@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # <<<emcvnx_raidgroups>>>
 #
@@ -202,7 +204,6 @@ check_info['emcvnx_raidgroups.capacity'] = {
     "service_description": "RAID Group %s Capacity",
     "has_perfdata": True,
     "group": "filesystem",
-    "includes": ["size_trend.include", "df.include"],
     "default_levels_variable": "filesystem_default_levels",
 }
 
@@ -252,7 +253,6 @@ check_info['emcvnx_raidgroups.capacity_contiguous'] = {
     "service_description": "RAID Group %s Capacity Contiguous",
     "has_perfdata": True,
     "group": "filesystem",
-    "includes": ["size_trend.include", "df.include"],
     "default_levels_variable": "filesystem_default_levels",
 }
 

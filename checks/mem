@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
 #   |           _ __ ___   ___ _ __ ___   | (_)_ __  _   ___  __           |
@@ -65,16 +66,21 @@ def check_mem_linux(_no_item, params, section):
 
     results = check_memory_dict(section, params)
 
-    # show these always:
+    # show this always:
     yield results.pop("virtual", (0, ""))[:2]
-    state, info, perfdata = results.pop("ram", (0, ""))
-    yield state, info
-    section["MemUsedPercent"] = perfdata[-1][1]
-    yield results.pop("swap", (0, ""))[:2]
-    # show rest only if not OK:
-    for state, infotext, _perf in results.values():
+
+    # show these if not OK:
+    ok_results = []
+    for key, (state, text, _perf) in results.items():
         if state:
-            yield state, infotext
+            yield state, text
+        elif key in ("ram", "swap"):
+            ok_results.append((state, text))
+    for state, text in ok_results:
+        yield state, f"\n{text}"
+
+    # add value of "mem_used_percent" metric to section
+    section["MemUsedPercent"] = results["ram"][2][-1][1]
 
     # Now send performance data. We simply output *all* fields of section
     # except for a few really useless values
@@ -127,7 +133,6 @@ check_info["mem.linux"] = {
     'has_perfdata': True,
     'group': 'memory_linux',
     "handle_real_time_checks": True,
-    'includes': ['mem.include'],
 }
 
 #.
@@ -143,7 +148,7 @@ check_info["mem.linux"] = {
 #   | used for unixoide operating systems.                                 |
 #   '----------------------------------------------------------------------'
 
-# The following variable is obsolete. It is kept here so that Check_MK
+# The following variable is obsolete. It is kept here so that Checkmk
 # won't fail if it's found in main.mk
 mem_extended_perfdata = None
 
@@ -279,7 +284,6 @@ check_info["mem.win"] = {
     'group': 'memory_pagefile_win',
     'default_levels_variable': 'memory_win_default_levels',
     "handle_real_time_checks": True,
-    "includes": ["mem.include"],
 }
 
 #.

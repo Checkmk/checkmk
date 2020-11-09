@@ -33,6 +33,10 @@ body.side {
     background-image: url("");
   }
 
+  b.treeangle.title {
+    color: $font-color-sidebar;
+  }
+
   img.treeangle {
     filter: $treeangle-img-filter-sidebar;
   }
@@ -64,22 +68,29 @@ body.side {
 
   div.shortcuts {
     display: flex;
-    padding: $spacing;
+    padding: $spacing $spacing (0.5 * $spacing);
     border-bottom: 1px solid $sidebar-border-color;
 
     a {
       flex: 1 0 auto;
       font-size: $font-size-small;
       line-height: 1.7;
+      color: $font-color-sidebar;
       text-align: center;
       text-decoration: none;
 
       &:hover img {
-        opacity: .5;
+        opacity: 0.5;
+      }
+
+      &:visited {
+        color: $font-color-sidebar;
       }
     }
 
-    img { width: 19px; }
+    img {
+      margin-bottom: 6px;
+    }
   }
 
   #side_content {
@@ -123,9 +134,9 @@ body.side {
     height: 100%;
     text-decoration: none;
     background-image: url("images/tribe29_icon.svg");
-    background-position: center;
+    background-position: center 5px;
     background-repeat: no-repeat;
-    background-size: auto 28px;
+    background-size: auto 44px;
     outline: none;
   }
 }
@@ -145,21 +156,30 @@ body.main .popup_menu #side_header > span {
 }
 
 #side_fold {
-  width: 20px;
-  height: 20px;
-  margin: 0 auto 10px;
+  margin: $spacing 0;
+  font-size: $font-size-small;
+  color: $font-color-sidebar;
+  text-align: center;
   cursor: pointer;
 
-  background: no-repeat center / 36% url("images/side_fold.png") $navigation-bg-color;
-  border: 1px solid $img-color;
-  border-radius: 15px;
-
-  &.folded {
-    transform: rotate(180deg);
+  &:not(.folded) {
+    color: $success;
   }
 
-  &:hover {
-    opacity: .5;
+  img {
+    margin-bottom: 8px;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &:not(.folded) img.folded {
+    display: none;
+  }
+
+  &.folded img:not(.folded) {
+    display: none;
   }
 }
 
@@ -168,7 +188,7 @@ body.main .popup_menu #side_header > span {
   font-size: 8px;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
-  color: $font-color-light;
+  color: $font-color-sidebar;
   text-align: center;
 
   a {
@@ -177,6 +197,10 @@ body.main .popup_menu #side_header > span {
 
     &:hover {
       text-decoration: underline;
+    }
+
+    &:visited {
+      color: $font-color-sidebar;
     }
   }
 
@@ -203,7 +227,8 @@ span#msg_label {
 }
 
 /* General layout of snapins */
-body.side div.snapin, div.add_snapin div.snapin  {
+body.side div.snapin,
+div.add_snapin div.snapin {
   width: 100%;
   padding: (0.75 * $spacing) (2 * $spacing);
   overflow: hidden;
@@ -224,7 +249,7 @@ div.snapin {
     position: relative;
     height: auto;
     line-height: 10px; /* affects height of snapin title bar */
-    color: $font-color;
+    color: $font-color-sidebar;
     text-align: left;
     background: transparent;
 
@@ -260,7 +285,7 @@ div.snapin {
 
   span.moresnapin {
     display: inline-block;
-    width: 16px;  /* FIXME: get rid of the animation that uses 4 images */
+    width: 16px; /* FIXME: get rid of the animation that uses 4 images */
     margin-right: 4px;
 
     img {
@@ -277,7 +302,7 @@ div.snapin {
       width: 16px;
       height: 16px;
       padding: 0;
-      margin-top: -9px;  /* HACK to align the button */
+      margin-top: -8px; /* HACK to align the button */
     }
   }
 
@@ -295,7 +320,7 @@ div.snapin {
     top: 64px;
     width: 100%;
     padding: $spacing 0 0;
-    color: $font-color;
+    color: $font-color-sidebar;
     box-sizing: border-box;
   }
 
@@ -312,7 +337,7 @@ div.snapin {
    */
 
   td {
-    color: $font-color;
+    color: $font-color-sidebar;
   }
 
   h3 {
@@ -324,13 +349,15 @@ div.snapin {
   /* Normal link in snapins */
   a {
     font-weight: normal;
-    color: $font-color;
+    color: $font-color-sidebar;
     text-decoration: none;
 
-    &:hover { text-decoration: underline; }
+    &:hover {
+      text-decoration: underline;
+    }
 
-    &.iconlink img {
-      margin-right: 8px;
+    &.iconlink img:not(.emblem) {
+      margin-right: 5px;
     }
   }
 
@@ -342,7 +369,7 @@ div.snapin {
   }
 
   li {
-    padding-left: 1px;
+    padding-left: 0;
     color: $snapin-list-color;
 
     &.sidebar {
@@ -450,20 +477,6 @@ div.snapin div.content div.foldable ul.treeangle a.iconlink {
   padding: 0;
 }
 
-div.snapin div.content div.foldable a.iconlink,
-/* TODO: Reproduce these two html elements */
-div.snapin div.content div.foldable body.main .popup_menu span.iconlink,
-body.main .popup_menu div.snapin div.content div.foldable span.iconlink {
-  padding: 4px 0;
-}
-
-div.snapin div.content div.foldable a.iconlink:last-of-type,
-/* TODO: Reproduce these two html elements */
-div.snapin div.content div.foldable body.main .popup_menu span.iconlink:last-of-type,
-body.main .popup_menu div.snapin div.content div.foldable span.iconlink:last-of-type {
-  padding-bottom: 12px;
-}
-
 div.snapin table.allhosts td a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin table.allhosts td body.main .popup_menu span.link,
@@ -511,7 +524,6 @@ div#snapinDragIndicator {
   box-shadow: 0 0 3px rgb(255, 255, 255);
 }
 
-
 /*-------------------------------------------------------------------------.
 |          _       _     _                         _                       |
 |         / \   __| | __| |  ___ _ __   __ _ _ __ (_)_ __  ___             |
@@ -525,7 +537,8 @@ div#snapinDragIndicator {
 
 div.add_snapin {
   div.snapinadder {
-    &, &:hover {
+    &,
+    &:hover {
       float: left;
       width: 270px;
       height: 220px;
@@ -535,11 +548,12 @@ div.add_snapin {
       border: 1px solid $snapin-bg-color;
       border-radius: 5px;
       box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
-      transition: box-shadow .15s 0s ease-in-out;
+      transition: box-shadow 0.15s 0s ease-in-out;
     }
 
-    *, &:hover * {
-      color: $font-color;
+    *,
+    &:hover * {
+      color: $font-color-sidebar;
     }
 
     &:hover {
@@ -552,7 +566,6 @@ div.add_snapin {
       font-weight: $font-weight-default;
       line-height: 1.333;
       letter-spacing: $letter-spacing-table;
-      color: $snapin-description-font-color;
       text-rendering: optimizeLegibility;
     }
 
@@ -566,7 +579,7 @@ div.add_snapin {
     .head {
       height: auto;
       padding: 8px;
-      color: $font-color;
+      color: $font-color-sidebar;
       text-align: left;
       background: transparent;
 
@@ -578,12 +591,23 @@ div.add_snapin {
       }
     }
 
-    .snapin b, .head b {
+    .snapin b,
+    .head b {
       font-weight: $font-weight-bold;
     }
 
     .content {
-      color: $font-color;
+      color: $font-color-sidebar;
+    }
+
+    div.foldable {
+      b.treeangle {
+        color: $font-color-sidebar;
+      }
+
+      img.treeangle {
+        filter: $treeangle-img-filter-sidebar;
+      }
     }
   }
 
@@ -605,7 +629,6 @@ div.add_snapin {
     }
   }
 }
-
 
 /*-Popup Msg-----------------------------------------------------------.
 |           ____                           __  __                      |

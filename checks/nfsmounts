@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.network_fs import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<nfsmounts>>>
 # /foobar hanging 0 0 0 0
 # /with spaces ok 217492 123563 112515 524288
@@ -15,5 +18,4 @@ check_info["nfsmounts"] = {
     'service_description': 'NFS mount %s',
     'has_perfdata': True,
     'group': 'network_fs',
-    'includes': ['network_fs.include', 'df.include', 'size_trend.include'],
 }

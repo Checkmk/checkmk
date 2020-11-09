@@ -7,8 +7,7 @@
 # FIXME: Can be removed once all dashboards have been converted
 # to have the view definitions right inside the dashboards
 
-from . import (
-    multisite_builtin_views,)
+from . import multisite_builtin_views
 
 multisite_builtin_views.update({
 
@@ -124,7 +123,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': [],
         'layout': 'table',
-        'linktitle': 'Events',
         'mustsearch': False,
         'name': 'events_dash',
         'num_columns': 1,

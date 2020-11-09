@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<db2_bp_hitratios>>>
 # [[[db2taddm:CMDBS1]]]
 # BP_NAME        TOTAL_HIT_RATIO_PERCENT DATA_HIT_RATIO_PERCENT INDEX_HIT_RATIO_PERCENT XDA_HIT_RATIO_PERCENT
@@ -87,5 +88,4 @@ check_info['db2_bp_hitratios'] = {
     "check_function": check_db2_bp_hitratios,
     "inventory_function": inventory_db2_bp_hitratios,
     "has_perfdata": True,
-    "includes": ["db2.include"]
 }

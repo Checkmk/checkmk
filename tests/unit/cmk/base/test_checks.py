@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import re
 from pathlib import Path
 
@@ -14,7 +15,6 @@ import testlib  # type: ignore[import]
 import cmk.utils.paths
 import cmk.base.config as config
 import cmk.base.check_utils
-import cmk.base.check_api as check_api
 
 
 def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
@@ -48,8 +48,8 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
     r"\btags_of_host\b",
 ])
 def test_deprecated_api_features(deprecated_pattern):
-    check_files = Path(cmk.utils.paths.checks_dir).glob("*")
-    check_files = (p for p in check_files if p.suffix not in (".swp",))
+    check_files = (pathname for pathname in Path(cmk.utils.paths.checks_dir).glob("*")
+                   if os.path.isfile(pathname) and pathname.suffix not in (".swp",))
     with_deprecated_feature = [
         finding  #
         for check_file_path in check_files  #
@@ -62,50 +62,22 @@ def test_deprecated_api_features(deprecated_pattern):
     )
 
 
-def _search_from_imports(check_file_path):
-    with open(check_file_path) as f_:
-        return [
-            "%s:%d:%s" % (Path(check_file_path).stem, line_no, repr(line.strip()))
-            for line_no, line in enumerate(f_.readlines(), 1)
-            if re.search(r'from\s.*\simport\s', line.strip())
-        ]
+def test_includes_are_deprecated(config_check_info):
+    for name, check_info in config_check_info.items():
+        assert not check_info.get("includes"), f"Plugin {name}: includes are deprecated!"
 
 
-def test_imports_in_checks():
-    check_files = config.get_plugin_paths(cmk.utils.paths.checks_dir)
-    with_from_imports = [
-        finding  #
-        for check_file_path in check_files  #
-        for finding in _search_from_imports(check_file_path)
-    ]
-    assert not with_from_imports, "Found %d from-imports:\n%s" % (len(with_from_imports),
-                                                                  "\n".join(with_from_imports))
-
-
-def test_check_plugin_header():
-    for checkfile in Path(testlib.repo_path()).joinpath(Path('checks')).iterdir():
-        if checkfile.name.startswith("."):
+@pytest.mark.parametrize('plugin_path', ['checks', 'inventory'])
+def test_check_plugin_header(plugin_path: str):
+    for plugin in Path(testlib.repo_path(), plugin_path).iterdir():
+        if plugin.name.startswith("."):
             # .f12
             continue
-        with checkfile.open() as f:
-            shebang = f.readline().strip()
-            encoding_header = f.readline().strip()
+        with plugin.open() as handle:
+            shebang = handle.readline().strip()
+            encoding_header = handle.readline().strip()
 
-        assert shebang == "#!/usr/bin/env python3", "Check plugin '%s' has wrong shebang '%s'" % (
-            checkfile.name, shebang)
-        assert encoding_header == "# -*- coding: utf-8 -*-", "Check plugin '%s' has wrong encoding header '%s'" % (
-            checkfile.name, encoding_header)
-
-
-def test_inventory_plugin_header():
-    for inventory_pluginfile in Path(testlib.repo_path()).joinpath(Path('inventory')).iterdir():
-        if inventory_pluginfile.name.startswith("."):
-            # .f12
-            continue
-        with inventory_pluginfile.open() as f:
-            shebang = f.readline().strip()
-            encoding_header = f.readline().strip()
-        assert shebang == "#!/usr/bin/env python3", "Inventory plugin '%s' has wrong shebang '%s'" % (
-            inventory_pluginfile.name, shebang)
-        assert encoding_header == "# -*- coding: utf-8 -*-", "Inventory plugin '%s' has wrong encoding header '%s'" % (
-            inventory_pluginfile.name, encoding_header)
+        assert shebang == "#!/usr/bin/env python3", (
+            f"Plugin '{plugin.name}' has wrong shebang '{shebang}'",)
+        assert encoding_header == "# -*- coding: utf-8 -*-", (
+            f"Plugin '{plugin.name}' has wrong encoding header '{encoding_header}'")

@@ -7,26 +7,25 @@
 
 #include <filesystem>
 #include <memory>
-#include <string>
 
 #include "Column.h"
 #include "CrashReport.h"
 #include "DynamicColumn.h"
-#include "DynamicHostFileColumn.h"
+#include "DynamicFileColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringLambdaColumn.h"
 
 TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<CrashReport>>(
         "id", "The ID of a crash report", offsets,
         [](const CrashReport &r) { return r._id; }));
     addColumn(std::make_unique<StringLambdaColumn<CrashReport>>(
         "component", "The component that crashed (gui, agent, check, etc.)",
         offsets, [](const CrashReport &r) { return r._component; }));
-    addDynamicColumn(std::make_unique<DynamicHostFileColumn<CrashReport>>(
+    addDynamicColumn(std::make_unique<DynamicFileColumn<CrashReport>>(
         "file", "Files related to the crash report (crash.info, etc.)", offsets,
         [mc] { return mc->crashReportPath(); },
         [](const CrashReport & /*r*/, const std::string &args) {

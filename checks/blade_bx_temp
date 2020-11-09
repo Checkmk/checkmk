@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def check_blade_bx_temp(item, params, info):
     blade_bx_status = {
@@ -65,5 +67,4 @@ check_info['blade_bx_temp'] = {
         ]),
     'snmp_scan_function': scan_blade_bx_temp,
     'group': 'temperature',
-    'includes': ['temperature.include']
 }

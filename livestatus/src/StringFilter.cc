@@ -5,7 +5,6 @@
 
 #include "StringFilter.h"
 
-#include "Filter.h"
 #include "RegExp.h"
 #include "Row.h"
 #include "StringColumn.h"

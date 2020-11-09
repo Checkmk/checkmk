@@ -56,7 +56,7 @@ def test_test_check_1_merged_rule(request, test_cfg, site, web):  # noqa: F811 #
         test_check_path, """
 import pprint
 
-from .agent_based_api.v0 import register, Service
+from .agent_based_api.v1 import register, Service
 
 
 def discover(params, section):
@@ -81,7 +81,7 @@ register.check_plugin(
 
     site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_1>>>\n1 2\n")
 
-    config.load_all_checks(check_api.get_check_api_context)
+    config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load(with_conf_d=False)
 
     web.discover_services("modes-test-host")
@@ -130,7 +130,7 @@ def test_test_check_1_all_rule(request, test_cfg, site, web):  # noqa: F811 # py
         test_check_path, """
 import pprint
 
-from .agent_based_api.v0 import register, Service
+from .agent_based_api.v1 import register, Service
 
 
 def discover(params, section):
@@ -155,7 +155,7 @@ register.check_plugin(
 
     site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_2>>>\n1 2\n")
 
-    config.load_all_checks(check_api.get_check_api_context)
+    config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load(with_conf_d=False)
 
     web.discover_services("modes-test-host")

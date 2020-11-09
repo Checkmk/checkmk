@@ -4,15 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 import threading
-import time
+import queue
 import os
 import stat
+import errno
 from pathlib import Path
 
 from six import ensure_binary
 import pytest  # type: ignore[import]
-from testlib import import_module
+from testlib import import_module, wait_until
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -233,10 +235,7 @@ def test_aquire_lock_not_existing(tmp_path, path_type):
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_locked(tmp_path, path_type):
-    locked_file = tmp_path / "locked_file"
-    locked_file.write_text(u"", encoding="utf-8")
-
+def test_locked(locked_file, path_type):
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
@@ -247,11 +246,46 @@ def test_locked(tmp_path, path_type):
     assert store.have_lock(path) is False
 
 
-@pytest.mark.parametrize("path_type", [str, Path])
-def test_aquire_lock(tmp_path, path_type):
+@pytest.fixture(name="locked_file")
+def fixture_locked_file(tmp_path):
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"", encoding="utf-8")
+    return locked_file
 
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_try_locked(locked_file, path_type):
+    path = path_type(locked_file)
+
+    assert store.have_lock(path) is False
+
+    with store.try_locked(path) as result:
+        assert result is True
+        assert store.have_lock(path) is True
+
+    assert store.have_lock(path) is False
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_try_locked_fails(locked_file, path_type, monkeypatch):
+    path = path_type(locked_file)
+
+    def _is_already_locked(path, blocking):
+        raise IOError(errno.EAGAIN, "%s is already locked" % path)
+
+    monkeypatch.setattr(store, "aquire_lock", _is_already_locked)
+
+    assert store.have_lock(path) is False
+
+    with store.try_locked(path) as result:
+        assert result is False
+        assert store.have_lock(path) is False
+
+    assert store.have_lock(path) is False
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_aquire_lock(locked_file, path_type):
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
@@ -260,10 +294,7 @@ def test_aquire_lock(tmp_path, path_type):
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_aquire_lock_twice(tmp_path, path_type):
-    locked_file = tmp_path / "locked_file"
-    locked_file.write_text(u"", encoding="utf-8")
-
+def test_aquire_lock_twice(locked_file, path_type):
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
@@ -279,10 +310,7 @@ def test_release_lock_not_locked(path_type):
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_release_lock(tmp_path, path_type):
-    locked_file = tmp_path / "locked_file"
-    locked_file.write_text(u"", encoding="utf-8")
-
+def test_release_lock(locked_file, path_type):
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
@@ -293,10 +321,7 @@ def test_release_lock(tmp_path, path_type):
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_release_lock_already_closed(tmp_path, path_type):
-    locked_file = tmp_path / "locked_file"
-    locked_file.write_text(u"", encoding="utf-8")
-
+def test_release_lock_already_closed(locked_file, path_type):
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
@@ -333,10 +358,7 @@ def test_release_all_locks(tmp_path, path_type):
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_release_all_locks_already_closed(tmp_path, path_type):
-    locked_file = tmp_path / "locked_file"
-    locked_file.write_text(u"", encoding="utf-8")
-
+def test_release_all_locks_already_closed(locked_file, path_type):
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
@@ -349,83 +371,196 @@ def test_release_all_locks_already_closed(tmp_path, path_type):
     assert store.have_lock(path) is False
 
 
+class LockTestJob(enum.Enum):
+    TERMINATE = enum.auto()
+    LOCK = enum.auto()
+    UNLOCK = enum.auto()
+
+
 class LockTestThread(threading.Thread):
     def __init__(self, store_mod, path):
-        self.store = store_mod
-        self.path = path
-        self.do = None
-        self.is_locked = False
-        self._need_stop = threading.Event()
         super(LockTestThread, self).__init__()
         self.daemon = True
 
+        self.store = store_mod
+        self.path = path
+
+        self._jobs: queue.Queue[LockTestJob] = queue.Queue()
+
     def run(self):
-        while not self._need_stop.is_set():
-            if self.do == "lock":
-                assert self.store.have_lock(self.path) is False
-                self.store.aquire_lock(self.path)
-                assert self.store.have_lock(self.path) is True
-                self.do = None
+        while True:
+            try:
+                job = self._jobs.get(block=True, timeout=0.1)
+            except queue.Empty:
+                continue
 
-            elif self.do == "unlock":
-                assert self.store.have_lock(self.path) is True
-                self.store.release_lock(self.path)
-                assert self.store.have_lock(self.path) is False
-                self.do = None
+            try:
+                if job is LockTestJob.TERMINATE:
+                    break
 
-            else:
-                time.sleep(0.1)
+                if job is LockTestJob.LOCK:
+                    assert self.store.have_lock(self.path) is False
+                    self.store.aquire_lock(self.path)
+                    assert self.store.have_lock(self.path) is True
+                    continue
+
+                if job is LockTestJob.UNLOCK:
+                    assert self.store.have_lock(self.path) is True
+                    self.store.release_lock(self.path)
+                    assert self.store.have_lock(self.path) is False
+                    continue
+            finally:
+                self._jobs.task_done()
 
     def terminate(self):
-        self._need_stop.set()
+        """Send terminate command to thread from outside and wait for completion"""
+        self._jobs.put(LockTestJob.TERMINATE)
+        self.join()
+
+    def lock(self):
+        """Send lock command to thread from outside and wait for completion"""
+        self.lock_nowait()
+        self._jobs.join()
+
+    def unlock(self):
+        """Send unlock command to thread from outside and wait for completion"""
+        self._jobs.put(LockTestJob.UNLOCK)
+        self._jobs.join()
+
+    def lock_nowait(self):
+        """Send lock command to thread from outside without waiting for completion"""
+        self._jobs.put(LockTestJob.LOCK)
+
+    def join_jobs(self):
+        self._jobs.join()
+
+
+@pytest.fixture(name="t1")
+def fixture_test_thread_1(locked_file):
+    # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
+    t_store = import_module("cmk/utils/store.py")
+
+    t = LockTestThread(t_store, locked_file)
+    t.start()
+
+    yield t
+
+    t.store.release_all_locks()
+    t.terminate()
+
+
+@pytest.fixture(name="t2")
+def fixture_test_thread_2(locked_file):
+    # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
+    t_store = store
+
+    t = LockTestThread(t_store, locked_file)
+    t.start()
+
+    yield t
+
+    t.store.release_all_locks()
+    t.terminate()
+
+
+def _wait_for_waiting_lock():
+    """Use /proc/locks to wait until one lock is in waiting state
+
+    https://man7.org/linux/man-pages/man5/proc.5.html
+    """
+    def has_waiting_lock():
+        pid = os.getpid()
+        with Path("/proc/locks").open() as f:
+            for line in f:
+                p = line.strip().split()
+                if p[1] == "->" and p[2] == "FLOCK" and p[4] == "WRITE" and p[5] == str(pid):
+                    return True
+        return False
+
+    wait_until(has_waiting_lock, timeout=1, interval=0.01)
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_locking(tmp_path, path_type):
-    # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
-    store1 = store
-    store2 = import_module("cmk/utils/store.py")
+def test_blocking_lock_while_other_holds_the_lock(locked_file, path_type, t1, t2, monkeypatch):
+    assert t1.store != t2.store
 
-    assert store1 != store2
+    path = path_type(locked_file)
 
-    locked_file_path = tmp_path / "locked_file"
-    with locked_file_path.open(mode="w", encoding="utf-8") as locked_file:
-        locked_file.write(u"")
-        path = "%s" % locked_file_path
+    assert t1.store.have_lock(path) is False
+    assert t2.store.have_lock(path) is False
 
-        t1 = LockTestThread(store1, path)
-        t1.start()
-        t2 = LockTestThread(store2, path)
-        t2.start()
+    try:
+        # Take lock with t1
+        t1.lock()
 
-        # Take lock with store1
-        t1.do = "lock"
-        for _dummy in range(20):
-            if store1.have_lock(path):
-                break
-            time.sleep(0.01)
-        assert store1.have_lock(path) is True
+        assert t1.store.have_lock(path) is True
+        assert t2.store.have_lock(path) is False
 
-        # Now try to get lock with store2
-        t2.do = "lock"
-        time.sleep(0.2)
-        assert store1.have_lock(path) is True
-        assert store2.have_lock(path) is False
+        # Now request the lock in t2, but don't wait for the successful locking. Only wait until we
+        # start waiting for the lock.
+        t2.lock_nowait()
+        _wait_for_waiting_lock()
 
-        # And now unlock store1 and check whether store2 has the lock now
-        t1.do = "unlock"
-        for _dummy in range(20):
-            if not store1.have_lock(path):
-                break
-            time.sleep(0.01)
-        assert store1.have_lock(path) is False
-        time.sleep(0.2)
-        assert store2.have_lock(path) is True
+        assert t1.store.have_lock(path) is True
+        assert t2.store.have_lock(path) is False
+    finally:
+        t1.unlock()
 
-        # Not 100% safe, but protects agains left over ressources in the good case at least
-        store1.release_all_locks()
-        store2.release_all_locks()
-        t1.terminate()
-        t1.join()
-        t2.terminate()
-        t2.join()
+    t2.join_jobs()
+
+    assert t1.store.have_lock(path) is False
+    assert t2.store.have_lock(path) is True
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_non_blocking_locking_without_previous_lock(locked_file, path_type, t1):
+    assert t1.store != store
+    path = path_type(locked_file)
+
+    # Try to lock first
+    assert store.try_aquire_lock(path) is True
+    assert store.have_lock(path) is True
+    store.release_lock(path)
+    assert store.have_lock(path) is False
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_non_blocking_locking_while_already_locked(locked_file, path_type, t1):
+    assert t1.store != store
+    path = path_type(locked_file)
+
+    # Now take lock with t1.store
+    t1.lock()
+    assert t1.store.have_lock(path) is True
+
+    # And now try to get the lock (which should not be possible)
+    assert store.try_aquire_lock(path) is False
+    assert t1.store.have_lock(path) is True
+    assert store.have_lock(path) is False
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_non_blocking_decorated_locking_without_previous_lock(locked_file, path_type, t1):
+    assert t1.store != store
+    path = path_type(locked_file)
+
+    with store.try_locked(path) as result:
+        assert result is True
+        assert store.have_lock(path) is True
+    assert store.have_lock(path) is False
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_non_blocking_decorated_locking_while_already_locked(locked_file, path_type, t1):
+    assert t1.store != store
+    path = path_type(locked_file)
+
+    # Take lock with t1.store
+    t1.lock()
+    assert t1.store.have_lock(path) is True
+
+    # And now try to get the lock (which should not be possible)
+    with store.try_locked(path) as result:
+        assert result is False
+        assert store.have_lock(path) is False
+    assert store.have_lock(path) is False

@@ -6,7 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksOperatingSystem,
+    RulespecGroupEnforcedServicesOperatingSystem,
     ManualCheckParameterRulespec,
     rulespec_registry,
 )
@@ -14,6 +14,6 @@ from cmk.gui.plugins.wato import (
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="zypper",
-        group=RulespecGroupManualChecksOperatingSystem,
+        group=RulespecGroupEnforcedServicesOperatingSystem,
         title=lambda: _("Zypper Updates"),
     ))

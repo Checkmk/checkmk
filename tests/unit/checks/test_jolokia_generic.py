@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from checktestlib import assertDiscoveryResultsEqual, DiscoveryResult
 
 pytestmark = pytest.mark.checks
@@ -17,10 +18,11 @@ info = [[u'PingFederate-CUK-CDI', u'TotalRequests', u'64790', u'number'],
     ('jolokia_generic', info, [(u'PingFederate-CUK-CDI TotalRequests', {})]),
     ('jolokia_generic.rate', info, [(u'PingFederate-CUK-CDI MaxRequestTime', {})]),
 ])
-def test_jolokia_generic_discovery(check_manager, check, lines, expected_result):
-    parsed = check_manager.get_check('jolokia_generic').run_parse(lines)
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_jolokia_generic_discovery(check, lines, expected_result):
+    parsed = Check('jolokia_generic').run_parse(lines)
 
-    check = check_manager.get_check(check)
+    check = Check(check)
     discovered = check.run_discovery(parsed)
     assertDiscoveryResultsEqual(
         check,

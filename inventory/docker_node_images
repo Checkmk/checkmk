@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import cmk.base.plugins.agent_based.utils.docker as docker
+from cmk.base.check_legacy_includes.legacy_docker import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def _split_subsections(info):
@@ -79,7 +80,6 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
 
 
 inv_info['docker_node_images'] = {
-    'includes': ['legacy_docker.include'],
     'inv_function': inv_docker_node_images,
     'has_status_data': True,
 }

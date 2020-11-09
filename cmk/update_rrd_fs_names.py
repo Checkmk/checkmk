@@ -148,18 +148,22 @@ def update_pnp_info_files(perfvar, newvar, filepath):
 
 def update_service_info(config_cache, hostnames):
     pnp_files_present = False
+    check_variables = config.get_check_variables()
 
     for hostname in hostnames:
-        for service in config_cache.get_autochecks_of(hostname):
+        for service in cmk.base.autochecks.parse_autochecks_file(
+                hostname,
+                config.service_description,
+                check_variables,
+        ):
             if service.check_plugin_name in CHECKS_USING_DF_INCLUDE:
-                servicedesc = config.service_description(hostname, service.check_plugin_name,
-                                                         service.item)
-                update_files(hostname, servicedesc, service.item, 'cmc')
-                pnp_files_present |= update_files(hostname, servicedesc, service.item, 'pnp4nagios')
+                update_files(hostname, service.description, service.item, 'cmc')
+                pnp_files_present |= update_files(hostname, service.description, service.item,
+                                                  'pnp4nagios')
 
 
 def update():
-    config.load_all_checks(check_api.get_check_api_context)
+    config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load()
 
     config_cache = config.get_config_cache()

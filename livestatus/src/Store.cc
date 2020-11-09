@@ -8,11 +8,8 @@
 #include <ctime>
 #include <filesystem>
 #include <memory>
-#include <mutex>
 #include <sstream>
 #include <stdexcept>
-#include <utility>
-#include <vector>
 
 #include "CrashReport.h"
 #include "EventConsoleConnection.h"
@@ -22,7 +19,6 @@
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "StringUtils.h"
-#include "Table.h"
 #include "mk_logwatch.h"
 
 Store::Store(MonitoringCore *mc)

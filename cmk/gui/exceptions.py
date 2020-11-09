@@ -31,8 +31,8 @@ class FinalizeRequest(MKException):
 class HTTPRedirect(FinalizeRequest):
     """Is used to end the HTTP request processing from deeper code levels
     and making the client request another page after receiving the response."""
-    def __init__(self, url: str) -> None:
-        super(HTTPRedirect, self).__init__(http.client.FOUND)
+    def __init__(self, url: str, code: int = http.client.FOUND) -> None:
+        super(HTTPRedirect, self).__init__(code)
         self.url: str = url
 
 

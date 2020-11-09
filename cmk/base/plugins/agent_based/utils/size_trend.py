@@ -4,15 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Tuple
+from typing import Any, Mapping, MutableMapping, Optional, Tuple
 import time
 
-from ..agent_based_api.v0.type_defs import (
-    ValueStore,
-    CheckGenerator,
-    Parameters,
-)
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1.type_defs import CheckResult
+from ..agent_based_api.v1 import (
     get_rate,
     get_average,
     Metric,
@@ -25,15 +21,14 @@ Levels = Tuple[Optional[float], Optional[float]]
 
 def size_trend(
     *,
-    value_store: ValueStore,
-    check: str,
-    item: str,
+    value_store: MutableMapping[str, Any],
+    value_store_key: str,
     resource: str,
-    levels: Parameters,
+    levels: Mapping[str, Any],
     used_mb: float,
     size_mb: float,
     timestamp: Optional[float],
-) -> CheckGenerator:
+) -> CheckResult:
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.
@@ -45,8 +40,8 @@ def size_trend(
       Use at your own risk!
 
     Args:
-      check (str): The name of the check, e.g. "df".
-      item (str): The name of the item, e.g. the mountpoint "/" for df.
+      value_store: Retrived value_store by calling check function
+      value_store_key (str): The key (prefix) to use in the value_store
       resource (str): The resource in question, e.g. "disk", "ram", "swap".
       levels (dict): Level parameters for the trend computation. Items:
           "trend_range"       : 24,        # interval for the trend in hours
@@ -60,19 +55,17 @@ def size_trend(
         and average. Defaults to "None".
       used_mb (float): Used space in MB.
       size_mb (float): Max. available space in MB.
-      value_store: Retrived value_store by calling check function
 
     Yields:
       Result- and Metric- instances for the trend computation.
-    >>> from ..agent_based_api.v0 import GetRateError, Result, state
+    >>> from ..agent_based_api.v1 import GetRateError, Result
     >>> vs = {}
     >>> t0 = time.time()
     >>> for i in range(2):
     ...     try:
     ...         for result in size_trend(
     ...                 value_store=vs,
-    ...                 check="check_name",
-    ...                 item="item_name",
+    ...                 value_store_key="vskey",
     ...                 resource="resource_name",
     ...                 levels={
     ...                     "trend_range": 24,
@@ -88,12 +81,12 @@ def size_trend(
     ...             print(result)
     ...     except GetRateError:
     ...         pass
-    Metric('growth', 1200.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.CRIT: 2>, summary='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +1000 B/+1.95 KiB)', details='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +1000 B/+1.95 KiB)')
-    Result(state=<state.WARN: 1>, summary='trend per 1 day 0 hours: +60.0% (warn/crit at +50.0%/+70.0%)', details='trend per 1 day 0 hours: +60.0% (warn/crit at +50.0%/+70.0%)')
+    Metric('growth', 1200.0)
+    Result(state=<State.CRIT: 2>, summary='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +1000 B/+1.95 KiB)')
+    Result(state=<State.WARN: 1>, summary='trend per 1 day 0 hours: +60.0% (warn/crit at +50.0%/+70.0%)')
     Metric('trend', 1200.0, levels=(1000.0, 1400.0), boundaries=(0.0, 83.33333333333333))
-    Result(state=<state.CRIT: 2>, summary='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)', details='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)')
-    Metric('trend_hoursleft', 37.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.CRIT: 2>, summary='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)')
+    Metric('trend_hoursleft', 37.0)
     """
     MB = 1024 * 1024
     SEC_PER_H = 60 * 60
@@ -102,11 +95,11 @@ def size_trend(
     range_sec = levels["trend_range"] * SEC_PER_H
     timestamp = timestamp or time.time()
 
-    mb_per_sec = get_rate(value_store, "%s.%s.delta" % (check, item), timestamp, used_mb)
+    mb_per_sec = get_rate(value_store, "%s.delta" % value_store_key, timestamp, used_mb)
 
     avg_mb_per_sec = get_average(
         value_store=value_store,
-        key="%s.%s.trend" % (check, item),
+        key="%s.trend" % value_store_key,
         time=timestamp,
         value=mb_per_sec,
         backlog_minutes=range_sec // 60,
@@ -139,9 +132,16 @@ def size_trend(
         return (None if levels[0] is None else levels[0] / 100 * size_mb,
                 None if levels[1] is None else levels[1] / 100 * size_mb)
 
+    def minn(a: Optional[float], b: Optional[float]) -> Optional[float]:
+        if a is None:
+            return b
+        if b is None:
+            return a
+        return min(a, b)
+
     def mins(levels1: Optional[Levels], levels2: Optional[Levels]) -> Levels:
-        return ((min(levels1[0], levels2[0]),
-                 min(levels1[1], levels2[1])) if levels1 and levels2 else  #
+        return ((minn(levels1[0], levels2[0]),
+                 minn(levels1[1], levels2[1])) if levels1 and levels2 else  #
                 levels1 or levels2 or (None, None))
 
     if levels.get("trend_perfdata"):

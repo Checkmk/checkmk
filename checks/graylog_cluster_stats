@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<graylog_cluster_stats>>>
 # [[u'{"stream_rule_count": 7, "input_count_by_type":
 # {"org.graylog.plugins.beats.Beats2Input": 1,
@@ -78,7 +79,6 @@ check_info["graylog_cluster_stats"] = {
     "service_description": "Graylog Cluster Stats",
     "has_perfdata": True,
     "group": "graylog_cluster_stats",
-    "includes": ["graylog.include"],
 }
 
 
@@ -184,7 +184,6 @@ check_info["graylog_cluster_stats.elastic"] = {
     "service_description": "Graylog Cluster Elasticsearch Stats",
     "has_perfdata": True,
     "group": "graylog_cluster_stats_elastic",
-    "includes": ["graylog.include"],
 }
 
 
@@ -244,5 +243,4 @@ check_info["graylog_cluster_stats.mongodb"] = {
     "service_description": "Graylog Cluster MongoDB Stats",
     "has_perfdata": True,
     "group": "graylog_cluster_stats_mongodb",
-    "includes": ["graylog.include"],
 }

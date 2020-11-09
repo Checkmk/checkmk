@@ -3,64 +3,54 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from contextlib import contextmanager
-
 import pytest  # type: ignore[import]
-
-from testlib.base import KNOWN_AUTO_MIGRATION_FAILURES  # type: ignore[import]
 
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import SectionName, CheckPluginName
-
-from cmk.snmplib.type_defs import SNMPTree
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
 import cmk.base.config as config
 
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
-from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
+from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
     _explicit_conversions,
     create_detect_spec,
 )
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin, SNMPTree
+
+from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: ignore[attr-defined]
+    _has_table_2, _is_cisco, _is_cisco_nexus,
+)
 
 pytestmark = pytest.mark.checks
 
 
-@contextmanager
-def known_exceptions(type_, name):
-    if (type_, name) not in KNOWN_AUTO_MIGRATION_FAILURES:
-        yield
-        return
-
-    with pytest.raises(NotImplementedError):
-        yield
-
-
-@pytest.fixture(scope="module", name="_load_all_checks")
-def load_all_checks():
-    config.load_all_checks(check_api.get_check_api_context)
-
-
 @pytest.fixture(scope="module", name="snmp_info", autouse=True)
-def _get_snmp_info(_load_all_checks):
+@pytest.mark.usefixtures("config_load_all_checks")
+def _get_snmp_info():
     assert len(config.snmp_info) > 400  # sanity check
     return config.snmp_info.copy()
 
 
 @pytest.fixture(scope="module", name="migrated_agent_sections", autouse=True)
-def _get_migrated_agent_sections(_load_all_checks):
+@pytest.mark.usefixtures("config_load_all_checks")
+def _get_migrated_agent_sections():
     return {s.name: s for s in agent_based_register.iter_all_agent_sections()}
 
 
 @pytest.fixture(scope="module", name="migrated_snmp_sections", autouse=True)
-def _get_migrated_snmp_sections(_load_all_checks):
+@pytest.mark.usefixtures("config_load_all_checks")
+def _get_migrated_snmp_sections():
     return {s.name: s for s in agent_based_register.iter_all_snmp_sections()}
 
 
 @pytest.fixture(scope="module", name="migrated_checks", autouse=True)
-def _get_migrated_checks(_load_all_checks):
+@pytest.mark.usefixtures("config_load_all_checks")
+def _get_migrated_checks():
     return {p.name: p for p in agent_based_register.iter_all_check_plugins()}
 
 
@@ -105,15 +95,14 @@ def test_create_section_plugin_from_legacy(config_check_info, snmp_info, migrate
 
         section_name = SectionName(name)
 
-        with known_exceptions('section', name):
-            section = migrated_agent_sections.get(section_name)
-            if section is not None:
-                assert isinstance(section, AgentSectionPlugin)
-            else:
-                section = migrated_snmp_sections.get(section_name)
-                if section is None:
-                    raise NotImplementedError(name)
-                assert isinstance(section, SNMPSectionPlugin)
+        section = migrated_agent_sections.get(section_name)
+        if section is not None:
+            assert isinstance(section, AgentSectionPlugin)
+        else:
+            section = migrated_snmp_sections.get(section_name)
+            if section is None:
+                raise NotImplementedError(name)
+            assert isinstance(section, SNMPSectionPlugin)
 
         if section is None:
             continue
@@ -149,25 +138,21 @@ def test_scan_function_translation(config_snmp_scan_functions):
         assert scan_func is not None
 
         # make sure we can convert the scan function
-        if ('section', name) not in KNOWN_AUTO_MIGRATION_FAILURES:
-            _ = create_detect_spec(name, scan_func, [])
+        _ = create_detect_spec(name, scan_func, [])
 
 
-@pytest.mark.parametrize("check_name, func_name", [
-    ("if64_tplink", "has_ifHCInOctets"),
-    ("fsc_subsystems", "_is_fsc_or_windows"),
-    ("ucd_processes", "_is_ucd"),
-    ("printer_pages", "scan_ricoh_printer"),
-    ("fsc_temp", "is_fsc"),
-    ("df_netapp32", "is_netapp_filer"),
-    ("cisco_cpu", "_has_table_2"),
-    ("cisco_cpu", "_is_cisco"),
-    ("cisco_cpu", "_is_cisco_nexus"),
+@pytest.mark.parametrize("func", [
+    _is_fsc_or_windows,
+    _is_ucd,
+    is_fsc,
+    is_netapp_filer,
+    _has_table_2,
+    _is_cisco,
+    _is_cisco_nexus,
 ])
-def test_explicit_conversion(check_manager, check_name, func_name):
-    scan_func = check_manager.get_check(check_name).context[func_name]
-    created = create_detect_spec("unit-test", scan_func, [])
-    explicit = _explicit_conversions(scan_func.__name__)
+def test_explicit_conversion(func):
+    created = create_detect_spec("unit-test", func, [])
+    explicit = _explicit_conversions(func.__name__)
     assert created == explicit
 
 
@@ -189,15 +174,11 @@ def test_all_checks_migrated(config_check_info, migrated_checks):
         n.replace('.', '_').replace('-', '_')
         for n, i in config_check_info.items()
         if i['check_function'])
-    # we know these fail:
-    known_fails = set(name for type_, name in KNOWN_AUTO_MIGRATION_FAILURES if type_ == "check")
-    unexpected = migrated & known_fails
-    assert not unexpected, "these have been migrated unexpectedly: %r" % (unexpected,)
-    failures = true_checks - (migrated | known_fails)
+    failures = true_checks - migrated
     assert not failures, "failed to migrate: %r" % (failures,)
 
 
-def test_all_check_variables_present(_load_all_checks, config_check_variables):
+def test_all_check_variables_present(config_check_variables):
     expected_check_variables = {
         'AKCP_TEMP_CHECK_DEFAULT_PARAMETERS',
         'ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS',
@@ -220,9 +201,7 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS',
         'FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS',
         'FILER_DISKS_CHECK_DEFAULT_PARAMETERS',
-        'HEALTH_STATUS_MAP',
         'IF_CHECK_DEFAULT_PARAMETERS',
-        'INFO_INCLUDED_MAP',
         'K8S_OK_CONDITIONS',
         'KEY_PULSE_SECURE_CPU',
         'MAILQUEUES_LABEL',
@@ -247,29 +226,19 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'NO_BLOCKING_SESSIONS_MSG',
         'NimbleReadsType',
         'NimbleWritesType',
-        'OPER_STATUS_MAP',
         'OPNEED_STATUS_MAP',
         'OpenhardwaremonitorTraits',
         'PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS',
         'RAS_STATUS_MAP',
-        'RESTART_POLICIES_TO_DISCOVER',
         'SAP_HANA_EVENTS_MAP',
         'SAP_HANA_REPL_STATUS_MAP',
-        'STATUS_MAP',
         'TYPE_FUNCTION',
-        'UCS_FAULTINST_SEVERITY_TO_STATE',
         'acme_certificates_default_levels',
         'acme_environment_states',
         'acme_sbc_snmp_default_levels',
         'active_mapping',
         'active_vm_levels',
         'ad_replication_default_params',
-        'adva_fsp_if_adminstates',
-        'adva_fsp_if_inventory_portstates',
-        'adva_fsp_if_inventory_porttypes',
-        'adva_fsp_if_inventory_uses_alias',
-        'adva_fsp_if_inventory_uses_description',
-        'adva_fsp_if_operstates',
         'adva_fsp_temp_default_levels',
         'airlaser_default_levels',
         'aironet_default_error_levels',
@@ -316,7 +285,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'arris_cmts_mem',
         'arris_cmts_temp_default_levels',
         'artec_temp_default_levels',
-        'asm_diskgroup_default_levels',
         'atto_fibrebridge_fcport',
         'avaya_45xx_cpu_default_levels',
         'avaya_45xx_temp_temp_default_levels',
@@ -626,11 +594,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'hp_proliant_fans_locale',
         'hp_proliant_fans_status_map',
         'hp_proliant_locale',
-        'hp_proliant_mem_condition_map',
-        'hp_proliant_mem_condition_status2nagios_map',
-        'hp_proliant_mem_status2nagios_map',
-        'hp_proliant_mem_status_map',
-        'hp_proliant_mem_type_map',
         'hp_proliant_psu_levels',
         'hp_proliant_speed_map',
         'hp_proliant_status2nagios_map',
@@ -682,15 +645,7 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'if_default_error_levels',
         'if_default_levels',
         'if_default_traffic_levels',
-        'if_disable_if64_hosts',
         'if_groups',
-        'if_inventory_monitor_speed',
-        'if_inventory_monitor_state',
-        'if_inventory_pad_portnumbers',
-        'if_inventory_portstates',
-        'if_inventory_porttypes',
-        'if_inventory_uses_alias',
-        'if_inventory_uses_description',
         'ifoperstatus_inventory_porttypes',
         'ifoperstatus_monitor_unused',
         'infoblox_temp_default_levels',
@@ -709,14 +664,10 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'inventory_df_rules',
         'inventory_fujitsu_ca_ports',
         'inventory_heartbeat_crm_rules',
-        'inventory_if_rules',
         'inventory_ipmi_rules',
-        'inventory_mssql_counters_rules',
         'inventory_multipath_rules',
-        'inventory_oracle_rman_incremental_details',
         'inventory_sap_values',
         'inventory_solaris_services_rules',
-        'ipmi_default_levels',
         'ipr400_in_voltage_default_levels',
         'ipr400_temp_default_levels',
         'isc_dhcpd_default_levels',
@@ -779,16 +730,8 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'linux_nic_check',
         'lnx_thermal_default_levels',
         'logins_default_levels',
-        'logwatch_dir',
-        'logwatch_groups',
-        'logwatch_max_filesize',
-        'logwatch_patterns',
-        'logwatch_rules',
-        'logwatch_service_output',
-        'logwatch_spool_dir',
         'lparstat_default_levels',
         'lvm_lvs_default_levels',
-        'map_counter_keys',
         'map_dev_states',
         'map_luntype',
         'map_memtype',
@@ -805,8 +748,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'mbg_lantime_state_default_levels',
         'mcafee_av_client_default_levels',
         'mcafee_emailgateway_cpuload_default_levels',
-        'mcdata_fcport_opstatus',
-        'mcdata_fcport_speedbits',
         'megaraid_bbu_refvalues',
         'megaraid_pdisks_adapterstr',
         'megaraid_pdisks_legacy_mode',
@@ -891,9 +832,7 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'oracle_recovery_area_defaults',
         'oracle_sessions_default_levels',
         'oracle_tablespaces_check_autoext',
-        'oracle_tablespaces_check_default_increment',
         'oracle_tablespaces_default_levels',
-        'oracle_tablespaces_defaults',
         'oracle_undostat_defaults',
         'oxyreduct_tag_map',
         'palo_alto_sessions',
@@ -918,7 +857,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'printer_io_states',
         'printer_io_units',
         'printer_output_default_levels',
-        'printer_pages_types',
         'printer_supply_default_levels',
         'printer_supply_ricoh_default_levels',
         'printer_supply_some_remaining_status',
@@ -982,6 +920,8 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'sensor_type_names',
         'sensor_type_names_external',
         'sensor_type_names_sems_external',
+        'services_default_levels',
+        'services_summary_default_levels',
         'severity_to_states',
         'shards_info',
         'siemens_plc_temp_default_levels',
@@ -995,8 +935,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'skype_sip_defaultlevels',
         'skype_xmpp_defaultlevels',
         'sles_license_default_levels',
-        'smart_stats_default_levels',
-        'smart_stats_fields',
         'smart_temp_default_levels',
         'socomec_outphase_default_levels',
         'solaris_services_default_levels',
@@ -1024,9 +962,7 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'systemd_services_default_levels',
         'systemd_services_summary_default_levels',
         'systemtime_default_values',
-        'tableindex',
         'tasks_info',
-        'tcp_conn_stats_default_levels',
         'temp_unitsym',
         'threads_default_levels',
         'threepar_ports_default_levels',
@@ -1036,7 +972,6 @@ def test_all_check_variables_present(_load_all_checks, config_check_variables):
         'tinkerforge_humidity_default_levels',
         'tsm_scratch_default_levels',
         'tsm_session_default_levels',
-        'tsm_stagingpools_default_levels',
         'tunnel_states',
         'ucd_mem_default_levels',
         'ucs_bladecenter_fans_temp_default_levels',
@@ -1127,14 +1062,12 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'acme_voltage',
         'ad_replication',
         'adva_fsp_current',
-        'adva_fsp_if',
         'adva_fsp_temp',
         'aironet_clients',
         'aironet_errors',
         'aix_hacmp_nodes',
         'aix_hacmp_resources',
         'aix_hacmp_services',
-        'aix_if',
         'aix_lvm',
         'aix_multipath',
         'aix_paging',
@@ -1163,7 +1096,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'allnet_ip_sensoric.humidity',
         'allnet_ip_sensoric.pressure',
         'allnet_ip_sensoric',
-        'apache_status',
         'apc_ats_output',
         'apc_ats_status',
         'apc_humidity',
@@ -1383,7 +1315,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'brocade_mlx_fan',
         'brocade_mlx_power',
         'brocade_mlx_temp',
-        'brocade_optical',
         'brocade_sfp.temp',
         'brocade_sfp',
         'brocade_sys.mem',
@@ -1402,7 +1333,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'cadvisor_diskstat',
         'cadvisor_if',
         'cadvisor_memory',
-        'canon_pages',
         'carel_sensors',
         'carel_uniflair_cooling',
         'casa_cpu_mem',
@@ -1570,7 +1500,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'datapower_mem',
         'datapower_pdrive',
         'datapower_raid_bat',
-        'datapower_tcp',
         'datapower_temp',
         'db2_backup',
         'db2_bp_hitratios',
@@ -1662,9 +1591,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'dmraid.pdisks',
         'docker_container_cpu',
         'docker_container_diskstat',
-        'docker_container_status.health',
-        'docker_container_status',
-        'docker_container_status.uptime',
         'docker_node_disk_usage',
         'docker_node_info',
         'docker_node_info.containers',
@@ -1713,7 +1639,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'emc_isilon_temp.cpu',
         'emc_vplex_cpu',
         'emc_vplex_director_stats',
-        'emc_vplex_if',
         'emc_vplex_volumes',
         'emcvnx_agent',
         'emcvnx_disks',
@@ -1774,9 +1699,7 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'enviromux_sems.voltage',
         'enviromux_sems.humidity',
         'epson_beamer_lamp',
-        'esx_vsphere_counters.diskio',
         'esx_vsphere_counters',
-        'esx_vsphere_counters.if',
         'esx_vsphere_counters.uptime',
         'esx_vsphere_counters.ramdisk',
         'esx_vsphere_counters.swap',
@@ -1799,6 +1722,7 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'esx_vsphere_vm.heartbeat',
         'esx_vsphere_vm.cpu',
         'esx_vsphere_vm.snapshots',
+        'esx_vsphere_vm.snapshots_summary',
         'esx_vsphere_vm.mounted_devices',
         'etherbox.temp',
         'etherbox.humidity',
@@ -1918,10 +1842,8 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'fortinet_controller_aps',
         'fortisandbox_cpu_util',
         'fortisandbox_queues',
-        'fritz',
         'fritz.conn',
         'fritz.config',
-        'fritz.wan_if',
         'fritz.link',
         'fsc_fans',
         'fsc_if64',
@@ -1975,7 +1897,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hitachi_hnas_cpu',
         'hitachi_hnas_drives',
         'hitachi_hnas_fan',
-        'hitachi_hnas_fc_if',
         'hitachi_hnas_fpga',
         'hitachi_hnas_pnode',
         'hitachi_hnas_psu',
@@ -2010,7 +1931,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hp_msa_disk.io',
         'hp_msa_disk.temp',
         'hp_msa_fan',
-        'hp_msa_if',
         'hp_msa_psu',
         'hp_msa_psu.sensor',
         'hp_msa_psu.temp',
@@ -2027,7 +1947,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hp_proliant_da_cntlr',
         'hp_proliant_da_phydrv',
         'hp_proliant_fans',
-        'hp_proliant_mem',
         'hp_proliant_power',
         'hp_proliant_psu',
         'hp_proliant_raid',
@@ -2038,7 +1957,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hp_webmgmt_status',
         'hpux_cpu',
         'hpux_fchba',
-        'hpux_if',
         'hpux_lunstats',
         'hpux_lvm',
         'hpux_multipath',
@@ -2054,7 +1972,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'hr_fs',
         'hr_ps',
         'huawei_osn_fan',
-        'huawei_osn_if',
         'huawei_osn_laser',
         'huawei_osn_power',
         'huawei_osn_temp',
@@ -2123,10 +2040,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'icom_repeater.pll_volt',
         'icom_repeater.temp',
         'icom_repeater',
-        'if64_tplink',
-        'if_brocade',
-        'if_fortigate',
-        'if_lancom',
         'ifoperstatus',
         'infoblox_dhcp_stats',
         'infoblox_dns_stats',
@@ -2151,7 +2064,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'intel_true_scale_fans',
         'intel_true_scale_psus',
         'intel_true_scale_sensors_temp',
-        'ipmi',
         'ipmi_sensors',
         'ipr400_in_voltage',
         'ipr400_temp',
@@ -2219,8 +2131,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'juniper_screenos_temp',
         'juniper_screenos_vpn',
         'juniper_temp',
-        'juniper_trpz_aps',
-        'juniper_trpz_aps_sessions',
         'juniper_trpz_cpu_util',
         'juniper_trpz_flash',
         'juniper_trpz_info',
@@ -2232,7 +2142,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'k8s_ingress_infos',
         'k8s_job_info',
         'k8s_namespaces',
-        'k8s_nodes',
         'k8s_persistent_volume_claims',
         'k8s_persistent_volumes',
         'k8s_pod_container',
@@ -2247,9 +2156,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'k8s_roles',
         'k8s_service_port',
         'k8s_stateful_set_replicas',
-        'k8s_stats',
-        'k8s_stats.network',
-        'k8s_stats.fs',
         'k8s_storage_classes',
         'kaspersky_av_client',
         'kaspersky_av_kesl_updates',
@@ -2271,7 +2177,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'kentix_temp',
         'kernel',
         'kernel.performance',
-        'kernel.util',
         'knuerr_rms_humidity',
         'knuerr_rms_temp',
         'knuerr_sensors',
@@ -2301,10 +2206,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'lnx_quota',
         'lnx_thermal',
         'logins',
-        'logwatch',
-        'logwatch.groups',
-        'logwatch.ec',
-        'logwatch.ec_single',
         'lparstat_aix',
         'lparstat_aix.cpu_util',
         'lsi.array',
@@ -2333,7 +2234,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'mcafee_webgateway',
         'mcafee_webgateway_info',
         'mcafee_webgateway_misc',
-        'mcdata_fcport',
         'md',
         'megaraid_bbu',
         'megaraid_ldisks',
@@ -2341,28 +2241,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'mem.linux',
         'mem.win',
         'mem.vmalloc',
-        'mgmt_dell_poweredge_amperage.power',
-        'mgmt_dell_poweredge_cpu',
-        'mgmt_dell_poweredge_mem',
-        'mgmt_dell_poweredge_netdev',
-        'mgmt_dell_poweredge_pci',
-        'mgmt_dell_poweredge_status',
-        'mgmt_dell_poweredge_temp',
-        'mgmt_fsc_sc2_cpu_status',
-        'mgmt_fsc_sc2_fans',
-        'mgmt_fsc_sc2_info',
-        'mgmt_fsc_sc2_mem_status',
-        'mgmt_fsc_sc2_power_consumption',
-        'mgmt_fsc_sc2_temp',
-        'mgmt_fsc_sc2_voltage',
-        'mgmt_hp_proliant_cpu',
-        'mgmt_hp_proliant_da_cntlr',
-        'mgmt_hp_proliant_fans',
-        'mgmt_hp_proliant_mem',
-        'mgmt_hp_proliant_temp',
-        'mgmt_hr_fs',
-        'mgmt_ipmi_sensors',
-        'mgmt_snmp_info',
         'mikrotik_signal',
         'mkbackup',
         'mkbackup.site',
@@ -2406,15 +2284,8 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'mssql_backup.per_type',
         'mssql_blocked_sessions',
         'mssql_connections',
-        'mssql_counters',
-        'mssql_counters.cache_hits',
-        'mssql_counters.transactions',
-        'mssql_counters.locks',
-        'mssql_counters.sqlstats',
-        'mssql_counters.pageactivity',
-        'mssql_counters.locks_per_batch',
-        'mssql_counters.file_sizes',
         'mssql_instance',
+        'mssql_jobs',
         'mssql_tablespaces',
         'mssql_versions',
         'mtr',
@@ -2447,7 +2318,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'netapp_api_fan',
         'netapp_api_fan.summary',
         'netapp_api_fcp',
-        'netapp_api_if',
         'netapp_api_info',
         'netapp_api_luns',
         'netapp_api_ports',
@@ -2460,8 +2330,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'netapp_api_status',
         'netapp_api_systemtime',
         'netapp_api_temp',
-        'netapp_api_vf_stats',
-        'netapp_api_vf_stats.traffic',
         'netapp_api_vf_status',
         'netapp_api_volumes',
         'netapp_api_vs_status',
@@ -2518,7 +2386,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'openhardwaremonitor.fan',
         'openhardwaremonitor.smart',
         'openvpn_clients',
-        'oracle_asm_diskgroup',
         'oracle_crs_res',
         'oracle_crs_version',
         'oracle_crs_voting',
@@ -2544,11 +2411,9 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'oracle_processes',
         'oracle_recovery_area',
         'oracle_recovery_status',
-        'oracle_rman',
         'oracle_rman_backups',
         'oracle_sessions',
         'oracle_sql',
-        'oracle_tablespaces',
         'oracle_undostat',
         'oracle_version',
         'orion_backup',
@@ -2602,8 +2467,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'printer_alerts',
         'printer_input',
         'printer_output',
-        'printer_pages',
-        'printer_pages_ricoh',
         'printer_supply',
         'printer_supply_ricoh',
         'prism_alerts',
@@ -2744,7 +2607,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'siemens_plc.info',
         'siemens_plc_cpu_state',
         'silverpeak_VX6000',
-        'site_object_counts',
         'skype',
         'skype.mcu',
         'skype.conferencing',
@@ -2755,12 +2617,10 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'skype.data_proxy',
         'skype.xmpp_proxy',
         'skype.mobile',
-        'smart.stats',
         'smart.temp',
         'sni_octopuse_cpu',
         'sni_octopuse_status',
         'sni_octopuse_trunks',
-        'snmp_info',
         'solaris_fmadm',
         'solaris_multipath',
         'solaris_prtdiag_status',
@@ -2781,7 +2641,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'statgrab_cpu',
         'statgrab_disk',
         'statgrab_load',
-        'statgrab_net',
         'steelhead_connections',
         'steelhead_peers',
         'steelhead_status',
@@ -2836,7 +2695,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'systemd_units.services',
         'systemd_units.services_summary',
         'systemtime',
-        'tcp_conn_stats',
         'teracom_tcw241_analog',
         'teracom_tcw241_digital',
         'timemachine',
@@ -2854,7 +2712,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'tsm_paths',
         'tsm_scratch',
         'tsm_sessions',
-        'tsm_stagingpools',
         'tsm_storagepools',
         'ucd_cpu_load',
         'ucd_cpu_util',
@@ -2865,7 +2722,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'ucs_bladecenter_fans',
         'ucs_bladecenter_fans.temp',
         'ucs_bladecenter_faultinst',
-        'ucs_bladecenter_if',
         'ucs_bladecenter_psu',
         'ucs_bladecenter_psu.switch_power',
         'ucs_bladecenter_psu.chassis_temp',
@@ -2908,7 +2764,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'ups_socomec_out_voltage',
         'ups_socomec_outphase',
         'ups_test',
-        'uptime',
         'varnish',
         'varnish.cache',
         'varnish.client',
@@ -2932,7 +2787,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'viprinet_temp',
         'vms_cpu',
         'vms_diskstat.df',
-        'vms_if',
         'vms_queuejobs',
         'vms_system.ios',
         'vms_system.procs',
@@ -2971,11 +2825,9 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'windows_updates',
         'winperf.cpuusage',
         'winperf.diskstat',
-        'winperf_if',
         'winperf_mem',
         'winperf_msx_queues',
         'winperf_processor.util',
-        'winperf_tcp_conn',
         'winperf_ts_sessions',
         'wmi_cpuload',
         'wmi_webservices',

@@ -3,6 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 CMK_WAIT_FOR_COMPLETION = 'cmk/wait-for-completion'
@@ -25,7 +26,7 @@ def test_openapi_activate_changes(
     host_created = wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "root"}',
+        params='{"host_name": "foobar", "folder": "/"}',
         status=200,
         content_type='application/json',
     )
@@ -34,6 +35,25 @@ def test_openapi_activate_changes(
         resp = wsgi_app.call_method(
             'post',
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
+            status=400,
+            params='{"sites": ["asdf"]}',
+            content_type='application/json',
+        )
+        assert resp.json['detail'].startswith("Unknown site")
+
+        resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/activation_run/actions/activate-changes/invoke",
+            status=200,
+        )
+
+    with live(expect_status_query=True):
+        resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/activation_run/actions/activate-changes/invoke",
+            status=301,
+            params='{"redirect": true}',
+            content_type='application/json',
         )
 
     for _ in range(10):

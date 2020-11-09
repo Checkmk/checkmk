@@ -3,22 +3,24 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
-from .agent_based_api.v0.type_defs import (
-    CheckGenerator,
-    DiscoveryGenerator,
+import time
+
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
     Parameters,
 )
-from .agent_based_api.v0 import get_value_store, register, Result, Service, state
+from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State as state
 from .utils import cpu_util
 
 
 def discover_esx_vsphere_hostsystem_cpu_usage(
-    section_esx_vsphere_hostsystem: Dict[str, List[str]],
-    section_winperf_processor: Any,
-) -> DiscoveryGenerator:
-    if section_winperf_processor:
+        section_esx_vsphere_hostsystem: Optional[Dict[str, List[str]]],
+        section_winperf_processor: Optional[List],  # currently no parse function
+) -> DiscoveryResult:
+    if section_winperf_processor or not section_esx_vsphere_hostsystem:
         return
 
     required_keys = {
@@ -33,8 +35,8 @@ def discover_esx_vsphere_hostsystem_cpu_usage(
 def check_esx_vsphere_hostsystem_cpu(
     params: Parameters,
     section_esx_vsphere_hostsystem: Optional[Dict[str, List[str]]],
-    section_winperf_processor: Any,
-) -> CheckGenerator:
+    section_winperf_processor: Optional[List],
+) -> CheckResult:
     if not section_esx_vsphere_hostsystem:
         return
     try:
@@ -49,22 +51,30 @@ def check_esx_vsphere_hostsystem_cpu(
     total_mhz = mhz_per_core * num_cores
     usage = used_mhz / total_mhz * 100
 
-    yield from cpu_util.check_cpu_util(get_value_store(), usage, params)
-    yield Result(
-        state=state.OK,
-        summary="%.2fGHz/%.2fGHz" % (used_mhz / 1000.0, total_mhz / 1000.0),
+    yield from cpu_util.check_cpu_util(
+        util=usage,
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
     )
     yield Result(
         state=state.OK,
-        summary="Sockets: %d" % num_sockets,
+        notice="%s/%s" % (
+            render.frequency(used_mhz * 1e6),
+            render.frequency(total_mhz * 1e6),
+        ),
     )
     yield Result(
         state=state.OK,
-        summary="Cores/socket: %d" % int(num_cores / num_sockets),
+        notice="Sockets: %d" % num_sockets,
     )
     yield Result(
         state=state.OK,
-        summary="Threads: %d" % num_threads,
+        notice="Cores/socket: %d" % int(num_cores / num_sockets),
+    )
+    yield Result(
+        state=state.OK,
+        notice="Threads: %d" % num_threads,
     )
 
 

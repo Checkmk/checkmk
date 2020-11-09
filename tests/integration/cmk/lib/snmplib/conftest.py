@@ -7,27 +7,32 @@
 import logging
 import os
 import subprocess
+from typing import NamedTuple
 from pathlib import Path
 
 import pytest  # type: ignore[import]
 
-from testlib import wait_until
+from testlib import wait_until  # type: ignore[import]
 
 import cmk.utils.debug as debug
 import cmk.utils.log as log
 import cmk.utils.paths
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import SNMPHostConfig
+from cmk.snmplib.type_defs import SNMPHostConfig, SNMPBackend
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
-
 try:
     from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
+
+ProcessDef = NamedTuple("ProcessDef", [
+    ("port", int),
+    ("process", subprocess.Popen),
+])
 
 
 @pytest.fixture(name="snmp_data_dir", scope="module")
@@ -40,62 +45,14 @@ def snmpsim_fixture(site, snmp_data_dir, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
-    cmd = [
-        "snmpsimd.py",
-        #"--log-level=error",
-        "--cache-dir",
-        str(tmp_path / "snmpsim"),
-        "--data-dir",
-        str(snmp_data_dir),
-        # TODO: Fix port allocation to prevent problems with parallel tests
-        #"--agent-unix-endpoint="
-        "--agent-udpv4-endpoint=127.0.0.1:1337",
-        "--agent-udpv6-endpoint=[::1]:1337",
-        "--v3-user=authOnlyUser",
-        "--v3-auth-key=authOnlyUser",
-        "--v3-auth-proto=MD5",
+
+    process_definitions = [
+        _define_process(idx, auth, tmp_path, snmp_data_dir)
+        for idx, auth in enumerate(_create_auth_list())
     ]
 
-    p = subprocess.Popen(
-        cmd,
-        close_fds=True,
-        # Silence the very noisy output. May be useful to enable this for debugging tests
-        #stdout=open(os.devnull, "w"),
-        #stderr=subprocess.STDOUT,
-    )
-
-    # Ensure that snmpsim is ready for clients before starting with the tests
-    def is_listening():
-        exitcode = p.poll()
-        if exitcode is not None:
-            raise Exception("snmpsimd died. Exit code: %d" % exitcode)
-
-        num_sockets = 0
-        try:
-            for e in os.listdir("/proc/%d/fd" % p.pid):
-                try:
-                    if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
-                        num_sockets += 1
-                except OSError:
-                    pass
-        except OSError:
-            exitcode = p.poll()
-            if exitcode is None:
-                raise
-            raise Exception("snmpsimd died. Exit code: %d" % exitcode)
-
-        if num_sockets < 2:
-            return False
-
-        # Correct module is only available in the site
-        import netsnmp  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-        var = netsnmp.Varbind("sysDescr.0")
-        result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:1337", Community="public")
-        if result is None or result[0] is None:
-            return False
-        return True
-
-    wait_until(is_listening, timeout=20)
+    for process_def in process_definitions:
+        wait_until(_create_listening_condition(process_def), timeout=20)
 
     yield
 
@@ -103,9 +60,101 @@ def snmpsim_fixture(site, snmp_data_dir, tmp_path_factory):
     debug.disable()
 
     logger.debug("Stopping snmpsimd...")
-    p.terminate()
-    p.wait()
+    for process_def in process_definitions:
+        process_def.process.terminate()
+        process_def.process.wait()
     logger.debug("Stopped snmpsimd.")
+
+
+def _define_process(index, auth, tmp_path, snmp_data_dir):
+    port = 1337 + index
+    return ProcessDef(
+        port=port,
+        process=subprocess.Popen(
+            [
+                "snmpsimd.py",
+                #"--log-level=error",
+                "--cache-dir",
+                # Each snmpsim instance needs an own cache directory otherwise
+                # some instances occasionally crash
+                str(tmp_path / "snmpsim%s") % index,
+                "--data-dir",
+                str(snmp_data_dir),
+                # TODO: Fix port allocation to prevent problems with parallel tests
+                #"--agent-unix-endpoint="
+                "--agent-udpv4-endpoint=127.0.0.1:%s" % port,
+                "--agent-udpv6-endpoint=[::1]:%s" % port,
+            ] + auth,
+            close_fds=True,
+            # Silence the very noisy output. May be useful to enable this for debugging tests
+            stdout=open(os.devnull, "w"),
+            stderr=subprocess.STDOUT,
+        ))
+
+
+def _create_auth_list():
+    return [
+        [
+            "--v3-user=authOnlyUser",
+            "--v3-auth-key=authOnlyUser",
+            "--v3-auth-proto=MD5",
+        ],
+        [
+            "--v3-user=md5desuser",
+            "--v3-auth-key=md5password",
+            "--v3-auth-proto=MD5",
+            "--v3-priv-key=desencryption",
+            "--v3-priv-proto=DES",
+        ],
+        [
+            "--v3-user=noAuthNoPrivUser",
+        ],
+        [
+            "--v3-user=shaaesuser",
+            "--v3-auth-key=shapassword",
+            "--v3-auth-proto=SHA",
+            "--v3-priv-key=aesencryption",
+            "--v3-priv-proto=AES",
+        ],
+    ]
+
+
+# This function is needed because Pylint raises these two error if
+# you create a function depending on a loop variable inside the loop:
+# W0631 (undefined-loop-variable), W0640 (cell-var-from-loop)
+def _create_listening_condition(process_def):
+    return lambda: _is_listening(process_def)
+
+
+def _is_listening(process_def):
+    p = process_def.process
+    port = process_def.port
+    exitcode = p.poll()
+    if exitcode is not None:
+        raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+    num_sockets = 0
+    try:
+        for e in os.listdir("/proc/%d/fd" % p.pid):
+            try:
+                if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
+                    num_sockets += 1
+            except OSError:
+                pass
+    except OSError:
+        exitcode = p.poll()
+        if exitcode is None:
+            raise
+        raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+    if num_sockets < 2:
+        return False
+    num_sockets = 0
+    # Correct module is only available in the site
+    import netsnmp  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+    var = netsnmp.Varbind("sysDescr.0")
+    result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:%s" % port, Community="public")
+    if result is None or result[0] is None:
+        return False
+    return True
 
 
 @pytest.fixture(name="backend",
@@ -130,8 +179,7 @@ def backend_fixture(request, snmp_data_dir):
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=backend is StoredWalkSNMPBackend,
-        is_inline_snmp_host=backend is InlineSNMPBackend,
-        record_stats=False,
+        snmp_backend=SNMPBackend.inline if backend is InlineSNMPBackend else SNMPBackend.classic,
     )
 
     snmpwalks_dir = cmk.utils.paths.snmpwalks_dir

@@ -13,6 +13,7 @@
 #include "Row.h"
 #include "Table.h"
 #include "contact_fwd.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Query;
 
@@ -27,7 +28,7 @@ public:
     bool isAuthorized(Row row, const contact *ctc) const override;
 
     static void addColumns(Table *table, const std::string &prefix,
-                           int indirect_offset);
+                           const ColumnOffsets &offsets);
 };
 
 #endif  // TableHostGroups_h

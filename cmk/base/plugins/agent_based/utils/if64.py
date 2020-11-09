@@ -6,10 +6,9 @@
 
 from typing import (
     List,
-    Sequence,
     Union,
 )
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     exists,
     OIDBytes,
     type_defs,
@@ -42,23 +41,7 @@ END_OIDS: List[Union[str, OIDBytes]] = [
     "31.1.1.1.15",  # ifHighSpeed              20
 ]
 
-BinaryHostRules = Sequence[bool]
-
-
-def _evaluate_binary_host_rules(list_rules: BinaryHostRules) -> bool:
-    return len(list_rules) > 0 and list_rules[0]
-
-
-def is_disabled(if_disable_if64_hosts: BinaryHostRules) -> bool:
-    return _evaluate_binary_host_rules(if_disable_if64_hosts)
-
-
-def need_if64adm(use_if64adm: BinaryHostRules) -> bool:
-    return _evaluate_binary_host_rules(use_if64adm)
-
-
-OID_ifHCInOctets = '.1.3.6.1.2.1.31.1.1.1.6.*'
-HAS_ifHCInOctets = exists(OID_ifHCInOctets)
+HAS_ifHCInOctets = exists('.1.3.6.1.2.1.31.1.1.1.6.*')
 
 _PORT_TYPES = {
     'other': '1',
@@ -302,7 +285,6 @@ _STATUS_NAMES = {
     'not present': '6',
     'lower layer down': '7',
     'degraded': '8',
-    'admin down': '9',
 }
 
 
@@ -324,7 +306,46 @@ def _convert_status(if_status: str) -> str:
         return if_status
 
 
-def parse_if64(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
+def fix_if_64_highspeed(highspeed: str) -> str:
+    return str(interfaces.saveint(highspeed) * 1000000)
+
+
+def generic_parse_if64(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
+    """
+    >>> from pprint import pprint
+    >>> pprint(generic_parse_if64([[
+    ... ['2', 'GigabitEthernet1/1', '6', '1000000000', '1', '615170130480', '468482397', '1439303',
+    ...  '3279788', '0', '0', '163344362761', '394389414', '54227', '36274', '0', '0', '0',
+    ...  '** Trunk to main switch **', [0, 12, 206, 149, 55, 128]]]]))
+    [Interface(index='2', descr='GigabitEthernet1/1', alias='** Trunk to main switch **', type='6', speed=1000000000, oper_status='1', in_octets=615170130480, in_ucast=468482397, in_mcast=1439303, in_bcast=3279788, in_discards=0, in_errors=0, out_octets=163344362761, out_ucast=394389414, out_mcast=54227, out_bcast=36274, out_discards=0, out_errors=0, out_qlen=0, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    """
+    return [
+        interfaces.Interface(
+            index=str(line[0]),
+            descr=str(line[1]),
+            type=str(line[2]),
+            speed=interfaces.saveint(line[3]),
+            oper_status=str(line[4]),
+            in_octets=interfaces.saveint(line[5]),
+            in_ucast=interfaces.saveint(line[6]),
+            in_mcast=interfaces.saveint(line[7]),
+            in_bcast=interfaces.saveint(line[8]),
+            in_discards=interfaces.saveint(line[9]),
+            in_errors=interfaces.saveint(line[10]),
+            out_octets=interfaces.saveint(line[11]),
+            out_ucast=interfaces.saveint(line[12]),
+            out_mcast=interfaces.saveint(line[13]),
+            out_bcast=interfaces.saveint(line[14]),
+            out_discards=interfaces.saveint(line[15]),
+            out_errors=interfaces.saveint(line[16]),
+            out_qlen=interfaces.saveint(line[17]),
+            alias=str(line[18]),
+            phys_address=line[19],
+        ) for line in string_table[0]
+    ]
+
+
+def parse_if64(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_if64([[
@@ -332,53 +353,38 @@ def parse_if64(string_table: type_defs.SNMPStringByteTable) -> interfaces.Sectio
     ...  '3279788', '0', '0', '163344362761', '394389414', '54227', '36274', '0', '0', '0',
     ...  '** Trunk to main switch **', [0, 12, 206, 149, 55, 128], '1000'],
     ... ['240', 'unrouted VLAN 400', '53', '0', '1', '', '', '', '', '', '', '', '', '', '', '', '',
-    ...  '', '', [0, 12, 206, 149, 55, 143], '0']]]))
-    [Interface(index='2', descr='GigabitEthernet1/1', type='6', speed=1000000000, oper_status='1', in_octets=615170130480, in_ucast=468482397, in_mcast=1439303, in_bcast=3279788, in_discards=0, in_errors=0, out_octets=163344362761, out_ucast=394389414, out_mcast=54227, out_bcast=36274, out_discards=0, out_errors=0, out_qlen=0, alias='** Trunk to main switch **', phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None),
-     Interface(index='240', descr='unrouted VLAN 400', type='53', speed=0, oper_status='1', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, alias='', phys_address=[0, 12, 206, 149, 55, 143], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
-    >>> pprint(parse_if64([[
-    ... ['2', 'GigabitEthernet1/1', '6', '1000000000', '1', '615170130480', '468482397', '1439303',
-    ...  '3279788', '0', '0', '163344362761', '394389414', '54227', '36274', '0', '0', '0',
-    ...  '** Trunk to main switch **', [0, 12, 206, 149, 55, 128], '1000', '1'],
-    ... ['240', 'unrouted VLAN 400', '53', '0', '1', '', '', '', '', '', '', '', '', '', '', '', '',
-    ...  '', '', [0, 12, 206, 149, 55, 143], '0', '2']]]))
-    [Interface(index='2', descr='GigabitEthernet1/1', type='6', speed=1000000000, oper_status='1', in_octets=615170130480, in_ucast=468482397, in_mcast=1439303, in_bcast=3279788, in_discards=0, in_errors=0, out_octets=163344362761, out_ucast=394389414, out_mcast=54227, out_bcast=36274, out_discards=0, out_errors=0, out_qlen=0, alias='** Trunk to main switch **', phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status='1'),
-     Interface(index='240', descr='unrouted VLAN 400', type='53', speed=0, oper_status='1', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, alias='', phys_address=[0, 12, 206, 149, 55, 143], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status='2')]
+    ...  '', '', [0, 12, 206, 149, 55, 143], '0',]]]))
+    [Interface(index='2', descr='GigabitEthernet1/1', alias='** Trunk to main switch **', type='6', speed=1000000000, oper_status='1', in_octets=615170130480, in_ucast=468482397, in_mcast=1439303, in_bcast=3279788, in_discards=0, in_errors=0, out_octets=163344362761, out_ucast=394389414, out_mcast=54227, out_bcast=36274, out_discards=0, out_errors=0, out_qlen=0, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None),
+     Interface(index='240', descr='unrouted VLAN 400', alias='', type='53', speed=0, oper_status='1', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address=[0, 12, 206, 149, 55, 143], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
     """
-    return [
-        interfaces.finalize_interface(
-            interfaces.PreInterface(
-                index=str(line[0]),
-                descr=str(line[1]),
-                type=_convert_type(str(line[2])),
-                speed=interfaces.saveint(line[3])
-                if line[20] in ["0", ""] else interfaces.saveint(line[20]) * 1000000,
-                oper_status=_convert_status(str(line[4])),
-                in_octets=interfaces.saveint(line[5]),
-                in_ucast=interfaces.saveint(line[6]),
-                in_mcast=interfaces.saveint(line[7]),
-                in_bcast=interfaces.saveint(line[8]),
-                in_discards=interfaces.saveint(line[9]),
-                in_errors=interfaces.saveint(line[10]),
-                out_octets=interfaces.saveint(line[11]),
-                out_ucast=interfaces.saveint(line[12]),
-                out_mcast=interfaces.saveint(line[13]),
-                out_bcast=interfaces.saveint(line[14]),
-                out_discards=interfaces.saveint(line[15]),
-                out_errors=interfaces.saveint(line[16]),
-                out_qlen=interfaces.saveint(line[17]),
-                alias=str(line[18]),
-                phys_address=line[19],
-                # ifAdminStatus from if64adm
-                admin_status=str(line[-1]) if len(line) == 22 else None,
-            )) for line in string_table[0] if interfaces.saveint(line[0]) > 0
-    ]
+    preprocessed_lines: List[type_defs.StringByteTable] = [[]]
+    for line in string_table[0]:
+        # some DLINK switches apparently report a broken interface with index 0, filter that out
+        if interfaces.saveint(line[0]) > 0:
+
+            # ifHighSpeed can't represent interfaces with less than 10^6 bit bandwidth, ifSpeed is
+            # capped at 4GBit.
+            # combine the two to get the actual interface speed
+            if line[20] in ["0", ""]:
+                line[3] = str(interfaces.saveint(line[3]))
+            else:
+                line[3] = fix_if_64_highspeed(str(line[20]))
+
+            # Fujitsu SC2 Servers do not use numeric values for port state and type
+            line[2] = _convert_type(str(line[2]))
+            line[4] = _convert_status(str(line[4]))
+
+            # remove ifHighSpeed
+            preprocessed_lines[0].append(line[:20])
+
+    return generic_parse_if64(preprocessed_lines)
 
 
-def check_if64(
+def generic_check_if64(
     item: str,
     params: type_defs.Parameters,
     section: interfaces.Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item,
         params,

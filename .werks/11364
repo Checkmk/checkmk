@@ -1,0 +1,25 @@
+Title: if_lancom: Never detect if if64-checks are disabled
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1598595890
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The check <tt>if_lancom</tt> monitors network interfaces of LANCOM devices
+using 64-bit SNMP counters. Since there are devices with broken firmware which
+by mistake report that they support 64-bit counters, checkmk offers the rule
+"Hosts forced to use 'if' instead of 'if64'". This rule enforces the usage of
+the 32-bit SNMP interface check <tt>if</tt> over the 64-bit version.
+
+Up to now, the check <tt>if_lancom</tt> did not fully apply this rule. I.e.,
+depending on the device, even if this rule was activated, <tt>if_lancom</tt>
+might still have been discovered. With this werk, <tt>if_lancom</tt> is never
+discovered if "Hosts forced to use 'if' instead of 'if64'" is activated.
+
+This change might be incompatible for users who activated the rule "Hosts forced
+to use 'if' instead of 'if64'". Currently discovered services will continue to
+work, however, upon rediscovery, <tt>if_lancom</tt> might be replaced by <tt>if</tt>.
+In such cases, users have to further restrict the hosts to which this rule is applied.

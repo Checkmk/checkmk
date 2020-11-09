@@ -4,123 +4,79 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import base64
-import csv
-from http.client import HTTPConnection, HTTPSConnection
-import json
-from optparse import OptionParser  # pylint: disable=deprecated-module
-import os
-import ssl
+from typing import Any, Tuple, Generator, Optional, Sequence
 import sys
-from urllib.request import HTTPSHandler, Request, build_opener
+import csv
+import logging
 
-from six import ensure_binary, ensure_str
+from cmk.special_agents.utils.agent_common import (
+    special_agent_main,
+    SectionWriter,
+)
+from cmk.special_agents.utils.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
+from cmk.special_agents.utils.request_helper import (
+    Requester,
+    HTTPSAuthRequester,
+)
 
-field_separator = "\t"
-# set once parameters have been parsed
-base_url = None
+SectionLine = Tuple[Any, ...]
 
+LOGGING = logging.getLogger("agent_prism")
 
-class HTTPSConfigurableConnection(HTTPSConnection):
-
-    IGNORE = "__ignore"
-
-    def __init__(self, host, ca_file=None):
-        HTTPSConnection.__init__(self, host)
-        self.__ca_file = ca_file
-
-    def connect(self):
-        if not self.__ca_file:
-            HTTPSConnection.connect(self)
-        else:
-            HTTPConnection.connect(self)
-            if self.__ca_file == HTTPSConfigurableConnection.IGNORE:
-                self.sock = ssl.wrap_socket(self.sock, cert_reqs=ssl.CERT_NONE)
-            else:
-                self.sock = ssl.wrap_socket(self.sock,
-                                            ca_certs=self.__ca_file,
-                                            cert_reqs=ssl.CERT_REQUIRED)
+# TODO: get rid of all this..
+# >>>>
+FIELD_SEPARATOR = "|"
 
 
-class HTTPSAuthHandler(HTTPSHandler):
-    def __init__(self, ca_file):
-        super(HTTPSAuthHandler, self).__init__()
-        self.__ca_file = ca_file
-
-    def https_open(self, req):
-        # TODO: Slightly interesting things in the typeshed here, investigate...
-        return self.do_open(self.get_connection, req)  # type: ignore[arg-type]
-
-    # Hmmm, this should be a HTTPConnectionProtocol...
-    def get_connection(self, host, timeout):
-        return HTTPSConfigurableConnection(host, ca_file=self.__ca_file)
+def gen_csv_writer() -> Any:
+    return csv.writer(sys.stdout, delimiter=FIELD_SEPARATOR)
 
 
-def flatten(d, separator="."):
-    """
-    recursively flatten dictionaries/lists. The result is a dictionary
-    with no nested dicts or lists and each element is a path using the
-    specified separator
-    """
-    def flatten_int(d, separator="."):
-        result = []
-        if isinstance(d, list):
-            counter = 0
-            for i in d:
-                for k, v in flatten_int(i):
-                    if k is not None:
-                        k = "%d%s%s" % (counter, separator, k)
-                    else:
-                        k = counter
-                    result.append((k, v))
-
-                counter += 1
-        elif isinstance(d, dict):
-            for k, v in d.items():
-                for sub_k, sub_v in flatten_int(v):
-                    if sub_k is not None:
-                        sub_k = "%s%s%s" % (k, separator, sub_k)
-                    else:
-                        sub_k = k
-                    result.append((sub_k, sub_v))
-        else:
-            result.append((None, d))
-        return result
-
-    return dict(flatten_int(d, separator))
+def write_title(section: str) -> None:
+    sys.stdout.write("<<<prism_%s:sep(%d)>>>\n" % (section, ord(FIELD_SEPARATOR)))
 
 
-def gen_headers(username, password):
-    auth = base64.encodebytes(ensure_binary("%s:%s" % (username, password))).strip()
-    return {'Authorization': "Basic " + ensure_str(auth)}
+# <<<<
 
 
-def gen_csv_writer():
-    return csv.writer(sys.stdout, delimiter=field_separator)
+def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+    parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument("--timeout",
+                        type=int,
+                        default=10,
+                        help="Timeout in seconds for network connects (default=10)")
+    parser.add_argument("--server",
+                        type=str,
+                        required=True,
+                        metavar="ADDRESS",
+                        help="host to connect to")
+    parser.add_argument("--port", type=int, metavar="PORT", default=9440)
+    parser.add_argument("--username",
+                        type=str,
+                        required=True,
+                        metavar="USER",
+                        help="user account on prism")
+    parser.add_argument("--password",
+                        type=str,
+                        required=True,
+                        metavar="PASSWORD",
+                        help="password for that account")
+
+    return parser.parse_args(argv)
 
 
-def write_title(section):
-    sys.stdout.write("<<<prism_%s:sep(%d)>>>\n" % (section, ord(field_separator)))
+# TODO: get rid of CSV and write JSON
+def output_containers(requester: Requester) -> None:
+    LOGGING.debug("do request..")
+    obj = requester.get("containers")
+    LOGGING.debug("got %d containers", len(obj["entities"]))
 
-
-def send_request(opener, path, headers, parameters=None):
-    url = "%s/PrismGateway/services/rest/v1/%s/" % (base_url, path)
-    if parameters is not None:
-        url = "%s?%s" % (url, "&".join(["%s=%s" % par for par in parameters.items()]))
-    req = Request(url, headers=headers)
-    response = opener.open(req)
-    res = response.read()
-    # TODO: error handling
-    return json.loads(res)
-
-
-def output_containers(opener, headers):
     write_title("containers")
-    obj = send_request(opener, "containers", headers)
-
     writer = gen_csv_writer()
     writer.writerow(["name", "usage", "capacity"])
-
     for entity in obj['entities']:
         writer.writerow([
             entity['name'], entity['usageStats']['storage.user_usage_bytes'],
@@ -128,48 +84,62 @@ def output_containers(opener, headers):
         ])
 
 
-def output_alerts(opener, headers):
-    write_title("alerts")
-    obj = send_request(opener,
-                       "alerts",
-                       headers,
-                       parameters={
-                           'resolved': "false",
-                           'acknowledged': "false"
-                       })
+def output_alerts(requester: Requester) -> Generator[SectionLine, None, None]:
+    needed_context_keys = {'vm_type'}
 
-    writer = gen_csv_writer()
-    writer.writerow(["timestamp", "message", "severity"])
+    LOGGING.debug("do request..")
+    obj = requester.get(
+        "alerts",
+        parameters={
+            'resolved': "false",
+            'acknowledged': "false"
+        },
+    )
+    LOGGING.debug("got %d alerts", len(obj["entities"]))
+
+    yield ("timestamp", "severity", "message", "context")
 
     for entity in obj['entities']:
         # The message is stored as a pattern with placeholders, the
         # actual values are stored in context_values, the keys in
         # context_types
-        context = dict(zip(entity['contextTypes'], entity['contextValues']))
+        full_context = dict(zip(entity['contextTypes'], entity['contextValues']))
+
+        # create a thinned out context we can provide together with the alert data in order to
+        # provide more sophisticated checks in the future (this could be made a cli option, too)
+        thin_context = {k: v for k, v in full_context.items() if k in needed_context_keys}
+
         # We have seen informational messages in format:
         # {dev_type} drive {dev_name} on host {ip_address} has the following problems: {err_msg}
         # In this case the keys have no values so we can not assign it to the message
         # To handle this, we output a message without assigning the keys
         try:
-            message = entity['message'].format(**context)
+            message = entity['message'].format(**full_context)
         except KeyError:
             message = entity['message']
-        writer.writerow([entity['createdTimeStampInUsecs'], message, entity['severity']])
+
+        yield (entity['createdTimeStampInUsecs'], entity['severity'], message, thin_context)
 
 
-def output_cluster(opener, headers):
+# TODO: get rid of CSV and write JSON
+def output_cluster(requester: Requester) -> None:
+    LOGGING.debug("do request..")
+    obj = requester.get("cluster")
+    LOGGING.debug("got %d keys", len(obj.keys()))
+
     write_title("info")
-    obj = send_request(opener, "cluster", headers)
-
     writer = gen_csv_writer()
     writer.writerow(["name", "version"])
     writer.writerow([obj['name'], obj['version']])
 
 
-def output_storage_pools(opener, headers):
-    write_title("storage_pools")
-    obj = send_request(opener, "storage_pools", headers)
+# TODO: get rid of CSV and write JSON
+def output_storage_pools(requester: Requester) -> None:
+    LOGGING.debug("do request..")
+    obj = requester.get("storage_pools")
+    LOGGING.debug("got %d entities", len(obj["entities"]))
 
+    write_title("storage_pools")
     writer = gen_csv_writer()
     writer.writerow(["name", "usage", "capacity"])
 
@@ -181,35 +151,38 @@ def output_storage_pools(opener, headers):
         ])
 
 
-def main():
-    if os.path.basename(__file__) == "mk_prism.py":
-        settings = {'port': 9440}
-        cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "prism.cfg")
-        if os.path.isfile(cfg_path):
-            exec(open(cfg_path).read(), settings, settings)
-    else:
-        parser = OptionParser()
-        parser.add_option("--server", help="host to connect to")
-        parser.add_option("--port", default=9440, type="int", help="tcp port")
-        parser.add_option("--username", help="user account on prism")
-        parser.add_option("--password", help="password for that account")
-        options, _args = parser.parse_args()
-        settings = vars(options)
+def agent_prism_main(args: Args) -> None:
+    """Establish a connection to a Prism server and process containers, alerts, clusters and
+    storage_pools"""
+    LOGGING.info("setup HTTPS connection..")
+    requester = HTTPSAuthRequester(
+        args.server,
+        args.port,
+        "PrismGateway/services/rest/v1",
+        args.username,
+        args.password,
+    )
 
-    if (settings.get('server') is None or settings.get('username') is None or
-            settings.get('password') is None):
-        sys.stderr.write(
-            'usage: agent_prism --server SERVER --username USER --password PASSWORD [--port PORT]\n'
-        )
-        sys.exit(1)
+    LOGGING.info("fetch and write container info..")
+    output_containers(requester)
 
-    req_headers = gen_headers(settings['username'], settings['password'])
+    LOGGING.info("fetch and write alerts..")
+    with SectionWriter("prism_alerts") as writer:
+        writer.append_json(output_alerts(requester))
 
-    global base_url
-    base_url = "https://%s:%d" % (settings['server'], settings['port'])
+    LOGGING.info("fetch and write cluster info..")
+    output_cluster(requester)
 
-    opener = build_opener(HTTPSAuthHandler(HTTPSConfigurableConnection.IGNORE))
-    output_containers(opener, req_headers)
-    output_alerts(opener, req_headers)
-    output_cluster(opener, req_headers)
-    output_storage_pools(opener, req_headers)
+    LOGGING.info("fetch and write storage_pools..")
+    output_storage_pools(requester)
+
+    LOGGING.info("all done. bye.")
+
+
+def main() -> None:
+    """Main entry point to be used """
+    special_agent_main(parse_arguments, agent_prism_main)
+
+
+if __name__ == "__main__":
+    main()

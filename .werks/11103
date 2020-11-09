@@ -6,6 +6,6 @@ Date: 1588795350
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In some cases the parsing of the systemd_units plugins output crashed with an IndexError. This has been fixed.

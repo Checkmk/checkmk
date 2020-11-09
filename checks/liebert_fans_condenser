@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["liebert_fans_condenser_default_levels"] = {
     'levels': (80, 90),
 }
@@ -28,7 +29,6 @@ check_info['liebert_fans_condenser'] = {
             '30.1.2.1.5276',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
         ]),
     'snmp_scan_function': scan_liebert,
-    'includes': ['liebert.include'],
     'group': 'hw_fans_perc',
     'default_levels_variable': 'liebert_fans_condenser_default_levels',
     'has_perfdata': True,

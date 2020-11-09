@@ -5,6 +5,7 @@
 
 #include "TableHostsByGroup.h"
 
+#include "Column.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
@@ -18,17 +19,19 @@ extern hostgroup *hostgroup_list;
 
 namespace {
 struct hostbygroup {
-    host hst;
-    // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
-    // cppcheck-suppress unusedStructMember
-    hostgroup *host_group;
+    const host *hst;
+    const hostgroup *host_group;
 };
 }  // namespace
 
 TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
-    TableHosts::addColumns(this, "", -1, -1);
-    TableHostGroups::addColumns(this, "hostgroup_",
-                                DANGEROUS_OFFSETOF(hostbygroup, host_group));
+    ColumnOffsets offsets{};
+    TableHosts::addColumns(this, "", offsets.add([](Row r) {
+        return r.rawData<hostbygroup>()->hst;
+    }));
+    TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
+        return r.rawData<hostbygroup>()->host_group;
+    }));
 }
 
 std::string TableHostsByGroup::name() const { return "hostsbygroup"; }
@@ -40,14 +43,14 @@ void TableHostsByGroup::answerQuery(Query *query) {
         query->authUser() != nullptr &&
         core()->groupAuthorization() == AuthorizationKind::strict;
 
-    for (hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
+    for (const hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
         if (requires_authcheck &&
             !is_authorized_for_host_group(core(), hg, query->authUser())) {
             continue;
         }
 
-        for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
-            hostbygroup hbg = {*m->host_ptr, hg};
+        for (const hostsmember *m = hg->members; m != nullptr; m = m->next) {
+            hostbygroup hbg{m->host_ptr, hg};
             if (!query->processDataset(Row(&hbg))) {
                 return;
             }
@@ -56,6 +59,6 @@ void TableHostsByGroup::answerQuery(Query *query) {
 }
 
 bool TableHostsByGroup::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for(core(), ctc, &rowData<hostbygroup>(row)->hst,
+    return is_authorized_for(core(), ctc, rowData<hostbygroup>(row)->hst,
                              nullptr);
 }

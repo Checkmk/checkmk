@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Generator, Mapping, Union
-from .agent_based_api.v0 import (
+from typing import Generator, List, Mapping, Union
+from .agent_based_api.v1 import (
     check_levels,
     clusterize,
     Metric,
@@ -21,7 +21,7 @@ Section = Mapping[str, int]
 CheckOutput = Generator[Union[Result, Metric], None, None]
 
 
-def parse_pulse_secure_users(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_pulse_secure_users(string_table: List[type_defs.StringTable]) -> Section:
     raw_data = string_table[0][0][0]
     try:
         return {'n_users': int(raw_data)}
@@ -32,7 +32,7 @@ def parse_pulse_secure_users(string_table: type_defs.SNMPStringTable) -> Section
 register.snmp_section(
     name="pulse_secure_users",
     parse_function=parse_pulse_secure_users,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12532",
             oids=[
@@ -68,15 +68,15 @@ def cluster_check_pulse_secure_users(
 
     for node_name, section_node in section.items():
         n_users_total += section_node['n_users']
-        node_details = clusterize.aggregate_node_details(
+        node_state, node_text = clusterize.aggregate_node_details(
             node_name,
             check_pulse_secure_users(
                 type_defs.Parameters({}),
                 section_node,
             ),
         )
-        if node_details:
-            yield node_details
+        if node_text:
+            yield Result(state=node_state, notice=node_text)
 
     yield from check_levels(
         n_users_total,

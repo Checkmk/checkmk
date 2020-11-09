@@ -26,7 +26,6 @@ def _parameter_valuespec_vm_backup_requirements():
         "age_levels_upper",
         Alternative(
             title=_("Backup conditions"),
-            style="dropdown",
             elements=[
                 Tuple(
                     title=_("Set conditions"),

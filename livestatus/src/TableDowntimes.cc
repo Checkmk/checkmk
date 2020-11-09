@@ -29,7 +29,7 @@
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<Downtime>>(
         "author", "The contact that scheduled the downtime", offsets,
         [](const Downtime &r) { return r._author_name; }));
@@ -74,10 +74,12 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
         offsets, [](const Downtime &r) { return r._triggered_by; }));
 
-    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Downtime, _host),
-                           -1);
-    TableServices::addColumns(this, "service_",
-                              DANGEROUS_OFFSETOF(Downtime, _service),
+    TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
+        return r.rawData<Downtime>()->_host;
+    }));
+    TableServices::addColumns(this, "service_", offsets.add([](Row r) {
+        return r.rawData<Downtime>()->_service;
+    }),
                               false /* no hosts table */);
 }
 

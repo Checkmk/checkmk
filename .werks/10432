@@ -6,7 +6,7 @@ Date: 1579075205
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Recently, a vulnerability of PyInstaller, that we use to compile
 the cmk-update-agent.exe executable on windows to one file, has been

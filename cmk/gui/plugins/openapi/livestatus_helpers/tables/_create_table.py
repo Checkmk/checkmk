@@ -34,12 +34,6 @@ from typing import Final
 
 import jinja2
 
-COLUMN_MAPPING: Final = {
-    'childs': 'children',
-    'host_childs': 'host_children',
-    'current_host_childs': 'current_host_children',
-}
-
 TABLE_FILE_TEMPLATE: Final = '''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
@@ -52,7 +46,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
 
 class {{ table_name.title() }}(Table):
     __tablename__ = '{{ table_name }}'
-    {%- for col in columns %}{% set column_name = translate_column_name(col.name) %}
+    {%- for col in columns %}{% set column_name = col.name %}
 
     {{ column_name }} = Column(
         '{{ col.name }}',{% if col.name != column_name %}  # sic{% endif %}
@@ -62,23 +56,6 @@ class {{ table_name.title() }}(Table):
     """{{ col.description }}"""{% endfor %}
 
 '''
-
-
-def translate_column_name(name: str) -> str:
-    """We want to remove un-fixable typos propagating.
-
-    Args:
-        name:
-            A name, possibly with a typo.
-
-    Returns:
-        A name, without the typo.
-
-    """
-    result = COLUMN_MAPPING.get(name, name)
-    if "childs" in result:
-        raise ValueError(result)
-    return result
 
 
 def transform_csv(table_name: str) -> None:
@@ -92,7 +69,6 @@ def transform_csv(table_name: str) -> None:
         Nothing.
     """
     env = jinja2.Environment(undefined=jinja2.StrictUndefined)  # nosec
-    env.globals['translate_column_name'] = translate_column_name
     template = env.from_string(TABLE_FILE_TEMPLATE)
     columns = ['description', 'name', 'table', 'type']
 

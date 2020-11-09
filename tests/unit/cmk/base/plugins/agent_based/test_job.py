@@ -12,10 +12,10 @@ import pytest  # type: ignore[import]
 from testlib import on_time
 
 from cmk.base.plugins.agent_based import job
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     clusterize,
     Result,
-    state,
+    State as state,
     Metric,
     type_defs,
 )
@@ -196,70 +196,38 @@ def test_parse(string_table, expected_parsed_data):
     assert job.parse_job(string_table) == expected_parsed_data
 
 
-@pytest.mark.parametrize("warn, crit, result", [
-    (0, 0, (state.OK, '2019-01-12 14:53:21')),
-    (1, 0, (state.WARN, '2019-01-12 14:53:21 (more than 1 second ago)')),
-    (1, 2, (state.CRIT, '2019-01-12 14:53:21 (more than 2 seconds ago)')),
-])
-def test_process_start_time(warn, crit, result):
-    with on_time(*TIME):
-        assert job._process_start_time(1547301201, warn, crit) == result
-
-
-def test_normal_result():
-    summary = 'summary'
-    for s in [state.OK, state.WARN, state.CRIT, state.UNKNOWN]:
-        assert job._normal_result(
-            mon_state=s,
-            summary=summary,
-        ) == Result(
-            state=s,
-            summary=summary,
-        )
-
-
-def test_ok_result():
-    summary = 'summary'
-    for s in [state.OK, state.WARN, state.CRIT, state.UNKNOWN]:
-        assert job._ok_result(
-            mon_state=s,
-            summary=summary,
-        ) == Result(
-            state=state.OK,
-            summary=summary,
-        )
-
-
 RESULTS_SHREK: List[Union[Metric, Result]] = [
-    Result(state=state.OK, summary='Exit-Code: 0', details='Exit-Code: 0'),
-    Result(state=state.OK,
-           summary='Started: 2019-01-12 14:53:21',
-           details='Started: 2019-01-12 14:53:21'),
-    Metric('start_time', 1547301201.0, levels=(None, None), boundaries=(None, None)),
-    Result(state=state.OK,
-           summary='Real-Time: 2 minutes 0 seconds',
-           details='Real-Time: 2 minutes 0 seconds'),
-    Metric('real_time', 120.0, levels=(None, None), boundaries=(None, None)),
-    Result(state=state.OK, summary='User-Time: 1 second', details='User-Time: 1 second'),
-    Metric('user_time', 1.0, levels=(None, None), boundaries=(None, None)),
-    Result(state=state.OK, summary='System-Time: 0 seconds', details='System-Time: 0 seconds'),
-    Metric('system_time', 0.0, levels=(None, None), boundaries=(None, None)),
-    Result(state=state.OK, summary='Filesystem Reads: 0', details='Filesystem Reads: 0'),
-    Metric('reads', 0.0, levels=(None, None), boundaries=(None, None)),
-    Result(state=state.OK, summary='Filesystem Writes: 0', details='Filesystem Writes: 0'),
-    Metric('writes', 0.0, levels=(None, None), boundaries=(None, None)),
-    Result(state=state.OK, summary='Max. Memory: 1.18 MiB', details='Max. Memory: 1.18 MiB'),
-    Metric('max_res_bytes', 1234000.0, levels=(None, None), boundaries=(None, None)),
-    Result(state=state.OK, summary='Avg. Memory: 1000 B', details='Avg. Memory: 1000 B'),
-    Metric('avg_mem_bytes', 1000.0, levels=(None, None), boundaries=(None, None)),
-    Result(state=state.OK,
-           summary='Invol. Context Switches: 12',
-           details='Invol. Context Switches: 12'),
-    Metric('invol_context_switches', 12.0, levels=(None, None), boundaries=(None, None)),
-    Result(state=state.OK, summary='Vol. Context Switches: 23',
-           details='Vol. Context Switches: 23'),
-    Metric('vol_context_switches', 23.0, levels=(None, None), boundaries=(None, None)),
+    Result(state=state.OK, summary='Latest exit code: 0'),
+    Result(state=state.OK, summary='Real time: 2 minutes 0 seconds'),
+    Metric('real_time', 120.0),
+    Result(state=state.OK, notice='Latest job started at Jan 12 2019 14:53:21'),
+    Metric('start_time', 1547301201.0),
+    Result(state=state.OK, summary='Job age: 1 year 178 days'),
+    Result(state=state.OK, notice='Avg. memory: 1000 B'),
+    Metric('avg_mem_bytes', 1000.0),
+    Result(state=state.OK, notice='Invol. context switches: 12'),
+    Metric('invol_context_switches', 12.0),
+    Result(state=state.OK, notice='Max. memory: 1.18 MiB'),
+    Metric('max_res_bytes', 1234000.0),
+    Result(state=state.OK, notice='Filesystem reads: 0'),
+    Metric('reads', 0.0),
+    Result(state=state.OK, notice='System time: 0 seconds'),
+    Metric('system_time', 0.0),
+    Result(state=state.OK, notice='User time: 1 second'),
+    Metric('user_time', 1.0),
+    Result(state=state.OK, notice='Vol. context switches: 23'),
+    Metric('vol_context_switches', 23.0),
+    Result(state=state.OK, notice='Filesystem writes: 0'),
+    Metric('writes', 0.0),
 ]
+
+
+def _aggr_shrek_result(node: str) -> Result:
+    return Result(**dict(
+        zip(  # type: ignore
+            ("state", "notice"),
+            clusterize.aggregate_node_details(node, RESULTS_SHREK),
+        )))
 
 
 @pytest.mark.parametrize(
@@ -268,33 +236,39 @@ RESULTS_SHREK: List[Union[Metric, Result]] = [
         (
             SECTION_1['SHREK'],
             (0, 0),
-            [],
+            {
+                0: state.OK
+            },
             RESULTS_SHREK,
         ),
         (
             SECTION_1['SHREK'],
             (1, 2),
-            [],
+            {
+                0: state.OK
+            },
             itertools.chain(
-                RESULTS_SHREK[0:1],
+                RESULTS_SHREK[0:5],
                 [
                     Result(
                         state=state.CRIT,
-                        summary='Started: 2019-01-12 14:53:21 (more than 2 seconds ago)',
+                        summary='Job age: 1 year 178 days (warn/crit at 1 second/2 seconds)',
                     ),
                 ],
-                RESULTS_SHREK[2:],
+                RESULTS_SHREK[6:],
             ),
         ),
         (
             SECTION_1['SHREK'],
             (0, 0),
-            [(0, 1)],
+            {
+                0: state.WARN
+            },
             itertools.chain(
                 [
                     Result(
                         state=state.WARN,
-                        summary='Exit-Code: 0',
+                        summary='Latest exit code: 0',
                     ),
                 ],
                 RESULTS_SHREK[1:],
@@ -306,24 +280,26 @@ RESULTS_SHREK: List[Union[Metric, Result]] = [
                 [1557301261, 1557301321, 1557301381, 1557301441, 1537301501, 1557301561],
             ),
             (1, 2),
-            [],
+            {
+                0: state.OK
+            },
             itertools.chain(
+                RESULTS_SHREK[:3],
                 [
                     Result(
+                        state=state.OK,
+                        notice=('6 jobs are currently running, started at'
+                                ' May 08 2019 09:41:01, May 08 2019 09:42:01,'
+                                ' May 08 2019 09:43:01, May 08 2019 09:44:01,'
+                                ' Sep 18 2018 22:11:41, May 08 2019 09:46:01'),
+                    ),
+                    Result(
                         state=state.CRIT,
-                        summary=
-                        'Currently running (started: 2018-09-18 22:11:41 (more than 2 seconds ago))',
-                    ),
-                    Result(
-                        state=state.OK,
-                        summary='Previous result (considered OK): Exit-Code: 0',
-                    ),
-                    Result(
-                        state=state.OK,
-                        summary='Started: 2019-01-12 14:53:21 (more than 2 seconds ago)',
+                        summary=('Job age (currently running): '
+                                 '1 year 63 days (warn/crit at 1 second/2 seconds)'),
                     ),
                 ],
-                RESULTS_SHREK[2:],
+                RESULTS_SHREK[6:],
             ),
         ),
     ],
@@ -364,43 +340,29 @@ def test_process_job_stats(
             type_defs.Parameters({'age': (0, 0)},),
             SECTION_2,
             [
-                Result(state=state.OK, summary='Exit-Code: 0', details='Exit-Code: 0'),
-                Result(state=state.OK,
-                       summary='Started: 2014-11-05 03:10:30',
-                       details='Started: 2014-11-05 03:10:30'),
-                Metric('start_time', 1415153430.0, levels=(None, None), boundaries=(None, None)),
-                Result(
-                    state=state.OK, summary='Real-Time: 9 seconds', details='Real-Time: 9 seconds'),
-                Metric('real_time', 9.9, levels=(None, None), boundaries=(None, None)),
-                Result(
-                    state=state.OK, summary='User-Time: 8 seconds', details='User-Time: 8 seconds'),
-                Metric('user_time', 8.85, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='System-Time: 970 milliseconds',
-                       details='System-Time: 970 milliseconds'),
-                Metric('system_time', 0.97, levels=(None, None), boundaries=(None, None)),
-                Result(
-                    state=state.OK, summary='Filesystem Reads: 96', details='Filesystem Reads: 96'),
-                Metric('reads', 96.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Filesystem Writes: 42016',
-                       details='Filesystem Writes: 42016'),
-                Metric('writes', 42016.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Max. Memory: 10.9 MiB',
-                       details='Max. Memory: 10.9 MiB'),
-                Metric('max_res_bytes', 11456000.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK, summary='Avg. Memory: 0 B', details='Avg. Memory: 0 B'),
-                Metric('avg_mem_bytes', 0.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Invol. Context Switches: 15',
-                       details='Invol. Context Switches: 15'),
-                Metric('invol_context_switches', 15.0, levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Vol. Context Switches: 274',
-                       details='Vol. Context Switches: 274'),
-                Metric('vol_context_switches', 274.0, levels=(None, None), boundaries=(None, None)),
+                Result(state=state.OK, summary='Latest exit code: 0',
+                       details='Latest exit code: 0'),
+                Result(state=state.OK, summary='Real time: 10 seconds'),
+                Metric('real_time', 9.9),
+                Result(state=state.OK, notice='Latest job started at Nov 05 2014 03:10:30'),
+                Metric('start_time', 1415153430.0),
+                Result(state=state.OK, summary='Job age: 5 years 248 days'),
+                Result(state=state.OK, notice='Avg. memory: 0 B'),
+                Metric('avg_mem_bytes', 0.0),
+                Result(state=state.OK, notice='Invol. context switches: 15'),
+                Metric('invol_context_switches', 15.0),
+                Result(state=state.OK, notice='Max. memory: 10.9 MiB'),
+                Metric('max_res_bytes', 11456000.0),
+                Result(state=state.OK, notice='Filesystem reads: 96'),
+                Metric('reads', 96.0),
+                Result(state=state.OK, notice='System time: 970 milliseconds'),
+                Metric('system_time', 0.97),
+                Result(state=state.OK, notice='User time: 9 seconds'),
+                Metric('user_time', 8.85),
+                Result(state=state.OK, notice='Vol. context switches: 274'),
+                Metric('vol_context_switches', 274.0),
+                Result(state=state.OK, notice='Filesystem writes: 42016'),
+                Metric('writes', 42016.0),
             ],
         ),
         (
@@ -408,54 +370,32 @@ def test_process_job_stats(
             type_defs.Parameters({'age': (1, 2)},),
             SECTION_2,
             [
+                Result(state=state.OK, summary='Latest exit code: 0'),
+                Result(state=state.OK, summary='Real time: 4 minutes 42 seconds'),
+                Metric('real_time', 281.65),
+                Result(state=state.OK,
+                       notice='1 job is currently running, started at Nov 05 2014 17:41:53'),
                 Result(
                     state=state.CRIT,
                     summary=
-                    'Currently running (started: 2014-11-05 17:41:53 (more than 2 seconds ago))',
-                    details=
-                    'Currently running (started: 2014-11-05 17:41:53 (more than 2 seconds ago))'),
-                Result(state=state.OK,
-                       summary='Previous result (considered OK): Exit-Code: 0',
-                       details='Previous result (considered OK): Exit-Code: 0'),
-                Result(state=state.OK,
-                       summary='Started: 2014-11-05 17:14:51 (more than 2 seconds ago)',
-                       details='Started: 2014-11-05 17:14:51 (more than 2 seconds ago)'),
-                Metric('start_time', 1415204091.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Real-Time: 4 minutes 41 seconds',
-                       details='Real-Time: 4 minutes 41 seconds'),
-                Metric('real_time', 281.65, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='User-Time: 4 minutes 37 seconds',
-                       details='User-Time: 4 minutes 37 seconds'),
-                Metric('user_time', 277.7, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='System-Time: 32 seconds',
-                       details='System-Time: 32 seconds'),
-                Metric('system_time', 32.12, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK, summary='Filesystem Reads: 0',
-                       details='Filesystem Reads: 0'),
-                Metric('reads', 0.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Filesystem Writes: 251792',
-                       details='Filesystem Writes: 251792'),
-                Metric('writes', 251792.0, levels=(None, None), boundaries=(None, None)),
-                Result(
-                    state=state.OK, summary='Max. Memory: 124 MiB', details='Max. Memory: 124 MiB'),
-                Metric('max_res_bytes', 130304000.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK, summary='Avg. Memory: 0 B', details='Avg. Memory: 0 B'),
-                Metric('avg_mem_bytes', 0.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Invol. Context Switches: 16806',
-                       details='Invol. Context Switches: 16806'),
-                Metric(
-                    'invol_context_switches', 16806.0, levels=(None, None),
-                    boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Vol. Context Switches: 32779',
-                       details='Vol. Context Switches: 32779'),
-                Metric(
-                    'vol_context_switches', 32779.0, levels=(None, None), boundaries=(None, None)),
+                    'Job age (currently running): 5 years 247 days (warn/crit at 1 second/2 seconds)'
+                ),
+                Result(state=state.OK, notice='Avg. memory: 0 B'),
+                Metric('avg_mem_bytes', 0.0),
+                Result(state=state.OK, notice='Invol. context switches: 16806'),
+                Metric('invol_context_switches', 16806.0),
+                Result(state=state.OK, notice='Max. memory: 124 MiB'),
+                Metric('max_res_bytes', 130304000.0),
+                Result(state=state.OK, notice='Filesystem reads: 0'),
+                Metric('reads', 0.0),
+                Result(state=state.OK, notice='System time: 32 seconds'),
+                Metric('system_time', 32.12),
+                Result(state=state.OK, notice='User time: 4 minutes 38 seconds'),
+                Metric('user_time', 277.7),
+                Result(state=state.OK, notice='Vol. context switches: 32779'),
+                Metric('vol_context_switches', 32779.0),
+                Result(state=state.OK, notice='Filesystem writes: 251792'),
+                Metric('writes', 251792.0),
             ],
         ),
         (
@@ -481,7 +421,7 @@ def test_check_job(item, params, section, expected_results):
                 'node1': SECTION_1
             },
             [
-                clusterize.aggregate_node_details('node1', RESULTS_SHREK),
+                _aggr_shrek_result('node1'),
                 Result(
                     state=state.OK,
                     summary=
@@ -497,8 +437,8 @@ def test_check_job(item, params, section, expected_results):
                 'node2': SECTION_1,
             },
             [
-                clusterize.aggregate_node_details('node1', RESULTS_SHREK),
-                clusterize.aggregate_node_details('node2', RESULTS_SHREK),
+                _aggr_shrek_result('node1'),
+                _aggr_shrek_result('node2'),
                 Result(
                     state=state.OK,
                     summary=
@@ -522,21 +462,37 @@ def test_check_job(item, params, section, expected_results):
                 },
             },
             [
-                Result(
-                    state=state.OK,
-                    details=
-                    '[node1]: Exit-Code: 0\n[node1]: Started: 2019-01-12 14:53:21 (more than 2 hours 0 minutes ago)(!!)\n[node1]: Real-Time: 2 minutes 0 seconds\n[node1]: User-Time: 1 second\n[node1]: System-Time: 0 seconds\n[node1]: Filesystem Reads: 0\n[node1]: Filesystem Writes: 0\n[node1]: Max. Memory: 1.18 MiB\n[node1]: Avg. Memory: 1000 B\n[node1]: Invol. Context Switches: 12\n[node1]: Vol. Context Switches: 23'
-                ),
-                Result(
-                    state=state.OK,
-                    details=
-                    '[node2]: Exit-Code: 0\n[node2]: Started: 2020-07-09 13:17:10 (more than 1 hour 0 minutes ago)(!)\n[node2]: Real-Time: 2 minutes 0 seconds\n[node2]: User-Time: 1 second\n[node2]: System-Time: 0 seconds\n[node2]: Filesystem Reads: 0\n[node2]: Filesystem Writes: 0\n[node2]: Max. Memory: 1.18 MiB\n[node2]: Avg. Memory: 1000 B\n[node2]: Invol. Context Switches: 12\n[node2]: Vol. Context Switches: 23'
-                ),
-                Result(
-                    state=state.WARN,
-                    summary=
-                    '0 nodes in state OK, 1 node in state WARN, 1 node in state CRIT, 0 nodes in state UNKNOWN',
-                ),
+                Result(state=state.OK,
+                       notice=('[node1]: Latest exit code: 0\n'
+                               '[node1]: Real time: 2 minutes 0 seconds\n'
+                               '[node1]: Latest job started at Jan 12 2019 14:53:21\n'
+                               '[node1]: Job age: 1 year 178 days (warn/crit at 1 hour'
+                               ' 0 minutes/2 hours 0 minutes)(!!)\n'
+                               '[node1]: Avg. memory: 1000 B\n'
+                               '[node1]: Invol. context switches: 12\n'
+                               '[node1]: Max. memory: 1.18 MiB\n'
+                               '[node1]: Filesystem reads: 0\n'
+                               '[node1]: System time: 0 seconds\n'
+                               '[node1]: User time: 1 second\n'
+                               '[node1]: Vol. context switches: 23\n'
+                               '[node1]: Filesystem writes: 0')),
+                Result(state=state.OK,
+                       notice=('[node2]: Latest exit code: 0\n'
+                               '[node2]: Real time: 2 minutes 0 seconds\n'
+                               '[node2]: Latest job started at Jul 09 2020 13:17:10\n'
+                               '[node2]: Job age: 1 hour 59 minutes (warn/crit at 1 hour'
+                               ' 0 minutes/2 hours 0 minutes)(!)\n'
+                               '[node2]: Avg. memory: 1000 B\n'
+                               '[node2]: Invol. context switches: 12\n'
+                               '[node2]: Max. memory: 1.18 MiB\n'
+                               '[node2]: Filesystem reads: 0\n'
+                               '[node2]: System time: 0 seconds\n'
+                               '[node2]: User time: 1 second\n'
+                               '[node2]: Vol. context switches: 23\n'
+                               '[node2]: Filesystem writes: 0')),
+                Result(state=state.WARN,
+                       summary=('0 nodes in state OK, 1 node in state WARN,'
+                                ' 1 node in state CRIT, 0 nodes in state UNKNOWN')),
             ],
         ),
         (

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.stormshield import *  # pylint: disable=wildcard-import,unused-wildcard-import
 route_type_mapping = {
     'DefaultRoute': 'default route',
     'PBR': 'policy based routing',
@@ -48,5 +49,4 @@ check_info['stormshield_route'] = {
             '9',  # snsRouteState
         ]),
     'snmp_scan_function': stormshield_scan_function,
-    'includes': ['stormshield.include'],
 }

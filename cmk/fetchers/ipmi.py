@@ -5,59 +5,56 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from types import TracebackType
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, Final, List, Optional
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
-from pyghmi.exceptions import IpmiException  # type: ignore[import]
+import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import]
 from six import ensure_binary
 
-import cmk.utils.debug
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from . import MKFetcherError
-from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
+from .agent import AgentFetcher, DefaultAgentFileCache
+from .type_defs import Mode
 
 
 class IPMIFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: DefaultAgentFileCache,
+        *,
         address: HostAddress,
         username: str,
         password: str,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.ipmi"))
-        self._address = address
-        self._username = username
-        self._password = password
+        self.address: Final = address
+        self.username: Final = username
+        self.password: Final = password
         self._command: Optional[ipmi_cmd.Command] = None
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "IPMIFetcher":
+    def _from_json(cls, serialized: Dict[str, Any]) -> "IPMIFetcher":
         return cls(
             DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             **serialized,
         )
 
-    def __enter__(self) -> 'IPMIFetcher':
-        self.open()
-        return self
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "file_cache": self.file_cache.to_json(),
+            "address": self.address,
+            "username": self.username,
+            "password": self.password,
+        }
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> bool:
-        self.close()
-        if exc_type is IpmiException and not str(exc_value):
-            # Raise a more specific exception
-            raise MKFetcherError("IPMI communication failed: %r" % exc_type)
-        if not cmk.utils.debug.enabled():
-            return False
-        return True
+    def _is_cache_enabled(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING
 
-    def _fetch_from_io(self) -> AgentRawData:
+    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._command is None:
             raise MKFetcherError("Not connected")
 
@@ -67,19 +64,52 @@ class IPMIFetcher(AgentFetcher):
         return output
 
     def open(self) -> None:
-        self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)", self._address,
-                           self._username)
-        self._command = ipmi_cmd.Command(bmc=self._address,
-                                         userid=self._username,
-                                         password=self._password,
-                                         privlevel=2)
+        self._logger.debug(
+            "Connecting to %s:623 (User: %s, Privlevel: 2)",
+            self.address,
+            self.username,
+        )
+
+        self._command = ipmi_cmd.Command(
+            bmc=self.address,
+            userid=self.username,
+            password=self.password,
+            privlevel=2,
+        )
 
     def close(self) -> None:
         if self._command is None:
             return
 
         self._logger.debug("Closing connection to %s:623", self._command.bmc)
-        self._command.ipmi_session.logout()
+
+        # This should not be our task, but seems pyghmi is not cleaning up good enough.
+        # There are some module and class level caches in pyghmi.ipmi.private.session that
+        # are kept after logout which should not be kept.
+        # These session objects and sockets lead to problems in our keepalive helper processes
+        # because they make the process reuse invalid sessions.  Instead of reusing, we want to
+        # initialize a new session every cycle.
+        # We also don't want to reuse sockets or other things from previous calls.
+
+        ipmi_session.iothread.join()
+        ipmi_session.iothread = None
+        ipmi_session.iothreadready = False
+        ipmi_session.iothreadwaiters.clear()
+
+        for socket in ipmi_session.iosockets:
+            socket.close()
+        ipmi_session.iosockets.clear()
+
+        ipmi_session.Session.socketpool.clear()
+        ipmi_session.Session.initting_sessions.clear()
+        ipmi_session.Session.bmc_handlers.clear()
+        ipmi_session.Session.waiting_sessions.clear()
+        ipmi_session.Session.initting_sessions.clear()
+        ipmi_session.Session.keepalive_sessions.clear()
+        ipmi_session.Session.peeraddr_to_nodes.clear()
+        ipmi_session.Session.iterwaiters.clear()
+
+        self._command = None
 
     def _sensors_section(self) -> AgentRawData:
         if self._command is None:
@@ -96,18 +126,22 @@ class IPMIFetcher(AgentFetcher):
 
         sensors = []
         has_no_gpu = not self._has_gpu()
-        for number in sdr.get_sensor_numbers():
-            rsp = self._command.raw_command(command=0x2d, netfn=4, data=(number,))
+        for ident in sdr.get_sensor_numbers():
+            sensor = sdr.sensors[ident]
+            rsp = self._command.raw_command(command=0x2d,
+                                            netfn=4,
+                                            rslun=sensor.sensor_lun,
+                                            data=(sensor.sensor_number,))
             if 'error' in rsp:
                 continue
 
-            reading = sdr.sensors[number].decode_sensor_reading(rsp['data'])
+            reading = sensor.decode_sensor_reading(rsp['data'])
             if reading is not None:
                 # sometimes (wrong) data for GPU sensors is reported, even if
                 # not installed
                 if "GPU" in reading.name and has_no_gpu:
                     continue
-                sensors.append(IPMIFetcher._parse_sensor_reading(number, reading))
+                sensors.append(IPMIFetcher._parse_sensor_reading(sensor.sensor_number, reading))
 
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
             [b"|".join(sensor) + b"\n" for sensor in sensors])

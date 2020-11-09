@@ -47,7 +47,7 @@ def do_git_commit():
         _git_add_files()
         _git_command([
             "commit", "--untracked-files=no", "--author", author, "-m",
-            _("Initialized GIT for Check_MK")
+            _("Initialized GIT for Checkmk")
         ])
 
     if _git_has_pending_changes():
@@ -121,7 +121,7 @@ def _write_gitignore_files():
     config_dir = Path(cmk.utils.paths.default_config_dir)
 
     with config_dir.joinpath(".gitignore").open("w", encoding="utf-8") as f:
-        f.write("# This file is under control of Check_MK. Please don't modify it.\n"
+        f.write("# This file is under control of Checkmk. Please don't modify it.\n"
                 "# Your changes will be overwritten.\n"
                 "\n"
                 "*\n"

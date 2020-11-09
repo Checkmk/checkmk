@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<lnx_thermal>>>
 # thermal_zone0 enabled acpitz 57000 127000 critical
 # thermal_zone1 enabled acpitz 65000 100000 critical 95500 passive
@@ -121,5 +122,4 @@ check_info['lnx_thermal'] = {
     "has_perfdata": True,
     "group": "temperature",
     "default_levels_variable": "lnx_thermal_default_levels",
-    "includes": ["temperature.include"],
 }

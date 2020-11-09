@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example agent output:
 # <<<ibm_svc_portsas:sep(58)>>>
 # 0:1:6Gb:1:node1:500507680305D3C0:online::host:host_controller:0:1
@@ -25,6 +26,10 @@
 
 # the corresponding header line
 #id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
+
+factory_settings["ibm_svc_portsas_default_levels"] = {
+    'current_state': 'offline',
+}
 
 
 def parse_ibm_svc_portsas(info):
@@ -67,11 +72,6 @@ def inventory_ibm_svc_portsas(parsed):
 
 @get_parsed_item_data
 def check_ibm_svc_portsas(item, params, data):
-    # This can be removed soon, because the age of the check
-    # was only about 7 days:
-    if not params:
-        params = {'current_state': 'offline'}
-
     sasport_status = data['status']
 
     infotext = "Status: %s" % sasport_status
@@ -90,5 +90,5 @@ check_info["ibm_svc_portsas"] = {
     "check_function": check_ibm_svc_portsas,
     "inventory_function": inventory_ibm_svc_portsas,
     "service_description": "SAS %s",
-    "includes": ["ibm_svc.include"],
+    "default_levels_variable": "ibm_svc_portsas_default_levels",
 }

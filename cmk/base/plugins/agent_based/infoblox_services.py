@@ -5,22 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Infoblox services and node services
 """
-from typing import Dict, Tuple, Mapping
+from typing import Dict, List, Mapping, Tuple
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     SNMPTree,
     register,
     Service,
     Result,
-    state,
+    State as state,
     any_of,
     startswith,
     contains,
 )
-from .agent_based_api.v0.type_defs import (
-    SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+from .agent_based_api.v1.type_defs import (
+    StringTable,
+    CheckResult,
+    DiscoveryResult,
 )
 Section = Dict[str, Tuple[str, str]]
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
@@ -105,7 +105,7 @@ STATE = {
 }
 
 
-def parse_infoblox_services(string_table: SNMPStringTable) -> Section:
+def parse_infoblox_services(string_table: List[StringTable]) -> Section:
     """
     >>> for item, status in parse_infoblox_services([[
     ...         ['9', '1', 'Running'],
@@ -131,20 +131,20 @@ def parse_infoblox_services(string_table: SNMPStringTable) -> Section:
     }
 
 
-def discovery_infoblox_services(section: Section) -> DiscoveryGenerator:
+def discovery_infoblox_services(section: Section) -> DiscoveryResult:
     """
     >>> for result in discovery_infoblox_services({
     ...         'node-status': ('working', 'Running'),
     ...         'discovery-capacity': ('working', '0% - Discovery capacity usage is OK.'),
     ... }):
     ...     print(result)
-    Service(item='node-status', parameters={}, labels=[])
-    Service(item='discovery-capacity', parameters={}, labels=[])
+    Service(item='node-status')
+    Service(item='discovery-capacity')
     """
     yield from (Service(item=item) for item in section)
 
 
-def check_infoblox_services(item: str, section: Section) -> CheckGenerator:
+def check_infoblox_services(item: str, section: Section) -> CheckResult:
     """
     >>> for result in check_infoblox_services("memory", {
     ...         'node-status': ('working', 'Running'),
@@ -152,7 +152,7 @@ def check_infoblox_services(item: str, section: Section) -> CheckGenerator:
     ...         'discovery-capacity': ('working', '0% - Discovery capacity usage is OK.'),
     ... }):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='Status: working (14% - System memory usage is OK.)', details='Status: working (14% - System memory usage is OK.)')
+    Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)')
     """
     if not item in section:
         return
@@ -163,7 +163,7 @@ def check_infoblox_services(item: str, section: Section) -> CheckGenerator:
     )
 
 
-def cluster_check_infoblox_services(item: str, section: Mapping[str, Section]) -> CheckGenerator:
+def cluster_check_infoblox_services(item: str, section: Mapping[str, Section]) -> CheckResult:
     """
     >>> for result in cluster_check_infoblox_services("memory", {
     ...     "node1": {
@@ -177,7 +177,7 @@ def cluster_check_infoblox_services(item: str, section: Mapping[str, Section]) -
     ...         'replication': ('working', 'Online'),
     ... }}):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='Status: working (14% - System memory usage is OK.)', details='Status: working (14% - System memory usage is OK.)')
+    Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)')
     """
     try:
         status, description = min(
@@ -196,7 +196,7 @@ register.snmp_section(
     name="infoblox_services",
     detect=DETECT_INFOBLOX,
     parse_function=parse_infoblox_services,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.9.1",
             oids=[
@@ -219,7 +219,7 @@ register.snmp_section(
     name="infoblox_node_services",
     detect=DETECT_INFOBLOX,
     parse_function=parse_infoblox_services,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.10.1",
             oids=[

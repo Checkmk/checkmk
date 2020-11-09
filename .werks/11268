@@ -1,0 +1,14 @@
+Title: mssql.vbs: Add SQL Server Native Client provider 11 (SQLNCLI11)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1599194900
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The legacy connection provider {{SQLOLEDB}} does not support {{TLSv1.2}}. The
+new {{OLE DB}} driver, {{MSOLEDBSQL}}, includes the support for the latest
+{{TLS 1.2}} standards and is backwards compatible with SQL Server Native Client
+11 ({{SQLNCLI11}}).

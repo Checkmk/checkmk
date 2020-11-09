@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # <<<ibm_svc_enclosure:sep(58)>>>
 # 1:online:control:yes:0:io_grp0:2072-24C:7804037:2:2:2:2:24
@@ -95,7 +96,6 @@ check_info["ibm_svc_enclosure"] = {
     "check_function": check_ibm_svc_enclosure,
     "inventory_function": discover(),
     "service_description": "Enclosure %s",
-    "includes": ["ibm_svc.include"],
     "group": "ibm_svc_enclosure",
 }
 

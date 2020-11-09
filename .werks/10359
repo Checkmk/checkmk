@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The plugin {{mk_oracle}} showed multiple lines with errors when a database was not
 opened. That created some problems in oracle_jobs, which have been fixed.

@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Optional, Tuple
+
 import pytest  # type: ignore[import]
 
 from cmk.base.api.agent_based.type_defs import Parameters
@@ -10,7 +12,7 @@ from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
     ServiceLabel,
     Service,
-    state,
+    State as state,
     Metric,
     Result,
 )
@@ -30,6 +32,8 @@ def test_paramters_invalid(data):
 def test_parameters_features():
     par0 = Parameters({})
     par1 = Parameters({'olaf': 'schneemann'})
+
+    assert repr(par1) == "Parameters({'olaf': 'schneemann'})"
 
     assert len(par0) == 0
     assert len(par1) == 1
@@ -92,7 +96,12 @@ def test_service_features():
     assert service.item is None
     assert service.parameters == {}
     assert service.labels == []
-    assert repr(service) == "Service(item=None, parameters={}, labels=[])"
+    assert repr(service) == "Service()"
+
+    service_foo = Service(item="foo")
+    assert repr(service_foo) == "Service(item='foo')"
+
+    assert service != service_foo
 
 
 def test_state():
@@ -174,9 +183,8 @@ def test_metric():
         (8, "foo", None, None),
         (state.OK, b"foo", None, None),
         (state.OK, "newline is a \no-no", None, None),
-        (state.OK, None, "newline is a \no-no", None),
-        (state.OK, "", "", ""),  # either is required
-        (state.OK, None, None, None),  # either is required
+        (state.OK, "", "", "details"),  # either is required
+        (state.OK, None, None, "details"),  # either is required
         (state.OK, "these are", "mutually exclusive", None),
         (state.OK, "summary", None, {
             "at the moment": "impossible",
@@ -185,24 +193,39 @@ def test_metric():
     ])
 def test_result_invalid(state_, summary, notice, details):
     with pytest.raises((TypeError, ValueError)):
-        _ = Result(state=state_, summary=summary, notice=notice, details=details)
+        _ = Result(
+            state=state_,
+            summary=summary,
+            notice=notice,
+            details=details,
+        )  # type: ignore[call-overload]
 
 
 @pytest.mark.parametrize("state_, summary, notice, details, expected_triple", [
-    (state.OK, None, None, "details", (state.OK, "", "details")),
     (state.OK, "summary", None, "details", (state.OK, "summary", "details")),
     (state.OK, "summary", None, None, (state.OK, "summary", "summary")),
     (state.OK, None, "notice", "details", (state.OK, "", "details")),
     (state.OK, None, "notice", None, (state.OK, "", "notice")),
-    (state.WARN, None, None, "details", (state.WARN, "", "details")),
     (state.WARN, "summary", None, "details", (state.WARN, "summary", "details")),
     (state.WARN, "summary", None, None, (state.WARN, "summary", "summary")),
     (state.WARN, None, "notice", "details", (state.WARN, "notice", "details")),
     (state.WARN, None, "notice", None, (state.WARN, "notice", "notice")),
 ])
-def test_result(state_, summary, notice, details, expected_triple):
-    result = Result(state=state_, summary=summary, notice=notice, details=details)
+def test_result(
+    state_: state,
+    summary: Optional[str],
+    notice: Optional[str],
+    details: Optional[str],
+    expected_triple: Tuple[state, str, str],
+) -> None:
+    result = Result(
+        state=state_,
+        summary=summary,
+        notice=notice,
+        details=details,
+    )  # type: ignore[call-overload]
     assert (result.state, result.summary, result.details) == expected_triple
+    assert result != Result(state=state_, summary="a different summary")
 
 
 def test_ignore_results():
@@ -210,3 +233,5 @@ def test_ignore_results():
     result2 = IgnoreResults("Login to DB failed")
     assert repr(result1) == "IgnoreResults('currently no results')"
     assert str(result2) == "Login to DB failed"
+    assert result1 != result2
+    assert result2 == IgnoreResults("Login to DB failed")

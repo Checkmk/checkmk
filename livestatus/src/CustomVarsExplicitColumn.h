@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "Column.h"
 #include "StringColumn.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
@@ -19,7 +19,7 @@ class CustomVarsExplicitColumn : public StringColumn {
 public:
     CustomVarsExplicitColumn(const std::string &name,
                              const std::string &description,
-                             const Column::Offsets &offsets,
+                             const ColumnOffsets &offsets,
                              const MonitoringCore *mc, const char *varname)
         : StringColumn(name, description, offsets)
         , _mc(mc)

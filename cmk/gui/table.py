@@ -7,7 +7,7 @@
 from contextlib import contextmanager
 import re
 import json
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union, cast
+from typing import Any, Dict, Iterator, List, Literal, NamedTuple, Optional, Tuple, Union, cast
 
 from six import ensure_str
 
@@ -15,8 +15,9 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import CSSSpec, HTML, HTMLContent, HTMLTagAttributes
+from cmk.gui.utils.urls import makeuri
 
 TableHeader = NamedTuple(
     "TableHeader",
@@ -57,11 +58,12 @@ def table_element(
     searchable: bool = True,
     sortable: bool = True,
     foldable: bool = False,
-    limit: Optional[int] = None,
+    limit: Union[None, int, Literal[False]] = None,
     output_format: str = "html",
     omit_if_empty: bool = False,
     omit_empty_columns: bool = False,
     omit_headers: bool = False,
+    omit_update_header: bool = False,
     empty_text: Optional[str] = None,
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     css: Optional[str] = None,
@@ -77,6 +79,7 @@ def table_element(
                       omit_if_empty=omit_if_empty,
                       omit_empty_columns=omit_empty_columns,
                       omit_headers=omit_headers,
+                      omit_update_header=omit_update_header,
                       empty_text=empty_text,
                       help=help,
                       css=css)
@@ -114,11 +117,12 @@ class Table:
         searchable: bool = True,
         sortable: bool = True,
         foldable: bool = False,
-        limit: Optional[int] = None,
+        limit: Union[None, int, Literal[False]] = None,
         output_format: str = "html",
         omit_if_empty: bool = False,
         omit_empty_columns: bool = False,
         omit_headers: bool = False,
+        omit_update_header: bool = False,
         empty_text: Optional[str] = None,
         help: Optional[str] = None,  # pylint: disable=redefined-builtin
         css: Optional[str] = None,
@@ -149,6 +153,7 @@ class Table:
             "omit_if_empty": omit_if_empty,
             "omit_empty_columns": omit_empty_columns,
             "omit_headers": omit_headers,
+            "omit_update_header": omit_update_header,
             "searchable": searchable,
             "sortable": sortable,
             "foldable": foldable,
@@ -301,7 +306,7 @@ class Table:
         # Apply limit after search / sorting etc.
         num_rows_unlimited = len(rows)
         limit = self.limit
-        if limit is not None:
+        if limit:
             # only use rows up to the limit plus the fixed rows
             limited_rows = []
             for index in range(num_rows_unlimited):
@@ -316,18 +321,19 @@ class Table:
         # Render header
         if self.limit_hint is not None:
             num_rows_unlimited = self.limit_hint
+
+        if limit and num_rows_unlimited > limit:
+
+            html.show_message(
+                _('This table is limited to show only %d of %d rows. '
+                  'Click <a href="%s">here</a> to disable the limitation.') %
+                (limit, num_rows_unlimited, makeuri(request, [('limit', 'none')])))
+
         self._write_table(rows, num_rows_unlimited, self._show_action_row(), actions_visible,
                           search_term)
 
         if self.title and self.options["foldable"]:
             html.end_foldable_container()
-
-        if limit is not None and num_rows_unlimited > limit:
-
-            html.show_message(
-                _('This table is limited to show only %d of %d rows. '
-                  'Click <a href="%s">here</a> to disable the limitation.') %
-                (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
 
         return
 
@@ -398,8 +404,10 @@ class Table:
 
     def _write_table(self, rows: TableRows, num_rows_unlimited: int, actions_enabled: bool,
                      actions_visible: bool, search_term: Optional[str]) -> None:
-        headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
-        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+        if not self.options["omit_update_header"]:
+            headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
+
+            html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
         table_id = self.id
 
@@ -594,7 +602,7 @@ class Table:
                         img = 'table_actions_off'
 
                     html.open_div(class_=["toggle_actions"])
-                    html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
+                    html.icon_button(makeuri(request, [('_%s_actions' % table_id, state)]),
                                      help_txt,
                                      img,
                                      cssclass='toggle_actions')

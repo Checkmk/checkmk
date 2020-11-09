@@ -6,7 +6,8 @@
 ' -----------------------------------------------------------------------------
 
 Option Explicit
-dim strStatisticsLoc, strProtection_BasesDate, strProtection_LastFscan, strProtection_LastConnected 
+Const CMK_VERSION = "2.0.0i2"
+dim strStatisticsLoc, strProtection_BasesDate, strProtection_LastFscan, strProtection_LastConnected
 dim strBIASLoc, strBIAS
 dim objShell
 

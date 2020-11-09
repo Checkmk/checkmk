@@ -6,7 +6,7 @@ Date: 1585565811
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If VM names contain non ASCII characters, the discovery could fail with an
 UnicodeDecodeError. This has been fixed.

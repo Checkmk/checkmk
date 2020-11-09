@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Any, Dict, Set
+from typing import Any, Callable, Dict, Set
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -26,6 +26,7 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 InventoryPluginNameStr = str
 InventoryInfo = Dict[str, Any]
+GetInventoryApiContext = Callable[[], Dict[str, Any]]
 
 # Inventory plugins have dependencies to check plugins and the inventory
 # plugins need the check API. This is the easiest solution to get this
@@ -49,8 +50,10 @@ _include_contexts: Dict[str, Any] = {}
 _plugin_file_lookup: Dict[str, str] = {}
 
 
-def load_plugins(get_check_api_context: config.GetCheckApiContext,
-                 get_inventory_context: config.GetInventoryApiContext) -> None:
+def load_legacy_inventory_plugins(
+    get_check_api_context: config.GetCheckApiContext,
+    get_inventory_context: GetInventoryApiContext,
+) -> None:
     loaded_files: Set[str] = set()
     filelist = config.get_plugin_paths(str(cmk.utils.paths.local_inventory_dir),
                                        cmk.utils.paths.inventory_dir)
@@ -108,6 +111,9 @@ def _extract_snmp_sections(
                     plugin_info['snmp_scan_function'],
                     plugin_info['snmp_info'],
                     scan_function_fallback_files=fallback_files,
+                    # We have to validate, because we read inventory plugin files
+                    # directly, and do not know whether they changed.
+                    validate_creation_kwargs=True,
                 ))
         except (NotImplementedError, KeyError, AssertionError, ValueError):
             msg = config.AUTO_MIGRATION_ERR_MSG % ('section', plugin_name)
@@ -134,8 +140,8 @@ def _extract_inventory_plugins(inf_info: Dict[InventoryPluginNameStr, InventoryI
 
 
 def _new_inv_context(get_check_api_context: config.GetCheckApiContext,
-                     get_inventory_context: config.GetInventoryApiContext) -> Dict:
-    # Add the data structures where the inventory plugins register with Check_MK
+                     get_inventory_context: GetInventoryApiContext) -> Dict:
+    # Add the data structures where the inventory plugins register with Checkmk
     context = {
         "inv_info": inv_info,
         "inv_export": inv_export,

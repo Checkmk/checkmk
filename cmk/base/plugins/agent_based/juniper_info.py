@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v0 import (
-    parse_to_string_table,
+from .agent_based_api.v1 import (
     register,
     SNMPTree,
     startswith,
@@ -13,8 +12,7 @@ from .agent_based_api.v0 import (
 
 register.snmp_section(
     name="juniper_info",
-    parse_function=parse_to_string_table,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2636.3.1",
             oids=[

@@ -4,14 +4,18 @@ catalog: hw/storagehw/netapp
 license: GPL
 distribution: check_mk
 description:
- Checks the CPU utilization (in percent) of a vFiler in a 7Mode environment.
+ This check monitors the CPU utilization (in percent) of a vFiler in a 7Mode
+ environment. By default, the check goes WARN if the utilization exceeds 90%
+ and CRIT if it exceeds 95%. Custom levels can be configured using the rule
+ "CPU utilization of Devices with Modules".
 
- {WARN} or {CRIT} is returned, if the usage in the last 60 sec was above
- given thresholds. {OK} is returned otherwise.
+ Furthermore, the check can also be configured to compute an averaged CPU
+ utilization. The time range over which the average is computed can be set by
+ the user. If averaging is activated, the levels will be applied to the averaged
+ utilization.
 
 item:
- Name of the CPU
+ Name of the vFiler.
 
 inventory:
  One service is created for each vFiler.
-

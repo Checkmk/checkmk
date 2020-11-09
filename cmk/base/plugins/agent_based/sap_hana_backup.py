@@ -7,14 +7,14 @@ import time
 
 from typing import Dict
 
-import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from .agent_based_api.v0 import (
+from .utils import sap_hana
+from .agent_based_api.v1 import (
     render,
     check_levels,
     register,
     Service,
     Result,
-    state,
+    State as state,
 )
 
 

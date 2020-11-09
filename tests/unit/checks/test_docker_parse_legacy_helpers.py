@@ -7,9 +7,11 @@
 import os
 import pytest  # type: ignore[import]
 
-pytestmark = pytest.mark.checks
+from cmk.base.check_legacy_includes.legacy_docker import (  # type: ignore[attr-defined]
+    _legacy_docker_get_bytes, _legacy_docker_trunk_id,
+)
 
-exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
+pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize('indata,outdata', [
@@ -20,7 +22,7 @@ exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker
     ("", None),
 ])
 def test_parse_legacy_docker_get_bytes(indata, outdata):
-    parsed = _legacy_docker_get_bytes(indata)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    parsed = _legacy_docker_get_bytes(indata)
     assert outdata == parsed
 
 
@@ -28,5 +30,5 @@ def test_parse_legacy_docker_get_bytes(indata, outdata):
     ("sha256:8b15606a9e3e430cb7ba739fde2fbb3734a19f8a59a825ffa877f9be49059817", "8b15606a9e3e"),
 ])
 def test_parse_legacy_docker_trunk_id(indata, outdata):
-    parsed = _legacy_docker_trunk_id(indata)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    parsed = _legacy_docker_trunk_id(indata)
     assert outdata == parsed

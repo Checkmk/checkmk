@@ -21,16 +21,19 @@ def test_domain_object():
             }
         },
         'links': [{
+            'domainType': 'link',
             'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
             'method': 'GET',
             'rel': 'self',
             'type': 'application/json'
         }, {
+            'domainType': 'link',
             'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
             'method': 'PUT',
             'rel': '.../update',
             'type': 'application/json'
         }, {
+            'domainType': 'link',
             'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
             'method': 'DELETE',
             'rel': '.../delete',
@@ -40,16 +43,19 @@ def test_domain_object():
             'move': {
                 'id': 'move',
                 'links': [{
+                    'domainType': 'link',
                     'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8',
                     'method': 'GET',
                     'rel': 'up',
                     'type': 'application/json'
                 }, {
+                    'domainType': 'link',
                     'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move',
                     'method': 'GET',
                     'rel': '.../details;action="move"',
                     'type': 'application/json'
                 }, {
+                    'domainType': 'link',
                     'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move/invoke',
                     'method': 'POST',
                     'rel': '.../invoke;action="move"',

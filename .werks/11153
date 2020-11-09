@@ -6,7 +6,7 @@ Date: 1591261890
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk extends the following checks by an option to compute averaged
 single-core CPU utilizations (previously, this was only possible for the total

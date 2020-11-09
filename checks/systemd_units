@@ -262,28 +262,43 @@ def _check_non_ok_services(systemd_services, params, output_string):
 def check_systemd_units_services_summary(_no_item, params, parsed):
     services = parsed.get('service', {}).values()
     blacklist = params.get('ignored', [])
-    yield 0, "%d services in total" % len(services)
+    yield 0, "Total: %d" % len(services)
 
     services_organised = _services_split(services, blacklist)
+
+    yield 0, "Disabled: %d" % len(services_organised["disabled"])
+    # some of the failed ones might be ignored, so this is OK:
+    yield 0, "Failed: %d" % sum(s.active == "failed" for s in services)
+
+    long_output = []
 
     included_template = "%d service%s %s (%s)"
     for subresult in _check_non_ok_services(services_organised["included"], params,
                                             included_template):
-        yield subresult
+        if subresult[0]:
+            yield subresult
+        else:
+            long_output.append(subresult)
 
     static_template = "%d static service%s %s (%s)"
     for subresult in _check_non_ok_services(services_organised["static"], params, static_template):
-        yield subresult
+        if subresult[0]:
+            yield subresult
+        else:
+            long_output.append(subresult)
 
     for temporary_type in ("activating", "reloading"):
         for subresult in _check_temporary_state(services_organised[temporary_type], params,
                                                 temporary_type):
-            yield subresult
+            if subresult[0]:
+                yield subresult
+            else:
+                long_output.append(subresult)
 
     if services_organised["excluded"]:
-        yield 0, "%d ignored services" % len(services_organised["excluded"])
-    if services_organised["disabled"]:
-        yield 0, "%d disabled services" % len(services_organised["disabled"])
+        yield 0, "\nIgnored: %d" % len(services_organised["excluded"])
+
+    yield from long_output
 
 
 check_info['systemd_units.services_summary'] = {

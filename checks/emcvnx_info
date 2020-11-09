@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.emcvnx import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # <<<emcvnx_info>>>
 #
@@ -136,7 +137,6 @@ check_info['emcvnx_info'] = {
     "inventory_function": lambda x: inventory_emcvnx_info(x, 'info'),
     "check_function": check_emcvnx_info,
     "service_description": "EMC VNX Info",
-    "includes": ["emcvnx.include"],
 }
 
 #   .--Storage-------------------------------------------------------------.

@@ -12,9 +12,19 @@ import tempfile
 import datetime
 from contextlib import contextmanager
 from pathlib import Path
+from types import ModuleType
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    MutableMapping,
+    Set,
+)
 
 import urllib3  # type: ignore[import]
 import freezegun  # type: ignore[import]
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from testlib.utils import (  # noqa: F401 # pylint: disable=unused-import
     repo_path, cmk_path, cme_path, cmc_path, current_branch_name, virtualenv_path,
@@ -32,7 +42,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def skip_unwanted_test_types(item):
-    import pytest  # type: ignore[import] # pylint: disable=import-outside-toplevel
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -90,6 +99,8 @@ def fake_version_and_paths():
                         os.path.join(tmp_dir, "tmp/check_mk/data_source_cache"))
     monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
     monkeypatch.setattr("cmk.utils.paths.log_dir", os.path.join(tmp_dir, "var/log"))
+    monkeypatch.setattr("cmk.utils.paths.core_helper_config_dir",
+                        Path(tmp_dir, "var/check_mk/core/helper_config"))
     monkeypatch.setattr("cmk.utils.paths.autochecks_dir",
                         os.path.join(tmp_dir, "var/check_mk/autochecks"))
     monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
@@ -131,6 +142,14 @@ def fake_version_and_paths():
                         Path(tmp_dir).joinpath("var/check_mk/diagnostics"))
     monkeypatch.setattr("cmk.utils.paths.site_config_dir",
                         Path(cmk.utils.paths.var_dir, "site_configs"))
+    monkeypatch.setattr("cmk.utils.paths.disabled_packages_dir",
+                        Path(cmk.utils.paths.var_dir, "disabled_packages"))
+    monkeypatch.setattr("cmk.utils.paths.nagios_objects_file",
+                        os.path.join(tmp_dir, "etc/nagios/conf.d/check_mk_objects.cfg"))
+    monkeypatch.setattr("cmk.utils.paths.precompiled_hostchecks_dir",
+                        os.path.join(tmp_dir, "var/check_mk/precompiled"))
+    monkeypatch.setattr("cmk.utils.paths.discovered_host_labels_dir",
+                        Path(tmp_dir, "var/check_mk/discovered_host_labels"))
 
 
 def import_module(pathname):
@@ -260,38 +279,8 @@ def create_linux_test_host(request, web_fixture, site, hostname):
 #   |                   \____|_| |_|\___|\___|_|\_\___/                    |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Testing of Check_MK checks                                           |
+#   | Testing of Checkmk checks                                           |
 #   '----------------------------------------------------------------------'
-
-
-class CheckManager:
-    def load(self, file_names=None):
-        """Load either all check plugins or the given file_names"""
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-        import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
-        import cmk.utils.paths  # pylint: disable=import-outside-toplevel
-
-        if file_names is None:
-            config.load_all_checks(check_api.get_check_api_context)  # loads all checks
-        else:
-            config._initialize_data_structures()
-            config.load_checks(check_api.get_check_api_context,
-                               [os.path.join(cmk.utils.paths.checks_dir, f) for f in file_names])
-
-        return self
-
-    def get_check(self, name):
-        main_check = name.split(".", 1)[0]
-        self.load([main_check])
-        return Check(name)
-
-    def get_active_check(self, name):
-        self.load([name])
-        return ActiveCheck(name)
-
-    def get_special_agent(self, name):
-        self.load([name])
-        return SpecialAgent(name)
 
 
 class MissingCheckInfoError(KeyError):
@@ -410,98 +399,45 @@ class SpecialAgent:
 
 
 @contextmanager
+def set_timezone(timezone):
+    if "TZ" not in os.environ:
+        tz_set = False
+        old_tz = ""
+    else:
+        tz_set = True
+        old_tz = os.environ['TZ']
+
+    os.environ['TZ'] = timezone
+    time.tzset()
+
+    yield
+
+    if not tz_set:
+        del os.environ['TZ']
+    else:
+        os.environ['TZ'] = old_tz
+
+    time.tzset()
+
+
+@contextmanager
 def on_time(utctime, timezone):
     """Set the time and timezone for the test"""
     if isinstance(utctime, (int, float)):
         utctime = datetime.datetime.utcfromtimestamp(utctime)
 
-    os.environ['TZ'] = timezone
-    time.tzset()
-    with freezegun.freeze_time(utctime):
+    with set_timezone(timezone), freezegun.freeze_time(utctime):
         yield
-    os.environ.pop('TZ')
-    time.tzset()
 
 
-#.
-#   .--Inventory plugins---------------------------------------------------.
-#   |            ___                      _                                |
-#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
-#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
-#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
-#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
-#   |                                                   |___/              |
-#   |                         _             _                              |
-#   |                   _ __ | |_   _  __ _(_)_ __  ___                    |
-#   |                  | '_ \| | | | |/ _` | | '_ \/ __|                   |
-#   |                  | |_) | | |_| | (_| | | | | \__ \                   |
-#   |                  | .__/|_|\__,_|\__, |_|_| |_|___/                   |
-#   |                  |_|            |___/                                |
-#   '----------------------------------------------------------------------'
+def get_value_store_fixture(
+        module: ModuleType
+) -> Callable[[MonkeyPatch], Generator[MutableMapping[str, Any], None, None]]:
+    """Creates a fixture for patching get_value_store (check API) in a given module"""
+    @pytest.fixture(name="value_store")
+    def value_store_fixture(monkeypatch):
+        value_store: MutableMapping[str, Any] = {}
+        monkeypatch.setattr(module, 'get_value_store', lambda: value_store)
+        yield value_store
 
-
-class MockStructuredDataTree:
-    def __init__(self):
-        self.data = {}
-
-    def get_dict(self, path):
-        return self.data.setdefault(path, dict())
-
-    def get_list(self, path):
-        return self.data.setdefault(path, list())
-
-
-class InventoryPluginManager:
-    def load(self):
-        import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
-        import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
-        g_inv_tree = MockStructuredDataTree()
-        g_status_tree = MockStructuredDataTree()
-
-        def get_inventory_context():
-            return {
-                "inv_tree_list": g_inv_tree.get_list,
-                "inv_tree": g_inv_tree.get_dict,
-            }
-
-        inv_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
-        return g_inv_tree, g_status_tree
-
-    def get_inventory_plugin(self, name):
-        g_inv_tree, g_status_tree = self.load()
-        return InventoryPlugin(name, g_inv_tree, g_status_tree)
-
-
-class MissingInvInfoError(KeyError):
-    pass
-
-
-class InventoryPlugin:
-    def __init__(self, name, g_inv_tree, g_status_tree):
-        import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
-        super(InventoryPlugin, self).__init__()
-        self.name = name
-        if self.name not in inv_plugins.inv_info:
-            raise MissingInvInfoError(self.name)
-        self.info = inv_plugins.inv_info[self.name]
-        self.g_inv_tree = g_inv_tree
-        self.g_status_tree = g_status_tree
-
-    def run_inventory(self, *args):
-        # args contain info/parsed and/or params
-        inv_function = self.info.get("inv_function")
-        if not inv_function:
-            raise MissingInvInfoError("Inventory plugin '%s' " % self.name +
-                                      "has no inv function defined.")
-
-        # As in inventory._do_inv_for_realhost
-        inventory_tree = MockStructuredDataTree()
-        status_data_tree = MockStructuredDataTree()
-        from cmk.utils.misc import make_kwargs_for  # pylint: disable=import-outside-toplevel
-        kwargs = make_kwargs_for(inv_function,
-                                 inventory_tree=inventory_tree,
-                                 status_data_tree=status_data_tree)
-        inv_function(*args, **kwargs)
-        if kwargs:
-            return inventory_tree.data, status_data_tree.data
-        return self.g_inv_tree.data, self.g_status_tree.data
+    return value_store_fixture

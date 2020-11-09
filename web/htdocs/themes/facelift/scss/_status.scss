@@ -44,7 +44,6 @@ table.data tr.data td.stale.hstate1 {
   text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
 }
 
-
 /* OK/UP */
 .state0,
 .hstate0,
@@ -59,10 +58,16 @@ body.main .popup_menu .hstate0 span {
 }
 
 /* TODO: Replace class "odd0" with "odd state0" */
-.odd0, .even0 {
-  .state0, .hstate0, .state0 a, .state0 body.main .popup_menu span,
-  body.main .popup_menu & .state0 span, .hstate0 a,
-  .hstate0 body.main .popup_menu span, body.main .popup_menu & .hstate0 span {
+.odd0,
+.even0 {
+  .state0,
+  .hstate0,
+  .state0 a,
+  .state0 body.main .popup_menu span,
+  body.main .popup_menu & .state0 span,
+  .hstate0 a,
+  .hstate0 body.main .popup_menu span,
+  body.main .popup_menu & .hstate0 span {
     color: $dark-font-color;
     background-color: $color-state-success-background !important;
     border-color: $color-state-success-border !important;
@@ -139,10 +144,15 @@ tr.even3 {
   background-color: $tr-even3-bg-color;
 }
 
-
 /* PENDING / in DOWNTIME */
-.statep, .hstatep, .stated, .hstated {
-  &, a, body.main .popup_menu span, body.main .popup_menu & span {
+.statep,
+.hstatep,
+.stated,
+.hstated {
+  &,
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
     color: $statep-font-color !important;
     background-color: $color-state-4-background !important;
     border-color: $color-state-4-border !important;
@@ -170,14 +180,19 @@ img.pluginurl {
 }
 
 /* *some* problem */
-.states, .hstates {
+.states,
+.hstates {
   color: rgb(0, 0, 0);
   background-image: url("images/someproblem.png");
   background-position: center center;
   background-repeat: repeat;
 
-  body.main & a, table.data tr.data > & a {
-    &, &:hover, &:link, &:link:hover {
+  body.main & a,
+  table.data tr.data > & a {
+    &,
+    &:hover,
+    &:link,
+    &:link:hover {
       color: $grey-7;
     }
   }
@@ -186,7 +201,7 @@ img.pluginurl {
 .states {
   background-color: $color-nuance-6;
   background-image: none;
-  transition: .15s ease-in-out;
+  transition: 0.15s ease-in-out;
 }
 
 /* Status of sites in sidebar and in WATO */
@@ -221,11 +236,11 @@ img.pluginurl {
     background-color: rgb(120, 120, 120);
   }
 
-  &.dead     {
+  &.dead {
     background-color: rgb(185, 30, 29);
   }
 
-  &.down     {
+  &.down {
     background-color: rgb(246, 0, 0);
   }
 
@@ -240,19 +255,18 @@ img.pluginurl {
     background-color: rgb(189, 138, 63);
   }
 
-  &.unknown  {
+  &.unknown {
     background-color: rgb(169, 99, 148);
   }
 
-  &.unreach  {
+  &.unreach {
     background-color: rgb(239, 123, 8);
   }
 
-  &.waiting  {
+  &.waiting {
     background-color: rgb(53, 116, 194);
   }
 }
-
 
 /* Performeter styling */
 
@@ -371,7 +385,8 @@ table.data td.perfometer {
   }
 }
 
-td.statex {  /* zero count */
+td.statex {
+  /* zero count */
   color: rgb(204, 204, 204);
 }
 
@@ -379,7 +394,9 @@ td.statex {  /* zero count */
 tr[class*="odd"] {
   background-color: $odd-tr-bg-color;
 
-  td.state0 a, td.state1 a, td.state3 a {
+  td.state0 a,
+  td.state1 a,
+  td.state3 a {
     color: $dark-font-color;
   }
 }
@@ -391,7 +408,9 @@ tr[class*="even"] {
     border-bottom: none;
   }
 
-  td.state0 a, td.state1 a, td.state3 a {
+  td.state0 a,
+  td.state1 a,
+  td.state3 a {
     color: $dark-font-color;
   }
 }
@@ -420,7 +439,8 @@ table.data {
     }
   }
 
-  .state2 *, .state3 * {
+  .state2 *,
+  .state3 * {
     color: rgb(255, 255, 255);
   }
 
@@ -429,8 +449,8 @@ table.data {
   }
 
   tr.data td.states {
-    background-color: $color-nuance-6;
     color: $states-font-color;
+    background-color: $color-nuance-6;
   }
 }
 
@@ -465,7 +485,6 @@ img.tabicon {
   height: 16px;
   vertical-align: middle;
 }
-
 
 /* Styles used by specific painters. These should be modularized later ... */
 /* TODO: Reproduce this html element */

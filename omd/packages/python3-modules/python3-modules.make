@@ -18,20 +18,20 @@ PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/pyt
 
 PYTHON3_MODULES_LIST :=
 
-PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
+PYTHON3_MODULES_LIST += setuptools_scm-4.1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += six-1.15.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL, python-active-directory
 PYTHON3_MODULES_LIST += python-dateutil-2.8.1.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += PyYAML-5.3.1.tar.gz # needed by vcrpy
-PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # needed by vcrpy
-PYTHON3_MODULES_LIST += yarl-1.3.0.tar.gz # needed by vcrpy
-PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # needed by yarl
+PYTHON3_MODULES_LIST += wrapt-1.12.1.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += yarl-1.6.0.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += multidict-4.7.6.tar.gz # needed by yarl
 PYTHON3_MODULES_LIST += idna-2.8.tar.gz # needed by yarl, requests
-PYTHON3_MODULES_LIST += vcrpy-2.1.0.tar.gz # used by various unit tests to mock HTTP transactions
+PYTHON3_MODULES_LIST += vcrpy-4.1.0.tar.gz # used by various unit tests to mock HTTP transactions
 
-PYTHON3_MODULES_LIST += pycparser-2.19.tar.gz # needed by cffi
-PYTHON3_MODULES_LIST += cffi-1.13.1.tar.gz # needed by PyNaCl, cryptography, bcrypt
+PYTHON3_MODULES_LIST += pycparser-2.20.tar.gz # needed by cffi
+PYTHON3_MODULES_LIST += cffi-1.14.3.tar.gz # needed by PyNaCl, cryptography, bcrypt
 PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # needed by paramiko
 PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # needed by paramiko, pyOpenSSL
 PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # needed by paramiko
@@ -47,10 +47,10 @@ PYTHON3_MODULES_LIST += snmpsim-0.4.7.tar.gz # needed by SNMP integration tests
 
 PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
-PYTHON3_MODULES_LIST += urllib3-1.25.8.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += urllib3-1.25.10.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
 PYTHON3_MODULES_LIST += pyghmi-1.5.13.tar.gz # needed by base for IPMI
-PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD, connexion
+PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += MarkupSafe-1.1.1.tar.gz # needed by Jinja2
@@ -58,21 +58,18 @@ PYTHON3_MODULES_LIST += itsdangerous-1.1.0.tar.gz # needed by Flask
 PYTHON3_MODULES_LIST += Jinja2-2.10.3.tar.gz # needed by Flask
 PYTHON3_MODULES_LIST += more-itertools-8.0.2.tar.gz # needed by zipp
 PYTHON3_MODULES_LIST += zipp-0.6.0.tar.gz # needed by importlib_metadata
-PYTHON3_MODULES_LIST += attrs-19.3.0.tar.gz # needed by jsonschema
+PYTHON3_MODULES_LIST += attrs-20.2.0.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += importlib_metadata-1.2.0.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += pyrsistent-0.15.6.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += Click-7.0.tar.gz # needed by clickclick
 PYTHON3_MODULES_LIST += Werkzeug-0.16.0.tar.gz # Needed by Flask
-PYTHON3_MODULES_LIST += jsonschema-3.2.0.tar.gz # needed by connexion, openapi-spec-validator
-PYTHON3_MODULES_LIST += clickclick-1.2.2.tar.gz # needed by connexion
-PYTHON3_MODULES_LIST += Flask-1.1.1.tar.gz # needed by connexion
+PYTHON3_MODULES_LIST += jsonschema-3.2.0.tar.gz # needed by openapi-spec-validator
+PYTHON3_MODULES_LIST += Flask-1.1.1.tar.gz # direct dependency
 PYTHON3_MODULES_LIST += pytz-2020.1.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Babel-2.8.0.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Flask-Babel-1.0.0.tar.gz # needed by GUI for i18n support (lazy gettext)
-PYTHON3_MODULES_LIST += inflection-0.3.1.tar.gz # needed by connexion
-PYTHON3_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz # needed by connexion
+PYTHON3_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz # direct dependency
 PYTHON3_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz # direct dependency
-PYTHON3_MODULES_LIST += connexion-2.4.0.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
 PYTHON3_MODULES_LIST += passlib-1.7.2.tar.gz # needed for omdlib
@@ -87,7 +84,7 @@ PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
 
-PYTHON3_MODULES_LIST += Pillow-7.0.0.tar.gz # needed by GUI, reportlab
+PYTHON3_MODULES_LIST += Pillow-7.2.0.tar.gz # needed by GUI, reportlab
 PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), python-active-directory
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += Cython-0.29.19.tar.gz # needed by numpy
@@ -96,9 +93,9 @@ PYTHON3_MODULES_LIST += reportlab-3.5.34.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 
-PYTHON3_MODULES_LIST += cachetools-4.0.0.tar.gz # needed by kubernetes
-PYTHON3_MODULES_LIST += google-auth-1.11.0.tar.gz # needed by kubernetes
-PYTHON3_MODULES_LIST += rsa-4.0.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += cachetools-4.1.1.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += google-auth-1.21.3.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += rsa-4.6.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += websocket_client-0.57.0.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += kubernetes-10.0.1.tar.gz # needed by kubernetes
 
@@ -113,10 +110,10 @@ PYTHON3_MODULES_LIST += PyMySQL-0.9.3.tar.gz # needed by check_sql active check
 PYTHON3_MODULES_LIST += psycopg2-binary-2.8.4.tar.gz # needed by check_sql active check
 
 # To automatically generate checkmk.yaml OpenAPI spec file
-PYTHON3_MODULES_LIST += apispec-2.0.2.tar.gz
-PYTHON3_MODULES_LIST += marshmallow-2.20.5.tar.gz
-PYTHON3_MODULES_LIST += marshmallow-oneofschema-1.0.6.tar.gz
-PYTHON3_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
+PYTHON3_MODULES_LIST += apispec-3.3.1.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-3.7.1.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-oneofschema-2.0.1.tar.gz
+PYTHON3_MODULES_LIST += apispec-oneofschema-3.0.0.tar.gz
 
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
@@ -125,6 +122,9 @@ PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-director
 PYTHON3_MODULES_LIST += python-active-directory-1.0.5.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += docstring_parser-0.7.2.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += yapf-0.30.0.tar.gz  # formatter for REST-API documentation code examples
+PYTHON3_MODULES_LIST += pyprof2calltree-1.4.5.tar.gz  # converts cProfile info into cachegrind files
+PYTHON3_MODULES_LIST += repoze.profile-2.3.tar.gz  # very minimal wsgi profiling middleware
+PYTHON3_MODULES_LIST += pyparsing-2.4.7.tar.gz  # direct dependency
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
@@ -193,7 +193,7 @@ $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_INTERMEDIATE_INSTALL)
-	$(RSYNC) $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) -v $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
 
 python3-modules-dump-Pipfile:
@@ -222,6 +222,7 @@ python3-modules-dump-Pipfile:
 	@echo 'pytest = "*"  # used by various test/Makefile targets'
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
+	@echo 'pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml'
 	@echo 'responses = "*" # used for unit tests'
 	@echo 'polib = "*"  # used by locale/add-authors for working with .po files'
 	@echo 'webtest = "*"  # used by WSGI based tests'

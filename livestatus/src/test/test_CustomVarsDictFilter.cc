@@ -3,7 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <cstddef>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -35,8 +34,9 @@ std::string b16encode(const std::string& str) {
 struct CustomVarsDictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string& value) {
         CustomVarsDictColumn cvdc{
-            "name", "description",
-            Column::Offsets{-1, -1, -1, offsetof(host, custom_variables)},
+            "name", "description", ColumnOffsets{}.add([](Row r) {
+                return &r.rawData<host>()->custom_variables;
+            }),
             &core, kind};
         CustomVarsDictFilter filter{Filter::Kind::row, cvdc,
                                     RelationalOperator::equal, value};

@@ -17,6 +17,7 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
+#include "tools/_win.h"
 
 namespace cma::details {
 extern bool G_Service;
@@ -487,12 +488,6 @@ TEST(Wtools, KillTree) {
     EXPECT_FALSE(kProcessTreeKillAllowed);
 }
 
-TEST(Wtools, IsHandleValid) {
-    EXPECT_FALSE(IsHandleValid(nullptr));
-    EXPECT_FALSE(IsHandleValid(INVALID_HANDLE_VALUE));
-    EXPECT_TRUE(IsHandleValid(reinterpret_cast<HANDLE>(4)));
-}
-
 TEST(Wtools, Acl) {
     wtools::ACLInfo info("c:\\windows\\notepad.exe");
     auto ret = info.query();
@@ -580,6 +575,23 @@ TEST(Wtools, Registry) {
         EXPECT_EQ(GetRegistryValue(path, name, uint_value), uint_value);
         EXPECT_TRUE(wtools::DeleteRegistryValue(path, name));
     }
+}
+
+TEST(Wtools, Win32) {
+    ASSERT_EQ(InvalidHandle(), INVALID_HANDLE_VALUE);
+    EXPECT_TRUE(IsInvalidHandle(INVALID_HANDLE_VALUE));
+    char c[10] = "aaa";
+    auto h = static_cast<HANDLE>(c);
+    EXPECT_FALSE(IsInvalidHandle(h));
+    EXPECT_FALSE(IsInvalidHandle(nullptr));
+
+    EXPECT_FALSE(IsGoodHandle(nullptr));
+    EXPECT_FALSE(IsGoodHandle(INVALID_HANDLE_VALUE));
+    EXPECT_TRUE(IsGoodHandle(reinterpret_cast<HANDLE>(4)));
+
+    EXPECT_TRUE(IsBadHandle(nullptr));
+    EXPECT_TRUE(IsBadHandle(INVALID_HANDLE_VALUE));
+    EXPECT_FALSE(IsBadHandle(reinterpret_cast<HANDLE>(4)));
 }
 
 }  // namespace wtools

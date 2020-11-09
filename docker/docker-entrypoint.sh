@@ -14,7 +14,7 @@ function exec_hook() {
         for hook in *; do
             if [ ! -d "$hook" ] && [ -x "$hook" ]; then
                 echo "### Running $HOOKDIR/$hook"
-                ./"$hook" || true
+                ./"$hook"
             fi
         done
         popd >/dev/null
@@ -37,6 +37,8 @@ function create_system_apache_config() {
     # Redirect top level requests to the sites base url
     echo -e "# Redirect top level requests to the sites base url\\nRedirectMatch 302 ^/$ /$CMK_SITE_ID/\\n" >>"$APACHE_DOCKER_CFG"
 }
+
+exec_hook pre-entrypoint
 
 if [ -z "$CMK_SITE_ID" ]; then
     echo "ERROR: No site ID given"
@@ -100,7 +102,7 @@ if [ ! -f "/omd/apache/$CMK_SITE_ID.conf" ]; then
 fi
 
 # In case the version symlink is dangling we are in an update situation: The
-# volume was previously attached to a container with another Check_MK version.
+# volume was previously attached to a container with another Checkmk version.
 # We now have to perform the "omd update" to be able to bring the site back
 # to life.
 if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then

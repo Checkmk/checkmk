@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
 # PFT01 flag Testbit True
@@ -60,7 +61,6 @@ check_info['siemens_plc.temp'] = {
     "has_perfdata": True,
     "group": "temperature",
     "default_levels_variable": "siemens_plc_temp_default_levels",
-    "includes": ["temperature.include"],
 }
 
 #.

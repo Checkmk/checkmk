@@ -70,7 +70,7 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
     def activate(self):
         raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
 
-    def load(self, site_specific=False, custom_site_path=None):
+    def load_full_config(self, site_specific=False, custom_site_path=None):
         filename = Path(self.config_file(site_specific))
         if custom_site_path:
             filename = Path(custom_site_path) / filename.relative_to(cmk.utils.paths.omd_root)
@@ -85,14 +85,13 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
             with filename.open("rb") as f:
                 exec(f.read(), settings, settings)
 
-            # FIXME: Do not modify the dict while iterating over it.
-            for varname in list(settings.keys()):
-                if varname not in config_variable_registry:
-                    del settings[varname]
-
             return settings
+
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
+
+    def load(self, site_specific=False, custom_site_path=None):
+        return filter_unknown_settings(self.load_full_config(site_specific, custom_site_path))
 
     def load_site_globals(self, custom_site_path=None):
         return self.load(site_specific=True, custom_site_path=custom_site_path)
@@ -256,6 +255,16 @@ class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVaria
 
 
 config_variable_registry = ConfigVariableRegistry()
+
+
+def filter_unknown_settings(settings):
+    removals: List[str] = []
+    for varname in list(settings.keys()):
+        if varname not in config_variable_registry:
+            removals.append(varname)
+    for removal in removals:
+        del settings[removal]
+    return settings
 
 
 def configvar_order():

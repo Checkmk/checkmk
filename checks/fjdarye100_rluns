@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard-import,unused-wildcard-import
 check_info["fjdarye100_rluns"] = {
-    'includes': ["fjdarye.include"],
     'check_function': check_fjdarye_rluns,
     'inventory_function': inventory_fjdarye_rluns,
     'service_description': 'RLUN %s',

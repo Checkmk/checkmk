@@ -14,7 +14,6 @@
 | Styles used in WATO.                                                     |
 '-------------------------------------------------------------------------*/
 
-
 .wato {
   color: $font-color;
 }
@@ -28,8 +27,8 @@
 }
 
 .wato table.data {
-  border: $wato-data-table-border;
-  box-shadow: $wato-data-table-box-shadow;
+  border-style: none;
+  box-shadow: none;
 
   &.job_table {
     border: none;
@@ -37,12 +36,12 @@
   }
 
   &:not(.job_table) th {
-    background: $wato-data-th-bg-color;
+    background: transparent;
     border-radius: 0;
 
     &.header_state {
-      color: $font-color !important;
-      background: $wato-data-th-bg-color !important;
+      color: rgb(119, 119, 119) !important;
+      background: transparent !important;
     }
   }
 
@@ -57,7 +56,9 @@
       text-align: center;
     }
 
-    &.buttons, &.buttons a, &.buttons img {
+    &.buttons,
+    &.buttons a,
+    &.buttons img {
       white-space: nowrap;
     }
   }
@@ -181,7 +182,7 @@
 }
 
 /* host validation error */
-table.validationerror  {
+table.validationerror {
   width: 100%;
 
   td.img {
@@ -199,7 +200,8 @@ table.validationerror  {
 
 /* bulk actions in host table */
 .wato table.data tr.data {
-  td.bulksearch, td.bulkactions {
+  td.bulksearch,
+  td.bulkactions {
     padding-top: 25px;
   }
 
@@ -232,22 +234,53 @@ div#service_container {
   }
 
   table.data {
+    tr.data > td {
+      height: auto;
+      padding: 3px 7px;
+
+      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
+        border-top: none;
+        border-bottom: none;
+      }
+
+      &.service {
+        width: 250px;
+        max-width: 250px;
+        min-width: 250px;
+      }
+    }
+
     tr.groupheader {
-      background-color: $service-container-groupheader-bg-color;
+      background-color: transparent;
+    }
+
+    th {
+      color: #777;
     }
 
     td h3 {
-      margin-top: $td-h3-margin-top;
+      margin-top: 13px;
+    }
+  }
+
+  h3 {
+    margin-top: 13px;
+    font-size: 13px;
+    color: #aaa;
+    text-transform: uppercase;
+
+    img {
+      position: relative;
+      top: -1px;
+      margin-left: 5px;
     }
   }
 }
-
 
 table.data tr.data > td.bulkactions {
   background: transparent;
   border: none;
 }
-
 
 a.service_button.disabled {
   pointer-events: none;
@@ -283,7 +316,7 @@ table.data tr.data > td.bulksearch {
 }
 
 .wato td.bulksearch {
-  input[type=text] {
+  input[type="text"] {
     width: 150px;
     margin-right: 5px;
   }
@@ -391,8 +424,8 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
     color: rgb(255, 255, 255);
     text-align: left;
     text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
     white-space: nowrap;
+    -o-text-overflow: ellipsis;
 
     a {
       position: relative;
@@ -410,11 +443,11 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
   }
 
   &.newfolder {
-    opacity: 0.4;
-    color: rgb(220, 220, 220);
     font-size: 80px;
-    text-align: center;
     line-height: 145px;
+    color: rgb(220, 220, 220);
+    text-align: center;
+    opacity: 0.4;
   }
 }
 
@@ -587,7 +620,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 .wato form.rule_editor {
   table.hosttags td.title {
     min-width: 200px;
-    }
+  }
 
   td.tag_sel {
     display: table-cell;
@@ -614,7 +647,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   }
 
   tag > div::before {
-    opacity: .5;
+    opacity: 0.5;
   }
 }
 
@@ -650,7 +683,8 @@ form#form_timeperiod td.vlof_content {
 }
 
 /* main menu */
-form.search, div.filter_buttons {
+form.search,
+div.filter_buttons {
   display: inline-block;
   padding-top: 10px;
   margin-bottom: 10px;
@@ -662,17 +696,20 @@ form.search, div.filter_buttons {
 }
 
 .wato div.mainmenu {
-  a, body.main .popup_menu span, body.main .popup_menu & span {
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
     display: block;
     width: 330px;
     height: 80px;
     margin: 0 8px 8px 0;
     background: $bg-color-secondary;
     border: 1px solid $color-table-border;
+    border-radius: $theme-border-radius;
     box-shadow: none;
 
     &:hover {
-      background: $wato-a-hover-bg-color;
+      background: $input-button-hover-bg-color;
     }
   }
 
@@ -680,12 +717,8 @@ form.search, div.filter_buttons {
     position: relative;
     float: left;
     width: 317px;
-    padding: 0 0 14px;
+    padding: 0 0 $spacing;
     border: $wato-a-border;
-
-    &:hover div.title {
-      color: $secondary-font-color;
-    }
   }
 
   div {
@@ -697,7 +730,6 @@ form.search, div.filter_buttons {
       left: 72px;
       padding: 0;
       font-weight: bold;
-      color: $secondary-link-color;
     }
 
     &.subtitle {
@@ -915,7 +947,8 @@ div.varname {
     height: 16px;
     text-align: center;
 
-    &.state_success, &.state_warning {
+    &.state_success,
+    &.state_warning {
       color: $dark-font-color;
     }
   }
@@ -970,7 +1003,8 @@ table.data tr.notification_context table {
   border: 1px solid $color-table-border;
   box-shadow: none;
 
-  th, td {
+  th,
+  td {
     font-family: monospace;
   }
 
@@ -1018,7 +1052,7 @@ table.data tr.data.dcd_log_entries {
 .wato table.progress {
   width: 50%;
   color: rgb(0, 0, 0);
-  background: $bg-color-tertiary;
+  background: $bg-color-secondary;
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
 
@@ -1112,7 +1146,8 @@ table.data tr.data.dcd_log_entries {
         border-spacing: 0;
       }
 
-      th, td {
+      th,
+      td {
         padding: 6px 0;
         border-bottom: 1px solid rgb(255, 255, 255);
         border-color: $color-table-border;
@@ -1224,7 +1259,6 @@ table.data td.bi_rule_tree {
   }
 }
 
-
 /*-Host Diag-----------------------------------------------------------.
 |              _   _           _     ____  _                           |
 |             | | | | ___  ___| |_  |  _ \(_) __ _  __ _               |
@@ -1242,21 +1276,20 @@ table.data td.bi_rule_tree {
   overflow-y: scroll;
   font-family: monospace, sans-serif;
   vertical-align: top;
-  background-color: $bg-color-default;
+  background-color: $bg-color;
   box-shadow: 1px 1px 3px rgb(136, 136, 136) inset;
   /* below resize option is css3 */
   resize: both;
 }
 
 .backup_job {
-
   .log pre {
     margin: 2px;
   }
 
   td.left {
-    min-width: 200px;
     width: 12%;
+    min-width: 200px;
   }
 }
 
@@ -1342,7 +1375,8 @@ table.setting td.reason {
   font-style: italic;
   color: rgb(255, 255, 255);
 
-  i { /* default value */
+  i {
+    /* default value */
     color: rgb(182, 200, 209);
   }
 
@@ -1355,7 +1389,8 @@ table.setting td.reason {
   }
 }
 
-td.settingvalue.unused, td.settingvalue.unused td {
+td.settingvalue.unused,
+td.settingvalue.unused td {
   font-style: italic;
   color: $td-unused-color;
 }
@@ -1392,12 +1427,13 @@ table.nform.rulesettings td.legend {
     padding: 2px;
     margin: 0 5px 5px 0;
     text-overflow: ellipsis;
-    background: $bg-color-tertiary;
+    background: $bg-color-secondary;
     border: 1px solid $color-table-border;
     border-radius: 6px;
     box-shadow: none;
 
-    div, span {
+    div,
+    span {
       display: inline-block;
       vertical-align: middle;
     }
@@ -1498,7 +1534,8 @@ table.data.analyze_config td.buttons {
   display: block;
 }
 
-.wato h2, .wato h3 {
+.wato h2,
+.wato h3 {
   margin-bottom: $wato-h3-margin-bottom;
 
   + div.info {
@@ -1511,10 +1548,12 @@ table.data.analyze_config td.buttons {
 }
 
 .wato h3 {
-  font-size: $theme-font-table-header;
+  margin-bottom: 12px;
+  font-size: 14px;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
-  color: $font-color;
+  color: $wato-h3-font-color;
+  text-transform: uppercase;
 }
 
 .wato table.data.job_table {

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<graylog_license>>>
 # {"status": [{"violated": true,"expired": false,"expiration_upcoming":
 # false,"expired_since": "PT0S","expires_in": "PT550H17.849S","trial":
@@ -80,7 +81,7 @@ def check_graylog_license(_no_item, params, parsed):
     expires = license_data.get("license", {}).get("expiration_date")
     if expires is not None:
 
-        timestamp = _handle_iso_utc_to_localtimestamp(expires)
+        timestamp = handle_iso_utc_to_localtimestamp(expires)
         time_to_expiration = int(timestamp) - time.time()
         warn, crit = params.get("expiration", (None, None))
         yield check_levels(time_to_expiration,
@@ -113,5 +114,4 @@ check_info["graylog_license"] = {
     "default_levels_variable": "graylog_license_default_levels",
     "service_description": "Graylog License",
     "group": "graylog_license",
-    "includes": ["graylog.include"],
 }

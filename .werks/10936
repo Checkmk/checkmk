@@ -6,7 +6,7 @@ Date: 1587983322
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The monitoring agent rules "SAP HANA" and "Run plugins and local checks using non-system" (Windows Agent) are using Password from Store.
 This werk enables a correct password handling between "explicit" and "password store".

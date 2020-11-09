@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.stormshield import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Older versions replay an empty string if the state is Unknown / Error state
 
 sync_name_mapping = {
@@ -62,5 +63,4 @@ check_info['stormshield_cluster'] = {
             '8',  # snsHASyncStatus
         ]),
     'snmp_scan_function': stormshield_cluster_scan_function,
-    'includes': ['stormshield.include'],
 }

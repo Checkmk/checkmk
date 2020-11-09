@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict
+from testlib import Check  # type: ignore[import]
 import pytest  # type: ignore[import]
 from cmk.base.check_api import MKCounterWrapped  # noqa: F401 # pylint: disable=unused-import
 from test_ibm_mq_include import parse_info
@@ -35,7 +36,8 @@ factory_settings["ibm_mq_managers_default_levels"] = {
 }
 
 
-def test_parse(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_parse():
     lines = """\
 QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT PERMITTED) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.6) HA() DRROLE()
    INSTANCE(sb112233) MODE(ACTIVE)
@@ -48,7 +50,7 @@ QMNAME(THE.SLEEPING.ONE)                                  STATUS(ENDED NORMALLY)
 QMNAME(THE.CRASHED.ONE)                                   STATUS(ENDED UNEXPECTEDLY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation2) INSTPATH(/opt/mqm9) INSTVER(9.0.0.6) HA() DRROLE()
 """
     section = parse_info(lines, chr(10))
-    check = check_manager.get_check(CHECK_NAME)
+    check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
     assert len(parsed) == 5
 
@@ -67,13 +69,14 @@ QMNAME(THE.CRASHED.ONE)                                   STATUS(ENDED UNEXPECTE
     assert 'INSTANCES' not in attrs
 
 
-def test_check_single_instance_running(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_single_instance_running():
     lines = """\
 QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT PERMITTED) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.6)
    INSTANCE(sb112233) MODE(ACTIVE)
 """
     section = parse_info(lines, chr(10))
-    check = check_manager.get_check(CHECK_NAME)
+    check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
 
     attrs = parsed["THE.LOCAL.ONE"]
@@ -91,12 +94,13 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
     assert expected == actual
 
 
-def test_ended_preemtively(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_ended_preemtively():
     lines = """\
 QMNAME(MTAVBS0P)                                          STATUS(ENDED PREEMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
     section = parse_info(lines, chr(10))
-    check = check_manager.get_check(CHECK_NAME)
+    check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
     params = factory_settings['ibm_mq_managers_default_levels']
     actual = list(check.run_check('MTAVBS0P', params, parsed))
@@ -111,7 +115,7 @@ QMNAME(MTAVBS0P)                                          STATUS(ENDED PREEMPTIV
 QMNAME(MTAVBS0P)                                          STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.1)
 """
     section = parse_info(lines, chr(10))
-    check = check_manager.get_check(CHECK_NAME)
+    check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
     params = factory_settings['ibm_mq_managers_default_levels']
     actual = list(check.run_check('MTAVBS0P', params, parsed))
@@ -123,12 +127,13 @@ QMNAME(MTAVBS0P)                                          STATUS(ENDED PRE-EMPTI
     assert expected == actual
 
 
-def test_version_mismatch(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_version_mismatch():
     lines = """\
 QMNAME(MTAVBS0P)                                          STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
     section = parse_info(lines, chr(10))
-    check = check_manager.get_check(CHECK_NAME)
+    check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
     params = factory_settings['ibm_mq_managers_default_levels']
     params.update({'version': ('at_least', '8.0')})

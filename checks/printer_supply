@@ -62,13 +62,26 @@ map_unit = {
 }
 
 
-def printer_supply_fix_infos(info):
+def _get_oid_end_last_index(oid_end):
+    # return last number of OID_END
+    return oid_end.split('.')[-1]
+
+
+def parse_printer_supply(info):
+    if len(info) < 2:
+        return {}
+
+    parsed = []
     colors = []
-    new_info = []
-    for index, (description, unit_info, max_capacity, level, class_, color) in enumerate(info):
+
+    color_mapping = {_get_oid_end_last_index(oid_end): value for oid_end, value in info[0]}
+
+    for index, (description, unit_info, max_capacity, level, class_,
+                color_id) in enumerate(info[1]):
         # give chance for latin1->utf8 decoding
         line_0 = description
 
+        color = color_mapping.get(color_id, '')
         # For toners or drum units add the color (if available)
         if line_0.startswith('Toner Cartridge') \
            or line_0.startswith('Image Drum Unit'):
@@ -84,23 +97,22 @@ def printer_supply_fix_infos(info):
         if " S/N:" in line_0:
             line_0 = line_0[:line_0.find(" S/N:")]
 
-        new_info.append([line_0, unit_info, max_capacity, level, class_, color])
-    return new_info
+        parsed.append([line_0, unit_info, max_capacity, level, class_, color_id, color])
+    return parsed
 
 
-def inventory_printer_supply(info):
+def inventory_printer_supply(parsed):
     # Ignore devices which show -2 for current value and -2 for max value -> useless
     # Also fix trailing zero bytes (seen on HP Jetdirect 143)
     return [
         (description.rstrip('\0'), {})
-        for description, _unit_info, max_capacity, level, _class, _color in
-        printer_supply_fix_infos(info)
+        for description, _unit_info, max_capacity, level, _class, _color_id, color in parsed
         # ignore useless devices
         if not (max_capacity == '-2' and level == '-2') and level and len(max_capacity) > 0
     ]
 
 
-def check_printer_supply(item, params, info):
+def check_printer_supply(item, params, parsed):
     if isinstance(params, tuple):
         if len(params) == 2:
             params = {"levels": params}
@@ -110,8 +122,7 @@ def check_printer_supply(item, params, info):
                 "upturn_toner": params[2],
             }
 
-    for description, unit_info, max_capacity, level, class_, color in printer_supply_fix_infos(
-            info):
+    for description, unit_info, max_capacity, level, class_, color_id, color in parsed:
         if description.rstrip('\0') == item:
             max_capacity = int(max_capacity)
             level = saveint(level)
@@ -183,19 +194,28 @@ def check_printer_supply(item, params, info):
 
 
 check_info["printer_supply"] = {
+    'parse_function': parse_printer_supply,
     'inventory_function': inventory_printer_supply,
     'check_function': check_printer_supply,
     'service_description': 'Supply %s',
-    'snmp_info': (
-        '.1.3.6.1.2.1.43',
-        [
-            '11.1.1.6',  # Printer-MIB::prtMarkerSuppliesDescription
-            '11.1.1.7',  # Printer-MIB::prtMarkerSuppliesUnit
-            '11.1.1.8',  # Printer-MIB::prtMarkerSuppliesMaxCapacity
-            '11.1.1.9',  # Printer-MIB::prtMarkerSuppliesLevel
-            '11.1.1.4',  # Printer-MIB::prtMarkerSuppliesClass
-            '12.1.1.4',  # Printer-MIB::prtMarkerColorantValue
-        ]),
+    'snmp_info': [
+        (
+            '.1.3.6.1.2.1.43.12.1.1',
+            [
+                OID_END,
+                '4',  # Printer-MIB::prtMarkerColorantValue
+            ]),
+        (
+            '.1.3.6.1.2.1.43.11.1.1',
+            [
+                '6',  # Printer-MIB::prtMarkerSuppliesDescription
+                '7',  # Printer-MIB::prtMarkerSuppliesUnit
+                '8',  # Printer-MIB::prtMarkerSuppliesMaxCapacity
+                '9',  # Printer-MIB::prtMarkerSuppliesLevel
+                '4',  # Printer-MIB::prtMarkerSuppliesClass
+                '3',  # Printer-MIB:prtMarkerSuppliesColorantIndex
+            ]),
+    ],
     'snmp_scan_function': lambda oid: (oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") is not None and oid(
         ".1.3.6.1.2.1.1.2.0") != ".1.3.6.1.4.1.367.1.1"),  # exclude ricoh printer
     'has_perfdata': True,

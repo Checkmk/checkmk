@@ -26,7 +26,7 @@ parsed = {
 }
 
 discovery = {
-    '': [(None, {}), HostLabel(u'cmk/kubernetes_object', u'daemonset')]
+    '': [(None, {})]
 }
 
 checks = {

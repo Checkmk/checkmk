@@ -5,37 +5,37 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Iterable, NamedTuple, Set
+from typing import Collection, Iterable, Tuple, Set
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import SectionName, SNMPDetectBaseType
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectSpec
+from cmk.snmplib.type_defs import ABCSNMPBackend
 from cmk.snmplib.utils import evaluate_snmp_detection
 
-SNMPScanSection = NamedTuple("SNMPScanSection", [
-    ("name", SectionName),
-    ("specs", SNMPDetectSpec),
-])
+SNMPScanSection = Tuple[SectionName, SNMPDetectBaseType]
 
 
 # gather auto_discovered check_plugin_names for this host
 def gather_available_raw_section_names(
-    sections: Iterable[SNMPScanSection],
+    sections: Collection[SNMPScanSection],
     on_error: str,
     *,
-    binary_host: bool,
+    missing_sys_description: bool,
     backend: ABCSNMPBackend,
 ) -> Set[SectionName]:
+    if not sections:
+        return set()
+
     try:
         return _snmp_scan(
             sections,
             on_error=on_error,
-            binary_host=binary_host,
+            missing_sys_description=missing_sys_description,
             backend=backend,
         )
     except Exception as e:
@@ -55,17 +55,18 @@ def _snmp_scan(
     sections: Iterable[SNMPScanSection],
     on_error: str = "ignore",
     *,
-    binary_host: bool,
+    missing_sys_description: bool,
     backend: ABCSNMPBackend,
 ) -> Set[SectionName]:
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
-    _snmp_scan_cache_description(
-        binary_host=binary_host,
-        backend=backend,
-    )
 
-    found_sections = _snmp_scan_find_sections(
+    if missing_sys_description:
+        _fake_description_object()
+    else:
+        _prefetch_description_object(backend=backend)
+
+    found_sections = _find_sections(
         sections,
         on_error=on_error,
         backend=backend,
@@ -75,38 +76,38 @@ def _snmp_scan(
     return found_sections
 
 
-def _snmp_scan_cache_description(
-    binary_host: bool,
+def _prefetch_description_object(
     *,
     backend: ABCSNMPBackend,
 ) -> None:
-    if not binary_host:
-        for oid, name in [
-            (OID_SYS_DESCR, "system description"),
-            (OID_SYS_OBJ, "system object"),
-        ]:
-            value = snmp_modes.get_single_oid(
-                oid,
-                backend=backend,
-            )
-            if value is None:
-                raise MKSNMPError(
-                    "Cannot fetch %s OID %s. Please check your SNMP "
-                    "configuration. Possible reason might be: Wrong credentials, "
-                    "wrong SNMP version, Firewall rules, etc." % (name, oid),)
-    else:
-        # Fake OID values to prevent issues with a lot of scan functions
-        console.vverbose(
-            "       Skipping system description OID "
-            '(Set %s and %s to "")\n',
-            OID_SYS_DESCR,
-            OID_SYS_OBJ,
+    for oid, name in [
+        (OID_SYS_DESCR, "system description"),
+        (OID_SYS_OBJ, "system object"),
+    ]:
+        value = snmp_modes.get_single_oid(
+            oid,
+            backend=backend,
         )
-        snmp_cache.set_single_oid_cache(OID_SYS_DESCR, "")
-        snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
+        if value is None:
+            raise MKSNMPError(
+                "Cannot fetch %s OID %s. Please check your SNMP "
+                "configuration. Possible reason might be: Wrong credentials, "
+                "wrong SNMP version, Firewall rules, etc." % (name, oid),)
 
 
-def _snmp_scan_find_sections(
+def _fake_description_object() -> None:
+    """Fake OID values to prevent issues with a lot of scan functions"""
+    console.vverbose(
+        "       Skipping system description OID "
+        '(Set %s and %s to "")\n',
+        OID_SYS_DESCR,
+        OID_SYS_OBJ,
+    )
+    snmp_cache.set_single_oid_cache(OID_SYS_DESCR, "")
+    snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
+
+
+def _find_sections(
     sections: Iterable[SNMPScanSection],
     *,
     on_error: str,

@@ -7,6 +7,7 @@
 # flake8: noqa
 # pylint: disable=unused-import
 
+import cmk.gui.default_permissions
 import cmk.gui.main
 import cmk.gui.sidebar
 import cmk.gui.main_menu
@@ -15,7 +16,6 @@ import cmk.gui.login
 import cmk.gui.weblib
 import cmk.gui.help
 import cmk.gui.hooks
-import cmk.gui.default_permissions
 
 import cmk.gui.visuals
 import cmk.gui.views

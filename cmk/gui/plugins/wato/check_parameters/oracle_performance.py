@@ -10,7 +10,7 @@
 # | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
-# This file is part of Check_MK.
+# This file is part of Checkmk.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 #
 # check_mk is free software;  you can redistribute it and/or modify it
@@ -118,7 +118,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
         valuespec=_valuespec_discovery_oracle_performance,
-        title=lambda: _("Oracle Performance Discovery"),
+        title=lambda: _("Oracle performance discovery"),
     ))
 
 

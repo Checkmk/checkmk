@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // Simple Mail Slot Transport
 // Windows only
@@ -25,6 +26,7 @@
 #include <thread>
 
 #include "tools/_process.h"  // folders
+#include "tools/_win.h"      // trace and log
 #include "tools/_xlog.h"     // trace and log
 
 // to be moved outside
@@ -181,14 +183,16 @@ public:
         FAILED_CREATE = -5
     };
 
-private:
-    MailSlot(const MailSlot&) {}
-    MailSlot& operator=(const MailSlot&) {}
+    MailSlot(const MailSlot&) = delete;
+    MailSlot& operator=(const MailSlot&) = delete;
+
+    MailSlot(MailSlot&&) = delete;
+    MailSlot& operator=(MailSlot&&) = delete;
 
 public:
     // convert slot name into fully qualified global object
     static std::string BuildMailSlotName(const char* slot_name, int id,
-                                         const char* pc_name = ".") {
+                                         const char* pc_name) {
         std::string name = "\\\\";
         name += pc_name;
         name += "\\mailslot\\Global\\";  // this work. ok. don't touch.
@@ -197,29 +201,37 @@ public:
         name += std::to_string(id);  // session id or something unique
         return name;
     }
-
-    MailSlot(const char* name, int id, const char* pc_name = ".") {
+    MailSlot(const char* name, int id, const char* pc_name) {
         name_ = BuildMailSlotName(name, id, pc_name);
     }
 
+    MailSlot(const char* name, int id) {
+        name_ = BuildMailSlotName(name, id, ".");
+    }
+
     // with prepared mail slot
-    MailSlot(const char* name) : name_(name) {}
+    explicit MailSlot(const char* name) : name_(name) {}
 
     ~MailSlot() { Close(); }
 
     // API below
 
     // Accessors
-    bool IsOwner() const noexcept {
+    [[nodiscard]] bool IsOwner() const noexcept {
         return owner_;
     }  // true, if mailslot had been "created", false if "opened"
-    bool IsPostman() const noexcept { return !owner_; }
-    const char* GetName() const noexcept { return name_.c_str(); }
-    HANDLE GetHandle() const noexcept { return handle_; }
+    [[nodiscard]] bool IsPostman() const noexcept { return !owner_; }
+    [[nodiscard]] const char* GetName() const noexcept { return name_.c_str(); }
+    [[nodiscard]] HANDLE GetHandle() const noexcept { return handle_; }
+
+    bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms,
+                         void* context) {
+        return ConstructThread(foo, sleep_ms, context, false);
+    }
 
     // mailbox start here
     bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms, void* context,
-                         bool force_open = false) {
+                         bool force_open) {
         if (main_thread_) {
             MailSlotLog(XLOG_FUNC + " Double call is forbidden");
             return false;
@@ -258,7 +270,7 @@ public:
     // postman the only operation
     bool ExecPost(const void* data, uint64_t length) {
         auto len = static_cast<int>(length);
-        if (!data && len) {
+        if (data == nullptr && len != 0) {
             MailSlotLog("Bad data for \"%s\"posting %p %d", name_.c_str(), data,
                         len);
             return false;
@@ -273,7 +285,8 @@ public:
         MailSlotLog("Can't open mail slot \"%s\"", name_.c_str());
         return false;
     }
-    // protected:
+
+    // returns false on duplicated name
     bool Create() {
         std::lock_guard<std::mutex> lck(lock_);
 
@@ -281,18 +294,15 @@ public:
 
         handle_ = createMailSlot(name_.c_str());
 
-        if (handle_ == INVALID_HANDLE_VALUE) handle_ = nullptr;
-
-        if (!handle_ && ::GetLastError() == 183)  // duplicated file name
+        if (handle_ == nullptr &&
+            ::GetLastError() == 183)  // duplicated file name
         {
             MailSlotLog("Duplicated OWN mail slot \"%s\" Retry with OPEN",
                         name_.c_str());
             return false;
         }
 
-        auto ret = handle_ != nullptr;
-
-        if (ret) {
+        if (handle_ != nullptr) {
             owner_ = true;  // we create -> we own
             MailSlotLog("OWN Mail slot \"%s\" was opened", name_.c_str());
         } else {
@@ -309,7 +319,7 @@ public:
         if (handle_) return true;  // bad(already exists) call
         handle_ = openMailSlotWrite(name_.c_str());
 
-        if (handle_ == INVALID_HANDLE_VALUE) {
+        if (wtools::IsInvalidHandle(handle_)) {
             auto error = ::GetLastError();
             handle_ = nullptr;
             MailSlotLog("Fail open mail slot \"%s\" %d", name_.c_str(), error);
@@ -435,7 +445,7 @@ public:
         auto sa = security_attribute_keeper.get();
         if (nullptr == sa) {
             MailSlotLog("Failed to create security descriptor");
-            return INVALID_HANDLE_VALUE;
+            return nullptr;
         }
 
         return CreateMailslotA(
@@ -453,6 +463,6 @@ private:
 
     std::atomic<bool> keep_running_ = true;  // thread flag
     std::unique_ptr<std::thread>
-        main_thread_;  // controlled by Construct/Dismantle
+        main_thread_{};  // controlled by Construct/Dismantle
 };
 };  // namespace cma

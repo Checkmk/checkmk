@@ -28,7 +28,6 @@ from cmk.gui.plugins.wato import (
 
 def _vs_mssql_backup_age(title):
     return Alternative(title=_("%s" % title),
-                       style="dropdown",
                        elements=[
                            Tuple(title=_("Set levels"),
                                  elements=[
@@ -45,7 +44,7 @@ def _vs_mssql_backup_age(title):
 
 def _valuespec_discovery_mssql_backup():
     return Dictionary(
-        title=_("Discovery of MSSQL backup"),
+        title=_("MSSQL backup discovery"),
         elements=[
             ("mode",
              DropdownChoice(title=_("Backup modes"),

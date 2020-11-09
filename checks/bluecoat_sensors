@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # OID branch 3 means the sensor unit type (from SENSOR-MIB):
 # other(1)
 # truthvalue(2)
@@ -62,6 +63,5 @@ check_info["bluecoat_sensors.temp"] = {
     'inventory_function': lambda info: inventory_bluecoat_sensors(info, True),
     'service_description': 'Temperature %s',
     'has_perfdata': True,
-    'includes': ["temperature.include"],
     'group': "temperature",
 }

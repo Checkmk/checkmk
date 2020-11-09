@@ -96,12 +96,12 @@ def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
     return sizeof(o)
 
 
-# Works with Check_MK version (without tailing .cee and/or .demo)
+# Works with Checkmk version (without tailing .cee and/or .demo)
 def is_daily_build_version(v: str) -> bool:
     return len(v) == 10 or '-' in v
 
 
-# Works with Check_MK version (without tailing .cee and/or .demo)
+# Works with Checkmk version (without tailing .cee and/or .demo)
 def branch_of_daily_build(v: str) -> str:
     if len(v) == 10:
         return "master"

@@ -25,7 +25,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     ListChoice,
     Timerange,
@@ -51,6 +51,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_display_options_dropdown,
 )
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
@@ -75,7 +76,10 @@ def page_version():
 
 
 def handle_acknowledgement():
-    if html.request.var("_werk_ack") and html.check_transaction():
+    if not html.check_transaction():
+        return
+
+    if html.request.var("_werk_ack"):
         werk_id = html.request.get_integer_input_mandatory("_werk_ack")
         if werk_id not in g_werks:
             raise MKUserError("werk", _("This werk does not exist."))
@@ -90,13 +94,11 @@ def handle_acknowledgement():
             load_werks()  # reload ack states after modification
 
     elif html.request.var("_ack_all"):
-        if html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
-                        method="GET"):
-            num = len(unacknowledged_incompatible_werks())
-            acknowledge_all_werks()
-            html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
-            html.reload_sidebar()
-            load_werks()  # reload ack states after modification
+        num = len(unacknowledged_incompatible_werks())
+        acknowledge_all_werks()
+        html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
+        html.reload_sidebar()
+        load_werks()  # reload ack states after modification
 
     render_unacknowleged_werks()
 
@@ -145,7 +147,13 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Acknowledge all"),
         icon_name="werk_ack",
-        item=make_simple_link(html.makeactionuri([("_ack_all", "1")])),
+        is_shortcut=True,
+        is_suggested=True,
+        item=make_simple_link(
+            make_confirm_link(
+                url=html.makeactionuri([("_ack_all", "1")]),
+                message=_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
+            )),
         is_enabled=bool(unacknowledged_incompatible_werks()),
     )
 
@@ -191,7 +199,7 @@ def _show_werk_options_controls() -> None:
 
     html.open_div(class_="update_buttons")
     html.button("apply", _("Apply"), "submit")
-    html.buttonlink(html.makeuri([], remove_prefix=""), _("Reset"))
+    html.buttonlink(makeuri(request, [], remove_prefix=""), _("Reset"))
     html.close_div()
 
     html.close_div()
@@ -420,7 +428,7 @@ def render_unacknowleged_werks():
         html.br()
         html.br()
         html.a(_("Show unacknowledged incompatible werks"),
-               href=html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")]))
+               href=makeuri_contextless(request, [("show_unack", "1"), ("wo_compatibility", "3")]))
         html.close_div()
 
 
@@ -555,7 +563,7 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
 
 def render_werk_id(werk, with_link):
     if with_link:
-        url = html.makeuri([("werk", werk["id"])], filename="werk.py")
+        url = makeuri(request, [("werk", werk["id"])], filename="werk.py")
         return html.render_a(render_werk_id(werk, with_link=False), url)
     return "#%04d" % werk["id"]
 

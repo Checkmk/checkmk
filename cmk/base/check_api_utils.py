@@ -11,7 +11,7 @@
 
 from typing import Optional, Union
 
-from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels
+from cmk.base.discovered_labels import DiscoveredServiceLabels
 from cmk.base.check_utils import LegacyCheckParameters
 from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, Item, HostName, ServiceName
 
@@ -36,12 +36,10 @@ class Service:
     def __init__(self,
                  item: Item,
                  parameters: LegacyCheckParameters = None,
-                 service_labels: Optional[DiscoveredServiceLabels] = None,
-                 host_labels: Optional[DiscoveredHostLabels] = None) -> None:
+                 service_labels: Optional[DiscoveredServiceLabels] = None) -> None:
         self.item = item
         self.parameters = parameters
         self.service_labels = service_labels or DiscoveredServiceLabels()
-        self.host_labels = host_labels or DiscoveredHostLabels()
 
 
 def set_hostname(hostname: Optional[HostName]) -> None:

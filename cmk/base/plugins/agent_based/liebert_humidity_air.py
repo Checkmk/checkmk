@@ -12,23 +12,23 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
-from typing import Any, Dict, Tuple, Optional
-from cmk.base.plugins.agent_based.utils.liebert import (
+from typing import Any, Dict, List, Tuple, Optional
+from .utils.liebert import (
     DETECT_LIEBERT,
     parse_liebert,
 )
-from cmk.base.api.agent_based.utils import check_levels
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
+    check_levels,
     register,
     SNMPTree,
     Service,
     Result,
-    state,
+    State as state,
 )
-from .agent_based_api.v0.type_defs import (
-    SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+from .agent_based_api.v1.type_defs import (
+    StringTable,
+    CheckResult,
+    DiscoveryResult,
     Parameters,
 )
 
@@ -54,14 +54,14 @@ def _get_item_data(
     return (None, None)
 
 
-def parse_liebert_humidity_air(string_table: SNMPStringTable) -> ParsedSection:
+def parse_liebert_humidity_air(string_table: List[StringTable]) -> ParsedSection:
     return parse_liebert(string_table, str)
 
 
 def discover_liebert_humidity_air(
     section_liebert_humidity_air: Optional[ParsedSection],
     section_liebert_system: Optional[Dict[str, str]],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
 
     if section_liebert_humidity_air is None:
         return
@@ -76,7 +76,7 @@ def check_liebert_humidity_air(
     params: Parameters,
     section_liebert_humidity_air: Optional[ParsedSection],
     section_liebert_system: Optional[Dict[str, str]],
-) -> CheckGenerator:
+) -> CheckResult:
 
     if section_liebert_humidity_air is None or section_liebert_system is None:
         return
@@ -108,7 +108,7 @@ register.snmp_section(
     name='liebert_humidity_air',
     detect=DETECT_LIEBERT,
     parse_function=parse_liebert_humidity_air,
-    trees=[
+    fetch=[
         SNMPTree(
             base='.1.3.6.1.4.1.476.1.42.3.9.20.1',
             oids=[

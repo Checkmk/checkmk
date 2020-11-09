@@ -6,7 +6,7 @@ Date: 1593756494
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 For performance reasons, the Piggyback data is stored in the tmpfs of the site
 (in tmp/check_mk/piggyback). This has the disadvantage that the files disappear

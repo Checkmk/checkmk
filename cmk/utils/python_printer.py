@@ -9,6 +9,7 @@ of Python's own pprint module plus the prefix change."""
 
 from io import StringIO as StrIO
 import sys
+from cmk.snmplib.type_defs import SNMPBackend  # pylint: disable=cmk-module-layer-violation
 from typing import List, Any, Callable, Dict, IO, Iterable, Optional, Tuple
 
 from cmk.utils.type_defs import EvalableFloat
@@ -118,6 +119,10 @@ def _format_object(printer: PythonPrinter, obj: object) -> None:
     printer._format(obj)
 
 
+def _format_snmp_backend(printer: PythonPrinter, obj: SNMPBackend) -> None:
+    printer._format(obj.value)
+
+
 def _format_dict_item(printer: PythonPrinter, item: Tuple[object, object]) -> None:
     printer._format(item[0])
     printer._write(': ')
@@ -151,6 +156,7 @@ _dispatch: Dict[Any, Any] = {
     _str: _format_unicode_string,
     tuple: _format_tuple,
     type(None): _format_via_repr,
+    SNMPBackend: _format_snmp_backend,
 }
 
 

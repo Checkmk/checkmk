@@ -3,23 +3,34 @@ agents: snmp
 catalog: hw/network/tplink
 license: GPL
 distribution: check_mk
+description:
+ This check is almost identical to {if64}. It additionally uses the OID
+ {.1.3.6.1.4.1.11863.1.1.3.2.1.1.1.1.2} to obtain meaningful interfaces aliases
+ and only uses {ifAlias} as a fallback. Please refer to {if64} for the complete
+ manual page.
 
 item:
- There are three allowed ways to specify a port: {1}: the last component of
- the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
- the port. If you are using the alias, you have to make sure that it is unique
- by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
-
-
-description:
- This check is a copy if {if64} but fixes two bugs of TP-LINK in their
- MIB implementation that lead to wrong interface speed and wrong
- alias names of ports. Both issues have been worked around in this
- check plugin. Please refer to {if64} for the complete manual page.
+ There are three allowed ways to specify an interface: its index {ifIndex}, its
+ description {ifDescr} and its alias, which is fetched from the OID mentioned above
+ if available. Otherwise, {ifAlias} is used as a fallback.
 
 inventory:
- One service is created for each port that fulfills configurable conditions.
- Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
- {32} (frameRelay), {117} (gigabitEthernet) or several others.
+ One service is created for each interface that fulfills configurable conditions
+ (rule "Network interface and switch port discovery").
+ By default, these are interfaces which are currently found {up} and are of type 6, 32,
+ 62, 117, 127, 128, 129, 180, 181, 182, 205 or 229.
 
- For further details look at {if64} manpage.
+ {Grouping:} In some situations, you do not want to monitor a single
+ interface but a group of interfaces that together form a pool.
+ This check supports such pools by defining groups. The data of all members is
+ accumulated and put together in a single grouped interface service.
+
+cluster:
+ In the case where single (ungrouped) interfaces are clustered, the corresponding
+ services report only the results from the node with the highest outgoing traffic,
+ since this node is likely the active node.
+ In the case where interface groups are clustered, the grouping is applied across
+ all nodes, potentially combining interfaces from different nodes. Note that the
+ rules defining the interface groups must be configured to apply to the nodes, not
+ to the cluster host (the latter has no effect). In case the grouping configurations
+ vary across the nodes, the last node wins.

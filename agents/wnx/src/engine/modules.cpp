@@ -231,6 +231,8 @@ ModuleCommander::GetSystemExtensions() {
         // dir is optional
         auto dir = cma::cfg::GetVal(node, vars::kModulesDir,
                                     std::string{defaults::kModulesDir});
+        if (dir.empty()) dir = std::string{defaults::kModulesDir};
+
         dir_ = fmt::format(dir, name());
 
     } catch (const std::exception &e) {
@@ -498,6 +500,7 @@ bool ModuleCommander::InstallModule(const Module &mod,
                                     const std::filesystem::path &user,
                                     InstallMode mode) {
     namespace fs = std::filesystem;
+    using namespace cma::tools;
 
     auto backup_file = GetModBackup(user) / mod.name();
     backup_file += kExtension.data();
@@ -514,8 +517,7 @@ bool ModuleCommander::InstallModule(const Module &mod,
         return false;
     }
 
-    if (cma::tools::AreFilesSame(backup_file, module_file) &&
-        mode == InstallMode::normal) {
+    if (AreFilesSame(backup_file, module_file) && mode == InstallMode::normal) {
         XLOG::l.i(
             "Installation of the module '{}' is not required, module file '{}'is same",
             mod.name(), module_file.u8string());
@@ -537,17 +539,23 @@ bool ModuleCommander::InstallModule(const Module &mod,
         CreateFileForTargetDir(default_dir, actual_dir);
     }
 
-    auto ret =
-        cma::tools::zip::Extract(backup_file.wstring(), actual_dir.wstring());
-    if (!ret) {
-        XLOG::l(
-            "Extraction failed: removing backup file '{}' and default dir '{}'",
-            backup_file.u8string(), default_dir.u8string());
-        fs::remove(backup_file, ec);
-        fs::remove_all(default_dir);
-    }
+    auto ret = zip::Extract(backup_file.wstring(), actual_dir.wstring());
+    if (ret) {
+        fs::path postinstall{actual_dir};
+        postinstall /= "postinstall.cmd";
+        if (!fs::exists(module_file, ec)) return true;
 
-    return ret;
+        cma::tools::RunCommandAndWait(postinstall.wstring(),
+                                      actual_dir.wstring());
+
+        return true;
+    }
+    XLOG::l("Extraction failed: removing backup file '{}' and default dir '{}'",
+            backup_file.u8string(), default_dir.u8string());
+    fs::remove(backup_file, ec);
+    fs::remove_all(default_dir);
+
+    return false;
 }
 
 void ModuleCommander::installModules(const std::filesystem::path &root,

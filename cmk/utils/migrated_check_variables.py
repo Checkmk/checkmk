@@ -26,5 +26,38 @@ ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
 # hr_mem (amongst others)
 memused_default_levels = (150.0, 200.0)
 
+# hp_proliant_power: see werk 10857
+hp_prolaint_power_default_levels = None  # yes, P R O L A I N T
+
+# if.include
+# These HostRulespecs are deprecated as of v2.0. However, for compatibility reasons, we must not
+# delete these variable.
+if_disable_if64_hosts = []  # type: ignore[var-annotated]
+if_groups = []  # type: ignore[var-annotated]
+# Obsolete variables, but needed as contained in autochecks of older checks. We need to keep this up
+# for a few years/decades...
+if_default_error_levels = (0.01, 0.1)
+if_default_traffic_levels = None, None
+if_default_average = None
+
+# netapp_api_vf_stats
+netapp_api_vf_stats_cpu_util_default_levels = (90.0, 95.0)
+
 # ps
 ps_default_levels = {"levels": (1, 1, 99999, 99999)}
+
+# services
+services_default_levels = {
+    "states": [("running", None, 0)],
+    "else": 2,
+    "additional_servicenames": [],
+}
+services_summary_default_levels = {"ignored": [], "state_if_stopped": 0}
+
+tcp_conn_stats_default_levels = {}  # type: ignore[var-annotated]
+
+# oracle_tablespaces
+oracle_tablespaces_default_levels = (10.0, 5.0)
+oracle_tablespaces_check_autoext = True
+
+winperf_cpu_default_levels = {}  # type: ignore[var-annotated]  # winperf_processor.util

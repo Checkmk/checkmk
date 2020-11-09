@@ -3,16 +3,22 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Acknowledge problems"""
+"""Acknowledge problems
 
+A problem occurs if a host is not UP or a service ist not OK.
+The acknowledgement of the problem is the indication that the reported issue is known and that
+somebody is attending to it.
+
+You can find an introduction to the acknowledgement of problems in the
+[Checkmk guide](https://checkmk.com/cms_basics_ackn.html).
+"""
 # TODO: List acknowledgments
 # TODO: Acknowledge service problem
 from urllib.parse import unquote
 from typing import Dict
 
-from connexion import problem  # type: ignore[import]
-
 from cmk.gui import config, sites, http
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_hostgroup_problem,
@@ -24,22 +30,29 @@ from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Services
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
-    endpoint_schema,
+    Endpoint,
     request_schemas,
-    ParamDict,
 )
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.plugins.openapi.utils import problem
+
+SERVICE_DESCRIPTION = {
+    'service_description': fields.String(
+        description="The service description.",
+        example="Memory",
+    )
+}
 
 
-@endpoint_schema(constructors.object_action_href('host', '{host_name}', 'acknowledge'),
-                 'cmk/create',
-                 method='post',
-                 parameters=[
-                     'host_name',
-                 ],
-                 request_schema=request_schemas.AcknowledgeHostProblem,
-                 output_empty=True)
+@Endpoint(constructors.object_action_href('host', '{host_name}', 'acknowledge'),
+          'cmk/create',
+          method='post',
+          tag_group='Monitoring',
+          path_params=[HOST_NAME],
+          request_schema=request_schemas.AcknowledgeHostProblem,
+          output_empty=True)
 def set_acknowledgement_on_host(params):
-    """Acknowledge problems on a specific host."""
+    """Acknowledge for a specific host"""
     host_name = params['host_name']
 
     host = Query([Hosts.name, Hosts.state], Hosts.name.equals(host_name)).first(sites.live())
@@ -67,20 +80,18 @@ def set_acknowledgement_on_host(params):
     return http.Response(status=204)
 
 
-@endpoint_schema(constructors.object_action_href('hostgroup', '{hostgroup_name}', 'acknowledge'),
-                 'cmk/create',
-                 method='post',
-                 parameters=[
-                     ParamDict.create('hostgroup_name',
-                                      'path',
-                                      description='The name of the host group',
-                                      example='samples',
-                                      required=True),
-                 ],
-                 request_schema=request_schemas.AcknowledgeHostProblem,
-                 output_empty=True)
+@Endpoint(constructors.object_action_href('hostgroup', '{hostgroup_name}', 'acknowledge'),
+          'cmk/create',
+          method='post',
+          path_params=[{
+              'hostgroup_name': fields.String(description='The name of the host group',
+                                              example='samples',
+                                              required=True),
+          }],
+          request_schema=request_schemas.AcknowledgeHostProblem,
+          output_empty=True)
 def set_acknowledgement_on_hostgroup(params):
-    """Acknowledge problems for hosts of a host group"""
+    """Acknowledge for hosts of a host group"""
     body = params['body']
     acknowledge_hostgroup_problem(
         sites.live(),
@@ -94,13 +105,14 @@ def set_acknowledgement_on_hostgroup(params):
     return http.Response(status=204)
 
 
-@endpoint_schema(constructors.domain_type_action_href('host', 'bulk-acknowledge'),
-                 'cmk/create',
-                 method='post',
-                 request_schema=request_schemas.BulkAcknowledgeHostProblem,
-                 output_empty=True)
+@Endpoint(constructors.domain_type_action_href('host', 'bulk-acknowledge'),
+          'cmk/create',
+          method='post',
+          tag_group='Monitoring',
+          request_schema=request_schemas.BulkAcknowledgeHostProblem,
+          output_empty=True)
 def bulk_set_acknowledgement_on_hosts(params):
-    """Bulk acknowledge on selected hosts"""
+    """Bulk acknowledge for hosts"""
     live = sites.live()
     entries = params['entries']
 
@@ -144,14 +156,15 @@ def bulk_set_acknowledgement_on_hosts(params):
     return http.Response(status=204)
 
 
-@endpoint_schema("/domain-types/service/{service_description}/actions/acknowledge/invoke",
-                 'cmk/create',
-                 method='post',
-                 parameters=['service_description'],
-                 request_schema=request_schemas.AcknowledgeServiceProblem,
-                 output_empty=True)
+@Endpoint("/domain-types/service/{service_description}/actions/acknowledge/invoke",
+          'cmk/create',
+          method='post',
+          tag_group='Monitoring',
+          path_params=[SERVICE_DESCRIPTION],
+          request_schema=request_schemas.AcknowledgeServiceProblem,
+          output_empty=True)
 def set_acknowledgement_for_service(params):
-    """Acknowledge problems for a specific service globally."""
+    """Acknowledge for a service globally"""
     service_description = unquote(params['service_description'])
     body = params['body']
 
@@ -190,15 +203,19 @@ def set_acknowledgement_for_service(params):
     return http.Response(status=204)
 
 
-@endpoint_schema(
+@Endpoint(
     "/objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge/invoke",
     'cmk/create',
     method='post',
-    parameters=['host_name', 'service_description'],
+    tag_group='Monitoring',
+    path_params=[
+        HOST_NAME,
+        SERVICE_DESCRIPTION,
+    ],
     request_schema=request_schemas.AcknowledgeServiceProblem,
     output_empty=True)
 def set_acknowledgement_on_host_service(params):
-    """Acknowledge problems of a specific service on a specific host"""
+    """Acknowledge for services on a host"""
     host_name = params['host_name']
     service_description = unquote(params['service_description'])
     body = params['body']
@@ -232,11 +249,12 @@ def set_acknowledgement_on_host_service(params):
     return http.Response(status=204)
 
 
-@endpoint_schema(constructors.domain_type_action_href("service", "bulk-acknowledge"),
-                 'cmk/service.bulk-acknowledge',
-                 method='post',
-                 request_schema=request_schemas.BulkAcknowledgeServiceProblem,
-                 output_empty=True)
+@Endpoint(constructors.domain_type_action_href("service", "bulk-acknowledge"),
+          'cmk/service.bulk-acknowledge',
+          method='post',
+          tag_group='Monitoring',
+          request_schema=request_schemas.BulkAcknowledgeServiceProblem,
+          output_empty=True)
 def bulk_set_acknowledgement_on_host_service(params):
     """Bulk Acknowledge specific services on specific host"""
     live = sites.live()
@@ -288,21 +306,23 @@ def bulk_set_acknowledgement_on_host_service(params):
     return http.Response(status=204)
 
 
-@endpoint_schema(constructors.object_action_href('servicegroup', '{servicegroup_name}',
-                                                 'acknowledge'),
-                 'cmk/create',
-                 method='post',
-                 parameters=[
-                     ParamDict.create('servicegroup_name',
-                                      'path',
-                                      description='The name of the service group',
-                                      example='windows',
-                                      required=True),
-                 ],
-                 request_schema=request_schemas.AcknowledgeServiceProblem,
-                 output_empty=True)
+@Endpoint(
+    constructors.object_action_href('servicegroup', '{servicegroup_name}', 'acknowledge'),
+    'cmk/create',
+    method='post',
+    tag_group='Monitoring',
+    path_params=[{
+        'servicegroup_name': fields.String(
+            description='The name of the service group',
+            example='windows',
+            required=True,
+        )
+    }],
+    request_schema=request_schemas.AcknowledgeServiceProblem,
+    output_empty=True,
+)
 def set_acknowledgement_on_servicegroup(params):
-    """Acknowledge problems for services of a service group"""
+    """Acknowledge for services of a service group"""
     body = params['body']
     acknowledge_servicegroup_problem(
         sites.live(),

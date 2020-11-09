@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_emka_modules(info):
     # basModuleCoIx == 0
@@ -314,7 +318,6 @@ check_info["emka_modules.sensor_volt"] = {
     "inventory_function": inventory_emka_modules_sensor_volt,
     "check_function": check_emka_modules_sensor_volt,
     "service_description": "Phase %s",
-    "includes": ["elphase.include"],
     "group": "el_inphase",
     "has_perfdata": True,
 }
@@ -350,7 +353,6 @@ check_info["emka_modules.sensor_temp"] = {
     "inventory_function": inventory_emka_modules_sensor_temp,
     "check_function": check_emka_modules_sensor_temp,
     "service_description": "Temperature %s",
-    "includes": ["temperature.include"],
     "group": "temperature",
     "has_perfdata": True,
 }
@@ -382,7 +384,6 @@ check_info["emka_modules.sensor_humid"] = {
     "inventory_function": inventory_emka_modules_sensor_humid,
     "check_function": check_emka_modules_sensor_humid,
     "service_description": "Humidity %s",
-    "includes": ["humidity.include"],
     "group": "humidity",
     "has_perfdata": True,
 }

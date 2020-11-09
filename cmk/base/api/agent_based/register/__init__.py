@@ -21,6 +21,7 @@ from cmk.base.api.agent_based.register._config import (
     get_relevant_raw_sections,
     get_ranked_sections,
     get_section_plugin,
+    get_snmp_section_plugin,
     is_registered_check_plugin,
     is_registered_inventory_plugin,
     is_registered_section_plugin,
@@ -34,11 +35,7 @@ from cmk.base.api.agent_based.register._config import (
 
 
 def load_all_plugins():
-    for plugin, exception in load_plugins_with_exceptions(
-            "cmk.base.plugins.agent_based",
-            cmk.utils.paths.agent_based_plugins_dir,
-            cmk.utils.paths.local_agent_based_plugins_dir,
-    ):
+    for plugin, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
         console.error("Error in agent based plugin %s: %s\n", plugin, exception)
         if cmk.utils.debug.enabled():
             raise exception
@@ -55,6 +52,7 @@ __all__ = [
     "get_relevant_raw_sections",
     "get_ranked_sections",
     "get_section_plugin",
+    "get_snmp_section_plugin",
     "is_registered_check_plugin",
     "is_registered_inventory_plugin",
     "is_registered_section_plugin",

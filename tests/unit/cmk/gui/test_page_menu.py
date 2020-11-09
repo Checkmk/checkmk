@@ -76,7 +76,7 @@ def test_simple_page_menu(register_builtin_html):
     assert dropdown.name == "hallo"
     assert dropdown.title == "HALLO"
     assert len(dropdown.topics) == 1
-    assert dropdown.any_advanced_entries is False
+    assert dropdown.any_show_more_entries is False
     assert dropdown.is_empty is False
 
     for topic in dropdown.topics:

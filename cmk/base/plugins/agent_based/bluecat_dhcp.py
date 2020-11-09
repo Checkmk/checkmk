@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     register,
     Service,
     SNMPTree,
@@ -23,7 +23,7 @@ from .utils.bluecat import (
 register.snmp_section(
     name='bluecat_dhcp',
     parse_function=parse_bluecat,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.13315.3.1.1.2.1",
             oids=[
@@ -36,10 +36,10 @@ register.snmp_section(
 )
 
 
-def discover_bluecat_dhcp(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_bluecat_dhcp(section: Section) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_bluecat_dhcp({'oper_state': 1, 'leases': 2}))
-    [Service(item=None, parameters={}, labels=[])]
+    [Service()]
     >>> list(discover_bluecat_dhcp({'oper_state': 2, 'leases': 2}))
     []
     """
@@ -50,7 +50,7 @@ def discover_bluecat_dhcp(section: Section) -> type_defs.DiscoveryGenerator:
 def check_bluecat_dhcp(
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_bluecat_operational_state(
         params,
         section,
@@ -60,7 +60,7 @@ def check_bluecat_dhcp(
 def cluster_check_bluecat_dhcp(
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_bluecat_operational_state(
         params,
         section,

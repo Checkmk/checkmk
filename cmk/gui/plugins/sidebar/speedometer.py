@@ -71,7 +71,7 @@ class Speedometer(SidebarSnapin):
             # That way we save CPU resources since the computation of the
             # scheduled checks rate needs to loop over all hosts and services.
             if last_program_start != program_start:
-                # These days, we configure the correct check interval for Check_MK checks.
+                # These days, we configure the correct check interval for Checkmk checks.
                 # We do this correctly for active and for passive ones. So we can simply
                 # use the check_interval of all services. Hosts checks are ignored.
                 #

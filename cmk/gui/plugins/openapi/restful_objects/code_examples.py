@@ -12,23 +12,19 @@ be referenced in the result of _build_code_templates.
 import json
 import re
 import threading
-from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Type, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 
 import jinja2
 import yapf.yapflib.yapf_api  # type: ignore[import]
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
 
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.restful_objects.params import to_openapi, fill_out_path_template
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    AnyParameter,
-    AnyParameterAndReference,
-    fill_out_path_template,
-    HTTPMethod,
-    LocationType,
-    OperationSpecType,
-    ParamDict,
-    RequestSchema,
+    CodeSample,
+    OpenAPIParameter,
 )
 
 CODE_TEMPLATES_LOCK = threading.Lock()
@@ -102,7 +98,7 @@ request = urllib.request.Request(
     headers={
         "Authorization": f"Bearer {USERNAME} {PASSWORD}",
         "Accept": "application/json",
-        {{- list_params(headers) }}
+        {{- list_params(header_params) }}
     },
     {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
     {%- if request_schema %}
@@ -132,7 +128,7 @@ curl \\
     -X {{ request_method | upper }} \\
     --header "Authorization: Bearer $USERNAME $PASSWORD" \\
     --header "Accept: application/json" \\
-{%- for header in headers %}
+{%- for header in header_params %}
     --header "{{ header.name }}: {{ header.example }}" \\
 {%- endfor %}
 {%- if query_params %}
@@ -166,7 +162,7 @@ PASSWORD="{{ password }}"
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
     "Authorization: Bearer $USERNAME $PASSWORD" \\
     "Accept: application/json" \\
-{%- for header in headers %}
+{%- for header in header_params %}
     '{{ header.name }}:{{ header.example }}' \\
 {% endfor -%}
 {%- if query_params %}
@@ -177,8 +173,8 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
  {%- endfor %}
 {%- endif %}
 {%- if request_schema %}
- {%- for key, value in (request_schema | to_dict).items() | sort %}
-    {{ key }}='{{ value | to_env }}' \\
+ {%- for key, field in request_schema.declared_fields.items() %}
+    {{ key }}='{{ field | field_value }}' \\
  {%- endfor %}
 {%- endif %}
     --json
@@ -207,7 +203,7 @@ session.headers['Accept'] = 'application/json'
 resp = session.{{ method }}(
     f"{API_URL}{{ request_endpoint | fill_out_parameters }}",
     {{- show_params("params", query_params, comment="goes into query string") }}
-    {{- show_params("headers", headers) }}
+    {{- show_params("headers", header_params) }}
     {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
     {%- if request_schema %}
     json={{
@@ -269,23 +265,29 @@ def first_sentence(text: str) -> str:
     return ''.join(re.split(r'(\w\.)', text)[:2])
 
 
+def field_value(field: fields.Field) -> str:
+    return field.metadata['example']
+
+
 def to_dict(schema: Schema) -> Dict[str, str]:
     """Convert a Schema-class to a dict-representation.
 
     Examples:
 
-        >>> from marshmallow import Schema, fields
-        >>> class SayHello(Schema):
+        >>> from marshmallow import fields
+        >>> from cmk.gui.plugins.openapi.utils import BaseSchema
+        >>> class SayHello(BaseSchema):
         ...      message = fields.String(example="Hello world!")
+        ...      message2 = fields.String(example="Hello Bob!")
         >>> to_dict(SayHello())
-        {'message': 'Hello world!'}
+        {'message': 'Hello world!', 'message2': 'Hello Bob!'}
 
-        >>> class Nobody(Schema):
+        >>> class Nobody(BaseSchema):
         ...      expects = fields.String()
         >>> to_dict(Nobody())
         Traceback (most recent call last):
         ...
-        KeyError: "Schema 'Nobody.expects' has no example."
+        KeyError: "Field 'Nobody.expects' has no 'example'"
 
     Args:
         schema:
@@ -295,17 +297,16 @@ def to_dict(schema: Schema) -> Dict[str, str]:
         A dict with the field-names as a key and their example as value.
 
     """
+    if not getattr(schema.Meta, 'ordered', False):
+        # NOTE: We need this to make sure our checkmk.yaml spec file is always predictably sorted.
+        raise Exception(f"Schema '{schema.__module__}.{schema.__class__.__name__}' is not ordered.")
     ret = {}
-    for name, field in schema.fields.items():
-        if 'example' not in field.metadata:
-            raise KeyError(f"Schema '{schema.__class__.__name__}.{name}' has no example.")
-        ret[name] = field.metadata['example']
+    for name, field in schema.declared_fields.items():
+        try:
+            ret[name] = field.metadata['example']
+        except KeyError as exc:
+            raise KeyError(f"Field '{schema.__class__.__name__}.{name}' has no {exc}")
     return ret
-
-
-def _is_parameter(param):
-    is_primitive_param = isinstance(param, dict) and 'name' in param and 'in' in param
-    return isinstance(param, ParamDict) or is_primitive_param
 
 
 def _transform_params(param_list):
@@ -324,47 +325,20 @@ def _transform_params(param_list):
         ... ])
         {'foo': {'name': 'foo', 'in': 'query'}}
 
-        >>> transformed = _transform_params([
-        ...      ParamDict.create('foo', 'query'),
-        ...      ParamDict.create('bar', 'header'),
-        ... ])
-        >>> expected = {
-        ...     'foo': {
-        ...         'name': 'foo',
-        ...         'in': 'query',
-        ...         'required': True,
-        ...         'allowEmptyValue': False,
-        ...         'schema': {'type': 'string'},
-        ...     }
-        ... }
-        >>> assert expected == transformed, transformed
 
     Returns:
         A dict with the key being the parameters name and the value being the parameter.
     """
     return {
-        param['name']: param
-        for param in param_list
-        if _is_parameter(param) and param['in'] != 'header'
+        param['name']: param for param in param_list if 'in' in param and param['in'] != 'header'
     }
 
 
-# noinspection PyDefaultArgument
-def code_samples(
-    path: str,
-    method: HTTPMethod,
-    request_schema: RequestSchema,
-    operation_spec: OperationSpecType,
-) -> List[Dict[str, str]]:
+def code_samples(endpoint, header_params, path_params, query_params) -> List[CodeSample]:
     """Create a list of rendered code sample Objects
 
     These are not specified by OpenAPI but are specific to ReDoc."""
     env = _jinja_environment()
-
-    parameters = operation_spec.get('parameters', [])
-
-    headers = _filter_params(parameters, 'header')
-    query_params = _filter_params(parameters, 'query')
 
     return [{
         'label': example.label,
@@ -374,29 +348,36 @@ def code_samples(
             site='heute',
             username='automation',
             password='test123',
-            request_endpoint=path,
-            request_method=method,
-            request_schema=_get_schema(request_schema),
-            request_schema_multiple=_schema_is_multiple(request_schema),
-            endpoint_parameters=_transform_params(parameters),
-            headers=headers,
-            query_params=query_params,
+            endpoint=endpoint,
+            path_params=to_openapi(path_params, 'path'),
+            query_params=to_openapi(query_params, 'query'),
+            header_params=to_openapi(header_params, 'header'),
+            request_endpoint=endpoint.path,
+            request_method=endpoint.method,
+            request_schema=_get_schema(endpoint.request_schema),
+            request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
         ).strip(),
     } for example in CODE_EXAMPLES]
 
 
-def _filter_params(
-    parameters: Sequence[AnyParameterAndReference],
-    param_location: LocationType,
-) -> Sequence[AnyParameter]:
-    query_parameters = []
-    for param in parameters:
-        if isinstance(param, (dict, ParamDict)) and param['in'] == param_location:
-            query_parameters.append(param)
-    return query_parameters
+def yapf_format(obj) -> str:
+    """Format the object nicely.
 
+    Examples:
 
-def yapf_format(obj):
+        While this should format in a stable manner, I'm not quite sure about it.
+
+        >>> yapf_format({'password': 'foo', 'username': 'bar'})
+        "{'password': 'foo', 'username': 'bar'}\\n"
+
+    Args:
+        obj:
+            A python object, which gets represented as valid Python-code when a str() is applied.
+
+    Returns:
+        A string of the object, formatted nicely.
+
+    """
     style = {
         'COLUMN_LIMIT': 50,
         'ALLOW_SPLIT_BEFORE_DICT_VALUE': False,
@@ -429,18 +410,19 @@ def _get_schema(schema: Optional[Union[str, Type[Schema]]]) -> Optional[Schema]:
     # We just take the first one and go with that, as we have no way of letting the user chose
     # the dispatching-key by himself (this is a limitation of ReDoc).
     _schema: Schema = resolve_schema_instance(schema)
-    if _schema_is_multiple(_schema):
-        first_key = list(_schema.type_schemas.keys())[0]
-        _schema = resolve_schema_instance(_schema.type_schemas[first_key])
+    if _schema_is_multiple(schema):
+        type_schemas = _schema.type_schemas  # type: ignore[attr-defined]
+        first_key = list(type_schemas.keys())[0]
+        _schema = resolve_schema_instance(type_schemas[first_key])
 
     return _schema
 
 
-def _schema_is_multiple(schema: Optional[Union[str, Schema]]) -> bool:
+def _schema_is_multiple(schema: Optional[Union[str, Type[Schema]]]) -> bool:
     if schema is None:
         return False
     _schema = resolve_schema_instance(schema)
-    return hasattr(_schema, 'type_schemas') and _schema.type_schemas
+    return bool(getattr(_schema, 'type_schemas', None))
 
 
 def _jinja_environment() -> jinja2.Environment:
@@ -455,13 +437,13 @@ def _jinja_environment() -> jinja2.Environment:
     ...     site='heute',
     ...     username='automation',
     ...     password='test123',
+    ...     path_params=[],
+    ...     query_params=[],
+    ...     header_params=[],
     ...     request_endpoint='foo',
     ...     request_method='get',
     ...     request_schema=_get_schema('CreateHost'),
     ...     request_schema_multiple=_schema_is_multiple('CreateHost'),
-    ...     endpoint_parameters={},
-    ...     query_params=[],
-    ...     headers=[],
     ... )
     >>> assert '&' not in result, result
 
@@ -481,27 +463,44 @@ def _jinja_environment() -> jinja2.Environment:
         fill_out_parameters=fill_out_parameters,
         first_sentence=first_sentence,
         indent=indent,
+        field_value=field_value,
         to_dict=to_dict,
         to_env=_to_env,
         to_json=json.dumps,
         to_python=yapf_format,
     )
     # These objects will be available in the templates
-    tmpl_env.globals.update(
-        spec=SPEC,
-        parameters=SPEC.components.to_dict().get('parameters', {}),
-    )
+    tmpl_env.globals.update(spec=SPEC,)
     return tmpl_env
 
 
+def to_param_dict(params: List[OpenAPIParameter]) -> Dict[str, OpenAPIParameter]:
+    """
+
+    >>> to_param_dict([{'name': 'Foo'}, {'name': 'Bar'}])
+    {'Foo': {'name': 'Foo'}, 'Bar': {'name': 'Bar'}}
+
+    Args:
+        params:
+
+    Returns:
+
+    """
+    res = {}
+    for entry in params:
+        if 'name' not in entry:
+            raise ValueError(f'Illegal parameter (name missing) ({entry!r}) in {params!r}')
+        res[entry['name']] = entry
+    return res
+
+
 @jinja2.contextfilter
-def fill_out_parameters(ctx: Dict[str, Any], val):
+def fill_out_parameters(ctx: Dict[str, Any], val) -> str:
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:
 
-        ctx['parameters']: Dict[str, ParamDict]
-        ctx['endpoint_parameters']: Dict[str, ParamDict]
+        ctx['parameters']: Dict[str, Dict[str, str]]
 
     Args:
         ctx: A Jinja2 context
@@ -514,39 +513,25 @@ def fill_out_parameters(ctx: Dict[str, Any], val):
         >>> parameters = {}
         >>> env = jinja2.Environment()
         >>> env.filters['fill_out_parameters'] = fill_out_parameters
-        >>> env.globals['parameters'] = parameters
 
-        >>> global_host_param = ParamDict.create('host', 'path', example='global_host')
-        >>> host = ParamDict.create('host', 'path', example='host')
-        >>> service = ParamDict.create('service', 'path', example='service')
+        >>> host = {'name': 'host', 'in': 'path', 'example': 'example.com'}
+        >>> service = {'name': 'service', 'in': 'path', 'example': 'CPU'}
 
         >>> tmpl_source = '{{ "/{host}/{service}" | fill_out_parameters }}'
         >>> tmpl = env.from_string(tmpl_source)
 
-        >>> tmpl.render(endpoint_parameters={})
+        >>> tmpl.render(path_params=[])
         Traceback (most recent call last):
         ...
-        ValueError: Parameter 'host' needed, but not supplied.
+        ValueError: Parameter 'host' needed, but not supplied in {}
 
-        >>> tmpl.render(endpoint_parameters={'host': host, 'service': service})
-        '/host/service'
-
-        >>> parameters['host'] = global_host_param
-        >>> tmpl.render(endpoint_parameters={'host': host, 'service': service})
-        '/host/service'
-
-        >>> parameters['host'] = global_host_param
-        >>> tmpl.render(endpoint_parameters={'service': service})
-        '/global_host/service'
-
+        >>> tmpl.render(path_params=[host, service])
+        '/example.com/CPU'
 
     Returns:
         A filled out string.
     """
-    parameters = {}
-    parameters.update(ctx['parameters'])
-    parameters.update(ctx['endpoint_parameters'])
-    return fill_out_path_template(val, parameters)
+    return fill_out_path_template(val, to_param_dict(ctx['path_params']))
 
 
 def indent(s, skip_lines=0, spaces=2):

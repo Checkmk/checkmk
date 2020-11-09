@@ -5,19 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List, Optional, Tuple
-from .agent_based_api.v0.type_defs import CheckGenerator, Parameters
+from .agent_based_api.v1.type_defs import CheckResult, Parameters
 
-from .agent_based_api.v0 import register
+from .agent_based_api.v1 import register
 from .utils import ps
 
 
 def check_ps(
     item: str,
     params: Parameters,
-    section_ps: ps.Section,
-    section_mem: ps.SectionMem,
-    section_cpu: ps.SectionCpu,
-) -> CheckGenerator:
+    section_ps: Optional[ps.Section],
+    section_mem: Optional[ps.SectionMem],
+    section_cpu: Optional[ps.SectionCpu],
+) -> CheckResult:
     if not section_ps:
         return
 
@@ -44,7 +44,7 @@ def cluster_check_ps(
         section_ps: Dict[str, ps.Section],
         section_mem: Dict[str, ps.SectionMem],  # unused
         section_cpu: Dict[str, ps.SectionCpu],  # unused
-) -> CheckGenerator:
+) -> CheckResult:
     # introduce node name
     process_lines: List[Tuple[Optional[str], ps.ps_info, List[str]]] = [
         (node_name, ps_info, cmd_line)

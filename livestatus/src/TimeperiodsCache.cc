@@ -7,7 +7,6 @@
 
 // IWYU pragma: no_include <type_traits>
 #include <ostream>
-#include <string>
 #include <utility>
 
 #include "Logger.h"

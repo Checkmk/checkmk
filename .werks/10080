@@ -6,7 +6,7 @@ Date: 1570439714
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The rendering of a memory usage perfometers did fail when min or max values where missing.
 We added a perfometer as fallback that will display the memory usage in a logarithmic form

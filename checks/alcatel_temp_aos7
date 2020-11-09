@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['alcatel_temp'] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 
 
@@ -59,5 +61,4 @@ check_info["alcatel_temp_aos7"] = {
             22,  # MIB object "chasNI7HardwareBoardTemp"
             23,  # MIB object "chasNI8HardwareBoardTemp"
         ]),
-    "includes": ["alcatel.include", "temperature.include"],
 }

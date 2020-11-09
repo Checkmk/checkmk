@@ -1,0 +1,13 @@
+Title: Crash mk_docker.py: 'SocketIO' object has no attribute 'recv'
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1604911393
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Docker sockets do not have recv method anymore. Docker offers
+handling for this (docker.utils.socket.read()).
+This function is now used in mk_docker agent aswell.

@@ -10,6 +10,8 @@ output the sums of all individual connection types
 see: https://d1nmyq4gcgsfi5.cloudfront.net/media/pi_3_3_devnet/api/v2/data/ClientCounts@_docs.html
 """
 
+from cmk.base.check_legacy_includes.cisco_prime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def check_cisco_prime_wifi_connections(item, params, parsed):
     """Sum up all individual counts for each connection type (as well as their sums
@@ -57,5 +59,4 @@ check_info["cisco_prime_wifi_connections"] = {
     "service_description": "Cisco Prime WiFi Connections",
     "group": "cisco_prime_wifi_connections",
     "has_perfdata": True,
-    "includes": ["cisco_prime.include"],
 }

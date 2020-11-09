@@ -7,6 +7,13 @@
 # yapf: disable
 # type: ignore
 
+DEPRECATION_WARNING = (1, (
+    "Deprecated plugin/agent (see long output)(!)\nYou are using legacy code, which may lead to "
+    "crashes and/or incomplete information. Please upgrade the monitored host to use the plugin "
+    "'mk_docker.py'."
+), [])
+
+
 checkname = 'docker_node_disk_usage'
 
 info = [
@@ -24,23 +31,34 @@ info = [
 discovery = {'': [('build cache', {}), ('containers', {}), ('images', {}), ('local volumes', {})]}
 
 checks = {
-    '': [('build cache', {}, [(0, 'Size: 0.00 B', [('size', 0, None, None, None, None)]),
-                              (0, 'Reclaimable: 0.00 B', [('reclaimable', 0, None, None, None, None)]),
-                              (0, 'Count: 0', [('count', 0, None, None, None, None)]),
-                              (0, 'Active: 0', [('active', 0, None, None, None, None)])]),
-         ('containers', {},
-          [(0, 'Size: 1.14 GB', [('size', 1226000000, None, None, None, None)]),
-           (0, 'Reclaimable: 1.14 GB', [('reclaimable', 1224000000, None, None, None, None)]),
-           (0, 'Count: 2', [('count', 2, None, None, None, None)]),
-           (0, 'Active: 1', [('active', 1, None, None, None, None)])]),
-         ('images', {}, [(0, 'Size: 8.91 GB', [('size', 9570000000, None, None, None, None)]),
-                         (0, 'Reclaimable: 8.08 GB', [('reclaimable', 8674000000, None, None, None,
-                                                       None)]),
-                         (0, 'Count: 15', [('count', 15, None, None, None, None)]),
-                         (0, 'Active: 2', [('active', 2, None, None, None, None)])]),
-         ('local volumes', {}, [(0, 'Size: 8.89 MB', [('size', 9323000, None, None, None, None)]),
-                                (0, 'Reclaimable: 0.00 B', [('reclaimable', 0, None, None, None,
-                                                          None)]),
-                                (0, 'Count: 1', [('count', 1, None, None, None, None)]),
-                                (0, 'Active: 1', [('active', 1, None, None, None, None)])])]
+    '': [
+        ('build cache', {}, [
+            (0, 'Size: 0.00 B', [('size', 0, None, None, None, None)]),
+            (0, 'Reclaimable: 0.00 B', [('reclaimable', 0, None, None, None, None)]),
+            (0, 'Count: 0', [('count', 0, None, None, None, None)]),
+            (0, 'Active: 0', [('active', 0, None, None, None, None)]),
+            DEPRECATION_WARNING,
+        ]),
+        ('containers', {}, [
+            (0, 'Size: 1.14 GB', [('size', 1226000000, None, None, None, None)]),
+            (0, 'Reclaimable: 1.14 GB', [('reclaimable', 1224000000, None, None, None, None)]),
+            (0, 'Count: 2', [('count', 2, None, None, None, None)]),
+            (0, 'Active: 1', [('active', 1, None, None, None, None)]),
+            DEPRECATION_WARNING,
+        ]),
+        ('images', {}, [
+            (0, 'Size: 8.91 GB', [('size', 9570000000, None, None, None, None)]),
+            (0, 'Reclaimable: 8.08 GB', [('reclaimable', 8674000000, None, None, None, None)]),
+            (0, 'Count: 15', [('count', 15, None, None, None, None)]),
+            (0, 'Active: 2', [('active', 2, None, None, None, None)]),
+            DEPRECATION_WARNING,
+        ]),
+        ('local volumes', {}, [
+            (0, 'Size: 8.89 MB', [('size', 9323000, None, None, None, None)]),
+            (0, 'Reclaimable: 0.00 B', [('reclaimable', 0, None, None, None, None)]),
+            (0, 'Count: 1', [('count', 1, None, None, None, None)]),
+            (0, 'Active: 1', [('active', 1, None, None, None, None)]),
+            DEPRECATION_WARNING,
+        ]),
+    ],
 }

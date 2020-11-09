@@ -13,6 +13,7 @@
 #define wtools_h__
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
+#include <aclapi.h>
 #include <comdef.h>
 
 #include "windows.h"
@@ -36,20 +37,17 @@
 #include "datablock.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
+#include "tools/_win.h"
 
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
-
-inline bool IsHandleValid(HANDLE h) noexcept {
-    return h != nullptr && h != INVALID_HANDLE_VALUE;
-}
 
 // this is functor to kill any pointer allocated with ::LocalAlloc
 // usually this pointer comes from Windows API
 template <typename T>
 struct LocalAllocDeleter {
     void operator()(T* r) noexcept {
-        if (r) ::LocalFree(reinterpret_cast<HLOCAL>(r));
+        if (r != nullptr) ::LocalFree(reinterpret_cast<HLOCAL>(r));
     }
 };
 
@@ -507,7 +505,7 @@ private:
 
         // Take a snapshot of all processes in the system.
         auto hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if (hProcessSnap == INVALID_HANDLE_VALUE) {
+        if (wtools::IsInvalidHandle(hProcessSnap)) {
             return {};
         };
 
@@ -1084,11 +1082,41 @@ public:
     BSTR data_;
 };
 
-/// \brief Set correct access rights in %ProgramData%/checkmk
+/// \brief Set correct access rights for the path
 ///
 ///  Normally called once on the start of the service.
-///  Removes Users write access from the programdata folder
-bool ProtectFolderFromUserWrite(const std::filesystem::path& folder);
+///  Removes Users write access from the specified path(usually it is
+///  %ProgramData%/checkmk)
+bool ProtectPathFromUserWrite(const std::filesystem::path& path);
+
+/// \brief Remove user access to the path
+///
+///  Normally called once on the start of the service.
+///  Removes Users Access to the specified path
+bool ProtectPathFromUserAccess(const std::filesystem::path& entry);
+
+/// \brief Remove user access to the file
+///
+///  Normally called once on the start of the service.
+///  Removes Users Access Writes to the specified file
+bool ProtectFileFromUserWrite(const std::filesystem::path& path);
+
+/// \brief Changes Access Rights in Windows crazy manner
+///
+/// Example of usage is
+/// ChangeAccessRights( L"c:\\txt", SE_FILE_OBJECT,        // what
+///                     L"a1", TRUSTEE_IS_NAME,            // who
+///                     STANDARD_RIGHTS_ALL | GENERIC_ALL, // how
+///                     GRANT_ACCESS, OBJECT_INHERIT_ACE);
+bool ChangeAccessRights(
+    const wchar_t* object_name,   // name of object
+    SE_OBJECT_TYPE object_type,   // type of object
+    const wchar_t* trustee_name,  // trustee for new ACE
+    TRUSTEE_FORM trustee_form,    // format of trustee structure
+    DWORD access_rights,          // access mask for new ACE
+    ACCESS_MODE access_mode,      // type of ACE
+    DWORD inheritance             // inheritance flags for new ACE ???
+);
 
 }  // namespace wtools
 

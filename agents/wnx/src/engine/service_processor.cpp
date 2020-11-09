@@ -546,6 +546,23 @@ void WaitForNetwork(std::chrono::seconds period) {
 }
 }  // namespace
 
+namespace {
+void ReProtectFiles() {
+    // Some secret files may be installed during start/update/upgrade.
+    // We must protect them.
+    try {
+        auto app_data_folder =
+            cma::tools::win::GetSomeSystemFolder(FOLDERID_ProgramData);
+        cma::security::ProtectFiles(std::filesystem::path(app_data_folder) /
+                                    cma::cfg::kAppDataCompanyName);
+    } catch (const std::exception& e) {
+        // no crashes allowed
+        XLOG::l.crit("Unexpected exception '{}' during re-protect files call",
+                     e.what());
+    }
+}
+}  // namespace
+
 // <HOSTING THREAD>
 // ex_port may be nullptr(command line test, for example)
 // makes a mail slot + starts IO on TCP
@@ -554,10 +571,11 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     // mail slot name selector "service" or "not service"
     using namespace std::chrono;
     using namespace cma::cfg;
-    auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
-                                          : cma::cfg::kTestingMailSlot;
+    auto mailslot_name = cma::IsService() ? kServiceMailSlot : kTestingMailSlot;
 
     if (cma::IsService()) {
+        ReProtectFiles();
+
         auto wait_period = GetVal(groups::kSystem, vars::kWaitNetwork,
                                   defaults::kServiceWaitNetwork);
         WaitForNetwork(seconds{wait_period});
@@ -745,7 +763,7 @@ HANDLE CreateDevNull() {
 // This Function is safe
 bool TheMiniProcess::start(const std::wstring& exe_name) {
     std::unique_lock lk(lock_);
-    if (process_handle_ != INVALID_HANDLE_VALUE) {
+    if (!wtools::IsInvalidHandle(process_handle_)) {
         // check status and reset handle if required
         DWORD exit_code = STILL_ACTIVE;
         if (!::GetExitCodeProcess(process_handle_,
@@ -755,11 +773,11 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
                 XLOG::l.i("Finished with {} code", exit_code);
             }
             CloseHandle(process_handle_);
-            process_handle_ = INVALID_HANDLE_VALUE;
+            process_handle_ = wtools::InvalidHandle();
         }
     }
 
-    if (process_handle_ == INVALID_HANDLE_VALUE) {
+    if (wtools::IsInvalidHandle(process_handle_)) {
         auto null_handle = CreateDevNull();
         STARTUPINFO si{0};
         si.cb = sizeof(STARTUPINFO);
@@ -787,7 +805,7 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
 // returns true when killing occurs
 bool TheMiniProcess::stop() {
     std::unique_lock lk(lock_);
-    if (process_handle_ == INVALID_HANDLE_VALUE) return false;
+    if (wtools::IsInvalidHandle(process_handle_)) return false;
 
     auto name = process_name_;
     auto pid = process_id_;
@@ -796,7 +814,7 @@ bool TheMiniProcess::stop() {
     process_id_ = 0;
     process_name_.clear();
     CloseHandle(handle);
-    process_handle_ = INVALID_HANDLE_VALUE;
+    process_handle_ = wtools::InvalidHandle();
 
     // check status and reset handle if required
     DWORD exit_code = STILL_ACTIVE;

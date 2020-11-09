@@ -6,7 +6,7 @@ Date: 1593590286
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 {{mk_inventory}} now writes a section {{<<<lnx_block_devices>>>}} block device
 information collected from system device tree.

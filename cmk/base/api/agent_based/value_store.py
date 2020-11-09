@@ -12,7 +12,10 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.type_defs import ValueStore
-from cmk.base.item_state import (
+
+# TODO: this API violiation is due to the fact that this value_store
+# is currently nothing more than a polished version of item state.
+from cmk.base.item_state import (  # pylint: disable=cmk-module-layer-violation
     set_item_state,  # for __setitem__
     clear_item_state,  # for __delitem__
     get_all_item_states,  # for __len__, __iter__

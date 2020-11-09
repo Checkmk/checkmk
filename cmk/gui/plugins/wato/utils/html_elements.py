@@ -18,14 +18,6 @@ from cmk.gui.watolib.activate_changes import get_pending_changes_info
 _html_head_open = False
 
 
-# Show confirmation dialog, send HTML-header if dialog is shown.
-def wato_confirm(html_title, message):
-    if not html.request.has_var("_do_confirm") and not html.request.has_var("_do_actions"):
-        # TODO: get the breadcrumb from all call sites
-        wato_html_head(title=html_title, breadcrumb=Breadcrumb())
-    return html.confirm(message)
-
-
 def initialize_wato_html_head():
     global _html_head_open
     _html_head_open = False

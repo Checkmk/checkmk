@@ -14,24 +14,11 @@ from typing import Any, Callable, Dict, Generator, Optional, overload, Tuple, Un
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.snmplib.type_defs import SNMPDetectSpec
-
-import cmk.base.check_api_utils as check_api_utils
-import cmk.base.prediction
-from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, state
+import cmk.base.check_api_utils as check_api_utils  # pylint: disable=cmk-module-layer-violation
+import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
+from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 from cmk.base.api.agent_based.type_defs import ValueStore
-
-
-# annotating this breaks validation.
-# yet another reason to not use this.
-def parse_to_string_table(string_table):
-    """A function that returns its argument unchanged.
-
-    Provided for developers who don't want to implement a parse function
-    in their section definition (which they should).
-    """
-    return string_table
-
 
 #     ____       _            _
 #    |  _ \  ___| |_ ___  ___| |_   ___ _ __   ___  ___
@@ -41,8 +28,8 @@ def parse_to_string_table(string_table):
 #                                      |_|
 
 
-def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
-           *specs: SNMPDetectSpec) -> SNMPDetectSpec:
+def all_of(spec_0: SNMPDetectSpecification, spec_1: SNMPDetectSpecification,
+           *specs: SNMPDetectSpecification) -> SNMPDetectSpecification:
     """Detect the device if all passed specifications are met
 
     Args:
@@ -57,13 +44,13 @@ def all_of(spec_0: SNMPDetectSpec, spec_1: SNMPDetectSpec,
         >>> DETECT = all_of(exists("1.2.3.4"), contains("1.2.3.5", "foo"))
 
     """
-    reduced = SNMPDetectSpec(l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1))
+    reduced = SNMPDetectSpecification(l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1))
     if not specs:
         return reduced
     return all_of(reduced, *specs)
 
 
-def any_of(*specs: SNMPDetectSpec) -> SNMPDetectSpec:
+def any_of(*specs: SNMPDetectSpecification) -> SNMPDetectSpecification:
     """Detect the device if any of the passed specifications are met
 
     Args:
@@ -77,16 +64,16 @@ def any_of(*specs: SNMPDetectSpec) -> SNMPDetectSpec:
         >>> DETECT = any_of(exists("1.2.3.4"), exists("1.2.3.5"))
 
     """
-    return SNMPDetectSpec(sum(specs, []))
+    return SNMPDetectSpecification(sum(specs, []))
 
 
-def _negate(spec: SNMPDetectSpec) -> SNMPDetectSpec:
+def _negate(spec: SNMPDetectSpecification) -> SNMPDetectSpecification:
     assert len(spec) == 1
     assert len(spec[0]) == 1
-    return SNMPDetectSpec([[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]])
+    return SNMPDetectSpecification([[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]])
 
 
-def matches(oidstr: str, value: str) -> SNMPDetectSpec:
+def matches(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID matches the expression
 
     Args:
@@ -98,13 +85,13 @@ def matches(oidstr: str, value: str) -> SNMPDetectSpec:
 
     Example:
 
-        >>> DETECT = match("1.2.3.4", ".* Server")
+        >>> DETECT = matches("1.2.3.4", ".* Server")
 
     """
-    return SNMPDetectSpec([[(oidstr, value, True)]])
+    return SNMPDetectSpecification([[(oidstr, value, True)]])
 
 
-def contains(oidstr: str, value: str) -> SNMPDetectSpec:
+def contains(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID contains the given string
 
     Args:
@@ -119,10 +106,10 @@ def contains(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = contains("1.2.3", "isco")
 
     """
-    return SNMPDetectSpec([[(oidstr, '.*%s.*' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, '.*%s.*' % re.escape(value), True)]])
 
 
-def startswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def startswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID starts with the given string
 
     Args:
@@ -137,10 +124,10 @@ def startswith(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = startswith("1.2.3", "Sol")
 
     """
-    return SNMPDetectSpec([[(oidstr, '%s.*' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, '%s.*' % re.escape(value), True)]])
 
 
-def endswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def endswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID ends with the given string
 
     Args:
@@ -155,10 +142,10 @@ def endswith(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = endswith("1.2.3", "nix")
 
     """
-    return SNMPDetectSpec([[(oidstr, '.*%s' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, '.*%s' % re.escape(value), True)]])
 
 
-def equals(oidstr: str, value: str) -> SNMPDetectSpec:
+def equals(oidstr: str, value: str) -> SNMPDetectSpecification:
     """Detect the device if the value of the OID equals the given string
 
     Args:
@@ -173,10 +160,10 @@ def equals(oidstr: str, value: str) -> SNMPDetectSpec:
         >>> DETECT = equals("1.2.3", "MySwitch")
 
     """
-    return SNMPDetectSpec([[(oidstr, '%s' % re.escape(value), True)]])
+    return SNMPDetectSpecification([[(oidstr, '%s' % re.escape(value), True)]])
 
 
-def exists(oidstr: str) -> SNMPDetectSpec:
+def exists(oidstr: str) -> SNMPDetectSpecification:
     """Detect the device if the OID exists at all
 
     Args:
@@ -190,55 +177,38 @@ def exists(oidstr: str) -> SNMPDetectSpec:
         >>> DETECT = exists("1.2.3")
 
     """
-    return SNMPDetectSpec([[(oidstr, '.*', True)]])
+    return SNMPDetectSpecification([[(oidstr, '.*', True)]])
 
 
-def not_matches(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_matches(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`matches`"""
     return _negate(matches(oidstr, value))
 
 
-def not_contains(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_contains(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`contains`"""
     return _negate(contains(oidstr, value))
 
 
-def not_startswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_startswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`startswith`"""
     return _negate(startswith(oidstr, value))
 
 
-def not_endswith(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_endswith(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`endswith`"""
     return _negate(endswith(oidstr, value))
 
 
-def not_equals(oidstr: str, value: str) -> SNMPDetectSpec:
+def not_equals(oidstr: str, value: str) -> SNMPDetectSpecification:
     """The negation of :func:`equals`"""
     return _negate(equals(oidstr, value))
 
 
-def not_exists(oidstr: str) -> SNMPDetectSpec:
+def not_exists(oidstr: str) -> SNMPDetectSpecification:
     """The negation of :func:`exists`"""
     return _negate(exists(oidstr))
 
-
-never_detect = SNMPDetectSpec([[(
-    # does not matter which OID we use here
-    ".1.3.6.1.2.1.1.2.0",
-    # this regex will never match: anything not followed by an x and also followed by an x,
-    # i.e. nothing
-    "(?!x)x",
-    True,
-)]])
-
-always_detect = SNMPDetectSpec([[(
-    # does not matter which OID we use here
-    ".1.3.6.1.2.1.1.2.0",
-    # this regex will always match
-    ".*",
-    True,
-)]])
 
 #          _               _        _                _
 #      ___| |__   ___  ___| | __   | | _____   _____| |___
@@ -253,22 +223,22 @@ def _do_check_levels(
     levels_upper: Optional[Tuple[float, float]],
     levels_lower: Optional[Tuple[float, float]],
     render_func: Callable[[float], str],
-) -> Tuple[state, str]:
+) -> Tuple[State, str]:
     # Typing says that levels are either None, or a Tuple of float.
     # However we also deal with (None, None) to avoid crashes of custom plugins.
     # CRIT ?
     if levels_upper and levels_upper[1] is not None and value >= levels_upper[1]:
-        return state.CRIT, _levelsinfo_ty("at", levels_upper, render_func)
+        return State.CRIT, _levelsinfo_ty("at", levels_upper, render_func)
     if levels_lower and levels_lower[1] is not None and value < levels_lower[1]:
-        return state.CRIT, _levelsinfo_ty("below", levels_lower, render_func)
+        return State.CRIT, _levelsinfo_ty("below", levels_lower, render_func)
 
     # WARN ?
     if levels_upper and levels_upper[0] is not None and value >= levels_upper[0]:
-        return state.WARN, _levelsinfo_ty("at", levels_upper, render_func)
+        return State.WARN, _levelsinfo_ty("at", levels_upper, render_func)
     if levels_lower and levels_lower[0] is not None and value < levels_lower[0]:
-        return state.WARN, _levelsinfo_ty("below", levels_lower, render_func)
+        return State.WARN, _levelsinfo_ty("below", levels_lower, render_func)
 
-    return state.OK, ""
+    return State.OK, ""
 
 
 def _levelsinfo_ty(preposition: str, levels: Tuple[float, float],
@@ -289,6 +259,7 @@ def check_levels(
     render_func: Optional[Callable[[float], str]] = None,
     label: Optional[str] = None,
     boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    notice_only: bool = False,
 ) -> Generator[Result, None, None]:
     pass
 
@@ -303,6 +274,7 @@ def check_levels(
     render_func: Optional[Callable[[float], str]] = None,
     label: Optional[str] = None,
     boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    notice_only: bool = False,
 ) -> Generator[Union[Result, Metric], None, None]:
     pass
 
@@ -316,6 +288,7 @@ def check_levels(
     render_func: Optional[Callable[[float], str]] = None,
     label: Optional[str] = None,
     boundaries: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    notice_only: bool = False,
 ) -> Generator[Union[Result, Metric], None, None]:
     """Generic function for checking a value against levels.
 
@@ -332,6 +305,8 @@ def check_levels(
                       human readable string.
         label:        The label to prepend to the output.
         boundaries:   Minimum and maximum to add to the metric.
+        notice_only:  Only show up in service output if not OK (otherwise in details).
+                      See `notice` keyword of `Result` class.
 
     Example:
 
@@ -339,10 +314,10 @@ def check_levels(
         ...     23.0,
         ...     levels_upper=(12., 42.),
         ...     label="Fridge",
-        ...      render_func=lambda v: "%.1f°",
+        ...     render_func=lambda v: "%.1f°" % v,
         ... )
         >>> print(result.summary)
-        'Fridge: 23.0° (warn/crit at 12.0°/42.0°)'
+        Fridge: 23.0° (warn/crit at 12.0°/42.0°)
 
     """
     if render_func is None:
@@ -354,7 +329,10 @@ def check_levels(
 
     value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
 
-    yield Result(state=value_state, summary=info_text + levels_text)
+    if notice_only:
+        yield Result(state=value_state, notice=info_text + levels_text)
+    else:
+        yield Result(state=value_state, summary=info_text + levels_text)
     if metric_name:
         yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
 
@@ -414,7 +392,7 @@ def check_levels_predictive(
     except Exception as e:
         if cmk.utils.debug.enabled():
             raise
-        yield Result(state=state.UNKNOWN, summary="%s" % e)
+        yield Result(state=State.UNKNOWN, summary="%s" % e)
         return
 
     levels_upper = (None if levels_tuple[0] is None or levels_tuple[1] is None else

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.firewall_if import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["pfsense_if_default_levels"] = {
     "ipv4_in_blocked": (100.0, 10000.0),
     "average": 3,
@@ -35,6 +36,5 @@ check_info["pfsense_if"] = {
             "12",  # pfInterfacesIf4PktsInBlock
         ]),
     "snmp_scan_function": lambda oid: "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    "includes": ["firewall_if.include"],
     "group": "firewall_if",
 }

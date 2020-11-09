@@ -32,7 +32,7 @@ PYTHON_MODULE_NAME := python-3.8.zip
 PYTHON_TIMESTAMP   := $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).timestamp
 OMD_PYTHON_PACKAGE := $(OMD_PACKAGES_DIR)\$(OMD_PYTHON_NAME).zip
 
-PYTHON_INSTALLER   := $(PYTHON_TMP_DIR)\out\win32\python-3.8.1.exe
+PYTHON_INSTALLER   := $(PYTHON_TMP_DIR)\out\win32\python-3.8.5.exe
 SRC_PIPFILE        := $(SRC_PIPFILE_DIR)\Pipfile
 
 PYTHON_PIPFILE     := $(PYTHON_SAVE_DIR)\Pipfile
@@ -96,6 +96,7 @@ venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
 	@powershell Write-Host "Target '$@'" -foreground white
 	@call exec_cmd.bat build_environment.cmd
 	@call exec_cmd.bat clean_environment.cmd
+	@call exec_cmd.bat patch_environment.cmd
 	
 	
 $(PYTHON_MODULE): venv ## zipping venv

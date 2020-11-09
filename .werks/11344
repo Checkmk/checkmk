@@ -1,0 +1,12 @@
+Title: Discover correct galera setups
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1600972935
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The galera subchecks discovered services in cases galera was not configured. This was fixed with this werk.
+Furthermore a crash regarding the discovered parameters is fixed.

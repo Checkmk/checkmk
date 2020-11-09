@@ -31,5 +31,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextAscii(title=_("Instance name"), allow_empty=True),
         parameter_valuespec=_parameter_valuespec_db2_mem,
-        title=lambda: _("Memory levels for DB2 memory usage"),
+        title=lambda: _("DB2 memory usage"),
     ))

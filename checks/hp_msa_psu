@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<hp_msa_psu>>>
 # power-supplies 1 durable-id psu_1.1
 # power-supplies 1 enclosure-id 1
@@ -53,7 +55,6 @@ check_info['hp_msa_psu'] = {
     'inventory_function': inventory_hp_msa_health,
     'check_function': check_hp_msa_health,
     'service_description': 'Power Supply Health %s',
-    'includes': ["hp_msa.include"],
 }
 
 #.
@@ -106,7 +107,6 @@ check_info['hp_msa_psu.sensor'] = {
     'service_description': 'Power Supply Voltage %s',
     'default_levels_variable': "hp_msa_psu_default_levels",
     'group': 'hp_msa_psu_voltage',
-    'includes': ["hp_msa.include"],
 }
 
 #.
@@ -136,5 +136,4 @@ check_info['hp_msa_psu.temp'] = {
     'has_perfdata': True,
     'group': 'temperature',
     'default_levels_variable': 'hp_msa_psu_temp_default_levels',
-    'includes': ["temperature.include", "hp_msa.include"],
 }

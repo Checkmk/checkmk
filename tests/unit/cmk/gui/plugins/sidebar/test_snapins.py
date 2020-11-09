@@ -42,7 +42,6 @@ def test_registered_snapins():
         'views',
         'wato_folders',
         'wato_foldertree',
-        'wiki',
     ]
 
     if not cmk_version.is_raw_edition():

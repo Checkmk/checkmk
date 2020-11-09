@@ -39,11 +39,14 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 
-from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     monitoring_macro_help,
+    flash,
+    mode_url,
+    redirect,
 )
 
 
@@ -161,13 +164,14 @@ class ModeDiagHost(WatoMode):
             elif "snmp_community" in new:
                 return_message.append(_("SNMP credentials"))
 
-            msg = _("Updated attributes: ") + ", ".join(return_message)
-
             self._host.update_attributes(new)
-            html.request.del_vars()
-            html.request.set_var("host", self._hostname)
-            html.request.set_var("folder", watolib.Folder.current().path())
-            return "edit_host", msg
+            flash(_("Updated attributes: ") + ", ".join(return_message))
+            return redirect(
+                mode_url(
+                    "edit_host",
+                    host=self._hostname,
+                    folder=watolib.Folder.current().path(),
+                ))
         return None
 
     def _validate_diag_html_vars(self):
@@ -257,10 +261,10 @@ class ModeDiagHost(WatoMode):
 
             html.open_td(class_="icons")
             html.open_div()
-            html.icon(title=None, icon="reload", id_="%s_img" % ident)
+            html.icon("reload", id_="%s_img" % ident)
             html.open_a(href="")
-            html.icon(title=_('Retry this test'),
-                      icon="reload",
+            html.icon("reload",
+                      title=_('Retry this test'),
                       cssclass="retry",
                       id_="%s_retry" % ident)
             html.close_a()
@@ -330,7 +334,7 @@ class ModeDiagHost(WatoMode):
                     minvalue = 1,
                     maxvalue = 65535,
                     default_value = 6556,
-                    title = _("Check_MK Agent Port (<a href=\"%s\">Rules</a>)") %
+                    title = _("Checkmk Agent Port (<a href=\"%s\">Rules</a>)") %
                         watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'agent_ports')]),
                     help = _("This variable allows to specify the TCP port to "
                              "be used to connect to the agent on a per-host-basis.")

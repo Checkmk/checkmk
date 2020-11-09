@@ -114,5 +114,5 @@ rulespec_registry.register(
         item_spec=_item_spec_disk_io,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_disk_io,
-        title=lambda: _("Levels on disk IO (old style checks)"),
+        title=lambda: _("Disk IO levels (old style checks)"),
     ))

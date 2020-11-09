@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Since Werk 4711 the device name for device types other than NVME has changed to
 e.g. "/dev/sdb". This regression has been fixed. If you already used the agent

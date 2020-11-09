@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.license import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from plugin:
 # <<<citrix_licenses>>>
 # PVS_STD_CCS 80 0
@@ -49,5 +50,4 @@ check_info["citrix_licenses"] = {
     'service_description': 'Citrix Licenses %s',
     'has_perfdata': True,
     'group': "citrix_licenses",
-    'includes': ["license.include"]
 }

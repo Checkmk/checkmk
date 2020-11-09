@@ -14,6 +14,7 @@ import pprint
 import subprocess
 import tarfile
 import time
+from contextlib import suppress
 from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Final
 
 from six import ensure_binary, ensure_str
@@ -235,7 +236,8 @@ def remove(package: PackageInfo) -> None:
                     if part.ident == 'ec_rule_packs':
                         _remove_packaged_rule_packs(filenames)
                     else:
-                        os.remove(path)
+                        with suppress(FileNotFoundError):
+                            os.remove(path)
                 except Exception as e:
                     if cmk.utils.debug.enabled():
                         raise
@@ -430,7 +432,8 @@ def install(file_object: BinaryIO) -> PackageInfo:
                     path = os.path.join(part.path, fn)
                     logger.log(VERBOSE, "Removing outdated file %s.", path)
                     try:
-                        os.remove(path)
+                        with suppress(FileNotFoundError):
+                            os.remove(path)
                     except Exception as e:
                         logger.error("Error removing %s: %s", path, e)
 

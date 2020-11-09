@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.hr_fs import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
 check_info["hr_fs"] = {
     'inventory_function': inventory_hr_fs,
     'check_function': check_hr_fs,
@@ -21,6 +25,5 @@ check_info["hr_fs"] = {
     'snmp_scan_function': is_hr,
     'group': 'filesystem',
     'default_levels_variable': 'filesystem_default_levels',
-    'includes': ['ucd_hr.include', "size_trend.include", "df.include", "hr_fs.include"],
     "management_board": HOST_ONLY,
 }

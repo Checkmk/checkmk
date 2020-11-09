@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Agent output:
 # <<<netapp_api_snapshots:sep(9)>>>
 # volume_snapshot volch150    percent-reserved 22 blocks-reserved 3322    size-total 12122 ...
@@ -69,5 +70,4 @@ check_info["netapp_api_snapshots"] = {
     'service_description': 'Snapshots Volume %s',
     'group': "netapp_snapshots",
     'has_perfdata': True,
-    'includes': ["netapp_api.include"]
 }

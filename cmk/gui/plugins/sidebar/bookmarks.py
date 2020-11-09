@@ -42,6 +42,10 @@ class BookmarkList(pagetypes.Overridable):
         return "bookmark_list"
 
     @classmethod
+    def type_icon(cls):
+        return "bookmark_list"
+
+    @classmethod
     def phrase(cls, phrase):
         return {
             "title": _("Bookmark list"),
@@ -102,7 +106,7 @@ class BookmarkList(pagetypes.Overridable):
                                         allow_empty=False,
                                         validate=cls.validate_url,
                                     )),
-                                    (IconSelector(title=_("Icon"),)),
+                                    (IconSelector(title=_("Icon"), with_emblem=False)),
                                     (cls._vs_topic()),
                                 ],
                                 orientation="horizontal",
@@ -138,7 +142,6 @@ class BookmarkList(pagetypes.Overridable):
                 ),
             ],
             title=_("Topic") + "<sup>*</sup>",
-            style="dropdown",
             orientation="horizontal",
         )
 

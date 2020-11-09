@@ -15,7 +15,7 @@ description:
  This is done by setting a user defineable value for the used
  percentage on a tape up to which you think it still makes sense
  to append to it, and then defining alert levels on the
- number of of tapes that need to have more than the limit.
+ number of tapes that need to have more than the limit.
 
  The check also tells you about the average utilization of all the
  tapes that still have enough capacity reserve to be considered
@@ -24,7 +24,9 @@ description:
 item:
  The name of the instance (optional) and the name of the staging pool seperated by a {{/}}
 
-
 inventory:
  One service is created for each staging pool.
 
+cluster:
+ On a cluster the check will evaluate the first node with the corresponding pool.
+ In case not all found staging pools are equal, the service will get {UNKNOWN}.

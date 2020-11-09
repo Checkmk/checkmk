@@ -32,10 +32,9 @@
 # VLANs; the VLAN is not included if its bit has a
 # value of '0'."
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     contains,
     OIDEnd,
-    parse_to_string_table,
     register,
     SNMPTree,
     TableRow,
@@ -43,8 +42,7 @@ from .agent_based_api.v0 import (
 
 register.snmp_section(
     name="inv_cisco_vlans",
-    parse_function=parse_to_string_table,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.68.1.2.2.1",
             oids=[

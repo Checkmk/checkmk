@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Future convention within all Check_MK modules for variable names:
+# Future convention within all Checkmk modules for variable names:
 #
 # - host_name     - Monitoring name of a host (string)
 # - node_name     - Name of cluster member (string)
@@ -69,7 +69,7 @@ try:
     # At least in case the config is needed, the checks are needed too, because
     # the configuration may refer to check config variable names.
     if mode_name not in modes.non_checks_options():
-        config.load_all_checks(check_api.get_check_api_context)
+        config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
     # Read the configuration files (main.mk, autochecks, etc.), but not for
     # certain operation modes that does not need them and should not be harmed
@@ -82,7 +82,7 @@ try:
         exit_status = modes.call(mode_name, mode_args, opts, args)
         done = True
 
-    # When no mode was found, Check_MK is running the "check" mode
+    # When no mode was found, Checkmk is running the "check" mode
     if not done:
         if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
             exit_status = modes.call("--check", None, opts, args)

@@ -8,7 +8,6 @@ import ast
 import os
 import re
 import subprocess
-from typing import Any, Dict, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
@@ -16,6 +15,7 @@ from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 from testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
+from cmk.utils.type_defs import SetAutochecksTable
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
@@ -221,11 +221,11 @@ def test_automation_try_discovery_host(test_cfg, site):
 
 
 def test_automation_set_autochecks(test_cfg, site):
-    new_items: Dict[Tuple[str, Optional[str]], Any] = {
-        ("df", "xxx"): ({}, {
+    new_items: SetAutochecksTable = {
+        ("df", "xxx"): ("Filesystem xxx", {}, {
             u"xyz": u"123"
         }),
-        ("uptime", None): (None, {}),
+        ("uptime", None): ("Uptime", None, {}),
     }
 
     try:

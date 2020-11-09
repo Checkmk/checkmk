@@ -70,4 +70,7 @@ $(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
 		INSTALLSITEMAN3DIR=/share/man/man3 \
 		INSTALLARCHLIB=/lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi \
 		install
+# Fixup some library permissions. They need to be owner writable to make
+# dh_strip command of deb packaging procedure work
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5/auto/*SNMP -type f -name \*.so -exec chmod u+w {} \;
 	$(TOUCH) $@

@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "Column.h"
 #include "IntColumn.h"
@@ -29,6 +30,8 @@ public:
     enum class Type {
         num_hst,
         num_hst_pending,
+        num_hst_handled_problems,
+        num_hst_unhandled_problems,
         //
         num_hst_up,
         num_hst_down,
@@ -54,8 +57,9 @@ public:
     };
 
     HostListStateColumn(const std::string &name, const std::string &description,
-                        Offsets offsets, MonitoringCore *mc, Type logictype)
-        : IntColumn(name, description, offsets)
+                        ColumnOffsets offsets, MonitoringCore *mc,
+                        Type logictype)
+        : IntColumn(name, description, std::move(offsets))
         , _mc(mc)
         , _logictype(logictype) {}
 
@@ -67,7 +71,7 @@ private:
 
     void update(const contact *auth_user, HostState current_state,
                 bool has_been_checked,
-                ServiceListStateColumn::service_list services,
+                ServiceListStateColumn::service_list services, bool handled,
                 int32_t &result) const;
 };
 

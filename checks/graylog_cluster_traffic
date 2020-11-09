@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<graylog_cluster_traffic>>>
 # {"to": "2019-09-20T12:00:00.000Z", "output": {"2019-09-17T03:00:00.000Z":
 # 6511247, "2019-09-18T14:00:00.000Z": 176026381, "2019-09-08T08:00:00.000Z":
@@ -56,5 +57,4 @@ check_info["graylog_cluster_traffic"] = {
     "service_description": "Graylog Cluster Traffic",
     "has_perfdata": True,
     "group": "graylog_cluster_traffic",
-    "includes": ["graylog.include"],
 }

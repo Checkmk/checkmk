@@ -9,6 +9,7 @@
 
 #include "logger.h"
 #include "tools/_raii.h"
+#include "tools/_win.h"
 
 namespace wtools {
 
@@ -44,7 +45,7 @@ LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
     SERVICE_FAILURE_ACTIONS* actions = nullptr;
 
     std::lock_guard lk(lock_);
-    if (!IsHandleValid(handle_)) return nullptr;
+    if (!IsGoodHandle(handle_)) return nullptr;
 
     DWORD bytes_needed = 0;
 
@@ -106,7 +107,7 @@ bool WinService::configureRestart(bool restart) {
     service_fail_actions.lpsaActions = fail_actions.data();
 
     std::lock_guard lk(lock_);
-    if (!IsHandleValid(handle_)) return false;
+    if (!IsGoodHandle(handle_)) return false;
 
     auto result =
         ::ChangeServiceConfig2(handle_, SERVICE_CONFIG_FAILURE_ACTIONS,

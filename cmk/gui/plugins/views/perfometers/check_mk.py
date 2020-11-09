@@ -17,7 +17,7 @@ from cmk.gui.plugins.views.perfometers import (
     perfometer_logarithmic_dual_independent,
 )
 
-# Perf-O-Meters for Check_MK's checks
+# Perf-O-Meters for Checkmk's checks
 #
 # They are called with:
 # 1. row -> a dictionary of the data row with at least the
@@ -344,7 +344,6 @@ def perfometer_check_mk_if(row, check_command, perf_data):
 
 perfometers["check_mk-if"] = perfometer_check_mk_if
 perfometers["check_mk-if64"] = perfometer_check_mk_if
-perfometers["check_mk-if64adm"] = perfometer_check_mk_if
 perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
 perfometers["check_mk-winperf_if"] = perfometer_check_mk_if
 perfometers["check_mk-vms_if"] = perfometer_check_mk_if
@@ -485,7 +484,7 @@ perfometers["check_mk-casa_cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
 
 
-def perfometer_ps_perf(row, check_command, perf_data):
+def perfometer_ps(row, check_command, perf_data):
     perf_dict = {p[0]: float(p[1]) for p in perf_data}
     try:
         perc = perf_dict["pcpu"]
@@ -494,8 +493,7 @@ def perfometer_ps_perf(row, check_command, perf_data):
         return "", ""
 
 
-perfometers["check_mk-ps"] = perfometer_ps_perf
-perfometers["check_mk-ps.perf"] = perfometer_ps_perf
+perfometers["check_mk-ps"] = perfometer_ps
 
 
 def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data):
@@ -693,15 +691,23 @@ def perfometer_fileinfo(row, check_command, perf_data):
 
 
 def perfometer_fileinfo_groups(row, check_command, perf_data):
+    # No files found in file group yields metrics('count', 'size')
+    # Files found in file group yields metrics('count', 'size', 'size_largest', 'size_smallest',
+    #                                          'age_oldest', 'age_newest')
     h = '<div class="stacked">'
     texts = []
-    for i, color, base, scale, verbfunc in [
-        (2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v),  # count
-        (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
-    ]:  # age_newest
-        val = float(perf_data[i][1])
-        h += perfometer_logarithmic(val, base, scale, color)
-        texts.append(verbfunc(val))
+    perfometer_values = {
+        'count': ("#aabb50", 10000, 10, lambda v: ("%d Tot") % v),
+        'age_newest': ("#ccff50", 3600, 10, cmk.utils.render.approx_age),
+    }
+    for name, value, _unit, _min, _max, _warn, _crit in perf_data:
+        try:
+            color, base, scale, verbfunc = perfometer_values[name]
+        except KeyError:
+            continue
+        value = float(value)
+        h += perfometer_logarithmic(value, base, scale, color)
+        texts.append(verbfunc(value))
     h += '</div>'
     return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
@@ -846,7 +852,10 @@ perfometers['check_mk-emc_datadomain_nvbat'] = perfometer_battery
 
 
 def perfometer_ups_capacity(row, command, perf):
-    return "%0.2f%%" % float(perf[1][1]), perfometer_linear(float(perf[1][1]), '#B2FF7F')
+    value = [float(data[1]) for data in perf if data[0] == 'percent']
+    if len(value) == 1:
+        return "%0.2f%%" % value[0], perfometer_linear(value[0], '#B2FF7F')
+    return "", ""
 
 
 perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity

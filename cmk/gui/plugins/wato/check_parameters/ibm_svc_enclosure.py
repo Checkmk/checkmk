@@ -32,7 +32,6 @@ def _parameter_valuespec_ibm_svc_enclosure():
     return Dictionary(elements=[("levels_lower_online_canisters",
                                  Alternative(
                                      title="Lower levels for online canisters",
-                                     style="dropdown",
                                      elements=[
                                          FixedValue(
                                              False,

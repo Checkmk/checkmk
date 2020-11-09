@@ -16,13 +16,17 @@ def agent_jenkins_arguments(params, hostname, ipaddress):
     args = [
         "-P",
         params["protocol"],
-        "-m",
-        ','.join(params["sections"]),
         "-u",
         params["user"],
         "-s",
         passwordstore_get_cmdline("%s", params["password"]),
     ]
+
+    if "sections" in params:
+        args += ["-m", " ".join(params["sections"])]
+    #compatibility with extension package format 1.6
+    elif "infos" in params:
+        args += ["-m", " ".join(params["infos"])]
 
     if "port" in params:
         args += ["-p", params["port"]]

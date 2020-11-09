@@ -8,8 +8,8 @@
 #include <cstdint>
 #include <memory>
 
+#include "BoolLambdaColumn.h"
 #include "Column.h"
-#include "IntLambdaColumn.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringLambdaColumn.h"
@@ -17,7 +17,7 @@
 #include "nagios.h"
 
 TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<timeperiod>>(
         "name", "The name of the timeperiod", offsets,
         [](const timeperiod& tp) { return tp.name; }));
@@ -25,11 +25,11 @@ TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
         "alias", "The alias of the timeperiod", offsets,
         [](const timeperiod& tp) { return tp.alias; }));
     // unknown timeperiod is assumed to be 24X7
-    addColumn(std::make_unique<IntLambdaColumn<timeperiod, 1>>(
+    addColumn(std::make_unique<BoolLambdaColumn<timeperiod, true>>(
         "in", "Wether we are currently in this period (0/1)", offsets,
         [](const timeperiod& tp) {
             extern TimeperiodsCache* g_timeperiods_cache;
-            return g_timeperiods_cache->inTimeperiod(&tp) ? 1 : 0;
+            return g_timeperiods_cache->inTimeperiod(&tp);
         }));
     // TODO(mk): add days and exceptions
 }

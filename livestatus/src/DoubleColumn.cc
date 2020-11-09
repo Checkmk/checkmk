@@ -8,7 +8,6 @@
 #include "Aggregator.h"
 #include "DoubleAggregator.h"
 #include "DoubleFilter.h"
-#include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
 

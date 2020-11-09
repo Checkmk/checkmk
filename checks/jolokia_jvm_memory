@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings.update({
     'jolokia_jvm_memory': {
         'perc_heap': (80., 90.),
@@ -22,7 +23,7 @@ def parse_jolokia_jvm_memory(info):
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(info):
 
-        type_ = _jolokia_mbean_attribute('type', mbean)
+        type_ = jolokia_mbean_attribute('type', mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
         parsed_data.update(data)
 
@@ -100,7 +101,6 @@ check_info["jolokia_jvm_memory"] = {
     "has_perfdata": True,
     "default_levels_variable": "jolokia_jvm_memory",
     "group": "jvm_memory",
-    "includes": ["jolokia.include"],
 }
 
 #.

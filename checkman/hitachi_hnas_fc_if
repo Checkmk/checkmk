@@ -4,25 +4,40 @@ catalog: hw/storagehw/hitachi
 license: GPL
 distribution: check_mk
 description:
- Checks FibreChannel Interfaces in Hitachi HNAS storage systems.
-
- It uses the check logic of the {if64} check, so for configuration parameters
- and examples please refer to the man page of {if64}.
-
- Values for ifHCInUcastPkts, ifHCInMulticastPkts, ifHCInBroadcastPkts,
- ifHCOutUcastPkts, ifHCOutMulticastPkts, ifHCOutBroadcastPkts, ifOutDiscards,
- ifOutErrors and ifOutQLen are always 0 and ifPhysAddress is empty, because
- they do not exist in this case.
+ This check monitors FibreChannel interfaces of Hitachi HNAS storage systems.
+ The check is identical to {if64} with the restriction that ifHCInUcastPkts,
+ ifHCInMulticastPkts, ifHCInBroadcastPkts, ifHCOutUcastPkts, ifHCOutMulticastPkts,
+ ifHCOutBroadcastPkts, ifOutDiscards, ifOutErrors and ifOutQLen are always 0 and
+ ifPhysAddress is empty, because these fields do not exist in this case. Please
+ refer to the {if64} manpage for further documentation.
 
 item:
- If configured to use the interface ID as item, it is build from
- the ID of the interface as a three digit number, prefixed with the ID
- of the ClusterNode. For Interface 2 on ClusterNode 1 e. g. 1002
-
- If configured to use the Alias or Description of an interface as item,
- it is build from the ID of the ClusterNode plus the ID of the interface
- separated by a dot. For Interface 2 on ClusterNode 1 e. g. 1.2
+ There are three allowed ways to specify an interface: its index, its description
+ and its alias. Here, the index is built from the interface ID as a three-digit
+ number prefixed with the ID of the ClusterNode, eg. 1002 for interface 2 on
+ ClusterNode 1. The description and the alias are given by the interface and the
+ ClusterNode ID separated by a dot, eg. 1.2 for interface 2 on ClusterNode 1.
 
 inventory:
- One servic is created for each FibreChannel Interface.
+ One service is created for each interface that fulfills configurable conditions
+ (rule "Network interface and switch port discovery").
+ By default, these are interfaces which are currently found {up} and are of type 6,
+ 32, 62, 117, 127, 128, 129, 180, 181, 182, 205 or 229. Note that the interfaces
+ discovered by this check do not have a type, so this restriction does not apply
+ here.
+
+ {Grouping:} In some situations, you do not want to monitor a single
+ interface but a group of interfaces that together form a pool.
+ This check supports such pools by defining groups. The data of all members is
+ accumulated and put together in a single grouped interface service.
+
+cluster:
+ In the case where single (ungrouped) interfaces are clustered, the corresponding
+ services report only the results from the node with the highest outgoing traffic,
+ since this node is likely the active node.
+ In the case where interface groups are clustered, the grouping is applied across
+ all nodes, potentially combining interfaces from different nodes. Note that the
+ rules defining the interface groups must be configured to apply to the nodes, not
+ to the cluster host (the latter has no effect). In case the grouping configurations
+ vary across the nodes, the last node wins.
 

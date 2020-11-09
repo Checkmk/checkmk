@@ -6,6 +6,6 @@ Date: 1588669468
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Due to a regression in version 1.6.0p11 the ruleset "CPU utilization for simple devices" did not have any effect on the services created by the check plugin "winperf_processor.util". This has been fixed.

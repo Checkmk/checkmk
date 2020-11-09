@@ -57,6 +57,7 @@ def test_agent_aws_cloudwatch_alarms_limits(get_cloudwatch_alarms_sections, alar
     cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results
 
     assert cloudwatch_alarms_limits.cache_interval == 300
+    assert cloudwatch_alarms_limits.period == 600
     assert cloudwatch_alarms_limits.name == "cloudwatch_alarms_limits"
 
     assert len(cloudwatch_alarms_limits_results) == 1
@@ -78,6 +79,7 @@ def test_agent_aws_cloudwatch_alarms(get_cloudwatch_alarms_sections, alarm_names
     cloudwatch_alarms_results = cloudwatch_alarms.run().results
 
     assert cloudwatch_alarms.cache_interval == 300
+    assert cloudwatch_alarms.period == 600
     assert cloudwatch_alarms.name == "cloudwatch_alarms"
 
     assert len(cloudwatch_alarms_results) == 1
@@ -93,6 +95,7 @@ def test_agent_aws_cloudwatch_alarms_without_limits(get_cloudwatch_alarms_sectio
     cloudwatch_alarms_results = cloudwatch_alarms.run().results
 
     assert cloudwatch_alarms.cache_interval == 300
+    assert cloudwatch_alarms.period == 600
     assert cloudwatch_alarms.name == "cloudwatch_alarms"
 
     assert len(cloudwatch_alarms_results) == 1

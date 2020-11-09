@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict
-from .agent_based_api.v0.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
-from .agent_based_api.v0 import register
+from .agent_based_api.v1 import register
 from .utils import docker
 
 
-def _parse_docker_container_mem_plugin(string_table: AgentStringTable) -> Dict[str, Any]:
+def _parse_docker_container_mem_plugin(string_table: StringTable) -> Dict[str, Any]:
     parsed = docker.json_get_obj(string_table[1])
     # flatten nested stats
     parsed.update(parsed.pop('stats'))
@@ -25,7 +25,7 @@ def _parse_docker_container_mem_plugin(string_table: AgentStringTable) -> Dict[s
     return parsed
 
 
-def parse_docker_container_mem(string_table: AgentStringTable) -> Dict[str, int]:
+def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
     """
         >>> import pprint
         >>> pprint.pprint(parse_docker_container_mem([
@@ -89,5 +89,5 @@ def parse_docker_container_mem(string_table: AgentStringTable) -> Dict[str, int]
 register.agent_section(
     name="docker_container_mem",
     parse_function=parse_docker_container_mem,
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
 )

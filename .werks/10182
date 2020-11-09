@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In some cases it happened that some Checkmk version specific cache files,
 e.g. in <tt>tmp/check_mk/check_includes</tt> or <tt>var/check_mk/precompiled_checks</tt>

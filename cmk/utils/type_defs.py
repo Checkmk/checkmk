@@ -9,23 +9,24 @@ import abc
 import enum
 import string
 import sys
+from contextlib import suppress
 from typing import (
     Any,
-    Callable,
     Dict,
     Final,
-    Generic,
     List,
     Literal,
+    NamedTuple,
     NewType,
-    NoReturn,
     Optional,
     Set,
     Tuple,
+    Type,
     TypedDict,
     TypeVar,
     Union,
 )
+import cmk.utils._type_defs_result as result  # pylint: disable=unused-import
 
 HostName = str
 HostAddress = str
@@ -39,7 +40,6 @@ RulesetName = str
 RuleValue = Any  # TODO: Improve this type
 RuleSpec = Dict[str, Any]  # TODO: Improve this type
 Ruleset = List[RuleSpec]  # TODO: Improve this type
-MetricName = str
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = Optional[str]
@@ -64,9 +64,15 @@ ServiceState = int
 HostState = int
 ServiceDetails = str
 ServiceAdditionalDetails = str
-# TODO: Specify this  (see cmk/base/checking.py::_convert_perf_data)
-Metric = List
-ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[Metric]]
+
+MetricName = str
+MetricTuple = Tuple[MetricName, float, Optional[float], Optional[float], Optional[float],
+                    Optional[float],]
+
+ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
+
+LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
+SetAutochecksTable = Dict[Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels]]
 
 UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this
@@ -77,6 +83,14 @@ AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
 # TODO(au): Replace usage with AgentPackagePlatform
 # But we need complete typing in cmk.gui.cee.agent_bakery first before we can safely do this.
 BakeryOpSys = NewType("BakeryOpSys", str)
+
+LATEST_SERIAL: Final[Literal["latest"]] = "latest"
+ConfigSerial = NewType("ConfigSerial", str)
+OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
+
+# This def is used to keep the API-exposed object in sync with our
+# implementation.
+SNMPDetectBaseType = List[List[Tuple[str, str, bool]]]
 
 
 class AgentPackagePlatform(enum.Enum):
@@ -131,6 +145,46 @@ class BakerySigningCredentials(TypedDict):
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.
 TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
+
+TProtocol = TypeVar("TProtocol", bound="Protocol")
+
+
+class Protocol(abc.ABC):
+    """Base class for serializable data.
+
+    Note:
+        This should be usable as a type. Do not add any
+        concrete implementation here.
+    """
+    def __eq__(self, other: Any) -> bool:
+        with suppress(TypeError):
+            return bytes(self) == bytes(other)
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(bytes(self))
+
+    def __add__(self, other: Any) -> bytes:
+        with suppress(TypeError):
+            return bytes(self) + bytes(other)
+        return NotImplemented
+
+    def __radd__(self, other: Any) -> bytes:
+        with suppress(TypeError):
+            return bytes(other) + bytes(self)
+        return NotImplemented
+
+    def __len__(self) -> int:
+        return len(bytes(self))
+
+    @abc.abstractmethod
+    def __bytes__(self) -> bytes:
+        raise NotImplementedError
+
+    @classmethod
+    @abc.abstractmethod
+    def from_bytes(cls: Type[TProtocol], data: bytes) -> TProtocol:
+        raise NotImplementedError
 
 
 class ABCName(abc.ABC):
@@ -251,193 +305,11 @@ class SourceType(enum.Enum):
     MANAGEMENT = "MANAGEMENT"
 
 
-T_co = TypeVar("T_co", covariant=True)
-E_co = TypeVar("E_co", covariant=True)
-
-
-class Result(Generic[T_co, E_co], abc.ABC):
-    """An error container inspired by Rust.
-
-    See Also:
-        https://doc.rust-lang.org/std/result/enum.Result.html
-
-    """
-    @staticmethod
-    def Err(err: E_co):  # type: ignore[misc]
-        # mypy complains about the variance of the argument but
-        # both static methods only forward it to the respective
-        # `__init__()`, which is safe.
-        #
-        # See Also:
-        #   - https://github.com/python/mypy/pull/2888
-        #   - https://github.com/python/mypy/issues/7049
-        return _Err(err)
-
-    @staticmethod
-    def OK(ok: T_co):  # type: ignore[misc]
-        # mypy: See comments to Err().
-        return _OK(ok)
-
-    @abc.abstractmethod
-    def __eq__(self, other: Any) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def __hash__(self) -> int:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def ok(self) -> Optional[T_co]:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def err(self) -> Optional[E_co]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def is_ok(self) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def is_err(self) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def unwrap(self) -> T_co:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def unwrap_err(self) -> E_co:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def unwrap_or(self, default: T_co) -> T_co:  # type: ignore[misc]
-        # mypy: See comments to Err().
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
-        raise NotImplementedError
-
-
-class _OK(Result[T_co, E_co]):
-    __slots__ = ["_ok"]
-
-    def __init__(self, ok: T_co):
-        self._ok: Final[T_co] = ok
-
-    def __repr__(self):
-        return "Result.OK(%r)" % self.ok
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, Result):
-            return NotImplemented
-        if not isinstance(other, _OK):
-            return False
-        return self.ok == other.ok
-
-    def __hash__(self) -> int:
-        return hash(self.ok)
-
-    @property
-    def ok(self) -> T_co:
-        return self._ok
-
-    @property
-    def err(self) -> None:
-        return None
-
-    def is_ok(self) -> bool:
-        return True
-
-    def is_err(self) -> bool:
-        return False
-
-    def unwrap(self) -> T_co:
-        return self.ok
-
-    def unwrap_err(self) -> NoReturn:
-        raise ValueError(str(self.ok))
-
-    def unwrap_or(self, default: T_co) -> T_co:  # type: ignore[misc]
-        # mypy: See comments to Err().
-        return self.ok
-
-    def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
-        return self.ok
-
-
-class _Err(Result[T_co, E_co]):
-    __slots__ = ["_err"]
-
-    def __init__(self, err: E_co):
-        self._err: Final[E_co] = err
-
-    def __repr__(self):
-        return "Result.Err(%r)" % self.err
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, Result):
-            return NotImplemented
-        if not isinstance(other, _Err):
-            return False
-        return self.err == other.err
-
-    def __hash__(self) -> int:
-        return hash(self.err)
-
-    @property
-    def ok(self) -> None:
-        return None
-
-    @property
-    def err(self) -> E_co:
-        return self._err
-
-    def is_ok(self) -> bool:
-        return False
-
-    def is_err(self) -> bool:
-        return True
-
-    def unwrap(self) -> NoReturn:
-        raise ValueError(str(self._err))
-
-    def unwrap_err(self) -> E_co:
-        return self.err
-
-    def unwrap_or(self, default: T_co) -> T_co:  # type: ignore[misc]
-        # mypy: See comments to Err().
-        return default
-
-    def unwrap_or_else(self, op: Callable[[E_co], T_co]) -> T_co:
-        return op(self.err)
-
-
-class OIDSpec:
-    """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
-    """
-    VALID_CHARACTERS = '.' + string.digits
-
-    @classmethod
-    def validate(cls, value: str) -> None:
-        if not isinstance(value, str):
-            raise TypeError("expected a non-empty string: %r" % (value,))
-        if not value:
-            raise ValueError("expected a non-empty string: %r" % (value,))
-
-        invalid = ''.join(c for c in value if c not in cls.VALID_CHARACTERS)
-        if invalid:
-            raise ValueError("invalid characters in OID descriptor: %r" % invalid)
-
-        if value.endswith('.'):
-            raise ValueError("%r should not end with '.'" % (value,))
-
-    def __init__(self, value: str) -> None:
-        self.validate(value)
-        self._value = value
+HostKey = NamedTuple("HostKey", [
+    ("hostname", HostName),
+    ("ipaddress", Optional[HostAddress]),
+    ("source_type", SourceType),
+])
 
 
 # TODO: We should really parse our configuration file and use a

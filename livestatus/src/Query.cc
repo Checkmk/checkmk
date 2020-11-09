@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
-#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <ratio>
@@ -16,20 +15,16 @@
 #include <stdexcept>
 #include <utility>
 
-#include "Aggregator.h"
 #include "AndingFilter.h"
 #include "ChronoUtils.h"
 #include "Column.h"
-#include "Filter.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "NullColumn.h"
 #include "OringFilter.h"
 #include "OutputBuffer.h"
-#include "StatsColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
-#include "Triggers.h"
 #include "auth.h"
 #include "opids.h"
 #include "strutil.h"
@@ -367,7 +362,7 @@ private:
     double sum_{0};
 };
 
-std::map<std::string, AggregationFactory> stats_ops{
+const std::map<std::string, AggregationFactory> stats_ops{
     {"sum", []() { return std::make_unique<SumAggregation>(); }},
     {"min", []() { return std::make_unique<MinAggregation>(); }},
     {"max", []() { return std::make_unique<MaxAggregation>(); }},
@@ -446,7 +441,7 @@ void Query::parseColumnsLine(char *line) {
                 << "replacing non-existing column '" << column_name
                 << "' with null column, reason: " << e.what();
             column = std::make_shared<NullColumn>(
-                column_name, "non-existing column", Column::Offsets{});
+                column_name, "non-existing column", ColumnOffsets{});
         }
         _columns.push_back(column);
         _all_columns.insert(column);
@@ -467,11 +462,12 @@ void Query::parseSeparatorsLine(char *line) {
 }
 
 namespace {
-std::map<std::string, OutputFormat> formats{{"CSV", OutputFormat::csv},
-                                            {"csv", OutputFormat::broken_csv},
-                                            {"json", OutputFormat::json},
-                                            {"python", OutputFormat::python},
-                                            {"python3", OutputFormat::python3}};
+const std::map<std::string, OutputFormat> formats{
+    {"CSV", OutputFormat::csv},
+    {"csv", OutputFormat::broken_csv},
+    {"json", OutputFormat::json},
+    {"python", OutputFormat::python},
+    {"python3", OutputFormat::python3}};
 }  // namespace
 
 void Query::parseOutputFormatLine(char *line) {

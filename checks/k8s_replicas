@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import math
 
 
 def parse_k8s_surge(value, total):
@@ -30,11 +31,10 @@ def parse_k8s_unavailability(value, total):
 
 def inventory_k8s_replicas(parsed):
     if parsed['ready_replicas'] is not None and parsed['replicas'] is not None:
-        yield HostLabel(u'cmk/kubernetes_object', u'deployment')
         yield (None, {})
 
 
-def check_k8s_replicas(_no_item, params, parsed):
+def check_k8s_replicas(_no_item, _params, parsed):
     ready, total = parsed['ready_replicas'], parsed['replicas']
     paused, strategy = parsed['paused'], parsed['strategy_type']
 
@@ -75,10 +75,8 @@ def check_k8s_replicas(_no_item, params, parsed):
 
 
 check_info['k8s_replicas'] = {
-    'parse_function': parse_k8s,
+    # section already migrated
     'inventory_function': inventory_k8s_replicas,
     'check_function': check_k8s_replicas,
     'service_description': 'Replicas',
-    'has_perfdata': True,
-    'includes': ['k8s.include'],
 }

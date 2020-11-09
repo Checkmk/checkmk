@@ -6,7 +6,8 @@
 
 import abc
 import os
-from typing import List, Optional, Dict, Any, Tuple, Type
+from typing import List, Optional, Dict, Any, Tuple, Type, Literal, Union
+from contextlib import suppress
 
 from livestatus import SiteId
 
@@ -18,16 +19,25 @@ from cmk.gui.i18n import _
 import cmk.gui.config as config
 from cmk.utils.type_defs import UserId
 
+# count this up, if new user attributes are used or old are marked as
+# incompatible
+USER_SCHEME_SERIAL = 0
+
 UserSpec = Dict[str, Any]  # TODO: Improve this type
 RoleSpec = Dict[str, Any]  # TODO: Improve this type
 Roles = Dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
 UserSyncConfig = Optional[str]
+CheckCredentialsResult = Union[UserId, None, Literal[False]]
 
 
 def load_cached_profile(user_id: UserId) -> Optional[UserSpec]:
     user = config.LoggedInUser(user_id) if user_id != config.user.id else config.user
     return user.load_file("cached_profile", None)
+
+
+def save_cached_profile(user_id: UserId, cached_profile: UserSpec) -> None:
+    config.save_user_file("cached_profile", cached_profile, user_id=user_id)
 
 
 def _multisite_dir() -> str:
@@ -106,6 +116,10 @@ def new_user_template(connection_id: str) -> UserSpec:
     return new_user
 
 
+def add_internal_attributes(user: UserSpec) -> UserSpec:
+    return user.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
+
+
 #   .--Connections---------------------------------------------------------.
 #   |        ____                            _   _                         |
 #   |       / ___|___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
@@ -122,8 +136,8 @@ def cleanup_connection_id(connection_id: Optional[str]) -> str:
     if connection_id is None:
         return 'htpasswd'
 
-    # Old Check_MK used a static "ldap" connector id for all LDAP users.
-    # Since Check_MK now supports multiple LDAP connections, the ID has
+    # Old Checkmk used a static "ldap" connector id for all LDAP users.
+    # Since Checkmk now supports multiple LDAP connections, the ID has
     # been changed to "default". But only transform this when there is
     # no connection existing with the id LDAP.
     if connection_id == 'ldap' and not get_connection('ldap'):
@@ -146,6 +160,11 @@ def get_connection(connection_id: Optional[str]) -> 'Optional[UserConnector]':
         g.user_connections[connection_id] = connections_with_id[0] if connections_with_id else None
 
     return g.user_connections[connection_id]
+
+
+def clear_user_connection_cache() -> None:
+    with suppress(AttributeError):
+        del g.user_connections
 
 
 def active_connections() -> 'List[Tuple[str, UserConnector]]':
@@ -217,6 +236,8 @@ def save_connection_config(connections: List[UserConnectionSpec],
 
     for connector_class in user_connector_registry.values():
         connector_class.config_changed()
+
+    clear_user_connection_cache()
 
 
 #.
@@ -332,7 +353,7 @@ class UserConnector(metaclass=abc.ABCMeta):
     #     False       -> Login failed
     #     None        -> Unknown user
     @abc.abstractmethod
-    def check_credentials(self, user_id, password):
+    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
         return None
 
     # Optional: Hook function can be registered here to be executed
@@ -445,3 +466,12 @@ user_attribute_registry = UserAttributeRegistry()
 
 def get_user_attributes():
     return [(name, attribute_class()) for name, attribute_class in user_attribute_registry.items()]
+
+
+def get_user_attributes_by_topic():
+    topics: Dict = {}
+    for name, attr_class in user_attribute_registry.items():
+        topic = attr_class().topic()
+        topics.setdefault(topic, []).append((name, attr_class()))
+
+    return topics

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.mysql import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 @mysql_parse_per_item
 def parse_mysql_slave(info):
@@ -74,5 +76,4 @@ check_info['mysql_slave'] = {
     "service_description": "MySQL DB Slave %s",
     "has_perfdata": True,
     "group": "mysql_slave",
-    "includes": ["mysql.include"],
 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 365 359" style="enable-background:new 0 0 365 359;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#7498BF;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-522.000000, -553.000000)">
+		<g id="vSphere" transform="translate(538.000000, 569.000000)">
+			<g>
+				<path class="st0" d="M326.4,288H124.8c-12.4,0-22.4-10-22.4-22.4V64c0-12.4,10-22.4,22.4-22.4h201.6c12.4,0,22.4,10,22.4,22.4
+					v201.6C348.8,278,338.8,288,326.4,288z M134.4,256h182.4V73.6H134.4V256z"/>
+			</g>
+			<g>
+				<path class="st0" d="M118.4,198.4h-48V16h182.4v41.6h32V6.4c0-12.4-10-22.4-22.4-22.4H60.8C48.4-16,38.4-6,38.4,6.4V208
+					c0,12.4,10,22.4,22.4,22.4h57.6V198.4z"/>
+				<path class="st0" d="M198.4,272v38.4H16V128h102.4V96H6.4C-6,96-16,106-16,118.4V320c0,12.4,10,22.4,22.4,22.4H208
+					c12.4,0,22.4-10,22.4-22.4v-48H198.4z"/>
+				<path class="st0" d="M326.4,288H124.8c-12.4,0-22.4-10-22.4-22.4V64c0-12.4,10-22.4,22.4-22.4h201.6c12.4,0,22.4,10,22.4,22.4
+					v201.6C348.8,278,338.8,288,326.4,288z M134.4,256h182.4V73.6H134.4V256z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

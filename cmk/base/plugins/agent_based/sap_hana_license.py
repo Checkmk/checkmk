@@ -9,26 +9,26 @@ from collections import namedtuple
 from typing import Mapping
 
 from .utils import sap_hana
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     render,
     check_levels,
     register,
     Service,
     Result,
-    state,
+    State as state,
 )
 
-from .agent_based_api.v0.type_defs import (
-    AgentStringTable,
-    DiscoveryGenerator,
-    CheckGenerator,
+from .agent_based_api.v1.type_defs import (
+    StringTable,
+    DiscoveryResult,
+    CheckResult,
     Parameters,
 )
 
 SAP_HANA_MAYBE = namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
 
 
-def parse_sap_hana_license(string_table: AgentStringTable) -> sap_hana.ParsedSection:
+def parse_sap_hana_license(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         for line in lines:
@@ -71,13 +71,13 @@ def _parse_maybe_bool(value):
     return
 
 
-def discovery_sap_hana_license(section: sap_hana.ParsedSection) -> DiscoveryGenerator:
+def discovery_sap_hana_license(section: sap_hana.ParsedSection) -> DiscoveryResult:
     for elem in section:
         yield Service(item=elem)
 
 
 def check_sap_hana_license(item: str, params: Parameters,
-                           section: sap_hana.ParsedSection) -> CheckGenerator:
+                           section: sap_hana.ParsedSection) -> CheckResult:
 
     data = section.get(item)
     if data is None:
@@ -130,7 +130,7 @@ def _check_product_usage(size, limit, params):
 
 
 def cluster_check_sap_hana_license(item: str, params: Parameters,
-                                   section: Mapping[str, sap_hana.ParsedSection]) -> CheckGenerator:
+                                   section: Mapping[str, sap_hana.ParsedSection]) -> CheckResult:
     yield Result(state=state.OK, summary='Nodes: %s' % ', '.join(section.keys()))
     for node_section in section.values():
         if item in node_section:

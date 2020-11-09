@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ddn_s2a import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["ddn_s2a_statsdelay_default_levels"] = {
     "read_avg": (0.1, 0.2),
     "write_avg": (0.1, 0.2),
@@ -145,7 +146,6 @@ check_info['ddn_s2a_statsdelay'] = {
     'inventory_function': inventory_ddn_s2a_statsdelay,
     'check_function': check_ddn_s2a_statsdelay,
     'service_description': 'DDN S2A Delay %s',
-    'includes': ["ddn_s2a.include"],
     'group': 'ddn_s2a_wait',
     'has_perfdata': True,
 }

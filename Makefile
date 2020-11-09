@@ -3,7 +3,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 #
-
 include defines.make
 
 NAME               := check_mk
@@ -74,10 +73,10 @@ LOCK_FD := 200
 LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
-        clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-python format-shell GTAGS headers help install \
-        iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel openapi openapi-doc
+        clean compile-neb-cmc compile-neb-cmc-docker cppcheck dist documentation \
+        format format-c format-python format-shell format-js GTAGS headers help \
+        install iwyu mrproper mrclean optimize-images packages setup setversion \
+        tidy version am--refresh skel openapi openapi-doc
 
 
 help:
@@ -288,7 +287,7 @@ headers:
 	doc/helpers/headrify
 
 
-$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py") $(shell find cmk/gui/cee/plugins/openapi -name "*.py")
+$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
 	export TMPFILE=$$(mktemp);  \
 	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \
@@ -432,7 +431,7 @@ setup:
 	    ksh \
 	    p7zip-full \
 	    zlib1g-dev
-	sudo -H pip install -U pipenv wheel
+	sudo -H pip3 install -U pipenv wheel
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
@@ -502,6 +501,9 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
 endif
 
+compile-neb-cmc-docker:
+	scripts/run-in-docker.sh make compile-neb-cmc
+
 tidy: config.h
 	$(MAKE) -C livestatus/src tidy
 ifeq ($(ENTERPRISE),yes)
@@ -533,7 +535,7 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src cppcheck-xml
 endif
 
-format: format-python format-c format-shell
+format: format-python format-c format-shell format-js format-css
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
@@ -554,6 +556,11 @@ format-python:
 format-shell:
 	$(MAKE)	-C tests format-shell
 
+format-js:
+	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{enterprise/,}web/htdocs/js/**/*.js"
+
+format-css:
+	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "web/htdocs/themes/**/*.scss"
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h
@@ -562,14 +569,6 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-# TODO: The line: sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
-# can be removed if pipenv fixes this issue.
-# See: https://github.com/pypa/pipenv/issues/3140
-#      https://github.com/pypa/pipenv/issues/3026
-# The recent pipenv version 2018.10.13 has a bug that places wrong markers in the
-# Pipfile.lock. This leads to an error when installing packages with this
-# markers and prints an error message. Example:
-# Ignoring pyopenssl: markers 'extra == "security"' don't match your environment
 # TODO: pipenv and make don't really cooperate nicely: Locking alone already
 # creates a virtual environment with setuptools/pip/wheel. This could lead to a
 # wrong up-to-date status of it later, so let's remove it here. What we really
@@ -579,8 +578,7 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Locking Python requirements..." ; \
 	    flock $(LOCK_FD); \
-	    $(PIPENV) lock; \
-	    sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
+	    SKIP_MAKEFILE_CALL=1 $(PIPENV) lock; \
 	    rm -rf .venv \
 	) $(LOCK_FD)>$(LOCK_PATH)
 

@@ -5,36 +5,63 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Hosts
 
-Hosts can only exist in conjunction with Folders. To get a list of hosts
-you need to access the folder API endpoints.
+A host is typically a server, a virtual machine (VM), a network device, a measuring device with
+an IP connection (thermometer, hygrometer) or anything else with an IP address which is
+being monitored by Checkmk.
+However, there are also hosts without an IP address, such as Docker containers.
+
+A host belongs to a certain folder.
+
+You can find an introduction to hosts in the
+[Checkmk guide](https://checkmk.com/cms_wato_hosts.html).
 """
 import itertools
 import json
 import operator
 
-from connexion import problem  # type: ignore[import]
-
 from cmk.gui import watolib
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.folder_config import load_folder
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
-    endpoint_schema,
+    Endpoint,
     request_schemas,
     response_schemas,
 )
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi import check_hostname
+from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 
 
-@endpoint_schema(constructors.collection_href('host_config'),
-                 'cmk/create',
-                 method='post',
-                 etag='output',
-                 request_body_required=True,
-                 request_schema=request_schemas.CreateHost,
-                 response_schema=response_schemas.ConcreteHost)
+@Endpoint(constructors.collection_href('host_config'),
+          'cmk/create',
+          method='post',
+          etag='output',
+          request_schema=request_schemas.CreateHost,
+          response_schema=response_schemas.DomainObject)
 def create_host(params):
     """Create a host"""
+    body = params['body']
+    host_name = body['host_name']
+
+    # is_cluster is defined as "cluster_hosts is not None"
+    body['folder'].create_hosts([(host_name, body['attributes'], None)])
+
+    host = watolib.Host.host(host_name)
+    return _serve_host(host)
+
+
+@Endpoint(constructors.collection_href('host_config', "clusters"),
+          'cmk/create_cluster',
+          method='post',
+          etag='output',
+          request_schema=request_schemas.CreateClusterHost,
+          response_schema=response_schemas.DomainObject)
+def create_cluster_host(params):
+    """Create a cluster host
+
+    A cluster host groups many hosts (called nodes in this context) into a conceptual cluster.
+    All the services of the individual nodes will be collated on the cluster host."""
     body = params['body']
     host_name = body['host_name']
 
@@ -44,19 +71,11 @@ def create_host(params):
     return _serve_host(host)
 
 
-def _host_folder(folder_id):
-    if folder_id == 'root':
-        folder = watolib.Folder.root_folder()
-    else:
-        folder = load_folder(folder_id, status=400)
-    return folder
-
-
-@endpoint_schema(constructors.domain_type_action_href('host_config', 'bulk-create'),
-                 'cmk/bulk_create',
-                 method='post',
-                 request_schema=request_schemas.BulkCreateHost,
-                 response_schema=response_schemas.HostCollection)
+@Endpoint(constructors.domain_type_action_href('host_config', 'bulk-create'),
+          'cmk/bulk_create',
+          method='post',
+          request_schema=request_schemas.BulkCreateHost,
+          response_schema=response_schemas.DomainObjectCollection)
 def bulk_create_hosts(params):
     """Bulk create hosts"""
     # TODO: addition of etag mechanism
@@ -64,29 +83,32 @@ def bulk_create_hosts(params):
     entries = body['entries']
 
     for folder, grouped_hosts in itertools.groupby(body['entries'], operator.itemgetter('folder')):
-        folder.create_hosts([
-            (host['host_name'], host['attributes'], host['nodes']) for host in grouped_hosts
-        ])
+        folder.create_hosts(
+            [(host['host_name'], host['attributes'], None) for host in grouped_hosts],
+            bake_hosts=False)
+
+    try_bake_agents_for_hosts([host["host_name"] for host in body["entries"]])
 
     hosts = [watolib.Host.host(entry['host_name']) for entry in entries]
     return _host_collection(hosts)
 
 
-@endpoint_schema(constructors.collection_href('host_config'),
-                 '.../collection',
-                 method='get',
-                 response_schema=response_schemas.HostCollection)
+@Endpoint(constructors.collection_href('host_config'),
+          '.../collection',
+          method='get',
+          response_schema=response_schemas.DomainObjectCollection)
 def list_hosts(param):
-    """List all hosts"""
+    """Show all hosts"""
     return _host_collection(watolib.Folder.root_folder().all_hosts_recursively().values())
 
 
-def _host_collection(hosts):
-    return constructors.serve_json({
+def _host_collection(hosts) -> Response:
+    host_collection = {
         'id': 'host',
+        'domainType': 'host_config',
         'value': [
             constructors.collection_item(
-                domain_type='host',
+                domain_type='host_config',
                 obj={
                     'title': host.name(),
                     'id': host.id()
@@ -94,22 +116,54 @@ def _host_collection(hosts):
             ) for host in hosts
         ],
         'links': [constructors.link_rel('self', constructors.collection_href('host_config'))],
-    })
+    }
+    return constructors.serve_json(host_collection)
 
 
-@endpoint_schema(constructors.object_href('host_config', '{host_name}'),
-                 '.../update',
-                 method='put',
-                 parameters=['host_name'],
-                 etag='both',
-                 request_body_required=True,
-                 request_schema=request_schemas.UpdateHost,
-                 response_schema=response_schemas.ConcreteHost)
+@Endpoint(constructors.object_property_href('host_config', '{host_name}', 'nodes'),
+          '.../property',
+          method='put',
+          path_params=[HOST_NAME],
+          etag='both',
+          request_schema=request_schemas.UpdateNodes,
+          response_schema=response_schemas.ObjectProperty)
+def update_nodes(params):
+    """Update the nodes of a cluster host"""
+    host_name = params['host_name']
+    body = params['body']
+    nodes = body['nodes']
+    check_hostname(host_name, should_exist=True)
+    for node in nodes:
+        check_hostname(node, should_exist=True)
+
+    host: watolib.CREHost = watolib.Host.host(host_name)
+    if not host.is_cluster():
+        return problem(status=400,
+                       title="Trying to change nodes of a regular host.",
+                       detail="nodes can only be changed on cluster hosts.")
+    constructors.require_etag(constructors.etag_of_obj(host))
+    host.edit(host.attributes(), nodes)
+
+    return constructors.serve_json(
+        constructors.object_sub_property(
+            domain_type='host_config',
+            ident=host_name,
+            name='nodes',
+            value=host.cluster_nodes(),
+        ))
+
+
+@Endpoint(constructors.object_href('host_config', '{host_name}'),
+          '.../update',
+          method='put',
+          path_params=[HOST_NAME],
+          etag='both',
+          request_schema=request_schemas.UpdateHost,
+          response_schema=response_schemas.DomainObject)
 def update_host(params):
     """Update a host"""
     host_name = params['host_name']
     body = params['body']
-    nodes = body['nodes']
     new_attributes = body['attributes']
     update_attributes = body['attributes']
     check_hostname(host_name, should_exist=True)
@@ -117,7 +171,7 @@ def update_host(params):
     constructors.require_etag(constructors.etag_of_obj(host))
 
     if new_attributes:
-        host.edit(new_attributes, nodes)
+        host.edit(new_attributes, None)
 
     if update_attributes:
         host.update_attributes(update_attributes)
@@ -125,11 +179,11 @@ def update_host(params):
     return _serve_host(host)
 
 
-@endpoint_schema(constructors.domain_type_action_href('host_config', 'bulk-update'),
-                 'cmk/bulk_update',
-                 method='put',
-                 request_schema=request_schemas.BulkUpdateHost,
-                 response_schema=response_schemas.HostCollection)
+@Endpoint(constructors.domain_type_action_href('host_config', 'bulk-update'),
+          'cmk/bulk_update',
+          method='put',
+          request_schema=request_schemas.BulkUpdateHost,
+          response_schema=response_schemas.DomainObjectCollection)
 def bulk_update_hosts(params):
     """Bulk update hosts"""
     body = params['body']
@@ -138,13 +192,12 @@ def bulk_update_hosts(params):
     hosts = []
     for update_detail in entries:
         host_name = update_detail['host_name']
-        nodes = update_detail['nodes']
         new_attributes = update_detail['attributes']
         update_attributes = update_detail['attributes']
         check_hostname(host_name)
         host: watolib.CREHost = watolib.Host.host(host_name)
         if new_attributes:
-            host.edit(new_attributes, nodes)
+            host.edit(new_attributes, None)
 
         if update_attributes:
             host.update_attributes(update_attributes)
@@ -153,13 +206,12 @@ def bulk_update_hosts(params):
     return _host_collection(hosts)
 
 
-@endpoint_schema(constructors.object_href('host_config', '{host_name}'),
-                 '.../delete',
-                 method='delete',
-                 parameters=['host_name'],
-                 etag='input',
-                 request_body_required=False,
-                 output_empty=True)
+@Endpoint(constructors.object_href('host_config', '{host_name}'),
+          '.../delete',
+          method='delete',
+          path_params=[HOST_NAME],
+          etag='input',
+          output_empty=True)
 def delete(params):
     """Delete a host"""
     host_name = params['host_name']
@@ -171,13 +223,13 @@ def delete(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.domain_type_action_href('host_config', 'bulk-delete'),
-                 '.../delete',
-                 method='delete',
-                 request_schema=request_schemas.BulkDeleteHost,
-                 output_empty=True)
+@Endpoint(constructors.domain_type_action_href('host_config', 'bulk-delete'),
+          '.../delete',
+          method='delete',
+          request_schema=request_schemas.BulkDeleteHost,
+          output_empty=True)
 def bulk_delete(params):
-    """Bulk delete hosts based upon host names"""
+    """Bulk delete hosts"""
     # TODO: require etag checking (409 Response)
     for host_name in params['entries']:
         host = watolib.Host.host(host_name)
@@ -185,12 +237,12 @@ def bulk_delete(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.object_href('host_config', '{host_name}'),
-                 'cmk/show',
-                 method='get',
-                 parameters=['host_name'],
-                 etag='output',
-                 response_schema=response_schemas.ConcreteHost)
+@Endpoint(constructors.object_href('host_config', '{host_name}'),
+          'cmk/show',
+          method='get',
+          path_params=[HOST_NAME],
+          etag='output',
+          response_schema=response_schemas.DomainObject)
 def show_host(params):
     """Show a host"""
     host_name = params['host_name']

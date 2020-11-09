@@ -22,9 +22,9 @@ import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -41,6 +41,7 @@ from cmk.gui.watolib.notifications import (
 )
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 
 from cmk.gui.valuespec import (
     Hostname,
@@ -57,13 +58,18 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     add_change,
-    wato_confirm,
+    redirect,
+    flash,
 )
 
-# TODO: I have no clue how to import this correctly...
-from cmk.gui.plugins.wato.bi import BIHostRenamer
+import cmk.gui.bi
+from cmk.utils.bi.bi_packs import BIHostRenamer
+
+from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling  # type: ignore[import]
@@ -93,7 +99,7 @@ class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
             raise MKGeneralException(_("Another renaming operation is currently in progress"))
 
     def _back_url(self):
-        return html.makeuri([])
+        return makeuri(request, [])
 
 
 @gui_background_job.job_registry.register
@@ -152,17 +158,19 @@ class ModeBulkRenameHost(WatoMode):
 
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
         renamings = self._collect_host_renamings(renaming_config)
 
         if not renamings:
-            return None, _("No matching host names")
+            flash(_("No matching host names"))
+            return None
 
         warning = self._renaming_collision_error(renamings)
         if warning:
-            return None, warning
+            flash(warning)
+            return None
 
         message = _(
             "<b>Do you really want to rename to following hosts? This involves a restart of the monitoring core!</b>"
@@ -172,7 +180,7 @@ class ModeBulkRenameHost(WatoMode):
             message += u"<tr><td>%s</td><td> → %s</td></tr>" % (host_name, target_name)
         message += "</table>"
 
-        c = wato_confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
+        c = _confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
         if c:
             title = _("Renaming of %s") % ", ".join(u"%s → %s" % x[1:] for x in renamings)
             host_renaming_job = RenameHostsBackgroundJob(title=title)
@@ -183,9 +191,9 @@ class ModeBulkRenameHost(WatoMode):
             except background_job.BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
-            raise HTTPRedirect(host_renaming_job.detail_url())
+            return redirect(host_renaming_job.detail_url())
         if c is False:  # not yet confirmed
-            return ""
+            return FinalizeRequest(code=200)
         return None  # browser reload
 
     def _renaming_collision_error(self, renamings):
@@ -350,6 +358,13 @@ class ModeBulkRenameHost(WatoMode):
             ])
 
 
+def _confirm(html_title, message):
+    if not html.request.has_var("_do_confirm") and not html.request.has_var("_do_actions"):
+        # TODO: get the breadcrumb from all call sites
+        wato_html_head(title=html_title, breadcrumb=Breadcrumb())
+    return confirm_with_preview(message)
+
+
 def rename_hosts_background_job(renamings, job_interface=None):
     actions, auth_problems = rename_hosts(
         renamings, job_interface=job_interface)  # Already activates the changes!
@@ -429,35 +444,27 @@ class ModeRenameHost(WatoMode):
 
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if watolib.get_pending_changes_info():
             raise MKUserError("newname",
                               _("You cannot rename a host while you have pending changes."))
 
         newname = html.request.var("newname")
         self._check_new_host_name("newname", newname)
-        c = wato_confirm(
-            _("Confirm renaming of host"),
-            _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>? "
-              "This involves a restart of the monitoring core!") % (self._host.name(), newname))
-        if c:
-            # Creating pending entry. That makes the site dirty and that will force a sync of
-            # the config to that site before the automation is being done.
-            host_renaming_job = RenameHostBackgroundJob(self._host,
-                                                        title=_("Renaming of %s -> %s") %
-                                                        (self._host.name(), newname))
-            renamings = [(watolib.Folder.current(), self._host.name(), newname)]
-            host_renaming_job.set_function(rename_hosts_background_job, renamings)
+        # Creating pending entry. That makes the site dirty and that will force a sync of
+        # the config to that site before the automation is being done.
+        host_renaming_job = RenameHostBackgroundJob(self._host,
+                                                    title=_("Renaming of %s -> %s") %
+                                                    (self._host.name(), newname))
+        renamings = [(watolib.Folder.current(), self._host.name(), newname)]
+        host_renaming_job.set_function(rename_hosts_background_job, renamings)
 
-            try:
-                host_renaming_job.start()
-            except background_job.BackgroundJobAlreadyRunning as e:
-                raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
+        try:
+            host_renaming_job.start()
+        except background_job.BackgroundJobAlreadyRunning as e:
+            raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
-            raise HTTPRedirect(host_renaming_job.detail_url())
-
-        if c is False:  # not yet confirmed
-            return ""
+        return redirect(host_renaming_job.detail_url())
 
     def _check_new_host_name(self, varname, host_name):
         if not host_name:
@@ -474,6 +481,10 @@ class ModeRenameHost(WatoMode):
               "of the monitoring core. You cannot rename a host while you have pending changes."))
 
         html.begin_form("rename_host", method="POST")
+        html.add_confirm_on_submit(
+            "rename_host",
+            _("Are you sure you want to rename the host <b>%s</b>? "
+              "This involves a restart of the monitoring core!") % (self._host.name()))
         forms.header(_("Rename host %s") % self._host.name())
         forms.section(_("Current name"))
         html.write_text(self._host.name())
@@ -656,7 +667,7 @@ def rename_host_in_multisite(oldname, newname):
 
 
 def rename_host_in_bi(oldname, newname):
-    return BIHostRenamer().rename_host(oldname, newname)
+    return BIHostRenamer().rename_host(oldname, newname, cmk.gui.bi.get_cached_bi_packs())
 
 
 def rename_hosts_in_check_mk(
@@ -718,7 +729,7 @@ def rename_hosts(renamings, job_interface=None):
         except MKAuthException as e:
             auth_problems.append((oldname, e))
 
-    # 2. Check_MK stuff ------------------------------------------------
+    # 2. Checkmk stuff ------------------------------------------------
     job_interface.send_progress_update(
         _("Renaming host(s) in base configuration, rrd, history files, etc."))
     job_interface.send_progress_update(

@@ -1,0 +1,13 @@
+Title: check_mk_agent: readdition of postfix_mailq_status
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1604041627
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The refactored check_mk_agent.linux was missing the postfix_mailq_status
+section in its output. This change reintroduces the section. The user is
+required to bake the agent in order to rollout this change.

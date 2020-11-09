@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.utils.aws_constants as aws_types
 
 default_running_ondemand_instances = [
@@ -59,7 +60,6 @@ check_info['aws_ec2_limits'] = {
     'inventory_function': discover(),
     'check_function': check_aws_ec2_limits,
     'service_description': 'AWS/EC2 Limits %s',
-    'includes': ['aws.include'],
     'group': 'aws_ec2_limits',
     'default_levels_variable': 'aws_ec2_limits_default_levels',
     'has_perfdata': True,

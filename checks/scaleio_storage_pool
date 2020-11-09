@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #<<<scaleio_storage_pool>>>
 #STORAGE_POOL 59c7748300000000:
 #        ID                                                 59c7748300000000
@@ -47,7 +51,6 @@ check_info['scaleio_storage_pool'] = {
     'inventory_function': inventory_scaleio_storage_pool,
     'check_function': check_scaleio_storage_pool,
     'service_description': 'ScaleIO SP capacity %s',
-    'includes': ['scaleio.include', 'size_trend.include', 'df.include', 'diskstat.include'],
     'has_perfdata': True,
     'group': 'filesystem',
 }

@@ -27,8 +27,7 @@ import * as page_menu from "page_menu";
 //#   |    unlocked individually.                                          |
 //#   '--------------------------------------------------------------------'
 
-export function activate_changes(mode, site_id)
-{
+export function activate_changes(mode, site_id) {
     var sites = [];
 
     if (mode == "selected") {
@@ -44,50 +43,49 @@ export function activate_changes(mode, site_id)
             async_progress.show_error("You have to select a site.");
             return;
         }
-
     } else if (mode == "site") {
         sites.push(site_id);
     }
 
     var activate_until = document.getElementById("activate_until");
-    if (!activate_until)
-        return;
+    if (!activate_until) return;
 
     var comment = "";
     var comment_field = document.getElementsByName("activate_p_comment")[0];
-    if (comment_field && comment_field.value != "")
-        comment = comment_field.value;
+    if (comment_field && comment_field.value != "") comment = comment_field.value;
 
     var activate_foreign = 0;
     var foreign_checkbox = document.getElementsByName("activate_p_foreign")[0];
-    if (foreign_checkbox && foreign_checkbox.checked)
-        activate_foreign = 1;
+    if (foreign_checkbox && foreign_checkbox.checked) activate_foreign = 1;
 
     start_activation(sites, activate_until.value, comment, activate_foreign);
 }
 
-function start_activation(sites, activate_until, comment, activate_foreign)
-{
+function start_activation(sites, activate_until, comment, activate_foreign) {
     async_progress.show_info("Initializing activation...");
 
-    var post_data = "activate_until=" + encodeURIComponent(activate_until)
-                  + "&sites=" + encodeURIComponent(sites.join(","))
-                  + "&comment=" + encodeURIComponent(comment)
-                  + "&activate_foreign=" + encodeURIComponent(activate_foreign);
+    var post_data =
+        "activate_until=" +
+        encodeURIComponent(activate_until) +
+        "&sites=" +
+        encodeURIComponent(sites.join(",")) +
+        "&comment=" +
+        encodeURIComponent(comment) +
+        "&activate_foreign=" +
+        encodeURIComponent(activate_foreign);
 
     ajax.call_ajax("ajax_start_activation.py", {
-        response_handler : handle_start_activation,
-        error_handler    : handle_start_activation_error,
-        method           : "POST",
-        post_data        : post_data,
-        add_ajax_id      : false
+        response_handler: handle_start_activation,
+        error_handler: handle_start_activation_error,
+        method: "POST",
+        post_data: post_data,
+        add_ajax_id: false,
     });
 
     lock_activation_controls(true);
 }
 
-function handle_start_activation(_unused, response_json)
-{
+function handle_start_activation(_unused, response_json) {
     var response = JSON.parse(response_json);
 
     if (response.result_code == 1) {
@@ -96,40 +94,43 @@ function handle_start_activation(_unused, response_json)
     } else {
         async_progress.show_info("Activating...");
         async_progress.monitor({
-            "update_url" : "ajax_activation_state.py?activation_id=" + encodeURIComponent(response.result.activation_id),
-            "start_time" : utils.time(),
-            "update_function": update_activation_state,
-            "is_finished_function": is_activation_progress_finished,
-            "finish_function": finish_activation,
-            "error_function": function(response) {
+            update_url:
+                "ajax_activation_state.py?activation_id=" +
+                encodeURIComponent(response.result.activation_id),
+            start_time: utils.time(),
+            update_function: update_activation_state,
+            is_finished_function: is_activation_progress_finished,
+            finish_function: finish_activation,
+            error_function: function (response) {
                 async_progress.show_error(response);
             },
-            "post_data": ""
+            post_data: "",
         });
     }
 }
 
-function handle_start_activation_error(_unused, status_code, error_msg)
-{
-    async_progress.show_error("Failed to start activation ["+status_code+"]: " + error_msg);
+function handle_start_activation_error(_unused, status_code, error_msg) {
+    async_progress.show_error("Failed to start activation [" + status_code + "]: " + error_msg);
 }
 
-function lock_activation_controls(lock)
-{
+function lock_activation_controls(lock) {
     var elements = [];
 
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByName("activate_p_comment"), 0));
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("site_checkbox"), 0));
-    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("activate_site"), 0));
+    elements = elements.concat(
+        Array.prototype.slice.call(document.getElementsByName("activate_p_comment"), 0)
+    );
+    elements = elements.concat(
+        Array.prototype.slice.call(document.getElementsByClassName("site_checkbox"), 0)
+    );
+    elements = elements.concat(
+        Array.prototype.slice.call(document.getElementsByClassName("activate_site"), 0)
+    );
 
     for (var i = 0; i < elements.length; i++) {
-        if (!elements[i])
-            continue;
+        if (!elements[i]) continue;
 
-        if (lock)
-            utils.add_class(elements[i], "disabled");
-        else
-            utils.remove_class(elements[i], "disabled");
+        if (lock) utils.add_class(elements[i], "disabled");
+        else utils.remove_class(elements[i], "disabled");
 
         elements[i].disabled = lock ? "disabled" : false;
     }
@@ -139,27 +140,22 @@ function lock_activation_controls(lock)
     page_menu.enable_menu_entry("discard_changes", !lock);
 }
 
-function is_activation_progress_finished(response)
-{
+function is_activation_progress_finished(response) {
     for (var site_id in response["sites"]) {
         // skip loop if the property is from prototype
-        if (!response["sites"].hasOwnProperty(site_id))
-            continue;
+        if (!response["sites"].hasOwnProperty(site_id)) continue;
 
         var site_state = response["sites"][site_id];
-        if (site_state["_phase"] != "done")
-            return false;
+        if (site_state["_phase"] != "done") return false;
     }
 
     return true;
 }
 
-function update_activation_state(_unused_handler_data, response)
-{
+function update_activation_state(_unused_handler_data, response) {
     for (var site_id in response["sites"]) {
         // skip loop if the property is from prototype
-        if (!response["sites"].hasOwnProperty(site_id))
-            continue;
+        if (!response["sites"].hasOwnProperty(site_id)) continue;
 
         var site_state = response["sites"][site_id];
 
@@ -174,15 +170,13 @@ function update_activation_state(_unused_handler_data, response)
 
         // Due to the asynchroneous nature of the activate changes site scheduler
         // the site state file may not be present within the first seconds
-        if (is_empty)
-            continue
+        if (is_empty) continue;
 
         update_site_activation_state(site_state);
     }
 }
 
-export function update_site_activation_state(site_state)
-{
+export function update_site_activation_state(site_state) {
     // Show status text (overlay text on the progress bar)
     var msg = document.getElementById("site_" + site_state["_site_id"] + "_status");
     msg.innerHTML = site_state["_status_text"];
@@ -203,8 +197,7 @@ export function update_site_activation_state(site_state)
     update_site_progress(site_state);
 }
 
-function update_site_progress(site_state)
-{
+function update_site_progress(site_state) {
     var max_width = 160;
 
     var progress = document.getElementById("site_" + site_state["_site_id"] + "_progress");
@@ -224,18 +217,16 @@ function update_site_progress(site_state)
     var duration = parseFloat(utils.time() - site_state["_time_started"]);
 
     var expected_duration = site_state["_expected_duration"];
-    var duration_percent = duration * 100.0 / expected_duration;
-    var width = parseInt(parseFloat(max_width) * duration_percent / 100);
+    var duration_percent = (duration * 100.0) / expected_duration;
+    var width = parseInt((parseFloat(max_width) * duration_percent) / 100);
 
-    if (width > max_width)
-        width = max_width;
+    if (width > max_width) width = max_width;
 
     progress.style.width = width + "px";
 }
 
-function finish_activation(result)
-{
-    utils.schedule_reload(utils.makeuri({"_finished": "1"}), 1000);
+function finish_activation(result) {
+    utils.schedule_reload(utils.makeuri({_finished: "1"}), 1000);
 
     // Trigger a reload of the sidebar (to update changes in WATO snapin)
     utils.reload_sidebar();

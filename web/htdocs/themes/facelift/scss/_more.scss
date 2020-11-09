@@ -4,31 +4,36 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 @keyframes fadein {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
-.advanced {
+.show_more_mode {
   display: none;
   opacity: 0;
 }
 
 .more {
-  .advanced {
+  .show_more_mode {
     display: block;
     animation: fadein 0s both;
   }
 
-  td.advanced {
+  td.show_more_mode {
     display: table-cell;
   }
 
-  tr.advanced {
+  tr.show_more_mode {
     display: table-row;
   }
 }
 
-.more.withanimation .advanced {
+.more.withanimation .show_more_mode {
   animation: fadein 1s both;
 }
 
@@ -45,35 +50,60 @@ a.more {
   }
 }
 
-div.more_container {
-  position: relative;
-  width: 100%;
-
-  a.more {
-    position: absolute;
-    top: -7px;
-    right: -5px;
-  }
-}
-
-.more a.more {
-  img.show_more {
-    z-index: 0;
-    opacity: 0;
-  }
-
-  img.show_less {
-    opacity: 1;
-  }
-}
-
 a.more {
-  img.show_more {
-    z-index: 1;
-    opacity: 1;
+  div.show_less {
+    display: none;
   }
 
-  img.show_less {
-    opacity: 0;
+  div.show_more {
+    display: block;
+
+    &:after {
+      content: url("images/icon_show_more.svg");
+    }
+  }
+
+  .more & {
+    div.show_more {
+      display: none;
+    }
+
+    div.show_less {
+      display: block;
+
+      &:after {
+        content: url("images/icon_show_less.svg");
+      }
+    }
+  }
+
+  &.hidden {
+    display: none;
+  }
+
+  &.has_text {
+    width: auto;
+    font-size: $font-size-small;
+
+    &:hover {
+      color: $success;
+
+      div.show_more::after {
+        content: url("images/icon_show_more_green.svg");
+      }
+
+      div.show_less::after {
+        content: url("images/icon_show_less_green.svg");
+      }
+    }
+
+    div.show_more,
+    div.show_less {
+      &:after {
+        position: relative;
+        top: 4px;
+        margin-left: 6px;
+      }
+    }
   }
 }

@@ -2087,7 +2087,7 @@ class EventCreator:
 
             # The event simulator ships the simulated original IP address in the
             # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
-            if "|" in event["host"]:
+            if isinstance(event["host"], str) and "|" in event["host"]:
                 event["host"], event["ipaddress"] = event["host"].split("|", 1)
 
         except Exception as e:

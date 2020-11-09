@@ -839,14 +839,12 @@ std::filesystem::path Folders::makeDefaultDataFolder(
         auto app_data_folder = win::GetSomeSystemFolder(FOLDERID_ProgramData);
 
         auto app_data = draw_folder(app_data_folder);
-        if (protection == Protection::yes &&
-            !wtools::ProtectFolderFromUserWrite(
-                (fs::path(app_data_folder) / cma::cfg::kAppDataCompanyName)
-                    .wstring())) {
-            XLOG::l.e("Protection failed!");
+        auto ret = CreateTree(app_data);
+        if (protection == Protection::yes) {
+            cma::security::ProtectAll(fs::path(app_data_folder) /
+                                      cma::cfg::kAppDataCompanyName);
         }
 
-        auto ret = CreateTree(app_data);
         if (ret == 0) return app_data;
         XLOG::l.bp("Failed to access ProgramData Folder {}", ret);
 
@@ -1190,7 +1188,8 @@ void SetupPluginEnvironment() {
     using namespace std;
 
     const std::pair<const std::string, const std::wstring> env_pairs[] = {
-        // string conversion  is required because of string used in interfaces
+        // string conversion  is required because of string used in
+        // interfaces
         // of SetEnv and ConvertToUTF8
         {string(envs::kMkLocalDirName), cma::cfg::GetLocalDir()},
         {string(envs::kMkStateDirName), cma::cfg::GetStateDir()},
@@ -1319,6 +1318,12 @@ void ConfigInfo::initFolders(
 
     folders_.setRoot(ServiceValidName, RootFolder);
     auto root = folders_.getRoot();
+
+    if (!ServiceValidName.empty()) {
+        auto exe_path = FindServiceImagePath(ServiceValidName);
+        wtools::ProtectFileFromUserWrite(exe_path);
+        wtools::ProtectPathFromUserAccess(root);
+    }
 
     if (folders_.getData().empty())
         XLOG::l.crit("Data folder is empty.This is bad.");

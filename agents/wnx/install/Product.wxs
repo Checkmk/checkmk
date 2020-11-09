@@ -59,6 +59,9 @@ just to signal that real build script was not called -->
     <!-- Support Link in the Control Panel -->
     <Property Id="ARPURLINFOABOUT" Value="https://checkmk.com" />
     
+     <!-- Administrative rights is mandatory -->
+    <Property Id="MSIUSEREALADMINDETECTION" Value="1" />        
+    
     <!-- Other links
     <Property Id="ARPURLUPDATEINFO" Value="https://checkmk.com" />
     <Property Id="ARPAUTHORIZEDCDFPREFIX" Value="https://checkmk.com/ARPAUTHORIZEDCDFPREFIX" />
@@ -69,6 +72,8 @@ just to signal that real build script was not called -->
     this code is disabled, because bakery/msi-update is not able to upgrade versions correctly 
     -->
     <MajorUpgrade AllowDowngrades="yes" />
+    <Icon Id="tribe29.ico" SourceFile="tribe29.ico" />
+    <Property Id="ARPPRODUCTICON" Value="tribe29.ico" />      
 
     <Upgrade Id="$(var.ProductUpgradeCode)">
       <UpgradeVersion Minimum="$(var.ProductVersion)"

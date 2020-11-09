@@ -21,7 +21,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
@@ -58,6 +58,10 @@ from cmk.gui.plugins.views import (
     cmp_simple_number,
     render_labels,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
+
+PaintResult = Tuple[str, Union[str, HTML]]
 
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
@@ -146,7 +150,7 @@ def _inv_filter_info():
 
 
 # Declares painters, sorters and filters to be used in views based on all host related datasources.
-def _declare_inv_column(invpath, datatype, title, short=None):
+def _declare_inv_column(invpath, datatype, title, short=None, is_show_more: bool = True):
     if invpath == ".":
         name = "inv"
     else:
@@ -195,35 +199,32 @@ def _declare_inv_column(invpath, datatype, title, short=None):
         filter_info = _inv_filter_info().get(datatype, {})
 
         # Declare filter. Sync this with _declare_invtable_column()
-        if datatype in ["str", "bool"]:
-            parent_class = FilterInvText if datatype == "str" else FilterInvBool
-            filter_class = type(
-                "FilterInv%s" % name.title(), (parent_class,), {
-                    "_ident": name,
-                    "_title": title,
-                    "_inv_path": invpath,
-                    "_invpath": property(lambda s: s._inv_path),
-                    "sort_index": property(lambda s: 800),
-                    "ident": property(lambda s: s._ident),
-                    "title": property(lambda s: s._title),
-                })
+        if datatype == "str":
+            filter_registry.register(
+                FilterInvText(
+                    ident=name,
+                    title=title,
+                    inv_path=invpath,
+                    is_show_more=is_show_more,
+                ))
+        elif datatype == "bool":
+            filter_registry.register(
+                FilterInvBool(
+                    ident=name,
+                    title=title,
+                    inv_path=invpath,
+                    is_show_more=is_show_more,
+                ))
         else:
-            filter_class = type(
-                "FilterInv%s" % name.title(), (FilterInvFloat,), {
-                    "_ident": name,
-                    "_title": title,
-                    "_inv_path": invpath,
-                    "_unit_val": filter_info.get("unit"),
-                    "_scale_val": filter_info.get("scale", 1.0),
-                    "_unit": property(lambda s: s._unit_val),
-                    "_scale": property(lambda s: s._scale_val),
-                    "_invpath": property(lambda s: s._inv_path),
-                    "sort_index": property(lambda s: 800),
-                    "ident": property(lambda s: s._ident),
-                    "title": property(lambda s: s._title),
-                })
-
-        filter_registry.register(filter_class)
+            filter_registry.register(
+                FilterInvFloat(
+                    ident=name,
+                    title=title,
+                    inv_path=invpath,
+                    unit=filter_info.get("unit"),
+                    scale=filter_info.get("scale", 1.0),
+                    is_show_more=is_show_more,
+                ))
 
 
 def _cmp_inventory_node(a: Dict[str, StructuredDataTree], b: Dict[str, StructuredDataTree],
@@ -359,17 +360,22 @@ class ABCRowTable(RowTable):
 #   '----------------------------------------------------------------------'
 
 
-def decorate_inv_paint(f):
-    def wrapper(v):
-        if v in ["", None]:
-            return "", ""
-        return f(v)
+def decorate_inv_paint(skip_painting_if_string=False):
+    def decorator(f):
+        def wrapper(v):
+            if v in ["", None]:
+                return "", ""
+            if skip_painting_if_string and isinstance(v, str):
+                return "number", v
+            return f(v)
 
-    return wrapper
+        return wrapper
+
+    return decorator
 
 
-@decorate_inv_paint
-def inv_paint_generic(v):
+@decorate_inv_paint()
+def inv_paint_generic(v: Union[str, float, int]) -> PaintResult:
     if isinstance(v, float):
         return "number", "%.2f" % v
     if isinstance(v, int):
@@ -377,50 +383,50 @@ def inv_paint_generic(v):
     return "", escape_text("%s" % v)
 
 
-@decorate_inv_paint
-def inv_paint_hz(hz):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_hz(hz: float) -> PaintResult:
     return "number", cmk.utils.render.fmt_number_with_precision(hz, drop_zeroes=False, unit="Hz")
 
 
-@decorate_inv_paint
-def inv_paint_bytes(b):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_bytes(b: int) -> PaintResult:
     if b == 0:
         return "number", "0"
     return "number", cmk.utils.render.fmt_bytes(b, precision=0)
 
 
-@decorate_inv_paint
-def inv_paint_size(b):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_size(b: int) -> PaintResult:
     return "number", cmk.utils.render.fmt_bytes(b)
 
 
-@decorate_inv_paint
-def inv_paint_bytes_rounded(b):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_bytes_rounded(b: int) -> PaintResult:
     if b == 0:
         return "number", "0"
     return "number", cmk.utils.render.fmt_bytes(b)
 
 
-@decorate_inv_paint
-def inv_paint_number(b):
+@decorate_inv_paint()
+def inv_paint_number(b: Union[str, int, float]) -> PaintResult:
     return "number", str(b)
 
 
 # Similar to paint_number, but is allowed to
 # abbreviate things if numbers are very large
 # (though it doesn't do so yet)
-@decorate_inv_paint
-def inv_paint_count(b):
+@decorate_inv_paint()
+def inv_paint_count(b: Union[str, int, float]) -> PaintResult:
     return "number", str(b)
 
 
-@decorate_inv_paint
-def inv_paint_nic_speed(bits_per_second):
+@decorate_inv_paint()
+def inv_paint_nic_speed(bits_per_second: str) -> PaintResult:
     return "number", cmk.utils.render.fmt_nic_speed(bits_per_second)
 
 
-@decorate_inv_paint
-def inv_paint_if_oper_status(oper_status):
+@decorate_inv_paint()
+def inv_paint_if_oper_status(oper_status: int) -> PaintResult:
     if oper_status == 1:
         css_class = "if_state_up"
     elif oper_status == 2:
@@ -433,43 +439,43 @@ def inv_paint_if_oper_status(oper_status):
 
 
 # admin status can only be 1 or 2, matches oper status :-)
-@decorate_inv_paint
-def inv_paint_if_admin_status(admin_status):
+@decorate_inv_paint()
+def inv_paint_if_admin_status(admin_status: int) -> PaintResult:
     return inv_paint_if_oper_status(admin_status)
 
 
-@decorate_inv_paint
-def inv_paint_if_port_type(port_type):
+@decorate_inv_paint()
+def inv_paint_if_port_type(port_type: int) -> PaintResult:
     type_name = defines.interface_port_types().get(port_type, _("unknown"))
     return "", "%d - %s" % (port_type, type_name)
 
 
-@decorate_inv_paint
-def inv_paint_if_available(available):
+@decorate_inv_paint()
+def inv_paint_if_available(available: bool) -> PaintResult:
     return "if_state " + (available and "if_available" or "if_not_available"), \
                          (available and _("free") or _("used"))
 
 
-@decorate_inv_paint
-def inv_paint_mssql_is_clustered(clustered):
+@decorate_inv_paint()
+def inv_paint_mssql_is_clustered(clustered: bool) -> PaintResult:
     return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), \
                       (clustered and _("is clustered") or _("is not clustered"))
 
 
-@decorate_inv_paint
-def inv_paint_mssql_node_names(node_names):
+@decorate_inv_paint()
+def inv_paint_mssql_node_names(node_names: str) -> PaintResult:
     return "", node_names
 
 
-@decorate_inv_paint
-def inv_paint_ipv4_network(nw):
+@decorate_inv_paint()
+def inv_paint_ipv4_network(nw: str) -> PaintResult:
     if nw == "0.0.0.0/0":
         return "", _("Default")
     return "", nw
 
 
-@decorate_inv_paint
-def inv_paint_ip_address_type(t):
+@decorate_inv_paint()
+def inv_paint_ip_address_type(t: str) -> PaintResult:
     if t == "ipv4":
         return "", _("IPv4")
     if t == "ipv6":
@@ -477,48 +483,48 @@ def inv_paint_ip_address_type(t):
     return "", t
 
 
-@decorate_inv_paint
-def inv_paint_route_type(rt):
+@decorate_inv_paint()
+def inv_paint_route_type(rt: str) -> PaintResult:
     if rt == "local":
         return "", _("Local route")
     return "", _("Gateway route")
 
 
-@decorate_inv_paint
-def inv_paint_volt(volt):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_volt(volt: float) -> PaintResult:
     return "number", "%.1f V" % volt
 
 
-@decorate_inv_paint
-def inv_paint_date(timestamp):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_date(timestamp: int) -> PaintResult:
     date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint
-def inv_paint_date_and_time(timestamp):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_date_and_time(timestamp: int) -> PaintResult:
     date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint
-def inv_paint_age(age):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_age(age: float) -> PaintResult:
     return "number", cmk.utils.render.approx_age(age)
 
 
-@decorate_inv_paint
-def inv_paint_bool(value):
+@decorate_inv_paint()
+def inv_paint_bool(value: bool) -> PaintResult:
     return "", (_("Yes") if value else _("No"))
 
 
-@decorate_inv_paint
-def inv_paint_timestamp_as_age(timestamp):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_timestamp_as_age(timestamp: int) -> PaintResult:
     age = time.time() - timestamp
     return inv_paint_age(age)
 
 
-@decorate_inv_paint
-def inv_paint_timestamp_as_age_days(timestamp):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
     def round_to_day(ts):
         broken = time.localtime(ts)
         return int(
@@ -546,21 +552,21 @@ def inv_paint_timestamp_as_age_days(timestamp):
     return css_class, "%d %s ago" % (int(age_days), _("days"))
 
 
-@decorate_inv_paint
-def inv_paint_csv_labels(csv_list):
+@decorate_inv_paint()
+def inv_paint_csv_labels(csv_list: str) -> PaintResult:
     return "labels", html.render_br().join(csv_list.split(","))
 
 
-@decorate_inv_paint
-def inv_paint_cmk_label(label):
+@decorate_inv_paint()
+def inv_paint_cmk_label(label: List[str]) -> PaintResult:
     return "labels", render_labels({label[0]: label[1]},
                                    object_type="host",
                                    with_links=True,
                                    label_sources={label[0]: "discovered"})
 
 
-@decorate_inv_paint
-def inv_paint_container_ready(ready):
+@decorate_inv_paint()
+def inv_paint_container_ready(ready: str) -> PaintResult:
     if ready == 'yes':
         css_class = "if_state_up"
     elif ready == 'no':
@@ -571,8 +577,8 @@ def inv_paint_container_ready(ready):
     return "if_state " + css_class, ready
 
 
-@decorate_inv_paint
-def inv_paint_service_status(status):
+@decorate_inv_paint()
+def inv_paint_service_status(status: str) -> PaintResult:
     if status == 'running':
         css_class = "if_state_up"
     elif status == 'stopped':
@@ -695,7 +701,11 @@ def declare_inventory_columns():
         if "*" not in invpath:
             datatype = hint.get("paint", "str")
             long_title = _inv_titleinfo_long(invpath, None)
-            _declare_inv_column(invpath, datatype, long_title, hint.get("short", hint["title"]))
+            _declare_inv_column(invpath,
+                                datatype,
+                                long_title,
+                                hint.get("short", hint["title"]),
+                                is_show_more=hint.get("is_show_more", True))
 
 
 #.
@@ -759,23 +769,19 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
     title = _inv_titleinfo(sub_invpath, None)[1]
 
     # Sync this with _declare_inv_column()
-    parent_class = hint.get("filter")
-    if not parent_class:
+    filter_class = hint.get("filter")
+    if not filter_class:
         if paint_name == "str":
-            parent_class = FilterInvtableText
+            filter_class = FilterInvtableText
         else:
-            parent_class = FilterInvtableIDRange
+            filter_class = FilterInvtableIDRange
 
-    filter_class = type(
-        "FilterInv%s" % name.title(), (parent_class,), {
-            "_inv_info": infoname,
-            "_ident": infoname + "_" + name,
-            "_title": topic + ": " + title,
-            "_invinfo": property(lambda s: s._inv_info),
-            "sort_index": property(lambda s: 800),
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._title),
-        })
+    filter_registry.register(
+        filter_class(
+            inv_info=infoname,
+            ident=infoname + "_" + name,
+            title=topic + ": " + title,
+        ))
 
     register_painter(
         column, {
@@ -792,8 +798,6 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
             "columns": [column],
             "cmp": lambda self, a, b: sortfunc(a.get(column), b.get(column)),
         })
-
-    filter_registry.register(filter_class)
 
 
 class RowTableInventory(ABCRowTable):
@@ -989,6 +993,11 @@ def _register_info_class(infoname, title_singular, title_plural):
 
 
 def _declare_views(infoname, title_plural, painters, filters, invpaths):
+    is_show_more = True
+    if len(invpaths) == 1:
+        hint = _inv_display_hint(invpaths[0])
+        is_show_more = hint.get("is_show_more", True)
+
     # Declare two views: one for searching globally. And one
     # for the items of one host.
     view_spec = {
@@ -1006,6 +1015,7 @@ def _declare_views(infoname, title_plural, painters, filters, invpaths):
         'mobile': False,
         'group_painters': [],
         'sorters': [],
+        'is_show_more': is_show_more,
     }
 
     # View for searching for items
@@ -1239,7 +1249,6 @@ multisite_builtin_views["inv_host"] = {
     'datasource': 'hosts',
     'topic': 'inventory',
     'title': _('Inventory of host'),
-    'linktitle': _('Inventory'),
     'description': _('The complete hardware- and software inventory of a host'),
     'icon': 'inv',
     'hidebutton': False,
@@ -1285,10 +1294,10 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     "topic": "inventory",
     "sort_index": 10,
     'title': _('CPU Related Inventory of all Hosts'),
-    'linktitle': _('CPU Inv. (all Hosts)'),
     'description': _('A list of all hosts with some CPU related inventory data'),
     'public': True,
     'hidden': False,
+    'is_show_more': True,
 
     # Layout options
     'layout': 'table',
@@ -1332,11 +1341,11 @@ multisite_builtin_views["inv_hosts_ports"] = {
     "topic": "inventory",
     "sort_index": 20,
     'title': _('Switch port statistics'),
-    'linktitle': _('Switch ports (all Hosts)'),
     'description':
         _('A list of all hosts with statistics about total, used and free networking interfaces'),
     'public': True,
     'hidden': False,
+    'is_show_more': False,
 
     # Layout options
     'layout': 'table',
@@ -1556,7 +1565,6 @@ multisite_builtin_views["inv_host_history"] = {
     'datasource': 'invhist',
     'topic': 'inventory',
     'title': _('Inventory history of host'),
-    'linktitle': _('Inventory History'),
     'description': _('The history for changes in hardware- and software inventory of a host'),
     'icon': 'inv',
     'hidebutton': False,
@@ -1646,7 +1654,8 @@ class NodeRenderer:
                 title = self._replace_placeholders(title, invpath)
 
             header = self._get_header(title, ".".join(map(str, node_abs_path)), "#666")
-            fetch_url = html.makeuri_contextless(
+            fetch_url = makeuri_contextless(
+                request,
                 [
                     ("site", self._site_id),
                     ("host", self._hostname),
@@ -1717,7 +1726,8 @@ class NodeRenderer:
 
         # Link to Multisite view with exactly this table
         if "view" in hint:
-            url = html.makeuri_contextless(
+            url = makeuri_contextless(
+                request,
                 [
                     ("view_name", hint["view"]),
                     ("host", self._hostname),

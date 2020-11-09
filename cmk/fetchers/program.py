@@ -8,46 +8,58 @@ import logging
 import os
 import signal
 import subprocess
-from types import TracebackType
-from typing import Any, Dict, Optional, Type, Union
+from contextlib import suppress
+from typing import Any, Dict, Final, Optional, Union
 
 from six import ensure_binary, ensure_str
 
-from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData
 
 from . import MKFetcherError
-from .agent import AgentFetcher, AgentFileCache, DefaultAgentFileCache
+from .agent import AgentFetcher, DefaultAgentFileCache
+from .type_defs import Mode
 
 
 class ProgramFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: DefaultAgentFileCache,
+        *,
         cmdline: Union[bytes, str],
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.program"))
-        self._cmdline = cmdline
-        self._stdin = stdin
-        self._is_cmc = is_cmc
+        self.cmdline: Final = cmdline
+        self.stdin: Final = stdin
+        self.is_cmc: Final = is_cmc
         self._process: Optional[subprocess.Popen] = None
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
+    def _from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
         return cls(
             DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             **serialized,
         )
 
-    def __enter__(self) -> 'ProgramFetcher':
-        self._logger.debug("Calling: %s", self._cmdline)
-        if self._stdin:
-            self._logger.debug("STDIN (first 30 bytes): %s... (total %d bytes)", self._stdin[:30],
-                               len(self._stdin))
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "file_cache": self.file_cache.to_json(),
+            "cmdline": self.cmdline,
+            "stdin": self.stdin,
+            "is_cmc": self.is_cmc,
+        }
 
-        if self._is_cmc:
+    def open(self) -> None:
+        self._logger.debug("Calling: %s", self.cmdline)
+        if self.stdin:
+            self._logger.debug(
+                "STDIN (first 30 bytes): %s... (total %d bytes)",
+                self.stdin[:30],
+                len(self.stdin),
+            )
+
+        if self.is_cmc:
             # Warning:
             # The preexec_fn parameter is not safe to use in the presence of threads in your
             # application. The child process could deadlock before exec is called. If you
@@ -59,9 +71,9 @@ class ProgramFetcher(AgentFetcher):
             # the place of a previously common use of preexec_fn to call os.setsid() in the
             # child.
             self._process = subprocess.Popen(  # nosec
-                self._cmdline,
+                self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE if self._stdin else open(os.devnull),
+                stdin=subprocess.PIPE if self.stdin else open(os.devnull),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=True,
@@ -72,39 +84,53 @@ class ProgramFetcher(AgentFetcher):
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
             self._process = subprocess.Popen(  # nosec
-                self._cmdline,
+                self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE if self._stdin else open(os.devnull),
+                stdin=subprocess.PIPE if self.stdin else open(os.devnull),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 close_fds=True,
             )
-        return self
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> None:
+    def close(self):
         if self._process is None:
             return
-        if exc_type is MKTimeout:
-            # On timeout exception try to stop the process to prevent child process "leakage"
-            os.killpg(os.getpgid(self._process.pid), signal.SIGTERM)
-            self._process.wait()
+
+        # Try to kill the process to prevent process "leakage".
+        #
+        # Please note that we have two different situations here:
+        #
+        # CMC: self._process is in a dedicated process group. By killing the process group we
+        # can terminate self._process and all it's child processes.
+        #
+        # Nagios: self._process is in the same process group as we are (See comment of
+        # subprocess.Popen) for the reason). In this situation killing the process group would
+        # also kill our own process. This must not be done.
+        if self.is_cmc:
+            with suppress(OSError):
+                os.killpg(os.getpgid(self._process.pid), signal.SIGTERM)
+                self._process.wait()
+
         # The stdout and stderr pipe are not closed correctly on a MKTimeout
         # Normally these pipes getting closed after p.communicate finishes
         # Closing them a second time in a OK scenario won't hurt neither..
         if self._process.stdout is None or self._process.stderr is None:
             raise Exception("stdout needs to be set")
+
         self._process.stdout.close()
         self._process.stderr.close()
         self._process = None
 
-    def _fetch_from_io(self) -> AgentRawData:
+    def _is_cache_enabled(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING
+
+    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(
-            input=ensure_binary(self._stdin) if self._stdin else None)
+            input=ensure_binary(self.stdin) if self.stdin else None)
         if self._process.returncode == 127:
-            exepath = self._cmdline.split()[0]  # for error message, hide options!
+            exepath = self.cmdline.split()[0]  # for error message, hide options!
             raise MKFetcherError("Program '%s' not found (exit code 127)" % ensure_str(exepath))
         if self._process.returncode:
             raise MKFetcherError("Agent exited with code %d: %s" %

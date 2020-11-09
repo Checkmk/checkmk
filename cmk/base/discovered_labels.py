@@ -6,12 +6,17 @@
 
 import abc
 from collections.abc import MutableMapping
-from typing import Iterator, Any, Union, Optional, List, Dict
+from typing import Any, Dict, Iterator, List, Optional, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import Labels, CheckPluginNameStr
 
-HostLabelValueDict = Dict[str, Union[str, Optional[CheckPluginNameStr]]]
+
+class HostLabelValueDict(TypedDict):
+    value: str
+    plugin_name: Optional[CheckPluginNameStr]
+
+
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
 
 
@@ -47,6 +52,12 @@ class ABCDiscoveredLabels(MutableMapping, metaclass=abc.ABCMeta):
     def to_dict(self) -> Dict:
         return self._labels
 
+    def to_list(self) -> List:
+        raise NotImplementedError()
+
+    def __repr__(self) -> str:
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(repr(arg) for arg in self.to_list()))
+
 
 class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single host during runtime"""
@@ -75,14 +86,20 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
         return sorted(self._labels.values(), key=lambda x: x.name)
 
     def __add__(self, other: 'DiscoveredHostLabels') -> 'DiscoveredHostLabels':
+        """ Adding [foo:bar2] to [foo:bar1] results in [foo:bar2]. The label value is updated """
         if not isinstance(other, DiscoveredHostLabels):
             raise TypeError('%s not type DiscoveredHostLabels' % other)
         data = self.to_dict().copy()
         data.update(other.to_dict())
         return DiscoveredHostLabels.from_dict(data)
 
-    def __repr__(self) -> str:
-        return "DiscoveredHostLabels(%s)" % ", ".join(repr(arg) for arg in self.to_list())
+    def __sub__(self, other: 'DiscoveredHostLabels') -> 'DiscoveredHostLabels':
+        """ Removing [foo:bar2] from [foo:bar1] results in []. The label key is removed """
+        if not isinstance(other, DiscoveredHostLabels):
+            raise TypeError('%s not type DiscoveredHostLabels' % other)
+        data = self.to_dict()
+        return DiscoveredHostLabels.from_dict(
+            {k: data[k] for k in data.keys() - other.to_dict().keys()})
 
 
 class ABCLabel:
@@ -123,14 +140,7 @@ class ABCLabel:
 
 
 class ServiceLabel(ABCLabel):
-    # This docstring is exposed by the agent_based API!
-    """Representing a service label in Checkmk
-
-    This class creates a service label that can be passed to a 'Service' object.
-    It can be used in the discovery function to create a new label like this:
-
-    my_label = ServiceLabel(u"my_label_key", u"my_value")
-    """
+    pass
 
 
 class HostLabel(ABCLabel):
@@ -176,7 +186,7 @@ class HostLabel(ABCLabel):
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HostLabel):
-            raise TypeError('%s not type HostLabel' % other)
+            raise TypeError(f'{other!r} is not of type HostLabel')
         return (self.name == other.name and self.value == other.value and
                 self.plugin_name == other.plugin_name)
 
@@ -187,9 +197,13 @@ class HostLabel(ABCLabel):
 class DiscoveredServiceLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-ancestors
     """Encapsulates the discovered labels of a single service during runtime"""
     def __init__(self, *args: ServiceLabel) -> None:
+        # TODO: Make self._labels also store ServiceLabel objects just like DiscoveredHostLabels
         self._labels: Labels = {}
         super(DiscoveredServiceLabels, self).__init__(*args)
 
     def add_label(self, label: ABCLabel) -> None:
         assert isinstance(label, ServiceLabel)
         self._labels[label.name] = label.value
+
+    def to_list(self) -> List[ServiceLabel]:
+        return sorted([ServiceLabel(k, v) for k, v in self._labels.items()], key=lambda x: x.name)

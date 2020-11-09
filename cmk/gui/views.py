@@ -28,7 +28,6 @@ import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 import cmk.gui.inventory as inventory
 import cmk.gui.visuals as visuals
-from cmk.gui.visuals import get_only_sites
 import cmk.gui.sites as sites
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
@@ -70,7 +69,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g
+from cmk.gui.globals import html, g, request as global_request
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKGeneralException,
@@ -148,6 +147,9 @@ if cmk_version.is_managed_edition():
 
 from cmk.gui.type_defs import (PainterSpec, HTTPVariables, InfoName, FilterHeaders, Row, Rows,
                                ColumnName, Visual, ViewSpec)
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -487,7 +489,7 @@ class View:
             breadcrumb.append(
                 BreadcrumbItem(
                     title=view_title(self.spec),
-                    url=html.makeuri_contextless(request_vars),
+                    url=makeuri_contextless(global_request, request_vars),
                 ))
             return breadcrumb
 
@@ -520,7 +522,10 @@ class View:
             breadcrumb.append(
                 BreadcrumbItem(
                     title=view_title(self.spec),
-                    url=html.makeuri_contextless([("view_name", self.name), ("host", host_name)]),
+                    url=makeuri_contextless(
+                        global_request,
+                        [("view_name", self.name), ("host", host_name)],
+                    ),
                 ))
             return breadcrumb
 
@@ -534,8 +539,14 @@ class View:
         breadcrumb.append(
             BreadcrumbItem(
                 title=view_title(self.spec),
-                url=html.makeuri_contextless([("view_name", self.name), ("host", host_name),
-                                              ("service", self.context["service"])]),
+                url=makeuri_contextless(
+                    global_request,
+                    [
+                        ("view_name", self.name),
+                        ("host", host_name),
+                        ("service", self.context["service"]),
+                    ],
+                ),
             ))
 
         return breadcrumb
@@ -592,7 +603,7 @@ class GUIViewRenderer(ABCViewRenderer):
         layout = self.view.layout
 
         # Display the filter form on page rendering in some cases
-        if view_spec.get("mustsearch") and not html.request.var("filled_in"):
+        if self._should_show_filter_form(view_spec):
             html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
 
         # Actions
@@ -613,7 +624,7 @@ class GUIViewRenderer(ABCViewRenderer):
             if html.do_actions() and html.transaction_valid():  # submit button pressed, no reload
                 try:
                     # Create URI with all actions variables removed
-                    backurl = html.makeuri([], delvars=['filled_in', 'actions'])
+                    backurl = makeuri(global_request, [], delvars=['filled_in', 'actions'])
                     has_done_actions = do_actions(view_spec, self.view.datasource.infos[0], rows,
                                                   backurl)
                 except MKUserError as e:
@@ -694,6 +705,29 @@ class GUIViewRenderer(ABCViewRenderer):
         if display_options.enabled(display_options.H):
             html.body_end()
 
+    def _should_show_filter_form(self, view_spec: ViewSpec) -> bool:
+        """Whether or not the filter form should be displayed on page load
+
+        a) In case the user toggled the popup in the frontend, always enforce that property
+
+        b) Show in case the view is a "mustsearch" view (User needs to submit the filter form before
+        data is shown).
+
+        c) Show after submitting the filter form. The user probably wants to update the filters
+        after first filtering.
+        """
+        show_form = html.request.get_integer_input("_show_filter_form")
+        if show_form is not None:
+            return show_form == 1
+
+        if view_spec.get("mustsearch"):
+            return True
+
+        if html.request.get_ascii_input("filled_in") == "filter":
+            return True
+
+        return False
+
     def _page_menu(self, breadcrumb: Breadcrumb, rows: Rows,
                    show_filters: List[Filter]) -> PageMenu:
         if not display_options.enabled(display_options.B):
@@ -741,7 +775,7 @@ class GUIViewRenderer(ABCViewRenderer):
                         title=_("On selected objects"),
                         entries=list(self._page_menu_entries_selected_objects()),
                     ),
-                    make_checkbox_selection_topic(),
+                    make_checkbox_selection_topic(is_enabled=self.view.checkboxes_displayed),
                 ],
             )
         ]
@@ -758,7 +792,9 @@ class GUIViewRenderer(ABCViewRenderer):
                     item=PageMenuPopup(self._render_command_form(info_name, command)),
                     name="command_%s" % command.ident,
                     is_enabled=_should_show_command_form(self.view.datasource),
-                    is_advanced=command.is_advanced,
+                    is_show_more=command.is_show_more,
+                    is_shortcut=command.is_shortcut,
+                    is_suggested=command.is_suggested,
                     css_classes=["command"],
                 )
 
@@ -772,13 +808,13 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("Export CSV"),
             icon_name="download_csv",
-            item=make_simple_link(html.makeuri([("output_format", "csv_export")])),
+            item=make_simple_link(makeuri(global_request, [("output_format", "csv_export")])),
         )
 
         yield PageMenuEntry(
             title=_("Export JSON"),
             icon_name="download_json",
-            item=make_simple_link(html.makeuri([("output_format", "json_export")])),
+            item=make_simple_link(makeuri(global_request, [("output_format", "json_export")])),
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
@@ -791,7 +827,7 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("This view as PDF"),
             icon_name="report",
-            item=make_simple_link(html.makeuri([], filename="report_instant.py")),
+            item=make_simple_link(makeuri(global_request, [], filename="report_instant.py")),
         )
 
         # Link related reports
@@ -847,11 +883,15 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu_entries_view_layout(self) -> Iterator[PageMenuEntry]:
         checkboxes_toggleable = self.view.layout.can_display_checkboxes and not self.view.checkboxes_enforced
         yield PageMenuEntry(
-            title=_("Toggle checkboxes"),
+            title=_("Hide checkboxes") if self.view.checkboxes_displayed else _("Show checkboxes"),
             icon_name="checkbox",
             item=make_simple_link(
-                html.makeuri([("show_checkboxes", "0" if self.view.checkboxes_displayed else "1")
-                             ])),
+                makeuri(
+                    global_request,
+                    [("show_checkboxes", "0" if self.view.checkboxes_displayed else "1")],
+                )),
+            is_shortcut=True,
+            is_suggested=True,
             is_enabled=checkboxes_toggleable,
         )
 
@@ -864,7 +904,7 @@ class GUIViewRenderer(ABCViewRenderer):
             if self.view.spec["owner"] != config.user.id:
                 url_vars.append(("load_user", self.view.spec["owner"]))
 
-            url = html.makeuri_contextless(url_vars, filename="edit_view.py")
+            url = makeuri_contextless(global_request, url_vars, filename="edit_view.py")
 
             yield PageMenuEntry(
                 title=_("Customize view"),
@@ -1149,7 +1189,11 @@ def show_create_view_dialog(next_url=None):
             vs_ds.validate_value(ds, 'ds')
 
             if not next_url:
-                next_url = html.makeuri([('datasource', ds)], filename="create_view_infos.py")
+                next_url = makeuri(
+                    global_request,
+                    [('datasource', ds)],
+                    filename="create_view_infos.py",
+                )
             else:
                 next_url = next_url + '&datasource=%s' % ds
             raise HTTPRedirect(next_url)
@@ -1368,7 +1412,6 @@ def view_editor_column_spec(ident, title, ds_name):
                     elements=column_elements(join_painters, "join_painter"),
                 ),
             ],
-            style='dropdown',
             match=lambda x: 1 * (x is not None and x[1] is not None),
         )
 
@@ -1581,7 +1624,53 @@ def create_view_from_valuespec(old_view, view):
 def show_filter_form(view: View, show_filters: List[Filter]) -> None:
     visuals.show_filter_form(info_list=view.datasource.infos,
                              mandatory_filters=[],
-                             context={f.ident: {} for f in show_filters if f.available()})
+                             context={f.ident: {} for f in show_filters if f.available()},
+                             page_name=view.name,
+                             reset_ajax_page="ajax_initial_view_filters")
+
+
+class ABCAjaxInitialFilters(AjaxPage):
+    @abc.abstractmethod
+    def _get_context(self, page_name: str) -> Dict:
+        raise NotImplementedError()
+
+    def page(self) -> Dict[str, str]:
+        request = self.webapi_request()
+        varprefix = request.get("varprefix", "")
+        page_name = request.get("page_name", "")
+        context = self._get_context(page_name)
+        page_request_vars = request.get("page_request_vars")
+        assert isinstance(page_request_vars, dict)
+        vs_filters = visuals.VisualFilterListWithAddPopup(info_list=page_request_vars["infos"],
+                                                          ignore=page_request_vars["ignore"])
+        with html.plugged():
+            vs_filters.render_input(varprefix, context)
+            return {"filters_html": html.drain()}
+
+
+@page_registry.register_page("ajax_initial_view_filters")
+class AjaxInitialViewFilters(ABCAjaxInitialFilters):
+    def _get_context(self, page_name: str) -> Dict:
+        # Obtain the visual filters and the view context
+        view_name = page_name
+        try:
+            view_spec = get_permitted_views()[view_name]
+        except KeyError:
+            raise MKUserError("view_name", _("The requested item %s does not exist") % view_name)
+
+        datasource = data_source_registry[view_spec["datasource"]]()
+        show_filters = visuals.filters_of_visual(view_spec,
+                                                 datasource.infos,
+                                                 link_filters=datasource.link_filters)
+        show_filters = visuals.visible_filters_of_visual(view_spec, show_filters)
+        view_context = view_spec.get("context", {})
+
+        # Return a visual filters dict filled with the view context values
+        return {
+            f.ident: view_context[f.ident] if f.ident in view_context else {}
+            for f in show_filters
+            if f.available()
+        }
 
 
 @cmk.gui.pages.register("view")
@@ -1599,7 +1688,8 @@ def page_view():
 
     view = View(view_name, view_spec, context)
     view.row_limit = get_limit()
-    view.only_sites = get_only_sites()
+    view.only_sites = visuals.get_only_sites_from_context(context)
+
     view.user_sorters = get_user_sorters()
     view.want_checkboxes = get_want_checkboxes()
 
@@ -2094,13 +2184,20 @@ def get_limit() -> Optional[int]:
 
 def _link_to_folder_by_path(path: str) -> str:
     """Return an URL to a certain WATO folder when we just know its path"""
-    return html.makeuri_contextless([("mode", "folder"), ("folder", path)], filename="wato.py")
+    return makeuri_contextless(
+        global_request,
+        [("mode", "folder"), ("folder", path)],
+        filename="wato.py",
+    )
 
 
 def _link_to_host_by_name(host_name: str) -> str:
     """Return an URL to the edit-properties of a host when we just know its name"""
-    return html.makeuri_contextless([("mode", "edit_host"), ("host", host_name)],
-                                    filename="wato.py")
+    return makeuri_contextless(
+        global_request,
+        [("mode", "edit_host"), ("host", host_name)],
+        filename="wato.py",
+    )
 
 
 def _get_context_page_menu_dropdowns(view: View, rows: Rows,
@@ -2143,10 +2240,16 @@ def _get_context_page_menu_dropdowns(view: View, rows: Rows,
             PageMenuDropdown(
                 name=ident,
                 title=info.title if is_single_info else info.title_plural,
-                topics=list(
-                    _get_context_page_menu_topics(view, info, is_single_info, topics,
-                                                  dropdown_visuals, singlecontext_request_vars,
-                                                  mobile)) + host_setup_topic,
+                topics=host_setup_topic + list(
+                    _get_context_page_menu_topics(
+                        view,
+                        info,
+                        is_single_info,
+                        topics,
+                        dropdown_visuals,
+                        singlecontext_request_vars,
+                        mobile,
+                    )),
             ))
 
     return dropdowns
@@ -2244,7 +2347,7 @@ def _collect_linked_visuals_of_type(type_name: str, view: View, rows: Rows,
     visual_type.load_handler()
     available_visuals = visual_type.permitted_visuals
 
-    for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon') or ""):
+    for visual in sorted(available_visuals.values(), key=lambda x: x.get('name') or ""):
         if visual == view.spec:
             continue
 
@@ -2307,15 +2410,17 @@ def _make_page_menu_entry_for_visual(visual_type: VisualType, visual: Visual,
     # add context link to this visual. For reports we put in
     # the *complete* context, even the non-single one.
     if visual_type.multicontext_links:
-        uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
+        uri = makeuri(global_request, [(visual_type.ident_attr, name)], filename=filename)
 
     else:
         # For views and dashboards currently the current filter settings
-        uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
-                                       filename=filename)
+        uri = makeuri_contextless(
+            global_request,
+            vars_values + [(visual_type.ident_attr, name)],
+            filename=filename,
+        )
 
-    linktitle = visual.get("linktitle") or visual["title"]
-    return PageMenuEntry(title=_u(linktitle),
+    return PageMenuEntry(title=visual["title"],
                          icon_name=visual.get("icon") or "trans",
                          item=make_simple_link(uri),
                          name="cb_" + name)
@@ -2347,7 +2452,7 @@ def _get_availability_entry(view: View, info: VisualInfo,
     return PageMenuEntry(
         title=_("Availability"),
         icon_name="availability",
-        item=make_simple_link(html.makeuri([("mode", "availability")])),
+        item=make_simple_link(makeuri(global_request, [("mode", "availability")])),
     )
 
 
@@ -2374,7 +2479,8 @@ def _get_combined_graphs_entry(view: View, info: VisualInfo,
     if not _show_in_current_dropdown(view, info.ident, is_single_info):
         return None
 
-    url = html.makeuri(
+    url = makeuri(
+        global_request,
         [
             ("single_infos", ",".join(view.spec["single_infos"])),
             ("datasource", view.datasource.ident),
@@ -2452,7 +2558,7 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
     host_name = html.request.get_ascii_input_mandatory("host")
 
     yield PageMenuEntry(
-        title=_("Configuration"),
+        title=_("Host configuration"),
         icon_name="wato",
         item=make_simple_link(_link_to_host_by_name(host_name)),
     )
@@ -2461,8 +2567,11 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
         title=_("Service configuration"),
         icon_name="services",
         item=make_simple_link(
-            html.makeuri_contextless([("mode", "inventory"), ("host", host_name)],
-                                     filename="wato.py")),
+            makeuri_contextless(
+                global_request,
+                [("mode", "inventory"), ("host", host_name)],
+                filename="wato.py",
+            )),
     )
 
     is_cluster = False
@@ -2471,8 +2580,11 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
             title=_("Connection tests"),
             icon_name="diagnose",
             item=make_simple_link(
-                html.makeuri_contextless([("mode", "diag_host"), ("host", host_name)],
-                                         filename="wato.py")),
+                makeuri_contextless(
+                    global_request,
+                    [("mode", "diag_host"), ("host", host_name)],
+                    filename="wato.py",
+                )),
         )
 
     if config.user.may('wato.rulesets'):
@@ -2480,8 +2592,11 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
             title=_("Effective parameters"),
             icon_name="rulesets",
             item=make_simple_link(
-                html.makeuri_contextless([("mode", "object_parameters"), ("host", host_name)],
-                                         filename="wato.py")),
+                makeuri_contextless(
+                    global_request,
+                    [("mode", "object_parameters"), ("host", host_name)],
+                    filename="wato.py",
+                )),
         )
 
 
@@ -2601,7 +2716,7 @@ def get_painter_title_for_choices(painter: Painter) -> str:
         info_title = _("Site")
 
     dummy_cell = Cell(View("", {}, {}), PainterSpec(painter.ident))
-    return u"%s: %s" % (info_title, painter.title(dummy_cell))
+    return u"%s: %s" % (info_title, painter.list_title(dummy_cell))
 
 
 #.
@@ -2641,7 +2756,7 @@ def _should_show_command_form(datasource: ABCDataSource,
     what = datasource.infos[0]
     for command_class in command_registry.values():
         command = command_class()
-        if what in command.tables and config.user.may(command.permission().name):
+        if what in command.tables and config.user.may(command.permission.name):
             return True
 
     return False
@@ -2652,7 +2767,7 @@ def _get_command_groups(info_name: InfoName) -> Dict[Type[CommandGroup], List[Co
 
     for command_class in command_registry.values():
         command = command_class()
-        if info_name in command.tables and config.user.may(command.permission().name):
+        if info_name in command.tables and config.user.may(command.permission.name):
             # Some special commands can be shown on special views using this option.  It is
             # currently only used by custom commands, not shipped with Checkmk.
             if command.only_view and html.request.var('view_name') != command.only_view:
@@ -2691,7 +2806,7 @@ def core_command(what, row, row_nr, total_rows):
     # confirmation dialog.
     for cmd_class in command_registry.values():
         cmd = cmd_class()
-        if config.user.may(cmd.permission().name):
+        if config.user.may(cmd.permission.name):
             result = cmd.action(cmdtag, spec, row, row_nr, total_rows)
             if result:
                 executor = cmd.executor
@@ -2730,12 +2845,13 @@ def do_actions(view, what, action_rows, backurl):
     command = None
     title, executor = core_command(what, action_rows[0], 0,
                                    len(action_rows))[1:3]  # just get the title and executor
-    if not html.confirm(_("Do you really want to %(title)s the following %(count)d %(what)s?") % {
-            "title": title,
-            "count": len(action_rows),
-            "what": visual_info_registry[what]().title_plural,
-    },
-                        method='GET'):
+    if not confirm_with_preview(
+            _("Do you really want to %(title)s the following %(count)d %(what)s?") % {
+                "title": title,
+                "count": len(action_rows),
+                "what": visual_info_registry[what]().title_plural,
+            },
+            method='GET'):
         return False
 
     count = 0
@@ -2926,7 +3042,7 @@ def ajax_popup_action_menu():
                     url = 'javascript:void(0);'
                 html.open_a(href=url, target=target_frame, onclick=onclick)
 
-            html.icon('', icon_name)
+            html.icon(icon_name)
             if title:
                 html.write(title)
             else:

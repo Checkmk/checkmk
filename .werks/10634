@@ -6,7 +6,7 @@ Date: 1579162165
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In the status details of a service, when the warn/crit message is shown,
 it is now possible to display the unit of the levels. E.g. for seconds 's' or millisecond 'ms'.

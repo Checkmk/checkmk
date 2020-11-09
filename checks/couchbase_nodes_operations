@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_couchbase_nodes_operations(info):
     parsed = {}
@@ -34,7 +36,6 @@ check_info['couchbase_nodes_operations'] = {
     'inventory_function': discover(lambda k, _v: k is not None),
     'check_function': check_couchbase_nodes_operations,
     'service_description': 'Couchbase %s Operations',
-    'includes': ['couchbase.include'],
     'group': 'couchbase_ops',
     'has_perfdata': True,
 }

@@ -7,8 +7,8 @@ description:
  Please refer to  {sap.value} for details.
  This check is only a subchecks who enables you to create Groups of values.
 
- The rule "SAP R/3 Single Value Inventory" is not necessary for that, you
- only need the rule "SAP Value Grouping Patterns" to define a name and an include
+ The rule "SAP R/3 single value discovery" is not necessary for that, you
+ only need the rule "SAP value discovery" to define a name and an include
  nor and exclusion list.
  After the service detection, the check will display the total number of OK and Critical values,
  in case of Critical values also these.

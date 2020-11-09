@@ -19,6 +19,7 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
     TextAscii,
+    Transform,
     Checkbox,
     DropdownChoice,
 )
@@ -354,8 +355,9 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
     def is_tag_attribute(self) -> bool:
         return False
 
-    def is_advanced(self) -> bool:
-        """Whether or not this attribute is treated as advanced element in the GUI"""
+    def is_show_more(self) -> bool:
+        """Whether or not this attribute is treated as an element only shown on
+        show more button in the GUI"""
         return False
 
 
@@ -386,7 +388,7 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttri
 
     def get_sorted_host_attributes(self) -> List[ABCHostAttribute]:
         """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()))
+        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()().title))
 
     def get_choices(self):
         return [(a.name(), a.title()) for a in self.get_sorted_host_attributes()]
@@ -523,9 +525,14 @@ def undeclare_host_tag_attribute(tag_id):
     undeclare_host_attribute(attrname)
 
 
-def _update_config_based_host_attributes():
-    def _compute_config_hash():
-        return hash(repr(config.tags.get_dict_format()) + repr(config.wato_host_attrs))
+_update_config_based_host_attributes_config_hash: Optional[str] = None
+
+
+def _update_config_based_host_attributes() -> None:
+    global _update_config_based_host_attributes_config_hash
+
+    def _compute_config_hash() -> str:
+        return str(hash(repr(config.tags.get_dict_format()))) + repr(config.wato_host_attrs)
 
     # The topic conversion needs to take place before the _compute_config_hash runs
     # The actual generated topics may be pre-1.5 converted topics
@@ -533,8 +540,7 @@ def _update_config_based_host_attributes():
     # If we do not convert the topics here, the config_hash comparison will always fail
     transform_pre_16_host_topics(config.wato_host_attrs)
 
-    if getattr(_update_config_based_host_attributes, "_config_hash",
-               None) == _compute_config_hash():
+    if _update_config_based_host_attributes_config_hash == _compute_config_hash():
         return  # No re-register needed :-)
 
     _clear_config_based_host_attributes()
@@ -544,7 +550,7 @@ def _update_config_based_host_attributes():
     from cmk.gui.watolib.hosts_and_folders import Folder  # pylint: disable=import-outside-toplevel
     Folder.invalidate_caches()
 
-    setattr(_update_config_based_host_attributes, "._config_hash", _compute_config_hash())
+    _update_config_based_host_attributes_config_hash = _compute_config_hash()
 
 
 # Make the config module initialize the host attributes after loading the config
@@ -875,13 +881,20 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, metaclass=abc.ABCMeta):
 class ABCHostAttributeHostTagList(ABCHostAttributeTag, metaclass=abc.ABCMeta):
     """A selection dropdown for a host tag"""
     def valuespec(self):
-        choices = self._tag_group.get_tag_choices()
-        return DropdownChoice(
-            title=self._tag_group.title,
-            choices=choices,
-            default_value=choices[0][0],
-            on_change="cmk.wato.fix_visibility();",
-            encode_value=False,
+        # Since encode_value=False is set it is not possible to use empty tag
+        # ID selections (Value: "None"). Transform that back and forth to make
+        # that work.
+        choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
+        return Transform(
+            DropdownChoice(
+                title=self._tag_group.title,
+                choices=choices,
+                default_value=choices[0][0],
+                on_change="cmk.wato.fix_visibility();",
+                encode_value=False,
+            ),
+            forth=lambda s: "" if s is None else s,
+            back=lambda s: None if s == "" else s,
         )
 
     @property

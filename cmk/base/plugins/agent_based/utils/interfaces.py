@@ -12,6 +12,7 @@ from dataclasses import (
 import time
 from typing import (
     Any,
+    Callable,
     Dict,
     Iterable,
     List,
@@ -24,7 +25,7 @@ from typing import (
     Union,
 )
 
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     check_levels,
     check_levels_predictive,
     get_average,
@@ -37,7 +38,7 @@ from ..agent_based_api.v0 import (
     render,
     Result,
     Service,
-    state,
+    State as state,
     type_defs,
 )
 
@@ -90,44 +91,48 @@ CHECK_DEFAULT_PARAMETERS = {
     "errors": (0.01, 0.1),
 }
 
-discovery_monitor_speed = True
-discovery_monitor_state = True
-
 
 @dataclass
-class PreInterface:
-    index: Union[str, Tuple[str, str]]
+class Interface:
+    index: str
     descr: str
-    type: str
-    speed: Union[str, float]
-    oper_status: Union[str, Tuple[str, str]]
-    in_octets: float
-    in_ucast: float
-    in_mcast: float
-    in_bcast: float
-    in_discards: float
-    in_errors: float
-    out_octets: float
-    out_ucast: float
-    out_mcast: float
-    out_bcast: float
-    out_discards: float
-    out_errors: float
-    out_qlen: float
     alias: str
-    phys_address: Union[Iterable[int], str]
-    oper_status_name: Optional[str] = None
+    type: str
+    speed: float = 0
+    oper_status: str = ''
+    in_octets: float = 0
+    in_ucast: float = 0
+    in_mcast: float = 0
+    in_bcast: float = 0
+    in_discards: float = 0
+    in_errors: float = 0
+    out_octets: float = 0
+    out_ucast: float = 0
+    out_mcast: float = 0
+    out_bcast: float = 0
+    out_discards: float = 0
+    out_errors: float = 0
+    out_qlen: float = 0
+    phys_address: Union[Iterable[int], str] = ''
+    oper_status_name: str = ''
     speed_as_text: str = ''
     group: Optional[str] = None
     node: Optional[str] = None
     admin_status: Optional[str] = None
 
+    def __post_init__(self) -> None:
+        self.finalize()
 
-class Interface(PreInterface):
-    index: str
-    speed: float
-    oper_status: str
-    oper_status_name: str
+    def finalize(self):
+        if not self.oper_status_name:
+            self.oper_status_name = statename(self.oper_status)
+
+        # Fix bug in TP Link switches
+        if self.speed > 9 * 1000 * 1000 * 1000 * 1000:
+            self.speed /= 10000
+
+        self.descr = cleanup_if_strings(self.descr)
+        self.alias = cleanup_if_strings(self.alias)
 
 
 Section = Sequence[Interface]
@@ -140,30 +145,16 @@ def saveint(i: Any) -> int:
         return 0
 
 
-def finalize_interface(pre_interface: PreInterface) -> Interface:
-    # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
-    # of just the ifOperStatus
-    if isinstance(pre_interface.oper_status, tuple):
-        pre_interface.oper_status, pre_interface.oper_status_name = pre_interface.oper_status
-    else:
-        pre_interface.oper_status_name = statename(pre_interface.oper_status)
-
-    if isinstance(pre_interface.index, tuple):
-        pre_interface.group, pre_interface.index = pre_interface.index
-
-    # Some devices (e.g. NetApp ONTAP) can report "auto" as speed
-    if pre_interface.speed == "auto":
-        pre_interface.speed_as_text = pre_interface.speed  # type: ignore[assignment]
-
-    # Fix bug in TP Link switches
-    pre_interface.speed = saveint(pre_interface.speed)
-    if pre_interface.speed > 9 * 1000 * 1000 * 1000 * 1000:
-        pre_interface.speed /= 10000
-
-    pre_interface.descr = cleanup_if_strings(pre_interface.descr)
-    pre_interface.alias = cleanup_if_strings(pre_interface.alias)
-
-    return Interface(**asdict(pre_interface))
+def mac_address_from_hexstring(hexstr: str) -> str:
+    r"""
+    >>> mac_address_from_hexstring('2e:27:06:b8:41:04')
+    ".'\x06¸A\x04"
+    >>> mac_address_from_hexstring('')
+    ''
+    """
+    if hexstr:
+        return "".join(chr(int(x, 16)) for x in hexstr.split(':'))
+    return ""
 
 
 # Remove 0 bytes from strings. They lead to problems e.g. here:
@@ -199,7 +190,6 @@ def statename(st: str) -> str:
         '6': 'not present',
         '7': 'lower layer down',
         '8': 'degraded',
-        '9': 'admin down',
     }
     return names.get(st, st)
 
@@ -359,7 +349,7 @@ def _compute_item(
     return item
 
 
-def _check_regex_match_conditions(
+def check_regex_match_conditions(
     name: str,
     what: Optional[Iterable[str]],
 ) -> bool:
@@ -386,9 +376,9 @@ def _check_single_matching_conditions(
     portstates = matching_conditions.get('portstates')
     admin_states = matching_conditions.get('admin_states')
 
-    return (_check_regex_match_conditions(interface.index, match_index) and
-            _check_regex_match_conditions(interface.alias, match_alias) and
-            _check_regex_match_conditions(interface.descr, match_desc) and
+    return (check_regex_match_conditions(interface.index, match_index) and
+            check_regex_match_conditions(interface.alias, match_alias) and
+            check_regex_match_conditions(interface.descr, match_desc) and
             (porttypes is None or interface.type in porttypes) and
             (portstates is None or interface.oper_status in portstates) and
             (admin_states is None or interface.admin_status is None or
@@ -422,14 +412,7 @@ def _check_group_matching_conditions(
         ) for exclusion_condition in group_configuration['exclusion_conditions'])
 
 
-class DiscoveredParams(TypedDict, total=False):
-    discovered_oper_status: Iterable[str]
-    discovered_admin_status: Iterable[str]
-    discovered_speed: float
-    aggregate: GroupConfiguration
-
-
-def _transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
+def transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
     # See cmk.gui.plugins.wato.check_parameters.if._transform_discovery_if_rules for more
     # information
 
@@ -477,7 +460,7 @@ def _transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
 
 
 def _groups_from_params(
-        discovery_params: Sequence[DiscoveryParams]) -> Dict[str, GroupConfiguration]:
+    discovery_params: Sequence[DiscoveryParams],) -> Dict[str, GroupConfiguration]:
     groups: Dict[str, GroupConfiguration] = {}
     inclusion_importances = {}
     exclusion_conditions = []
@@ -512,11 +495,11 @@ def _groups_from_params(
 def discover_interfaces(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     if len(section) == 0:
         return
 
-    rulesets = [_transform_discovery_rules(par) for par in params]
+    rulesets = [transform_discovery_rules(par) for par in params]
 
     pre_inventory = []
     seen_indices: Set[str] = set()
@@ -568,11 +551,10 @@ def discover_interfaces(
 
         # discover single interface
         if discover_single_interface and interface.index not in seen_indices:
-            discovered_params_single: DiscoveredParams = {}
-            if discovery_monitor_state:
-                discovered_params_single["discovered_oper_status"] = [interface.oper_status]
-            if discovery_monitor_speed:
-                discovered_params_single["discovered_speed"] = interface.speed
+            discovered_params_single = {
+                "discovered_oper_status": [interface.oper_status],
+                "discovered_speed": interface.speed,
+            }
             if interface.admin_status is not None:
                 discovered_params_single['discovered_admin_status'] = [interface.admin_status]
 
@@ -619,14 +601,11 @@ def discover_interfaces(
 
         # only discover non-empty groups
         if groups_has_members:
-            discovered_params_group: DiscoveredParams = {
+            discovered_params_group = {
                 "aggregate": group_configuration,
+                "discovered_oper_status": [group_oper_status],
+                "discovered_speed": group_speed,
             }
-
-            if discovery_monitor_state:
-                discovered_params_group["discovered_oper_status"] = [group_oper_status]
-            if discovery_monitor_speed:
-                discovered_params_group["discovered_speed"] = group_speed
 
             # Note: the group interface index is always set to 1
             pre_inventory.append((group_name, discovered_params_group, 1, False))
@@ -661,7 +640,8 @@ def _check_ungrouped_ifs(
     params: type_defs.Parameters,
     section: Section,
     timestamp: float,
-) -> type_defs.CheckGenerator:
+    input_is_rate: bool,
+) -> type_defs.CheckResult:
     """
     Check one or more ungrouped interfaces. In a non-cluster setup, only one interface will match
     the item and the results will simply be the output of check_single_interface. On a cluster,
@@ -682,6 +662,7 @@ def _check_ungrouped_ifs(
                         params,
                         interface,
                         timestamp=timestamp,
+                        input_is_rate=input_is_rate,
                     ))
             except IgnoreResultsError as excpt:
                 ignore_res_error = excpt
@@ -710,7 +691,8 @@ def _check_grouped_ifs(
     section: Section,
     group_name: str,
     timestamp: float,
-) -> type_defs.CheckGenerator:
+    input_is_rate: bool,
+) -> type_defs.CheckResult:
     """
     Grouped interfaces are combined into a single interface, which is then passed to
     check_single_interface.
@@ -721,7 +703,18 @@ def _check_grouped_ifs(
 
     for interface in section:
         if_member_item = _compute_item(
-            params["aggregate"]["member_appearance"],
+            params["aggregate"].get(
+                "member_appearance",
+                # This happens when someones upgrades from v1.6 to v1.7, where the structure of the
+                # discovered parameters changed. Interface groups defined by the user will stop
+                # working, users have to do a re-discovery in that case, as we wrote in werk #11361.
+                # However, we can still support groups defined already in the agent output, since
+                # these work purley by the group name.
+                params["aggregate"].get(
+                    "item_type",
+                    DISCOVERY_DEFAULT_PARAMETERS['discovery_single'][1]['item_appearance'],
+                ),
+            ),
             interface,
             section,
             item[0] == '0',
@@ -741,24 +734,8 @@ def _check_grouped_ifs(
     cumulated_interface = Interface(
         index=item,
         descr=item,
-        type="",
-        speed=0,
-        oper_status="",
-        in_octets=0,
-        in_ucast=0,
-        in_mcast=0,
-        in_bcast=0,
-        in_discards=0,
-        in_errors=0,
-        out_octets=0,
-        out_ucast=0,
-        out_mcast=0,
-        out_bcast=0,
-        out_discards=0,
-        out_errors=0,
-        out_qlen=0,
         alias="",
-        phys_address="",
+        type="",
     )
 
     num_up = 0
@@ -778,34 +755,37 @@ def _check_grouped_ifs(
             member_info['admin_status_name'] = statename(interface.admin_status)
         groups_node.append(member_info)
 
-        # Only these values are packed into counters
-        # We might need to enlarge this table
-        # However, more values leads to more MKCounterWrapped...
-        for name, counter in [
-            ("in", interface.in_octets),
-            ("inucast", interface.in_ucast),
-            ("inmcast", interface.in_mcast),
-            ("inbcast", interface.in_bcast),
-            ("indisc", interface.in_discards),
-            ("inerr", interface.in_errors),
-            ("out", interface.out_octets),
-            ("outucast", interface.out_ucast),
-            ("outmcast", interface.out_mcast),
-            ("outbcast", interface.out_bcast),
-            ("outdisc", interface.out_discards),
-            ("outerr", interface.out_errors),
-        ]:
-            try:
-                get_rate(
-                    value_store,
-                    _get_value_store_key(name, str(interface.node), str(idx)),
-                    timestamp,
-                    saveint(counter),
-                    raise_overflow=True,
-                )
-            except IgnoreResultsError:
-                yield IgnoreResults(value='Initializing counters')
-                # continue, other counters might wrap as well
+        if not input_is_rate:
+            # Only these values are packed into counters
+            # We might need to enlarge this table
+            # However, more values leads to more MKCounterWrapped...
+            for name, counter in [
+                ("in", interface.in_octets),
+                ("inucast", interface.in_ucast),
+                ("inmcast", interface.in_mcast),
+                ("inbcast", interface.in_bcast),
+                ("indisc", interface.in_discards),
+                ("inerr", interface.in_errors),
+                ("out", interface.out_octets),
+                ("outucast", interface.out_ucast),
+                ("outmcast", interface.out_mcast),
+                ("outbcast", interface.out_bcast),
+                ("outdisc", interface.out_discards),
+                ("outerr", interface.out_errors),
+            ]:
+                try:
+                    # We make sure that every group member has valid rates before adding up the
+                    # counters
+                    get_rate(
+                        value_store,
+                        _get_value_store_key(name, str(interface.node), str(idx)),
+                        timestamp,
+                        saveint(counter),
+                        raise_overflow=True,
+                    )
+                except IgnoreResultsError:
+                    yield IgnoreResults(value='Initializing counters')
+                    # continue, other counters might wrap as well
 
         # Add interface info to group info
         if is_up:
@@ -832,6 +812,7 @@ def _check_grouped_ifs(
         cumulated_interface.oper_status = "8"  # degraded
     else:
         cumulated_interface.oper_status = "2"  # down
+    cumulated_interface.oper_status_name = statename(cumulated_interface.oper_status)
 
     alias_info = []
     if len(nodes) > 1:
@@ -848,10 +829,11 @@ def _check_grouped_ifs(
     yield from check_single_interface(
         item,
         params,
-        finalize_interface(cumulated_interface),
+        cumulated_interface,
         group_members=group_members,
         group_name=group_name,
         timestamp=timestamp,
+        input_is_rate=input_is_rate,
         # the discovered speed corresponds to only one of the nodes, so it cannot be used for
         # interface groups on clusters; same for state
         use_discovered_state_and_speed=section[0].node is None,
@@ -864,7 +846,8 @@ def check_multiple_interfaces(
     section: Section,
     group_name: str = "Interface group",
     timestamp: Optional[float] = None,
-) -> type_defs.CheckGenerator:
+    input_is_rate: bool = False,
+) -> type_defs.CheckResult:
 
     if timestamp is None:
         timestamp = time.time()
@@ -876,6 +859,7 @@ def check_multiple_interfaces(
             section,
             group_name,
             timestamp,
+            input_is_rate,
         )
     else:
         yield from _check_ungrouped_ifs(
@@ -883,6 +867,7 @@ def check_multiple_interfaces(
             params,
             section,
             timestamp,
+            input_is_rate,
         )
 
 
@@ -953,7 +938,7 @@ def _transform_check_params(params: type_defs.Parameters) -> type_defs.Parameter
     try:
         states.remove('9')
         removed_port_state_9 = True
-    except ValueError:
+    except (ValueError, AttributeError):
         removed_port_state_9 = False
     if removed_port_state_9 and params_mutable.get('state') == []:
         del params_mutable['state']
@@ -978,6 +963,29 @@ def _transform_check_params(params: type_defs.Parameters) -> type_defs.Parameter
     return type_defs.Parameters(params_mutable)
 
 
+def _check_speed(interface: Interface, targetspeed: Optional[int]) -> Result:
+    """Check speed settings of interface
+
+    Only if speed information is available. This is not always the case.
+    """
+    if interface.speed:
+        speed_actual = render.nicspeed(interface.speed / 8)
+        speed_expected = ("" if (targetspeed is None or int(interface.speed) == targetspeed) else
+                          " (expected: %s)" % render.nicspeed(targetspeed / 8))
+        return Result(
+            state=state.WARN if speed_expected else state.OK,
+            summary=f"Speed: {speed_actual}{speed_expected}",
+        )
+
+    if targetspeed:
+        return Result(
+            state=state.OK,
+            summary="Speed: %s (assumed)" % render.nicspeed(targetspeed / 8),
+        )
+
+    return Result(state=state.OK, summary="Speed: %s" % (interface.speed_as_text or "unknown"))
+
+
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
 # One case of winperf_if appeared to indicate that in that case Errors = Discards.
 def check_single_interface(
@@ -989,7 +997,7 @@ def check_single_interface(
     timestamp: Optional[float] = None,
     input_is_rate: bool = False,
     use_discovered_state_and_speed: bool = True,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
     params = _transform_check_params(params)
 
@@ -1051,9 +1059,9 @@ def check_single_interface(
         else:
             # Display port number or alias in summary_interface if that is not part
             # of the service description anyway
-            if item.lstrip("0") == interface.index \
-                and (item == interface.alias or interface.alias == '') \
-                and (item == interface.descr or interface.descr == ''):  # description trivial
+            if ((item == interface.index or item.lstrip("0") == interface.index) and
+                (item == interface.alias or interface.alias == '') and
+                (item == interface.descr or interface.descr == '')):  # description trivial
                 info_interface = ""
             elif item == "%s %s" % (interface.alias,
                                     interface.index) and interface.descr != '':  # non-unique Alias
@@ -1074,10 +1082,11 @@ def check_single_interface(
             else:
                 info_interface = "On %s" % interface.node
 
-    yield Result(
-        state=state.OK,
-        summary=info_interface,
-    )
+    if info_interface:
+        yield Result(
+            state=state.OK,
+            notice=info_interface,
+        )
 
     info_oper_status, info_admin_status = _render_status_info_main_interface(
         interface.oper_status_name,
@@ -1090,7 +1099,7 @@ def check_single_interface(
             target_oper_states,
             _get_map_states(params.get("map_operstates", [])),
         ),
-        summary=info_oper_status,
+        notice=info_oper_status,
     )
 
     if info_admin_status:
@@ -1100,7 +1109,7 @@ def check_single_interface(
                 target_admin_states,
                 _get_map_states(params.get("map_admin_states", [])),
             ),
-            summary=info_admin_status,
+            notice=info_admin_status,
         )
 
     if group_members:
@@ -1121,42 +1130,21 @@ def check_single_interface(
 
         yield Result(
             state=state.OK,
-            summary='Members: %s' % ' '.join(infos_group),
+            notice='Members: %s' % ' '.join(infos_group),
         )
 
     if interface.phys_address:
         yield Result(
             state=state.OK,
-            summary='MAC: %s' % render_mac_address(interface.phys_address),
+            notice='MAC: %s' % render_mac_address(interface.phys_address),
         )
 
     # prepare reference speed for computing relative bandwidth usage
-    speed = int(interface.speed)
     ref_speed = None
-    if speed:
-        ref_speed = speed / 8.0
+    if interface.speed:
+        ref_speed = interface.speed / 8.0
     elif targetspeed:
         ref_speed = targetspeed / 8.0
-
-    # Check speed settings of interface, but only if speed information
-    # is available. This is not always the case.
-    mon_state = state.OK
-    if speed:
-        info_speed = render.nicspeed(speed / 8)
-        if targetspeed is not None and speed != targetspeed:
-            info_speed += " (wrong speed, expected: %s)" % render.nicspeed(targetspeed / 8)
-            mon_state = state.WARN
-    elif targetspeed:
-        info_speed = "assuming %s" % render.nicspeed(targetspeed / 8)
-    elif interface.speed_as_text:
-        info_speed = "speed %s" % interface.speed_as_text
-    else:
-        info_speed = "speed unknown"
-
-    yield Result(
-        state=mon_state,
-        summary=info_speed,
-    )
 
     # Convert the traffic levels to interface specific levels, for example where the percentage
     # levels are converted to absolute levels or assumed speeds of an interface are treated correctly
@@ -1224,6 +1212,7 @@ def check_single_interface(
 
     # if at least one counter wrapped, we do not handle the counters at all
     if caught_ignore_results_error:
+        yield _check_speed(interface, targetspeed)
         # If there is a threshold on the bandwidth, we cannot proceed
         # further (the check would be flapping to green on a wrap)
         if any(traffic_levels.values()):
@@ -1235,9 +1224,8 @@ def check_single_interface(
         'outqlen',
         interface.out_qlen,
     )
-
     if unit == 'Bit':
-        bandwidth_renderer = lambda v: render.nicspeed(v * 8)
+        bandwidth_renderer: Callable[[float], str] = render.nicspeed
     else:
         bandwidth_renderer = render.iobandwidth
 
@@ -1283,7 +1271,7 @@ def check_single_interface(
 
         # Check bandwidth thresholds incl. prediction
         if predictive:
-            result = list(
+            result, _metric, *ref_curve = list(
                 check_levels_predictive(
                     traffic,
                     levels=levels_predictive,
@@ -1291,32 +1279,29 @@ def check_single_interface(
                     render_func=bandwidth_renderer,
                     label=title,
                 ))
-            if len(result) == 3:
-                yield result[2]  # reference curve for predictive levels
+            assert isinstance(result, Result)
+            if ref_curve:
+                yield from ref_curve  # reference curve for predictive levels
         else:
-            result = list(
-                check_levels(
-                    traffic,
-                    levels_upper=levels_uppper,
-                    levels_lower=levels_lower,
-                    metric_name=dsname,
-                    render_func=bandwidth_renderer,
-                    label=title,
-                ))
-        next_result = result[0]
-
-        if speed:
-            perc_used = 100.0 * traffic / speed
-            assumed_info = ""
-            if assumed_speed_in or assumed_speed_out:
-                assumed_info = "/" + bandwidth_renderer(speed)
-            assert isinstance(next_result, Result)
-            next_result = Result(
-                state=next_result.state,
-                summary=next_result.summary + " (%.1f%%%s)" % (perc_used, assumed_info),
+            result, = check_levels(
+                traffic,
+                levels_upper=levels_uppper,
+                levels_lower=levels_lower,
+                render_func=bandwidth_renderer,
+                label=title,
             )
 
-        yield next_result
+        if speed:
+            perc_info = render.percent(100.0 * traffic / speed)
+            if assumed_speed_in or assumed_speed_out:
+                perc_info += "/" + bandwidth_renderer(speed)
+
+            yield Result(
+                state=result.state,
+                summary="%s (%s)" % (result.summary, perc_info),
+            )
+        else:
+            yield result
 
         # check error, broadcast, multicast and non-unicast packets and discards
         pacrate = urate + nurate + errorrate
@@ -1352,6 +1337,7 @@ def check_single_interface(
                             metric_name=dsname if text == "errors" else text,
                             render_func=render.percent,
                             label=infotxt,
+                            notice_only=True,
                         )
                     elif isinstance(params_crit, int):  # absolute levels
                         infotxt += " packets"
@@ -1364,6 +1350,7 @@ def check_single_interface(
                             metric_name=dsname,
                             render_func=lambda x: "%d" % x,
                             label=infotxt,
+                            notice_only=True,
                         )
 
         for _txt, _rate, _warn, _crit in [("non-unicast packets", nurate, nucast_warn, nucast_crit),
@@ -1376,14 +1363,16 @@ def check_single_interface(
                     metric_name=_txt,
                     render_func=lambda x: "%.2f/s" % x,
                     label="%s %s" % (what, _txt),
+                    notice_only=True,
                 )
+    yield _check_speed(interface, targetspeed)
 
 
 def cluster_check(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
     ifaces = [
         Interface(**{  # type: ignore[arg-type]

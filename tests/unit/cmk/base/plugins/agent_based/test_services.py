@@ -4,11 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import pytest  # type: ignore[import]
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
-    state,
+    State as state,
     Result,
 )
 import cmk.base.plugins.agent_based.services as services
@@ -20,38 +19,26 @@ STRING_TABLE = [
     ['app', 'pending', 'Windows App', 'Update'],
 ]
 
-PARSED = {
-    'WSearch': {
-        'description': 'Windows Search',
-        'start_type': 'demand',
-        'state': 'stopped'
-    },
-    'app': {
-        'description': 'Windows App Update',
-        'start_type': 'unknown',
-        'state': 'pending'
-    },
-    'wscsvc': {
-        'description': 'Security Center',
-        'start_type': 'auto',
-        'state': 'running'
-    },
-    'wuauserv': {
-        'description': 'Windows Update',
-        'start_type': 'disabled',
-        'state': 'stopped'
-    },
-}
+PARSED = [
+    services.WinService('wscsvc', 'running', 'auto', 'Security Center'),
+    services.WinService('WSearch', 'stopped', 'demand', 'Windows Search'),
+    services.WinService('wuauserv', 'stopped', 'disabled', 'Windows Update'),
+    services.WinService('app', 'pending', 'unknown', 'Windows App Update'),
+]
 
-PARSED_NODE = copy.deepcopy(PARSED)
-PARSED_NODE["app"] = {
-    'description': 'Windows App Update',
-    'start_type': 'unknown',
-    'state': 'running'
-}
+PARSED_NODE = [
+    services.WinService('wscsvc', 'running', 'auto', 'Security Center'),
+    services.WinService('WSearch', 'stopped', 'demand', 'Windows Search'),
+    services.WinService('wuauserv', 'stopped', 'disabled', 'Windows Update'),
+    services.WinService('app', 'running', 'unknown', 'Windows App Update'),
+]
 
-PARSED_AUTO = copy.deepcopy(PARSED)
-PARSED_AUTO["app"] = {'description': 'Windows App Update', 'start_type': 'auto', 'state': 'stopped'}
+PARSED_AUTO = [
+    services.WinService('wscsvc', 'running', 'auto', 'Security Center'),
+    services.WinService('WSearch', 'stopped', 'demand', 'Windows Search'),
+    services.WinService('wuauserv', 'stopped', 'disabled', 'Windows Update'),
+    services.WinService('app', 'stopped', 'auto', 'Windows App Update'),
+]
 
 
 def test_parse():
@@ -105,40 +92,39 @@ def test_discovery_windows_services(params, discovered_services):
 
 @pytest.mark.parametrize("item, params, yielded_results", [
     ("WSearch", services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS, [
-        Result(state=state.CRIT,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)')
+        Result(state=state.CRIT, summary='Windows Search: stopped (start type is demand)'),
     ]),
     ("WSearch", {
         "else": 1
     }, [
-        Result(state=state.WARN,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)')
+        Result(state=state.WARN, summary='Windows Search: stopped (start type is demand)'),
     ]),
     ("WSearch", {
         "states": [("stopped", None, 0)]
     }, [
-        Result(state=state.OK,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)')
+        Result(state=state.OK, summary='Windows Search: stopped (start type is demand)'),
     ]),
     ("WSearch", {
         "states": [(None, "demand", 1)]
     }, [
-        Result(state=state.WARN,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)')
+        Result(state=state.WARN, summary='Windows Search: stopped (start type is demand)'),
     ]),
     ("WSearch", {
         "additional_servicenames": ["wuauserv"]
     }, [
-        Result(state=state.CRIT,
-               summary='Windows Search: stopped (start type is demand)',
-               details='Windows Search: stopped (start type is demand)'),
-        Result(state=state.CRIT,
-               summary='Windows Update: stopped (start type is disabled)',
-               details='Windows Update: stopped (start type is disabled)')
+        Result(state=state.CRIT, summary='Windows Search: stopped (start type is demand)'),
+        Result(state=state.CRIT, summary='Windows Update: stopped (start type is disabled)'),
+    ]),
+    ("NonExistent", {
+        "states": [(None, "demand", 1)],
+    }, [
+        Result(state=state.CRIT, summary='service not found'),
+    ]),
+    ("NonExistent", {
+        "states": [(None, "demand", 1)],
+        "else": 0,
+    }, [
+        Result(state=state.OK, summary='service not found'),
     ]),
 ])
 def test_check_windows_services(item, params, yielded_results):
@@ -147,20 +133,16 @@ def test_check_windows_services(item, params, yielded_results):
 
 @pytest.mark.parametrize("item, params, yielded_results", [
     ("app", services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS, [
-        Result(state=state.OK,
-               summary='Windows App Update: running (start type is unknown)',
-               details='Windows App Update: running (start type is unknown)'),
-        Result(state=state.OK, summary='Running on: node2', details='Running on: node2')
+        Result(state=state.OK, summary='Windows App Update: running (start type is unknown)'),
+        Result(state=state.OK, summary='Running on: node2')
     ]),
     ("app", {
         "states": [("running", None, 2)]
     }, [
-        Result(state=state.CRIT,
-               summary='Windows App Update: pending (start type is unknown)',
-               details='Windows App Update: pending (start type is unknown)'),
+        Result(state=state.CRIT, summary='Windows App Update: running (start type is unknown)'),
     ]),
     ("non-existant-service", services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS, [
-        Result(state=state.CRIT, summary='service not found', details='service not found'),
+        Result(state=state.CRIT, summary='service not found'),
     ]),
 ])
 def test_cluster_windows_services(item, params, yielded_results):
@@ -179,32 +161,45 @@ def test_discovery_services_summary():
     (services.SERVICES_SUMMARY_DEFAULT_PARAMETERS, [
         Result(
             state=state.OK,
-            summary=
-            '4 services, 2 services in autostart - of which 1 services are stopped (app), 0 services stopped but ignored',
-            details=
-            '4 services, 2 services in autostart - of which 1 services are stopped (app), 0 services stopped but ignored'
-        )
+            summary='Autostart services: 2',
+            details='Autostart services: 2\nServices found in total: 4',
+        ),
+        Result(
+            state=state.OK,
+            summary='Stopped services: 1',
+            details='Stopped services: app',
+        ),
     ]),
     ({
         "state_if_stopped": 2
     }, [
         Result(
+            state=state.OK,
+            summary='Autostart services: 2',
+            details='Autostart services: 2\nServices found in total: 4',
+        ),
+        Result(
             state=state.CRIT,
-            summary=
-            '4 services, 2 services in autostart - of which 1 services are stopped (app), 0 services stopped but ignored',
-            details=
-            '4 services, 2 services in autostart - of which 1 services are stopped (app), 0 services stopped but ignored'
-        )
+            summary='Stopped services: 1',
+            details='Stopped services: app',
+        ),
     ]),
     ({
         "ignored": ["app"]
     }, [
         Result(
             state=state.OK,
-            summary=
-            '4 services, 2 services in autostart - of which 0 services are stopped, 1 services stopped but ignored',
-            details=
-            '4 services, 2 services in autostart - of which 0 services are stopped, 1 services stopped but ignored'
+            summary='Autostart services: 2',
+            details='Autostart services: 2\nServices found in total: 4',
+        ),
+        Result(
+            state=state.OK,
+            summary='Stopped services: 0',
+            details='Stopped services: 0',
+        ),
+        Result(
+            state=state.OK,
+            notice='Stopped but ignored: 1',
         )
     ]),
 ])

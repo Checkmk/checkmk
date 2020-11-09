@@ -10,17 +10,32 @@ export class TabsBar {
     }
 
     initialize() {
-        this._nav = this._div_selection.append("nav").attr("role", "navigation").classed("main-navigation", true);
+        this._nav = this._div_selection
+            .append("nav")
+            .attr("role", "navigation")
+            .classed("main-navigation", true);
         this.main_content = this._div_selection.append("div").classed("main-content", true);
 
         this._register_tabs();
 
         this._ul = this._nav.append("ul");
-        let a_selection = this._ul.selectAll("li").data(this._tabs_list).enter().append("li").each((d, idx, nodes) => {
-            d3.select(nodes[idx]).classed(d.tab_id(), true);
-        }).on("click", () => this._tab_clicked()).append("a").attr("href", d => "#" + d.tab_id()).style("pointer-events", "none");
+        let a_selection = this._ul
+            .selectAll("li")
+            .data(this._tabs_list)
+            .enter()
+            .append("li")
+            .each((d, idx, nodes) => {
+                d3.select(nodes[idx]).classed(d.tab_id(), true);
+            })
+            .on("click", () => this._tab_clicked())
+            .append("a")
+            .attr("href", d => "#" + d.tab_id())
+            .style("pointer-events", "none");
 
-        a_selection.append("span").classed("noselect", true).text(d => d.name());
+        a_selection
+            .append("span")
+            .classed("noselect", true)
+            .text(d => d.name());
     }
 
     _register_tabs() {
@@ -55,8 +70,7 @@ export class TabsBar {
 
         // Deactivate other tabs
         for (let tab_id in this._tabs_list) {
-            if (tab_id == enable_tab_id)
-                continue;
+            if (tab_id == enable_tab_id) continue;
 
             this._tabs_list[tab_id].deactivate();
         }
@@ -71,7 +85,11 @@ export class TabsBar {
 export class Tab {
     constructor(tabs_bar) {
         this._tabs_bar = tabs_bar;
-        this._tab_selection = tabs_bar.main_content.append("div").attr("id", this.tab_id()).classed("cmk_tab_element", true).datum(this);
+        this._tab_selection = tabs_bar.main_content
+            .append("div")
+            .attr("id", this.tab_id())
+            .classed("cmk_tab_element", true)
+            .datum(this);
     }
 
     // Internal ID

@@ -21,6 +21,7 @@ import cmk.gui.pages
 import cmk.gui.weblib as weblib
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
+
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -51,6 +52,9 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
     mode_registry,
+    redirect,
+    mode_url,
+    flash,
 )
 
 # Was not able to get determine the type of csv._reader / _csv.reader
@@ -221,6 +225,7 @@ class ModeBulkImport(WatoMode):
         num_succeeded, num_failed = 0, 0
         fail_messages = []
         selected = []
+        imported_hosts = []
 
         for row in csv_reader:
             if not row:
@@ -228,13 +233,19 @@ class ModeBulkImport(WatoMode):
 
             host_name, attributes = self._get_host_info_from_row(row)
             try:
-                watolib.Folder.current().create_hosts([(host_name, attributes, None)])
+                watolib.Folder.current().create_hosts(
+                    [(host_name, attributes, None)],
+                    bake_hosts=False,
+                )
+                imported_hosts.append(host_name)
                 selected.append('_c_%s' % host_name)
                 num_succeeded += 1
             except Exception as e:
                 fail_messages.append(
                     _("Failed to create a host from line %d: %s") % (csv_reader.line_num, e))
                 num_failed += 1
+
+        watolib.hosts_and_folders.try_bake_agents_for_hosts(imported_hosts)
 
         self._delete_csv_file()
 
@@ -251,11 +262,9 @@ class ModeBulkImport(WatoMode):
             config.user.set_rowselection(weblib.selection_id(),
                                          'wato-folder-/' + watolib.Folder.current().path(),
                                          selected, 'set')
-            html.request.set_var('mode', 'bulkinventory')
-            html.request.set_var('_bulk_inventory', '1')
-            html.request.set_var('show_checkboxes', '1')
-            return "bulkinventory"
-        return "folder", msg
+            return redirect(mode_url("bulkinventory", _bulk_inventory='1', show_checkboxes='1'))
+        flash(msg)
+        return redirect(mode_url("folder"))
 
     def _delete_csv_file(self) -> None:
         self._file_path().unlink()

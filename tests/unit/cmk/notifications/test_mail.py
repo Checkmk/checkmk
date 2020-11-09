@@ -263,8 +263,8 @@ Service:             CPU utilization
 Event:               OK -> WARN
 Address:             127.0.0.1
 Date / Time:         Wed Mar 20 16:51:46 CET 2019
-Plugin Output:       &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok (!)
-Additional Output:   &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;(!)
+Summary:             &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok (!)
+Details:             &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;(!)
 another line\\nlast line
 Host Metrics:        \n\
 Service Metrics:     \n\
@@ -390,7 +390,7 @@ Host:                heute (heute)
 Event:               DOWN -> UP
 Address:             127.0.0.1
 Date / Time:         Fri Aug 23 11:13:17 CEST 2019
-Plugin Output:       Packet received via smart PING
+Summary:             Packet received via smart PING
 Metrics:             \n\
 """
 

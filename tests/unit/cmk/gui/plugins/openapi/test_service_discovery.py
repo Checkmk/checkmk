@@ -345,7 +345,7 @@ def test_openapi_discovery(wsgi_app, with_automation_user, suppress_automation_c
     _host_created = wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "root"}',
+        params='{"host_name": "foobar", "folder": "/"}',
         status=200,
         content_type='application/json',
     )
@@ -357,13 +357,4 @@ def test_openapi_discovery(wsgi_app, with_automation_user, suppress_automation_c
         status=204
     )
 
-    resp = wsgi_app.call_method(
-        'get',
-        base + "/domain-types/service/collections/services",
-        params={
-            'host': 'foobar',
-            'discovery_state': "undecided"
-        },
-        status=200,
-    )
-    assert 'bcf2839b714c2f1aebf2cd0d333b6e84b45d6b0cce1f0fd9f106fb58c7cc7d2e' in resp.json["members"]
+    # TODO: Unify and test services collections

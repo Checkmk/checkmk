@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['levels_azure_usagedetails'] = {}
 
 
@@ -47,7 +48,6 @@ check_info['azure_usagedetails'] = {
     'inventory_function': discover(),
     'check_function': check_azure_usagedetails,
     'service_description': "Costs %s",
-    'includes': ['azure.include'],
     'default_levels_variable': 'levels_azure_usagedetails',
     'group': 'azure_usagedetails',
     'has_perfdata': True,

@@ -5,20 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Union, Tuple, List, Optional, Type
+import http.client
+from typing import List, Optional, Type
+
+from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import PageMenu
-from cmk.gui.type_defs import MegaMenu
+from cmk.gui.type_defs import MegaMenu, HTTPVariables
 from cmk.gui.main_menu import mega_menu_registry
 
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 
-NewMode = Union[None, bool, str]
-ActionResult = Union[NewMode, Tuple[NewMode, str]]
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect
+
+ActionResult = Optional[FinalizeRequest]
 
 
 class WatoMode(metaclass=abc.ABCMeta):
@@ -40,6 +45,13 @@ class WatoMode(metaclass=abc.ABCMeta):
     def name(cls) -> str:
         """Wato wide unique mode name which is used to access this mode"""
         raise NotImplementedError("%s misses name()" % cls.__name__)
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        """Create a URL pointing to this mode (with all needed vars)"""
+        get_vars: HTTPVariables = [("mode", cls.name())]
+        get_vars += list(kwargs.items())
+        return makeuri_contextless(request, get_vars, filename="wato.py")
 
     @classmethod
     def parent_mode(cls) -> Optional[Type["WatoMode"]]:
@@ -100,7 +112,7 @@ class WatoMode(metaclass=abc.ABCMeta):
         This can be useful when a mode needs some more contextual information
         to link to the correct page.
         """
-        return html.makeuri_contextless([("mode", self.name())], filename="wato.py")
+        return self.mode_url()
 
     def _topic_breadcrumb_item(self) -> Optional[BreadcrumbItem]:
         """Return the BreadcrumbItem for the topic of this mode
@@ -145,3 +157,27 @@ class WatoMode(metaclass=abc.ABCMeta):
 
     def handle_page(self) -> None:
         return self.page()
+
+
+class ModeRegistry(Registry[Type[WatoMode]]):
+    def plugin_name(self, instance):
+        return instance.name()
+
+
+mode_registry = ModeRegistry()
+
+
+def mode_url(mode_name: str, **kwargs: str) -> str:
+    """Returns an URL pointing to the given WATO mode
+
+    To be able to link some modes, there are context information needed, which are need to be
+    gathered from the current request variables.
+    """
+    return mode_registry[mode_name].mode_url(**kwargs)
+
+
+def redirect(location: str, code: int = http.client.FOUND) -> HTTPRedirect:
+    """Returns an object triggering a redirect to another page
+    Similar to flasks redirect method.
+    """
+    return HTTPRedirect(location, code=code)

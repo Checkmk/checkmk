@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #    UCD-SNMP-MIB::ssCpuRawUser.0 = Counter32: 219998591
 #    UCD-SNMP-MIB::ssCpuRawNice.0 = Counter32: 0
 #    UCD-SNMP-MIB::ssCpuRawSystem.0 = Counter32: 98206536
@@ -56,13 +58,14 @@ def check_ucd_cpu_util(item, params, parsed):
     if error != 'systemStats':
         yield 1, 'Error: %s' % error
 
-    cpu_ticks = cpu_info(['cpu'] + parsed['raw_cpu_ticks'])
+    cpu_ticks = CPUInfo('cpu', *parsed['raw_cpu_ticks'])
     for result in check_cpu_util_unix(cpu_ticks, params):
         yield result
 
-    perfdata = [('read_blocks', get_rate('io_received', now,
-                                         parsed['raw_io_received']), None, None),
-                ('write_blocks', get_rate('io_send', now, parsed['raw_io_send']), None, None)]
+    perfdata = [
+        ('read_blocks', get_rate('io_received', now, parsed['raw_io_received']), None, None),
+        ('write_blocks', get_rate('io_send', now, parsed['raw_io_send']), None, None),
+    ]
     yield 0, '', perfdata
 
 
@@ -87,6 +90,5 @@ check_info["ucd_cpu_util"] = {
             "61",  # ssCpuRawSoftIRQ
         ]),
     'snmp_scan_function': prefer_hr_else_ucd,
-    'includes': ["ucd_hr.include", "cpu_util.include"],
     'group': 'cpu_iowait',
 }

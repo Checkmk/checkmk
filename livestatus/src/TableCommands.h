@@ -11,6 +11,7 @@
 #include <string>
 
 #include "Table.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Query;
 
@@ -22,7 +23,8 @@ public:
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
-    static void addColumns(Table *table, const std::string &prefix, int offset);
+    static void addColumns(Table *table, const std::string &prefix,
+                           const ColumnOffsets &offsets);
 };
 
 #endif  // TableCommands_h

@@ -35,7 +35,7 @@ check_metrics["check_mk_active-icmp"] = {
         "scale": m
     },
 }
-# This metric is not for an official Check_MK check
+# This metric is not for an official Checkmk check
 # It may be provided by an check_icmp check configured as mrpe
 check_metrics["check_icmp"] = {
     "~.*rta": {
@@ -272,7 +272,7 @@ check_metrics["check_mk-ibm_svc_nodestats_diskio"] = {
 memory_simple_translation = {
     "memory_used": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
 }
 check_metrics["check_mk-hp_procurve_mem"] = memory_simple_translation
@@ -283,7 +283,7 @@ ram_used_swap_translation = {
     "ramused": {
         "name": "mem_used",
         "scale": MB,
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
     "mem_used_percent": {
         "auto_graph": False,
@@ -291,13 +291,13 @@ ram_used_swap_translation = {
     "swapused": {
         "name": "swap_used",
         "scale": MB,
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
     "memused": {
         "name": "mem_lnx_total_used",
         "auto_graph": False,
         "scale": MB,
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
     "mem_lnx_total_used": {
         "auto_graph": False,
@@ -308,22 +308,22 @@ ram_used_swap_translation = {
     },
     "shared": {
         "name": "mem_lnx_shmem",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
     "pagetables": {
         "name": "mem_lnx_page_tables",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
     "mapped": {
         "name": "mem_lnx_mapped",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
     "committed_as": {
         "name": "mem_lnx_committed_as",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
 }
@@ -431,7 +431,7 @@ check_metrics["check_mk-mem_win"] = {
     "memory": {
         "name": "mem_used",
         "scale": MB,
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "pagefile": {
         "name": "pagefile_used",
@@ -455,7 +455,7 @@ check_metrics["check_mk-mem_win"] = {
 check_metrics["check_mk-brocade_mlx_module_mem"] = {
     "memused": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
 }
 check_metrics["check_mk-jolokia_metrics_mem"] = {
@@ -693,7 +693,7 @@ df_translation = {
     "~(?!%s).*$" % "|".join(df_basic_perfvarnames): {
         "name": "fs_used",
         "scale": MB,
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "fs_used": {
         "scale": MB
@@ -764,8 +764,10 @@ check_metrics["check_mk-numble_volumes"] = df_translation
 check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation
 check_metrics["check_mk-k8s_stats_fs"] = df_translation
+check_metrics["check_mk-sap_hana_diskusage"] = df_translation
 check_metrics["check_mk-fjdarye200_pools"] = df_translation
 check_metrics["check_mk-db2_logsizes"] = df_translation
+check_metrics["check_mk-dell_compellent_folder"] = df_translation
 check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_used": {
         "scale": MB
@@ -908,7 +910,6 @@ check_metrics["check_mk-fritz"] = if_translation
 check_metrics["check_mk-fritz_wan_if"] = if_translation
 check_metrics["check_mk-hitachi_hnas_fc_if"] = if_translation
 check_metrics["check_mk-if64"] = if_translation
-check_metrics["check_mk-if64adm"] = if_translation
 check_metrics["check_mk-hpux_if"] = if_translation
 check_metrics["check_mk-if64_tplink"] = if_translation
 check_metrics["check_mk-if_lancom"] = if_translation
@@ -1283,7 +1284,7 @@ check_metrics["check_mk-ibm_svc_systemstats_cache"] = {
 mem_vsphere_hostsystem = {
     "usage": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "mem_total": {
         "auto_graph": False
@@ -1311,7 +1312,7 @@ check_metrics["check_mk-ibm_svc_host"] = {
 juniper_mem = {
     "usage": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
 }
 check_metrics["check_mk-juniper_screenos_mem"] = juniper_mem
@@ -1669,7 +1670,7 @@ check_metrics["check_mk-db2_logsize"] = {
     "~[_/]": {
         "name": "fs_used",
         "scale": MB,
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "fs_used": {
         "scale": MB
@@ -1987,7 +1988,6 @@ check_metrics["check_mk-smart_stats"] = {
     },
 }
 check_metrics["check_mk-ps"] = ps_translation
-check_metrics["check_mk-ps_perf"] = ps_translation
 check_metrics["check_mk-mssql_counters_sqlstats"] = {
     "batch_requests/sec": {
         "name": "requests_per_second"
@@ -2004,10 +2004,46 @@ check_metrics["check_mk-mssql_counters_file_sizes"] = {
         "name": "log_files_total"
     },
 }
+check_metrics["check_mk-mssql_counters_locks"] = {
+    "lock_requests/sec": {
+        "name": "lock_requests_per_second"
+    },
+    "lock_timeouts/sec": {
+        "name": "lock_timeouts_per_second"
+    },
+    "number_of_deadlocks/sec": {
+        "name": "number_of_deadlocks_per_second"
+    },
+    "lock_waits/sec": {
+        "name": "lock_waits_per_second"
+    },
+}
+check_metrics["check_mk-mssql_counters_pageactivity"] = {
+    "page_reads/sec": {
+        "name": "page_reads_per_second"
+    },
+    "page_writes/sec": {
+        "name": "page_writes_per_second"
+    },
+    "page_lookups/sec": {
+        "name": "page_lookups_per_second"
+    },
+}
+check_metrics["check_mk-mssql_counters_transactions"] = {
+    "transactions/sec": {
+        "name": "transactions_per_second"
+    },
+    "write_transactions/sec": {
+        "name": "write_transactions_per_second"
+    },
+    "tracked_transactions/sec": {
+        "name": "tracked_transactions_per_second"
+    },
+}
 cisco_mem_translation = {
     "mem_used": {
         "name": "mem_used_percent",
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
 }
 check_metrics["check_mk-cisco_cpu_memory"] = cisco_mem_translation

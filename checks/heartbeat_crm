@@ -57,27 +57,40 @@ def heartbeat_crm_parse_general(info):
     dc = None
     num_nodes = None
     num_resources = None
-    for line in info:
+    for raw_line in info:
+        # lines are prefixed with _* in pacemaker versions 2.0.3, e.g.:
+        # _* Current DC: ha02 (version 2.0.3-5.el8_2.1-4b1f869f0f)
+        line = raw_line[1:] if not raw_line[0].isalnum() else raw_line
         line_txt = ' '.join(line)
+        title = line_txt.split(':', 1)[0]
 
-        if line_txt.startswith("Last updated:"):
+        if title == "Last updated":
             if "Last change:" in line_txt:
                 # Some versions seem to combine both lines
                 last_updated = line_txt[:line_txt.index("Last change:")].split(": ")[1].strip()
             else:
                 last_updated = ' '.join(line[2:])
+            continue
 
-        elif line_txt.startswith('Current DC:'):
+        if title == 'Current DC':
             dc = line[2]
+            continue
 
-        elif "nodes and" in line_txt and "resources configured" in line_txt:
+        if "nodes and" in line_txt and "resources configured" in line_txt:
             # Some versions put number of nodes and resources in one line
             num_nodes = int(line[0])
             num_resources = int(line[3])
+            continue
 
-        elif ' '.join(line[1:3]).rstrip('.,').lower() == 'nodes configured':
+        if 'nodes configured' in line_txt.lower():
             num_nodes = int(line[0])
-        elif ' '.join(line[1:3]).rstrip('.,').lower() == 'resources configured':
+            continue
+
+        if 'resources configured' in line_txt.lower(
+        ) or 'resource instances configured' in line_txt.lower():
+            # outputs may vary:
+            # pacemaker version < 2.0.3: 21 Resources configured.
+            # pacemaker version = 2.0.3:  3 resource instances configured
             num_resources = int(line[0])
 
     return last_updated, dc, num_nodes, num_resources
@@ -141,8 +154,9 @@ def check_heartbeat_crm(_no_item, params, info):
 
     first_line = u' '.join(info[0])
     if first_line.lower().startswith(
-            "critical") or 'connection to cluster failed' in first_line.lower():
+        ("critical", "error:")) or 'connection to cluster failed' in first_line.lower():
         yield 2, first_line
+        return
 
     last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
 

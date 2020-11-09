@@ -3,13 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+VERSION="2.0.0i2"
+
 # sample output of pgrep command
 # 1051 /usr/bin/redis-server 127.0.0.1:6380
 # 1324 /usr/bin/redis-server 127.0.0.1:6379
 
 # example cfg file /etc/check_mk/mk_redis.cfg
 #
-# REDIS_INSTANCES=(My_First_Redis My_Second_Redis)
+# REDIS_INSTANCES=(My_First_Redis My_Second_Redis My_socket_Redis)
 #
 # REDIS_HOST_My_First_Redis="127.0.0.1"
 # REDIS_PORT_My_First_Redis="6380"
@@ -18,16 +22,50 @@
 # REDIS_HOST_My_Second_Redis="127.0.0.1"
 # REDIS_PORT_My_Second_Redis="6379"
 
+# REDIS_HOST_My_socket_Redis="/var/redis/redis.sock"
+# REDIS_PORT_My_socket_Redis="unix-socket"
+
 set -e -o pipefail
 
 REDIS_INSTANCES=()
 IS_DETECTED=false
+REDIS_CLI_CMD=${REDIS_CLI_CMD:-redis-cli} # To be overloaded by tests
+WAITMAX_CMD=${WAITMAX_CMD:-waitmax}       # To be overloaded by tests
 
-# source optional configuration file
-if [ -e "$MK_CONFDIR/mk_redis.cfg" ]; then
-    # shellcheck disable=SC1090
-    . "$MK_CONFDIR/mk_redis.cfg"
-fi
+load_config() {
+    # source optional configuration file
+    if [ -e "$MK_CONFDIR/mk_redis.cfg" ]; then
+        # shellcheck disable=SC1090
+        . "$MK_CONFDIR/mk_redis.cfg"
+    fi
+}
+
+redis_args() {
+    INSTANCE=$1
+
+    HOST="REDIS_HOST_$INSTANCE"
+    PORT="REDIS_PORT_$INSTANCE"
+    PASSWORD="REDIS_PASSWORD_$INSTANCE"
+
+    # if autodetection is used, rewrite instance name for section output
+    if [[ "$IS_DETECTED" == true ]]; then
+        INSTANCE="${!HOST};${!PORT}"
+    fi
+
+    if [[ "${!PORT}" == "unix-socket" ]]; then
+        REDIS_ARGS="-s ${!HOST}"
+    else
+        REDIS_ARGS="-h ${!HOST} -p ${!PORT}"
+    fi
+
+    if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
+        REDIS_ARGS+=" -a ${!PASSWORD}"
+    fi
+
+    REDIS_ARGS+=" info"
+}
+
+load_config
 
 # if no servers in config file, try to detect
 if [ ${#REDIS_INSTANCES[@]} -eq 0 ]; then
@@ -61,25 +99,11 @@ else
 fi
 
 for INSTANCE in ${REDIS_INSTANCES[*]}; do
-    HOST="REDIS_HOST_$INSTANCE"
-    PORT="REDIS_PORT_$INSTANCE"
-    PASSWORD="REDIS_PASSWORD_$INSTANCE"
-
-    if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
-        REDIS_CMD="waitmax 3 redis-cli -h ${!HOST} -p ${!PORT} -a ${!PASSWORD} info"
-    else
-        REDIS_CMD="waitmax 3 redis-cli -h ${!HOST} -p ${!PORT} info"
-    fi
-
-    # if autodetection is used, rewrite instance name for section output
-    if [[ "$IS_DETECTED" == true ]]; then
-        INSTANCE="${!HOST};${!PORT}"
-    fi
-
+    redis_args $INSTANCE
     # print server section
     echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
     # execute command
-    $REDIS_CMD
+    $WAITMAX_CMD 3 $REDIS_CLI_CMD $REDIS_ARGS
     echo
 done

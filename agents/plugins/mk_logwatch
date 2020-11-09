@@ -20,6 +20,8 @@ You should find an example configuration file at
 
 from __future__ import with_statement
 
+__version__ = "2.0.0i2"
+
 import sys
 if sys.version_info < (2, 6):
     sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")

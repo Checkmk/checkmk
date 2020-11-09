@@ -29,19 +29,20 @@ from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     get_hostnames_from_checkboxes,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.valuespec import (
+    DropdownChoice,
     TextUnicode,
     TextAscii,
     ValueSpec,
@@ -59,7 +60,9 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_display_options_dropdown,
     make_form_submit_link,
+    make_confirmed_form_submit_link,
 )
+from cmk.gui.utils.urls import makeuri, make_confirm_link
 
 
 def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:
@@ -125,24 +128,8 @@ class ModeFolder(WatoMode):
                     title=_("Folder"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Folders"),
+                            title=_("Folder"),
                             entries=list(self._page_menu_entries_this_folder()),
-                        ),
-                        PageMenuTopic(
-                            title=_("Host settings"),
-                            entries=list(self._page_menu_entries_host_settings()),
-                        ),
-                        PageMenuTopic(
-                            title=_("Service settings"),
-                            entries=list(self._page_menu_entries_service_settings()),
-                        ),
-                        PageMenuTopic(
-                            title=_("Agent settings"),
-                            entries=list(self._page_menu_entries_agents()),
-                        ),
-                        PageMenuTopic(
-                            title=_("User interface settings"),
-                            entries=list(self._page_menu_entries_user_interface()),
                         ),
                     ],
                 ),
@@ -158,6 +145,7 @@ class ModeFolder(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(placeholder=_("Filter hosts")),
         )
 
         self._extend_display_dropdown(menu)
@@ -180,13 +168,6 @@ class ModeFolder(WatoMode):
                 entries=list(self._page_menu_entries_search()),
             ))
 
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Filter hosts"),
-                entries=list(self._page_menu_entries_filter()),
-            ))
-
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
         menu.add_manual_reference(title=_("Host administration"), article_name="wato_hosts")
         menu.add_manual_reference(title=_("Beginner's guide: Host folder structures"),
@@ -207,6 +188,17 @@ class ModeFolder(WatoMode):
     def _search_folder_page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
             dropdowns=[
+                PageMenuDropdown(
+                    name="hosts",
+                    title=_("Hosts"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("On selected hosts"),
+                            entries=list(self._page_menu_entries_selected_hosts()),
+                        ),
+                        make_checkbox_selection_topic(),
+                    ],
+                ),
                 PageMenuDropdown(
                     name="search",
                     title=_("Search"),
@@ -304,9 +296,10 @@ class ModeFolder(WatoMode):
                 yield PageMenuEntry(
                     title=_("Delete hosts"),
                     icon_name="delete",
-                    item=make_form_submit_link(
+                    item=make_confirmed_form_submit_link(
                         form_name="hosts",
                         button_name="_bulk_delete",
+                        message=_("Do you really want to delete the selected hosts?"),
                     ),
                 )
 
@@ -361,16 +354,20 @@ class ModeFolder(WatoMode):
                     yield PageMenuEntry(
                         title=_("Move to target folders"),
                         icon_name="move",
-                        item=make_form_submit_link(
+                        item=make_confirmed_form_submit_link(
                             form_name="hosts",
                             button_name="_bulk_movetotarget",
+                            message=_('You are going to move the selected hosts to folders '
+                                      'representing their original folder location in the system '
+                                      'you did the import from. Please make sure that you have '
+                                      'done an <b>inventory</b> before moving the hosts.'),
                         ),
                     )
 
     def _page_menu_entries_this_folder(self) -> Iterator[PageMenuEntry]:
         if self._folder.may("read"):
             yield PageMenuEntry(
-                title=_("Folder properties"),
+                title=_("Properties"),
                 icon_name="edit",
                 item=make_simple_link(self._folder.edit_url(backfolder=self._folder)),
             )
@@ -387,120 +384,19 @@ class ModeFolder(WatoMode):
 
         yield make_folder_status_link(watolib.Folder.current(), view_name="allhosts")
 
-    def _page_menu_entries_host_settings(self) -> Iterator[PageMenuEntry]:
-        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
-            return
-
-        yield PageMenuEntry(
-            title=_("Monitoring settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "monconf")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("HW/SW inventory"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "inventory")])),
-            is_advanced=True,
-        )
-
-    def _page_menu_entries_service_settings(self) -> Iterator[PageMenuEntry]:
-        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
-            return
-
-        yield PageMenuEntry(
-            title=_("Monitoring settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "monconf")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Discovery settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "checkparams")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Check network settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "activechecks")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Integrate Nagios plugins"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "custom_checks")])),
-            is_advanced=True,
-        )
-
-        yield PageMenuEntry(
-            title=_("Manual services"),
-            icon_name="rulesets",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "static_checks")])),
-            is_advanced=True,
-        )
-
-    def _page_menu_entries_agents(self) -> Iterator[PageMenuEntry]:
-        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
-            return
-
-        yield PageMenuEntry(
-            title=_("VM, Cloud, Container"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"),
-                                                ("group", "vm_cloud_container")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Other integrations"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"),
-                                                ("group", "datasource_programs")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("Custom integrations"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"),
-                                                ("group", "custom_integrations")])),
-            is_advanced=True,
-        )
-
-        yield PageMenuEntry(
-            title=_("Agent access settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "agent")])),
-        )
-
-        yield PageMenuEntry(
-            title=_("SNMP settings"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"), ("group", "snmp")])),
-        )
-
-    def _page_menu_entries_user_interface(self) -> Iterator[PageMenuEntry]:
-        if not config.user.may("wato.rulesets") and not config.user.may("wato.seeall"):
-            return
-
-        yield PageMenuEntry(
-            title=_("User interface"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                watolib.folder_preserving_link([("mode", "rulesets"),
-                                                ("group", "user_interface")])),
-            is_advanced=True,
-        )
+        if config.user.may("wato.rulesets") or config.user.may("wato.seeall"):
+            yield PageMenuEntry(
+                title=_("Rules"),
+                icon_name="rulesets",
+                item=make_simple_link(
+                    watolib.folder_preserving_link([
+                        ("mode", "rule_search"),
+                        ("filled_in", "rule_search"),
+                        ("folder", watolib.Folder.current().path()),
+                        ("search_p_ruleset_used", DropdownChoice.option_id(True)),
+                        ("search_p_ruleset_used_USE", "on"),
+                    ])),
+            )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
@@ -521,15 +417,8 @@ class ModeFolder(WatoMode):
                 icon_name="dcd_connections",
                 item=make_simple_link(watolib.folder_preserving_link([("mode", "dcd_connections")
                                                                      ])),
-                is_advanced=True,
+                is_show_more=True,
             )
-
-    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title="",
-            icon_name="trans",
-            item=PageMenuSearch(),
-        )
 
     def _page_menu_entries_search(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
@@ -549,35 +438,36 @@ class ModeFolder(WatoMode):
                 icon_name="trans",
                 item=PageMenuCheckbox(
                     is_checked=setting,
-                    check_url=html.makeuri([(toggle_id, "1")]),
-                    uncheck_url=html.makeuri([(toggle_id, "")]),
+                    check_url=makeuri(global_request, [(toggle_id, "1")]),
+                    uncheck_url=makeuri(global_request, [(toggle_id, "")]),
                 ),
             )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var("_search"):  # just commit to search form
-            return
+            return None
 
         # Operations on SUBFOLDERS
 
         if html.request.var("_delete_folder"):
-            if html.transaction_valid():
-                return self._delete_subfolder_after_confirm(html.request.var("_delete_folder"))
-            return
+            if html.check_transaction():
+                self._folder.delete_subfolder(html.request.var("_delete_folder"))
+            return redirect(mode_url("folder", folder=self._folder.path()))
 
         if html.request.has_var("_move_folder_to"):
             if html.check_transaction():
                 what_folder = watolib.Folder.folder(html.request.var("_ident"))
                 target_folder = watolib.Folder.folder(html.request.var("_move_folder_to"))
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
-            return
+            return redirect(mode_url("folder", folder=self._folder.path()))
 
         # Operations on HOSTS
 
         # Deletion of single hosts
         delname = html.request.var("_delete_host")
         if delname and watolib.Folder.current().has_host(delname):
-            return delete_host_after_confirm(delname)
+            watolib.Folder.current().delete_hosts([delname])
+            return redirect(mode_url("folder", folder=self._folder.path()))
 
         # Move single hosts to other folders
         if html.request.has_var("_move_host_to"):
@@ -585,15 +475,15 @@ class ModeFolder(WatoMode):
             if hostname:
                 target_folder = watolib.Folder.folder(html.request.var("_move_host_to"))
                 watolib.Folder.current().move_hosts([hostname], target_folder)
-                return
+                return None
 
         # bulk operation on hosts
         if not html.transaction_valid():
-            return
+            return None
 
         # Host table: No error message on search filter reset
         if html.request.var("_hosts_reset_sorting") or html.request.var("_hosts_sort"):
-            return
+            return None
 
         selected_host_names = get_hostnames_from_checkboxes()
         if not selected_host_names:
@@ -601,53 +491,38 @@ class ModeFolder(WatoMode):
                               _("Please select some hosts before doing bulk operations on hosts."))
 
         if html.request.var("_bulk_inventory"):
-            return "bulkinventory"
+            return redirect(mode_url("bulkinventory", folder=watolib.Folder.current().path()))
 
         if html.request.var("_parentscan"):
-            return "parentscan"
+            return redirect(mode_url("parentscan", folder=watolib.Folder.current().path()))
 
         # Deletion
         if html.request.var("_bulk_delete"):
-            return self._delete_hosts_after_confirm(selected_host_names)
+            return self._delete_hosts(selected_host_names)
 
         # Move
         if html.request.var("_bulk_move"):
-            target_folder_path = html.request.var("bulk_moveto",
+            target_folder_path = html.request.var("_bulk_moveto",
                                                   html.request.var("_top_bulk_moveto"))
             if target_folder_path == "@":
-                raise MKUserError("bulk_moveto", _("Please select the destination folder"))
+                raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
             target_folder = watolib.Folder.folder(target_folder_path)
             watolib.Folder.current().move_hosts(selected_host_names, target_folder)
-            return None, _("Moved %d hosts to %s") % (len(selected_host_names),
-                                                      target_folder.title())
+            flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
+            return None
 
         # Move to target folder (from import)
         if html.request.var("_bulk_movetotarget"):
-            return self._move_to_imported_folders(selected_host_names)
+            self._move_to_imported_folders(selected_host_names)
+            return None
 
         if html.request.var("_bulk_edit"):
-            return "bulkedit"
+            return redirect(mode_url("bulkedit", folder=watolib.Folder.current().path()))
 
         if html.request.var("_bulk_cleanup"):
-            return "bulkcleanup"
+            return redirect(mode_url("bulkcleanup", folder=watolib.Folder.current().path()))
 
-    def _delete_subfolder_after_confirm(self, subfolder_name):
-        subfolder = self._folder.subfolder(subfolder_name)
-        msg = _("Do you really want to delete the folder %s?") % subfolder.title()
-        if not config.wato_hide_filenames:
-            msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
-        num_hosts = subfolder.num_hosts_recursively()
-        if num_hosts:
-            msg += _(
-                " The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
-        c = wato_confirm(_("Confirm folder deletion"), msg)
-
-        if c:
-            self._folder.delete_subfolder(subfolder_name)
-            return "folder"
-        if c is False:  # not yet confirmed
-            return ""
-        return None  # browser reload
+        return None
 
     def page(self):
         if not self._folder.may("read"):
@@ -720,8 +595,8 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:
-            html.icon(escaping.strip_tags(subfolder.reason_why_may_not("read")),
-                      "autherr",
+            html.icon("autherr",
+                      escaping.strip_tags(subfolder.reason_why_may_not("read")),
                       class_=["autherr"])
             html.div('', class_="hoverarea")
 
@@ -756,8 +631,20 @@ class ModeFolder(WatoMode):
         )
 
     def _show_subfolder_delete_button(self, subfolder):
+        msg = _("Do you really want to delete the folder %s?") % subfolder.title()
+        if not config.wato_hide_filenames:
+            msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
+        num_hosts = subfolder.num_hosts_recursively()
+        if num_hosts:
+            msg += _(
+                " The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
+
         html.icon_button(
-            watolib.make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
+            make_confirm_link(
+                url=watolib.make_action_link([("mode", "folder"),
+                                              ("_delete_folder", subfolder.name())]),
+                message=msg,
+            ),
             _("Delete this folder"),
             "delete",
             id_='delete_' + subfolder.name(),
@@ -772,7 +659,7 @@ class ModeFolder(WatoMode):
         permitted_groups, _folder_contact_groups, _use_for_services = subfolder.groups()
         for num, pg in enumerate(permitted_groups):
             cgalias = groups.get(pg, {'alias': pg})['alias']
-            html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
+            html.icon("contactgroups", _("Contactgroups that have permission on this folder"))
             html.write_text(' %s' % cgalias)
             html.br()
             if num > 1 and len(permitted_groups) > 4:
@@ -908,16 +795,16 @@ class ModeFolder(WatoMode):
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
-            html.icon(msg, "validation_error")
+            html.icon("validation_error", msg)
             html.nbsp()
 
         if host.is_offline():
-            html.icon(_("This host is disabled"), "disabled")
+            html.icon("disabled", _("This host is disabled"))
             html.nbsp()
 
         if host.is_cluster():
-            html.icon(
-                _("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
+            html.icon("cluster",
+                      _("This host is a cluster of %s") % ", ".join(host.cluster_nodes()))
             html.nbsp()
 
         html.a(hostname, href=host.edit_url())
@@ -981,7 +868,7 @@ class ModeFolder(WatoMode):
         show_all, limit = HTML(""), 3
         if len(labels) > limit and html.request.var("_show_all") != "1":
             show_all = HTML(" ") + html.render_a("... (%s)" % _("show all"),
-                                                 href=html.makeuri([("_show_all", "1")]))
+                                                 href=makeuri(global_request, [("_show_all", "1")]))
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
@@ -1015,20 +902,17 @@ class ModeFolder(WatoMode):
             if config.user.may("wato.manage_hosts"):
                 if config.user.may("wato.clone_hosts"):
                     html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
-                delete_url = watolib.make_action_link([("mode", "folder"),
-                                                       ("_delete_host", host.name())])
+                delete_url = make_confirm_link(
+                    url=watolib.make_action_link([("mode", "folder"),
+                                                  ("_delete_host", host.name())]),
+                    message=_("Do you really want to delete the host <tt>%s</tt>?") % host.name(),
+                )
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 
-    def _delete_hosts_after_confirm(self, host_names):
-        c = wato_confirm(
-            _("Confirm deletion of %d hosts") % len(host_names),
-            _("Do you really want to delete the %d selected hosts?") % len(host_names))
-        if c:
-            self._folder.delete_hosts(host_names)
-            return "folder", _("Successfully deleted %d hosts") % len(host_names)
-        if c is False:  # not yet confirmed
-            return ""
-        return None  # browser reload
+    def _delete_hosts(self, host_names) -> ActionResult:
+        self._folder.delete_hosts(host_names)
+        flash(_("Successfully deleted %d hosts") % len(host_names))
+        return redirect(mode_url("folder", folder=self._folder.path()))
 
     def _render_bulk_move_form(self) -> str:
         with html.plugged():
@@ -1038,7 +922,7 @@ class ModeFolder(WatoMode):
 
             choices.insert(0, ("@", _("(select target folder)")))
 
-            html.dropdown("bulk_moveto",
+            html.dropdown("_bulk_moveto",
                           choices,
                           deflt="@",
                           label=_("Move to folder:"),
@@ -1049,18 +933,7 @@ class ModeFolder(WatoMode):
 
             return html.drain()
 
-    def _move_to_imported_folders(self, host_names_to_move):
-        c = wato_confirm(
-            _("Confirm moving hosts"),
-            _('You are going to move the selected hosts to folders '
-              'representing their original folder location in the system '
-              'you did the import from. Please make sure that you have '
-              'done an <b>inventory</b> before moving the hosts.'))
-        if c is False:  # not yet confirmed
-            return ""
-        if not c:
-            return None  # browser reload
-
+    def _move_to_imported_folders(self, host_names_to_move) -> None:
         # Create groups of hosts with the same target folder
         target_folder_names: Dict[str, List[HostName]] = {}
         for host_name in host_names_to_move:
@@ -1082,7 +955,7 @@ class ModeFolder(WatoMode):
             target_folder = self._create_target_folder_from_aliaspath(imported_folder)
             self._folder.move_hosts(host_names, target_folder)
 
-        return None, _("Successfully moved hosts to their original folder destinations.")
+        flash(_("Successfully moved hosts to their original folder destinations."))
 
     def _create_target_folder_from_aliaspath(self, aliaspath):
         # The alias path is a '/' separated path of folder titles.
@@ -1104,19 +977,6 @@ class ModeFolder(WatoMode):
                 parts = parts[1:]
 
         return folder
-
-
-# TODO: Move to WatoHostFolderMode() once mode_edit_host has been migrated
-def delete_host_after_confirm(delname):
-    c = wato_confirm(_("Confirm host deletion"),
-                     _("Do you really want to delete the host <tt>%s</tt>?") % delname)
-    if c:
-        watolib.Folder.current().delete_hosts([delname])
-        # Delete host files
-        return "folder"
-    if c is False:  # not yet confirmed
-        return ""
-    return None  # browser reload
 
 
 # TODO: Split this into one base class and one subclass for folder and hosts
@@ -1216,9 +1076,15 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
                                           button_name="save",
                                           save_is_enabled=is_enabled)
 
-    def action(self):
+    def action(self) -> ActionResult:
+        if html.request.has_var("backfolder"):
+            # Edit icon on subfolder preview should bring user back to parent folder
+            folder = watolib.Folder.folder(html.request.var("backfolder"))
+        else:
+            folder = watolib.Folder.current()
+
         if not html.check_transaction():
-            return "folder"
+            return redirect(mode_url("folder", folder=folder.path()))
 
         # Title
         title = TextUnicode().from_html_vars("title")
@@ -1227,10 +1093,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
         attributes = watolib.collect_attributes("folder", new=self._folder.name() is None)
         self._save(title, attributes)
 
-        # Edit icon on subfolder preview should bring user back to parent folder
-        if html.request.has_var("backfolder"):
-            watolib.Folder.set_current(watolib.Folder.folder(html.request.var("backfolder")))
-        return "folder"
+        return redirect(mode_url("folder", folder=folder.path()))
 
     # TODO: Clean this method up! Split new/edit handling to sub classes
     def page(self):

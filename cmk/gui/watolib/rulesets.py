@@ -43,7 +43,7 @@ from cmk.gui.watolib.utils import (
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-import cmk.base.export
+import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 # Make the GUI config module reset the base config to always get the latest state of the config
 config.register_post_config_load_hook(cmk.base.export.reset_config)
 
@@ -285,8 +285,9 @@ class RulesetCollection:
 
         rules_file_path = folder.rules_file_path()
         # Remove rules files if it has no content. This prevents needless reads
-        if not has_content and os.path.exists(rules_file_path):
-            os.unlink(rules_file_path)  # Do not keep empty rules.mk files
+        if not has_content:
+            if os.path.exists(rules_file_path):
+                os.unlink(rules_file_path)  # Do not keep empty rules.mk files
             return
 
         # Adding this instead of the full path makes it easy to move config
@@ -304,6 +305,9 @@ class RulesetCollection:
 
     def set(self, name, ruleset):
         self._rulesets[name] = ruleset
+
+    def delete(self, name):
+        del self._rulesets[name]
 
     def get_rulesets(self):
         return self._rulesets
@@ -436,6 +440,7 @@ class Ruleset:
     def __init__(self, name, tag_to_group_map):
         super(Ruleset, self).__init__()
         self.name = name
+        self.tag_to_group_map = tag_to_group_map
         self.rulespec = rulespec_registry[name]
         # Holds list of the rules. Using the folder paths as keys.
         self._rules = {}
@@ -446,6 +451,16 @@ class Ruleset:
         # Converts pre 1.6 tuple rulesets in place to 1.6+ format
         self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
             tag_to_group_map=tag_to_group_map)
+
+    def clone(self):
+        cloned = Ruleset(self.name, self.tag_to_group_map)
+        cloned.rulespec = self.rulespec
+        for folder, _rule_index, rule in self.get_rules():
+            cloned.append_rule(folder, rule)
+        return cloned
+
+    def set_name(self, name):
+        self.name = name
 
     def is_empty(self):
         return self.num_rules() == 0
@@ -609,8 +624,8 @@ class Ruleset:
         ]:
             return True
 
-        return self.rulespec.group_name \
-            in rulespec_group_registry.get_matching_group_names(search_options["ruleset_group"])
+        return self.rulespec.group_name in rulespec_group_registry.get_matching_group_names(
+            search_options["ruleset_group"])
 
     def get_rule(self, folder, rule_index):
         return self._rules[folder.path()][rule_index]
@@ -829,8 +844,8 @@ class Rule:
     def to_config(self):
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non WATO hosts.
-        for_config = self.conditions.to_config_with_folder_macro() \
-            if not self.folder.is_root() else self.conditions.to_config_without_folder()
+        for_config = self.conditions.to_config_with_folder_macro(
+        ) if not self.folder.is_root() else self.conditions.to_config_without_folder()
         return self._to_config(for_config)
 
     def to_web_api(self):
@@ -993,19 +1008,19 @@ class Rule:
                                                                    value_text):
             return False
 
-        if self.conditions.host_list \
-            and not _match_one_of_search_expression(search_options, "rule_host_list", self.conditions.host_list[0]):
+        if self.conditions.host_list and not _match_one_of_search_expression(
+                search_options, "rule_host_list", self.conditions.host_list[0]):
             return False
 
-        if self.conditions.item_list \
-           and not _match_one_of_search_expression(search_options, "rule_item_list", self.conditions.item_list[0]):
+        if self.conditions.item_list and not _match_one_of_search_expression(
+                search_options, "rule_item_list", self.conditions.item_list[0]):
             return False
 
         to_search = [
             self.comment(),
             self.description(),
-        ] + (self.conditions.host_list[0] if self.conditions.host_list else []) \
-          + (self.conditions.item_list[0] if self.conditions.item_list else [])
+        ] + (self.conditions.host_list[0] if self.conditions.host_list else
+             []) + (self.conditions.item_list[0] if self.conditions.item_list else [])
 
         if value_text is not None:
             to_search.append(value_text)
@@ -1060,10 +1075,10 @@ class Rule:
         return self.conditions
 
     def is_discovery_rule_of(self, host):
-        return self.conditions.host_name == [host.name()] \
-               and self.conditions.host_tags == {} \
-               and self.conditions.has_only_explicit_service_conditions() \
-               and self.folder.is_transitive_parent_of(host.folder())
+        return self.conditions.host_name == [
+            host.name()
+        ] and self.conditions.host_tags == {} and self.conditions.has_only_explicit_service_conditions(
+        ) and self.folder.is_transitive_parent_of(host.folder())
 
     def replace_explicit_host_condition(self, old_name, new_name):
         """Does an in-place(!) replacement of explicit (non regex) hostnames in rules"""

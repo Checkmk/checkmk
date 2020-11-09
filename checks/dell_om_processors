@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_dell_om_processors(info):
     return [(x[0], None) for x in info if x[1] != '4' and x[0] != '']
@@ -74,5 +76,4 @@ check_info["dell_om_processors"] = {
             "30.1.9",  # DeviceStatus State
             "32.1.6",  # Deive Status reading
         ]),
-    "includes": ["dell_om.include"],
 }

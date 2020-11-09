@@ -6,12 +6,15 @@
 
 # TODO: Rework connection management and multiplexing
 
-from typing import cast, Union, Any, Callable, Dict, List, Optional, Tuple
+from typing import cast, Union, Any, Callable, Dict, List, Optional, Tuple, Literal
 import time
 import os
 import traceback
 import copy
+import ast
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
+from contextlib import suppress
 
 from six import ensure_str
 
@@ -27,7 +30,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.exceptions import MKUserError, MKInternalError
+from cmk.gui.exceptions import MKUserError, MKInternalError, MKAuthException
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (
     TextAscii,
@@ -35,7 +38,7 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request, local, session
 import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
@@ -51,7 +54,11 @@ from cmk.gui.plugins.userdb.utils import (
     get_connection,
     active_connections,
     release_users_lock,
+    save_cached_profile,
+    add_internal_attributes,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -117,6 +124,11 @@ def _get_attributes(connection_id: Optional[str], selector: Callable[[UserConnec
 
 
 def create_non_existing_user(connection_id: str, username: UserId) -> None:
+    # Since user_exists also looks into the htpasswd and treats all users that can be found there as
+    # "existing users", we don't care about partially known users here and don't create them ad-hoc.
+    # The load_users() method will handle this kind of users (TODO: Consolidate this!).
+    # Which makes this function basically relevant for users that authenticate using an LDAP
+    # connection and do not exist yet.
     if user_exists(username):
         return  # User exists. Nothing to do...
 
@@ -172,7 +184,7 @@ def _user_exists_according_to_profile(username: UserId) -> bool:
             or os.path.exists(base_path + "serial.mk")
 
 
-def login_timed_out(username: UserId, last_activity: float) -> bool:
+def _login_timed_out(username: UserId, last_activity: int) -> bool:
     idle_timeout = load_custom_attr(username, "idle_timeout", _convert_idle_timeout, None)
     if idle_timeout is None:
         idle_timeout = config.user_idle_timeout
@@ -181,26 +193,22 @@ def login_timed_out(username: UserId, last_activity: float) -> bool:
         return False  # no timeout activated at all
 
     timed_out = (time.time() - last_activity) > idle_timeout
-
-    if timed_out:
-        auth_logger.debug("%s login timed out (Inactive for %d seconds)" %
-                          (username, time.time() - last_activity))
-
     return timed_out
 
 
-def update_user_access_time(username: UserId) -> None:
-    if not config.save_user_access_times:
-        return
-    save_custom_attr(username, 'last_seen', repr(time.time()))
+def _reset_failed_logins(username: UserId) -> None:
+    """Login succeeded: Set failed login counter to 0"""
+    num_failed_logins = _load_failed_logins(username)
+    if num_failed_logins != 0:
+        _save_failed_logins(username, 0)
 
 
-def on_succeeded_login(username: UserId) -> None:
-    num_failed_logins = load_custom_attr(username, 'num_failed_logins', utils.saveint)
-    if num_failed_logins is not None and num_failed_logins != 0:
-        save_custom_attr(username, 'num_failed_logins', '0')
+def _load_failed_logins(username: UserId) -> int:
+    return load_custom_attr(username, 'num_failed_logins', utils.saveint)
 
-    update_user_access_time(username)
+
+def _save_failed_logins(username: UserId, count: int) -> None:
+    save_custom_attr(username, 'num_failed_logins', str(count))
 
 
 # userdb.need_to_change_pw returns either False or the reason description why the
@@ -227,39 +235,27 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
     return False
 
 
-def _is_local_user(user_id: UserId) -> bool:
+def _load_user(user_id: UserId) -> UserSpec:
+    """Loads of a single user profile
+
+    This is called during regular page processing. We must not load the whole user database, because
+    that would take too much time. To optimize this, we have the "cached user profile" files which
+    are read normally when working with a single user.
+    """
     user = load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
         user = load_users(lock=False).get(user_id, {})
         assert user is not None  # help mypy
+    return user
 
-    return user.get('connector', 'htpasswd') == 'htpasswd'
+
+def _is_local_user(user_id: UserId) -> bool:
+    return _load_user(user_id).get('connector', 'htpasswd') == 'htpasswd'
 
 
 def _user_locked(user_id: UserId) -> bool:
-    user = load_cached_profile(user_id)
-    if user is None:
-        # No cached profile present. Load all users to get the users data
-        user = load_users(lock=False).get(user_id, {})
-        assert user is not None  # help mypy
-
-    return user.get('locked', False)
-
-
-def on_failed_login(username: UserId) -> None:
-    users = load_users(lock=True)
-    if username in users:
-        if "num_failed_logins" in users[username]:
-            users[username]["num_failed_logins"] += 1
-        else:
-            users[username]["num_failed_logins"] = 1
-
-        if config.lock_on_logon_failures:
-            if users[username]["num_failed_logins"] >= config.lock_on_logon_failures:
-                users[username]["locked"] = True
-
-        save_users(users)
+    return _load_user(user_id).get('locked', False)
 
 
 def _root_dir() -> str:
@@ -305,6 +301,60 @@ class UserSelection(DropdownChoice):
         return text.split(" - ")[-1]
 
 
+def on_succeeded_login(username: UserId) -> str:
+    _ensure_user_can_init_session(username)
+    _reset_failed_logins(username)
+
+    return _initialize_session(username)
+
+
+def on_failed_login(username: UserId) -> None:
+    users = load_users(lock=True)
+    if username in users:
+        if "num_failed_logins" in users[username]:
+            users[username]["num_failed_logins"] += 1
+        else:
+            users[username]["num_failed_logins"] = 1
+
+        if config.lock_on_logon_failures:
+            if users[username]["num_failed_logins"] >= config.lock_on_logon_failures:
+                users[username]["locked"] = True
+
+        save_users(users)
+
+
+def on_logout(username: UserId, session_id: str) -> None:
+    _invalidate_session(username, session_id)
+
+
+def on_access(username: UserId, session_id: str) -> None:
+    session_infos = _load_session_infos(username)
+
+    if not _is_valid_user_session(username, session_infos, session_id):
+        raise MKAuthException("Invalid user session")
+
+    # Check whether or not there is an idle timeout configured, delete cookie and
+    # require the user to renew the log when the timeout exceeded.
+    session_info = session_infos[session_id]
+    timed_out = _login_timed_out(username, session_info.last_activity)
+    if timed_out:
+        raise MKAuthException("%s login timed out (Inactivity exceeded %r)" %
+                              (username, config.user_idle_timeout))
+
+    _set_session(username, session_info)
+
+
+def on_end_of_request(user_id: UserId) -> None:
+    if not session:
+        return  # Nothing to be done in case there is no session
+
+    assert user_id == session.user_id
+    session_infos = _load_session_infos(user_id, lock=True)
+    _refresh_session(user_id, session.session_info)
+    session_infos[session.session_info.session_id] = session.session_info
+    _save_session_infos(user_id, session_infos)
+
+
 #.
 #   .--User Session--------------------------------------------------------.
 #   |       _   _                 ____                _                    |
@@ -329,96 +379,149 @@ class UserSelection(DropdownChoice):
 #   '----------------------------------------------------------------------'
 
 
-def is_valid_user_session(username: UserId, session_id: str) -> bool:
-    if config.single_user_session is None:
-        return True  # No login session limitation enabled, no validation
+@dataclass
+class SessionInfo:
+    session_id: str
+    started_at: int
+    last_activity: int
+    flashes: List[str] = field(default_factory=list)
 
-    session_info = load_session_info(username)
-    if session_info is None:
+    def to_json(self):
+        return asdict(self)
+
+
+@dataclass
+class Session:
+    """Container object for encapsulating the session of the currently logged in user"""
+    user_id: UserId
+    session_info: SessionInfo
+
+
+def _is_valid_user_session(username: UserId, session_infos: Dict[str, SessionInfo],
+                           session_id: str) -> bool:
+    """Return True in case this request is done with a currently valid user session"""
+    if not session_infos:
         return False  # no session active
-    active_session_id, last_activity = session_info
 
-    if session_id == active_session_id:
-        return True  # Current session. Fine.
+    if session_id not in session_infos:
+        auth_logger.debug("%s session_id %s not valid (logged out or timed out?)", username,
+                          session_id)
+        return False
 
-    auth_logger.debug("%s session_id not valid (timed out?) (Inactive for %d seconds)" %
-                      (username, time.time() - last_activity))
-
-    return False
+    return True
 
 
-def ensure_user_can_init_session(username: UserId) -> bool:
+def _ensure_user_can_init_session(username: UserId) -> bool:
+    """When single user session mode is enabled, check that there is not another active session"""
     if config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
     session_timeout = config.single_user_session
 
-    session_info = load_session_info(username)
-    if session_info is None:
-        return True  # No session active
+    for session_info in _load_session_infos(username).values():
+        if (time.time() - session_info.last_activity) > session_timeout:
+            continue  # Former active session timed out
 
-    last_activity = session_info[1]
-    if (time.time() - last_activity) > session_timeout:
-        return True  # Former active session timed out
+        auth_logger.debug("%s another session is active (inactive for: %d seconds)" %
+                          (username, time.time() - session_info.last_activity))
 
-    auth_logger.debug("%s another session is active (inactive for: %d seconds)" %
-                      (username, time.time() - last_activity))
+        raise MKUserError(None, _("Another session is active"))
 
-    raise MKUserError(None, _("Another session is active"))
+    return True  # No session active
 
 
-def initialize_session(username: UserId) -> str:
+def _initialize_session(username: UserId) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
-    if not config.single_user_session:
-        return ""
+    session_infos = _cleanup_old_sessions(_load_session_infos(username, lock=True))
 
-    session_id = create_session_id()
-    save_session_info(username, session_id)
+    session_id = _create_session_id()
+    now = int(time.time())
+    session_info = SessionInfo(
+        session_id=session_id,
+        started_at=now,
+        last_activity=now,
+        flashes=[],
+    )
+
+    _set_session(username, session_info)
+    session_infos[session_id] = session_info
+
+    # Save once right after initialization. It may be saved another time later, in case something
+    # was modified during the request (e.g. flashes were added)
+    _save_session_infos(username, session_infos)
+
     return session_id
 
 
-def create_session_id() -> str:
+def _set_session(user_id: UserId, session_info: SessionInfo):
+    local.session = Session(user_id=user_id, session_info=session_info)
+
+
+def _cleanup_old_sessions(session_infos: Dict[str, SessionInfo]) -> Dict[str, SessionInfo]:
+    """Remove invalid / outdated sessions
+
+    In single user session mode all sessions are removed. In regular mode, the sessions are limited
+    to 20 per user. Sessions with an inactivity > 7 days are also removed.
+    """
+    if config.single_user_session:
+        # In single user session mode there is only one session allowed at a time. Once we
+        # reach this place, we can be sure that we are allowed to remove all existing ones.
+        return {}
+
+    return {
+        s.session_id: s
+        for s in sorted(session_infos.values(), key=lambda s: s.last_activity)[:20]
+        if time.time() - s.last_activity < 86400 * 7
+    }
+
+
+def _create_session_id() -> str:
     """Creates a random session id for the user and returns it."""
     return utils.gen_id()
 
 
-def refresh_session(username: UserId) -> None:
-    """Updates the current session of the user and returns the session_id or only
-    returns an empty string when single user session mode is not enabled."""
-    if not config.single_user_session:
-        return  # No session handling at all
-
-    session_info = load_session_info(username)
-    if session_info is None:
-        return  # Don't refresh. Session is not valid anymore
-
-    session_id = session_info[0]
-    save_session_info(username, session_id)
+def _refresh_session(username: UserId, session_info: SessionInfo) -> None:
+    """Updates the current session of the user"""
+    session_info.last_activity = int(time.time())
 
 
-def invalidate_session(username: UserId) -> None:
-    remove_custom_attr(username, "session_info")
+def _invalidate_session(username: UserId, session_id: str) -> None:
+    session_infos = _load_session_infos(username, lock=True)
+    with suppress(KeyError):
+        del session_infos[session_id]
+        _save_session_infos(username, session_infos)
 
 
-# Saves the current session_id and the current time (last activity)
-def save_session_info(username: UserId, session_id: str) -> None:
-    save_custom_attr(username, "session_info", "%s|%s" % (session_id, int(time.time())))
+def _save_session_infos(username: UserId, session_infos: Dict[str, SessionInfo]) -> None:
+    """Saves the sessions for the current user"""
+    save_custom_attr(username, "session_info",
+                     repr({k: asdict(v) for k, v in session_infos.items()}))
 
 
-# Returns either None (when no session_id available) or a two element
-# tuple where the first element is the sesssion_id and the second the
-# timestamp of the last activity.
-def load_session_info(username: UserId) -> Optional[Tuple[str, int]]:
-    return load_custom_attr(username, "session_info", _convert_session_info)
+def _load_session_infos(username: UserId, lock: bool = False) -> Dict[str, SessionInfo]:
+    """Returns the stored sessions of the given user"""
+    return load_custom_attr(username, "session_info", _convert_session_info, lock=lock) or {}
 
 
-def _convert_session_info(value: str) -> Optional[Tuple[str, int]]:
+def _convert_session_info(value: str) -> Dict[str, SessionInfo]:
     if value == "":
-        return None
+        return {}
 
+    if value.startswith("{"):
+        return {k: SessionInfo(**v) for k, v in ast.literal_eval(value).items()}
+
+    # Transform pre 2.0 values
     session_id, last_activity = value.split("|", 1)
-    return session_id, int(last_activity)
+    return {
+        session_id: SessionInfo(
+            session_id=session_id,
+            # We don't have that information. The best guess is to use the last activitiy
+            started_at=int(last_activity),
+            last_activity=int(last_activity),
+            flashes=[],
+        ),
+    }
 
 
 #.
@@ -518,7 +621,7 @@ def load_users(lock: bool = False) -> Users:
     if 'users' in g:
         return g.users
 
-    # First load monitoring contacts from Check_MK's world. If this is
+    # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
     contacts = store.load_from_mk_file(filename, "contacts", {})
@@ -590,6 +693,9 @@ def load_users(lock: bool = False) -> Users:
                     "password": password,
                     "locked": False,
                 }
+
+                add_internal_attributes(new_user)
+
                 result[uid] = new_user
             # Make sure that the user has an alias
             result[uid].setdefault("alias", uid)
@@ -616,10 +722,11 @@ def load_users(lock: bool = False) -> Users:
                 for attr, conv_func in [
                     ('num_failed_logins', utils.saveint),
                     ('last_pw_change', utils.saveint),
-                    ('last_seen', utils.savefloat),
                     ('enforce_pw_change', lambda x: bool(utils.saveint(x))),
                     ('idle_timeout', _convert_idle_timeout),
-                    ('session_id', _convert_session_info),
+                    ('session_info', _convert_session_info),
+                    ('ui_theme', lambda x: x),
+                    ('ui_sidebar_position', lambda x: None if x == "None" else x),
                 ]:
                     val = load_custom_attr(uid, attr, conv_func)
                     if val is not None:
@@ -656,13 +763,13 @@ def custom_attr_path(userid: UserId, key: str) -> str:
 def load_custom_attr(userid: UserId,
                      key: str,
                      conv_func: Callable[[str], Any],
-                     default: Any = None) -> Any:
+                     default: Any = None,
+                     lock: bool = False) -> Any:
     path = Path(custom_attr_path(userid, key))
-    try:
-        with path.open(encoding="utf-8") as f:
-            return conv_func(ensure_str(f.read().strip()))
-    except IOError:
-        return default
+    result = store.load_text_from_file(path, default=default, lock=lock)
+    if result == default:
+        return result
+    return conv_func(result.strip())
 
 
 def save_custom_attr(userid: UserId, key: str, val: Any) -> None:
@@ -682,9 +789,13 @@ def get_online_user_ids() -> List[UserId]:
     online_threshold = time.time() - config.user_online_maxage
     users = []
     for user_id, user in load_users(lock=False).items():
-        if user.get('last_seen', 0) >= online_threshold:
+        if get_last_activity(user_id, user) >= online_threshold:
             users.append(user_id)
     return users
+
+
+def get_last_activity(user_id: UserId, user: UserSpec) -> int:
+    return max([s.last_activity for s in user.get("session_info", {}).values()] + [0])
 
 
 def split_dict(d: Dict[str, Any], keylist: List[str], positive: bool) -> Dict[str, Any]:
@@ -763,9 +874,16 @@ def _save_user_profiles(updated_profiles: Users) -> None:
         else:
             remove_custom_attr(user_id, "idle_timeout")
 
-        # Write out the last seent time
-        if 'last_seen' in user:
-            save_custom_attr(user_id, 'last_seen', repr(user['last_seen']))
+        # Is None on first load
+        if user.get("ui_theme") is not None:
+            save_custom_attr(user_id, "ui_theme", user["ui_theme"])
+        else:
+            remove_custom_attr(user_id, "ui_theme")
+
+        if "ui_sidebar_position" in user:
+            save_custom_attr(user_id, 'ui_sidebar_position', user['ui_sidebar_position'])
+        else:
+            remove_custom_attr(user_id, "ui_sidebar_position")
 
         _save_cached_profile(user_id, user, multisite_keys, non_contact_keys)
 
@@ -835,7 +953,7 @@ def write_contacts_and_users_file(profiles: Users,
             if p in multisite_keys + multisite_attributes_cache[profile.get('connector')]
         }
 
-    # Check_MK's monitoring contacts
+    # Checkmk's monitoring contacts
     store.save_to_mk_file("%s/%s" % (check_mk_config_dir, "contacts.mk"),
                           "contacts",
                           contacts,
@@ -851,23 +969,27 @@ def write_contacts_and_users_file(profiles: Users,
 def _non_contact_keys() -> List[str]:
     """User attributes not to put into contact definitions for Check_MK"""
     return [
-        "roles",
-        "password",
-        "locked",
         "automation_secret",
-        "language",
-        "serial",
         "connector",
-        "num_failed_logins",
         "enforce_pw_change",
-        "last_pw_change",
-        "last_seen",
         "idle_timeout",
+        "language",
+        "last_pw_change",
+        "locked",
+        "num_failed_logins",
+        "password",
+        "roles",
+        "serial",
+        "session_info",
     ] + _get_multisite_custom_variable_names()
 
 
 def _multisite_keys() -> List[str]:
     """User attributes to put into multisite configuration"""
+    multisite_variables = [
+        var for var in _get_multisite_custom_variable_names()
+        if var not in ["ui_theme", "ui_sidebar_position"]
+    ]
     return [
         "roles",
         "locked",
@@ -875,7 +997,7 @@ def _multisite_keys() -> List[str]:
         "alias",
         "language",
         "connector",
-    ] + _get_multisite_custom_variable_names()
+    ] + multisite_variables
 
 
 def _get_multisite_custom_variable_names() -> List[str]:
@@ -929,17 +1051,11 @@ def _save_cached_profile(user_id: UserId, user: UserSpec, multisite_keys: List[s
         if key in multisite_keys or key not in non_contact_keys:
             cache[key] = user[key]
 
-    config.save_user_file("cached_profile", cache, user_id=user_id)
+    save_cached_profile(user_id, cache)
 
 
 def contactgroups_of_user(user_id: UserId) -> List[ContactgroupName]:
-    user = load_cached_profile(user_id)
-    if user is None:
-        # No cached profile present. Load all users to get the users data
-        user = load_users(lock=False).get(user_id, {})
-        assert user is not None  # help mypy
-
-    return user.get("contactgroups", [])
+    return _load_user(user_id).get("contactgroups", [])
 
 
 def _convert_idle_timeout(value: str) -> Union[int, bool, None]:
@@ -1009,38 +1125,49 @@ config.register_post_config_load_hook(update_config_based_user_attributes)
 #   +----------------------------------------------------------------------+
 
 
-# This hook is called to validate the login credentials provided by a user
-def hook_login(username: UserId, password: str) -> Union[UserId, bool]:
+def check_credentials(username: UserId, password: str) -> Union[UserId, Literal[False]]:
+    """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():
-        result = connection.check_credentials(username, password)
         # None        -> User unknown, means continue with other connectors
         # '<user_id>' -> success
         # False       -> failed
-        if result not in [False, None]:
-            username = result
-            if not isinstance(username, str):
-                raise MKInternalError(
-                    _("The username returned by the %s "
-                      "connector is not of type string (%r).") % (connection_id, username))
-            # Check whether or not the user exists (and maybe create it)
-            create_non_existing_user(connection_id, username)
-
-            if not is_customer_user_allowed_to_login(username):
-                # A CME not assigned with the current sites customer
-                # is not allowed to login
-                auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % username)
-                return False
-
-            # Now, after successfull login (and optional user account creation), check whether or
-            # not the user is locked.
-            if _user_locked(username):
-                auth_logger.debug("User '%s' is not allowed to login: Account locked" % username)
-                return False  # The account is locked
-
-            return result
+        result = connection.check_credentials(username, password)
 
         if result is False:
             return False
+
+        if result is None:
+            continue
+
+        user_id: UserId = result
+        if not isinstance(user_id, str):
+            raise MKInternalError(
+                _("The username returned by the %s "
+                  "connector is not of type string (%r).") % (connection_id, user_id))
+
+        # Check whether or not the user exists (and maybe create it)
+        #
+        # We have the cases where users exist "partially"
+        # a) The htpasswd file of the site may have a username:pwhash data set
+        #    and Checkmk does not have a user entry yet
+        # b) LDAP authenticates a user and Checkmk does not have a user entry yet
+        #
+        # In these situations a user account with the "default profile" should be created
+        create_non_existing_user(connection_id, user_id)
+
+        if not is_customer_user_allowed_to_login(user_id):
+            # A CME not assigned with the current sites customer
+            # is not allowed to login
+            auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % user_id)
+            return False
+
+        # Now, after successfull login (and optional user account creation), check whether or
+        # not the user is locked.
+        if _user_locked(user_id):
+            auth_logger.debug("User '%s' is not allowed to login: Account locked" % user_id)
+            return False  # The account is locked
+
+        return user_id
 
     return False
 
@@ -1143,7 +1270,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         )
 
     def _back_url(self) -> str:
-        return html.makeuri_contextless([("mode", "users")], filename="wato.py")
+        return makeuri_contextless(request, [("mode", "users")], filename="wato.py")
 
     def do_sync(self, job_interface: background_job.BackgroundProcessInterface,
                 add_to_changelog: bool, enforce_sync: bool, load_users_func: Callable,

@@ -56,7 +56,7 @@ def check_3ware_units(item, _no_params, info):
     return (3, "unit %s not found in agent output" % item)
 
 
-# declare the check to Check_MK
+# declare the check to Checkmk
 
 check_info["3ware_units"] = {
     'check_function': check_3ware_units,

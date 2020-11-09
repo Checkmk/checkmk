@@ -11,9 +11,9 @@ from cmk.base.plugins.agent_based.liebert_humidity_air import (
     discover_liebert_humidity_air,
     check_liebert_humidity_air,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
-    state,
+    State as state,
     Service,
     Metric,
 )
@@ -75,8 +75,8 @@ def test_discover_liebert_humidity_air(section, extra_section, result):
             PARSED_SECTION,
             PARSED_EXTRA_SECTION,
             [
-                Result(state=state.OK, summary='36.50 % RH', details='36.50 % RH'),
-                Metric(name='humidity', value=36.5, levels=(50.0, 55.0), boundaries=(None, None)),
+                Result(state=state.OK, summary='36.50 % RH'),
+                Metric(name='humidity', value=36.5, levels=(50.0, 55.0)),
             ],
         ),
         (

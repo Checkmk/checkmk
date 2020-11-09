@@ -16,7 +16,7 @@
 #include "nagios.h"
 
 TableServiceGroups::TableServiceGroups(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", -1);
+    addColumns(this, "", ColumnOffsets{});
 }
 
 std::string TableServiceGroups::name() const { return "servicegroups"; }
@@ -25,8 +25,9 @@ std::string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 
 // static
 void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
-                                    int indirect_offset) {
-    Column::Offsets offsets{indirect_offset, 0};
+                                    const ColumnOffsets &offsets) {
+    auto offsets_members{
+        offsets.add([](Row r) { return &r.rawData<servicegroup>()->members; })};
     table->addColumn(std::make_unique<StringLambdaColumn<servicegroup>>(
         prefix + "name", "The name of the service group", offsets,
         [](const servicegroup &r) {
@@ -57,96 +58,65 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
-        table->core(), false));
+        offsets_members, table->core(), false));
     table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
         prefix + "members_with_state",
         "A list of all members of the service group with state and has_been_checked",
-        Column::Offsets{
-            indirect_offset,
-            -1,
-            -1,
-            DANGEROUS_OFFSETOF(servicegroup, members),
-        },
-        table->core(), true));
+        offsets_members, table->core(), true));
 
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",
         "The worst soft state of all of the groups services (OK <= WARN <= UNKNOWN <= CRIT)",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
-        table->core(), ServiceListStateColumn::Type::worst_state));
+        offsets_members, table->core(),
+        ServiceListStateColumn::Type::worst_state));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services in the group",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
-        table->core(), ServiceListStateColumn::Type::num));
+        offsets_members, table->core(), ServiceListStateColumn::Type::num));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_ok",
-        "The number of services in the group that are OK",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        "The number of services in the group that are OK", offsets_members,
         table->core(), ServiceListStateColumn::Type::num_ok));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_warn",
-        "The number of services in the group that are WARN",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        "The number of services in the group that are WARN", offsets_members,
         table->core(), ServiceListStateColumn::Type::num_warn));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_crit",
-        "The number of services in the group that are CRIT",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        "The number of services in the group that are CRIT", offsets_members,
         table->core(), ServiceListStateColumn::Type::num_crit));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_unknown",
-        "The number of services in the group that are UNKNOWN",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        "The number of services in the group that are UNKNOWN", offsets_members,
         table->core(), ServiceListStateColumn::Type::num_unknown));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_pending",
-        "The number of services in the group that are PENDING",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        "The number of services in the group that are PENDING", offsets_members,
         table->core(), ServiceListStateColumn::Type::num_pending));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_handled_problems",
         "The number of services in the group that have handled problems",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
-        table->core(), ServiceListStateColumn::Type::num_handled_problems));
+        offsets_members, table->core(),
+        ServiceListStateColumn::Type::num_handled_problems));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_unhandled_problems",
         "The number of services in the group that have unhandled problems",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
-        table->core(), ServiceListStateColumn::Type::num_unhandled_problems));
+        offsets_members, table->core(),
+        ServiceListStateColumn::Type::num_unhandled_problems));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
-        "The number of services in the group that are OK",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        "The number of services in the group that are OK", offsets_members,
         table->core(), ServiceListStateColumn::Type::num_hard_ok));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_warn",
-        "The number of services in the group that are WARN",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        "The number of services in the group that are WARN", offsets_members,
         table->core(), ServiceListStateColumn::Type::num_hard_warn));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_crit",
-        "The number of services in the group that are CRIT",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        "The number of services in the group that are CRIT", offsets_members,
         table->core(), ServiceListStateColumn::Type::num_hard_crit));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_unknown",
-        "The number of services in the group that are UNKNOWN",
-        Column::Offsets{indirect_offset, -1, -1,
-                        DANGEROUS_OFFSETOF(servicegroup, members)},
+        "The number of services in the group that are UNKNOWN", offsets_members,
         table->core(), ServiceListStateColumn::Type::num_hard_unknown));
 }
 

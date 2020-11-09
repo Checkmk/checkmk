@@ -57,8 +57,8 @@ test_neb_SOURCES = \
     test/test_CustomVarsDictFilter.cc \
     test/test_FileSystemHelper.cc \
     test/test_LogEntry.cc \
+    test/test_MacroExpander.cc \
     test/test_Metric.cc \
-    test/test_OffsetStringMacroColumn.cc \
     test/test_Queue.cc \
     test/test_RegExp.cc \
     test/test_StringUtil.cc \
@@ -104,7 +104,6 @@ liblivestatus_a_SOURCES = \
         ContactGroupsColumn.cc \
         CountAggregator.cc \
         CrashReport.cc \
-        CustomTimeperiodColumn.cc \
         CustomVarsDictColumn.cc \
         CustomVarsDictFilter.cc \
         CustomVarsExplicitColumn.cc \
@@ -117,13 +116,13 @@ liblivestatus_a_SOURCES = \
         DowntimesOrComments.cc \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
-        DynamicHostFileColumn-impl.cc \
+        DynamicFileColumn-impl.cc \
         DynamicRRDColumn.cc \
         EventConsoleConnection.cc \
+        FileColumn-impl.cc \
         FileSystemHelper.cc \
         Filter.cc \
         HostContactsColumn.cc \
-        HostFileColumn-impl.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \
@@ -141,15 +140,14 @@ liblivestatus_a_SOURCES = \
         Logfile.cc \
         Logger.cc \
         LogwatchListColumn.cc \
+        MacroExpander.cc \
         Metric.cc \
         NagiosCore.cc \
         NullColumn.cc \
-        OffsetStringHostMacroColumn.cc \
-        OffsetStringMacroColumn.cc \
-        OffsetStringServiceMacroColumn.cc \
         OringFilter.cc \
         OutputBuffer.cc \
         PerfdataAggregator.cc \
+        POSIXUtils.cc \
         Query.cc \
         RegExp.cc \
         Renderer.cc \
@@ -198,7 +196,6 @@ liblivestatus_a_SOURCES = \
         TableTimeperiods.cc \
         TimeColumn.cc \
         TimeFilter.cc \
-        TimeperiodColumn.cc \
         TimeperiodsCache.cc \
         Triggers.cc \
         auth.cc \

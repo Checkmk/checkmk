@@ -4,15 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Dict
-
-import cmk.base.config
 from cmk.base.core_config import MonitoringCore
 
 
-def create_core(options: Optional[Dict] = None) -> MonitoringCore:
-    if cmk.base.config.monitoring_core == "cmc":
+def create_core(core_name: str) -> MonitoringCore:
+    if core_name == "cmc":
         from cmk.base.cee.core_cmc import CMC  # pylint: disable=no-name-in-module,import-outside-toplevel
-        return CMC(options)
-    from cmk.base.core_nagios import NagiosCore  # pylint: disable=import-outside-toplevel
-    return NagiosCore()
+        return CMC()
+
+    if core_name == "nagios":
+        from cmk.base.core_nagios import NagiosCore  # pylint: disable=import-outside-toplevel
+        return NagiosCore()
+
+    raise NotImplementedError

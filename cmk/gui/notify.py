@@ -18,8 +18,8 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.i18n
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.i18n import _, _l
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.permissions import (
@@ -47,6 +47,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.utils.urls import makeuri
 
 
 def get_gui_messages(user_id=None):
@@ -107,28 +108,15 @@ def _notify_methods() -> Dict[str, Dict[str, Any]]:
     }
 
 
-@permission_registry.register
-class NotifyUsersPermission(Permission):
-    @property
-    def section(self):
-        return PermissionSectionGeneral
-
-    @property
-    def permission_name(self):
-        return "notify"
-
-    @property
-    def title(self):
-        return _("Notify Users")
-
-    @property
-    def description(self):
-        return _("This permissions allows users to send notifications to the users of "
-                 "the monitoring system using the web interface.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+permission_registry.register(
+    Permission(
+        section=PermissionSectionGeneral,
+        name="notify",
+        title=_l("Notify Users"),
+        description=_l("This permissions allows users to send notifications to the users of "
+                       "the monitoring system using the web interface."),
+        defaults=["admin"],
+    ))
 
 
 @cmk.gui.pages.register("notify")
@@ -165,7 +153,6 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
         form_name="notify",
         button_name="save",
         save_title=_("Send notification"),
-        add_abort_link=False,
     )
 
     menu.dropdowns.insert(
@@ -201,10 +188,8 @@ def _vs_notify():
              allow_empty=False,
          )),
         #('contactgroup', _('All members of a contact group')),
+        ('online', _('All online users')),
     ]
-
-    if config.save_user_access_times:
-        dest_choices.append(('online', _('All online users')))
 
     return Dictionary(
         elements=[
@@ -305,7 +290,7 @@ def _process_notify_message(msg):
     message += "</table>"
 
     message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
-    message += '<a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
+    message += '<a href="%s">%s</a>' % (makeuri(request, []), _('Back to previous page'))
     html.show_message(HTML(message))
 
     if errors:
@@ -359,7 +344,7 @@ def notify_mail(user_id, msg):
         sender_name = user_id
 
     # Code mostly taken from notify_via_email() from notify.py module
-    subject = _('Check_MK: Notification')
+    subject = _('Checkmk: Notification')
     body = _('''Greetings %s,
 
 %s sent you a notification:

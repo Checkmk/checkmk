@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Code for processing Check_MK werks. This is needed by several components,
+"""Code for processing Checkmk werks. This is needed by several components,
 so it's best place is in the central library."""
 
 import itertools
@@ -45,7 +45,7 @@ class WerkTranslator:
             "inv": _("HW/SW inventory"),
 
             # CEE
-            "cmc": _("The Check_MK Micro Core"),
+            "cmc": _("The Checkmk Micro Core"),
             "setup": _("Setup, site management"),
             "config": _("Configuration generation"),
             "inline-snmp": _("Inline SNMP"),
@@ -256,11 +256,11 @@ def sort_by_date(werks):
 VERSION_PATTERN = re.compile(r'^([.\-a-z]+)?(\d+)')
 
 
-# Parses versions of Check_MK and converts them into comparable integers.
+# Parses versions of Checkmk and converts them into comparable integers.
 def parse_check_mk_version(v: str) -> int:
     """Figure out how to compare versions semantically.
 
-    Parses versions of Check_MK and converts them into comparable integers.
+    Parses versions of Checkmk and converts them into comparable integers.
 
     >>> p = parse_check_mk_version
 

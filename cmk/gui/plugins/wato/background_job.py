@@ -8,9 +8,8 @@ from typing import Optional, Type, Iterator
 import traceback
 
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -23,15 +22,20 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.plugins.wato import (
     main_module_registry,
-    MainModule,
+    ABCMainModule,
     MainModuleTopicMaintenance,
     WatoMode,
+    ActionResult,
     mode_registry,
+    redirect,
+    mode_url,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @main_module_registry.register
-class MainModuleBackgroundJobs(MainModule):
+class MainModuleBackgroundJobs(ABCMainModule):
     @property
     def mode_or_url(self):
         return "background_jobs_overview"
@@ -54,14 +58,14 @@ class MainModuleBackgroundJobs(MainModule):
 
     @property
     def description(self):
-        return _("Manage longer running tasks in the Check_MK GUI")
+        return _("Manage longer running tasks in the Checkmk GUI")
 
     @property
     def sort_index(self):
         return 60
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
@@ -81,7 +85,7 @@ class ModeBackgroundJobsOverview(WatoMode):
     def page(self):
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
-        back_url = html.makeuri_contextless([("mode", "background_jobs_overview")])
+        back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
         job_manager.show_status_of_job_classes(gui_background_job.job_registry.values(),
                                                job_details_back_url=back_url)
 
@@ -90,9 +94,11 @@ class ModeBackgroundJobsOverview(WatoMode):
                 for c in gui_background_job.job_registry.values()):
             html.immediate_browser_redirect(0.8, "")
 
-    def action(self):
+    # Mypy requires the explicit return, pylint does not like it.
+    def action(self) -> ActionResult:  # pylint: disable=useless-return
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
+        return None
 
 
 @mode_registry.register
@@ -165,10 +171,11 @@ class ModeBackgroundJobDetails(WatoMode):
         if job_snapshot.is_active():
             html.immediate_browser_redirect(1, "")
 
-    def action(self):
+    def action(self) -> ActionResult:
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_delete_job():
             if self._back_url():
-                raise HTTPRedirect(self._back_url())
-            return "background_jobs_overview"
+                raise redirect(self._back_url())
+            return redirect(mode_url("background_jobs_overview"))
+        return None

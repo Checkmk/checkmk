@@ -6,6 +6,7 @@
 
 import re
 from typing import Any, Dict
+import copy
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -32,7 +33,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksApplications,
+    RulespecGroupEnforcedServicesApplications,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     UserIconOrAction,
@@ -41,6 +42,12 @@ from cmk.gui.plugins.wato import (
     ManualCheckParameterRulespec,
     CheckParameterRulespecWithItem,
 )
+
+# This object indicates that the setting 'CPU rescale maximum load' has not been set, which can only
+# be the case for legacy rules from before version 1.6.0, see werk #6646. Note that we cannot use
+# None here because DropdownChoice only renders invalid_choice_title if the input value is not
+# None...
+CPU_RESCALE_MAX_UNSPEC = 'cpu_rescale_max_unspecified'
 
 
 def process_level_elements():
@@ -66,6 +73,7 @@ def process_level_elements():
              invalid_choice_error=_("CPU rescale maximum load is Unspecified.") + " " +
              _("Starting from version 1.6.0 this value must be configured. "
                "Read Werk #6646 for further information."),
+             deprecated_choices=[CPU_RESCALE_MAX_UNSPEC],
          )),
         ('levels',
          Tuple(
@@ -191,13 +199,16 @@ def process_level_elements():
          DropdownChoice(
              title=_("Enable per-process details in long-output"),
              label=_("Enable per-process details"),
-             help=_("If active, the long output of this service will contain a list of all the "
-                    "matching processes and their details (i.e. PID, CPU usage, memory usage). "
-                    "Please note that HTML output will only work if \"Escape HTML codes in "
-                    "plugin output\" is disabled in global settings. This might expose you to "
-                    "Cross-Site-Scripting (everyone with write-access to checks could get "
-                    "scripts executed on the monitoring site in the context of the user of the "
-                    "monitoring site) so please do this if you understand the consequences."),
+             help=_(
+                 "If active, the long output of this service will contain a list of all the "
+                 "matching processes and their details (i.e. PID, CPU usage, memory usage). "
+                 "Please note that HTML output will only work if rules in the rulesets "
+                 "\"Escape HTML codes in host output\" or \"Escape HTML codes in service output\" "
+                 "are created or the global setting \"Escape HTML codes in plugin output\" "
+                 "is disabled. This might expose you to "
+                 "Cross-Site-Scripting attacks (everyone with write-access to checks could get "
+                 "scripts executed on the monitoring site in the context of the user of the "
+                 "monitoring site) so please do this if you understand the consequences."),
              choices=[
                  (None, _("Disable")),
                  ("text", _("Text output")),
@@ -225,6 +236,26 @@ def process_level_elements():
 
 # Add checks that have parameters but are only configured as manual checks
 def ps_cleanup_params(params):
+    # New parameter format: dictionary. Example:
+    # {
+    #    "user" : "foo",
+    #    "process" : "/usr/bin/food",
+    #    "warnmin" : 1,
+    #    "okmin"   : 1,
+    #    "okmax"   : 1,
+    #    "warnmax" : 1,
+    # }
+
+    # Even newer format:
+    # {
+    #   "user" : "foo",
+    #   "levels" : (1, 1, 99999, 99999)
+    # }
+
+    # TODO: This is a workaround which makes sure input arguments are not getting altered.
+    #       A nice implementation would return a new dict based on the input
+    params = copy.deepcopy(params)
+
     if isinstance(params, (list, tuple)):
         if len(params) == 5:
             procname, warnmin, okmin, okmax, warnmax = params
@@ -237,16 +268,16 @@ def ps_cleanup_params(params):
             "user": user,
         }
 
-    if any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
+    elif any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
         params["levels"] = (
             params.pop("warnmin", 1),
             params.pop("okmin", 1),
-            params.pop("warnmax", 99999),
             params.pop("okmax", 99999),
+            params.pop("warnmax", 99999),
         )
 
     if "cpu_rescale_max" not in params:
-        params["cpu_rescale_max"] = None
+        params["cpu_rescale_max"] = CPU_RESCALE_MAX_UNSPEC
 
     return params
 
@@ -319,7 +350,6 @@ def process_discovery_descr_option():
 def process_match_options():
     return Alternative(
         title=_("Process Matching"),
-        style="dropdown",
         elements=[
             TextAscii(
                 title=_("Exact name of the process without argments"),
@@ -362,7 +392,6 @@ def user_match_options(extra_elements=None):
 
     return Alternative(
         title=_("Name of operating system user"),
-        style="dropdown",
         elements=[
             TextAscii(title=_("Exact name of the operating system user"), label=_("User:"),
                       size=50),
@@ -400,7 +429,6 @@ def cgroup_match_options():
         title=_("Operating system control group information"),
         elements=[
             Alternative(
-                style="dropdown",
                 elements=[
                     TextAscii(title=_("Exact content of the operating system control group info"),
                               label=_("Control group:"),
@@ -487,7 +515,7 @@ def _manual_parameter_valuespec_ps():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="ps",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_manual_item_spec_ps,
         parameter_valuespec=_manual_parameter_valuespec_ps,
         title=lambda: _("State and count of processes"),
@@ -516,7 +544,7 @@ def convert_inventory_processes(old_dict):
 
     # cmk1.6 cpu rescaling load rule
     if "cpu_rescale_max" not in old_dict.get("default_params", {}):
-        new_dict["default_params"]["cpu_rescale_max"] = None
+        new_dict["default_params"]["cpu_rescale_max"] = CPU_RESCALE_MAX_UNSPEC
 
     # cmk1.6 move icon into default_params to match setup of static and discovered ps checks
     if "icon" in old_dict:
@@ -528,7 +556,7 @@ def convert_inventory_processes(old_dict):
 def _valuespec_inventory_processes_rules():
     return Transform(
         Dictionary(
-            title=_('Process Discovery'),
+            title=_('Process discovery'),
             help=_("This ruleset defines criteria for automatically creating checks for running "
                    "processes based upon what is running when the service discovery is "
                    "done. These services will be created with default parameters. They will get "
@@ -614,7 +642,6 @@ def match_hr_alternative(x):
 def hr_process_match_name_option():
     return Alternative(
         title=_("Process Name Matching"),
-        style="dropdown",
         elements=[
             TextAscii(
                 title=_("Exact name of the textual description"),
@@ -649,7 +676,6 @@ def hr_process_match_name_option():
 def hr_process_match_path_option():
     return Alternative(
         title=_("Process Path Matching"),
-        style="dropdown",
         elements=[
             TextAscii(
                 title=_("Exact name of the process path"),
@@ -754,7 +780,7 @@ def hr_process_parameter_elements():
 
 def _valuespec_discovery_hr_processes_rules():
     return Dictionary(
-        title=_('Process Discovery (only SNMP)'),
+        title=_('Process discovery (only SNMP)'),
         help=_("This ruleset defines criteria for automatically creating checks for running "
                "SNMP processes based upon the HOST Resource MIB and what is running when the "
                "service discovery is done. You can either specify the textual description "
@@ -835,7 +861,7 @@ def _manual_parameter_valuespec_hr_ps():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="hr_ps",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_manual_item_spec_hr_ps,
         parameter_valuespec=_manual_parameter_valuespec_hr_ps,
         title=lambda: _("State and count of processes (only SNMP)"),

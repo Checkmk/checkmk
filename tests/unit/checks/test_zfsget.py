@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 
 pytestmark = pytest.mark.checks
@@ -231,8 +232,9 @@ pytestmark = pytest.mark.checks
             [("/mnt/f oo/bar baz", {}), ("/mnt/f oo", {}), ("/", {})],
         ),
     ])
-def test_zfsget_discovery(check_manager, info, expected_discovery_result):
-    check_zfsget = check_manager.get_check("zfsget")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_zfsget_discovery(info, expected_discovery_result):
+    check_zfsget = Check("zfsget")
     discovery_result = DiscoveryResult(check_zfsget.run_discovery(check_zfsget.run_parse(info)))
     assertDiscoveryResultsEqual("zfsget", discovery_result,
                                 DiscoveryResult(expected_discovery_result))

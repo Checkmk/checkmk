@@ -10,20 +10,26 @@ import pytest  # type: ignore[import]
 from six import ensure_str
 
 # No stub file
-from testlib import CheckManager  # type: ignore[import]
-# No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostKey,
+    SectionName,
+    SourceType,
+    ConfigSerial,
+    LATEST_SERIAL,
+)
 
 from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+from cmk.snmplib.type_defs import OIDBytes, OIDCached
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -569,36 +575,6 @@ def test_is_all_agents_host(monkeypatch, hostname, tags, result):
 def test_is_all_special_agents_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
     assert config_cache.get_host_config(hostname).is_all_special_agents_host == result
-
-
-def test_prepare_check_command_basics():
-    assert config.prepare_check_command(u"args 123 -x 1 -y 2", "bla", "blub") \
-        == u"args 123 -x 1 -y 2"
-
-    assert config.prepare_check_command(["args", "123", "-x", "1", "-y", "2"], "bla", "blub") \
-        == "'args' '123' '-x' '1' '-y' '2'"
-
-    assert config.prepare_check_command(["args", "1 2 3", "-d=2", "--hallo=eins", 9], "bla", "blub") \
-        == "'args' '1 2 3' '-d=2' '--hallo=eins' 9"
-
-    # TODO Do we really need to test things dynamically which are already
-    # caught statically?
-    with pytest.raises(NotImplementedError):
-        config.prepare_check_command((1, 2), "bla", "blub")  # type: ignore[arg-type]
-
-
-@pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", u"aädg"])
-def test_prepare_check_command_password_store(monkeypatch, pw):
-    monkeypatch.setattr(config, "stored_passwords", {"pw-id": {"password": pw,}})
-    assert config.prepare_check_command(["arg1", ("store", "pw-id", "--password=%s"), "arg3"], "bla", "blub") \
-        == "--pwstore=2@11@pw-id 'arg1' '--password=%s' 'arg3'" % ("*" * len(pw))
-
-
-def test_prepare_check_command_not_existing_password(capsys):
-    assert config.prepare_check_command(["arg1", ("store", "pw-id", "--password=%s"), "arg3"], "bla", "blub") \
-        == "--pwstore=2@11@pw-id 'arg1' '--password=***' 'arg3'"
-    stderr = capsys.readouterr().err
-    assert "The stored password \"pw-id\" used by service \"blub\" on host \"bla\"" in stderr
 
 
 @pytest.mark.parametrize("hostname,result", [
@@ -1155,6 +1131,7 @@ def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version,
     assert config_cache.get_host_config(hostname).snmp_credentials_of_version(version) == result
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize("hostname,section_name,result", [
     ("testhost1", "uptime", None),
     ("testhost2", "uptime", None),
@@ -1162,7 +1139,6 @@ def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version,
     ("testhost2", "snmp_uptime", 4),
 ])
 def test_host_config_snmp_check_interval(monkeypatch, hostname, section_name, result):
-    CheckManager().load(["uptime", "snmp_uptime"])
     ts = Scenario().add_host(hostname)
     ts.set_ruleset("snmp_check_interval", [
         (("snmp_uptime", 4), [], ["testhost2"], {}),
@@ -1444,8 +1420,8 @@ def test_labels_of_service(monkeypatch):
     }
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
-    CheckManager().load(["cpu"])
     ts = Scenario().add_host("test-host")
 
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
@@ -1505,12 +1481,12 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
     assert config_cache.extra_attributes_of_service(hostname, "CPU load") == result
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", []),
     ("testhost2", ["icon1", "icon2"]),
 ])
 def test_config_cache_icons_and_actions(monkeypatch, hostname, result):
-    CheckManager().load(["ps"])
     ts = Scenario().add_host(hostname)
     ts.set_ruleset("service_icons_and_actions", [
         ("icon1", [], ["testhost2"], "CPU load$", {}),
@@ -1679,6 +1655,86 @@ def test_config_cache_service_discovery_name(monkeypatch, use_new_descr, result)
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.service_discovery_name() == result
+
+
+def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch):
+    ts = Scenario()
+
+    config_cache = ts.apply(monkeypatch)
+
+    # regardless of config: descr == None -> return None
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        None,
+        lambda _x: "dummy.test.ip.0",
+    ) is None
+    # still None, we have no cluster:
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        'Test Service',
+        lambda _x: "dummy.test.ip.0",
+    ) is None
+
+
+def test_config_cache_get_clustered_service_node_keys_cluster_no_service(monkeypatch):
+    ts = Scenario()
+    ts.add_cluster('cluster.test', nodes=['node1.test', 'node2.test'])
+    config_cache = ts.apply(monkeypatch)
+
+    # None for a node:
+    assert config_cache.get_clustered_service_node_keys(
+        'node1.test',
+        SourceType.HOST,
+        'Test Service',
+        lambda _x: "dummy.test.ip.0",
+    ) is None
+    # empty list for cluster (we have not clustered the service)
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        'Test Service',
+        lambda _x: "dummy.test.ip.0",
+    ) == []
+
+
+def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch):
+    ts = Scenario()
+    ts.add_host('node1.test')
+    ts.add_host('node2.test')
+    ts.add_cluster('cluster.test', nodes=['node1.test', 'node2.test'])
+    # add a fake rule, that defines a cluster
+    ts.set_option('clustered_services_mapping', [{
+        'value': 'cluster.test',
+        'condition': {
+            'service_description': ['Test Service']
+        },
+    }])
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        'Test Service',
+        lambda host_config: "dummy.test.ip.%s" % host_config.hostname[4],
+    ) == [
+        HostKey('node1.test', "dummy.test.ip.1", SourceType.HOST),
+        HostKey('node2.test', "dummy.test.ip.2", SourceType.HOST),
+    ]
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        'Test Unclustered',
+        lambda _x: "dummy.test.ip.0",
+    ) == []
+    # regardless of config: descr == None -> return None
+    assert config_cache.get_clustered_service_node_keys(
+        'cluster.test',
+        SourceType.HOST,
+        None,
+        lambda _x: "dummy.test.ip.0",
+    ) is None
 
 
 def test_host_ruleset_match_object_of_service(monkeypatch):
@@ -1964,11 +2020,125 @@ cmc_host_rrd_config = [
 """ % (condition, value))
 
 
-@pytest.mark.parametrize("pack_string", [
-    "_test_var = OIDBytes('6')\n\n",
-    "_test_var = OIDCached('6')\n\n",
+@pytest.fixture(name="serial")
+def fixture_serial():
+    return ConfigSerial("13")
+
+
+def test_save_packed_config(monkeypatch, serial):
+    ts = Scenario()
+    ts.add_host("bla1")
+    config_cache = ts.apply(monkeypatch)
+
+    assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
+                    "precompiled_check_config.mk").exists()
+    assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
+                    "precompiled_check_config.mk.orig").exists()
+
+    config.save_packed_config(serial, config_cache)
+
+    assert Path(cmk.utils.paths.core_helper_config_dir, serial,
+                "precompiled_check_config.mk").exists()
+    assert Path(cmk.utils.paths.core_helper_config_dir, serial,
+                "precompiled_check_config.mk.orig").exists()
+
+
+def test_load_packed_config(serial):
+    config.PackedConfigStore(serial).write("abc = 1")
+
+    assert "abc" not in config.__dict__
+    config.load_packed_config(serial)
+    # Mypy does not understand that we add some new member for testing
+    assert config.abc == 1  # type: ignore[attr-defined]
+    del config.__dict__["abc"]
+
+
+# These types are currently imported into the cmk.base.config namespace, just to be able to load
+# objects of this type from the configuration
+def test_packed_config_able_to_load_snmp_types(serial):
+    config.PackedConfigStore(serial).write(
+        "test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
+
+    config.load_packed_config(serial)
+    assert config.test_var1 == OIDBytes('6')  # type: ignore[attr-defined]
+    assert config.test_var2 == OIDCached('6')  # type: ignore[attr-defined]
+
+
+class TestPackedConfigStore:
+    @pytest.fixture()
+    def store(self, serial):
+        return config.PackedConfigStore(serial)
+
+    def test_latest_serial_path(self):
+        store = config.PackedConfigStore(serial=LATEST_SERIAL)
+        assert store._compiled_path == Path(cmk.utils.paths.core_helper_config_dir, "latest",
+                                            "precompiled_check_config.mk")
+
+    def test_given_serial_path(self):
+        store = config.PackedConfigStore(serial=ConfigSerial("42"))
+        assert store._compiled_path == Path(cmk.utils.paths.core_helper_config_dir, "42",
+                                            "precompiled_check_config.mk")
+
+    def test_read_not_existing_file(self, store):
+        with pytest.raises(FileNotFoundError):
+            store.read()
+
+    def test_write(self, store, serial):
+        assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
+                        "precompiled_check_config.mk").exists()
+        assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
+                        "precompiled_check_config.mk.orig").exists()
+
+        store.write("abc = 1\n")
+
+        packed_file_path = Path(cmk.utils.paths.core_helper_config_dir, serial,
+                                "precompiled_check_config.mk")
+        assert packed_file_path.exists()
+        assert Path(cmk.utils.paths.core_helper_config_dir, serial,
+                    "precompiled_check_config.mk.orig").exists()
+
+        assert store.read() == {
+            "abc": 1,
+        }
+
+
+@pytest.mark.parametrize("params, expected_result", [
+    (
+        None,
+        False,
+    ),
+    (
+        {},
+        False,
+    ),
+    (
+        {
+            'x': 'y'
+        },
+        False,
+    ),
+    (
+        [1, (2, 3)],
+        False,
+    ),
+    (
+        4,
+        False,
+    ),
+    (
+        {
+            'tp_default_value': 1,
+            'tp_values': [('24X7', 2)]
+        },
+        True,
+    ),
+    (
+        ['abc', {
+            'tp_default_value': 1,
+            'tp_values': [('24X7', 2)]
+        }],
+        True,
+    ),
 ])
-def test_packed_config(pack_string):
-    packed_config = config.PackedConfig()
-    packed_config._write(pack_string)
-    packed_config.load()
+def test_has_timespecific_params(params, expected_result):
+    assert config.has_timespecific_params(params) is expected_result

@@ -1,0 +1,14 @@
+Title: Linux agent (systemd): Add OnlyFrom to agent output
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1604483569
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+If agent access is restricted via agent you can now read the OnlyFrom
+configuration in the agent output.
+Beforehand this was only possible if the agent used xinet.d. Now it is
+possible for both systemd and xinetd.

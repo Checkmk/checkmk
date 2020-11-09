@@ -6,7 +6,7 @@ Date: 1585559694
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This change introduces a fix for the scan function of the cisco_asa_connections check plugin.
 In the previous version, the scan function did not pass when the sysDescr started with

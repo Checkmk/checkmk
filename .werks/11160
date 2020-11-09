@@ -6,7 +6,7 @@ Date: 1590573920
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When exporting a view using %output_format=csv|json|python labels would not
 get exported properly (concatenated key/value pairs like 

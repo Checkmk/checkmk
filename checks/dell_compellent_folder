@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # example output
 
 
@@ -14,11 +16,11 @@ def inventory_dell_compellent_folder(info):
 
 
 def check_dell_compellent_folder(item, params, info):
-    for number, total, free in info:
+    for number, total, used in info:
         if number == item:
             # sizes delivered in GiB
             total = float(total) * 1024
-            free = float(free) * 1024
+            free = total - float(used) * 1024
             yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
@@ -31,8 +33,8 @@ check_info['dell_compellent_folder'] = {
         [
             2,  # DELL-STORAGE-SC-MIB::scDiskFolderSUNbr
             5,  # DELL-STORAGE-SC-MIB::scDiskFolderSUTotalSpace2
-            8,  # DELL-STORAGE-SC-MIB::scDiskFolderSUFreeSpace
+            6,  # DELL-STORAGE-SC-MIB::scDiskFolderSUUsedSpace2
         ]),
     'snmp_scan_function': lambda oid: oid(".1.3.6.1.4.1.674.11000.2000.500.1.2.1.0"),
-    'includes': ['df.include', 'size_trend.include'],
+    'group': 'filesystem',
 }

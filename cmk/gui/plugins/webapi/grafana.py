@@ -119,7 +119,7 @@ class APICallGrafanaConnector(APICallCollection):
         try:
             from cmk.gui.cee.plugins.metrics.graphs import graph_recipes_for_api_request
         except ImportError:
-            raise MKGeneralException(_("Currently not supported with this Check_MK Edition"))
+            raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
         _graph_data_range, graph_recipes = graph_recipes_for_api_request(request)
         return graph_recipes
 
@@ -130,7 +130,7 @@ class APICallGrafanaConnector(APICallCollection):
                 matching_combined_graphs,
             )
         except ImportError:
-            raise MKGeneralException(_("Currently not supported with this Check_MK Edition"))
+            raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
 
         if "presentation" not in request:
             request['presentation'] = 'sum'
@@ -176,7 +176,7 @@ class APICallGrafanaConnector(APICallCollection):
         try:
             from cmk.gui.cee.plugins.metrics.graphs import get_filter_headers_of_context
         except ImportError:
-            raise MKGeneralException(_("Currently not supported with this Check_MK Edition"))
+            raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
 
         datasource = data_source_registry[datasource_name]()
         return get_filter_headers_of_context(datasource, context, single_infos)

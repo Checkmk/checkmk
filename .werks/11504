@@ -1,0 +1,14 @@
+Title: Fix Appliance snapin
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1603869482
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+When installing Checkmk 2.0.0i1 on a Checkmk appliance, there is an Appliance
+specific sidebar snapin for navigating to the Checkmk Appliance GUI from
+Checkmk. This snapin did not work in 2.0.0i1 and showed the message
+"No module named '__builtin__'".

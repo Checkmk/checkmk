@@ -6,13 +6,10 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Age,
     Dictionary,
-    Filesize,
     ListOfTimeRanges,
     MonitoringState,
     TextAscii,
-    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
@@ -21,41 +18,20 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
 )
 
+from cmk.gui.plugins.wato.check_parameters.file_attributes_utils import (
+    min_age_levels,
+    max_age_levels,
+    min_size_levels,
+    max_size_levels,
+)
+
 
 def _parameter_valuespec_fileinfo():
     return Dictionary(elements=[
-        ("minage",
-         Tuple(
-             title=_("Minimal age"),
-             elements=[
-                 Age(title=_("Warning if younger than")),
-                 Age(title=_("Critical if younger than")),
-             ],
-         )),
-        ("maxage",
-         Tuple(
-             title=_("Maximal age"),
-             elements=[
-                 Age(title=_("Warning if older than")),
-                 Age(title=_("Critical if older than")),
-             ],
-         )),
-        ("minsize",
-         Tuple(
-             title=_("Minimal size"),
-             elements=[
-                 Filesize(title=_("Warning if below")),
-                 Filesize(title=_("Critical if below")),
-             ],
-         )),
-        ("maxsize",
-         Tuple(
-             title=_("Maximal size"),
-             elements=[
-                 Filesize(title=_("Warning at")),
-                 Filesize(title=_("Critical at")),
-             ],
-         )),
+        ("minage", min_age_levels()),
+        ("maxage", max_age_levels()),
+        ("minsize", min_size_levels()),
+        ("maxsize", max_size_levels()),
         ("timeofday",
          ListOfTimeRanges(
              title=_("Only check during the following times of the day"),

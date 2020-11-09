@@ -46,11 +46,13 @@ from cmk.gui.watolib.groups import (
     GroupType,
 )
 
-from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
+    make_confirm_link,
+    redirect,
+    mode_url,
     mode_registry,
-    wato_confirm,
 )
 
 
@@ -126,6 +128,9 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         )
 
     def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(mode_url("%s_groups" % self.type_name))
+
         if html.request.var('_delete'):
             delname = html.request.get_ascii_input_mandatory("_delete")
             usages = watolib.find_usages_of_group(delname, self.type_name)
@@ -139,17 +144,10 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
                 message += "</ul>"
                 raise MKUserError(None, message)
 
-            confirm_txt = _('Do you really want to delete the %s group "%s"?') % (self.type_name,
-                                                                                  delname)
+            watolib.delete_group(delname, self.type_name)
+            self._groups = self._load_groups()
 
-            c = wato_confirm(_("Confirm deletion of group \"%s\"") % delname, confirm_txt)
-            if c:
-                watolib.delete_group(delname, self.type_name)
-                self._groups = self._load_groups()
-            elif c is False:
-                return ""
-
-        return None
+        return redirect(mode_url("%s_groups" % self.type_name))
 
     def _page_no_groups(self) -> None:
         html.div(_("No groups are defined yet."), class_="info")
@@ -161,7 +159,9 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         table.cell(_("Actions"), css="buttons")
         edit_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
                                                    ("edit", name)])
-        delete_url = html.makeactionuri([("_delete", name)])
+        delete_url = make_confirm_link(
+            url=html.makeactionuri([("_delete", name)]),
+            message=_('Do you really want to delete the %s group "%s"?') % (self.type_name, name))
         clone_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
                                                     ("clone", name)])
         html.icon_button(edit_url, _("Properties"), "edit")
@@ -229,7 +229,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
-            return "%s_groups" % self.type_name
+            return redirect(mode_url("%s_groups" % self.type_name))
 
         alias = html.request.get_unicode_input_mandatory("alias").strip()
         self.group = {"alias": alias}
@@ -242,7 +242,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         else:
             watolib.edit_group(self._name, self.type_name, self.group)
 
-        return "%s_groups" % self.type_name
+        return redirect(mode_url("%s_groups" % self.type_name))
 
     def _show_extra_page_elements(self):
         pass
@@ -541,4 +541,4 @@ class ModeEditContactgroup(ABCModeEditGroup):
         for f in os.listdir(nagvis_maps_path):
             if f[0] != '.' and f.endswith('.cfg'):
                 maps.append((f[:-4], f[:-4]))
-        return maps
+        return sorted(maps)

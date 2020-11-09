@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import ActiveCheck  # type: ignore[import]
 
 
 @pytest.mark.parametrize('params, result', [
@@ -25,6 +26,7 @@ import pytest  # type: ignore[import]
         "expected_address": ["1.2.3.4", "5.6.7.8,4.3.2.1"],
     }), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-a', '1.2.3.4', '-a', '4.3.2.1,5.6.7.8']),
 ])
-def test_ac_check_dns_expected_addresses(check_manager, params, result):
-    active_check = check_manager.get_active_check("check_dns")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_ac_check_dns_expected_addresses(params, result):
+    active_check = ActiveCheck("check_dns")
     assert active_check.run_argument_function(params) == result

@@ -1,0 +1,11 @@
+Title: NagVis: Fix incompatibility with PHP 7.4
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1600418478
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+

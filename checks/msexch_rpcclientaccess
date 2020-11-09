@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 factory_settings['msexch_rpcclientaccess_defaultlevels'] = {
@@ -47,7 +48,6 @@ check_info['msexch_rpcclientaccess'] = {
     'parse_function': parse_wmi_table,
     'has_perfdata': True,
     'service_description': "Exchange RPC Client Access",
-    'includes': ['wmi.include'],
     'group': 'msx_rpcclientaccess',
     'default_levels_variable': 'msexch_rpcclientaccess_defaultlevels'
 }

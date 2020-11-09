@@ -13,9 +13,11 @@ echo "Update site $SITE..."
 echo "Copy CRE files..."
 sudo rsync \
     --exclude="*.pyc" \
+    --exclude="flycheck*" \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme.py \
+    --delete-excluded \
     -a * $ROOT/lib/python3/cmk/base/
 
 # Ensure cmk.base[.cee] is a namespace package

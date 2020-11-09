@@ -4,12 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.if_include import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_aws_rds(info):
     parsed = {}
-    for metrics in _extract_aws_metrics_by_labels(
+    for metrics in extract_aws_metrics_by_labels(
         [
             "CPUUtilization",
             "CPUCreditUsage",
@@ -76,7 +80,6 @@ check_info['aws_rds'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['CPUUtilization']),
     'check_function': check_aws_rds,
     'service_description': 'AWS/RDS %s CPU Utilization',
-    'includes': ['cpu_util.include', 'aws.include'],
     'group': 'cpu_utilization_multiitem',
     'default_levels_variable': 'aws_rds_cpu_util',
     'has_perfdata': True,
@@ -141,7 +144,6 @@ check_info['aws_rds.cpu_credits'] = {
     ]),
     'check_function': check_aws_rds_cpu_credits,
     'service_description': 'AWS/RDS %s CPU Credits',
-    'includes': ['aws.include'],
     'group': 'aws_rds_cpu_credits',
     'has_perfdata': True,
 }
@@ -191,7 +193,6 @@ check_info['aws_rds.network_io'] = {
     ]),
     'check_function': check_aws_rds_network_io,
     'service_description': 'AWS/RDS %s Network IO',
-    'includes': ['aws.include', "if.include"],
     'default_levels_variable': "if_default_levels",
     'group': 'if',
     'has_perfdata': True,
@@ -228,7 +229,6 @@ check_info['aws_rds.bin_log_usage'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['BinLogDiskUsage']),
     'check_function': check_aws_rds_bin_log_usage,
     'service_description': 'AWS/RDS %s Binary Log Usage',
-    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_disk_usage',
 }
@@ -276,7 +276,6 @@ check_info['aws_rds.transaction_logs_usage'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['TransactionLogsDiskUsage']),
     'check_function': check_aws_rds_transaction_logs_usage,
     'service_description': 'AWS/RDS %s Transaction Logs Usage',
-    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_disk_usage',
 }
@@ -320,7 +319,6 @@ check_info['aws_rds.replication_slot_usage'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['ReplicationSlotDiskUsage']),
     'check_function': check_aws_rds_replication_slot_usage,
     'service_description': 'AWS/RDS %s Replication Slot Usage',
-    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_disk_usage',
 }
@@ -367,7 +365,6 @@ check_info['aws_rds.disk_io'] = {
     ]),
     'check_function': check_aws_rds_disk_io,
     'service_description': 'AWS/RDS %s Disk IO',
-    'includes': ['aws.include', 'diskstat.include'],
     'group': 'diskstat',
     'has_perfdata': True,
 }
@@ -395,7 +392,6 @@ check_info['aws_rds.connections'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['DatabaseConnections']),
     'check_function': check_aws_rds_connections,
     'service_description': 'AWS/RDS %s Connections',
-    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_connections',
 }
@@ -425,7 +421,6 @@ check_info['aws_rds.agent_jobs'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['FailedSQLServerAgentJobsCount']),
     'check_function': check_aws_rds_agent_jobs,
     'service_description': 'AWS/RDS %s SQL Server Agent Jobs',
-    'includes': ['aws.include'],
 }
 
 #.
@@ -464,7 +459,6 @@ check_info['aws_rds.replica_lag'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['ReplicaLag']),
     'check_function': check_aws_rds_replica_lag,
     'service_description': 'AWS/RDS %s Replica Lag',
-    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_replica_lag',
 }

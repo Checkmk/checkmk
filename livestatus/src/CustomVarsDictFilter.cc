@@ -12,7 +12,6 @@
 #include <utility>
 
 #include "CustomVarsDictColumn.h"
-#include "Filter.h"
 #include "RegExp.h"
 #include "Row.h"
 

@@ -43,6 +43,14 @@ def load_timeperiods() -> TimeperiodSpecs:
     return timeperiods
 
 
+def load_timeperiod(name: str):
+    timeperiods = load_timeperiods()
+    try:
+        return timeperiods[name]
+    except KeyError:
+        return
+
+
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
     store.mkdir(wato_root_dir())
     store.save_to_mk_file(wato_root_dir() + "timeperiods.mk",
@@ -50,6 +58,17 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
                           _filter_builtin_timeperiods(timeperiods),
                           pprint_value=config.wato_pprint_config)
     g.timeperiod_information = timeperiods
+
+
+def save_timeperiod(name, timeperiod) -> None:
+    existing_timeperiods = load_timeperiods()
+    existing_timeperiods[name] = timeperiod
+    save_timeperiods(existing_timeperiods)
+
+
+def verify_timeperiod_name_exists(name):
+    existing_timperiods = load_timeperiods()
+    return name in existing_timperiods
 
 
 def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:

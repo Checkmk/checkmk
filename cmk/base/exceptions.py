@@ -8,16 +8,13 @@ import traceback
 from types import TracebackType
 from typing import Tuple, Type
 
-from cmk.utils.exceptions import MKException, MKGeneralException
+# Imported as alias for other cmk.base modules
+from cmk.utils.exceptions import MKException, MKGeneralException  # pylint: disable=unused-import
 
 from cmk.fetchers import MKFetcherError
 
 
 class MKAgentError(MKFetcherError):
-    pass
-
-
-class MKIPAddressLookupError(MKGeneralException):
     pass
 
 

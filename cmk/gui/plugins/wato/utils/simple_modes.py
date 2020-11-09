@@ -14,16 +14,15 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import Optional, List, Type, Union, Tuple, Dict
+from typing import Optional, List, Type, Dict
 
 from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
+from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, ActionResult, redirect, mode_url)
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
     ID,
@@ -44,6 +43,8 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.utils.flashed_messages import flash
 
 
 class SimpleModeType(metaclass=abc.ABCMeta):
@@ -141,7 +142,7 @@ class SimpleListMode(SimpleWatoModeBase):
         """Shows the HTML code for the cells of an object row"""
         raise NotImplementedError()
 
-    def _handle_custom_action(self, action: str) -> Union[None, bool, Tuple[Optional[str], str]]:
+    def _handle_custom_action(self, action: str) -> ActionResult:
         """Gives the mode the option to implement custom actions
 
         This function is called when the action phase is triggered. The action name is given
@@ -167,9 +168,12 @@ class SimpleListMode(SimpleWatoModeBase):
                                     title=self._new_button_label(),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([
-                                            ("mode", self._mode_type.edit_mode_name())
-                                        ])),
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", self._mode_type.edit_mode_name())],
+                                        )),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),
@@ -182,23 +186,19 @@ class SimpleListMode(SimpleWatoModeBase):
     def _new_button_label(self) -> str:
         return _("Add %s") % self._mode_type.name_singular()
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.transaction_valid():
-            return
+            return None
 
         action_var = html.request.get_str_input("_action")
         if action_var is None:
-            return
+            return None
 
         if action_var != "delete":
             return self._handle_custom_action(action_var)
 
-        confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
-        if confirm is False:
-            return False
-        if not confirm:
-            return
-        html.check_transaction()  # invalidate transid
+        if not html.check_transaction():
+            return redirect(mode_url(self._mode_type.list_mode_name()))
 
         entries = self._store.load_for_modification()
 
@@ -219,7 +219,8 @@ class SimpleListMode(SimpleWatoModeBase):
                          _("Removed the %s '%s'") % (self._mode_type.name_singular(), ident))
         self._store.save(entries)
 
-        return None, _("The %s has been deleted.") % self._mode_type.name_singular()
+        flash(_("The %s has been deleted.") % self._mode_type.name_singular())
+        return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _validate_deletion(self, ident, entry):
         """Override this to implement custom validations"""
@@ -243,23 +244,32 @@ class SimpleListMode(SimpleWatoModeBase):
     def _show_action_cell(self, table, ident):
         table.cell(_("Actions"), css="buttons")
 
-        edit_url = html.makeuri_contextless([
-            ("mode", self._mode_type.edit_mode_name()),
-            ("ident", ident),
-        ])
+        edit_url = makeuri_contextless(
+            request,
+            [
+                ("mode", self._mode_type.edit_mode_name()),
+                ("ident", ident),
+            ],
+        )
         html.icon_button(edit_url, _("Edit this %s") % self._mode_type.name_singular(), "edit")
 
-        clone_url = html.makeuri_contextless([
-            ("mode", self._mode_type.edit_mode_name()),
-            ("clone", ident),
-        ])
+        clone_url = makeuri_contextless(
+            request,
+            [
+                ("mode", self._mode_type.edit_mode_name()),
+                ("clone", ident),
+            ],
+        )
         html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
 
-        delete_url = watolib.make_action_link([
-            ("mode", self._mode_type.list_mode_name()),
-            ("_action", "delete"),
-            ("_delete", ident),
-        ])
+        delete_url = make_confirm_link(
+            url=watolib.make_action_link([
+                ("mode", self._mode_type.list_mode_name()),
+                ("_action", "delete"),
+                ("_delete", ident),
+            ]),
+            message=self._delete_confirm_message(),
+        )
         html.icon_button(delete_url,
                          _("Delete this %s") % self._mode_type.name_singular(), "delete")
 
@@ -386,9 +396,9 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
     def _vs_optional_keys(self):
         return []
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.transaction_valid():
-            return self._mode_type.list_mode_name()
+            return redirect(mode_url(self._mode_type.list_mode_name()))
 
         vs = self.valuespec()
 
@@ -422,7 +432,7 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
 
         self._save(entries)
 
-        return self._mode_type.list_mode_name()
+        return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _save(self, entries):
         self._store.save(entries)

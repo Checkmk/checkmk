@@ -6,10 +6,10 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Service,
-    state,
+    State as state,
     type_defs,
 )
 from cmk.base.plugins.agent_based import veritas_vcs
@@ -403,7 +403,7 @@ def test_cluster_check_veritas_vcs():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: running',
+                notice='[node1]: running',
             ),
             Result(
                 state=state.OK,
@@ -424,11 +424,11 @@ def test_cluster_check_veritas_vcs_system():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: running',
+                notice='[node1]: running',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: running',
+                notice='[node2]: running',
             ),
             Result(
                 state=state.OK,
@@ -454,7 +454,7 @@ def test_cluster_check_veritas_vcs_group():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: online',
+                notice='[node1]: online',
             ),
             Result(
                 state=state.CRIT,
@@ -492,7 +492,7 @@ def test_cluster_check_veritas_vcs_resource():
             ),
             Result(
                 state=state.OK,
-                details='[node2]: online',
+                notice='[node2]: online',
             ),
             Result(
                 state=state.WARN,

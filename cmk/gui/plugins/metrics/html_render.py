@@ -8,7 +8,7 @@ import copy
 import time
 import json
 import traceback
-from typing import NamedTuple, Optional, Tuple, List, Union
+from typing import NamedTuple, Optional, Tuple, List, Union, Iterable
 
 import livestatus
 
@@ -16,20 +16,23 @@ import cmk.utils.render
 
 from cmk.gui import sites, escaping
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKGeneralException
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _u, _
 
 from cmk.gui.log import logger
 
 from cmk.gui.plugins.metrics.utils import render_color_icon
 
 from cmk.gui.plugins.metrics import artwork
+from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 
 from cmk.gui.utils.popups import MethodAjax
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 RenderOutput = Union[HTML, str]
 
@@ -142,9 +145,22 @@ def graph_ajax_context(graph_artwork, graph_data_range, graph_render_options):
     }
 
 
-def render_plain_graph_title(graph_artwork, graph_render_options):
-    return " / ".join(
-        txt for txt, _url in _render_graph_title_elements(graph_artwork, graph_render_options))
+def render_title_elements(elements, *, plain_text: bool = False) -> Union[str, HTML]:
+    def _wrap_link(txt, url):
+        title: Union[str, HTML] = _u(txt)
+        if not plain_text and url:
+            title = html.render_a(title, href=url)
+        return title
+
+    link: Union[str, HTML] = " / " if plain_text else HTML(" / ")
+    return link.join(_wrap_link(txt, url) for txt, url in elements if txt)
+
+
+def render_plain_graph_title(graph_artwork, graph_render_options) -> str:
+    title = render_title_elements(_render_graph_title_elements(graph_artwork, graph_render_options),
+                                  plain_text=True)
+    assert isinstance(title, str)
+    return title
 
 
 def _render_graph_title_elements(graph_artwork, graph_render_options):
@@ -155,48 +171,57 @@ def _render_graph_title_elements(graph_artwork, graph_render_options):
     if "title" in graph_render_options:
         return [(graph_render_options["title"], None)]
 
-    title_elements: List[Tuple[str, Optional[str]]] = [(graph_artwork["title"], None)]
+    title_elements: List[Tuple[str, Optional[str]]] = []
 
-    if isinstance(graph_render_options["title_format"], (tuple, list)):
-        title_format, title_format_params = graph_render_options["title_format"]
-    else:
-        title_format, title_format_params = graph_render_options["title_format"], []
+    title_format = transform_graph_render_options_title_format(graph_render_options["title_format"])
 
-    if title_format == "plain":
-        return title_elements
+    if "plain" in title_format:
+        title_elements.append((graph_artwork["title"], None))
 
     # Only add host/service information for template based graphs
     ident_type, spec_info = graph_artwork["definition"]["specification"]
     if ident_type != "template":
         return title_elements
 
-    if title_format != "add_title_infos":
-        raise NotImplementedError()
-
-    if "add_host_name" in title_format_params:
-        host_name = spec_info["host_name"]
-        host_url = html.makeuri_contextless([("view_name", "hoststatus"),
-                                             ("host", spec_info["host_name"])],
-                                            filename="view.py")
-        title_elements.append((host_name, host_url))
-
-    if "add_host_alias" in title_format_params:
-        host_alias = _get_alias_of_host(spec_info["site"], spec_info["host_name"])
-        host_url = html.makeuri_contextless([("view_name", "hoststatus"),
-                                             ("host", spec_info["host_name"])],
-                                            filename="view.py")
-        title_elements.append((host_alias, host_url))
-
-    if "add_service_description" in title_format_params:
-        service_description = spec_info["service_description"]
-        if service_description != "_HOST_":
-            service_url = html.makeuri_contextless([("view_name", "service"),
-                                                    ("host", spec_info["host_name"]),
-                                                    ("service", service_description)],
-                                                   filename="view.py")
-            title_elements.append((service_description, service_url))
+    title_elements.extend(title_info_elements(spec_info, title_format))
 
     return title_elements
+
+
+def title_info_elements(spec_info, title_format) -> Iterable[Tuple[str, str]]:
+    if "add_host_name" in title_format:
+        host_url = makeuri_contextless(
+            global_request,
+            [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
+            filename="view.py",
+        )
+        yield spec_info["host_name"], host_url
+
+    if "add_host_alias" in title_format:
+        host_alias = _get_alias_of_host(spec_info["site"], spec_info["host_name"])
+        host_url = makeuri_contextless(
+            global_request,
+            [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
+            filename="view.py",
+        )
+        yield host_alias, host_url
+
+    if "add_service_description" in title_format:
+        service_description = spec_info["service_description"]
+        if service_description != "_HOST_":
+            service_url = makeuri_contextless(
+                global_request,
+                [
+                    ("view_name", "service"),
+                    ("host", spec_info["host_name"]),
+                    ("service", service_description),
+                ],
+                filename="view.py",
+            )
+            yield service_description, service_url
+
+    if "add_metric_name" in title_format:
+        yield spec_info["metric"], ""
 
 
 def _get_alias_of_host(site, host_name):
@@ -217,10 +242,7 @@ def _get_alias_of_host(site, host_name):
 
 
 def render_html_graph_title(graph_artwork, graph_render_options):
-    title = HTML(" / ").join([
-        (html.render_a(txt, href=url) if url else txt)
-        for txt, url in _render_graph_title_elements(graph_artwork, graph_render_options)
-    ])
+    title = render_title_elements(_render_graph_title_elements(graph_artwork, graph_render_options))
     if title:
         return html.render_div(
             title,
@@ -556,12 +578,10 @@ def forget_manual_vertical_zoom():
         save_user_graph_data_range(user_range)
 
 
-def render_graphs_from_specification_html(graph_identification,
-                                          graph_data_range,
-                                          graph_render_options,
-                                          render_async=True):
+def resolve_graph_recipe(graph_identification, destination=None):
     try:
-        graph_recipes = graph_identification_types.create_graph_recipes(graph_identification)
+        return graph_identification_types.create_graph_recipes(graph_identification,
+                                                               destination=None)
     except livestatus.MKLivestatusNotFoundError:
         return render_graph_error_html(
             "%s\n\n%s: %r" % (_("Cannot fetch data via Livestatus"),
@@ -569,6 +589,16 @@ def render_graphs_from_specification_html(graph_identification,
             _("Cannot calculate graph recipes"))
     except Exception as e:
         return render_graph_error_html(e, _("Cannot calculate graph recipes"))
+
+
+def render_graphs_from_specification_html(graph_identification,
+                                          graph_data_range,
+                                          graph_render_options,
+                                          render_async=True):
+
+    graph_recipes = resolve_graph_recipe(graph_identification)
+    if not isinstance(graph_recipes, list):
+        return graph_recipes  # This is to html.write the exception
 
     return render_graphs_from_definitions(graph_recipes, graph_data_range, graph_render_options,
                                           render_async)
@@ -757,11 +787,9 @@ def render_ajax_graph_hover(context, hover_time):
     graph_data_range = context["data_range"]
     graph_recipe = context["definition"]
 
-    start_time, end_time, step, curves = artwork.compute_graph_artwork_curves(
-        graph_recipe, graph_data_range)
+    curves = artwork.compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
-    curve_values = artwork._compute_curve_values_at_timestamp(graph_recipe, curves, hover_time,
-                                                              start_time, end_time, step)
+    curve_values = artwork._compute_curve_values_at_timestamp(graph_recipe, curves, hover_time)
 
     return {
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
@@ -773,7 +801,7 @@ def render_ajax_graph_hover(context, hover_time):
 # TODO: This is not acurate! Especially when the font size is changed this does not lead to correct
 # results. But this is a more generic problem of the html_size_per_ex which is hard coded instead
 # of relying on the font as it should.
-def graph_legend_height_ex(graph_render_options, graph_artwork):
+def graph_legend_height_ex(graph_render_options, graph_artwork) -> float:
     if not show_graph_legend(graph_render_options, graph_artwork):
         return 0.0
     # Add header line + spacing: '3.0'
@@ -818,7 +846,8 @@ def _graph_title_height_ex(graph_render_options):
 default_dashlet_graph_render_options = {
     "font_size": 8,
     "show_legend": False,
-    "title_format": ("add_title_infos", ["add_host_name", "add_service_description"]),
+    "show_title": False,
+    "title_format": ["plain", "add_host_name", "add_service_description"],
     "show_controls": False,
     "resizable": False,
     "show_time_range_previews": False,
@@ -866,16 +895,14 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
     graph_data_range["step"] = estimate_graph_step_for_html(graph_data_range["time_range"],
                                                             graph_render_options)
 
-    try:
-        graph_recipes = graph_identification_types.create_graph_recipes(
-            graph_identification, destination=GraphDestinations.dashlet)
-        if graph_recipes:
-            graph_recipe = graph_recipes[0]
-        else:
-            raise MKGeneralException(_("Failed to calculate a graph recipe."))
-    except livestatus.MKLivestatusNotFoundError:
-        html.div(_("Cannot render graphs: cannot fetch data via Livestatus"), class_="error")
-        return
+    graph_recipes = resolve_graph_recipe(graph_identification,
+                                         destination=GraphDestinations.dashlet)
+    if not isinstance(graph_recipes, list):
+        return graph_recipes  # This is to html.write the exception
+    if graph_recipes:
+        graph_recipe = graph_recipes[0]
+    else:
+        raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to
     # make the graph fit into the dashlet area.
@@ -884,9 +911,8 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
         graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
                                                       graph_render_options)
         if graph_artwork["curves"]:
-            legend_width, legend_height = graph_legend_height_ex(graph_render_options,
-                                                                 graph_artwork)
-            graph_render_options["size"] = (width - legend_width, height - legend_height)
+            legend_height = graph_legend_height_ex(graph_render_options, graph_artwork)
+            graph_render_options["size"] = (width, height - legend_height)
 
     html_code = render_graphs_from_definitions([graph_recipe],
                                                graph_data_range,

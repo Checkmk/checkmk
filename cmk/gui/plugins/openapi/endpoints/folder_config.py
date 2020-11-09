@@ -3,38 +3,53 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Folders"""
-import http.client
+"""Folders
 
-from connexion import ProblemException  # type: ignore
+Folders are used in Checkmk to organize the hosts in a tree structure.
+The root (or main) folder is always existing, other folders can be created manually.
+If you build the tree cleverly you can use it to pass on attributes in a meaningful manner.
+
+You can find an introduction to hosts including folders in the
+[Checkmk guide](https://checkmk.com/cms_wato_hosts.html).
+"""
+import urllib.parse
 
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
-    endpoint_schema,
+    Endpoint,
     request_schemas,
     response_schemas,
 )
+from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib import CREFolder
-from cmk.gui.wsgi.type_defs import DomainObject
 
 # TODO: Remove all hard-coded response creation in favour of a generic one
 # TODO: Implement formal description (GET endpoint) of move action
-# TODO: throw out connexion
-# TODO: add redoc.js
+
+FOLDER_FIELD = {
+    'folder': fields.FolderField(
+        description=(
+            "The folder identifier. This can be a path name or the folder-specific 128 bit "
+            "identifier. This identifier is unique to the folder and stays the same, even if the "
+            "folder has been moved. The special value 'root' represents the root-folder. The same "
+            "root folder can also be accessed via '/'. The folder value has to urlencoded."),
+        example=urllib.parse.quote_plus('/my/fine/folder'),
+    )
+}
 
 
-@endpoint_schema(constructors.collection_href('folder_config'),
-                 'cmk/create',
-                 method='post',
-                 response_schema=response_schemas.ConcreteFolder,
-                 etag='output',
-                 request_body_required=True,
-                 request_schema=request_schemas.CreateFolder)
+@Endpoint(constructors.collection_href('folder_config'),
+          'cmk/create',
+          method='post',
+          etag='output',
+          response_schema=response_schemas.ConcreteFolder,
+          request_schema=request_schemas.CreateFolder)
 def create(params):
-    """Create a new folder"""
+    """Create a folder"""
     put_body = params['body']
     name = put_body['name']
     title = put_body['title']
@@ -46,42 +61,17 @@ def create(params):
     return _serve_folder(folder)
 
 
-@endpoint_schema(constructors.domain_type_action_href('folder_config', 'bulk-create'),
-                 'cmk/bulk_create',
-                 method='post',
-                 response_schema=response_schemas.FolderCollection,
-                 request_body_required=True,
-                 request_schema=request_schemas.BulkCreateFolder)
-def bulk_create(params):
-    """Bulk create folders"""
-    body = params['body']
-    entries = body['entries']
-    folders = []
-    for details in entries:
-        folder = details['parent'].create_subfolder(
-            details['name'],
-            details['title'],
-            details['attributes'],
-        )
-        folders.append(folder)
-
-    return constructors.serve_json(_folders_collection(folders))
-
-
-@endpoint_schema(constructors.object_href('folder_config', '{ident}'),
-                 '.../persist',
-                 method='put',
-                 parameters=['ident'],
-                 response_schema=response_schemas.ConcreteFolder,
-                 etag='both',
-                 request_body_required=True,
-                 request_schema=request_schemas.UpdateFolder)
+@Endpoint(constructors.object_href('folder_config', '{folder}'),
+          '.../persist',
+          method='put',
+          path_params=[FOLDER_FIELD],
+          etag='both',
+          response_schema=response_schemas.ConcreteFolder,
+          request_schema=request_schemas.UpdateFolder)
 def update(params):
     """Update a folder
-
-    Title and attributes can be updated, but there is no checking of the attributes done."""
-    ident = params['ident']
-    folder = load_folder(ident, status=404)
+    """
+    folder = params['folder']
     constructors.require_etag(constructors.etag_of_obj(folder))
 
     post_body = params['body']
@@ -105,11 +95,11 @@ def update(params):
     return _serve_folder(folder)
 
 
-@endpoint_schema(constructors.domain_type_action_href('folder_config', 'bulk-update'),
-                 'cmk/bulk_update',
-                 method='put',
-                 response_schema=response_schemas.FolderCollection,
-                 request_schema=request_schemas.BulkUpdateFolder)
+@Endpoint(constructors.domain_type_action_href('folder_config', 'bulk-update'),
+          'cmk/bulk_update',
+          method='put',
+          response_schema=response_schemas.FolderCollection,
+          request_schema=request_schemas.BulkUpdateFolder)
 def bulk_update(params):
     """Bulk update folders"""
     body = params['body']
@@ -135,81 +125,57 @@ def bulk_update(params):
         folder.edit(title, attributes)
         folders.append(folder)
 
-    return _folders_collection(folders)
+    return constructors.serve_json(_folders_collection(folders))
 
 
-@endpoint_schema(constructors.object_href('folder_config', '{ident}'),
-                 '.../delete',
-                 method='delete',
-                 parameters=['ident'],
-                 output_empty=True,
-                 etag='input')
+@Endpoint(constructors.object_href('folder_config', '{folder}'),
+          '.../delete',
+          method='delete',
+          path_params=[FOLDER_FIELD],
+          output_empty=True,
+          etag='input')
 def delete(params):
     """Delete a folder"""
-    ident = params['ident']
-    folder = load_folder(ident, status=404)
-    _delete_specific(folder)
-    return Response(status=204)
-
-
-@endpoint_schema(constructors.domain_type_action_href('folder_config', 'bulk-delete'),
-                 '.../delete',
-                 method='delete',
-                 request_schema=request_schemas.BulkDeleteFolder,
-                 output_empty=True)
-def bulk_delete(params):
-    """Bulk delete folders based upon folder id"""
-    # TODO: etag implementation
-    entries = params['entries']
-    folders = []
-    for folder_ident in entries:
-        folders.append(
-            load_folder(
-                folder_ident,
-                status=400,
-                message="folder config %s was not found" % folder_ident,
-            ))
-    for folder in folders:
-        _delete_specific(folder)
-    return Response(status=204)
-
-
-def _delete_specific(folder):
+    folder = params['folder']
     parent = folder.parent()
     parent.delete_subfolder(folder.name())
+    return Response(status=204)
 
 
-@endpoint_schema(constructors.object_action_href('folder_config', '{ident}', action_name='move'),
-                 'cmk/move',
-                 method='post',
-                 parameters=['ident'],
-                 response_schema=response_schemas.ConcreteFolder,
-                 etag='both')
+@Endpoint(constructors.object_action_href('folder_config', '{folder}', action_name='move'),
+          'cmk/move',
+          method='post',
+          path_params=[FOLDER_FIELD],
+          response_schema=response_schemas.ConcreteFolder,
+          request_schema=request_schemas.MoveFolder,
+          etag='both')
 def move(params):
     """Move a folder"""
-    ident = params['ident']
-    folder = load_folder(ident, status=404)
+    folder: watolib.CREFolder = params['folder']
+    folder_id = folder.id()
 
     constructors.require_etag(constructors.etag_of_obj(folder))
 
-    dest = params['body']['destination']
-    if dest == 'root':
-        dest_folder = watolib.Folder.root_folder()
-    else:
-        dest_folder = load_folder(dest, status=400)
+    dest_folder: watolib.CREFolder = params['body']['destination']
 
-    folder.parent().move_subfolder_to(folder, dest_folder)
-
-    folder = load_folder(ident, status=500)
+    try:
+        folder.parent().move_subfolder_to(folder, dest_folder)
+    except MKUserError as exc:
+        raise ProblemException(
+            title="Problem moving folder.",
+            detail=exc.message,
+            status=400,
+        )
+    folder = fields.FolderField.load_folder(folder_id)
     return _serve_folder(folder)
 
 
-@endpoint_schema(constructors.collection_href('folder_config'),
-                 '.../collection',
-                 method='get',
-                 response_schema=response_schemas.FolderCollection)
+@Endpoint(constructors.collection_href('folder_config'),
+          '.../collection',
+          method='get',
+          response_schema=response_schemas.FolderCollection)
 def list_folders(_params):
-    """List folders"""
+    """Show all folders"""
     folders = watolib.Folder.root_folder().subfolders()
     return constructors.serve_json(_folders_collection(folders))
 
@@ -231,16 +197,15 @@ def _folders_collection(folders):
     return collection_object
 
 
-@endpoint_schema(constructors.object_href('folder_config', '{ident}'),
-                 'cmk/show',
-                 method='get',
-                 response_schema=response_schemas.ConcreteFolder,
-                 etag='output',
-                 parameters=['ident'])
+@Endpoint(constructors.object_href('folder_config', '{folder}'),
+          'cmk/show',
+          method='get',
+          response_schema=response_schemas.ConcreteFolder,
+          etag='output',
+          path_params=[FOLDER_FIELD])
 def show_folder(params):
     """Show a folder"""
-    ident = params['ident']
-    folder = load_folder(ident, status=404)
+    folder = params['folder']
     return _serve_folder(folder)
 
 
@@ -251,25 +216,13 @@ def _serve_folder(folder, profile=None):
     return response
 
 
-def _serialize_folder(folder: CREFolder) -> DomainObject:
+def _serialize_folder(folder: CREFolder):
     uri = constructors.object_href('folder_config', folder.id())
     return constructors.domain_object(
         domain_type='folder_config',
         identifier=folder.id(),
         title=folder.title(),
         members={
-            'hosts': constructors.object_collection(
-                name='hosts',
-                domain_type='host_config',
-                entries=[
-                    constructors.link_rel(
-                        rel='.../value',
-                        parameters={'collection': "items"},
-                        href=constructors.object_href('host_config', host),
-                    ) for host in folder.hosts().values()
-                ],
-                base=uri,
-            ),
             'move': constructors.object_action(
                 name='move',
                 base=uri,
@@ -288,14 +241,3 @@ def _serialize_folder(folder: CREFolder) -> DomainObject:
             'attributes': folder.attributes().copy(),
         },
     )
-
-
-def load_folder(ident, status=404, message=None):
-    try:
-        if ident == 'root':
-            return watolib.Folder.root_folder()
-        return watolib.Folder.by_id(ident)
-    except MKUserError as exc:
-        if message is None:
-            message = str(exc)
-        raise ProblemException(status, http.client.responses[status], message)

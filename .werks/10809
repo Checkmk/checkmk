@@ -6,7 +6,7 @@ Date: 1579871873
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
  This check plugin can be used for Prometheus retrieved metrics concerning disk IO information
  from the cAdvisor. The information can be grouped by container and/or pod level. The grouping option

@@ -113,6 +113,8 @@ public:
     [[nodiscard]] virtual std::filesystem::path structuredStatusPath()
         const = 0;
     [[nodiscard]] virtual std::filesystem::path crashReportPath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path licenseUsageHistoryPath()
+        const = 0;
     [[nodiscard]] virtual std::filesystem::path pnpPath() const = 0;
     [[nodiscard]] virtual std::filesystem::path historyFilePath() const = 0;
     [[nodiscard]] virtual std::filesystem::path logArchivePath() const = 0;

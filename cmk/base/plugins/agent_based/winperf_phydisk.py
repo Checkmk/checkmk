@@ -46,7 +46,9 @@ from typing import (
     Optional,
     Sequence,
 )
-from .agent_based_api.v0 import (
+import time
+
+from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
     IgnoreResultsError,
@@ -67,7 +69,7 @@ _LINE_TO_METRIC = {
 }
 
 
-def parse_winperf_phydisk(string_table: type_defs.AgentStringTable) -> Optional[diskstat.Section]:
+def parse_winperf_phydisk(string_table: type_defs.StringTable) -> Optional[diskstat.Section]:
 
     section: Dict[str, Dict[str, float]] = {}
 
@@ -124,7 +126,7 @@ register.agent_section(
 def discover_winperf_phydisk(
     params: Sequence[type_defs.Parameters],
     section: diskstat.Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     yield from diskstat.discovery_diskstat_generic(
         params,
         section,
@@ -207,7 +209,7 @@ def check_winperf_phydisk(
     item: str,
     params: type_defs.Parameters,
     section: diskstat.Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
 
@@ -231,9 +233,10 @@ def check_winperf_phydisk(
             return
 
     yield from diskstat.check_diskstat_dict(
-        _averaging_to_seconds(params),
-        disk_with_rates,
-        value_store,
+        params=_averaging_to_seconds(params),
+        disk=disk_with_rates,
+        value_store=value_store,
+        this_time=time.time(),
     )
 
 
@@ -241,7 +244,7 @@ def cluster_check_winperf_phydisk(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, diskstat.Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # We potentially overwrite a disk from an earlier section with a disk with the same name from a
     # later section
     disks_merged: Dict[str, diskstat.Disk] = {}

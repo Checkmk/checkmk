@@ -5,7 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from checktestlib import CheckResult, assertCheckResultsEqual
+
+from cmk.base.plugins.agent_based.utils.k8s import parse_json
 
 pytestmark = pytest.mark.checks
 
@@ -96,9 +99,10 @@ info_recreate = [[
         ],
     ),
 ])
-def test_k8s_replicas(check_manager, info, expected):
-    check = check_manager.get_check("k8s_replicas")
-    parsed = check.run_parse(info)
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_k8s_replicas(info, expected):
+    check = Check("k8s_replicas")
+    parsed = parse_json(info)
     actual = check.run_check(None, {}, parsed)
 
     assertCheckResultsEqual(
@@ -111,8 +115,9 @@ def test_k8s_replicas(check_manager, info, expected):
     (1, 4, 6),
     ('25%', 10, 14),
 ])
-def test_surge_levels(check_manager, max_surge, total, expected):
-    check = check_manager.get_check('k8s_replicas')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_surge_levels(max_surge, total, expected):
+    check = Check('k8s_replicas')
     crit = check.context['parse_k8s_surge'](max_surge, total)
     assert crit == expected
 
@@ -121,7 +126,8 @@ def test_surge_levels(check_manager, max_surge, total, expected):
     (2, 5, 3),
     ('25%', 10, 7),
 ])
-def test_unavailability_levels(check_manager, max_unavailable, total, expected):
-    check = check_manager.get_check('k8s_replicas')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_unavailability_levels(max_unavailable, total, expected):
+    check = Check('k8s_replicas')
     crit_lower = check.context['parse_k8s_unavailability'](max_unavailable, total)
     assert crit_lower == expected

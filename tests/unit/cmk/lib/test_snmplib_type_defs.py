@@ -8,51 +8,49 @@ import json
 
 import pytest  # type: ignore[import]
 
-from cmk.snmplib.type_defs import OID_END, OIDBytes, OIDCached, OIDEnd, OIDSpec, SNMPTree
+from cmk.snmplib.type_defs import (
+    BackendSNMPTree,
+    OIDBytes,
+    OIDCached,
+    OIDSpec,
+    SNMPDetectSpec,
+    SpecialColumn,
+)
 
 
-def test_oid_end():
-    oide = OIDEnd()
-    assert oide == OIDEnd()
-    assert repr(oide) == "OIDEnd()"
-    assert oide == OID_END
+class TestSNMPDetectSpec:
+    @pytest.fixture
+    def specs(self):
+        return SNMPDetectSpec([[
+            ("oid0", "regex0", True),
+            ("oid1", "regex1", True),
+            ("oid2", "regex2", False),
+        ]])
 
-
-@pytest.mark.parametrize(
-    "base, oids",
-    [
-        ('1.2', ['1', '2']),  # base no leading dot
-        ('.1.2', '12'),  # oids not a list
-        # TODO: this should fail once OIDEndCompat is not needed anymore
-        # ('.1.2', ['1', 2]),  # int in list
-        ('.1.2', ['42.1', '42.2']),  # 42 should be in base
-    ])
-def test_snmptree_valid(base, oids):
-    with pytest.raises((ValueError, TypeError)):
-        SNMPTree(base=base, oids=oids)
+    def test_serialization(self, specs):
+        assert SNMPDetectSpec.from_json(specs.to_json()) == specs
 
 
 @pytest.mark.parametrize("base, oids", [
     ('.1.2', ['1', '2']),
     ('.1.2', ['1', OIDCached('2')]),
     ('.1.2', ['1', OIDBytes('2')]),
-    ('.1.2', ['1', OIDEnd()]),
+    ('.1.2', ['1', SpecialColumn.END]),
 ])
 def test_snmptree(base, oids):
-    tree = SNMPTree(base=base, oids=oids)
+    tree = BackendSNMPTree.from_frontend(base=base, oids=oids)
 
-    assert tree.base == OIDSpec(base)
+    assert tree.base == base
     assert isinstance(tree.oids, list)
     for oid in tree.oids:
-        assert isinstance(oid, (OIDSpec, OIDEnd))
+        assert isinstance(oid, (OIDSpec, SpecialColumn))
 
 
 @pytest.mark.parametrize("tree", [
-    SNMPTree(base=".1.2.3", oids=["4.5.6", "7.8.9"]),
-    SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDSpec("7.8.9")]),
-    SNMPTree(base=".1.2.3", oids=[OIDCached("4.5.6"), OIDBytes("7.8.9")]),
-    SNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDEnd()]),
-    SNMPTree(base=OIDSpec(".1.2.3"), oids=[OIDBytes("4.5.6"), OIDEnd()]),
+    BackendSNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), OIDSpec("7.8.9")]),
+    BackendSNMPTree(base=".1.2.3", oids=[OIDCached("4.5.6"), OIDBytes("7.8.9")]),
+    BackendSNMPTree(base=".1.2.3", oids=[OIDSpec("4.5.6"), SpecialColumn.END]),
+    BackendSNMPTree(base=".1.2.3", oids=[OIDBytes("4.5.6"), SpecialColumn.END]),
 ])
 def test_serialize_snmptree(tree):
     assert tree.from_json(json.loads(json.dumps(tree.to_json()))) == tree

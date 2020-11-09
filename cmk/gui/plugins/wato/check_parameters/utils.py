@@ -72,7 +72,6 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
 
     return Alternative(
         title=_("Levels for %s %s") % (name, title),
-        style="dropdown",
         show_alternative_title=True,
         default_value=default_value,
         elements=vs_subgroup + [
@@ -311,7 +310,7 @@ def vs_filesystem(extra_elements=None):
         help=_("This ruleset allows to set parameters for space and inodes usage"),
         elements=filesystem_elements + extra_elements,
         hidden_keys=["flex_levels"],
-        ignored_keys=["patterns"],
+        ignored_keys=["patterns", "include_volume_name"],
     )
 
 

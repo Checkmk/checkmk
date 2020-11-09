@@ -1,0 +1,46 @@
+title: MSSQL Database: Jobs
+agents: windows
+catalog: app/mssql
+license: GPL
+distribution: check_mk
+description:
+ This check monitors scheduled jobs on MSSQL databases. The following
+ information is shown for each job:
+
+ -job duration
+ -MSSQL job status
+ -outcome message
+ -last run time
+ -next run time
+
+ It is possible to set warn/crit levels for the job duration, in case the job
+ or schedule is inactive, and/or corresponding to the MSSQL job status.
+ Performance data is tracked in terms of job duration.
+
+ Parameters:
+
+ "Maximum run duration for last execution":
+ Set state to WARN or CRIT when the job duration exceeds the levels provided.
+
+ "Job State":
+ The state of the job is ignored when this parameter is set to "Ignore the state
+ of the Job". This is the default behavior.
+
+ "Status of service in case of disabled job":
+ The state that should be shown if the job or the schedule is disabled. The
+ default state is OK.
+
+ "Status of service in case of missing job":
+ The state that should be shown if the job is missing. The default state is
+ CRIT.
+
+ This check needs the Checkmk mssql.vbs-plugin installed on the host. Please
+ refer to the online documentation for instructions on how to install this
+ plugin.
+
+item:
+ The job name (optional), separated by {{.}}
+
+inventory:
+ A seperate service is created for each job.
+

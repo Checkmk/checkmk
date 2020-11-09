@@ -18,10 +18,11 @@ import cmk.gui.userdb as userdb
 import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.groups import load_group_information, load_contact_group_information
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html, g
+from cmk.gui.globals import html, g, request
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeuri_contextless_ruleset_group
 
 from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 from cmk.gui.watolib.changes import add_change
@@ -181,7 +182,7 @@ def _set_group(all_groups, group_type: GroupType, name, extra_info):
 
 
 def save_group_information(all_groups, custom_default_config_dir=None):
-    # Split groups data into Check_MK/Multisite parts
+    # Split groups data into Checkmk/Multisite parts
     check_mk_groups: Dict[str, Dict[Any, Any]] = {}
     multisite_groups: Dict[str, Dict[Any, Any]] = {}
 
@@ -203,7 +204,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
                     multisite_groups[what].setdefault(gid, {})
                     multisite_groups[what][gid][attr] = value
 
-    # Save Check_MK world related parts
+    # Save Checkmk world related parts
     store.makedirs(check_mk_config_dir)
     output = wato_fileheader()
     for what in ["host", "service", "contact"]:
@@ -400,11 +401,11 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def sort_index(cls):
         return 25
 
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
     def help(self):
-        url = "wato.py?mode=rulesets&group=grouping"
+        url = makeuri_contextless_ruleset_group(request, 'grouping')
         return _("Only members of the contact groups listed here have WATO permission "
                  "to the host / folder. If you want, you can make those contact groups "
                  "automatically also <b>monitoring contacts</b>. This is completely "
@@ -468,11 +469,14 @@ class HostAttributeContactGroups(ABCHostAttribute):
             html.checkbox(
                 varprefix + self.name() + "_use",
                 value["use"],
-                label=_("Add these groups as <b>contacts</b> to all hosts in this folder"))
+                label=_("Add these groups as <b>contacts</b> to all hosts <b>in this folder</b>"))
             html.br()
-            html.checkbox(varprefix + self.name() + "_recurse_use",
-                          value["recurse_use"],
-                          label=_("Add these groups as <b>contacts in all subfolders</b>"))
+            html.checkbox(
+                varprefix + self.name() + "_recurse_use",
+                value["recurse_use"],
+                label=
+                _("Add these groups as <b>contacts</b> to all hosts <b>in all subfolders of this folder</b>"
+                 ))
 
         html.hr()
         html.help(
@@ -481,9 +485,12 @@ class HostAttributeContactGroups(ABCHostAttribute):
               "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
               "As long as you do not have any such rule a service always inherits all contact groups "
               "from its host."))
-        html.checkbox(varprefix + self.name() + "_use_for_services",
-                      value.get("use_for_services", False),
-                      label=_("Always add host contact groups also to its services"))
+        html.checkbox(
+            varprefix + self.name() + "_use_for_services",
+            value.get("use_for_services", False),
+            label=_("Always add host contact groups also to its services") if is_host else
+            _("Always add these groups as <b>contacts</b> to all services <b>in all subfolders of this folder</b>"
+             ))
 
     def load_data(self):
         # Make cache valid only during this HTTP request

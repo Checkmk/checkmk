@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+import cmk.base.plugins.agent_based.kernel
+
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|___  _   _ _ __ | |_ ___ _ __ ___                |
@@ -17,11 +22,7 @@
 
 kernel_default_levels = None
 
-kernel_counter_names = collections.OrderedDict([("processes", "Process Creations"),
-                                                ("ctxt", "Context Switches"),
-                                                ("pgmajfault", "Major Page Faults"),
-                                                ("pswpin", "Page Swap in"),
-                                                ("pswpout", "Page Swap Out")])
+kernel_counter_names = cmk.base.plugins.agent_based.kernel.KERNEL_COUNTER_NAMES
 
 kernel_metrics_names = {
     'ctxt': 'context_switches',
@@ -30,28 +31,6 @@ kernel_metrics_names = {
     'pswpin': 'page_swap_in',
     'pswpout': 'page_swap_out',
 }
-
-
-def parse_kernel(info):
-    try:
-        timestamp = int(info[0][0])
-    except (IndexError, ValueError):
-        timestamp = None
-
-    parsed = {}
-    for line in info[1:]:
-        if line[0] in kernel_counter_names:
-            try:
-                parsed.setdefault(kernel_counter_names[line[0]], []).append((line[0], int(line[1])))
-            except (IndexError, ValueError):
-                continue
-
-        if line[0].startswith('cpu'):
-            try:
-                parsed.setdefault('Cpu Utilization', []).append((line[0], line[1:]))
-            except (IndexError, ValueError):
-                continue
-    return timestamp, parsed
 
 
 # item is one of the keys in /proc/stat or /proc/vmstat
@@ -76,7 +55,7 @@ def check_kernel(item, params, parsed):
 
 # This check is deprecated. Please have a look at werk #8969.
 check_info["kernel"] = {
-    'parse_function': parse_kernel,
+    # section is already migrated!
     'check_function': check_kernel,
     'service_description': 'Kernel %s',
     'has_perfdata': True,
@@ -139,69 +118,4 @@ check_info['kernel.performance'] = {
     'service_description': 'Kernel Performance',
     'has_perfdata': True,
     'group': 'kernel_performance',
-}
-
-#.
-#   .--kernel.util--CPU Utilization----------------------------------------.
-#   |             _   _ _   _ _ _          _   _                           |
-#   |            | | | | |_(_) (_)______ _| |_(_) ___  _ __                |
-#   |            | | | | __| | | |_  / _` | __| |/ _ \| '_ \               |
-#   |            | |_| | |_| | | |/ / (_| | |_| | (_) | | | |              |
-#   |             \___/ \__|_|_|_/___\__,_|\__|_|\___/|_| |_|              |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Check system/user/io-wait                                           |
-#   '----------------------------------------------------------------------'
-
-
-def inventory_cpu_utilization(parsed):
-    _, items = parsed
-    data = items.get('Cpu Utilization')
-    if data is not None and len(data) > 0:
-        return [(None, {})]
-
-
-# Columns of cpu usage /proc/stat:
-# - cpuX: number of CPU or only 'cpu' for aggregation
-# - user: normal processes executing in user mode
-# - nice: niced processes executing in user mode
-# - system: processes executing in kernel mode
-# - idle: twiddling thumbs
-# - iowait: waiting for I/O to complete
-# - irq: servicing interrupts
-# - softirq: servicing softirqs
-# - steal: Stolen time, which is the time spent in other operating systems
-#          when running in a virtualized environment (since Linux 2.6.11)
-# - guest: Time spent running a virtual CPU for guest operating systems (since Linux 2.6.24)
-# - guest_nice: Time spent running a niced guest (since Linux 2.6.33)
-
-
-def kernel_check_cpu_utilization(item, params, parsed):
-    params = transform_cpu_iowait(params)
-    _, items = parsed
-    total, cores = [], []
-
-    # Look for entry matching "cpu" (this is the combined load of all cores)
-    for cpu in items.get('Cpu Utilization', []):
-        if cpu[0] == 'cpu':
-            total.append(cpu_info([cpu[0]] + cpu[1]))
-        elif cpu[0].startswith('cpu'):
-            cores.append(cpu_info([cpu[0]] + cpu[1]))
-
-    if len(total) != 1:
-        return 3, "More than one line with CPU info found. This check is not cluster-enabled."
-
-    # total contains now the following columns:
-    # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
-    # convert number to int
-    return check_cpu_util_unix(total[0], params, cores)
-
-
-check_info["kernel.util"] = {
-    'check_function': kernel_check_cpu_utilization,
-    'inventory_function': inventory_cpu_utilization,
-    'service_description': 'CPU utilization',
-    'has_perfdata': True,
-    'group': 'cpu_iowait',
-    'includes': ['cpu_util.include', 'transforms.include'],
 }

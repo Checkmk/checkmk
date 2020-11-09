@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hitachi_hnas import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def format_hitachi_hnas_name(nodeid, sensorid, new_format):
     # net item format is used in 1.2.7i? and newer
@@ -60,5 +63,4 @@ check_info["hitachi_hnas_temp"] = {
         ]),
     "snmp_scan_function": hitachin_hnas_scan_function,
     "group": "temperature",
-    "includes": ["temperature.include", "hitachi_hnas.include"],
 }

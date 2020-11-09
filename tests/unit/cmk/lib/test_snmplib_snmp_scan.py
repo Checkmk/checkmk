@@ -18,12 +18,11 @@ from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan
-from cmk.snmplib.snmp_scan import SNMPScanSection
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig
+from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig, SNMPBackend
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
+from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
     create_detect_spec,)
 
 
@@ -162,8 +161,7 @@ SNMPConfig = SNMPHostConfig(
     snmpv3_contexts=[],
     character_encoding="ascii",
     is_usewalk_host=False,
-    is_inline_snmp_host=False,
-    record_stats=False,
+    snmp_backend=SNMPBackend.classic,
 )
 
 
@@ -210,28 +208,22 @@ def cache_oids(backend):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 @pytest.mark.parametrize("oid", [snmp_scan.OID_SYS_DESCR, snmp_scan.OID_SYS_OBJ])
-def test_snmp_scan_cache_description__oid_missing(oid, backend):
+def test_snmp_scan_prefetch_description_object__oid_missing(oid, backend):
     snmp_cache.set_single_oid_cache(oid, None)
 
     with pytest.raises(snmp_scan.MKSNMPError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
-        snmp_scan._snmp_scan_cache_description(
-            False,
-            backend=backend,
-        )
+        snmp_scan._prefetch_description_object(backend=backend)
 
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
-def test_snmp_scan_cache_description__success_non_binary(backend):
+def test_snmp_scan_prefetch_description_object__success(backend):
     sys_desc = snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR)
     sys_obj = snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ)
     assert sys_desc
     assert sys_obj
 
-    snmp_scan._snmp_scan_cache_description(
-        binary_host=False,
-        backend=backend,
-    )
+    snmp_scan._prefetch_description_object(backend=backend)
 
     # Success is no-op
     assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR) == sys_desc
@@ -240,11 +232,8 @@ def test_snmp_scan_cache_description__success_non_binary(backend):
 
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
-def test_snmp_scan_cache_description__success_binary(backend):
-    snmp_scan._snmp_scan_cache_description(
-        binary_host=True,
-        backend=backend,
-    )
+def test_snmp_scan_fake_description_object__success(backend):
+    snmp_scan._fake_description_object()
 
     assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_DESCR) == ""
     assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ) == ""
@@ -253,11 +242,8 @@ def test_snmp_scan_cache_description__success_binary(backend):
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_snmp_scan_find_plugins__success(backend):
-    sections = [
-        SNMPScanSection(_.name, _.detect_spec)
-        for _ in agent_based_register.iter_all_snmp_sections()
-    ]
-    found = snmp_scan._snmp_scan_find_sections(
+    sections = [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()]
+    found = snmp_scan._find_sections(
         sections,
         on_error="raise",
         backend=backend,
@@ -275,16 +261,12 @@ def test_gather_available_raw_section_names_defaults(backend, mocker):
     assert snmp_cache.get_oid_from_single_oid_cache(snmp_scan.OID_SYS_OBJ)
 
     assert snmp_scan.gather_available_raw_section_names(
-        [
-            SNMPScanSection(_.name, _.detect_spec)
-            for _ in agent_based_register.iter_all_snmp_sections()
-        ],
+        [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()],
         on_error="raise",
-        binary_host=False,
+        missing_sys_description=False,
         backend=backend,
     ) == {
         SectionName("hr_mem"),
-        SectionName("mgmt_snmp_info"),
         SectionName("snmp_info"),
         SectionName("snmp_os"),
         SectionName("snmp_uptime"),

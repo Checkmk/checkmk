@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import cmk.base.plugins.agent_based.utils.ps as ps
+from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 discovery_hr_processes_rules = []
 
@@ -130,7 +131,6 @@ check_info['hr_ps'] = {
             '4',  # hrSWRunPath
             '7',  # hrSWRunStatus
         ]),
-    'includes': ['ucd_hr.include'],
     'group': 'hr_ps',
     'default_levels_variable': 'hr_ps_default_levels',
 }

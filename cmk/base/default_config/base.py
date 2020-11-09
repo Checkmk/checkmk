@@ -59,15 +59,25 @@ predefined_conditions: _Dict = {}
 http_proxies: _Dict = {}
 
 # SNMP communities and encoding
-use_inline_snmp = True
-# Ruleset to disable Inline-SNMP per host when use_inline_snmp is enabled.
+# TODO: Rename use_inline_snmp and non_inline_snmp_hosts (different purpose now)
+# the names of the rules are kept because of backwards compatibility.
+# Old value is True or False and new value is a string for the respective backend.
+# From version 2.0.0i1 upwards old values are no longer configurable.
+
+# Global config for SNMP Backend
+snmp_backend_default: str = "inline"
+# Deprecated: Replaced by snmp_backend_hosts
+use_inline_snmp: bool = True
+
+# Ruleset to enable specific SNMP Backend for each host.
+snmp_backend_hosts: _List = []
+# Deprecated: Replaced by snmp_backend_hosts
 non_inline_snmp_hosts: _List = []
 
 # Ruleset to recduce fetched OIDs of a check, only inline SNMP
 snmp_limit_oid_range: _List = []
 # Ruleset to customize bulk size
 snmp_bulk_size: _List = []
-record_inline_snmp_stats = False
 snmp_default_community = 'public'
 snmp_communities: _List = []
 # override the rule based configuration
@@ -216,7 +226,7 @@ explicit_host_conf: _Dict = {}
 extra_service_conf: _Dict = {}
 extra_nagios_conf = ""
 service_descriptions: _Dict = {}
-# needed by WATO, ignored by Check_MK
+# needed by WATO, ignored by Checkmk
 host_attributes: _Dict = {}
 # special parameters for host/PING check_command
 ping_levels: _List = []
@@ -230,6 +240,7 @@ check_mk_exit_status: _List = []
 check_mk_agent_target_versions: _List = []
 check_periods: _List = []
 snmp_check_interval: _List = []
+snmp_exclude_sections: _List = []
 # Rulesets for inventory export hooks
 inv_exports: _Dict = {}
 # Rulesets for parameters of notification scripts
@@ -265,3 +276,5 @@ aggregation_output_format = "multiline"  # new in 1.1.6. Possible also: "multili
 aggr_summary_hostname = "%s-s"
 status_data_inventory: _List = []
 legacy_checks: _List = []
+
+logwatch_rules: _List = []

@@ -8,17 +8,18 @@ import json
 from typing import Type
 from livestatus import lqencode
 from cmk.utils.render import date_and_time
+from cmk.gui.type_defs import HTTPVariables
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.visuals import get_filter_headers
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarBarChartDataGenerator
-from cmk.gui.figures import ABCFigureDashlet
-from cmk.gui.utils.url_encoder import HTTPVariables
+from cmk.gui.figures import ABCFigureDashlet, dashlet_http_variables
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import Dictionary, DropdownChoice
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 #   .--Base Classes--------------------------------------------------------.
@@ -120,7 +121,7 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
             for k, f in fil.items():
                 args.append((k, f))
 
-        return tooltip, html.makeuri_contextless(args, filename="view.py")
+        return tooltip, makeuri_contextless(request, args, filename="view.py")
 
 
 class ABCEventBarChartDashlet(ABCFigureDashlet):
@@ -129,10 +130,7 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
         raise NotImplementedError()
 
     def show(self):
-        args: HTTPVariables = []
-        args.append(("context", json.dumps(self._dashlet_spec["context"])))
-        args.append(
-            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
+        args = dashlet_http_variables(self)
         args.append(("log_type", self.data_generator().log_type()))
         body = html.urlencode_vars(args)
 
@@ -176,7 +174,7 @@ class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
 
     @classmethod
     def title(cls):
-        return _("Host and service notifications")
+        return _("Notification timeline")
 
     @classmethod
     def description(cls):
@@ -228,7 +226,7 @@ class AlertsBarChartDashlet(ABCEventBarChartDashlet):
 
     @classmethod
     def title(cls):
-        return _("Host and service alerts")
+        return _("Alert timeline")
 
     @classmethod
     def description(cls):

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, List, Tuple
+from testlib import Check  # type: ignore[import]
 import pytest  # type: ignore
 from cmk.base.check_api import MKCounterWrapped
 from test_ibm_mq_include import parse_info
@@ -28,7 +29,8 @@ factory_settings["ibm_mq_channels_default_levels"] = {
 }
 
 
-def test_parse(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_parse():
     lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -60,7 +62,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
     section = parse_info(lines, chr(10))
-    check = check_manager.get_check(CHECK_NAME)
+    check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
     assert 2 + 1 == len(parsed)
 
@@ -79,7 +81,8 @@ All valid MQSC commands were processed.
     assert attrs['CONNAME'] == '55.888.222.333(1414),22,333.444.555(1414)'
 
 
-def test_parse_svrconn_with_multiple_instances(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_parse_svrconn_with_multiple_instances():
     lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -98,7 +101,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
     section = parse_info(lines, chr(10))
-    check = check_manager.get_check(CHECK_NAME)
+    check = Check(CHECK_NAME)
     parsed = check.run_parse(section)
     attrs = parsed['MY.TEST:XXXXXX.IIB.SVRCONN']
     assert attrs['CHLTYPE'] == 'SVRCONN'
@@ -107,8 +110,9 @@ All valid MQSC commands were processed.
     assert attrs['CONNAME'] == '10.25.19.183'
 
 
-def test_discovery_qmgr_not_included(check_manager):
-    check = check_manager.get_check(CHECK_NAME)
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_discovery_qmgr_not_included():
+    check = Check(CHECK_NAME)
     parsed = {
         'QM1': {
             'STATUS': 'RUNNING'
@@ -131,8 +135,9 @@ def test_discovery_qmgr_not_included(check_manager):
     assert ('QM1:CHAN2', {}) in discovery
 
 
-def test_check(check_manager):
-    check = check_manager.get_check(CHECK_NAME)
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check():
+    check = Check(CHECK_NAME)
     params = factory_settings['ibm_mq_channels_default_levels']
     parsed = {
         'QM1': {
@@ -166,13 +171,14 @@ def test_check(check_manager):
     assert actual == expected
 
 
-def test_no_xmit_queue_defined(check_manager):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_no_xmit_queue_defined():
     """
     Happened on queue manager MQSWISSFPMP1 and channel LXFPMS.TO.RESA. It
     is a misconfiguration on the queue manager, but the monitoring should
     not choke on this.
     """
-    check = check_manager.get_check(CHECK_NAME)
+    check = Check(CHECK_NAME)
     params = factory_settings['ibm_mq_channels_default_levels']
     parsed = {
         'QM1': {
@@ -199,16 +205,18 @@ def test_no_xmit_queue_defined(check_manager):
     assert actual == expected
 
 
-def test_stale_service_for_not_running_qmgr(check_manager):
-    check = check_manager.get_check(CHECK_NAME)
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_stale_service_for_not_running_qmgr():
+    check = Check(CHECK_NAME)
     params = factory_settings['ibm_mq_channels_default_levels']
     parsed = {'QM1': {'STATUS': 'ENDED NORMALLY'}}
     with pytest.raises(MKCounterWrapped, match=r"Stale because queue manager ENDED NORMALLY"):
         list(check.run_check('QM1:CHAN2', params, parsed))
 
 
-def test_vanished_service_for_running_qmgr(check_manager):
-    check = check_manager.get_check(CHECK_NAME)
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_vanished_service_for_running_qmgr():
+    check = Check(CHECK_NAME)
     params = factory_settings['ibm_mq_channels_default_levels']
     parsed = {
         'QM1': {

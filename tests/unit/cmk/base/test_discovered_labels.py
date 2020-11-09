@@ -20,6 +20,9 @@ from cmk.base.discovered_labels import (
     ServiceLabel,
 )
 
+from cmk.base.discovery import _perform_host_label_discovery, DiscoveryParameters
+import cmk.base.config as config
+
 
 @pytest.fixture(name="labels", params=["host", "service"])
 def labels_fixture(request):
@@ -89,6 +92,14 @@ def test_discovered_service_labels_to_dict():
         "äbc": "123",
         "xyz": "blä",
     }
+
+
+def test_discovered_service_labels_repr():
+    labels = DiscoveredServiceLabels()
+    labels.add_label(ServiceLabel(u"äbc", u"123"))
+    labels.add_label(ServiceLabel(u"ccc", u"ddd"))
+    assert repr(
+        labels) == "DiscoveredServiceLabels(ServiceLabel('ccc', 'ddd'), ServiceLabel('äbc', '123'))"
 
 
 def test_discovered_host_labels_to_dict():
@@ -170,6 +181,33 @@ def test_discovered_host_labels_add():
     }
 
 
+def test_discovered_host_labels_sub():
+    labels_1 = DiscoveredHostLabels()
+    labels_1.add_label(HostLabel("foo", "bär", "plugin_1"))
+    labels_1.add_label(HostLabel("foo2", "bär2", "plugin_2"))
+
+    labels_2 = DiscoveredHostLabels()
+    labels_2.add_label(HostLabel("foo", "bär", "plugin_1"))
+
+    assert (labels_1 - labels_2).to_dict() == {
+        "foo2": {
+            "value": "bär2",
+            "plugin_name": "plugin_2",
+        },
+    }
+
+    assert (labels_2 - labels_1).to_dict() == {}
+
+
+def test_discovered_host_labels_repr():
+    labels = DiscoveredHostLabels()
+    labels.add_label(HostLabel(u"äbc", u"123", "plugin_1"))
+    labels.add_label(HostLabel(u"ccc", u"ddd", "plugin_2"))
+    assert repr(
+        labels
+    ) == "DiscoveredHostLabels(HostLabel('ccc', 'ddd', plugin_name='plugin_2'), HostLabel('äbc', '123', plugin_name='plugin_1'))"
+
+
 def test_discovered_host_label_equal():
     assert HostLabel(u"äbc", u"123") != HostLabel(u"xyz", u"blä")
     assert HostLabel(u"äbc", u"123") == HostLabel(u"äbc", u"123")
@@ -211,3 +249,55 @@ def test_label_validation(cls):
 
     with pytest.raises(MKGeneralException, match="Invalid label value"):
         cls(u"äbc", b"\xc3\xbcbc")
+
+
+@pytest.mark.parametrize(["existing_labels", "new_labels", "expected_labels", "load_labels"], [
+    [
+        [("foo", "1.5")],
+        [("foo", "1.6")],
+        [("foo", "1.6")],
+        False,
+    ],
+    [
+        [("foo", "1.5")],
+        [("foo", "1.6"), ("foo", "1.7")],
+        [("foo", "1.7")],
+        False,
+    ],
+    [
+        [("foo", "1.5"), ("bar", "2.0"), ("dung", "3.0")],
+        [("foo", "1.6"), ("bar", "2.0")],
+        [("foo", "1.6"), ("bar", "2.0")],
+        False,
+    ],
+    [
+        [("foo", "1.5"), ("bar", "1.5")],
+        [("foo", "1.6")],
+        [("foo", "1.6"), ("bar", "1.5")],
+        True,
+    ],
+    [
+        [("foo", "1.5"), ("bar", "1.5")],
+        [("foo", "1.6"), ("batz", "3.0")],
+        [("foo", "1.6"), ("batz", "3.0"), ("bar", "1.5")],
+        True,
+    ],
+])
+def test_perform_host_label_discovery(discovered_host_labels_dir, existing_labels, new_labels,
+                                      expected_labels, load_labels):
+    hostname = "testhost"
+    config.get_config_cache().initialize()
+    store = DiscoveredHostLabelsStore(hostname)
+    store.save(DiscoveredHostLabels(*[HostLabel(*x) for x in existing_labels]).to_dict())
+
+    discovery_parameters = DiscoveryParameters(
+        on_error="raise",
+        load_labels=load_labels,
+        save_labels=False,
+    )
+
+    new_host_labels, _host_labels_per_plugin = _perform_host_label_discovery(
+        hostname, DiscoveredHostLabels(*[HostLabel(*x) for x in new_labels]), discovery_parameters)
+
+    labels_expected = DiscoveredHostLabels(*[HostLabel(*x) for x in expected_labels])
+    assert new_host_labels.to_dict() == labels_expected.to_dict()

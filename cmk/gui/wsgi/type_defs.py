@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Literal, TypedDict, Union
+from typing import List, Literal, TypedDict, Union
 
 Scope = List[str]
 UnixTimeStamp = int  # restrict to positive numbers
 Audience = Union[str, List[str]]
-DomainObject = Dict[str, Any]
 TokenType = Union[Literal["access_token"], Literal["refresh_token"]]
 RFC7662 = TypedDict(
     'RFC7662',

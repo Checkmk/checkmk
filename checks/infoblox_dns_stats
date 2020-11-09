@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.infoblox import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def check_infoblox_dns_stats(_no_item, _no_params, info):
     successes, referrals, nxrrset, nxdomain, \
@@ -35,5 +37,4 @@ check_info['infoblox_dns_stats'] = {
         ]),
     'snmp_scan_function': scan_infoblox,
     'has_perfdata': True,
-    'includes': ["infoblox.include"],
 }

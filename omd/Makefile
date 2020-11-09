@@ -37,7 +37,6 @@ PACKAGES := \
     check_mysql_health \
     check_oracle_health \
     Webinject \
-    dokuwiki \
     jmx4perl \
     mk-livestatus \
     stunnel \
@@ -273,7 +272,7 @@ deb: debian/changelog debian/control
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
 	    TARGET="-us -uc -B" ; \
 	else \
-	    TARGET="--no-sign -- clean binary-arch" ; \
+	    TARGET="--no-sign -- clean build-arch binary-arch" ; \
 	fi && \
 	    debuild \
 	    --preserve-envvar="NEXUS_*" \

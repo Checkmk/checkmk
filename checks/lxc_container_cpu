@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_lxc_container_cpu(info):
     parsed = {}
@@ -23,6 +25,5 @@ check_info["lxc_container_cpu"] = {
     "check_function": check_cpu_util_linux_container,
     "service_description": "CPU utilization",
     "has_perfdata": True,
-    "includes": ["cpu_util.include"],
     "group": "cpu_utilization_os",
 }

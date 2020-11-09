@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import cast, Any, Callable
+from typing import Any, Callable
 
 from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.defines as defines
-from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKSNMPError
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKSNMPError, MKIPAddressLookupError
 from cmk.utils.log import console
 
 from cmk.fetchers import MKFetcherError
@@ -19,7 +19,7 @@ from cmk.fetchers import MKFetcherError
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
 import cmk.base.crash_reporting
-from cmk.base.exceptions import MKAgentError, MKIPAddressLookupError
+from cmk.base.exceptions import MKAgentError
 from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName
 
 
@@ -41,15 +41,15 @@ def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
                 if _in_keepalive_mode():
                     raise
                 infotexts.append("Timed out")
-                status = max(status, cast(int, exit_spec.get("timeout", 2)))
+                status = max(status, exit_spec.get("timeout", 2))
 
             except (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError) as e:
                 infotexts.append("%s" % e)
-                status = cast(int, exit_spec.get("connection", 2))
+                status = exit_spec.get("connection", 2)
 
             except MKGeneralException as e:
                 infotexts.append("%s" % e)
-                status = max(status, cast(int, exit_spec.get("exception", 3)))
+                status = max(status, exit_spec.get("exception", 3))
 
             except Exception:
                 if cmk.utils.debug.enabled():
@@ -57,7 +57,7 @@ def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
                 crash_output = cmk.base.crash_reporting.create_check_crash_dump(
                     hostname, check_plugin_name, {}, False, description)
                 infotexts.append(crash_output.replace("Crash dump:\n", "Crash dump:\\n"))
-                status = max(status, cast(int, exit_spec.get("exception", 3)))
+                status = max(status, exit_spec.get("exception", 3))
 
             # Produce the service check result output
             output_txt = "%s - %s" % (defines.short_service_state_name(status),

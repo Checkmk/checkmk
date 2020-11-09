@@ -5,98 +5,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Email server roundtrip active check
 """
-
-import sys
-import time
-import ast
-from contextlib import suppress
+from typing import Tuple, Dict
+import os
+import re
 import argparse
 import logging
-import os
+from contextlib import suppress
+import time
 import random
-import re
-from typing import Sequence, Optional, Tuple, Any, Dict, Union
-import email
-import email.mime.text
-import email.utils
-import imaplib
-import poplib
 import smtplib
+import email.utils
+import email.mime.text
 
-import cmk.utils.password_store
-
-# The documentations of imaplib and poplib do not give any information about the encodings of their
-# outputs (e.g. of imaplib.IMAP4.search). From the source codes, it seems to be either ASCII or
-# UTF-8, so this should work.
-ENCODING = 'utf-8'
+from cmk.utils.mailbox import (
+    SendMailError,
+    FetchMailsError,
+    CheckResult,
+    active_check_main,
+    MailMessages,
+    Args,
+    Mailbox,
+)
 
 MailID = Tuple[int, int]
 MailDict = Dict[str, MailID]
-Args = argparse.Namespace
-Status = int
-PerfData = Any
-CheckResult = Tuple[Status, str, PerfData]
-MailBoxType = Union[poplib.POP3_SSL, poplib.POP3, imaplib.IMAP4_SSL, imaplib.IMAP4]
 
 
-class FetchMailsError(Exception):
-    pass
-
-
-class SendMailError(Exception):
-    pass
-
-
-class CleanupMailboxError(Exception):
-    pass
-
-
-class ForwardToECError(Exception):
-    pass
-
-
-def parse_arguments(argv: Sequence[str]) -> Args:
-    """Parse command line arguments and return argument object"""
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("--debug",
-                        "-d",
-                        action="store_true",
-                        help="Enable debug mode (keep some exceptions unhandled)")
-    parser.add_argument("--connect-timeout",
-                        type=int,
-                        default=10,
-                        help="Timeout in seconds for network connects")
-
-    parser.add_argument("--fetch-server",
-                        type=str,
-                        required=True,
-                        metavar="ADDRESS",
-                        help="Host address of the IMAP/POP3 server hosting your mailbox")
-    parser.add_argument("--fetch-username",
-                        type=str,
-                        required=True,
-                        metavar="USER",
-                        help="Username to use for IMAP/POP3")
-    parser.add_argument("--fetch-password",
-                        type=str,
-                        required=True,
-                        metavar="PASSWORD",
-                        help="Password to use for IMAP/POP3")
-    parser.add_argument("--fetch-protocol",
-                        type=str,
-                        default="IMAP",
-                        choices={'IMAP', 'POP3'},
-                        help="Set to 'IMAP' or 'POP3', depending on your mailserver")
-    parser.add_argument("--fetch-port",
-                        type=int,
-                        metavar="PORT",
-                        help="IMAP or POP3 port (defaults to 110 for POP3 and 995 for POP3 "
-                        "with TLS/SSL and 143 for IMAP and 993 for IMAP with TLS/SSL)")
-    parser.add_argument("--fetch-tls",
-                        action="store_true",
-                        help="Use TLS/SSL for feching the mailbox (disabled by default)")
-
+def create_argument_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--smtp-server",
                         type=str,
                         required=True,
@@ -154,40 +90,20 @@ def parse_arguments(argv: Sequence[str]) -> Args:
                         metavar="SUFFIX",
                         help="Concantenated with 'check_mail_loop.SUFFIX.status' to generate "
                         "the name of the status file.")
+
     parser.add_argument("--delete-messages",
                         action="store_true",
                         help="Delete all messages identified as being related to this check "
                         "plugin. This is disabled by default, which might make your mailbox "
                         "grow when you not clean it up manually.")
+
     parser.add_argument("--subject",
                         type=str,
                         metavar="SUBJECT",
                         default="Check_MK-Mail-Loop",
                         help="You can specify the subject text.")
 
-    parser.add_argument("--verbose", '-v', action="count", default=0)
-
-    args = parser.parse_args(argv)
-    args.fetch_port = args.fetch_port or (
-        (995 if args.fetch_tls else 110) if args.fetch_protocol == 'POP3' else
-        (993 if args.fetch_tls else 143))
-    return args
-
-
-def parse_exception(exc: Exception) -> str:
-    what = str(exc)
-    return "%d - %s" % list(ast.literal_eval(what).values())[0] if what[0] == '{' else what
-
-
-def output_check_result(rc: Status, text: str, perfdata: PerfData) -> None:
-    sys.stdout.write('%s - %s' % (
-        ('OK', 'WARN', 'CRIT', 'UNKNOWN')[rc],
-        text,
-    ))
-    if perfdata:
-        sys.stdout.write(" | ")
-        sys.stdout.write(" ".join('%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata))
-    sys.stdout.write("\n")
+    return parser
 
 
 def load_expected_mails(status_path: str) -> MailDict:
@@ -236,22 +152,71 @@ def send_mail(args: Args) -> Tuple[str, MailID]:
     except smtplib.SMTPAuthenticationError as exc:
         if exc.smtp_code == 530:
             raise SendMailError("Could not login to SMTP server. "
-                                "Looks like you have to use the --smtp-tls flag.")
+                                "Looks like you have to use the --smtp-tls flag.") from exc
         if exc.smtp_code == 535:
             raise SendMailError("Could not login to SMTP server. "
-                                "Looks like you provided the wrong credentials.")
-        raise SendMailError("Could not login to SMTP server. (%r)" % exc)
+                                "Looks like you provided the wrong credentials.") from exc
+        raise SendMailError("Could not login to SMTP server. (%r)" % exc) from exc
     except smtplib.SMTPRecipientsRefused as exc:
         raise SendMailError("Could not send email. "
-                            "Maybe you've sent too much mails? (%r)." % exc)
-    except Exception as e:
-        if args.debug:
-            raise
-        raise SendMailError('Failed to send mail: %s' % parse_exception(e))
+                            "Maybe you've sent too much mails? (%r)." % exc) from exc
+    except Exception as exc:
+        raise SendMailError('Failed to send mail: %r' % exc) from exc
 
 
-def check_mails(warning: int, critical: int, expected_mails: MailDict,
-                fetched_mails: MailDict) -> CheckResult:
+def fetch_mail_timestamps(
+        args: Args,
+        mails: MailMessages,
+        expected_mails: MailDict,
+        now: int = int(time.time()),
+) -> Tuple[MailDict, MailDict]:
+    """Fetch mails and return tuples of dicts containing timestamps of mails which have been
+    not expected (anymore) and expected"""
+    if not expected_mails:
+        return {}, {}
+
+    try:
+        obsolete_mails, fetched_mails = {}, {}
+        # Now filter out the messages for this check
+        pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % args.subject)
+
+        for index, msg in mails.items():
+            matches = pattern.match(msg.get('Subject', ''))
+            if not matches:
+                logging.debug("Skip mail with subject %r", msg.get('Subject', ''))
+                continue
+
+            ts = matches.group(1).strip()
+            key = matches.group(2).strip()
+
+            if 'Received' in msg:
+                parsed = email.utils.parsedate_tz(msg['Received'].split(';')[-1])
+                rx_ts = email.utils.mktime_tz(parsed) if parsed else now
+            else:
+                # use current time as fallback where no Received header could be found
+                rx_ts = now
+
+            ts_key = "%s-%s" % (ts, key)
+            if ts_key not in expected_mails:
+                # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if
+                # they are not in our list
+                if args.delete_messages and now - rx_ts > 24 * 3600:
+                    obsolete_mails[ts_key] = index, rx_ts
+                continue
+
+            fetched_mails[ts_key] = index, rx_ts
+        return obsolete_mails, fetched_mails
+
+    except Exception as exc:
+        raise FetchMailsError("Failed to fetch mails: %r" % exc) from exc
+
+
+def check_mails(
+    warning: int,
+    critical: int,
+    expected_mails: MailDict,
+    fetched_mails: MailDict,
+) -> CheckResult:
     state = 0
     perfdata = []
     output = []
@@ -315,207 +280,46 @@ def check_mails(warning: int, critical: int, expected_mails: MailDict,
     return state, ", ".join(output), perfdata
 
 
-class MailBox:
-    def __init__(self, args: Args) -> None:
-        self._mailbox = None
-        self._args = args
+def check_mail_roundtrip(args: Args) -> CheckResult:
+    # TODO: maybe we should use cmk.utils.paths.tmp_dir?
+    status_path = '%s/check_mail_loop%s.status' % (
+        args.status_dir,
+        (".%s" % args.status_suffix) if args.status_suffix else "",
+    )
+    logging.debug("status_path: %r", status_path)
+    expected_mails = load_expected_mails(status_path) or {}
+    logging.debug("expected_mails: %r", expected_mails)
 
-    def __enter__(self) -> Any:
-        return self
-
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
-        self._close_mailbox()
-
-    def _connect_pop3(self) -> None:
-        self._mailbox = (poplib.POP3_SSL if self._args.fetch_tls else poplib.POP3)(
-            self._args.fetch_server,
-            self._args.fetch_port,
-            timeout=self._args.connect_timeout,
+    with Mailbox(args) as mailbox:
+        mailbox.connect()
+        obsolete_mails, fetched_mails = fetch_mail_timestamps(
+            args,
+            mailbox.fetch_mails(),
+            expected_mails,
         )
-        if isinstance(self._mailbox, (poplib.POP3_SSL, poplib.POP3)):
-            self._mailbox.user(self._args.fetch_username)
-            self._mailbox.pass_(self._args.fetch_password)
-
-    def _connect_imap(self) -> None:
-        # seems to not support timeout
-        self._mailbox = (imaplib.IMAP4_SSL if self._args.fetch_tls else imaplib.IMAP4)(
-            self._args.fetch_server,
-            self._args.fetch_port,
+        logging.debug("obsolete_mails: %r", obsolete_mails)
+        logging.debug("fetched_mails: %r", fetched_mails)
+        new_mail = send_mail(args)
+        logging.debug("sent new mail: %r", new_mail)
+        expected_mails.update((new_mail,))
+        state, output, perfdata = check_mails(
+            args.warning,
+            args.critical,
+            expected_mails,
+            fetched_mails,
         )
-        if isinstance(self._mailbox, (imaplib.IMAP4_SSL, imaplib.IMAP4)):
-            self._mailbox.login(self._args.fetch_username, self._args.fetch_password)
-            self._mailbox.select('INBOX', readonly=False)
-
-    def _fetch_mails_pop3(self) -> Dict[int, email.message.Message]:
-        if self._mailbox is None:
-            return {}
-        num_messages = len(self._mailbox.list()[1])
-        # TODO: this should not be a dict
-        return {
-            i: email.message_from_bytes(b"\n".join(self._mailbox.retr(i + 1)[1]))
-            for i in range(num_messages)
-        }
-
-    def _fetch_mails_imap(self) -> Dict[int, email.message.Message]:
-        if self._mailbox is None:
-            return {}
-        retcode, raw_messages = self._mailbox.search(None, 'NOT', 'DELETED')
-        messages = raw_messages[0].decode(ENCODING).strip()
-        if retcode == 'OK' and messages:
-            # TODO: this should not be a dict
-            mails = {}
-            for num in messages.split():
-                try:
-                    _type, data = self._mailbox.fetch(num, '(RFC822)')
-                    if isinstance(data[0], tuple):
-                        mails[num] = email.message_from_bytes(data[0][1])
-                # TODO: this smells - seems like we intended to just skip this mail but this way
-                #       we jump out of the for loop
-                except Exception as e:
-                    raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
-                                    (num, parse_exception(e), messages))
-            return mails
-        return {}
-
-    def fetch_mails(self, expected_mails: MailDict) -> Tuple[MailDict, MailDict]:
-        try:
-            if self._args.fetch_protocol == 'POP3':
-                self._connect_pop3()
-                mails = self._fetch_mails_pop3()
-            else:
-                self._connect_imap()
-                mails = self._fetch_mails_imap()
-
-            obsolete_mails, fetched_mails = {}, {}
-            # Now filter out the messages for this check
-            pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % self._args.subject)
-
-            for index, msg in mails.items():
-                matches = pattern.match(msg.get('Subject', ''))
-                if not matches:
-                    logging.debug("Skip mail with subject %r", msg.get('Subject', ''))
-                    continue
-
-                ts = matches.group(1).strip()
-                key = matches.group(2).strip()
-
-                if 'Received' in msg:
-                    parsed = email.utils.parsedate_tz(msg['Received'].split(';')[-1])
-                    rx_ts = email.utils.mktime_tz(parsed) if parsed else int(time.time())
-                else:
-                    # use current time as fallback where no Received header could be found
-                    rx_ts = int(time.time())
-
-                if "%s-%s" % (ts, key) not in expected_mails:
-                    # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if
-                    # they are not in our list
-                    if self._args.delete_messages and int(time.time()) - rx_ts > 24 * 3600:
-                        obsolete_mails[ts + '-' + key] = (index, rx_ts)
-                    continue
-
-                fetched_mails[ts + '-' + key] = index, rx_ts
-            return obsolete_mails, fetched_mails
-
-        except Exception as e:
-            if self._args.debug:
-                raise
-            raise FetchMailsError('Failed to check for mails: %s' % parse_exception(e))
-
-    def cleanup_mailbox(self, obsolete_mails: MailDict, fetched_mails: MailDict) -> None:
-        if not self._mailbox:
-            return  # do not deal with mailbox when none sent yet
-
-        try:
+        save_expected_mails(expected_mails, status_path)
+        if args.delete_messages:
             # Do not delete all messages in the inbox. Only the ones which were
-            # processed before! In the meantime there might be occured new ones.
-            for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(
-                    obsolete_mails.values()):
-                if isinstance(self._mailbox, poplib.POP3):
-                    response = self._mailbox.dele(mail_index + 1).decode(ENCODING)
-                    if not response.startswith("+OK"):
-                        raise Exception("Response from server: [%s]" % response)
-                elif isinstance(self._mailbox, imaplib.IMAP4):
-                    response = self._mailbox.store(mail_index, '+FLAGS', '\\Deleted')[0]
-                    if response != 'OK':
-                        raise Exception("Response from server: [%s]" % response)
+            # processed before! In the meantime new ones might have come in.
+            mailbox.delete_mails(
+                set(elem[0]
+                    for maillist in (obsolete_mails, fetched_mails)
+                    for elem in maillist.values()))
 
-            if isinstance(self._mailbox, imaplib.IMAP4):
-                self._mailbox.expunge()
-
-        except Exception as e:
-            if self._args.debug:
-                raise
-            raise CleanupMailboxError('Failed to delete mail: %s' % parse_exception(e))
-
-    def _close_mailbox(self) -> None:
-        if isinstance(self._mailbox, poplib.POP3):
-            self._mailbox.quit()
-        elif isinstance(self._mailbox, imaplib.IMAP4):
-            self._mailbox.close()
-            self._mailbox.logout()
-
-
-def main(sys_args: Optional[Sequence[str]] = None) -> CheckResult:
-    args = parse_arguments(sys_args or sys.argv[1:])
-    logging.basicConfig(level={
-        0: logging.WARN,
-        1: logging.INFO,
-        2: logging.DEBUG
-    }.get(args.verbose, logging.DEBUG))
-
-    # Enable IMAP protocol messages on stderr
-    if args.fetch_protocol == 'IMAP':
-        # Bug in mypy's typeshed.
-        imaplib.Debug = args.verbose  # type: ignore[attr-defined]
-
-    try:
-        # TODO: maybe we should use cmk.utils.paths.tmp_dir?
-        status_path = '%s/check_mail_loop%s.status' % (
-            args.status_dir,
-            (".%s" % args.status_suffix) if args.status_suffix else "",
-        )
-        logging.debug("use protocol for fetching: %r", args.fetch_protocol)
-        logging.debug("status_path: %r", status_path)
-        expected_mails = load_expected_mails(status_path) or {}
-        logging.debug("expected_mails: %r", expected_mails)
-
-        with MailBox(args) as mailbox:
-            obsolete_mails, fetched_mails = (mailbox.fetch_mails(expected_mails)
-                                             if expected_mails else ({}, {}))
-            logging.debug("obsolete_mails: %r", obsolete_mails)
-            logging.debug("fetched_mails: %r", fetched_mails)
-            new_mail = send_mail(args)
-            logging.debug("sent new mail: %r", new_mail)
-            expected_mails.update((new_mail,))
-            state, output, perfdata = check_mails(
-                args.warning,
-                args.critical,
-                expected_mails,
-                fetched_mails,
-            )
-            save_expected_mails(expected_mails, status_path)
-            if args.delete_messages:
-                mailbox.cleanup_mailbox(obsolete_mails, fetched_mails)
-
-        return state, output, perfdata
-
-    except FetchMailsError as e:
-        return 3, str(e), None
-
-    except SendMailError as e:
-        return 3, str(e), None
-
-    except CleanupMailboxError as e:
-        return 2, str(e), None
-
-    except Exception as e:
-        if args.debug:
-            raise
-        return 2, 'Unhandled exception: %s' % parse_exception(e), None
+    return state, output, perfdata
 
 
 if __name__ == "__main__":
-    cmk.utils.password_store.replace_passwords()
-    exitcode, info, perf = main()
-    output_check_result(exitcode, info, perf)
-    sys.exit(exitcode)
+    logging.getLogger().name = "check_mail_loop"
+    active_check_main(create_argument_parser(), check_mail_roundtrip)

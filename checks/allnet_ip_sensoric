@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 
 # <<<allnet_ip_sensoric:sep(59)>>>
@@ -172,7 +174,6 @@ check_info["allnet_ip_sensoric.temp"] = {
     "service_description": "Temperature %s",
     "has_perfdata": True,
     "group": "temperature",
-    "includes": ["temperature.include"],
     "default_levels_variable": "allnet_ip_sensoric_temp_default_levels"
 }
 
@@ -212,7 +213,6 @@ check_info["allnet_ip_sensoric.humidity"] = {
     "service_description": "Humidity %s",
     "has_perfdata": True,
     "group": "humidity",
-    "includes": ["humidity.include"],
 }
 
 #.

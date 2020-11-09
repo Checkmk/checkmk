@@ -181,7 +181,7 @@ def test_registered_commands():
             'group': 'acknowledge',
             'permission': 'action.acknowledge',
             'tables': ['host', 'service', 'aggr'],
-            'title': u'Acknowledge Problems'
+            'title': u'Acknowledge problems'
         },
         'ec_custom_actions': {
             'permission': 'mkeventd.actions',
@@ -293,7 +293,7 @@ def test_registered_commands():
         cmd_spec = expected[cmd.ident]
         assert cmd.title == cmd_spec["title"]
         assert cmd.tables == cmd_spec["tables"], cmd.ident
-        assert cmd.permission().name == cmd_spec["permission"]
+        assert cmd.permission.name == cmd_spec["permission"]
 
 
 def test_legacy_register_command(monkeypatch):
@@ -1395,8 +1395,8 @@ def test_registered_painters():
         },
         'host_plugin_output': {
             'columns': ['host_plugin_output', 'host_custom_variables'],
-            'short': u'Status detail',
-            'title': u'Output of host check plugin'
+            'short': u'Summary',
+            'title': u'Summary'
         },
         'host_pnpgraph': {
             'columns': ['host_name', 'host_perf_data', 'host_metrics', 'host_check_command'],
@@ -2883,8 +2883,8 @@ def test_registered_painters():
         },
         'svc_long_plugin_output': {
             'columns': ['service_long_plugin_output', 'service_custom_variables'],
-            'short': u'Status detail',
-            'title': u'Long output of check plugin (multiline)'
+            'short': u'Details',
+            'title': u'Details',
         },
         'svc_metrics': {
             'columns': ['service_check_command', 'service_perf_data'],
@@ -2984,9 +2984,9 @@ def test_registered_painters():
         },
         'svc_plugin_output': {
             'columns': ['service_plugin_output', 'service_custom_variables'],
-            'short': u'Status detail',
+            'short': u'Summary',
             'sorter': 'svcoutput',
-            'title': u'Output of check plugin'
+            'title': u'Summary'
         },
         'svc_pnpgraph': {
             'columns': [
@@ -6069,6 +6069,8 @@ def test_registered_display_hints():
     '.software.applications.check_mk.sites:*.npcd',
     '.software.applications.check_mk.sites:*.check_helper_usage',
     '.software.applications.check_mk.sites:*.check_mk_helper_usage',
+    '.software.applications.check_mk.sites:*.fetcher_helper_usage',
+    '.software.applications.check_mk.sites:*.checker_helper_usage',
     '.software.applications.check_mk.sites:*.livestatus_usage',
     '.software.applications.check_mk.sites:*.num_hosts',
     '.software.applications.check_mk.sites:*.num_services',
@@ -6184,6 +6186,7 @@ def test_registered_display_hints():
     '.software.applications.oracle.instance:*.logins',
     '.software.applications.oracle.instance:*.logmode',
     '.software.applications.oracle.instance:*.openmode',
+    '.software.applications.oracle.instance:*.pname',
     '.software.applications.oracle.instance:*.sid',
     '.software.applications.oracle.instance:*.version',
     '.software.applications.oracle.recovery_area:',

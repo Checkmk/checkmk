@@ -74,7 +74,7 @@ def check_oracle_jobs(item, params, info):
             data_found = True
 
         # check for pdb_name in agent output
-        # => the agentoutput is responsible for the format of item from Check_MK!
+        # => the agentoutput is responsible for the format of item from Checkmk!
         # item could have the following formats. Keep in mind, that job_name could include a '.'!
         if len(line) == 11:
             # => sid.pdb_name.job_owner.job_name

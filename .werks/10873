@@ -6,7 +6,7 @@ Date: 1584191660
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In previous versions of Checkmk the title of reports could only be set to a
 fixed size. Especially with generic reports, like host or service reports, this

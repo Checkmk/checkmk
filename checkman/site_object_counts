@@ -98,10 +98,10 @@ description:
  - the amount of all productive hosts and services of type {omd_apache} and
  {omd_status} of all sites.
 
- - additionaly the amount of all SNMP hosts and the amount of all interface
+ - additionally, the amount of all SNMP hosts and the amount of all interface
  services of the type {if} of the site {site_a} and
 
- - additionaly the amount of all agent-based hosts and the amount of all
+ - additionally, the amount of all agent-based hosts and the amount of all
  Linux interface services of the type {lnx_if} of the site {site_b}.
 
 
@@ -126,13 +126,18 @@ description:
  - the amount of all productive hosts and services of type {omd_apache} and
  {omd_status} of the sites {site_a}, {site_b} and {site_c}.
 
- - additionaly the amount of all SNMP hosts and the amount of all interface
+ - additionally, the amount of all SNMP hosts and the amount of all interface
  services of the type {if} of the site {site_a} and
 
- - additionaly the amount of all agent-based hosts and the amount of all
+ - additionally, the amount of all agent-based hosts and the amount of all
  Linux interface services of the type {lnx_if} of the site {site_b}.
 
- The check is cluster-aware and the check state is always OK.
+ The check is always in the state OK.
 
 inventory:
  One service is created.
+
+cluster:
+ In the clustered case, the check reports the counted tags and service check commands
+ for each site on each node separately. Moreover, the summarized output reports the numbers
+ of tags and service check commands summed over all sites and nodes.

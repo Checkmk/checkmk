@@ -98,7 +98,8 @@ class SoapTemplates:
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
         '    <ns1:propSet>'
-        '      <ns1:type>HostSystem</ns1:type><ns1:pathSet>name</ns1:pathSet>'
+        '      <ns1:type>HostSystem</ns1:type>'
+        '      <ns1:pathSet>name</ns1:pathSet>'
         '    </ns1:propSet>'
         '    <ns1:objectSet>'
         '      <ns1:obj type="Folder">%(rootFolder)s</ns1:obj>'
@@ -166,7 +167,8 @@ class SoapTemplates:
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
-        '    <ns1:propSet><ns1:type>Datastore</ns1:type>'
+        '    <ns1:propSet>'
+        '      <ns1:type>Datastore</ns1:type>'
         '      <ns1:pathSet>name</ns1:pathSet>'
         '      <ns1:pathSet>summary.freeSpace</ns1:pathSet>'
         '      <ns1:pathSet>summary.capacity</ns1:pathSet>'
@@ -1060,8 +1062,8 @@ class ESXConnection:
     @staticmethod
     def filter_request(request):
         """Used for VCR. Filter password"""
-        if '<ns1:password>' in request.body:
-            request.body = "login request filtered out"
+        if b'<ns1:password>' in request.body:
+            request.body = b"login request filtered out"
         return request
 
     @staticmethod
@@ -1619,7 +1621,7 @@ def get_sections_aggregated_snapshots(vms, hostsystems, time_reference):
         section_lines += [
             '<<<<%s>>>>' % piggytarget, '<<<esx_vsphere_vm>>>',
             'time_reference %d' % time_reference,
-            'snapshot.rootSnapshotList %s' % '|'.join(sn_list), '<<<<>>>>'
+            'snapshot.rootSnapshotList.summary %s' % '|'.join(sn_list), '<<<<>>>>'
         ]
     return section_lines
 
@@ -1735,8 +1737,7 @@ def fetch_datastores(connection):
 
 def get_section_datastores(datastores):
     section_lines = ["<<<esx_vsphere_datastores:sep(9)>>>"]
-    for key in sorted(datastores.keys()):
-        data = datastores[key]
+    for _key, data in sorted(datastores.items()):
         section_lines.append("[%s]" % data.get("name"))
         for ds_key in sorted(data.keys()):
             if ds_key == "name":

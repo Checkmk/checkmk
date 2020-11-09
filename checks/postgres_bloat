@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.postgres import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<postgres_bloat>>>
 # [databases_start]
 # postgres
@@ -131,5 +132,4 @@ check_info['postgres_bloat'] = {
     "group": "db_bloat",
     "default_levels_variable": "postgres_bloat_default_levels",
     "has_perfdata": True,
-    "includes": ["postgres.include"]
 }

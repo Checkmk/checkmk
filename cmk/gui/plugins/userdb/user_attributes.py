@@ -107,7 +107,6 @@ class StartURLUserAttribute(UserAttribute):
         return Transform(
             Alternative(
                 title=_("Start URL to display in main frame"),
-                style="dropdown",
                 orientation="horizontal",
                 elements=[
                     FixedValue(
@@ -143,12 +142,11 @@ class UIThemeUserAttribute(UserAttribute):
         return "ui_theme"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return Alternative(
             title=_("User interface theme"),
-            style="dropdown",
             orientation="horizontal",
             elements=[
                 FixedValue(
@@ -174,7 +172,7 @@ class UISidebarPosition(UserAttribute):
         return "ui_sidebar_position"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return DropdownChoice(
@@ -194,7 +192,7 @@ class UIIconPlacement(UserAttribute):
         return "icons_per_item"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return DropdownChoice(
@@ -211,25 +209,24 @@ class UIIconPlacement(UserAttribute):
 class UIBasicAdvancedToggle(UserAttribute):
     @classmethod
     def name(cls):
-        return "ui_basic_advanced_mode"
+        return "show_mode"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return DropdownChoice(
-            title=_("Basic / advanced mode"),
-            help=_(
-                "In some places like e.g. the main menu Checkmk divides features, "
-                "filters, input fields etc. in two categories - basic and advanced. With this"
-                "option you can set a default mode for unvisited menus. Alternatively, you can "
-                "enforce one mode so that the round button with the three dots is not shown at all."
-            ),
+            title=_("Show more / Show less"),
+            help=_("In some places like e.g. the main menu Checkmk divides "
+                   "features, filters, input fields etc. in two categories, showing "
+                   "more or less entries. With this option you can set a default "
+                   "mode for unvisited menus. Alternatively, you can enforce to "
+                   "show more, so that the round button with the three dots is not "
+                   "shown at all."),
             choices=[
-                (None, _("Default to basic mode")),
-                ("default_advanced", _("Default to advanced mode")),
-                ("enforce_basic", _("Enforce basic mode")),
-                ("enforce_advanced", _("Enforce advanced mode")),
+                (None, _("Default to show less")),
+                ("default_show_more", _("Default to show more")),
+                ("enforce_show_more", _("Enforce show more")),
             ],
         )
 

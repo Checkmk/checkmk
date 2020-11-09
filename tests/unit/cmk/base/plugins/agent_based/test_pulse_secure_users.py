@@ -7,7 +7,7 @@
 import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based import pulse_secure_users
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Result, state, Metric, type_defs
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state, Metric, type_defs
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
@@ -61,11 +61,11 @@ def test_cluster_check_pulse_secure_users():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: Pulse Secure users: 20',
+                notice='[node1]: Pulse Secure users: 20',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: Pulse Secure users: 30',
+                notice='[node2]: Pulse Secure users: 30',
             ),
             Result(
                 state=state.OK,

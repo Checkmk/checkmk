@@ -6,18 +6,18 @@
 
 from typing import Dict
 
-from .agent_based_api.v0.type_defs import (
-    AgentStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+from .agent_based_api.v1.type_defs import (
+    StringTable,
+    CheckResult,
+    DiscoveryResult,
     Parameters,
 )
-from .agent_based_api.v0 import IgnoreResults, register, Result, Service, state
+from .agent_based_api.v1 import IgnoreResults, register, Result, Service, State as state
 
 SectionDatabases = Dict[str, Dict[str, str]]
 
 
-def parse_mssql_databases(string_table: AgentStringTable) -> SectionDatabases:
+def parse_mssql_databases(string_table: StringTable) -> SectionDatabases:
     """
         >>> from pprint import pprint
         >>> pprint(parse_mssql_databases([
@@ -56,7 +56,7 @@ register.agent_section(
 )
 
 
-def discover_mssql_databases(section: SectionDatabases) -> DiscoveryGenerator:
+def discover_mssql_databases(section: SectionDatabases) -> DiscoveryResult:
     for key in section:
         yield Service(item=key)
 
@@ -65,7 +65,7 @@ def check_mssql_databases(
     item: str,
     params: Parameters,
     section: SectionDatabases,
-) -> CheckGenerator:
+) -> CheckResult:
     data = section.get(item)
     if data is None:
         yield IgnoreResults("Login into database failed")
@@ -94,7 +94,7 @@ def cluster_check_mssql_databases(
     item: str,
     params: Parameters,
     section: Dict[str, SectionDatabases],
-) -> CheckGenerator:
+) -> CheckResult:
 
     conflated_section: SectionDatabases = {}
     for node_data in section.values():

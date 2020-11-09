@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If server is stated in the bakery rule {{JMX monitoring of Java JVMs using Jolokia}}
 the related configuration was wrong and an AttributeError occured while

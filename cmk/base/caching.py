@@ -131,6 +131,6 @@ class ListCache(list, Cache):
 config_cache = CacheManager()
 
 # These caches are not automatically cleared during the whole execution
-# time of the current Check_MK process. Single cached may be cleaned
+# time of the current Checkmk process. Single cached may be cleaned
 # manually during execution.
 runtime_cache = CacheManager()

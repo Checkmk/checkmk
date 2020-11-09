@@ -50,5 +50,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Port"), help=_("The Port Description")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hp_hh3c_ext_states,
-        title=lambda: _("States of HP Switch modules"),
+        title=lambda: _("HP Switch module state"),
     ))

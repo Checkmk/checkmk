@@ -7,7 +7,6 @@
 
 def inventory_k8s_daemon_pods(parsed):
     if parsed:
-        yield HostLabel(u"cmk/kubernetes_object", u"daemonset")
         yield (None, {})
 
 
@@ -47,10 +46,8 @@ def check_k8s_daemon_pods(_no_item, _params, parsed):
 
 
 check_info["k8s_daemon_pods"] = {
-    "parse_function": parse_k8s,
+    # section is already migrated
     "inventory_function": inventory_k8s_daemon_pods,
     "check_function": check_k8s_daemon_pods,
     "service_description": "Daemon Pods",
-    "has_perfdata": True,
-    "includes": ["k8s.include"],
 }

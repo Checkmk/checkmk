@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard-import,unused-wildcard-import
 check_info['fjdarye500_disks'] = {
     'parse_function': parse_fjdarye_disks,
     'inventory_function': inventory_fjdarye_disks,
@@ -12,7 +13,6 @@ check_info['fjdarye500_disks'] = {
     'snmp_info': ('.1.3.6.1.4.1.211.1.21.1.150.2.19.2.1', [1, 3]),
     'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
     'group': 'raid_disk',
-    'includes': ["fjdarye.include"],
 }
 
 check_info['fjdarye500_disks.summary'] = {
@@ -22,5 +22,4 @@ check_info['fjdarye500_disks.summary'] = {
     'snmp_info': ('.1.3.6.1.4.1.211.1.21.1.150.2.19.2.1', [1, 3]),
     'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
     'group': 'raid_summary',
-    'includes': ["fjdarye.include"],
 }

@@ -14,7 +14,7 @@ for param in "$@"; do
         continue
     fi
     if [[ "$param" == enterprise* || "$param" == managed* ]]; then
-        if ! head -30 $param|grep -c -E "C[ME]E|Check_MK Enterprise License" > /dev/null; then
+        if ! head -30 $param|grep -c -E "C[ME]E|Checkmk Enterprise License" > /dev/null; then
             fails+=($param)
         fi
     else

@@ -6,7 +6,7 @@ Date: 1578566575
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 With this check you can monitor Redis instances. The check gets input from
 the redis-cli command "info" and the resulting "Persistence" section. It

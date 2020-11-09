@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_ibm_imm_temp(info):
     for line in info:
@@ -27,7 +29,6 @@ check_info["ibm_imm_temp"] = {
     'check_function'          : check_ibm_imm_temp,
     'inventory_function'      : inventory_ibm_imm_temp,
     'service_description'     : 'Temperature %s',
-    'includes'                : [ 'temperature.include' ],
     'has_perfdata'             : True,
     'group'                   : 'temperature',
     'snmp_scan_function'      :

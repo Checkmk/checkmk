@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks
@@ -34,12 +35,13 @@ pytestmark = pytest.mark.checks
         ([("current", "1"), ("available", None), ("totalCreated", "10000")], 3, '', '', -1, -1, ''),
         ([("current", "1"), ("available", "10"), ("totalCreated", None)], 3, '', '', -1, -1, ''),
     ])
-def test_check_function(check_manager, info, state_expected, info_expected, perf_expected_key,
-                        perf_expected_value, state_expected_perc, info_expected_perc):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_function(info, state_expected, info_expected, perf_expected_key, perf_expected_value,
+                        state_expected_perc, info_expected_perc):
     """
     Checks funny connections values
     """
-    check = check_manager.get_check("mongodb_connections")
+    check = Check("mongodb_connections")
     check_result = CheckResult(check.run_check(None, {'levels_perc': (80.0, 90.0)}, info))
 
     if len(check_result.subresults) == 0:

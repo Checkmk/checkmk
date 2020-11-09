@@ -8,7 +8,7 @@ import os
 import re
 import logging
 import pytest  # type: ignore[import]
-from testlib import cmk_path, cmc_path, cme_path
+from testlib import cmk_path, cmc_path, cme_path  # type: ignore[import]
 
 LOGGER = logging.getLogger()
 
@@ -25,8 +25,6 @@ check_paths = [
     "inventory",
     "notifications",
     "active_checks",
-    # CMC specific
-    "agents/bakery",
     # TODO: Update all agent plugins to use sys.stdout.write instead of print
     "agents/plugins",
 ]
@@ -53,12 +51,14 @@ def test_find_debugs_false(line):
 
 @pytest.mark.parametrize(
     'path',
-    list(
-        filter(os.path.exists, [
-            "%s/%s" % (base_path, dir_path)
-            for base_path in [cmk_path(), cmc_path(), cme_path()]
-            for dir_path in check_paths
-        ])))
+    [
+        p  #
+        for base_path in [cmk_path(), cmc_path(), cme_path()]  #
+        for dir_path in check_paths  #
+        for p in ["%s/%s" % (base_path, dir_path)]
+        if os.path.exists(p)
+    ],
+)
 def test_find_debug_code(path):
     scanned = 0
 
@@ -76,11 +76,15 @@ def test_find_debug_code(path):
                 continue
 
             LOGGER.info("Checking file %s", file_path)
-            for nr, line in enumerate(open(file_path)):
-                if nr == 0 and ("bash" in line or "php" in line):
-                    break  # skip non python files
+            try:
+                with open(file_path) as file:
+                    for nr, line in enumerate(file.readlines()):
+                        if nr == 0 and ("bash" in line or "php" in line):
+                            break  # skip non python files
 
-                assert not find_debugs(line), "Found \"print(...)\" call in %s:%d" % (file_path,
-                                                                                      nr + 1)
+                        assert not find_debugs(line), ("Found \"print(...)\" call in %s:%d" %
+                                                       (file_path, nr + 1))
+            except UnicodeDecodeError:
+                LOGGER.warning("Could not read %r due to UnicodeDecodeError", file_path)
 
     assert scanned > 0

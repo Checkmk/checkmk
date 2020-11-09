@@ -6,7 +6,7 @@ Date: 1595337693
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If a Checkmk site is updated to a newer version but the agents of Windows hosts
 are not, then the warning {{Unexpected allowed IP ranges}} may be displayed in

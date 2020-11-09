@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.dell_om import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["dell_om_sensors_default_levels"] = {"levels": (50, 60)}
 
 
@@ -67,6 +69,5 @@ check_info["dell_om_sensors"] = {
             '13',  # ProbeLowerCriticalThreshold',
             #'16.1', # ProbeDiscreteReading',
         ]),
-    "includes": ["dell_om.include", "temperature.include"],
     "default_levels_variable": "dell_om_sensors_default_levels"
 }

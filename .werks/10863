@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When hosts are created using the Web API with data structures in JSON format,
 configuring these hosts could lead to problems in different situations.

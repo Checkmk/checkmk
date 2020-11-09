@@ -1,0 +1,35 @@
+Title: Remove dokuwiki from standard Checkmk packages
+Class: feature
+Compatible: compat
+Component: packages
+Date: 1601359706
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+Dokuwiki has been delivered with Checkmk since the introduction of OMD. It has
+certainly helped some users to quickly create documentation in their monitoring
+site. But for Checkmk 2.0 we decided to remove Dokuwiki from the standard
+packages.
+
+The Dokuwiki package causes increased effort and complexity because it has to
+be maintained by us, including the plugins that have been selected and
+implemented. The main problem here is: We support different Linux distros in
+different versions. These platforms provide different PHP versions by default
+(currently PHP 5.4 to 7). To all these versions we have to keep Dokuwiki and
+the plugins compatible. Upstream, however, Dokuwiki has removed support for
+such old PHP versions. This would increase the effort for us significantly if
+we want to support all platforms equally well.
+
+If you have been using Dokuwiki in a Checkmk site so far, there are ways to do
+so. Dokuwiki can be installed into the local hierarchy of a site and run from
+there. You are responsible for the installation and maintenance of the
+installation yourself. It would even be possible to create an MKP to share the
+installation with other users.
+
+The Checkmk sidebar snapin "Wiki" has also been removed from Checkmk. If
+you want to use it, you can find it at
+"share/doc/check_mk/treasures/wiki_sidebar_snapin.py" in your site. Copy
+the file to "local/share/check_mk/web/plugins/sidebar/" and restart your
+site apache to make the snapin available to the GUI.

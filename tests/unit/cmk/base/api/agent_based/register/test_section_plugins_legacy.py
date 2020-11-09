@@ -9,11 +9,10 @@
 import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
-from cmk.snmplib.type_defs import SNMPTree
 
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.api.agent_based.type_defs import AgentStringTable
+from cmk.base.api.agent_based.type_defs import SNMPTree, StringTable
 from cmk.base.check_api_utils import Service
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
@@ -26,21 +25,12 @@ def old_school_parse_function(_info):
     return {"what": "ever"}
 
 
-HOST_LABELS = [
-    HostLabel("foo", "bar"),
-    HostLabel("gee", "boo"),
-    HostLabel("heinz", "hirn"),
-]
-
-
 def old_school_discover_function(parsed_extra):
     _parsed, _extra_section = parsed_extra
     yield "item1", {"discoverd_param": 42}
-    yield HOST_LABELS[0]
     yield Service(
         "item2",
         {},
-        host_labels=DiscoveredHostLabels(*HOST_LABELS[1:]),
     )
     yield "item3", "{'how_bad_is_this': 100}"
 
@@ -66,7 +56,7 @@ def test_create_agent_parse_function():
 
     section_plugins._validate_parse_function(
         compliant_parse_function,
-        expected_annotation=(AgentStringTable, "AgentStringTable"),
+        expected_annotation=(StringTable, "StringTable"),
     )
 
     assert old_school_parse_function([]) == compliant_parse_function([])
@@ -91,30 +81,6 @@ def test_create_snmp_parse_function():
     assert old_school_parse_function([]) == compliant_parse_function([])
 
 
-@pytest.mark.parametrize("disco_func, labels_expected", [
-    (old_school_discover_function, HOST_LABELS),
-    (lambda x: None, []),
-    (lambda x: [], []),
-])
-def test_create_host_label_function(disco_func, labels_expected):
-    host_label_function = section_plugins_legacy._create_host_label_function(
-        disco_func, ["some_extra_section"])
-
-    assert host_label_function is not None
-    section_plugins.validate_function_arguments(
-        "host_label",
-        host_label_function,
-        has_item=False,
-        has_params=False,
-        sections=[ParsedSectionName("__only_one_seciton__")],
-    )
-
-    # check that we can pass an un-unpackable argument now!
-    actual_labels = list(host_label_function({"parse": "result"}))
-
-    assert actual_labels == labels_expected
-
-
 def test_create_snmp_section_plugin_from_legacy():
 
     plugin = section_plugins_legacy.create_snmp_section_plugin_from_legacy(
@@ -125,12 +91,13 @@ def test_create_snmp_section_plugin_from_legacy():
         },
         old_school_scan_function,
         (".1.2.3.4.5", ["2", 3]),
+        validate_creation_kwargs=True,
     )
 
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("norris")
     assert plugin.parse_function.__name__ == "old_school_parse_function"
-    assert plugin.host_label_function.__name__ == "host_label_function"
+    assert plugin.host_label_function.__name__ == "_noop_host_label_function"
     assert plugin.supersedes == set()
     assert plugin.detect_spec == [[(".1.2.3.4.5", "norris.*", True)]]
     assert plugin.trees == [SNMPTree(base=".1.2.3.4.5", oids=["2", "3"])]

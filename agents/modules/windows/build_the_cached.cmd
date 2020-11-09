@@ -15,10 +15,10 @@ SETLOCAL EnableExtensions EnableDelayedExpansion
 
 @if "%3"=="" powershell 'Invalid parameters' && exit /B 9
 
-rem Increase the value below to rebuild
-set BUILD_NUM=1
+rem Increase the value in file BUILD_NUM to rebuild master
+set /p BUILD_NUM=<BUILD_NUM
 
-powershell Write-Host "Starting cached build..." -foreground Cyan
+powershell Write-Host "Starting cached build with BUILD_NUM=%BUILD_NUM%..." -foreground Cyan
 where curl.exe > nul 2>&1 ||  powershell Write-Host "[-] curl not found"  -Foreground red && exit /B 10
 powershell Write-Host "[+] curl found" -Foreground green
 

@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict
-from .agent_based_api.v0 import register, type_defs
+from .agent_based_api.v1 import register, type_defs
 
 
-def parse_systemtime(string_table: type_defs.AgentStringTable) -> Dict[str, float]:
+def parse_systemtime(string_table: type_defs.StringTable) -> Dict[str, float]:
     """
     >>> parse_systemtime([['12345']])
     {'foreign_systemtime': 12345.0}

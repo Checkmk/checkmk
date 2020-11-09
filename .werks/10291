@@ -1,0 +1,28 @@
+Title: New Checkmk REST-API introduced
+Class: feature
+Compatible: compat
+Component: core
+Date: 1603702291
+Edition: cre
+Knowledge: undoc
+Level: 3
+Version: 2.0.0i1
+
+With the Checkmk REST-API you can execute tasks you would normally perform manually in Checkmk's GUI
+on the Checkmk server via custom made scripts.
+
+REST stands for REpresentational State Transfer and describes an architecture for the exchange of
+data on distributed systems - especially for Web services. The implementation of this REST-API is
+done via the HTTP/1.1 protocol, where resources are addressed via URIs and accessed with HTTP
+methods (GET, PUT, POST, DELETE).
+
+The API is documented in a machine-readable schema and a human-readable document in English, with
+all resources, their input and output parameters and the associated value ranges. The API is
+specified in the OpenAPI 3.x specification format.
+
+The documentation for the API can be accessed in Checkmk's GUI under "Navigation > Help > REST-API
+Documentation". The specification file can be downloaded by clicking on the "Download OpenAPI
+Specification" button at the top of the documentation.
+
+A chapter in the Checkmk Manual specific to the REST-API is currently being created and will be
+ready for the 2.0.0 release.

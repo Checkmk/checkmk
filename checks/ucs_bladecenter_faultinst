@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
+
 # <<<ucs_bladecenter_faultinst:sep(9)>>>
 # faultInst   Dn sys/chassis-2/bl...ault-F1256 Descr Local disk 2 missing on server 2/3    Severity info
 # faultInst   Dn sys/chassis-2/bl...ault-F1256 Descr Local disk 1 missing on server 2/3    Severity info
@@ -14,7 +16,7 @@ def inventory_ucs_bladecenter_faultinst(parsed):
     yield None, None
 
 
-def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
+def check_ucs_bladecenter_faultinst(_item, params, parsed):
     severities = {}
     for values in parsed.get("faultInst", {}).values():
         entry_sev = values.get("Severity").lower()
@@ -26,7 +28,7 @@ def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
         return
 
     for sev, instances in severities.items():
-        sev_state = UCS_FAULTINST_SEVERITY_TO_STATE.get(sev, 3)
+        sev_state = params.get(sev, ucs_bladecenter.UCS_FAULTINST_SEVERITY_TO_STATE.get(sev, 3))
 
         # Right now, OK instances are also reported in detail
         # If required we can increase the state level here, so that only WARN+ messages are shown
@@ -42,9 +44,9 @@ def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
 
 
 check_info["ucs_bladecenter_faultinst"] = {
-    'parse_function': ucs_bladecenter_convert_info,
+    'parse_function': ucs_bladecenter.generic_parse,
     'inventory_function': inventory_ucs_bladecenter_faultinst,
     'check_function': check_ucs_bladecenter_faultinst,
     'service_description': 'Fault Instances',
-    'includes': ['ucs_bladecenter.include'],
+    'group': 'ucs_bladecenter_faultinst',
 }

@@ -1,0 +1,12 @@
+Title: qnap_fans: update default parameters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1604493790
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+Broken fans can be detected by lower thresholds (not upper thresholds). The default parameters have been adapted accordingly.
+

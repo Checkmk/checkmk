@@ -116,10 +116,10 @@
 
 """
 from typing import Dict, Optional
-from .agent_based_api.v0 import register, type_defs
+from .agent_based_api.v1 import register, type_defs
 
 
-def parse_proc_meminfo_bytes(string_table: type_defs.AgentStringTable) -> Optional[Dict[str, int]]:
+def parse_proc_meminfo_bytes(string_table: type_defs.StringTable) -> Optional[Dict[str, int]]:
     """Parse /proc/meminfo into the canonical form: into bytes
 
         >>> import pprint
@@ -154,7 +154,7 @@ register.agent_section(
 )
 
 
-def parse_aix_memory(string_table: type_defs.AgentStringTable) -> Optional[Dict[str, int]]:
+def parse_aix_memory(string_table: type_defs.StringTable) -> Optional[Dict[str, int]]:
     """Parse AIX vmstat output into something compatible with the Linux output of /proc/meminfo
 
     AIX speaks of 4k pages while Linux of kilobytes.
@@ -213,12 +213,12 @@ def parse_aix_memory(string_table: type_defs.AgentStringTable) -> Optional[Dict[
 
 register.agent_section(
     name="aix_memory",
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
     parse_function=parse_aix_memory,
 )
 
 
-def parse_solaris_mem(string_table: type_defs.AgentStringTable) -> Optional[Dict[str, int]]:
+def parse_solaris_mem(string_table: type_defs.StringTable) -> Optional[Dict[str, int]]:
     """
         >>> import pprint
         >>> test = 'Memory: 512M phys mem, 353M free mem, 2000M total swap, 2000M free swap'
@@ -255,12 +255,12 @@ def parse_solaris_mem(string_table: type_defs.AgentStringTable) -> Optional[Dict
 
 register.agent_section(
     name="solaris_mem",
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
     parse_function=parse_solaris_mem,
 )
 
 
-def parse_statgrab_mem(string_table: type_defs.AgentStringTable) -> Optional[Dict[str, int]]:
+def parse_statgrab_mem(string_table: type_defs.StringTable) -> Optional[Dict[str, int]]:
     """
         >>> import pprint
         >>> pprint.pprint(parse_statgrab_mem([
@@ -309,6 +309,6 @@ def parse_statgrab_mem(string_table: type_defs.AgentStringTable) -> Optional[Dic
 
 register.agent_section(
     name="statgrab_mem",
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
     parse_function=parse_statgrab_mem,
 )

@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<db2_logsizes>>>
 # [[[db2taddm:CMDBS1]]]
 # TIMESTAMP 1426495343
@@ -98,5 +101,4 @@ check_info['db2_logsizes'] = {
     "group": "db2_logsize",
     "has_perfdata": True,
     "default_levels_variable": "db2_logsize_default_levels",
-    "includes": ["size_trend.include", "df.include", "db2.include"]
 }

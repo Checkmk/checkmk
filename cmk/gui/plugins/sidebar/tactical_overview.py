@@ -13,9 +13,10 @@ import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
 from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
+from cmk.gui.utils.urls import makeuri_contextless
 
 ViewURLParams = namedtuple("ViewURLParams", ["total", "handled", "unhandled", "stale"])
 OverviewRow = namedtuple("OverviewRow", ["what", "title", "context", "stats", "views"])
@@ -44,7 +45,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         return _("Tactical overview")
 
     @classmethod
-    def has_advanced_items(cls):
+    def has_show_more_items(cls):
         return True
 
     @classmethod
@@ -157,25 +158,28 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
             html.open_tr()
             html.th(row.title)
-            html.th(_("Problems"), class_="advanced")
+            html.th(_("Problems"), class_="show_more_mode")
             html.th(_("Unhandled"))
             if show_stales and has_stale_objects:
-                html.th(_("Stale"), class_="advanced")
+                html.th(_("Stale"), class_="show_more_mode")
             html.close_tr()
 
             td_class = 'col4' if has_stale_objects else 'col3'
 
             html.open_tr()
-            url = html.makeuri_contextless(row.views.total + context_vars, filename="view.py")
+            url = makeuri_contextless(request, row.views.total + context_vars, filename="view.py")
             html.open_td(class_=["total", td_class])
             html.a("%s" % amount, href=url, target="main")
             html.close_td()
 
             for value, ty in [(problems, "handled"), (unhandled_problems, "unhandled")]:
-                url = html.makeuri_contextless(getattr(row.views, ty) + context_vars,
-                                               filename="view.py")
+                url = makeuri_contextless(
+                    request,
+                    getattr(row.views, ty) + context_vars,
+                    filename="view.py",
+                )
                 html.open_td(class_=[
-                    td_class, "states prob" if value != 0 else None, "advanced" if ty ==
+                    td_class, "states prob" if value != 0 else None, "show_more_mode" if ty ==
                     "handled" else "basic"
                 ])
                 link(str(value), url)
@@ -183,14 +187,17 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
             if show_stales and has_stale_objects:
                 if row.views.stale:
-                    url = html.makeuri_contextless(row.views.stale + context_vars,
-                                                   filename="view.py")
+                    url = makeuri_contextless(
+                        request,
+                        row.views.stale + context_vars,
+                        filename="view.py",
+                    )
                     html.open_td(
-                        class_=[td_class, "states prob" if stales != 0 else None, "advanced"])
+                        class_=[td_class, "states prob" if stales != 0 else None, "show_more_mode"])
                     link(str(stales), url)
                     html.close_td()
                 else:
-                    html.td(html.render_span("0"), class_="advanced")
+                    html.td(html.render_span("0"), class_="show_more_mode")
 
             html.close_tr()
         html.close_table()
@@ -394,11 +401,14 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         html.open_div(class_="spacertop")
         html.open_div(class_="tacticalalert")
 
-        confirm_url = html.makeuri_contextless([], filename="clear_failed_notifications.py")
+        confirm_url = makeuri_contextless(request, [], filename="clear_failed_notifications.py")
         html.icon_button(confirm_url, _("Confirm failed notifications"), "delete", target="main")
 
-        view_url = html.makeuri_contextless([("view_name", "failed_notifications")],
-                                            filename="view.py")
+        view_url = makeuri_contextless(
+            request,
+            [("view_name", "failed_notifications")],
+            filename="view.py",
+        )
 
         html.a(_("%d failed notifications") % failed_notifications, target="main", href=view_url)
         html.close_div()
@@ -438,11 +448,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         tooltip = tooltip_template % ', '.join(sites_not_connected)
 
         if config.user.may("wato.sites"):
-            url = html.makeuri_contextless([("mode", "sites")], filename="wato.py")
+            url = makeuri_contextless(request, [("mode", "sites")], filename="wato.py")
             html.icon_button(url, tooltip, "sites", target="main")
             html.a(message, target="main", href=url)
         else:
-            html.icon(tooltip, "sites")
+            html.icon("sites", tooltip)
             html.write_text(message)
 
         html.close_div()

@@ -21,15 +21,6 @@ class Logger;
 class MonitoringCore;
 class Query;
 
-// NOTE: This macro leads to undefined behaviour for non-POD/non-standard-layout
-// classes, e.g. Entity, Host, etc., nevertheless we have to use it below. :-/
-// On top of that, we use -1 as placeholder so that the result must be
-// converted to int in the end.
-#define DANGEROUS_OFFSETOF(typename, member)                             \
-    (static_cast<int>(reinterpret_cast<size_t>(                          \
-                          &(reinterpret_cast<typename *>(32))->member) - \
-                      32))
-
 /// A table-like view for some underlying data, exposed via LQL.
 class Table {
 public:

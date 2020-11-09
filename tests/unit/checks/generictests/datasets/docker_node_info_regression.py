@@ -7,11 +7,12 @@
 # yapf: disable
 # type: ignore
 
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.plugins.agent_based.docker_node_info import parse_docker_node_info
+
 
 checkname = 'docker_node_info'
 
-info = [
+parsed = parse_docker_node_info([
     [
         '{"ID":"VAW5:RDCA:ATG7:24TV:Q7IJ:L33R:U5MX:XKXN:Z77K:AR22:QUE6:3JGL","Containers":0,"ContainersRunning":0,"ContainersPaused":0,"ContainersStopped":0,"Images":0,"Driver":"overlay2","DriverStatus":[["Backing',
         'Filesystem","extfs"],["Supports', 'd_type","true"],["Native', 'Overlay',
@@ -19,12 +20,12 @@ info = [
         '18.04.1',
         'LTS","OSType":"linux","Architecture":"x86_64","IndexServerAddress":"https://index.docker.io/v1/","RegistryConfig":{"AllowNondistributableArtifactsCIDRs":[],"AllowNondistributableArtifactsHostnames":[],"InsecureRegistryCIDRs":["127.0.0.0/8"],"IndexConfigs":{"docker.io":{"Name":"docker.io","Mirrors":[],"Secure":true,"Official":true}},"Mirrors":[]},"NCPU":8,"MemTotal":16690192384,"GenericResources":null,"DockerRootDir":"/var/lib/docker","HttpProxy":"","HttpsProxy":"","NoProxy":"","Name":"klappson","Labels":[],"ExperimentalBuild":false,"ServerVersion":"18.06.1-ce","ClusterStore":"","ClusterAdvertise":"","Runtimes":{"runc":{"path":"docker-runc"}},"DefaultRuntime":"runc","Swarm":{"NodeID":"","NodeAddr":"","LocalNodeState":"inactive","ControlAvailable":false,"Error":"","RemoteManagers":null},"LiveRestoreEnabled":false,"Isolation":"","InitBinary":"docker-init","ContainerdCommit":{"ID":"468a545b9edcd5932818eb9de8e72413e616e86e","Expected":"468a545b9edcd5932818eb9de8e72413e616e86e"},"RuncCommit":{"ID":"69663f0bd4b60df09991c08812a60108003fa340","Expected":"69663f0bd4b60df09991c08812a60108003fa340"},"InitCommit":{"ID":"fec3683","Expected":"fec3683"},"SecurityOptions":["name=apparmor","name=seccomp,profile=default"]}'
     ],
-]
+])
 
-discovery = {'': [(None, {}),
-                  HostLabel(u'cmk/docker_object', u'node')
-                 ],
-            'containers': [(None, {})]}
+discovery = {
+    '': [(None, {})],
+    'containers': [(None, {})],
+}
 
 checks = {
     '': [(None, {}, [(0, u'Daemon running on host klappson', [])])],

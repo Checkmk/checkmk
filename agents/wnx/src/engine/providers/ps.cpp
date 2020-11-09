@@ -17,6 +17,7 @@
 #include "providers/ps.h"
 #include "providers/wmi.h"
 #include "tools/_raii.h"
+#include "tools/_win.h"
 #include "tools/_xlog.h"
 
 namespace cma {
@@ -83,7 +84,7 @@ std::wstring GetProcessListFromWmi(std::wstring_view separator) {
 // code from legacy client:
 std::string ExtractProcessOwner(HANDLE Process) {
     // Get process token
-    HANDLE raw_handle = INVALID_HANDLE_VALUE;
+    HANDLE raw_handle{wtools::InvalidHandle()};
 
     if (!::OpenProcessToken(Process, TOKEN_READ, &raw_handle)) {
         if (GetLastError() != 5)

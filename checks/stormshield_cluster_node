@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.stormshield import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['stormshield_cluster_node'] = {
     'quality': (80, 50),
 }
@@ -71,5 +72,4 @@ check_info['stormshield_cluster_node'] = {
         ]),
     'group': 'stormshield_quality',
     'snmp_scan_function': stormshield_cluster_scan_function,
-    'includes': ['stormshield.include'],
 }

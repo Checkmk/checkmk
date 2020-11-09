@@ -23,7 +23,8 @@ public:
     struct Constant;
     struct Reference;
     StringLambdaColumn(std::string name, std::string description,
-                       Offsets offsets, std::function<std::string(const T&)> gv)
+                       ColumnOffsets offsets,
+                       std::function<std::string(const T&)> gv)
         : StringColumn(std::move(name), std::move(description),
                        std::move(offsets))
         , get_value_(std::move(gv)) {}

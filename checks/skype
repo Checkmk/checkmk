@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # these defaults were specified by customer
 factory_settings['skype_mobile_defaultlevels'] = {'requests_processing': {"upper": (10000, 20000)}}
 
@@ -219,7 +220,6 @@ check_info['skype'] = {
     'parse_function': lambda info: parse_wmi_table(info, key="instance"),
     'has_perfdata': True,
     'service_description': "Skype Web Components",
-    'includes': ['wmi.include'],
     'group': 'skype',
     'default_levels_variable': 'skype_defaultlevels'
 }
@@ -307,7 +307,6 @@ check_info['skype.conferencing'] = {
     'parse_function': lambda info: parse_wmi_table(info, key="instance"),
     'has_perfdata': True,
     'service_description': "Skype Conferencing",
-    'includes': ['wmi.include'],
     'group': 'skype_conferencing',
     'default_levels_variable': 'skype_conferencing_defaultlevels'
 }

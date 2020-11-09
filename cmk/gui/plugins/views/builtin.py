@@ -9,8 +9,7 @@ from typing import Any, List, Optional, Tuple
 import cmk.utils.version as cmk_version
 from cmk.gui.i18n import _
 
-from . import (
-    multisite_builtin_views,)
+from . import multisite_builtin_views
 
 # Painters used in list of services views
 service_view_painters: List[Tuple[Optional[str], ...]] = [
@@ -73,6 +72,7 @@ multisite_builtin_views.update({
         'title': _('All hosts'),
         "topic": "overview",
         "sort_index": 20,
+        'icon': 'folder',
     },
     'unmonitored_services': {
         'browser_reload': 0,
@@ -125,6 +125,10 @@ multisite_builtin_views.update({
         'title': _('Unmonitored services'),
         "topic": "analyze",
         "sort_index": 60,
+        'icon': {
+            'icon': 'services',
+            'emblem': 'warning'
+        },
     },
     'pending_discovery': {
         'browser_reload': 0,
@@ -177,6 +181,10 @@ multisite_builtin_views.update({
         'title': _('Pending service discovery'),
         "topic": "analyze",
         "sort_index": 50,
+        'icon': {
+            'icon': 'service_discovery',
+            'emblem': 'pending'
+        },
     },
     'allservices': {
         'browser_reload': 90,
@@ -242,6 +250,7 @@ multisite_builtin_views.update({
             ('svcdescr', False),
         ],
         'title': _('All services'),
+        'icon': 'services',
     },
     'service_check_durations': {
         'browser_reload': 90,
@@ -258,9 +267,7 @@ multisite_builtin_views.update({
         'group_painters': [('sitealias', 'sitehosts', None)],
         'hidden': False,
         'hidebutton': False,
-        'icon': None,
         'layout': 'table',
-        'linktitle': _('Service check durations'),
         'mobile': False,
         'mustsearch': False,
         'name': 'service_check_durations',
@@ -286,7 +293,8 @@ multisite_builtin_views.update({
         'title': _('Service check durations'),
         "topic": "history",
         "sort_index": 70,
-        "is_advanced": True,
+        "is_show_more": True,
+        'icon': 'service_duration',
     },
     'comments': {
         'column_headers': 'pergroup',
@@ -351,7 +359,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Host comments'),
         'title': _('Comments of host'),
         "topic": "monitoring",
     },
@@ -380,7 +387,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Comments'),
         'title': _('Comments of service'),
         "topic": "monitoring",
     },
@@ -427,7 +433,7 @@ multisite_builtin_views.update({
             ('downtime_what', False),
             ('downtime_start_time', False),
         ],
-        'title': _('Downtimes'),
+        'title': _('Scheduled downtimes'),
         "topic": "overview",
         "sort_index": 80,
     },
@@ -447,7 +453,6 @@ multisite_builtin_views.update({
         'hide_filters': [],
         'icon': 'downtime',
         'layout': 'table',
-        'linktitle': _('Host Dt-History'),
         'mustsearch': False,
         'num_columns': 1,
         'painters': [
@@ -545,7 +550,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Host downtimes'),
         'title': _('Downtimes of host'),
         'topic': "history",
     },
@@ -578,7 +582,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Downtimes'),
         'title': _('Downtimes of service'),
         'topic': "history",
     },
@@ -593,7 +596,7 @@ multisite_builtin_views.update({
         'hard_filtervars': [],
         'hidden': True,
         'hide_filters': ['siteopt', 'host'],
-        'icon': 'status',
+        'icon': 'services',
         'layout': 'boxed',
         'mustsearch': False,
         'name': 'host',
@@ -608,7 +611,6 @@ multisite_builtin_views.update({
             ('site_host', False),
             ('svcdescr', False),
         ],
-        'linktitle': _('Services'),
         'title': _('Services of Host'),
         'topic': 'monitoring',
     },
@@ -639,7 +641,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': ['svcstate', 'serviceregex'],
         'sorters': [('svcdescr', False)],
-        'linktitle': _('Services'),
         'title': _('Services of Host')
     },
     'hosts': {
@@ -656,7 +657,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': [],
         'layout': 'boxed',
-        'linktitle': _('Services of Hosts'),
         'mustsearch': False,
         'name': 'hosts',
         'num_columns': 1,
@@ -699,7 +699,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': ['svcstate'],
         'sorters': [('svcdescr', False)],
-        'linktitle': _('Services: OK'),
         'title': _('OK Services of host')
     },
     'host_warn': {
@@ -729,7 +728,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': ['svcstate'],
         'sorters': [('svcdescr', False)],
-        'linktitle': _('Services: WARN'),
         'title': _('WARN Services of host')
     },
     'host_crit': {
@@ -759,7 +757,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': ['svcstate'],
         'sorters': [('svcdescr', False)],
-        'linktitle': _('Services: CRIT'),
         'title': _('CRIT Services of host')
     },
     'host_unknown': {
@@ -789,7 +786,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': ['svcstate'],
         'sorters': [('svcdescr', False)],
-        'linktitle': _('Services: UNKNOWN'),
         'title': _('UNKNOWN Services of host')
     },
     'host_pending': {
@@ -819,7 +815,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': ['svcstate'],
         'sorters': [('svcdescr', False)],
-        'linktitle': _('Services: PENDING'),
         'title': _('PENDING Services of host')
     },
     'problemsofhost': {
@@ -851,7 +846,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': ['svcstate'],
         'sorters': [('svcdescr', False)],
-        'linktitle': _('Host Problems'),
         'title': _('Problems of host')
     },
     'hostgroup': {
@@ -869,7 +863,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'boxed',
-        'linktitle': _('Host Group Overview'),
         'mustsearch': False,
         'name': 'hostgroup',
         'num_columns': 2,
@@ -909,7 +902,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'boxed',
-        'linktitle': _('Host Group Overview of Up Hosts'),
         'mustsearch': False,
         'name': 'hostgroup_up',
         'num_columns': 2,
@@ -949,7 +941,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'boxed',
-        'linktitle': _('Host Group Overview of Down Hosts'),
         'mustsearch': False,
         'name': 'hostgroup_down',
         'num_columns': 2,
@@ -989,7 +980,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'boxed',
-        'linktitle': _('Host Group Overview of Unreachable Hosts'),
         'mustsearch': False,
         'name': 'hostgroup_unreach',
         'num_columns': 2,
@@ -1029,7 +1019,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'boxed',
-        'linktitle': _('Host Group Overview of Pending Hosts'),
         'mustsearch': False,
         'name': 'hostgroup',
         'num_columns': 2,
@@ -1073,7 +1062,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'table',
-        'linktitle': _('Services'),
         'mustsearch': False,
         'name': 'hostgroupservices',
         'num_columns': 2,
@@ -1141,7 +1129,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'table',
-        'linktitle': _('OK Services'),
         'mustsearch': False,
         'name': 'hostgroupservices_ok',
         'num_columns': 1,
@@ -1209,7 +1196,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'table',
-        'linktitle': _('WARN Services'),
         'mustsearch': False,
         'name': 'hostgroupservices_warn',
         'num_columns': 1,
@@ -1277,7 +1263,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'table',
-        'linktitle': _('CRIT Services'),
         'mustsearch': False,
         'name': 'hostgroupservices_crit',
         'num_columns': 1,
@@ -1345,7 +1330,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'table',
-        'linktitle': _('UNKNOWN Services'),
         'mustsearch': False,
         'name': 'hostgroupservices_unknwn',
         'num_columns': 1,
@@ -1413,7 +1397,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['hostgroup'],
         'layout': 'table',
-        'linktitle': _('PEND Services'),
         'mustsearch': False,
         'name': 'hostgroupservices_pend',
         'num_columns': 1,
@@ -1486,6 +1469,7 @@ multisite_builtin_views.update({
         'sorters': [],
         'title': _('Host groups'),
         "topic": "overview",
+        'icon': "hostgroups",
         "sort_index": 60,
     },
     'hostproblems': {
@@ -1525,6 +1509,7 @@ multisite_builtin_views.update({
         'sorters': [],
         'title': _('Host problems'),
         "topic": "problems",
+        'icon': 'host_problems',
         "sort_index": 20,
     },
     'hoststatus': {
@@ -1597,7 +1582,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Host status'),
         'title': _('Status of Host'),
         'topic': 'monitoring',
     },
@@ -1618,7 +1602,6 @@ multisite_builtin_views.update({
         'hidden': False,
         'hide_filters': [],
         'layout': 'table',
-        'linktitle': _('Pending services'),
         'mustsearch': False,
         'name': 'pendingsvc',
         'num_columns': 5,
@@ -1630,8 +1613,12 @@ multisite_builtin_views.update({
         'sorters': [],
         'title': _('Pending services'),
         'topic': "analyze",
+        'icon': {
+            'icon': 'services',
+            'emblem': 'pending'
+        },
         "sort_index": 50,
-        "is_advanced": True,
+        "is_show_more": True,
     },
     'searchhost': {
         'browser_reload': 60,
@@ -1676,6 +1663,10 @@ multisite_builtin_views.update({
         'title': _('Host search'),
         "topic": "overview",
         "sort_index": 30,
+        'icon': {
+            'icon': 'folder',
+            'emblem': 'search'
+        },
     },
     'searchsvc': {
         'browser_reload': 60,
@@ -1760,6 +1751,10 @@ multisite_builtin_views.update({
         ],
         'title': _('Service search'),
         "topic": "overview",
+        'icon': {
+            'icon': 'services',
+            'emblem': 'search'
+        },
         "sort_index": 40,
     },
     'service': {
@@ -1827,7 +1822,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Details'),
         'title': _('Service')
     },
     'servicedesc': {
@@ -1860,7 +1854,6 @@ multisite_builtin_views.update({
             ('site_host', False),
         ],
         'user_sortable': 'on',
-        'linktitle': _('Service globally'),
         'title': _('All Services with this description:')
     },
     'servicedescpnp': {
@@ -1875,7 +1868,6 @@ multisite_builtin_views.update({
         'hide_filters': ['service'],
         'icon': 'pnp',
         'layout': 'boxed',
-        'linktitle': _('Graphs globally'),
         'mustsearch': False,
         'name': 'servicedescpnp',
         'num_columns': 2,
@@ -1906,7 +1898,6 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['servicegroup'],
         'layout': 'table',
-        'linktitle': _('Service Group'),
         'mustsearch': False,
         'name': 'servicegroup',
         'num_columns': 1,
@@ -1948,7 +1939,6 @@ multisite_builtin_views.update({
             ('site', False),
             ('site_host', False),
         ],
-        'linktitle': _('Complete site'),
         'title': _('All hosts of site')
     },
     'svcgroups': {
@@ -1982,6 +1972,7 @@ multisite_builtin_views.update({
         'sorters': [],
         'title': _('Service groups'),
         "topic": "overview",
+        'icon': 'servicegroups',
         "sort_index": 70,
     },
     'svcproblems': {
@@ -2031,6 +2022,7 @@ multisite_builtin_views.update({
         ],
         'title': _('Service problems'),
         "topic": "problems",
+        'icon': 'svc_problems',
         "sort_index": 30,
     },
     'searchpnp': {
@@ -2053,7 +2045,10 @@ multisite_builtin_views.update({
         ],
         'hidden': False,
         'hide_filters': [],
-        'icon': 'pnp',
+        'icon': {
+            'icon': 'graph',
+            'emblem': 'search'
+        },
         'layout': 'boxed',
         'mustsearch': True,
         'name': 'searchpnp',
@@ -2089,7 +2084,7 @@ multisite_builtin_views.update({
         'title': _('Search time graphs'),
         "topic": "history",
         "sort_index": 50,
-        "is_advanced": True,
+        "is_show_more": True,
     },
     'hostpnp': {
         'browser_reload': 90,
@@ -2124,7 +2119,6 @@ multisite_builtin_views.update({
             ('site_host', False),
             ('svcdescr', False),
         ],
-        'linktitle': _('Service graphs'),
         'title': _('Service graphs of host'),
         "topic": "history",
     },
@@ -2147,7 +2141,6 @@ multisite_builtin_views.update({
         'hidden': False,
         'hide_filters': [],
         'layout': 'table',
-        'linktitle': _('Change ago:'),
         'mustsearch': False,
         'name': 'svcrecent',
         'num_columns': 1,
@@ -2160,6 +2153,10 @@ multisite_builtin_views.update({
         'title': _('Recently changed services'),
         "topic": "history",
         "sort_index": 80,
+        'icon': {
+            'icon': 'services',
+            'emblem': 'warning'
+        },
     },
     'uncheckedsvc': {
         'browser_reload': 30,
@@ -2182,7 +2179,7 @@ multisite_builtin_views.update({
         'hidden': False,
         'hide_filters': [],
         'hidebutton': False,
-        'icon': None,
+        'icon': 'stale',
         'layout': 'table',
         'mobile': False,
         'mustsearch': False,
@@ -2200,7 +2197,7 @@ multisite_builtin_views.update({
         'title': _('Stale services'),
         "topic": "problems",
         "sort_index": 40,
-        "is_advanced": True,
+        "is_show_more": True,
     },
     'stale_hosts': {
         'browser_reload': 30,
@@ -2251,9 +2248,8 @@ multisite_builtin_views.update({
         ],
         'hidden': False,
         'hide_filters': [],
-        'icon': 'history',
+        'icon': 'event',
         'layout': 'table',
-        'linktitle': _('Events'),
         'mustsearch': False,
         'name': 'events',
         'num_columns': 1,
@@ -2283,7 +2279,7 @@ multisite_builtin_views.update({
             ('log_time', True),
             ('log_lineno', True),
         ],
-        'title': _('Monitoring history'),
+        'title': _('Host & service events'),
         "topic": "history",
         "sort_index": 10,
     },
@@ -2303,7 +2299,6 @@ multisite_builtin_views.update({
         'hide_filters': ['siteopt', 'host'],
         'icon': 'history',
         'layout': 'table',
-        'linktitle': _('Host history'),
         'mustsearch': False,
         'name': 'events',
         'num_columns': 1,
@@ -2341,7 +2336,6 @@ multisite_builtin_views.update({
         'hide_filters': ['siteopt', 'host'],
         'icon': 'downtime',
         'layout': 'table',
-        'linktitle': _('Host Dt-History'),
         'mustsearch': False,
         'num_columns': 1,
         'painters': [
@@ -2375,7 +2369,6 @@ multisite_builtin_views.update({
         'hide_filters': ['siteopt', 'host', 'service'],
         'icon': 'history',
         'layout': 'table',
-        'linktitle': _('History'),
         'mustsearch': False,
         'name': 'events',
         'num_columns': 1,
@@ -2413,7 +2406,6 @@ multisite_builtin_views.update({
         'hide_filters': ['siteopt', 'host', 'service'],
         'icon': 'downtime',
         'layout': 'table',
-        'linktitle': _('Downtime-History'),
         'mustsearch': False,
         'num_columns': 1,
         'painters': [
@@ -2448,7 +2440,6 @@ multisite_builtin_views.update({
         'hide_filters': ['siteopt', 'host'],
         'icon': 'history',
         'layout': 'table',
-        'linktitle': _('Host/Svc history'),
         'mustsearch': False,
         'name': 'events',
         'num_columns': 1,
@@ -2500,9 +2491,11 @@ multisite_builtin_views.update({
         ],
         'hidden': False,
         'hide_filters': [],
-        'icon': 'history',
+        'icon': {
+            'icon': 'event',
+            'emblem': 'search'
+        },
         'layout': 'table',
-        'linktitle': _('Search history'),
         'mustsearch': True,
         'name': 'logfile',
         'num_columns': 1,
@@ -2536,7 +2529,7 @@ multisite_builtin_views.update({
         'title': _('Search history'),
         "topic": "history",
         "sort_index": 40,
-        "is_advanced": True,
+        "is_show_more": True,
     },
     'sitesvcs_ok': {
         'browser_reload': 60,
@@ -2550,7 +2543,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'hide_filters': ['siteopt'],
         'layout': 'boxed',
-        'linktitle': _('OK Services of Site'),
         'mustsearch': False,
         'name': 'sitesvcs_ok',
         'num_columns': 2,
@@ -2593,7 +2585,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'hide_filters': ['siteopt'],
         'layout': 'boxed',
-        'linktitle': _('WARN Services of Site'),
         'mustsearch': False,
         'name': 'sitesvcs_warn',
         'num_columns': 2,
@@ -2636,7 +2627,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'hide_filters': ['siteopt'],
         'layout': 'boxed',
-        'linktitle': _('CRIT Services of Site'),
         'mustsearch': False,
         'name': 'sitesvcs_crit',
         'num_columns': 2,
@@ -2679,7 +2669,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'hide_filters': ['siteopt'],
         'layout': 'boxed',
-        'linktitle': _('UNKNOWN Services of Site'),
         'mustsearch': False,
         'name': 'sitesvcs_unknwn',
         'num_columns': 2,
@@ -2722,7 +2711,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'hide_filters': ['siteopt'],
         'layout': 'boxed',
-        'linktitle': _('Pending Services of Site'),
         'mustsearch': False,
         'name': 'sitesvcs_pend',
         'num_columns': 2,
@@ -2765,7 +2753,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'hide_filters': ['siteopt'],
         'layout': 'boxed',
-        'linktitle': _('Services of Site'),
         'mustsearch': False,
         'name': 'sitesvcs',
         'num_columns': 2,
@@ -2821,7 +2808,6 @@ multisite_builtin_views.update({
         'hide_filters': [],
         'hidebutton': False,
         'layout': 'boxed',
-        'linktitle': _('Alerts'),
         'mustsearch': False,
         'name': 'alertstats',
         'num_columns': 1,
@@ -2858,7 +2844,8 @@ multisite_builtin_views.update({
         'title': _('Alert Statistics'),
         "topic": "problems",
         "sort_index": 50,
-        "is_advanced": True,
+        'icon': 'alert_statistics',
+        "is_show_more": True,
     },
 
     # Special views for NagStaMon
@@ -2874,7 +2861,6 @@ multisite_builtin_views.update({
         'hide_filters': [],
         'hidebutton': True,
         'layout': 'table',
-        'linktitle': _('Host problems for NagStaMon'),
         'mustsearch': False,
         'name': 'nagstamon_hosts',
         'num_columns': 1,
@@ -2927,7 +2913,6 @@ multisite_builtin_views.update({
         'hide_filters': [],
         'hidebutton': True,
         'layout': 'table',
-        'linktitle': _('Service problems for NagStaMon'),
         'mustsearch': False,
         'name': 'nagstamon_svc',
         'num_columns': 1,
@@ -2996,7 +2981,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'matrix',
         'layout': 'matrix',
-        'linktitle': _('Performance Matrix'),
         'num_columns': 12,
         'painters': [
             ('service_description', 'service', None),
@@ -3127,7 +3111,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': _('All Aggregations'),
         'mustsearch': False,
         'name': 'aggr_all',
         'num_columns': 1,
@@ -3193,7 +3176,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': _('Aggregation group'),
         'mustsearch': False,
         'name': 'aggr_group',
         'num_columns': 1,
@@ -3257,9 +3239,8 @@ multisite_builtin_views.update({
         'hidden': False,
         'hide_filters': [],
         'hidebutton': True,
-        'icon': 'aggr',
+        'icon': 'aggr_single',
         'layout': 'table',
-        'linktitle': _('Host Aggregations'),
         'mustsearch': False,
         'name': 'aggr_singlehosts',
         'num_columns': 1,
@@ -3335,7 +3316,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': _('Host Aggregations'),
         'mustsearch': False,
         'num_columns': 1,
         'owner': 'cmkadmin',
@@ -3384,7 +3364,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': _('Host Aggregations'),
         'mustsearch': False,
         'name': 'aggrhost',
         'num_columns': 1,
@@ -3435,7 +3414,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': _('Aggregations'),
         'mustsearch': False,
         'name': 'aggr_host',
         'num_columns': 1,
@@ -3494,7 +3472,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': _('Service Aggreg.'),
         'mustsearch': False,
         'name': 'aggr_service',
         'num_columns': 1,
@@ -3554,7 +3531,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': _('Problem aggregations'),
         'mustsearch': False,
         'name': 'aggr_all',
         'num_columns': 1,
@@ -3624,9 +3600,8 @@ multisite_builtin_views.update({
         'hidden': False,
         'hide_filters': [],
         'hidebutton': True,
-        'icon': 'aggr',
+        'icon': 'aggr_single_problem',
         'layout': 'table',
-        'linktitle': _('Single host problems'),
         'mustsearch': False,
         'name': 'aggr_hostproblems',
         'num_columns': 1,
@@ -3676,7 +3651,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': 'All Aggregations',
         'mobile': False,
         'mustsearch': False,
         'name': 'aggr_single',
@@ -3713,7 +3687,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': 'All Aggregations',
         'mobile': False,
         'mustsearch': False,
         'name': 'aggr_all_api',
@@ -3754,7 +3727,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'icon': 'aggr',
         'layout': 'table',
-        'linktitle': 'Single Aggregation',
         'mobile': False,
         'mustsearch': False,
         'name': 'aggr_single_api',
@@ -3791,7 +3763,6 @@ multisite_builtin_views.update({
         'hidebutton': True,
         'icon': None,
         'layout': 'boxed',
-        'linktitle': u'BI Aggregations Summary State',
         'mobile': False,
         'mustsearch': False,
         'name': 'aggr_summary',
@@ -3833,7 +3804,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'aggr',
         'layout': 'boxed',
-        'linktitle': u'BI Boxes',
         'name': 'aggr_hostgroup_boxed',
         'num_columns': 2,
         'painters': [
@@ -3887,7 +3857,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'notification',
         'layout': 'table',
-        'linktitle': _('Host notifications'),
         'mustsearch': False,
         'name': 'hostnotifications',
         'num_columns': 1,
@@ -3947,7 +3916,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'notification',
         'layout': 'table',
-        'linktitle': _('Host/Svc notific.'),
         'mustsearch': False,
         'name': 'hostsvcnotifications',
         'num_columns': 1,
@@ -4005,9 +3973,8 @@ multisite_builtin_views.update({
         'hidden': False,
         'hide_filters': [],
         'hidebutton': False,
-        'icon': 'notification',
+        'icon': 'notifications',
         'layout': 'table',
-        'linktitle': _('Notifications'),
         'mustsearch': False,
         'name': 'notifications',
         'num_columns': 1,
@@ -4038,7 +4005,7 @@ multisite_builtin_views.update({
             ('log_time', True),
             ('log_lineno', True),
         ],
-        'title': _('Notification history'),
+        'title': _('Host & service history'),
         "topic": "history",
         "sort_index": 20,
     },
@@ -4076,9 +4043,11 @@ multisite_builtin_views.update({
         'hidden': False,
         'hide_filters': [],
         'hidebutton': True,
-        'icon': 'notification',
+        'icon': {
+            'icon': 'notifications',
+            'emblem': 'warning'
+        },
         'layout': 'table',
-        'linktitle': _('Notifications'),
         'mustsearch': False,
         'name': 'notifications',
         'num_columns': 1,
@@ -4139,7 +4108,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'notification',
         'layout': 'table',
-        'linktitle': _('Notifications'),
         'mustsearch': False,
         'name': 'svcnotifications',
         'num_columns': 1,
@@ -4193,7 +4161,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'notification',
         'layout': 'table',
-        'linktitle': _('Contact notification'),
         'mustsearch': False,
         'name': 'contactnotifications',
         'num_columns': 1,
@@ -4258,9 +4225,8 @@ multisite_builtin_views.update({
         'hidden': False,
         'hide_filters': [],
         'hidebutton': False,
-        'icon': 'notification',
+        'icon': 'alert_handlers',
         'layout': 'table',
-        'linktitle': _('Notifications'),
         'mustsearch': False,
         'name': 'notifications',
         'num_columns': 1,
@@ -4396,6 +4362,7 @@ multisite_builtin_views["docker_nodes"] = _simple_host_view(
     {
         'title': _('Docker nodes'),
         "topic": "applications",
+        'icon': 'docker',
         "sort_index": 10,
         'description':
             _('Overall state of all docker nodes, with counts of services in the various states.'),
@@ -4419,6 +4386,7 @@ multisite_builtin_views["docker_containers"] = _simple_host_view(
     {
         'title': _('Docker containers'),
         "topic": "applications",
+        'icon': 'docker',
         "sort_index": 20,
         'description': _(
             'Overall state of all docker containers, with counts of services in the various states.'
@@ -4442,6 +4410,7 @@ multisite_builtin_views["vsphere_servers"] = _simple_host_view(
     {
         'title': _('vSphere Servers'),
         "topic": "applications",
+        'icon': 'vsphere',
         "sort_index": 30,
         'description': _(
             'Overall state of all vSphere servers, with counts of services in the various states.'),
@@ -4459,6 +4428,7 @@ multisite_builtin_views["vpshere_vms"] = _simple_host_view(
     {
         'title': _('vSphere VMs'),
         "topic": "applications",
+        'icon': 'vsphere',
         "sort_index": 40,
         'description': _('Overall state of all vSphere based virtual machines.'),
         'add_context_to_title': False,
@@ -4478,7 +4448,6 @@ multisite_builtin_views["vpshere_vms"] = _simple_host_view(
 
 multisite_builtin_views['crash_reports'] = {
     'description': _('List crash reports of all sites'),
-    'linktitle': _('Crash reports'),
     'title': _('Crash reports'),
     'browser_reload': 0,
     'column_headers': 'pergroup',
@@ -4488,7 +4457,7 @@ multisite_builtin_views['crash_reports'] = {
     'group_painters': [('sitealias', '', None),],
     'hidden': False,
     'hidebutton': False,
-    'icon': 'clanbomber',
+    'icon': 'crash',
     'layout': 'table',
     'mobile': False,
     'mustsearch': False,
@@ -4507,7 +4476,7 @@ multisite_builtin_views['crash_reports'] = {
     'user_sortable': True,
     "topic": "analyze",
     "sort_index": 30,
-    "is_advanced": True,
+    "is_show_more": True,
 }
 
 multisite_builtin_views['cmk_servers'] = {
@@ -4527,7 +4496,6 @@ multisite_builtin_views['cmk_servers'] = {
     'hidebutton': True,
     'icon': "checkmk",
     'layout': 'table',
-    'linktitle': u'Checkmk servers',
     'mobile': False,
     'mustsearch': False,
     'name': 'cmk_servers',
@@ -4625,7 +4593,6 @@ multisite_builtin_views['cmk_sites'] = {
     'hidebutton': True,
     'icon': "checkmk",
     'layout': 'table',
-    'linktitle': u'Checkmk sites',
     'mobile': False,
     'mustsearch': False,
     'name': 'cmk_sites',
@@ -4653,7 +4620,6 @@ multisite_builtin_views['cmk_sites_of_host'] = {
     'hidebutton': True,
     'icon': "checkmk",
     'layout': 'table',
-    'linktitle': u'Checkmk sites',
     'mobile': False,
     'mustsearch': False,
     'name': 'cmk_sites',

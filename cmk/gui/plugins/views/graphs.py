@@ -9,7 +9,7 @@ import copy
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     DropdownChoice,
     Transform,
@@ -28,6 +28,8 @@ from cmk.gui.plugins.views import (
     multisite_builtin_views,
     get_graph_timerange_from_painter_options,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 multisite_builtin_views.update({
     'service_graphs': {
@@ -54,7 +56,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Graphs'),
         'icon': 'pnp',
         'title': _('Service Graphs'),
         "topic": "history",
@@ -82,7 +83,6 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Graphs'),
         'icon': 'pnp',
         'title': _('Host Graphs'),
         "topic": "history",
@@ -305,4 +305,4 @@ def cmk_graph_url(row, what):
     else:
         urivars.append(("view_name", "host_graphs"))
 
-    return html.makeuri_contextless(urivars, filename="view.py")
+    return makeuri_contextless(request, urivars, filename="view.py")

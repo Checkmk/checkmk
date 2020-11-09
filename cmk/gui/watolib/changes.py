@@ -26,6 +26,7 @@ from cmk.gui.exceptions import MKGeneralException
 
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
+from cmk.gui.watolib import search
 
 from cmk.gui.plugins.watolib import config_domain_registry
 
@@ -84,7 +85,9 @@ def add_change(action_name,
     log_audit(obj, action_name, text, config.user.id if add_user else '')
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-    # On each change to the Check_MK configuration mark the agents to be rebuild
+    search.update_and_store_index_background(action_name)
+
+    # On each change to the Checkmk configuration mark the agents to be rebuild
     # TODO: Really? Why?
     #if has_agent_bakery():
     #    import cmk.gui.cee.agent_bakery as agent_bakery

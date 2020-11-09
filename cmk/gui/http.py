@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
 
-from typing import List, Optional, Any, Iterator, Union, Dict, Tuple
+from typing import List, Optional, Any, Iterator, Union, Dict, Tuple, TypeVar
 
 from six import ensure_binary, ensure_str
 import werkzeug.wrappers
@@ -17,6 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 
 UploadedFile = Tuple[str, str, bytes]
+T = TypeVar('T')
 
 
 class LegacyVarsMixin:
@@ -232,6 +233,12 @@ class LegacyDeprecatedMixin:
         return self.remote_addr  # type: ignore[attr-defined]
 
 
+def mandatory_parameter(varname: str, value: Optional[T]) -> T:
+    if value is None:
+        raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+    return value
+
+
 class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JSONMixin,
               werkzeug.wrappers.Request):
     """Provides information about the users HTTP-request to the application
@@ -250,38 +257,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         #       the timeout for the moment.
         return 110
 
-    # TODO: For historic reasons this needs to return byte strings. We will clean this up
-    # soon when moving to python 3
     def get_str_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
-        return self.var(varname, deflt)
-
-    def get_str_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
-        value = self.var(varname, deflt)
-        if value is None:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-        return value
-
-    # TODO: For historic reasons this needs to return byte strings. We will clean this up
-    # soon when moving to python 3
-    def get_ascii_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
-        """Helper to retrieve a byte string and ensure it only contains ASCII characters
-        In case a non ASCII character is found an MKUserError() is raised."""
-        value = self.var(varname, deflt)
-        if value is None:
-            return value
-        if not value.isascii():
-            raise MKUserError(varname, _("The given text must only contain ASCII characters."))
-        return value
-
-    # TODO: For historic reasons this needs to return byte strings. We will clean this up
-    # soon when moving to python 3
-    def get_ascii_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
-        value = self.get_ascii_input(varname, deflt)
-        if value is None:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-        return value
-
-    def get_unicode_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
         try:
             val = self.var(varname, ensure_str(deflt) if deflt is not None else None)
             if val is None:
@@ -293,11 +269,27 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
                 _("The given text is wrong encoded. "
                   "You need to provide a UTF-8 encoded text."))
 
-    def get_unicode_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
-        value = self.get_unicode_input(varname, deflt)
+    def get_str_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
+        return mandatory_parameter(varname, self.get_str_input(varname, deflt))
+
+    def get_ascii_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
+        """Helper to retrieve a byte string and ensure it only contains ASCII characters
+        In case a non ASCII character is found an MKUserError() is raised."""
+        value = self.get_str_input(varname, deflt)
         if value is None:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+            return value
+        if not value.isascii():
+            raise MKUserError(varname, _("The given text must only contain ASCII characters."))
         return value
+
+    def get_ascii_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
+        return mandatory_parameter(varname, self.get_ascii_input(varname, deflt))
+
+    def get_unicode_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
+        return self.get_str_input(varname, deflt)
+
+    def get_unicode_input_mandatory(self, varname, deflt=None) -> str:
+        return mandatory_parameter(varname, self.get_str_input_mandatory(varname, deflt))
 
     def get_binary_input(self, varname: str, deflt: Optional[bytes] = None) -> Optional[bytes]:
         val = self.var(varname, ensure_str(deflt) if deflt is not None else None)
@@ -306,10 +298,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         return ensure_binary(val)
 
     def get_binary_input_mandatory(self, varname: str, deflt: Optional[bytes] = None) -> bytes:
-        value = self.get_binary_input(varname, deflt)
-        if value is None:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-        return value
+        return mandatory_parameter(varname, self.get_binary_input(varname, deflt))
 
     def get_integer_input(self, varname: str, deflt: Optional[int] = None) -> Optional[int]:
 
@@ -323,10 +312,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
             raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
 
     def get_integer_input_mandatory(self, varname: str, deflt: Optional[int] = None) -> int:
-        value = self.get_integer_input(varname, deflt)
-        if value is None:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-        return value
+        return mandatory_parameter(varname, self.get_integer_input(varname, deflt))
 
     def get_float_input(self, varname: str, deflt: Optional[float] = None) -> Optional[float]:
 
@@ -340,10 +326,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
             raise MKUserError(varname, _("The parameter \"%s\" is not a float.") % varname)
 
     def get_float_input_mandatory(self, varname: str, deflt: Optional[float] = None) -> float:
-        value = self.get_float_input(varname, deflt)
-        if value is None:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-        return value
+        return mandatory_parameter(varname, self.get_float_input(varname, deflt))
 
 
 class Response(werkzeug.wrappers.Response):

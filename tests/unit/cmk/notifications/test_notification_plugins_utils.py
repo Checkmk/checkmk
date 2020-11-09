@@ -220,10 +220,59 @@ def test_api_endpoint_url(monkeypatch, value, result):
         # ... all variables will be escaped
         (
             {
-                'SERVICEOUTPUT': '<h1>Important</h1>'
+                'FOO': '<h1>Important</h1>'
             },
             {
-                'SERVICEOUTPUT': '&lt;h1&gt;Important&lt;/h1&gt;'
+                'FOO': '&lt;h1&gt;Important&lt;/h1&gt;'
+            },
+        ),
+        # Host and service output will be escaped:
+        (
+            {
+                'SERVICEOUTPUT': '<h1>A</h1>',
+                'LONGSERVICEOUTPUT': '<h1>B</h1>',
+                'HOSTOUTPUT': '<h1>C</h1>',
+                'LONGHOSTOUTPUT': '<h1>D</h1>',
+            },
+            {
+                'SERVICEOUTPUT': '&lt;h1&gt;A&lt;/h1&gt;',
+                'LONGSERVICEOUTPUT': '&lt;h1&gt;B&lt;/h1&gt;',
+                'HOSTOUTPUT': '&lt;h1&gt;C&lt;/h1&gt;',
+                'LONGHOSTOUTPUT': '&lt;h1&gt;D&lt;/h1&gt;',
+            },
+        ),
+        # if not disabled with the rule "HTML codes in service output" for services:
+        (
+            {
+                'SERVICEOUTPUT': '<h1>A</h1>',
+                'LONGSERVICEOUTPUT': '<h1>B</h1>',
+                'HOSTOUTPUT': '<h1>C</h1>',
+                'LONGHOSTOUTPUT': '<h1>D</h1>',
+                'SERVICE_ESCAPE_PLUGIN_OUTPUT': '0',  # variable set via the rule
+            },
+            {
+                'SERVICEOUTPUT': '<h1>A</h1>',
+                'LONGSERVICEOUTPUT': '<h1>B</h1>',
+                'HOSTOUTPUT': '&lt;h1&gt;C&lt;/h1&gt;',
+                'LONGHOSTOUTPUT': '&lt;h1&gt;D&lt;/h1&gt;',
+                'SERVICE_ESCAPE_PLUGIN_OUTPUT': '0',  # variable set via the rule
+            },
+        ),
+        # or with the rule "HTML codes in host output" for hosts:
+        (
+            {
+                'SERVICEOUTPUT': '<h1>A</h1>',
+                'LONGSERVICEOUTPUT': '<h1>B</h1>',
+                'HOSTOUTPUT': '<h1>C</h1>',
+                'LONGHOSTOUTPUT': '<h1>D</h1>',
+                'HOST_ESCAPE_PLUGIN_OUTPUT': '0',  # variable set via the rule
+            },
+            {
+                'SERVICEOUTPUT': '&lt;h1&gt;A&lt;/h1&gt;',
+                'LONGSERVICEOUTPUT': '&lt;h1&gt;B&lt;/h1&gt;',
+                'HOSTOUTPUT': '<h1>C</h1>',
+                'LONGHOSTOUTPUT': '<h1>D</h1>',
+                'HOST_ESCAPE_PLUGIN_OUTPUT': '0',  # variable set via the rule
             },
         ),
     ])

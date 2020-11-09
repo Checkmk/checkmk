@@ -5,30 +5,90 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from contextlib import suppress
+from pathlib import Path
+import shutil
 
-# No stub file
-from testlib import CheckManager  # type: ignore[import]
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
+from testlib.base import Scenario
 
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, ConfigSerial, LATEST_SERIAL
+
 import cmk.base.config as config
 import cmk.base.core_config as core_config
+import cmk.base.nagios_utils
+from cmk.base.core_factory import create_core
 from cmk.base.check_utils import Service
 
 
-def test_active_check_arguments(mocker):
+def test_do_create_config_nagios(core_scenario):
+    core_config.do_create_config(create_core("nagios"))
+
+    assert Path(cmk.utils.paths.nagios_objects_file).exists()
+    assert config.PackedConfigStore(LATEST_SERIAL)._compiled_path.exists()
+
+
+def test_active_check_arguments_basics():
+    assert core_config.active_check_arguments("bla", "blub", u"args 123 -x 1 -y 2") \
+        == u"args 123 -x 1 -y 2"
+
+    assert core_config.active_check_arguments("bla", "blub", ["args", "123", "-x", "1", "-y", "2"]) \
+        == "'args' '123' '-x' '1' '-y' '2'"
+
+    assert core_config.active_check_arguments("bla", "blub", ["args", "1 2 3", "-d=2",
+        "--hallo=eins", 9]) \
+        == "'args' '1 2 3' '-d=2' '--hallo=eins' 9"
+
+    with pytest.raises(MKGeneralException):
+        core_config.active_check_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", u"aädg"])
+def test_active_check_arguments_password_store(monkeypatch, pw):
+    monkeypatch.setattr(config, "stored_passwords", {"pw-id": {"password": pw,}})
+    assert core_config.active_check_arguments("bla", "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]) \
+        == "--pwstore=2@11@pw-id 'arg1' '--password=%s' 'arg3'" % ("*" * len(pw))
+
+
+def test_active_check_arguments_not_existing_password(capsys):
+    assert core_config.active_check_arguments("bla", "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]) \
+        == "--pwstore=2@11@pw-id 'arg1' '--password=***' 'arg3'"
+    stderr = capsys.readouterr().err
+    assert "The stored password \"pw-id\" used by service \"blub\" on host \"bla\"" in stderr
+
+
+def test_active_check_arguments_wrong_types():
     with pytest.raises(MKGeneralException):
         core_config.active_check_arguments("bla", "blub", 1)  # type: ignore[arg-type]
 
     with pytest.raises(MKGeneralException):
         core_config.active_check_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
 
-    prepare_check_command = mocker.patch.object(config, "prepare_check_command")
-    core_config.active_check_arguments("bla", "blub", u"args 123 -x 1 -y 2")
-    assert prepare_check_command.called_once()
+
+def test_active_check_arguments_str():
+    assert core_config.active_check_arguments("bla", "blub",
+                                              u"args 123 -x 1 -y 2") == 'args 123 -x 1 -y 2'
+
+
+def test_active_check_arguments_list():
+    assert core_config.active_check_arguments("bla", "blub", ["a", "123"]) == "'a' '123'"
+
+
+def test_active_check_arguments_list_with_numbers():
+    assert core_config.active_check_arguments("bla", "blub", [1, 1.2]) == "1 1.2"
+
+
+def test_active_check_arguments_list_with_pwstore_reference():
+    assert core_config.active_check_arguments(
+        "bla", "blub",
+        ["a", ("store", "pw1", "--password=%s")]) == "--pwstore=2@11@pw1 'a' '--password=***'"
+
+
+def test_active_check_arguments_list_with_invalid_type():
+    with pytest.raises(MKGeneralException):
+        core_config.active_check_arguments("bla", "blub", [None])  # type: ignore[list-item]
 
 
 def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
@@ -67,6 +127,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     assert attrs == expected_attrs
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize("hostname,result", [
     ("localhost", {
         'check_interval': 1.0,
@@ -77,8 +138,6 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     }),
 ])
 def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
-    CheckManager().load(["cpu"])
-
     ts = Scenario().add_host("localhost")
     ts.add_host("blub")
     ts.set_option(
@@ -120,3 +179,157 @@ def test_get_tag_attributes(tag_groups, result):
     for k, v in attributes.items():
         assert isinstance(k, str)
         assert isinstance(v, str)
+
+
+class TestHelperConfig:
+    @pytest.fixture
+    def serial(self):
+        return "13"
+
+    @pytest.fixture
+    def store(self, serial):
+        return core_config.HelperConfig(serial)
+
+    def test_given_serial_path(self):
+        store = core_config.HelperConfig(serial=ConfigSerial("42"))
+        assert store.serial_path == cmk.utils.paths.core_helper_config_dir / "42"
+
+    def test_create_success(self, store, serial):
+        assert not store.serial_path.exists()
+        assert not store.latest_path.exists()
+
+        with store.create():
+            assert store.serial_path.exists()
+            assert not store.latest_path.exists()
+
+        assert store.serial_path.exists()
+        assert store.latest_path.exists()
+
+    def test_create_success_replace_latest_link(self, store, serial):
+        prev_serial = ConfigSerial("1")
+        prev_path = cmk.utils.paths.core_helper_config_dir / prev_serial
+        prev_path.mkdir(parents=True, exist_ok=True)
+        store.latest_path.symlink_to(prev_serial)
+        assert store.latest_path.exists()
+
+        with store.create():
+            assert store.serial_path.exists()
+
+        assert store.serial_path.exists()
+        assert store.latest_path.resolve().name == serial
+
+    def test_create_no_latest_link_creation_on_failure(self, store, serial):
+        assert not store.serial_path.exists()
+        assert not store.latest_path.exists()
+
+        with suppress(RuntimeError):
+            with store.create():
+                assert store.serial_path.exists()
+                raise RuntimeError("boom")
+
+        assert store.serial_path.exists()
+        assert not store.latest_path.exists()
+
+    def test_create_no_latest_link_replace_on_failure(self, store, serial):
+        assert not store.serial_path.exists()
+        assert not store.latest_path.exists()
+
+        prev_serial = "13"
+        prev_path = cmk.utils.paths.core_helper_config_dir / prev_serial
+        prev_path.mkdir(parents=True, exist_ok=True)
+        store.latest_path.symlink_to("13")
+        assert store.latest_path.exists()
+
+        with suppress(RuntimeError):
+            with store.create():
+                assert store.serial_path.exists()
+                raise RuntimeError("boom")
+
+        assert store.serial_path.exists()
+        assert store.latest_path.resolve().name == prev_serial
+
+    @pytest.fixture
+    def nagios_core(self, monkeypatch):
+        ts = Scenario().set_option("monitoring_core", "nagios")
+        ts.apply(monkeypatch)
+
+    @pytest.fixture
+    def cmc_core(self, monkeypatch):
+        ts = Scenario().set_option("monitoring_core", "cmc")
+        ts.apply(monkeypatch)
+
+    @pytest.fixture
+    def prev_serial(self, serial):
+        return ConfigSerial(str(int(serial) - 1))
+
+    @pytest.fixture
+    def prev_prev_serial(self, prev_serial):
+        return ConfigSerial(str(int(prev_serial) - 1))
+
+    @pytest.fixture
+    def prev_helper_config(self, store, prev_serial, prev_prev_serial):
+        assert not store.latest_path.exists()
+
+        def _create_helper_config_dir(serial):
+            path = cmk.utils.paths.core_helper_config_dir / serial
+            path.mkdir(parents=True, exist_ok=True)
+            with suppress(FileNotFoundError):
+                store.latest_path.unlink()
+            store.latest_path.symlink_to(serial)
+
+        _create_helper_config_dir(prev_prev_serial)
+        _create_helper_config_dir(prev_serial)
+
+        assert config.make_helper_config_path(prev_prev_serial).exists()
+        assert config.make_helper_config_path(prev_serial).exists()
+        assert store.latest_path.exists()
+
+    @pytest.mark.usefixtures("nagios_core", "prev_helper_config")
+    def test_cleanup_with_nagios(self, store, prev_helper_config, prev_serial, prev_prev_serial):
+        assert config.monitoring_core == "nagios"
+        prev_path = config.make_helper_config_path(prev_serial)
+
+        assert not store.serial_path.exists()
+        with store.create():
+            assert not config.make_helper_config_path(prev_prev_serial).exists()
+            assert prev_path.exists()
+            assert store.serial_path.exists()
+            assert store.latest_path.resolve() == prev_path
+
+        assert store.latest_path.resolve() == store.serial_path
+
+    @pytest.mark.usefixtures("nagios_core", "prev_helper_config")
+    def test_cleanup_with_broken_latest_link(self, store, prev_serial, prev_prev_serial):
+        assert config.monitoring_core == "nagios"
+        prev_path = config.make_helper_config_path(prev_serial)
+        shutil.rmtree(prev_path)
+
+        assert not prev_path.exists()
+        assert store.latest_path.resolve() == prev_path
+
+        assert not store.serial_path.exists()
+        with store.create():
+            assert not config.make_helper_config_path(prev_prev_serial).exists()
+            assert not prev_path.exists()
+            assert store.serial_path.exists()
+            assert store.latest_path.resolve() == prev_path
+
+        assert store.latest_path.resolve() == store.serial_path
+
+    @pytest.mark.usefixtures("cmc_core", "prev_helper_config")
+    def test_no_cleanup_with_microcore(self, store, prev_serial, prev_prev_serial):
+        assert config.monitoring_core == "cmc"
+        assert not store.serial_path.exists()
+        with store.create():
+            pass
+
+        assert config.make_helper_config_path(prev_prev_serial).exists()
+        assert config.make_helper_config_path(prev_serial).exists()
+        assert store.serial_path.exists()
+        assert store.latest_path.resolve() == store.serial_path
+
+
+def test_new_helper_config_serial():
+    assert core_config.new_helper_config_serial() == ConfigSerial("1")
+    assert core_config.new_helper_config_serial() == ConfigSerial("2")
+    assert core_config.new_helper_config_serial() == ConfigSerial("3")

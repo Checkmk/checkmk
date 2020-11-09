@@ -1302,7 +1302,8 @@ class PrometheusAPI:
                 metric_info = {
                     "name": metric.get("metric_name"),
                     "label": metric["metric_label"],
-                    "promql_query": metric["promql_query"]
+                    "promql_query": metric["promql_query"],
+                    "levels": metric.get("levels")
                 }
                 try:
                     promql_response = PromQLResponse(self._query_promql(metric["promql_query"]))

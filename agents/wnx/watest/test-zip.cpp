@@ -31,7 +31,7 @@ TEST(CmaTools, Zip) {
     ASSERT_FALSE(Extract(tgt.wstring(), zip_file.wstring()));
     ASSERT_FALSE(Extract((tgt / "tst").wstring(), (tgt / "tst").wstring()));
     auto ret = List(zip_file.wstring());
-    ASSERT_EQ(ret.size(), 4);
+    ASSERT_EQ(ret.size(), 5);
     //
     ASSERT_TRUE(Extract(zip_file.wstring(), (tgt / "tst").wstring()));
     for (auto& entry : ret) {

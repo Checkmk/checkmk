@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #
 # Based on contribution by Karsten Schöke <karsten.schoeke@geobasis-bb.de>
 #
@@ -73,7 +75,6 @@ check_info["netscaler_health.fan"] = {
     "has_perfdata": True,
     "default_levels_variable": "netscaler_health_fan_default_levels",
     "group": "hw_fans",
-    "includes": ["fan.include"],
 }
 #.
 #   .--temp----------------------------------------------------------------.
@@ -111,7 +112,6 @@ check_info["netscaler_health.temp"] = {
     "has_perfdata": True,
     "snmp_info": netscaler_health_info,
     "snmp_scan_function": netscaler_health_scan,
-    "includes": ["temperature.include"],
     "default_levels_variable": "netscaler_health_temp_default_levels",
 }
 

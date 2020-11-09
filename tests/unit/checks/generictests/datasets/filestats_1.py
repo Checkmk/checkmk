@@ -101,10 +101,8 @@ checks = {
             "minage_newest": (3600 * 72, 3600 * 96)
         }, [(0, 'Files in total: 6', [('file_count', 6, None, None, None, None)]),
             (0, 'Smallest: 1.12 kB', []),
-            (1, 'Largest: 12.58 kB (warn/crit at 12.00 kB/13.00 kB):'
-             ' /home/mo/git/check_mk/agents/check_mk_agent.aix', []),
-            (2, 'Newest: 2.6 d (warn/crit below 3 d/4 d):'
-             ' /home/mo/git/check_mk/agents/plugins/mk_logwatch.aix', []), (0, 'Oldest: 217 d',
+            (1, 'Largest: 12.58 kB (warn/crit at 12.00 kB/13.00 kB)', []),
+            (2, 'Newest: 2.6 d (warn/crit below 3 d/4 d)', []), (0, 'Oldest: 217 d',
                                                                             [])]),
         ('$ection with funny characters %s &! (count files in ~)', {
             "maxcount": (5, 10)

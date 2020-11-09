@@ -13,10 +13,12 @@ from cmk.gui.plugins.watolib.utils import (
 )
 
 
-def load_configuration_settings(site_specific=False, custom_site_path=None):
+def load_configuration_settings(site_specific=False, custom_site_path=None, full_config=False):
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
-        if site_specific:
+        if full_config:
+            settings.update(domain().load_full_config())
+        elif site_specific:
             settings.update(domain().load_site_globals(custom_site_path=custom_site_path))
         else:
             settings.update(domain().load())
@@ -45,6 +47,8 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
     if "userdb_automatic_sync" in vars_:
         per_domain.setdefault(ConfigDomainGUI.ident,
                               {})["userdb_automatic_sync"] = vars_["userdb_automatic_sync"]
+    if "user_login" in vars_:
+        per_domain.setdefault(ConfigDomainGUI.ident, {})["user_login"] = vars_["user_login"]
 
     for domain in ABCConfigDomain.enabled_domains():
         domain_config = per_domain.get(domain().ident, {})

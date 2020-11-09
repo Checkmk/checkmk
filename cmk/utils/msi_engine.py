@@ -144,7 +144,7 @@ def patch_msi_properties(dir_name, product_code, version_build):
         for line in lines_property_idt[3:]:
             tokens = line.split("\t")
             if tokens[0] == "ProductName":
-                tokens[1] = "Check MK Agent 1.7\r\n"
+                tokens[1] = "Check MK Agent 2.0\r\n"
             # The upgrade code defines the product family. Do not change it!
             #    elif tokens[0] == "UpgradeCode":
             #        tokens[1] = upgrade_code
@@ -181,6 +181,7 @@ def generate_product_version(version, revision_text):
     major, minor, build = '1', '0', '0'
     try:
         major, minor, build = [x.lstrip("0") for x in version.split("-")[0].split(".")[:3]]
+        minor = '0' if minor == '' else minor
         build = '0' if build == '' else build
         if len(major) > 3:
             # Looks like a daily build.. 2015.03.05

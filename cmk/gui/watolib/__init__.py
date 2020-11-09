@@ -174,7 +174,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
     RulespecGroupRegistry,
     rulespec_group_registry,
-    RulespecGroupManualChecks,
+    RulespecGroupEnforcedServices,
     register_rulegroup,
     get_rulegroup,
     Rulespec,
@@ -600,7 +600,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "nvidia_temp",
                 "postfix_mailq",
                 "ps",
-                "ps_perf",
                 "qmail_stats",
                 "raritan_emx",
                 "raritan_pdu_inlet",
@@ -615,7 +614,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "zfsget",
             ],
             "enable_rulebased_notifications": True,
-            "ui_theme": "facelift",
             "lock_on_logon_failures": 10,
         }
 

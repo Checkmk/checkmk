@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "Column.h"
 #include "DoubleColumn.h"
+class ColumnOffsets;
 class Row;
 
 class ServiceSpecialDoubleColumn : public DoubleColumn {
@@ -20,7 +20,7 @@ public:
 
     ServiceSpecialDoubleColumn(const std::string& name,
                                const std::string& description,
-                               const Column::Offsets& offsets, Type ssdc_type)
+                               const ColumnOffsets& offsets, Type ssdc_type)
         : DoubleColumn(name, description, offsets), _type(ssdc_type) {}
 
     [[nodiscard]] double getValue(Row row) const override;

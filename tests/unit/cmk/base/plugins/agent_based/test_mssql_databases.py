@@ -6,8 +6,8 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import Parameters
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Result, Service, state
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State as state
 from cmk.base.plugins.agent_based.mssql_databases import (
     parse_mssql_databases,
     discover_mssql_databases,
@@ -31,7 +31,7 @@ def _get_section():
 def test_discover_mssql_databases(section):
 
     assert sorted(discover_mssql_databases(section),
-                  key=lambda s: s.item) == [  # type: ignore[attr-defined]
+                  key=lambda s: s.item or "") == [  # type: ignore[attr-defined]
                       Service(item='MSSQL_MSSQL46 CorreLog_Report_T'),
                       Service(item='MSSQL_MSSQL46 NOC_ALARM_T'),
                       Service(item='MSSQL_MSSQL46 master'),

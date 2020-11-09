@@ -6,18 +6,19 @@
 """Code for support of Nagios (and compatible) cores"""
 
 import base64
-import errno
 import os
 import py_compile
 import sys
-import tempfile
+from io import StringIO
+from pathlib import Path
 from typing import Any, Dict, IO, List, Optional, Set, Tuple, Union
 
 from six import ensure_binary, ensure_str
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import maincheckify, section_name_of
+import cmk.utils.store as store
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -31,6 +32,7 @@ from cmk.utils.type_defs import (
     Item,
     ServicegroupName,
     ServiceName,
+    ConfigSerial,
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -39,7 +41,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-import cmk.base.data_sources as data_sources
+import cmk.base.checkers as checkers
 import cmk.base.ip_lookup as ip_lookup
 
 from cmk.base.check_utils import ServiceID
@@ -52,10 +54,22 @@ ActiveServiceID = Tuple[str, Item]  # TODO: I hope the str someday (tm) becomes 
 CustomServiceID = Tuple[str, Item]  # #     at which point these will be the same as "ServiceID"
 AbstractServiceID = Union[ActiveServiceID, CustomServiceID, ServiceID]
 
+CHECK_INFO_BY_MIGRATED_NAME = {
+    k: config.check_info[v] for k, v in config.legacy_check_plugin_names.items()
+}
+
 
 class NagiosCore(core_config.MonitoringCore):
-    def create_config(self) -> None:
-        """Tries to create a new Check_MK object configuration file for the Nagios core
+    @classmethod
+    def name(cls) -> str:
+        return "nagios"
+
+    def create_config(self, serial: ConfigSerial) -> None:
+        self._create_core_config()
+        self._precompile_hostchecks(serial)
+
+    def _create_core_config(self) -> None:
+        """Tries to create a new Checkmk object configuration file for the Nagios core
 
         During create_config() exceptions may be raised which are caused by configuration issues.
         Don't produce a half written object file. Simply throw away everything and keep the old file.
@@ -63,31 +77,14 @@ class NagiosCore(core_config.MonitoringCore):
         The user can then start the site with the old configuration and fix the configuration issue
         while the monitoring is running.
         """
-        tmp_path = None
-        try:
-            with tempfile.NamedTemporaryFile(
-                    "w",
-                    dir=os.path.dirname(cmk.utils.paths.nagios_objects_file),
-                    prefix=".%s.new" % os.path.basename(cmk.utils.paths.nagios_objects_file),
-                    delete=False) as tmp:
-                tmp_path = tmp.name
-                os.chmod(tmp.name, 0o660)
-                create_config(tmp, hostnames=None)
-                os.rename(tmp.name, cmk.utils.paths.nagios_objects_file)
+        config_buffer = StringIO()
+        create_config(config_buffer, hostnames=None)
 
-        except Exception:
-            # In case an exception happens cleanup the tempfile created for writing
-            try:
-                if tmp_path:
-                    os.unlink(tmp_path)
-            except IOError as e:
-                if e.errno == errno.ENOENT:  # No such file or directory
-                    pass
-            raise
+        store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
-    def precompile(self) -> None:
+    def _precompile_hostchecks(self, serial: ConfigSerial) -> None:
         out.output("Precompiling host checks...")
-        precompile_hostchecks()
+        _precompile_hostchecks(serial)
         out.output(tty.ok + "\n")
 
 
@@ -309,12 +306,7 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
 
         return result
 
-    check_info_by_migrated_name = {
-        # TODO (mo): centralize maincheckify: CMK-4295
-        CheckPluginName(maincheckify(k)): v for k, v in config.check_info.items()
-    }
-
-    host_check_table = get_check_table(hostname, remove_duplicates=True)
+    host_check_table = get_check_table(hostname)
     have_at_least_one_service = False
     used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
     for service in sorted(host_check_table.values(), key=lambda s: (s.check_plugin_name, s.item)):
@@ -325,13 +317,22 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
                 "Skipping invalid service with empty description (plugin: %s) on host %s" %
                 (service.check_plugin_name, hostname))
             continue
+
+        if service.description in used_descriptions:
+            core_config.duplicate_service_warning(
+                checktype="auto",
+                description=service.description,
+                host_name=hostname,
+                first_occurrence=used_descriptions[service.description],
+                second_occurrence=service.id())
+            continue
         used_descriptions[service.description] = service.id()
 
         # TODO: CMK-1125
         # For now, for every check plugin developed against the new check API
         # we just assume that it may have metrics. The careful review of this
         # mechanism is subject of issue CMK-1125
-        check_info_value = check_info_by_migrated_name.get(service.check_plugin_name,
+        check_info_value = CHECK_INFO_BY_MIGRATED_NAME.get(service.check_plugin_name,
                                                            {"has_perfdata": True})
         if check_info_value.get("has_perfdata", False):
             template = config.passive_service_template_perf
@@ -359,7 +360,7 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
         cfg.checknames_to_define.add(service.check_plugin_name)
         have_at_least_one_service = True
 
-    # Active check for check_mk
+    # Active check for Check_MK
     if have_at_least_one_service:
         service_spec = {
             "use": config.active_service_template,
@@ -409,13 +410,16 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
                 if cn == "active(%s)" % acttype:
                     continue
 
-                core_config.warning(
-                    "ERROR: Duplicate service description (active check) '%s' for host '%s'!\n"
-                    " - 1st occurrance: checktype = %s, item = %r\n"
-                    " - 2nd occurrance: checktype = active(%s), item = None\n" %
-                    (description, hostname, cn, it, acttype))
+                core_config.duplicate_service_warning(
+                    checktype="active",
+                    description=description,
+                    host_name=hostname,
+                    first_occurrence=(cn, it),
+                    second_occurrence=("active(%s)" % acttype, None),
+                )
                 continue
 
+            # TODO: is this right? description on the right, not item?
             used_descriptions[description] = ("active(" + acttype + ")", description)
 
             template = "check_mk_perf," if has_perfdata else ""
@@ -490,11 +494,13 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
                 if cn == "custom(%s)" % command_name:
                     continue
 
-                core_config.warning(
-                    "ERROR: Duplicate service description (custom check) '%s' for host '%s'!\n"
-                    " - 1st occurrance: checktype = %s, item = %r\n"
-                    " - 2nd occurrance: checktype = custom(%s), item = %r\n" %
-                    (description, hostname, cn, it, command_name, description))
+                core_config.duplicate_service_warning(
+                    checktype="custom",
+                    description=description,
+                    host_name=hostname,
+                    first_occurrence=(cn, it),
+                    second_occurrence=("custom(%s)" % command_name, description),
+                )
                 continue
 
             used_descriptions[description] = ("custom(%s)" % command_name, description)
@@ -887,7 +893,7 @@ def _extra_service_conf_of(cfg: NagiosConfig, config_cache: ConfigCache, hostnam
 #   | contains that code and information that is needed for executing all  |
 #   | checks of that host. Also static data that cannot change during the  |
 #   | normal monitoring process is being precomputed and hard coded. This  |
-#   | all saves substantial CPU resources as opposed to running Check_MK   |
+#   | all saves substantial CPU resources as opposed to running Checkmk   |
 #   | in adhoc mode (about 75%).                                           |
 #   '----------------------------------------------------------------------'
 
@@ -917,41 +923,77 @@ def _find_check_plugins(checktype: CheckPluginNameStr) -> List[str]:
     return paths
 
 
-def precompile_hostchecks() -> None:
+class HostCheckStore:
+    """Caring about persistence of the precompiled host check files"""
+    @staticmethod
+    def host_check_file_path(serial: ConfigSerial, hostname: HostName) -> Path:
+        return Path(config.make_helper_config_path(serial), "host_checks", hostname)
+
+    @staticmethod
+    def host_check_source_file_path(serial: ConfigSerial, hostname: HostName) -> Path:
+        # TODO: Use append_suffix(".py") once we are on Python 3.10
+        path = HostCheckStore.host_check_file_path(serial, hostname)
+        return path.with_suffix(path.suffix + ".py")
+
+    def write(self, serial: ConfigSerial, hostname: HostName, host_check: str) -> None:
+        compiled_filename = self.host_check_file_path(serial, hostname)
+        source_filename = self.host_check_source_file_path(serial, hostname)
+
+        store.makedirs(compiled_filename.parent)
+
+        store.save_text_to_file(source_filename, host_check)
+
+        # compile python (either now or delayed - see host_check code for delay_precompile handling)
+        if config.delay_precompile:
+            compiled_filename.symlink_to(hostname + ".py")
+        else:
+            py_compile.compile(file=str(source_filename),
+                               cfile=str(compiled_filename),
+                               dfile=str(compiled_filename),
+                               doraise=True)
+            os.chmod(compiled_filename, 0o750)
+
+        console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
+
+
+def _precompile_hostchecks(serial: ConfigSerial) -> None:
     console.verbose("Creating precompiled host check config...\n")
-    config.PackedConfig().save()
-
-    if not os.path.exists(cmk.utils.paths.precompiled_hostchecks_dir):
-        os.makedirs(cmk.utils.paths.precompiled_hostchecks_dir)
-
     config_cache = config.get_config_cache()
 
+    config.save_packed_config(serial, config_cache)
+
     console.verbose("Precompiling host checks...\n")
-    for host in config_cache.all_active_hosts():
+
+    host_check_store = HostCheckStore()
+    for hostname in config_cache.all_active_hosts():
         try:
-            _precompile_hostcheck(config_cache, host)
+            console.verbose("%s%s%-16s%s:",
+                            tty.bold,
+                            tty.blue,
+                            hostname,
+                            tty.normal,
+                            stream=sys.stderr)
+            host_check = _dump_precompiled_hostcheck(config_cache, serial, hostname)
+            if host_check is None:
+                console.verbose("(no Checkmk checks)\n")
+                continue
+
+            host_check_store.write(serial, hostname, host_check)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error("Error precompiling checks for host %s: %s\n" % (host, e))
+            console.error("Error precompiling checks for host %s: %s\n" % (hostname, e))
             sys.exit(5)
 
 
-def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None:
+def _dump_precompiled_hostcheck(config_cache: ConfigCache,
+                                serial: ConfigSerial,
+                                hostname: HostName,
+                                *,
+                                verify_site_python=True) -> Optional[str]:
     host_config = config_cache.get_host_config(hostname)
 
-    console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
-
     check_api_utils.set_hostname(hostname)
-
-    compiled_filename = cmk.utils.paths.precompiled_hostchecks_dir + "/" + hostname
-    source_filename = compiled_filename + ".py"
-    for fname in [compiled_filename, source_filename]:
-        try:
-            os.remove(fname)
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
 
     (needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names,
      needed_agent_based_inventory_plugin_names) = _get_needed_plugin_names(host_config)
@@ -961,19 +1003,36 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
             needed_agent_based_check_plugin_names,
             needed_agent_based_inventory_plugin_names,
     )):
-        console.verbose("(no Check_MK checks)\n")
-        return
+        return None
 
-    output = open(source_filename + ".new", "w")
+    output = StringIO()
     output.write("#!/usr/bin/env python3\n")
     output.write("# encoding: utf-8\n\n")
 
     output.write("import logging\n")
     output.write("import sys\n\n")
 
-    output.write("if not sys.executable.startswith('/omd'):\n")
-    output.write("    sys.stdout.write(\"ERROR: Only executable with sites python\\n\")\n")
-    output.write("    sys.exit(2)\n\n")
+    if verify_site_python:
+        output.write("if not sys.executable.startswith('/omd'):\n")
+        output.write("    sys.stdout.write(\"ERROR: Only executable with sites python\\n\")\n")
+        output.write("    sys.exit(2)\n\n")
+
+    # Self-compile: replace symlink with precompiled python-code, if
+    # we are run for the first time
+    if config.delay_precompile:
+        output.write(
+            """
+import os
+if os.path.islink(%(dst)r):
+    import py_compile
+    os.remove(%(dst)r)
+    py_compile.compile(%(src)r, %(dst)r, %(dst)r, True)
+    os.chmod(%(dst)r, 0o755)
+
+""" % {
+                "src": str(HostCheckStore.host_check_source_file_path(serial, hostname)),
+                "dst": str(HostCheckStore.host_check_file_path(serial, hostname)),
+            })
 
     # Remove precompiled directory from sys.path. Leaving it in the path
     # makes problems when host names (name of precompiled files) are equal
@@ -983,6 +1042,7 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
     output.write("import cmk.utils.log\n")
     output.write("import cmk.utils.debug\n")
     output.write("from cmk.utils.exceptions import MKTerminate\n")
+    output.write("from cmk.utils.type_defs import LATEST_SERIAL\n")
     output.write("\n")
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")
@@ -999,23 +1059,7 @@ def _precompile_hostcheck(config_cache: ConfigCache, hostname: HostName) -> None
         output.write("import %s\n" % full_mod_name)
         console.verbose(" %s%s%s", tty.green, full_mod_name, tty.normal, stream=sys.stderr)
 
-    # Self-compile: replace symlink with precompiled python-code, if
-    # we are run for the first time
-    if config.delay_precompile:
-        output.write("""
-import os
-if os.path.islink(%(dst)r):
-    import py_compile
-    os.remove(%(dst)r)
-    py_compile.compile(%(src)r, %(dst)r, %(dst)r, True)
-    os.chmod(%(dst)r, 0755)
-
-""" % {
-            "src": source_filename,
-            "dst": compiled_filename
-        })
-
-    # Register default Check_MK signal handler
+    # Register default Checkmk signal handler
     output.write("cmk.base.utils.register_sigint_handler()\n")
 
     # initialize global variables
@@ -1035,13 +1079,15 @@ if '-d' in sys.argv:
 """)
 
     file_list = sorted(_get_legacy_check_file_names_to_load(needed_legacy_check_plugin_names))
-    output.write("config.load_checks(check_api.get_check_api_context, [\n    %s,\n])\n" %
-                 ",\n    ".join("%r" % n for n in file_list))
+    formatted_file_list = ("\n    %s,\n" %
+                           ",\n    ".join("%r" % n for n in file_list) if file_list else "")
+    output.write("config.load_checks(check_api.get_check_api_context, [%s])\n" %
+                 formatted_file_list)
 
     for check_plugin_name in sorted(needed_legacy_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
-    output.write("config.load_packed_config()\n")
+    output.write("config.load_packed_config(serial=LATEST_SERIAL)\n")
 
     # IP addresses
     needed_ipaddresses, needed_ipv6addresses, = {}, {}
@@ -1099,28 +1145,8 @@ if '-d' in sys.argv:
 
     output.write("\n")
     output.write("    sys.exit(3)\n")
-    output.close()
 
-    # compile python (either now or delayed), but only if the source
-    # code has not changed. The Python compilation is the most costly
-    # operation here.
-    if os.path.exists(source_filename):
-        if open(source_filename).read() == open(source_filename + ".new").read():
-            console.verbose(" (%s is unchanged)\n", source_filename, stream=sys.stderr)
-            os.remove(source_filename + ".new")
-            return
-        console.verbose(" (new content)", stream=sys.stderr)
-
-    os.rename(source_filename + ".new", source_filename)
-    if not config.delay_precompile:
-        py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
-        os.chmod(compiled_filename, 0o755)
-    else:
-        if os.path.exists(compiled_filename) or os.path.islink(compiled_filename):
-            os.remove(compiled_filename)
-        os.symlink(hostname + ".py", compiled_filename)
-
-    console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
+    return output.getvalue()
 
 
 def _get_needed_plugin_names(
@@ -1128,8 +1154,6 @@ def _get_needed_plugin_names(
 ) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[InventoryPluginName]]:
     from cmk.base.check_table import get_needed_check_names  # pylint: disable=import-outside-toplevel
     needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
-    needed_agent_based_check_plugin_names: Set[CheckPluginName] = set([])
-    legacy_plugin_name_lookup = {maincheckify(k): k for k in config.check_info}
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
@@ -1137,25 +1161,32 @@ def _get_needed_plugin_names(
         ipaddress = ip_lookup.lookup_ip_address(host_config)
     except Exception:
         ipaddress = None
-    for configurator in data_sources.make_configurators(
+    for source in checkers.make_sources(
             host_config,
             ipaddress,
-            mode=data_sources.Mode.NONE,
+            mode=checkers.Mode.NONE,
     ):
-        if isinstance(configurator, data_sources.programs.SpecialAgentConfigurator):
-            needed_legacy_check_plugin_names.add(configurator.special_agent_plugin_file_name)
+        if isinstance(source, checkers.programs.SpecialAgentSource):
+            needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
 
-    # Collect the needed check plugin names using the host check table
-    needed_check_plugins = get_needed_check_names(host_config.hostname,
-                                                  filter_mode="include_clustered",
-                                                  skip_ignored=False)
+    # Collect the needed check plugin names using the host check table.
+    # Even auto-migrated checks must be on the list of needed *agent based* plugins:
+    # In those cases, the module attribute will be `None`, so nothing will
+    # be imported; BUT: we need it in the list, because it must be considered
+    # when determining the needed *section* plugins.
+    # This matters in cases where the section is migrated, but the check
+    # plugins are not.
+    needed_agent_based_check_plugin_names = get_needed_check_names(
+        host_config.hostname,
+        filter_mode="include_clustered",
+        skip_ignored=False,
+    )
 
-    for check_plugin_name in needed_check_plugins:
-        if str(check_plugin_name) not in legacy_plugin_name_lookup:
-            needed_agent_based_check_plugin_names.add(check_plugin_name)
+    for check_plugin_name in needed_agent_based_check_plugin_names:
+        legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
+        if legacy_name is None:
             continue
 
-        legacy_name = legacy_plugin_name_lookup[str(check_plugin_name)]
         if config.check_info[legacy_name].get("extra_sections"):
             for section_name in config.check_info[legacy_name]["extra_sections"]:
                 if section_name in config.check_info:
@@ -1173,7 +1204,7 @@ def _get_needed_plugin_names(
             raise MKGeneralException("Invalid cluster configuration")
         for node in nodes:
             for check_plugin_name in get_needed_check_names(node, skip_ignored=False):
-                opt_legacy_name = legacy_plugin_name_lookup.get(str(check_plugin_name))
+                opt_legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
                 if opt_legacy_name is not None:
                     needed_legacy_check_plugin_names.add(opt_legacy_name)
                 else:
@@ -1183,15 +1214,11 @@ def _get_needed_plugin_names(
     # otherwise inventory plugins will crash upon unparsed data.
     needed_agent_based_inventory_plugin_names: Set[InventoryPluginName] = set()
     if host_config.do_status_data_inventory:
-        import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-        from cmk.base.check_api import get_check_api_context  # pylint: disable=import-outside-toplevel
-        from cmk.base.inventory import get_inventory_context  # pylint: disable=import-outside-toplevel
-        inventory_plugins.load_plugins(get_check_api_context, get_inventory_context)
         for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
             for section_name in inventory_plugin.sections:
                 # check if we must add the legacy check plugin:
-                legacy_check_name = legacy_plugin_name_lookup.get(str(section_name))
+                legacy_check_name = config.legacy_check_plugin_names.get(section_name)
                 if legacy_check_name is not None:
                     needed_legacy_check_plugin_names.add(legacy_check_name)
 
@@ -1248,9 +1275,10 @@ def _get_needed_agent_based_modules(
                     for plugin in
                     [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
                     if plugin is not None and plugin.module is not None))
-    modules.update((section.module for section in agent_based_register.get_relevant_raw_sections(
-        check_plugin_names=check_plugin_names,
-        inventory_plugin_names=inventory_plugin_names,
-    ).values() if section.module is not None))
+    modules.update((
+        section.module for section in agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=check_plugin_names,
+            consider_inventory_plugins=bool(inventory_plugin_names),  # TODO (mo): clean this up
+        ).values() if section.module is not None))
 
     return sorted(modules)

@@ -4,15 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, List, Optional, Tuple
-from .agent_based_api.v0.type_defs import SNMPStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
-from .agent_based_api.v0 import register, SNMPTree
+from .agent_based_api.v1 import register, SNMPTree
 from .utils import ucd_hr_detection
 
 PreParsed = Dict[str, List[Tuple[str, int, int]]]
 
 
-def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
+def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
     info = string_table[0]
 
     map_types = {
@@ -26,6 +26,7 @@ def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
         '.1.3.6.1.2.1.25.2.1.8': 'RAM disk',
         '.1.3.6.1.2.1.25.2.1.9': 'flash memory',
         '.1.3.6.1.2.1.25.2.1.10': 'network disk',
+        '.1.3.6.1.2.1.25.3.9': None,  # not relevant, contains info about file systems
     }
 
     def to_bytes(units: str) -> int:
@@ -37,10 +38,26 @@ def pre_parse_hr_mem(string_table: SNMPStringTable) -> PreParsed:
 
     parsed: PreParsed = {}
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
-        units = to_bytes(hrunits)
-        size = int(hrsize) * units
-        used = int(hrused) * units
-        parsed.setdefault(map_types[hrtype], []).append((hrdescr.lower(), size, used))
+        # should crash when the hrtype is not defined in the mapping table:
+        # it may mean there was an important change in the way the OIDs are
+        # mapped that we should know about
+        try:
+            map_type = map_types[hrtype]
+        except KeyError:
+            oid_base = '.'.join(hrtype.split('.')[:-1])
+            map_type = map_types[oid_base]
+
+        if map_type:
+            # Sometimes one of the values that is being converted is an empty
+            # string. This means that SNMP delivers invalid data, and the service
+            # should not be discovered.
+            try:
+                units = to_bytes(hrunits)
+                size = int(hrsize) * units
+                used = int(hrused) * units
+            except ValueError:
+                return {}
+            parsed.setdefault(map_type, []).append((hrdescr.lower(), size, used))
 
     return parsed
 
@@ -77,7 +94,7 @@ def aggregate_meminfo(parsed: PreParsed) -> Dict[str, float]:
     return meminfo
 
 
-def parse_hr_mem(string_table: SNMPStringTable) -> Optional[Dict[str, float]]:
+def parse_hr_mem(string_table: List[StringTable]) -> Optional[Dict[str, float]]:
     pre_parsed = pre_parse_hr_mem(string_table)
 
     # Do we find at least one entry concerning memory?
@@ -91,9 +108,9 @@ def parse_hr_mem(string_table: SNMPStringTable) -> Optional[Dict[str, float]]:
 
 register.snmp_section(
     name="hr_mem",
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
     parse_function=parse_hr_mem,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.25.2.3.1",
             oids=[

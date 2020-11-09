@@ -324,19 +324,17 @@ void ColoredOutputOnStdio(bool On) {
 
     if (old == On) return;
 
-    auto hStdin = GetStdHandle(STD_INPUT_HANDLE);
-    DWORD old_mode = 0;
+    auto std_input = GetStdHandle(STD_INPUT_HANDLE);
     if (On) {
-        GetConsoleMode(hStdin, &details::LogOldMode);  // store old mode
+        GetConsoleMode(std_input, &details::LogOldMode);  // store old mode
 
         //  set color output
-        old_mode = 0;  // details::LogOldMode;
-        old_mode |= ENABLE_PROCESSED_OUTPUT | ENABLE_PROCESSED_OUTPUT |
-                    ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        SetConsoleMode(hStdin, old_mode);
+        DWORD old_mode =
+            ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        SetConsoleMode(std_input, old_mode);
     } else {
         if (details::LogOldMode != -1)
-            SetConsoleMode(hStdin, details::LogOldMode);
+            SetConsoleMode(std_input, details::LogOldMode);
     }
 }
 

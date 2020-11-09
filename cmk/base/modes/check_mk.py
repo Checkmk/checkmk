@@ -29,7 +29,13 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, HostAddress, HostgroupName, HostName, TagValue
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostAddress,
+    HostgroupName,
+    HostName,
+    TagValue,
+)
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
@@ -37,24 +43,22 @@ import cmk.fetchers.factory as snmp_factory
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.backup
-import cmk.base.check_api as check_api
 import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_nagios
-import cmk.base.data_sources as data_sources
+import cmk.base.checkers as checkers
 import cmk.base.diagnostics
 import cmk.base.discovery as discovery
 import cmk.base.dump_host
 import cmk.base.inventory as inventory
-import cmk.base.inventory_plugins as inventory_plugins
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.localize
 import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
-from cmk.base.api.agent_based.register.check_plugins import CheckPlugin
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 
@@ -71,7 +75,7 @@ from cmk.base.modes import keepalive_option, Mode, modes, Option
 #   |      \____|\___|_| |_|\___|_|  \__,_|_|  \___/| .__/ \__|___(_)      |
 #   |                                               |_|                    |
 #   +----------------------------------------------------------------------+
-#   | The general options that are available for all Check_MK modes. Only  |
+#   | The general options that are available for all Checkmk modes. Only  |
 #   | add new general options in case they are really affecting basic      |
 #   | things and used by the most of the modes.                            |
 #   '----------------------------------------------------------------------'
@@ -97,7 +101,7 @@ _verbosity = 0
 
 
 def option_cache() -> None:
-    data_sources.set_cache_opts(use_caches=True)
+    checkers.set_cache_opts(use_caches=True)
 
 
 modes.register_general_option(
@@ -111,7 +115,7 @@ modes.register_general_option(
 
 
 def option_no_cache() -> None:
-    cmk.base.data_sources.FileCacheConfigurator.disabled = True
+    cmk.base.checkers.FileCacheFactory.disabled = True
 
 
 modes.register_general_option(
@@ -123,7 +127,7 @@ modes.register_general_option(
 
 
 def option_no_tcp() -> None:
-    data_sources.tcp.TCPConfigurator.use_only_cache = True
+    checkers.tcp.TCPSource.use_only_cache = True
 
 
 # TODO: Check whether or not this is used only for -I as written in the help.
@@ -317,8 +321,6 @@ def mode_list_checks() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
     all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
 
-    legacy_check_plugins = {maincheckify(name) for name in config.check_info}
-
     registered_checks = [(p.name, p) for p in agent_based_register.iter_all_check_plugins()]
     active_checks = [("check_%s" % name, entry) for name, entry in config.active_check_info.items()]
     # TODO clean mixed typed list up:
@@ -329,7 +331,7 @@ def mode_list_checks() -> None:
             what = 'active'
             ty_color = tty.blue
         else:
-            if str(plugin_name) in legacy_check_plugins:
+            if plugin_name in config.legacy_check_plugin_names:
                 what = 'auto migrated'
                 ty_color = tty.magenta
             else:
@@ -390,36 +392,29 @@ def mode_dump_agent(hostname: HostName) -> None:
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for configurator in data_sources.make_configurators(
+        mode = checkers.Mode.CHECKING
+        for source in checkers.make_sources(
                 host_config,
                 ipaddress,
-                mode=data_sources.Mode.CHECKING,
+                mode=mode,
         ):
-            configurator.file_cache.max_age = config.check_max_cachefile_age
-            if not isinstance(configurator, data_sources.agent.AgentConfigurator):
+            source.file_cache_max_age = config.check_max_cachefile_age
+            if not isinstance(source, checkers.agent.AgentSource):
                 continue
 
-            checker = configurator.make_checker()
-
-            raw_data = configurator.default_raw_data
-            try:
-                with configurator.make_fetcher() as fetcher:
-                    raw_data = fetcher.fetch()
-            except Exception as exc:
-                checker.exception = exc
-            else:
-                host_sections = checker.check(raw_data)
-                checker.host_sections = host_sections
-
-            source_state, source_output, _source_perfdata = checker.get_summary_result()
+            raw_data = source.fetch()
+            host_sections = source.parse(raw_data)
+            source_state, source_output, _source_perfdata = source.summarize(host_sections)
             if source_state != 0:
                 console.error(
                     "ERROR [%s]: %s\n",
-                    configurator.id,
+                    source.id,
                     ensure_str(source_output),
                 )
                 has_errors = True
-            output.append(raw_data)
+            if raw_data.is_ok():
+                assert raw_data.ok is not None
+                output.append(raw_data.ok)
 
         out.output(ensure_str(b"".join(output), errors="surrogateescape"))
         if has_errors:
@@ -662,6 +657,7 @@ modes.register(
             "arguments for a help on packaging."
         ],
         needs_config=False,
+        needs_checks=False,
     ))
 
 #.
@@ -684,6 +680,7 @@ modes.register(
         long_option="localize",
         handler_function=mode_localize,
         needs_config=False,
+        needs_checks=False,
         argument=True,
         argument_descr="COMMAND",
         argument_optional=True,
@@ -823,6 +820,7 @@ modes.register(
         long_option="snmptranslate",
         handler_function=mode_snmptranslate,
         needs_config=False,
+        needs_checks=False,
         argument=True,
         argument_descr="HOST",
         short_help="Do snmptranslate on walk",
@@ -1088,57 +1086,6 @@ modes.register(
         ],
     ))
 
-
-def mode_update_no_precompile(options: Dict) -> None:
-    from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
-    do_update(create_core(options), with_precompile=False)
-
-
-modes.register(
-    Mode(
-        long_option="update-no-precompile",
-        short_option="B",
-        handler_function=mode_update_no_precompile,
-        short_help="Create configuration for core",
-        long_help=[
-            "Updates the configuration for the monitoring core. In case of Nagios, "
-            "the file etc/nagios/conf.d/check_mk_objects.cfg is updated. In case of "
-            "the Microcore, either the file var/check_mk/core/config or the file "
-            "specified with the option --cmc-file is written.",
-        ],
-        sub_options=[
-            Option(
-                long_option="cmc-file",
-                argument=True,
-                argument_descr="X",
-                short_help="Relative filename for CMC config file",
-            ),
-        ],
-    ))
-
-#.
-#   .--compile-------------------------------------------------------------.
-#   |                                           _ _                        |
-#   |                  ___ ___  _ __ ___  _ __ (_) | ___                   |
-#   |                 / __/ _ \| '_ ` _ \| '_ \| | |/ _ \                  |
-#   |                | (_| (_) | | | | | | |_) | | |  __/                  |
-#   |                 \___\___/|_| |_| |_| .__/|_|_|\___|                  |
-#   |                                    |_|                               |
-#   '----------------------------------------------------------------------'
-
-
-def mode_compile() -> None:
-    cmk.base.core_nagios.precompile_hostchecks()
-
-
-modes.register(
-    Mode(
-        long_option="compile",
-        short_option="C",
-        handler_function=mode_compile,
-        short_help="Precompile host checks",
-    ))
-
 #.
 #   .--update--------------------------------------------------------------.
 #   |                                   _       _                          |
@@ -1150,9 +1097,16 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_update(options: Dict) -> None:
-    from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
-    do_update(create_core(options), with_precompile=True)
+def mode_update() -> None:
+    from cmk.base.core_config import do_create_config  # pylint: disable=import-outside-toplevel
+    try:
+        with cmk.base.core.activation_lock(mode=config.restart_locking):
+            do_create_config(create_core(config.monitoring_core))
+    except Exception as e:
+        console.error("Configuration Error: %s\n" % e)
+        if cmk.utils.debug.enabled():
+            raise
+        sys.exit(1)
 
 
 modes.register(
@@ -1160,22 +1114,14 @@ modes.register(
         long_option="update",
         short_option="U",
         handler_function=mode_update,
-        short_help="Precompile + create config for core",
+        short_help="Create core config",
         long_help=[
-            "Updates the core configuration based on the current Check_MK "
+            "Updates the core configuration based on the current Checkmk "
             "configuration. When using the Nagios core, the precompiled host "
             "checks are created and the nagios configuration is updated. "
-            "CEE only: When using the Check_MK Microcore, the core is created "
-            "and the configuration for the Check_MK check helpers is being created.",
+            "When using the CheckMK Microcore, the core configuration is created "
+            "and the configuration for the Core helper processes is being created.",
             "The agent bakery is updating the agents.",
-        ],
-        sub_options=[
-            Option(
-                long_option="cmc-file",
-                argument=True,
-                argument_descr="X",
-                short_help="Relative filename for CMC config file",
-            ),
         ],
     ))
 
@@ -1191,7 +1137,7 @@ modes.register(
 
 
 def mode_restart() -> None:
-    cmk.base.core.do_restart(create_core())
+    cmk.base.core.do_restart(create_core(config.monitoring_core))
 
 
 modes.register(
@@ -1199,7 +1145,7 @@ modes.register(
         long_option="restart",
         short_option="R",
         handler_function=mode_restart,
-        short_help="Precompile + config + core restart",
+        short_help="Create core config + core restart",
     ))
 
 #.
@@ -1214,7 +1160,7 @@ modes.register(
 
 
 def mode_reload() -> None:
-    cmk.base.core.do_reload(create_core())
+    cmk.base.core.do_reload(create_core(config.monitoring_core))
 
 
 modes.register(
@@ -1222,7 +1168,7 @@ modes.register(
         long_option="reload",
         short_option="O",
         handler_function=mode_reload,
-        short_help="Precompile + config + core reload",
+        short_help="Create core config + core reload",
     ))
 
 #.
@@ -1253,6 +1199,7 @@ modes.register(
         argument_descr="CHECKTYPE",
         argument_optional=True,
         needs_config=False,
+        needs_checks=False,
         short_help="Show manpage for check CHECKTYPE",
         long_help=[
             "Shows documentation about a check type. If /usr/bin/less is "
@@ -1283,6 +1230,7 @@ modes.register(
         short_option="m",
         handler_function=mode_browse_man,
         needs_config=False,
+        needs_checks=False,
         short_help="Open interactive manpage browser",
     ))
 
@@ -1298,7 +1246,6 @@ modes.register(
 
 
 def mode_inventory(options: Dict, args: List[str]) -> None:
-    inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
     config_cache = config.get_config_cache()
 
     if args:
@@ -1307,11 +1254,11 @@ def mode_inventory(options: Dict, args: List[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        data_sources.FileCacheConfigurator.reset_maybe()
+        checkers.FileCacheFactory.reset_maybe()
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        data_sources.agent.AgentChecker.use_outdated_persisted_sections()
+        checkers.agent.AgentSource.use_outdated_persisted_sections = True
 
     inventory.do_inv(hostnames)
 
@@ -1349,8 +1296,6 @@ modes.register(
 
 
 def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
-    inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
-
     return inventory.do_inv_check(hostname, options)
 
 
@@ -1409,6 +1354,12 @@ def mode_automation(args: List[str]) -> None:
 
     if not args:
         raise automations.MKAutomationError("You need to provide arguments")
+
+    # At least for the automation calls that buffer and handle the stdout/stderr on their own
+    # we can now enable this. In the future we should remove this call for all automations calls and
+    # handle the output in a common way.
+    if args[0] not in ["restart", "reload", "start", "create-diagnostics-dump", "try-inventory"]:
+        log.clear_console_logging()
 
     sys.exit(automations.automations.execute(args[0], args[1:]))
 
@@ -1475,7 +1426,7 @@ modes.register(
 
 
 def mode_discover_marked_hosts() -> None:
-    discovery.discover_marked_hosts(create_core())
+    discovery.discover_marked_hosts(create_core(config.monitoring_core))
 
 
 modes.register(
@@ -1567,10 +1518,10 @@ def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
     hostnames = modes.parse_hostname_list(args)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
-        # by default. Otherwise Check_MK would have to connect to ALL hosts.
-        # This will make Check_MK only contact hosts in case the cache is not
+        # by default. Otherwise Checkmk would have to connect to ALL hosts.
+        # This will make Checkmk only contact hosts in case the cache is not
         # new enough.
-        data_sources.FileCacheConfigurator.reset_maybe()
+        checkers.FileCacheFactory.reset_maybe()
 
     discovery.do_discovery(set(hostnames), options.get("checks"), options["discover"] == 1)
 
@@ -1657,7 +1608,7 @@ def mode_check(options: CheckingOptions, args: List[str]) -> None:
     if len(args) == 2:
         ipaddress = args[1]
 
-    return checking.do_check(hostname, ipaddress, options.get("checks"))
+    return checking.do_check(hostname, ipaddress, only_check_plugin_names=options.get("checks"))
 
 
 modes.register(

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<netapp_api_vf_snapvault:sep(9)>>>
 # snapvault /vol/ipb_datap/   status idle state snapvaulted   lag-time 53812  source-system 172.31.12.15
 # snapvault /vol/ipb_datas/   status idle state snapvaulted   lag-time 53812  source-system 172.31.12.15
@@ -61,5 +62,4 @@ check_info["netapp_api_snapvault"] = {
     'inventory_function': inventory_netapp_api_snapvault,
     'group': "snapvault",
     'service_description': 'Snapvault %s',
-    'includes': ["netapp_api.include"]
 }

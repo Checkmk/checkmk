@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously the Windows Firewall could prevent a connection to the Windows Agent
 (this is the default behavior) thus forcing a system administrator to configure

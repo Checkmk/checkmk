@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 387 435" style="enable-background:new 0 0 387 435;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#28A2F3;}
+	.st1{fill:url(#Oval_4_);}
+	.st2{fill:url(#Path_4_);}
+	.st3{fill:#50E6FF;}
+	.st4{fill:url(#Path_5_);}
+	.st5{fill:url(#Path_6_);}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-514.000000, -513.000000)">
+		<g id="icon_folder" transform="translate(514.000000, 513.000000)">
+			<path id="Path" class="st0" d="M358.9,0H27.3C12.1,0,0,12.1,0,27.3v380c0,15.1,12.1,27.2,27.2,27.2h331.6
+				c15.1,0,27.2-12.1,27.2-27.2v-379C387.1,12.1,374,0,358.9,0z"/>
+			
+				<linearGradient id="Oval_4_" gradientUnits="userSpaceOnUse" x1="-751.9382" y1="751.5844" x2="-750.9233" y2="751.5844" gradientTransform="matrix(54.432 0 0 -54.432 41095.2695 41276.1836)">
+				<stop  offset="0" style="stop-color:#1D59B3"/>
+				<stop  offset="1" style="stop-color:#195BBC"/>
+			</linearGradient>
+			<circle id="Oval" class="st1" cx="193.6" cy="365.9" r="27.2"/>
+			
+				<linearGradient id="Path_4_" gradientUnits="userSpaceOnUse" x1="-763.2266" y1="752.7322" x2="-762.2266" y2="752.7322" gradientTransform="matrix(276.192 0 0 -67.536 210852.5469 50919.7227)">
+				<stop  offset="0" style="stop-color:#1D59B3"/>
+				<stop  offset="1" style="stop-color:#195BBC"/>
+			</linearGradient>
+			<path id="Path_1_" class="st2" d="M324.6,117H62.5c-4,0-7.1-2-7.1-6V55.5c0-3,3-6,7.1-6h262.1c4,0,7.1,2,7.1,6v56.4
+				C331.7,113.9,328.6,117,324.6,117z"/>
+			<circle id="Oval_1_" class="st3" cx="290.3" cy="82.7" r="14.1"/>
+			
+				<linearGradient id="Path_5_" gradientUnits="userSpaceOnUse" x1="-763.2266" y1="752.8023" x2="-762.2266" y2="752.8023" gradientTransform="matrix(276.192 0 0 -68.544 210852.5469 51769.4688)">
+				<stop  offset="0" style="stop-color:#1D59B3"/>
+				<stop  offset="1" style="stop-color:#195BBC"/>
+			</linearGradient>
+			<path id="Path_2_" class="st4" d="M324.6,203.7H62.5c-4,0-7.1-2-7.1-6v-56.4c0-3,3-6,7.1-6h262.1c4,0,7.1,2,7.1,6v56.4
+				C331.7,200.6,328.6,203.7,324.6,203.7z"/>
+			<circle id="Oval_2_" class="st3" cx="290.3" cy="169.4" r="14.1"/>
+			
+				<linearGradient id="Path_6_" gradientUnits="userSpaceOnUse" x1="-763.2266" y1="752.8023" x2="-762.2266" y2="752.8023" gradientTransform="matrix(276.192 0 0 -68.544 210852.5469 51855.1367)">
+				<stop  offset="0" style="stop-color:#1D59B3"/>
+				<stop  offset="1" style="stop-color:#195BBC"/>
+			</linearGradient>
+			<path id="Path_3_" class="st5" d="M324.6,289.3H62.5c-4,0-7.1-2-7.1-6v-56.4c0-3,3-6,7.1-6h262.1c4,0,7.1,2,7.1,6v56.4
+				C331.7,287.3,328.6,289.3,324.6,289.3z"/>
+			<circle id="Oval_3_" class="st3" cx="290.3" cy="256.1" r="14.1"/>
+		</g>
+	</g>
+</g>
+</svg>

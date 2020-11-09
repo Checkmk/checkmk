@@ -145,6 +145,9 @@ $(PERL_MODULES_BUILD): $(PACKAGE_DIR)/$(PERL_MODULES)/src/Crypt-SSLeay-0.72-patc
 	    export PERL_JSON_BACKEND='JSON::XS'; \
 	    cd $(PERL_MODULES_BUILD_SRCDIR) ; \
 	    ./build_module.pl -d "$(DISTRO_INFO)" -p $(PERL_MODULES_BUILD_DESTDIR) $(PERL_MODULES_LIST2)
+# Fixup some library permissions. They need to be owner writable to make
+# dh_strip command of deb packaging procedure work
+	find $(PERL_MODULES_BUILD_DESTDIR)/lib -type f -name \*.so -exec chmod u+w {} \;
 	cd $(PERL_MODULES_BUILD_PERL5LIB)/ ; $(RM) utils.pm ; ln -s ../../../nagios/plugins/utils.pm .
 	$(MKDIR) $(PERL_MODULES_BUILD_PERL5LIB)/CPAN
 	cp $(PACKAGE_DIR)/$(PERL_MODULES)/MyConfig.pm $(PERL_MODULES_BUILD_PERL5LIB)/CPAN/MyConfig.skel

@@ -13,14 +13,14 @@ from cmk.base.plugins.agent_based.cisco_mem_asa import (
     _idem_check_cisco_mem,
 )
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     Result,
     Metric,
-    state,
+    State as state,
 )
 
-from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import Parameters, ValueStore
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters, ValueStore
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In a distributed environment, where the central site is based on 1.5 and a remote site
 has already been migrated to 1.6, the configuration synchronization to the 1.6 site

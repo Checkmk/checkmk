@@ -24,6 +24,7 @@ PYTHON3_PATHS=(
     utils
     ec
     notification_plugins
+    special_agents/utils
     special_agents/__init__.py
     special_agents/agent_3par.py
     special_agents/agent_activemq.py
@@ -65,7 +66,6 @@ PYTHON3_PATHS=(
     special_agents/agent_vsphere.py
     special_agents/agent_zerto.py
     special_agents/agent_cisco_prime.py
-    special_agents/utils.py
     update_rrd_fs_names.py
     update_config.py
 )
@@ -73,6 +73,7 @@ PYTHON3_PATHS=(
 echo "Copy CRE files..."
 sudo rsync \
     --exclude="*.pyc" \
+    --exclude="flycheck*" \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme \

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.docsis import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second
 # usage has '0' in the docsIfUpChannelFrequency...
@@ -194,5 +195,4 @@ check_info["docsis_channels_upstream"] = {
     ],
     "default_levels_variable": "docsis_channels_upstream_default_levels",
     "group": "docsis_channels_upstream",
-    "includes": ["docsis.include"],
 }

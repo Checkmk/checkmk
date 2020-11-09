@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # +------------------------------------------------------------------+
 # | This file has been contributed and is copyrighted by:            |
 # |                                                                  |
@@ -91,7 +93,7 @@ def check_lparstat_aix_cpu(_no_item, params, parsed):
     # and legacy None defaults before 1.6
     params = transform_cpu_iowait(params)
 
-    values = cpu_info(['', user, 0, system, cpu.get('idle', 0), wait], caster=lambda x: x)
+    values = CPUInfo('', user, 0, system, cpu.get('idle', 0), wait)
 
     for util_result in check_cpu_util_unix(values, params, values_counter=False):
         yield util_result
@@ -119,5 +121,4 @@ check_info['lparstat_aix.cpu_util'] = {
     "service_description": "CPU utilization",
     "has_perfdata": True,
     "group": "cpu_iowait",
-    "includes": ["transforms.include", "cpu_util.include"],
 }

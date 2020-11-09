@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Union, List, Tuple, Any, Optional, Callable, NamedTuple
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Iterable, List, Mapping, NamedTuple, Optional, Tuple, TypedDict, Union
 from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
@@ -85,26 +87,68 @@ class SetOnceDict(dict):
         raise NotImplementedError("Deleting items are not supported.")
 
 
-TopicMenuItem = NamedTuple("TopicMenuItem", [
-    ("name", str),
-    ("title", str),
-    ("url", str),
-    ("sort_index", int),
-    ("is_advanced", bool),
-    ("icon_name", Optional[str]),
-])
+class ABCMegaMenuSearch(ABC):
+    """Abstract base class for search fields in mega menus"""
+    def __init__(self, name: str) -> None:
+        self._name = name
 
-TopicMenuTopic = NamedTuple("TopicMenuTopic", [
-    ("name", "str"),
-    ("title", "str"),
-    ("items", List[TopicMenuItem]),
-    ("icon_name", Optional[str]),
-])
+    @property
+    def name(self) -> str:
+        return self._name
 
-MegaMenu = NamedTuple("MegaMenu", [
-    ("name", str),
-    ("title", str),
-    ("icon_name", str),
-    ("sort_index", int),
-    ("topics", Callable[[], List[TopicMenuTopic]]),
-])
+    @property
+    def onopen(self) -> str:
+        return 'cmk.popup_menu.focus_search_field("mk_side_search_field_%s");' % self.name
+
+    @abstractmethod
+    def show_search_field(self) -> None:
+        ...
+
+
+class _Icon(TypedDict):
+    icon: str
+    emblem: Optional[str]
+
+
+Icon = Union[str, _Icon]
+
+
+class TopicMenuItem(NamedTuple):
+    name: str
+    title: str
+    sort_index: int
+    url: str
+    target: str = "main"
+    is_show_more: bool = False
+    icon: Optional[Icon] = None
+    button_title: Optional[str] = None
+
+
+class TopicMenuTopic(NamedTuple):
+    name: "str"
+    title: "str"
+    items: List[TopicMenuItem]
+    icon: Optional[Icon] = None
+    hide: bool = False
+
+
+class MegaMenu(NamedTuple):
+    name: str
+    title: str
+    icon: Icon
+    sort_index: int
+    topics: Callable[[], List[TopicMenuTopic]]
+    search: Optional[ABCMegaMenuSearch] = None
+
+
+SearchQuery = str
+
+
+@dataclass
+class SearchResult:
+    """Representation of a single result"""
+    title: str
+    url: str
+
+
+SearchResultsByTopic = Mapping[str, Iterable[SearchResult]]

@@ -8,13 +8,19 @@
 
 import abc
 import json
-from typing import Type
+from typing import cast, Type, Dict, Any
 
-from cmk.gui.plugins.dashboard import Dashlet
+from cmk.gui.valuespec import ValueSpec
+from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_vs_general_settings, dashlet_registry
+from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.exceptions import (
+    MKUserError,)
+FigureResponse = Dict[str, Any]
 
 
-def create_figures_response(data, context=None):
+def create_figures_response(data, context=None) -> FigureResponse:
     """ Any data for a figure is always wrapped into a dictionary
         This makes future extensions (meta_data, etc.) easier, preventing
         intermingling of dictionary keys """
@@ -32,16 +38,41 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def generate_response_data(cls, properties, context):
+    def generate_response_data(cls, properties, context, settings):
         raise NotImplementedError()
 
     @classmethod
     def generate_response_from_request(cls):
+        settings = json.loads(html.request.get_str_input_mandatory("settings"))
+
+        try:
+            dashlet_type = cast(Dashlet, dashlet_registry[settings.get("type")])
+        except KeyError:
+            raise MKUserError("type", _('The requested dashlet type does not exist.'))
+
+        settings = dashlet_vs_general_settings(
+            dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
+
         properties = cls.vs_parameters().value_from_json(
             json.loads(html.request.get_str_input_mandatory("properties")))
         context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
-        response_data = cls.generate_response_data(properties, context)
+        response_data = cls.generate_response_data(properties, context, settings)
         return create_figures_response(response_data)
+
+
+def dashlet_http_variables(dashlet: Dashlet) -> HTTPVariables:
+    vs_general_settings = dashlet_vs_general_settings(dashlet, dashlet.single_infos())
+    dashlet_settings = vs_general_settings.value_to_json(dashlet._dashlet_spec)
+    dashlet_params = dashlet.vs_parameters()
+    assert isinstance(dashlet_params, ValueSpec)  # help mypy
+    dashlet_properties = dashlet_params.value_to_json(dashlet._dashlet_spec)
+
+    args: HTTPVariables = []
+    args.append(("settings", json.dumps(dashlet_settings)))
+    args.append(("context", json.dumps(dashlet._dashlet_spec["context"])))
+    args.append(("properties", json.dumps(dashlet_properties)))
+
+    return args
 
 
 class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
@@ -64,10 +95,6 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
     @classmethod
     def initial_size(cls):
         return (56, 40)
-
-    @classmethod
-    def default_settings(cls):
-        return {"show_title": False}
 
     @classmethod
     def infos(cls):
@@ -96,7 +123,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @property
-    def update_interval(self):
+    def update_interval(self) -> int:
         return 60
 
     def on_resize(self):
@@ -106,6 +133,31 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
                 "}") % {
                     "instance": self.instance_name
                 }
+
+    def js_dashlet(self, fetch_url: str):
+        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
+        html.div("", id_=div_id)
+
+        args = dashlet_http_variables(self)
+        body = html.urlencode_vars(args)
+
+        html.javascript(
+            """
+            let %(type_name)s_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("%(type_name)s");
+            let %(instance_name)s = new %(type_name)s_class_%(dashlet_id)d(%(div_selector)s);
+            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
+            %(instance_name)s.initialize();
+            %(instance_name)s.scheduler.set_update_interval(%(update)d);
+            %(instance_name)s.scheduler.enable();
+            """ % {
+                "type_name": self.type_name(),
+                "dashlet_id": self._dashlet_id,
+                "instance_name": self.instance_name,
+                "div_selector": json.dumps("#%s" % div_id),
+                "url": json.dumps(fetch_url),
+                "body": json.dumps(body),
+                "update": self.update_interval,
+            })
 
 
 class TableFigureDataCreator:

@@ -1,0 +1,30 @@
+Title: jira notification: Clearer assignment of tickets in distributed environments
+Class: fix
+Compatible: incompat
+Component: notifications
+Date: 1598009116
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If JIRA notifications are used in distributed environments the host and service
+problem ID might not be unique, because every site core creates own host and
+service problem IDs. This could lead to problems with ticket creation if the
+notifications end up at the same JIRA instance because the problem ID might
+already have been used.
+
+If you use such setup, please configure the new option "Site custom field ID"
+in the notification rule for JIRA. You also have to configure this ID in JIRA
+(e.g. "CMK_SITE_FIELD") like the already configured host and service custom
+field ID described in the article "Notifications via Jira" in our official
+guide. The script will then set the host and service problem ID and the site
+name on creation.
+
+If Jira notifications are send from one site to one JIRA instance or from
+different sites to different JIRA instances, no action is required. The Script
+will use the old mechanism of setting and checking for host and service problem
+IDs.
+
+We will update the official guide shortly.

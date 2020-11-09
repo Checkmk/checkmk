@@ -63,7 +63,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def topic(self):
         return HostAttributeTopicBasicSettings
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     @classmethod
@@ -174,7 +174,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 50
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def name(self):
@@ -209,6 +209,9 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 60
+
+    def is_show_more(self) -> bool:
+        return True
 
     def name(self):
         return "additional_ipv6addresses"
@@ -279,7 +282,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 80
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def show_in_table(self):
@@ -689,9 +692,6 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
-    def is_advanced(self) -> bool:
-        return True
-
     def name(self):
         return "management_snmp_community"
 
@@ -717,7 +717,6 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
 class IPMICredentials(Alternative):
     def __init__(self, **kwargs):
-        kwargs["style"] = "dropdown"
         kwargs["elements"] = [
             FixedValue(
                 None,
@@ -741,9 +740,6 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 140
 
-    def is_advanced(self) -> bool:
-        return True
-
     def show_in_table(self):
         return False
 
@@ -762,7 +758,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def name(self):
         return "site"
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def topic(self):
@@ -994,7 +990,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 190
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def help(self):

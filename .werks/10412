@@ -6,7 +6,7 @@ Date: 1574758018
 Edition: cme
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Site filter within a customer assigned remote site is quite redundant as
 the site only has access to itself, thus never actively used. However, the

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.filerdisks import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Agent output:
 # <<<netapp_api_disk:sep(9)>>>
 
@@ -73,5 +74,4 @@ check_info["netapp_api_disk.summary"] = {
     'group': 'netapp_disks',
     'has_perfdata': True,
     'default_levels_variable': 'filer_disks_default_levels',
-    'includes': ['filerdisks.include'],
 }

@@ -21,7 +21,7 @@ import cmk.gui.forms as forms
 import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
 from cmk.gui.watolib.changes import activation_sites
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
@@ -29,9 +29,9 @@ import cmk.gui.watolib.activate_changes
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.display_options import display_options
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
 from cmk.gui.valuespec import DictionaryEntry
 from cmk.gui.breadcrumb import Breadcrumb
@@ -43,6 +43,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_javascript_link,
 )
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @mode_registry.register
@@ -99,9 +100,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             yield PageMenuEntry(
                 title=_("Sites"),
                 icon_name="sites",
-                item=make_simple_link(html.makeuri_contextless([
-                    ("mode", "sites"),
-                ])),
+                item=make_simple_link(makeuri_contextless(
+                    global_request,
+                    [("mode", "sites")],
+                )),
             )
 
         if config.user.may("wato.auditlog"):
@@ -161,18 +163,18 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         return True
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var("_action") != "discard":
-            return
+            return None
 
         if not html.check_transaction():
-            return
+            return None
 
         if not self._may_discard_changes():
-            return
+            return None
 
         if not self.has_changes():
-            return
+            return None
 
         # Now remove all currently pending changes by simply restoring the last automatically
         # taken snapshot. Then activate the configuration. This should revert all pending changes.
@@ -205,8 +207,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.show_message(_("Successfully discarded all pending changes."))
         html.javascript("hide_changes_buttons();")
         html.footer()
-
-        return False
+        return FinalizeRequest(code=200)
 
     def _extract_snapshot(self, snapshot_file):
         self._extract_from_file(cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file,
@@ -334,7 +335,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 table.cell(_("User"), css="narrow nobr")
                 html.write_text(change["user_id"] if change["user_id"] else "")
                 if self._is_foreign(change):
-                    html.icon(_("This change has been made by another user"), "foreign_changes")
+                    html.icon("foreign_changes", _("This change has been made by another user"))
 
                 table.cell(_("Change"), change["text"])
 
@@ -422,7 +423,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         onclick="cmk.activation.activate_changes(\"site\", \"%s\")" % site_id)
 
                 if can_activate_all and not need_action:
-                    html.icon(_("This site is up-to-date."), "siteuptodate")
+                    html.icon("siteuptodate", _("This site is up-to-date."))
 
                 site_url = site.get("multisiteurl")
                 if site_url:
@@ -439,7 +440,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                                   status=status,
                                   title=_("This site is %s") % status)
 
-                # Livestatus-/Check_MK-Version
+                # Livestatus-/Checkmk-Version
                 table.cell(_("Version"),
                            site_status.get("livestatus_version", ""),
                            css="narrow nobr")

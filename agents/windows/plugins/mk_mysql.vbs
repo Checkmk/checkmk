@@ -6,6 +6,7 @@
 ' is running one or multiple MySQL server instances locally.
 
 Option Explicit
+Const CMK_VERSION = "2.0.0i2"
 
 Dim SHO, FSO, WMI, PROC
 Dim cfg_dir, cfg_file, service_list, service, instances, instance, cmd
@@ -94,7 +95,7 @@ For Each instance In instances.Keys
     cmd = Replace(cmd, "mysqld""", "mysql""")
     cmd = Replace(cmd, "mysqld-nt""", "mysql""")
     cmd = Replace(cmd, "mysql""", "mysql.exe""")
-    cmd = Replace(cmd, "mysqld.exe""", "mysql.exe""")    
+    cmd = Replace(cmd, "mysqld.exe""", "mysql.exe""")
     If InStr(cmd, "mysql.exe""") = 0 Then
         ' replace failed, probably we have no double quotes in the string
         cmd = Replace(cmd, "mysqld.exe", "mysql.exe")

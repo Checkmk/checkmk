@@ -1,0 +1,22 @@
+Title: Redis agent plugin now supports databases listening on unix sockets
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1599567297
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+
+The Redis agent plugin is extendend to support instances listening on unix
+sockets. They must be explicitly declared on the configuration file,
+auto-detect feature of the agent does not work in this case. An example of
+how to define an instance use the socket file as a HOST and then port must
+be labled unix-socket.
+
+F+:/etc/check_mk/mk_redis.cfg
+REDIS_INSTANCES=(MY_socket_Redis)
+REDIS_HOST_MY_socket_Redis="/var/redis/redis.sock"
+REDIS_PORT_MY_socket_Redis="unix-socket"
+F-:

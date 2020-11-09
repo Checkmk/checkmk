@@ -13,4 +13,3 @@ set PYTHONPATH=%cd%\Lib\;%cd%\DLLs\
 set PYTHONHOME=%cd%
 set PATH=%cd%\;%cd%\Scripts\;%PATH%
 %cd%\python.exe -m pipenv sync --python=%cd%\python.exe || exit /b 5
-copy /Y ..\..\pyvenv.cfg .venv\pyvenv.cfg

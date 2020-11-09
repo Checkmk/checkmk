@@ -1,0 +1,24 @@
+Title: windows_tasks: Make check plugin configurable & improve output
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1603720169
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+This werk enhances the check plugin <tt>windows_tasks</tt>. This plugin can now
+handle all of the exit codes of Windows tasks specified under
+https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-error-and-success-constants.
+Previously, the check plugin could only handle some of these exit codes and went
+CRIT if it encountered an unknown exit code. Furthermore, the check plugin now
+discovers any task which is not disabled. Previously, only tasks in the state
+"Enabled" were discovered.
+
+Moreover, the check plugin is now user-configurable via the new ruleset "Windows
+Tasks". Here, users can modify the default mapping of exit codes to monitoring
+states used by the check and users can also change the text produced by the check
+plugin for a given exit code. Finally, users can also change the monitoring state
+for tasks which are not enabled (the default monitoring state in such cases used
+to be CRIT, it is now WARN).

@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_aws_s3(info):  # pylint: disable=function-redefined
-    parsed = _extract_aws_metrics_by_labels([
+    parsed = extract_aws_metrics_by_labels([
         "AllRequests",
         "GetRequests",
         "PutRequests",
@@ -76,7 +78,6 @@ check_info['aws_s3_requests'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['AllRequests']),
     'check_function': check_aws_s3_requests,
     'service_description': 'AWS/S3 Requests %s',
-    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_s3_requests',
 }
@@ -105,7 +106,6 @@ check_info['aws_s3_requests.http_errors'] = {
         p, ['AllRequests', '4xxErrors', '5xxErrors']),
     'check_function': check_aws_s3_http_errors,
     'service_description': 'AWS/S3 HTTP Errors %s',
-    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_s3_http_errors',
 }
@@ -154,7 +154,6 @@ check_info['aws_s3_requests.latency'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['TotalRequestLatency']),
     'check_function': check_aws_s3_latency,
     'service_description': 'AWS/S3 Latency %s',
-    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_s3_latency',
 }
@@ -187,7 +186,6 @@ check_info['aws_s3_requests.traffic_stats'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['BytesDownloaded', 'BytesUploaded']),
     'check_function': check_aws_s3_traffic_stats,
     'service_description': 'AWS/S3 Traffic Stats %s',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }
 
@@ -220,6 +218,5 @@ check_info['aws_s3_requests.select_object'] = {
         p, ['SelectBytesScanned', 'SelectBytesReturned']),
     'check_function': check_aws_s3_select_object,
     'service_description': 'AWS/S3 SELECT Object %s',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }

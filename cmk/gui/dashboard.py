@@ -26,18 +26,18 @@ from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.valuespec import (
     Transform,
     Dictionary,
-    TextUnicode,
     DropdownChoice,
     Checkbox,
-    FixedValue,
 )
 from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
 import cmk.gui.i18n
-from cmk.gui.i18n import _u, _
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.views import ABCAjaxInitialFilters
+from cmk.gui.pages import page_registry
 from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
     Breadcrumb,
@@ -82,24 +82,21 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.plugins.dashboard.utils import (
-    builtin_dashboards,
-    GROW,
-    MAX,
-    dashlet_types,
-    dashlet_registry,
-    Dashlet,
-    get_all_dashboards,
-    save_all_dashboards,
-    get_permitted_dashboards,
-    copy_view_into_dashlet,
-)
+from cmk.gui.plugins.dashboard.utils import (builtin_dashboards, GROW, MAX, dashlet_types,
+                                             dashlet_registry, Dashlet, get_all_dashboards,
+                                             save_all_dashboards, get_permitted_dashboards,
+                                             copy_view_into_dashlet, dashboard_breadcrumb,
+                                             dashlet_vs_general_settings)
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
     DashletId,
 )
+from cmk.gui.plugins.metrics.html_render import title_info_elements, render_title_elements
+from cmk.gui.node_visualization import get_topology_view_and_filters
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -406,7 +403,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
         return super(LegacyDashlet, self)._get_iframe_url()
 
 
-# Pre Check_MK 1.6 the dashlets were declared with dictionaries like this:
+# Pre Checkmk 1.6 the dashlets were declared with dictionaries like this:
 #
 # dashlet_types["hoststats"] = {
 #     "title"       : _("Host Statistics"),
@@ -510,7 +507,7 @@ def draw_dashboard(name: DashboardName) -> None:
         unconfigured_single_infos.update(dashlet.unconfigured_single_infos())
 
     html.add_body_css_class("dashboard")
-    breadcrumb = _dashboard_breadcrumb(name, board, title)
+    breadcrumb = dashboard_breadcrumb(name, board, title)
     html.header(title,
                 breadcrumb=breadcrumb,
                 page_menu=_page_menu(breadcrumb, name, board, board_context,
@@ -522,7 +519,7 @@ def draw_dashboard(name: DashboardName) -> None:
     dashlet_styles(board)
 
     for dashlet in dashlets:
-        title, content = _render_dashlet(
+        dashlet_title, content = _render_dashlet(
             board,
             dashlet,
             is_update=False,
@@ -532,7 +529,7 @@ def draw_dashboard(name: DashboardName) -> None:
 
         # Now after the dashlet content has been calculated render the whole dashlet
         dashlet_container_begin(dashlet)
-        draw_dashlet(dashlet, content, title)
+        draw_dashlet(dashlet, content, dashlet_title)
         dashlet_container_end()
 
     # Display the dialog during initial rendering when required context information is missing.
@@ -585,18 +582,6 @@ def _get_dashlets(name: DashboardName, board: DashboardConfig) -> List[Dashlet]:
     return dashlets
 
 
-def _dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
-    breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
-                                       PagetypeTopics.get_topic(board["topic"]))
-
-    breadcrumb.append(BreadcrumbItem(
-        title,
-        html.makeuri_contextless([("name", name)]),
-    ))
-
-    return breadcrumb
-
-
 def _get_refresh_dashlets(
     dashlets: List[Dashlet]
 ) -> List[Tuple[DashletId, DashletRefreshInterval, DashletRefreshAction]]:
@@ -637,9 +622,9 @@ def dashlet_container_end() -> None:
 
 
 def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int,
-                    missing_mandatory_context_filters: bool) -> Tuple[str, str]:
+                    missing_mandatory_context_filters: bool) -> Tuple[Union[str, HTML], str]:
     content = ""
-    title = ""
+    title: Union[str, HTML] = ""
     try:
         missing_single_infos = dashlet.missing_single_infos()
         if missing_single_infos or missing_mandatory_context_filters:
@@ -661,15 +646,19 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
     return title, content
 
 
-def _render_dashlet_title(dashlet: Dashlet) -> str:
+def _render_dashlet_title(dashlet: Dashlet) -> Union[str, HTML]:
     title = dashlet.display_title()
-    if title is not None and dashlet.show_title():
-        url = dashlet.title_url()
-        if url:
-            title = u"%s" % html.render_a(_u(title), url)
-        else:
-            title = _u(title)
-    return title
+    title_elements = []
+    title_format = dashlet._dashlet_spec.get("title_format", ["plain"])
+
+    if dashlet.show_title() and title and "plain" in title_format:
+        title_elements.append((title, dashlet.title_url()))
+
+    if dashlet.type_name() == "pnpgraph":
+        title_elements.extend(
+            title_info_elements(dashlet._dashlet_spec["_graph_identification"][1], title_format))
+
+    return render_title_elements(title_elements)
 
 
 def _render_dashlet_content(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
@@ -782,19 +771,38 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
             ),
             PageMenuDropdown(
                 name="add_dashlets",
-                title=_("Add dashlets"),
+                title=_("Add"),
                 topics=[
                     PageMenuTopic(
-                        title=_("Dashlets"),
-                        entries=list(_dashboard_add_dashlet_entries(name, board, mode)),
+                        title=_("Views"),
+                        entries=list(_dashboard_add_views_dashlet_entries(name, board, mode)),
+                    ),
+                    PageMenuTopic(
+                        title=_("Graphs"),
+                        entries=list(_dashboard_add_graphs_dashlet_entries(name, board, mode)),
+                    ),
+                    PageMenuTopic(
+                        title=_("Metrics"),
+                        entries=list(_dashboard_add_metrics_dashlet_entries(name, board, mode)),
+                    ),
+                    PageMenuTopic(
+                        title=_("Checkmk"),
+                        entries=list(_dashboard_add_checkmk_dashlet_entries(name, board, mode)),
+                    ),
+                    PageMenuTopic(
+                        title=_("Ntop"),
+                        entries=list(_dashboard_add_ntop_dashlet_entries(name, board, mode)),
+                    ),
+                    PageMenuTopic(
+                        title=_("Other"),
+                        entries=list(_dashboard_add_other_dashlet_entries(name, board, mode)),
                     ),
                 ],
-                is_enabled=mode == "edit",
+                is_enabled=True,
             ),
         ],
         breadcrumb=breadcrumb,
     )
-
     _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
 
     return menu
@@ -810,16 +818,20 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
         yield PageMenuEntry(
-            title=_("Edit dashboard"),
+            title=_("Customize builtin dashboard"),
             icon_name="edit",
-            item=make_simple_link(html.makeuri([("edit", 1)])),
+            item=make_simple_link(makeuri(request, [("edit", 1)])),
         )
         return
 
+    edit_text = _("Leave layout mode")
+    display_text = _("Enter layout mode")
+
     yield PageMenuEntry(
-        title=_("Toggle edit mode"),
+        title=edit_text if mode == "edit" else display_text,
         icon_name="trans",
-        item=make_javascript_link("cmk.dashboard.toggle_dashboard_edit()"),
+        item=make_javascript_link('cmk.dashboard.toggle_dashboard_edit("%s", "%s")' %
+                                  (edit_text, display_text)),
         is_shortcut=True,
         name="toggle_edit",
     )
@@ -828,10 +840,11 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         title=_("Properties"),
         icon_name="properties",
         item=make_simple_link(
-            html.makeuri_contextless(
+            makeuri_contextless(
+                request,
                 [
                     ("load_name", name),
-                    ("back", html.urlencode(html.makeuri([]))),
+                    ("back", html.urlencode(makeuri(request, []))),
                 ],
                 filename="edit_dashboard.py",
             )),
@@ -855,30 +868,209 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                               icon_name="filters",
                               item=PageMenuSidePopup(
                                   visuals.render_filter_form(info_list, mandatory_filters,
-                                                             board_context)),
+                                                             board_context, board["name"],
+                                                             "ajax_initial_dashboard_filters")),
                               name="filters",
                               is_shortcut=True,
                           ),
                       ]))
 
 
-def _dashboard_add_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                   mode: str) -> Iterator[PageMenuEntry]:
+@page_registry.register_page("ajax_initial_dashboard_filters")
+class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
+    def _get_context(self, page_name: str) -> Dict:
+        dashboard_name = page_name
+        board = _load_dashboard_with_cloning(get_permitted_dashboards(), dashboard_name, edit=False)
+        board = _add_context_to_dashboard(board)
+
+        # For the topology dashboard filters are retrieved from a corresponding view context
+        if page_name == "topology":
+            _view, show_filters = get_topology_view_and_filters()
+            return {
+                f.ident: board["context"][f.ident] if f.ident in board["context"] else {}
+                for f in show_filters
+                if f.available()
+            }
+        return board["context"]
+
+
+def _dashboard_add_views_dashlet_entries(name: DashboardName, board: DashboardConfig,
+                                         mode: str) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_('Copy existing view'),
         icon_name="dashlet_view",
         item=make_simple_link(
             'create_view_dashlet.py?name=%s&create=0&back=%s' %
-            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))),
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        is_show_more=True,
     )
 
-    for ty, dashlet_type in sorted(dashlet_registry.items(), key=lambda x: x[1].sort_index()):
-        if dashlet_type.is_selectable():
-            yield PageMenuEntry(
-                title=dashlet_type.title(),
-                icon_name="dashlet_%s" % ty,
-                item=make_simple_link(dashlet_type.add_url()),
-            )
+    yield PageMenuEntry(
+        title=_('View'),
+        icon_name='dashlet_view',
+        item=make_simple_link(
+            'create_view_dashlet.py?name=%s&create=0&back=%s' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title=_('Link existing view'),
+        icon_name='dashlet_linked_view',
+        item=make_simple_link(
+            'create_link_view_dashlet.py?name=%s&create=0&back=%s' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+
+def _dashboard_add_graphs_dashlet_entries(name: DashboardName, board: DashboardConfig,
+                                          mode: str) -> Iterator[PageMenuEntry]:
+
+    yield PageMenuEntry(
+        title='Performance Graph',
+        icon_name='dashlet_pnpgraph',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=pnpgraph' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Custom Graph',
+        icon_name='dashlet_custom_graph',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=custom_graph' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+
+def _dashboard_add_metrics_dashlet_entries(name: DashboardName, board: DashboardConfig,
+                                           mode: str) -> Iterator[PageMenuEntry]:
+
+    yield PageMenuEntry(
+        title='Average scatterplot',
+        icon_name='dashlet_average_scatterplot',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=average_scatterplot' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Barplot',
+        icon_name='dashlet_barplot',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=barplot' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Gauge',
+        icon_name='dashlet_gauge',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=gauge' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Single metric',
+        icon_name='dashlet_single_metric',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=single_metric' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+
+def _dashboard_add_checkmk_dashlet_entries(name: DashboardName, board: DashboardConfig,
+                                           mode: str) -> Iterator[PageMenuEntry]:
+
+    yield PageMenuEntry(
+        title='Host Statistics',
+        icon_name='dashlet_hoststats',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=hoststats' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Service Statistics',
+        icon_name='dashlet_servicestats',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=servicestats' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Notification timeline',
+        icon_name='dashlet_notifications_bar_chart',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=notifications_bar_chart' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Alert timeline',
+        icon_name='dashlet_alerts_bar_chart',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=alerts_bar_chart' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='User notifications',
+        icon_name='dashlet_notify_users',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=notify_users' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Sidebar Snapin',
+        icon_name='dashlet_snapin',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=snapin' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        is_show_more=True,
+    )
+
+
+def _dashboard_add_ntop_dashlet_entries(name: DashboardName, board: DashboardConfig,
+                                        mode: str) -> Iterator[PageMenuEntry]:
+
+    yield PageMenuEntry(
+        title='Alerts',
+        icon_name='dashlet_ntop_alerts',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_alerts' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Ntop: Flows',
+        icon_name='dashlet_ntop_flows',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_flows' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+
+def _dashboard_add_other_dashlet_entries(name: DashboardName, board: DashboardConfig,
+                                         mode: str) -> Iterator[PageMenuEntry]:
+
+    yield PageMenuEntry(
+        title='Custom URL',
+        icon_name='dashlet_url',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=url' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        is_show_more=True,
+    )
+
+    yield PageMenuEntry(
+        title='Static text',
+        icon_name='dashlet_nodata',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=nodata' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        is_show_more=True,
+    )
 
 
 # Render dashlet custom scripts
@@ -951,7 +1143,7 @@ def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
         raise MKGeneralException(_('The dashlet does not exist.'))
 
 
-def draw_dashlet(dashlet: Dashlet, content: str, title: str) -> None:
+def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> None:
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in
@@ -959,7 +1151,14 @@ def draw_dashlet(dashlet: Dashlet, content: str, title: str) -> None:
     div there is an inner div containing the actual dashlet content. This content
     is updated later using the dashboard_dashlet.py ajax call.
     """
-    if title is not None and dashlet.show_title():
+    if all((
+            dashlet.type_name() not in [
+                'single_metric', 'average_scatterplot', 'gauge', 'barplot', 'average_scatterplot',
+                'alerts_bar_chart', 'notifications_bar_chart'
+            ],
+            title is not None,
+            dashlet.show_title(),
+    )):
         html.div(html.render_span(title),
                  id_="dashlet_title_%d" % dashlet.dashlet_id,
                  class_=["title"])
@@ -1164,7 +1363,7 @@ def _vs_dashboard() -> Dictionary:
 def page_create_link_view_dashlet() -> None:
     """Choose an existing view from the list of available views"""
     name = html.request.get_str_input_mandatory('name')
-    choose_view(name, _('Link existing view'), _create_linked_view_dashlet_spec)
+    choose_view(name, _('Embed existing view'), _create_linked_view_dashlet_spec)
 
 
 def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> Dict:
@@ -1180,7 +1379,11 @@ def page_create_view_dashlet() -> None:
 
     if create:
         import cmk.gui.views as views  # pylint: disable=import-outside-toplevel
-        url = html.makeuri([('back', html.makeuri([]))], filename="create_view_dashlet_infos.py")
+        url = makeuri(
+            request,
+            [('back', makeuri(request, []))],
+            filename="create_view_dashlet_infos.py",
+        )
         views.show_create_view_dialog(next_url=url)
 
     else:
@@ -1205,16 +1408,19 @@ def page_create_view_dashlet_infos() -> None:
     # Create a new view by choosing the datasource and the single object types
     visuals.page_create_visual('views',
                                data_source_registry[ds_name]().infos,
-                               next_url=html.makeuri_contextless([
+                               next_url=makeuri_contextless(request, [
                                    ('name', html.request.var('name')),
                                    ('type', 'view'),
                                    ('datasource', ds_name),
-                                   ('back', html.makeuri([])),
+                                   ('back', makeuri(request, [])),
                                    ('next',
-                                    html.makeuri_contextless([('name', html.request.var('name')),
-                                                              ('edit', '1')], 'dashboard.py')),
+                                    makeuri_contextless(
+                                        request,
+                                        [('name', html.request.var('name')), ('edit', '1')],
+                                        'dashboard.py',
+                                    )),
                                ],
-                                                                 filename='edit_dashlet.py'))
+                                                            filename='edit_dashlet.py'))
 
 
 def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Callable) -> None:
@@ -1240,7 +1446,8 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
             add_dashlet(dashlet_spec, dashboard)
 
             raise HTTPRedirect(
-                html.makeuri_contextless(
+                makeuri_contextless(
+                    request,
                     [
                         ("name", name),
                         ("id", str(dashlet_id)),
@@ -1287,12 +1494,12 @@ def page_edit_dashlet() -> None:
         raise MKUserError("name", _('The requested dashboard does not exist.'))
 
     if ident is None:
-        ty = html.request.get_str_input_mandatory('type')
+        type_name = html.request.get_str_input_mandatory('type')
         mode = 'add'
         title = _('Add Dashlet')
 
         try:
-            dashlet_type = dashlet_registry[ty]
+            dashlet_type = cast(Dashlet, dashlet_registry[type_name])
         except KeyError:
             raise MKUserError("type", _('The requested dashlet type does not exist.'))
 
@@ -1301,7 +1508,7 @@ def page_edit_dashlet() -> None:
             'position': dashlet_type.initial_position(),
             'size': dashlet_type.initial_size(),
             'single_infos': dashlet_type.single_infos(),
-            'type': ty,
+            'type': type_name,
         }
         dashlet_spec.update(dashlet_type.default_settings())
 
@@ -1331,55 +1538,14 @@ def page_edit_dashlet() -> None:
         except IndexError:
             raise MKUserError("id", _('The dashlet does not exist.'))
 
-        ty = cast(str, dashlet_spec['type'])
-        dashlet_type = dashlet_registry[ty]
+        type_name = cast(str, dashlet_spec['type'])
+        dashlet_type = cast(Dashlet, dashlet_registry[type_name])
         single_infos = cast(List[str], dashlet_spec['single_infos'])
 
     breadcrumb = _dashlet_editor_breadcrumb(board, dashboard, title)
     html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
 
-    vs_general = Dictionary(
-        title=_('General Settings'),
-        render='form',
-        optional_keys=['title', 'title_url'],
-        elements=[
-            ('type', FixedValue(
-                ty,
-                totext=dashlet_type.title(),
-                title=_('Dashlet Type'),
-            )),
-            visuals.single_infos_spec(single_infos),
-            ('background',
-             Checkbox(
-                 title=_('Colored Background'),
-                 label=_('Render background'),
-                 help=_('Render gray background color behind the dashlets content.'),
-                 default_value=True,
-             )),
-            ('show_title',
-             Checkbox(
-                 title=_('Show Title'),
-                 label=_('Render the titlebar above the dashlet'),
-                 help=_('Render the titlebar including title and link above the dashlet.'),
-                 default_value=True,
-             )),
-            ('title',
-             TextUnicode(
-                 title=_('Custom Title') + '<sup>*</sup>',
-                 help=_(
-                     'Most dashlets have a hard coded default title. For example the view snapin '
-                     'has even a dynamic title which defaults to the real title of the view. If you '
-                     'like to use another title, set it here.'),
-                 size=50,
-             )),
-            ('title_url',
-             TextUnicode(
-                 title=_('Link of Title'),
-                 help=_('The URL of the target page the link of the dashlet should link to.'),
-                 size=50,
-             )),
-        ],
-    )
+    vs_general = dashlet_vs_general_settings(dashlet_type, single_infos)
 
     def dashlet_info_handler(dashlet_spec: DashletConfig) -> List[str]:
         assert board is not None
@@ -1411,14 +1577,26 @@ def page_edit_dashlet() -> None:
         # It's a tuple of functions which should be used to render and parse the params
         render_input_func, handle_input_func = params
 
+    # Check disjoint option on known valuespecs
+    if isinstance(vs_type, Dictionary):
+        settings_elements = set(el[0] for el in vs_general._elements)
+        pe = vs_type._elements() if callable(vs_type._elements) else vs_type._elements
+        properties_elements = set(el[0] for el in pe)
+        assert settings_elements.isdisjoint(
+            properties_elements), "Dashlet settings and properties have a shared option name"
+
     if html.request.var('save') and html.transaction_valid():
         try:
             general_properties = vs_general.from_html_vars('general')
             vs_general.validate_value(general_properties, 'general')
             dashlet_spec.update(general_properties)
+
             # Remove unset optional attributes
-            if 'title' not in general_properties and 'title' in dashlet_spec:
-                del dashlet_spec['title']
+            optional_properties = set(e[0] for e in vs_general._get_elements()) - set(
+                vs_general._required_keys)
+            for option in optional_properties:
+                if option not in general_properties and option in dashlet_spec:
+                    del dashlet_spec[option]
 
             if vs_type:
                 type_properties = vs_type.from_html_vars('type')

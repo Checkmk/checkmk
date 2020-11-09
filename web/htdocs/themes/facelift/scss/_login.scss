@@ -71,13 +71,17 @@ body.login {
     color: rgb(255, 255, 255);
   }
 
-  #label_user, #label_pass {
+  #label_user,
+  #label_pass {
     left: 40px;
     font-size: $font-size-global;
     letter-spacing: $letter-spacing-table;
   }
 
-  #label_user, #input_user, #label_pass, #input_pass {
+  #label_user,
+  #input_user,
+  #label_pass,
+  #input_pass {
     position: absolute;
   }
 
@@ -92,11 +96,13 @@ body.login {
   #label_pass {
     top: 120px;
   }
+
   #input_pass {
     top: 112px;
   }
 
-  #input_user, #input_pass {
+  #input_user,
+  #input_pass {
     left: 140px;
     width: 171px;
     height: 17px;
@@ -156,7 +162,8 @@ body.login {
     text-align: center;
   }
 
-  div#login div#foot a, div#login div#foot body.main .popup_menu span,
+  div#login div#foot a,
+  div#login div#foot body.main .popup_menu span,
   body.main .popup_menu div#login div#foot span {
     color: $darkgrey;
   }

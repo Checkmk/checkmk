@@ -123,7 +123,7 @@ fi
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 1.7.0i1"
+    echo "Version: 2.0.0i2"
     echo "AgentOS: linux"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"
@@ -131,11 +131,45 @@ section_checkmk() {
     echo "SpoolDirectory: $SPOOLDIR"
     echo "PluginsDirectory: $PLUGINSDIR"
     echo "LocalDirectory: $LOCALDIR"
+
+    # If we are called via xinetd, try to find only_from configuration
+    if [ -n "$REMOTE_HOST" ]; then
+        echo -n 'OnlyFrom: '
+        sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
+        echo
+    # If we are called via systemd, try to find only_from configuration aswell
+    elif inpath systemctl; then
+        echo -n 'OnlyFrom: '
+        sed -n '/^# systemd socket definition file/,/^IPAddressAllow/s/IPAddressAllow=//p' /etc/systemd/system/check-mk-agent*
+        echo
+    fi
 }
 
 #
 # CHECK SECTIONS
 #
+
+section_labels() {
+    LABELS=""
+    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+        DEVICE_TYPE="container"
+    elif grep "hypervisor" /proc/cpuinfo >/dev/null 2>&1; then
+        DEVICE_TYPE="vm"
+    fi
+
+    if [ -n "$DEVICE_TYPE" ]; then
+        LABELS+="{\"cmk/device_type\":\"$DEVICE_TYPE\"}\n"
+    fi
+
+    if inpath omd; then
+        LABELS+="{\"cmk/check_mk_server\":\"yes\"}"
+    fi
+
+    if [ -n "$LABELS" ]; then
+        echo '<<<labels:sep(0)>>>'
+        echo -e "$LABELS"
+    fi
+}
 
 section_mem() {
     if [ -z "$IS_DOCKERIZED" ]; then
@@ -282,8 +316,6 @@ section_mounts() {
 section_ps() {
     if inpath ps; then
         # processes including username, without kernel processes
-        echo '<<<ps>>>'
-        echo 'dummy section -- refer to section ps_lnx'
         echo '<<<ps_lnx>>>'
         CGROUP=""
         if [ -e /sys/fs/cgroup ]; then
@@ -553,11 +585,12 @@ section_drbd() {
     if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
         cat /proc/drbd
+        cat /sys/kernel/debug/drbd/resources/*/connections/*/0/proc_drbd 2>/dev/null
     fi
 }
 
 section_heartbeat() {
-    if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd >/dev/null 2>&1 || pgrep -f pacemaker-controld >/dev/null 2>&1; then
+    if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
         echo '<<<heartbeat_crm>>>'
         TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
     fi
@@ -625,6 +658,27 @@ section_mailqueue() {
         mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
 
+    # Postfix status monitoring. Can handle multiple instances.
+    if inpath postfix; then
+        echo "<<<postfix_mailq_status:sep(58)>>>"
+        for i in /var/spool/postfix*/; do
+            if [ -e "$i/pid/master.pid" ]; then
+                if [ -r "$i/pid/master.pid" ]; then
+                    postfix_pid=$(sed 's/ //g' <"$i/pid/master.pid") # handle possible spaces in output
+                    if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
+                        echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
+                    else
+                        echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
+                    fi
+                else
+                    echo "$i:PID file exists but is not readable"
+                fi
+            else
+                echo "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
+            fi
+        done
+    fi
+
     # Check status of qmail mailqueue
     if inpath qmail-qstat; then
         echo "<<<qmail_stats>>>"
@@ -642,9 +696,6 @@ section_mailqueue() {
 
 section_omd() {
     if inpath omd; then
-        echo '<<<labels:sep(0)>>>'
-        echo '{"cmk/check_mk_server": "yes"}'
-
         run_cached -s omd_status 60 "omd status --bare || true"
         echo '<<<mknotifyd:sep(0)>>>'
         date +%s
@@ -1162,7 +1213,7 @@ run_cached() {
 # Make run_cached available for subshells (plugins, local checks, etc.)
 export -f run_cached
 
-# Implements Real-Time Check feature of the Check_MK agent which can send
+# Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
 run_real_time_checks() {
@@ -1286,12 +1337,7 @@ get_file_mtime() {
 
 section_checkmk
 
-# If we are called via xinetd, try to find only_from configuration
-if [ -n "$REMOTE_HOST" ]; then
-    echo -n 'OnlyFrom: '
-    sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
-    echo
-fi
+[ -z "$MK_SKIP_LABELS" ] && section_labels
 
 [ -z "$MK_SKIP_DF" ] && section_df
 
@@ -1395,7 +1441,7 @@ fi
 
 [ -z "$MK_SKIP_MAILQUEUE" ] && section_mailqueue
 
-## Check status of OMD sites and Check_MK Notification spooler
+## Check status of OMD sites and Checkmk Notification spooler
 [ -z "$MK_SKIP_OMD" ] && section_omd
 
 # Welcome the ZFS check on Linux
@@ -1416,7 +1462,7 @@ fi
 # on non-OMD machines.
 [ -z "$MK_SKIP_OMD_CORES" ] && section_omd_core
 
-# Collect states of configured Check_MK site backup jobs
+# Collect states of configured Checkmk site backup jobs
 section_mkbackup
 
 # Get statistics about monitored jobs. Below the job directory there

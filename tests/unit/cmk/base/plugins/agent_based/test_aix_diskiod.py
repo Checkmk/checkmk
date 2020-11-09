@@ -4,32 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+# pylint: disable=protected-access
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+import pytest  # type: ignore[import]
+from testlib import get_value_store_fixture
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
     Result,
-    state,
+    State as state,
     type_defs,
 )
 from cmk.base.plugins.agent_based import aix_diskiod
+
+value_store_fixture = get_value_store_fixture(aix_diskiod)
 
 DISK = {
     'read_throughput': 2437253982208,
     'write_throughput': 12421567621120,
 }
-
-
-def _get_value_store():
-    return {}
-
-
-@pytest.fixture(name="value_store")
-def value_store_fixture(monkeypatch):
-    value_store = _get_value_store()
-    monkeypatch.setattr(aix_diskiod, 'get_value_store', lambda: value_store)
-    yield value_store
 
 
 def test_parse_aix_diskiod():
@@ -41,8 +34,7 @@ def test_parse_aix_diskiod():
     }
 
 
-def test_compute_rates():
-    value_store = _get_value_store()
+def test_compute_rates(value_store):
     # first call should result in IngoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
         assert aix_diskiod._compute_rates(DISK, value_store)
@@ -54,14 +46,10 @@ def test_check_disk(value_store):
     with pytest.raises(IgnoreResultsError):
         list(aix_diskiod._check_disk(type_defs.Parameters({}), DISK))
     assert list(aix_diskiod._check_disk(type_defs.Parameters({}), DISK)) == [
-        Result(state=state.OK,
-               summary='Read throughput: 0.00 B/s',
-               details='Read throughput: 0.00 B/s'),
-        Metric('disk_read_throughput', 0.0, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Write throughput: 0.00 B/s',
-               details='Write throughput: 0.00 B/s'),
-        Metric('disk_write_throughput', 0.0, levels=(None, None), boundaries=(None, None)),
+        Result(state=state.OK, summary='Read: 0.00 B/s'),
+        Metric('disk_read_throughput', 0.0),
+        Result(state=state.OK, summary='Write: 0.00 B/s'),
+        Metric('disk_write_throughput', 0.0),
     ]
 
 

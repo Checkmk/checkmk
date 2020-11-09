@@ -26,7 +26,7 @@ class Performance(SidebarSnapin):
         return _("Server performance")
 
     @classmethod
-    def has_advanced_items(cls):
+    def has_show_more_items(cls):
         return True
 
     @classmethod
@@ -40,8 +40,8 @@ class Performance(SidebarSnapin):
     def show(self):
         only_sites = snapin_site_choice("performance", config.site_choices())
 
-        def write_line(left, right, advanced):
-            html.open_tr(class_="advanced" if advanced else "basic")
+        def write_line(left, right, show_more):
+            html.open_tr(class_="show_more_mode" if show_more else "basic")
             html.td(left, class_="left")
             html.td(html.render_strong(right), class_="right")
             html.close_tr()
@@ -56,7 +56,7 @@ class Performance(SidebarSnapin):
         finally:
             sites.live().set_only_sites(None)
 
-        for what, advanced, col, format_str in \
+        for what, show_more, col, format_str in \
             [("Service checks",         False, 0, "%.2f/s"),
              ("Host checks",            False, 1, "%.2f/s"),
              ("External commands",      True, 2, "%.2f/s"),
@@ -64,7 +64,7 @@ class Performance(SidebarSnapin):
              ("Process creations",      True, 4, "%.2f/s"),
              ("New log messages",       True, 5, "%.2f/s"),
              ("Cached log messages",    True, 6, "%d")]:
-            write_line(what + ":", format_str % sum(row[col] for row in data), advanced=advanced)
+            write_line(what + ":", format_str % sum(row[col] for row in data), show_more=show_more)
 
         if only_sites is None and len(config.allsites()) == 1:
             try:
@@ -74,7 +74,7 @@ class Performance(SidebarSnapin):
                 sites.live().set_only_sites(None)
             size = sum([row[0] for row in data])
             maxx = sum([row[1] for row in data])
-            write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size), advanced=True)
+            write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size), show_more=True)
 
         html.close_table()
 

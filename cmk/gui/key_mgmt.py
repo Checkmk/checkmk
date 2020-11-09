@@ -16,7 +16,7 @@ import cmk.utils.store as store
 from cmk.gui.table import table_element
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     Dictionary,
     Password,
@@ -25,7 +25,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     TextUnicode,
 )
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -35,6 +35,8 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect
 
 
 class KeypairStore:
@@ -110,7 +112,7 @@ class PageKeyManagement:
                                     title=_("Add key"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", self.edit_mode)])),
+                                        makeuri_contextless(request, [("mode", self.edit_mode)])),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -118,7 +120,7 @@ class PageKeyManagement:
                                     title=_("Upload key"),
                                     icon_name="upload",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", self.upload_mode)])),
+                                        makeuri_contextless(request, [("mode", self.upload_mode)])),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -133,31 +135,23 @@ class PageKeyManagement:
     def _may_edit_config(self):
         return True
 
-    def action(self):
+    def action(self) -> ActionResult:
         if self._may_edit_config() and html.request.has_var("_delete"):
             key_id_as_str = html.request.var("_delete")
             if key_id_as_str is None:
                 raise Exception("cannot happen")
             key_id = int(key_id_as_str)
             if key_id not in self.keys:
-                return
+                return None
 
             key = self.keys[key_id]
 
             if self._key_in_use(key_id, key):
                 raise MKUserError("", _("This key is still used."))
 
-            message = self._delete_confirm_msg()
-            if key["owner"] != config.user.id:
-                message += _(
-                    "<br><b>Note</b>: this key has created by user <b>%s</b>") % key["owner"]
-            c = html.confirm(message, add_header=self.title())
-            if c:
-                self.delete(key_id)
-                self.save(self.keys)
-
-            elif c is False:
-                return ""
+            self.delete(key_id)
+            self.save(self.keys)
+        return None
 
     def delete(self, key_id):
         del self.keys[key_id]
@@ -180,10 +174,20 @@ class PageKeyManagement:
                 table.row()
                 table.cell(_("Actions"), css="buttons")
                 if self._may_edit_config():
-                    delete_url = html.makeactionuri([("_delete", key_id)])
+                    message = self._delete_confirm_msg()
+                    if key["owner"] != config.user.id:
+                        message += _("<br><b>Note</b>: this key has created by user <b>%s</b>"
+                                    ) % key["owner"]
+
+                    delete_url = make_confirm_link(
+                        url=html.makeactionuri([("_delete", key_id)]),
+                        message=message,
+                    )
                     html.icon_button(delete_url, _("Delete this key"), "delete")
-                download_url = html.makeuri_contextless([("mode", self.download_mode),
-                                                         ("key", key_id)])
+                download_url = makeuri_contextless(
+                    request,
+                    [("mode", self.download_mode), ("key", key_id)],
+                )
                 html.icon_button(download_url, _("Download this key"), "download")
                 table.cell(_("Description"), html.render_text(key["alias"]))
                 table.cell(_("Created"), cmk.utils.render.date(key["date"]))
@@ -211,7 +215,7 @@ class PageEditKey:
             save_title=_("Create"),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.check_transaction():
             value = self._vs_key().from_html_vars("key")
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
@@ -220,7 +224,8 @@ class PageEditKey:
             html.request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
-            return self.back_mode
+            return redirect(mode_url(self.back_mode))
+        return None
 
     def _create_key(self, value):
         keys = self.load()
@@ -299,7 +304,7 @@ class PageUploadKey:
             save_title=_("Upload"),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.check_transaction():
             value = self._vs_key().from_html_vars("key")
             html.request.del_var("key_p_passphrase")
@@ -316,7 +321,8 @@ class PageUploadKey:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
             self._upload_key(key_file, value)
-            return self.back_mode
+            return redirect(mode_url(self.back_mode))
+        return None
 
     def _get_uploaded(self, cert_spec, key):
         if key in cert_spec:
@@ -425,7 +431,7 @@ class PageDownloadKey:
             save_title=_("Download"),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.check_transaction():
             keys = self.load()
 
@@ -447,7 +453,8 @@ class PageDownloadKey:
             decrypt_private_key(private_key, value["passphrase"])
 
             self._send_download(keys, key_id)
-            return False
+            return FinalizeRequest(code=200)
+        return None
 
     def _send_download(self, keys, key_id):
         key = keys[key_id]

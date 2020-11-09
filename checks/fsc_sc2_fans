@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.fsc_sc2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['fan_fsc_sc2_levels'] = FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS
 
 check_info["fsc_sc2_fans"] = {
@@ -21,6 +24,5 @@ check_info["fsc_sc2_fans"] = {
     'has_perfdata': True,
     'default_levels_variable': 'fan_fsc_sc2_levels',
     'group': "hw_fans",
-    'includes': ['fan.include', 'fsc.include', 'fsc_sc2.include'],
     "management_board": HOST_ONLY,
 }

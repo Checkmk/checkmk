@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.raritan import *  # pylint: disable=wildcard-import,unused-wildcard-import
 raritan_pdu_plugs_default = '"on"'  # only to be downwards compatible and can be removed any decade now.
 
 
@@ -62,5 +63,4 @@ check_info['raritan_pdu_plugs'] = {
     "snmp_scan_function" : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13742.6") and \
                                       (oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX2-2") or \
                                       oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX3")),
-    "includes" : [ "raritan.include" ],
 }

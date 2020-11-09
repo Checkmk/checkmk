@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -20,11 +22,30 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.metrics import artwork
 
 
-# This was moved from pnp_graph reportlet specific code
-def transform_graph_render_options_title_format(p):
+def transform_graph_render_options_title_format(p) -> List[str]:
+    # ->1.5.0i2 pnp_graph reportlet
     if p in ('add_host_name', 'add_host_alias'):
         p = ("add_title_infos", [p])
+    #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
+    if p == "plain":
+        return ["plain"]
+    if isinstance(p, tuple):
+        if p[0] == "add_title_infos":
+            return ["plain"] + p[1]
+        if p[0] == "plain":
+            return ["plain"]
     return p
+
+
+def transform_graph_render_options(value):
+    # Graphs in painters and dashlets had the show_service option before 1.5.0i2.
+    # This has been consolidated with the option title_format from the reportlet.
+    if value.pop("show_service", False):
+        value["title_format"] = ["plain", "add_host_name", "add_service_description"]
+    #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
+    if isinstance(value.get("title_format"), (str, tuple)):
+        value["title_format"] = transform_graph_render_options_title_format(value["title_format"])
+    return value
 
 
 def vs_graph_render_options(default_values=None, exclude=None):
@@ -34,21 +55,20 @@ def vs_graph_render_options(default_values=None, exclude=None):
             optional_keys=[],
             title=_("Graph rendering options"),
         ),
-        forth=_transform_graph_render_options,
+        forth=transform_graph_render_options,
     )
 
 
-def _transform_graph_render_options(value):
-    # Graphs in painters and dashlets had the show_service option before 1.5.0i2.
-    # This has been consolidated with the option title_format from the reportlet.
-    if "show_service" in value:
-        show_service = value.pop("show_service")
-        if show_service:
-            value["title_format"] = ("add_title_infos",
-                                     ["add_host_name", "add_service_description"])
-        else:
-            value["title_format"] = ("plain", [])
-    return value
+def vs_title_infos(with_metric: bool = False):
+    choices = [
+        ("plain", _("Graph title")),
+        ("add_host_name", _("Host name")),
+        ("add_host_alias", _("Host alias")),
+        ("add_service_description", _("Service description")),
+    ]
+    if with_metric:
+        choices.append(("add_metric_name", _("Add metric name")))
+    return ListChoice(title=_("Title format"), choices=choices, default_value=["plain"])
 
 
 def vs_graph_render_option_elements(default_values=None, exclude=None):
@@ -75,19 +95,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
          )),
         ("title_format",
          Transform(
-             CascadingDropdown(
-                 title=_("Title format"),
-                 orientation="vertical",
-                 choices=[
-                     ("plain", _("Just show graph title")),
-                     ("add_title_infos", _("Add additional information"),
-                      ListChoice(choices=[
-                          ("add_host_name", _("Add host name")),
-                          ("add_host_alias", _("Add host alias")),
-                          ("add_service_description", _("Add service description")),
-                      ])),
-                 ],
-             ),
+             vs_title_infos(),
              forth=transform_graph_render_options_title_format,
          )),
         ("show_graph_time",

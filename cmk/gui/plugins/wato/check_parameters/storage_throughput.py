@@ -55,5 +55,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Port index or 'Total'")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_storage_throughput,
-        title=lambda: _("Throughput for DDN S2A devices"),
+        title=lambda: _("DDN S2A throughput"),
     ))

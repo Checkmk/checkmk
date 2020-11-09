@@ -19,6 +19,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Age,
     TextUnicode,
+    TextAreaUnicode,
     DropdownChoice,
     RegExp,
     RegExpUnicode,
@@ -29,7 +30,6 @@ from cmk.gui.valuespec import (
     Password,
     Percentage,
     CascadingDropdown,
-    UploadOrPasteTextFile,
     Hostname,
     Optional,
 )
@@ -49,18 +49,19 @@ from cmk.gui.exceptions import MKUserError
 
 
 @rulespec_group_registry.register
-class RulespecGroupIntegrateNagiosPlugins(RulespecGroup):
+class RulespecGroupIntegrateOtherServices(RulespecGroup):
     @property
     def name(self):
         return "custom_checks"
 
     @property
     def title(self):
-        return _("Integrate Nagios plugins")
+        return _("Other services")
 
     @property
     def help(self):
-        return _("Integrate custom nagios plugins (so called active checks)")
+        return _("This services are provided by so called active checks. "
+                 "You can also integrate custom nagios plugins.")
 
 
 @rulespec_group_registry.register
@@ -71,11 +72,13 @@ class RulespecGroupActiveChecks(RulespecGroup):
 
     @property
     def title(self):
-        return _("Check networking services")
+        return _("HTTP, TCP, Email, ...")
 
     @property
     def help(self):
-        return _("Configure active networking checks like HTTP and TCP")
+        return _("Rules to add [cms_active_checks|network services] like HTTP and TCP to the "
+                 "monitoring. The services are provided by so called active checks that allow "
+                 "you to monitor network services directly from the outside.")
 
 
 @rulespec_group_registry.register
@@ -264,7 +267,7 @@ def _valuespec_active_checks_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:ssh",
         valuespec=_valuespec_active_checks_ssh,
@@ -615,29 +618,31 @@ def _valuespec_active_checks_sql():
                  help=_('The password used to connect to the database'),
                  allow_empty=False,
              )),
-            ("sql",
-             Alternative(
-                 title=_("Query or SQL statement"),
-                 elements=[
-                     TextAscii(
-                         title=_("SQL statement or procedure name"),
-                         help=
-                         _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
-                           'a result table with one row and at least two columns. The first column must be '
-                           'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
-                           'Alternatively the first column can be interpreted as number value and you can '
-                           'define levels for this number. The '
-                           'second column is used as check output. The third column is optional and can '
-                           'contain performance data.'),
-                         allow_empty=False,
-                     ),
-                     UploadOrPasteTextFile(
-                         title=_("Import Query"),
-                         file_title=_("File including Query"),
-                         default_mode="upload",
-                     ),
-                 ],
-             )),
+            (
+                "sql",
+                Transform(
+                    TextAreaUnicode(
+                        title=_("Query or SQL statement"),
+                        help=
+                        _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
+                          'a result table with one row and at least two columns. The first column must be '
+                          'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
+                          'Alternatively the first column can be interpreted as number value and you can '
+                          'define levels for this number. The '
+                          'second column is used as check output. The third column is optional and can '
+                          'contain performance data.'),
+                        allow_empty=False,
+                        monospaced=True,
+                    ),
+                    # Former Alternative(Text, Alternative(FileUpload, Text)) based implementation
+                    # would save a string or a tuple with a string or a binary array as third element
+                    # which would then be turned into a string.
+                    # Just make all this a string
+                    forth=lambda old_val: [
+                        elem.decode() if isinstance(elem, bytes) else str(elem)
+                        for elem in ((old_val[-1] if isinstance(old_val, tuple) else old_val),)
+                    ][0],
+                )),
             (
                 "procedure",
                 Dictionary(
@@ -697,7 +702,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_tcp():
     return Tuple(
-        title=_("Check connecting to a TCP port"),
+        title=_("Check TCP port connection"),
         help=_("This check tests the connection to a TCP port. It uses "
                "<tt>check_tcp</tt> from the standard Nagios plugins."),
         elements=[
@@ -868,7 +873,7 @@ def _valuespec_active_checks_uniserv():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         name="active_checks:uniserv",
         valuespec=_valuespec_active_checks_uniserv,
     ))
@@ -1263,7 +1268,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_ldap():
     return Tuple(
-        title=_("Check access to LDAP service"),
+        title=_("Check LDAP service access"),
         help=_("This check uses <tt>check_ldap</tt> from the standard "
                "Nagios plugins in order to try the response of an LDAP "
                "server."),
@@ -1380,7 +1385,7 @@ def _active_checks_smtp_transform_smtp_address_family(val):
 
 def _valuespec_active_checks_smtp():
     return Tuple(
-        title=_("Check access to SMTP services"),
+        title=_("Check SMTP service access"),
         help=_("This check uses <tt>check_smtp</tt> from the standard "
                "Nagios plugins in order to try the response of an SMTP "
                "server."),
@@ -1522,7 +1527,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_disk_smb():
     return Dictionary(
-        title=_("Check access to SMB share"),
+        title=_("Check SMB share access"),
         help=_("This ruleset helps you to configure the classical Nagios "
                "plugin <tt>check_disk_smb</tt> that checks the access to "
                "filesystem shares that are exported via SMB/CIFS."),
@@ -1666,7 +1671,7 @@ def _valuespec_custom_checks():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupIntegrateNagiosPlugins,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="custom_checks",
         valuespec=_valuespec_custom_checks,
@@ -1894,7 +1899,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_notify_count():
     return Tuple(
-        title=_("Check Number of Notifications per Contact"),
+        title=_("Check notification number per contact"),
         help=
         _("Check the number of sent notifications per contact using the plugin <tt>check_notify_count</tt> "
           "provided with Check_MK. This plugin counts the total number of notifications sent by the local "
@@ -1927,7 +1932,7 @@ def _valuespec_active_checks_notify_count():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:notify_count",
         valuespec=_valuespec_active_checks_notify_count,
@@ -2373,7 +2378,7 @@ def _valuespec_active_checks_by_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupIntegrateNagiosPlugins,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:by_ssh",
         valuespec=_valuespec_active_checks_by_ssh,
@@ -2489,7 +2494,7 @@ def _valuespec_active_checks_elasticsearch_query():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:elasticsearch_query",
         valuespec=_valuespec_active_checks_elasticsearch_query,

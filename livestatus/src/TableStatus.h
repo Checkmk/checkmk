@@ -10,9 +10,9 @@
 
 #include <string>
 
-#include "Column.h"
 #include "Table.h"
 #include "global_counters.h"
+class ColumnOffsets;
 #ifdef CMC
 class Core;
 #endif
@@ -34,7 +34,7 @@ public:
 private:
     void addCounterColumns(const std::string &name,
                            const std::string &description,
-                           const Column::Offsets &offsets, Counter which);
+                           const ColumnOffsets &offsets, Counter which);
 };
 
 #endif  // TableStatus_h

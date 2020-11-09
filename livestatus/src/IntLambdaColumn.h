@@ -19,8 +19,8 @@ class IntLambdaColumn : public IntColumn {
 public:
     struct Constant;
     struct Reference;
-    IntLambdaColumn(std::string name, std::string description, Offsets offsets,
-                    std::function<int(const T&)> gv)
+    IntLambdaColumn(std::string name, std::string description,
+                    ColumnOffsets offsets, std::function<int(const T&)> gv)
         : IntColumn(std::move(name), std::move(description), std::move(offsets))
         , get_value_{std::move(gv)} {}
     ~IntLambdaColumn() override = default;

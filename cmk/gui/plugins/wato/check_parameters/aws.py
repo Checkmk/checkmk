@@ -40,7 +40,6 @@ from cmk.utils.aws_constants import (
 def _vs_s3_buckets():
     return ('bucket_size_levels',
             Alternative(title=_("Upper levels for the bucket size"),
-                        style="dropdown",
                         elements=[
                             Tuple(title=_("Set levels"),
                                   elements=[
@@ -58,7 +57,6 @@ def _vs_s3_buckets():
 def _vs_glacier_vaults():
     return ('vault_size_levels',
             Alternative(title=_("Upper levels for the vault size"),
-                        style="dropdown",
                         elements=[
                             Tuple(title=_("Set levels"),
                                   elements=[
@@ -76,7 +74,6 @@ def _vs_glacier_vaults():
 def _vs_burst_balance():
     return ('burst_balance_levels_lower',
             Alternative(title=_("Lower levels for burst balance"),
-                        style="dropdown",
                         elements=[
                             Tuple(title=_("Set levels"),
                                   elements=[
@@ -94,7 +91,6 @@ def _vs_burst_balance():
 def _vs_cpu_credits_balance():
     return ('balance_levels_lower',
             Alternative(title=_("Lower levels for CPU balance"),
-                        style="dropdown",
                         elements=[
                             Tuple(title=_("Set levels"),
                                   elements=[
@@ -166,7 +162,6 @@ def _vs_limits(resource: str,
 
     return Alternative(
         title=title,
-        style="dropdown",
         elements=[
             Tuple(title=_("Set levels"),
                   elements=[
@@ -284,7 +279,6 @@ def _parameter_valuespec_aws_s3_requests():
     return Dictionary(elements=[
         ('get_requests_perc',
          Alternative(title=_("Upper percentual levels for GET requests"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -299,7 +293,6 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('put_requests_perc',
          Alternative(title=_("Upper percentual levels for PUT requests"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -314,7 +307,6 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('delete_requests_perc',
          Alternative(title=_("Upper percentual levels for DELETE requests"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -329,7 +321,6 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('head_requests_perc',
          Alternative(title=_("Upper percentual levels for HEAD requests"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -344,7 +335,6 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('post_requests_perc',
          Alternative(title=_("Upper percentual levels for POST requests"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -359,7 +349,6 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('select_requests_perc',
          Alternative(title=_("Upper percentual levels for SELECT requests"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -374,7 +363,6 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('list_requests_perc',
          Alternative(title=_("Upper percentual levels for LIST requests"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -920,7 +908,6 @@ def _parameter_valuespec_aws_rds_disk_usage():
     return Dictionary(elements=[
         ('levels',
          Alternative(title=_("Upper levels for disk usage"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -951,7 +938,6 @@ def _parameter_valuespec_aws_rds_connections():
     return Dictionary(elements=[
         ('levels',
          Alternative(title=_("Upper levels for connections in use"),
-                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[

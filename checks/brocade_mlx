@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #TODO refactoring: use parse-function
 
 brocade_mlx_states = {
@@ -159,7 +160,6 @@ check_info["brocade_mlx.module_mem"] = {
     "snmp_scan_function": brocade_mlx_scan,
     "has_perfdata": True,
     "group": "memory_multiitem",
-    "includes": ["mem.include"],
 }
 
 #.

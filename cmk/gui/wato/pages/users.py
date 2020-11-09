@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing users and contacts"""
 
-from typing import Iterator, Optional, Type
+from typing import Iterator, Optional, Type, overload
 import base64
 import traceback
 import time
@@ -34,7 +34,7 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _u, get_languages, get_language_alias
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     UserID,
     EmailAddress,
@@ -50,6 +50,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     make_simple_link,
     make_simple_form_page_menu,
+    make_confirmed_form_submit_link,
 )
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.watolib.groups import load_contact_group_information
@@ -57,10 +58,16 @@ from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
-    wato_confirm,
+    make_confirm_link,
     make_action_link,
+    flash,
+    redirect,
+    mode_url,
 )
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -107,6 +114,24 @@ class ModeUsers(WatoMode):
                             ],
                         ),
                         PageMenuTopic(
+                            title=_("On selected users"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Delete users"),
+                                    shortcut_title=_("Delete selected users"),
+                                    icon_name="delete",
+                                    item=make_confirmed_form_submit_link(
+                                        form_name="bulk_delete_form",
+                                        button_name="_bulk_delete_users",
+                                        message=_(
+                                            "Do you really want to delete the selected users?"),
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                        PageMenuTopic(
                             title=_("Synchronized users"),
                             entries=list(self._page_menu_entries_synchronized_users()),
                         ),
@@ -134,7 +159,7 @@ class ModeUsers(WatoMode):
         if userdb.sync_possible():
             if not self._job_snapshot.is_active():
                 yield PageMenuEntry(
-                    title=_("Start user synchronization"),
+                    title=_("Synchronize users"),
                     icon_name="replicate",
                     item=make_simple_link(html.makeactionuri([("_sync", 1)])),
                 )
@@ -144,12 +169,6 @@ class ModeUsers(WatoMode):
                     icon_name="background_job_details",
                     item=make_simple_link(self._job.detail_url()),
                 )
-
-        yield PageMenuEntry(
-            title=_("LDAP & Active Directory"),
-            icon_name="ldap",
-            item=make_simple_link(watolib.folder_preserving_link([("mode", "ldap_config")])),
-        )
 
     def _page_menu_entries_notify_users(self) -> Iterator[PageMenuEntry]:
         if config.user.may("general.notify"):
@@ -173,18 +192,14 @@ class ModeUsers(WatoMode):
             item=make_simple_link(watolib.folder_preserving_link([("mode", "ldap_config")])),
         )
 
-    def action(self):
-        if html.request.var('_delete'):
-            delid = html.request.get_unicode_input("_delete")
-            c = wato_confirm(
-                _("Confirm deletion of user %s") % delid,
-                _("Do you really want to delete the user %s?") % delid)
-            if c:
-                delete_users([delid])
-            elif c is False:
-                return ""
+    def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(self.mode_url())
 
-        elif html.request.var('_sync') and html.check_transaction():
+        if html.request.var('_delete'):
+            delete_users([html.request.get_unicode_input("_delete")])
+
+        elif html.request.var('_sync'):
             try:
 
                 job = userdb.UserSyncBackgroundJob()
@@ -206,14 +221,15 @@ class ModeUsers(WatoMode):
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
 
         elif html.request.var("_bulk_delete_users"):
-            return self._bulk_delete_users_after_confirm()
+            self._bulk_delete_users_after_confirm()
 
-        elif html.check_transaction():
+        else:
             action_handler = gui_background_job.ActionHandler(self.breadcrumb())
             action_handler.handle_actions()
             if action_handler.did_acknowledge_job():
                 self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
-                return None, _("Synchronization job acknowledged")
+                flash(_("Synchronization job acknowledged"))
+        return redirect(self.mode_url())
 
     def _bulk_delete_users_after_confirm(self):
         selected_users = []
@@ -226,13 +242,7 @@ class ModeUsers(WatoMode):
                     selected_users.append(user)
 
         if selected_users:
-            c = wato_confirm(
-                _("Confirm deletion of %d users") % len(selected_users),
-                _("Do you really want to delete %d users?") % len(selected_users))
-            if c:
-                delete_users(selected_users)
-            elif c is False:
-                return ""
+            delete_users(selected_users)
 
     def page(self):
         if not self._job_snapshot.exists():
@@ -243,7 +253,7 @@ class ModeUsers(WatoMode):
             # Still running
             html.show_message(
                 HTML(_("User synchronization currently running: ")) + self._job_details_link())
-            url = html.makeuri([])
+            url = makeuri(request, [])
             html.immediate_browser_redirect(2, url)
 
         elif self._job_snapshot.state() == gui_background_job.background_job.JobStatusStates.FINISHED \
@@ -264,10 +274,11 @@ class ModeUsers(WatoMode):
         return html.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
 
     def _job_details_url(self):
-        return html.makeuri_contextless(
+        return makeuri_contextless(
+            request,
             [("mode", "background_job_details"),
              ("back_url",
-              html.makeuri_contextless([("mode", "users")], filename="%s.py" % html.myfile)),
+              makeuri_contextless(request, [("mode", "users")], filename="%s.py" % html.myfile)),
              ("job_id", self._job_snapshot.get_job_id())],
             filename="wato.py")
 
@@ -328,7 +339,10 @@ class ModeUsers(WatoMode):
                                                                 ("clone", uid)])
                     html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-                delete_url = make_action_link([("mode", "users"), ("_delete", uid)])
+                delete_url = make_confirm_link(
+                    url=make_action_link([("mode", "users"), ("_delete", uid)]),
+                    message=_("Do you really want to delete the user %s?") % uid,
+                )
                 html.icon_button(delete_url, _("Delete"), "delete")
 
                 notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"),
@@ -341,8 +355,9 @@ class ModeUsers(WatoMode):
                 table.cell(_("ID"), uid)
 
                 # Online/Offline
-                if config.save_user_access_times:
-                    last_seen = user.get('last_seen', 0)
+                if config.user.may("wato.show_last_user_activity"):
+                    last_seen = userdb.get_last_activity(uid, user)
+                    user.get('last_seen', 0)
                     if last_seen >= online_threshold:
                         title = _('Online')
                         img_txt = 'online'
@@ -355,7 +370,7 @@ class ModeUsers(WatoMode):
 
                     title += ' (%s %s)' % (render.date(last_seen), render.time_of_day(last_seen))
                     table.cell(_("Act."))
-                    html.icon(title, img_txt)
+                    html.icon(img_txt, title)
 
                     table.cell(_("Last seen"))
                     if last_seen != 0:
@@ -389,7 +404,7 @@ class ModeUsers(WatoMode):
 
                 table.cell(_("State"))
                 if user.get("locked", False):
-                    html.icon(_('The login is currently locked'), 'user_locked')
+                    html.icon('user_locked', _('The login is currently locked'))
 
                 if "disable_notifications" in user and isinstance(user["disable_notifications"],
                                                                   bool):
@@ -398,7 +413,7 @@ class ModeUsers(WatoMode):
                     disable_notifications_opts = user.get("disable_notifications", {})
 
                 if disable_notifications_opts.get("disable", False):
-                    html.icon(_('Notifications are disabled'), 'notif_disabled')
+                    html.icon('notif_disabled', _('Notifications are disabled'))
 
                 # Full name / Alias
                 table.text_cell(_("Alias"), user.get("alias", ""))
@@ -466,7 +481,6 @@ class ModeUsers(WatoMode):
                     table.cell(escaping.escape_attribute(_u(vs.title())))
                     html.write(vs.value_to_text(user.get(name, vs.default_value())))
 
-        html.button("_bulk_delete_users", _("Bulk Delete"), "submit", style="margin-top:10px")
         html.hidden_fields()
         html.end_form()
 
@@ -501,9 +515,24 @@ class ModeEditUser(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeUsers
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, edit: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def _breadcrumb_url(self) -> str:
-        return html.makeuri_contextless([("mode", self.name()), ("edit", self._user_id)],
-                                        filename="wato.py")
+        assert self._user_id is not None
+        return self.mode_url(edit=self._user_id)
 
     def __init__(self):
         super(ModeEditUser, self).__init__()
@@ -573,9 +602,9 @@ class ModeEditUser(WatoMode):
                                                     ("user", self._user_id)])),
             )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return "users"
+            return redirect(mode_url("users"))
 
         if self._user_id is None:  # same as self._is_new_user
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
@@ -716,7 +745,7 @@ class ModeEditUser(WatoMode):
         user_object = {self._user_id: {"attributes": user_attrs, "is_new_user": self._is_new_user}}
         # The following call validates and updated the users
         edit_users(user_object)
-        return "users"
+        return redirect(mode_url("users"))
 
     def page(self):
         # Let exceptions from loading notification scripts happen now
@@ -781,7 +810,9 @@ class ModeEditUser(WatoMode):
             html.write_html(vs_sites.value_to_text(authorized_sites))
         html.help(vs_sites.help())
 
-        self._show_custom_user_attributes('ident')
+        custom_user_attr_topics = userdb_utils.get_user_attributes_by_topic()
+
+        self._show_custom_user_attributes(custom_user_attr_topics.get('ident', []))
 
         forms.header(_("Security"))
         forms.section(_("Authentication"))
@@ -901,7 +932,7 @@ class ModeEditUser(WatoMode):
                 html.hidden_field("role_" + role_id, '1' if is_member else '')
         if self._is_locked('roles') and not is_member_of_at_least_one:
             html.i(_('No roles assigned.'))
-        self._show_custom_user_attributes('security')
+        self._show_custom_user_attributes(custom_user_attr_topics.get('security', []))
 
         # Contact groups
         forms.header(_("Contact Groups"), isopen=False)
@@ -1025,11 +1056,13 @@ class ModeEditUser(WatoMode):
                   "setting <a href=\"wato.py?mode=edit_configvar&varname=notification_fallback_email\">"
                   "Fallback email address for notifications</a>."))
 
-        self._show_custom_user_attributes('notify')
+        self._show_custom_user_attributes(custom_user_attr_topics.get('notify', []))
 
-        forms.header(_("Personal Settings"), isopen=False)
+        forms.header(_("Personal settings"), isopen=False)
         select_language(self._user)
-        self._show_custom_user_attributes('personal')
+        self._show_custom_user_attributes(custom_user_attr_topics.get('personal', []))
+        forms.header(_("Interface settings"), isopen=False)
+        self._show_custom_user_attributes(custom_user_attr_topics.get('interface', []))
 
         # Later we could add custom macros here, which then could be used
         # for notifications. On the other hand, if we implement some check_mk
@@ -1048,8 +1081,12 @@ class ModeEditUser(WatoMode):
         return rulebased_notifications_enabled()
 
     def _pw_suffix(self) -> str:
-        return 'new' if self._user_id is None else ensure_str(
-            base64.b64encode(self._user_id.encode("utf-8")))
+        if self._is_new_user:
+            return 'new'
+        # mypy complaines that None has no attribute "encode" and
+        # "bytes", expected "str"
+        assert self._user_id is not None
+        return str(base64.b64encode(self._user_id.encode("utf-8")))
 
     def _is_locked(self, attr):
         """Returns true if an attribute is locked and should be read only. Is only
@@ -1061,7 +1098,6 @@ class ModeEditUser(WatoMode):
             title=_("Authorized sites"),
             help=_("The sites the user is authorized to see in the GUI."),
             default_value=None,
-            style="dropdown",
             elements=[
                 FixedValue(
                     None,
@@ -1075,11 +1111,8 @@ class ModeEditUser(WatoMode):
             ],
         )
 
-    def _show_custom_user_attributes(self, topic):
-        for name, attr in userdb.get_user_attributes():
-            if topic is not None and topic != attr.topic():
-                continue  # skip attrs of other topics
-
+    def _show_custom_user_attributes(self, custom_attr):
+        for name, attr in custom_attr:
             vs = attr.valuespec()
             forms.section(_u(vs.title()))
             if not self._is_locked(name):

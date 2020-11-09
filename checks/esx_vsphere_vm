@@ -347,10 +347,10 @@ def inventory_esx_vsphere_vm_snapshots(section):
         return [(None, {})]
 
 
-def check_esx_vsphere_vm_snapshots(_no_item, params, section):
+def check_esx_vsphere_vm_snapshots(_no_item, params, section, key: str):
     Snapshot = collections.namedtuple("Snapshot", ["time", "state", "name"])
 
-    raw_snapshots = " ".join(section.get("snapshot.rootSnapshotList", [])).split("|")
+    raw_snapshots = " ".join(section.get(key, [])).split("|")
     snapshots = (x.split(" ", 3) for x in raw_snapshots if x)
     snapshots = [Snapshot(int(x[1]), x[2], x[3]) for x in snapshots]
     yield 0, "Count: %d" % len(snapshots)
@@ -403,8 +403,22 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, section):
 
 check_info['esx_vsphere_vm.snapshots'] = {
     "inventory_function": inventory_esx_vsphere_vm_snapshots,
-    "check_function": check_esx_vsphere_vm_snapshots,
+    "check_function": lambda *args: check_esx_vsphere_vm_snapshots(
+        *args,
+        key="snapshot.rootSnapshotList",
+    ),
     "service_description": "ESX Snapshots",
+    "group": "vm_snapshots",
+    "has_perfdata": True,
+}
+
+check_info['esx_vsphere_vm.snapshots_summary'] = {
+    "inventory_function": inventory_esx_vsphere_vm_snapshots,
+    "check_function": lambda *args: check_esx_vsphere_vm_snapshots(
+        *args,
+        key="snapshot.rootSnapshotList.summary",
+    ),
+    "service_description": "ESX Snapshots Summary",
     "group": "vm_snapshots",
     "has_perfdata": True,
 }

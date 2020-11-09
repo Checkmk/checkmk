@@ -11,7 +11,7 @@ the global settings.
 """
 
 import re
-from typing import Set, List, Dict, Any, Tuple, Optional, Type
+from typing import Set, List, Dict, Any, Tuple, Optional, Type, overload
 
 from six import ensure_str
 
@@ -24,7 +24,7 @@ from cmk.gui.table import table_element
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
@@ -34,7 +34,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuSearch,
     make_simple_link,
-    make_display_options_dropdown,
 )
 
 from cmk.gui.valuespec import (
@@ -51,6 +50,8 @@ from cmk.gui.plugins.wato import (
     search_form,
     get_search_expression,
 )
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
 @mode_registry.register
@@ -72,23 +73,9 @@ class ModeCheckPlugins(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = super().page_menu(breadcrumb)
-        self._extend_display_dropdown(menu)
+        menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search",
+                                            placeholder=_("Search"))
         return menu
-
-    def _extend_display_dropdown(self, menu: PageMenu) -> None:
-        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Search for check plugins"),
-                entries=[
-                    PageMenuEntry(
-                        title="",
-                        icon_name="trans",
-                        item=PageMenuSearch(target_mode="check_plugin_search"),
-                    ),
-                ],
-            ))
 
     def page(self):
         html.help(
@@ -101,8 +88,10 @@ class ModeCheckPlugins(WatoMode):
         menu = MainMenu()
         for topic, _has_second_level, title, helptext in _man_page_catalog_topics():
             menu.add_item(
-                MenuItem(mode_or_url=html.makeuri([("mode", "check_plugin_topic"),
-                                                   ("topic", topic)]),
+                MenuItem(mode_or_url=makeuri(
+                    request,
+                    [("mode", "check_plugin_topic"), ("topic", topic)],
+                ),
                          title=title,
                          icon="plugins_" + topic,
                          permission=None,
@@ -196,6 +185,21 @@ class ModeCheckPluginTopic(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeCheckPlugins
 
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, topic: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
     def breadcrumb(self) -> Breadcrumb:
         """Add each individual level of the catalog topics as single breadcrumb item"""
         parent_cls = self.parent_mode()
@@ -207,8 +211,7 @@ class ModeCheckPluginTopic(WatoMode):
 
     def _breadcrumb_url(self) -> str:
         """Ensure the URL is computed correctly when linking from man pages to the topic"""
-        return html.makeuri_contextless([("mode", self.name()), ("topic", self._topic)],
-                                        filename="wato.py")
+        return self.mode_url(topic=self._topic)
 
     def _from_vars(self):
         self._topic = html.request.get_ascii_input_mandatory("topic", "")
@@ -245,7 +248,7 @@ class ModeCheckPluginTopic(WatoMode):
             # For some topics we render a second level in the same optic as the first level
             menu = MainMenu()
             for path_comp, subnode in self._manpages.items():
-                url = html.makeuri([("topic", "%s/%s" % (self._path[0], path_comp))])
+                url = makeuri(request, [("topic", "%s/%s" % (self._path[0], path_comp))])
                 title = self._titles.get(path_comp, path_comp)
                 helptext = self._get_check_plugin_stats(subnode)
 
@@ -292,8 +295,10 @@ def _add_breadcrumb_topic_items(breadcrumb, titles, path):
         breadcrumb.append(
             BreadcrumbItem(
                 title=titles.get(elements[-1], elements[-1]),
-                url=html.makeuri_contextless([("mode", "check_plugin_topic"),
-                                              ("topic", "/".join(elements))]),
+                url=makeuri_contextless(
+                    request,
+                    [("mode", "check_plugin_topic"), ("topic", "/".join(elements))],
+                ),
             ))
     return breadcrumb
 
@@ -308,8 +313,14 @@ def _render_manpage_list(titles, manpage_list, path_comp, heading):
             if not isinstance(entry, dict):
                 continue
             table.row()
-            url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),
-                                ("back", html.makeuri([]))])
+            url = makeuri(
+                request,
+                [
+                    ("mode", "check_manpage"),
+                    ("check_type", entry["name"]),
+                    ("back", makeuri(request, [])),
+                ],
+            )
             table.cell(_("Type of Check"),
                        "<a href='%s'>%s</a>" % (url, entry["title"]),
                        css="title")
@@ -388,10 +399,19 @@ class ModeCheckManPage(WatoMode):
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeCheckPluginTopic
 
+    def breadcrumb(self) -> Breadcrumb:
+        # To be able to calculate the breadcrumb with ModeCheckPluginTopic as parent, we need to
+        # ensure that the topic is available.
+        with html.stashed_vars():
+            html.request.set_var("topic", self._manpage["header"]["catalog"])
+            return super().breadcrumb()
+
     def _from_vars(self):
         self._check_type = html.request.get_ascii_input_mandatory("check_type", "")
 
-        if not re.match("^[a-zA-Z0-9_.]+$", self._check_type):
+        builtin_check_types = ['check-mk', "check-mk-inventory"]
+        if not re.match("^[a-zA-Z0-9_.]+$", self._check_type) and \
+                self._check_type not in builtin_check_types:
             raise MKUserError("check_type", _("Invalid check type"))
 
         manpage = man_pages.load_man_page(self._check_type)
@@ -411,7 +431,7 @@ class ModeCheckManPage(WatoMode):
                 "type": "active",
                 **self._manpage,
             }
-        elif self._check_type in ['check-mk', "check-mk-inventory"]:
+        elif self._check_type in builtin_check_types:
             self._manpage = {
                 "type": "check_mk",
                 "service_description": "Check_MK%s" %
@@ -432,9 +452,11 @@ class ModeCheckManPage(WatoMode):
             command = "check_mk_active-" + self._check_type[6:]
         else:
             command = "check_mk-" + self._check_type
-        url = html.makeuri_contextless([("view_name", "searchsvc"), ("check_command", command),
-                                        ("filled_in", "filter")],
-                                       filename="view.py")
+        url = makeuri_contextless(
+            request,
+            [("view_name", "searchsvc"), ("check_command", command), ("filled_in", "filter")],
+            filename="view.py",
+        )
 
         return PageMenu(
             dropdowns=[
@@ -506,7 +528,7 @@ class ModeCheckManPage(WatoMode):
             return
 
         rulespec = rulespec_registry[varname]
-        url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
+        url = makeuri_contextless(request, [("mode", "edit_ruleset"), ("varname", varname)])
         param_ruleset = html.render_a(rulespec.title, url)
         html.open_tr()
         html.th(_("Parameter rule set"))

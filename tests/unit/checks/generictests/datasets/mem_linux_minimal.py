@@ -37,13 +37,13 @@ checks = {
                 'levels_hardwarecorrupted': ('abs_used', (1, 1))
             }, [
                 (0, 'Total virtual memory: 13.78% - 1.27 GB of 9.25 GB', []),
-                (0, 'RAM: 13.56% - 1.08 GB of 8.00 GB', []),
-                (0, 'Swap: 15.23% - 194.90 MB of 1.25 GB', []),
                 (
                     2,
                     'Largest Free VMalloc Chunk: 0% free - 2.00 kB of 32.00 TB VMalloc Area (warn/crit below 50.0 MiB/30.0 MiB free)',
                     []
                 ),
+                (0, '\nRAM: 13.56% - 1.08 GB of 8.00 GB', []),
+                (0, '\nSwap: 15.23% - 194.90 MB of 1.25 GB', []),
                 (
                     0, '', [
                         ('buffers', 837836800, None, None, None, None),

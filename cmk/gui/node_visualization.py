@@ -29,15 +29,22 @@ from cmk.gui.pages import (
 
 from cmk.gui.plugins.views.utils import (
     get_permitted_views,)
-from cmk.gui.views import View
+from cmk.gui.views import ABCAjaxInitialFilters, View
 
 import cmk.gui.visuals
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import FilterHeaders
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.breadcrumb import (
+    make_current_page_breadcrumb_item,
+    make_simple_page_breadcrumb,
+    make_topic_breadcrumb,
+)
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (make_display_options_dropdown, PageMenu, PageMenuEntry,
+                               PageMenuSidePopup, PageMenuTopic)
+from cmk.gui.pagetypes import PagetypeTopics
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]
@@ -54,8 +61,22 @@ class MKGrowthInterruption(MKGeneralException):
 
 @page_registry.register_page("parent_child_topology")
 class ParentChildTopologyPage(Page):
+    @classmethod
+    def visual_spec(cls):
+        return {
+            "topic": "overview",
+            "title": _("Network Topology"),
+            "name": "parent_child_topology",
+            "sort_index": 50,
+            "is_show_more": False,
+            "icon": "network_topology",
+            "hidden": False,
+        }
+
     def page(self) -> PageResult:
         """ Determines the hosts to be shown """
+        config.user.need_permission("general.parent_child_topology")
+
         growth_auto_max_nodes = None
 
         # Jump this number of hops from the root node(s)
@@ -125,8 +146,13 @@ class ParentChildTopologyPage(Page):
                       growth_auto_max_nodes: Optional[int] = None,
                       mesh_depth: int = 0,
                       max_nodes: int = 400) -> None:
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), "")
-        html.header("", breadcrumb)
+        visual_spec = ParentChildTopologyPage.visual_spec()
+        breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                           PagetypeTopics.get_topic(visual_spec["topic"]))
+        breadcrumb.append(make_current_page_breadcrumb_item(visual_spec["title"]))
+        page_menu = PageMenu(breadcrumb=breadcrumb)
+        self._extend_display_dropdown(page_menu, visual_spec["name"])
+        html.header(visual_spec["title"], breadcrumb, page_menu)
         self.show_topology_content(hostnames,
                                    mode,
                                    growth_auto_max_nodes=growth_auto_max_nodes,
@@ -140,17 +166,7 @@ class ParentChildTopologyPage(Page):
                               max_nodes: int = 400,
                               mesh_depth: int = 0) -> None:
         div_id = "node_visualization"
-        html.div("", id=div_id)
-
-        # Filters
-        html.open_div(id="topology_filters")
-        view, filters = self._get_topology_view_and_filters()
-        html.request.set_var("topology_mesh_depth", str(mesh_depth))
-        html.request.set_var("topology_max_nodes", str(max_nodes))
-        cmk.gui.views.show_filter_form(view, filters)
-        html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
-        html.close_div()
-
+        html.div("", id_=div_id)
         html.javascript(
             "topology_instance = new cmk.node_visualization.TopologyVisualization(%s, %s);" %
             (json.dumps(div_id), json.dumps(mode)))
@@ -172,19 +188,49 @@ class ParentChildTopologyPage(Page):
         return []
 
     def _get_filter_headers(self) -> FilterHeaders:
-        view, filters = self._get_topology_view_and_filters()
+        view, filters = get_topology_view_and_filters()
         return cmk.gui.views.get_livestatus_filter_headers(view, filters)
 
-    def _get_topology_view_and_filters(self) -> Tuple[View, List[Filter]]:
-        view_spec = get_permitted_views()["topology_filters"]
-        view_name = "topology_filters"
-        view = View(view_name, view_spec, view_spec.get("context", {}))
-        filters = cmk.gui.visuals.filters_of_visual(view.spec,
-                                                    view.datasource.infos,
-                                                    link_filters=view.datasource.link_filters)
+    def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
+        _view, show_filters = get_topology_view_and_filters()
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Filter"),
+                        icon_name="filters",
+                        item=PageMenuSidePopup(
+                            cmk.gui.visuals.render_filter_form(
+                                info_list=["host", "service"],
+                                mandatory_filters=[],
+                                context={f.ident: {} for f in show_filters if f.available()},
+                                page_name=page_name,
+                                reset_ajax_page="ajax_initial_topology_filters")),
+                        name="filters",
+                        is_shortcut=True,
+                    ),
+                ]))
 
-        show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
-        return view, show_filters
+
+def get_topology_view_and_filters() -> Tuple[View, List[Filter]]:
+    view_name = "topology_filters"
+    view_spec = get_permitted_views()[view_name]
+    view = View(view_name, view_spec, view_spec.get("context", {}))
+    filters = cmk.gui.visuals.filters_of_visual(view.spec,
+                                                view.datasource.infos,
+                                                link_filters=view.datasource.link_filters)
+    show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
+    return view, show_filters
+
+
+@page_registry.register_page("ajax_initial_topology_filters")
+class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
+    def _get_context(self, page_name: str) -> Dict:
+        _view, show_filters = get_topology_view_and_filters()
+        return {f.ident: {} for f in show_filters if f.available()}
 
 
 @cmk.gui.pages.register("bi_map")
@@ -221,20 +267,21 @@ class AjaxFetchAggregationData(AjaxPage):
         aggregation_layouts = BILayoutManagement.get_all_bi_aggregation_layouts()
 
         for row in state_data["rows"]:
-            aggr_name = row["tree"]["aggr_name"]
+            row = row["tree"]
+            aggr_name = row["aggr_name"]
             if filter_names and aggr_name not in filter_names:
                 continue
             visual_mapper = NodeVisualizationBIDataMapper()
-            aggr_treestate = row["tree"]["aggr_treestate"]
+            aggr_treestate = row["aggr_treestate"]
             hierarchy = visual_mapper.consume(aggr_treestate)
 
             data: Dict[str, Any] = {}
             data["hierarchy"] = hierarchy
-            data["aggr_type"] = row["tree"]["aggr_tree"]["aggr_type"]
-            data["groups"] = row["groups"]
+            data["aggr_type"] = row["aggr_tree"]["aggr_type"]
+            data["groups"] = row["aggr_group"]
             data["data_timestamp"] = int(time.time())
 
-            aggr_settings = row["tree"]["aggr_tree"]["node_visualization"]
+            aggr_settings = row["aggr_tree"]["node_visualization"]
             layout: Dict[str, Any] = {"config": {}}
             if forced_layout_id:
                 layout["enforced_id"] = aggr_name
@@ -258,7 +305,7 @@ class AjaxFetchAggregationData(AjaxPage):
                 layout["config"]["line_config"] = self._get_line_style_config(aggr_settings)
 
             data["layout"] = layout
-            aggregation_info["aggregations"][row["tree"]["aggr_name"]] = data
+            aggregation_info["aggregations"][row["aggr_name"]] = data
 
         html.set_output_format("json")
         return aggregation_info
@@ -344,12 +391,16 @@ class NodeVisualizationBIDataMapper:
         raise ValueError("Invalid treestate")
 
     def _get_node_data_of_bi_aggregator(self, node: Dict[str, Any]) -> Dict[str, Any]:
+        bi_packs = bi.get_cached_bi_packs()
         node_data: Dict[str, Any] = {}
         node_data["node_type"] = "bi_aggregator"
+        bi_rule = bi_packs.get_rule_mandatory(node["rule_id"])
+
         node_data["rule_id"] = {
-            "pack": node["rule_id"][0],
-            "rule": node["rule_id"][1],
-            "function": node["rule_id"][2]
+            "pack": bi_rule.pack_id,
+            "rule": bi_rule.id,
+            "function":
+                node["rule_id"][2]  # TODO: fix visualization of function
         }
         if "rule_layout_style" in node:
             node_data["rule_layout_style"] = node["rule_layout_style"]

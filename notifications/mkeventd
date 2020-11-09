@@ -6,7 +6,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # This notification plugin sends a notification to the
-# Check_MK Event Console. It takes two parameters:
+# Checkmk Event Console. It takes two parameters:
 # 1. Syslog facility to use. This must be a number
 #  from 0 to 23. 16 means 'local0', 17 means 'local1',
 #  ... and 23 means 'local7'. If you leave this empty

@@ -203,7 +203,6 @@ multisite_builtin_views.update({
             ('stateage', False),
             ('svcdescr', False),
         ],
-        'linktitle': _('Problems (unhandled)'),
         'title': _('Problems (unhandled)'),
         'topic': _('Services'),
     }),
@@ -216,7 +215,6 @@ multisite_builtin_views.update({
         'hard_filtervars': [],
         'hide_filters': ['site', 'service', 'host'],
         'layout': 'mobiledataset',
-        'linktitle': 'Details',
         'name': 'mobile_service',
         'num_columns': 1,
         'hidden': True,
@@ -277,7 +275,6 @@ multisite_builtin_views.update({
         ],
         'show_filters': ['svcstate', 'serviceregex'],
         'sorters': [('svcstate', True), ('stateage', False), ('svcdescr', False)],
-        'linktitle': _('Services of this host'),
         'title': _('Services of host'),
     }),
 
@@ -345,7 +342,6 @@ multisite_builtin_views.update({
         ],
         'hide_filters': [],
         'layout': 'mobilelist',
-        'linktitle': 'Host search',
         'mustsearch': True,
         'num_columns': 2,
         'painters': [
@@ -451,7 +447,6 @@ multisite_builtin_views.update({
         ],
         'hide_filters': [],
         'layout': 'mobilelist',
-        'linktitle': 'Events',
         'mustsearch': False,
         'name': 'mobile_events',
         'num_columns': 1,
@@ -491,7 +486,6 @@ multisite_builtin_views.update({
         'hide_filters': [],
         'icon': 'notification',
         'layout': 'mobilelist',
-        'linktitle': _('Notifications'),
         'mustsearch': False,
         'name': 'mobile_notifications',
         'num_columns': 2,
@@ -530,7 +524,6 @@ multisite_builtin_views.update({
         'hide_filters': ['site', 'host'],
         'icon': 'history',
         'layout': 'mobilelist',
-        'linktitle': _('Host+Svc history'),
         'name': 'events',
         'num_columns': 2,
         'painters': [
@@ -561,7 +554,6 @@ multisite_builtin_views.update({
         'hide_filters': ['site', 'host', 'service'],
         'icon': 'history',
         'layout': 'mobilelist',
-        'linktitle': _('History'),
         'name': 'events',
         'num_columns': 2,
         'painters': [
@@ -600,7 +592,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'notification',
         'layout': 'mobilelist',
-        'linktitle': _('Contact notification'),
         'name': 'mobile_contactnotifications',
         'num_columns': 2,
         'painters': [
@@ -641,7 +632,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'notification',
         'layout': 'mobilelist',
-        'linktitle': _('Host+Svc notifications'),
         'name': 'hostsvcnotifications',
         'num_columns': 2,
         'painters': [
@@ -681,7 +671,6 @@ multisite_builtin_views.update({
         'hidebutton': False,
         'icon': 'notification',
         'layout': 'mobilelist',
-        'linktitle': _('Notifications'),
         'name': 'mobile_svcnotifications',
         'num_columns': 2,
         'painters': [

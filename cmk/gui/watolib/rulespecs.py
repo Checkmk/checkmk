@@ -12,7 +12,7 @@ from typing import Union, Dict, List, Type, Optional, Any, Callable, Tuple as _T
 import cmk.utils.plugin_registry
 
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.valuespec import (
@@ -27,8 +27,22 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.automations import check_mk_local_automation
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
+from cmk.gui.watolib.main_menu import (
+    ModuleRegistry,
+    main_module_registry,
+)
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.utils.urls import (
+    makeuri,
+    makeuri_contextless_ruleset_group,
+)
 
 
 class RulespecBaseGroup(metaclass=abc.ABCMeta):
@@ -115,15 +129,13 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
         else:
             raise TypeError("Got invalid type \"%s\"" % instance.__name__)
 
-    def get_group_choices(self, mode: str) -> List[_Tuple[str, str]]:
+    def get_group_choices(self) -> List[_Tuple[str, str]]:
         """Returns all available ruleset groups to be used in dropdown choices"""
         choices: List[_Tuple[str, str]] = []
 
         main_groups = [g_class() for g_class in self.get_main_groups()]
         for main_group in sorted(main_groups, key=lambda g: g.title):
-            if mode == "static_checks" and main_group.name != "static":
-                continue
-            if mode != "static_checks" and main_group.name == "static":
+            if main_group.name == "static":
                 continue
 
             choices.append((main_group.name, main_group.choice_title))
@@ -171,25 +183,29 @@ rulespec_group_registry = RulespecGroupRegistry()
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecks(RulespecGroup):
+class RulespecGroupEnforcedServices(RulespecGroup):
     @property
     def name(self):
         return "static"
 
     @property
     def title(self):
-        return _("Manual services")
+        return _("Enforced services")
 
     @property
     def help(self):
-        return _("Statically configured Checkmk services that do not rely on the service discovery")
+        return _(
+            "Rules to set up [cms_wato_services#manual_checks|manual services]. Services set "
+            "up in this way do not depend on the service discovery. This is useful if you want "
+            "to enforce compliance with a specific guideline. You can for example ensure that "
+            "a certain Windows service is always present on a host.")
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksNetworking(RulespecSubGroup):
+class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -201,10 +217,10 @@ class RulespecGroupManualChecksNetworking(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksApplications(RulespecSubGroup):
+class RulespecGroupEnforcedServicesApplications(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -216,10 +232,10 @@ class RulespecGroupManualChecksApplications(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksEnvironment(RulespecSubGroup):
+class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -231,10 +247,10 @@ class RulespecGroupManualChecksEnvironment(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksOperatingSystem(RulespecSubGroup):
+class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -246,10 +262,10 @@ class RulespecGroupManualChecksOperatingSystem(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksHardware(RulespecSubGroup):
+class RulespecGroupEnforcedServicesHardware(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -261,10 +277,10 @@ class RulespecGroupManualChecksHardware(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksStorage(RulespecSubGroup):
+class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -276,10 +292,10 @@ class RulespecGroupManualChecksStorage(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksVirtualization(RulespecSubGroup):
+class RulespecGroupEnforcedServicesVirtualization(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -1125,7 +1141,7 @@ class TimeperiodValuespec(ValueSpec):
 
         url_vars: HTTPVariables = []
         url_vars += vars_copy.items()
-        toggle_url = html.makeuri(url_vars)
+        toggle_url = makeuri(request, url_vars)
 
         if is_active:
             value = self._get_timeperiod_value(value)
@@ -1142,13 +1158,8 @@ class TimeperiodValuespec(ValueSpec):
             return r
 
     def value_to_text(self, value):
-        text = ""
-        if self.is_active(value):
-            # TODO/Phantasm: highlight currently active timewindow
-            text += self._get_timeperiod_valuespec().value_to_text(value)
-        else:
-            text += self._enclosed_valuespec.value_to_text(value)
-        return text
+        # TODO/Phantasm: highlight currently active timewindow
+        return self._get_used_valuespec(value).value_to_text(value)
 
     def from_html_vars(self, varprefix):
         if html.request.var(self.tp_current_mode) == "1":
@@ -1168,10 +1179,7 @@ class TimeperiodValuespec(ValueSpec):
 
     def _validate_value(self, value, varprefix):
         super(TimeperiodValuespec, self)._validate_value(value, varprefix)
-        if self.is_active(value):
-            self._get_timeperiod_valuespec().validate_value(value, varprefix)
-        else:
-            self._enclosed_valuespec.validate_value(value, varprefix)
+        self._get_used_valuespec(value).validate_value(value, varprefix)
 
     def _get_timeperiod_valuespec(self):
         return Dictionary(
@@ -1215,5 +1223,67 @@ class TimeperiodValuespec(ValueSpec):
             return value.get(self.tp_default_value_key)
         return value
 
+    # Returns the currently used ValueSpec based on the current value
+    def _get_used_valuespec(self, value: Any) -> ValueSpec:
+        return self._get_timeperiod_valuespec() if self.is_active(
+            value) else self._enclosed_valuespec
+
+    def transform_value(self, value: Any) -> Any:
+        return self._get_used_valuespec(value).transform_value(value)
+
+
+class MatchItemGeneratorRules(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        main_module_reg: ModuleRegistry,
+        rulesepc_group_reg: RulespecGroupRegistry,
+        rulespec_reg: RulespecRegistry,
+    ) -> None:
+        super().__init__(name)
+        self._main_module_registry = main_module_reg
+        self._rulespec_group_registry = rulesepc_group_reg
+        self._rulespec_registry = rulespec_reg
+
+    def _topic_from_group_name(self, group_name: str) -> str:
+
+        main_group = self._rulespec_group_registry[group_name]()
+        if isinstance(main_group, RulespecSubGroup):
+            main_group = main_group.main_group()
+
+        main_module_cls = self._main_module_registry.get(
+            makeuri_contextless_ruleset_group(
+                request,
+                main_group.name,
+            ))
+        if main_module_cls:
+            topic_prefix = main_module_cls().topic.title
+        else:
+            topic_prefix = _('Rules')
+
+        return f"{topic_prefix} > {main_group.title}"
+
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=rulespec.title,
+            topic=self._topic_from_group_name(group),
+            url="wato.py?mode=edit_ruleset&varname=%s" % rulespec.name,
+            match_texts=[rulespec.title, rulespec.name],
+        )
+                    for group in self._rulespec_registry.get_all_groups()
+                    for rulespec in self._rulespec_registry.get_by_group(group)
+                    if rulespec.title)
+
+    def is_affected_by_change(self, *_, **__) -> bool:
+        return False
+
 
 rulespec_registry = RulespecRegistry(rulespec_group_registry)
+
+match_item_generator_registry.register(
+    MatchItemGeneratorRules(
+        'rules',
+        main_module_registry,
+        rulespec_group_registry,
+        rulespec_registry,
+    ))

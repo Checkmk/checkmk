@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import InventoryPluginName, ParsedSectionName
 
-from cmk.base.api.agent_based.type_defs import InventoryPlugin
+from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 
 import cmk.base.api.agent_based.register.inventory_plugins as inventory_plugins
 

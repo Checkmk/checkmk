@@ -5,15 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-from typing import Mapping
-from ..agent_based_api.v0 import (
+from typing import List, Mapping
+from ..agent_based_api.v1 import (
     equals,
     Metric,
     Result,
-    state,
+    State as state,
     type_defs,
 )
-from ..agent_based_api.v0.clusterize import aggregate_node_details
+from ..agent_based_api.v1.clusterize import aggregate_node_details
 
 Section = Mapping[str, int]
 ClusterSection = Mapping[str, Section]
@@ -36,7 +36,7 @@ _OPER_STATE_MAP = {
 }
 
 
-def parse_bluecat(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_bluecat(string_table: List[type_defs.StringTable]) -> Section:
     """
     >>> parse_bluecat([[['1', '2']]])
     {'oper_state': 1, 'leases': 2}
@@ -58,7 +58,7 @@ def _get_service_name(section: Section) -> str:
 def check_bluecat_operational_state(
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     oper_state = section['oper_state']
     service_name = _get_service_name(section)
 
@@ -100,7 +100,7 @@ OKNodeResults = namedtuple(
 def cluster_check_bluecat_operational_state(
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
     results = {}
     ok_node_results = None
@@ -127,14 +127,12 @@ def cluster_check_bluecat_operational_state(
             monitoring_state_result.state,
         )
 
-    for node_name, agg_node_result in results.items():
-        assert agg_node_result
-        if ok_node_results:
-            agg_node_result = Result(
-                state=state.OK,
-                details=agg_node_result.details,
-            )
-        yield agg_node_result
+    for node_name, (node_state, node_text) in results.items():
+        assert node_text
+        yield Result(
+            state=state.OK if ok_node_results else node_state,
+            notice=node_text,
+        )
 
     if ok_node_results:
         for result in ok_node_results.results:

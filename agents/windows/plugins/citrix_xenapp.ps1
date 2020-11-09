@@ -1,3 +1,4 @@
+$VERSION = "2.0.0i2"
 Add-PSSnapin Citrix*
 
 ### Citrix XenApp Serverload

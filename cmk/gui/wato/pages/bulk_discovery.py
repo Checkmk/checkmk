@@ -29,6 +29,7 @@ from cmk.gui.watolib.bulk_discovery import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     get_hostnames_from_checkboxes,
 )
@@ -87,7 +88,7 @@ class ModeBulkDiscovery(WatoMode):
             save_title=_("Start"),
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         config.user.need_permission("wato.services")
 
         tasks = get_tasks(self._get_hosts_to_discover(), self._bulk_size)

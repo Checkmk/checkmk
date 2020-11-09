@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 
 @pytest.mark.parametrize("info, item, expected_item_data", [
@@ -39,6 +40,7 @@ import pytest  # type: ignore[import]
         'status': u'1',
     }),
 ])
-def test_wmi_cpu_load_discovery(check_manager, info, item, expected_item_data):
-    check = check_manager.get_check("f5_bigip_vserver")
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_wmi_cpu_load_discovery(info, item, expected_item_data):
+    check = Check("f5_bigip_vserver")
     assert sorted(check.run_parse(info)[item].items()) == sorted(expected_item_data.items())

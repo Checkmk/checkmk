@@ -1,0 +1,16 @@
+Title: fileinfo.groups: fixed grouping pattern error when no files are found
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1603534075
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The fileinfo.groups check reports when a service does not have a corresponding
+grouping pattern saved in the rules configuration file. This is important so
+that missing grouping patterns can be addressed. However, this error is not
+relevant when the agent is unable to find files. In such an event, the check
+continues to run normally and check values for count and overall file size
+against the specified levels.

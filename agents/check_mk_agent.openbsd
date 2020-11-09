@@ -7,7 +7,7 @@
 #         Florian Heigl <florian.heigl@gmail.com>
 #	  Christian Zigotzky <chzigotzky@xenosoft.de>
 
-# NOTE: This agent has been adapted from the Check_MK FreeBSD agent.
+# NOTE: This agent has been adapted from the Checkmk FreeBSD agent.
 
 # Remove locale settings to eliminate localized outputs where possible
 export LC_ALL=C
@@ -42,7 +42,7 @@ else
 fi
 
 echo "<<<check_mk>>>"
-echo "Version: 1.7.0i1"
+echo "Version: 2.0.0i2"
 echo "AgentOS: openbsd"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # TODO together with other mcafee-emailgateway-info checks?
 
 
@@ -24,5 +25,4 @@ check_info['mcafee_emailgateway_spam_mcafee'] = {
             '11',  # spam-mcafee-rules-version
         ]),
     'snmp_scan_function': scan_mcafee_emailgateway,
-    'includes': ['mcafee_gateway.include'],
 }

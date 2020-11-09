@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.genua import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example Agent Output:
 # GENUA-MIB:
 
@@ -132,5 +133,4 @@ check_info['genua_carp'] = {
             ]),
     ],
     "snmp_scan_function": scan_genua,
-    "includes": ["genua.include"],
 }

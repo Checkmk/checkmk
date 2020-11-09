@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import ActiveCheck  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -26,7 +27,8 @@ pytestmark = pytest.mark.checks
         })
     }, ["$HOSTADDRESS$", 123, "foobar", "ADDRESS", "street", 0, "city", "regex"]),
 ])
-def test_check_uniserv_argument_parsing(check_manager, params, expected_args):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_uniserv_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    active_check = check_manager.get_active_check("check_uniserv")
+    active_check = ActiveCheck("check_uniserv")
     assert active_check.run_argument_function(params) == expected_args

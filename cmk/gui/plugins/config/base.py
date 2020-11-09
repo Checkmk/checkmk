@@ -35,7 +35,6 @@ users: _List[str] = []
 admin_users: _List[str] = ["omdadmin", "cmkadmin"]
 guest_users: _List[str] = []
 default_user_role = "user"
-save_user_access_times = False
 user_online_maxage = 30  # seconds
 
 log_levels = {
@@ -258,6 +257,11 @@ crash_report_url = "https://crash.checkmk.com"
 # Target email address for "Crashed Check" page
 crash_report_target = "feedback@checkmk.com"
 
+support_credentials = {
+    "username": "",
+    "password": ("password", ""),
+}
+
 # GUI Tests (see cmk-guitest)
 guitests_enabled = False
 
@@ -305,6 +309,10 @@ graph_timeranges: _List[_Dict[str, _Any]] = [
 # moved to the sites configuration. This might have been configured in master/remote
 # in previous versions and is set on remote sites during WATO synchronization.
 userdb_automatic_sync = "master"
+
+# Permission to login to the web gui of a site (can be changed in sites
+# configuration)
+user_login = True
 
 # Holds dicts defining user connector instances and their properties
 user_connections: _List = []
@@ -405,9 +413,6 @@ user_downtime_timeranges: _List[_Dict[str, _Any]] = [
 # Override toplevel and sort_index settings of builtin icons
 builtin_icon_visibility: _Dict = {}
 
-# Name of the hostgroup to filter the network topology view by default
-topology_default_filter_group = None
-
 trusted_certificate_authorities = {
     "use_system_wide_cas": True,
     "trusted_cas": [],
@@ -502,11 +507,11 @@ aggregation_rules: _Dict = {}
 aggregations: _List = []
 host_aggregations: _List = []
 bi_packs: _Dict = {}
-bi_precompile_on_demand = True
-bi_use_legacy_compilation = False
 
 default_bi_layout = {"node_style": "builtin_hierarchy", "line_style": "straight"}
 bi_layouts: _Dict[str, _Dict] = {"templates": {}, "aggregations": {}}
 
 # Deprecated. Kept for compatibility.
 bi_compile_log = None
+bi_precompile_on_demand = False
+bi_use_legacy_compilation = False

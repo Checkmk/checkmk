@@ -17,6 +17,12 @@ import omdlib.certs as certs
 import livestatus
 
 
+# Override top level fixture to make livestatus connects possible here
+@pytest.fixture
+def prevent_livestatus_connect():
+    pass
+
+
 @pytest.fixture
 def ca(tmp_path, monkeypatch):
     p = tmp_path / "etc" / "ssl"

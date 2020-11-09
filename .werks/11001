@@ -6,7 +6,7 @@ Date: 1592889678
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Within the ruleset {{Periodic service discovery}} you can indicate service
 names or regexes in {{Activate only services matching}} resp.

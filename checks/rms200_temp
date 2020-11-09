@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["rms200_temp_default_levels"] = {"levels": (25, 28)}
 
 
@@ -37,6 +38,5 @@ check_info["rms200_temp"] = {
             2,  # Name,
             5,  # Temp
         ]),
-    "includes": ["temperature.include"],
     "default_levels_variable": "rms200_temp_default_levels"
 }

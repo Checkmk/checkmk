@@ -1,0 +1,12 @@
+Title: ServiceNow: Make rule more flexible
+Class: feature
+Compatible: compat
+Component: notifications
+Date: 1599204250
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The enterprise notification plugin "ServiceNow" has a new rule option for setting the incident state in case of an incoming recovery.
+Furthermore all rules for changing the incident state can be configured by using an Integer as state. This can be useful in case the default mapping was changed by the user in ServiceNow and does not fit anymore the mapping definied in checkmk.

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['fireeye_lic'] = {
     'days': (120, 90),
 }
@@ -44,5 +45,4 @@ check_info['fireeye_lic_expiration'] = {
         ]),
     'snmp_scan_function': scan_fireeye,
     'has_perfdata': True,
-    'includes': ['fireeye.include']
 }

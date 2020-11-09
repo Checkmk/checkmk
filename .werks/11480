@@ -1,0 +1,31 @@
+Title: snmp_info, mgmt_snmp_info: Add host label "cmk/device_type" discovery
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1600523872
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+From now on, the sysDescr is parsed for the following strings:
+
+<li>appliance</li>
+<li>firewall</li>
+<li>printer</li>
+<li>router</li>
+<li>sensor</li>
+<li>switch</li>
+<li>ups</li>
+<li>wlc</li><br>
+
+If one string (foo in this example) is found, the host will discover the host
+label <b>"cmk/device_type:foo"</b>.
+
+Because sysDescr is the only reliable way to get the device type from a snmp
+device, but not every description contains the strings above, we also have to add
+device specific host labels via the regarding check plugins. This will be added
+with further werks.
+
+The implementation takes care, that the device specific host label always wins
+about the strings in snmp_info and mgmt_snmp_info.

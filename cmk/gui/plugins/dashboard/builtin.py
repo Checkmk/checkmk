@@ -20,6 +20,7 @@ builtin_dashboards["main"] = {
     "title": _("Main Overview"),
     "topic": "overview",
     "sort_index": 10,
+    "icon": "dashboard",
     "description": _("This dashboard gives you a general overview on the state of your "
                      "monitored devices."),
     "dashlets": [
@@ -165,7 +166,6 @@ builtin_dashboards["main"] = {
             },
             'hidden': True,
             'layout': 'table',
-            'linktitle': 'Events',
             'mustsearch': False,
             'name': 'dashlet_4',
             'num_columns': 1,
@@ -179,31 +179,6 @@ builtin_dashboards["main"] = {
     ]
 }
 
-builtin_dashboards["topology"] = {
-    "single_infos": [],
-    "context": {},
-    "mtime": 0,
-    "show_title": False,
-    "title": _("Network Topology"),
-    "topic": "overview",
-    "sort_index": 50,
-    "description": _("This dashboard uses the parent relationships of your hosts to display a "
-                     "hierarchical map."),
-    "dashlets": [{
-        'add_context_to_title': True,
-        'link_from': {},
-        'background': True,
-        'context': {},
-        'position': (1, 1),
-        'show_in_iframe': True,
-        'show_title': False,
-        'single_infos': [],
-        'size': (GROW, GROW),
-        'type': 'url',
-        'url': 'parent_child_topology.py'
-    }],
-}
-
 builtin_dashboards["simple_problems"] = {
     "single_infos": [],
     "context": {},
@@ -211,6 +186,7 @@ builtin_dashboards["simple_problems"] = {
     "show_title": True,
     "title": _("Host & service problems"),
     "topic": "problems",
+    "icon": "host_svc_problems",
     "sort_index": 10,
     "description": _("A compact dashboard which lists your unhandled host and service problems."),
     "dashlets": [
@@ -325,7 +301,6 @@ builtin_dashboards["cmk_overview"] = {
     'context': {},
     'hidden': False,
     "mtime": 0,
-    'linktitle': u'Checkmk',
     'show_title': True,
     'dashlets': [{
         'background': True,
@@ -592,24 +567,15 @@ builtin_dashboards['cmk_host'] = {
             }
         },
         'position': (-1, 1),
-        'view': {
-            'layout': 'table',
-            'browser_reload': 0,
-            'datasource': 'services',
-            'num_columns': 1,
-            'column_headers': 'pergroup',
-            'options': []
-        },
         'single_infos': ['host'],
         'mustsearch': False
     }],
     'name': 'cmk_host',
-    'topic': u'Applications',
+    'topic': 'applications',
     'context': {},
     'mtime': 0,
     'owner': '',
     'hidden': True,
-    'linktitle': u'Checkmk',
     'show_title': True,
     'public': False,
     'single_infos': ['host'],

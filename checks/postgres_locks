@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.postgres import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<postgres_locks>>>
 # [databases_start]
 # postgres
@@ -72,5 +73,4 @@ check_info['postgres_locks'] = {
     "service_description": "PostgreSQL Locks %s",
     "has_perfdata": True,
     "group": "postgres_locks",
-    "includes": ["postgres.include"],
 }

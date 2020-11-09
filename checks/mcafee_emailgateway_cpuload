@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
 mcafee_emailgateway_cpuload_default_levels = (5.0, 10.0)
 
 
@@ -26,6 +28,5 @@ check_info['mcafee_emailgateway_cpuload'] = {
             '2',  # loadaverage
         ]),
     'snmp_scan_function': scan_mcafee_emailgateway,
-    'includes': ['mcafee_gateway.include', 'cpu_load.include'],
     'group': 'cpu_load',
 }

@@ -4,30 +4,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 import pytest  # type: ignore[import]
-from testlib import on_time
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
-    state,
+    State as state,
     Result,
     Metric,
 )
-from cmk.utils.type_defs import CheckPluginName
-from cmk.base.api.agent_based import value_store
+
+from cmk.base.api.agent_based.type_defs import Parameters
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
 
-NOW_SIMULATED = 581785200, "UTC"
 STRING_TABLE_STATUS = [
     ['[heute]'],
     [
         'accept_passive_host_checks', 'accept_passive_service_checks', 'average_latency_cmk',
-        'average_latency_generic', 'average_latency_real_time', 'cached_log_messages',
-        'check_external_commands', 'check_host_freshness', 'check_service_freshness', 'connections',
-        'connections_rate', 'core_pid', 'enable_event_handlers', 'enable_flap_detection',
-        'enable_notifications', 'execute_host_checks', 'execute_service_checks',
-        'external_command_buffer_max', 'external_command_buffer_slots',
-        'external_command_buffer_usage', 'external_commands', 'external_commands_rate', 'forks',
-        'forks_rate', 'has_event_handlers', 'helper_usage_cmk', 'helper_usage_generic',
+        'average_latency_fetcher', 'average_latency_generic', 'average_latency_real_time',
+        'cached_log_messages', 'check_external_commands', 'check_host_freshness',
+        'check_service_freshness', 'connections', 'connections_rate', 'core_pid',
+        'enable_event_handlers', 'enable_flap_detection', 'enable_notifications',
+        'execute_host_checks', 'execute_service_checks', 'external_command_buffer_max',
+        'external_command_buffer_slots', 'external_command_buffer_usage', 'external_commands',
+        'external_commands_rate', 'forks', 'forks_rate', 'has_event_handlers', 'helper_usage_cmk',
+        'helper_usage_fetcher', 'helper_usage_checker', 'helper_usage_generic',
         'helper_usage_real_time', 'host_checks', 'host_checks_rate', 'interval_length',
         'last_command_check', 'last_log_rotation', 'livecheck_overflows',
         'livecheck_overflows_rate', 'livechecks', 'livechecks_rate',
@@ -40,24 +41,25 @@ STRING_TABLE_STATUS = [
         'service_checks', 'service_checks_rate'
     ],
     [
-        '1', '1', '2.01088e-05', '2.23711e-06', '0', '446', '1', '1', '1', '3645', '0.0319528',
-        '6334', '1', '1', '1', '1', '1', '1', '0', '0', '49', '9.88131e-324', '0', '0', '0',
-        '0.000438272', '0.0142967', '0', '44310', '11.1626', '60', '0', '1559292801', '0', '0',
-        '3793', '0.0695533', '1', '0', '0', '0', '20', '3.45846e-323', '2019.05.31', '932',
-        '1.84655e-07', '1559732314', '6334', '0', '0', '2', '0', '0', '513', '0', '0', '1',
-        '1559719506', 'Check_MK 2019.05.31', '4709', '0.0319528', '156263', '5.85075'
+        '1', '1', '2.01088e-05', '2.01088e-05', '2.23711e-06', '0', '446', '1', '1', '1', '3645',
+        '0.0319528', '6334', '1', '1', '1', '1', '1', '1', '0', '0', '49', '9.88131e-324', '0', '0',
+        '0', '0.000438272', '0.000438272', '0.000438272', '0.0142967', '0', '44310', '11.1626',
+        '60', '0', '1559292801', '0', '0', '3793', '0.0695533', '1', '0', '0', '0', '20',
+        '3.45846e-323', '2019.05.31', '932', '1.84655e-07', '1559732314', '6334', '0', '0', '2',
+        '0', '0', '513', '0', '0', '1', '1559719506', 'Check_MK 2019.05.31', '4709', '0.0319528',
+        '156263', '5.85075'
     ], ['[oldstable]'],
     [
         'accept_passive_host_checks', 'accept_passive_service_checks', 'average_latency_cmk',
-        'average_latency_generic', 'average_latency_real_time', 'cached_log_messages',
-        'check_external_commands', 'check_host_freshness', 'check_service_freshness', 'connections',
-        'connections_rate', 'core_pid', 'enable_event_handlers', 'enable_flap_detection',
-        'enable_notifications', 'execute_host_checks', 'execute_service_checks',
-        'external_command_buffer_max', 'external_command_buffer_slots',
-        'external_command_buffer_usage', 'external_commands', 'external_commands_rate', 'forks',
-        'forks_rate', 'has_event_handlers', 'helper_usage_cmk', 'helper_usage_generic',
-        'helper_usage_real_time', 'host_checks', 'host_checks_rate', 'interval_length',
-        'last_command_check', 'last_log_rotation', 'livecheck_overflows',
+        'average_latency_fetcher', 'average_latency_generic', 'average_latency_real_time',
+        'cached_log_messages', 'check_external_commands', 'check_host_freshness',
+        'check_service_freshness', 'connections', 'connections_rate', 'core_pid',
+        'enable_event_handlers', 'enable_flap_detection', 'enable_notifications',
+        'execute_host_checks', 'execute_service_checks', 'external_command_buffer_max',
+        'external_command_buffer_slots', 'external_command_buffer_usage', 'external_commands',
+        'external_commands_rate', 'forks', 'forks_rate', 'has_event_handlers', 'helper_usage_cmk',
+        'helper_usage_generic', 'helper_usage_real_time', 'host_checks', 'host_checks_rate',
+        'interval_length', 'last_command_check', 'last_log_rotation', 'livecheck_overflows',
         'livecheck_overflows_rate', 'livechecks', 'livechecks_rate',
         'livestatus_active_connections', 'livestatus_overflows', 'livestatus_overflows_rate',
         'livestatus_queued_connections', 'livestatus_threads', 'livestatus_usage',
@@ -67,21 +69,22 @@ STRING_TABLE_STATUS = [
         'program_version', 'requests', 'requests_rate', 'service_checks', 'service_checks_rate'
     ],
     [
-        '1', '1', '0', '0', '0', '0', '1', '1', '1', '3390', '0.0319528', '3294', '1', '1', '1',
-        '1', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '60', '0',
+        '1', '1', '0', '0', '0', '0', '0', '1', '1', '1', '3390', '0.0319528', '3294', '1', '1',
+        '1', '1', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '60', '0',
         '1559562137', '0', '0', '0', '0', '1', '0', '0', '0', '20', '0', '1.4.0p38', '4',
         '9.88131e-324', '0', '3294', '0', '0', '0', '0', '0', '0', '1', '1559629930',
         'Check_MK 1.4.0p38', '3390', '0.0319528', '0', '0'
     ], ['[stable]'],
     [
         'accept_passive_host_checks', 'accept_passive_service_checks', 'average_latency_cmk',
-        'average_latency_generic', 'average_latency_real_time', 'cached_log_messages',
-        'check_external_commands', 'check_host_freshness', 'check_service_freshness', 'connections',
-        'connections_rate', 'core_pid', 'enable_event_handlers', 'enable_flap_detection',
-        'enable_notifications', 'execute_host_checks', 'execute_service_checks',
-        'external_command_buffer_max', 'external_command_buffer_slots',
-        'external_command_buffer_usage', 'external_commands', 'external_commands_rate', 'forks',
-        'forks_rate', 'has_event_handlers', 'helper_usage_cmk', 'helper_usage_generic',
+        'average_latency_fetcher', 'average_latency_generic', 'average_latency_real_time',
+        'cached_log_messages', 'check_external_commands', 'check_host_freshness',
+        'check_service_freshness', 'connections', 'connections_rate', 'core_pid',
+        'enable_event_handlers', 'enable_flap_detection', 'enable_notifications',
+        'execute_host_checks', 'execute_service_checks', 'external_command_buffer_max',
+        'external_command_buffer_slots', 'external_command_buffer_usage', 'external_commands',
+        'external_commands_rate', 'forks', 'forks_rate', 'has_event_handlers', 'helper_usage_cmk',
+        'helper_usage_fetcher', 'helper_usage_checker', 'helper_usage_generic',
         'helper_usage_real_time', 'host_checks', 'host_checks_rate', 'interval_length',
         'last_command_check', 'last_log_rotation', 'livecheck_overflows',
         'livecheck_overflows_rate', 'livechecks', 'livechecks_rate',
@@ -94,12 +97,13 @@ STRING_TABLE_STATUS = [
         'service_checks', 'service_checks_rate'
     ],
     [
-        '1', '1', '1.16922e-05', '0', '0', '152', '1', '1', '1', '109', '0.0952764', '27961', '1',
-        '1', '1', '1', '1', '1', '0', '0', '2', '9.88576e-38', '0', '0', '0', '2.51355e-07', '0',
-        '0', '5792', '10.9501', '60', '0', '1558943084', '0', '0', '52', '0.0319455', '1', '0', '0',
-        '0', '20', '7.76247e-05', '1.5.0-2019.05.27', '68', '1.34222e-06', '1559648243', '27961',
-        '0', '0', '2', '0', '0', '45', '0', '0', '1', '1559730846', 'Check_MK 1.5.0-2019.05.27',
-        '385', '0.437433', '1058', '1.11243'
+        '1', '1', '1.16922e-05', '1.16922e-05', '0', '0', '152', '1', '1', '1', '109', '0.0952764',
+        '27961', '1', '1', '1', '1', '1', '1', '0', '0', '2', '9.88576e-38', '0', '0', '0',
+        '2.51355e-07', '2.51355e-07', '2.51355e-07', '0', '0', '5792', '10.9501', '60', '0',
+        '1558943084', '0', '0', '52', '0.0319455', '1', '0', '0', '0', '20', '7.76247e-05',
+        '1.5.0-2019.05.27', '68', '1.34222e-06', '1559648243', '27961', '0', '0', '2', '0', '0',
+        '45', '0', '0', '1', '1559730846', 'Check_MK 1.5.0-2019.05.27', '385', '0.437433', '1058',
+        '1.11243'
     ]
 ]
 PARSED_STATUS = {
@@ -107,6 +111,7 @@ PARSED_STATUS = {
         'accept_passive_host_checks': '1',
         'accept_passive_service_checks': '1',
         'average_latency_cmk': '2.01088e-05',
+        'average_latency_fetcher': '2.01088e-05',
         'average_latency_generic': '2.23711e-06',
         'average_latency_real_time': '0',
         'cached_log_messages': '446',
@@ -130,6 +135,8 @@ PARSED_STATUS = {
         'forks_rate': '0',
         'has_event_handlers': '0',
         'helper_usage_cmk': '0.000438272',
+        'helper_usage_fetcher': '0.000438272',
+        'helper_usage_checker': '0.000438272',
         'helper_usage_generic': '0.0142967',
         'helper_usage_real_time': '0',
         'host_checks': '44310',
@@ -172,6 +179,7 @@ PARSED_STATUS = {
         'accept_passive_host_checks': '1',
         'accept_passive_service_checks': '1',
         'average_latency_cmk': '0',
+        'average_latency_fetcher': '0',
         'average_latency_generic': '0',
         'average_latency_real_time': '0',
         'cached_log_messages': '0',
@@ -195,6 +203,9 @@ PARSED_STATUS = {
         'forks_rate': '0',
         'has_event_handlers': '0',
         'helper_usage_cmk': '0',
+        # Simulate the host without those counters:
+        #'helper_usage_fetcher': '0',
+        #'helper_usage_checker': '0',
         'helper_usage_generic': '0',
         'helper_usage_real_time': '0',
         'host_checks': '0',
@@ -235,6 +246,7 @@ PARSED_STATUS = {
         'accept_passive_host_checks': '1',
         'accept_passive_service_checks': '1',
         'average_latency_cmk': '1.16922e-05',
+        'average_latency_fetcher': '1.16922e-05',
         'average_latency_generic': '0',
         'average_latency_real_time': '0',
         'cached_log_messages': '152',
@@ -258,6 +270,8 @@ PARSED_STATUS = {
         'forks_rate': '0',
         'has_event_handlers': '0',
         'helper_usage_cmk': '2.51355e-07',
+        'helper_usage_fetcher': '2.51355e-07',
+        'helper_usage_checker': '2.51355e-07',
         'helper_usage_generic': '0',
         'helper_usage_real_time': '0',
         'host_checks': '5792',
@@ -326,124 +340,100 @@ def test_discovery():
     ]
 
 
-@pytest.mark.parametrize("item, params", [
-    ("heute", livestatus_status.livestatus_status_default_levels),
-])
-def test_check(monkeypatch, item, params):
-    value_store_patched = {}
-    for key in [
-            "host_checks",
-            "service_checks",
-            "forks",
-            "connections",
-            "requests",
-            "log_messages",
-    ]:
-        value_store_patched["livestatus_status.%s.%s" % (item, key)] = [1, 2]
+@pytest.fixture(name="fetcher_checker_counters", scope="module")
+def fixture_fetcher_checker_counters_list():
+    return [
+        Result(state=state.OK, notice='Fetcher helper usage: 0%'),
+        Metric('helper_usage_fetcher', 0.0, levels=(40.0, 80.0)),
+        Result(state=state.OK, notice='Checker helper usage: 0%'),
+        Metric('helper_usage_checker', 0.0, levels=(40.0, 80.0)),
+    ]
 
-    monkeypatch.setattr(livestatus_status, 'get_value_store', lambda: value_store_patched)
 
-    with on_time(*NOW_SIMULATED):
-        with value_store.context(CheckPluginName("livestatus_status"), None):
+@pytest.mark.usefixtures("fetcher_checker_counters")
+def test_check_new_counters_in_oldstabe(fetcher_checker_counters):
+    yielded_results = list(
+        livestatus_status._generate_livestatus_results(
+            "oldstable",
+            Parameters(livestatus_status.livestatus_status_default_levels),
+            PARSED_STATUS,
+            PARSED_SSL,
+            {
+                "host_checks": [1, 2],
+                "service_checks": [1, 2],
+                "forks": [1, 2],
+                "connections": [1, 2],
+                "requests": [1, 2],
+                "log_messages": [1, 2],
+            },
+            581785200,
+        ))
+    assert all(x in yielded_results for x in fetcher_checker_counters)
 
-            yielded_results = list(
-                livestatus_status.check_livestatus_status(item, params, PARSED_STATUS, PARSED_SSL))
 
-            assert yielded_results == [
-                Result(state=state.OK, summary='HostChecks: 0.0/s', details='HostChecks: 0.0/s'),
-                Metric('host_checks',
-                       7.615869237677187e-05,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='ServiceChecks: 0.0/s',
-                       details='ServiceChecks: 0.0/s'),
-                Metric('service_checks',
-                       0.0002685888198403617,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='ProcessCreations: -0.0/s',
-                       details='ProcessCreations: -0.0/s'),
-                Metric('forks',
-                       -3.4376948802370615e-09,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='LivestatusConnects: 0.0/s',
-                       details='LivestatusConnects: 0.0/s'),
-                Metric('connections',
-                       6.261761224351807e-06,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='LivestatusRequests: 0.0/s',
-                       details='LivestatusRequests: 0.0/s'),
-                Metric('requests',
-                       8.090614900637924e-06,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK, summary='LogMessages: 0.0/s', details='LogMessages: 0.0/s'),
-                Metric('log_messages',
-                       1.5985281193102335e-06,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Average check latency: 0.000s',
-                       details='Average check latency: 0.000s'),
-                Metric('average_latency_generic',
-                       2.23711e-06,
-                       levels=(30.0, 60.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Average Checkmk latency: 0.000s',
-                       details='Average Checkmk latency: 0.000s'),
-                Metric('average_latency_cmk',
-                       2.01088e-05,
-                       levels=(30.0, 60.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Check helper usage: 1.43%',
-                       details='Check helper usage: 1.43%'),
-                Metric('helper_usage_generic',
-                       1.42967,
-                       levels=(60.0, 90.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Checkmk helper usage: 0.04%',
-                       details='Checkmk helper usage: 0.04%'),
-                Metric('helper_usage_cmk',
-                       0.043827200000000004,
-                       levels=(60.0, 90.0),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Livestatus usage: 0.00%',
-                       details='Livestatus usage: 0.00%'),
-                Metric('livestatus_usage', 3.46e-321, levels=(80.0, 90.0), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Livestatus overflow rate: 0.0/s',
-                       details='Livestatus overflow rate: 0.0/s'),
-                Metric('livestatus_overflows_rate',
-                       0.0,
-                       levels=(0.01, 0.02),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Monitored Hosts: 2.00',
-                       details='Monitored Hosts: 2.00'),
-                Metric('monitored_hosts', 2.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK, summary='Services: 513.00', details='Services: 513.00'),
-                Metric('monitored_services', 513.0, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='Core version: Checkmk 2019.05.31',
-                       details='Core version: Checkmk 2019.05.31'),
-                Result(state=state.OK,
-                       summary='Livestatus version: 2019.05.31',
-                       details='Livestatus version: 2019.05.31'),
-                Result(state=state.OK,
-                       summary='Site certificate validity (until 3017-10-01 08:53:08): 375948.75',
-                       details='Site certificate validity (until 3017-10-01 08:53:08): 375948.75'),
-                Metric('site_cert_days',
-                       375948.7452314815,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-            ]
+def test_check():
+
+    yielded_results = list(
+        livestatus_status._generate_livestatus_results(
+            "heute",
+            Parameters(livestatus_status.livestatus_status_default_levels),
+            PARSED_STATUS,
+            PARSED_SSL,
+            {
+                "host_checks": [1, 2],
+                "service_checks": [1, 2],
+                "forks": [1, 2],
+                "connections": [1, 2],
+                "requests": [1, 2],
+                "log_messages": [1, 2],
+            },
+            581785200,
+        ))
+
+    assert yielded_results == [
+        Result(state=state.OK, summary='Livestatus version: 2019.05.31'),
+        Result(state=state.OK, summary='Host checks: 0.0/s'),
+        Metric('host_checks', 7.615869237677187e-05),
+        Result(state=state.OK, summary='Service checks: 0.0/s'),
+        Metric('service_checks', 0.0002685888198403617),
+        Result(state=state.OK, notice='Process creations: -0.0/s'),
+        Metric('forks', -3.4376948802370615e-09),
+        Result(state=state.OK, notice='Livestatus connects: 0.0/s'),
+        Metric('connections', 6.261761224351807e-06),
+        Result(state=state.OK, notice='Livestatus requests: 0.0/s'),
+        Metric('requests', 8.090614900637924e-06),
+        Result(state=state.OK, notice='Log messages: 0.0/s'),
+        Metric('log_messages', 1.5985281193102335e-06),
+        Result(state=state.OK, notice='Average check latency: 0.000s'),
+        Metric('average_latency_generic', 2.23711e-06, levels=(30.0, 60.0)),
+        Result(state=state.OK, notice='Average Checkmk latency: 0.000s'),
+        Metric('average_latency_cmk', 2.01088e-05, levels=(30.0, 60.0)),
+        Result(state=state.OK, notice='Average fetcher latency: 0.000s'),
+        Metric('average_latency_fetcher', 2.01088e-05, levels=(30.0, 60.0)),
+        Result(state=state.OK, notice='Check helper usage: 1.4%'),
+        Metric('helper_usage_generic', 1.42967, levels=(60.0, 90.0)),
+        Result(state=state.OK, notice='Checkmk helper usage: 0.044%'),
+        Metric('helper_usage_cmk', 0.043827200000000004, levels=(60.0, 90.0)),
+        Result(state=state.OK, notice='Fetcher helper usage: 0.044%'),
+        Metric('helper_usage_fetcher', 0.043827200000000004, levels=(40.0, 80.0)),
+        Result(state=state.OK, notice='Checker helper usage: 0.044%'),
+        Metric('helper_usage_checker', 0.043827200000000004, levels=(40.0, 80.0)),
+        Result(state=state.OK, notice='Livestatus usage: 0.000000000000%'),
+        Metric('livestatus_usage', 3.46e-321, levels=(80.0, 90.0)),
+        Result(state=state.OK, notice='Livestatus overflow rate: 0.0/s'),
+        Metric('livestatus_overflows_rate', 0.0, levels=(0.01, 0.02)),
+        Result(state=state.OK, notice='Hosts: 2.00'),
+        Metric('monitored_hosts', 2.0),
+        Result(state=state.OK, notice='Services: 513.00'),
+        Metric('monitored_services', 513.0),
+        Result(state=state.OK, notice='Core version: Checkmk 2019.05.31'),
+        Result(
+            state=state.OK,
+            notice='Site certificate valid until Oct 01 3017',
+        ),
+        Result(
+            state=state.OK,
+            notice='Expiring in: 1029 years 363 days',
+        ),
+        Metric('site_cert_days', 375948.7452314815),
+    ]

@@ -1,70 +1,34 @@
-title: LANCOM Devices: Network Interfaces via Standard MIB Using 64 Bit Counters
+title: LANCOM Devices: Network Interfaces via Standard MIB Using 64-Bit Counters
 agents: snmp
 catalog: hw/network/lancom
 license: GPL
 distribution: check_mk
 description:
- This check does exactly the same as {if64} but retrieves {ifName} instead
- of {ifDescr}, because {ifDescr} is not useful in LANCOM devices.
-
- It uses 64 bit counters from the {IF-MIB} below {.1.3.6.1.2.1.31.1.1.1}. This allows to correctly
- monitor switch ports with a traffic of more then 2GB per check interval.
-
- Also this check can use {ifAlias} instead if {ifDescr} for retrieving
- the admin-configured interface description. This is e.g. useful for HP ProCurve
- switches which do not show that aliasses in {ifDescr}.
-
- {Note}: This check needs SNMP v2c and thus only works, if you hosts are
- added to {bulkwalk_hosts}.
-
- Depending on the check paramters this check can go WARN or CRIT when the
- port status changes (i.e. is down), when the link speed changes (e.g. a
- port expected to be set to 1GBit/s operates only at 100MBit/s), when the
- absolute or procentual traffic of a port exceeds certain levels or if the
- rate of errors or discards exceeds configurable limits.
-
- As of Checkmk version 1.1.9i1 this check supports averaging the in- and
- outgoing traffic over a configurable range of time by using an exponentially
- weighted moving average - just as Linux does for the CPU load averages.
- The averaging can be configured on a per host and per port base. This is
- done by adding a key {"average"} to the parameter dictionary with the number
- of minutes that the average should cover as its key. Port with averaging
- turned on output two additional performance values: the averaged traffic
- in bytes. If you have configured traffic levels, then those levels are
- applied to the averaged values.
+ This check does exactly the same as {if64} but retrieves {ifName} instead of {ifDescr},
+ because {ifDescr} is not useful for LANCOM devices. Please refer to the if64 manpage
+ for documentation.
 
 item:
- There are three allowed ways to specify a port: {1}: the last component of
- the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
- the port. If you are using the alias, you have to make sure that it is unique
- by configuring useful aliases in the switch. Checkmk does not check for uniqueness.
+ There are three allowed ways to specify an interface: its index {ifIndex}, its
+ description, which is taken from {ifName}, and its alias {ifAlias}.
 
 inventory:
- One service is created for each for each port that fulfills configurable conditions.
- Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
- {32} (frameRelay) or {117} (gigabitEthernet).
+ One service is created for each interface that fulfills configurable conditions
+ (rule "Network interface and switch port discovery").
+ By default, these are interfaces which are currently found {up} and are of type 6, 32,
+ 62, 117, 127, 128, 129, 180, 181, 182, 205 or 229.
 
- {Grouping:} In some situations you do not want to monitor a single
+ {Grouping:} In some situations, you do not want to monitor a single
  interface but a group of interfaces that together form a pool.
- The {if} check supports such pools by defining groups.
- You can specifiy the members of a group by their port type and the item name(s) of
- the single interfaces. The data of all members is accumulated and put together
- in a single grouped interface service.
+ This check supports such pools by defining groups. The data of all members is
+ accumulated and put together in a single grouped interface service.
 
- You can specify the groups with the ruleset {if_groups}.
- Groups are defined as list of dictionaries.
-
- The keys are:
-
-  {"name"}:   String. Name of the group within the service description
-
-  {"iftype"}: Integer. Interface port type as integer
-
-  {"include_items"}: List of Strings. Interface item name. This name depends
-  on further settings like if_inventory_uses_alias or if_inventory_uses_description
-
-  {"single"}(optional): Bool. Interfaces in this group do not show up
-  as single service if "single" is set to True (Default: False)
-
-  For example: if_groups = ([{"name" : "Group WLAN", "iftype" : 6, "single" : True}], ["lan"], ALL_HOSTS )
-
+cluster:
+ In the case where single (ungrouped) interfaces are clustered, the corresponding
+ services report only the results from the node with the highest outgoing traffic,
+ since this node is likely the active node.
+ In the case where interface groups are clustered, the grouping is applied across
+ all nodes, potentially combining interfaces from different nodes. Note that the
+ rules defining the interface groups must be configured to apply to the nodes, not
+ to the cluster host (the latter has no effect). In case the grouping configurations
+ vary across the nodes, the last node wins.

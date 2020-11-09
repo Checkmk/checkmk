@@ -24,7 +24,7 @@ mkdir /etc/check_mk /usr/lib/check_mk_agent /usr/lib/check_mk_agent/local /usr/l
 In most setups, the agent is called via inetd. To setup inetd for check_mk on AIX,
 start by adding the TCP service name to /etc/services:
 edit it and add the following entry:
-check_mk        6556/tcp    # Check_MK monitoring agent
+check_mk        6556/tcp    # Checkmk monitoring agent
 
 
 # Access security

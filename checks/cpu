@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Output is taken from /proc/loadavg plus the number of cores:
 # 0.26 0.47 0.52 2/459 19531 4
 
@@ -37,7 +38,6 @@ check_info["cpu.loads"] = {
     "service_description": "CPU load",
     "has_perfdata": True,
     "group": "cpu_load",
-    "includes": ["cpu_load.include"],
     "handle_real_time_checks": True,
 }
 

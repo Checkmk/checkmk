@@ -6,7 +6,6 @@
 
 import os
 import io
-from typing import Iterable
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 
@@ -27,19 +26,16 @@ from cmk.gui.valuespec import (
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
     make_simple_form_page_menu,
 )
 
-from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
-    wato_confirm,
     make_action_link,
+    make_confirm_link,
+    redirect,
 )
 
 
@@ -57,38 +53,13 @@ class ModeIcons(WatoMode):
         return _("Custom icons")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(breadcrumb,
                                           form_name="upload_form",
                                           button_name="_do_upload",
-                                          save_title=_("Upload"),
-                                          add_abort_link=False)
-
-        menu.dropdowns.insert(
-            1,
-            PageMenuDropdown(
-                name="related",
-                title=_("Related"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Setup"),
-                        entries=list(self._page_menu_entries_related()),
-                    ),
-                ],
-            ))
-
-        return menu
-
-    def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
-        yield PageMenuEntry(
-            title=_("User interface rulesets"),
-            icon_name="rulesets",
-            item=make_simple_link(
-                html.makeuri_contextless([("mode", "rulesets"), ("group", "user_interface")],
-                                         filename="wato.py")),
-        )
+                                          save_title=_("Upload"))
 
     def _load_custom_icons(self):
-        s = IconSelector()
+        s = IconSelector(show_builtin_icons=False, with_emblem=False)
         return s.available_icons(only_local=True)
 
     def _vs_upload(self):
@@ -124,29 +95,22 @@ class ModeIcons(WatoMode):
                   'choose another name for your icon.'))
 
     def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(self.mode_url())
+
         if html.request.has_var("_delete"):
             icon_name = html.request.var("_delete")
             if icon_name in self._load_custom_icons():
-                c = wato_confirm(_("Confirm Icon deletion"),
-                                 _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
-                if c:
-                    os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
-                              (cmk.utils.paths.omd_root, icon_name))
-                elif c is False:
-                    return ""
-                else:
-                    return None
+                os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
+                          (cmk.utils.paths.omd_root, icon_name))
 
         elif html.request.has_var("_do_upload"):
-            if not html.check_transaction():
-                return None
-
             vs_upload = self._vs_upload()
             icon_info = vs_upload.from_html_vars('_upload_icon')
             vs_upload.validate_value(icon_info, '_upload_icon')
             self._upload_icon(icon_info)
 
-        return None
+        return redirect(self.mode_url())
 
     def _upload_icon(self, icon_info):
         # Add the icon category to the PNG comment
@@ -169,7 +133,12 @@ class ModeIcons(WatoMode):
 
     def page(self) -> None:
         html.h3(_("Upload Icon"))
-        html.p(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
+        html.p(
+            _("Here you can add icons, for example to use them in bookmarks or "
+              "in custom actions of views. Allowed are single PNG image files "
+              "with a maximum size of 80x80 px. Custom actions have to be defined "
+              "in the global settings and can be used in the custom icons rules "
+              "of hosts and services."))
 
         html.begin_form('upload_form', method='POST')
         self._vs_upload().render_input('_upload_icon', None)
@@ -182,7 +151,10 @@ class ModeIcons(WatoMode):
                 table.row()
 
                 table.cell(_("Actions"), css="buttons")
-                delete_url = make_action_link([("mode", "icons"), ("_delete", icon_name)])
+                delete_url = make_confirm_link(
+                    url=make_action_link([("mode", "icons"), ("_delete", icon_name)]),
+                    message=_("Do you really want to delete the icon <b>%s</b>?") % icon_name,
+                )
                 html.icon_button(delete_url, _("Delete this Icon"), "delete")
 
                 table.cell(_("Icon"), html.render_icon(icon_name), css="buttons")

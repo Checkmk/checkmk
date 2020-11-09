@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.akcp_sensor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example for contents of info
 #   description     degree  unit status low_crit low_warn high_warn  high_crit degreeraw online
 # ["HGS-RZ1TEMP-TH1", "22", "1",   "2",   "18",   "20",    "25",      "28",      "",     "1"]
@@ -32,5 +34,4 @@ check_info["akcp_sensor_temp"] = {
             5,  # SPAGENT-MIB::sensorProbeTempOnline
         ]),
     "group": "temperature",
-    "includes": ["temperature.include", "akcp_sensor.include"],
 }

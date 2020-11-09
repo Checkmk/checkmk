@@ -43,7 +43,6 @@ def test_dashlet_registry_plugins():
         'hoststats',
         'notify_failed_notifications',
         'mk_logo',
-        'network_topology',
         'servicestats',
         'url',
         'overview',
@@ -71,7 +70,6 @@ def _expected_intervals():
     expected = [
         ('hoststats', 60),
         ('mk_logo', False),
-        ('network_topology', False),
         ('nodata', False),
         ('notify_failed_notifications', 60),
         ('notify_users', False),
@@ -103,6 +101,12 @@ def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_re
     }
     if dashlet_type.has_context():
         dashlet_spec["context"] = {}
+    if type_name in ["pnpgraph", "custom_graph"]:
+        monkeypatch.setattr(dashlet_type, "graph_identification", lambda s: ("template", {}))
+        monkeypatch.setattr("cmk.gui.plugins.metrics.html_render.resolve_graph_recipe",
+                            lambda g, d: [{
+                                "title": '1'
+                            }])
 
     monkeypatch.setattr(dashboard.Dashlet, "_get_context", lambda s: {})
 

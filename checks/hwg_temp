@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hwg import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 check_info['hwg_temp'] = {
     'parse_function': parse_hwg,
     "check_function": check_hwg_temp,
@@ -22,6 +24,5 @@ check_info['hwg_temp'] = {
         ]),
     "snmp_scan_function": lambda oid: "hwg" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group": "temperature",
-    "includes": ["temperature.include", "hwg.include"],
     "default_levels_variable": "hwg_temp_defaultlevels"
 }

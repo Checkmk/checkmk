@@ -17,6 +17,7 @@
 #include "cvt.h"
 #include "logger.h"
 #include "tools/_raii.h"
+#include "tools/_win.h"
 #include "tools/_xlog.h"
 #include "upgrade.h"
 
@@ -288,7 +289,7 @@ bool CheckAllFilesWritable(const std::string &Directory) {
                                    OPEN_EXISTING,
                                    FILE_ATTRIBUTE_NORMAL,  // normal file
                                    nullptr);
-        if (handle != nullptr && handle != INVALID_HANDLE_VALUE) {
+        if (wtools::IsGoodHandle(handle)) {
             ::CloseHandle(handle);
         } else {
             XLOG::d("file '{}' is not writable, error {}", path.u8string(),

@@ -32,8 +32,8 @@
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnCumulateSessions.0 = Counter32: 0 Sessions
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnPeakConcurrentSessions.0 = Gauge32: 0 Sessions
 
-from typing import Dict
-from .agent_based_api.v0 import (
+from typing import Dict, List
+from .agent_based_api.v1 import (
     any_of,
     contains,
     register,
@@ -45,7 +45,8 @@ SESSION_TYPES = ['IPsec RA', 'IPsec L2L', 'AnyConnect SVC', 'WebVPN']
 METRICS_PER_SESSION_TYPE = ['active_sessions', 'cumulative_sessions', 'peak_sessions']
 
 
-def parse_cisco_vpn_sessions(string_table: type_defs.SNMPStringTable) -> Dict[str, Dict[str, int]]:
+def parse_cisco_vpn_sessions(
+        string_table: List[type_defs.StringTable]) -> Dict[str, Dict[str, int]]:
 
     raw_data = string_table[0][0]
     parsed = {}
@@ -87,7 +88,7 @@ register.snmp_section(
         contains('.1.3.6.1.2.1.1.1.0', 'cisco adaptive security'),
         contains('.1.3.6.1.2.1.1.1.0', 'cisco firepower threat defense'),
     ),
-    trees=[
+    fetch=[
         SNMPTree(
             base='.1.3.6.1.4.1.9.9.392.1',
             oids=[

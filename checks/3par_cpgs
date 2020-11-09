@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def count_3par_vvs(line):
     return line['numFPVVs'] + line['numTDVVs'] + line['numTPVVs']
@@ -33,7 +37,6 @@ check_info['3par_cpgs'] = {
     'inventory_function': inventory_3par_cpgs,
     'check_function': check_3par_cpgs,
     'service_description': "CPG %s",
-    'includes': ["3par.include", "size_trend.include", "df.include"]
 }
 
 

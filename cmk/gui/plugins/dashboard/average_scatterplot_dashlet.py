@@ -4,27 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from typing import Dict, Optional, Tuple, List
+import numpy as np  # type: ignore[import]
 
 from cmk.utils.render import date_and_time
 
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
-    CascadingDropdown,
     Dictionary,
-    TextUnicode,
     Timerange,
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.utils import site_query
-from cmk.gui.plugins.metrics.stats import percentile
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns, merge_multicol
-from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 import cmk.gui.metrics as metrics
 
@@ -32,21 +27,23 @@ import cmk.gui.metrics as metrics
 class AverageScatterplotDataGenerator(ABCDataGenerator):
     """Data generator for a scatterplot with average lines"""
     @classmethod
-    def figure_title(cls, properties, context):
-        title_config = properties["figure_title"]
-        if title_config == "show":
-            return cls.default_figure_title(properties, context)
-        if title_config == "hide":
-            return ""
-        if isinstance(title_config, tuple) and title_config[0] == "custom" and isinstance(
-                title_config[1], str):
-            return title_config[1]
-        raise MKUserError("figure_title",
-                          _("Invalid bar chart title config \"%r\" given" % (title_config,)))
+    def figure_title(cls, properties, context, settings) -> str:
+        title: List[str] = []
+        if settings.get("show_title", False):
+            if settings.get("title") and "plain" in settings.get("title_format", []):
+                title.append(settings.get("title"))
+            if "add_host_name" in settings.get("title_format", []):
+                if "hostregex" in context:
+                    hostregex = context["hostregex"].get("host_regex", "")
+                    neg_regex = context["hostregex"].get("neg_host_regex")
+                    host_title = ("not " if neg_regex else "") + hostregex
+                    title.append(host_title)
+            if "add_service_description" in settings.get("title_format", []):
+                service = context.get("service")
+                if service:
+                    title.append(service)
 
-    @classmethod
-    def default_figure_title(cls, properties, context):
-        return _("Average scatterplot for %s") % cls._get_metric_name(properties, context)
+        return " / ".join(txt for txt in title)
 
     @classmethod
     def _get_metric_name(cls, properties, context):
@@ -54,30 +51,17 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         return metric["title"] if metric else properties["metric"]
 
     @classmethod
-    def _scatterplot_vs_components(cls):
-        return [
-            ("time_range", Timerange(
-                title=_("Time range"),
-                default_value='d0',
-            )),
-            ("figure_title",
-             CascadingDropdown(title=_("Average scatterplot title"),
-                               orientation="horizontal",
-                               choices=[
-                                   ("show", _("Show default title")),
-                                   ("hide", _("Hide title")),
-                                   ("custom", _("Set a custom title:"),
-                                    TextUnicode(default_value="")),
-                               ],
-                               default_value="show")),
-        ]
-
-    @classmethod
     def vs_parameters(cls):
         return Dictionary(title=_("Properties"),
                           render="form",
                           optional_keys=[],
-                          elements=cls._scatterplot_vs_components() + [("metric", MetricName())])
+                          elements=[
+                              ("metric", MetricName()),
+                              ("time_range", Timerange(
+                                  title=_("Time range"),
+                                  default_value='d0',
+                              )),
+                          ])
 
     @classmethod
     def int_time_range_from_rangespec(cls, rangespec):
@@ -103,10 +87,10 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         return cmc_cols + metric_colums
 
     @classmethod
-    def _create_scatterplot_config(cls, elements, properties, context):
+    def _create_scatterplot_config(cls, elements, properties, context, settings):
         metric_name = cls._get_metric_name(properties, context)
         return {
-            "title": cls.figure_title(properties, context),
+            "title": cls.figure_title(properties, context, settings),
             "plot_definitions": [{
                 "plot_type": "scatterplot",
                 "css_classes": ["scatterdot"],
@@ -130,9 +114,9 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         }
 
     @classmethod
-    def generate_response_data(cls, properties, context):
+    def generate_response_data(cls, properties, context, settings):
         elements = cls._create_plot_elements(properties, context)
-        return cls._create_scatterplot_config(elements, properties, context)
+        return cls._create_scatterplot_config(elements, properties, context, settings)
 
     @classmethod
     def _create_plot_elements(cls, properties, context):
@@ -179,7 +163,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
             values_per_timestamp.setdefault(elem["timestamp"],
                                             {}).update({elem["label"]: elem["value"]})
         for ts, value_dict in values_per_timestamp.items():
-            median_value = cls._get_median_value(value_dict.values())
+            median_value = cls._get_median_value(list(value_dict.values()))
             mean_value = sum(value_dict.values()) / len(value_dict.values())
             yield {
                 "timestamp": ts,
@@ -217,10 +201,9 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
 
     @classmethod
     def _get_median_value(cls, values):
-        if isinstance(values, dict):
-            values = [v for v in values.values() if v]
+        values = list(filter(None, values))
         if values:
-            return percentile(values, 50)
+            return np.percentile(values, 50, interpolation='midpoint')
         return None
 
 
@@ -244,32 +227,7 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
         return AverageScatterplotDataGenerator
 
     def show(self):
-        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
-        html.div("", id_=div_id)
-
-        fetch_url = "ajax_average_scatterplot_data.py"
-        args: HTTPVariables = []
-        args.append(("context", json.dumps(self._dashlet_spec["context"])))
-        args.append(
-            ("properties", json.dumps(self.vs_parameters().value_to_json(self._dashlet_spec))))
-        body = html.urlencode_vars(args)
-
-        html.javascript(
-            """
-            let average_scatterplot_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("average_scatterplot");
-            let %(instance_name)s = new average_scatterplot_class_%(dashlet_id)d(%(div_selector)s);
-            %(instance_name)s.initialize();
-            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
-            %(instance_name)s.scheduler.set_update_interval(%(update)d);
-            %(instance_name)s.scheduler.enable();
-            """ % {
-                "dashlet_id": self._dashlet_id,
-                "instance_name": self.instance_name,
-                "div_selector": json.dumps("#%s" % div_id),
-                "url": json.dumps(fetch_url),
-                "body": json.dumps(body),
-                "update": 300,
-            })
+        self.js_dashlet("ajax_average_scatterplot_data.py")
 
 
 @page_registry.register_page("ajax_average_scatterplot_data")

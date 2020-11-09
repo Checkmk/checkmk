@@ -9,8 +9,8 @@ from typing import Dict
 import pytest  # type: ignore[import]
 
 import cmk.base.plugins.agent_based.local as local
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Result, state, Metric
-from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import Parameters
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 
 
 @pytest.mark.parametrize(
@@ -265,14 +265,14 @@ def test_cluster():
     best = local.cluster_check_local("item", Parameters({"outcome_on_cluster": "best"}), section)
 
     assert list(worst) == [
-        Result(state=state.CRIT, summary="[node2]: Service is CRIT"),
-        Result(state=state.OK, details="[node0]: Service is OK"),
-        Result(state=state.WARN, details="[node1]: Service is WARN(!)"),
+        Result(state=state.CRIT, notice="[node2]: Service is CRIT"),
+        Result(state=state.OK, notice="[node0]: Service is OK"),
+        Result(state=state.WARN, notice="[node1]: Service is WARN(!)"),
     ]
     assert list(best) == [
         Result(state=state.OK, summary="[node0]: Service is OK"),
-        Result(state=state.OK, details="[node1]: Service is WARN(!)"),
-        Result(state=state.OK, details="[node2]: Service is CRIT(!!)"),
+        Result(state=state.OK, notice="[node1]: Service is WARN(!)"),
+        Result(state=state.OK, notice="[node2]: Service is CRIT(!!)"),
     ]
 
 

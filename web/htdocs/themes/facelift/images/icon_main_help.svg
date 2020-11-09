@@ -1,15 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="19px" height="19px" viewBox="0 0 19 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
-    <title>Shape</title>
-    <desc>Created with Sketch.</desc>
-    <g id="design" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="bar_left_actions" transform="translate(-317.000000, -21.000000)" fill="#505862" fill-rule="nonzero">
-            <g id="Sidebar" transform="translate(63.000000, 0.000000)">
-                <g id="Links" transform="translate(27.000000, 20.000000)">
-                    <path d="M242.73272,3.69928 C240.992012,1.958644 238.67768,1 236.216,1 C233.75432,1 231.439988,1.958644 229.69928,3.69928 C227.958644,5.439988 227,7.75432 227,10.216 C227,12.67768 227.958644,14.992012 229.69928,16.73272 C231.439988,18.473356 233.75432,19.432 236.216,19.432 C238.67768,19.432 240.992012,18.473356 242.73272,16.73272 C244.473356,14.992012 245.432,12.67768 245.432,10.216 C245.432,7.75432 244.473356,5.439988 242.73272,3.69928 Z M236.216,3.52 C237.307772,3.52 238.196,4.408228 238.196,5.5 C238.196,6.591772 237.307772,7.48 236.216,7.48 C235.124228,7.48 234.236,6.591772 234.236,5.5 C234.236,4.408228 235.124228,3.52 236.216,3.52 Z M238.736,16.12 L233.696,16.12 L233.696,15.04 L234.776,15.04 L234.776,9.64 L233.696,9.64 L233.696,8.56 L237.656,8.56 L237.656,15.04 L238.736,15.04 L238.736,16.12 Z" id="Shape"></path>
-                </g>
-            </g>
-        </g>
-    </g>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 24.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 18 18" style="enable-background:new 0 0 18 18;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#F7F7F7;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Symbols">
+	<g id="Navbar" transform="translate(-15.000000, -566.000000)">
+		<path id="Shape" class="st0" d="M30.4,568.6c-1.7-1.7-4-2.6-6.4-2.6s-4.7,0.9-6.4,2.6c-1.7,1.7-2.6,4-2.6,6.4s0.9,4.7,2.6,6.4
+			c1.7,1.7,4,2.6,6.4,2.6s4.7-0.9,6.4-2.6c1.7-1.7,2.6-4,2.6-6.4S32.1,570.3,30.4,568.6z M24,568.5c1.1,0,1.9,0.9,1.9,1.9
+			s-0.9,1.9-1.9,1.9s-1.9-0.9-1.9-1.9S22.9,568.5,24,568.5z M26.5,580.8h-4.9v-1.1h1.1v-5.3h-1.1v-1.1h3.9v6.3h1.1V580.8z"/>
+	</g>
+</g>
 </svg>

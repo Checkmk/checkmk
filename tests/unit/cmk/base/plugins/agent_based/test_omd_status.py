@@ -11,7 +11,7 @@ from cmk.base.plugins.agent_based.omd_status import (
     check_omd_status,
     cluster_check_omd_status,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Result, state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [

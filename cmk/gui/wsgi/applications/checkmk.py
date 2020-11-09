@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Callable
 import functools
 import http.client as http_client
-import os
 import traceback
 
 import livestatus
@@ -30,39 +30,45 @@ from cmk.gui.globals import html, request, RequestContext, AppContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.utils.urls import makeuri
+from cmk.gui.http import Response
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
 
 
-def _auth(func):
+def _auth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     # Ensure the user is authenticated. This call is wrapping all the different
-    # authentication modes the Check_MK GUI supports and initializes the logged
+    # authentication modes the Checkmk GUI supports and initializes the logged
     # in user objects.
     @functools.wraps(func)
     def _call_auth():
-        if not login.authenticate(request):
-            return _handle_not_authenticated()
+        with login.authenticate(request) as authenticated:
+            if not authenticated:
+                return _handle_not_authenticated()
 
-        # This may raise an exception with error messages, which will then be displayed to the user.
-        _ensure_general_access()
+            # This may raise an exception with error messages, which will then be displayed to the user.
+            _ensure_general_access()
 
-        # Initialize the multisite cmk.gui.i18n. This will be replaced by
-        # language settings stored in the user profile after the user
-        # has been initialized
-        _localize_request()
+            # Initialize the multisite cmk.gui.i18n. This will be replaced by
+            # language settings stored in the user profile after the user
+            # has been initialized
+            _localize_request()
 
-        # Update the UI theme with the attribute configured by the user
-        html.set_theme(config.user.get_attribute("ui_theme"))
+            # Update the UI theme with the attribute configured by the user.
+            # Returns None on first load
+            assert config.user.id is not None
+            theme = cmk.gui.userdb.load_custom_attr(config.user.id, 'ui_theme', lambda x: x)
+            html.set_theme(theme)
 
-        func()
+            func()
 
-        return html.response
+            return html.response
 
     return _call_auth
 
 
-def _noauth(func):
+def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     #
     # We don't have to set up anything because we assume this is only used for special calls. We
     # however have to make sure all errors get written out in plaintext, without HTML.
@@ -78,7 +84,7 @@ def _noauth(func):
         try:
             func()
         except Exception as e:
-            html.write_text("%s" % e)
+            html.write_text(str(e))
             if config.debug:
                 html.write_text(traceback.format_exc())
 
@@ -87,7 +93,7 @@ def _noauth(func):
     return _call_noauth
 
 
-def get_and_wrap_page(script_name):
+def get_and_wrap_page(script_name: str) -> Callable[[], Response]:
     """Get the page handler and wrap authentication logic when needed.
 
     For all "noauth" page handlers the wrapping part is skipped. In the `_auth` wrapper
@@ -109,29 +115,19 @@ def get_and_wrap_page(script_name):
     return _auth(_handler)
 
 
-def _plain_error():
+def _plain_error() -> bool:
     """Webservice functions may decide to get a normal result code
     but a text with an error message in case of an error"""
     return html.request.has_var("_plain_error") or html.myfile == "webapi"
 
 
-def _profiling_enabled():
-    if config.profile is False:
-        return False  # Not enabled
-
-    if config.profile == "enable_by_var" and not html.request.has_var("_profile"):
-        return False  # Not enabled by HTTP variable
-
-    return True
-
-
-def _fail_silently():
+def _fail_silently() -> bool:
     """Ajax-Functions want no HTML output in case of an error but
     just a plain server result code of 500"""
     return html.request.has_var("_ajaxid")
 
 
-def _page_not_found():
+def _page_not_found() -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
     if html.request.has_var("_plain_error"):
@@ -156,7 +152,7 @@ def _page_not_found():
     return html.response
 
 
-def _ensure_general_access():
+def _ensure_general_access() -> None:
     if config.user.may("general.use"):
         return
 
@@ -183,7 +179,7 @@ def _ensure_general_access():
     raise MKAuthException(" ".join(reason))
 
 
-def _handle_not_authenticated():
+def _handle_not_authenticated() -> Response:
     if _fail_silently():
         # While api call don't show the login dialog
         raise MKUnauthenticatedException(_('You are not authenticated.'))
@@ -193,7 +189,7 @@ def _handle_not_authenticated():
     # or "dashboard.py". This results in strange problems.
     if html.myfile != 'login':
         raise HTTPRedirect('%scheck_mk/login.py?_origtarget=%s' %
-                           (config.url_prefix(), html.urlencode(html.makeuri([]))))
+                           (config.url_prefix(), html.urlencode(makeuri(request, []))))
     # This either displays the login page or validates the information submitted
     # to the login form. After successful login a http redirect to the originally
     # requested page is performed.
@@ -204,7 +200,7 @@ def _handle_not_authenticated():
     return html.response
 
 
-def _load_all_plugins():
+def _load_all_plugins() -> None:
     # Optimization: in case of the graph ajax call only check the metrics module. This
     # improves the performance for these requests.
     # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
@@ -213,7 +209,7 @@ def _load_all_plugins():
     modules.load_all_plugins(only_modules=only_modules)
 
 
-def _localize_request():
+def _localize_request() -> None:
     previous_language = cmk.gui.i18n.get_current_language()
     user_language = html.request.get_ascii_input("lang", config.user.language)
 
@@ -227,7 +223,7 @@ def _localize_request():
         _load_all_plugins()
 
 
-def _render_exception(e, title=""):
+def _render_exception(e: Exception, title: str = "") -> Response:
     if title:
         title = "%s: " % title
 
@@ -237,30 +233,14 @@ def _render_exception(e, title=""):
 
     elif not _fail_silently():
         html.header(title, Breadcrumb())
-        html.show_error(e)
+        html.show_error(str(e))
         html.footer()
 
     return html.response
 
 
-def profiling_middleware(func):
-    """Wrap an WSGI app in a profiling context manager"""
-    def profiler(environ, start_response):
-        with cmk.utils.profile.Profile(
-                enabled=_profiling_enabled(),
-                profile_file=os.path.join(cmk.utils.paths.var_dir, "multisite.profile"),
-        ):
-            return func(environ, start_response)
-
-    return profiler
-
-
 class CheckmkApp:
     """The Check_MK GUI WSGI entry point"""
-    def __init__(self):
-        # TODO: Just inline profiling_middleware, getting rid of this useless meta-Kung-Fu.
-        self.wsgi_app = profiling_middleware(self._wsgi_app)
-
     def __call__(self, environ, start_response):
         req = http.Request(environ)
         with AppContext(self), RequestContext(req=req, html_obj=htmllib.html(req)):
@@ -268,15 +248,14 @@ class CheckmkApp:
             html.init_modes()
             return self.wsgi_app(environ, start_response)
 
-    def _wsgi_app(self, environ, start_response):
+    def wsgi_app(self, environ, start_response):
         """Is called by the WSGI server to serve the current page"""
         with cmk.utils.store.cleanup_locks():
             return _process_request(environ, start_response)
 
 
-def _process_request(environ, start_response):  # pylint: disable=too-many-branches
+def _process_request(environ, start_response) -> Response:  # pylint: disable=too-many-branches
     try:
-        config.initialize()
         html.init_modes()
 
         # Make sure all plugins are available as early as possible. At least
@@ -298,7 +277,6 @@ def _process_request(environ, start_response):  # pylint: disable=too-many-branc
         response.headers["Location"] = e.url
 
     except FinalizeRequest as e:
-        # This doesn't seem to serve much purpose anymore.
         # TODO: Remove all FinalizeRequest exceptions from all pages and replace it with a `return`.
         #       It may be necessary to rewire the control-flow a bit as this exception could have
         #       been used to short-circuit some code and jump directly to the response. This
@@ -332,7 +310,8 @@ def _process_request(environ, start_response):  # pylint: disable=too-many-branc
         logger.error("MKGeneralException: %s", e)
 
     except Exception:
-        crash_reporting.handle_exception_as_gui_crash_report(_plain_error(), _fail_silently())
+        crash_reporting.handle_exception_as_gui_crash_report(plain_error=_plain_error(),
+                                                             fail_silently=_fail_silently())
         # This needs to be cleaned up.
         response = html.response
 

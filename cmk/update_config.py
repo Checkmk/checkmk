@@ -16,6 +16,7 @@ import errno
 from typing import List, Tuple, Any, Dict, Set
 import argparse
 import logging
+import copy
 
 from werkzeug.test import create_environ
 
@@ -25,8 +26,9 @@ from werkzeug.test import create_environ
 # with it.
 import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-import cmk.base.check_api
+import cmk.base.check_api  # pylint: disable=cmk-module-layer-violation
 from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based import register  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
@@ -35,26 +37,32 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 import cmk.utils
 from cmk.utils.type_defs import CheckPluginName, UserId
-import cmk.utils.packaging as packaging
+from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
+from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.visuals as visuals
-from cmk.gui.plugins.views.utils import get_all_views
-from cmk.gui.plugins.dashboard.utils import get_all_dashboards
+import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.dashboard.utils import builtin_dashboards, get_all_dashboards, transform_topology_dashlet  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.watolib.search  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.userdb import load_users, save_users  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.htmllib as htmllib  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.globals import AppContext, RequestContext  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
 
-import cmk.update_rrd_fs_names
+import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
 
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
+    CheckPluginName("snmp_uptime"): CheckPluginName("uptime"),
     CheckPluginName("ps_perf"): CheckPluginName("ps"),
     CheckPluginName("aix_memory"): CheckPluginName("mem_used"),
     CheckPluginName("docker_container_mem"): CheckPluginName("mem_used"),
@@ -62,6 +70,22 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("solaris_mem"): CheckPluginName("mem_used"),
     CheckPluginName("statgrab_mem"): CheckPluginName("mem_used"),
     CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem_asa"),
+    CheckPluginName("if64adm"): CheckPluginName("if64"),
+    CheckPluginName("winperf_tcp_conn"): CheckPluginName("tcp_conn_stats"),
+    CheckPluginName("datapower_tcp"): CheckPluginName("tcp_conn_stats"),
+}
+
+# List[(old_config_name, new_config_name, replacement_dict{old: new})]
+REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [
+    ("use_inline_snmp", "snmp_backend_default", {
+        True: "inline",
+        False: "classic"
+    }),
+    ("config", "notification_spooler_config", {}),
+]
+
+REMOVED_WATO_RULESETS_MAP = {
+    "non_inline_snmp_hosts": "snmp_backend_hosts",
 }
 
 
@@ -95,8 +119,7 @@ class UpdateConfig:
         # should really be cleaned up.
         this_html.disable_request_timeout()
 
-        with AppContext(DummyApplication(environ, None)), \
-                RequestContext(this_html):
+        with AppContext(DummyApplication(environ, None)), RequestContext(this_html):
             self._initialize_gui_environment()
 
             self._logger.log(VERBOSE, "Updating Checkmk configuration...")
@@ -105,12 +128,16 @@ class UpdateConfig:
                 try:
                     step_func()
                 except Exception:
-                    self._logger.log(VERBOSE, " + \"%s\" failed" % title, exc_info=True)
+                    self._logger.error(" + \"%s\" failed" % title, exc_info=True)
+                    if self._arguments.debug:
+                        raise
 
         self._logger.log(VERBOSE, "Done")
 
     def _steps(self):
         return [
+            (self._migrate_topology_dashlet, "Migrate deprecated network topology dashlet"),
+            (self._rewrite_removed_global_settings, "Rewriting removed global settings"),
             (self._rewrite_wato_tag_config, "Rewriting WATO tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting WATO hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting WATO rulesets"),
@@ -118,10 +145,13 @@ class UpdateConfig:
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
-            (self._disable_outdated_mkps, "Disable outdated MKPs"),
+            (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
+            (self._create_search_index, "Creating search index"),
+            (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
+            (self._set_user_scheme_serial, "Set version specific user attributes"),
         ]
 
-    # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
+    # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->2.0
     def _update_fs_used_name(self):
         check_df_includes_use_new_metric()
         cmk.update_rrd_fs_names.update()
@@ -137,13 +167,41 @@ class UpdateConfig:
         root_folder.save()
         root_folder.rewrite_hosts_files()
 
+    def _rewrite_removed_global_settings(self):
+        # Load full config (with undefined settings)
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
+            full_config=True)
+        # Replace old settings with new ones
+        for old_config_name, new_config_name, replacement in REMOVED_GLOBALS_MAP:
+            if old_config_name in global_config:
+                self._logger.log(VERBOSE,
+                                 "Replacing %s with %s" % (old_config_name, new_config_name))
+                old_value = global_config[old_config_name]
+                if replacement:
+                    global_config.setdefault(new_config_name, replacement[old_value])
+                else:
+                    global_config.setdefault(new_config_name, old_value)
+
+                del global_config[old_config_name]
+
+        # Delete unused settings
+        global_config = filter_unknown_settings(global_config)
+
+        # Write updated settings
+        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+
     def _rewrite_autochecks(self):
         # Failing to load the config here will result in the loss of *all*
         # services due to an exception thrown by cmk.base.config.service_description
         # in _parse_autocheck_entry of cmk.base.autochecks.
         cmk.base.config.load()
-        cmk.base.config.load_all_checks(cmk.base.check_api.get_check_api_context)
+        cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
         check_variables = cmk.base.config.get_check_variables()
+        failed_hosts: List[str] = []
+
+        all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
+        all_rulesets.load()
+
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = autocheck_file.stem
             try:
@@ -153,29 +211,148 @@ class UpdateConfig:
                     check_variables,
                 )
             except MKGeneralException as exc:
-                raise MKGeneralException(
-                    "%s\nIf you encounter this error during the update process "
-                    "you need to replace the the variable by its actual value, e.g. "
-                    "replace `my_custom_levels` by `{'levels': (23, 42)}`." % exc)
-            autochecks = [self._map_removed_check_plugin_names(s) for s in autochecks]
+                msg = ("%s\nIf you encounter this error during the update process "
+                       "you need to replace the the variable by its actual value, e.g. "
+                       "replace `my_custom_levels` by `{'levels': (23, 42)}`." % exc)
+                if self._arguments.debug:
+                    raise MKGeneralException(msg)
+                self._logger.error(msg)
+                failed_hosts.append(hostname)
+                continue
+
+            autochecks = [self._fix_service(s, all_rulesets, hostname) for s in autochecks]
             cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
 
-    def _map_removed_check_plugin_names(self, service: Service) -> Service:
-        """Change names of removed plugins to the new ones"""
-        if service.check_plugin_name not in REMOVED_CHECK_PLUGIN_MAP:
+        if failed_hosts:
+            msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)
+            self._logger.error(msg)
+            raise MKGeneralException(msg)
+
+    def _transformed_params(
+        self,
+        plugin_name: CheckPluginName,
+        params: Any,
+        all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
+        hostname: str,
+    ) -> Any:
+        check_plugin = register.get_check_plugin(plugin_name)
+        if check_plugin is None:
+            return None
+
+        ruleset_name = "checkgroup_parameters:%s" % check_plugin.check_ruleset_name
+        if ruleset_name not in all_rulesets.get_rulesets():
+            return None
+
+        debug_info = "host=%r, plugin=%r, ruleset=%r, params=%r" % (
+            hostname, str(plugin_name), str(check_plugin.check_ruleset_name), params)
+
+        try:
+            ruleset = all_rulesets.get_rulesets()[ruleset_name]
+
+            # TODO: in order to keep the original input parameters and to identify misbehaving
+            #       transform_values() implementations we check the passed values for modifications
+            #       In that case we have to fix that transform_values() before using it
+            #       This hack chould vanish as soon as we know transform_values() works as expected
+            param_copy = copy.deepcopy(params)
+            new_params = ruleset.valuespec().transform_value(param_copy) if params else {}
+            if not param_copy == params:
+                self._logger.warning("transform_value() for ruleset '%s' altered input" %
+                                     check_plugin.check_ruleset_name)
+
+            assert new_params or not params, "non-empty params vanished"
+            assert not isinstance(params, dict) or isinstance(
+                new_params, dict), ("transformed params down-graded from dict: %r" % new_params)
+
+            # TODO: in case of known exceptions we don't want the transformed values be combined
+            #       with old keys. As soon as we can remove the workaround below we should not
+            #       handle any ruleset differently
+            if str(check_plugin.check_ruleset_name) in {"if"}:
+                return new_params
+
+            # TODO: some transform_value() implementations (e.g. 'ps') return parameter with
+            #       missing keys - so for safety-reasons we keep keys that don't exist in the
+            #       transformed values
+            #       On the flipside this can lead to problems with the check itself and should
+            #       be vanished as soon as we can be sure no keys are deleted accidentally
+            return {**params, **new_params} if isinstance(params, dict) else new_params
+
+        except Exception as exc:
+            msg = ("Transform failed: %s, error=%r" % (debug_info, exc))
+            if self._arguments.debug:
+                raise RuntimeError(msg) from exc
+            self._logger.error(msg)
+
+        return None
+
+    def _fix_service(
+        self,
+        service: Service,
+        all_rulesets: cmk.gui.watolib.rulesets.AllRulesets,
+        hostname: str,
+    ) -> Service:
+        """Change names of removed plugins to the new ones and transform parameters"""
+        new_plugin_name = REMOVED_CHECK_PLUGIN_MAP.get(service.check_plugin_name)
+        new_params = self._transformed_params(
+            new_plugin_name or service.check_plugin_name,
+            service.parameters,
+            all_rulesets,
+            hostname,
+        )
+
+        if new_plugin_name is None and new_params is None:
+            # don't create a new service if nothing has changed
             return service
+
         return Service(
-            check_plugin_name=REMOVED_CHECK_PLUGIN_MAP[service.check_plugin_name],
+            check_plugin_name=new_plugin_name or service.check_plugin_name,
             item=service.item,
             description=service.description,
-            parameters=service.parameters,
+            parameters=new_params or service.parameters,
             service_labels=service.service_labels,
         )
 
     def _rewrite_wato_rulesets(self):
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
+        self._transform_replaced_wato_rulesets(all_rulesets)
+        self._transform_wato_rulesets_params(all_rulesets)
         all_rulesets.save()
+
+    def _transform_replaced_wato_rulesets(self, all_rulesets):
+        replacements: Dict[str, cmk.gui.watolib.rulesets.Ruleset] = {}
+        for ruleset_name in all_rulesets.get_rulesets():
+            if ruleset_name not in REMOVED_WATO_RULESETS_MAP:
+                continue
+            new_ruleset = all_rulesets.get(ruleset_name).clone()
+            new_ruleset.set_name(REMOVED_WATO_RULESETS_MAP[ruleset_name])
+            if not new_ruleset.is_empty():
+                self._logger.log(VERBOSE, "Found deprecated ruleset: %s" % ruleset_name)
+                replacements.setdefault(ruleset_name, new_ruleset)
+
+        for old_ruleset_name, ruleset in replacements.items():
+            self._logger.log(VERBOSE,
+                             "Replacing ruleset %s with %s" % (old_ruleset_name, ruleset.name))
+            all_rulesets.set(ruleset.name, ruleset)
+            all_rulesets.delete(old_ruleset_name)
+
+    def _transform_wato_rulesets_params(self, all_rulesets):
+        num_errors = 0
+        for ruleset in all_rulesets.get_rulesets().values():
+            valuespec = ruleset.valuespec()
+            for folder, folder_index, rule in ruleset.get_rules():
+                try:
+                    rule.value = valuespec.transform_value(rule.value)
+                except Exception as e:
+                    if self._arguments.debug:
+                        raise
+                    self._logger.error(
+                        "ERROR: Failed to transform rule: (Ruleset: %s, Folder: %s, "
+                        "Rule: %d, Value: %s: %s", ruleset.name, folder.path(), folder_index,
+                        rule.value, e)
+                    num_errors += 1
+
+        if num_errors:
+            raise MKGeneralException("Failed to transform %d rule values" % num_errors)
 
     def _initialize_gui_environment(self):
         self._logger.log(VERBOSE, "Loading GUI plugins...")
@@ -213,7 +390,7 @@ class UpdateConfig:
     def _migrate_pagetype_topics_to_ids(self):
         """Change all visuals / page types to use IDs as topics
 
-        1.7 changed the topic from a free form user localizable string to an ID
+        2.0 changed the topic from a free form user localizable string to an ID
         that references the builtin and user managable "pagetype_topics".
 
         Try to detect builtin or existing topics topics, reference them and
@@ -278,7 +455,7 @@ class UpdateConfig:
 
         # Reports
         try:
-            import cmk.gui.cee.reporting as reporting
+            import cmk.gui.cee.reporting as reporting  # pylint: disable=cmk-module-layer-violation
         except ImportError:
             reporting = None  # type: ignore[assignment]
 
@@ -364,15 +541,65 @@ class UpdateConfig:
         spec["topic"] = name
         return True, True
 
-    def _disable_outdated_mkps(self) -> None:
-        """Disable MKP packages that are declared to be outdated with the new version
+    def _add_missing_type_to_ldap_connections(self):
+        """Each user connections needs to declare it's connection type.
 
-        Since 1.6 there is the option version.usable_until available in MKP packages.
-        Iterate over all installed packages, check that field and once it is set, compare
-        the version with the new Checkmk version. In case it is outdated, move the
-        package to the disabled packages.
+        This is done using the "type" attribute. Previous versions did not always set this
+        attribute, which is corrected with this update method."""
+        connections = load_connection_config()
+        if not connections:
+            return
+
+        for connection in connections:
+            connection.setdefault("type", "ldap")
+        save_connection_config(connections)
+
+    def _create_search_index(self):
+        """Rebuild and store the search index used by the seach field in the Setup menu.
+
+        This is necessary for example if a new Rulespec was added by an MKP.
         """
-        packaging.disable_outdated()
+        cmk.gui.watolib.search.build_and_store_index()
+
+    def _rewrite_bi_configuration(self):
+        """Convert the bi configuration to the new (REST API compatible) format"""
+        BILegacyPacksConverter(BIManager.bi_configuration_file()).convert_config()
+
+    def _migrate_topology_dashlet(self):
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
+            full_config=True)
+        filter_group = global_config.get("topology_default_filter_group", "")
+
+        dashboards = visuals.load("dashboards", builtin_dashboards)
+        modified_user_instances: Set[UserId] = set()
+        for (owner, _name), dashboard in dashboards.items():
+            for dashlet in dashboard["dashlets"]:
+                if dashlet["type"] == "network_topology":
+                    transform_topology_dashlet(dashlet, filter_group)
+                    modified_user_instances.add(owner)
+
+        for user_id in modified_user_instances:
+            visuals.save("dashboards", dashboards, user_id)
+
+    def _set_user_scheme_serial(self):
+        """Set attribute to detect with what cmk version the user was created.
+        We start that with 2.0"""
+        users = load_users(lock=True)
+        for user_id in users:
+            # pre 2.0 user
+            if users[user_id].get("user_scheme_serial") is None:
+                _set_show_mode(users, user_id)
+            # here you could set attributes based on the current scheme
+
+            users[user_id]["user_scheme_serial"] = USER_SCHEME_SERIAL
+        save_users(users)
+
+
+def _set_show_mode(users, user_id):
+    """Set show_mode for existing user to 'default to show more' on upgrade to
+    2.0"""
+    users[user_id]["show_mode"] = "default_show_more"
+    return users
 
 
 def _id_from_title(title):
@@ -423,7 +650,7 @@ def check_df_includes_use_new_metric():
             mat = re.search('fs_used', r, re.M)
             if not mat:
                 msg = ('source: %s\n Returns the wrong perfdata\n' % df_file +
-                       'Checkmk 1.7 requires Filesystem check plugins to deliver '
+                       'Checkmk 2.0 requires Filesystem check plugins to deliver '
                        '"Used filesystem space" perfdata under the metric name fs_used. '
                        'Your local extension pluging seems to be using the old convention '
                        'of mountpoints as the metric name. Please update your include file '

@@ -11,9 +11,9 @@
 #include <cstdint>
 #include <string>
 
-#include "Column.h"
 #include "IntColumn.h"
 #include "LogEntry.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
@@ -47,7 +47,7 @@ public:
 
     ServiceListStateColumn(const std::string &name,
                            const std::string &description,
-                           const Column::Offsets &offsets, MonitoringCore *mc,
+                           const ColumnOffsets &offsets, MonitoringCore *mc,
                            Type logictype)
         : IntColumn(name, description, offsets)
         , _mc(mc)

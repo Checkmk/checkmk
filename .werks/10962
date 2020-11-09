@@ -6,7 +6,7 @@ Date: 1587384159
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk fixes a bug which affected the conversion of AWS
 Cloudwatch metrics with a statistics of type "Sum" into rates.

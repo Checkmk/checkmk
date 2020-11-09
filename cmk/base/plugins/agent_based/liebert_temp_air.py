@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Tuple
-from cmk.base.plugins.agent_based.utils.liebert import (
+from typing import Any, Dict, List, Tuple, Optional
+from .utils.liebert import (
     DETECT_LIEBERT,
     parse_liebert,
 )
@@ -14,17 +14,17 @@ from .utils.temperature import (
     TempParamType,
     to_celsius,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     register,
     SNMPTree,
     Service,
     Result,
-    state,
+    State as state,
 )
-from .agent_based_api.v0.type_defs import (
-    SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+from .agent_based_api.v1.type_defs import (
+    StringTable,
+    CheckResult,
+    DiscoveryResult,
 )
 
 ParsedSection = Dict[str, Any]
@@ -41,22 +41,27 @@ def _get_item_data(item: str, section_liebert_temp_air: ParsedSection) -> Tuple:
     return (None, None)
 
 
-def parse_liebert_temp_air(string_table: SNMPStringTable) -> ParsedSection:
+def parse_liebert_temp_air(string_table: List[StringTable]) -> ParsedSection:
     return parse_liebert(string_table, str)
 
 
 def discover_liebert_temp_air(
-    section_liebert_temp_air: ParsedSection,
-    section_liebert_system: Dict[str, str],
-) -> DiscoveryGenerator:
+    section_liebert_temp_air: Optional[ParsedSection],
+    section_liebert_system: Optional[Dict[str, str]],
+) -> DiscoveryResult:
+    if not section_liebert_temp_air:
+        return
     for key, (value, _unit) in section_liebert_temp_air.items():
         if "Unavailable" not in value:
             yield Service(item=_get_item_from_key(key))
 
 
-def check_liebert_temp_air(item: str, params: TempParamType,
-                           section_liebert_temp_air: ParsedSection,
-                           section_liebert_system: Dict[str, str]) -> CheckGenerator:
+def check_liebert_temp_air(
+    item: str,
+    params: TempParamType,
+    section_liebert_temp_air: Optional[ParsedSection],
+    section_liebert_system: Optional[Dict[str, str]],
+) -> CheckResult:
 
     if section_liebert_temp_air is None or section_liebert_system is None:
         return
@@ -88,7 +93,7 @@ register.snmp_section(
     name="liebert_temp_air",
     detect=DETECT_LIEBERT,
     parse_function=parse_liebert_temp_air,
-    trees=[
+    fetch=[
         SNMPTree(
             base='.1.3.6.1.4.1.476.1.42.3.9.20.1',
             oids=[

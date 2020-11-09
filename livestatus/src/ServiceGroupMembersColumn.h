@@ -14,10 +14,10 @@
 #include <utility>
 #include <vector>
 
-#include "Column.h"
 #include "Filter.h"
 #include "ListColumn.h"
 #include "opids.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 class RowRenderer;
@@ -33,8 +33,8 @@ class ServiceGroupMembersColumn : public ListColumn {
 public:
     ServiceGroupMembersColumn(const std::string &name,
                               const std::string &description,
-                              const Column::Offsets &offsets,
-                              MonitoringCore *mc, bool show_state)
+                              const ColumnOffsets &offsets, MonitoringCore *mc,
+                              bool show_state)
         : ListColumn(name, description, offsets)
         , _mc(mc)
         , _show_state(show_state) {}

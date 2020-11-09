@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # [['1', '24', 'SLOT #0: TEMP #1'],
 # ['2', '12', 'SLOT #0: TEMP #2'],
@@ -66,7 +68,6 @@ check_info["brocade.fan"] = {
     "snmp_info": brocade_info,
     "snmp_scan_function": brocade_scan,
     "has_perfdata": True,
-    "includes": ["fan.include"],
 }
 
 
@@ -119,5 +120,4 @@ check_info["brocade.temp"] = {
     "snmp_info": brocade_info,
     'snmp_scan_function': brocade_scan,
     "default_levels_variable": "brocade_temp_default_levels",
-    "includes": ["temperature.include"],
 }

@@ -9,24 +9,25 @@ import re
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import quote
 
-from connexion import ProblemException  # type: ignore[import]
 from werkzeug.datastructures import ETags
 
 from cmk.gui.globals import request
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionItem,
     CollectionObject,
     DomainObject,
     DomainType,
     EndpointName,
-    ENDPOINT_REGISTRY,
     HTTPMethod,
     LinkType,
+    ObjectProperty,
     PropertyFormat,
     ResultType,
     Serializable,
 )
+from cmk.gui.plugins.openapi.utils import ProblemException
 
 
 def link_rel(
@@ -246,12 +247,14 @@ def object_collection(
 def action_result(
     action_links: List[LinkType],
     result_type: ResultType,
-    result_links: List[LinkType],
-    result_value: Optional[Any],
+    result_value: Optional[Any] = None,
+    result_links: Optional[List[LinkType]] = None,
 ) -> Dict:
     """Construct an Action Result resource
 
     Described in Restful Objects, chapter 19.1-4 """
+    if result_links is None:
+        result_links = []
     return {
         'links': action_links,
         'resultType': result_type,
@@ -282,6 +285,43 @@ class DomainObjectMembers:
 
     def to_dict(self):
         return self.members
+
+
+def object_property_href(
+    domain_type: DomainType,
+    identifier: str,
+    property_name: str,
+):
+    return f"/objects/{domain_type}/{identifier}/properties/{property_name}"
+
+
+def object_sub_property(
+    domain_type: DomainType,
+    ident: str,
+    name: str,
+    value: Any,
+    disabled_reason: Optional[str] = None,
+    extensions: Optional[Dict[str, Any]] = None,
+) -> ObjectProperty:
+    if extensions is None:
+        extensions = {}
+    ret: ObjectProperty = {
+        'id': f"{ident}_{name}",
+        'value': value,
+        'extensions': extensions,
+    }
+    if disabled_reason is not None:
+        ret['disabledReason'] = disabled_reason
+
+    ret['links'] = [
+        link_rel(
+            rel='.../modify',
+            href=object_property_href(domain_type, ident, name),
+            method='put',
+        ),
+    ]
+
+    return ret
 
 
 def object_property(
@@ -615,7 +655,7 @@ def link_endpoint(
     module_name: str,
     rel: EndpointName,
     parameters: Dict[str, str],
-):
+) -> LinkType:
     """Link to a specific endpoint by name.
 
     Args:
@@ -632,7 +672,7 @@ def link_endpoint(
     """
     endpoint = ENDPOINT_REGISTRY.lookup(module_name, rel, parameters)
     return link_rel(
-        href=endpoint['href'],
+        href=endpoint['endpoint'].make_url(parameters),
         rel=endpoint['rel'],
         method=endpoint['method'],
     )
@@ -721,12 +761,16 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
 
     """
     def _update(_hash_obj, _d):
-        for key, value in sorted(_d.items()):
-            _hash_obj.update(key.encode('utf-8'))
-            if isinstance(value, dict):
+        if isinstance(_d, list):
+            for value in sorted(_d):
                 _update(_hash_obj, value)
-            else:
-                _hash_obj.update(value.encode('utf-8'))
+        else:
+            for key, value in sorted(_d.items()):
+                _hash_obj.update(key.encode('utf-8'))
+                if isinstance(value, (dict, list)):
+                    _update(_hash_obj, value)
+                else:
+                    _hash_obj.update(value.encode('utf-8'))
 
     _hash = hashlib.sha256()
     _update(_hash, dict_)

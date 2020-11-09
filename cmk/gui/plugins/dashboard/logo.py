@@ -22,11 +22,11 @@ class MKLogoDashlet(Dashlet):
 
     @classmethod
     def title(cls):
-        return _("Check_MK Logo")
+        return _("Checkmk Logo")
 
     @classmethod
     def description(cls):
-        return _("Shows the Check_MK logo.")
+        return _("Shows the Checkmk logo.")
 
     @classmethod
     def sort_index(cls):

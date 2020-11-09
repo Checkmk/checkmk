@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<graylog_streams>>>
 # {"total": 5, "streams": [{"remove_matches_from_default_stream": false,
 # "is_default": false, "index_set_id": "5da58758e2847e0602771f2a",
@@ -126,5 +127,4 @@ check_info["graylog_streams"] = {
     "default_levels_variable": "graylog_streams_default_levels",
     "service_description": "Graylog Streams",
     "group": "graylog_streams",
-    "includes": ["graylog.include"],
 }

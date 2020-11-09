@@ -14,7 +14,7 @@ import urllib.parse
 
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import UserId
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import HTTPVariables, VisualContext
 
 import cmk.gui.sites as sites
 
@@ -23,16 +23,34 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKTimeout
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
-from cmk.gui.globals import g, html
-from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
+from cmk.gui.globals import g, html, request
+from cmk.gui.valuespec import (
+    ValueSpec,
+    ValueSpecValidateFunc,
+    DictionaryEntry,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    Checkbox,
+    TextUnicode,
+)
 from cmk.gui.plugins.views.utils import (
     get_permitted_views,
     get_all_views,
     transform_painter_spec,
 )
-from cmk.gui.utils.url_encoder import HTTPVariables
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
+from cmk.gui.plugins.metrics.valuespecs import vs_title_infos, transform_graph_render_options
+from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
+from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.breadcrumb import (
+    make_topic_breadcrumb,
+    Breadcrumb,
+    BreadcrumbItem,
+)
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
@@ -158,8 +176,11 @@ class Dashlet(metaclass=abc.ABCMeta):
     @classmethod
     def add_url(cls) -> str:
         """The URL to open for adding a new dashlet of this type to a dashboard"""
-        return html.makeuri([('type', cls.type_name()), ('back', html.makeuri([('edit', '1')]))],
-                            filename='edit_dashlet.py')
+        return makeuri(
+            request,
+            [('type', cls.type_name()), ('back', makeuri(request, [('edit', '1')]))],
+            filename='edit_dashlet.py',
+        )
 
     @classmethod
     def default_settings(cls):
@@ -317,7 +338,8 @@ class Dashlet(metaclass=abc.ABCMeta):
         if self._dashlet_spec.get("url"):
             return self._dashlet_spec["url"]
 
-        return html.makeuri_contextless(
+        return makeuri_contextless(
+            request,
             [
                 ('name', self._dashboard_name),
                 ('id', self._dashlet_id),
@@ -357,6 +379,57 @@ class Dashlet(metaclass=abc.ABCMeta):
             return module.__dict__[func_name]()
 
         return globals()[urlfunc]()
+
+
+def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
+    return Dictionary(
+        title=_('General Settings'),
+        render='form',
+        optional_keys=['title', 'title_url'],
+        elements=[
+            ('type',
+             FixedValue(
+                 dashlet.type_name(),
+                 totext=dashlet.title(),
+                 title=_('Dashlet Type'),
+             )),
+            visuals.single_infos_spec(single_infos),
+            ('background',
+             Checkbox(
+                 title=_('Colored Background'),
+                 label=_('Render background'),
+                 help=_('Render gray background color behind the dashlets content.'),
+                 default_value=True,
+             )),
+            ('show_title',
+             DropdownChoice(
+                 title=_("Show title header"),
+                 help=_('Render the titlebar including title and link above the dashlet.'),
+                 choices=[
+                     (False, _("Don't show any header")),
+                     (True, _("Show header with highlighted background")),
+                     ("transparent", _("Show title without any background")),
+                 ],
+                 default_value=True,
+             )),
+            ('title',
+             TextUnicode(
+                 title=_('Custom Title') + '<sup>*</sup>',
+                 help=_(
+                     'Most dashlets have a hard coded default title. For example the view snapin '
+                     'has even a dynamic title which defaults to the real title of the view. If you '
+                     'like to use another title, set it here.'),
+                 size=50,
+             )),
+            ("title_format", vs_title_infos()),
+            ('title_url',
+             TextUnicode(
+                 title=_('Link of Title'),
+                 help=_('The URL of the target page the link of the dashlet should link to.'),
+                 size=50,
+             )),
+        ],
+    )
 
 
 class IFrameDashlet(Dashlet, metaclass=abc.ABCMeta):
@@ -458,27 +531,72 @@ def get_permitted_dashboards() -> Dict[DashboardName, DashboardConfig]:
 # This code transforms views from user_dashboards.mk which have been
 # migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
+# Also this method transforms network topology dashlets to custom url ones
 def _transform_dashboards(
     boards: Dict[Tuple[UserId, DashboardName], DashboardConfig]
 ) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
     for dashboard in boards.values():
         visuals.transform_old_visual(dashboard)
-
-        # Also transform dashlets
         for dashlet in dashboard['dashlets']:
             visuals.transform_old_visual(dashlet)
-
-            if dashlet['type'] == 'view':
-                # abusing pass by reference to mutate dashlet
-                transform_painter_spec(dashlet)
-
-            if dashlet['type'] == 'pnpgraph':
-                if 'service' not in dashlet['single_infos']:
-                    dashlet['single_infos'].append('service')
-                if 'host' not in dashlet['single_infos']:
-                    dashlet['single_infos'].append('host')
+            _transform_dashlets_mut(dashlet)
 
     return boards
+
+
+def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
+    # abusing pass by reference to mutate dashlet
+    if dashlet_spec['type'] == 'view':
+        transform_painter_spec(dashlet_spec)
+
+    # ->2014-10
+    if dashlet_spec['type'] == 'pnpgraph':
+        if 'service' not in dashlet_spec['single_infos']:
+            dashlet_spec['single_infos'].append('service')
+        if 'host' not in dashlet_spec['single_infos']:
+            dashlet_spec['single_infos'].append('host')
+
+    if dashlet_spec['type'] in ['pnpgraph', 'custom_graph']:
+        # -> 1.5.0i2
+        if "graph_render_options" not in dashlet_spec:
+            dashlet_spec["graph_render_options"] = {
+                "show_legend": dashlet_spec.pop("show_legend", False),
+                "show_service": dashlet_spec.pop("show_service", True),
+            }
+        # -> 2.0.0i1
+        dashlet_spec["graph_render_options"].setdefault(
+            "title_format", default_dashlet_graph_render_options["title_format"])
+        transform_graph_render_options(dashlet_spec["graph_render_options"])
+        title_format = dashlet_spec["graph_render_options"].pop("title_format")
+        dashlet_spec.setdefault(
+            "title_format", title_format or dashlet_spec["graph_render_options"]["title_format"])
+        dashlet_spec["graph_render_options"].pop("show_title", None)
+
+    if dashlet_spec["type"] == "network_topology":
+        # -> 2.0.0i Removed network topology dashlet type
+        transform_topology_dashlet(dashlet_spec)
+
+    # -> 2.0.0i1 All dashlets have new mandatory title_format
+    dashlet_spec.setdefault("title_format", ['plain'])
+
+    return dashlet_spec
+
+
+def transform_topology_dashlet(dashlet_spec: DashletConfig,
+                               filter_group: str = "") -> DashletConfig:
+    site_id = dashlet_spec["context"].get("site", config.omd_site())
+
+    dashlet_spec.update({
+        "type": "url",
+        "title": _("Network topology of site %s") % site_id,
+        "url": "../nagvis/frontend/nagvis-js/index.php?mod=Map&header_template="\
+                "on-demand-filter&header_menu=1&label_show=1&sources=automap&act=view"\
+                "&backend_id=%s&render_mode=undirected&url_target=main&filter_group=%s"\
+                % (site_id, filter_group),
+        "show_in_iframe": True,
+    })
+
+    return dashlet_spec
 
 
 # be compatible to old definitions, where even internal dashlets were
@@ -620,8 +738,11 @@ def copy_view_into_dashlet(dashlet: DashletConfig,
             view["context"],
             view["single_infos"],
         ).items()))
-    dashlet['title_url'] = html.makeuri_contextless(name_part + singlecontext_vars,
-                                                    filename='view.py')
+    dashlet['title_url'] = makeuri_contextless(
+        request,
+        name_part + singlecontext_vars,
+        filename='view.py',
+    )
 
     dashlet['type'] = 'view'
     dashlet['name'] = 'dashlet_%d' % nr
@@ -673,32 +794,42 @@ def create_data_for_single_metric(cls, properties, context):
         series = merge_multicol(d_row, columns, properties)
         site = d_row['site']
         host = d_row["host_name"]
-        svc_url = html.makeuri([("view_name", "service"), ("site", site), ("host", host),
-                                ("service", d_row['service_description'])],
-                               filename="view.py")
+        svc_url = makeuri(
+            request,
+            [("view_name", "service"), ("site", site), ("host", host),
+             ("service", d_row['service_description'])],
+            filename="view.py",
+        )
 
         row_id = "row_%d" % idx
 
-        # Live value
-        if properties["time_range"] == "current":
-            data.append({
-                "tag": row_id,
-                "timestamp": int(time.time()),
-                "value": metric['value'],
-                "url": svc_url,
-                "label": host,
-            })
         # Historic values
-        else:
-            for ts, elem in series.time_data_pairs():
-                if elem:
-                    data.append({
-                        "tag": row_id,
-                        "timestamp": ts,
-                        "value": elem,
-                        "label": host,
-                    })
+        for ts, elem in series.time_data_pairs():
+            if elem:
+                data.append({
+                    "tag": row_id,
+                    "timestamp": ts,
+                    "value": elem,
+                    "label": host,
+                })
 
-        used_metrics.append((row_id, host, metric))
+        # Live value
+        data.append({
+            "tag": row_id,
+            "timestamp": int(time.time()),
+            "value": metric['value'],
+            "formatted_value": metric['unit']['render'](metric['value']),
+            "url": svc_url,
+            "label": host,
+        })
+
+        used_metrics.append((row_id, metric, d_row))
 
     return data, used_metrics
+
+
+def dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
+    breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                       PagetypeTopics.get_topic(board["topic"]))
+    breadcrumb.append(BreadcrumbItem(title, makeuri_contextless(request, [("name", name)])))
+    return breadcrumb

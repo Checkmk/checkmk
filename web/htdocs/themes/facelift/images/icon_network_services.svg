@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 384 466" style="enable-background:new 0 0 384 466;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:none;stroke:#979797;stroke-width:32;stroke-linecap:round;stroke-linejoin:round;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#FFC107;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#FFCA28;}
+	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#DEA806;}
+	.st4{fill-rule:evenodd;clip-rule:evenodd;fill:#FFD90A;}
+	.st5{fill:none;stroke:#979797;stroke-width:42.656;stroke-linecap:round;stroke-linejoin:round;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-514.000000, -497.000000)">
+		<g id="network" transform="translate(514.000000, 497.000000)">
+			<polyline id="Stroke-1" class="st0" points="65.1,214.3 66.5,319.4 184.4,364.8 			"/>
+			<polygon id="Fill-2" class="st1" points="117.3,0 0,53.4 117.3,106.7 234.7,53.4 117.4,0 			"/>
+			<polygon id="Fill-3" class="st2" points="117.3,234.7 234.7,181.3 234.7,53.3 117.3,106.7 			"/>
+			<polygon id="Fill-4" class="st3" points="117.3,0 0,53.4 117.3,106.7 117.3,0 			"/>
+			<polygon id="Fill-5" class="st4" points="0,181.3 117.3,234.6 117.3,106.6 0,53.3 			"/>
+			<polygon id="Fill-6" class="st1" points="149.3,283.7 266.6,337.1 384,283.7 266.6,230.4 			"/>
+			<polygon id="Fill-7" class="st2" points="266.7,337.1 266.7,465.1 384,411.7 384,283.7 			"/>
+			<polygon id="Fill-8" class="st3" points="266.7,230.4 149.3,283.7 266.7,337 			"/>
+			<polygon id="Fill-9" class="st4" points="149.4,411.8 266.6,465 266.6,337.1 149.4,283.7 			"/>
+			<polyline id="Stroke-10" class="st5" points="265.3,258.4 264.3,179.5 175.7,145.4 			"/>
+		</g>
+	</g>
+</g>
+</svg>

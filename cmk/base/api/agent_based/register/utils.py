@@ -4,24 +4,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+import sys
+from typing import (
+    Callable,
+    Dict,
+    get_args,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import inspect
 
 from pathlib import Path
 
-from cmk.utils.type_defs import CheckPluginName, InventoryPluginName, ParsedSectionName, SectionName
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    InventoryPluginName,
+    ParsedSectionName,
+    RuleSetName,
+    SectionName,
+)
 from cmk.utils.paths import agent_based_plugins_dir
 
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
+
+ITEM_VARIABLE = "%s"
 
 
 def get_validated_plugin_module_name() -> Optional[str]:
     """Find out which module registered the plugin and make sure its in the right place"""
-    try:
-        calling_from = inspect.stack()[2].filename
-    except UnicodeDecodeError:  # calling from precompiled host file
+    # We used this before, but it was a performance killer. The method below is a lot faster.
+    # calling_from = inspect.stack()[2].filename
+    frame = sys._getframe(2)
+    if not frame:
         return None
+    calling_from = frame.f_code.co_filename
 
     path = Path(calling_from)
     if not path.parent.parts[-3:] == agent_based_plugins_dir.parts[-3:]:
@@ -72,34 +96,73 @@ def create_subscribed_sections(
 
 
 def validate_function_arguments(
-    func_type: str,
+    *,
+    type_label: Literal["check", "cluster_check", "discovery", "host_label", "inventory"],
     function: Callable,
     has_item: bool,
-    has_params: bool,
+    default_params: Optional[Dict],
     sections: List[ParsedSectionName],
 ) -> None:
     """Validate the functions signature and type"""
 
     if not inspect.isgeneratorfunction(function):
-        raise TypeError("%s function must be a generator function" % (func_type,))
+        raise TypeError(f"{type_label}_function must be a generator function")
 
     expected_params = []
     if has_item:
         expected_params.append('item')
-    if has_params:
+    if default_params is not None:
         expected_params.append('params')
     if len(sections) == 1:
         expected_params.append('section')
     else:
         expected_params.extend('section_%s' % s for s in sections)
 
-    if expected_params != list(inspect.signature(function).parameters):
-        raise TypeError("%s function: expected function arguments: %s" %
-                        (func_type, ', '.join(expected_params)))
+    parameters = inspect.signature(function).parameters
+    present_params = list(parameters)
+
+    if expected_params == present_params:
+        return (None if type_label == "cluster_check" else
+                _validate_optional_section_annotation(parameters))
+
+    # We know we must raise. Dispatch for a better error message:
+
+    if set(expected_params) == set(present_params):  # not len()!
+        exp_str = ', '.join(expected_params)
+        raise TypeError(f"{type_label}_function: wrong order of arguments. Expected: {exp_str}")
+
+    symm_diff = set(expected_params).symmetric_difference(present_params)
+
+    if "item" in symm_diff:
+        missing_or_unexpected = "missing" if has_item else "unexpected"
+        raise TypeError(f"{type_label}_function: {missing_or_unexpected} 'item' argument")
+
+    if "params" in symm_diff:
+        raise TypeError(f"{type_label}_function: 'params' argument expected if "
+                        "and only if default parameters are not None")
+
+    exp_str = ', '.join(expected_params)
+    raise TypeError(f"{type_label}_function: expected arguments: {exp_str}")
+
+
+def _validate_optional_section_annotation(params: Mapping[str, inspect.Parameter]) -> None:
+    """Validate that the section annotation is correct, if present.
+
+    The thing is: if we have more than one section, all of them must be `Optional`.
+    """
+    section_args = [p for n, p in params.items() if n.startswith("section_")]
+    if not section_args:
+        return  # we know nothing in this case
+    if all(p.annotation == p.empty for p in section_args):
+        return  # no typing used in plugin
+    none_type = type(None)
+    if all(none_type in get_args(p.annotation) for p in section_args):
+        return  # good, all sections are Optional.
+    raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
 
 
 def validate_default_parameters(
-    params_type: str,
+    params_type: Literal["check", "discovery", "inventory"],
     ruleset_name: Optional[str],
     default_parameters: Optional[Dict],
 ) -> None:
@@ -114,3 +177,35 @@ def validate_default_parameters(
 
     if ruleset_name is None and params_type != 'check':
         raise TypeError("missing ruleset name for default %s parameters" % (params_type))
+
+
+def validate_check_ruleset_item_consistency(
+    check_plugin: CheckPlugin,
+    check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]],
+) -> None:
+    """Validate check plugins sharing a check_ruleset_name have either all or none an item.
+
+    Mixed checkgroups lead to strange exceptions when processing the check parameters.
+    So it is much better to catch these errors in a central place with a clear error message.
+    """
+    if check_plugin.check_ruleset_name is None:
+        return
+
+    present_check_plugins = check_plugins_by_ruleset_name[check_plugin.check_ruleset_name]
+    if not present_check_plugins:
+        return
+
+    # Trying to detect whether or not the check has an item. But this mechanism is not
+    # 100% reliable since Checkmk appends an item to the service_description when "%s"
+    # is not in the checks service_description template.
+    # Maybe we need to define a new rule which enforces the developer to use the %s in
+    # the service_description. At least for grouped checks.
+    item_present = ITEM_VARIABLE in check_plugin.service_name
+    item_expected = ITEM_VARIABLE in present_check_plugins[0].service_name
+
+    if item_present is not item_expected:
+        present_plugins = ", ".join(str(p.name) for p in present_check_plugins)
+        raise ValueError(
+            f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
+            "At least one of the checks in this group needs to be changed "
+            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins}).")

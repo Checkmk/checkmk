@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_discovery_netapp_api_fan_rules():
     return Dictionary(
-        title=_("Discovery of Netapp fans"),
+        title=_("Netapp fan discovery"),
         elements=[
             ("mode",
              CascadingDropdown(

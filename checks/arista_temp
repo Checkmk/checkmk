@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Check originally developed for:
 # Arista Networks EOS version 4.20.9M running on an Arista Networks DCS-7280QR-C36
 
@@ -58,6 +59,5 @@ check_info["arista_temp"] = {
             "99.1.1.1.4",  # ENTITY-SENSOR-MIB::entPhySensorValue
         ]),
     "snmp_scan_function": arista_temp_scan_function,
-    "includes": ["temperature.include"],
     "group": "temperature",
 }

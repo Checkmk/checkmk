@@ -46,7 +46,23 @@ import json.encoder  # type: ignore[import]
 import abc
 import pprint
 from contextlib import contextmanager
-from typing import Union, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING, TypeVar, NamedTuple, Text
+from typing import (
+    Union,
+    Optional,
+    List,
+    Dict,
+    Tuple,
+    Any,
+    Iterator,
+    cast,
+    Mapping,
+    Set,
+    Sequence,
+    TYPE_CHECKING,
+    TypeVar,
+    NamedTuple,
+    Text,
+)
 from pathlib import Path
 import urllib.parse
 
@@ -108,6 +124,11 @@ from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
+from cmk.gui.utils.urls import (
+    makeactionuri,
+    makeactionuri_contextless,
+    requested_file_name,
+)
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
@@ -118,7 +139,7 @@ from cmk.gui.page_menu import (
     PageMenuPopupsRenderer,
     enable_page_menu_entry,
 )
-from cmk.gui.type_defs import CSSSpec
+from cmk.gui.type_defs import CSSSpec, Icon
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -1025,7 +1046,7 @@ class html(ABCHTMLGenerator):
 
         self.init_mobile()
 
-        self.myfile = self._requested_file_name()
+        self.myfile = requested_file_name(self.request)
 
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh
@@ -1069,13 +1090,21 @@ class html(ABCHTMLGenerator):
     def get_theme(self) -> str:
         return self._theme
 
+    def icon_themes(self) -> List[str]:
+        """Returns the themes where icons of a theme can be found in increasing order of importance.
+        By default the facelift theme provides all icons. If a theme wants to use different icons it
+        only needs to add those icons under the same name. See detect_icon_path for a detailed list
+        of paths.
+        """
+        return ["facelift"] if self._theme == "facelift" else ["facelift", self._theme]
+
     def theme_url(self, rel_url: str) -> str:
         return "themes/%s/%s" % (self._theme, rel_url)
 
     def _verify_not_using_threaded_mpm(self) -> None:
         if self.request.is_multithread:
             raise MKGeneralException(
-                _("You are trying to Check_MK together with a threaded Apache multiprocessing module (MPM). "
+                _("You are trying to Checkmk together with a threaded Apache multiprocessing module (MPM). "
                   "Check_MK is only working with the prefork module. Please change the MPM module to make "
                   "Check_MK work."))
 
@@ -1090,28 +1119,6 @@ class html(ABCHTMLGenerator):
     def _init_screenshot_mode(self) -> None:
         if self.request.var("screenshotmode", "1" if config.screenshotmode else ""):
             self.screenshotmode = True
-
-    def _requested_file_name(self) -> str:
-        parts = self.request.requested_file.rstrip("/").split("/")
-
-        if len(parts) == 3 and parts[-1] == "check_mk":
-            # Load index page when accessing /[site]/check_mk
-            myfile = "index"
-
-        elif parts[-1].endswith(".py"):
-            # Regular pages end with .py - Stript it away to get the page name
-            myfile = parts[-1][:-3]
-            if myfile == "":
-                myfile = "index"
-
-        else:
-            myfile = "index"
-
-        # Redirect to mobile GUI if we are a mobile device and the index is requested
-        if myfile == "index" and self.mobile:
-            myfile = "mobile"
-
-        return myfile
 
     def init_mobile(self) -> None:
         if self.request.has_var("mobile"):
@@ -1368,7 +1375,6 @@ class html(ABCHTMLGenerator):
 
     def finalize(self) -> None:
         """Finish the HTTP request processing before handing over to the application server"""
-        self.transaction_manager.store_new()
         self.disable_request_timeout()
 
     #
@@ -1487,47 +1493,27 @@ class html(ABCHTMLGenerator):
     # URL building
     #
 
-    def makeuri(self,
-                addvars: 'HTTPVariables',
-                remove_prefix: Optional[str] = None,
-                filename: Optional[str] = None,
-                delvars: Optional[List[str]] = None) -> str:
-        new_vars = [nv[0] for nv in addvars]
-        vars_: 'HTTPVariables' = [
-            (v, val)
-            for v, val in self.request.itervars()
-            if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)
-        ]
-        if remove_prefix is not None:
-            vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
-        vars_ = vars_ + addvars
-        if filename is None:
-            filename = self.urlencode(self.myfile) + ".py"
-        if vars_:
-            return filename + "?" + self.urlencode_vars(vars_)
-        return filename
-
-    def makeuri_contextless(self, vars_: 'HTTPVariables', filename: Optional[str] = None) -> str:
-        if not filename:
-            assert self.myfile is not None
-            filename = self.myfile + ".py"
-        if vars_:
-            return filename + "?" + self.urlencode_vars(vars_)
-        return filename
-
     def makeactionuri(self,
                       addvars: 'HTTPVariables',
                       filename: Optional[str] = None,
-                      delvars: Optional[List[str]] = None) -> str:
-        return self.makeuri(addvars + [("_transid", self.transaction_manager.get())],
-                            filename=filename,
-                            delvars=delvars)
+                      delvars: Optional[Sequence[str]] = None) -> str:
+        return makeactionuri(
+            self.request,
+            self.transaction_manager,
+            addvars,
+            filename=filename,
+            delvars=delvars,
+        )
 
     def makeactionuri_contextless(self,
                                   addvars: 'HTTPVariables',
                                   filename: Optional[str] = None) -> str:
-        return self.makeuri_contextless(addvars + [("_transid", self.transaction_manager.get())],
-                                        filename=filename)
+        return makeactionuri_contextless(
+            self.request,
+            self.transaction_manager,
+            addvars,
+            filename=filename,
+        )
 
     #
     # HTML heading and footer rendering
@@ -1599,7 +1585,7 @@ class html(ABCHTMLGenerator):
 
     # Make the browser load specified javascript files. We have some special handling here:
     # a) files which can not be found shal not be loaded
-    # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
+    # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname: str) -> Optional[str]:
         filename_for_browser = None
@@ -1677,8 +1663,6 @@ class html(ABCHTMLGenerator):
         classes = self._body_classes[:]
         if self.screenshotmode:
             classes += ["screenshotmode"]
-        if not self.foldable_container_is_open("suggestions", "all", True):
-            classes += ["hide_suggestions"]
         return classes
 
     def html_foot(self) -> None:
@@ -1714,7 +1698,9 @@ class html(ABCHTMLGenerator):
         self.close_div()  # titlebar
 
         if page_menu:
-            PageMenuRenderer().show(page_menu)
+            PageMenuRenderer().show(
+                page_menu,
+                hide_suggestions=not self.foldable_container_is_open("suggestions", "all", True))
 
         self.close_div()  # top_heading
 
@@ -1815,12 +1801,21 @@ class html(ABCHTMLGenerator):
                        enctype="multipart/form-data" if method.lower() == "post" else None)
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
-            self.hidden_field("_transid", str(self.transaction_manager.get()))
+            self.hidden_field(
+                "_transid",
+                str(self.transaction_manager.get()),
+                add_var=True,
+            )
         self.form_name = name
 
     def end_form(self) -> None:
         self.close_form()
         self.form_name = None
+
+    def add_confirm_on_submit(self, form_name: str, msg: str) -> None:
+        """Adds a confirm dialog to a form that is shown before executing a form submission"""
+        self.javascript("cmk.forms.add_confirm_on_submit(%s, %s)" %
+                        (json.dumps("form_%s" % form_name), json.dumps(escaping.escape_text(msg))))
 
     def in_form(self) -> bool:
         return self.form_name is not None
@@ -2075,6 +2070,7 @@ class html(ABCHTMLGenerator):
         self.form_vars.append(varname)
 
         # View
+        # TODO: Move styling away from py code
         style_size: Optional[str] = None
         field_size: Optional[str] = None
         if try_max_width:
@@ -2333,48 +2329,6 @@ class html(ABCHTMLGenerator):
             self.close_x()
         self.form_vars.append(varname)
 
-    # The confirm dialog is normally not a dialog which need to be protected
-    # by a transid itselfs. It is only a intermediate step to the real action
-    # But there are use cases where the confirm dialog is used during rendering
-    # a normal page, for example when deleting a dashlet from a dashboard. In
-    # such cases, the transid must be added by the confirm dialog.
-    # add_header: A title can be given to make the confirm method render the HTML
-    #             header when showing the confirm message.
-    def confirm(self,
-                msg: Union[str, HTML],
-                method: str = "POST",
-                action: Optional[str] = None,
-                add_transid: bool = False,
-                add_header: Optional[str] = None) -> Optional[bool]:
-        if self.request.var("_do_actions") == _("No"):
-            # User has pressed "No", now invalidate the unused transid
-            self.check_transaction()
-            return None  # None --> "No"
-
-        if not self.request.has_var("_do_confirm"):
-            if add_header:
-                # TODO: Find the call sites and enforce them to provide a breadcrumb
-                self.header(add_header, Breadcrumb())
-
-            if self.mobile:
-                self.open_center()
-            self.open_div(class_="really")
-            self.write_text(msg)
-            # FIXME: When this confirms another form, use the form name from self.request.itervars()
-            self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
-            self.hidden_fields(add_action_vars=True)
-            self.button("_do_confirm", _("Yes!"), "really")
-            self.button("_do_actions", _("No"), "")
-            self.end_form()
-            self.close_div()
-            if self.mobile:
-                self.close_center()
-
-            return False  # False --> "Dialog shown, no answer yet"
-
-        # Now check the transaction. True: "Yes", None --> Browser reload of "yes" page
-        return True if self.check_transaction() else None
-
     #
     # Radio groups
     #
@@ -2554,16 +2508,15 @@ class html(ABCHTMLGenerator):
     # HTML icon rendering
     #
 
-    # FIXME: Change order of input arguments in one: icon and render_icon!!
     def icon(self,
-             title: Optional[str],
-             icon: str,
+             icon: Icon,
+             title: Optional[str] = None,
              middle: bool = True,
              id_: Optional[str] = None,
              cssclass: Optional[str] = None,
              class_: CSSSpec = None) -> None:
         self.write_html(
-            self.render_icon(icon_name=icon,
+            self.render_icon(icon=icon,
                              title=title,
                              middle=middle,
                              id_=id_,
@@ -2574,7 +2527,7 @@ class html(ABCHTMLGenerator):
         self.write_html(self.render_icon("trans"))
 
     def render_icon(self,
-                    icon_name: str,
+                    icon: Icon,
                     title: Optional[str] = None,
                     middle: bool = True,
                     id_: Optional[str] = None,
@@ -2586,19 +2539,25 @@ class html(ABCHTMLGenerator):
         else:
             classes.append(class_)
 
-        return self._render_start_tag(
+        icon_name = icon["icon"] if isinstance(icon, dict) else icon
+        icon_element = self._render_start_tag(
             'img',
             close_tag=True,
             title=title,
             id_=id_,
             class_=classes,
             align='absmiddle' if middle else None,
-            src=(icon_name if "/" in icon_name else self._detect_icon_path(icon_name)),
+            src=icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon"),
         )
 
-    def _detect_icon_path(self, icon_name: str) -> str:
-        """Detect from which place an icon shall be used and return it's path relative to
- htdocs/
+        if isinstance(icon, dict) and icon["emblem"] is not None:
+            emblem_path = self.detect_icon_path(icon["emblem"], prefix="emblem")
+            return self.render_span(icon_element + self.render_img(emblem_path, class_="emblem"),
+                                    class_="emblem")
+        return icon_element
+
+    def detect_icon_path(self, icon_name: str, prefix: str) -> str:
+        """Detect from which place an icon shall be used and return it's path relative to htdocs/
 
         Priority:
         1. In case the modern-dark theme is active: <theme> = modern-dark -> priorities 3-6
@@ -2610,18 +2569,13 @@ class html(ABCHTMLGenerator):
         7. images/icons/[name].png in site local hierarchy
         8. images/icons/[name].png in standard hierarchy
         """
-
-        if self._theme == "modern-dark":
-            # in the modern-dark theme facelift images act as fallbacks
-            themes = [self._theme, "facelift"]
-        else:
-            themes = [self._theme]
-        for theme in themes:
-            rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s" % (theme, icon_name)
+        for theme in self.icon_themes():
+            path = "share/check_mk/web/htdocs/themes/%s/images/%s_%s" % (theme, prefix, icon_name)
             for file_type in ["svg", "png"]:
                 for base_dir in [cmk.utils.paths.omd_root, cmk.utils.paths.omd_root + "/local"]:
-                    if os.path.exists(base_dir + "/" + rel_path + "." + file_type):
-                        return "themes/%s/images/icon_%s.%s" % (self._theme, icon_name, file_type)
+                    if os.path.exists(base_dir + "/" + path + "." + file_type):
+                        return "themes/%s/images/%s_%s.%s" % (self._theme, prefix, icon_name,
+                                                              file_type)
 
         # TODO: This fallback is odd. Find use cases and clean this up
         return "images/icons/%s.png" % icon_name
@@ -2629,14 +2583,13 @@ class html(ABCHTMLGenerator):
     def render_icon_button(self,
                            url: Union[None, str, str],
                            title: str,
-                           icon: str,
+                           icon: Icon,
                            id_: Optional[str] = None,
                            onclick: Optional[HTMLTagAttributeValue] = None,
                            style: Optional[str] = None,
                            target: Optional[str] = None,
                            cssclass: Optional[str] = None,
                            class_: CSSSpec = None) -> HTML:
-
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]
         if isinstance(class_, list):
@@ -2662,7 +2615,7 @@ class html(ABCHTMLGenerator):
     def icon_button(self,
                     url: Optional[str],
                     title: str,
-                    icon: str,
+                    icon: Icon,
                     id_: Optional[str] = None,
                     onclick: Optional[HTMLTagAttributeValue] = None,
                     style: Optional[str] = None,
@@ -2673,18 +2626,28 @@ class html(ABCHTMLGenerator):
             self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
                                     class_))
 
-    def more_button(self, id_: str, dom_levels_up: int, additional_js: str = "") -> None:
-        if config.user.get_attribute("ui_basic_advanced_mode") in ("enforce_basic",
-                                                                   "enforce_advanced"):
+    def more_button(self,
+                    id_: str,
+                    dom_levels_up: int,
+                    additional_js: str = "",
+                    with_text: bool = False) -> None:
+        if config.user.get_attribute("show_mode") == "enforce_show_more":
             return
 
         self.open_a(href="javascript:void(0)",
-                    class_="more",
+                    id_="more_%s" % id_,
+                    class_=["more", "has_text" if with_text else ""],
                     onfocus="if (this.blur) this.blur();",
                     onclick="cmk.utils.toggle_more(this, %s, %d);%s" %
                     (json.dumps(id_), dom_levels_up, additional_js))
-        self.icon(title=_("Show more items"), icon="show_more", class_="show_more")
-        self.icon(title=_("Show less items"), icon="show_less", class_="show_less")
+        self.open_div(title="Show more items" if not with_text else "", class_="show_more")
+        if with_text:
+            self.span(_("show more"))
+        self.close_div()
+        self.open_div(title="Show less items" if not with_text else "", class_="show_less")
+        if with_text:
+            self.span(_("show less"))
+        self.close_div()
         self.close_a()
 
     def popup_trigger(self,
@@ -2695,11 +2658,13 @@ class html(ABCHTMLGenerator):
                       style: Optional[str] = None,
                       cssclass: CSSSpec = None,
                       onclose: Optional[str] = None,
+                      onopen: Optional[str] = None,
                       resizable: bool = False,
-                      popup_group: Optional[str] = None) -> None:
+                      popup_group: Optional[str] = None,
+                      hover_switch_delay: Optional[int] = None) -> None:
         self.write_html(
             self.render_popup_trigger(content, ident, method, data, style, cssclass, onclose,
-                                      resizable, popup_group))
+                                      onopen, resizable, popup_group, hover_switch_delay))
 
     def render_popup_trigger(self,
                              content: HTML,
@@ -2709,21 +2674,27 @@ class html(ABCHTMLGenerator):
                              style: Optional[str] = None,
                              cssclass: CSSSpec = None,
                              onclose: Optional[str] = None,
+                             onopen: Optional[str] = None,
                              resizable: bool = False,
-                             popup_group: Optional[str] = None) -> HTML:
+                             popup_group: Optional[str] = None,
+                             hover_switch_delay: Optional[int] = None) -> HTML:
 
-        onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s);' % \
+        onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s,  %s);' % \
                     (json.dumps(ident),
                      json.dumps(method.asdict()),
                      json.dumps(data if data else None),
                      json.dumps(onclose.replace("'", "\\'") if onclose else None),
+                     json.dumps(onopen.replace("'", "\\'") if onopen else None),
                      json.dumps(resizable))
 
         if popup_group:
-            onmouseenter: Optional[
-                str] = "cmk.popup_menu.switch_popup_menu_group(this, %s)" % json.dumps(popup_group)
+            onmouseenter: Optional[str] = (
+                "cmk.popup_menu.switch_popup_menu_group(this, %s, %s)" %
+                (json.dumps(popup_group), json.dumps(hover_switch_delay)))
+            onmouseleave: Optional[str] = "cmk.popup_menu.stop_popup_menu_group_switch(this)"
         else:
             onmouseenter = None
+            onmouseleave = None
 
         atag = self.render_a(
             content,
@@ -2733,6 +2704,7 @@ class html(ABCHTMLGenerator):
             target="_self",
             onclick=onclick,
             onmouseenter=onmouseenter,
+            onmouseleave=onmouseleave,
         )
 
         classes: List[Optional[str]] = ["popup_trigger"]

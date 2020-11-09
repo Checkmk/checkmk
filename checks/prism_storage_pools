@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.prism import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<prism_storage_pools:sep(9)>>>
 # name    usage   capacity
 # foobar    2518694292480   38575532134515
@@ -42,6 +45,5 @@ check_info["prism_storage_pools"] = {
     "group": "filesystem",
     "has_perfdata": True,
     "service_description": "Storage Pool %s",
-    "includes": ["prism.include", "size_trend.include", "df.include"],
     "default_levels_variable": "filesystem_default_levels",
 }

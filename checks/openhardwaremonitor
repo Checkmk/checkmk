@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value
 # 1,Available Memory,/ram,Data,3.009140
@@ -228,7 +230,6 @@ check_info['openhardwaremonitor.temperature'] = {
     'service_description': "Temperature %s",
     'group': 'temperature',
     'default_levels_variable': 'openhardwaremonitor_temperature_default_levels',
-    'includes': ['temperature.include']
 }
 
 #.
@@ -279,7 +280,6 @@ check_info['openhardwaremonitor.fan'] = {
     'service_description': "Fan %s",
     'default_levels_variable': 'openhardwaremonitor_fan_default_levels',
     'group': 'hw_fans',
-    'includes': ['fan.include'],
 }
 
 #.

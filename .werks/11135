@@ -6,7 +6,7 @@ Date: 1589380397
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The Advanced Server from EnterpriseDB is compatible against Postgres but uses a different process during startup.
 The process to detect a running instance has been changed in newer versions of PostgreSQL from postgres to postmaster.

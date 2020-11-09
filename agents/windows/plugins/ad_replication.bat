@@ -1,3 +1,4 @@
+set VERSION="2.0.0i2"
 @echo off
 
 REM ***
@@ -15,11 +16,11 @@ REM * - Change the account the service is being started with to a
 REM *   domain user account with enough permissions on the DC.
 REM *
 REM ***
-REM * If tools to manage  DC are absent, 
+REM * If tools to manage  DC are absent,
 REM   then plugin outputs nothing
-REM * If tools to manage  DC are present but the computer is not DC, 
+REM * If tools to manage  DC are present but the computer is not DC,
 REM   then plugin outputs only header
-REM * If the computer is DC, 
+REM * If the computer is DC,
 REM   then plugin works as usually
 REM ***
 REM * repadmin reports 'repadmin_ERROR' when the tools to manage DC

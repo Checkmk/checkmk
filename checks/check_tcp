@@ -9,7 +9,7 @@ def check_tcp_arguments(params):
     port, settings = params
     args = []
 
-    args += ["-p", port]
+    args += ["-p", str(port)]
 
     if "response_time" in settings:
         warn, crit = settings["response_time"]
@@ -64,7 +64,7 @@ def check_tcp_arguments(params):
     if "hostname" in settings:
         args += ["-H", settings["hostname"]]
     else:
-        args += ["-H", "'$HOSTADDRESS$'"]
+        args += ["-H", "$HOSTADDRESS$"]
 
     return args
 

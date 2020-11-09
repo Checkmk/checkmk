@@ -3,32 +3,33 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, Generator, List, Optional, Tuple, Union
+from typing import Dict, Generator, List, Optional, Sequence, Tuple, Union
 
 import collections
 import contextlib
 import re
 import time
 
-from ..agent_based_api.v0.type_defs import (
-    CheckGenerator,
-    DiscoveryGenerator,
+from ..agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
     HostLabelGenerator,
     Parameters,
     ValueStore,
 )
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     check_levels,
     get_average,
     get_rate,
     get_value_store,
+    HostLabel,
     IgnoreResultsError,
     Metric,
     regex,
     render,
     Result,
     Service,
-    state,
+    State as state,
 )
 
 ps_info = collections.namedtuple(
@@ -40,27 +41,22 @@ ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)  # type: ignore[at
 Section = Tuple[int, List[Tuple[ps_info, List[str]]]]
 
 
-def get_discovery_specs(params):
+def get_discovery_specs(params: Sequence[Parameters]):
     inventory_specs = []
     for value in params[:-1]:  # skip empty default parameters
-        default_params = value.get('default_params', value)
-        if "cpu_rescale_max" not in default_params:
-            default_params["cpu_rescale_max"] = None
-
         inventory_specs.append((
             value['descr'],
             value.get('match'),
             value.get('user'),
             value.get('cgroup', (None, False)),
             value.get('label', {}),
-            default_params,
+            value['default_params'],
         ))
-
     return inventory_specs
 
 
 def host_labels_ps(
-    params: List[Parameters],
+    params: Sequence[Parameters],
     section: Section,
 ) -> HostLabelGenerator:
     specs = get_discovery_specs(params)
@@ -72,8 +68,7 @@ def host_labels_ps(
             matches = process_matches(command_line, pattern)
             if not matches:
                 continue  # skip not matched lines
-
-            yield from labels.values()
+            yield from (HostLabel(*item) for item in labels.items())
 
 
 def minn(a, b):
@@ -243,51 +238,6 @@ def parse_ps_time(text):
     return 86400 * days + day_secs
 
 
-# This function is repeated in cmk/gui/plugins/wato/check_parameters/ps.py
-# Update that function too until we can import them
-def ps_cleanup_params(params):
-    # New parameter format: dictionary. Example:
-    # {
-    #    "user" : "foo",
-    #    "process" : "/usr/bin/food",
-    #    "warnmin" : 1,
-    #    "okmin"   : 1,
-    #    "okmax"   : 1,
-    #    "warnmax" : 1,
-    # }
-
-    # Even newer format:
-    # {
-    #   "user" : "foo",
-    #   "levels" : (1, 1, 99999, 99999)
-    # }
-    if isinstance(params, (list, tuple)):
-        if len(params) == 5:
-            procname, warnmin, okmin, okmax, warnmax = params
-            user = None
-        elif len(params) == 6:
-            procname, user, warnmin, okmin, okmax, warnmax = params
-
-        params = {
-            "process": procname,
-            "levels": (warnmin, okmin, okmax, warnmax),
-            "user": user,
-        }
-
-    elif any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
-        params["levels"] = (
-            params.pop("warnmin", 1),
-            params.pop("okmin", 1),
-            params.pop("okmax", 99999),
-            params.pop("warnmax", 99999),
-        )
-
-    if "cpu_rescale_max" not in params:
-        params["cpu_rescale_max"] = None
-
-    return params
-
-
 def cpu_rate(value_store, counter, now, lifetime):
     try:
         return get_rate(value_store, counter, now, lifetime)
@@ -322,12 +272,14 @@ class ProcessAggregator:
     def core_weight(self, is_win):
         cpu_rescale_max = self.params.get('cpu_rescale_max')
 
-        # Rule not set up, only windows scaled
-        if cpu_rescale_max is None and not is_win:
-            return 1.0
-
-        # Current rule is set. Explicitly ask not to divide
-        if cpu_rescale_max is False:
+        if any((
+                # Rule not set up, only windows scaled
+                cpu_rescale_max == 'cpu_rescale_max_unspecified' and not is_win,
+                # Current rule is set. Explicitly ask not to divide
+                cpu_rescale_max is False,
+                # Domino tasks counter
+                cpu_rescale_max is None,
+        )):
             return 1.0
 
         # Use default of division
@@ -468,11 +420,11 @@ SectionCpu = Dict[str, Union[float, List[float]]]
 
 
 def discover_ps(
-    params: List[Parameters],
+    params: Sequence[Parameters],
     section_ps: Optional[Section],
     section_mem: Optional[SectionMem],
     section_cpu: Optional[SectionCpu],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     if not section_ps:
         return
 
@@ -506,15 +458,8 @@ def discover_ps(
                 "match_groups": match_groups,
                 "user": i_userspec,
                 "cgroup": cgroupspec,
+                **default_params,
             }
-
-            # default_params is either a clean dict with optional
-            # parameters to set as default or - from version 1.2.4 - the
-            # dict from the rule itself. In the later case we need to remove
-            # the keys that do not specify default parameters
-            for key, value in default_params.items():
-                if key not in ("descr", "match", "user", "perfdata"):
-                    inv_params[key] = value
 
             yield Service(
                 item=i_servicedesc,
@@ -549,9 +494,7 @@ def check_ps_common(
     process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
     cpu_cores: int,
     total_ram: Optional[float],
-) -> CheckGenerator:
-    params = ps_cleanup_params(params)
-
+) -> CheckResult:
     with unused_value_remover(get_value_store(), "collective") as value_store:
         processes = process_capture(process_lines, params, cpu_cores, value_store)
 
@@ -579,7 +522,7 @@ def check_ps_common(
     if params.get("process_info"):
         yield Result(
             state=state.OK,
-            details=format_process_list(processes, params["process_info"] == "html"),
+            notice=format_process_list(processes, params["process_info"] == "html"),
         )
 
 
@@ -587,7 +530,7 @@ def count_check(
     processes: ProcessAggregator,
     params: Parameters,
     info_name: str,
-) -> CheckGenerator:
+) -> CheckResult:
     warnmin, okmin, okmax, warnmax = params["levels"]
     yield from check_levels(
         processes.count,
@@ -601,14 +544,14 @@ def count_check(
     if processes.running_on_nodes:
         yield Result(
             state=state.OK,
-            summary="Running on nodes %s" % ", ".join(sorted(processes.running_on_nodes)),
+            notice="Running on nodes %s" % ", ".join(sorted(processes.running_on_nodes)),
         )
 
 
 def memory_check(
     processes: ProcessAggregator,
     params: Parameters,
-) -> CheckGenerator:
+) -> CheckResult:
     """Check levels for virtual and physical used memory"""
     for size, label, levels, metric in [
         (processes.virtual_size, "virtual", "virtual_levels", "vsz"),
@@ -622,6 +565,7 @@ def memory_check(
             levels_upper=params.get(levels),
             render_func=render.bytes,
             label=label,
+            notice_only=True,
         )
         yield Metric(metric, size, levels=params.get(levels))
 
@@ -630,7 +574,7 @@ def memory_perc_check(
     processes: ProcessAggregator,
     params: Parameters,
     total_ram: Optional[float],
-) -> CheckGenerator:
+) -> CheckResult:
     """Check levels that are in percent of the total RAM of the host"""
     if not total_ram:
         yield Result(
@@ -645,10 +589,11 @@ def memory_perc_check(
         levels_upper=params["resident_levels_perc"],
         render_func=render.percent,
         label="Percentage of total RAM",
+        notice_only=True,
     )
 
 
-def cpu_check(percent_cpu: float, params: Parameters) -> CheckGenerator:
+def cpu_check(percent_cpu: float, params: Parameters) -> CheckResult:
     """Check levels for cpu utilization from given process"""
 
     warn_cpu, crit_cpu = params.get("cpulevels", (None, None, None))[:2]
@@ -683,7 +628,7 @@ def cpu_check(percent_cpu: float, params: Parameters) -> CheckGenerator:
 def individual_process_check(
     processes: ProcessAggregator,
     params: Parameters,
-) -> CheckGenerator:
+) -> CheckResult:
     levels = params["single_cpulevels"]
     for p in processes.processes:
         cpu_usage, name, pid = 0.0, None, None
@@ -714,7 +659,7 @@ def uptime_check(
     min_elapsed: float,
     max_elapsed: float,
     params: Parameters,
-) -> CheckGenerator:
+) -> CheckResult:
     """Check how long the process is running"""
     if min_elapsed == max_elapsed:
         yield from check_levels(
@@ -723,6 +668,7 @@ def uptime_check(
             levels_upper=params.get("max_age"),
             render_func=render.timespan,
             label="Running for",
+            notice_only=True,
         )
     else:
         yield from check_levels(
@@ -730,23 +676,26 @@ def uptime_check(
             levels_lower=params.get("min_age"),
             render_func=render.timespan,
             label="Youngest running for",
+            notice_only=True,
         )
         yield from check_levels(
             max_elapsed,
             levels_upper=params.get("max_age"),
             render_func=render.timespan,
             label="Oldest running for",
+            notice_only=True,
         )
 
 
 def handle_count_check(
     processes: ProcessAggregator,
     params: Parameters,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from check_levels(
         processes.handle_count,
         metric_name="process_handles",
         levels_upper=params.get("handle_count"),
         render_func=lambda d: str(int(d)),
         label="Process handles",
+        notice_only=True,
     )

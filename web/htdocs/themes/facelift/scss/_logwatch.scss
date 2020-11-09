@@ -48,11 +48,11 @@
     font-family: courier, monospace;
     font-size: 13px;
     text-indent: -8px;
-    word-wrap: break-word;    /* IE */
-    white-space: pre-wrap;      /* CSS3 */
+    word-wrap: break-word; /* IE */
+    white-space: pre-wrap; /* CSS3 */
     white-space: -moz-pre-wrap; /* Firefox */
-    white-space: -pre-wrap;     /* Opera <7 */
-    white-space: -o-pre-wrap;   /* Opera 7 */
+    white-space: -pre-wrap; /* Opera <7 */
+    white-space: -o-pre-wrap; /* Opera 7 */
     background-color: rgb(221, 221, 221);
     border-right: 1px solid rgb(136, 136, 136);
     border-left: 1px solid rgb(136, 136, 136);
@@ -77,7 +77,9 @@
     border-bottom: 1px solid rgb(0, 204, 0);
   }
 
-  td.WARN, td.CRIT, td.OK {
+  td.WARN,
+  td.CRIT,
+  td.OK {
     width: 60px;
     padding: 0 3px;
     margin: 0;
@@ -116,7 +118,7 @@
     text-align: right;
 
     a {
-      padding: .7px 7px;
+      padding: 0.7px 7px;
       font-weight: normal;
       color: rgb(0, 0, 0);
       text-decoration: none;
@@ -135,7 +137,8 @@
   /* --- navigation tabs in logwatch ------------------ */
   /* TODO: Reproduce these .tab and .tabactive elements */
 
-  a.tab, a.tabactive {
+  a.tab,
+  a.tabactive {
     display: block;
     width: 140px;
     padding: 2.8px 12px;

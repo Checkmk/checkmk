@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['aws_cloudwatch_alarms_limits_default_levels'] = {
     'cloudwatch_alarms': (None, 80.0, 90.0),
 }
@@ -19,7 +20,6 @@ check_info['aws_cloudwatch_alarms_limits'] = {
     'inventory_function': discover(),
     'check_function': check_aws_cloudwatch_alarms_limits,
     'service_description': 'AWS/CloudWatch Alarms Limits %s',
-    'includes': ['aws.include'],
     'group': 'aws_cloudwatch_alarms_limits',
     'default_levels_variable': 'aws_cloudwatch_alarms_limits_default_levels',
     'has_perfdata': True,

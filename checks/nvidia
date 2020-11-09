@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["nvidia_temp_default_levels"] = {"levels": (60, 65)}
 
 factory_settings["nvidia_temp_core_default_levels"] = {"levels": (90, 95)}
@@ -38,7 +39,6 @@ check_info["nvidia.temp"] = {
     'inventory_function': lambda info: inventory_nvidia_temp(False, info),
     'service_description': 'Temperature %s',
     'has_perfdata': True,
-    'includes': ['temperature.include'],
     'group': 'temperature',
     'default_levels_variable': 'nvidia_temp_default_levels'
 }
@@ -48,7 +48,6 @@ check_info["nvidia.temp_core"] = {
     'inventory_function': lambda info: inventory_nvidia_temp(True, info),
     'service_description': 'Temperature %s',
     'has_perfdata': True,
-    'includes': ['temperature.include'],
     'group': 'temperature',
     'default_levels_variable': 'nvidia_temp_core_default_levels'
 }

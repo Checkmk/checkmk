@@ -1,0 +1,22 @@
+Title: Add Rule set to disable individual SNMP sections
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1599469895
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Users can now entirely disable individual SNMP sections using the rule
+"Include or exclude SNMP sections".
+
+As a result, the related data will not be fetched from the corresponding devices.
+This may be useful if you want reduce the traffic on your network, or
+suppress device responses that are known to be wrong.
+
+This is similar to disabling check plugins, but not quite the same:
+An SNMP section may be used by multiple check plugins, and it may or may
+not be *required* by an individual check plugin.
+Check plugins that require a section which has been disabled will not be
+discovered subsequently.

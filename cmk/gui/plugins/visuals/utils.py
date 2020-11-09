@@ -203,22 +203,16 @@ visual_type_registry = VisualTypeRegistry()
 
 class Filter(metaclass=abc.ABCMeta):
     """Base class for all filters"""
-    @abc.abstractproperty
-    def ident(self) -> str:
-        """The identity of a filter. One word, may contain alpha numeric characters
-        This id is e.g. used in the persisted view configuration"""
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def title(self) -> str:
-        """Used as display string for the filter in the GUI (e.g. view editor)"""
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def sort_index(self) -> int:
-        raise NotImplementedError()
-
-    def __init__(self, info: str, htmlvars: List[str], link_columns: List[ColumnName]) -> None:
+    def __init__(self,
+                 *,
+                 ident: str,
+                 title: str,
+                 sort_index: int,
+                 info: str,
+                 htmlvars: List[str],
+                 link_columns: List[ColumnName],
+                 description: Optional[str] = None,
+                 is_show_more: bool = False) -> None:
         """
         info:          The datasource info this filter needs to work. If this
                        is "service", the filter will also be available in tables
@@ -233,19 +227,14 @@ class Filter(metaclass=abc.ABCMeta):
                        a few filters are useful for linking (such as the host_name and
                        service_description filters with exact match)
         """
-        super(Filter, self).__init__()
+        self.ident = ident
+        self.title = title
+        self.sort_index = sort_index
         self.info = info
         self.htmlvars = htmlvars
         self.link_columns = link_columns
-
-    @property
-    def description(self) -> Optional[str]:
-        return None
-
-    @property
-    def is_advanced(self) -> bool:
-        """Whether or not treat this as advanced GUI element"""
-        return False
+        self.description = description
+        self.is_show_more = is_show_more
 
     def available(self) -> bool:
         """Some filters can be unavailable due to the configuration
@@ -259,10 +248,6 @@ class Filter(metaclass=abc.ABCMeta):
         A good example is the "site" filter which does not need to be available to the
         user in single site setups."""
         return True
-
-    def double_height(self) -> bool:
-        """More complex filters need more height in the HTML layout"""
-        return False
 
     @abc.abstractmethod
     def display(self) -> None:
@@ -303,29 +288,26 @@ class Filter(metaclass=abc.ABCMeta):
             val[varname] = html.request.var(varname, '')
         return val
 
-    def set_value(self, value):
-        """Is used to populate a value, for example loaded from persistance, into
-        the HTML context where it can be used by e.g. the display() method."""
-        for varname in self.htmlvars:
-            var_value = value.get(varname)
-            if var_value is not None:
-                html.request.set_var(varname, var_value)
-
-
-# TODO: We should merge this with Filter() and make all vars unicode ...
-class FilterUnicodeFilter(Filter):
-    def value(self):
-        val = {}
-        for varname in self.htmlvars:
-            val[varname] = html.request.get_unicode_input(varname, '')
-        return val
-
 
 class FilterTristate(Filter):
-    def __init__(self, info, column, deflt=-1):
+    def __init__(self,
+                 *,
+                 ident: str,
+                 title: str,
+                 sort_index: int,
+                 info: str,
+                 column: Optional[str],
+                 deflt: int = -1,
+                 is_show_more: bool = False):
         self.column = column
-        self.varname = "is_" + self.ident
-        super(FilterTristate, self).__init__(info, [self.varname], [])
+        self.varname = "is_" + ident
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=sort_index,
+                         info=info,
+                         htmlvars=[self.varname],
+                         link_columns=[],
+                         is_show_more=is_show_more)
         self.deflt = deflt
 
     def display(self):
@@ -353,7 +335,14 @@ class FilterTristate(Filter):
 
 class FilterTime(Filter):
     """Filter for setting time ranges, e.g. on last_state_change and last_check"""
-    def __init__(self, info, column):
+    def __init__(self,
+                 *,
+                 ident: str,
+                 title: str,
+                 sort_index: int,
+                 info: str,
+                 column: Optional[str],
+                 is_show_more: bool = False):
         self.column = column
         self.ranges = [
             (86400, _("days")),
@@ -362,14 +351,19 @@ class FilterTime(Filter):
             (1, _("sec")),
         ]
         varnames = [
-            self.ident + "_from", self.ident + "_from_range", self.ident + "_until",
-            self.ident + "_until_range"
+            ident + "_from",
+            ident + "_from_range",
+            ident + "_until",
+            ident + "_until_range",
         ]
 
-        super(FilterTime, self).__init__(info, varnames, [column])
-
-    def double_height(self):
-        return True
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=sort_index,
+                         info=info,
+                         htmlvars=varnames,
+                         link_columns=[column] if column is not None else [],
+                         is_show_more=is_show_more)
 
     def display(self):
         choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges]
@@ -443,9 +437,9 @@ def filter_cre_heading_info():
     return config.site(current_value)["alias"] if current_value else None
 
 
-class FilterRegistry(cmk.utils.plugin_registry.Registry[Type[Filter]]):
+class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):
     def plugin_name(self, instance):
-        return instance().ident
+        return instance.ident
 
 
 filter_registry = FilterRegistry()

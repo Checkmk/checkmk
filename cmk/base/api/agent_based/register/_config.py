@@ -5,27 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, Iterable, List, Optional, Set
-
+from collections import defaultdict
 import itertools
 
 from cmk.utils.type_defs import (
     CheckPluginName,
     InventoryPluginName,
     ParsedSectionName,
+    RuleSetName,
     SectionName,
 )
 
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
-    CheckPlugin,
-    InventoryPlugin,
-    RuleSetName,
     SectionPlugin,
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
-from cmk.base.api.agent_based.register.utils import rank_sections_by_supersedes
+from cmk.base.api.agent_based.register.utils import (
+    rank_sections_by_supersedes,
+    validate_check_ruleset_item_consistency,
+)
 
 registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
@@ -34,9 +37,14 @@ registered_inventory_plugins: Dict[InventoryPluginName, InventoryPlugin] = {}
 
 stored_discovery_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
 
+# Lookup table for optimizing validate_check_ruleset_item_consistency()
+_check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]] = defaultdict(list)
+
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
+    validate_check_ruleset_item_consistency(check_plugin, _check_plugins_by_ruleset_name)
     registered_check_plugins[check_plugin.name] = check_plugin
+    _check_plugins_by_ruleset_name[check_plugin.check_ruleset_name].append(check_plugin)
 
 
 def add_discovery_ruleset(ruleset_name: RuleSetName) -> None:
@@ -97,8 +105,8 @@ def get_ranked_sections(
 
 def get_relevant_raw_sections(
     *,
-    check_plugin_names: Iterable[CheckPluginName] = (),
-    inventory_plugin_names: Iterable[InventoryPluginName] = (),
+    check_plugin_names: Iterable[CheckPluginName],
+    consider_inventory_plugins: bool,
 ) -> Dict[SectionName, SectionPlugin]:
     """return the raw sections potentially relevant for the given check or inventory plugins"""
     parsed_section_names: Set[ParsedSectionName] = set()
@@ -108,9 +116,8 @@ def get_relevant_raw_sections(
         if check_plugin:
             parsed_section_names.update(check_plugin.sections)
 
-    for inventory_plugin_name in inventory_plugin_names:
-        inventory_plugin = get_inventory_plugin(inventory_plugin_name)
-        if inventory_plugin:
+    if consider_inventory_plugins:
+        for inventory_plugin in iter_all_inventory_plugins():
             parsed_section_names.update(inventory_plugin.sections)
 
     iter_all_sections: Iterable[SectionPlugin] = itertools.chain(
@@ -128,6 +135,10 @@ def get_relevant_raw_sections(
 def get_section_plugin(section_name: SectionName) -> SectionPlugin:
     return (registered_agent_sections.get(section_name) or
             registered_snmp_sections.get(section_name) or trivial_section_factory(section_name))
+
+
+def get_snmp_section_plugin(section_name: SectionName) -> SNMPSectionPlugin:
+    return registered_snmp_sections[section_name]
 
 
 def is_registered_check_plugin(check_plugin_name: CheckPluginName) -> bool:

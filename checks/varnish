@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 # Special thanks to Rene Stolle (r.stolle@funkemedien.de)
 #   .--agent output--------------------------------------------------------.
@@ -383,7 +385,6 @@ check_info["varnish"] = {
     "check_function": check_varnish_uptime,
     "service_description": "Varnish Uptime",
     "has_perfdata": True,
-    "includes": ["uptime.include"],
 }
 #.
 #   .--cache---------------------------------------------------------------.

@@ -16,7 +16,7 @@ from cmk.utils.rulesets.tuple_rulesets import (
 )
 from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, ServiceName, TagGroups, TagList, Ruleset, RuleValue
+from cmk.utils.type_defs import HostName, ServiceName, TagGroups, TagList, Ruleset, RuleValue, Union
 
 if TYPE_CHECKING:
     from cmk.utils.labels import LabelManager
@@ -125,8 +125,9 @@ class RulesetMatcher:
 
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
-        with_foreign_hosts = match_object.host_name not in \
-                                self.ruleset_optimizer.all_processed_hosts()
+        with_foreign_hosts = (match_object.host_name
+                              not in self.ruleset_optimizer.all_processed_hosts())
+
         optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(ruleset,
                                                                     with_foreign_hosts,
                                                                     is_binary=is_binary)
@@ -199,7 +200,7 @@ class RulesetMatcher:
             return False
 
         if service_labels_condition \
-           and not _matches_labels(match_object.service_labels, service_labels_condition):
+           and not matches_labels(match_object.service_labels, service_labels_condition):
             return False
 
         return True
@@ -240,7 +241,7 @@ class RulesetMatcher:
             if tags and not self.ruleset_optimizer.matches_host_tags([], tags):
                 continue
 
-            if labels and not _matches_labels({}, labels):
+            if labels and not matches_labels({}, labels):
                 continue
 
             if not self.ruleset_optimizer.matches_host_name(hostlist, ""):
@@ -299,6 +300,10 @@ class RulesetOptimizer:
 
     def clear_host_ruleset_cache(self) -> None:
         self._host_ruleset_cache.clear()
+
+    def clear_caches(self) -> None:
+        self._host_ruleset_cache.clear()
+        self._all_matching_hosts_match_cache.clear()
 
     def all_processed_hosts(self) -> Set[HostName]:
         """Returns a set of all processed hosts"""
@@ -457,18 +462,20 @@ class RulesetOptimizer:
                 return matched_by_tags
 
         matching: Set[str] = set()
-        only_specific_hosts = hostlist is not None \
-            and not isinstance(hostlist, dict) \
-            and all(not isinstance(x, dict) for x in hostlist)
+        only_specific_hosts = (hostlist is not None and not isinstance(hostlist, dict) and
+                               all(not isinstance(x, dict) for x in hostlist))
 
         if hostlist == []:
             pass  # Empty host list -> Nothing matches
+
         elif not tags and not labels and not hostlist:
             # If no tags are specified and the hostlist only include @all (all hosts)
             matching = valid_hosts
+
         elif not tags and not labels and only_specific_hosts and hostlist is not None:
             # If no tags are specified and there are only specific hosts we already have the matches
             matching = valid_hosts.intersection(hostlist)
+
         else:
             # If the rule has only exact host restrictions, we can thin out the list of hosts to check
             if only_specific_hosts and hostlist is not None:
@@ -484,7 +491,7 @@ class RulesetOptimizer:
 
                 if labels:
                     host_labels = self._labels.labels_of_host(self._ruleset_matcher, hostname)
-                    if not _matches_labels(host_labels, labels):
+                    if not matches_labels(host_labels, labels):
                         continue
 
                 if not self.matches_host_name(hostlist, hostname):
@@ -517,43 +524,15 @@ class RulesetOptimizer:
 
     def matches_host_tags(self, hosttags, required_tags):
         for tag_spec in required_tags.values():
-            if self._matches_tag_spec(tag_spec, hosttags) is False:
+            if matches_tag_spec(tag_spec, hosttags) is False:
                 return False
 
         return True
 
-    def _matches_tag_spec(self, tag_spec, hosttags):
-        is_not = False
-        if isinstance(tag_spec, dict):
-            if "$ne" in tag_spec:
-                is_not = True
-                tag_spec = tag_spec["$ne"]
-
-            elif "$or" in tag_spec:
-                return any(
-                    self._matches_tag_spec(sub_tag_spec, hosttags)
-                    for sub_tag_spec in tag_spec["$or"])
-
-            elif "$nor" in tag_spec:
-                return not any(
-                    self._matches_tag_spec(sub_tag_spec, hosttags)
-                    for sub_tag_spec in tag_spec["$nor"])
-
-            else:
-                raise NotImplementedError()
-
-        matches = tag_spec in hosttags
-        if matches == is_not:
-            return False
-
-        return True
-
     def _condition_cache_id(self, hostlist, tags, labels, rule_path):
-        host_parts: List[Optional[str]] = []
+        host_parts: List[str] = []
 
-        if hostlist is None:
-            host_parts.append(None)
-        else:
+        if hostlist is not None:
             negate, hostlist = parse_negated_condition_list(hostlist)
             if negate:
                 host_parts.append("!")
@@ -687,7 +666,31 @@ def _tags_or_labels_cache_id(tag_or_label_spec):
     return tag_or_label_spec
 
 
-def _matches_labels(object_labels, required_labels):
+def matches_tag_spec(tag_spec: Union[dict, str], hosttags: TagList) -> bool:
+    is_not = False
+    if isinstance(tag_spec, dict):
+        if "$ne" in tag_spec:
+            is_not = True
+            tag_spec = tag_spec["$ne"]
+
+        elif "$or" in tag_spec:
+            return any(matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in tag_spec["$or"])
+
+        elif "$nor" in tag_spec:
+            return not any(
+                matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in tag_spec["$nor"])
+
+        else:
+            raise NotImplementedError()
+
+    matches = tag_spec in hosttags
+    if matches == is_not:
+        return False
+
+    return True
+
+
+def matches_labels(object_labels, required_labels) -> bool:
     for label_group_id, label_spec in required_labels.items():
         is_not = isinstance(label_spec, dict)
         if is_not:

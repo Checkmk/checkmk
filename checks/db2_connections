@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<db2_connections>>>
 # [[[db2taddm:CMDBS1]]]
 # port 50214
@@ -62,5 +63,4 @@ check_info['db2_connections'] = {
     "has_perfdata": True,
     "group": "db2_connections",
     "default_levels_variable": "db2_connections_default_levels",
-    "includes": ["db2.include"]
 }

@@ -186,6 +186,7 @@ private:
     std::atomic<LogLevel> _level;
     std::atomic<Handler *> _handler;
     std::atomic<bool> _use_parent_handlers;
+    std::mutex _lock;
 };
 
 class LoggerDecorator : public Logger {
@@ -317,10 +318,13 @@ public:
         : std::system_error(err, std::generic_category(), what_arg) {}
 
     explicit generic_error(const char *what_arg)
-        : std::system_error(errno, std::generic_category(), what_arg) {}
+        : generic_error(errno, what_arg) {}
+
+    generic_error(int err, const std::string &what_arg)
+        : std::system_error(err, std::generic_category(), what_arg) {}
 
     explicit generic_error(const std::string &what_arg)
-        : std::system_error(errno, std::generic_category(), what_arg) {}
+        : generic_error(errno, what_arg) {}
 };
 std::ostream &operator<<(std::ostream &os, const generic_error &ge);
 

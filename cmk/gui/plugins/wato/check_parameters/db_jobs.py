@@ -22,7 +22,7 @@ run_duration = Tuple(
     ],
 )
 
-consider_db_status = DropdownChoice(
+ignore_db_status = DropdownChoice(
     title=_("Job State"),
     help=_("The state of the job is ignored by default."),
     choices=[

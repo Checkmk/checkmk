@@ -3,17 +3,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
-from .agent_based_api.v0.type_defs import (
-    CheckGenerator,
-    DiscoveryGenerator,
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
     Parameters,
-    SNMPStringTable,
+    StringTable,
 )
 
 from .utils import ps, domino
-from .agent_based_api.v0 import register, SNMPTree
+from .agent_based_api.v1 import register, SNMPTree
 
 # Example SNMP walk:
 #
@@ -34,7 +34,7 @@ ProcessLines = List[Tuple[Optional[str], ps.ps_info, List[str]]]
 # Bring the SNMP data in the format expected by the common ps functions.
 # e.g.:
 # [None, (u'root', u'185292', u'5804', u'00:00:02/03:33:13', u'1'), u'/sbin/init', u'splash']
-def parse_domino_tasks(string_table: SNMPStringTable) -> ps.Section:
+def parse_domino_tasks(string_table: List[StringTable]) -> ps.Section:
     process_lines = [(ps.ps_info(), line) for line in string_table[0]]  # type: ignore[call-arg]
     # add cpu_cores count to be compatible with ps section
     return 1, process_lines
@@ -43,7 +43,7 @@ def parse_domino_tasks(string_table: SNMPStringTable) -> ps.Section:
 register.snmp_section(
     name='domino_tasks',
     parse_function=parse_domino_tasks,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.334.72.1.1.6.1.2.1",
             oids=["4"],  # InTaskName
@@ -54,10 +54,10 @@ register.snmp_section(
 
 
 def discover_domino_tasks(
-    params: List[Parameters],
+    params: Sequence[Parameters],
     section_domino_tasks: Optional[ps.Section],
     section_mem: Optional[Dict[str, float]],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     yield from ps.discover_ps(params, section_domino_tasks, section_mem, None)
 
 
@@ -66,7 +66,7 @@ def check_domino_tasks(
     params: Parameters,
     section_domino_tasks: Optional[ps.Section],
     section_mem: Optional[Dict[str, float]],
-) -> CheckGenerator:
+) -> CheckResult:
     if section_domino_tasks is None:
         return
     cpu_cores, lines = section_domino_tasks
@@ -87,7 +87,7 @@ def cluster_check_domino_tasks(
     params: Parameters,
     section_domino_tasks: Dict[str, ps.Section],
     section_mem: Dict[str, Dict[str, int]],
-) -> CheckGenerator:
+) -> CheckResult:
 
     process_lines: ProcessLines = [(node_name, psi, cmd_line)
                                    for node_name, node_section in section_domino_tasks.items()
@@ -112,6 +112,12 @@ register.check_plugin(
     discovery_ruleset_type="all",
     discovery_default_parameters={},
     check_function=check_domino_tasks,
+    # Note: domino_tasks is a ManualCheckParameterRulespec. If the user specifies an already
+    # discovered item, the manual check will overrule the corresponding autocheck. As a result, for
+    # the user it looks as if the parameters specified in the manual check configuration were simply
+    # passed to the check plugin, without any sort of overruling. Also note that we cannot simply
+    # remove this line. If we did that, the checktype domino_tasks would not be available any more
+    # when configuring the manual check.
     check_ruleset_name="domino_tasks",
     check_default_parameters={},
     cluster_check_function=cluster_check_domino_tasks,

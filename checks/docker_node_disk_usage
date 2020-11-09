@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import cmk.base.plugins.agent_based.utils.docker as docker
+from cmk.base.check_legacy_includes.legacy_docker import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def parse_docker_node_disk_usage(info):
@@ -39,7 +40,6 @@ check_info["docker_node_disk_usage"] = {
     "inventory_function": discover(),
     "check_function": check_docker_node_disk_usage,
     "service_description": "Docker disk usage - %s",
-    "includes": ['legacy_docker.include'],
     "has_perfdata": True,
     "group": "docker_node_disk_usage",
 }

@@ -6,7 +6,7 @@ Date: 1586334238
 Edition: cme
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When saving a site configuration and trying to submit the form again
 a second time, this could result in an error message. No information

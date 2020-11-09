@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The password policy is only meant to be used for local Checkmk users. During
 login of LDAP users the expiration time was also applied to LDAP users by

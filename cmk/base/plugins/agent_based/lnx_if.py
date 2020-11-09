@@ -12,7 +12,7 @@ from typing import (
     Tuple,
     Union,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     register,
     type_defs,
 )
@@ -102,7 +102,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
     return ip_stats
 
 
-def _parse_lnx_if_sections(string_table: type_defs.AgentStringTable):
+def _parse_lnx_if_sections(string_table: type_defs.StringTable):
     ip_stats = {}
     ethtool_stats: Dict[str, Dict[str, Union[str, int, Sequence[int]]]] = {}
     iface = None
@@ -140,7 +140,7 @@ def _parse_lnx_if_sections(string_table: type_defs.AgentStringTable):
     return ip_stats, ethtool_stats
 
 
-def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
+def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
     ip_stats, ethtool_stats = _parse_lnx_if_sections(string_table)
 
     nic_info = []
@@ -164,18 +164,18 @@ def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
         # Compute speed
         speed_text = attr.get("Speed")
         if speed_text is None:
-            ifSpeed = ''
+            ifSpeed = 0
         else:
             if speed_text == '65535Mb/s':  # unknown
-                ifSpeed = ''
+                ifSpeed = 0
             elif speed_text.endswith("Kb/s"):
-                ifSpeed = str(int(float(speed_text[:-4])) * 1000)
+                ifSpeed = int(float(speed_text[:-4])) * 1000
             elif speed_text.endswith("Mb/s"):
-                ifSpeed = str(int(float(speed_text[:-4])) * 1000000)
+                ifSpeed = int(float(speed_text[:-4])) * 1000000
             elif speed_text.endswith("Gb/s"):
-                ifSpeed = str(int(float(speed_text[:-4])) * 1000000000)
+                ifSpeed = int(float(speed_text[:-4])) * 1000000000
             else:
-                ifSpeed = ''
+                ifSpeed = 0
 
         # Performance counters
         ifInOctets = counters[0]
@@ -219,33 +219,33 @@ def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
         if ":" in raw_phys_address:
             # We saw interface entries of tunnels for the address
             # is an integer, eg. '1910236'; especially on OpenBSD.
-            ifPhysAddress = "".join([chr(int(x, 16)) for x in raw_phys_address.split(":")])
+            ifPhysAddress = interfaces.mac_address_from_hexstring(raw_phys_address)
         else:
             ifPhysAddress = ''
 
-        interface = interfaces.PreInterface(
-            index=str(ifIndex),
-            descr=str(ifDescr),
-            type=str(ifType),
-            speed=ifSpeed,
-            oper_status=str(ifOperStatus),
-            in_octets=ifInOctets,
-            in_ucast=inucast,
-            in_mcast=inmcast,
-            in_bcast=inbcast,
-            in_discards=ifInDiscards,
-            in_errors=ifInErrors,
-            out_octets=ifOutOctets,
-            out_ucast=outucast,
-            out_mcast=outmcast,
-            out_bcast=outbcast,
-            out_discards=ifOutDiscards,
-            out_errors=ifOutErrors,
-            out_qlen=ifOutQLen,
-            alias=ifAlias,
-            phys_address=ifPhysAddress,
-        )
-        if_table.append(interfaces.finalize_interface(interface))
+        if_table.append(
+            interfaces.Interface(
+                index=str(ifIndex),
+                descr=str(ifDescr),
+                type=str(ifType),
+                speed=ifSpeed,
+                oper_status=str(ifOperStatus),
+                in_octets=ifInOctets,
+                in_ucast=inucast,
+                in_mcast=inmcast,
+                in_bcast=inbcast,
+                in_discards=ifInDiscards,
+                in_errors=ifInErrors,
+                out_octets=ifOutOctets,
+                out_ucast=outucast,
+                out_mcast=outmcast,
+                out_bcast=outbcast,
+                out_discards=ifOutDiscards,
+                out_errors=ifOutErrors,
+                out_qlen=ifOutQLen,
+                alias=ifAlias,
+                phys_address=ifPhysAddress,
+            ))
 
     return if_table, ip_stats
 
@@ -259,7 +259,7 @@ register.agent_section(
 def discover_lnx_if(
     params: Sequence[type_defs.Parameters],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     # Always exclude dockers veth* interfaces on docker nodes
     if_table = [iface for iface in section[0] if not iface.descr.startswith("veth")]
     yield from interfaces.discover_interfaces(
@@ -272,7 +272,7 @@ def check_lnx_if(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
@@ -284,7 +284,7 @@ def cluster_check_lnx_if(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
         item,
         params,

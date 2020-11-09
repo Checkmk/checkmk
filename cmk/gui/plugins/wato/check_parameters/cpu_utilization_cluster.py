@@ -12,7 +12,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksNetworking,
+    RulespecGroupEnforcedServicesNetworking,
     rulespec_registry,
     ManualCheckParameterRulespec,
 )
@@ -44,7 +44,7 @@ def _parameter_valuespec_cpu_utilization_cluster():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="cpu_utilization_cluster",
-        group=RulespecGroupManualChecksNetworking,
+        group=RulespecGroupEnforcedServicesNetworking,
         parameter_valuespec=_parameter_valuespec_cpu_utilization_cluster,
         title=lambda: _("CPU Utilization of Clusters"),
     ))

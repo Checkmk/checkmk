@@ -29,7 +29,7 @@
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<StringLambdaColumn<Comment>>(
         "author", "The contact that entered the comment", offsets,
         [](const Comment &r) { return r._author_name; }));
@@ -71,10 +71,12 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
             return std::chrono::system_clock::from_time_t(r._expire_time);
         }));
 
-    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Comment, _host),
-                           -1);
-    TableServices::addColumns(this, "service_",
-                              DANGEROUS_OFFSETOF(Comment, _service),
+    TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
+        return r.rawData<Comment>()->_host;
+    }));
+    TableServices::addColumns(this, "service_", offsets.add([](Row r) {
+        return r.rawData<Comment>()->_service;
+    }),
                               false /* no hosts table */);
 }
 

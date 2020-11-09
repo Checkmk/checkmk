@@ -3,27 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import cmk.base.plugins.agent_based.utils.docker as docker
-
-
-def parse_docker_node_info(info):
-    version = docker.get_version(info)
-    if version is None:
-        return parse_legacy_docker_node_info(info)  # pylint: disable=undefined-variable
-
-    if len(info) < 2:
-        return {}
-
-    loaded = {}
-    for line in info[1:]:
-        loaded.update(docker.json_get_obj(line) or {})
-    return loaded
+from cmk.base.check_legacy_includes.legacy_docker import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def discover_docker_node_info(info):
     if info:
-        yield HostLabel(u"cmk/docker_object", u"node")
-        yield (None, {})
+        yield None, {}
 
 
 @append_deprecation_warning  # pylint: disable=undefined-variable
@@ -36,8 +21,7 @@ def check_docker_node_info(_no_item, _no_params, parsed):
 
 
 check_info['docker_node_info'] = {
-    'includes': ['legacy_docker.include'],
-    'parse_function': parse_docker_node_info,
+    # section is already migrated!
     'inventory_function': discover_docker_node_info,
     'check_function': check_docker_node_info,
     'service_description': 'Docker node info',
@@ -69,10 +53,10 @@ def check_docker_node_containers(_no_item, params, parsed):
 
 
 check_info["docker_node_info.containers"] = {
+    # section is already migrated!
     "inventory_function": discover_single,
     "check_function": check_docker_node_containers,
     "service_description": "Docker containers",
     "has_perfdata": True,
     "group": "docker_node_containers",
-    'includes': ['legacy_docker.include'],
 }

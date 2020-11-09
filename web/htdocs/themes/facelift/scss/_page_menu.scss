@@ -13,24 +13,6 @@ body.main {
       display: none;
     }
   }
-
-  &.hide_suggestions {
-    td.shortcuts {
-      a.suggested {
-        display: inline-block;
-      }
-    }
-
-    tr#suggestions {
-      display: none;
-    }
-  }
-
-  &.hide_suggestions {
-    a#menu_shortcut_toggle_suggestions {
-      transform: rotate(180deg);
-    }
-  }
 }
 
 div#top_heading {
@@ -52,7 +34,9 @@ div#top_heading {
     text-decoration: none;
     white-space: nowrap;
 
-    &:hover { cursor: pointer; }
+    &:hover {
+      cursor: pointer;
+    }
   }
 
   div.page_state {
@@ -90,7 +74,8 @@ div#top_heading {
     }
 
     &.default {
-      div.icon_container, div.icon_container > img.icon {
+      div.icon_container,
+      div.icon_container > img.icon {
         width: 18px;
         height: 18px;
         border: 4px solid rgba($font-color, 0.5);
@@ -112,11 +97,12 @@ div#top_heading {
     font-size: 11px;
     white-space: nowrap;
 
-    span, a {
+    span,
+    a {
       &:last-child:after {
         content: "";
       }
-      color: rgba($font-color, .5);
+      color: rgba($font-color, 0.5);
       text-decoration: none;
     }
 
@@ -153,8 +139,8 @@ div#top_heading {
 
           img {
             filter: grayscale(100%) brightness(50%);
-	  }
-	}
+          }
+        }
 
         #menu_shortcut_toggle_suggestions img {
           filter: grayscale(100%) brightness(55%);
@@ -162,12 +148,16 @@ div#top_heading {
       }
     }
 
+    td.menues div.menucontainer,
+    td.inpage_search {
+      background-color: $page-menu-bg-color;
+      border-bottom: 2px solid $page-menu-bg-color;
+    }
+
     td.menues div.menucontainer {
       position: relative;
       display: inline-block;
       padding: 0;
-      background-color: $page-menu-bg-color;
-      border-bottom: 2px solid $page-menu-bg-color;
 
       &.disabled {
         pointer-events: none;
@@ -188,7 +178,7 @@ div#top_heading {
 
       div.popup_trigger {
         height: 100%;
-        min-width: 78px;
+        padding: 0 (0.5 * $spacing);
 
         > a {
           text-align: center;
@@ -209,8 +199,10 @@ div#top_heading {
           margin: 0;
           font-size: 12px;
 
-          &:hover { cursor: pointer; }
-	}
+          &:hover {
+            cursor: pointer;
+          }
+        }
       }
 
       div.menu {
@@ -221,63 +213,53 @@ div#top_heading {
         display: none;
         max-height: calc(100vh - 113px);
         min-width: 220px;
-        padding: $spacing;
+        padding: 0 $spacing $spacing;
         overflow-y: auto;
+        line-height: 16px;
         text-align: left;
         background-color: $page-menu-bg-color;
+        opacity: 1;
         scrollbar-width: none; /* Firefox */
 
         img {
-          width: 16px;
-          height: auto;
-          margin-right: 7px;
-        }
-
-        a.more img {
-          width: auto;
-          height: 20px;
+          width: 14px;
+          height: 14px;
+          margin-right: 5px;
         }
 
         div.topic {
-          margin-top: $spacing;
-
-          &:nth-child(2) {
-            margin: 0;
-          }
-
           &:first-child {
             margin-top: 0;
           }
 
           div.topic_title {
             display: inline-block;
-            padding-bottom: 2px;
-            margin-bottom: $spacing;
+            padding: $spacing 0 2px 32px;
+            font-size: $font-size-global;
             font-weight: normal;
-            color: rgba($font-color, .5);
+            color: rgba($font-color, 0.5);
             cursor: default;
-            border-bottom: 1px solid rgba($font-color, .2);
           }
 
           div.entry {
-            padding-left: 0;
-            margin: 0 0 $spacing $spacing;
+            padding-left: $spacing;
 
             a {
               display: flex;
               align-items: center;
-              color: $font-color;
               text-decoration: none;
             }
 
-            &.enabled a:hover { opacity: .7; }
+            &.enabled a:hover {
+              color: $success;
+            }
 
             &.disabled a {
               text-decoration: none;
               pointer-events: none;
               cursor: default;
-              opacity: .5;
-	    }
+              opacity: 0.5;
+            }
           }
         }
 
@@ -298,6 +280,87 @@ div#top_heading {
             }
           }
         }
+
+        div.more_container {
+          position: relative;
+          width: 100%;
+
+          a.more {
+            position: absolute;
+            top: $spacing;
+            right: 0;
+          }
+        }
+      }
+    }
+
+    &#page_menu_bar.hide_suggestions {
+      td.shortcuts a.suggested {
+        display: inline-block;
+        line-height: 26px;
+      }
+
+      tr#suggestions {
+        display: none;
+      }
+
+      a#menu_shortcut_toggle_suggestions {
+        transform: rotate(180deg);
+      }
+    }
+
+    td.inpage_search {
+      padding: 2px 10px 0;
+
+      form {
+        padding: 0;
+        margin: 0;
+        background-color: $headline-color;
+        border-radius: 2px;
+      }
+
+      input,
+      input:active,
+      input:focus {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        box-sizing: border-box;
+      }
+
+      input[type="text"] {
+        width: 110px !important;
+        height: 18px;
+      }
+
+      input#inpage_search_form_reset {
+        width: 11px;
+        height: 11px;
+        margin: 0 4px;
+        padding: 0;
+        background-repeat: no-repeat;
+        background-size: 11px 11px;
+        border-radius: 0;
+        background-image: url("images/icon_close.png");
+        filter: $inpage-close-button-filter;
+
+        &:disabled {
+          width: 10px;
+          height: 10px;
+          background-size: 10px 10px;
+          background-image: url("images/icon_filter_line.svg");
+          filter: none;
+        }
+      }
+
+      img {
+        width: 10px;
+        height: 10px;
+        margin: 0 4px;
+
+        &:hover {
+          opacity: 1;
+        }
       }
     }
   }
@@ -310,8 +373,13 @@ div#top_heading {
       padding: 6px 3px 3px 0;
 
       @keyframes easyhoverbg {
-        from { background-color: 1px solid $button-bg-color-secondary; }
-        to { background-color: 1px solid $button-bg-color-secondary-hover; }
+        from {
+          background-color: 1px solid $button-bg-color-suggestions;
+        }
+
+        to {
+          background-color: 1px solid $button-bg-color-default;
+        }
       }
 
       div.suggestion {
@@ -327,7 +395,12 @@ div#top_heading {
 
         &.disabled {
           pointer-events: none;
-          filter: grayscale(100%) brightness(55%);
+
+          a {
+            background-color: $input-button-hover-bg-color;
+            opacity: 0.5;
+            filter: $button-inactive-filter;
+          }
         }
 
         a {
@@ -335,23 +408,30 @@ div#top_heading {
           align-items: center;
           justify-content: center;
 
-          height: 34px;
-          padding: 0 11px;
-
+          height: 30px;
+          padding: 0 8px;
           font-size: 12px;
           font-weight: bold;
+          line-height: 16px;
           color: $button-font-color-default;
           text-decoration: none;
-          background-color: $button-bg-color-secondary;
+          background-color: $button-bg-color-suggestions;
           border-radius: 4px;
 
           img {
-            margin-right: 6px;
+            width: 15px;
+            height: 15px;
+            padding: 0;
+            margin-right: 5px;
+
+            &:hover {
+              opacity: 1;
+            }
           }
 
           &:hover {
             cursor: pointer;
-            background-color: $button-bg-color-secondary-hover;
+            background-color: $button-bg-color-default;
 
             animation-duration: 0.5s;
             animation-name: easyhoverbg;
@@ -364,11 +444,12 @@ div#top_heading {
 }
 
 div#page_menu_popups {
+  margin: 0 $spacing $spacing 0;
+
   div.page_menu_popup {
     position: relative;
     display: none;
-    padding: 10px;
-    background-color: $form-bg-color;
+    background-color: $base-color;
     border: none;
     border-radius: $popup-filters-border-radius;
 
@@ -376,49 +457,61 @@ div#page_menu_popups {
       display: block;
     }
 
+    &.side_popup > .head {
+      background-color: inherit;
+    }
+
     > .head {
-      padding: 0;
+      padding: 6px 0 5px $spacing;
+      background-color: $headline-color;
 
       h3 {
         padding: 0;
-        margin: 8px 10px;
-        font-size: 14px;
-        font-weight: bold;
+        margin: 0;
+        font-size: $font-size-global;
+        font-weight: $font-weight-bold;
         color: $font-color;
-        text-transform: uppercase;
       }
 
       a.close_popup img {
         position: absolute;
-        top: 1px;
-        right: 6px;
+        top: 4px;
+        right: $spacing;
         width: 16px;
         height: auto;
+        filter: $inpage-close-button-filter;
       }
     }
 
-    > .content {
+    &.side_popup > .content {
       padding: 0;
     }
 
-    form {
-      width: 456px;
+    div.group {
+      padding-top: $spacing;
 
-      span.checkbox { white-space: initial; }
+      &:first-of-type {
+        padding-top: 0;
+      }
     }
 
-
-    select, .tagify__input, span.select2 .select2-selection, input[type="checkbox"] + label::before, input:not(.reset):not([type="submit"])  {
-      background-color: $odd-tr-bg-color;
+    form span.checkbox {
+      padding-right: $spacing;
+      white-space: initial;
     }
 
-    input.submit {
-      color: $black;
-      background-color: $success;
+    select,
+    .tagify__input,
+    span.select2 .select2-selection,
+    input[type="checkbox"] + label::before,
+    input:not(.reset):not([type="submit"]) {
+      background-color: $bg-color;
     }
 
-    input[type=submit]:not(.submit) {
-      border: $popup-button-border;
+    input.button {
+      padding: 8px 16px;
+      margin-top: 0;
+      margin-bottom: 0;
     }
   }
 }
@@ -432,49 +525,58 @@ div#page_menu_popups div.side_popup {
   width: 375px;
   height: 100vh;
   padding: 0;
+  border-left: $popup-border;
 
   form {
     width: inherit;
     text-align: left;
 
     div.side_popup_content {
-      height: 100vh;
+      height: calc(100vh - 86px);
       overflow-x: hidden;
       overflow-y: auto;
     }
 
     /* general floatfilter elment styling */
     div.floatfilter {
-      padding: 0;
-      padding-right: 8px;
-      padding-bottom: 3px;
+      padding: 0 8px 3px $spacing;
       margin: 0;
-      background-color: $button-bg-color-default;
+      background-color: $base-color;
       border-style: none;
       border-radius: 0;
       box-shadow: none;
 
       input.neg[type="text"] {
-        width: 84%;
-      }
-
-      div.legend {
-        margin: 0;
-        margin-bottom: 4px;
-        font-size: 10px;
-        font-weight: normal;
-        color: $font-color;
-        text-align: left;
-        text-transform: uppercase;
-        border-radius: 0;
+        width: 81%;
       }
 
       div.content {
-        padding: 0;
+        padding: 1px 0 5px;
+        overflow: auto;
       }
 
       span.select2-container--default {
         display: inline-block;
+
+        &:last-child {
+          width: auto !important;
+        }
+      }
+
+      &.host_auxtags {
+        div.content {
+          padding-bottom: 1px;
+        }
+
+        span.select2-container--default {
+          margin-bottom: 4px;
+        }
+      }
+
+      &.address_families {
+        div.content {
+          padding-bottom: 1px;
+        }
       }
     }
 
@@ -522,12 +624,10 @@ div#page_menu_popups div.side_popup {
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-
       padding: 10px;
       margin: 0;
-      border-top: $primary-table-border;
-      border-bottom: $primary-table-border;
-      border-color: $headline-color;
+      border-top: $popup-inner-border;
+      border-bottom: $popup-inner-border;
 
       a.add {
         display: inline-block;
@@ -544,34 +644,36 @@ div#page_menu_popups div.side_popup {
           display: inline-block;
           margin: 5px 10px 0;
           color: #5a6782;
-          text-transform: uppercase;
         }
 
-        &:hover, &.active {
+        &:hover,
+        &.active {
           img {
             opacity: 1;
-            filter: brightness(100);
+            filter: $filter-add-button-hover-brightness;
           }
-          div.description { color: $font-color; }
+
+          div.description {
+            color: $font-color;
+          }
         }
       }
 
       div.update_buttons {
         margin-left: auto;
 
-        input {
-          padding: 8px 16px;
-          margin: 0;
-        }
+        input.apply {
+          margin-right: 0;
 
-        input.reset {
-          border-color: $font-color;
+          &:disabled {
+            opacity: 0.5;
+          }
         }
       }
     }
   }
 
-  div#popup_filter_list {
+  div.popup_filter_list {
     position: fixed;
     top: 0;
     right: 375px;
@@ -580,14 +682,17 @@ div#page_menu_popups div.side_popup {
     height: 100vh;
     padding: 0;
     overflow: auto;
-    background-color: rgb(53, 63, 74);
-    border: none;
+    background-color: $base-color;
+    border-right: $popup-inner-border;
+    border-left: $popup-border;
 
     &.active {
       display: block;
     }
 
-    div.filter_group:last-child { margin-bottom: 10px; }
+    div.filter_group:last-child {
+      margin-bottom: 10px;
+    }
 
     a.filter_group_title {
       display: block;
@@ -599,11 +704,13 @@ div#page_menu_popups div.side_popup {
 
     a.more {
       position: absolute;
+      top: 6px;
       right: 4px;
     }
 
     ul {
       padding: 0 20px;
+      margin-top: 0;
 
       li {
         list-style: none;
@@ -620,7 +727,7 @@ div#page_menu_popups div.side_popup {
           text-decoration: none;
           pointer-events: none;
           cursor: default;
-          opacity: .5;
+          opacity: 0.5;
         }
       }
     }
@@ -629,76 +736,4 @@ div#page_menu_popups div.side_popup {
       display: none;
     }
   }
-}
-
-/* Ein bisschen Styling für das Darktheme - unabhängig vom Inpage */
-.wato table.data {
-  border-style: none;
-  box-shadow: none;
-
-  &:not(.job_table) th {
-    background: transparent;
-
-    &.header_state {
-      color: #777 !important;
-      background: transparent !important;
-    }
-  }
-}
-
-div#service_container {
-  table.data {
-    tr.data > td {
-      height: auto;
-      padding: 3px 7px;
-
-      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
-        border-top: none;
-        border-bottom: none;
-      }
-
-      &.service {
-        width: 250px;
-        max-width: 250px;
-        min-width: 250px;
-        white-space: nowrap;
-      }
-    }
-
-    tr.groupheader {
-      background-color: transparent;
-    }
-
-    th {
-      color: #777;
-    }
-
-    td h3 {
-      margin-top: 13px;
-    }
-  }
-
-  h3 {
-    margin-top: 13px;
-    font-size: 13px;
-    color: #aaa;
-    text-transform: uppercase;
-
-    img {
-      position: relative;
-      top: -1px;
-      margin-left: 5px;
-    }
-  }
-}
-
-div.help {
-  text-transform: none; /* Neccessary due to help in H3 */
-}
-
-div.wato h3 {
-  margin-bottom: 12px;
-  font-size: 14px;
-  color: #aaa;
-  text-transform: uppercase;
 }

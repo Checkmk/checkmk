@@ -28,6 +28,7 @@ table.filterform {
 div.floatfilter {
   width: 333px;
   padding: 4px;
+  padding-left: 10px;
   margin: 0 5px 5px 0;
   color: $primary-font-color;
   background-color: $bg-color-secondary;
@@ -36,10 +37,16 @@ div.floatfilter {
     width: 100%;
     height: 17px;
     padding: 5px 8px;
-    font-size: 10px;
-    color: $secondary-font-color;
-    text-transform: uppercase;
+    padding-left: 0;
+    font-size: 11px;
+    font-weight: bold;
+    color: $font-color;
     background-color: $floatfilter-bg-color;
+
+    span {
+      padding-bottom: 3px;
+      border-bottom: $floatfilter-legend-border;
+    }
   }
 
   .content {
@@ -92,11 +99,14 @@ div.floatfilter {
       }
     }
 
-    input, select, textarea, #mk_side_search_field {
+    input,
+    select,
+    textarea,
+    #mk_side_search_field {
       margin-bottom: 0;
     }
 
-    input[type=text] {
+    input[type="text"] {
       width: 100%;
       box-sizing: border-box;
 
@@ -109,28 +119,28 @@ div.floatfilter {
       }
     }
 
-    input.neg[type=text] {
+    input.neg[type="text"] {
       position: relative;
-      top: -2px;
+      top: -1px;
       width: 237px;
     }
 
-    input[type^=radio],
-    select[type^=radio],
-    textarea[type^=radio],
-    [type^=radio]#mk_side_search_field {
+    input[type^="radio"],
+    select[type^="radio"],
+    textarea[type^="radio"],
+    [type^="radio"]#mk_side_search_field {
       width: auto;
       margin-bottom: 0;
     }
 
-    input[type=radio] {
+    input[type="radio"] {
       margin-left: 5px;
     }
 
     .radiobutton_group {
       display: inline-block;
 
-      input[type=radio] {
+      input[type="radio"] {
         margin-left: 0;
       }
 
@@ -147,20 +157,26 @@ div.floatfilter {
     nobr {
       margin-left: 4px;
     }
+
+    table {
+      border-spacing: 0;
+
+      td {
+        padding: 0 4px 4px 0;
+      }
+    }
   }
 
-  &.service_custom_variable, &.host_custom_variable {
+  &.service_custom_variable,
+  &.host_custom_variable {
     .select2-container {
       max-width: 55%;
     }
 
-    input, select {
+    input[type="text"] {
       display: inline-block;
-      width: 45%;
-    }
-
-    select {
-      margin-right: 10px;
+      width: 43%;
+      margin-left: 4px;
     }
   }
 
@@ -179,7 +195,8 @@ div.floatfilter {
     }
   }
 
-  &.invswpac_version, &.invswpac_package_version {
+  &.invswpac_version,
+  &.invswpac_package_version {
     input.text {
       margin-left: 4px;
     }
@@ -208,7 +225,8 @@ div.floatfilter {
   }
 
   &.double {
-    &.log_class .content, &.log_state .content {
+    &.log_class .content,
+    &.log_state .content {
       table {
         border-spacing: 6px 0;
 
@@ -237,11 +255,8 @@ div.floatfilter {
     }
   }
 
-  &.host_tags .content table {
-    border-spacing: 4px 0;
-  }
-
-  &.svchardstate .content, &.svcstate .content {
+  &.svchardstate .content,
+  &.svcstate .content {
     .checkbox:not(:last-of-type) {
       margin-right: 8px;
     }
@@ -259,8 +274,7 @@ div.floatfilter {
     height: 22px;
   }
 
-  .select2-container--default .select2-selection--single
-  .select2-selection__rendered {
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
     line-height: 20px;
   }
 
@@ -279,26 +293,56 @@ div.floatfilter {
       padding: 3px;
     }
   }
-}
 
-/* Improving styling of floatfilters that are contained in a ListOf() */
-table.valuespec_listof.filter {
-  *.filter {
-    width: 300px;
-    border-spacing: 0;
+  &.address_families {
+    span.radiobutton_group {
+      margin-bottom: 4px;
+    }
   }
 
-  td {
-    &.vlof_content {
-      width: 1px;
-      border-style: none;
+  &.host_address,
+  &.host_ipv4_address,
+  &.host_ipv6_address {
+    input[type="text"] {
+      margin-bottom: 8px;
+    }
+  }
+
+  &.invswpac {
+    div.content > input[type="text"] {
+      margin-bottom: 8px;
     }
 
-    &.vlof_buttons {
-      width: 1px;
-      vertical-align: top;
-      border-style: none;
+    span.min_max_row {
+      display: inline-block;
+      margin: 8px 0;
     }
+  }
+}
+
+/* Specific styling for side popup floatfilters that are contained in a ListOf() */
+div.side_popup_content table.valuespec_listof.filter {
+  td.vlof_buttons {
+    width: 0;
+
+    a.delete_button img {
+      position: absolute;
+      top: 7px;
+      right: $spacing;
+      z-index: 5;
+      width: 16px;
+      height: 16px;
+      filter: $inpage-close-button-filter;
+    }
+  }
+
+  td.vlof_content {
+    position: relative;
+    left: -4px;
+  }
+
+  > tbody > tr {
+    position: relative;
   }
 }
 
@@ -313,7 +357,8 @@ table.nform table.valuespec_listof {
     vertical-align: middle;
   }
 
-  .vlof_content, .vlof_buttons {
+  .vlof_content,
+  .vlof_buttons {
     border-bottom: 1px solid $nform-vlof-border-color;
   }
 
@@ -332,10 +377,20 @@ table.nform table.valuespec_listof {
   }
 
   .vlof_buttons {
-    width: 1px;
-    padding-top: 14px;
-    padding-bottom: 26px;
+    width: 44px;
+    min-width: 44px;
+    padding-right: 8px;
+    text-align: center;
     vertical-align: middle;
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+
+    a:not(:last-child) {
+      margin-right: 4px;
+    }
   }
 }
 
@@ -344,7 +399,9 @@ table.filtertime td {
 }
 
 div.optiondial {
-  &, &.num_columns, &.refresh {
+  &,
+  &.num_columns,
+  &.refresh {
     top: 0;
     width: 80.5px;
     height: 28px;
@@ -355,7 +412,6 @@ div.optiondial {
     border: 1px solid $color-table-border;
     box-shadow: none;
     box-sizing: border-box;
-
 
     div {
       padding: 0;
@@ -411,19 +467,15 @@ div.view_form {
 | Styles used by layouts of the views (plugins/views/layouts.py)           |
 '-------------------------------------------------------------------------*/
 
-
 table.data tr.data > td.gap,
 table.data tr > td.last_col,
 table.data tr > th.last_col {
   border-right: none;
 }
 
-td.gap, table.data .checkbox_hover.gap {
+td.gap,
+table.data .checkbox_hover.gap {
   width: 5px;
-  /* #TODO: Check whether these background styles are needed */
-  background-attachment: fixed;
-  background-image: url("images/contentframe_background.jpg");
-  background-repeat: repeat;
 }
 
 /* boxed layout */
@@ -472,11 +524,13 @@ table.tiled td {
     font-size: 9px;
     border-style: none;
 
-    &.tl, &.bl {
+    &.tl,
+    &.bl {
       text-align: left;
     }
 
-    &.tr, &.br {
+    &.tr,
+    &.br {
       text-align: right;
     }
 
@@ -484,15 +538,20 @@ table.tiled td {
       vertical-align: middle;
     }
 
-    &.center, &.cont {
+    &.center,
+    &.cont {
       text-align: center;
     }
 
-    &.bl, &.br {
+    &.bl,
+    &.br {
       vertical-align: bottom;
     }
 
-    &.bl, &.br, &.tl, &.tr {
+    &.bl,
+    &.br,
+    &.tl,
+    &.tr {
       height: 20px;
     }
   }
@@ -519,10 +578,10 @@ table.data.tiled td.tiles {
           border-radius: $theme-border-radius;
         }
 
-	&.center {
-	  white-space: break-spaces;
-	  word-wrap: anywhere;
-	}
+        &.center {
+          word-wrap: anywhere;
+          white-space: break-spaces;
+        }
       }
     }
 
@@ -565,22 +624,26 @@ table.data.single {
       border: 1px solid $color-table-border;
       box-shadow: none;
 
-      th, td {
-	height: 14px;
-	padding: 2px 6px;
-	background-color: $invtree-td-bg-color;
-	border: 1px solid $color-table-border;
+      th,
+      td {
+        height: 14px;
+        padding: 2px 6px;
+        background-color: $invtree-td-bg-color;
+        border: 1px solid $color-table-border;
       }
 
       th {
-	color: $font-color;
-	background-color: $invtree-th-bg-color;
+        color: $font-color;
+        background-color: $invtree-th-bg-color;
       }
     }
 
-    &.odd0, &.even0 {
-      .state, .svcstate:not(.statex), .badflag {
-	padding-left: 16px;
+    &.odd0,
+    &.even0 {
+      .state,
+      .svcstate:not(.statex),
+      .badflag {
+        padding-left: 16px;
       }
     }
   }
@@ -595,7 +658,7 @@ table.data.single {
     &.left {
       font-weight: $font-weight-bold;
       border-right: $td-single-left-border-right;
-      transition: .15s ease-in-out;
+      transition: 0.15s ease-in-out;
     }
 
     &.perfometer {
@@ -634,17 +697,18 @@ table.data.matrix {
 
       &.left {
         font-weight: $font-weight-bold;
-        background-color: $bg-color-tertiary;
-        transition: .15s ease-in-out;
+        background-color: $bg-color-secondary;
+        transition: 0.15s ease-in-out;
 
-	&:not(.state) {
-	  border-right: 1px solid $color-table-border;
-	  border-left: 1px solid $color-table-border;
-	}
+        &:not(.state) {
+          border-right: 1px solid $color-table-border;
+          border-left: 1px solid $color-table-border;
+        }
       }
 
       &.cell td.perfometer {
-        div.title, div.content {
+        div.title,
+        div.content {
           padding: 0;
         }
       }
@@ -654,15 +718,17 @@ table.data.matrix {
       background: transparent;
 
       td.matrixhead {
-	font-size: $font-size-global;
-	letter-spacing: $letter-spacing-table;
-	text-transform: uppercase;
+        font-size: $font-size-global;
+        letter-spacing: $letter-spacing-table;
+        text-transform: uppercase;
       }
     }
   }
 
   td.minority {
-    &, a, a:link {
+    &,
+    a,
+    a:link {
       color: $minority-font-color;
     }
   }
@@ -679,7 +745,8 @@ table.data.matrix {
     }
   }
 
-  tr.even0, tr.odd0 {
+  tr.even0,
+  tr.odd0 {
     tbody & td.matrixhead {
       font-weight: $font-weight-bold;
       color: $font-color;
@@ -723,7 +790,6 @@ input#try {
   float: left;
 }
 
-
 /*-------------------------------------------------------------------------.
 |       _     _     _            __         _                              |
 |      | |   (_)___| |_    ___  / _| __   _(_) _____      _____            |
@@ -743,7 +809,8 @@ table.views {
   border-collapse: collapse;
   empty-cells: show;
 
-  td, th{
+  td,
+  th {
     padding: 2px 1ex;
     color: rgb(255, 255, 255);
     border: 1px solid rgb(68, 68, 68);
@@ -803,7 +870,7 @@ table.data.availability {
   }
 
   tr.odd0 td.number.stats {
-    opacity: .5;
+    opacity: 0.5;
   }
 
   td {
@@ -815,13 +882,21 @@ table.data.availability {
   }
 }
 
-table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
+table.data td.flapping,
+table.timeline td.flapping,
+div.avlegend.timeline div.state.flapping {
   background-color: rgb(255, 0, 255);
 }
-table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
+
+table.data td.downtime,
+table.timeline td.downtime,
+div.avlegend.timeline div.state.downtime {
   background-color: rgb(0, 170, 255);
 }
-table.data tr.data > td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
+
+table.data tr.data > td.hostdown,
+table.timeline td.hostdown,
+div.avlegend.timeline div.state.hostdown {
   color: $white;
   background-color: $hostdown-bg-color;
 }
@@ -843,7 +918,8 @@ table.data.availability tr.even0 td {
   }
 }
 
-table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
+table.timeline td.ooservice,
+div.avlegend.timeline div.state.ooservice {
   background-color: rgb(202, 202, 202);
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
@@ -886,7 +962,8 @@ table.timeline {
     padding: 0;
     border-style: none;
 
-    &.hilite, &.hilite.state2 {
+    &.hilite,
+    &.hilite.state2 {
       padding: 0;
       border: $timeline-hilite-border;
       filter: brightness(80%);
@@ -936,7 +1013,7 @@ table.timelineevents {
   border: $wato-data-table-border;
   box-shadow: $wato-data-table-box-shadow;
 
-  th{
+  th {
     background: $timelineevents-data-th-bg-color;
   }
 }
@@ -953,7 +1030,8 @@ table.data.oddeven.timelineevents > tbody > tr.hilite {
   }
 }
 
-.timelinerange .from, .timelinerange .until {
+.timelinerange .from,
+.timelinerange .until {
   display: inline-block;
   margin-top: 8px;
   margin-bottom: 4px;
@@ -1020,7 +1098,6 @@ div.avlegend {
   }
 }
 
-
 /*--Inventory--------------------------------------------------------------.
 |            ___                      _                                    |
 |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _                  |
@@ -1051,7 +1128,8 @@ td.invtree {
     border-collapse: collapse;
   }
 
-  table td, table th {
+  table td,
+  table th {
     height: 14px;
     padding: 1px 5px;
     border: 1px solid rgb(136, 136, 136);
@@ -1067,11 +1145,14 @@ td.invtree {
 }
 
 /* TODO: Reproduce this html element */
-td.invtree span.invold, span.invold table.data {
+td.invtree span.invold,
+span.invold table.data {
   color: rgb(255, 0, 0);
 }
+
 /* TODO: Reproduce this html element */
-td.invtree span.invnew, span.invnew table.data {
+td.invtree span.invnew,
+span.invnew table.data {
   color: rgb(0, 191, 0);
 }
 
@@ -1236,7 +1317,8 @@ div.timelinerange.sla {
 table.data.headerleft.sla {
   tbody tr {
     td {
-      &, &.sla {
+      &,
+      &.sla {
         padding: 4px 8px;
       }
 
@@ -1324,7 +1406,9 @@ table.data tr.notification_context table {
 table.data tr.ac_test_details td {
   padding: 8px;
 
-  p, ul, table {
+  p,
+  ul,
+  table {
     margin: 8px 0;
 
     &:first-child:not(:last-child) {
@@ -1364,7 +1448,7 @@ td.agent_config table.rulesets table td,
 table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 td.rule_conditions table td {
-  background-color: $bg-color-default;
+  background-color: $bg-color;
 }
 
 td.sla_spec table td.title,

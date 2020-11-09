@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 @get_parsed_item_data
 def check_couchbase_buckets_fragmentation(_item, params, data):
@@ -30,7 +32,6 @@ check_info['couchbase_buckets_fragmentation'] = {
     'inventory_function': discover(lambda _k, v: 'couch_docs_fragmentation' in v),
     'check_function': check_couchbase_buckets_fragmentation,
     'service_description': 'Couchbase Bucket %s Fragmentation',
-    'includes': ['couchbase.include'],
     'group': 'couchbase_fragmentation',
     'has_perfdata': True
 }

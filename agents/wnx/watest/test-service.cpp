@@ -122,24 +122,6 @@ TEST(ServiceControllerTest, StartStop) {
 
 }  // namespace wtools
 
-TEST(Misc, All) {
-    {
-        std::string a = "a";
-        cma::tools::AddDirSymbol(a);
-        EXPECT_TRUE(a == "a\\");
-        cma::tools::AddDirSymbol(a);
-        EXPECT_TRUE(a == "a\\");
-    }
-    {
-        std::string b = "b\\";
-        cma::tools::AddDirSymbol(b);
-        EXPECT_TRUE(b == "b\\");
-        b = "b/";
-        cma::tools::AddDirSymbol(b);
-        EXPECT_TRUE(b == "b/");
-    }
-}
-
 namespace cma::srv {
 extern bool global_stop_signaled;
 TEST(SelfConfigure, Checker) {

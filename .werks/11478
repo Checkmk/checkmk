@@ -1,0 +1,32 @@
+Title: Fixed encoding of timestamp painters
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1600370424
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The painter values for "Date format" and "Time stamp format" in the display
+options of views were previously encoded.
+
+To make this parameters usable in e.g. automation calls, this values are not
+encoded any more.
+
+If you've used this parameter for automation calls before, please check to see
+if adjustments are required.<br>
+
+<b>ts_format</b><br>
+<li>mixed (Mixed)</li>
+<li>abs (Absolute)</li>
+<li>rel (Relative)</li>
+<li>both (Both)</li>
+<li>epoch (Unix Timestamp (Epoch))</li><br>
+
+<b>ts_date</b><br>
+<li>%Y-%m-%d (1970-12-18)</li>
+<li>%d.%m.%Y (18.12.1970)</li>
+<li>%m/%d/%Y (12/18/1970)</li>
+<li>%d.%m. (18.12.)</li>
+<li>%m/%d (12/18)</li>

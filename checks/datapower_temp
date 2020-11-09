@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.datapower_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #
 
 factory_settings["datapower_temp_default_levels"] = {
@@ -53,6 +55,5 @@ check_info["datapower_temp"] = {
             6,  # dpStatusEnvironmentalSensorsUpperCriticalThreshold
         ]),
     "snmp_scan_function": scan_datapower,
-    "includes": ["temperature.include", "datapower_scan.include"],
     "default_levels_variable": "datapower_temp_default_levels",
 }

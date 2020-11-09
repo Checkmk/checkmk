@@ -237,7 +237,7 @@ def test_openapi_bulk_acknowledge(
     ])
 
     live.expect_query(
-        f'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;Memory;2;1;1;test123-...;Hello world!',
+        'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;Memory;2;1;1;test123-...;Hello world!',
         match_type='ellipsis',
     )
 
@@ -319,7 +319,6 @@ def test_openapi_acknowledge_servicegroup(
             base + '/objects/servicegroup/windows/actions/acknowledge/invoke',
             content_type='application/json',
             params=json.dumps({
-                'servicegroup_name': 'windows',
                 'sticky': False,
                 'notify': False,
                 'persistent': False,

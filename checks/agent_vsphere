@@ -19,13 +19,13 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
 
     args += ["-u", params["user"]]
     args += ["-s", passwordstore_get_cmdline("%s", params["secret"])]
-    args += ["-i " + ",".join(params["infos"])]
+    args += ["-i", ",".join(params["infos"])]
 
     # Available options. Don't ask...
     #  True,               _("Queried host is a host system" ) ),
-    #  "hostsystem_agent", _("Queried host is a host system with Check_MK Agent installed") ),
+    #  "hostsystem_agent", _("Queried host is a host system with Checkmk Agent installed") ),
     #  False,              _("Queried host is the vCenter") ),
-    #  "agent",            _("Queried host is the vCenter with Check_MK Agent installed") ),
+    #  "agent",            _("Queried host is the vCenter with Checkmk Agent installed") ),
     direct = params.get("direct", False)
     if direct == "agent":
         args.append('--agent')

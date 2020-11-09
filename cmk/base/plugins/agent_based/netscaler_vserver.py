@@ -6,19 +6,20 @@
 
 from typing import (
     Iterable,
+    List,
     Mapping,
     Sequence,
     Tuple,
     TypedDict,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     check_levels,
     register,
     render,
     Result,
     Service,
     SNMPTree,
-    state,
+    State as state,
     type_defs,
 )
 from .utils.netscaler import SNMP_DETECT
@@ -124,7 +125,7 @@ def _to_vserver(line: Iterable[str]) -> Tuple[str, VServer]:
     return full_name or name, vserver
 
 
-def parse_netscaler_vserver(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_netscaler_vserver(string_table: List[type_defs.StringTable]) -> Section:
     """
     >>> import pprint
     >>> pprint.pprint(parse_netscaler_vserver([[
@@ -161,7 +162,7 @@ def parse_netscaler_vserver(string_table: type_defs.SNMPStringTable) -> Section:
 register.snmp_section(
     name="netscaler_vserver",
     parse_function=parse_netscaler_vserver,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.5951.4.1.3.1.1",
             oids=[  # nsVserverGroup.vserverTable.vserverEntry
@@ -183,15 +184,14 @@ register.snmp_section(
 )
 
 
-def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryResult:
     """
     >>> import pprint
     >>> pprint.pprint(list(discover_netscaler_vserver({
     ... 'cag.erwinhymergroup.com': {},
     ... 'citrix.ehg.directory': {},
     ... })))
-    [Service(item='cag.erwinhymergroup.com', parameters={}, labels=[]),
-     Service(item='citrix.ehg.directory', parameters={}, labels=[])]
+    [Service(item='cag.erwinhymergroup.com'), Service(item='citrix.ehg.directory')]
     """
     for srv_name in section:
         yield Service(item=srv_name)
@@ -200,7 +200,7 @@ def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryGenerator
 def _check_netscaler_vservers(
     params: type_defs.Parameters,
     vsevers: Sequence[VServer],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     >>> for result in _check_netscaler_vservers(
     ...     type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"}),
@@ -215,16 +215,16 @@ def _check_netscaler_vservers(
     ...         'tx_bytes': 0,
     ...     }]):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='Status: up', details='Status: up')
-    Result(state=<state.OK: 0>, summary='Health: 100%', details='Health: 100%')
-    Metric('health_perc', 100.0, levels=(None, None), boundaries=(0.0, 100.0))
-    Result(state=<state.OK: 0>, summary='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0', details='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0')
-    Result(state=<state.OK: 0>, summary='Request rate: 0/s', details='Request rate: 0/s')
-    Metric('request_rate', 0.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='In: 0.00 Bit/s', details='In: 0.00 Bit/s')
-    Metric('if_in_octets', 0.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Out: 0.00 Bit/s', details='Out: 0.00 Bit/s')
-    Metric('if_out_octets', 0.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.OK: 0>, summary='Status: up')
+    Result(state=<State.OK: 0>, summary='Health: 100%')
+    Metric('health_perc', 100.0, boundaries=(0.0, 100.0))
+    Result(state=<State.OK: 0>, summary='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0')
+    Result(state=<State.OK: 0>, summary='Request rate: 0/s')
+    Metric('request_rate', 0.0)
+    Result(state=<State.OK: 0>, summary='In: 0.00 Bit/s')
+    Metric('if_in_octets', 0.0)
+    Result(state=<State.OK: 0>, summary='Out: 0.00 Bit/s')
+    Metric('if_out_octets', 0.0)
     """
     if not vsevers:
         return
@@ -285,7 +285,7 @@ def check_netscaler_vserver(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     >>> par = type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"})
     >>> assert list(check_netscaler_vserver('item', par, {})) == []
@@ -312,7 +312,7 @@ def cluster_check_netscaler_vserver(
     item: str,
     params: type_defs.Parameters,
     section: Mapping[str, Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     >>> par = type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"})
     >>> vserver = {

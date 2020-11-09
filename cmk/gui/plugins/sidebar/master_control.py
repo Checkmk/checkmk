@@ -109,7 +109,7 @@ class MasterControlSnapin(SidebarSnapin):
 
         html.open_table(class_="master_control")
         for i, (colname, title) in enumerate(items):
-            # Do not show event handlers on Check_MK Micro Core
+            # Do not show event handlers on Checkmk Micro Core
             if is_cmc and title == _("Event handlers"):
                 continue
 

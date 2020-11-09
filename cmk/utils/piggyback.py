@@ -18,10 +18,8 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.render import Age
 from cmk.utils.regex import regex
-import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
 
-log.setup_console_logging()
 logger = logging.getLogger("cmk.base")
 
 PiggybackFileInfo = NamedTuple('PiggybackFileInfo', [

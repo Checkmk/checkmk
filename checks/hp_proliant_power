@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # .2 cpqHePowerMeterStatus
 #    Description:        This value specifies whether Power Meter reading is supported by this Server .
 #    The following values are supported:
@@ -46,6 +47,5 @@ check_info["hp_proliant_power"] = {
             "3",  # cpqHePowerMeterCurrReading
         ]),
     'snmp_scan_function': hp_proliant_scan_function,
-    'includes': ['hp_proliant.include'],
     'has_perfdata': True
 }

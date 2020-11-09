@@ -6,6 +6,15 @@
 
 import pytest  # type: ignore[import]
 
+from testlib.base import Scenario
+
+
+@pytest.fixture(name="core_scenario")
+def fixture_core_scenario(monkeypatch):
+    ts = Scenario().add_host("test-host")
+    ts.set_option("ipaddresses", {"test-host": "127.0.0.1"})
+    return ts.apply(monkeypatch)
+
 
 # Automatically refresh caches for each test
 @pytest.fixture(autouse=True, scope="function")

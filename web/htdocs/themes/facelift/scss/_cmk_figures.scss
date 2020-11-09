@@ -3,7 +3,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-
 // Styling for cmk_tabs.js
 div.cmk_tab {
   nav.main-navigation {
@@ -65,7 +64,7 @@ div.cmk_tab {
 
   rect.bar.bar_chart {
     fill: $bar-fill-color;
-    stroke: rgba(0, 0, 0, .2);
+    stroke: rgba(0, 0, 0, 0.2);
 
     &:hover {
       fill: $bar-hover-fill-color;
@@ -75,7 +74,7 @@ div.cmk_tab {
 
   rect.bar.bar_chart.barbar_chart {
     fill: $barbar-fill-color;
-    stroke: rgba(0, 0, 0, .3);
+    stroke: rgba(0, 0, 0, 0.3);
 
     &:hover {
       fill: $barbar-hover-fill-color;
@@ -86,8 +85,7 @@ div.cmk_tab {
 
 div.cmk_figure {
   div.loading_img {
-    position: absolute;
-    top: 30%;
+    position: relative;
     left: 50%;
     width: 48px;
     height: 48px;
@@ -99,7 +97,7 @@ div.cmk_figure {
     z-index: 1;
     padding: 5px;
     pointer-events: none;
-    background-color: rgba($bg-color-secondary, .87);
+    background-color: rgba($bg-color-secondary, 0.87);
     border: $tooltip-border;
     border-radius: 5px;
 
@@ -174,16 +172,30 @@ div.cmk_figure {
           }
         }
 
-        tr.scatterpoint + tr, tr.median + tr {
+        tr.scatterpoint + tr,
+        tr.median + tr {
           border-top: 1px solid $font-color;
 
-          td { padding-top: 4px; }
+          td {
+            padding-top: 4px;
+          }
         }
 
-        tr.mean td:nth-child(2) { color: $dc-graph-color-1; }
-        tr.median td:nth-child(2) { color: $dc-graph-color-2; }
-        tr.top_matches td:nth-child(2) { color: rgb(255, 40, 40); }
-        tr.bottom_matches td:nth-child(2) { color: rgb(31, 150, 240); }
+        tr.mean td:nth-child(2) {
+          color: $dc-graph-color-1;
+        }
+
+        tr.median td:nth-child(2) {
+          color: $dc-graph-color-2;
+        }
+
+        tr.top_matches td:nth-child(2) {
+          color: rgb(255, 40, 40);
+        }
+
+        tr.bottom_matches td:nth-child(2) {
+          color: rgb(31, 150, 240);
+        }
       }
 
       div.collapser {
@@ -211,11 +223,25 @@ div.cmk_figure {
       }
     }
 
-    path.line { stroke-width: 2px; }
-    path.mean_line { stroke: $dc-graph-color-1; }
-    path.median_line { stroke: $dc-graph-color-2; }
-    path.pin { stroke: $font-color; }
-    path.host.hilite { stroke: rgb(70, 130, 180); }
+    path.line {
+      stroke-width: 2px;
+    }
+
+    path.mean_line {
+      stroke: $dc-graph-color-1;
+    }
+
+    path.median_line {
+      stroke: $dc-graph-color-2;
+    }
+
+    path.pin {
+      stroke: $font-color;
+    }
+
+    path.host.hilite {
+      stroke: rgb(70, 130, 180);
+    }
 
     circle.scatterdot {
       fill: $dc-graph-color-0;
@@ -225,11 +251,15 @@ div.cmk_figure {
       }
     }
   }
+
+  g.title rect.highlighted {
+    fill: $headline-color;
+  }
 }
 
-circle.scatterdot { fill: $dc-graph-color-0; }
-
-
+circle.scatterdot {
+  fill: $dc-graph-color-0;
+}
 
 // Styling for dc_table.js
 div.dc_table .options {

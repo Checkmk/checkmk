@@ -22,7 +22,7 @@ from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolut
 
 
 def _valuespec_mssql_transactionlogs_discovery():
-    return Dictionary(title=_("MSSQL Datafile and Transactionlog Discovery"),
+    return Dictionary(title=_("MSSQL datafile and transactionlog discovery"),
                       elements=[
                           ("summarize_datafiles",
                            Checkbox(

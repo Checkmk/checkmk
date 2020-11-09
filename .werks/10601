@@ -6,7 +6,7 @@ Date: 1584701112
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 We are now converting all plugins to the new format expected by
 the future API. Migrated are plugins from
@@ -61,6 +61,6 @@ to see what options are available.
 <h4> Known limitations</h4>
 
 <ul>
-  <li>HostLabels that are generated in a subchecks discovery function are lost</li>
+  <li>HostLabels are only supported via the new API (see werk #11117)</li>
 </ul>
 

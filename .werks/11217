@@ -6,7 +6,7 @@ Date: 1592838023
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk adds the option to configure timeouts for the MSSQL agent
 plugin (rule "Microsoft SQL Server (Windows)"). There are two types of

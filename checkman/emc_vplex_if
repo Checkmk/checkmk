@@ -1,20 +1,46 @@
-title: EMC VPLEX: Traffic and Status of Network Interfaces
+title: EMC VPLEX: Traffic of Network Interfaces
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL
 distribution: check_mk
 description:
- This check monitors the traffic of the EMC VPLEX frontend and backend
- interfaces. Port up/down detection is not supported.
+ This check monitors the traffic of EMC VPLEX frontend and backend interfaces.
+ The check uses the same functionality as {if64}. Please refer to the if64 manpage
+ for further documentation.
 
  You can configure limits for the in- and outgoing traffic.
- This check supports the averaging of the in- and outgoing traffic.
+
+ This check supports averaging the in- and outgoing traffic over a configurable
+ time range by using an exponentially weighted moving average - just as Linux
+ does for the CPU load averages. The averaging can be configured on a per-host
+ and per-interface base. Interfaces with averaging turned on yield two additional
+ performance values: the averaged in- and outgoing traffic in bytes. If you have
+ configured traffic levels, then those levels are applied to the averaged values.
 
 item:
- There are three ways to specify the interface: {1}: the index number
- which is determined by the check, the interface description, e.g. {B1-FC00} or
- the alias, which is a combination of the director name an the description, e.g {director-1-1-A A1-FC03}
+ There are three ways to specify the interface: the index, which simply enumerates
+ the interfaces starting from 1, the interface description, e.g. {B1-FC00}, or the
+ alias, which is a combination of the director name and the description, e.g
+ {director-1-1-A A1-FC03}.
 
 inventory:
- One service is created for each port.
+ One service is created for each interface that fulfills configurable conditions
+ (rule "Network interface and switch port discovery").
+ By default, all interfaces are discovered. Note that the interfaces discovered by
+ this check have no port type and are always in the state "up".
+
+ {Grouping:} In some situations, you do not want to monitor a single
+ interface but a group of interfaces that together form a pool.
+ This check supports such pools by defining groups. The data of all members is
+ accumulated and put together in a single grouped interface service.
+
+cluster:
+ In the case where single (ungrouped) interfaces are clustered, the corresponding
+ services report only the results from the node with the highest outgoing traffic,
+ since this node is likely the active node.
+ In the case where interface groups are clustered, the grouping is applied across
+ all nodes, potentially combining interfaces from different nodes. Note that the
+ rules defining the interface groups must be configured to apply to the nodes, not
+ to the cluster host (the latter has no effect). In case the grouping configurations
+ vary across the nodes, the last node wins.
 

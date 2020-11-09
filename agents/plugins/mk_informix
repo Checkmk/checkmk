@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Monitor status of LUNs on HP-UX
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+VERSION="2.0.0i2"
+
+# Informix
 # Make ENV-VARs avail for subshells
 set -a
 
@@ -273,4 +277,3 @@ for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
         fi
     )
 done
-

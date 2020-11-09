@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.brocade import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # lookup tables for check implementation
 # Taken from swFCPortPhyState
 brocade_fcport_phystates = {
@@ -85,8 +86,19 @@ def _try_int(int_str):
         return None
 
 
-def _hexstr_to_int(hexstr):
-    return int(hexstr.replace(" ", ""), 16)
+def _to_int(raw_value):
+    """Convert a raw integer
+
+    This is done by considering the string to be a little endian byte string.
+    Such strings are sometimes used by SNMP to encode 64 bit counters without
+    needed COUNTER64 (which is not available in SNMP v1).
+    """
+    value = 0
+    mult = 1
+    for ord_int in raw_value[::-1]:
+        value += mult * ord_int
+        mult *= 256
+    return value
 
 
 def _get_if_table_offset(speed_info, offset):
@@ -134,11 +146,11 @@ def parse_brocade_fcport(info):
             for oidend, tx_objects, rx_objects, tx_elements, rx_elements, bbcredits_64 in if64_info:
                 if index == oidend.split(".")[-1]:
                     fcmgmt_portstats = [
-                        _hexstr_to_int(tx_objects),
-                        _hexstr_to_int(rx_objects),
-                        _hexstr_to_int(tx_elements) / 4,
-                        _hexstr_to_int(rx_elements) / 4,
-                        _hexstr_to_int(bbcredits_64),
+                        _to_int(tx_objects),
+                        _to_int(rx_objects),
+                        int(_to_int(tx_elements) / 4),
+                        int(_to_int(rx_elements) / 4),
+                        _to_int(bbcredits_64),
                     ]
                     break
             if fcmgmt_portstats:
@@ -440,16 +452,15 @@ check_info["brocade_fcport"] = {
             ".1.3.6.1.3.94.4.5.1",
             [
                 OID_END,
-                "4",  # FCMGMT-MIB::connUnitPortStatCountTxObjects
-                "5",  # FCMGMT-MIB::connUnitPortStatCountRxObjects
-                "6",  # FCMGMT-MIB::connUnitPortStatCountTxElements
-                "7",  # FCMGMT-MIB::connUnitPortStatCountRxElements
-                "8",  # FCMGMT-MIB::connUnitPortStatCountBBCreditZero
+                BINARY("4"),  # FCMGMT-MIB::connUnitPortStatCountTxObjects
+                BINARY("5"),  # FCMGMT-MIB::connUnitPortStatCountRxObjects
+                BINARY("6"),  # FCMGMT-MIB::connUnitPortStatCountTxElements
+                BINARY("7"),  # FCMGMT-MIB::connUnitPortStatCountRxElements
+                BINARY("8"),  # FCMGMT-MIB::connUnitPortStatCountBBCreditZero
             ]),
     ],
     'snmp_scan_function': lambda oid: (oid(".1.3.6.1.2.1.1.2.0").startswith(
         ".1.3.6.1.4.1.1588.2.1.1") and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") is not None),
-    'includes': ['brocade.include'],
     'group': 'brocade_fcport',
     'default_levels_variable': 'brocade_fcport_default_levels',
 }

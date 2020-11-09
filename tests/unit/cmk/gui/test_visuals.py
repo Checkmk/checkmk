@@ -3484,9 +3484,7 @@ def test_registered_filters(load_plugins):
     names = cmk.gui.plugins.visuals.utils.filter_registry.keys()
     assert sorted(expected_filters.keys()) == sorted(names)
 
-    for filter_class in cmk.gui.plugins.visuals.utils.filter_registry.values():
-        # FIXME: register instances in filter_registry (CMK-5137)
-        filt = filter_class()  # type: ignore[call-arg]
+    for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
         spec = expected_filters[filt.ident]
 
         assert filt.title == spec["title"]
@@ -3772,7 +3770,7 @@ def test_get_context_uri_vars(register_builtin_html, visual, expected_vars):
     # Single host context -> not set
     (["host"], ["host"], [], {}),
     # Single host context -> empty set
-    (["host"], ["host"], [("host", "")], {"host": ""}),
+    (["host"], ["host"], [("host", "")], {}),
     # Single host context with non-ascii char
     (["host"], ["host"], [("host", "äbc")], {"host": u"äbc"}),
     # Single host context, multiple services
@@ -3858,3 +3856,22 @@ def test_context_uri_vars(register_builtin_html):
         assert html.request.var("hu") == "hu"
 
     assert list(dict(html.request.itervars()).keys()) == ["bla"]
+
+
+@pytest.mark.parametrize(
+    "context,result",
+    [
+        pytest.param({"site": "sitename"}, [visuals.SiteId("sitename")],
+                     id="Single context site enforced"),
+        pytest.param({"siteopt": {"site": ""}}, None,
+                     id="Multiple contexts no site selected"),
+        pytest.param({"sites": "first|second"},
+                     [visuals.SiteId("first"), visuals.SiteId("second")],
+                     id="Single context Multiple sites selected"),
+        pytest.param({"sites": {"sites": "first|second"}},
+                     [visuals.SiteId("first"), visuals.SiteId("second")],
+                     id="Multiple contexts Multiple sites selected"),
+    ]
+)
+def test_get_only_sites_from_context(context, result):
+    assert visuals.get_only_sites_from_context(context) == result

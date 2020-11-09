@@ -21,7 +21,7 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request
 from cmk.gui.valuespec import (
     DateFormat,
     Dictionary,
@@ -67,6 +67,8 @@ from cmk.gui.plugins.views.graphs import (
     paint_time_graph_cmk,
     cmk_time_graph_params,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -114,6 +116,7 @@ class PainterOptionTimestampFormat(PainterOption):
         return DropdownChoice(
             title=_("Time stamp format"),
             default_value=config.default_ts_format,
+            encode_value=False,
             choices=[
                 ("mixed", _("Mixed")),
                 ("abs", _("Absolute")),
@@ -448,10 +451,10 @@ class PainterSvcPluginOutput(Painter):
         return "svc_plugin_output"
 
     def title(self, cell):
-        return _("Output of check plugin")
+        return _("Summary")
 
-    def short_title(self, cell):
-        return _("Status detail")
+    def list_title(self, cell):
+        return _("Summary (Previously named: Status details or plugin output)")
 
     @property
     def columns(self):
@@ -472,10 +475,10 @@ class PainterSvcLongPluginOutput(Painter):
         return "svc_long_plugin_output"
 
     def title(self, cell):
-        return _("Long output of check plugin (multiline)")
+        return _("Details")
 
-    def short_title(self, cell):
-        return _("Status detail")
+    def list_title(self, cell):
+        return _("Details (Previously named: long output)")
 
     @property
     def columns(self):
@@ -486,8 +489,8 @@ class PainterSvcLongPluginOutput(Painter):
         return Dictionary(elements=[
             ('max_len',
              Integer(
-                 title=_("Maximum number of characters in long Output"),
-                 help=_("Truncate long Output at this amount of characters."
+                 title=_("Maximum number of characters in to show"),
+                 help=_("Truncate content at this amount of characters."
                         "A zero value mean not to truncate"),
                  default_value=0,
                  minvalue=0,
@@ -1349,7 +1352,7 @@ class PainterCheckManpage(Painter):
         return "check_manpage"
 
     def title(self, cell):
-        return _("Check manual (for Check_MK based checks)")
+        return _("Check manual (for Checkmk based checks)")
 
     def short_title(self, cell):
         return _("Manual")
@@ -1769,10 +1772,10 @@ class PainterHostPluginOutput(Painter):
         return "host_plugin_output"
 
     def title(self, cell):
-        return _("Output of host check plugin")
+        return _("Summary")
 
-    def short_title(self, cell):
-        return _("Status detail")
+    def list_title(self, cell):
+        return _("Summary (Previously named: Status details or plugin output)")
 
     @property
     def columns(self):
@@ -4146,10 +4149,10 @@ class PainterLogPluginOutput(Painter):
         return "log_plugin_output"
 
     def title(self, cell):
-        return _("Log: Output")
+        return _("Log: Summary")
 
     def short_title(self, cell):
-        return _("Output")
+        return _("Summary")
 
     @property
     def columns(self):
@@ -4899,7 +4902,8 @@ class PainterHostDockerNode(Painter):
 
         content = []
         for host_name in docker_nodes:
-            url = html.makeuri_contextless(
+            url = makeuri_contextless(
+                request,
                 [
                     ("view_name", "host"),
                     ("host", host_name),

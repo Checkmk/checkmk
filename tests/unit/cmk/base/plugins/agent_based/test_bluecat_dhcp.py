@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
-    state,
+    State as state,
     type_defs,
 )
 from cmk.base.plugins.agent_based import bluecat_dhcp
@@ -122,11 +122,11 @@ def test_cluster_check_bluecat_all_ok():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: DHCP is running normally\n[node1]: 11 leases per second',
+                notice='[node1]: DHCP is running normally\n[node1]: 11 leases per second',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: DHCP is running normally\n[node2]: 11 leases per second',
+                notice='[node2]: DHCP is running normally\n[node2]: 11 leases per second',
             ),
             Result(
                 state=state.OK,
@@ -165,11 +165,11 @@ def test_cluster_check_bluecat_one_ok():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: DHCP is running normally\n[node1]: 13 leases per second',
+                notice='[node1]: DHCP is running normally\n[node1]: 13 leases per second',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: DHCP is currently stopping(!)\n[node2]: 11 leases per second',
+                notice='[node2]: DHCP is currently stopping(!)\n[node2]: 11 leases per second',
             ),
             Result(
                 state=state.OK,
@@ -208,11 +208,11 @@ def test_cluster_check_bluecat_none_ok():
         )) == [
             Result(
                 state=state.WARN,
-                details='[node1]: DHCP is running normally(!)\n[node1]: 0 leases per second',
+                notice='[node1]: DHCP is running normally(!)\n[node1]: 0 leases per second',
             ),
             Result(
                 state=state.CRIT,
-                details='[node2]: DHCP is currently starting(!!)\n[node2]: 1 lease per second',
+                notice='[node2]: DHCP is currently starting(!!)\n[node2]: 1 lease per second',
             ),
             Result(
                 state=state.CRIT,

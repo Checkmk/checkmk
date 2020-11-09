@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # <<<ibm_svc_array:sep(58)>>>
 # 27:SSD_mdisk27:online:1:POOL_0_V7000_RZ:372.1GB:online:raid1:1:256:generic_ssd
@@ -63,5 +64,4 @@ check_info["ibm_svc_array"] = {
     "check_function": check_ibm_svc_array,
     "inventory_function": discover(),
     "service_description": "RAID Array %s",
-    "includes": ["ibm_svc.include"],
 }

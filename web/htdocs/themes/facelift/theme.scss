@@ -32,6 +32,8 @@
 // but that is simply not possible at the moment using SCSS. Hack around this
 // using symlinks in the git during development and replace the links with empty
 // files during the build procedure of other editions.
+// Note: In case you add something here, you will have to add some dummy files
+// to buildscripts/scripts/lib/versioning.groovy (see patch_themes())
 @import "../facelift/scss/cee/_graphs.scss";
 @import "../facelift/scss/cee/_reporting.scss";
 @import "../facelift/scss/cee/_ntop.scss";
@@ -41,6 +43,8 @@
   @include ntop;
 }
 
+// Note: In case you add something here, you will have to add some dummy files
+// to buildscripts/scripts/lib/versioning.groovy (see patch_themes())
 @import "../facelift/scss/cme/_managed.scss";
 @if $MANAGED = "yes" {
   @include managed;

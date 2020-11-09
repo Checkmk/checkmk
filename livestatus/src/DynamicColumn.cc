@@ -7,18 +7,12 @@
 
 #include <utility>
 
-#include "Column.h"
-#include "Logger.h"
-
 DynamicColumn::DynamicColumn(std::string name, std::string description,
-                             Column::Offsets offsets)
-    : _logger(Logger::getLogger("cmk.livestatus"))
-    , _name(std::move(name))
+                             ColumnOffsets offsets)
+    : _name(std::move(name))
     , _description(std::move(description))
     , _offsets(std::move(offsets)) {}
 
 DynamicColumn::~DynamicColumn() = default;
-
-[[nodiscard]] Logger *DynamicColumn::logger() const { return _logger; }
 
 std::string DynamicColumn::name() const { return _name; }

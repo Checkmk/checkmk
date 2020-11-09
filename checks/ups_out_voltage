@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ups_out_voltage import *  # pylint: disable=wildcard-import,unused-wildcard-import
 ups_out_voltage_default_levels = (210, 180)  # warning / critical
 
 check_info['ups_out_voltage'] = {
@@ -12,7 +14,6 @@ check_info['ups_out_voltage'] = {
     "service_description": "OUT voltage phase %s",
     "has_perfdata": True,
     "group": "evolt",
-    "includes": ['ups_out_voltage.include', "ups_generic.include"],
     "snmp_info": (".1.3.6.1.2.1.33.1.4.4.1", [0, 2]),
     "snmp_scan_function": ups_generic_scan_function,
 }

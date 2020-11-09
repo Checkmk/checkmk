@@ -1,3 +1,7 @@
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+VERSION="2.0.0i2"
+
 if [ -r /var/run/haproxy.stat ]; then
 	echo "<<<haproxy:sep(44)>>>"
 	echo "show stat" | socat - UNIX-CONNECT:/var/run/haproxy.sock

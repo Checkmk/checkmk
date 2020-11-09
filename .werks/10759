@@ -6,7 +6,7 @@ Date: 1578913898
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 With this special agent and checks, it's possible to query given projects and
 there workflows. This will result in one service per project and workflow that

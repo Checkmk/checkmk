@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The help texts for "IPv4 Address" and "IPv6 Address" have given the impression
 that the field could be set with an empty value. This is not correct, the

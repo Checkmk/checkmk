@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<netapp_api_vs_traffic:sep(9)>>>
 # lif:vserver        instance_uuid 4294967295        instance_name sb1        sent_errors 0        recv_errors 0 ...
 # lif:vserver        instance_uuid 16        instance_name vsFS        sent_errors 0        recv_errors 0        ..
@@ -133,5 +134,4 @@ check_info["netapp_api_vs_traffic"] = {
     'check_function': check_netapp_api_vs_traffic,
     'service_description': 'Traffic vServer %s',
     'has_perfdata': True,
-    'includes': ["netapp_api.include"]
 }

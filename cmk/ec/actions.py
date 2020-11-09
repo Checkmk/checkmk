@@ -246,7 +246,7 @@ def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
 #   |        |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  EC create Check_MK native notifications via cmk --notify.           |
+#   |  EC create Checkmk native notifications via cmk --notify.           |
 #   '----------------------------------------------------------------------'
 
 # Es fehlt:
@@ -257,7 +257,7 @@ def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
 # - Das muss sich in den Hilfetexten wiederspiegeln
 
 
-# This function creates a Check_MK Notification for a locally running Check_MK.
+# This function creates a Checkmk Notification for a locally running Checkmk.
 # We simulate a *service* notification.
 def do_notify(event_server: Any,
               logger: Logger,
@@ -418,7 +418,7 @@ def _add_contact_information_to_context(context: Any, contact_groups: Any, logge
 
 
 # NOTE: This function is an exact copy from modules/notify.py. We need
-# to move all this Check_MK-specific livestatus query stuff to a helper
+# to move all this Checkmk-specific livestatus query stuff to a helper
 # module in lib some day.
 # NOTE: Typing chaos ahead!
 def _rbn_groups_contacts(groups: Any) -> Any:

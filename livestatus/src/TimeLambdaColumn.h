@@ -23,7 +23,7 @@ public:
     struct Constant;
     struct Reference;
     TimeLambdaColumn(
-        std::string name, std::string description, Offsets offsets,
+        std::string name, std::string description, ColumnOffsets offsets,
         std::function<std::chrono::system_clock::time_point(const T&)> gv)
         : TimeColumn(std::move(name), std::move(description),
                      std::move(offsets))

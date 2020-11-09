@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Column.h"
@@ -23,9 +24,9 @@ class Row;
 class CommentColumn : public ListColumn {
 public:
     CommentColumn(const std::string &name, const std::string &description,
-                  Offsets offsets, MonitoringCore *mc, bool is_service,
+                  ColumnOffsets offsets, MonitoringCore *mc, bool is_service,
                   bool with_info, bool with_extra_info)
-        : ListColumn(name, description, offsets)
+        : ListColumn(name, description, std::move(offsets))
         , _mc(mc)
         , _is_service(is_service)
         , _with_info(with_info)

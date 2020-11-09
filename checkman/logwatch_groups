@@ -15,3 +15,5 @@ item:
 inventory:
  One service is created for each group.
 
+cluster:
+ In a cluster setup all messages are aggregated across the nodes.

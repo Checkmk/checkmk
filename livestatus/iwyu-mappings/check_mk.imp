@@ -1,4 +1,4 @@
-# Default include mappings for Check_MK
+# Default include mappings for Checkmk
 [
   { ref: gcc.libc.imp },
   { ref: gcc.symbols.imp },

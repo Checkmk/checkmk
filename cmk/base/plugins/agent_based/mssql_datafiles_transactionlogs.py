@@ -7,20 +7,20 @@
 from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 from contextlib import suppress
 
-from .agent_based_api.v0.type_defs import (
-    AgentStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+from .agent_based_api.v1.type_defs import (
+    StringTable,
+    CheckResult,
+    DiscoveryResult,
     Parameters,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
     register,
     render,
     Result,
     Service,
-    state,
+    State as state,
 )
 
 
@@ -34,7 +34,7 @@ class MSSQLInstanceData(TypedDict):
 SectionDatafiles = Dict[Tuple[Optional[str], str, str], MSSQLInstanceData]
 
 
-def parse_mssql_datafiles(string_table: AgentStringTable) -> SectionDatafiles:
+def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
     """
         >>> from pprint import pprint
         >>> pprint(parse_mssql_datafiles([
@@ -106,7 +106,7 @@ def _mssql_datafiles_process_sizes(
     allocated_size: float,
     max_size: Optional[float],
     unlimited: bool,
-) -> CheckGenerator:
+) -> CheckResult:
     def calculate_levels(
         levels: Tuple[float, float],
         reference_value: Optional[float],
@@ -163,7 +163,7 @@ def discover_mssql_common(
     params: List[Parameters],
     section: SectionDatafiles,
     section_mssql_databases: Dict[str, Dict[str, str]],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
 
     summarize = params[0].get("summarize_%s" % mode, False)
     for inst, database, file_name in section:
@@ -180,7 +180,7 @@ def discover_mssql_datafiles(
     params: List[Parameters],
     section_mssql_datafiles: Optional[SectionDatafiles],
     section_mssql_databases: Optional[Dict[str, Dict[str, str]]],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     if section_mssql_datafiles:
         yield from discover_mssql_common("datafiles", params, section_mssql_datafiles,
                                          section_mssql_databases or {})
@@ -190,7 +190,7 @@ def discover_mssql_transactionlogs(
     params: List[Parameters],
     section_mssql_transactionlogs: Optional[SectionDatafiles],
     section_mssql_databases: Optional[Dict[str, Dict[str, str]]],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     if section_mssql_transactionlogs:
         yield from discover_mssql_common("transactionlogs", params, section_mssql_transactionlogs,
                                          section_mssql_databases or {})
@@ -232,7 +232,7 @@ def check_mssql_transactionlogs(
     params: Parameters,
     section_mssql_transactionlogs: Optional[SectionDatafiles],
     section_mssql_databases: Optional[Dict[str, Dict[str, str]]],
-) -> CheckGenerator:
+) -> CheckResult:
     if section_mssql_transactionlogs:
         yield from check_mssql_common(item, params, section_mssql_transactionlogs)
 
@@ -242,7 +242,7 @@ def check_mssql_datafiles(
     params: Parameters,
     section_mssql_datafiles: Optional[SectionDatafiles],
     section_mssql_databases: Optional[Dict[str, Dict[str, str]]],
-) -> CheckGenerator:
+) -> CheckResult:
     if section_mssql_datafiles:
         yield from check_mssql_common(item, params, section_mssql_datafiles)
 

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from checktestlib import (
     CheckResult,
     assertCheckResultsEqual,
@@ -72,9 +73,10 @@ expected_result_2 = CheckResult([
     (info_statgrab_cpu_hpux, mock_state_tuple, expected_result_1),
     (info_statgrab_cpu_hpux, mock_state_dict, expected_result_2),
 ])
-def test_statgrab_cpu_check(check_manager, info, mockstate, expected_result):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_statgrab_cpu_check(info, mockstate, expected_result):
 
-    check = check_manager.get_check("statgrab_cpu")
+    check = Check("statgrab_cpu")
 
     # set up mocking of `get_item_state`
     with MockItemState(mockstate):
@@ -85,9 +87,10 @@ def test_statgrab_cpu_check(check_manager, info, mockstate, expected_result):
 @pytest.mark.parametrize("info,mockstate", [
     (info_statgrab_cpu_hpux, mock_state_function),
 ])
-def test_statgrab_cpu_check_error(check_manager, info, mockstate):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_statgrab_cpu_check_error(info, mockstate):
 
-    check = check_manager.get_check("statgrab_cpu")
+    check = Check("statgrab_cpu")
 
     with MockItemState(mockstate):
         # the mock values are designed to raise an exception.

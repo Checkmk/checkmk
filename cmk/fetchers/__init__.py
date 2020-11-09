@@ -5,11 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Package containing the fetchers to the data sources."""
 
-from typing import Any, Dict, Type
-
 import enum
+from typing import Any, Dict, Literal, Type, Optional
 
-from ._base import ABCFetcher, MKFetcherError
+from ._base import ABCFetcher, ABCFileCache, MKFetcherError, verify_ipaddress
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
@@ -19,6 +18,7 @@ from .tcp import TCPFetcher
 
 __all__ = [
     "ABCFetcher",
+    "ABCFileCache",
     "MKFetcherError",
     "IPMIFetcher",
     "PiggybackFetcher",
@@ -44,8 +44,7 @@ class FetcherType(enum.Enum):
 
     def make(self) -> Type[ABCFetcher]:
         """The fetcher factory."""
-        # This typing error is a false positive.  There are tests
-        # to demonstrate that.
+        # This typing error is a false positive.  There are tests to demonstrate that.
         return {  # type: ignore[return-value]
             FetcherType.IPMI: IPMIFetcher,
             FetcherType.PIGGYBACK: PiggybackFetcher,

@@ -7,28 +7,28 @@
 # yapf: disable
 # type: ignore
 
+from cmk.base.plugins.agent_based import ntp
 
 
 checkname = 'ntp'
 
 
-info = [['-',
-         '42.202.61.100',
-         '.INIT.',
-         '16',
-         'u',
-         '-',
-         '1024',
-         '0',
-         '0.000',
-         '0.000',
-         '0.000']]
+parsed = ntp.parse_ntp([
+    ['-', '42.202.61.100', '.INIT.', '16', 'u', '-', '1024', '0', '0.000', '0.000', '0.000'],
+])
 
 
-discovery = {'': [], 'time': [(None, {})]}
+discovery = {
+    '': [],
+    'time': [(None, {})],
+}
 
 
-checks = {'time': [(None,
-                    {'alert_delay': (300, 3600), 'ntp_levels': (10, 200.0, 500.0)},
-                    [(0, 'found 1 peers, but none is suitable', []),
-                     (0, 'Just started monitoring', [])])]}
+checks = {
+    'time': [
+        (None, {'alert_delay': (300, 3600), 'ntp_levels': (10, 200.0, 500.0)}, [
+            (0, 'Found 1 peers, but none is suitable', []),
+            (0, 'Time since last sync: N/A (started monitoring)', []),
+        ]),
+    ],
+}

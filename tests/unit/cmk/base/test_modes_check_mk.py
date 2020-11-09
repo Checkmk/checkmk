@@ -8,10 +8,11 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.fetchers._base import ABCFileCache
+from cmk.utils.type_defs import result
 
 import cmk.base.modes.check_mk as check_mk
-from cmk.base.data_sources import FileCacheConfigurator
+from cmk.base.checkers import FileCacheFactory
+from cmk.base.checkers.tcp import TCPSource
 
 
 class TestModeDumpAgent:
@@ -28,8 +29,8 @@ class TestModeDumpAgent:
         return b"<<<check_mk>>>\nraw data"
 
     @pytest.fixture
-    def patch_io(self, raw_data, monkeypatch):
-        monkeypatch.setattr(ABCFileCache, "read", lambda *args, **kwargs: raw_data)
+    def patch_fetch(self, raw_data, monkeypatch):
+        monkeypatch.setattr(TCPSource, "fetch", lambda self: result.OK(raw_data))
 
     @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):
@@ -39,9 +40,9 @@ class TestModeDumpAgent:
         return ts
 
     @pytest.mark.usefixtures("scenario")
-    @pytest.mark.usefixtures("patch_io")
+    @pytest.mark.usefixtures("patch_fetch")
     def test_success(self, hostname, raw_data, capsys):
-        assert FileCacheConfigurator.disabled is False
+        assert FileCacheFactory.disabled is False
 
         check_mk.mode_dump_agent(hostname)
         assert capsys.readouterr().out == raw_data.decode()

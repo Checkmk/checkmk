@@ -21,7 +21,8 @@ from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unuse
     user_attribute_registry,  #
     get_user_attributes,  #
     UserConnector,  #
-    user_connector_registry,
+    user_connector_registry,  #
+    CheckCredentialsResult,
 )
 
 #.

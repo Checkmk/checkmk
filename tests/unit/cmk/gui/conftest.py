@@ -14,28 +14,28 @@ import urllib.parse
 from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Any, NamedTuple, Literal
+from functools import lru_cache
 
 import pytest  # type: ignore[import]
 import webtest  # type: ignore[import]
 from mock import MagicMock
-from six import ensure_str
 from werkzeug.test import create_environ
 
 from testlib.utils import DummyApplication
 
 import cmk.utils.log
 import cmk.utils.paths as paths
-from cmk.utils import store
 
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request
-from cmk.gui.plugins.userdb import htpasswd
 from cmk.gui.utils import get_random_string
+from cmk.gui.watolib import search
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
+from cmk.gui.background_job import BackgroundProcessInterface
 
 SPEC_LOCK = threading.Lock()
 
@@ -50,6 +50,7 @@ HTTPMethod = Literal[
     "get", "put", "post", "delete",
     "GET", "PUT", "POST", "DELETE",
 ]  # yapf: disable
+
 
 @pytest.fixture(scope='function')
 def register_builtin_html():
@@ -89,12 +90,20 @@ def load_plugins(register_builtin_html, monkeypatch, tmp_path):
 
 
 def _mk_user_obj(username, password, automation=False):
+    # This dramatically improves the performance of the unit tests using this in fixtures
+    precomputed_hashes = {
+        "Ischbinwischtisch": '$5$rounds=535000$mn3ra3ny1cbHVGsW$5kiJmJcgQ6Iwd1R.i4.kGAQcMF.7zbCt0BOdRG8Mn.9',
+    }
+
+    if password not in precomputed_hashes:
+        raise ValueError("Add your hash to precomputed_hashes")
+
     user = {
         username: {
             'attributes': {
                 'alias': username,
                 'email': 'admin@example.com',
-                'password': htpasswd.hash_password(password),
+                'password': precomputed_hashes[password],
                 'notification_method': 'email',
                 'roles': ['admin'],
                 'serial': 0
@@ -149,9 +158,8 @@ def with_user(register_builtin_html, load_config):
 @pytest.fixture(scope='function')
 def with_user_login(with_user):
     user_id = with_user[0]
-    login.login(user_id)
-    yield user_id
-    config.clear_user_login()
+    with login.UserContext(user_id):
+        yield user_id
 
 
 @pytest.fixture(scope='function')
@@ -163,27 +171,8 @@ def with_admin(register_builtin_html, load_config):
 @pytest.fixture(scope='function')
 def with_admin_login(with_admin):
     user_id = with_admin[0]
-    login.login(user_id)
-    yield user_id
-    config.clear_user_login()
-
-
-# noinspection PyDefaultArgument
-@pytest.fixture(scope='function')
-def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-default-value
-    from cmk.gui.openapi import generate
-    spec_path = paths.omd_root + "/share/checkmk/web/htdocs/openapi"
-    openapi_spec_dir = mocker.patch('cmk.gui.wsgi.applications.rest_api')
-    openapi_spec_dir.return_value = spec_path
-
-    if not _cache:
-        with SPEC_LOCK:
-            if not _cache:
-                _cache.append(generate())
-
-    spec_data = ensure_str(_cache[0])
-    store.makedirs(spec_path)
-    store.save_text_to_file(spec_path + "/checkmk.yaml", spec_data)
+    with login.UserContext(user_id):
+        yield user_id
 
 
 @pytest.fixture()
@@ -241,6 +230,9 @@ def inline_background_jobs(mocker):
     mocker.patch("cmk.gui.watolib.ActivateChangesSite._detach_from_parent")
     mocker.patch("cmk.gui.watolib.ActivateChangesSite._close_apache_fds")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._detach_from_parent")
+    mocker.patch("cmk.gui.background_job.BackgroundProcess._open_stdout_and_stderr")
+    mocker.patch("cmk.gui.background_job.BackgroundProcess._register_signal_handlers")
+    mocker.patch("cmk.gui.background_job.BackgroundProcess._register_signal_handlers")
     mocker.patch("cmk.gui.background_job.BackgroundJob._exit")
     mocker.patch("cmk.utils.daemon.daemonize")
     mocker.patch("cmk.utils.daemon.closefrom")
@@ -341,10 +333,14 @@ class WebTestAppForCMK(webtest.TestApp):
         raise NotImplementedError("Format %s not implemented" % output_format)
 
 
+@lru_cache
+def _session_wsgi_callable(debug):
+    return make_app(debug=debug)
+
+
 def _make_webtest(debug):
-    wsgi_callable = make_app(debug=debug)
     cookies = CookieJar()
-    return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)
+    return WebTestAppForCMK(_session_wsgi_callable(debug), cookiejar=cookies)
 
 
 @pytest.fixture(scope='function')
@@ -355,3 +351,20 @@ def wsgi_app(monkeypatch):
 @pytest.fixture(scope='function')
 def wsgi_app_debug_off(monkeypatch):
     return _make_webtest(debug=False)
+
+
+@pytest.fixture(scope='function', autouse=True)
+def store_search_index():
+    search.get_index_store().store_index({})
+
+
+@pytest.fixture(scope='function', autouse=True)
+def avoid_search_index_update_background(monkeypatch):
+    monkeypatch.setattr(
+        search,
+        'update_and_store_index_background',
+        lambda change_action_name: search._update_and_store_index_background(
+            change_action_name,
+            MagicMock(BackgroundProcessInterface),
+        ),
+    )

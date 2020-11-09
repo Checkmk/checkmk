@@ -7,10 +7,16 @@
 
 import enum
 
+__all__ = ["Mode"]
+
 
 class Mode(enum.Enum):
     NONE = enum.auto()
     CHECKING = enum.auto()
     DISCOVERY = enum.auto()
+    # Special case of DISCOVERY for the "service discovery page" (automation: try-inventory) which
+    # needs to execute the discovery but has to use the available caches, even when dealing with
+    # SNMP devices.
+    CACHED_DISCOVERY = enum.auto()
     INVENTORY = enum.auto()
     RTC = enum.auto()

@@ -7,7 +7,6 @@
    status GUI, in WATO pages and in "Add snapin". These
    styles are not used in the sidebar and in Mobile. */
 
-
 /*-------------------------------------------------------------------------.
 |                   ____                           _                       |
 |                  / ___| ___ _ __   ___ _ __ __ _| |                      |
@@ -19,7 +18,10 @@
 | General styles used in the pages                                         |
 '-------------------------------------------------------------------------*/
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   color: $font-color;
 }
 
@@ -40,11 +42,14 @@ h3 {
 | Styles for the main frame (its body, header, footer, etc.)               |
 '-------------------------------------------------------------------------*/
 
-
 body {
-  color: rgb(255, 255, 255);
+  color: $font-color;
 
-  a, a:link, a:visited { color: $font-color; }
+  a,
+  a:link,
+  a:visited {
+    color: $font-color;
+  }
 
   &.hidden:after {
     position: absolute;
@@ -53,7 +58,7 @@ body {
     display: block;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, .5);
+    background-color: rgba(0, 0, 0, 0.5);
     content: "";
   }
 
@@ -98,43 +103,47 @@ body {
       padding: 8px 20px;
       margin: 0 0 5px;
       color: rgb(255, 255, 255);
-      background: $bg-color-default;
+      background: $bg-color;
       border-spacing: 0;
 
       td {
-	overflow: hidden;
-	color: rgb(255, 255, 255);
-	text-overflow: ellipsis;
-	-o-text-overflow: ellipsis;
-	vertical-align: middle;
-	white-space: nowrap;
+        overflow: hidden;
+        color: rgb(255, 255, 255);
+        text-overflow: ellipsis;
+        -o-text-overflow: ellipsis;
+        vertical-align: middle;
+        white-space: nowrap;
 
-	&.heading {
-	  height: 31px;
-	  max-width: 100px;
-	  padding-left: 0;
-	  font-size: 21px;
+        &.heading {
+          height: 31px;
+          max-width: 100px;
+          padding-left: 0;
+          font-size: 21px;
 
-	  img {
-	    width: 24px;
-	    height: 24px;
-	    margin-right: 3px;
-	    vertical-align: middle;
-	  }
+          img {
+            width: 24px;
+            height: 24px;
+            margin-right: 3px;
+            vertical-align: middle;
+          }
 
-	  a, a:hover {
-	    text-decoration: none;
-	  }
+          a,
+          a:hover {
+            text-decoration: none;
+          }
 
-	  a, .popup_menu span, .popup_menu & span {
-	    color: $font-color;
-	  }
+          a,
+          .popup_menu span,
+          .popup_menu & span {
+            color: $font-color;
+          }
 
           div.breadcrumb {
             font-size: 11px;
             white-space: nowrap;
 
-            span, a {
+            span,
+            a {
               &:last-child:after {
                 content: "";
               }
@@ -151,35 +160,35 @@ body {
               content: " > ";
             }
           }
-	}
+        }
 
-	&.right {
-	  width: 1%;
-	  font-size: 13px;
-	  color: $font-color;
-	  text-align: right;
+        &.right {
+          width: 1%;
+          font-size: 13px;
+          color: $font-color;
+          text-align: right;
 
-	  img {
-	    width: 19px;
-	    height: 19px;
-	    vertical-align: middle;
-	  }
+          img {
+            width: 19px;
+            height: 19px;
+            vertical-align: middle;
+          }
 
-	  a.head_logo img {
-	    width: 20px;
-	    height: 23px;
-	    margin: 0 0 1px 5px;
+          a.head_logo img {
+            width: 20px;
+            height: 23px;
+            margin: 0 0 1px 5px;
 
-	    &:hover {
-	      opacity: 0.5;
-	      filter: alpha(opacity=50);
-	    }
-	  }
+            &:hover {
+              opacity: 0.5;
+              filter: alpha(opacity=50);
+            }
+          }
 
-	  * {
-	    color: $primary-link-color;
-	  }
-	}
+          * {
+            color: $primary-link-color;
+          }
+        }
       }
     }
 
@@ -196,22 +205,17 @@ body {
     div#main_page_content {
       flex: 1 1 auto;
       height: 100%;
-      padding-right: 12px;
+      padding-right: 11px;
       padding-bottom: 20px;
       overflow: auto;
 
-      div.simplebar-track { background-color: $simplebar-track-bg-color; }
-
-      div.simplebar-horizontal div.simplebar-scrollbar {
-        height: 6px;
-        &::before { top: 3px; }
+      div.simplebar-track {
+        background-color: $bg-color;
       }
 
-      div.simplebar-vertical {
-        &, div.simplebar-scrollbar { width: 12px; }
+      body.dashboard & {
+        padding-bottom: 0;
       }
-
-      body.dashboard & { padding-bottom: 0; }
     }
   }
 }
@@ -267,7 +271,6 @@ body {
     text-decoration: underline;
   }
 }
-
 
 /*-------------------------------------------------------------------------.
 |            ____        _          _____     _     _                      |
@@ -351,7 +354,7 @@ table.data {
       white-space: nowrap;
 
       &.visuals {
-	width: 75px;
+        width: 75px;
       }
     }
 
@@ -407,7 +410,7 @@ table.data {
   tr.data {
     overflow: hidden;
     box-sizing: border-box;
-    transition: all .15s ease-in;
+    transition: all 0.15s ease-in;
 
     /* TODO: Refactor these messy and complicated styles */
     > td {
@@ -418,19 +421,20 @@ table.data {
       border-right: none;
 
       &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
-	border-top: $data-table-border-top;
-	border-bottom: $data-table-border-bottom;
+        border-top: $data-table-border-top;
+        border-bottom: $data-table-border-bottom;
       }
 
       &:first-child {
         border-radius: $first-child-border-radius;
 
-	&:not(.state):not(.gap):not(.bulksearch):not(.bulkactions) {
-	  border-left: 1px solid $color-table-border;
-	}
+        &:not(.state):not(.gap):not(.bulksearch):not(.bulkactions) {
+          border-left: 1px solid $color-table-border;
+        }
       }
 
-      &:last-child:not(.fillup):not(.bulkactions), &.last_col {
+      &:last-child:not(.fillup):not(.bulkactions),
+      &.last_col {
         border-right: 1px solid $color-table-border;
         border-radius: $table-cell-last-child-border-radius;
       }
@@ -441,25 +445,25 @@ table.data {
       }
 
       a {
-	color: $secondary-font-color;
+        color: $secondary-font-color;
 
-	&:hover {
-	  color: $primary-hover-font-color;
-	}
+        &:hover {
+          color: $primary-hover-font-color;
+        }
       }
 
       &:not(.gap):not(.last_col) {
-	border-left: $td-border-left-right;
-	border-right: $td-border-left-right;
+        border-left: $td-border-left-right;
+        border-right: $td-border-left-right;
       }
 
       &.state {
-	border-top: $data-table-state-border-top;
-	border-bottom: $data-table-state-border-bottom;
+        border-top: $data-table-state-border-top;
+        border-bottom: $data-table-state-border-bottom;
       }
 
       &:not(.state) {
-	text-overflow: $td-text-overflow;
+        text-overflow: $td-text-overflow;
       }
     }
 
@@ -473,7 +477,8 @@ table.data {
     }
   }
 
-  tr td.gap, tr td.fillup {
+  tr td.gap,
+  tr td.fillup {
     background: $td-gap-bg-color;
     border: 1px solid $td-gap-bg-color;
   }
@@ -578,16 +583,15 @@ table.data {
   }
 }
 
-table.data .popup_menu, body.main table.data .popup_menu {
+table.data .popup_menu,
+body.main table.data .popup_menu {
   color: $font-color;
 }
 
 /* Give each table's topmost row a top border */
-table.data tr:not(.data) + tr.data
-> td:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
+table.data tr:not(.data) + tr.data > td:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
   border-top: $data-table-border-topmost;
 }
-
 
 /* TODO: Check whether these narrow and wide styles are deprecated */
 td.narrow {
@@ -604,7 +608,8 @@ table.groupheader {
   margin: 0;
   border: none;
 
-  tr.groupheader td, tr.groupheader td a {
+  tr.groupheader td,
+  tr.groupheader td a {
     font-size: $theme-font-table-header;
     font-weight: $font-weight-default;
   }
@@ -659,7 +664,7 @@ tr.groupheader {
       &.state {
         width: auto;
         padding: 0 8px;
-	margin-top: 12px;
+        margin-top: 12px;
         font-size: 14px;
         text-transform: uppercase;
         box-shadow: none;
@@ -698,11 +703,12 @@ tr.groupheader {
   }
 
   &:first-of-type td.groupheader table.groupheader {
-    &, tbody tr td {
+    &,
+    tbody tr td {
       padding-top: 0;
 
       .state {
-	margin-top: 0;
+        margin-top: 0;
       }
     }
   }
@@ -739,13 +745,26 @@ img.icon.reloading {
   -moz-animation: spin 1s linear infinite;
 }
 
-@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
-@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
-@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
+@-moz-keyframes spin {
+  100% {
+    -moz-transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
 
 /* Table with captions on the left side. Used e.g. for man pages and werks */
 table.data.headerleft {
-    border-spacing: 0;
+  border-spacing: 0;
 
   th {
     text-align: left;
@@ -757,7 +776,7 @@ table.data.headerleft {
     &:nth-child(even) {
       padding: 5px 16px;
       vertical-align: top;
-      background: $bg-color-tertiary;
+      background: $bg-color-secondary;
       border-top: 1px solid $color-table-border;
       border-bottom: $table-headerleft-border-bottom;
       border-left: 1px solid $color-table-border;
@@ -795,36 +814,45 @@ table.data.headerleft {
 | Input forms (e.g. Filters, Commands, WATO)                               |
 '-------------------------------------------------------------------------*/
 
-input:not(.button), input[type=text], input[type=password],
-select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
+input:not(.button),
+input[type="text"],
+input[type="password"],
+select,
+textarea,
+div.snapin textarea,
+#mk_side_search_field,
+.tagify__input {
   height: auto;
   padding: 3px 6px;
   color: $font-color;
-  background: $bg-color-default;
+  background-color: $bg-color;
   background-image: none;
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
 
-  &:focus, &:active {
+  &:focus,
+  &:active {
     box-shadow: 0 0 1px $input-focus-box-shadow-color inset;
   }
 }
 
 span.select2 .select2-selection {
-  background-color: $bg-color-default;
+  background-color: $select2-bg-color;
   border-color: $select2-border-color;
 }
 
-input[type=text], textarea {
+input[type="text"],
+textarea {
   position: relative;
 }
 
-input[type=text], input[type=password] {
+input[type="text"],
+input[type="password"] {
   vertical-align: middle;
 }
 
-input[type=password] {
+input[type="password"] {
   box-shadow: 0.1px 1.2px 1.8px 0 rgb(136, 0, 0) inset;
 }
 
@@ -832,13 +860,13 @@ select {
   vertical-align: middle;
 }
 
-input[type=radio],
-input[type=checkbox] {
+input[type="radio"],
+input[type="checkbox"] {
   margin-left: 0;
 }
 
-input, select, textarea, div.snapin select, div.snapin textarea,
-#mk_side_search_field {
+input,
+select {
   &.number {
     text-align: left;
   }
@@ -851,36 +879,35 @@ input, select, textarea, div.snapin select, div.snapin textarea,
     margin-bottom: 8px;
     margin-left: 0;
     font-size: $font-size-default;
+    font-weight: $font-weight-bold;
     letter-spacing: $letter-spacing-table;
     color: $input-button-color;
     background-color: $input-button-bg-color;
-    border-color: $input-button-bg-color;
     box-shadow: none;
 
-    &:hover, &:active {
+    &:hover,
+    &:active {
       background-color: $input-button-hover-bg-color;
-      border-color: $input-button-hover-bg-color;
     }
   }
 
-  &[type=radio] {
+  &[type="radio"] {
     width: auto;
     margin-bottom: 0;
   }
 }
 
 input.button {
-  &:not([type=text]), &:not([type=password]) {
-    padding: 4px 8px;
-    border: 1px solid $input-button-bg-color;
-
-    &:hover, &:active {
-      border: 1px solid $input-button-hover-bg-color;
-    }
+  &:not([type="text"]),
+  &:not([type="password"]) {
+    padding: 5px 8px;
   }
 }
 
-select, textarea, div.snapin select, div.snapin textarea,
+select,
+textarea,
+div.snapin select,
+div.snapin textarea,
 #mk_side_search_field {
   &.toggle_timespecific_parameter {
     display: block;
@@ -901,16 +928,28 @@ td.content hr {
 /* TODO: Reproduce these html elements (also have a look at .tab and .tabactive
  *       elemenets in _logwatch.scss)
  */
-input.tab#results, input.tabactive#results { background-color: rgb(255, 238, 102); }
-input.date, input.time {
+input.tab#results,
+input.tabactive#results {
+  background-color: rgb(255, 238, 102);
+}
+
+input.date,
+input.time {
   font-family: monospace;
 }
 
-/* TODO: Reproduce .inputerror elements */
 .inputerror {
-  input, select, textarea, div.snapin select, div.snapin & select,
-  div.snapin textarea, div.snapin & textarea, #mk_side_search_field,
-  span.checkbox, > select {
+  input,
+  select,
+  textarea,
+  div.snapin select,
+  div.snapin & select,
+  div.snapin textarea,
+  div.snapin & textarea,
+  #mk_side_search_field,
+  span.checkbox,
+  span.select2 .select2-selection,
+  > select {
     background-color: $color-nuance-15;
   }
 
@@ -991,10 +1030,9 @@ table.nform {
     a.more {
       float: right;
 
-      img {
-        top: 3px;
-        width: 16px;
-        height: 16px;
+      div::after {
+        position: relative;
+        top: 2px;
       }
     }
   }
@@ -1031,7 +1069,7 @@ table.nform {
       white-space: nowrap;
 
       .dots {
-        opacity: .2;
+        opacity: 0.2;
       }
 
       &.withcheckbox {
@@ -1071,7 +1109,7 @@ table.nform {
       display: inline-block;
 
       &:not(first-of-type) {
-	margin-top: 4px;
+        margin-top: 4px;
       }
     }
   }
@@ -1097,13 +1135,16 @@ table.nform {
     padding: 8px 4px;
   }
 
-  input, select, textarea, #mk_side_search_field {
+  input,
+  select,
+  textarea,
+  #mk_side_search_field {
     & {
       margin: 0;
     }
 
     &.button {
-      margin: 1px 5px 0 0;
+      margin-right: 5px;
     }
   }
 
@@ -1112,7 +1153,9 @@ table.nform {
     background-color: $nform-table-hr-color;
   }
 
-  .ruleset { margin-bottom: 8px; }
+  .ruleset {
+    margin-bottom: 8px;
+  }
 
   tr.open td.content .checkbox {
     display: inline-block;
@@ -1125,9 +1168,17 @@ table.nform {
     vertical-align: middle;
   }
 
-  .title { color: $font-color; }
-  #view_p_options_tbl { border-spacing: 4px; }
-  tbody tr:nth-child(1) td { padding-top: 4px; }
+  .title {
+    color: $font-color;
+  }
+
+  #view_p_options_tbl {
+    border-spacing: 4px;
+  }
+
+  tbody tr:nth-child(1) td {
+    padding-top: 4px;
+  }
 
   tr td.legend {
     width: 280px;
@@ -1137,12 +1188,16 @@ table.nform {
     div.title {
       max-width: 270px;
 
-      &.withcheckbox { max-width: 241px; }
+      &.withcheckbox {
+        max-width: 241px;
+      }
     }
   }
 }
 
-form.visual { margin-right: $spacing; }
+form.visual {
+  margin-right: $spacing;
+}
 
 /*-------------------------------------------------------------------------.
 |                     _        _   _                                       |
@@ -1154,7 +1209,11 @@ form.visual { margin-right: $spacing; }
 +--------------------------------------------------------------------------+
 | Confirmation dialogs, success and error messages when performing actions |
 '-------------------------------------------------------------------------*/
-div.really, div.success, div.error, div.message, div.warning {
+div.really,
+div.success,
+div.error,
+div.message,
+div.warning {
   padding: 1em 2em;
   margin: 2em 0;
   border-radius: $theme-border-radius;
@@ -1209,6 +1268,7 @@ div.help {
   font-weight: normal;
   color: rgb(0, 0, 0);
   text-align: left;
+  text-transform: none; /* Neccessary due to help in H3 */
   background-color: $help-bg-color;
   background-image: none;
   border-radius: 5px;
@@ -1225,7 +1285,9 @@ div.help {
     content: "i";
   }
 
-  a, a:link, a:visited {
+  a,
+  a:link,
+  a:visited {
     color: $help-link-color;
 
     &:hover {
@@ -1272,7 +1334,7 @@ body.main .popup_menu {
   min-width: 300px;
   color: rgb(255, 255, 255);
   white-space: normal;
-  background-color: $bg-color-tertiary;
+  background-color: $bg-color-secondary;
   border: 1px solid $color-table-border;
   border-radius: 5px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
@@ -1332,7 +1394,8 @@ body.main .popup_menu {
 
 body.main .popup_menu,
 body.main .popup_menu {
-  a, span {
+  a,
+  span {
     display: block;
     padding-top: 1px;
     padding-bottom: 1px;
@@ -1444,14 +1507,15 @@ body.main .popup_menu {
 |                                                                          |
 '-------------------------------------------------------------------------*/
 
-div.log_output, .crash_report pre {
+div.log_output,
+.crash_report pre {
   padding: 8px 16px;
   margin: 16px;
   font-family: monospace;
   font-weight: $font-weight-default;
   color: $lightgrey;
-  background: $navigation-bg-color;
-  border: 1px solid $color-table-border-dark;
+  background: $log-output-color;
+  border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }
@@ -1463,7 +1527,7 @@ div.log_output {
   pre {
     font-family: monospace;
     font-size: $font-size-global;
-    color: $lightgrey;
+    color: $font-color;
   }
 }
 
@@ -1486,7 +1550,6 @@ a.element_dragger {
   -ms-transform: scale(1.005);
   -o-transform: scale(1.005);
 }
-
 
 /*-------------------------------------------------------------------------.
 |         ____       _                                                     |
@@ -1634,7 +1697,6 @@ table.data.job_table {
       width: 50px;
     }
 
-
     &.job_started {
       width: 160px;
     }
@@ -1692,21 +1754,23 @@ table.data.job_table {
       line-height: 14px;
     }
 
-    &, &.discovered {
+    &,
+    &.discovered {
       &:hover:not([readonly]) div::before {
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-	opacity: $tag-hover-opacity;
-	box-shadow: none;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        opacity: $tag-hover-opacity;
+        box-shadow: none;
       }
     }
   }
 
   // Display input always non-colored
   &:not([readonly]) tag {
-    > div::before, &:hover > div::before {
+    > div::before,
+    &:hover > div::before {
       background: $tag-input-bg-color;
       opacity: 1;
     }
@@ -1720,7 +1784,8 @@ table.data.job_table {
     color: $tag-dropdown-active-color;
   }
 
-  tag, &[readonly] tag {
+  tag,
+  &[readonly] tag {
     > div::before {
       top: 0;
       right: 0;
@@ -1763,9 +1828,9 @@ table.data.job_table {
       margin: 1px;
 
       &--active {
-	color: $tag-dropdown-active-color;
-	background-color: $tag-dropdown-active-bg-color;
-	border: $primary-table-border;
+        color: $tag-dropdown-active-color;
+        background-color: $tag-dropdown-active-bg-color;
+        border: $primary-table-border;
       }
     }
   }

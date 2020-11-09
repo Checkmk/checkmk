@@ -10,18 +10,19 @@
 checkname = 'printer_supply'
 
 info = [
-    ['Toner Cartridge OKI DATA CORP', '19', '100', '30', 'class', 'black'],
-    ['Toner Cartridge OKI DATA CORP', '19', '100', '10', 'class', 'cyan'],
-    ['Toner Cartridge OKI DATA CORP', '19', '100', '10', 'class', 'magenta'],
-    ['Toner Cartridge OKI DATA CORP', '19', '100', '40', 'class', 'yellow'],
-    ['Image Drum Unit OKI DATA CORP', '1', '20000', '409', 'class', ''],
-    ['Image Drum Unit OKI DATA CORP', '1', '20000', '7969', 'class', ''],
-    ['Image Drum Unit OKI DATA CORP', '1', '20000', '11597', 'class', ''],
-    ['Image Drum Unit OKI DATA CORP', '1', '20000', '4621', 'class', ''],
-    ['Belt Unit OKI DATA CORP', '2', '60000', '47371', 'class', ''],
-    ['Fuser Unit OKI DATA CORP', '2', '60000', '26174', 'class', ''],
-    ['Waste Toner box OKI DATA CORP', '1', '1', '-2', 'class', ''],
-    ['ZFoobar', '15', '4615', '4615', '3', 'very deep black']
+    [['1.1', 'black'], ['1.2', 'cyan'], ['1.3', 'magenta'], ['1.4', 'yellow'], ['1.5', 'very deep black']],
+    [['Toner Cartridge OKI DATA CORP', '19', '100', '30', 'class', '1'],
+    ['Toner Cartridge OKI DATA CORP', '19', '100', '10', 'class', '2'],
+    ['Toner Cartridge OKI DATA CORP', '19', '100', '10', 'class', '3'],
+    ['Toner Cartridge OKI DATA CORP', '19', '100', '40', 'class', '4'],
+    ['Image Drum Unit OKI DATA CORP', '1', '20000', '409', 'class', '0'],
+    ['Image Drum Unit OKI DATA CORP', '1', '20000', '7969', 'class', '0'],
+    ['Image Drum Unit OKI DATA CORP', '1', '20000', '11597', 'class', '0'],
+    ['Image Drum Unit OKI DATA CORP', '1', '20000', '4621', 'class', '0'],
+    ['Belt Unit OKI DATA CORP', '2', '60000', '47371', 'class', '0'],
+    ['Fuser Unit OKI DATA CORP', '2', '60000', '26174', 'class', '0'],
+    ['Waste Toner box OKI DATA CORP', '1', '1', '-2', 'class', '0'],
+    ['ZFoobar', '15', '4615', '4615', '3', '5']]
 ]
 
 discovery = {

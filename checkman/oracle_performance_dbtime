@@ -4,7 +4,7 @@ catalog: app/oracle
 license: GPL
 distribution: check_mk
 description:
- This subcheck is active if configured in the WATO rules 'Oracle Performance Discovery'.
+ This subcheck is active if configured in the WATO rules 'Oracle performance discovery'.
  If this subcheck is active the DB time statistics of the oracle_performance main check are
  extracted into this check.
 

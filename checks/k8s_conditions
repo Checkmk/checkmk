@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
 K8S_OK_CONDITIONS = {
     "Ready": "True",
     # Node conditions
@@ -36,5 +37,4 @@ check_info['k8s_conditions'] = {
     'inventory_function': inventory_k8s_conditions,
     'check_function': check_k8s_conditions,
     'service_description': 'Condition %s',
-    'includes': ['k8s.include'],
 }

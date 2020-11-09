@@ -19,9 +19,9 @@ description:
  This check supports averaging the in- and outgoing traffic over a configurable
  time range by using an exponentially weighted moving average - just as Linux
  does for the CPU load averages. The averaging can be configured on a per-host
- and per-interface base. Interfaces with averaging turned on output two additional
- performance values: the averaged traffic in bytes. If you have configured traffic
- levels, then those levels are applied to the averaged values.
+ and per-interface base. Interfaces with averaging turned on yield two additional
+ performance values: the averaged in- and outgoing traffic in bytes. If you have
+ configured traffic levels, then those levels are applied to the averaged values.
 
  Please note: if your devices supports SNMP v2c, you should rather add
  them to {bulkwalk_hosts} and use the check {if64}. This check is almost identical
@@ -34,7 +34,7 @@ item:
 
 inventory:
  One service is created for each interface that fulfills configurable conditions
- (rule "Network Interface and Switch Port Discovery").
+ (rule "Network interface and switch port discovery").
  By default, these are interfaces which are currently found {up} and are of type 6, 32,
  62, 117, 127, 128, 129, 180, 181, 182, 205 or 229.
 

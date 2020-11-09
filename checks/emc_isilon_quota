@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # emc_isilon_quota_types = {
 #     0: "default_user",
 #     1: "user",
@@ -87,7 +89,6 @@ check_info["emc_isilon_quota"] = {
             # useless to us
         ]),
     "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    "includes": ["size_trend.include", "df.include"],
     "group": "filesystem",
     "default_levels_variable": "emc_isilon_quota",
 }

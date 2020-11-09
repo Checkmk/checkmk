@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["ups_bat_temp_default"] = {
     "levels": (40, 50),
 }
@@ -46,5 +48,4 @@ check_info['ups_bat_temp'] = {
             "2.7",  # upsBatteryTemperature
         ]),
     "snmp_scan_function": ups_generic_scan_function,
-    "includes": ["temperature.include", "ups_generic.include"],
 }

@@ -7,16 +7,20 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    Tuple,
     TextAscii,
-    Age,
-    Filesize,
 )
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
+)
+
+from cmk.gui.plugins.wato.check_parameters.file_attributes_utils import (
+    min_age_levels,
+    max_age_levels,
+    min_size_levels,
+    max_size_levels,
 )
 
 
@@ -28,38 +32,12 @@ def _item_spec_filestats():
 
 def _parameter_valuespec_filestats():
     return Dictionary(
-        elements=[("min_age",
-                   Tuple(
-                       title=_("Minimal age of a file"),
-                       elements=[
-                           Age(title=_("Warning if younger than")),
-                           Age(title=_("Critical if younger than")),
-                       ],
-                   )),
-                  ("max_age",
-                   Tuple(
-                       title=_("Maximal age of a file"),
-                       elements=[
-                           Age(title=_("Warning if older than")),
-                           Age(title=_("Critical if older than")),
-                       ],
-                   )),
-                  ("min_size",
-                   Tuple(
-                       title=_("Minimal size of a file"),
-                       elements=[
-                           Filesize(title=_("Warning if below")),
-                           Filesize(title=_("Critical if below")),
-                       ],
-                   )),
-                  ("max_size",
-                   Tuple(
-                       title=_("Maximal size of a file"),
-                       elements=[
-                           Filesize(title=_("Warning if above")),
-                           Filesize(title=_("Critical if above")),
-                       ],
-                   ))],
+        elements=[
+            ('min_age', min_age_levels()),
+            ('max_age', max_age_levels()),
+            ('min_size', min_size_levels()),
+            ('max_size', max_size_levels()),
+        ],
         help=_("Here you can impose various levels the results reported by the"
                " mk_filstats plugin. Note that those levels only concern about a single file."),
     )

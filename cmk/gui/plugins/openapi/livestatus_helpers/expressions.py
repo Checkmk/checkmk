@@ -23,6 +23,16 @@ from typing import List, Tuple
 
 RenderIntermediary = List[Tuple[str, str]]
 
+LIVESTATUS_OPERATORS = [
+    '=',
+    '<',
+    '>',
+    '<=',
+    '>=',
+    '~',
+    '~~',
+]
+
 
 class QueryExpression(abc.ABC):
     """Baseclass of all 'Filter:' expressions."""
@@ -288,6 +298,9 @@ class BoolExpression(QueryExpression):
             # to have empty arguments, though we'd have to decide on an actual use-case to be sure.
             raise RuntimeError("Need at least one parameter.")
 
+    def __repr__(self):
+        return f"{self.expr}{self.args!r}"
+
     def render(self):
         # This is necessarily a bit ugly, due to some unavoidable edge-cases
         # in combination with NothingExpression().
@@ -339,5 +352,71 @@ class Not(QueryExpression):
     def __init__(self, other: QueryExpression):
         self.other = other
 
+    def __repr__(self):
+        return f"Not({self.other!r})"
+
     def render(self):
         return self.other.render() + [("Negate", "1")]
+
+
+def lookup_column(table_column_name) -> UnaryExpression:
+    from cmk.gui.plugins.openapi.livestatus_helpers import tables
+    table_name, column_name = table_column_name.split('.')
+    table_class = getattr(tables, table_name.title())
+    column = getattr(table_class, column_name)
+    return column.expr
+
+
+def tree_to_expr(filter_dict) -> QueryExpression:
+    """Turn a filter-dict into a QueryExpression.
+
+    Examples:
+
+        >>> tree_to_expr({'op': '=', 'left': 'hosts.name', 'right': 'example.com'})
+        Filter(name = example.com)
+
+        >>> tree_to_expr({'op': 'and', \
+                          'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
+        And(Filter(name = example.com),)
+
+        >>> tree_to_expr({'op': 'or', \
+                          'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
+        Or(Filter(name = example.com),)
+
+        >>> tree_to_expr({'op': 'not', \
+                          'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
+        Not(Filter(name = example.com))
+
+        >>> tree_to_expr({'op': 'not', \
+                          'expr': {'op': 'not', \
+                                   'expr': {'op': '=', \
+                                            'left': 'hosts.name', \
+                                            'right': 'example.com'}}})
+        Not(Not(Filter(name = example.com)))
+
+    Args:
+        filter_dict:
+            A filter-dict, which can either be persisted or passed over the wire.
+
+    Returns:
+        A valid LiveStatus query expression.
+
+    """
+    op = filter_dict['op']
+    if op in LIVESTATUS_OPERATORS:
+        return BinaryExpression(
+            lookup_column(filter_dict['left']),
+            LiteralExpression(filter_dict['right']),
+            op,
+        )
+
+    if op == 'and':
+        return And(tree_to_expr(filter_dict['expr']))
+
+    if op == 'or':
+        return Or(tree_to_expr(filter_dict['expr']))
+
+    if op == 'not':
+        return Not(tree_to_expr(filter_dict['expr']))
+
+    raise ValueError(f"Unknown operator: {op}")

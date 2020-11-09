@@ -6,6 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
+import contextlib
 import os
 import shutil
 import subprocess
@@ -57,9 +58,6 @@ def _get_files_to_check(pylint_test_dir):
     open(pylint_test_dir + "/__init__.py", "w")
     _compile_check_and_inventory_plugins(pylint_test_dir)
 
-    if is_enterprise_repo():
-        _compile_bakery_plugins(pylint_test_dir)
-
     # Not checking compiled check, inventory, bakery plugins with Python 3
     files = [pylint_test_dir]
 
@@ -78,9 +76,7 @@ def _get_files_to_check(pylint_test_dir):
 
         # Can currently not be checked alone. Are compiled together below
         if rel_path.startswith("checks/") or \
-           rel_path.startswith("inventory/") or \
-           rel_path.startswith("agents/bakery/") or \
-           rel_path.startswith("enterprise/agents/bakery/"):
+           rel_path.startswith("inventory/"):
             continue
 
         # TODO: We should also test them...
@@ -103,12 +99,18 @@ def _get_files_to_check(pylint_test_dir):
     return files
 
 
-def _compile_check_and_inventory_plugins(pylint_test_dir):
-    with open(pylint_test_dir + "/cmk_checks.py", "w") as f:
+@contextlib.contextmanager
+def stand_alone_template(file_name):
+
+    with open(file_name, "w") as file_handle:
 
         # Fake data structures where checks register (See cmk/base/checks.py)
-        f.write("""
+        file_handle.write("""
 # -*- encoding: utf-8 -*-
+
+from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+
 check_info                         = {}
 check_includes                     = {}
 precompile_params                  = {}
@@ -155,33 +157,19 @@ def inv_tree(path, default_value=None):
             'wrong-import-position',
         ]
 
-        # add the modules
         # These pylint warnings are incompatible with our "concatenation technology".
-        f.write("# pylint: disable=%s\n" % ','.join(disable_pylint))
+        file_handle.write("# pylint: disable=%s\n" % ','.join(disable_pylint))
 
-        pylint_cmk.add_file(f, repo_path() + "/cmk/base/check_api.py")
-        pylint_cmk.add_file(f, repo_path() + "/cmk/base/inventory_plugins.py")
+        yield file_handle
 
-        # Now add the checks
-        for path in sorted(pylint_cmk.check_files(repo_path() + "/checks"),
-                           key=lambda check: (not check.endswith(".include"), check)):
-            pylint_cmk.add_file(f, path)
 
-        # Now add the inventory plugins
+def _compile_check_and_inventory_plugins(pylint_test_dir):
+
+    for idx, f_name in enumerate(pylint_cmk.check_files(repo_path() + "/checks")):
+        with stand_alone_template(pylint_test_dir + "/cmk_checks_%s.py" % idx) as file_handle:
+            pylint_cmk.add_file(file_handle, f_name)
+
+    with stand_alone_template(pylint_test_dir + "/cmk_checks.py") as file_handle:
+        pylint_cmk.add_file(file_handle, repo_path() + "/cmk/base/inventory_plugins.py")
         for path in pylint_cmk.check_files(repo_path() + "/inventory"):
-            pylint_cmk.add_file(f, path)
-
-
-def _compile_bakery_plugins(pylint_test_dir):
-    with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
-        # This pylint warning is incompatible with our "concatenation technology".
-        f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
-
-        pylint_cmk.add_file(
-            f,
-            os.path.realpath(os.path.join(repo_path(),
-                                          "enterprise/cmk/base/cee/bakery/plugins.py")))
-
-        # Also add bakery plugins
-        for path in pylint_cmk.check_files(os.path.join(repo_path(), "enterprise/agents/bakery")):
-            pylint_cmk.add_file(f, path)
+            pylint_cmk.add_file(file_handle, path)

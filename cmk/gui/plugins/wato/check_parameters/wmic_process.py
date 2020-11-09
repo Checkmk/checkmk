@@ -12,7 +12,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksApplications,
+    RulespecGroupEnforcedServicesApplications,
     rulespec_registry,
     ManualCheckParameterRulespec,
 )
@@ -43,7 +43,7 @@ def _parameter_valuespec_wmic_process():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="wmic_process",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_item_spec_wmic_process,
         parameter_valuespec=_parameter_valuespec_wmic_process,
         title=lambda: _("Memory and CPU of processes on Windows"),

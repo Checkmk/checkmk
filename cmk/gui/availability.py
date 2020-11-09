@@ -20,7 +20,6 @@ from cmk.utils.type_defs import HostName, ServiceName
 from cmk.utils.prediction import lq_logic
 
 import cmk.gui.utils as utils
-import cmk.gui.bi as bi
 import cmk.gui.sites as sites
 from cmk.gui.view_utils import CSSClass
 from cmk.gui.type_defs import Rows, Row
@@ -37,7 +36,8 @@ from cmk.gui.valuespec import (
     Timerange,
 )
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = str  # TODO: Improve this type
@@ -67,6 +67,15 @@ AVTimelineRows = List[_Tuple[AVSpan, AVTimelineStateName]]
 AVTimelineStates = Dict[AVTimelineStateName, int]
 AVTimelineStatistics = Dict[AVTimelineStateName, _Tuple[int, int, int]]
 AVTimelineStyle = str
+
+from cmk.utils.bi.bi_data_fetcher import (
+    BIServiceWithFullState,
+    BIHostStatusInfoRow,
+    BIStatusInfo,
+    BIHostSpec,
+)
+
+from cmk.gui.bi import BIManager
 
 # Example for annotations:
 # {
@@ -180,10 +189,6 @@ class AvailabilityColumns:
 # 4. the valuespec
 
 
-def get_avoption_entries(what) -> AVOptionValueSpecs:
-    return get_av_display_options(what) + get_av_computation_options()
-
-
 def get_av_display_options(what) -> AVOptionValueSpecs:
     if what == "bi":
         grouping_choices = [
@@ -199,7 +204,8 @@ def get_av_display_options(what) -> AVOptionValueSpecs:
         ]
 
     if not cmk_version.is_raw_edition():
-        ruleset_search_url = html.makeuri_contextless(
+        ruleset_search_url = makeuri_contextless(
+            request,
             [
                 ("filled_in", "search"),
                 ("search", "long_output"),
@@ -1133,7 +1139,7 @@ def compute_availability_groups(what: AVObjectType, av_data: AVData,
             titled_groups.append((title, group_id))  # ACHTUNG
 
     # 3. Loop over all groups and render them
-    for title, group_id in sorted(titled_groups, key=lambda x: x[1]):
+    for title, group_id in sorted(titled_groups, key=lambda x: x[1] or ""):
         group_table = []
         for entry in av_data:
             group_ids: AVGroupIds = entry["groups"]
@@ -1376,11 +1382,25 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
         urls = []
         if "omit_buttons" not in labelling:
             if what != "bi":
-                timeline_url = html.makeuri([("av_mode", "timeline"), ("av_site", site),
-                                             ("av_host", host), ("av_service", service)])
+                timeline_url = makeuri(
+                    request,
+                    [
+                        ("av_mode", "timeline"),
+                        ("av_site", site),
+                        ("av_host", host),
+                        ("av_service", service),
+                    ],
+                )
             else:
-                timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_group", host),
-                                             ("aggr_name", service), ("view_name", "aggr_single")])
+                timeline_url = makeuri(
+                    request,
+                    [
+                        ("av_mode", "timeline"),
+                        ("av_aggr_group", host),
+                        ("aggr_name", service),
+                        ("view_name", "aggr_single"),
+                    ],
+                )
             urls.append(("timeline", _("Timeline"), timeline_url))
             if what != "bi":
                 urls.append(
@@ -1780,6 +1800,11 @@ def find_next_choord(broken, scale):
 #   |  group and the field "service" with the BI aggregate's name.         |
 #   '----------------------------------------------------------------------'
 
+BIAggregationGroupTitle = str
+BIAggregationTree = Dict[str, Any]
+BIAggregationTitle = str
+BITreeState = Any
+
 
 def get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output, avoptions):
     raise Exception("Not implemented yet. Sorry.")
@@ -1801,8 +1826,10 @@ class TimelineContainer:
         self._aggr_row = aggr_row
 
         # PUBLIC accessible data
-        self.aggr_tree: bi.BIAggregationTree = self._aggr_row["aggr_tree"]
-        self.aggr_group: bi.BIAggregationGroupTitle = self._aggr_row["aggr_group"]
+        self.aggr_compiled_aggregation = self._aggr_row["aggr_compiled_aggregation"]
+        self.aggr_compiled_branch = self._aggr_row["aggr_compiled_branch"]
+        self.aggr_tree: BIAggregationTree = self._aggr_row["aggr_tree"]
+        self.aggr_group: BIAggregationGroupTitle = self._aggr_row["aggr_group"]
 
         # Data fetched from livestatus query
         self.host_service_info: Set[_Tuple[HostName, ServiceName]] = set()
@@ -1810,9 +1837,9 @@ class TimelineContainer:
         # Computed data
         self.timeline = []
         self.states: AVBITimelineStates = {}
-        self.timewarp_state: _Optional[bi.BITreeState] = None
+        self.timewarp_state: _Optional[BITreeState] = None
         self.tree_time: _Optional[AVTimeStamp] = None
-        self.tree_state: _Optional[bi.BITreeState] = None
+        self.tree_state: _Optional[BITreeState] = None
 
 
 def get_bi_leaf_history(
@@ -1824,8 +1851,7 @@ def get_bi_leaf_history(
     only_sites = set()
     hosts = set()
     for row in aggr_rows:
-        tree = row["aggr_tree"]
-        for site, host in tree["reqhosts"]:
+        for site, host in row["aggr_compiled_branch"].get_required_hosts():
             only_sites.add(site)
             hosts.add(host)
 
@@ -1850,10 +1876,9 @@ def get_bi_leaf_history(
     by_host: Dict[HostName, Set[ServiceName]] = {}
     timeline_containers: List[TimelineContainer] = []
     for row in aggr_rows:
-        tree = row["aggr_tree"]
         timeline_container = TimelineContainer(row)
 
-        for site, host, service in bi.find_all_leaves(tree):
+        for site, host, service in timeline_container.aggr_compiled_branch.required_elements():
             this_service = service or ""
             by_host.setdefault(host, set()).add(this_service)
             timeline_container.host_service_info.add((host, this_service))
@@ -1921,6 +1946,8 @@ def compute_bi_timelines(timeline_containers: List[TimelineContainer], time_rang
                 (values["in_service_period"] != 0),
             )
 
+    bi_manager = BIManager()
+
     # Initial phase, this includes all elements
     from_time, first_phase = phases_list[0]
     first_phase_keys = set(first_phase.keys())
@@ -1930,7 +1957,7 @@ def compute_bi_timelines(timeline_containers: List[TimelineContainer], time_rang
         update_states(timeline_container.states, use_elements, first_phase)
 
         # States does now reflect the host/services states at the beginning of the query range.
-        tree_state = _compute_bi_tree_state(timeline_container.aggr_tree, timeline_container.states)
+        tree_state = _compute_bi_tree_state(timeline_container, bi_manager)
 
         tree_time = time_range[0]
         timeline_container.timewarp_state = tree_state if timewarp == int(tree_time) else None
@@ -1947,8 +1974,8 @@ def compute_bi_timelines(timeline_containers: List[TimelineContainer], time_rang
                 continue
 
             update_states(timeline_container.states, use_elements, phase_hst_svc)
-            next_tree_state = _compute_bi_tree_state(timeline_container.aggr_tree,
-                                                     timeline_container.states)
+            next_tree_state = _compute_bi_tree_state(timeline_container, bi_manager)
+
             timeline_container.timeline.append(
                 create_bi_timeline_entry(timeline_container.aggr_tree,
                                          timeline_container.aggr_group,
@@ -1989,23 +2016,25 @@ def create_bi_timeline_entry(tree, aggr_group, from_time, until_time, tree_state
     }
 
 
-def _compute_bi_tree_state(tree: bi.BIAggregationTree,
-                           status: AVBITimelineStates) -> bi.BITreeState:
+def _compute_bi_tree_state(timeline_container, bi_manager: BIManager) -> BITreeState:
     # Convert our status format into that needed by BI
-    services_by_host: Dict[bi.BIHostSpec, List[Any]] = {}
+    #
+    status = timeline_container.states
+    services_by_host: Dict[BIHostSpec, Dict[str, BIServiceWithFullState]] = {}
     hosts = {}
     for site_host_service, state_output in status.items():
-        site_host: bi.BIHostSpec = site_host_service[:2]
+        site_host: BIHostSpec = site_host_service[:2]
         service = site_host_service[2]
         state: _Optional[int] = state_output[0]
-        if state == -1:
-            state = None  # Means: consider this object as missing
 
         if service:
-            services_by_host.setdefault(site_host, []).append((
-                service,  # service description
+            if state == -1:
+                # Ignore pending services
+                continue
+            services_by_host.setdefault(site_host, {})
+            services_by_host[site_host][service] = BIServiceWithFullState(
                 state,
-                1,  # has_been_checked
+                True,  # has_been_checked
                 state_output[1],  # output
                 state,  # hard state (we use the soft state here)
                 1,  # attempt
@@ -2013,35 +2042,63 @@ def _compute_bi_tree_state(tree: bi.BIAggregationTree,
                 state_output[2],  # in_downtime
                 False,  # acknowledged
                 state_output[3],  # in_service_period
-            ))
+            )
         else:
             hosts[site_host] = state_output
 
-    status_info = _compute_status_info(hosts, services_by_host)
+    bi_manager.status_fetcher.states = _compute_status_info(hosts, services_by_host)
+    compiled_aggregation = timeline_container.aggr_compiled_aggregation
+    branch = timeline_container.aggr_compiled_branch
+    results = compiled_aggregation.compute_branches([branch], bi_manager.status_fetcher)
 
-    # Finally we can execute the tree
-    tree_state = bi.execute_tree(tree, status_info)
-    return tree_state
+    if not results:
+        # The aggregation did not found any hosts/svcs
+        # It is not the job of the compiled_aggregation to offer a fallback result
+        # for this special availability scenario
+        return _get_not_monitored_result(compiled_aggregation, branch)
+
+    legacy_branch = compiled_aggregation.convert_result_to_legacy_format(results[0])
+    return legacy_branch["aggr_treestate"]
 
 
-def _compute_status_info(hosts: Dict[bi.BIHostSpec, AVBITimelineState],
-                         services_by_host: Dict[bi.BIHostSpec, List[Any]]) -> bi.BIStatusInfo:
-    status_info: bi.BIStatusInfo = {}
+def _get_not_monitored_result(compiled_aggregation, branch):
+    return [
+        {
+            'acknowledged': False,
+            'in_downtime': False,
+            'in_service_period': True,
+            'output': _("Not yet monitored"),
+            'state': None
+        },
+        None,
+        compiled_aggregation.create_aggr_tree(branch),
+        [],
+    ]
+
+
+def _compute_status_info(
+        hosts: Dict[BIHostSpec, AVBITimelineState],
+        services_by_host: Dict[BIHostSpec, Dict[str, BIServiceWithFullState]]) -> BIStatusInfo:
+
+    status_info: BIStatusInfo = {}
+
     for site_host, state_output in hosts.items():
         state: _Optional[int] = state_output[0]
+
         if state == -1:
             state = None  # Means: consider this object as missing
 
-        status_info[site_host] = bi.BIStatusInfoRow([
-            state,
+        status_info[site_host] = BIHostStatusInfoRow(
+            state,  # state
+            True,  # has_been_checked
             state,  # host hard state
-            state_output[1],
+            state_output[1],  # plugin output
             state_output[2],  # in_downtime
-            False,  # acknowledged
             state_output[3],  # in_service_period
-            services_by_host.get(site_host, [])
-        ])
-
+            False,  # acknowledged
+            services_by_host.get(site_host, {}),
+            {},  # remaining keys N/A
+        )
     return status_info
 
 

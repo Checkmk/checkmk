@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import json
 
 factory_settings['azure_agent_info_levels'] = {
@@ -24,13 +25,13 @@ def _update_remaining_reads(parsed, value):
      * present, but never an integer -> 'unknown'
      * at least one integer value -> minimum of all values
     '''
-    parsed.setdefault('remaining-reads', 'unknown')
     try:
-        value = int(value)
+        if isinstance(parsed.setdefault('remaining-reads', 'unknown'), int):
+            parsed['remaining-reads'] = min(int(value), parsed['remaining-reads'])
+        else:
+            parsed['remaining-reads'] = int(value)
     except ValueError:
-        return
-    # integer wins over string!
-    parsed['remaining-reads'] = min(value, parsed['remaining-reads'])
+        pass
 
 
 def parse_azure_agent_info(info):
@@ -38,7 +39,7 @@ def parse_azure_agent_info(info):
     parsed = {}
     for row in info:
         key = row[0]
-        value = _AZURE_AGENT_SEPARATOR.join(row[1:])  # pylint: disable=undefined-variable
+        value = AZURE_AGENT_SEPARATOR.join(row[1:])  # pylint: disable=undefined-variable
 
         if key == 'remaining-reads':
             _update_remaining_reads(parsed, value)
@@ -169,5 +170,4 @@ check_info['azure_agent_info'] = {
     'default_levels_variable': "azure_agent_info_levels",
     'has_perfdata': True,
     'group': "azure_agent_info",
-    'includes': ['azure.include'],
 }

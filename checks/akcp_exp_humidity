@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.akcp_sensor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example for contents of info
 #           description         percent  status  online
 # ["Port 8 Feuchte USV Raum A",  "38",    "5",    "1"]
@@ -23,5 +25,4 @@ check_info["akcp_exp_humidity"] = {
             8,  # SPAGENT-MIB::sensorHumidityGoOffline
         ]),
     "group": "humidity",
-    "includes": ["humidity.include", "akcp_sensor.include"],
 }

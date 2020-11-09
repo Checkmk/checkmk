@@ -7,6 +7,7 @@
 # coding=utf-8
 # yapf: disable
 import collections
+from testlib import Check  # type: ignore[import]
 import datetime as dt
 
 import freezegun  # type: ignore[import]
@@ -162,8 +163,9 @@ from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
          (2, u'5 \xb0C (device warn/crit below 6/6 \xb0C)', [('temp', 5, None, None)])),
     ],
 )
-def test_check_temperature(check_manager, params, kwargs, expected):
-    check = check_manager.get_check('acme_temp')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_temperature(params, kwargs, expected):
+    check = Check('acme_temp')
     check_temperature = check.context['check_temperature']
     result = check_temperature(*params, **kwargs)
     assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
@@ -240,8 +242,9 @@ _WATO_DICT = {
         # Are the effects of last two test cases related somehow?
     ]
 )
-def test_check_temperature_trend(check_manager, test_case):
-    check = check_manager.get_check('acme_temp')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_temperature_trend(test_case):
+    check = Check('acme_temp')
     check_trend = check.context['check_temperature_trend']
 
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
@@ -273,8 +276,9 @@ def test_check_temperature_trend(check_manager, test_case):
         ),
     ]
 )
-def test_check_temperature_called(check_manager, test_case):
-    check = check_manager.get_check('acme_temp')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_temperature_called(test_case):
+    check = Check('acme_temp')
     check_temperature = check.context['check_temperature']
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 

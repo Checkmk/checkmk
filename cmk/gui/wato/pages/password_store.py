@@ -7,7 +7,6 @@
 from typing import List, Optional, Type
 
 import cmk.gui.config as config
-import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import ValueSpec, DictionaryEntry
@@ -21,6 +20,7 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.passwords import sorted_contact_group_choices
 from cmk.gui.plugins.wato import (
     WatoMode,
     ConfigDomainCore,
@@ -152,11 +152,10 @@ class ModeEditPassword(SimpleEditMode):
                  title=_("Editable by"),
                  help=_("Each password is owned by a group of users which are able to edit, "
                         "delete and use existing passwords."),
-                 style="dropdown",
                  elements=admin_element + [
                      DropdownChoice(
                          title=_("Members of the contact group:"),
-                         choices=lambda: self._contact_group_choices(only_own=True),
+                         choices=lambda: sorted_contact_group_choices(only_own=True),
                          invalid_choice="complain",
                          empty_text=_(
                              "You need to be member of at least one contact group to be able to "
@@ -173,23 +172,9 @@ class ModeEditPassword(SimpleEditMode):
                  help=_("By default only the members of the owner contact group are permitted "
                         "to use a a configured password. It is possible to share a password with "
                         "other groups of users to make them able to use a password in checks."),
-                 choices=self._contact_group_choices,
+                 choices=sorted_contact_group_choices,
                  autoheight=False,
              )),
         ]
 
         return elements
-
-    def _contact_group_choices(self, only_own=False):
-        contact_groups = load_contact_group_information()
-
-        if only_own:
-            assert config.user.id is not None
-            user_groups = userdb.contactgroups_of_user(config.user.id)
-        else:
-            user_groups = []
-
-        entries = [
-            (c, g['alias']) for c, g in contact_groups.items() if not only_own or c in user_groups
-        ]
-        return sorted(entries, key=lambda x: x[1])

@@ -1,0 +1,13 @@
+Title: hp_psu: Added new possible state "Aux not powered"
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1600162503
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The state "Aux not powered" (9) is not defined in the MIB but was discovered in
+the wild. The check honors this now.
+

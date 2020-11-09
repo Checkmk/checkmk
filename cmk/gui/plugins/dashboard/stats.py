@@ -11,13 +11,15 @@ from livestatus import MKLivestatusNotFoundError
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 
 from cmk.gui.plugins.dashboard import (
     Dashlet,
     dashlet_registry,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 class DashletStats(Dashlet, metaclass=abc.ABCMeta):
@@ -109,7 +111,7 @@ class DashletStats(Dashlet, metaclass=abc.ABCMeta):
                 ("filled_in", "filter"),
                 ("search", "1"),
             ] + table_url_vars + self._dashlet_context_vars()
-            url = html.makeuri_contextless(url_vars, filename="view.py")
+            url = makeuri_contextless(request, url_vars, filename="view.py")
 
             html.open_tr()
             html.th(html.render_a(name, href=url))

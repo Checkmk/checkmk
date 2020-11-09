@@ -1,0 +1,17 @@
+Title: Fixed site configuration setting "Direct login to Web GUI allowed"
+Class: fix
+Compatible: incompat
+Component: multisite
+Date: 1600160698
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+In previous versions, the site configuration option
+"Direct login to Web GUI allowed" was intended to influence the synchronisation when activating changes.
+When enabled, the related site was marked for synchronisation every time a Web GUI related option is changed in the central site.
+
+From now on, this option <b>also</b> controls whether a login is allowed on a site or not.
+
+Please check this option in your current configuration.

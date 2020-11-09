@@ -54,6 +54,7 @@ Available commands are:
    remove NAME      ...  Uninstall package NAME
    disable NAME     ...  Disable package NAME
    enable NAME      ...  Enable previously disabled package NAME
+   disable-outdated ...  Disable outdated packages
 
    -v  enables verbose output
 
@@ -79,6 +80,7 @@ def do_packaging(args: List[str]) -> None:
         "install": package_install,
         "disable": package_disable,
         "enable": package_enable,
+        "disable-outdated": package_disable_outdated,
     }
     f = commands.get(command)
     if f:
@@ -236,7 +238,7 @@ def package_pack(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P pack NAME")
 
-    # Make sure, user is not in data directories of Check_MK
+    # Make sure, user is not in data directories of Checkmk
     abs_curdir = os.path.abspath(os.curdir)
     for directory in [cmk.utils.paths.var_dir
                      ] + [p.path for p in get_package_parts() + get_config_parts()]:
@@ -296,3 +298,16 @@ def package_enable(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P enable PACK.mkp")
     packaging.enable(args[0])
+
+
+def package_disable_outdated(args: List[str]) -> None:
+    """Disable MKP packages that are declared to be outdated with the new version
+
+    Since 1.6 there is the option version.usable_until available in MKP packages.
+    Iterate over all installed packages, check that field and once it is set, compare
+    the version with the new Checkmk version. In case it is outdated, move the
+    package to the disabled packages.
+    """
+    if args:
+        raise PackageException("Usage: check_mk -P disable-outdated")
+    packaging.disable_outdated()

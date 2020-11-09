@@ -15,6 +15,22 @@ if typing.TYPE_CHECKING:
     import webtest  # type: ignore[import] # pylint: disable=unused-import
 
 
+def test_profiling(wsgi_app, mocker):
+    var_dir = cmk.utils.paths.var_dir
+    assert not os.path.exists(var_dir + "/multisite.py")
+    assert not os.path.exists(var_dir + "/multisite.profile")
+    assert not os.path.exists(var_dir + "/multisite.cachegrind")
+
+    config = mocker.patch("cmk.gui.config")
+    config.profile = True
+
+    _ = wsgi_app.get('/NO_SITE/check_mk/login.py')
+
+    assert os.path.exists(var_dir + "/multisite.py")
+    assert os.path.exists(var_dir + "/multisite.profile")
+    assert os.path.exists(var_dir + "/multisite.cachegrind")
+
+
 def test_normal_auth(wsgi_app, with_user):
     username, password = with_user
     login: 'webtest.TestResponse' = wsgi_app.get('/NO_SITE/check_mk/login.py')
@@ -39,7 +55,9 @@ def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version?fail=1", status=500)
     assert 'detail' in resp.json
     assert 'title' in resp.json
-    # TODO: Check CrashReport storage
+    assert 'crash_report' in resp.json
+    assert 'check_mk' in resp.json['crash_report']['href']
+    assert 'crash_id' in resp.json
 
 
 @pytest.mark.skip

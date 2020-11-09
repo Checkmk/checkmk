@@ -5,14 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 """
-from typing import Optional
+from typing import List, Optional
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     SNMPTree,
     register,
     all_of,
 )
-from .agent_based_api.v0.type_defs import SNMPStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
 from .utils.f5_bigip import (
     F5_BIGIP,
@@ -28,7 +28,7 @@ from .f5_bigip_cluster_status import (
 NodeState = int
 
 
-def parse_f5_bigip_vcmpfailover(string_table: SNMPStringTable) -> Optional[NodeState]:
+def parse_f5_bigip_vcmpfailover(string_table: List[StringTable]) -> Optional[NodeState]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_vcmpfailover([[["0", "4"]]])
     4
@@ -46,7 +46,7 @@ register.snmp_section(
     name="f5_bigip_vcmpfailover",
     detect=all_of(F5_BIGIP, VERSION_V11_2_PLUS),
     parse_function=parse_f5_bigip_vcmpfailover,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.1",
             oids=[

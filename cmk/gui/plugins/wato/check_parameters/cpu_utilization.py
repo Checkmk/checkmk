@@ -217,7 +217,7 @@ rulespec_registry.register(
 def _transform_cpu_utilization(params):
     if params is None:
         return {}
-    if isinstance(params, Tuple):
+    if isinstance(params, tuple):
         return {"util": params}
     return params
 

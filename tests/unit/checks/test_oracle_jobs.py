@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from cmk.base.check_api import MKCounterWrapped
 
 pytestmark = pytest.mark.checks
@@ -18,15 +19,17 @@ _broken_info = [[
 @pytest.mark.parametrize('info', [
     _broken_info,
 ])
-def test_oracle_jobs_discovery_error(check_manager, info):
-    check = check_manager.get_check('oracle_jobs')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_oracle_jobs_discovery_error(info):
+    check = Check('oracle_jobs')
     assert list(check.run_discovery(info)) == []
 
 
 @pytest.mark.parametrize('info', [
     _broken_info,
 ])
-def test_oracle_jobs_check_error(check_manager, info):
-    check = check_manager.get_check('oracle_jobs')
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_oracle_jobs_check_error(info):
+    check = Check('oracle_jobs')
     with pytest.raises(MKCounterWrapped):
         check.run_check("DB19.SYS.JOB1", {}, info)

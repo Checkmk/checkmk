@@ -1,0 +1,13 @@
+Title: agent_fritzbox: Fix missing agent output
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1604411423
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Since Python 3 handle.read() returns byte values but Checkmk
+needs Unicode decoded strings to write the agent output.
+The content is now decoded as UTF-8.

@@ -6,7 +6,7 @@ Date: 1588874595
 Edition: cre
 Knowledge: undoc
 Level: 3
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Synchronizing configurations between the central and remote sites has taken too
 much time in the past because the entire configuration was always synchronized.

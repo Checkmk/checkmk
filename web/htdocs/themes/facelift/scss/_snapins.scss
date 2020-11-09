@@ -12,8 +12,8 @@ div.bookmark {
   overflow: hidden;
   color: $font-color;
   text-overflow: ellipsis;
-  -o-text-overflow: ellipsis;
   white-space: nowrap;
+  -o-text-overflow: ellipsis;
 }
 
 /*
@@ -24,13 +24,9 @@ div.bookmark {
     padding-left: 10px;
   }
 
-  img {
-    margin-right: 5px;
-
-    &.icon {
-      width: 16px;
-      height: 16px;
-    }
+  img.icon {
+    width: 14px;
+    height: 14px;
   }
 }
 
@@ -100,7 +96,7 @@ div.snapin table.master_control {
   td {
     div.toggle_switch {
       float: right;
-      background-color: $bg-color-default;
+      background-color: $bg-color;
 
       a {
         font-weight: $font-weight-bold;
@@ -172,18 +168,21 @@ table.mkeventd_performance {
  * NagVis maps snapin
  */
 div.state1 {
-  &.statea, &.stated {
+  &.statea,
+  &.stated {
     border-color: rgb(255, 255, 0);
   }
 }
 
 div.state2 {
-  &.statea, &.stated {
+  &.statea,
+  &.stated {
     border-color: rgb(255, 0, 0);
   }
 }
 
-div.statea, div.stated {
+div.statea,
+div.stated {
   background-color: rgb(0, 187, 51);
 }
 
@@ -222,7 +221,7 @@ table.performance {
   font-size: 24px;
   font-weight: bold;
   letter-spacing: $letter-spacing-table;
-  color: $font-color;
+  color: $font-color-sidebar;
   text-align: center;
   border-spacing: 4px;
 }
@@ -269,7 +268,8 @@ div.speedometer {
   height: 223px;
 }
 
-img#speedometerbg, canvas#speedometer {
+img#speedometerbg,
+canvas#speedometer {
   position: absolute;
   top: 0;
   left: 0;
@@ -322,7 +322,8 @@ table.tacticaloverview {
     }
   }
 
-  a, span {
+  a,
+  span {
     display: block;
     margin-right: 2px;
   }
@@ -339,11 +340,7 @@ body.main .popup_menu table.tacticaloverview td span {
   font-size: $font-size-default;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
-  color: $font-color;
-}
-
-table.tacticaloverview td a.link, table.tacticaloverview td a:hover {
-  color: $font-color;
+  color: $font-color-sidebar;
 }
 
 div.tacticalalert {
@@ -434,18 +431,24 @@ div.spacertop {
 /*
  * Admin mini snapin (WATO)
  */
+#snapin_container_admin_mini.more a.show_more_mode {
+  display: inline;
+}
+
 #snapin_admin_mini {
   padding-top: 6px;
   clear: right;
 
-  img {
-    position: relative;
-    left: 3px;
-    width: 18px;
-    height: 18px;
+  img.icon {
+    width: 14px;
+    height: 14px;
     padding: 0;
-    margin-right: 3.9px;
-    margin-bottom: 4px;
+    margin-right: 5px;
+    margin-bottom: 10px;
+  }
+
+  img.emblem {
+    bottom: 3px;
   }
 
   div.footnotelink {
@@ -454,6 +457,21 @@ div.spacertop {
 
   div.clear {
     clear: right;
+  }
+}
+
+#snapin_container_admin.less li.sidebar.show_more_mode {
+  display: none;
+}
+
+#snapin_admin {
+  li {
+    line-height: $menu-item-spacing;
+
+    img.icon {
+      width: 14px;
+      height: 14px;
+    }
   }
 }
 
@@ -474,15 +492,19 @@ div.spacertop {
   padding: 0;
 
   img {
-    display: none; }
+    display: none;
+  }
 
   input {
-    margin:  0;
+    margin: 0;
     font-size: 11px;
     background-repeat: no-repeat;
   }
 
-  input, select, textarea, #mk_side_search_field {
+  input,
+  select,
+  textarea,
+  #mk_side_search_field {
     box-sizing: border-box;
   }
 }
@@ -492,7 +514,7 @@ div.spacertop {
  */
 #snapin_container_wiki div.content {
   font-weight: bold;
-  color: $font-color;
+  color: $font-color-sidebar;
 
   p {
     font-weight: normal;
@@ -527,9 +549,19 @@ div.spacertop {
     width: 100%;
     padding: 6px 0 6px $spacing;
     font-size: 14px;
+    color: $font-color-sidebar;
+    background-color: $sidebar-input-field-bg-color;
     background-image: url("images/icon_quicksearch.png");
     background-position: right $spacing bottom 6px;
     background-size: 15px;
+    border: none;
+  }
+
+  input::placeholder {
+    font-size: $font-size-global;
+    line-height: 16px;
+    letter-spacing: 0;
+    color: $font-color;
   }
 
   div.topic {
@@ -542,26 +574,29 @@ div.spacertop {
   position: absolute;
   z-index: 1;
   width: 223px;
-  padding: 12px;
+  padding: 8px;
   margin-top: 2px;
   font-size: 80%;
-  color: $font-color;
+  color: $font-color-sidebar;
+  background-color: $sidebar-input-field-bg-color;
 
   a {
     display: block;
     width: 217px;
     padding-left: 5px;
     margin-bottom: 5px;
-    color: $font-color;
+    color: $font-color-sidebar;
     text-align: left;
     text-decoration: none;
 
-    &:hover, &.active {
+    &:hover,
+    &.active {
       background-color: $snapin-bg-color;
     }
   }
 
-  div.error, div.warning {
+  div.error,
+  div.warning {
     padding: 2px;
     font-size: 12px;
   }
@@ -624,15 +659,15 @@ table.cmc_stats {
       display: inline-block;
 
       td {
-	font-size: 11px;
+        font-size: 11px;
 
-	&.tuple_td:nth-of-type(2) {
-	  padding-left: 8px;
-	}
+        &.tuple_td:nth-of-type(2) {
+          padding-left: 8px;
+        }
 
-	&.tuple_left {
-	  padding-right: 4px;
-	}
+        &.tuple_left {
+          padding-right: 4px;
+        }
       }
 
       span.title {

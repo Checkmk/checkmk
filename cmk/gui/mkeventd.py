@@ -30,7 +30,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.valuespec import DropdownChoices
+from cmk.gui.valuespec import DropdownChoices, DropdownChoiceEntry
 
 
 def _socket_path() -> Path:
@@ -50,7 +50,7 @@ def mib_dirs() -> List[Tuple[Path, str]]:
     ]
 
 
-syslog_priorities: DropdownChoices = [
+syslog_priorities: List[DropdownChoiceEntry] = [
     (0, "emerg"),
     (1, "alert"),
     (2, "crit"),

@@ -6,46 +6,56 @@
 
 import json
 import logging
-from types import TracebackType
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, Final, List, Optional, Tuple
 
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from .agent import AgentFileCache, AgentFetcher, NoCache
+from .agent import AgentFetcher, NoCache
+from .type_defs import Mode
 
 
 class PiggybackFetcher(AgentFetcher):
     def __init__(
         self,
-        file_cache: AgentFileCache,
+        file_cache: NoCache,
+        *,
         hostname: HostName,
         address: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.fetchers.piggyback"))
-        self._hostname = hostname
-        self._address = address
-        self._time_settings = time_settings
+        self.hostname: Final = hostname
+        self.address: Final = address
+        self.time_settings: Final = time_settings
         self._sources: List[PiggybackRawDataInfo] = []
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "PiggybackFetcher":
+    def _from_json(cls, serialized: Dict[str, Any]) -> "PiggybackFetcher":
         return cls(
             NoCache.from_json(serialized.pop("file_cache")),
             **serialized,
         )
 
-    def __enter__(self) -> 'PiggybackFetcher':
-        for origin in (self._hostname, self._address):
-            self._sources.extend(PiggybackFetcher._raw_data(origin, self._time_settings))
-        return self
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "file_cache": self.file_cache.to_json(),
+            "hostname": self.hostname,
+            "address": self.address,
+            "time_settings": self.time_settings,
+        }
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]], exc_value: Optional[BaseException],
-                 traceback: Optional[TracebackType]) -> None:
+    def open(self) -> None:
+        for origin in (self.hostname, self.address):
+            self._sources.extend(PiggybackFetcher._raw_data(origin, self.time_settings))
+
+    def close(self) -> None:
         self._sources.clear()
 
-    def _fetch_from_io(self) -> AgentRawData:
+    def _is_cache_enabled(self, mode: Mode) -> bool:
+        return mode is not Mode.CHECKING
+
+    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         raw_data = b""
         raw_data += self._get_main_section()
         raw_data += self._get_source_labels_section()

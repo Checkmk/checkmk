@@ -6,19 +6,19 @@
 
 from typing import Union, Tuple, Optional, TypedDict, Generator
 import time
-from cmk.base.api.agent_based.utils import (
+from ..agent_based_api.v1 import (
     check_levels,
     get_rate,
     get_average,
 )
-from cmk.base.api.agent_based.render import (
+from ..agent_based_api.v1.render import (
     timespan,)
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     Result,
-    state,
+    State as state,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import (
-    CheckGenerator,)
+from ..agent_based_api.v1.type_defs import (
+    CheckResult,)
 
 StatusType = int
 TempUnitType = str
@@ -262,7 +262,7 @@ def check_temperature(
     dev_levels_lower: Optional[Tuple[float, float]] = None,
     dev_status: Optional[StatusType] = None,
     dev_status_name: Optional[str] = None,
-) -> CheckGenerator:
+) -> CheckResult:
     """This function checks the temperature value against specified levels and issues a warn/cirt
     message. Levels can be supplied by the user or the device. The user has the possibility to configure
     the preferred levels. Additionally, it is possible to check temperature trends. All internal
@@ -371,13 +371,13 @@ def check_temperature(
     if device_levels_handling == 'usr':
         yield usr_metric
         yield from usr_results
-        yield Result(state=state.OK, details='Configuration: only use user levels')
+        yield Result(state=state.OK, notice='Configuration: only use user levels')
         return
 
     if device_levels_handling == 'dev':
         yield dev_metric
         yield from dev_results
-        yield Result(state=state.OK, details='Configuration: only use device levels')
+        yield Result(state=state.OK, notice='Configuration: only use device levels')
         return
 
     if device_levels_handling == 'usrdefault':
@@ -398,7 +398,7 @@ def check_temperature(
 
         yield Result(
             state=state.OK,
-            details='Configuration: prefer user levels over device levels %s' % suffix,
+            notice='Configuration: prefer user levels over device levels %s' % suffix,
         )
 
         return
@@ -421,7 +421,7 @@ def check_temperature(
 
         yield Result(
             state=state.OK,
-            details='Configuration: prefer device levels over user levels %s' % suffix,
+            notice='Configuration: prefer device levels over user levels %s' % suffix,
         )
 
         return
@@ -438,7 +438,7 @@ def check_temperature(
             yield dev_metric
             yield from dev_results
 
-        yield Result(state=state.OK, details='Configuration: show most critical state')
+        yield Result(state=state.OK, notice='Configuration: show most critical state')
 
         return
 
@@ -454,6 +454,6 @@ def check_temperature(
             yield dev_metric
             yield from dev_results
 
-        yield Result(state=state.OK, details='Configuration: show least critical state')
+        yield Result(state=state.OK, notice='Configuration: show least critical state')
 
         return

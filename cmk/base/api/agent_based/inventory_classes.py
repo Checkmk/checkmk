@@ -5,193 +5,174 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plugins
 """
-import abc
 import string
-from typing import Any, Dict, List, Optional, Type
+from typing import (
+    Any,
+    Dict,
+    get_args,
+    List,
+    Mapping,
+    NamedTuple,
+    NoReturn,
+    Callable,
+    Optional,
+    Iterable,
+    Union,
+)
+from cmk.utils.type_defs import (
+    InventoryPluginName,
+    ParsedSectionName,
+    RuleSetName,
+)
 
-from cmk.base.api.agent_based.type_defs import ABCInventoryGenerated
+_ATTR_DICT_KEY_TYPE = str
 
+AttrDict = Mapping[_ATTR_DICT_KEY_TYPE, Union[None, int, float, str]]
 
-class ABCPathedObject(abc.ABC, ABCInventoryGenerated):
+# get allowed value types back as a tuple to guarantee consistency
+_ATTR_DICT_VAL_TYPES = get_args(get_args(AttrDict)[1])
 
-    VALID_CHARACTERS = set(string.ascii_letters + string.digits + "_-")
-
-    @classmethod
-    def validate_path(cls, path: List[str]) -> None:
-        if not (path and isinstance(path, list) and all(isinstance(s, str) for s in path)):
-            raise TypeError("%s 'path' arg expected a non empty List[str], got %r" %
-                            (cls.__name__, path))
-        invalid_chars = set("".join(path)) - cls.VALID_CHARACTERS
-        if invalid_chars:
-            raise ValueError("invalid characters in path: %r" % "".join(invalid_chars))
-
-    def __init__(self, path: List[str]) -> None:
-        self.validate_path(path)
-        self._path = path
-
-    @property
-    def path(self) -> List[str]:
-        return self._path
-
-    @staticmethod
-    def _validate_dict(
-        name: str,
-        dict_: Dict[str, Any],
-        value_class: Optional[Type] = None,
-    ) -> None:
-        if not (isinstance(dict_, dict) and all(isinstance(k, str) for k in dict_) and
-                (value_class is None or all(isinstance(v, value_class) for v in dict_.values()))):
-            raise TypeError("Attributes %r expected Dict[str, %s], got %r" % (
-                name,
-                'Any' if value_class is None else value_class.__name__,
-                dict_,
-            ))
+_VALID_CHARACTERS = set(string.ascii_letters + string.digits + "_-")
 
 
-class Attributes(ABCPathedObject):
+def _parse_valid_path(path: List[str]) -> List[str]:
+    if not (path and isinstance(path, list) and all(isinstance(s, str) for s in path)):
+        raise TypeError("'path' arg expected a non empty List[str], got %r" % path)
+    invalid_chars = set("".join(path)) - _VALID_CHARACTERS
+    if invalid_chars:
+        raise ValueError("invalid characters in path: %r" % "".join(invalid_chars))
+    return path
+
+
+def _raise_invalid_attr_dict(kwarg_name: str, dict_: AttrDict) -> NoReturn:
+    value_types = ', '.join(t.__name__ for t in _ATTR_DICT_VAL_TYPES)
+    raise TypeError(f"{kwarg_name} must be a dict with keys of type {_ATTR_DICT_KEY_TYPE.__name__}"
+                    f" and values of type {value_types}. Got {dict_!r}")
+
+
+def _parse_valid_dict(kwarg_name: str, dict_: Optional[AttrDict]) -> AttrDict:
+    if dict_ is None:
+        return {}
+    if not isinstance(dict_, dict):
+        _raise_invalid_attr_dict(kwarg_name, dict_)
+    if not all(
+            isinstance(k, _ATTR_DICT_KEY_TYPE) and isinstance(v, _ATTR_DICT_VAL_TYPES)
+            for k, v in dict_.items()):
+        _raise_invalid_attr_dict(kwarg_name, dict_)
+    return dict_
+
+
+class Attributes(
+        NamedTuple("_AttributesTuple", [
+            ("path", List[str]),
+            ("inventory_attributes", AttrDict),
+            ("status_attributes", AttrDict),
+        ])):
     """Attributes to be written at a node in the HW/SW inventory"""
-    def __init__(
-        self,
+    def __new__(
+        cls,
         *,
         path: List[str],
-        inventory_attributes: Optional[Dict[str, str]] = None,
-        status_attributes: Optional[Dict[str, str]] = None,
-    ) -> None:
+        inventory_attributes: Optional[AttrDict] = None,
+        status_attributes: Optional[AttrDict] = None,
+    ) -> "Attributes":
         """
 
         Example:
 
-            >>> Attributes(
+            >>> _ = Attributes(
             ...     path = ["os", "vendor"],
             ...     inventory_attributes = {
             ...         "name" : "Micki$osft",
             ...         "date" : "1920",
-            ...     }
+            ...     },
             ...     status_attributes = {
-            ...         "uptime" : "0",
-            ...     }
+            ...         "uptime" : 0,
+            ...     },
             ... )
 
         """
-        super(Attributes, self).__init__(path)
-
-        if inventory_attributes is None:
-            inventory_attributes = {}
-        if status_attributes is None:
-            status_attributes = {}
-
-        self._validate_dict("inventory_attributes", inventory_attributes, str)
-        self._validate_dict("status_attributes", status_attributes, str)
-
+        inventory_attributes = _parse_valid_dict("inventory_attributes", inventory_attributes)
+        status_attributes = _parse_valid_dict("status_attributes", status_attributes)
         common_keys = set(inventory_attributes) & set(status_attributes)
         if common_keys:
             raise ValueError("keys must be either of type 'status' or 'inventory': %s" %
                              ', '.join(common_keys))
 
-        self._inventory_attributes = inventory_attributes
-        self._status_attributes = status_attributes
-
-    @property
-    def inventory_attributes(self):
-        return self._inventory_attributes
-
-    @property
-    def status_attributes(self):
-        return self._status_attributes
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("cannot compare %s to %s" %
-                            (self.__class__.__name__, other.__class__.__name__))
-        return all((
-            self.path == other.path,
-            self.inventory_attributes == other.inventory_attributes,
-            self.status_attributes == other.status_attributes,
-        ))
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(path={self.path}, inventory_attributes={self.inventory_attributes}, status_attributes={self.status_attributes})"
+        return super().__new__(
+            cls,
+            path=_parse_valid_path(path),
+            inventory_attributes=inventory_attributes,
+            status_attributes=status_attributes,
+        )
 
 
-class TableRow(ABCPathedObject, ABCInventoryGenerated):
+class TableRow(
+        NamedTuple("_TableRowTuple", [
+            ("path", List[str]),
+            ("key_columns", AttrDict),
+            ("inventory_columns", AttrDict),
+            ("status_columns", AttrDict),
+        ])):
     """TableRow to be written into a Table at a node in the HW/SW inventory"""
-    def __init__(
-        self,
+    def __new__(
+        cls,
         *,
         path: List[str],
-        key_columns: Dict[str, Any],
-        inventory_columns: Optional[Dict[str, Any]] = None,
-        status_columns: Optional[Dict[str, Any]] = None,
-    ) -> None:
+        key_columns: AttrDict,
+        inventory_columns: Optional[AttrDict] = None,
+        status_columns: Optional[AttrDict] = None,
+    ) -> "TableRow":
         """
 
         Example:
 
-            >>> TableRow(
+            >>> _ = TableRow(
             ...     path = ["software", "applications", "oracle", "instance"],
             ...     key_columns = {
-            ...         "sid" : item_data['sid'],
+            ...         "sid" : "DECAF-FOOBAR",
             ...     },
             ...     inventory_columns = {
-            ...         "version": item_data['version'],
-            ...         "openmode": item_data['openmode'],
-            ...         "logmode": item_data['log_mode'],
-            ...         "logins": item_data['logins'],
-            ...         "db_creation_time": _parse_raw_db_creation_time(item_data['db_creation_time']),
-            ...     }
+            ...         "version": "23.42",
+            ...         "logmode": "debug",
+            ...     },
             ...     status_columns = {
-            ...         "db_uptime": up_seconds,
-            ...     }
+            ...         "db_uptime": 123456,
+            ...     },
             ... )
 
         """
-        super(TableRow, self).__init__(path)
-
-        if not isinstance(key_columns, dict):
+        if not (isinstance(key_columns, dict) and key_columns):
             raise TypeError("TableRows 'key_columns' expected non empty Dict[str, Any], got %r" %
                             (key_columns,))
-        if not key_columns:
-            raise ValueError("TableRows 'key_columns' expected non empty Dict[str, Any], got %r" %
-                             (key_columns,))
 
-        if inventory_columns is None:
-            inventory_columns = {}
-        if status_columns is None:
-            status_columns = {}
-
-        self._validate_dict("key_columns", key_columns)
-        self._validate_dict("inventory_columns", inventory_columns)
-        self._validate_dict("status_columns", status_columns)
+        key_columns = _parse_valid_dict("key_columns", key_columns)
+        inventory_columns = _parse_valid_dict("inventory_columns", inventory_columns)
+        status_columns = _parse_valid_dict("status_columns", status_columns)
 
         for key in set(inventory_columns) | set(status_columns):
             if ((key in key_columns) + (key in inventory_columns) + (key in status_columns)) > 1:
                 raise ValueError("conflicting key: %s" % key)
 
-        self._key_columns = key_columns
-        self._inventory_columns = inventory_columns
-        self._status_columns = status_columns
+        return super().__new__(
+            cls,
+            path=_parse_valid_path(path),
+            key_columns=key_columns,
+            inventory_columns=inventory_columns,
+            status_columns=status_columns,
+        )
 
-    @property
-    def key_columns(self) -> Dict[str, Any]:
-        return self._key_columns
 
-    @property
-    def inventory_columns(self) -> Dict[str, Any]:
-        return self._inventory_columns
-
-    @property
-    def status_columns(self) -> Dict[str, Any]:
-        return self._status_columns
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError("cannot compare %s to %s" %
-                            (self.__class__.__name__, other.__class__.__name__))
-        return all((
-            self.path == other.path,
-            self.inventory_columns == other.inventory_columns,
-            self.status_columns == other.status_columns,
-        ))
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(path={self.path}, key_columns={self.key_columns}, inventory_columns={self.inventory_columns}, status_columns={self.status_columns})"
+InventoryResult = Iterable[Union[Attributes, TableRow]]
+InventoryFunction = Callable[..., InventoryResult]
+InventoryPlugin = NamedTuple(
+    "InventoryPlugin",
+    [
+        ("name", InventoryPluginName),
+        ("sections", List[ParsedSectionName]),
+        ("inventory_function", InventoryFunction),
+        ("inventory_default_parameters", Dict[str, Any]),
+        ("inventory_ruleset_name", Optional[RuleSetName]),
+        ("module", Optional[str]),  # not available for auto migrated plugins.
+    ],
+)

@@ -8,7 +8,6 @@ TARGET=$1
 PATCHSET_REVISION=$2
 SCRIPT_PATH="${BASH_SOURCE[0]}"
 REPO_DIR="$(dirname "$(cd "$(dirname "$SCRIPT_PATH")" >/dev/null 2>&1 && pwd)")"
-CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 
 function execute_test() {
     # Prevpare Makefiles, otherwise "make compile_commands.json" will fail
@@ -64,15 +63,4 @@ if [ -z "$PATCHSET_REVISION" ]; then
     exit 1
 fi
 
-if [ -z "$RUN_HERE" ]; then
-    echo "Running in Docker Container $CONTAINER (workdir $PWD)"
-    docker run -t -a stdout -a stderr \
-        -u "$UID:$UID" \
-        -v "$REPO_DIR:$REPO_DIR" \
-        -e RUN_HERE="true" \
-        -w "$PWD" \
-        "$CONTAINER" \
-        "$SCRIPT_PATH" "$TARGET" "$PATCHSET_REVISION"
-else
-    execute_test "$TARGET" "$PATCHSET_REVISION"
-fi
+execute_test "$TARGET" "$PATCHSET_REVISION"

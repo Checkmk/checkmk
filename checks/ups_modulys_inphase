@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings['ups_modulys_inphase_default_levels'] = {}
 
 
@@ -38,7 +39,6 @@ check_info['ups_modulys_inphase'] = {
     'service_description': 'Input %s',
     'has_perfdata': True,
     'default_levels_variable': 'ups_modulys_inphase_default_levels',
-    'includes': ["elphase.include",],
     'group': 'el_inphase',
     'snmp_info': (
         ".1.3.6.1.4.1.2254.2.4.4",

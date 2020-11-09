@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # EXAMPLE DATA FROM: WDC SSC-D0128SC-2100
 #<<<smart>>>
 #/dev/sda ATA WDC_SSC-D0128SC-   1 Raw_Read_Error_Rate     0x000b   100   100   050    Pre-fail  Always       -       16777215
@@ -28,206 +29,16 @@
 
 factory_settings["smart_temp_default_levels"] = {"levels": (35, 40)}
 
-smart_stats_default_levels = {
-    'realloc_events': (1, 1),
-    'realloc_sectors': (1, 1),
-    'spin_retries': (1, 1),
-    'pending_retries': (1, 1),
-    'pending_sectors': (1, 1),
-    'cmd_timeouts': (5, 10),
-    'e2e_errs': (1, 1),
-    'uncorr_errs': (1, 1),
-    'udma_crcs': (1, 1),
-}
 
-
-def parse_smart_raw_values(info):
-    disks = {}
-    disk_name = None
-
-    for line in info:
-        if len(line) >= 13:
-            if line[0] != disk_name:
-                disk_name = line[0]
-                disk = {}
-                disks[disk_name] = disk
-
-            field = line[4]
-            if field != "Unknown_Attribute":
-                value = saveint(line[12])
-                disk[field] = value
-        # nvme
-        elif 3 <= len(line) <= 6:
-            if "/dev" in line[0]:
-                disk_name = line[0]
-                disk = {}
-                disks[disk_name] = disk
-
-            else:
-                field, value = [e.strip() for e in " ".join(line).split(":")]
-                value = value.replace("%", "").replace(".", "").replace(",", "")
-                if field == "Temperature":
-                    value = value.split()[0]
-                if field == "Critical Warning":
-                    value = int(value, 16)
-                if field == "Data Units Read":
-                    value = (int(value.split()[0]) * 512000)
-                if field == "Data Units Written":
-                    value = (int(value.split()[0]) * 512000)
-                disk[field.replace(" ", "_")] = saveint(value)
-
-    return disks
-
-
-def parse_smart_normalized_values(info):
-    disks = {}
-    disk_name = None
-
-    for line in info:
-        if len(line) >= 13:
-            if line[0] != disk_name:
-                disk_name = line[0]
-                disk = {}
-                disks[disk_name] = disk
-
-            field = line[4]
-            if field != "Unknown_Attribute":
-                try:
-                    value = int(line[6])
-                except ValueError:
-                    disk[field] = None, None
-                    continue
-                if isinstance(line[8], int):
-                    threshold = int(line[8])
-                else:
-                    threshold = None
-                disk[field] = value, threshold
-    return disks
-
-
-smart_stats_fields = [
-    'Reallocated_Sector_Ct',
-    'Spin_Retry_Count',
-    'Reallocated_Event_Count',
-    'Current_Pending_Sector',
-    'Command_Timeout',
-    'End-to-End_Error',
-    'Reported_Uncorrect',
-    'Uncorrectable_Error_Cnt',
-    'UDMA_CRC_Error_Count',
-    'CRC_Error_Count',
-    #nvme
-    'Critical_Warning',
-]
-
-
-def inventory_smart_stats(info):
-    disks = parse_smart_raw_values(info)
-    inventory = []
-    for disk_name, disk in disks.items():
-        for field in disk:
-            if field in smart_stats_fields:  # found at least one interesting field
-                cleaned = dict([(f, disk[f]) for f in smart_stats_fields if f in disk])
-                inventory.append((disk_name, cleaned))
-                break
-    return inventory
-
-
-def check_smart_stats(item, params, info):
-    # params is a snapshot of all counters at the point of time of inventory
-
-    disks = parse_smart_raw_values(info)
-    normalized = parse_smart_normalized_values(info)
-
-    if item not in disks:
-        return
-    disk = disks[item]
-
-    for unit, field, descr in [
-        (' hours', 'Power_On_Hours', 'Powered on'),
-        ('', 'Power_Cycle_Count', 'Power cycles'),
-        ('', 'Reallocated_Sector_Ct', 'Reallocated sectors'),
-        ('', 'Reallocated_Event_Count', 'Reallocated events'),
-        ('', 'Spin_Retry_Count', 'Spin retries'),
-        ('', 'Current_Pending_Sector', 'Pending sectors'),
-        ('', 'Command_Timeout', 'Command timeouts'),
-        ('', 'End-to-End_Error', 'End-to-End errors'),
-        ('', 'Reported_Uncorrect', 'Uncorrectable errors'),
-        ('', 'Uncorrectable_Error_Cnt', 'Uncorrectable errors'),
-        ('', 'UDMA_CRC_Error_Count', 'UDMA CRC errors'),
-        ('', 'CRC_Error_Count', 'UDMA CRC errors'),
-            #nvme
-        ('', 'Power_Cycles', 'Power cycles'),
-        ('', 'Critical_Warning', 'Critical warning'),
-        ('%', 'Available_Spare', 'Available spare'),
-        ('%', 'Percentage_Used', 'Percentage used'),
-        ('', 'Media_and_Data_Integrity_Errors', 'Media and data integrity errors'),
-        ('', 'Error_Information_Log_Entries', 'Error information log entries'),
-        ('', 'Data_Units_Read', 'Data units read'),
-        ('', 'Data_Units_Written', 'Data units written'),
-    ]:
-        value = disk.get(field)
-        if value is None:
-            continue
-
-        if field.startswith("Data_Units_"):
-            infotext = "%s: %s%s" % (descr, get_bytes_human_readable(value), unit)
-        else:
-            infotext = "%s: %d%s" % (descr, value, unit)
-
-        if field == "Available_Spare":
-            ref_value = int(disk.get("Available_Spare_Threshold"))
-        else:
-            ref_value = params.get(field)
-
-        if ref_value is None:
-            yield 0, infotext, [(field, value)]
-            continue
-
-        if field == "Available_Spare":
-            state = 2 if value < ref_value else 0
-            hints = ["during discovery: %d (!!)" % ref_value] if value < ref_value else []
-        else:
-            state = 2 if value > ref_value else 0
-            hints = ["during discovery: %d (!!)" % ref_value] if value > ref_value else []
-
-        # For reallocated event counts we experienced to many reported errors for disks
-        # which still seem to be OK. The raw value increased by a small amount but the
-        # aggregated value remained at it's initial/ok state. So we use the aggregated
-        # value now. Only for this field.
-        if field == "Reallocated_Event_Count":
-            norm_value, norm_threshold = normalized[item][field]
-            if norm_value is None:
-                yield 0, infotext, [(field, value)]
-                continue
-            hints.append("normalized value: %d" % norm_value)
-            if norm_value <= norm_threshold:
-                state = 2
-                hints[-1] += " (!!)"
-
-        yield state, infotext + " (%s)" % ', '.join(hints) if hints else infotext, [(field, value)]
-
-
-check_info["smart.stats"] = {
-    'check_function': check_smart_stats,
-    'inventory_function': inventory_smart_stats,
-    'has_perfdata': True,
-    'service_description': 'SMART %s Stats',
-}
-
-
-def inventory_smart_temp(info):
-    disks = parse_smart_raw_values(info)
-    for disk_name, disk in disks.items():
-        if "Temperature_Celsius" in disk or \
-           "Temperature_Internal" in disk or \
-           "Temperature" in disk:
+def inventory_smart_temp(section):
+    relevant = {"Temperature_Celsius", "Temperature_Internal", "Temperature"}
+    for disk_name, disk in section.items():
+        if relevant.intersection(disk):
             yield disk_name, {}
 
 
-def check_smart_temp(item, params, info):
-    disks = parse_smart_raw_values(info)
-    data = disks.get(item)
+def check_smart_temp(item, params, section):
+    data = section.get(item)
     if data is None:
         return
 
@@ -244,11 +55,11 @@ def check_smart_temp(item, params, info):
 
 
 check_info["smart.temp"] = {
+    # section defined in new API!
     'check_function': check_smart_temp,
     'inventory_function': inventory_smart_temp,
     'service_description': 'Temperature SMART %s',
     'group': 'temperature',
     'has_perfdata': True,
-    'includes': ['temperature.include'],
     'default_levels_variable': "smart_temp_default_levels"
 }

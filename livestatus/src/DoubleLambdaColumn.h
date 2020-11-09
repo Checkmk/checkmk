@@ -21,7 +21,8 @@ template <class T>
 class DoubleLambdaColumn : public DoubleColumn {
 public:
     DoubleLambdaColumn(std::string name, std::string description,
-                       Offsets offsets, std::function<double(const T&)> gv)
+                       ColumnOffsets offsets,
+                       std::function<double(const T&)> gv)
         : DoubleColumn(std::move(name), std::move(description),
                        std::move(offsets))
         , get_value_{std::move(gv)} {}

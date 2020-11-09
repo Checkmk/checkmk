@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<windows_intel_bonding>>>
 # Caption    Name                                    RedundancyStatus
 # Bond_10.4  {714F579F-D17A-40DC-B684-083C561EE352}  2
@@ -108,5 +109,4 @@ check_info['windows_intel_bonding'] = {
     "service_description": "Bonding interface %s",
     "default_levels_variable": "bonding_default_levels",
     "group": "bonding",
-    "includes": ["bonding.include"],
 }

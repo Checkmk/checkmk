@@ -6,7 +6,7 @@
 
 @echo off
 set p_name=cpython-3.8
-set p_full_name=python-3.8.1
+set p_full_name=python-3.8.5
 set cur_dir=%cd%
 set build_dir=%cd%\tmp\out
 set uninstall_dir=%cd%\tmp\uninstall

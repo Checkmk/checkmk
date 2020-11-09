@@ -1,0 +1,15 @@
+Title: fileinfo.groups: enable count and size of all files within a file group
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1603809955
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+With the feature "Additional Rules for Files" enabled, the fileinfo.groups
+check excluded files that matched to one of these additional rules from the
+count and size of files of the whole file group. The check has been amended so
+that it counts and adds file sizes of all files within the file group,
+regardless of any additional rules defined.

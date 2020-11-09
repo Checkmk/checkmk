@@ -66,6 +66,7 @@ import ast
 from importlib import import_module
 import os
 from pathlib import Path
+import pytest
 import sys
 import time
 from typing import Any, Iterable
@@ -192,8 +193,8 @@ def _get_out_filename(datasetfile, inplace):
 
     return out_name.replace('.py', '_regression.py')
 
-
-def test_main(config_check_info, check_manager, datasetfile, inplace):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_main(config_check_info, datasetfile, inplace):
     """Script to create test datasets.
 
     This is a script. But we need the py.test environment, so it comes in the
@@ -213,6 +214,6 @@ def test_main(config_check_info, check_manager, datasetfile, inplace):
 
     regression = WritableDataset(vars(input_data))
 
-    generictests.run(config_check_info, check_manager, regression, write=True)
+    generictests.run(config_check_info, regression, write=True)
 
     regression.write(_get_out_filename(datasetfile, inplace))

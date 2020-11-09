@@ -18,27 +18,24 @@ def inv_winperf_if(parsed, params, inventory_tree):
     interfaces = []
     total_ethernet_ports = 0
     available_ethernet_ports = 0
-    for if_index, if_descr, if_type, if_speed, if_oper_status, \
-        _if_in_octets, _inucast, _inmcast, _inbcast, _if_in_discards, \
-        _if_in_errors, _if_out_octets, _outucast, _outmcast, _outbcast, \
-        _if_out_discards, _if_out_errors, _if_out_qlen, if_alias, if_phys_address in perf:
+    for interface in perf:
 
-        if if_type in ("231", "232") or not if_speed:
+        if interface.type in ("231", "232") or not interface.speed:
             continue  # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
             # Ignore useless half-empty tables (e.g. Viprinet-Router)
 
         if_info = {
-            "index": int(if_index[-1]),
-            "description": if_descr,
-            "alias": if_alias,
-            "speed": int(if_speed),
-            "phys_address": render_mac_address(if_phys_address),
-            "oper_status": int(if_oper_status[0]),
-            "port_type": int(if_type),
+            "index": int(interface.index[-1]),
+            "description": interface.descr,
+            "alias": interface.alias,
+            "speed": int(interface.speed),
+            "phys_address": render_mac_address(interface.phys_address),
+            "oper_status": int(interface.oper_status[0]),
+            "port_type": int(interface.type),
         }
 
-        if if_type in usage_port_types:
-            if_available = if_oper_status == '2'
+        if interface.type in usage_port_types:
+            if_available = interface.oper_status == '2'
             total_ethernet_ports += 1
             if if_available:
                 available_ethernet_ports += 1

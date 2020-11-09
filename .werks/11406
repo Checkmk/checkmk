@@ -1,0 +1,37 @@
+Title: Improved product version for Windows agent package
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1603708244
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Windows product versions are an expression of 4 numbers,
+with the scheme <tt>major.minor.build.revision</tt>.
+
+Up to now, baked Windows agent MSI packages only make
+use of the <tt>major.minor.build</tt> part, writing a
+default value of <tt>12345</tt> to the revision part.
+
+The agent bakery now also makes use of the revision part,
+using an encoded representation of the innovation/beta/patch part
+of the Checkmk version, that preserves the order of the
+Checkmk versioning scheme.
+
+It's best explained by an example:
+<ul>
+<li>Checkmk version: <code>2.0.0i1</code>
+<ul>
+<li>Old product version: <tt>2.0.0.12345</tt></li>
+<li>New product version: <tt>2.0.0.10100</tt></li>
+</ul>
+</li>
+<li>Checkmk version: <tt>2.0.0p5</tt>
+<ul>
+<li>Old product version: <tt>2.0.0.12345</tt></li>
+<li>New product version: <tt>2.0.0.50005</tt></li>
+</ul>
+</li>
+</ul>

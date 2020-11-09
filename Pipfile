@@ -25,12 +25,11 @@ pytest = "*"  # used by various test/Makefile targets
 pytest-cov = "*"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
 pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture
 pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml
+pytest-profiling = "*" # used to analyze test run performance
 responses = "*" # used for unit tests
-yapf = "*"  # used for editor integration and the format-python Makefile target
 polib = "*"  # used by locale/add-authors for working with .po files
 webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before commiting changes
-pyfakefs = "*" # used for unit tests
 flake8 = "*"
 sphinx = "*" # used for the plugin API documentation
 sphinx-autodoc-typehints = "*" # used for the plugin API documentation
@@ -38,18 +37,18 @@ sphinx-rtd-theme = "*" # used for the plugin API documentation
 3to2 = "*" # used for converting agent plugins from py3 to 2
 
 [packages]
-setuptools_scm = "==3.3.3"  # needed by various setup.py
+setuptools_scm = "==4.1.2"  # needed by various setup.py
 setuptools-git = "==1.2"  # needed by various setup.py
 six = "==1.15.0"  # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, python-active-directory
 python-dateutil = "==2.8.1"  # direct dependency
 PyYAML = "==5.3.1"  # needed by vcrpy
-wrapt = "==1.11.2"  # needed by vcrpy
-yarl = "==1.3.0"  # needed by vcrpy
-multidict = "==4.5.2"  # needed by yarl
+wrapt = "==1.12.1"  # needed by vcrpy
+yarl = "==1.6.0"  # needed by vcrpy
+multidict = "==4.7.6"  # needed by yarl
 idna = "==2.8"  # needed by yarl
-vcrpy = "==2.1.0"  # used by various unit tests to mock HTTP transactions
-pycparser = "==2.19"  # needed by cffi
-cffi = "==1.13.1"  # needed by PyNaCl, cryptography, bcrypt
+vcrpy = "==4.1.0"  # used by various unit tests to mock HTTP transactions
+pycparser = "==2.20"  # needed by cffi
+cffi = "==1.14.3"  # needed by PyNaCl, cryptography, bcrypt
 PyNaCl = "==1.3.0"  # needed by paramiko
 cryptography = "==2.8"  # needed by paramiko
 bcrypt = "==3.1.7"  # needed by paramiko
@@ -63,10 +62,10 @@ pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
 certifi = "==2019.11.28"  # needed by requests
 chardet = "==3.0.4"  # needed by requests
-urllib3 = "==1.25.8"  # needed by requests
+urllib3 = "==1.25.10"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
 pyghmi = "==1.5.13" # needed by base for IPMI
-requests = { version = "==2.22.0", extras = ["security"] }  # needed by DCD, connexion
+requests = {version = "==2.22.0",extras = ["security"]}  # needed by DCD, connexion
 pykerberos = "==1.2.1" # needed by check_bi_aggr
 requests-kerberos = "==0.12.0" # needed by check_bi_aggr
 MarkupSafe = "==1.1.1" # needed by Jinja2
@@ -74,21 +73,16 @@ itsdangerous = "==1.1.0" # needed by Flask
 Jinja2 = "==2.10.3" # needed by Flask
 more-itertools = "==8.0.2"  # needed by connexion through zipp, pytest
 zipp = "==0.6.0" # needed by importlib_metadata
-attrs = "==19.3.0" # needed by jsonschema
+attrs = "==20.2.0" # needed by jsonschema
 importlib_metadata = "==1.2.0" # needed by jsonschema
 pyrsistent = "==0.15.6" # needed by jsonschema
-Click = "==7.0" # needed by clickclick
 Werkzeug = "==0.16.0" # Needed by Flask
-jsonschema = "==3.2.0" # needed by connexion, openapi-spec-validator
-clickclick = "==1.2.2" # needed by connexion
-Flask = "==1.1.1" # needed by connexion
+jsonschema = "==3.2.0" # needed by openapi-spec-validator
+Flask = "==1.1.1" # direct dependency
 pytz = "==2020.1" # needed by Flask-Babel
 Babel = "==2.8.0" # needed by Flask-Babel
 Flask-Babel = "==1.0.0" # needed by GUI for i18n support (lazy gettext)
-inflection = "==0.3.1" # needed by connexion
-openapi-spec-validator = "==0.2.8" # needed by connexion
 swagger_ui_bundle = "==0.0.6" # direct dependency
-connexion = { version = "==2.4.0", extras = ["swagger-ui"] }  # direct dependency
 psutil = "==5.6.7" # needed for omdlib
 passlib = "==1.7.2" # needed for omdlib
 defusedxml = "==0.6.0" # needed by jira
@@ -99,7 +93,7 @@ requests-toolbelt = "==0.9.1" # needed by jira
 PyJWT = "==1.7.1" # needed by jira
 jira = "==2.0.0" # needed by jira
 adal = "==1.2.0" # needed by agent_azure
-Pillow = "==7.0.0" # needed by GUI
+Pillow = "==7.2.0" # needed by GUI
 python-ldap = "==3.3.1" # needed by GUI (User sync), python-active-directory
 dicttoxml = "==1.7.4" # needed by GUI (API XML format)
 Cython = "==0.29.19" # needed by numpy
@@ -107,9 +101,9 @@ numpy = "==1.18.4" # needed by GUI (metrics)
 reportlab = "==3.5.34" # needed by GUI (reporting)
 PyPDF2 = "==1.26.0" # needed by GUI (reporting)
 roman = "==3.2" # needed by GUI (reporting)
-cachetools = "==4.0.0" # needed by kubernetes
-google-auth = "==1.11.0" # needed by kubernetes
-rsa = "==4.0" # needed by kubernetes
+cachetools = "==4.1.1" # needed by kubernetes
+google-auth = "==1.21.3" # needed by kubernetes
+rsa = "==4.6" # needed by kubernetes
 websocket_client = "==0.57.0" # needed by kubernetes
 kubernetes = "==10.0.1" # needed by kubernetes
 docutils = "==0.15.2" # needed by boto3 (aws)
@@ -120,17 +114,21 @@ boto3 = "==1.11.11" # needed by boto3 (aws)
 python-snap7 = "==0.10" # needed by Siemens PLC special agent
 PyMySQL = "==0.9.3" # needed by check_sql active check
 psycopg2-binary = "==2.8.4" # needed by check_sql active check
-apispec = "==2.0.2"
-marshmallow = "==2.20.5"
-marshmallow-oneofschema = "==1.0.6"
-apispec-oneofschema = "==2.1.1"
+apispec = "==3.3.1"  # direct dependency
+marshmallow = "==3.7.1"  # direct dependency
+marshmallow-oneofschema = "==2.0.1"  # direct dependency
+apispec-oneofschema = "==3.0.0"  # direct dependency
+openapi-spec-validator = "==0.2.9" # direct dependency
 mypy_extensions = "==0.4.3"  # direct dependency
 typing_extensions = "==3.7.4.1"  # direct dependency
 dnspython = "==1.16.0"  # needed by python-active-directory
 python-active-directory = "==1.0.5"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
-docstring-parser = "==0.7.2"  # direct dependency
+docstring_parser = "==0.7.2"  # direct dependency
 yapf = "==0.30.0"  # formatter for REST-API documentation code examples
+pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
+repoze-profile = "==2.3"  # used for GUI/API profiling
+pyparsing = "==2.4.7"
 
 [requires]
 python_version = "3.8"

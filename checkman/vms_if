@@ -4,15 +4,33 @@ catalog: os/networking
 license: GPL
 distribution: check_mk
 description:
-  This check monitors the ingoing and outgoing traffic of networking
-  interfaces on OpenVMS. Levels can be set on the used bandwidth and
-  on the error rate.
-
-  This check is compatible to {if}. Please refer to that man page for
-  further details about check configuration.
+ This check monitors the ingoing and outgoing traffic of network interfaces on OpenVMS.
+ Please refer to the manpage of {if64} for documentation.
 
 item:
- The port of the interface
+ There are three allowed ways to specify an interface: its index, which simply
+ enumerates the interfaces starting from 1, its description and its alias. For this
+ check, the description and the alias are the same.
 
 inventory:
- One service is created for each port.
+ One service is created for each interface that fulfills configurable conditions
+ (rule "Network interface and switch port discovery").
+ By default, these are interfaces which are currently found {up} and are of type 6, 32,
+ 62, 117, 127, 128, 129, 180, 181, 182, 205 or 229. For this check, these default
+ conditions include all interfaces, since any interface discovered by this check is
+ of type 6 and up.
+
+ {Grouping:} In some situations, you do not want to monitor a single
+ interface but a group of interfaces that together form a pool.
+ This check supports such pools by defining groups. The data of all members is
+ accumulated and put together in a single grouped interface service.
+
+cluster:
+ In the case where single (ungrouped) interfaces are clustered, the corresponding
+ services report only the results from the node with the highest outgoing traffic,
+ since this node is likely the active node.
+ In the case where interface groups are clustered, the grouping is applied across
+ all nodes, potentially combining interfaces from different nodes. Note that the
+ rules defining the interface groups must be configured to apply to the nodes, not
+ to the cluster host (the latter has no effect). In case the grouping configurations
+ vary across the nodes, the last node wins.

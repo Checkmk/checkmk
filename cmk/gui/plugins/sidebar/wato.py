@@ -23,6 +23,7 @@ from cmk.gui.plugins.sidebar import (
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
+    search,
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import (
@@ -33,10 +34,10 @@ from cmk.gui.plugins.wato.utils.main_menu import (
 
 def render_wato(mini):
     if not config.wato_enabled:
-        html.write_text(_("WATO is disabled."))
+        html.write_text(_("Setup is disabled."))
         return False
     if not config.user.may("wato.use"):
-        html.write_text(_("You are not allowed to use Check_MK's web configuration GUI."))
+        html.write_text(_("You are not allowed to use the setup."))
         return False
 
     menu = get_wato_menu_items()
@@ -45,8 +46,9 @@ def render_wato(mini):
         for topic in menu:
             for item in topic.items:
                 html.icon_button(url=item.url,
+                                 class_="show_more_mode" if item.is_show_more else None,
                                  title=item.title,
-                                 icon=item.icon_name or "wato",
+                                 icon=item.icon or "wato",
                                  target="main")
     else:
         show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
@@ -70,17 +72,17 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
             TopicMenuTopic(
                 name=module.topic.name,
                 title=module.topic.title,
-                icon_name=module.topic.icon_name,
+                icon=module.topic.icon_name,
                 items=[],
             ))
         topic.items.append(
             TopicMenuItem(
                 name=module.mode_or_url,
                 title=module.title,
-                icon_name=module.icon,
                 url=module.get_url(),
                 sort_index=module.sort_index,
-                is_advanced=module.is_advanced,
+                is_show_more=module.is_show_more,
+                icon=module.icon,
             ))
 
     # Sort the items of all topics
@@ -95,9 +97,10 @@ mega_menu_registry.register(
     MegaMenu(
         name="setup",
         title=_l("Setup"),
-        icon_name="main_setup",
+        icon="main_setup",
         sort_index=15,
         topics=get_wato_menu_items,
+        search=search.SetupSearch("setup_search"),
     ))
 
 
@@ -109,11 +112,15 @@ class SidebarSnapinWATO(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO - Configuration")
+        return _("Setup")
+
+    @classmethod
+    def has_show_more_items(cls):
+        return True
 
     @classmethod
     def description(cls):
-        return _("Direct access to WATO - the web administration GUI of Check_MK")
+        return _("Direct access to the setup menu")
 
     @classmethod
     def allowed_roles(cls):
@@ -136,11 +143,15 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO - Quickaccess")
+        return _("Quick setup")
+
+    @classmethod
+    def has_show_more_items(cls):
+        return True
 
     @classmethod
     def description(cls):
-        return _("Access to WATO modules with only icons (saves space)")
+        return _("Access to the setup menu with only icons (saves space)")
 
     @classmethod
     def allowed_roles(cls):
@@ -316,7 +327,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         for topic in topics:
             targets: Choices = []
             for item in topic.items:
-                if item.url.startswith("dashboards.py"):
+                if item.url and item.url.startswith("dashboard.py"):
                     name = 'dashboard|' + item.name
                 else:
                     name = item.name

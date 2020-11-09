@@ -55,7 +55,7 @@ def test_builtin_icons_and_actions():
             'agent_deployment',
             'deployment_status',
             'status_shadow',
-            'ntop_host_interface',
+            'ntop_host',
             'ntop_service_interface',
         ]
 

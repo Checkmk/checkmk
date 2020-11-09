@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings["juniper_screenos_temp_default_levels"] = {"levels": (70, 80)}
 
 
@@ -35,6 +36,5 @@ check_info["juniper_screenos_temp"] = {
             4,  # Name
             3,  # Temperatur
         ]),
-    "includes": ["temperature.include"],
     "default_levels_variable": "juniper_screenos_temp_default_levels"
 }

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.4868 Calculated Next Maintenance Month
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.4868 5
@@ -53,6 +54,5 @@ check_info['liebert_maintenance'] = {
             '20.1.2.1.4869',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
         ]),
     'snmp_scan_function': scan_liebert,
-    'includes': ['liebert.include'],
     'default_levels_variable': 'liebert_maintenance_default_levels',
 }

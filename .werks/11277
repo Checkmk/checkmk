@@ -1,0 +1,17 @@
+Title: Fix wrong allocation of colorant for printer supplies
+Class: fix
+Compatible: imcompat
+Component: checks
+Date: 1598622178
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+For some printers the mapping of the colorant did not match to the description of the service.
+This mappings can vary depending on the manufacturer.
+The generic mapping was replaced by using the correct link between description and colorant.
+
+Before this fix and depending on the manufacturer the service description could have been wrong.
+The result was a discrepancies between the service color name and the perf-o-meter color.
+If your printer has such a difference, please make sure to rediscover your host services.

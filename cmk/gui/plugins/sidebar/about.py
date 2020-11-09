@@ -17,11 +17,11 @@ class About(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("About Check_MK")
+        return _("About Checkmk")
 
     @classmethod
     def description(cls):
-        return _("Links to webpage, documentation and download of Check_MK")
+        return _("Links to webpage, documentation and download of Checkmk")
 
     def show(self):
         html.open_ul()

@@ -1,0 +1,12 @@
+Title: Fix broken site restore
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1604914895
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The restore of site backups was terminating in 2.0.0i1 because of some broken
+hard link handling of files below var/check_mk/core/helper_config.

@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1566469619
 
 Monitoring systems with multiple thousand folders had performance problems loading the configuration on the command line.

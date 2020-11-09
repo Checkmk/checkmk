@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_aws_elbv2_summary(info):
     application_lbs, network_lbs = [], []
@@ -32,7 +34,6 @@ check_info['aws_elbv2_summary'] = {
     'inventory_function': inventory_aws_elbv2_summary_application,
     'check_function': check_aws_elbv2_summary_application,
     'service_description': 'AWS/ApplicationELB Summary',
-    'includes': ['aws.include'],
 }
 
 
@@ -51,5 +52,4 @@ check_info['aws_elbv2_summary.network'] = {
     'inventory_function': inventory_aws_elbv2_summary_network,
     'check_function': check_aws_elbv2_summary_network,
     'service_description': 'AWS/NetworkELB Summary',
-    'includes': ['aws.include'],
 }

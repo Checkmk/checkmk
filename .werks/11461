@@ -1,0 +1,14 @@
+Title: Windows agent: Improved protection of configuration files
+Class: security
+Compatible: compat
+Component: checks
+Date: 1599746065
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+With this fix only System and Administrators can access main configuration
+files of the Windows agent, check_mk.user.yml and check_mk.bakery.yml, thus
+preventing unauthorized access to potentially sensitive data.
+

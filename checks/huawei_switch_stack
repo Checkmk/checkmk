@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.huawei_switch import *  # pylint: disable=wildcard-import,unused-wildcard-import
 huawei_switch_stack_unknown_role = "unknown"
 
 
@@ -56,5 +57,4 @@ check_info['huawei_switch_stack'] = {
         ),
     ],
     'snmp_scan_function': huawei_switch_scan_function,
-    'includes': ['huawei_switch.include'],
 }

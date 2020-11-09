@@ -16,6 +16,9 @@ plugin ("pip install docker").
 
 This plugin it will be called by the agent without any arguments.
 """
+
+__version__ = "2.0.0i2"
+
 # N O T E:
 # docker is available for python versions from 2.6 / 3.3
 
@@ -200,16 +203,16 @@ class MKDockerClient(docker.DockerClient):
     def iter_socket(sock, descriptor):
         '''iterator to recv data from container socket
         '''
-        header = sock.recv(8)
+        header = docker.utils.socket.read(sock, 8)
         while header:
             actual_descriptor, length = struct.unpack('>BxxxL', header)
             while length:
-                data = sock.recv(length)
+                data = docker.utils.socket.read(sock, length)
                 length -= len(data)
                 LOGGER.debug("Received data: %r", data)
                 if actual_descriptor == descriptor:
                     yield data
-            header = sock.recv(8)
+            header = docker.utils.socket.read(sock, 8)
 
     def get_stdout(self, exec_return_val):
         '''read stdout from container process

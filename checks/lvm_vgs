@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_lvm_vgs(info):
     for line in info:
@@ -26,5 +29,4 @@ check_info['lvm_vgs'] = {
     "has_perfdata": True,
     "group": "volume_groups",
     "default_levels_variable": "filesystem_default_levels",
-    "includes": ["size_trend.include", "df.include"]
 }

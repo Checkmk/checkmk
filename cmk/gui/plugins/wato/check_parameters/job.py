@@ -71,5 +71,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Job name"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_job,
-        title=lambda: _("Age of jobs controlled by mk-job"),
+        title=lambda: _("mk-job job age"),
     ))

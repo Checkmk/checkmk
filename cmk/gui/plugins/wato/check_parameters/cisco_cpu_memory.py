@@ -40,7 +40,6 @@ def _parameter_valuespec_memory():
                         help=_(
                             "Specify the threshold levels for the occupied memory. The occupied memory "
                             "consists of used and kernel reserved memory."),
-                        style="dropdown",
                         elements=[
                             Tuple(
                                 title=_("Specify levels in percentage of total RAM"),
@@ -59,31 +58,28 @@ def _parameter_valuespec_memory():
                         ],
                     ),
                     Transform(
-                        Alternative(
-                            style="dropdown",
-                            elements=[
-                                Tuple(
-                                    title=_("Specify levels in percentage of total RAM"),
-                                    elements=[
-                                        Percentage(
-                                            title=_("Warning if less than"),
-                                            maxvalue=None,
-                                        ),
-                                        Percentage(
-                                            title=_("Critical if less than"),
-                                            maxvalue=None,
-                                        )
-                                    ],
-                                ),
-                                Tuple(
-                                    title=_("Specify levels in absolute values"),
-                                    elements=[
-                                        Integer(title=_("Warning if below"), unit=_("MB")),
-                                        Integer(title=_("Critical if below"), unit=_("MB"))
-                                    ],
-                                ),
-                            ],
-                        ),
+                        Alternative(elements=[
+                            Tuple(
+                                title=_("Specify levels in percentage of total RAM"),
+                                elements=[
+                                    Percentage(
+                                        title=_("Warning if less than"),
+                                        maxvalue=None,
+                                    ),
+                                    Percentage(
+                                        title=_("Critical if less than"),
+                                        maxvalue=None,
+                                    )
+                                ],
+                            ),
+                            Tuple(
+                                title=_("Specify levels in absolute values"),
+                                elements=[
+                                    Integer(title=_("Warning if below"), unit=_("MB")),
+                                    Integer(title=_("Critical if below"), unit=_("MB"))
+                                ],
+                            ),
+                        ],),
                         title=_("Levels for free memory"),
                         help=_(
                             "Specify the threshold levels for the free memory space. The free memory "

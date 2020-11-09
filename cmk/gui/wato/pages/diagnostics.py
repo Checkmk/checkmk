@@ -21,7 +21,7 @@ from cmk.utils.diagnostics import (
 import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.exceptions import (
     HTTPRedirect,)
 import cmk.gui.config as config
@@ -55,9 +55,13 @@ from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
+    redirect,
 )
 from cmk.gui.pages import page_registry, Page
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
 @mode_registry.register
@@ -87,8 +91,7 @@ class ModeDiagnostics(WatoMode):
         menu = make_simple_form_page_menu(breadcrumb,
                                           form_name="diagnostics",
                                           button_name="_start",
-                                          save_title="Start",
-                                          add_abort_link=False)
+                                          save_title="Start")
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(
@@ -109,17 +112,17 @@ class ModeDiagnostics(WatoMode):
             ))
         return menu
 
-    def action(self) -> None:
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         if self._job.is_active() or self._diagnostics_parameters is None:
-            raise HTTPRedirect(self._job.detail_url())
+            return redirect(self._job.detail_url())
 
         self._job.set_function(self._job.do_execute, self._diagnostics_parameters)
         self._job.start()
 
-        raise HTTPRedirect(self._job.detail_url())
+        return redirect(self._job.detail_url())
 
     def page(self) -> None:
         job_status_snapshot = self._job.get_status_snapshot()
@@ -279,7 +282,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
         )
 
     def _back_url(self) -> str:
-        return html.makeuri([])
+        return makeuri(global_request, [])
 
     def do_execute(self, diagnostics_parameters: DiagnosticsParameters,
                    job_interface: BackgroundProcessInterface) -> None:
@@ -297,9 +300,11 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
         if result["tarfile_created"]:
             tarfile_path = result['tarfile_path']
-            download_url = html.makeuri_contextless([("site", site),
-                                                     ("tarfile_name", str(Path(tarfile_path)))],
-                                                    "download_diagnostics_dump.py")
+            download_url = makeuri_contextless(
+                global_request,
+                [("site", site), ("tarfile_name", str(Path(tarfile_path)))],
+                filename="download_diagnostics_dump.py",
+            )
             button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
 
             job_interface.send_progress_update(_("Dump file: %s") % tarfile_path)

@@ -7,7 +7,7 @@
 
 import time
 import abc
-from typing import List, Union, Iterator
+from typing import Iterator, List, Optional, Union
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.i18n
@@ -23,9 +23,10 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
+from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.pages import page_registry, AjaxPage, Page
 from cmk.gui.page_menu import (
     PageMenu,
@@ -43,32 +44,71 @@ from cmk.gui.wato.pages.users import select_language
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 
+from cmk.gui.utils.urls import makeuri
+
+
+def _get_current_theme_titel() -> str:
+    return [titel for theme_id, titel in config.theme_choices() if theme_id == html.get_theme()][0]
+
+
+def _get_sidebar_position() -> str:
+    assert config.user.id is not None
+    sidebar_position = userdb.load_custom_attr(config.user.id, 'ui_sidebar_position', lambda x: None
+                                               if x == "None" else "left")
+
+    return _get_sidebar_position_title(sidebar_position or "right")
+
+
+def _get_sidebar_position_title(value: str) -> str:
+    return {
+        "left": _("left"),
+        "right": _("right"),
+    }[value]
+
 
 def _user_menu_topics() -> List[TopicMenuTopic]:
+    quick_items = [
+        TopicMenuItem(
+            name="ui_theme",
+            title=_("Interface theme"),
+            url="javascript:cmk.sidebar.toggle_user_attribute(\"ajax_ui_theme.py\")",
+            target="",
+            sort_index=10,
+            icon="color_mode",
+            button_title=_get_current_theme_titel(),
+        ),
+        TopicMenuItem(
+            name="sidebar_position",
+            title=_("Sidebar position"),
+            url="javascript:cmk.sidebar.toggle_user_attribute(\"ajax_sidebar_position.py\")",
+            target="",
+            sort_index=20,
+            icon="sidebar_position",
+            button_title=_get_sidebar_position(),
+        ),
+    ]
+
     items = [
         TopicMenuItem(
             name="change_password",
             title=_("Change password"),
             url="user_change_pw.py",
             sort_index=10,
-            is_advanced=False,
-            icon_name="topic_change_password",
+            icon="topic_change_password",
         ),
         TopicMenuItem(
             name="user_profile",
             title=_("Edit profile"),
             url="user_profile.py",
             sort_index=20,
-            is_advanced=False,
-            icon_name="topic_profile",
+            icon="topic_profile",
         ),
         TopicMenuItem(
             name="logout",
             title=_("Logout"),
             url="logout.py",
             sort_index=30,
-            is_advanced=False,
-            icon_name="sidebar_logout",
+            icon="sidebar_logout",
         ),
     ]
 
@@ -80,26 +120,71 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
                 title=_("Notification rules"),
                 url="wato.py?mode=user_notifications_p",
                 sort_index=30,
-                is_advanced=False,
-                icon_name="topic_events",
+                icon="topic_events",
             ))
 
-    return [TopicMenuTopic(
-        name="user",
-        title=_("User"),
-        icon_name="topic_profile",
-        items=items,
-    )]
+    return [
+        TopicMenuTopic(
+            name="user",
+            title=_("Quick toggle"),
+            # TODO(rb): set correct icon
+            icon="topic_profile",
+            items=quick_items,
+        ),
+        TopicMenuTopic(
+            name="user",
+            title=_("Profile"),
+            icon="topic_profile",
+            items=items,
+        )
+    ]
 
 
 mega_menu_registry.register(
     MegaMenu(
         name="user",
         title=_l("User"),
-        icon_name="main_user",
+        icon="main_user",
         sort_index=20,
         topics=_user_menu_topics,
     ))
+
+
+@page_registry.register_page("ajax_ui_theme")
+class ModeAjaxCycleThemes(AjaxPage):
+    """AJAX handler for quick access option 'Interface theme" in user menu"""
+    def page(self):
+        themes = [theme for theme, _title in cmk.gui.config.theme_choices()]
+        current_theme = html.get_theme()
+        try:
+            theme_index = themes.index(current_theme)
+        except ValueError:
+            raise MKUserError(None, _("Could not determine current theme."))
+
+        if len(themes) == theme_index + 1:
+            new_theme = themes[0]
+        else:
+            new_theme = themes[theme_index + 1]
+
+        _set_user_attribute("ui_theme", new_theme)
+
+
+@page_registry.register_page("ajax_sidebar_position")
+class ModeAjaxCycleSidebarPosition(AjaxPage):
+    """AJAX handler for quick access option 'Sidebar position" in user menu"""
+    def page(self):
+        _set_user_attribute("ui_sidebar_position",
+                            None if _get_sidebar_position() == "left" else "left")
+
+
+def _set_user_attribute(key: str, value: Optional[str]):
+    assert config.user.id is not None
+    user_id = config.user.id
+
+    if value is None:
+        userdb.remove_custom_attr(user_id, key)
+    else:
+        userdb.save_custom_attr(user_id, key, value)
 
 
 def user_profile_async_replication_page() -> None:
@@ -190,10 +275,7 @@ class ABCUserProfilePage(Page):
             raise MKAuthException(_('User profiles can not be edited (WATO is disabled).'))
 
     def _page_menu(self, breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
-                                          form_name="profile",
-                                          button_name="_save",
-                                          add_abort_link=False)
+        menu = make_simple_form_page_menu(breadcrumb, form_name="profile", button_name="_save")
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(html.myfile))
         return menu
 
@@ -252,7 +334,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         if cur_password == password:
             raise MKUserError("password", _("The new password must differ from your current one."))
 
-        if userdb.hook_login(config.user.id, cur_password) is False:
+        if userdb.check_credentials(config.user.id, cur_password) is False:
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
@@ -277,7 +359,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         userdb.save_users(users)
 
         # Set the new cookie to prevent logout for the current user
-        login.set_auth_cookie(config.user.id)
+        login.update_auth_cookie(config.user.id)
 
         return True
 
@@ -395,7 +477,7 @@ class UserProfile(ABCUserProfilePage):
             html.reload_sidebar()
             html.show_message(_("Successfully updated user profile."))
             # Ensure theme changes are applied without additional user interaction
-            html.immediate_browser_redirect(0.5, html.makeuri([]))
+            html.immediate_browser_redirect(0.5, makeuri(global_request, []))
 
         if html.has_user_errors():
             html.show_user_errors()
@@ -409,7 +491,7 @@ class UserProfile(ABCUserProfilePage):
         html.begin_form("profile", method="POST")
         html.prevent_password_auto_completion()
         html.open_div(class_="wato")
-        forms.header(self._page_title())
+        forms.header(_("Personal settings"))
 
         forms.section(_("Name"), simple=True)
         html.write_text(user.get("alias", config.user.id))
@@ -428,22 +510,29 @@ class UserProfile(ABCUserProfilePage):
                                                                  user.get("notification_method"))
 
         if config.user.may('general.edit_user_attributes'):
-            for name, attr in userdb.get_user_attributes():
-                if attr.user_editable():
-                    vs = attr.valuespec()
-                    forms.section(_u(vs.title()))
-                    value = user.get(name, vs.default_value())
-                    if not attr.permission() or config.user.may(attr.permission()):
-                        vs.render_input("ua_" + name, value)
-                        html.help(_u(vs.help()))
-                    else:
-                        html.write(vs.value_to_text(value))
+            custom_user_attr_topics = get_user_attributes_by_topic()
+            _show_custom_user_attr(user, custom_user_attr_topics.get("personal", []))
+            forms.header(_("Interface settings"), isopen=False)
+            _show_custom_user_attr(user, custom_user_attr_topics.get("interface", []))
 
         forms.end()
         html.close_div()
         html.hidden_fields()
         html.end_form()
         html.footer()
+
+
+def _show_custom_user_attr(user, custom_attr):
+    for name, attr in custom_attr:
+        if attr.user_editable():
+            vs = attr.valuespec()
+            forms.section(_u(vs.title()))
+            value = user.get(name, vs.default_value())
+            if not attr.permission() or config.user.may(attr.permission()):
+                vs.render_input("ua_" + name, value)
+                html.help(_u(vs.help()))
+            else:
+                html.write(vs.value_to_text(value))
 
 
 @page_registry.register_page("wato_ajax_profile_repl")

@@ -12,8 +12,8 @@ import livestatus
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.i18n import _, _l
+from cmk.gui.globals import html, request
 from cmk.gui.escaping import escape_text
 
 from cmk.gui.plugins.views import (
@@ -41,6 +41,8 @@ from cmk.gui.plugins.views import (
     command_registry,
     Command,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @data_source_registry.register
@@ -165,7 +167,8 @@ class PainterCrashIdent(Painter):
         return ["crash_id"]
 
     def render(self, row, cell):
-        url = html.makeuri_contextless(
+        url = makeuri_contextless(
+            request,
             [
                 ("crash_id", row["crash_id"]),
                 ("site", row["site"]),
@@ -278,27 +281,14 @@ class SorterCrashTime(Sorter):
         return cmp_simple_number("crash_time", r1, r2)
 
 
-@permission_registry.register
-class PermissionActionDeleteCrashReport(Permission):
-    @property
-    def section(self):
-        return PermissionSectionAction
-
-    @property
-    def permission_name(self):
-        return "delete_crash_report"
-
-    @property
-    def title(self):
-        return _("Delete crash reports")
-
-    @property
-    def description(self):
-        return _("Delete crash reports created by Checkmk")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+PermissionActionDeleteCrashReport = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="delete_crash_report",
+        title=_l("Delete crash reports"),
+        description=_l("Delete crash reports created by Checkmk"),
+        defaults=["admin"],
+    ))
 
 
 @command_registry.register

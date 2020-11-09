@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import re
 
 
 def parse_aws_wafv2_web_acl(info):
-    metrics = _extract_aws_metrics_by_labels(['AllowedRequests', 'BlockedRequests'],
-                                             parse_aws(info))
+    metrics = extract_aws_metrics_by_labels(['AllowedRequests', 'BlockedRequests'], parse_aws(info))
     try:
         return list(metrics.values())[-1]
     except IndexError:
@@ -63,5 +63,4 @@ check_info['aws_wafv2_web_acl'] = {
     'service_description': 'AWS/WAFV2 Web ACL Requests',
     'group': 'aws_wafv2_web_acl',
     'has_perfdata': True,
-    'includes': ['aws.include'],
 }

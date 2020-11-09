@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #<<<scaleio_pd>>>
 #PROTECTION_DOMAIN 91ebcf4500000000:
 #        ID                                                 91ebcf4500000000
@@ -37,7 +40,6 @@ check_info['scaleio_pd'] = {
     'inventory_function': inventory_scaleio_pd,
     'check_function': check_scaleio_pd,
     'service_description': 'ScaleIO PD capacity %s',
-    'includes': ["scaleio.include", "size_trend.include", "df.include"],
     'has_perfdata': True,
     'group': "filesystem",
 }

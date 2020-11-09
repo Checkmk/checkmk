@@ -19,7 +19,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -35,7 +35,9 @@ from cmk.gui.watolib.host_attributes import (
     transform_pre_16_host_topics,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.plugins.wato import WatoMode, add_change, mode_registry, wato_confirm
+from cmk.gui.plugins.wato import (WatoMode, ActionResult, add_change, mode_registry,
+                                  make_confirm_link, redirect, mode_url)
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 def update_user_custom_attrs():
@@ -153,10 +155,10 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
     def _add_extra_form_sections(self):
         pass
 
-    def action(self):
+    def action(self) -> ActionResult:
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         if not html.check_transaction():
-            return
+            return None
 
         title = html.request.get_unicode_input_mandatory("title").strip()
         if not title:
@@ -215,7 +217,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         save_custom_attrs_to_mk_file(self._all_attrs)
         self._update_config()
 
-        return self._type + "_attrs"
+        return redirect(mode_url(self._type + "_attrs"))
 
     def page(self):
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
@@ -434,6 +436,8 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                                         watolib.folder_preserving_link([
                                             ("mode", "edit_%s_attr" % self._type)
                                         ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),
@@ -457,24 +461,21 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         raise NotImplementedError()
 
-    def action(self):
-        if html.request.var('_delete'):
-            delname = html.request.var("_delete")
+    def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(self.mode_url())
 
-            # FIXME: Raise an error if the attribute is still used
+        if not html.request.var('_delete'):
+            return redirect(self.mode_url())
 
-            confirm_txt = _('Do you really want to delete the custom attribute "%s"?') % (delname)
-
-            c = wato_confirm(_("Confirm deletion of attribute \"%s\"") % delname, confirm_txt)
-            if c:
-                for index, attr in enumerate(self._attrs):
-                    if attr['name'] == delname:
-                        self._attrs.pop(index)
-                save_custom_attrs_to_mk_file(self._all_attrs)
-                self._update_config()
-                add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
-            elif c is False:
-                return ""
+        delname = html.request.var("_delete")
+        for index, attr in enumerate(self._attrs):
+            if attr['name'] == delname:
+                self._attrs.pop(index)
+        save_custom_attrs_to_mk_file(self._all_attrs)
+        self._update_config()
+        add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
+        return redirect(self.mode_url())
 
     def page(self):
         if not self._attrs:
@@ -488,7 +489,11 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                 table.cell(_("Actions"), css="buttons")
                 edit_url = watolib.folder_preserving_link([("mode", "edit_%s_attr" % self._type),
                                                            ("edit", custom_attr['name'])])
-                delete_url = html.makeactionuri([("_delete", custom_attr['name'])])
+                delete_url = make_confirm_link(
+                    url=html.makeactionuri([("_delete", custom_attr['name'])]),
+                    message=_('Do you really want to delete the custom attribute "%s"?') %
+                    custom_attr['name'],
+                )
                 html.icon_button(edit_url, _("Properties"), "edit")
                 html.icon_button(delete_url, _("Delete"), "delete")
 
@@ -521,8 +526,12 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name="users",
-            item=make_simple_link(html.makeuri_contextless([("mode", "users")],
-                                                           filename="wato.py")),
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("mode", "users")],
+                    filename="wato.py",
+                )),
         )
 
 
@@ -553,6 +562,10 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         yield PageMenuEntry(
             title=_("Hosts"),
             icon_name="host",
-            item=make_simple_link(html.makeuri_contextless([("mode", "folder")],
-                                                           filename="wato.py")),
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("mode", "folder")],
+                    filename="wato.py",
+                )),
         )

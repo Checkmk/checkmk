@@ -11,8 +11,9 @@
 #include <memory>
 #include <string>
 
-#include "Column.h"
 #include "DynamicColumn.h"
+class Column;
+class ColumnOffsets;
 class MonitoringCore;
 
 class DynamicEventConsoleReplicationColumn : public DynamicColumn {
@@ -20,7 +21,7 @@ public:
     DynamicEventConsoleReplicationColumn(const std::string &name,
                                          const std::string &description,
                                          MonitoringCore *mc,
-                                         const Column::Offsets &);
+                                         const ColumnOffsets &);
 
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;

@@ -5,13 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
-import testlib  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
-
-
-@pytest.fixture(scope="module")
-def check_manager():
-    return testlib.CheckManager()
 
 
 # patch cmk.utils.paths

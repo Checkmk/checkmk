@@ -7,9 +7,9 @@
 import time
 from typing import Dict, List, Mapping, NamedTuple, Optional, Tuple, Union
 
-from .agent_based_api.v0.type_defs import CheckGenerator, DiscoveryGenerator
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     get_average,
     get_value_store,
     Metric,
@@ -17,7 +17,7 @@ from .agent_based_api.v0 import (
     render,
     Result,
     Service,
-    state,
+    State as state,
 )
 
 from .utils import memory
@@ -31,7 +31,7 @@ class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', flo
         return render.bytes(self.bytes)
 
 
-def discover_mem_used(section: Dict[str, int]) -> DiscoveryGenerator:
+def discover_mem_used(section: Dict[str, int]) -> DiscoveryResult:
     if ("MemTotal" in section and "PageTotal" not in section and
             not memory.is_linux_section(section)  # handled by more modern check
        ):
@@ -62,7 +62,7 @@ def _get_total_usage(
     return totalused, "Total (%s)" % " + ".join(details)
 
 
-def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
+def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckResult:
     # we have used a parse function that creates bytes, but this function
     # still expects kB:
     meminfo = {k: v / 1024.0 for k, v in section.items()}
@@ -99,14 +99,13 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
 
     totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
 
-    result = next(  # pylint: disable=stop-iteration-return  # this won't raise.
-        memory.check_element(
-            totalused_descr,
-            totalused.bytes,
-            memtotal.bytes,
-            ("ignore", (None, None)),
-            label_total="RAM" if totalused_descr != "RAM" else "",
-        ))
+    result, *_ = memory.check_element(
+        totalused_descr,
+        totalused.bytes,
+        memtotal.bytes,
+        ("ignore", (None, None)),
+        label_total="RAM" if totalused_descr != "RAM" else "",
+    )
     assert isinstance(result, Result)
     infotext = result.summary
 
@@ -189,7 +188,6 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
 register.check_plugin(
     name="mem_used",
     service_name="Memory",
-    sections=["mem"],
     discovery_function=discover_mem_used,
     check_function=check_mem_used,
     check_default_parameters={

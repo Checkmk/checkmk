@@ -422,7 +422,9 @@ checks = {
     ],
     'services_summary': [
         ('Summary', DEFAULT_PARAMS, [
-            (0, '32 services in total', []),
+            (0, 'Total: 32', []),
+            (0, 'Disabled: 0', []),
+            (0, 'Failed: 1', []),
             (2, '1 service failed (systemd-cryptsetup@cryptswap1)', []),
         ]),
     ],

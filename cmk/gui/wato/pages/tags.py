@@ -6,9 +6,8 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
-from typing import Any, Dict, List, Set, Tuple as _Tuple, Union, Optional, Type
+from typing import List, Set, Union, Optional, Type
 import abc
-from enum import Enum
 
 import cmk.utils.tags
 
@@ -16,13 +15,10 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element, Table
 import cmk.gui.forms as forms
-from cmk.gui.exceptions import (
-    MKUserError,
-    MKAuthException,
-    MKGeneralException,
-)
+from cmk.gui.exceptions import (MKUserError, MKGeneralException, FinalizeRequest)
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
     Foldable,
@@ -48,6 +44,15 @@ from cmk.gui.page_menu import (
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder
+from cmk.gui.watolib.tags import (
+    TagCleanupMode,
+    ABCOperation,
+    OperationReplaceGroupedTags,
+    OperationRemoveAuxTag,
+    OperationRemoveTagGroup,
+    identify_modified_tags,
+    change_host_tags_in_folders,
+)
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
@@ -59,10 +64,14 @@ from cmk.gui.plugins.wato.utils.html_elements import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
-    wato_confirm,
     make_action_link,
+    make_confirm_link,
     add_change,
+    redirect,
+    mode_url,
+    flash,
 )
 
 
@@ -156,7 +165,10 @@ class ModeTags(ABCTagMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(mode_url("tags"))
+
         if html.request.has_var("_delete"):
             return self._delete_tag_group()
 
@@ -166,7 +178,9 @@ class ModeTags(ABCTagMode):
         if html.request.var("_move") and html.check_transaction():
             return self._move_tag_group()
 
-    def _delete_tag_group(self):
+        return redirect(mode_url("tags"))
+
+    def _delete_tag_group(self) -> ActionResult:
         del_id = html.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
 
         if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
@@ -176,14 +190,8 @@ class ModeTags(ABCTagMode):
         else:
             message = _rename_tags_after_confirmation(self.breadcrumb(),
                                                       OperationRemoveTagGroup(del_id))
-            if message is True:  # no confirmation yet
-                c = wato_confirm(
-                    _("Confirm deletion of the tag group '%s'") % del_id,
-                    _("Do you really want to delete the tag group '%s'?") % del_id)
-                if c is False:
-                    return ""
-                if c is None:
-                    return None
+            if message is False:
+                return FinalizeRequest(code=200)
 
         if message:
             self._tag_config.remove_tag_group(del_id)
@@ -193,7 +201,9 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
-            return "tags", message is not True and message or None
+            if isinstance(message, str):
+                flash(message)
+        return redirect(mode_url("tags"))
 
     def _is_cleaning_up_user_tag_group_to_builtin(self, del_id):
         """The "Agent type" tag group was user defined in previous versions
@@ -220,7 +230,7 @@ class ModeTags(ABCTagMode):
         # simply allow removal without confirm
         return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
-    def _delete_aux_tag(self):
+    def _delete_aux_tag(self) -> ActionResult:
         del_id = html.get_item_input("_del_aux",
                                      dict(self._tag_config.aux_tag_list.get_choices()))[1]
 
@@ -234,14 +244,8 @@ class ModeTags(ABCTagMode):
                           "It is being used in the tag group <b>%s</b>.") % group.title)
 
         message = _rename_tags_after_confirmation(self.breadcrumb(), OperationRemoveAuxTag(del_id))
-        if message is True:  # no confirmation yet
-            c = wato_confirm(
-                _("Confirm deletion of the auxiliary tag '%s'") % del_id,
-                _("Do you really want to delete the auxiliary tag '%s'?") % del_id)
-            if c is False:
-                return ""
-            if c is None:
-                return None
+        if message is False:
+            return FinalizeRequest(code=200)
 
         if message:
             self._tag_config.aux_tag_list.remove(del_id)
@@ -251,9 +255,12 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
-            return "tags", message if message is not True else None
+            if isinstance(message, str):
+                flash(message)
+        return redirect(mode_url("tags"))
 
-    def _move_tag_group(self):
+    # Mypy wants the explicit return, pylint does not like it.
+    def _move_tag_group(self) -> ActionResult:  # pylint: disable=useless-return
         move_nr = html.request.get_integer_input_mandatory("_move")
         move_to = html.request.get_integer_input_mandatory("_index")
 
@@ -267,12 +274,13 @@ class ModeTags(ABCTagMode):
         self._tag_config_file.save(self._tag_config.get_dict_format())
         self._load_effective_config()
         watolib.add_change("edit-tags", _("Changed order of tag groups"))
+        return None
 
     def page(self):
         if not self._tag_config.tag_groups + self._tag_config.get_aux_tags():
             MainMenu([
                 MenuItem(
-                    "edit_ttag", _("Create new tag group"), "new", "hosttags",
+                    "edit_tag", _("Create new tag group"), "new", "hosttags",
                     _("Each tag group will create one dropdown choice in the host configuration.")),
                 MenuItem(
                     "edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",
@@ -348,7 +356,9 @@ class ModeTags(ABCTagMode):
 
         html.element_dragger_url("tr", base_url=make_action_link([("mode", "tags"), ("_move", nr)]))
 
-        delete_url = make_action_link([("mode", "tags"), ("_delete", tag_group.id)])
+        delete_url = make_confirm_link(
+            url=make_action_link([("mode", "tags"), ("_delete", tag_group.id)]),
+            message=_("Do you really want to delete the tag group '%s'?") % tag_group.id)
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
     def _render_aux_tag_list(self) -> None:
@@ -383,7 +393,9 @@ class ModeTags(ABCTagMode):
             return
 
         edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
-        delete_url = make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)])
+        delete_url = make_confirm_link(
+            url=make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)]),
+            message=_("Do you really want to delete the auxiliary tag '%s'?") % aux_tag.id)
         html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
         html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
 
@@ -489,7 +501,7 @@ class ModeTagUsage(ABCTagMode):
                                                 remove_tag_ids=[tag.id],
                                                 replace_tag_ids={})
         affected_folders, affected_hosts, affected_rulesets = \
-            _change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
+            change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
 
         table.cell(_("Explicitly set on folders"))
         if affected_folders:
@@ -536,7 +548,7 @@ class ModeTagUsage(ABCTagMode):
             raise Exception("uninitialized tag")
         operation = OperationRemoveAuxTag(aux_tag.id)
         affected_folders, affected_hosts, affected_rulesets = \
-            _change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
+            change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
 
         table.cell(_("Explicitly set on folders"))
         if affected_folders:
@@ -591,9 +603,9 @@ class ModeEditAuxtag(ABCEditTagMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(breadcrumb, form_name="aux_tag", button_name="save")
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return "tags"
+            return redirect(mode_url("tags"))
 
         vs = self._valuespec()
         aux_tag_spec = vs.from_html_vars("aux_tag")
@@ -616,7 +628,7 @@ class ModeEditAuxtag(ABCEditTagMode):
 
         self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 
-        return "tags"
+        return redirect(mode_url("tags"))
 
     def page(self):
         html.begin_form("aux_tag")
@@ -668,9 +680,9 @@ class ModeEditTagGroup(ABCEditTagMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(breadcrumb, form_name="tag_group", button_name="save")
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return "tags"
+            return redirect(mode_url("tags"))
 
         vs = self._valuespec()
         tag_group_spec = vs.from_html_vars("tag_group")
@@ -679,7 +691,6 @@ class ModeEditTagGroup(ABCEditTagMode):
         # Create new object with existing host tags
         changed_hosttags_config = cmk.utils.tags.TagConfig()
         changed_hosttags_config.parse_config(self._tag_config_file.load_for_modification())
-
         changed_tag_group = cmk.utils.tags.TagGroup(tag_group_spec)
         self._tag_group = changed_tag_group
 
@@ -692,7 +703,8 @@ class ModeEditTagGroup(ABCEditTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
-            return "tags", _("Created new host tag group '%s'") % changed_tag_group.title
+            flash(_("Created new host tag group '%s'") % changed_tag_group.title)
+            return redirect(mode_url("tags"))
 
         # Updates and verifies changed tag group
         changed_hosttags_config.update_tag_group(changed_tag_group)
@@ -701,24 +713,8 @@ class ModeEditTagGroup(ABCEditTagMode):
         except MKGeneralException as e:
             raise MKUserError(None, "%s" % e)
 
-        remove_tag_ids, replace_tag_ids = [], {}
-        new_by_title = {tag.title: tag.id for tag in changed_tag_group.tags}
-
-        for former_tag in self._untainted_tag_group.tags:
-            # Detect renaming
-            if former_tag.title in new_by_title:
-                new_id = new_by_title[former_tag.title]
-                if new_id != former_tag.id:
-                    # new_id may be None
-                    replace_tag_ids[former_tag.id] = new_id
-                    continue
-
-            # Detect removal
-            if former_tag.id is not None \
-                    and former_tag.id not in [ tmp_tag.id for tmp_tag in changed_tag_group.tags ]:
-                # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
-                remove_tag_ids.append(former_tag.id)
-
+        remove_tag_ids, replace_tag_ids = identify_modified_tags(changed_tag_group,
+                                                                 self._untainted_tag_group)
         tg_id = self._tag_group.id
         if tg_id is None:
             raise Exception("tag group ID not set")
@@ -729,9 +725,9 @@ class ModeEditTagGroup(ABCEditTagMode):
         if message:
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
-            return "tags", message is not True and message or None
-
-        return "tags"
+            if isinstance(message, str):
+                flash(message)
+        return redirect(mode_url("tags"))
 
     def page(self):
         html.begin_form("tag_group", method='POST')
@@ -816,55 +812,17 @@ class ModeEditTagGroup(ABCEditTagMode):
         )
 
 
-class TagCleanupMode(Enum):
-    ABORT = "abort"  # No further action. Aborting here.
-    CHECK = "check"  # only affected rulesets are collected, nothing is modified
-    DELETE = "delete"  # Rules using this tag are deleted
-    REMOVE = "remove"  # Remove tags from rules
-    REPAIR = "repair"  # Remove tags from rules
-
-
-class ABCOperation(metaclass=abc.ABCMeta):
-    """Base for all tag cleanup operations"""
-    @abc.abstractmethod
-    def confirm_title(self) -> str:
-        raise NotImplementedError()
-
-
-class ABCTagGroupOperation(ABCOperation, metaclass=abc.ABCMeta):
-    def __init__(self, tag_group_id: str) -> None:
-        super(ABCTagGroupOperation, self).__init__()
-        self.tag_group_id = tag_group_id
-
-
-class OperationRemoveTagGroup(ABCTagGroupOperation):
-    def confirm_title(self):
-        return _("Confirm tag group deletion")
-
-
-class OperationRemoveAuxTag(ABCTagGroupOperation):
-    def confirm_title(self):
-        return _("Confirm aux tag deletion")
-
-
-class OperationReplaceGroupedTags(ABCOperation):
-    def __init__(self, tag_group_id: str, remove_tag_ids: List[str],
-                 replace_tag_ids: Dict[str, str]) -> None:
-        super(OperationReplaceGroupedTags, self).__init__()
-        self.tag_group_id = tag_group_id
-        self.remove_tag_ids = remove_tag_ids
-        self.replace_tag_ids = replace_tag_ids
-
-    def confirm_title(self):
-        return _("Confirm tag modifications")
-
-
 def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
                                     operation: ABCOperation) -> Union[bool, str]:
     """Handle renaming and deletion of tags
 
     Find affected hosts, folders and rules. Remove or fix those rules according
     the users' wishes.
+
+    Returns:
+        True: Proceed, no "question" dialog shown
+        False: "Question dialog" shown
+        str: Action done after "question" dialog
     """
     repair_mode = html.request.var("_repair")
     if repair_mode is not None:
@@ -881,34 +839,34 @@ def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
             watolib.host_attributes.undeclare_host_tag_attribute(operation.tag_group_id)
 
         affected_folders, affected_hosts, affected_rulesets = \
-        _change_host_tags_in_folders(operation, mode, watolib.Folder.root_folder())
+            change_host_tags_in_folders(operation, mode, watolib.Folder.root_folder())
 
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \
-            (len(affected_folders), len(affected_hosts), len(affected_rulesets))
+               (len(affected_folders), len(affected_hosts), len(affected_rulesets))
 
-    message = u""
+    message = HTML()
     affected_folders, affected_hosts, affected_rulesets = \
-        _change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
+        change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
 
     if affected_folders:
         message += _("Affected folders with an explicit reference to this tag "
                      "group and that are affected by the change") + ":"
         with html.plugged():
             _show_affected_folders(affected_folders)
-            message += html.drain()
+            message += HTML(html.drain())
 
     if affected_hosts:
         message += _("Hosts where this tag group is explicitely set "
                      "and that are effected by the change") + ":"
         with html.plugged():
             _show_affected_hosts(affected_hosts)
-            message += html.drain()
+            message += HTML(html.drain())
 
     if affected_rulesets:
         message += _("Rulesets that contain rules with references to the changed tags") + ":"
         with html.plugged():
             _show_affected_rulesets(affected_rulesets)
-            message += html.drain()
+            message += HTML(html.drain())
 
     if message:
         wato_html_head(title=operation.confirm_title(), breadcrumb=breadcrumb)
@@ -1019,167 +977,3 @@ def _is_removing_tags(operation: ABCOperation) -> bool:
         return True
 
     return False
-
-
-def _change_host_tags_in_folders(operation, mode, folder):
-    """Update host tag assignments in hosts/folders
-
-    See _rename_tags_after_confirmation() doc string for additional information.
-    """
-    affected_folders = []
-    affected_hosts = []
-    affected_rulesets = []
-
-    if not isinstance(operation, OperationRemoveAuxTag):
-        aff_folders = _change_host_tags_in_host_or_folder(operation, mode, folder)
-        affected_folders += aff_folders
-
-        if aff_folders and mode != TagCleanupMode.CHECK:
-            try:
-                folder.save()
-            except MKAuthException:
-                # Ignore MKAuthExceptions of locked host.mk files
-                pass
-
-        for subfolder in folder.subfolders():
-            aff_folders, aff_hosts, aff_rulespecs = _change_host_tags_in_folders(
-                operation, mode, subfolder)
-            affected_folders += aff_folders
-            affected_hosts += aff_hosts
-            affected_rulesets += aff_rulespecs
-
-        affected_hosts += _change_host_tags_in_hosts(operation, mode, folder)
-
-    affected_rulesets += _change_host_tags_in_rules(operation, mode, folder)
-    return affected_folders, affected_hosts, affected_rulesets
-
-
-def _change_host_tags_in_hosts(operation, mode, folder):
-    affected_hosts = []
-    for host in folder.hosts().values():
-        aff_hosts = _change_host_tags_in_host_or_folder(operation, mode, host)
-        affected_hosts += aff_hosts
-
-    if affected_hosts and mode != TagCleanupMode.CHECK:
-        try:
-            folder.save_hosts()
-        except MKAuthException:
-            # Ignore MKAuthExceptions of locked host.mk files
-            pass
-    return affected_hosts
-
-
-def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
-    affected: List[Union[watolib.CREHost, watolib.CREFolder]] = []
-
-    attrname = "tag_" + operation.tag_group_id
-    attributes = host_or_folder.attributes()
-    if attrname not in attributes:
-        return affected  # The attribute is not set
-
-    # Deletion of a tag group
-    if isinstance(operation, OperationRemoveTagGroup):
-        if attrname in attributes:
-            affected.append(host_or_folder)
-            if mode != TagCleanupMode.CHECK:
-                del attributes[attrname]
-        return affected
-
-    if not isinstance(operation, OperationReplaceGroupedTags):
-        raise NotImplementedError()
-
-    # Deletion or replacement of a tag choice
-    current = attributes[attrname]
-    if current in operation.remove_tag_ids or current in operation.replace_tag_ids:
-        affected.append(host_or_folder)
-        if mode != TagCleanupMode.CHECK:
-            if current in operation.remove_tag_ids:
-                del attributes[attrname]
-            elif current in operation.replace_tag_ids:
-                new_tag = operation.replace_tag_ids[current]
-                attributes[attrname] = new_tag
-            else:
-                raise NotImplementedError()
-
-    return affected
-
-
-def _change_host_tags_in_rules(operation, mode, folder):
-    """Update tags in all rules
-
-    The function parses all rules in all rulesets and looks for host tags that
-    have been removed or renamed. If tags are removed then the depending on the
-    mode affected rules are either deleted ("delete") or the vanished tags are
-    removed from the rule ("remove").
-
-    See _rename_tags_after_confirmation() doc string for additional information.
-    """
-    affected_rulesets = set()
-
-    rulesets = watolib.FolderRulesets(folder)
-    rulesets.load()
-
-    for ruleset in rulesets.get_rulesets().values():
-        for _folder, _rulenr, rule in ruleset.get_rules():
-            affected_rulesets.update(_change_host_tags_in_rule(operation, mode, ruleset, rule))
-
-    if affected_rulesets and mode != TagCleanupMode.CHECK:
-        rulesets.save()
-
-    return sorted(affected_rulesets, key=lambda x: x.title())
-
-
-def _change_host_tags_in_rule(operation, mode, ruleset, rule):
-    affected_rulesets: Set[watolib.FolderRulesets] = set()
-    if operation.tag_group_id not in rule.conditions.host_tags:
-        return affected_rulesets  # The tag group is not used
-
-    # Handle deletion of complete tag group
-    if isinstance(operation, ABCTagGroupOperation):
-        affected_rulesets.add(ruleset)
-
-        if mode == TagCleanupMode.CHECK:
-            pass
-
-        elif mode == TagCleanupMode.DELETE:
-            ruleset.delete_rule(rule)
-        else:
-            del rule.conditions.host_tags[operation.tag_group_id]
-
-        return affected_rulesets
-
-    if not isinstance(operation, OperationReplaceGroupedTags):
-        raise NotImplementedError()
-
-    tag_map: List[_Tuple[str, Any]] = list(operation.replace_tag_ids.items())
-    tag_map += [(tag_id, False) for tag_id in operation.remove_tag_ids]
-
-    # Removal or renaming of single tag choices
-    for old_tag, new_tag in tag_map:
-        # The case that old_tag is None (an empty tag has got a name)
-        # cannot be handled when it comes to rules. Rules do not support
-        # such None-values.
-        if not old_tag:
-            continue
-
-        current_value = rule.conditions.host_tags[operation.tag_group_id]
-        if current_value not in (old_tag, {'$ne': old_tag}):
-            continue  # old_tag id is not configured
-
-        affected_rulesets.add(ruleset)
-
-        if mode == TagCleanupMode.CHECK:
-            continue  # Skip modification
-
-        # First remove current setting
-        del rule.conditions.host_tags[operation.tag_group_id]
-
-        # In case it needs to be replaced with a new value, do it now
-        if new_tag:
-            was_negated = isinstance(dict, current_value) and "$ne" in current_value
-            new_value = {"$ne": new_tag} if was_negated else new_tag
-            rule.conditions.host_tags[operation.tag_group_id] = new_value
-        elif mode == TagCleanupMode.DELETE:
-            ruleset.delete_rule(rule)
-
-    return affected_rulesets

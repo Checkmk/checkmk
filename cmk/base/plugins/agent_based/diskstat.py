@@ -67,7 +67,6 @@
 #  Index 16 -- sectors discarded
 #  Index 17 -- time spent discarding
 
-import re
 from typing import (
     Any,
     Dict,
@@ -76,7 +75,11 @@ from typing import (
     Sequence,
     Tuple,
 )
-from .agent_based_api.v0 import (
+
+import re
+import time
+
+from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
     IgnoreResultsError,
@@ -88,7 +91,7 @@ from .utils import diskstat
 SectionMultipath = Mapping[str, Any]
 
 
-def parse_diskstat(string_table: type_defs.AgentStringTable) -> diskstat.Section:
+def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
     timestamp, proc_diskstat, name_info = diskstat_extract_name_info(string_table)
     assert timestamp is not None
 
@@ -206,8 +209,8 @@ def parse_diskstat(string_table: type_defs.AgentStringTable) -> diskstat.Section
 #     (None, 253, 6): 'LVM vgappl-applvol',
 # }
 def diskstat_extract_name_info(
-    string_table: type_defs.AgentStringTable
-) -> Tuple[Optional[int], type_defs.AgentStringTable, Mapping[Tuple[int, int], str]]:
+    string_table: type_defs.StringTable
+) -> Tuple[Optional[int], type_defs.StringTable, Mapping[Tuple[int, int], str]]:
     name_info = {}  # dict from (major, minor) to itemname
     timestamp = None
 
@@ -294,7 +297,7 @@ def discover_diskstat(
     params: Sequence[type_defs.Parameters],
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     if section_diskstat is None:
         return
     yield from diskstat.discovery_diskstat_generic(
@@ -377,7 +380,7 @@ def check_diskstat(
     params: type_defs.Parameters,
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
     if section_diskstat is None:
@@ -408,9 +411,10 @@ def check_diskstat(
             return
 
     yield from diskstat.check_diskstat_dict(
-        params,
-        disk_with_rates,
-        value_store,
+        params=params,
+        disk=disk_with_rates,
+        value_store=value_store,
+        this_time=time.time(),
     )
 
 
@@ -428,7 +432,7 @@ def cluster_check_diskstat(
     params: type_defs.Parameters,
     section_diskstat: Mapping[str, Optional[diskstat.Section]],
     section_multipath: Mapping[str, Optional[SectionMultipath]],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_diskstat(
         item,
         params,

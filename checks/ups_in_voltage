@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ups_in_voltage import *  # pylint: disable=wildcard-import,unused-wildcard-import
 ups_in_voltage_default_levels = (210, 180)  # warning / critical
 
 
@@ -18,7 +20,6 @@ check_info['ups_in_voltage'] = {
     "service_description": "IN voltage phase %s",
     "has_perfdata": True,
     "group": "evolt",
-    "includes": ['ups_in_voltage.include', "ups_generic.include"],
     "snmp_info": (".1.3.6.1.2.1.33.1.3.3.1", [0, 3]),
     "snmp_scan_function": ups_generic_scan_function,
 }

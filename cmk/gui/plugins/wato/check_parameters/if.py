@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, List, Tuple as _Tuple, Union
-
+import copy
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -42,6 +42,11 @@ from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 def transform_if(v):
+
+    # TODO: This is a workaround which makes sure input arguments are not getting altered.
+    #       A nice implementation would return a new dict based on the input
+    v = copy.deepcopy(v)
+
     new_traffic: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]] = []
 
     if 'traffic' in v and not isinstance(v['traffic'], list):
@@ -79,7 +84,8 @@ def transform_if(v):
     try:
         states.remove('9')
         removed_port_state_9 = True
-    except ValueError:
+    # AttributeError --> states = None --> means 'ignore the interface status'
+    except (ValueError, AttributeError):
         removed_port_state_9 = False
     # if only port state 9 was selected, a unique transform is possible
     if removed_port_state_9 and v.get('state') == []:
@@ -254,10 +260,12 @@ def _vs_regex_matching(match_obj):
 def _note_for_admin_state_options():
     return _(
         "Note: The admin state is in general only available for the 64-bit SNMP interface check. "
-        "Additionally, you have to specifically configure checkmk to fetch this information using "
-        "the rule <a href='wato.py?mode=edit_ruleset&varname=use_if64adm'>SNMP Interface check: "
-        "Monitor ifAdminStatus (use 'if64adm' instead of 'if64')</a>. Using this option on hosts "
-        "which are not configured to report the admin state will have no effect.")
+        "Additionally, you have to specifically configure Checkmk to fetch this information, "
+        "otherwise, using this option will have no effect. To make Checkmk fetch the admin status, "
+        "activate the section <tt>if64adm</tt> via the rule "
+        "<a href='wato.py?mode=edit_ruleset&varname=snmp_exclude_sections'>Include or exclude SNMP "
+        "sections</a>. Note that this will lead to an increase in SNMP traffic of approximately "
+        "5%.")
 
 
 def _admin_states():
@@ -412,7 +420,7 @@ def _validate_valuespec_inventory_if_rules(value, varprefix):
 def _valuespec_inventory_if_rules():
     return Transform(
         Dictionary(
-            title=_("Network Interface and Switch Port Discovery"),
+            title=_("Network interface and switch port discovery"),
             help=_(
                 "Configure the discovery of services monitoring network interfaces and switch "
                 "ports. Note that this rule is a somewhat special case compared to most other "
@@ -507,7 +515,6 @@ def _valuespec_if_groups():
           'of its members. You can configure if interfaces which are identified as group interfaces '
           'should not show up as single service. You can restrict grouped interfaces by iftype and the '
           'item name of the single interface.'),
-        style="dropdown",
         elements=[
             ListOf(
                 title=_("Groups on single host"),
@@ -558,28 +565,7 @@ rulespec_registry.register(
         help_func=_help_if_disable_if64_hosts,
         name="if_disable_if64_hosts",
         title=lambda: _("Hosts forced to use 'if' instead of 'if64'"),
-    ))
-
-rulespec_registry.register(
-    BinaryHostRulespec(
-        group=RulespecGroupCheckParametersNetworking,
-        help_func=lambda: _(
-            "On hosts where this option is activated, the 64-bit SNMP interface check will "
-            "in addition to the default output also monitor the admin state "
-            "<tt>ifAdminStatus</tt>. The admin state can be used both when configuring the "
-            "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>discovery of "
-            "interfaces (\"Network Interface and Switch Port Discovery\")</a> and the "
-            "<a href='wato.py?mode=edit_ruleset&varname=checkgroup_parameters:if'>corresponding "
-            "monitoring states (\"Network interfaces and switch ports\")</a>. Note that activating "
-            "this option will lead to an increase in SNMP traffic of approximately 5%. Also note "
-            "that after activating or deactivating this option, you have to-rediscover the "
-            "services of affected hosts for this change to have an effect. This is necessary "
-            "because when reporting the admin state, checkmk uses a different check plugin "
-            "(<tt>if64adm</tt> instead of <tt>if64</tt>). However, by default, <tt>if64adm</tt> "
-            "generates the same services as <tt>if64</tt>, but with additional output."),
-        name="use_if64adm",
-        title=lambda: _(
-            "SNMP Interface check: Monitor ifAdminStatus (use 'if64adm' instead of 'if64')"),
+        is_deprecated=True,
     ))
 
 
@@ -649,8 +635,11 @@ def _parameter_valuespec_if():
                      explicit=Integer(title=_("Other speed in bits per second"),
                                       label=_("Bits per second")))),
                 ("state",
-                 Optional(ListChoice(title=_("Allowed operational states:"),
-                                     choices=defines.interface_oper_states()),
+                 Optional(ListChoice(
+                     title=_("Allowed operational states:"),
+                     choices=defines.interface_oper_states(),
+                     allow_empty=False,
+                 ),
                           title=_("Operational state"),
                           help=_(
                               "If you activate the monitoring of the operational state "
@@ -663,7 +652,10 @@ def _parameter_valuespec_if():
                  ListOf(
                      Tuple(orientation="horizontal",
                            elements=[
-                               ListChoice(choices=defines.interface_oper_states()),
+                               ListChoice(
+                                   choices=defines.interface_oper_states(),
+                                   allow_empty=False,
+                               ),
                                MonitoringState()
                            ]),
                      title=_('Map operational states'),
@@ -672,7 +664,11 @@ def _parameter_valuespec_if():
                  )),
                 ("admin_state",
                  Optional(
-                     ListChoice(title=_("Allowed admin states:"), choices=_admin_states()),
+                     ListChoice(
+                         title=_("Allowed admin states:"),
+                         choices=_admin_states(),
+                         allow_empty=False,
+                     ),
                      title=_("Admin state (SNMP with 64-bit counters only)"),
                      help=_("If you activate the monitoring of the admin state "
                             "(<tt>ifAdminStatus</tt>), the check will go critical if the "
@@ -684,8 +680,13 @@ def _parameter_valuespec_if():
                 ("map_admin_states",
                  ListOf(
                      Tuple(orientation="horizontal",
-                           elements=[ListChoice(choices=_admin_states()),
-                                     MonitoringState()]),
+                           elements=[
+                               ListChoice(
+                                   choices=_admin_states(),
+                                   allow_empty=False,
+                               ),
+                               MonitoringState(),
+                           ]),
                      title=_('Map admin states (SNMP with 64-bit counters only)'),
                      help=_("Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state. " +
                             _note_for_admin_state_options()),

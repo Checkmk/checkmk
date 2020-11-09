@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import re
 
 # params = {
 #     "mincount": (tuple, integer),
@@ -18,6 +19,8 @@ import ast
 #     "minsize_largest": -"-,
 #     "maxsize_...
 # }
+
+# 'additional_rules': [('/var/log/sys*', {'maxsize_largest': (1, 2)})]
 
 #.
 #   .--Parsing-------------------------------------------------------------.
@@ -84,8 +87,11 @@ def check_filestats_count(count, params):
                         human_readable_func=lambda i: "%d" % i)
 
 
-def check_filestats_extremes(files, params):
+def check_filestats_extremes(files, params, show_all_files=False):
     '''common check result - used by main and extremes_only check'''
+    if not files:
+        return
+    long_output = {}
     for key, hr_function, minlabel, maxlabel in (
         ('size', get_bytes_human_readable, 'smallest', 'largest'),
         ('age', get_age_human_readable, 'newest', 'oldest'),
@@ -95,14 +101,56 @@ def check_filestats_extremes(files, params):
             levels = (params.get("max%s_%s" % (key, label),
                                  (None, None)) + params.get("min%s_%s" % (key, label),
                                                             (None, None)))
-            state, text, _no_perf = check_levels(efile[key],
-                                                 None,
-                                                 levels,
-                                                 infoname=label.title(),
-                                                 human_readable_func=hr_function)
-            if state:
-                text = "%s: %s" % (text, efile.get('path', "<path info missing>"))
-            yield state, text
+            yield check_levels(
+                efile[key],
+                None,
+                levels,
+                infoname=label.title(),
+                human_readable_func=hr_function,
+            )
+
+        if not show_all_files:
+            continue
+
+        min_label_levels = (params.get("max%s_%s" % (key, minlabel),
+                                       (None, None)) + params.get("min%s_%s" % (key, minlabel),
+                                                                  (None, None)))
+        for efile in files:
+            state, _text, _no_perf = check_levels(
+                efile[key],
+                None,
+                min_label_levels,
+            )
+            if state == 0:
+                break
+            if efile['path'] not in long_output:
+                text = 'Age: %s, Size: %s%s' % (
+                    get_age_human_readable(efile['age']),
+                    get_bytes_human_readable(efile['size']),
+                    state_markers[state],
+                )
+                long_output[efile['path']] = text
+
+        max_label_levels = (params.get("max%s_%s" % (key, maxlabel),
+                                       (None, None)) + params.get("min%s_%s" % (key, maxlabel),
+                                                                  (None, None)))
+        for efile in reversed(files):
+            state, _text, _no_perf = check_levels(
+                efile[key],
+                None,
+                max_label_levels,
+            )
+            if state == 0:
+                break
+            if efile['path'] not in long_output:
+                text = 'Age: %s, Size: %s%s' % (
+                    get_age_human_readable(efile['age']),
+                    get_bytes_human_readable(efile['size']),
+                    state_markers[state],
+                )
+                long_output[efile['path']] = text
+
+    return ['[%s] %s' % key_text for key_text in sorted(long_output.items())]
 
 
 #.
@@ -128,9 +176,46 @@ def check_filestats(_item, params, data):
         yield check_filestats_count(count, params)
 
     files = [i for i in reported_lines if i.get("type") == "file"]
-    if files:
-        for subresult in check_filestats_extremes(files, params):
-            yield subresult
+
+    if not files:
+        return
+
+    show_all_files = bool(params.get('show_all_files', False))
+
+    additional_rules = params.get('additional_rules', {})
+
+    matching_files = {}
+    remaining_files = []
+    for efile in files:
+        for file_expression, rules in additional_rules:
+            if re.match(file_expression, efile['path']):
+                matching_files.setdefault(file_expression, (rules, []))[1].append(efile)
+                break
+        else:
+            remaining_files.append(efile)
+
+    remaining_files_output = yield from check_filestats_extremes(
+        remaining_files,
+        params,
+        show_all_files,
+    )
+
+    additional_rules_output = []
+    for file_expression, (rules, files) in matching_files.items():
+        yield 0, 'Files matching %r: %d' % (file_expression, len(files))
+        output = yield from check_filestats_extremes(
+            files,
+            rules,
+            show_all_files,
+        )
+        additional_rules_output.append('Files matching %r:' % file_expression)
+        additional_rules_output.append('\n'.join(output))
+
+    if additional_rules_output:
+        yield 0, '\n' + '\n'.join(additional_rules_output)
+
+    if remaining_files_output:
+        yield 0, '\n(Remaining) files in file group:\n' + '\n'.join(remaining_files_output)
 
 
 @get_parsed_item_data

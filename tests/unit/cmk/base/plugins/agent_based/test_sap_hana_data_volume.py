@@ -8,9 +8,9 @@ from datetime import datetime
 import pytest  # type: ignore[import]
 from freezegun import freeze_time  # type: ignore[import]
 from cmk.utils.type_defs import CheckPluginName
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
-    state,
+    State as state,
     Result,
     Metric,
 )
@@ -120,8 +120,8 @@ def test_sap_hana_data_volume_discovery():
 @pytest.fixture(name="value_store_patch")
 def value_store_fixture(monkeypatch):
     value_store_patched = {
-        "sap_hana_data_volume.H62 10 - DATA 20.delta": [2000000, 30000000],
-        "sap_hana_data_volume.H62 10 - DATA 20.trend": [LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989]
+        "H62 10 - DATA 20.delta": [2000000, 30000000],
+        "H62 10 - DATA 20.trend": [LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989]
     }
     monkeypatch.setattr(sap_hana_data_volume, 'get_value_store', lambda: value_store_patched)
     yield value_store_patched
@@ -130,57 +130,38 @@ def value_store_fixture(monkeypatch):
 @pytest.mark.parametrize("item, params, expected_results", [
     ("H62 10 - DATA 20", df.FILESYSTEM_DEFAULT_LEVELS, [
         Metric('fs_used', 84.703125, levels=(256.0, 288.0), boundaries=(0.0, 320.0)),
-        Metric('fs_size', 320.0, levels=(None, None), boundaries=(None, None)),
-        Metric('fs_used_percent', 26.4697265625, levels=(None, None), boundaries=(None, None)),
+        Metric('fs_size', 320.0),
+        Metric('fs_used_percent', 26.4697265625),
+        Result(state=state.OK, summary='26.5% used (84.7 of 320 MiB)'),
+        Metric('growth', -4470.553049074118),
+        Result(state=state.OK, summary='trend per 1 day 0 hours: +621 TiB'),
+        Result(state=state.OK, summary='trend per 1 day 0 hours: +203357490%'),
+        Metric('trend', 650743966.868858, boundaries=(0.0, 13.333333333333334)),
+        Result(state=state.OK, summary='Time left until disk full: 31 milliseconds'),
+        Result(state=state.OK, summary='Service: scriptserver'),
         Result(state=state.OK,
-               summary='26.5% used (84.7  of 320 MiB)',
-               details='26.5% used (84.7  of 320 MiB)'),
-        Metric('growth', -4470.553049074118, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='trend per 1 day 0 hours: +621 TiB',
-               details='trend per 1 day 0 hours: +621 TiB'),
-        Result(state=state.OK,
-               summary='trend per 1 day 0 hours: +203357490%',
-               details='trend per 1 day 0 hours: +203357490%'),
-        Metric('trend', 650743966.868858, levels=(None, None),
-               boundaries=(0.0, 13.333333333333334)),
-        Result(state=state.OK,
-               summary='Time left until disk full: 31 milliseconds',
-               details='Time left until disk full: 31 milliseconds'),
-        Result(state=state.OK, summary='Service: scriptserver', details='Service: scriptserver'),
-        Result(state=state.OK,
-               summary='Path: /hana/data/H62/mnt00007/hdb00020/datavolume_0000.dat',
-               details='Path: /hana/data/H62/mnt00007/hdb00020/datavolume_0000.dat'),
+               summary='Path: /hana/data/H62/mnt00007/hdb00020/datavolume_0000.dat'),
     ]),
     ("H62 10 - DATA 20", LEVELS_CRIT, [
         Metric('fs_used', 84.703125, levels=(32.0, 48.0), boundaries=(0.0, 320.0)),
-        Metric('fs_size', 320.0, levels=(None, None), boundaries=(None, None)),
-        Metric('fs_used_percent', 26.4697265625, levels=(None, None), boundaries=(None, None)),
+        Metric('fs_size', 320.0),
+        Metric('fs_used_percent', 26.4697265625),
+        Result(state=state.CRIT, summary='26.5% used (84.7 of 320 MiB, warn/crit at 10.0%/15.0%)'),
+        Metric('growth', -4470.553049074118),
         Result(state=state.CRIT,
-               summary='26.5% used (84.7  of 320 MiB), (warn/crit at 10.0%/15.0%)',
-               details='26.5% used (84.7  of 320 MiB), (warn/crit at 10.0%/15.0%)'),
-        Metric('growth', -4470.553049074118, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.CRIT,
-               summary='trend per 1 day 0 hours: +621 TiB (warn/crit at +10 B/+20 B)',
-               details='trend per 1 day 0 hours: +621 TiB (warn/crit at +10 B/+20 B)'),
-        Result(state=state.OK,
-               summary='trend per 1 day 0 hours: +203357490%',
-               details='trend per 1 day 0 hours: +203357490%'),
+               summary='trend per 1 day 0 hours: +621 TiB (warn/crit at +10 B/+20 B)'),
+        Result(state=state.OK, summary='trend per 1 day 0 hours: +203357490%'),
         Metric('trend', 650743966.868858, levels=(10.0, 20.0),
                boundaries=(0.0, 13.333333333333334)),
+        Result(state=state.OK, summary='Time left until disk full: 31 milliseconds'),
+        Result(state=state.OK, summary='Service: scriptserver'),
         Result(state=state.OK,
-               summary='Time left until disk full: 31 milliseconds',
-               details='Time left until disk full: 31 milliseconds'),
-        Result(state=state.OK, summary='Service: scriptserver', details='Service: scriptserver'),
-        Result(state=state.OK,
-               summary='Path: /hana/data/H62/mnt00007/hdb00020/datavolume_0000.dat',
-               details='Path: /hana/data/H62/mnt00007/hdb00020/datavolume_0000.dat'),
+               summary='Path: /hana/data/H62/mnt00007/hdb00020/datavolume_0000.dat'),
     ])
 ])
 @freeze_time(NOW_SIMULATED)
 def test_sap_hana_data_volume_check(value_store_patch, item, params, expected_results):
 
-    with value_store.context(CheckPluginName("sap_hana_data_volume"), None):
-        yielded_results = list(
-            sap_hana_data_volume.check_sap_hana_data_volume(item, params, PARSED_SECTION))
-        assert yielded_results == expected_results
+    yielded_results = list(
+        sap_hana_data_volume.check_sap_hana_data_volume(item, params, PARSED_SECTION))
+    assert yielded_results == expected_results

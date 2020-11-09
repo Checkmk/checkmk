@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import ActiveCheck  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -15,8 +16,9 @@ pytestmark = pytest.mark.checks
         "ssl": (False, 143),
         "auth": ("hans", "wurst"),
     }
-}, ["--server=foo", "--port=143", "--username=hans", "--password=wurst"])])
-def test_check_mailboxes_argument_parsing(check_manager, params, expected_args):
+}, ["--fetch-server=foo", "--fetch-port=143", "--fetch-username=hans", "--fetch-password=wurst"])])
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_mailboxes_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    active_check = check_manager.get_active_check("check_mailboxes")
+    active_check = ActiveCheck("check_mailboxes")
     assert active_check.run_argument_function(params) == expected_args

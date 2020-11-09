@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.hp_mcs import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # example output
 
 
@@ -39,5 +40,4 @@ check_info['hp_mcs_system'] = {
             "11.2.10.3",  # CPQHOST-MIB::cpqHoGUID
         ]),
     'snmp_scan_function': hp_mcs_scan_function,
-    'includes': ["hp_mcs.include"]
 }

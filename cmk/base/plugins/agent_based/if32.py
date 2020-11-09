@@ -3,14 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# pylint: disable=wrong-import-order
-
-from typing import Sequence
-from .agent_based_api.v0 import (
-    always_detect,
-    never_detect,
-    not_exists,
+from typing import List
+from .agent_based_api.v1 import (
+    exists,
     OIDBytes,
     register,
     SNMPTree,
@@ -19,65 +14,44 @@ from .agent_based_api.v0 import (
 from .utils import if64, interfaces
 
 
-def parse_if(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
+def parse_if(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_if([[
     ... ['1', '1', '6', '100000000', '1', '539345078', '3530301', '494413', '0', '15', '231288017',
     ...  '3477770', '38668315', '0', '0', '0', [0, 38, 241, 198, 3, 255]]]]))
-    [Interface(index='1', descr='1', type='6', speed=100000000, oper_status='1', in_octets=539345078, in_ucast=3530301, in_mcast=494413, in_bcast=0, in_discards=0, in_errors=15, out_octets=231288017, out_ucast=3477770, out_mcast=0, out_bcast=38668315, out_discards=0, out_errors=0, out_qlen=0, alias='1', phys_address=[0, 38, 241, 198, 3, 255], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='1', descr='1', alias='1', type='6', speed=100000000, oper_status='1', in_octets=539345078, in_ucast=3530301, in_mcast=494413, in_bcast=0, in_discards=0, in_errors=15, out_octets=231288017, out_ucast=3477770, out_mcast=0, out_bcast=38668315, out_discards=0, out_errors=0, out_qlen=0, phys_address=[0, 38, 241, 198, 3, 255], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
     """
     return [
-        interfaces.finalize_interface(
-            interfaces.PreInterface(
-                index=str(line[0]),
-                descr=str(line[1]),
-                type=str(line[2]),
-                speed=interfaces.saveint(line[3]),
-                oper_status=str(line[4]),
-                in_octets=interfaces.saveint(line[5]),
-                in_ucast=interfaces.saveint(line[6]),
-                in_mcast=interfaces.saveint(line[7]),
-                in_bcast=0,
-                in_discards=interfaces.saveint(line[8]),
-                in_errors=interfaces.saveint(line[9]),
-                out_octets=interfaces.saveint(line[10]),
-                out_ucast=interfaces.saveint(line[11]),
-                out_mcast=0,
-                out_bcast=interfaces.saveint(line[12]),
-                out_discards=interfaces.saveint(line[13]),
-                out_errors=interfaces.saveint(line[14]),
-                out_qlen=interfaces.saveint(line[15]),
-                alias=str(line[1]),
-                phys_address=line[16],
-            )) for line in string_table[0] if interfaces.saveint(line[0]) > 0
+        interfaces.Interface(
+            index=str(line[0]),
+            descr=str(line[1]),
+            type=str(line[2]),
+            speed=interfaces.saveint(line[3]),
+            oper_status=str(line[4]),
+            in_octets=interfaces.saveint(line[5]),
+            in_ucast=interfaces.saveint(line[6]),
+            in_mcast=interfaces.saveint(line[7]),
+            in_bcast=0,
+            in_discards=interfaces.saveint(line[8]),
+            in_errors=interfaces.saveint(line[9]),
+            out_octets=interfaces.saveint(line[10]),
+            out_ucast=interfaces.saveint(line[11]),
+            out_mcast=0,
+            out_bcast=interfaces.saveint(line[12]),
+            out_discards=interfaces.saveint(line[13]),
+            out_errors=interfaces.saveint(line[14]),
+            out_qlen=interfaces.saveint(line[15]),
+            alias=str(line[1]),
+            phys_address=line[16],
+        ) for line in string_table[0] if interfaces.saveint(line[0]) > 0
     ]
 
 
-# NOTE: THIS AN API VIOLATION, DO NOT REPLICATE THIS
-# ==================================================================================================
-from cmk.utils.type_defs import RuleSetName
-from cmk.snmplib.type_defs import SNMPDetectSpec, SNMPRuleDependentDetectSpec
-from cmk.base.api.agent_based.register import add_section_plugin, add_discovery_ruleset
-from cmk.base.api.agent_based.register.section_plugins import create_snmp_section_plugin
-
-
-def compute_detect_spec_if(if_disable_if64_hosts: Sequence[bool]) -> SNMPDetectSpec:
-    """
-    >>> compute_detect_spec_if([])
-    [[('.1.3.6.1.2.1.31.1.1.1.6.*', '.*', False)]]
-    >>> compute_detect_spec_if([True])
-    [[('.1.3.6.1.2.1.1.2.0', '.*', True)]]
-    """
-    if if64.is_disabled(if_disable_if64_hosts):
-        return always_detect
-    return not_exists(if64.OID_ifHCInOctets)
-
-
-section_plugin = create_snmp_section_plugin(
+register.snmp_section(
     name="if",
     parse_function=parse_if,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
             oids=[
@@ -101,17 +75,8 @@ section_plugin = create_snmp_section_plugin(
             ],
         ),
     ],
-    detect_spec=never_detect,  # does not matter what we put here
-    rule_dependent_detect_spec=SNMPRuleDependentDetectSpec(
-        [RuleSetName('if_disable_if64_hosts')],
-        compute_detect_spec_if,
-    ),
+    detect=exists(".1.3.6.1.2.1.2.2.1.*"),
 )
-add_section_plugin(section_plugin)
-assert section_plugin.rule_dependent_detect_spec
-for discovery_ruleset in section_plugin.rule_dependent_detect_spec.rulesets:
-    add_discovery_ruleset(discovery_ruleset)
-# ==================================================================================================
 
 register.check_plugin(
     name="if",
@@ -122,6 +87,6 @@ register.check_plugin(
     discovery_function=interfaces.discover_interfaces,
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.check_if64,
+    check_function=if64.generic_check_if64,
     cluster_check_function=interfaces.cluster_check,
 )

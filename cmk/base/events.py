@@ -40,7 +40,6 @@ EventContext = Dict[str, Any]  # TODO Improve this
 Matcher = Callable[[EventRule, EventContext], Optional[str]]
 
 logger = logging.getLogger('cmk.base.events')
-logger.addHandler(logging.NullHandler())
 
 
 def event_keepalive(event_function: Callable,
@@ -280,7 +279,7 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
         raw_context.setdefault("OMD_ROOT", cmk.utils.paths.omd_root)
         raw_context.setdefault("OMD_SITE", cmk_version.omd_site())
 
-        # The Check_MK Micro Core sends the MICROTIME and no other time stamps. We add
+        # The Checkmk Micro Core sends the MICROTIME and no other time stamps. We add
         # a few Nagios-like variants in order to be compatible
         if "MICROTIME" in raw_context:
             microtime = int(raw_context["MICROTIME"])

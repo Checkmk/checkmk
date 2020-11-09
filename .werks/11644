@@ -1,0 +1,13 @@
+Title: PySNMP: Cannot convert 'NoneType' object to bytes
+Class: fix
+Compatible: compat
+Component: pysnmp
+Date: 1604930590
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The context_name interface uses None as value but PySNMP
+can't handle the context_name None. As default value it needs
+"" (empty string).

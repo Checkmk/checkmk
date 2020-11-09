@@ -6,7 +6,7 @@ Date: 1588681854
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In rare cases the simultaion of hosts using stored SNMP walks did not find any data.
 

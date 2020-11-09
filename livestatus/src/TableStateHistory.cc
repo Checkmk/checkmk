@@ -8,7 +8,6 @@
 #include <chrono>
 #include <cstdint>
 #include <ctime>
-#include <memory>
 #include <mutex>
 #include <optional>
 #include <ostream>
@@ -76,7 +75,7 @@ std::string getCustomVariable(const MonitoringCore *mc,
 
 TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
-    Column::Offsets offsets{};
+    ColumnOffsets offsets{};
     addColumn(std::make_unique<TimeLambdaColumn<HostServiceState>>(
         "time", "Time of the log event (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) {
@@ -196,10 +195,12 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         }));
 
     // join host and service tables
-    TableHosts::addColumns(this, "current_host_",
-                           DANGEROUS_OFFSETOF(HostServiceState, _host), -1);
-    TableServices::addColumns(this, "current_service_",
-                              DANGEROUS_OFFSETOF(HostServiceState, _service),
+    TableHosts::addColumns(this, "current_host_", offsets.add([](Row r) {
+        return r.rawData<HostServiceState>()->_host;
+    }));
+    TableServices::addColumns(this, "current_service_", offsets.add([](Row r) {
+        return r.rawData<HostServiceState>()->_service;
+    }),
                               false /* no hosts table */);
 }
 

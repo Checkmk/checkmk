@@ -16,7 +16,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Metric, Result, Service, state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State as state
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
@@ -96,12 +96,13 @@ WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
 
 PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     {
-        "default_params": {},
+        "default_params": {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         "descr": "smss",
         "match": "~smss.exe"
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "cpulevels": (90.0, 98.0),
             "handle_count": (1000, 2000),
             "levels": (1, 1, 99999, 99999),
@@ -116,6 +117,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "process_info": "text"
         },
         "match": "~.*(fire)fox",
@@ -124,6 +126,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "process_info": "text"
         },
         "match": "~.*(fire)fox",
@@ -147,6 +150,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "max_age": (3600, 7200),
             "resident_levels_perc": (25.0, 50.0),
             "single_cpulevels": (90.0, 98.0),
@@ -157,17 +161,18 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
         "user": "root"
     },
     {
-        "default_params": {},
+        "default_params": {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         "descr": "sshd",
         "match": "~.*sshd"
     },
     {
-        'default_params': {},
+        'default_params': {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         'descr': 'PS counter',
         'user': 'zombie',
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "process_info": "text"
         },
         "match": r"~/omd/sites/(\w+)/lib/cmc/checkhelper",
@@ -176,6 +181,7 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     },
     {
         "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified",
             "process_info": "text"
         },
         "match": r"~/omd/sites/\w+/lib/cmc/checkhelper",
@@ -184,47 +190,6 @@ PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     },
     {},
 ]
-
-@pytest.mark.parametrize("params, result", [
-    (("sshd", 1, 1, 99, 99), {
-        "process": "sshd",
-        "user": None,
-        "levels": (1, 1, 99, 99),
-        'cpu_rescale_max': None,
-    }),
-    (("sshd", "root", 2, 2, 5, 5), {
-        "process": "sshd",
-        "user": "root",
-        "levels": (2, 2, 5, 5),
-        'cpu_rescale_max': None,
-    }),
-    ({
-        "user": "foo",
-        "process": "/usr/bin/foo",
-        "warnmin": 1,
-        "okmin": 1,
-        "okmax": 3,
-        "warnmax": 3,
-    }, {
-        "user": "foo",
-        "process": "/usr/bin/foo",
-        "levels": (1, 1, 3, 3),
-        'cpu_rescale_max': None,
-    }),
-    ({
-        "user": "foo",
-        "process": "/usr/bin/foo",
-        "levels": (1, 1, 3, 3),
-        'cpu_rescale_max': True,
-    }, {
-        "user": "foo",
-        "process": "/usr/bin/foo",
-        "levels": (1, 1, 3, 3),
-        'cpu_rescale_max': True,
-    }),
-])
-def test_cleanup_params(params, result):
-    assert ps_utils.ps_cleanup_params(params) == result
 
 
 PS_DISCOVERED_ITEMS = [
@@ -245,7 +210,7 @@ PS_DISCOVERED_ITEMS = [
         "process": "~.*(fire)fox",
         "process_info": "text",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'match_groups': ('fire',),
         'cgroup': (None, False),
     }),
@@ -253,7 +218,7 @@ PS_DISCOVERED_ITEMS = [
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
         "process_info": "text",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'match_groups': ('heute',),
         'cgroup': (None, False),
     }),
@@ -262,26 +227,26 @@ PS_DISCOVERED_ITEMS = [
         "process_info": "text",
         "user": None,
         'match_groups': (),
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'cgroup': (None, False),
     }),
     Service(item="Checkhelpers twelve", parameters={
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
         "process_info": "text",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'match_groups': ('twelve',),
         'cgroup': (None, False),
     }),
     Service(item="sshd", parameters={
         "process": "~.*sshd",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         "match_groups": (),
         'cgroup': (None, False),
     }),
     Service(item="PS counter", parameters={
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         'process': None,
         'user': 'zombie',
         "match_groups": (),
@@ -298,14 +263,14 @@ PS_DISCOVERED_ITEMS = [
         "single_cpulevels": (90.0, 98.0),
         "user": None,
         "virtual_levels": (1073741824000, 2147483648000),
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         "match_groups": (),
         'cgroup': (None, False),
     }),
     Service(item="smss", parameters={
         "process": "~smss.exe",
         "user": None,
-        'cpu_rescale_max': None,
+        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
         "match_groups": (),
         'cgroup': (None, False),
     }),
@@ -319,7 +284,8 @@ def test_inventory_common():
         ps_section.parse_ps(info),
         None,
         None,
-    )}.values(), key=lambda s: s.item) == sorted(PS_DISCOVERED_ITEMS, key=lambda s: s.item)  # type: ignore[attr-defined]
+    )}.values(), key=lambda s: s.item or "") == sorted(PS_DISCOVERED_ITEMS, key=lambda s: s.item or
+            "")  # type: ignore[attr-defined]
 
 
 CheckResult = tuple
@@ -333,17 +299,17 @@ check_results = [
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
         Result(
             state=state.WARN,
-            summary="virtual: 1.00 GiB (warn/crit at 1.00 GiB/2.00 GiB)",
+            notice="virtual: 1.00 GiB (warn/crit at 1.00 GiB/2.00 GiB)",
         ),
         Metric("vsz", 1050360, levels=(1073741824, 2147483648)),
         Result(
             state=state.OK,
-            summary="physical: 296 MiB",
+            notice="physical: 296 MiB",
         ),
         Metric("rss", 303252, levels=(1073741824, 2147483648)),
         Result(
             state=state.WARN,
-            summary="Percentage of total RAM: 28.9% (warn/crit at 25.0%/50.0%)",
+            notice="Percentage of total RAM: 28.9% (warn/crit at 25.0%/50.0%)",
         ),
         Metric("pcpu", 0.0),
         Metric("pcpuavg", 0.0, boundaries=(0, 15)),
@@ -353,11 +319,11 @@ check_results = [
         ),
         Result(
             state=state.OK,
-            summary="Running for: 1 day 3 hours",
+            notice="Running for: 1 day 3 hours",
         ),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "<table><tr><th>name</th><th>user</th><th>virtual size</th>"
                 "<th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr>"
                 "<tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td>"
@@ -373,20 +339,20 @@ check_results = [
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
         Result(
             state=state.OK,
-            summary="virtual: 2.79 GiB",
+            notice="virtual: 2.79 GiB",
         ),
         Metric("vsz", 2924232),
         Result(
             state=state.OK,
-            summary="physical: 461 MiB",
+            notice="physical: 461 MiB",
         ),
         Metric("rss", 472252),
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Running for: 7 hours 24 minutes"),
+        Result(state=state.OK, notice="Running for: 7 hours 24 minutes"),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "name /usr/lib/firefox/firefox, user on, virtual size 2924232kB,"
                 " resident size 472252kB, creation time Oct 24 2018 04:38:07, pid 7912,"
                 " cpu usage 0.0%\r\n"
@@ -396,16 +362,16 @@ check_results = [
     [
         Result(state=state.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 10.9 MiB"),
+        Result(state=state.OK, notice="virtual: 10.9 MiB"),
         Metric("vsz", 11180),
-        Result(state=state.OK, summary="physical: 1.12 MiB"),
+        Result(state=state.OK, notice="physical: 1.12 MiB"),
         Metric("rss", 1144),
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Running for: 3 hours 54 minutes"),
+        Result(state=state.OK, notice="Running for: 3 hours 54 minutes"),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB,"
                 " resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884,"
                 " cpu usage 0.0%\r\n"
@@ -415,17 +381,17 @@ check_results = [
     [
         Result(state=state.OK, summary="Processes: 2"),
         Metric("count", 2, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 21.8 MiB"),
+        Result(state=state.OK, notice="virtual: 21.8 MiB"),
         Metric("vsz", 22360),
-        Result(state=state.OK, summary="physical: 2.33 MiB"),
+        Result(state=state.OK, notice="physical: 2.33 MiB"),
         Metric("rss", 2388),
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Youngest running for: 2 hours 37 minutes"),
-        Result(state=state.OK, summary="Oldest running for: 3 hours 54 minutes"),
+        Result(state=state.OK, notice="Youngest running for: 2 hours 37 minutes"),
+        Result(state=state.OK, notice="Oldest running for: 3 hours 54 minutes"),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB,"
                 " resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884,"
                 " cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve,"
@@ -437,16 +403,16 @@ check_results = [
     [
         Result(state=state.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 10.9 MiB"),
+        Result(state=state.OK, notice="virtual: 10.9 MiB"),
         Metric("vsz", 11180),
-        Result(state=state.OK, summary="physical: 1.21 MiB"),
+        Result(state=state.OK, notice="physical: 1.21 MiB"),
         Metric("rss", 1244),
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Running for: 2 hours 37 minutes"),
+        Result(state=state.OK, notice="Running for: 2 hours 37 minutes"),
         Result(
             state=state.OK,
-            details=(
+            notice=(
                 "name /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB,"
                 " resident size 1244kB, creation time Oct 24 2018 09:24:43, pid 30136,"
                 " cpu usage 0.0%\r\n"
@@ -456,55 +422,55 @@ check_results = [
     [
         Result(state=state.OK, summary="Processes: 2"),
         Metric("count", 2, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 20.7 MiB"),
+        Result(state=state.OK, notice="virtual: 20.7 MiB"),
         Metric("vsz", 21232),
-        Result(state=state.OK, summary="physical: 18.6 MiB"),
+        Result(state=state.OK, notice="physical: 18.6 MiB"),
         Metric("rss", 19052),
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Running for: 52 days 4 hours"),
+        Result(state=state.OK, notice="Running for: 52 days 4 hours"),
     ],
     [
         Result(state=state.OK, summary='Processes: 1'),
         Metric('count', 1, levels=(100000, 100000), boundaries=(0, None)),
         Metric('pcpu', 0.0),
         Result(state=state.OK, summary='CPU: 0%'),
-        Result(state=state.OK, summary='Running for: 0 seconds'),
+        Result(state=state.OK, notice='Running for: 0 seconds'),
     ],
     [
         Result(state=state.OK, summary="Processes: 3"),
         Metric("count", 3, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 136 MiB"),
+        Result(state=state.OK, notice="virtual: 136 MiB"),
         Metric("vsz", 139532, levels=(1073741824000, 2147483648000)),
-        Result(state=state.OK, summary="physical: 38.6 MiB"),
+        Result(state=state.OK, notice="physical: 38.6 MiB"),
         Metric("rss", 39516, levels=(104857600, 209715200)),
         Result(
             state=state.UNKNOWN,
-            summary="Percentual RAM levels configured, but total RAM is unknown",
+            notice="Percentual RAM levels configured, but total RAM is unknown",
         ),
         Metric("pcpu", 0.0, levels=(90.0, 98.0)),
         Result(state=state.OK, summary="CPU: 0%"),
         Result(
             state=state.OK,
-            details='svchost.exe with PID 600 CPU: 0%',
+            notice='svchost.exe with PID 600 CPU: 0%',
         ),
         Result(
             state=state.OK,
-            details='svchost.exe with PID 676 CPU: 0%',
+            notice='svchost.exe with PID 676 CPU: 0%',
         ),
         Result(
             state=state.OK,
-            details='svchost.exe with PID 764 CPU: 0%',
+            notice='svchost.exe with PID 764 CPU: 0%',
         ),
         Result(
             state=state.WARN,
-            summary="Process handles: 1204 (warn/crit at 1000/2000)",
+            notice="Process handles: 1204 (warn/crit at 1000/2000)",
         ),
         Metric("process_handles", 1204, levels=(1000, 2000)),
-        Result(state=state.OK, summary="Youngest running for: 12 seconds"),
+        Result(state=state.OK, notice="Youngest running for: 12 seconds"),
         Result(
             state=state.WARN,
-            summary=(
+            notice=(
                 "Oldest running for: 1 hour 11 minutes"
                 " (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)"
             ),
@@ -513,13 +479,13 @@ check_results = [
     [
         Result(state=state.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 4.47 MiB"),
+        Result(state=state.OK, notice="virtual: 4.47 MiB"),
         Metric("vsz", 4576),
-        Result(state=state.OK, summary="physical: 316 KiB"),
+        Result(state=state.OK, notice="physical: 316 KiB"),
         Metric("rss", 316),
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
-        Result(state=state.OK, summary="Process handles: 53"),
+        Result(state=state.OK, notice="Process handles: 53"),
         Metric("process_handles", 53),
     ],
 ]
@@ -616,13 +582,13 @@ def test_check_ps_common_cpu(data):
     assert output[:6] == [
         Result(state=state.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 105 KiB"),
+        Result(state=state.OK, notice="virtual: 105 KiB"),
         Metric("vsz", 105),
-        Result(state=state.OK, summary="physical: 30.0 KiB"),
+        Result(state=state.OK, notice="physical: 30.0 KiB"),
         Metric("rss", 30),
     ]
     assert output[8:] == [
-        Result(state=state.OK, summary="Running for: 3 hours 59 minutes"),
+        Result(state=state.OK, notice="Running for: 3 hours 59 minutes"),
     ]
 
 
@@ -718,11 +684,12 @@ def test_subset_patterns():
     assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered}  # type: ignore[attr-defined]
 
     for service, count in zip(discovered, [1, 2, 1]):
+        assert isinstance(service.item, str)
         with value_store.context(CheckPluginName("ps"), "unit-test"):
             output = list(ps_utils.check_ps_common(
                 label="Processes",
                 item=service.item,
-                params=service.parameters,
+                params=service.parameters,  # type: ignore[arg-type]
                 process_lines=[
                     (None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
                 cpu_cores=1,
@@ -776,19 +743,19 @@ def test_cpu_util_single_process_levels(cpu_cores):
     reference = [
         Result(state=state.OK, summary="Processes: 4"),
         Metric("count", 4, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=state.OK, summary="virtual: 13.0 GiB"),
+        Result(state=state.OK, notice="virtual: 13.0 GiB"),
         Metric("vsz", 13631104),
-        Result(state=state.OK, summary="physical: 1.06 GiB"),
+        Result(state=state.OK, notice="physical: 1.06 GiB"),
         Metric("rss", 1106568),
         Metric('pcpu', cpu_util),
         Result(state=state.OK, summary="CPU: %s" % cpu_util_s),
-        Result(state=state.OK, details='firefox with PID 25576 CPU: 0%'),
-        Result(state=state.OK, details='firefox with PID 25664 CPU: 0%'),
-        Result(state=state.OK, details='firefox with PID 25758 CPU: 0%'),
-        Result(state=state.OK, details='firefox with PID 25898 CPU: 40.0%'),
-        Result(state=state.OK, summary='Youngest running for: 6 minutes 57 seconds'),
-        Result(state=state.OK, summary='Oldest running for: 26 minutes 58 seconds'),
-        Result(state=state.OK, details="\r\n".join([
+        Result(state=state.OK, notice='firefox with PID 25576 CPU: 0%'),
+        Result(state=state.OK, notice='firefox with PID 25664 CPU: 0%'),
+        Result(state=state.OK, notice='firefox with PID 25758 CPU: 0%'),
+        Result(state=state.OK, notice='firefox with PID 25898 CPU: 40.0%'),
+        Result(state=state.OK, notice='Youngest running for: 6 minutes 57 seconds'),
+        Result(state=state.OK, notice='Oldest running for: 26 minutes 58 seconds'),
+        Result(state=state.OK, notice="\r\n".join([
             'name firefox, user on, virtual size 2275004kB, resident size 434008kB,'
             ' creation time Jan 01 1970 00:34:02, pid 25576, cpu usage 0.0%',
             'name firefox, user on, virtual size 1869920kB, resident size 359836kB,'
@@ -802,8 +769,8 @@ def test_cpu_util_single_process_levels(cpu_cores):
     ]
 
     if cpu_util > params['single_cpulevels'][1]:
-        reference[11] = Result(state=state.CRIT, summary=single_msg)
+        reference[11] = Result(state=state.CRIT, notice=single_msg)
     elif cpu_util > params['single_cpulevels'][0]:
-        reference[11] = Result(state=state.WARN, summary=single_msg)
+        reference[11] = Result(state=state.WARN, notice=single_msg)
 
     assert output == reference

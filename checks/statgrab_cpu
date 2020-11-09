@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_statgrab_cpu(info):
     if len(info) > 1:
@@ -31,7 +34,7 @@ def check_statgrab_cpu(_no_item, params, info):
         elif var == 'iowait':
             iowait = int(value)
 
-    values = cpu_info(['cpu', user, nice, system, idle, iowait])
+    values = CPUInfo('cpu', user, nice, system, idle, iowait)
 
     return check_cpu_util_unix(values, params)
 
@@ -41,6 +44,5 @@ check_info["statgrab_cpu"] = {
     'inventory_function': inventory_statgrab_cpu,
     'service_description': 'CPU utilization',
     'has_perfdata': True,
-    'includes': ['cpu_util.include', 'transforms.include'],
     'group': 'cpu_iowait',
 }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 364 395" style="enable-background:new 0 0 364 395;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:none;stroke:#ED3B3B;stroke-width:20.16;}
+	.st1{fill:#B01213;}
+	.st2{fill:#ED3B3B;}
+	.st3{fill:#B01214;stroke:#045873;stroke-width:20.16;stroke-linecap:round;stroke-linejoin:round;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-526.000000, -530.000000)">
+		<g id="robot_red" transform="translate(526.000000, 541.000000)">
+			<path id="Path" class="st0" d="M181.6,80.6V29.7c0-16.4,13.3-29.7,29.7-29.7h1c16.4,0,29.7,13.3,29.7,29.7l0,0"/>
+			<path id="Path_1_" class="st1" d="M299.3,171.2h22.1c23,0,41.7,18.7,41.7,41.7v57.8c0,23-18.7,41.7-41.7,41.7h-22.1V171.2z"/>
+			<path id="Path_2_" class="st1" d="M63.9,171.2H41.8c-23,0-41.7,18.7-41.7,41.7v57.8c0,23,18.7,41.7,41.7,41.7h22.1V171.2
+				L63.9,171.2z"/>
+			<path id="Path_3_" class="st1" d="M195.4,60.5h-27.6c-25.8,0-46.7,20.9-46.7,46.7c0,7.6,6.2,13.8,13.8,13.8h93.4
+				c7.6,0,13.8-6.2,13.8-13.8C242.1,81.4,221.1,60.5,195.4,60.5z"/>
+			<path id="Path_4_" class="st2" d="M272.1,90.7H91.1c-33.5,0-60.7,27.1-60.7,60.4v171.5c0,33.3,27.2,60.4,60.7,60.4h181.1
+				c33.5,0,60.7-27.1,60.7-60.4V151.1C332.8,117.8,305.6,90.7,272.1,90.7z"/>
+			
+				<ellipse id="Oval" transform="matrix(0.2298 -0.9732 0.9732 0.2298 147.22 266.6605)" class="st2" cx="242.1" cy="40.3" rx="20.2" ry="20.2"/>
+			
+				<ellipse id="Oval_1_" transform="matrix(0.1602 -0.9871 0.9871 0.1602 12.7716 418.2112)" class="st3" cx="252.2" cy="201.6" rx="30.2" ry="30.2"/>
+			<circle id="Oval_2_" class="st3" cx="117.8" cy="201.6" r="30.2"/>
+		</g>
+	</g>
+</g>
+</svg>

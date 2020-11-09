@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # <<<ibm_svc_mdisk:sep(58)>>>
 # 0:stp5_300G_01-01:online:managed:16:stp5_300G_01:1.1TB:0000000000000000:BLUBB5:600a0b80006e1dbc0000f6f9513026a000000000000000000000000000000000:generic_hdd
@@ -77,7 +78,6 @@ check_info["ibm_svc_mdisk"] = {
     "check_function": check_ibm_svc_mdisk,
     "inventory_function": inventory_ibm_svc_mdisk,
     "service_description": "MDisk %s",
-    "includes": ['ibm_svc.include'],
     "group": "ibm_svc_mdisk",
     "default_levels_variable": "ibm_svc_mdisk_default_levels",
 }

@@ -6,6 +6,51 @@
 import json
 
 
+def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/clusters",
+        params='{"host_name": "bazfoo", "folder": "/", "nodes": ["foobar"]}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/bazfoo",
+        status=200,
+    )
+
+    wsgi_app.call_method(
+        'put',
+        base + "/objects/host_config/bazfoo/properties/nodes",
+        params='{"nodes": []}',
+        status=200,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/bazfoo",
+        status=200,
+    )
+    assert resp.json['extensions']['cluster_nodes'] == []
+
+
 def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
@@ -15,7 +60,7 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     resp = wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "root"}',
+        params='{"host_name": "foobar", "folder": "/"}',
         status=200,
         content_type='application/json',
     )
@@ -72,14 +117,14 @@ def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_
             "entries": [
                 {
                     "host_name": "foobar",
-                    "folder": "root",
+                    "folder": "/",
                     "attributes": {
                         "ipaddress": "127.0.0.2"
                     }
                 },
                 {
                     "host_name": "sample",
-                    "folder": "root",
+                    "folder": "/",
                     "attributes": {
                         "ipaddress": "127.0.0.2"
                     }

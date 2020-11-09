@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest  # type: ignore[import]
 
+from pathlib import Path
+
 from cmk.utils.type_defs import InventoryPluginName
 
-from cmk.base.api.agent_based.type_defs import InventoryPlugin
 from cmk.base.api.agent_based.inventory_classes import Attributes
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -20,13 +21,18 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.fixture(scope="module", name="inv_info")
-def _get_inv_info():
-    inventory_plugins.load_plugins(
-        check_api.get_check_api_context,
-        inventory.get_inventory_context,
-    )
-    assert len(inventory_plugins.inv_info) > 98  # sanity check
+def _get_inv_info(config_load_all_checks):  # no idea why usefixtures will not work.
+    assert len(inventory_plugins.inv_info) > 90  # sanity check
     return inventory_plugins.inv_info.copy()
+
+
+def test_no_new_legacy_tests():
+    this_dir = Path(__file__).parent
+
+    assert [p.name for p in this_dir.iterdir() if p.name != "__pycache__"] == [
+        "test_generic_legacy_conversion_inv.py",
+    ], ("Please do not put new tests in %s. They belong to the tests for agent_based plugins." %
+        this_dir)
 
 
 def test_create_section_plugin_from_legacy(inv_info):

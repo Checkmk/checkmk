@@ -28,24 +28,23 @@ from cmk.gui.plugins.metrics import (
 
 for nimble_op_ty in ["read", "write"]:
     for nimble_key, nimble_title, nimble_color in [
-        ("total", "Total", "11/a"),
-        ("0.1", "0-0.1 ms", "12/a"),
-        ("0.2", "0.1-0.2 ms", "13/a"),
-        ("0.5", "0.2-0.5 ms", "14/a"),
-        ("1", "0.5-1.0 ms", "15/a"),
-        ("2", "1-2 ms", "16/a"),
-        ("5", "2-5 ms", "21/a"),
+        ("0.1", "0-0.1 ms", "32/a"),
+        ("0.2", "0.1-0.2 ms", "31/a"),
+        ("0.5", "0.2-0.5 ms", "26/a"),
+        ("1", "0.5-1.0 ms", "25/a"),
+        ("2", "1-2 ms", "24/a"),
+        ("5", "2-5 ms", "23/a"),
         ("10", "5-10 ms", "22/a"),
-        ("20", "10-20 ms", "23/a"),
-        ("50", "20-50 ms", "24/a"),
-        ("100", "50-100 ms", "25/a"),
-        ("200", "100-200 ms", "26/a"),
-        ("500", "200-500 ms", "31/a"),
-        ("1000", "500+ ms", "32/a"),
+        ("20", "10-20 ms", "21/a"),
+        ("50", "20-50 ms", "16/a"),
+        ("100", "50-100 ms", "15/a"),
+        ("200", "100-200 ms", "14/a"),
+        ("500", "200-500 ms", "13/a"),
+        ("1000", "500+ ms", "12/a"),
     ]:
         metric_info["nimble_%s_latency_%s" % (nimble_op_ty, nimble_key.replace(".", ""))] = {
             "title": _("%s latency %s" % (nimble_op_ty.title(), nimble_title)),
-            "unit": "s",
+            "unit": "%",
             "color": nimble_color,
         }
 
@@ -62,9 +61,8 @@ for nimble_op_ty in ["read", "write"]:
 #   '----------------------------------------------------------------------'
 
 graph_info["read_latency"] = {
-    "title": _("Read latency"),
+    "title": _("Percentage of Read I/O Operations per Latency Range"),
     "metrics": [
-        ("nimble_read_latency_total", "area"),
         ("nimble_read_latency_01", "line"),
         ("nimble_read_latency_02", "line"),
         ("nimble_read_latency_05", "line"),
@@ -82,9 +80,8 @@ graph_info["read_latency"] = {
 }
 
 graph_info["write_latency"] = {
-    "title": _("Write latency"),
+    "title": _("Percentage of Write I/O Operations per Latency Range"),
     "metrics": [
-        ("nimble_write_latency_total", "area"),
         ("nimble_write_latency_01", "line"),
         ("nimble_write_latency_02", "line"),
         ("nimble_write_latency_05", "line"),

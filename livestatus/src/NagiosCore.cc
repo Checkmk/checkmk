@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
-#include <filesystem>
 #include <memory>
 #include <ostream>
 #include <utility>
@@ -157,27 +156,39 @@ bool NagiosCore::mkeventdEnabled() {
 std::filesystem::path NagiosCore::mkeventdSocketPath() const {
     return _paths._mkeventd_socket;
 }
+
 std::filesystem::path NagiosCore::mkLogwatchPath() const {
     return _paths._mk_logwatch;
 }
+
 std::filesystem::path NagiosCore::mkInventoryPath() const {
     return _paths._mk_inventory;
 }
+
 std::filesystem::path NagiosCore::structuredStatusPath() const {
     return _paths._structured_status;
 }
+
 std::filesystem::path NagiosCore::crashReportPath() const {
     return _paths._crash_reports_path;
 }
+
+std::filesystem::path NagiosCore::licenseUsageHistoryPath() const {
+    return _paths._license_usage_history_path;
+}
+
 std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
+
 std::filesystem::path NagiosCore::historyFilePath() const {
     extern char *log_file;
     return log_file;
 }
+
 std::filesystem::path NagiosCore::logArchivePath() const {
     extern char *log_archive_path;
     return log_archive_path;
 }
+
 std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
 }

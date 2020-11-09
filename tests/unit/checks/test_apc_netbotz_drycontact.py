@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 
 @pytest.mark.parametrize("parsed, expected", [({
@@ -21,9 +22,10 @@ import pytest  # type: ignore[import]
         'state': ('Closed high mem', 2),
     }
 }, [('Pumpe 0', {}), ('Pumpe 1', {}), ('Pumpe 2', {})])])
-def test_apc_netbotz_drycontact_inventory(check_manager, parsed, expected):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_apc_netbotz_drycontact_inventory(parsed, expected):
 
-    check = check_manager.get_check("apc_netbotz_drycontact")
+    check = Check("apc_netbotz_drycontact")
     assert list(check.run_discovery(parsed)) == expected
 
 
@@ -56,9 +58,10 @@ def test_apc_netbotz_drycontact_inventory(check_manager, parsed, expected):
              'state': ('Disabled', 1)
          }
      }), ([], {})])
-def test_apc_netbotz_drycontact_parse(check_manager, info, expected):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_apc_netbotz_drycontact_parse(info, expected):
 
-    check = check_manager.get_check("apc_netbotz_drycontact")
+    check = Check("apc_netbotz_drycontact")
     assert check.run_parse(info) == expected
 
 
@@ -99,7 +102,8 @@ def test_apc_netbotz_drycontact_parse(check_manager, info, expected):
                                   'state': ('unknown[5]', 3)
                               }
                           }, (3, 'State: unknown[5]'))])
-def test_apc_netbotz_drycontact_check(check_manager, item, params, data, expected):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_apc_netbotz_drycontact_check(item, params, data, expected):
 
-    check = check_manager.get_check("apc_netbotz_drycontact")
+    check = Check("apc_netbotz_drycontact")
     assert check.run_check(item, params, data) == expected

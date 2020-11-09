@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.quanta import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # .1.3.6.1.4.1.7244.1.2.1.3.4.1.1.1 1
 # .1.3.6.1.4.1.7244.1.2.1.3.4.1.1.2 2
 # ...
@@ -50,7 +52,6 @@ check_info['quanta_temperature'] = {
         'parse_function': parse_quanta,
         'check_function': check_quanta_temperature,
         'service_description': 'Temperature %s',
-        'includes': ['quanta.include', 'temperature.include' ],
         'group': 'temperature',
         'has_perfdata': True,
         # these is no good oid identifier for quanta devices, thats why the first oid is used here

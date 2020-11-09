@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.license import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # <<<ibm_svc_license:sep(58)>>>
 # used_flash:0.00
@@ -58,5 +59,4 @@ check_info["ibm_svc_license"] = {
     "service_description": "License %s",
     "group": "ibmsvc_licenses",
     "has_perfdata": True,
-    "includes": ["license.include"]
 }

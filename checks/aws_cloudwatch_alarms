@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 aws_cloudwatch_alarm_map = {
     'no_alarms': (0, 'no alarms'),
     'ok': (0, 'OK'),
@@ -38,5 +39,4 @@ check_info['aws_cloudwatch_alarms'] = {
     'inventory_function': discover_single,
     'check_function': check_aws_cloudwatch_alarms,
     'service_description': 'AWS/CloudWatch Alarms',
-    'includes': ['aws.include'],
 }

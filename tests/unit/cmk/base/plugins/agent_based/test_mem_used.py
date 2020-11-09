@@ -8,7 +8,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.utils import memory
 from cmk.base.plugins.agent_based.mem_used import check_mem_used
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Result, Metric, state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Metric, State as state
 from cmk.base.api.agent_based import value_store
 
 import pytest  # type: ignore[import]

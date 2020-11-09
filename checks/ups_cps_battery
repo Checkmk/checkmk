@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_ups_cps_battery(info):
     parsed = {}
@@ -46,7 +48,6 @@ check_info["ups_cps_battery.temp"] = {
     "check_function": check_ups_cps_battery_temp,
     "service_description": "Temperature %s",
     "group": "temperature",
-    "includes": ["temperature.include"],
 }
 
 #.

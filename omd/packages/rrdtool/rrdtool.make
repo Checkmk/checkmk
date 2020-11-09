@@ -112,6 +112,9 @@ $(RRDTOOL_INSTALL_BINDINGS): $(RRDTOOL_BUILD_BINDINGS) $(PERL_MODULES_INTERMEDIA
 	export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(RRDTOOL_BUILD_DIR)/bindings install
+# Fixup some library permissions. They need to be owner writable to make
+# dh_strip command of deb packaging procedure work
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5 -type f -name RRDs.so -exec chmod u+w {} \;
 # clean up perl man pages which end up in wrong location
 # clean up systemd init files. Note that on RPM based distros this
 # seem to be located in /usr/lib and on debian /lib.

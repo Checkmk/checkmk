@@ -66,7 +66,6 @@ except ImportError:
 from cmk.utils.type_defs import HostName
 
 logger = logging.getLogger('cmk.base.notify')
-logger.addHandler(logging.NullHandler())
 
 _log_to_stdout = False
 notify_mode = "notify"
@@ -346,7 +345,7 @@ def locally_deliver_raw_context(raw_context: EventContext,
         # check-mk-notify.
         # We do we not simply check the config variable enable_rulebased_notifications?
         # -> Because the core needs are restart in order to reflect this while the
-        #    notification mode of Check_MK not. There are thus situations where the
+        #    notification mode of Checkmk not. There are thus situations where the
         #    setting of the core is different from our global variable. The core must
         #    have precedence in this situation!
         if not contactname or contactname == "check-mk-notify":
@@ -358,7 +357,7 @@ def locally_deliver_raw_context(raw_context: EventContext,
             return None  # Analysis only possible when rule based notifications are enabled
 
         # Now fetch all configuration about that contact (it needs to be configure via
-        # Check_MK for that purpose). If we do not know that contact then we cannot use
+        # Checkmk for that purpose). If we do not know that contact then we cannot use
         # flexible notifications even if they are enabled.
         # TODO find a common place for type hint 'Contact'/'Contacts'
         contact = cast(Contact, config.contacts.get(contactname))
@@ -802,6 +801,8 @@ def rbn_match_rule(rule: EventRule, context: EventContext) -> Optional[str]:
         rbn_match_host_event,
         rbn_match_service_event,
         rbn_match_notification_comment,
+        rbn_match_hostlabels,
+        rbn_match_servicelabels,
         rbn_match_event_console,
     ], rule, context)
 
@@ -1000,6 +1001,35 @@ def rbn_match_notification_comment(rule: EventRule, context: EventContext) -> Op
         if not r.match(notification_comment):
             return "The beginning of the notification comment '%s' is not matched by the regex '%s'" % (
                 notification_comment, rule["match_notification_comment"])
+    return None
+
+
+def rbn_match_hostlabels(rule: EventRule, context: EventContext) -> Optional[str]:
+    if "match_hostlabels" in rule:
+        return _rbn_handle_labels(rule, context, "host")
+
+    return None
+
+
+def rbn_match_servicelabels(rule: EventRule, context: EventContext) -> Optional[str]:
+    if "match_servicelabels" in rule:
+        return _rbn_handle_labels(rule, context, "service")
+
+    return None
+
+
+def _rbn_handle_labels(rule: EventRule, context: EventContext, what: str) -> Optional[str]:
+    labels: Dict[str, Any] = {}
+    context_str = "%sLABEL" % what.upper()
+    labels = {
+        variable.replace("%s_" % context_str, ""): value
+        for variable, value in context.items()
+        if variable.startswith(context_str)
+    }
+
+    if not set(labels.items()).issuperset(set(rule["match_%slabels" % what].items())):
+        return "The %s labels %s did not match %s" % (what, rule["match_%slabels" % what], labels)
+
     return None
 
 
@@ -1884,7 +1914,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
             unhandled_uuids.append((mtime, notify_uuid))
             continue
 
-        bulk_context.append(context)
+        bulk_context.append(NotificationContext(context))
 
     if bulk_context:  # otherwise: only corrupted files
         # Per default the uuids are sorted chronologically from oldest to newest
@@ -1894,15 +1924,13 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
             bulk_context.reverse()
 
         assert isinstance(old_params, dict)
+        plugin_text = NotificationPluginName("bulk " + (plugin_name or "plain email"))
         context_lines = create_bulk_parameter_context(old_params)
         for context in bulk_context:
             # Do not forget to add this to the monitoring log. We create
             # a single entry for each notification contained in the bulk.
             # It is important later to have this precise information.
-            plugin_name = "bulk " + (plugin_name or "plain email")
-            _log_to_history(
-                notification_message(NotificationPluginName(plugin_name),
-                                     NotificationContext(context)))
+            _log_to_history(notification_message(plugin_text, context))
 
             context_lines.append("\n")
             for varname, value in context.items():
@@ -1913,12 +1941,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
 
         for context in bulk_context:
             _log_to_history(
-                notification_result_message(
-                    NotificationPluginName("bulk " + (plugin_name or "plain email")),
-                    NotificationContext(context),
-                    NotificationResultCode(exitcode),
-                    output_lines,
-                ))
+                notification_result_message(plugin_text, context, exitcode, output_lines))
     else:
         logger.info("No valid notification file left. Skipping this bulk.")
 
@@ -1943,8 +1966,9 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
             logger.info("Warning: cannot remove directory %s: %s", dirname, e)
 
 
-def call_bulk_notification_script(plugin_name: NotificationPluginNameStr,
-                                  context_lines: List[str]) -> Tuple[int, List[str]]:
+def call_bulk_notification_script(
+        plugin_name: NotificationPluginNameStr,
+        context_lines: List[str]) -> Tuple[NotificationResultCode, List[str]]:
     path = path_to_notification_script(plugin_name)
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin_name)
@@ -1983,7 +2007,7 @@ def call_bulk_notification_script(plugin_name: NotificationPluginNameStr,
     for line in output_lines:
         logger.info("%s: %s", plugin_name, line.rstrip())
 
-    return exitcode, output_lines
+    return NotificationResultCode(exitcode), output_lines
 
 
 #.

@@ -19,23 +19,26 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_bonding():
-    return Dictionary(elements=[
-        ("expect_active",
-         DropdownChoice(
-             title=_("Warn on unexpected active interface"),
-             choices=[
-                 ("ignore", _("ignore which one is active")),
-                 ("primary", _("require primary interface to be active")),
-                 ("lowest", _("require interface that sorts lowest alphabetically")),
-             ],
-             default_value="ignore",
-         )),
-        ("ieee_302_3ad_agg_id_missmatch_state",
-         MonitoringState(
-             title=_("State for missmatching Aggregator IDs for LACP"),
-             default_value=1,
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            ("expect_active",
+             DropdownChoice(
+                 title=_("Warn on unexpected active interface"),
+                 choices=[
+                     ("ignore", _("ignore which one is active")),
+                     ("primary", _("require primary interface to be active")),
+                     ("lowest", _("require interface that sorts lowest alphabetically")),
+                 ],
+                 default_value="ignore",
+             )),
+            ("ieee_302_3ad_agg_id_missmatch_state",
+             MonitoringState(
+                 title=_("State for missmatching Aggregator IDs for LACP"),
+                 default_value=1,
+             )),
+        ],
+        ignored_keys=["primary"],
+    )
 
 
 rulespec_registry.register(
@@ -45,5 +48,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Name of the bonding interface")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bonding,
-        title=lambda: _("Status of Linux bonding interfaces"),
+        title=lambda: _("Linux bonding interface status"),
     ))

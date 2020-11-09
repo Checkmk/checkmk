@@ -106,7 +106,7 @@ class ACTestLiveproxyd(ACTest):
 
     def help(self) -> str:
         return _(
-            "The Livestatus Proxy Daemon is available with the Check_MK Enterprise Edition "
+            "The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
             "and improves the management of the inter site connections using livestatus. Using "
             "the Livestatus Proxy Daemon improves the responsiveness and performance of your "
             "GUI and will decrease resource usage.")
@@ -197,11 +197,11 @@ class ACTestTmpfs(ACTest):
         return _("Temporary filesystem mounted")
 
     def help(self) -> str:
-        return _("<p>By default each Check_MK site has it's own temporary filesystem "
+        return _("<p>By default each Checkmk site has it's own temporary filesystem "
                  "(a ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not "
-                 "possible Check_MK starts without this temporary filesystem.</p>"
-                 "<p>Even if this is possible, it is not recommended to use Check_MK this "
-                 "way because it may reduce the overall performance of Check_MK.</p>")
+                 "possible Checkmk starts without this temporary filesystem.</p>"
+                 "<p>Even if this is possible, it is not recommended to use Checkmk this "
+                 "way because it may reduce the overall performance of Checkmk.</p>")
 
     def is_relevant(self) -> bool:
         return True
@@ -240,7 +240,7 @@ class ACTestLDAPSecured(ACTest):
         return _("Secure LDAP")
 
     def help(self) -> str:
-        return _("When using the regular LDAP protocol all data transfered between the Check_MK "
+        return _("When using the regular LDAP protocol all data transfered between the Checkmk "
                  "and LDAP servers is sent over the network in plain text (unencrypted). This also "
                  "includes the passwords users enter to authenticate with the LDAP Server. It is "
                  "highly recommended to enable SSL for securing the transported data.")
@@ -276,7 +276,7 @@ class ACTestLivestatusSecured(ACTest):
     def help(self) -> str:
         return _(
             "<p>In distributed setups Livestatus is used to transport the status information "
-            "gathered in one site to the central site. Since Check_MK 1.6 it is natively "
+            "gathered in one site to the central site. Since Checkmk 1.6 it is natively "
             "possible and highly recommended to encrypt this Livestatus traffic.</p> "
             "<p>This can be enabled using the global setting "
             "<a href=\"wato.py?mode=edit_configvar&varname=site_livestatus_tcp\">Access to Livestatus via TCP</a>. Before enabling this you should ensure that all your Livestatus clients "
@@ -306,7 +306,7 @@ class ACTestNumberOfUsers(ACTest):
         return _("Number of users")
 
     def help(self) -> str:
-        return _("<p>Having a large number of users configured in Check_MK may decrease the "
+        return _("<p>Having a large number of users configured in Checkmk may decrease the "
                  "performance of the Web GUI.</p>"
                  "<p>It may be possible that you are using the LDAP sync to create the users. "
                  "Please review the filter configuration of the LDAP sync. Maybe you can "
@@ -325,7 +325,7 @@ class ACTestNumberOfUsers(ACTest):
         else:
             yield ACResultWARN(
                 _("You have %d users configured. Please review the number of "
-                  "users you have configured in Check_MK.") % num_users)
+                  "users you have configured in Checkmk.") % num_users)
 
 
 @ac_test_registry.register
@@ -338,9 +338,9 @@ class ACTestHTTPSecured(ACTest):
 
     def help(self) -> str:
         return \
-            _("When using the regular HTTP protocol all data transfered between the Check_MK "
+            _("When using the regular HTTP protocol all data transfered between the Checkmk "
               "and the clients using the GUI is sent over the network in plain text (unencrypted). "
-              "This includes the passwords users enter to authenticate with Check_MK and other "
+              "This includes the passwords users enter to authenticate with Checkmk and other "
               "sensitive information. It is highly recommended to enable SSL for securing the "
               "transported data.") \
             + " " \
@@ -396,13 +396,13 @@ class ACTestBackupConfigured(ACTest):
         return _(
             "<p>You should have a backup configured for being able to restore your "
             "monitoring environment in case of a data loss.<br>"
-            "In case you a using a virtual machine as Check_MK server and perform snapshot based "
+            "In case you a using a virtual machine as Checkmk server and perform snapshot based "
             "backups, you should be safe.</p>"
             "<p>In case you are using a 3rd party backup solution the backed up data may not be "
             "reliably backed up or not up-to-date in the moment of the backup.</p>"
-            "<p>It is recommended to use the Check_MK backup to create a backup of the runnning "
+            "<p>It is recommended to use the Checkmk backup to create a backup of the runnning "
             "site to be sure that the data is consistent. If you need to, you can then use "
-            "the 3rd party tool to archive the Check_MK backups.</p>")
+            "the 3rd party tool to archive the Checkmk backups.</p>")
 
     def is_relevant(self) -> bool:
         return True
@@ -597,28 +597,28 @@ class ACTestCheckMKHelperUsage(ACTest):
         return ACTestCategories.performance
 
     def title(self) -> str:
-        return _("Check_MK helper usage")
+        return _("Checkmk helper usage")
 
     def help(self) -> str:
         return _(
-            "<p>The Check_MK Microcore uses Check_MK helper processes to execute "
-            "the Check_MK and Check_MK Discovery services of the hosts monitored "
-            "with Check_MK. There should always be enough helper processes to handle "
+            "<p>The Checkmk Microcore uses Checkmk helper processes to execute "
+            "the Checkmk and Checkmk Discovery services of the hosts monitored "
+            "with Checkmk. There should always be enough helper processes to handle "
             "the configured checks.</p>"
             "<p>In case the helper pool is 100% used, checks will not be executed in "
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             "<li>Check which checks / plugins are <a href=\"view.py?view_name=service_check_durations\">consuming most helper process time</a></li>"
-            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_cmk_helpers\">number of Check_MK helpers</a></li>"
+            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_cmk_helpers\">number of Checkmk helpers</a></li>"
             "</ul>"
             "</p>"
-            "<p>But you need to be careful that you don't configure too many Check_MK "
+            "<p>But you need to be careful that you don't configure too many Checkmk "
             "check helpers, because they consume a lot of memory. Your system needs "
             "to be able to handle the memory demand for all of them at once. An additional "
-            "problem is that the Check_MK helpers are initialized in parallel during startup "
+            "problem is that the Checkmk helpers are initialized in parallel during startup "
             "of the Microcore, which may cause load peaks when having "
-            "a lot of Check_MK helper processes configured.</p>")
+            "a lot of Checkmk helper processes configured.</p>")
 
     def is_relevant(self) -> bool:
         return self._uses_microcore()
@@ -640,7 +640,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             cls = ACResultOK
 
         yield cls(
-            _("The current Check_MK helper usage is %.2f%%. The Check_MK services have an "
+            _("The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
               "average check latency of %.3fs.") % (helper_usage_perc, check_latecy_cmk))
 
         # Only report this as warning in case the user increased the default helper configuration
@@ -649,7 +649,130 @@ class ACTestCheckMKHelperUsage(ACTest):
                 "cmc_cmk_helpers") > default_values["cmc_cmk_helpers"] and helper_usage_perc < 50:
             yield ACResultWARN(
                 _("The helper usage is below 50%, you may decrease the number of "
-                  "Check_MK helpers to reduce the memory consumption."))
+                  "Checkmk helpers to reduce the memory consumption."))
+
+
+@ac_test_registry.register
+class ACTestCheckMKFetcherUsage(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.performance
+
+    def title(self) -> str:
+        return _("Checkmk fetcher usage")
+
+    def help(self) -> str:
+        return _(
+            "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
+            "the Checkmk and Checkmk Discovery services of the hosts monitored "
+            "with Checkmk. There should always be enough fetcher processes to handle "
+            "the configured checks just in time.</p>"
+            "<p>In case the fetcher helper pool is 100% used, checks will not be executed in "
+            "time, the check latency will grow and the states are not up to date.</p>"
+            "<p>Possible actions:<ul>"
+            "<li>Check whether or not you can decrease check timeouts</li>"
+            "<li>Check which checks / plugins are <a href=\"view.py?view_name=service_check_durations\">consuming most helper process time</a></li>"
+            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_cmk_helpers\">number of Checkmk helpers</a></li>"
+            "</ul>"
+            "</p>"
+            "<p>But you need to be careful that you don't configure too many Checkmk "
+            "fetcher helpers, because they consume resources. An additional "
+            "problem is that the Checkmk fetchers are initialized in parallel during startup "
+            "of the Microcore, which may cause load peaks when having "
+            "a lot of Checkmk helper processes configured.</p>")
+
+    def is_relevant(self) -> bool:
+        return self._uses_microcore()
+
+    def execute(self) -> Iterator[ACResult]:
+        local_connection = LocalConnection()
+        row = local_connection.query_row(
+            "GET status\nColumns: helper_usage_fetcher average_latency_fetcher\n")
+
+        fetcher_usage_perc = 100 * row[0]
+        fetcher_latency = row[1]
+
+        usage_warn, usage_crit = 85, 95
+        if fetcher_usage_perc >= usage_crit:
+            cls: Type[ACResult] = ACResultCRIT
+        elif fetcher_usage_perc >= usage_warn:
+            cls = ACResultWARN
+        else:
+            cls = ACResultOK
+
+        yield cls(
+            _("The current fetcher usage is %.2f%%."
+              " The checks have an average check latency of %.3fs.") %
+            (fetcher_usage_perc, fetcher_latency))
+
+        # Only report this as warning in case the user increased the default helper configuration
+        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        if self._get_effective_global_setting("cmc_fetcher_helpers") > default_values[
+                "cmc_fetcher_helpers"] and fetcher_usage_perc < 50:
+            yield ACResultWARN(
+                _("The fetcher usage is below 50%, you may decrease the number of "
+                  "fetchers to reduce the memory consumption."))
+
+
+@ac_test_registry.register
+class ACTestCheckMKCheckerUsage(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.performance
+
+    def title(self) -> str:
+        return _("Checkmk checker usage")
+
+    def help(self) -> str:
+        return _(
+            "<p>The Checkmk Microcore uses Checkmk checker processes to execute "
+            "the Checkmk and Checkmk Discovery services of the hosts monitored "
+            "with Checkmk. There should always be enough helper processes to handle "
+            "the configured checks.</p>"
+            "<p>In case the checker helper pool is 100% used, checks will not be executed in "
+            "time, the check latency will grow and the states are not up to date.</p>"
+            "<p>Possible actions:<ul>"
+            "<li>Check whether or not you can decrease check timeouts</li>"
+            "<li>Check which checks / plugins are <a href=\"view.py?view_name=service_check_durations\">consuming most helper process time</a></li>"
+            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_checker_helpers\">number of Checkmk checkers</a></li>"
+            "</ul>"
+            "</p>"
+            "<p>But you need to be careful that you don't configure too many Checkmk "
+            "checker helpers, because they consume a lot of memory. Your system has "
+            "to be able to handle the memory demand for all of them at once. An additional "
+            "problem is that the Checkmk helpers are initialized in parallel during startup "
+            "of the Microcore, which may cause load peaks when having "
+            "a lot of Checkmk helper processes configured.</p>")
+
+    def is_relevant(self) -> bool:
+        return self._uses_microcore()
+
+    def execute(self) -> Iterator[ACResult]:
+        local_connection = LocalConnection()
+        row = local_connection.query_row(
+            "GET status\nColumns: helper_usage_checker average_latency_fetcher\n")
+
+        checker_usage_perc = 100 * row[0]
+        fetcher_latency = row[1]
+
+        usage_warn, usage_crit = 85, 95
+        if checker_usage_perc >= usage_crit:
+            cls: Type[ACResult] = ACResultCRIT
+        elif checker_usage_perc >= usage_warn:
+            cls = ACResultWARN
+        else:
+            cls = ACResultOK
+
+        yield cls(
+            _("The current checker usage is %.2f%%,"
+              " The checks have an average check latency of %.3fs.") %
+            (checker_usage_perc, fetcher_latency))
+
+        # Only report this as warning in case the user increased the default helper configuration
+        default_values = watolib.ABCConfigDomain.get_all_default_globals()
+        if self._get_effective_global_setting("cmc_checker_helpers") > default_values[
+                "cmc_checker_helpers"] and checker_usage_perc < 50:
+            yield ACResultWARN(
+                _("The checker usage is below 50%, you may decrease the number of "
+                  "checkers to reduce the memory consumption."))
 
 
 @ac_test_registry.register
@@ -687,7 +810,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
 
     def help(self) -> str:
         return _(
-            "<p>The Check_MK Microcore uses generic check helper processes to execute "
+            "<p>The Checkmk Microcore uses generic check helper processes to execute "
             "the active check based services (e.g. check_http, check_...). There should "
             "always be enough helper processes to handle the configured checks.</p>"
             "<p>In case the helper pool is 100% used, checks will not be executed in "
@@ -804,12 +927,12 @@ class ACTestESXDatasources(ACTest):
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("The Check_MK agent is queried via the ESX datasource program")
+        return _("The Checkmk agent is queried via the ESX datasource program")
 
     def help(self) -> str:
-        return _("The Check_MK agent is queried via the datasource program for ESX systems. "
+        return _("The Checkmk agent is queried via the datasource program for ESX systems. "
                  "This is option will be deleted in a future release. Please configure the "
-                 "host to contact the Check_MK agent and the configured datasource programs "
+                 "host to contact the Checkmk agent and the configured datasource programs "
                  "instead.")
 
     def _get_rules(self):
@@ -846,7 +969,7 @@ class ACTestRulebasedNotifications(ACTest):
     def help(self) -> str:
         return _(
             "Flexible and plain email notifications are considered deprecated in version 1.5.0 and "
-            " will be removed in Check_MK version 1.6.0. Please consider to switch to rulebased "
+            " will be removed in Checkmk version 1.6.0. Please consider to switch to rulebased "
             "notifications.")
 
     def is_relevant(self) -> bool:
@@ -891,7 +1014,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
     def help(self) -> str:
         return _(
             "This check returns CRIT if the parameter <b>State in case of restricted address missmatch</b> "
-            "in the ruleset <b>Status of the Check_MK services</b> is configured and differs from default "
+            "in the ruleset <b>Status of the Checkmk services</b> is configured and differs from default "
             "state <b>WARN</b>. "
             "With the above setting you can overwrite the default service state. This will help "
             "you to reduce above warnings during the update process of your Checkmk sites "

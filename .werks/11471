@@ -1,0 +1,18 @@
+Title: Fixed default LDAP synchronization setting of central sites
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1599135039
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The default setting for "Sync with LDAP connections" in the connection settings
+of central sites showed "Disabled user synchronization (use master site
+users)". If you saved this page, because of changes in other settings, this
+default setting was set for the site in question, leading to missing
+synchronizations on that site.
+
+From now on the default for central sites is "Sync users with all connections"
+as stated in the inline help.

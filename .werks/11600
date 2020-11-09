@@ -1,0 +1,15 @@
+Title: Fix broken view sorting
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1604328880
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+An error "URL not found" occurred when trying to sort a view in the GUI.  This
+was fixed for regular views.
+
+View dashlets can not be sorted when viewed in the GUI by default.  This
+setting is now enforced for all linked view dashlets.

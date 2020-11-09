@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 48 48" style="enable-background:new 0 0 48 48;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-356.000000, -5617.000000)">
+		<g id="enable" transform="translate(356.000000, 5617.000000)">
+			<path id="Fill-1" class="st0" d="M24,47.6C11,47.6,0.4,37,0.4,24S11,0.4,24,0.4S47.6,11,47.6,24S37,47.6,24,47.6"/>
+			<path id="Fill-6" class="st1" d="M19.4,37l-12-12c-0.4-0.4-0.4-1.1,0-1.6l3.4-3.4c0.4-0.4,1.1-0.4,1.6,0l11.9,12
+				c0.4,0.4,0.4,1.1,0,1.6L21,37C20.5,37.5,19.8,37.5,19.4,37"/>
+			<path id="Fill-8" class="st1" d="M16.1,31.8l19.2-19.2c0.4-0.4,1.1-0.4,1.6,0l3.4,3.4c0.4,0.4,0.4,1.1,0,1.6L21.1,36.8
+				c-0.4,0.4-1.1,0.4-1.6,0l-3.4-3.4C15.7,33,15.7,32.3,16.1,31.8"/>
+		</g>
+	</g>
+</g>
+</svg>

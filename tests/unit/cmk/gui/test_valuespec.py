@@ -6,6 +6,7 @@
 
 import pytest  # type: ignore[import]
 
+import cmk.gui.config
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
 from testlib import on_time
@@ -18,6 +19,7 @@ from testlib import on_time
     ("y1", ((1514764800.0, 1546300800.0), "2018")),
     ("y0", ((1546300800.0, 1567702200.0), "2019")),
     ("4h", ((1567687800.0, 1567702200.0), u"Last 4 hours")),
+    (4 * 60 * 60, ((1567687800.0, 1567702200.0), "The last 4 hours")),
     ("25h", ((1567612200.0, 1567702200.0), u"Last 25 hours")),
     ("8d", ((1567011000.0, 1567702200.0), u"Last 8 days")),
     ("15d", ((1566406200.0, 1567702200.0), u"Last 15 days")),
@@ -126,17 +128,72 @@ def test_dropdownchoice_value_to_json_conversion(choices, value, result):
     assert vs.DropdownChoice(choices).value_from_json(json_value) == value
 
 
+@pytest.mark.parametrize(
+    "choices, deprecated_choices, value, is_valid_datatype",
+    [
+        ([(1, "1"), (2, "2")], [], 1, True),
+        ([(1, "1"), (2, "2")], [], 3, True),
+        ([(1, "1"), (2, "2")], [None], None, True),
+        ([(1, "1"), (2, "2")], ['a'], 4.1523, False),
+    ],
+    ids=[
+        'valid_choice_valid_datatype',
+        'invalid_choice_valid_datatype',
+        'invalid_choice_valid_deprecated_choice',
+        'invalid_choice_invalid_deprecated_choice',
+    ],
+)
+def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is_valid_datatype):
+    dropdown_choice = vs.DropdownChoice(
+        choices,
+        deprecated_choices=deprecated_choices,
+    )
+    if is_valid_datatype:
+        dropdown_choice.validate_datatype(value, "")
+    else:
+        with pytest.raises(MKUserError):
+            dropdown_choice.validate_datatype(value, "")
+
+
+@pytest.mark.parametrize(
+    "value, result_title",
+    [
+        (("age", 4 * 60 * 60), "The last 4 fun hours"),  # Werk 4477, deprecated input on cmk2.0
+        (("age", 25 * 60 * 60), "The last 25 hard hours"),  # Werk 4477, deprecated input on cmk2.0
+        (4 * 60 * 60, "The last 4 fun hours"),  # defaults are idents
+        (25 * 60 * 60, "The last 25 hard hours"),  # defaults are idents
+        (3600 * 24 * 7 * 1.5, "Since a sesquiweek"),  # defaults are idents
+    ])
+def test_timerange_value_to_text_conversion(monkeypatch, value, result_title):
+
+    monkeypatch.setattr(cmk.gui.config, "graph_timeranges", [{
+        'title': "The last 4 fun hours",
+        "duration": 4 * 60 * 60
+    }, {
+        'title': "The last 25 hard hours",
+        "duration": 25 * 60 * 60
+    }, {
+        "title": "Since a sesquiweek",
+        "duration": 3600 * 24 * 7 * 1.5
+    }])
+
+    assert vs.Timerange().value_to_text(value) == result_title
+
+
 def test_timerange_value_to_json_conversion():
     with on_time("2020-03-02", "UTC"):
-        for choice in vs.Timerange().choices():
-            if choice[0] == "age":
-                choice = (("age", 12345), "The last..., 3 hours 25 minutes 45 seconds", None)
-            elif choice[0] == "date":
-                choice = (("date", (1582671600.0, 1582844400.0)),
-                          "Date range, 2020-02-25, 2020-02-27", None)
-            assert vs.Timerange().value_to_text(choice[0]) == choice[1]
-            json_value = vs.Timerange().value_to_json(choice[0])
-            assert vs.Timerange().value_from_json(json_value) == choice[0]
+        for ident, title, _vs in vs.Timerange().choices():
+            choice_value: vs.CascadingDropdownChoiceValue = ident
+            if ident == "age":
+                choice_value = ("age", 12345)
+                title = "The last..., 3 hours 25 minutes 45 seconds"
+            elif ident == "date":
+                choice_value = ("date", (1582671600.0, 1582844400.0))
+                title = "Date range, 2020-02-25, 2020-02-27"
+
+            assert vs.Timerange().value_to_text(choice_value) == title
+            json_value = vs.Timerange().value_to_json(choice_value)
+            assert vs.Timerange().value_from_json(json_value) == choice_value
 
 
 @pytest.mark.parametrize("value, result", [
@@ -211,3 +268,74 @@ def test_email_validation_non_compliance(address):
 def test_email_validation_raises(address):
     with pytest.raises(MKUserError):
         vs.EmailAddress().validate_value(address, "")
+
+
+def test_transform_value_no_transform_vs():
+    valuespec = vs.TextAscii()
+    assert valuespec.transform_value("lala") == "lala"
+    assert valuespec.transform_value("AAA") == "AAA"
+
+
+def test_transform_value_with_transform_vs():
+    valuespec = vs.Transform(
+        vs.TextAscii(),
+        forth=lambda x: x if x == "lala" else x.upper(),
+        back=lambda x: x + "aaa",
+    )
+
+    assert valuespec.transform_value("lala") == "lalaaaa"
+    assert valuespec.transform_value("AAA") == "AAAaaa"
+
+
+def test_transform_value_dict():
+    valuespec = vs.Dictionary(elements=[
+        ("a", vs.TextAscii()),
+    ])
+    assert valuespec.transform_value({"a": "lala"}) == {"a": "lala"}
+
+
+def test_transform_value_in_dict():
+    valuespec = vs.Dictionary(elements=[
+        ("a",
+         vs.Transform(
+             vs.TextAscii(),
+             forth=lambda x: x if x == "lala" else x.upper(),
+             back=lambda x: x + "aaa",
+         )),
+    ])
+
+    assert valuespec.transform_value({"a": "lala"}) == {"a": "lalaaaa"}
+    assert valuespec.transform_value({"a": "AAA"}) == {"a": "AAAaaa"}
+
+
+def test_transform_value_in_tuple():
+    valuespec = vs.Tuple(elements=[
+        vs.Transform(
+            vs.TextAscii(),
+            forth=lambda x: x if x == "lala" else x.upper(),
+            back=lambda x: x + "aaa",
+        ),
+        vs.Transform(
+            vs.TextAscii(),
+            forth=lambda x: x if x == "lala" else x.upper(),
+            back=lambda x: x + "aaa",
+        ),
+    ])
+
+    assert valuespec.transform_value(("lala", "AAA")) == ("lalaaaa", "AAAaaa")
+
+
+def test_transform_value_in_cascading_dropdown():
+    valuespec = vs.CascadingDropdown(choices=[
+        ("a", "Title a", vs.TextAscii()),
+        ("b", "Title b",
+         vs.Transform(
+             vs.TextAscii(),
+             forth=lambda x: x if x == "lala" else x.upper(),
+             back=lambda x: x + "aaa",
+         )),
+    ])
+
+    assert valuespec.transform_value(("a", "abc")) == ("a", "abc")
+    assert valuespec.transform_value(("b", "lala")) == ("b", "lalaaaa")
+    assert valuespec.transform_value(("b", "AAA")) == ("b", "AAAaaa")

@@ -24,6 +24,7 @@ def run(Map args) {
         print(args.CONDITION)
         if (args.CONDITION) {
             dir(args.DIR) {
+                args.ENV_VARS.add("TEST_CONTAINER=${TEST_CONTAINER}")
                 withEnv(args.ENV_VARS) {
                     STATUS = sh(script: ". /bauwelt/bin/bw-setup-jenkins-env ; " + args.COMMAND, returnStatus: true)
                     desc_add_status_row(args.NAME, STATUS)

@@ -12,6 +12,7 @@
 
 #include "Row.h"
 #include "Table.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Query;
 
@@ -25,7 +26,7 @@ public:
     [[nodiscard]] Row findObject(const std::string &objectspec) const override;
 
     static void addColumns(Table *table, const std::string &prefix,
-                           int indirect_offset);
+                           const ColumnOffsets &offsets);
 };
 
 #endif  // TableContacts_h

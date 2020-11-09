@@ -13,6 +13,7 @@ def test_registered_jobs():
     expected = [
         'cmk.gui.inventory.run',
         'cmk.gui.plugins.cron.gui_background_job.housekeeping',
+        'cmk.gui.plugins.cron.wato_folder_lookup_cache.rebuild_folder_lookup_cache',
         'cmk.gui.userdb.execute_userdb_job',
         'cmk.gui.wato.execute_network_scan_job',
         'cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job',

@@ -72,7 +72,7 @@ public:
     void buildStatehistCache();
     void flushStatehistCache();
     void tryFinishStatehistCache();
-    bool addObjectHistcache(Object *object);
+    void addObjectHistcache(Object *object);
     void addAlertToStatehistCache(const Object &object, int state,
                                   const std::string &output,
                                   const std::string &long_output);

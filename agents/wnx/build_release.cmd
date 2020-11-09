@@ -133,5 +133,4 @@ copy %build_dir%\watest\x64\Release\watest64.exe %REMOTE_MACHINE% /Y
 
 @rem Additional Phase: post processing/build special modules using make
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
-!make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && echo set && exit /b 37
 

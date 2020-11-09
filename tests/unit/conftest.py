@@ -11,16 +11,22 @@ import logging
 from pathlib import Path
 
 import pytest  # type: ignore[import]
+import livestatus
 
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
+# The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
+# to have the default permissions loaded before that to fix some implicit dependencies.
+# TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
+import cmk.gui.default_permissions
+from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
+
 # No stub file
 from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
 # No stub file
 from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +57,7 @@ def patch_omd_site(monkeypatch):
     monkeypatch.setattr(cmk_version, "omd_site", lambda: "NO_SITE")
 
     _touch(cmk.utils.paths.htpasswd_file)
+    store.makedirs(cmk.utils.paths.autochecks_dir)
     store.makedirs(cmk.utils.paths.var_dir + '/web')
     store.makedirs(cmk.utils.paths.var_dir + '/php-api')
     store.makedirs(cmk.utils.paths.var_dir + '/wato/php-api')
@@ -112,9 +119,9 @@ def fixup_ip_lookup(monkeypatch):
     monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
 
 
-@pytest.fixture(name='config_load_all_checks', scope="session", autouse=True)
+@pytest.fixture(name='config_load_all_checks', scope="session")
 def _config_load_all_checks():
-    # this is needed in cmk/base *and* checks/ :-(
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
 
@@ -122,34 +129,74 @@ def _config_load_all_checks():
     assert config.check_info == {}
 
     with cmk_debug_enabled():  # fail if a plugin can't be loaded
-        config.load_all_checks(check_api.get_check_api_context)
+        config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
     assert len(config.check_info) > 1000  # sanitiy check
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(name='config_load_all_inventory_plugins', scope="session")
+@pytest.mark.usesfixture('config_load_all_checks')
+def _config_load_all_inventory_plugins():
+    # Local import to have faster pytest initialization
+    import cmk.base.api.agent_based.register.inventory_plugins_legacy as inventory_legacy  # pylint: disable=bad-option-value,import-outside-toplevel
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=bad-option-value,import-outside-toplevel
+    import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
+
+    with cmk_debug_enabled():  # fail if a plugin can't be loaded
+        inventory_plugins.load_legacy_inventory_plugins(
+            check_api.get_check_api_context,
+            inventory_legacy.get_inventory_context,
+        )
+
+    assert len(inventory_plugins.inv_info) > 90  # sanitiy check, may decrease as we migrate
+
+
+@pytest.fixture(scope="session")
 def config_check_info(config_load_all_checks):
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.check_info)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def config_active_check_info(config_load_all_checks):
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.active_check_info)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def config_snmp_scan_functions(config_load_all_checks):
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     assert len(config.snmp_scan_functions) > 400  # sanity check
     return copy.deepcopy(config.snmp_scan_functions)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def config_check_variables(config_load_all_checks):
+    # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     return copy.deepcopy(config.get_check_variables())
+
+
+@pytest.fixture(autouse=True)
+def prevent_livestatus_connect(monkeypatch):
+    """Prevent tests from trying to open livestatus connections. This will result in connect
+    timeouts which slow down our tests."""
+    monkeypatch.setattr(
+        livestatus.SingleSiteConnection, "_create_socket", lambda s, f: pytest.fail(
+            "The test tried to use a livestatus connection. This will result in connect timeouts. "
+            "Use mock_livestatus for mocking away the livestatus API"))
+
+    orig_init = livestatus.MultiSiteConnection.__init__
+
+    def init_mock(self, *args, **kwargs):
+        orig_init(self, *args, **kwargs)
+        if self.deadsites:
+            pytest.fail("Dead sites: %r" % self.deadsites)
+
+    monkeypatch.setattr(livestatus.MultiSiteConnection, "__init__", init_mock)
 
 
 @pytest.fixture(name="mock_livestatus")
@@ -171,6 +218,8 @@ def _mock_livestatus(mocker, monkeypatch):
 
 
     """
+    # Local import to have faster pytest initialization
+    from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection  # pylint: disable=bad-option-value,import-outside-toplevel
     live = MockLiveStatusConnection()
 
     def enabled_and_disabled_sites(user):

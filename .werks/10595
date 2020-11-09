@@ -6,7 +6,7 @@ Date: 1580301720
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This only affects users who have custom Plugins developed. The function
 <tt>inventory_wmi_table</tt> has been removed from wmi.inlude.

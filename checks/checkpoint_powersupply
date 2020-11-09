@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_checkpoint_powersupply(info):
     for index, _dev_status in info:
@@ -32,5 +34,4 @@ check_info['checkpoint_powersupply'] = {
             1,  # powerSupplyIndex
             2,  # powersupplyStatus
         ]),
-    'includes': ['checkpoint.include'],
 }

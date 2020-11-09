@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<ibm_mq_channels:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
 # 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -74,5 +75,4 @@ check_info["ibm_mq_channels"] = {
     "has_perfdata": False,
     "default_levels_variable": "ibm_mq_channels_default_levels",
     "group": "ibm_mq_channels",
-    "includes": ["ibm_mq.include"],
 }

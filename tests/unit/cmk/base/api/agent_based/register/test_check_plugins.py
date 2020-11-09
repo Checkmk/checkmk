@@ -124,11 +124,23 @@ def test_create_sections(sections, plugin_name, expected):
 ])
 def test_validate_function_args(function, has_item, has_params, sections, raises):
     if raises is None:
-        check_plugins.validate_function_arguments("", function, has_item, has_params, sections)
+        check_plugins.validate_function_arguments(
+            type_label="check",
+            function=function,
+            has_item=has_item,
+            default_params={} if has_params else None,
+            sections=sections,
+        )
         return
 
     with pytest.raises(raises):
-        check_plugins.validate_function_arguments("", function, has_item, has_params, sections)
+        check_plugins.validate_function_arguments(
+            type_label="check",
+            function=function,
+            has_item=has_item,
+            default_params={} if has_params else None,
+            sections=sections,
+        )
 
 
 @pytest.mark.parametrize("key", list(MINIMAL_CREATION_KWARGS.keys()))
@@ -163,8 +175,8 @@ def test_create_check_plugin():
     assert plugin.service_name == MINIMAL_CREATION_KWARGS["service_name"]
     assert plugin.discovery_function.__name__ == MINIMAL_CREATION_KWARGS[
         "discovery_function"].__name__
-    assert plugin.discovery_default_parameters == {}
+    assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
     assert plugin.check_function.__name__ == MINIMAL_CREATION_KWARGS["check_function"].__name__
-    assert plugin.check_default_parameters == {}
+    assert plugin.check_default_parameters is None
     assert plugin.check_ruleset_name is None

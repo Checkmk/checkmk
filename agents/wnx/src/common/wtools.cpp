@@ -31,6 +31,63 @@
 #include "upgrade.h"
 
 namespace wtools {
+bool ChangeAccessRights(
+    const wchar_t* object_name,   // name of object
+    SE_OBJECT_TYPE object_type,   // type of object
+    const wchar_t* trustee_name,  // trustee for new ACE
+    TRUSTEE_FORM trustee_form,    // format of trustee structure
+    DWORD access_rights,          // access mask for new ACE
+    ACCESS_MODE access_mode,      // type of ACE
+    DWORD inheritance             // inheritance flags for new ACE ???
+) {
+    PACL old_dacl = nullptr;
+    PSECURITY_DESCRIPTOR sd = nullptr;
+
+    if (nullptr == object_name) return false;
+
+    // Get a pointer to the existing DACL.
+    auto result = ::GetNamedSecurityInfo(object_name, object_type,
+                                         DACL_SECURITY_INFORMATION, nullptr,
+                                         nullptr, &old_dacl, nullptr, &sd);
+    if (ERROR_SUCCESS != result) {
+        XLOG::l("GetNamedSecurityInfo Error {}", result);
+        return false;
+    }
+    ON_OUT_OF_SCOPE(if (sd != nullptr) LocalFree((HLOCAL)sd));
+
+    // Initialize an EXPLICIT_ACCESS structure for the new ACE.
+
+    EXPLICIT_ACCESS ea;
+    ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
+    ea.grfAccessPermissions = access_rights;
+    ea.grfAccessMode = access_mode;
+    ea.grfInheritance = inheritance;
+    ea.Trustee.TrusteeForm = trustee_form;
+    ea.Trustee.ptstrName = const_cast<wchar_t*>(trustee_name);
+
+    // Create a new ACL that merges the new ACE
+    // into the existing DACL.
+    PACL new_dacl = nullptr;
+    result = ::SetEntriesInAcl(1, &ea, old_dacl, &new_dacl);
+    if (ERROR_SUCCESS != result) {
+        XLOG::l("SetEntriesInAcl Error {}", result);
+        return false;
+    }
+
+    ON_OUT_OF_SCOPE(if (new_dacl != nullptr) LocalFree((HLOCAL)new_dacl));
+    // Attach the new ACL as the object's DACL.
+
+    result = ::SetNamedSecurityInfo(const_cast<wchar_t*>(object_name),
+                                    object_type, DACL_SECURITY_INFORMATION,
+                                    nullptr, nullptr, new_dacl, nullptr);
+    if (ERROR_SUCCESS != result) {
+        XLOG::l("SetNamedSecurityInfo Error {}", result);
+        return false;
+    }
+
+    return true;
+}
+
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
     auto h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,  // not on XP
                            FALSE, pid);
@@ -900,7 +957,7 @@ inline auto NextInstance(const PERF_INSTANCE_DEFINITION* Instance) {
 // DataSequence is primitive wrapper over data buffer
 // DataSequence takes ownership over buffer
 DataSequence ReadPerformanceDataFromRegistry(
-    const std::wstring& CounterName) noexcept {
+    const std::wstring& counter_name) noexcept {
     DWORD buf_size = 40000;
     BYTE* buffer = nullptr;
 
@@ -910,32 +967,36 @@ DataSequence ReadPerformanceDataFromRegistry(
         try {
             buffer = new BYTE[buf_size];
         } catch (...) {
-            return cma::tools::DataBlock<BYTE>();  // ups
+            XLOG::l(XLOG_FUNC + " Out of memory allocating [{}] bytes",
+                    buf_size);
+            return {};
         }
 
         DWORD type = 0;
         auto ret =
-            ::RegQueryValueExW(HKEY_PERFORMANCE_DATA, CounterName.c_str(),
+            ::RegQueryValueExW(HKEY_PERFORMANCE_DATA, counter_name.c_str(),
                                nullptr, &type, buffer, &buf_size);
-        RegCloseKey(HKEY_PERFORMANCE_DATA);  // MSDN requirement
+        ::RegCloseKey(HKEY_PERFORMANCE_DATA);  // MSDN requirement
 
         if (ret == ERROR_SUCCESS) break;  // normal exit
 
-        if (ret == ERROR_MORE_DATA) {
-            buf_size *= 2;    // :)
-            delete[] buffer;  // realloc part one
-            continue;         // to be safe
-        } else
+        if (ret != ERROR_MORE_DATA) {
+            XLOG::l("Can't read counter '{}' error [{}]",
+                    wtools::ConvertToUTF8(counter_name), ret);
             return {};
+        }
+
+        buf_size *= 2;    // this is not optimal, may be reworked
+        delete[] buffer;  // realloc part one
     }
 
-    return DataSequence((int)buf_size, buffer);
+    return DataSequence(static_cast<int>(buf_size), buffer);
 }
 
-const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& Db,
+const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& data_buffer,
                                        DWORD counter_index) noexcept {
-    auto data = Db.data_;
-    auto max_offset = Db.len_;
+    auto data = data_buffer.data_;
+    auto max_offset = data_buffer.len_;
     if (!data || !max_offset) return nullptr;
 
     auto data_block = reinterpret_cast<PERF_DATA_BLOCK*>(data);
@@ -946,10 +1007,10 @@ const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& Db,
         // more than that in the buffer returned
         if (object->ObjectNameTitleIndex == counter_index) {
             return object;
-        } else {
-            object = FindNextObject(object);
         }
+        object = FindNextObject(object);
     }
+
     return nullptr;
 }
 
@@ -969,6 +1030,7 @@ std::vector<const PERF_INSTANCE_DEFINITION*> GenerateInstances(
     } catch (const std::exception& e) {
         XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
     }
+
     return result;
 }
 
@@ -1028,21 +1090,24 @@ std::vector<const PERF_COUNTER_DEFINITION*> GenerateCounters(
 
 // used only in skype
 // build map of the <id:name>
-std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE* Object,
-                                               const NameMap& Map) {
+std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE* object,
+                                               const NameMap& name_map) {
     std::vector<std::wstring> result;
-    auto counter = FirstCounter(Object);
-    for (DWORD i = 0UL; i < Object->NumCounters; ++i) {
-        auto iter = Map.find(counter->CounterNameTitleIndex);
-        if (iter != Map.end()) {
-            result.push_back(iter->second);
+
+    auto counter = FirstCounter(object);
+    for (DWORD i = 0UL; i < object->NumCounters; ++i) {
+        auto index = counter->CounterNameTitleIndex;
+        auto iter = name_map.find(index);
+        if (iter != name_map.end()) {
+            result.emplace_back(iter->second);
         } else {
-            // not found in map
-            result.push_back(std::to_wstring(counter->CounterNameTitleIndex));
+            // use index as a name
+            result.emplace_back(std::to_wstring(index));
         }
 
         counter = NextCounter(counter);
     }
+
     return result;
 }
 
@@ -2541,7 +2606,7 @@ bool RemoveCmaUser(const std::wstring& user_name) noexcept {
     return primary_dc.userDel(user_name) != uc::Status::error;
 }
 
-bool ProtectFolderFromUserWrite(const std::filesystem::path& folder) {
+bool ProtectPathFromUserWrite(const std::filesystem::path& path) {
     // CONTEXT: to prevent malicious file creation or modification  in folder
     // "programdata/checkmk" we must remove inherited write rights for
     // Users in checkmk root data folder.
@@ -2552,13 +2617,58 @@ bool ProtectFolderFromUserWrite(const std::filesystem::path& folder) {
         L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
 
     for (auto const t : command_templates) {
-        auto cmd = fmt::format(t.data(), folder.wstring());
+        auto cmd = fmt::format(t.data(), path.wstring());
         if (!cma::tools::RunCommandAndWait(cmd)) {
             // logging is almost useless: at this phase logfile is absent
             XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
             return false;
         }
     }
+    XLOG::l.i("User Write Protected '{}'", path.u8string());
+
+    return true;
+}
+
+bool ProtectFileFromUserWrite(const std::filesystem::path& path) {
+    // CONTEXT: to prevent malicious file creation or modification  in folder
+    // "programdata/checkmk" we must remove inherited write rights for
+    // Users in checkmk root data folder.
+
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user rights
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(RX) /c"};  // read/exec
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), path.wstring());
+        if (!cma::tools::RunCommandAndWait(cmd)) {
+            // logging is almost useless: at this phase logfile is absent
+            XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
+            return false;
+        }
+    }
+    XLOG::l.i("User Write Protected '{}'", path.u8string());
+
+    return true;
+}
+
+bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
+    // CONTEXT: some files must be protected from the user fully
+
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",          // disable inheritance
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c"  // remove all user rights
+    };
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), entry.wstring());
+        if (!cma::tools::RunCommandAndWait(cmd)) {
+            // logging is almost useless: at this phase logfile is absent
+            XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
+            return false;
+        }
+    }
+    XLOG::l.i("User Access Protected '{}'", entry.u8string());
 
     return true;
 }

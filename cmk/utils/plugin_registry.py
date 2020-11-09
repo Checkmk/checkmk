@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import abstractmethod
-from typing import Dict, Iterator, Mapping, TypeVar
+from typing import Dict, Iterator, Mapping, TypeVar, Type
 
 _VT = TypeVar('_VT')
 
@@ -57,6 +57,11 @@ class Registry(Mapping[str, _VT]):
         self.registration_hook(instance)
         self._entries[self.plugin_name(instance)] = instance
         return instance
+
+    def register_instance(self, cls: Type[_VT]) -> Type[_VT]:
+        """Decorate a class to create an instance of the class and register it to the object registry"""
+        self.register(cls())
+        return cls
 
     def unregister(self, name: str) -> None:
         del self._entries[name]

@@ -22,7 +22,6 @@ from cmk.gui.plugins.wato import (
 
 def _vs_fortinet_signatures(title):
     return Alternative(title=title,
-                       style="dropdown",
                        elements=[
                            Tuple(title=_("Set levels"),
                                  elements=[

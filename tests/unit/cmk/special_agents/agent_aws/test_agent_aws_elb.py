@@ -125,6 +125,7 @@ def test_agent_aws_elb_limits(get_elb_sections, names, tags, found_instances,
     elb_limits_results = elb_limits.run().results
 
     assert elb_limits.cache_interval == 300
+    assert elb_limits.period == 600
     assert elb_limits.name == "elb_limits"
     assert len(elb_limits_results) == 4
     for result in elb_limits_results:
@@ -142,6 +143,7 @@ def test_agent_aws_elb_summary(get_elb_sections, names, tags, found_instances,
     elb_summary_results = elb_summary.run().results
 
     assert elb_summary.cache_interval == 300
+    assert elb_summary.period == 600
     assert elb_summary.name == "elb_summary"
 
     if found_instances:
@@ -163,6 +165,7 @@ def test_agent_aws_elb_labels(get_elb_sections, names, tags, found_instances,
     elb_labels_results = elb_labels.run().results
 
     assert elb_labels.cache_interval == 300
+    assert elb_labels.period == 600
     assert elb_labels.name == "elb_generic_labels"
     assert len(elb_labels_results) == len(found_instances_with_labels)
     for result in elb_labels_results:
@@ -178,6 +181,7 @@ def test_agent_aws_elb_health(get_elb_sections, names, tags, found_instances,
     elb_health_results = elb_health.run().results
 
     assert elb_health.cache_interval == 300
+    assert elb_health.period == 600
     assert elb_health.name == "elb_health"
     assert len(elb_health_results) == len(found_instances)
     for result in elb_health_results:
@@ -192,6 +196,7 @@ def test_agent_aws_elb(get_elb_sections, names, tags, found_instances, found_ins
     elb_results = elb.run().results
 
     assert elb.cache_interval == 300
+    assert elb.period == 600
     assert elb.name == "elb"
     assert len(elb_results) == len(found_instances)
     for result in elb_results:
@@ -207,6 +212,7 @@ def test_agent_aws_elb_summary_without_limits(get_elb_sections, names, tags, fou
     elb_summary_results = elb_summary.run().results
 
     assert elb_summary.cache_interval == 300
+    assert elb_summary.period == 600
     assert elb_summary.name == "elb_summary"
 
     if found_instances:
@@ -227,6 +233,7 @@ def test_agent_aws_elb_labels_without_limits(get_elb_sections, names, tags, foun
     elb_labels_results = elb_labels.run().results
 
     assert elb_labels.cache_interval == 300
+    assert elb_labels.period == 600
     assert elb_labels.name == "elb_generic_labels"
     assert len(elb_labels_results) == len(found_instances_with_labels)
     for result in elb_labels_results:
@@ -241,6 +248,7 @@ def test_agent_aws_elb_health_without_limits(get_elb_sections, names, tags, foun
     elb_health_results = elb_health.run().results
 
     assert elb_health.cache_interval == 300
+    assert elb_health.period == 600
     assert elb_health.name == "elb_health"
     assert len(elb_health_results) == len(found_instances)
     for result in elb_health_results:
@@ -255,6 +263,7 @@ def test_agent_aws_elb_without_limits(get_elb_sections, names, tags, found_insta
     elb_results = elb.run().results
 
     assert elb.cache_interval == 300
+    assert elb.period == 600
     assert elb.name == "elb"
     assert len(elb_results) == len(found_instances)
     for result in elb_results:

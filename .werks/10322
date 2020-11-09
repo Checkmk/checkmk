@@ -6,7 +6,7 @@ Date: 1570626143
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This check monitors the heap space of a graylog JVM. It outputs the used and
 committed heap space. Needs the datasource "Check state of Graylog" to be

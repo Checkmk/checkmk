@@ -7,6 +7,7 @@
 from html import escape as html_escape
 import re
 from typing import Union
+from urllib.parse import urlparse
 
 from six import ensure_str
 
@@ -30,8 +31,9 @@ EscapableEntity = Union[None, int, HTML, str]
 
 _UNESCAPER_TEXT = re.compile(
     r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-_QUOTE = re.compile(r"(?:&quot;|&#x27;)")
-_A_HREF = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
+_A_HREF = re.compile(
+    r'&lt;a href=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;))(?: target=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)))?&gt;'
+)
 
 
 # TODO: Cleanup the accepted types!
@@ -69,7 +71,7 @@ def escape_attribute(value: EscapableEntity) -> str:
     if isinstance(attr_type, bytes):  # TODO: Not in the signature!
         return html_escape(ensure_str(value), quote=True)
     # TODO: What is this case for? Exception?
-    return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!
+    return html_escape(str(value), quote=True)  # TODO: Not in the signature!
 
 
 def unescape_attributes(value: str) -> str:
@@ -111,8 +113,21 @@ def escape_text(text: EscapableEntity) -> str:
     text = escape_attribute(text)
     text = _UNESCAPER_TEXT.sub(r'<\1\2>', text)
     for a_href in _A_HREF.finditer(text):
-        text = text.replace(a_href.group(0), u"<a href=%s>" % _QUOTE.sub(u"\"", a_href.group(1)))
-    return text.replace(u"&amp;nbsp;", u"&nbsp;")
+        href = a_href.group(1)
+
+        parsed = urlparse(href)
+        if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
+            continue  # Do not unescape links containing disallowed URLs
+
+        target = a_href.group(2)
+
+        if target:
+            unescaped_tag = "<a href=\"%s\" target=\"%s\">" % (href, target)
+        else:
+            unescaped_tag = "<a href=\"%s\">" % href
+
+        text = text.replace(a_href.group(0), unescaped_tag)
+    return text.replace("&amp;nbsp;", u"&nbsp;")
 
 
 def strip_scripts(ht: str) -> str:

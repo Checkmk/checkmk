@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from checktestlib import BasicCheckResult
 
 pytestmark = pytest.mark.checks
@@ -89,12 +90,13 @@ pytestmark = pytest.mark.checks
                                     [('humidity', 75.0, None, None, 0, 100)])),
               ]),
     ])
-def test_ra32e_sensors_inputs(check_manager, info, discoveries_expected, checks_expected):
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_ra32e_sensors_inputs(info, discoveries_expected, checks_expected):
     ra32e_sensors_checks = [
         'ra32e_sensors', 'ra32e_sensors.humidity', 'ra32e_sensors.voltage', 'ra32e_sensors.power'
     ]
 
-    checks = {name: check_manager.get_check(name) for name in ra32e_sensors_checks}
+    checks = {name: Check(name) for name in ra32e_sensors_checks}
     parsed = checks['ra32e_sensors'].run_parse(info)
 
     for check, expected in discoveries_expected:

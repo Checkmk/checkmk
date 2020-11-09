@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Werk #5535 introduced with Checkmk moved the "Agent type" tag group from
 a tag group that could be customized to a builtin tag group.

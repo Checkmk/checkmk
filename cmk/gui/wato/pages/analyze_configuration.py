@@ -38,10 +38,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
 )
 
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-)
+from cmk.gui.plugins.wato import WatoMode, ActionResult, mode_registry
 from cmk.gui.plugins.wato.ac_tests import ACTestConnectivity
 
 from cmk.gui.watolib.changes import activation_sites
@@ -102,9 +99,9 @@ class ModeAnalyzeConfig(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         test_id = html.request.var("_test_id")
         site_id = html.request.var("_site_id")
@@ -134,6 +131,8 @@ class ModeAnalyzeConfig(WatoMode):
 
         else:
             raise NotImplementedError()
+
+        return None
 
     def page(self):
         if not self._analyze_sites():

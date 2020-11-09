@@ -10,6 +10,8 @@ import re
 import logging
 import pytest  # type: ignore[import]
 
+from cmk.utils.misc import is_daily_build_version
+
 LOGGER = logging.getLogger()
 
 
@@ -219,6 +221,22 @@ def test_src_not_contains_enterprise_sources(package_path):
 
     assert enterprise_files == []
     assert managed_files == []
+
+
+def test_src_windows_agent_has_correct_version(package_path, cmk_version):
+    if not package_path.endswith(".tar.gz"):
+        pytest.skip("%s is not a source package" % os.path.basename(package_path))
+
+    if is_daily_build_version(cmk_version):
+        pytest.skip("Do not test daily builds")
+
+    prefix = os.path.basename(package_path).replace(".tar.gz", "")
+    for file_path in [
+            prefix + "/agents/windows/check_mk_agent.exe",
+            prefix + "/agents/windows/check_mk_agent-64.exe",
+    ]:
+        exe_bytes = subprocess.check_output(["tar", "-xvOf", package_path, file_path])
+        assert cmk_version.encode("ascii") in exe_bytes
 
 
 def test_demo_modifications(package_path, cmk_version):

@@ -216,7 +216,7 @@ interactions:
         Console" class="icon" /><div class="title">Event Console</div><div class="subtitle">Manage
         event classification and correlation rules for the Event Console</div></a><a
         onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=bi_packs"><img
-        src="themes/facelift/images/icon_aggr.png" align="absmiddle" title="Business
+        src="themes/facelift/images/icon_aggr.svg" align="absmiddle" title="Business
         Intelligence" class="icon" /><div class="title">Business Intelligence</div><div
         class="subtitle">Configuration of Check_MK&#x27;s Business Intelligence component.</div></a><a
         onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=sites"><img

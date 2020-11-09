@@ -22,11 +22,10 @@ from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
 )
 from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
@@ -39,10 +38,13 @@ from cmk.gui.page_menu import (
     PageMenuCheckbox,
     PageMenuSearch,
     make_simple_link,
-    make_form_submit_link,
+    make_confirmed_form_submit_link,
     make_simple_form_page_menu,
     make_display_options_dropdown,
 )
+
+from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.flashed_messages import flash
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -224,25 +226,22 @@ class ABCEditGlobalSettingMode(WatoMode):
             PageMenuEntry(
                 title=_("Remove explicit setting") if value == defvalue else _("Reset to default"),
                 icon_name="reset",
-                item=make_form_submit_link(form_name="value_editor", button_name="_reset"),
+                item=make_confirmed_form_submit_link(
+                    form_name="value_editor",
+                    button_name="_reset",
+                    message=_("Do you really want to reset this configuration variable "
+                              "back to its default value?")),
                 is_enabled=reset_possible,
+                is_shortcut=True,
+                is_suggested=True,
             ))
 
         return menu
 
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.var("_reset"):
-            if not is_a_checkbox(self._valuespec):
-                c = wato_confirm(
-                    _("Resetting configuration variable"),
-                    _("Do you really want to reset this configuration variable "
-                      "back to its default value?"))
-                if c is False:
-                    return ""
-                if c is None:
-                    return None
-            elif not html.check_transaction():
-                return
+            if not html.check_transaction():
+                return None
 
             try:
                 del self._current_settings[self._varname]
@@ -269,7 +268,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
         page_menu = self.parent_mode()
         assert page_menu is not None
-        return page_menu.name()
+        return redirect(mode_url(page_menu.name()))
 
     def _save(self):
         watolib.save_global_settings(self._current_settings)
@@ -375,6 +374,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         menu = PageMenu(
             dropdowns=dropdowns,
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
         )
 
         self._extend_display_dropdown(menu)
@@ -395,71 +395,46 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
                 entries=list(self._page_menu_entries_details()),
             ))
 
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Filter settings"),
-                entries=list(self._page_menu_entries_filter()),
-            ))
-
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Show only modified settings"),
             icon_name="trans",
             item=PageMenuCheckbox(
                 is_checked=self._show_only_modified,
-                check_url=html.makeuri([("_show_only_modified", "1")]),
-                uncheck_url=html.makeuri([("_show_only_modified", "0")]),
+                check_url=makeuri(request, [("_show_only_modified", "1")]),
+                uncheck_url=makeuri(request, [("_show_only_modified", "0")]),
             ),
         )
 
-    def _page_menu_entries_filter(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title="",
-            icon_name="trans",
-            item=PageMenuSearch(),
-        )
-
-    def action(self):
+    def action(self) -> ActionResult:
         varname = html.request.var("_varname")
         if not varname:
-            return
+            return None
 
         action = html.request.var("_action")
 
         config_variable = config_variable_registry[varname]()
         def_value = self._default_values[varname]
 
-        if action == "reset" and not is_a_checkbox(config_variable.valuespec()):
-            c = wato_confirm(
-                _("Resetting configuration variable"),
-                _("Do you really want to reset the configuration variable <b>%s</b> "
-                  "back to the default value of <b><tt>%s</tt></b>?") %
-                (varname, config_variable.valuespec().value_to_text(def_value)))
+        if not html.check_transaction():
+            return None
+
+        if varname in self._current_settings:
+            self._current_settings[varname] = not self._current_settings[varname]
         else:
-            if not html.check_transaction():
-                return
-            c = True  # no confirmation for direct toggle
+            self._current_settings[varname] = not def_value
+        msg = _("Changed Configuration variable %s to %s.") % (
+            varname, "on" if self._current_settings[varname] else "off")
+        watolib.save_global_settings(self._current_settings)
 
-        if c:
-            if varname in self._current_settings:
-                self._current_settings[varname] = not self._current_settings[varname]
-            else:
-                self._current_settings[varname] = not def_value
-            msg = _("Changed Configuration variable %s to %s.") % (
-                varname, "on" if self._current_settings[varname] else "off")
-            watolib.save_global_settings(self._current_settings)
+        watolib.add_change("edit-configvar",
+                           msg,
+                           domains=[config_variable.domain()],
+                           need_restart=config_variable.need_restart())
 
-            watolib.add_change("edit-configvar",
-                               msg,
-                               domains=[config_variable.domain()],
-                               need_restart=config_variable.need_restart())
-
-            if action == "_reset":
-                return "globalvars", msg
-            return "globalvars"
-        if c is False:
-            return ""
+        if action == "_reset":
+            flash(msg)
+        return redirect(mode_url("globalvars"))
 
     def page(self):
         self._show_configuration_variables(self._groups())

@@ -11,7 +11,7 @@ import pytest  # type: ignore[import]
 import cmk.base.core
 import cmk.base.config
 import cmk.base.checking
-from cmk.base.api.agent_based.checking_classes import Result, state, Metric
+from cmk.base.api.agent_based.checking_classes import Result, State as state, Metric
 
 
 @pytest.mark.parametrize(
@@ -202,7 +202,7 @@ def _check_timeperiod(timeperiod, active_timeperiods):
 @pytest.mark.parametrize("subresults, aggregated_results", [
     ([], cmk.base.checking.ITEM_NOT_FOUND),
     ([
-        Result(state=state.OK, details="details"),
+        Result(state=state.OK, notice="details"),
     ], (0, "Everything looks OK - 1 detail available\ndetails", [])),
     ([
         Result(state=state.OK, summary="summary1", details="detailed info1"),

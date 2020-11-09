@@ -1,0 +1,15 @@
+Title: Nagios: Fix broken config reason displaying
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p18
+Date: 1600080986
+Class: fix
+
+This issue is only affecting Checkmk installations that use the Nagios core.
+In case a configuration error occurs, the reason for this issue should be displayed
+in the console or the GUI like this: "When Validating Nagios configuration...ERROR: REASON".
+
+However, since release v1.6.0p4 the output of the config validation was not shown to the user.
+Instead this text was shown instead: "Validating Nagios configuration...ERROR: Configuration Error: local variable 'cmk' referenced before assignment"

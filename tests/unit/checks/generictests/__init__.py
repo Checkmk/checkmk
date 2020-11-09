@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for generic testing of a 'dataset' derived from various sources.
 
-    `generictests.run(check_manager, dataset)`
+    `generictests.run(dataset)`
 
 will run all possible tests on `dataset`, depending on what attributes
 `dataset` has. Datasets can be derived from agentouputs, crashreports,

@@ -1,5 +1,27 @@
 // library for calculation of version numbers
 import java.text.SimpleDateFormat
+import groovy.transform.Field
+
+// TODO: Add the rules to exclude mkp-able folder regarding ntop integration under "managed"
+@Field
+def REPO_PATCH_RULES = [\
+"raw": [\
+    "folders_to_be_removed": [\
+        "enterprise", \
+        "managed", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee}"],\
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee}"]], \
+"enterprise": [\
+    "folders_to_be_removed": [\
+        "managed", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
+"managed": [\
+    "folders_to_be_removed": [],\
+    "folders_to_be_created": []] \
+]
 
 def get_branch(scm) {
     def BRANCH = scm.branches[0].name.replaceAll("/","-")
@@ -58,6 +80,62 @@ def select_docker_tag(BRANCH, BUILD_TAG, FOLDER_TAG) {
 
 def print_image_tag() {
     sh "cat /version.txt"
+}
+
+def patch_folders(EDITION) {
+    REPO_PATCH_RULES[EDITION]["folders_to_be_removed"].each{FOLDER ->
+            sh """
+                rm -rf ${FOLDER}
+            """ }
+
+    REPO_PATCH_RULES[EDITION]["folders_to_be_created"].each{FOLDER ->
+            sh """
+                mkdir -p ${FOLDER}
+            """ }
+}
+
+def patch_themes(EDITION) {
+    def THEME_LIST = ["facelift", "modern-dark"]
+    switch(EDITION) {
+        case 'raw':
+            // Workaround since scss does not support conditional includes
+            THEME_LIST.each { THEME ->
+                sh """
+                    echo '@mixin graphs {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs.scss
+                    echo '@mixin reporting {}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
+                    echo '@mixin ntop {}' > web/htdocs/themes/${THEME}/scss/cee/_ntop.scss
+                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
+                """
+            }
+            break
+        case 'enterprise':
+            // Workaround since scss does not support conditional includes
+            THEME_LIST.each { THEME ->
+                sh """
+                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
+                """
+            }
+            break
+    }
+}
+
+def patch_demo(DEMO) {
+    if (DEMO == 'yes') {
+        sh '''sed -ri 's/^(DEMO_SUFFIX[[:space:]]*:?= *).*/\\1'" .demo/" defines.make'''
+        sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
+        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{Core,World}.cc'''
+    }
+}
+
+def set_version(CMK_VERS) {
+    sh "make NEW_VERSION=${CMK_VERS} setversion"
+}
+
+def patch_git_after_checkout(EDITION, DEMO, CMK_VERS) {
+    patch_folders(EDITION)
+    patch_themes(EDITION)
+    patch_demo(DEMO)
+    set_version(CMK_VERS)
 }
 
 return this

@@ -13,6 +13,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     IndividualOrStoredPassword,
     RulespecGroup,
+    RulespecSubGroup,
     monitoring_macro_help,
     rulespec_group_registry,
     rulespec_registry,
@@ -80,18 +81,107 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupCustomIntegrations(RulespecGroup):
+class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
     @property
-    def name(self):
-        return "custom_integrations"
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "os"
+
+    @property
+    def title(self):
+        return _("Operating systems")
+
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "apps"
+
+    @property
+    def title(self):
+        return _("Applications")
+
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "cloud"
+
+    @property
+    def title(self):
+        return _("Cloud based environments")
+
+
+class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "container"
+
+    @property
+    def title(self):
+        return _("Containerization")
+
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "custom"
 
     @property
     def title(self):
         return _("Custom integrations")
 
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
     @property
-    def help(self):
-        return _("Integrate custom platform connections (special agents)")
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "hw"
+
+    @property
+    def title(self):
+        return _("Hardware")
+
+
+@rulespec_group_registry.register
+class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def sub_group_name(self):
+        return "testing"
+
+    @property
+    def title(self):
+        return _("Testing")
 
 
 def _valuespec_datasource_programs():
@@ -104,7 +194,7 @@ def _valuespec_datasource_programs():
                "via SSH.") + monitoring_macro_help() +
         _("This option can only be used with the permission \"Can add or modify executables\"."),
         label=_("Command line to execute"),
-        empty_text=_("Access Check_MK Agent via TCP"),
+        empty_text=_("Access Checkmk Agent via TCP"),
         size=80,
         attrencode=True,
     )
@@ -112,7 +202,7 @@ def _valuespec_datasource_programs():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupCustomIntegrations,
+        group=RulespecGroupDatasourceProgramsCustom,
         name="datasource_programs",
         valuespec=_valuespec_datasource_programs,
     ))
@@ -132,7 +222,7 @@ def _valuespec_special_agents_ddn_s2a():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:ddn_s2a",
         valuespec=_valuespec_special_agents_ddn_s2a,
     ))
@@ -218,7 +308,7 @@ def _valuespec_special_agents_cisco_prime():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsOS,
         name="special_agents:cisco_prime",
         valuespec=_valuespec_special_agents_cisco_prime,
     ))
@@ -568,8 +658,36 @@ def _valuespec_generic_metrics_prometheus():
                                        allow_empty=False,
                                        size=80,
                                        help=_("Example PromQL query: up{job=\"node_exporter\"}"))),
+                                  ("levels",
+                                   Dictionary(
+                                       elements=[
+                                           ("lower_levels",
+                                            Tuple(title=_("Lower levels"),
+                                                  elements=[
+                                                      Float(title=_("Warning below")),
+                                                      Float(title=_("Critical below")),
+                                                  ])),
+                                           ("upper_levels",
+                                            Tuple(
+                                                title=_("Upper levels"),
+                                                elements=[
+                                                    Float(title=_("Warning at")),
+                                                    Float(title=_("Critical at"))
+                                                ],
+                                            )),
+                                       ],
+                                       title="Metric levels",
+                                       validate=_verify_prometheus_empty,
+                                       help=
+                                       _("Specify upper and/or lower levels for the queried PromQL value. This option "
+                                         "should be used for simple cases where levels are only required once. You "
+                                         "should use the Prometheus custom services monitoring rule if you want to "
+                                         "specify a rule which applies to multiple Prometheus custom services at once. "
+                                         "The custom rule always has priority over the rule specified here "
+                                         "if the two overlap."),
+                                   )),
                               ],
-                              optional_keys=["metric_name"],
+                              optional_keys=["metric_name", "levels"],
                           ),
                           title=_('PromQL queries for Service'),
                           add_label=_("Add new PromQL query"),
@@ -586,6 +704,11 @@ def _valuespec_generic_metrics_prometheus():
         title=_("Prometheus"),
         optional_keys=[],
     )
+
+
+def _verify_prometheus_empty(value, varprefix):
+    if not value:
+        raise MKUserError(varprefix, _("Please specify at least one type of levels"))
 
 
 def _validate_prometheus_service_metrics(value, _varprefix):
@@ -628,9 +751,9 @@ def _valuespec_special_agents_vsphere():
                  choices=[
                      (True, _("Queried host is a host system")),
                      ("hostsystem_agent",
-                      _("Queried host is a host system with Check_MK Agent installed")),
+                      _("Queried host is a host system with Checkmk Agent installed")),
                      (False, _("Queried host is the vCenter")),
-                     ("agent", _("Queried host is the vCenter with Check_MK Agent installed")),
+                     ("agent", _("Queried host is the vCenter with Checkmk Agent installed")),
                  ],
                  default_value=True,
              )),
@@ -765,7 +888,7 @@ def _valuespec_special_agents_vsphere():
         ],
         ignored_keys=["use_pysphere"],
     ),
-                     title=_("Check state of VMWare ESX via vSphere"),
+                     title=_("VMWare ESX via vSphere"),
                      help=_(
                          "This rule selects the vSphere agent instead of the normal Check_MK Agent "
                          "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
@@ -797,7 +920,7 @@ def _valuespec_special_agents_hp_msa():
             )),
         ],
         optional_keys=False,
-        title=_("Check HP MSA via Web Interface"),
+        title=_("HP MSA via Web Interface"),
         help=_("This rule selects the Agent HP MSA instead of the normal Check_MK Agent "
                "which collects the data through the HP MSA web interface"),
     )
@@ -805,7 +928,7 @@ def _valuespec_special_agents_hp_msa():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:hp_msa",
         valuespec=_valuespec_special_agents_hp_msa,
     ))
@@ -878,7 +1001,7 @@ def _valuespec_special_agents_ipmi_sensors():
                 ("freeipmi", _("Use FreeIPMI"), _special_agents_ipmi_sensors_vs_freeipmi()),
                 ("ipmitool", _("Use IPMItool"), _special_agents_ipmi_sensors_vs_ipmitool()),
             ],
-            title=_("Check IPMI Sensors via Freeipmi or IPMItool"),
+            title=_("IPMI Sensors via Freeipmi or IPMItool"),
             help=_("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
                    "which collects the data through the FreeIPMI resp. IPMItool command"),
         ),
@@ -888,7 +1011,7 @@ def _valuespec_special_agents_ipmi_sensors():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsOS,
         name="special_agents:ipmi_sensors",
         valuespec=_valuespec_special_agents_ipmi_sensors,
     ))
@@ -916,7 +1039,7 @@ def _valuespec_special_agents_netapp():
                      "This can save quite a lot of CPU load on larger systems."),
              )),
         ],
-        title=_("Check NetApp via WebAPI"),
+        title=_("NetApp via WebAPI"),
         help=_(
             "This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
             "and allows monitoring via the NetApp Web API. To access the data the "
@@ -930,7 +1053,7 @@ def _valuespec_special_agents_netapp():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:netapp",
         valuespec=_valuespec_special_agents_netapp,
     ))
@@ -973,7 +1096,7 @@ def _valuespec_special_agents_activemq():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_activemq(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:activemq",
         valuespec=_valuespec_special_agents_activemq,
     ))
@@ -986,7 +1109,7 @@ def _factory_default_special_agents_emcvnx():
 
 def _valuespec_special_agents_emcvnx():
     return Dictionary(
-        title=_("Check state of EMC VNX storage systems"),
+        title=_("EMC VNX storage systems"),
         help=_("This rule selects the EMC VNX agent instead of the normal Check_MK Agent "
                "and allows monitoring of EMC VNX storage systems by calling naviseccli "
                "commandline tool locally on the monitoring system. Make sure it is installed "
@@ -1042,7 +1165,7 @@ def _valuespec_special_agents_emcvnx():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_emcvnx(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:emcvnx",
         valuespec=_valuespec_special_agents_emcvnx,
     ))
@@ -1055,7 +1178,7 @@ def _factory_default_special_agents_ibmsvc():
 
 def _valuespec_special_agents_ibmsvc():
     return Dictionary(
-        title=_("Check state of IBM SVC / V7000 storage systems"),
+        title=_("IBM SVC / V7000 storage systems"),
         help=_(
             "This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Check_MK Agent "
             "and allows monitoring of IBM SVC / V7000 storage systems by calling "
@@ -1120,7 +1243,7 @@ def _valuespec_special_agents_ibmsvc():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_ibmsvc(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:ibmsvc",
         valuespec=_valuespec_special_agents_ibmsvc,
     ))
@@ -1144,7 +1267,7 @@ def _valuespec_special_agents_random():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_random(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsTesting,
         name="special_agents:random",
         valuespec=_valuespec_special_agents_random,
     ))
@@ -1158,7 +1281,7 @@ def _factory_default_special_agents_acme_sbc():
 def _valuespec_special_agents_acme_sbc():
     return FixedValue(
         {},
-        title=_("Check ACME Session Border Controller"),
+        title=_("ACME Session Border Controller"),
         help=_("This rule activates an agent which connects "
                "to an ACME Session Border Controller (SBC). This agent uses SSH, so "
                "you have to exchange an SSH key to make a passwordless connect possible."),
@@ -1169,7 +1292,7 @@ def _valuespec_special_agents_acme_sbc():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_acme_sbc(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:acme_sbc",
         valuespec=_valuespec_special_agents_acme_sbc,
     ))
@@ -1182,7 +1305,7 @@ def _factory_default_special_agents_fritzbox():
 
 def _valuespec_special_agents_fritzbox():
     return Dictionary(
-        title=_("Check state of Fritz!Box Devices"),
+        title=_("Fritz!Box Devices"),
         help=_("This rule selects the Fritz!Box agent, which uses UPNP to gather information "
                "about configuration and connection status information."),
         elements=[
@@ -1204,7 +1327,7 @@ def _valuespec_special_agents_fritzbox():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_fritzbox(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:fritzbox",
         valuespec=_valuespec_special_agents_fritzbox,
     ))
@@ -1229,7 +1352,7 @@ def _valuespec_special_agents_innovaphone():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_innovaphone(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:innovaphone",
         valuespec=_valuespec_special_agents_innovaphone,
     ))
@@ -1252,7 +1375,7 @@ def _valuespec_special_agents_hivemanager():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_hivemanager(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:hivemanager",
         valuespec=_valuespec_special_agents_hivemanager,
     ))
@@ -1302,7 +1425,7 @@ def _valuespec_special_agents_hivemanager_ng():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_hivemanager_ng(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:hivemanager_ng",
         valuespec=_valuespec_special_agents_hivemanager_ng,
     ))
@@ -1315,7 +1438,7 @@ def _factory_default_special_agents_allnet_ip_sensoric():
 
 def _valuespec_special_agents_allnet_ip_sensoric():
     return Dictionary(
-        title=_("Check state of ALLNET IP Sensoric Devices"),
+        title=_("ALLNET IP Sensoric Devices"),
         help=_("This rule selects the ALLNET IP Sensoric agent, which fetches "
                "/xml/sensordata.xml from the device by HTTP and extracts the "
                "needed monitoring information from this file."),
@@ -1337,7 +1460,7 @@ def _valuespec_special_agents_allnet_ip_sensoric():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_allnet_ip_sensoric(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:allnet_ip_sensoric",
         valuespec=_valuespec_special_agents_allnet_ip_sensoric,
     ))
@@ -1345,7 +1468,7 @@ rulespec_registry.register(
 
 def _valuespec_special_agents_ucs_bladecenter():
     return Dictionary(
-        title=_("Check state of UCS Bladecenter"),
+        title=_("UCS Bladecenter"),
         help=_("This rule selects the UCS Bladecenter agent instead of the normal Check_MK Agent "
                "which collects the data through the UCS Bladecenter Web API"),
         elements=[
@@ -1370,7 +1493,7 @@ def _valuespec_special_agents_ucs_bladecenter():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:ucs_bladecenter",
         valuespec=_valuespec_special_agents_ucs_bladecenter,
     ))
@@ -1553,7 +1676,7 @@ def _valuespec_special_agents_siemens_plc():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_siemens_plc(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:siemens_plc",
         valuespec=_valuespec_special_agents_siemens_plc,
     ))
@@ -1590,7 +1713,7 @@ def _valuespec_special_agents_ruckus_spot():
             )),
             ("cmk_agent",
              Dictionary(
-                 title=_("Also contact Check_MK agent"),
+                 title=_("Also contact Checkmk agent"),
                  help=_("With this setting, the special agent will also contact the "
                         "Check_MK agent on the same system at the specified port."),
                  elements=[
@@ -1602,7 +1725,7 @@ def _valuespec_special_agents_ruckus_spot():
                  optional_keys=[],
              )),
         ],
-        title=_("Agent for Ruckus Spot"),
+        title=_("Ruckus Spot"),
         help=_("This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
                "which collects the data through the Ruckus Spot web interface"),
         optional_keys=["cmk_agent"])
@@ -1610,7 +1733,7 @@ def _valuespec_special_agents_ruckus_spot():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:ruckus_spot",
         valuespec=_valuespec_special_agents_ruckus_spot,
     ))
@@ -1671,7 +1794,7 @@ def _valuespec_special_agents_appdynamics():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_appdynamics(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:appdynamics",
         valuespec=_valuespec_special_agents_appdynamics,
     ))
@@ -1734,7 +1857,7 @@ def _valuespec_special_agents_jolokia():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jolokia(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:jolokia",
         valuespec=_valuespec_special_agents_jolokia,
     ))
@@ -1765,7 +1888,7 @@ def _valuespec_special_agents_tinkerforge():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:tinkerforge",
         valuespec=_valuespec_special_agents_tinkerforge,
     ))
@@ -1789,7 +1912,7 @@ def _valuespec_special_agents_prism():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsOS,
         name="special_agents:prism",
         valuespec=_valuespec_special_agents_prism,
     ))
@@ -1803,7 +1926,7 @@ def _special_agents_3par_transform_3par_add_verify_cert(v):
 def _valuespec_special_agents_3par():
     return Transform(
         Dictionary(
-            title=_("Agent 3PAR Configuration"),
+            title=_("3PAR Configuration"),
             elements=[
                 ("user", TextAscii(
                     title=_("Username"),
@@ -1841,16 +1964,16 @@ def _valuespec_special_agents_3par():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:3par",
-        title=lambda: _("Agent 3PAR Configuration"),
+        title=lambda: _("3PAR Configuration"),
         valuespec=_valuespec_special_agents_3par,
     ))
 
 
 def _valuespec_special_agents_storeonce():
     return Dictionary(
-        title=_("Check HPE StoreOnce"),
+        title=_("HPE StoreOnce"),
         help=_("This rule set selects the special agent for HPE StoreOnce Applainces "
                "instead of the normal Check_MK agent and allows monitoring via Web API. "),
         optional_keys=["cert"],
@@ -1869,7 +1992,7 @@ def _valuespec_special_agents_storeonce():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:storeonce",
         valuespec=_valuespec_special_agents_storeonce,
     ))
@@ -1877,7 +2000,7 @@ rulespec_registry.register(
 
 def _valuespec_special_agents_storeonce4x():
     return Dictionary(
-        title=_("Check HPE StoreOnce via REST API 4.x"),
+        title=_("HPE StoreOnce via REST API 4.x"),
         help=_("This rule set selects the special agent for HPE StoreOnce Appliances "
                "instead of the normal Check_MK agent and allows monitoring via REST API v4.x or "
                "higher. "),
@@ -1897,7 +2020,7 @@ def _valuespec_special_agents_storeonce4x():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:storeonce4x",
         valuespec=_valuespec_special_agents_storeonce4x,
     ))
@@ -1905,7 +2028,7 @@ rulespec_registry.register(
 
 def _valuespec_special_agents_salesforce():
     return Dictionary(
-        title=_("Check Salesforce"),
+        title=_("Salesforce"),
         help=_("This rule selects the special agent for Salesforce."),
         elements=[
             ("instances", ListOfStrings(
@@ -1919,10 +2042,10 @@ def _valuespec_special_agents_salesforce():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         help_func=lambda: _("This rule selects the special agent for Salesforce."),
         name="special_agents:salesforce",
-        title=lambda: _("Check Salesforce"),
+        title=lambda: _("Salesforce"),
         valuespec=_valuespec_special_agents_salesforce,
     ))
 
@@ -2170,7 +2293,7 @@ class MultisiteBiDatasource:
 def _valuespec_special_agents_bi():
     return ListOf(
         MultisiteBiDatasource().get_valuespec(),
-        title=_("Check state of BI Aggregations"),
+        title=_("BI Aggregations"),
         help=_(
             "This rule allows you to check multiple BI aggregations from multiple sites at once. "
             "You can also assign aggregations to specific hosts through the piggyback mechanism."),
@@ -2179,7 +2302,7 @@ def _valuespec_special_agents_bi():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:bi",
         valuespec=_valuespec_special_agents_bi,
     ))
@@ -2264,6 +2387,8 @@ def _transform_aws(d):
     if 'cloudwatch' in services:
         services['cloudwatch_alarms'] = services['cloudwatch']
         del services['cloudwatch']
+    if 'assume_role' not in d:
+        d['assume_role'] = {}
     return d
 
 
@@ -2473,7 +2598,7 @@ def _factory_default_special_agents_vnx_quotas():
 
 def _valuespec_special_agents_vnx_quotas():
     return Dictionary(
-        title=_("Check VNX quotas and filesystems"),
+        title=_("VNX quotas and filesystems"),
         elements=[
             ("user", TextAscii(title=_("NAS DB user name"))),
             ("password", Password(title=_("Password"))),
@@ -2486,7 +2611,7 @@ def _valuespec_special_agents_vnx_quotas():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_vnx_quotas(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsHardware,
         name="special_agents:vnx_quotas",
         valuespec=_valuespec_special_agents_vnx_quotas,
     ))
@@ -2500,7 +2625,7 @@ def _factory_default_special_agents_elasticsearch():
 def _valuespec_special_agents_elasticsearch():
     return Dictionary(
         optional_keys=["user", "password"],
-        title=_("Check state of Elasticsearch"),
+        title=_("Elasticsearch"),
         help=_("Requests data about Elasticsearch clusters, nodes and indices."),
         elements=[
             ("hosts",
@@ -2556,7 +2681,7 @@ def _valuespec_special_agents_elasticsearch():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_elasticsearch(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:elasticsearch",
         valuespec=_valuespec_special_agents_elasticsearch,
     ))
@@ -2569,7 +2694,7 @@ def _factory_default_special_agents_splunk():
 
 def _valuespec_special_agents_splunk():
     return Dictionary(
-        title=_("Check state of Splunk"),
+        title=_("Splunk"),
         help=_("Requests data from a Splunk instance."),
         optional_keys=["instance", "port"],
         elements=[
@@ -2630,7 +2755,7 @@ def _valuespec_special_agents_splunk():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_splunk(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:splunk",
         valuespec=_valuespec_special_agents_splunk,
     ))
@@ -2641,9 +2766,15 @@ def _factory_default_special_agents_jenkins():
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
 
 
+def _transform_jenkins_infos(value):
+    if "infos" in value:
+        value["sections"] = value.pop("infos")
+    return value
+
+
 def _valuespec_special_agents_jenkins():
-    return Dictionary(
-        title=_("Check state of Jenkins jobs and builds"),
+    return Transform(Dictionary(
+        title=_("Jenkins jobs and builds"),
         help=_("Requests data from a jenkins instance."),
         optional_keys=["port"],
         elements=[
@@ -2702,13 +2833,14 @@ def _valuespec_special_agents_jenkins():
                  allow_empty=False,
              )),
         ],
-    )
+    ),
+                     forth=_transform_jenkins_infos)
 
 
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jenkins(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:jenkins",
         valuespec=_valuespec_special_agents_jenkins,
     ))
@@ -2735,13 +2867,13 @@ def _valuespec_special_agents_zerto():
                 allow_empty=False,
             )),
         ],
-        title=_("Check state of Zerto"),
+        title=_("Zerto"),
         help=_("This rule selects the Zerto special agent for an existing Checkmk host"))
 
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:zerto",
         valuespec=_valuespec_special_agents_zerto,
     ))
@@ -2754,7 +2886,7 @@ def _factory_default_special_agents_graylog():
 
 def _valuespec_special_agents_graylog():
     return Dictionary(
-        title=_("Check state of Graylog"),
+        title=_("Graylog"),
         help=_("Requests node, cluster and indice data from a Graylog "
                "instance."),
         optional_keys=["port"],
@@ -2869,7 +3001,7 @@ def _valuespec_special_agents_graylog():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_graylog(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:graylog",
         valuespec=_valuespec_special_agents_graylog,
     ))
@@ -2877,8 +3009,8 @@ rulespec_registry.register(
 
 def _valuespec_special_agents_couchbase():
     return Dictionary(
-        title=_("Check state of couchbase servers"),
-        help=_("This rule allows to select a couchbase server to monitor as well as "
+        title=_("Couchbase servers"),
+        help=_("This rule allows to select a Couchbase server to monitor as well as "
                "configure buckets for further checks"),
         elements=[
             ("buckets",
@@ -2905,7 +3037,7 @@ def _valuespec_special_agents_couchbase():
 rulespec_registry.register(
     HostRulespec(
         factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:couchbase",
         valuespec=_valuespec_special_agents_couchbase,
     ))
@@ -2955,7 +3087,7 @@ def _vs_jira_projects(title):
 
 def _valuespec_special_agents_jira():
     return Dictionary(
-        title=_("Check statistics of Jira"),
+        title=_("Jira statistics"),
         help=_("Use Jira Query Language (JQL) to get statistics out of your "
                "Jira instance."),
         elements=[
@@ -3074,7 +3206,7 @@ def _valuespec_special_agents_jira():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jira(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:jira",
         valuespec=_valuespec_special_agents_jira,
     ))
@@ -3087,7 +3219,7 @@ def _factory_default_special_agents_rabbitmq():
 
 def _valuespec_special_agents_rabbitmq():
     return Dictionary(
-        title=_("Check state of RabbitMQ"),
+        title=_("RabbitMQ"),
         help=_("Requests data from a RabbitMQ instance."),
         elements=[
             ("instance",
@@ -3152,7 +3284,7 @@ def _valuespec_special_agents_rabbitmq():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_rabbitmq(),
-        group=RulespecGroupDatasourcePrograms,
+        group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:rabbitmq",
         valuespec=_valuespec_special_agents_rabbitmq,
     ))

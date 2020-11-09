@@ -14,10 +14,10 @@
 #include <utility>
 #include <vector>
 
-#include "Column.h"
 #include "DynamicRRDColumn.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 class RowRenderer;
@@ -25,7 +25,7 @@ class RowRenderer;
 class RRDColumn : public ListColumn {
 public:
     RRDColumn(const std::string &name, const std::string &description,
-              const Column::Offsets &, MonitoringCore *mc, RRDColumnArgs args);
+              const ColumnOffsets &, MonitoringCore *mc, RRDColumnArgs args);
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;

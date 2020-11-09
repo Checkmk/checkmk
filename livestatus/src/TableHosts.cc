@@ -13,14 +13,16 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
+#include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "CommentColumn.h"
 #include "ContactGroupsColumn.h"
-#include "CustomTimeperiodColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
@@ -28,10 +30,10 @@
 #include "DoubleLambdaColumn.h"
 #include "DowntimeColumn.h"
 #include "DynamicColumn.h"
-#include "DynamicHostFileColumn.h"
+#include "DynamicFileColumn.h"
 #include "DynamicRRDColumn.h"
+#include "FileColumn.h"
 #include "HostContactsColumn.h"
-#include "HostFileColumn.h"
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
 #include "HostRRDColumn.h"
@@ -41,24 +43,25 @@
 #include "ListLambdaColumn.h"
 #include "Logger.h"
 #include "LogwatchListColumn.h"
+#include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
-#include "OffsetStringHostMacroColumn.h"
 #include "Query.h"
 #include "ServiceListColumn.h"
 #include "ServiceListStateColumn.h"
 #include "StringLambdaColumn.h"
 #include "StringPerfdataColumn.h"
 #include "TimeLambdaColumn.h"
-#include "TimeperiodColumn.h"
+#include "TimeperiodsCache.h"
 #include "auth.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
 extern host *host_list;
+extern TimeperiodsCache *g_timeperiods_cache;
 
 TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", -1, -1);
+    addColumns(this, "", ColumnOffsets{});
 }
 
 std::string TableHosts::name() const { return "hosts"; }
@@ -67,8 +70,11 @@ std::string TableHosts::namePrefix() const { return "host_"; }
 
 // static
 void TableHosts::addColumns(Table *table, const std::string &prefix,
-                            int indirect_offset, int extra_offset) {
-    Column::Offsets offsets{indirect_offset, extra_offset, 0};
+                            const ColumnOffsets &offsets) {
+    auto offsets_custom_variables{offsets.add(
+        [](Row r) { return &r.rawData<host>()->custom_variables; })};
+    auto offsets_services{
+        offsets.add([](Row r) { return &r.rawData<host>()->services; })};
     auto *mc = table->core();
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "name", "Host name", offsets,
@@ -92,11 +98,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) {
             return r.check_command == nullptr ? "" : r.check_command;
         }));
-    table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        Column::Offsets{indirect_offset, extra_offset, 0}, table->core(),
-        DANGEROUS_OFFSETOF(host, check_command)));
+        offsets, [mc](const host &r) {
+            return HostMacroExpander::make(r, mc)->expandMacros(
+                r.check_command);
+        }));
 #else
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "check_command",
@@ -104,11 +112,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) {
             return r.host_check_command == nullptr ? "" : r.host_check_command;
         }));
-    table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        DANGEROUS_OFFSETOF(host, host_check_command)));
+        offsets, [mc](const host &r) {
+            return HostMacroExpander::make(r, mc)->expandMacros(
+                r.host_check_command);
+        }));
 #endif
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "event_handler", "Nagios command used as event handler",
@@ -130,39 +140,40 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period", "The name of the service period of the host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), "SERVICE_PERIOD"));
+        offsets_custom_variables, table->core(), "SERVICE_PERIOD"));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "notes", "Optional notes for this host", offsets,
         [](const host &r) { return r.notes == nullptr ? "" : r.notes; }));
-    table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        DANGEROUS_OFFSETOF(host, notes)));
+        offsets, [mc](const host &r) {
+            return HostMacroExpander::make(r, mc)->expandMacros(r.notes);
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "notes_url",
         "An optional URL with further information about the host", offsets,
         [](const host &r) {
             return r.notes_url == nullptr ? "" : r.notes_url;
         }));
-    table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
-        Column::Offsets{indirect_offset, extra_offset, -1}, table->core(),
-        DANGEROUS_OFFSETOF(host, notes_url)));
+        offsets, [mc](const host &r) {
+            return HostMacroExpander::make(r, mc)->expandMacros(r.notes_url);
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "action_url",
         "An optional URL to custom actions or information about this host",
         offsets, [](const host &r) {
             return r.action_url == nullptr ? "" : r.action_url;
         }));
-    table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        DANGEROUS_OFFSETOF(host, action_url)));
+        offsets, [mc](const host &r) {
+            return HostMacroExpander::make(r, mc)->expandMacros(r.action_url);
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "plugin_output", "Output of the last host check", offsets,
         [](const host &r) {
@@ -180,11 +191,12 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) {
             return r.icon_image == nullptr ? "" : r.icon_image;
         }));
-    table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        DANGEROUS_OFFSETOF(host, icon_image)));
+        offsets, [mc](const host &r) {
+            return HostMacroExpander::make(r, mc)->expandMacros(r.icon_image);
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",
         offsets, [](const host &r) {
@@ -268,15 +280,12 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 r.next_host_notification);
         }));
 #else
-    table->addColumn(std::make_unique <
-                     TimeLambdaColumn<host>(
-                         prefix + "last_notification",
-                         "Time of the last notification (Unix timestamp)",
-                         offsets,
-                         [](const host &r) {
-                             return std::chrono::system_clock::from_time_t(
-                                 r.last_notification);
-                         }));
+    table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
+        prefix + "last_notification",
+        "Time of the last notification (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.last_notification);
+        }));
     table->addColumn(std::make_unique<TimeLambdaColumn<host>>(
         prefix + "next_notification",
         "Time of the next notification (Unix timestamp)", offsets,
@@ -407,13 +416,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, modified_attributes)}));
+        offsets.add(
+            [](Row r) { return &r.rawData<host>()->modified_attributes; })));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, modified_attributes)}));
+        "A list of all modified attributes", offsets.add([](Row r) {
+            return &r.rawData<host>()->modified_attributes;
+        })));
 
     // columns of type double
     table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
@@ -458,124 +467,102 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "percent_state_change", "Percent state change", offsets,
         [](const host &r) { return r.percent_state_change; }));
 
-    table->addColumn(std::make_unique<TimeperiodColumn>(
+    table->addColumn(std::make_unique<BoolLambdaColumn<host, true>>(
         prefix + "in_notification_period",
         "Whether this host is currently in its notification period (0/1)",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, notification_period_ptr), 0}));
-    table->addColumn(std::make_unique<TimeperiodColumn>(
+        offsets, [](const host &r) {
+            return g_timeperiods_cache->inTimeperiod(r.notification_period_ptr);
+        }));
+    table->addColumn(std::make_unique<BoolLambdaColumn<host, true>>(
         prefix + "in_check_period",
-        "Whether this host is currently in its check period (0/1)",
-        Column::Offsets{indirect_offset, extra_offset,
-                        DANGEROUS_OFFSETOF(host, check_period_ptr), 0}));
-    table->addColumn(std::make_unique<CustomTimeperiodColumn>(
+        "Whether this host is currently in its check period (0/1)", offsets,
+        [](const host &r) {
+            return g_timeperiods_cache->inTimeperiod(r.check_period_ptr);
+        }));
+    table->addColumn(std::make_unique<BoolLambdaColumn<host, true>>(
         prefix + "in_service_period",
-        "Whether this host is currently in its service period (0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), "SERVICE_PERIOD"));
+        "Whether this host is currently in its service period (0/1)", offsets,
+        [mc](const host &r) {
+            auto attrs = mc->customAttributes(&r.custom_variables,
+                                              AttributeKind::custom_variables);
+            auto it = attrs.find("SERVICE_PERIOD");
+            return it == attrs.end() ||
+                   g_timeperiods_cache->inTimeperiod(it->second);
+        }));
 
     table->addColumn(std::make_unique<HostContactsColumn>(
         prefix + "contacts",
         "A list of all contacts of this host, either direct or via a contact group",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}));
+        offsets));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes",
-        "A list of the ids of all scheduled downtimes of this host",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        false, DowntimeColumn::info::none));
+        "A list of the ids of all scheduled downtimes of this host", offsets,
+        table->core(), false, DowntimeColumn::info::none));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        false, DowntimeColumn::info::medium));
+        offsets, table->core(), false, DowntimeColumn::info::medium));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        false, DowntimeColumn::info::full));
+        offsets, table->core(), false, DowntimeColumn::info::full));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        false, false, false));
+        offsets, table->core(), false, false, false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        false, true, false));
+        offsets, table->core(), false, true, false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        false, true, true));
+        offsets, table->core(), false, true, true));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
-        "A list of the names of the custom variables",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        "A list of the names of the custom variables", offsets_custom_variables,
         table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), AttributeKind::custom_variables));
+        offsets_custom_variables, table->core(),
+        AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), AttributeKind::custom_variables));
+        offsets_custom_variables, table->core(),
+        AttributeKind::custom_variables));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "tag_names", "A list of the names of the tags",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), AttributeKind::tags));
+        offsets_custom_variables, table->core(), AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "tag_values", "A list of the values of the tags",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), AttributeKind::tags));
+        offsets_custom_variables, table->core(), AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "tags", "A dictionary of the tags",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        prefix + "tags", "A dictionary of the tags", offsets_custom_variables,
         table->core(), AttributeKind::tags));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_names", "A list of the names of the labels",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), AttributeKind::labels));
+        offsets_custom_variables, table->core(), AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_values", "A list of the values of the labels",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), AttributeKind::labels));
+        offsets_custom_variables, table->core(), AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "labels", "A dictionary of the labels",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), AttributeKind::labels));
+        offsets_custom_variables, table->core(), AttributeKind::labels));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_source_names",
-        "A list of the names of the label sources",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        "A list of the names of the label sources", offsets_custom_variables,
         table->core(), AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_source_values",
-        "A list of the values of the label sources",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        "A list of the values of the label sources", offsets_custom_variables,
         table->core(), AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "label_sources", "A dictionary of the label sources",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), AttributeKind::label_sources));
+        offsets_custom_variables, table->core(), AttributeKind::label_sources));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom
@@ -583,19 +570,15 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     // ordinary Nagios columns.
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "filename", "The value of the custom variable FILENAME",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, custom_variables)},
-        table->core(), "FILENAME"));
+        offsets_custom_variables, table->core(), "FILENAME"));
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, parent_hosts)},
+        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }),
         table->core(), false));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct children of the host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, child_hosts)},
+        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }),
         table->core(), false));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<HostRRDColumn>>(
         prefix + "rrddata",
@@ -604,127 +587,108 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services of the host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num));
+        offsets_services, table->core(), ServiceListStateColumn::Type::num));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",
         "The worst soft state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::worst_state));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::worst_state));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_ok",
         "The number of the host's services with the soft state OK",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_ok));
+        offsets_services, table->core(), ServiceListStateColumn::Type::num_ok));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_warn",
         "The number of the host's services with the soft state WARN",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_warn));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_warn));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_crit",
         "The number of the host's services with the soft state CRIT",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_crit));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_crit));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_unknown",
         "The number of the host's services with the soft state UNKNOWN",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_unknown));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_unknown));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_pending",
         "The number of the host's services which have not been checked yet (pending)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_pending));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_pending));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_handled_problems",
         "The number of the host's services which have handled problems",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_handled_problems));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_handled_problems));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_unhandled_problems",
         "The number of the host's services which have unhandled problems",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_unhandled_problems));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_unhandled_problems));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "worst_service_hard_state",
         "The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::worst_hard_state));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::worst_hard_state));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
         "The number of the host's services with the hard state OK",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_hard_ok));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_hard_ok));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_warn",
         "The number of the host's services with the hard state WARN",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_hard_warn));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_hard_warn));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_crit",
         "The number of the host's services with the hard state CRIT",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_hard_crit));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_hard_crit));
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The number of the host's services with the hard state UNKNOWN",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), ServiceListStateColumn::Type::num_hard_unknown));
+        offsets_services, table->core(),
+        ServiceListStateColumn::Type::num_hard_unknown));
 
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        HostSpecialIntColumn::Type::real_hard_state));
+        offsets, table->core(), HostSpecialIntColumn::Type::real_hard_state));
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        HostSpecialIntColumn::Type::pnp_graph_present));
+        offsets, table->core(), HostSpecialIntColumn::Type::pnp_graph_present));
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
-        HostSpecialIntColumn::Type::mk_inventory_last));
+        offsets, table->core(), HostSpecialIntColumn::Type::mk_inventory_last));
 
-    table->addColumn(std::make_unique<HostFileColumn<host>>(
+    table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
         [](const host &r) { return std::filesystem::path{r.name}; }));
-    table->addColumn(std::make_unique<HostFileColumn<host>>(
+    table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
         [](const host &r) {
             return std::filesystem::path{std::string{r.name} + ".gz"};
         }));
-    table->addColumn(std::make_unique<HostFileColumn<host>>(
+    table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
         offsets, [mc]() { return mc->structuredStatusPath(); },
         [](const host &r) { return std::filesystem::path{r.name}; }));
     table->addColumn(std::make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",
-        "This list of logfiles with problems fetched via mk_logwatch",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core()));
+        "This list of logfiles with problems fetched via mk_logwatch", offsets,
+        table->core()));
 
-    table->addDynamicColumn(std::make_unique<DynamicHostFileColumn<host>>(
+    table->addDynamicColumn(std::make_unique<DynamicFileColumn<host>>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", offsets,
         [mc]() { return mc->mkLogwatchPath(); },
@@ -733,44 +697,33 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
 
     table->addColumn(std::make_unique<HostSpecialDoubleColumn>(
-        prefix + "staleness", "Staleness indicator for this host",
-        Column::Offsets{indirect_offset, extra_offset, -1, 0},
+        prefix + "staleness", "Staleness indicator for this host", offsets,
         HostSpecialDoubleColumn::Type::staleness));
 
     table->addColumn(std::make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, hostgroups_ptr)},
+        offsets.add([](Row r) { return &r.rawData<host>()->hostgroups_ptr; }),
         table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, contact_groups)}));
+        offsets.add([](Row r) { return &r.rawData<host>()->contact_groups; })));
 
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), 0));
+        offsets_services, table->core(), 0));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), 1));
+        offsets_services, table->core(), 1));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), 2));
+        offsets_services, table->core(), 2));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
-        Column::Offsets{indirect_offset, extra_offset, -1,
-                        DANGEROUS_OFFSETOF(host, services)},
-        table->core(), 3));
+        offsets_services, table->core(), 3));
 
     table->addColumn(std::make_unique<ListLambdaColumn<host>>(
         prefix + "metrics",
@@ -782,7 +735,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                     scan_rrd(mc->pnpPath() / r.name,
                              dummy_service_description(), mc->loggerRRD());
                 std::transform(std::begin(names), std::end(names),
-                               std::begin(metrics),
+                               std::back_inserter(metrics),
                                [](auto &&m) { return m.string(); });
             }
             return metrics;

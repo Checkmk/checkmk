@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_aws_elbv2_network(info):
-    metrics = _extract_aws_metrics_by_labels([
+    metrics = extract_aws_metrics_by_labels([
         'ConsumedLCUs',
         'ActiveFlowCount',
         'ActiveFlowCount_TLS',
@@ -56,7 +58,6 @@ check_info['aws_elbv2_network'] = {
     'inventory_function': lambda p: inventory_aws_generic_single(p, ['ConsumedLCUs']),
     'check_function': check_aws_elbv2_network_lcu,
     'service_description': 'AWS/NetworkELB LCUs',
-    'includes': ['aws.include'],
     'group': 'aws_elbv2_lcu',
     'has_perfdata': True,
 }
@@ -99,7 +100,6 @@ check_info['aws_elbv2_network.connections'] = {
         p, _aws_elbv2_network_connection_types, requirement=any),
     'check_function': check_aws_elbv2_network_connections,
     'service_description': 'AWS/NetworkELB Connections',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }
 
@@ -156,7 +156,6 @@ check_info['aws_elbv2_network.connections'] = {
 #         p, ['HealthyHostCount', 'UnHealthyHostCount']),
 #     'check_function': check_aws_elbv2_network_healthy_hosts,
 #     'service_description': 'AWS/NetworkELB Healthy Hosts',
-#     'includes': ['aws.include'],
 #     'group': 'aws_elb_healthy_hosts',
 #     'has_perfdata': True,
 # }
@@ -197,7 +196,6 @@ check_info['aws_elbv2_network.tls_handshakes'] = {
         p, _aws_elbv2_network_tls_types, requirement=any),
     'check_function': check_aws_elbv2_network_tls_handshakes,
     'service_description': 'AWS/NetworkELB TLS Handshakes',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }
 
@@ -236,7 +234,6 @@ check_info['aws_elbv2_network.rst_packets'] = {
         p, _aws_elbv2_network_rst_packets_types, requirement=any),
     'check_function': check_aws_elbv2_network_rst_packets,
     'service_description': 'AWS/NetworkELB Reset Packets',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }
 
@@ -273,6 +270,5 @@ check_info['aws_elbv2_network.statistics'] = {
         p, _aws_elbv2_network_statistics_metric_names, requirement=any),
     'check_function': check_aws_elbv2_network_statistics,
     'service_description': 'AWS/NetworkELB Statistics',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }

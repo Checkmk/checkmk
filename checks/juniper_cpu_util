@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Default settings for warn/crit values
 factory_settings['juniper_cpu_default'] = {'levels': (80.0, 90.0)}
 
@@ -52,6 +53,5 @@ check_info['juniper_cpu_util'] = {
             5,  # jnxOperatingDescr
             8,  # jnxOperatingCPU
         ]),
-    'includes': ["cpu_util.include"],
     'default_levels_variable': 'juniper_cpu_default',
 }

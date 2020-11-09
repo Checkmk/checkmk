@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<lnx_bonding:sep(58)>>>
 # ==> bond0 <==
 # Ethernet Channel Bonding Driver: v3.7.1 (April 27, 2011)
@@ -117,5 +118,4 @@ check_info['lnx_bonding'] = {
     "service_description": "Bonding Interface %s",
     "group": "bonding",
     "default_levels_variable": "bonding_default_levels",
-    "includes": ["bonding.include"],
 }

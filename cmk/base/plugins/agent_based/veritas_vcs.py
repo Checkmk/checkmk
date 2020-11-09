@@ -14,14 +14,14 @@ from typing import (
     MutableMapping,
     Optional,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     register,
     Result,
     Service,
-    state,
+    State as state,
     type_defs,
 )
-from .agent_based_api.v0.clusterize import aggregate_node_details
+from .agent_based_api.v1.clusterize import aggregate_node_details
 
 # <<<veritas_vcs>>>
 # ClusState        RUNNING
@@ -128,7 +128,7 @@ Section = MutableMapping[str, SubSection]
 ClusterSection = Mapping[str, Section]
 
 
-def parse_veritas_vcs(string_table: type_defs.AgentStringTable) -> Optional[Section]:
+def parse_veritas_vcs(string_table: type_defs.StringTable) -> Optional[Section]:
     parsed: Section = {}
 
     for line in string_table:
@@ -166,7 +166,7 @@ register.agent_section(
 )
 
 
-def discover_veritas_vcs_subsection(subsection: SubSection,) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs_subsection(subsection: SubSection,) -> type_defs.DiscoveryResult:
     for item_name in subsection:
         yield Service(item=item_name)
 
@@ -226,7 +226,7 @@ def cluster_check_veritas_vcs_subsection(
     item: str,
     params: type_defs.Parameters,
     subsections: Mapping[str, SubSection],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     last_cluster_result = None
 
     all_nodes_ok = True
@@ -240,22 +240,22 @@ def cluster_check_veritas_vcs_subsection(
             last_cluster_result = node_results[-1]
             node_results = node_results[:-1]
 
-        agg_node_results = aggregate_node_details(
+        agg_node_state, agg_node_text = aggregate_node_details(
             node_name,
             node_results,
         )
-        if agg_node_results:
+        if agg_node_text:
             details_prefix = "[%s]: " % node_name
-            details_split = agg_node_results.details.split('\n')
+            details_split = agg_node_text.split('\n')
             details_split = [details_split[0]] + [
                 detail_split[len(details_prefix):] for detail_split in details_split[1:]
             ]
             yield Result(
-                state=agg_node_results.state,
+                state=agg_node_state,
                 notice=', '.join(details_split),
-                details=agg_node_results.details,
+                details=agg_node_text,
             )
-            all_nodes_ok &= agg_node_results.state is state.OK
+            all_nodes_ok &= agg_node_state is state.OK
 
     if all_nodes_ok:
         yield Result(
@@ -277,7 +277,7 @@ def cluster_check_veritas_vcs_subsection(
 #   +----------------------------------------------------------------------+
 
 
-def discover_veritas_vcs(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs(section: Section) -> type_defs.DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get('cluster', {}))
 
 
@@ -285,7 +285,7 @@ def check_veritas_vcs(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -297,7 +297,7 @@ def cluster_check_veritas_vcs(
     item: str,
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -327,7 +327,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_veritas_vcs_system(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs_system(section: Section) -> type_defs.DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get('system', {}))
 
 
@@ -335,7 +335,7 @@ def check_veritas_vcs_system(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -347,7 +347,7 @@ def cluster_check_veritas_vcs_system(
     item: str,
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -377,7 +377,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_veritas_vcs_group(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs_group(section: Section) -> type_defs.DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get('group', {}))
 
 
@@ -385,7 +385,7 @@ def check_veritas_vcs_group(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -397,7 +397,7 @@ def cluster_check_veritas_vcs_group(
     item: str,
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
@@ -427,7 +427,7 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_veritas_vcs_resource(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_veritas_vcs_resource(section: Section) -> type_defs.DiscoveryResult:
     yield from discover_veritas_vcs_subsection(section.get('resource', {}))
 
 
@@ -435,7 +435,7 @@ def check_veritas_vcs_resource(
     item: str,
     params: type_defs.Parameters,
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
         item,
         params,
@@ -447,7 +447,7 @@ def cluster_check_veritas_vcs_resource(
     item: str,
     params: type_defs.Parameters,
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,

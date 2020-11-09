@@ -27,8 +27,8 @@ def parse_kaspersky_av_client(info):
 
         timestamp_text = line[1] + " " + line[2]
         # We assume that the timestamp is to be interpreted in the timezone of
-        # the Check_MK server. This might be a problem, if e.g. the agent is located
-        # in China and the Check_MK server in USA.
+        # the Checkmk server. This might be a problem, if e.g. the agent is located
+        # in China and the Checkmk server in USA.
         age = now - time.mktime(time.strptime(timestamp_text, '%d.%m.%Y %H:%M:%S'))
 
         if line[0] == "Signatures":

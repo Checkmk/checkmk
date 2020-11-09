@@ -6,7 +6,7 @@
 
 from typing import Optional
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
 # TODO: Change all call sites to directly import from cmk.gui.page_menu
@@ -60,5 +60,11 @@ def _make_wato_page_state() -> PageState:
             text=changes_info,
             icon_name="pending_changes",
             url=changelog_url,
+            tooltip_text=ungettext(singular=_("Currently there is one change to activate"),
+                                   plural=_("Currently there are %s to activate." % changes_info),
+                                   n=int(changes_info.rstrip("+ changes"))) + \
+                         "\n" + _("Click here to go to pending changes."),
         )
-    return PageState(text=_("No pending changes"), url=changelog_url)
+    return PageState(text=_("No pending changes"),
+                     url=changelog_url,
+                     tooltip_text=_("Click here to see the activation status per site."))

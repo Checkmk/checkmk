@@ -23,11 +23,12 @@ class PageState:
     icon_name: Optional[str] = None
     css_classes: CSSSpec = None
     url: Optional[str] = None
+    tooltip_text: str = ""
 
 
 class PageStateRenderer:
     def show(self, page_state: PageState) -> None:
-        html.open_div(class_=self._get_css_classes(page_state))
+        html.open_div(class_=self._get_css_classes(page_state), title=page_state.tooltip_text)
         if page_state.url:
             html.open_a(page_state.url)
             self._show_content(page_state)

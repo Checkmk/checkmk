@@ -81,6 +81,14 @@ def _concat_instance_multivalues(parsed, key):
     return all_multivalues
 
 
+def _max_latency(latencies):
+    all_latencies = []
+    for data in latencies.values():
+        multivalues, _unit = data[0]
+        all_latencies.extend(map(int, multivalues))
+    return max(all_latencies) if all_latencies else None
+
+
 def check_esx_vsphere_counters_diskio(item, params, parsed):
     summary = {}
 
@@ -97,9 +105,9 @@ def check_esx_vsphere_counters_diskio(item, params, parsed):
             # these are absolute counts, every 20 seconds.
             summary["%s_ios" % op_type] = esx_vsphere_get_average(op_counts) / 20
 
-    latencies = _concat_instance_multivalues(parsed, "disk.deviceLatency")
-    if latencies:
-        summary['latency'] = max(int(l) for l in latencies) / 1000.0
+    latency = _max_latency(parsed.get("disk.deviceLatency", {}))
+    if latency is not None:
+        summary['latency'] = latency / 1000.0
 
     return check_diskstat_dict(item, params, {"SUMMARY": summary})
 

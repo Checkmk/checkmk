@@ -95,7 +95,7 @@ def patch_folders(EDITION) {
 }
 
 def patch_themes(EDITION) {
-    def THEME_LIST = ["classic", "facelift", "modern-dark"]
+    def THEME_LIST = ["facelift", "modern-dark"]
     switch(EDITION) {
         case 'raw':
             // Workaround since scss does not support conditional includes

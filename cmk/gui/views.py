@@ -149,6 +149,7 @@ from cmk.gui.type_defs import (PainterSpec, HTTPVariables, InfoName, FilterHeade
                                ColumnName, Visual, ViewSpec)
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -2844,12 +2845,13 @@ def do_actions(view, what, action_rows, backurl):
     command = None
     title, executor = core_command(what, action_rows[0], 0,
                                    len(action_rows))[1:3]  # just get the title and executor
-    if not html.confirm(_("Do you really want to %(title)s the following %(count)d %(what)s?") % {
-            "title": title,
-            "count": len(action_rows),
-            "what": visual_info_registry[what]().title_plural,
-    },
-                        method='GET'):
+    if not confirm_with_preview(
+            _("Do you really want to %(title)s the following %(count)d %(what)s?") % {
+                "title": title,
+                "count": len(action_rows),
+                "what": visual_info_registry[what]().title_plural,
+            },
+            method='GET'):
         return False
 
     count = 0

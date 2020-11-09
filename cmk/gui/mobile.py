@@ -31,6 +31,7 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
 HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
 Items = List[Tuple[str, str, str]]
@@ -450,7 +451,7 @@ def do_commands(what: str, rows: Rows) -> bool:
     command = None
     title, executor = views.core_command(what, rows[0], 0, len(rows))[1:3]  # just get the title
     title_what = _("hosts") if what == "host" else _("services")
-    r = html.confirm(
+    r = confirm_with_preview(
         _("Do you really want to %(title)s the %(count)d %(what)s?") % {
             "title": title,
             "count": len(rows),

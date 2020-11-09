@@ -2329,48 +2329,6 @@ class html(ABCHTMLGenerator):
             self.close_x()
         self.form_vars.append(varname)
 
-    # The confirm dialog is normally not a dialog which need to be protected
-    # by a transid itselfs. It is only a intermediate step to the real action
-    # But there are use cases where the confirm dialog is used during rendering
-    # a normal page, for example when deleting a dashlet from a dashboard. In
-    # such cases, the transid must be added by the confirm dialog.
-    # add_header: A title can be given to make the confirm method render the HTML
-    #             header when showing the confirm message.
-    def confirm(self,
-                msg: Union[str, HTML],
-                method: str = "POST",
-                action: Optional[str] = None,
-                add_transid: bool = False,
-                add_header: Optional[str] = None) -> Optional[bool]:
-        if self.request.var("_do_actions") == _("No"):
-            # User has pressed "No", now invalidate the unused transid
-            self.check_transaction()
-            return None  # None --> "No"
-
-        if not self.request.has_var("_do_confirm"):
-            if add_header:
-                # TODO: Find the call sites and enforce them to provide a breadcrumb
-                self.header(add_header, Breadcrumb())
-
-            if self.mobile:
-                self.open_center()
-            self.open_div(class_="really")
-            self.write_text(msg)
-            # FIXME: When this confirms another form, use the form name from self.request.itervars()
-            self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
-            self.hidden_fields(add_action_vars=True)
-            self.button("_do_confirm", _("Yes!"), "really")
-            self.button("_do_actions", _("No"), "")
-            self.end_form()
-            self.close_div()
-            if self.mobile:
-                self.close_center()
-
-            return False  # False --> "Dialog shown, no answer yet"
-
-        # Now check the transaction. True: "Yes", None --> Browser reload of "yes" page
-        return True if self.check_transaction() else None
-
     #
     # Radio groups
     #

@@ -69,6 +69,7 @@ import cmk.gui.bi
 from cmk.utils.bi.bi_packs import BIHostRenamer
 
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling  # type: ignore[import]
@@ -361,7 +362,7 @@ def _confirm(html_title, message):
     if not html.request.has_var("_do_confirm") and not html.request.has_var("_do_actions"):
         # TODO: get the breadcrumb from all call sites
         wato_html_head(title=html_title, breadcrumb=Breadcrumb())
-    return html.confirm(message)
+    return confirm_with_preview(message)
 
 
 def rename_hosts_background_job(renamings, job_interface=None):

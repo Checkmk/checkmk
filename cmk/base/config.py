@@ -1839,7 +1839,13 @@ def set_check_variables(check_variables: CheckVariables) -> None:
     """Update the check related config variables in the relevant check contexts"""
     for varname, value in check_variables.items():
         for context_ident in _check_variables[varname]:
-            _check_contexts[context_ident][varname] = value
+            # This case is important for discovery rulesets which are accessed in legacy-includes.
+            # Without the "[:]", we would write the value to a variable in the check plugin.
+            # However, we want to write it to the variable in the legacy-include.
+            if isinstance(_check_contexts[context_ident][varname], list):
+                _check_contexts[context_ident][varname][:] = value
+            else:
+                _check_contexts[context_ident][varname] = value
 
 
 def get_check_variables() -> CheckVariables:

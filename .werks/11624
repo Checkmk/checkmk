@@ -1,0 +1,13 @@
+Title: Legacy checks: fix usage of discovery rulesets
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605013343
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+For certain legacy checks, some discovery rulesets were not applied
+correctly (e.g. the discovery ruleset "Filesystem grouping patterns"
+for the <tt>df</tt>-check). This has been fixed.

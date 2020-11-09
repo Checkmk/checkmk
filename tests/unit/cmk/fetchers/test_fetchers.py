@@ -74,14 +74,14 @@ class TestFileCache:
         assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
 
-class TestSNMPFileCache:
+class TestNoCache:
     @pytest.fixture
     def path(self, tmp_path):
         return tmp_path / "database"
 
     @pytest.fixture
     def file_cache(self, path):
-        return SNMPFileCache(
+        return NoCache(
             path=path,
             max_age=999,
             disabled=False,
@@ -91,6 +91,48 @@ class TestSNMPFileCache:
 
     @pytest.fixture
     def raw_data(self):
+        return b"<<<check_mk>>>\nagent raw data"
+
+    def test_write_and_read_is_noop(self, file_cache, raw_data):
+        assert not file_cache.disabled
+        assert not file_cache.path.exists()
+
+        file_cache.write(raw_data)
+
+        assert not file_cache.path.exists()
+        assert file_cache.read() is None
+
+    def test_disabled_write_and_read(self, file_cache, raw_data):
+        file_cache.disabled = True
+        assert file_cache.disabled is True
+        assert not file_cache.path.exists()
+
+        file_cache.write(raw_data)
+
+        assert not file_cache.path.exists()
+        assert file_cache.read() is None
+
+
+class TestDefaultFileCache_and_SNMPFileCache:
+    @pytest.fixture
+    def path(self, tmp_path):
+        return tmp_path / "database"
+
+    @pytest.fixture(params=[DefaultAgentFileCache, SNMPFileCache])
+    def file_cache(self, path, request):
+        return request.param(
+            path=path,
+            max_age=999,
+            disabled=False,
+            use_outdated=False,
+            simulation=False,
+        )
+
+    @pytest.fixture
+    def raw_data(self, file_cache):
+        if isinstance(file_cache, DefaultAgentFileCache):
+            return b"<<<check_mk>>>\nagent raw data"
+        assert isinstance(file_cache, SNMPFileCache)
         table: SNMPTable = []
         raw_data: SNMPRawData = {SectionName("X"): table}
         return raw_data

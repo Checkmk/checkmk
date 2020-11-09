@@ -202,6 +202,7 @@ private:
     std::atomic<LogLevel> _level;
     std::atomic<Handler *> _handler;
     std::atomic<bool> _use_parent_handlers;
+    std::mutex _lock;
 };
 
 class LoggerDecorator : public Logger {

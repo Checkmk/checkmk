@@ -296,7 +296,7 @@ def inventory_plugin(
                                 section_<name2>' ect. Defaults to a list containing as only element
                                 a name equal to the name of the inventory plugin.
 
-      inventoy_function:        The inventory_function. Arguments must be 'params' (if inventory
+      inventory_function:       The inventory_function. Arguments must be 'params' (if inventory
                                 parameters are defined) and 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Attributes` or

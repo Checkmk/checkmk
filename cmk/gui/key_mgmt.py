@@ -35,7 +35,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
 from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect
 
 
@@ -149,17 +149,8 @@ class PageKeyManagement:
             if self._key_in_use(key_id, key):
                 raise MKUserError("", _("This key is still used."))
 
-            message = self._delete_confirm_msg()
-            if key["owner"] != config.user.id:
-                message += _(
-                    "<br><b>Note</b>: this key has created by user <b>%s</b>") % key["owner"]
-            c = html.confirm(message, add_header=self.title())
-            if c:
-                self.delete(key_id)
-                self.save(self.keys)
-
-            elif c is False:
-                return FinalizeRequest(code=200)
+            self.delete(key_id)
+            self.save(self.keys)
         return None
 
     def delete(self, key_id):
@@ -183,7 +174,15 @@ class PageKeyManagement:
                 table.row()
                 table.cell(_("Actions"), css="buttons")
                 if self._may_edit_config():
-                    delete_url = html.makeactionuri([("_delete", key_id)])
+                    message = self._delete_confirm_msg()
+                    if key["owner"] != config.user.id:
+                        message += _("<br><b>Note</b>: this key has created by user <b>%s</b>"
+                                    ) % key["owner"]
+
+                    delete_url = make_confirm_link(
+                        url=html.makeactionuri([("_delete", key_id)]),
+                        message=message,
+                    )
                     html.icon_button(delete_url, _("Delete this key"), "delete")
                 download_url = makeuri_contextless(
                     request,

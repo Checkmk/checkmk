@@ -51,7 +51,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_display_options_dropdown,
 )
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
@@ -76,7 +76,10 @@ def page_version():
 
 
 def handle_acknowledgement():
-    if html.request.var("_werk_ack") and html.check_transaction():
+    if not html.check_transaction():
+        return
+
+    if html.request.var("_werk_ack"):
         werk_id = html.request.get_integer_input_mandatory("_werk_ack")
         if werk_id not in g_werks:
             raise MKUserError("werk", _("This werk does not exist."))
@@ -91,13 +94,11 @@ def handle_acknowledgement():
             load_werks()  # reload ack states after modification
 
     elif html.request.var("_ack_all"):
-        if html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
-                        method="GET"):
-            num = len(unacknowledged_incompatible_werks())
-            acknowledge_all_werks()
-            html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
-            html.reload_sidebar()
-            load_werks()  # reload ack states after modification
+        num = len(unacknowledged_incompatible_werks())
+        acknowledge_all_werks()
+        html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
+        html.reload_sidebar()
+        load_werks()  # reload ack states after modification
 
     render_unacknowleged_werks()
 
@@ -148,7 +149,11 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
         icon_name="werk_ack",
         is_shortcut=True,
         is_suggested=True,
-        item=make_simple_link(html.makeactionuri([("_ack_all", "1")])),
+        item=make_simple_link(
+            make_confirm_link(
+                url=html.makeactionuri([("_ack_all", "1")]),
+                message=_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
+            )),
         is_enabled=bool(unacknowledged_incompatible_werks()),
     )
 

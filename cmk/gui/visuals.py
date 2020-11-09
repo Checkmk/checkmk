@@ -78,7 +78,7 @@ from cmk.gui.plugins.visuals.utils import (
     filter_registry,
 )
 
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -478,27 +478,20 @@ def page_list(what,
 
     # Deletion of visuals
     delname = html.request.var("_delete")
-    if delname and html.transaction_valid():
+    if delname and html.check_transaction():
         if config.user.may('general.delete_foreign_%s' % what):
             user_id_str = html.request.get_unicode_input('_user_id', config.user.id)
             user_id = None if user_id_str is None else UserId(user_id_str)
         else:
             user_id = config.user.id
 
-        deltitle = visuals[(user_id, delname)]['title']
-
         try:
             if check_deletable_handler:
                 check_deletable_handler(visuals, user_id, delname)
 
-            c = html.confirm(_("Please confirm the deletion of \"%s\".") % deltitle)
-            if c:
-                del visuals[(user_id, delname)]
-                save(what, visuals, user_id)
-                html.reload_sidebar()
-            elif c is False:
-                html.footer()
-                return
+            del visuals[(user_id, delname)]
+            save(what, visuals, user_id)
+            html.reload_sidebar()
         except MKUserError as e:
             html.user_error(e)
 
@@ -548,7 +541,11 @@ def page_list(what,
                     add_vars = [('_delete', visual_name)]
                     if owner != config.user.id:
                         add_vars.append(('_user_id', owner))
-                    html.icon_button(html.makeactionuri(add_vars), _("Delete!"), "delete")
+                    html.icon_button(
+                        make_confirm_link(
+                            url=html.makeactionuri(add_vars),
+                            message=_("Please confirm the deletion of \"%s\".") % visual['title'],
+                        ), _("Delete!"), "delete")
 
                 # Edit
                 if owner == config.user.id or (owner != "" and

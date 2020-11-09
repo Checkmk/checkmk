@@ -71,7 +71,7 @@ from cmk.gui.plugins.views import (
     format_plugin_output,
 )
 
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, make_confirm_link
 
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual
 
@@ -1012,7 +1012,10 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             edit_url = makeuri(request, anno_vars)
             html.icon_button(edit_url, _("Edit this annotation"), "edit")
             del_anno: 'HTTPVariables' = [("_delete_annotation", "1")]
-            delete_url = html.makeactionuri(del_anno + anno_vars)
+            delete_url = make_confirm_link(
+                url=html.makeactionuri(del_anno + anno_vars),
+                message=_("Are you sure that you want to delete this annotation?"),
+            )
             html.icon_button(delete_url, _("Delete this annotation"), "delete")
 
             if not omit_service:
@@ -1210,11 +1213,6 @@ def handle_delete_annotations():
         annotation = availability.find_annotation(annotations, site_host_svc, host_state,
                                                   service_state, fromtime, untiltime)
         if not annotation:
-            return
-
-        if not html.confirm(
-                _("Are you sure that you want to delete the annotation '%s'?") %
-                annotation["text"]):
             return
 
         availability.delete_annotation(annotations, site_host_svc, host_state, service_state,

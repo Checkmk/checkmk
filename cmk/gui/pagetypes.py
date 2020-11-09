@@ -56,6 +56,7 @@ from cmk.gui.page_menu import (
     make_javascript_link,
     make_simple_link,
     make_form_submit_link,
+    make_confirmed_form_submit_link,
 )
 
 from cmk.gui.exceptions import (
@@ -82,7 +83,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.main_menu import mega_menu_registry
 
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 SubPagesSpec = _Optional[List[Tuple[str, str, str]]]
 
@@ -640,7 +641,14 @@ class Overridable(Base):
         add_vars: HTTPVariables = [('_delete', self.name())]
         if not self.is_mine():
             add_vars.append(('_owner', self.owner()))
-        return html.makeactionuri(add_vars)
+
+        if not self.is_mine():
+            owned_by = _(" (owned by %s)") % self.owner()
+        else:
+            owned_by = ""
+        message = _("Please confirm the deletion of \"%s\"%s.") % (self.title(), owned_by)
+
+        return make_confirm_link(url=html.makeactionuri(add_vars), message=message)
 
     @classmethod
     def create_url(cls):
@@ -976,6 +984,40 @@ class Overridable(Base):
                         ),
                     ],
                 ),
+                PageMenuTopic(
+                    title=_("On selected customized"),
+                    entries=[
+                        PageMenuEntry(
+                            title=_("Delete"),
+                            icon_name="delete",
+                            item=make_confirmed_form_submit_link(
+                                form_name="bulk_delete_my",
+                                button_name="_bulk_delete_my",
+                                message=_("Do you really want to delete the selected %s?") %
+                                cls.phrase("title_plural"),
+                            ),
+                            is_shortcut=True,
+                            is_suggested=True,
+                        ),
+                    ],
+                ),
+                PageMenuTopic(
+                    title=_("On selected owned by other users"),
+                    entries=[
+                        PageMenuEntry(
+                            title=_("Delete"),
+                            icon_name="delete",
+                            item=make_confirmed_form_submit_link(
+                                form_name="bulk_delete_foreign",
+                                button_name="_bulk_delete_foreign",
+                                message=_("Do you really want to delete the selected %s?") %
+                                cls.phrase("title_plural"),
+                            ),
+                            is_shortcut=True,
+                            is_suggested=True,
+                        ),
+                    ],
+                ),
             ],
         )
 
@@ -984,7 +1026,7 @@ class Overridable(Base):
 
         # Deletion
         delname = html.request.var("_delete")
-        if delname and html.transaction_valid():
+        if delname and html.check_transaction():
             owner = UserId(html.request.get_unicode_input_mandatory('_owner', config.user.id))
 
             try:
@@ -999,32 +1041,17 @@ class Overridable(Base):
                 raise MKUserError("_delete", _("You are not permitted to perform this action."))
 
             try:
-                if owner != config.user.id:
-                    owned_by = _(" (owned by %s)") % owner
-                else:
-                    owned_by = ""
-                c = html.confirm(
-                    _("Please confirm the deletion of \"%s\"%s.") % (instance.title(), owned_by))
-                if c:
-                    cls.remove_instance((owner, delname))
-                    cls.save_user_instances(owner)
-                    html.reload_sidebar()
-                elif c is False:
-                    html.footer()
-                    return
+                cls.remove_instance((owner, delname))
+                cls.save_user_instances(owner)
+                html.reload_sidebar()
             except MKUserError as e:
                 html.user_error(e)
 
-        # Bulk delete
-        if html.request.var("_bulk_delete_my") and html.transaction_valid():
-            if cls._bulk_delete_after_confirm("my") is False:
-                html.footer()
-                return
+        elif html.request.var("_bulk_delete_my") and html.check_transaction():
+            cls._bulk_delete_after_confirm("my")
 
-        elif html.request.var("_bulk_delete_foreign") and html.transaction_valid():
-            if cls._bulk_delete_after_confirm("foreign") is False:
-                html.footer()
-                return
+        elif html.request.var("_bulk_delete_foreign") and html.check_transaction():
+            cls._bulk_delete_after_confirm("foreign")
 
         my_instances, foreign_instances, builtin_instances = cls.get_instances()
         for what, title, instances in [
@@ -1107,15 +1134,10 @@ class Overridable(Base):
                     # ##     render_custom_columns(visual_name, visual)
 
             if what != "builtin":
-                html.button("_bulk_delete_%s" % what,
-                            _("Bulk delete"),
-                            "submit",
-                            style="margin-top:10px")
                 html.hidden_fields()
                 html.end_form()
 
         html.footer()
-        return
 
     @classmethod
     def get_instances(cls):
@@ -1145,19 +1167,13 @@ class Overridable(Base):
         if not to_delete:
             return
 
-        c = html.confirm(
-            _("Do you really want to delete %d %s?") % (len(to_delete), cls.phrase("title_plural")))
+        for owner, instance_id in to_delete:
+            cls.remove_instance((owner, instance_id))
 
-        if c:
-            for owner, instance_id in to_delete:
-                cls.remove_instance((owner, instance_id))
+        for owner in {e[0] for e in to_delete}:
+            cls.save_user_instances(owner)
 
-            for owner in {e[0] for e in to_delete}:
-                cls.save_user_instances(owner)
-
-            html.reload_sidebar()
-        elif c is False:
-            return False
+        html.reload_sidebar()
 
     # Override this in order to display additional columns of an instance
     # in the table of all instances.

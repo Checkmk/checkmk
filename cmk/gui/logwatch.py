@@ -33,7 +33,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_display_options_dropdown,
 )
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -455,10 +455,17 @@ def _page_menu_entry_acknowledge(site: Optional[config.SiteId] = None,
     if int_filename:
         urivars.append(("file", int_filename))
 
+    ack_msg = _get_ack_msg(host_name, form_file_to_ext(int_filename) if int_filename else None)
+
     yield PageMenuEntry(
         title=label,
         icon_name="delete",
-        item=make_simple_link(html.makeactionuri(urivars)),
+        item=make_simple_link(
+            make_confirm_link(
+                url=html.makeactionuri(urivars),
+                message=_("Do you really want to acknowledge %s "
+                          "by <b>deleting</b> all stored messages?") % ack_msg,
+            )),
         is_shortcut=True,
         is_suggested=True,
     )
@@ -473,32 +480,24 @@ def do_log_ack(site, host_name, file_name):
             for int_filename in logs:
                 file_display = form_file_to_ext(int_filename)
                 logs_to_ack.append((this_site, this_host, int_filename, file_display))
-        ack_msg = _('all logfiles on all hosts')
 
     elif host_name and not file_name:  # all logs on one host
         for int_filename in logfiles_of_host(site, host_name):
             file_display = form_file_to_ext(int_filename)
             logs_to_ack.append((site, host_name, int_filename, file_display))
-        ack_msg = _('all logfiles of host %s') % host_name
 
     elif host_name and file_name:  # one log on one host
         int_filename = form_file_to_int(file_name)
         logs_to_ack = [(site, host_name, int_filename, form_file_to_ext(int_filename))]
-        ack_msg = _('the log file %s on host %s') % (file_name, host_name)
 
     else:
         for this_site, this_host, logs in all_logs():
             file_display = form_file_to_ext(file_name)
             if file_name in logs:
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
-        ack_msg = _('log file %s on all hosts') % file_name
 
+    ack_msg = _get_ack_msg(host_name, file_name)
     ack = html.request.var('_ack')
-    if not html.confirm(
-            _("Do you really want to acknowledge %s by <b>deleting</b> all stored messages?") %
-            ack_msg):
-        html.footer()
-        return
 
     if not config.user.may("general.act"):
         html.h1(_('Permission denied'), class_=["error"])
@@ -524,6 +523,19 @@ def do_log_ack(site, host_name, file_name):
         '<b>%s</b><p>%s</p>' %
         (_('Acknowledged %s') % ack_msg, _('Acknowledged all messages in %s.') % ack_msg))
     html.footer()
+
+
+def _get_ack_msg(host_name, file_name) -> str:
+    if not host_name and not file_name:  # all logs on all hosts
+        return _('all logfiles on all hosts')
+
+    if host_name and not file_name:  # all logs on one host
+        return _('all logfiles of host %s') % host_name
+
+    if host_name and file_name:  # one log on one host
+        return _('the log file %s on host %s') % (file_name, host_name)
+
+    return _('log file %s on all hosts') % file_name
 
 
 def acknowledge_logfile(site, host_name, int_filename, display_name):

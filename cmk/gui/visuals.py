@@ -393,7 +393,7 @@ def available(what, all_visuals):
             # Honor original permissions for the current user
             permname = "%s.%s" % (permprefix, n)
             if permname in permission_registry \
-                and not config.user.may(permname):
+                    and not config.user.may(permname):
                 continue
             visuals[n] = visual
 
@@ -412,7 +412,7 @@ def available(what, all_visuals):
                 # Is there a builtin visual with the same name? If yes, honor permissions.
                 permname = "%s.%s" % (permprefix, n)
                 if permname in permission_registry \
-                    and not config.user.may(permname):
+                        and not config.user.may(permname):
                     continue
                 visuals[n] = visual
 
@@ -1589,7 +1589,7 @@ def _show_filter_form_buttons(varprefix: str, filter_list_id: str,
                   onclick="cmk.valuespecs.visual_filter_list_reset(%s, %s, %s, %s)" %
                   (json.dumps(varprefix), json.dumps(page_request_vars), json.dumps(view_name),
                    json.dumps(reset_ajax_page)))
-    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply submit")
+    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply hot")
     html.close_div()
     html.close_div()
 

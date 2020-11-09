@@ -509,14 +509,9 @@ div#page_menu_popups {
     }
 
     input.button {
-      padding: 8px 12px;
+      padding: 8px 16px;
       margin-top: 0;
       margin-bottom: 0;
-    }
-
-    input.submit {
-      color: $black;
-      background-color: $success;
     }
   }
 }
@@ -667,13 +662,8 @@ div#page_menu_popups div.side_popup {
       div.update_buttons {
         margin-left: auto;
 
-        input {
-          padding: 8px 16px;
-          margin: 0;
-        }
-
-        input.reset {
-          margin-right: $spacing;
+        input.apply {
+          margin-right: 0;
 
           &:disabled {
             opacity: 0.5;

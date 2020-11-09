@@ -451,34 +451,24 @@ function render_resize_controls(controls, i) {
 
 function render_sizer(controls, nr, i, anchor_id, size) {
     // 0 ~ X, 1 ~ Y
+    let orientation = i ? "height" : "width";
     var sizer = document.createElement("div");
     sizer.className = "sizer sizer" + i + " anchor" + anchor_id;
 
-    // create the sizer label
-    var sizer_lbl = document.createElement("div");
-    sizer_lbl.className = "sizer_lbl sizer_lbl" + i + " anchor" + anchor_id;
-
     if (size <= dashboard_properties.GROW) {
         sizer.className += " grow";
-        //sizer_lbl.innerHTML = "GROW";
+        sizer.innerHTML = "auto " + orientation;
         sizer.title = "Grow in this direction";
     } else {
         sizer.className += " abs";
         sizer.title = "Fixed size (drag border for resize)";
+        sizer.innerHTML = "manual " + orientation;
         render_resize_controls(controls, i);
     }
 
-    // js magic stuff - closures!
-    sizer.onclick = (function (dashlet_id, sizer_id) {
-        return function () {
-            toggle_sizer(dashlet_id, sizer_id);
-        };
-    })(nr, i);
-    sizer_lbl.onclick = sizer.onclick;
-    sizer_lbl.title = sizer.title;
+    sizer.onclick = () => toggle_sizer(nr, i);
 
     controls.appendChild(sizer);
-    if (is_dynamic(size)) controls.appendChild(sizer_lbl);
 }
 
 function render_corner_resizers(controls) {
@@ -517,10 +507,8 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
 
         // Create the size / grow indicators and resizer control elements
         if (utils.has_class(dashlet_obj, "resizable")) {
-            for (let i = 0; i < 2; i++) {
-                if (i == 0) render_sizer(controls, nr, i, anchor_id, dashlet.w);
-                else render_sizer(controls, nr, i, anchor_id, dashlet.h);
-            }
+            render_sizer(controls, nr, 0, anchor_id, dashlet.w);
+            render_sizer(controls, nr, 1, anchor_id, dashlet.h);
 
             if (!is_dynamic(dashlet.w) && !is_dynamic(dashlet.h)) render_corner_resizers(controls);
         }

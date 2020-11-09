@@ -331,6 +331,7 @@ iframe[id^="dashlet_iframe"] {
 div.dashlet.edit {
   .controls {
     position: relative;
+    border: 1px dashed #4e5d69;
     z-index: 100;
     width: 100%;
     height: 100%;
@@ -466,200 +467,43 @@ div#dashboard.grid {
 .sizer {
   position: absolute;
   cursor: pointer;
-  border: 1px solid rgb(102, 102, 102);
-  border-radius: 2px;
-  box-shadow: 0.5px 0.5px 2px rgb(51, 51, 51);
-}
-
-.sizer0 {
-  width: 50%;
-  height: 10px;
-}
-
-.sizer1 {
-  width: 10px;
-  height: 50%;
-}
-
-.sizer.max {
-  background-color: rgb(255, 0, 0);
+  border-radius: 12px;
+  padding: 2px 6px;
 }
 
 .sizer.grow {
-  background-color: rgb(255, 255, 0);
+  background-color: #10181d;
 }
 
 .sizer.abs {
-  background-color: rgb(238, 238, 238);
+  background-color: #13d389;
 }
 
-/* left side */
-.sizer1.anchor0,
-.sizer1.anchor3 {
-  top: 25%;
-  left: 5px;
-}
+.sizer0 {
+  top: 50%;
 
-/* right side */
-.sizer1.anchor1,
-.sizer1.anchor2 {
-  top: 25%;
-  right: 10px;
-}
+  &.anchor0,
+  &.anchor3 {
+    right: 15px;
+  }
 
-/* top side */
-.sizer0.anchor0,
-.sizer0.anchor1 {
-  top: 5px;
-  left: 25%;
+  &.anchor1,
+  &.anchor2 {
+    left: 15px;
+  }
 }
+.sizer1 {
+  left: 50%;
 
-/* bottom side */
-.sizer0.anchor2,
-.sizer0.anchor3 {
-  bottom: 10px;
-  left: 25%;
-}
+  &.anchor0,
+  &.anchor1 {
+    bottom: 15px;
+  }
 
-/* general arrow */
-.sizer0:before,
-.sizer1:before {
-  position: absolute;
-  content: " ";
-}
-
-/* arrow on left */
-.sizer0.anchor1:before,
-.sizer0.anchor2:before {
-  top: -7px;
-  left: -11px;
-  width: 13px;
-  height: 21px;
-  background-repeat: no-repeat;
-}
-
-.sizer0.anchor1.max:before,
-.sizer0.anchor2.max:before {
-  background-image: url("images/dashlet_arrow_l_max.png");
-}
-
-.sizer0.anchor1.grow:before,
-.sizer0.anchor2.grow:before {
-  background-image: url("images/dashlet_arrow_l_grow.png");
-}
-
-/* arrow on right */
-.sizer0.anchor0:before,
-.sizer0.anchor3:before {
-  top: -7px;
-  left: 100%;
-  width: 12px;
-  height: 21px;
-  background-repeat: no-repeat;
-}
-
-.sizer0.anchor0.max:before,
-.sizer0.anchor3.max:before {
-  background-image: url("images/dashlet_arrow_r_max.png");
-}
-
-.sizer0.anchor0.grow:before,
-.sizer0.anchor3.grow:before {
-  background-image: url("images/dashlet_arrow_r_grow.png");
-}
-
-/* arrow at top */
-.sizer1.anchor2:before,
-.sizer1.anchor3:before {
-  top: -10px;
-  left: -7px;
-  width: 23px;
-  height: 14px;
-  background-repeat: no-repeat;
-}
-
-.sizer1.anchor2.max:before,
-.sizer1.anchor3.max:before {
-  background-image: url("images/dashlet_arrow_t_max.png");
-}
-
-.sizer1.anchor2.grow:before,
-.sizer1.anchor3.grow:before {
-  background-image: url("images/dashlet_arrow_t_grow.png");
-}
-
-/* arrow at bottom */
-.sizer1.anchor0:before,
-.sizer1.anchor1:before {
-  bottom: -10px;
-  left: -7px;
-  width: 23px;
-  height: 14px;
-  background-repeat: no-repeat;
-}
-
-.sizer1.anchor0.max:before,
-.sizer1.anchor1.max:before {
-  background-image: url("images/dashlet_arrow_b_max.png");
-}
-
-.sizer1.anchor0.grow:before,
-.sizer1.anchor1.grow:before {
-  background-image: url("images/dashlet_arrow_b_grow.png");
-}
-
-.sizer_lbl {
-  position: absolute;
-  /* display: none; */
-  padding: 2px;
-  font-size: 6px;
-  color: rgb(0, 0, 0);
-  cursor: auto;
-}
-
-.sizer_lbl0 {
-  width: auto;
-  height: 15px;
-}
-
-.sizer_lbl1 {
-  width: 15px;
-  height: auto;
-  /* Should be unset in IE9+ I think. */
-  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
-  transform: rotate(-90deg);
-  -webkit-transform: rotate(-90deg);
-  -moz-transform: rotate(-90deg);
-  -ms-transform: rotate(-90deg);
-  -o-transform: rotate(-90deg);
-}
-
-/* left side */
-.sizer_lbl1.anchor0,
-.sizer_lbl1.anchor3 {
-  top: 47%;
-  left: 1.5px;
-}
-
-/* right side */
-.sizer_lbl1.anchor1,
-.sizer_lbl1.anchor2 {
-  top: 47%;
-  right: 6.5px;
-}
-
-/* top side */
-.sizer_lbl0.anchor0,
-.sizer_lbl0.anchor1 {
-  top: 5px;
-  left: 47%;
-}
-
-/* bottom side */
-.sizer_lbl0.anchor2,
-.sizer_lbl0.anchor3 {
-  bottom: 2.5px;
-  left: 47%;
+  &.anchor2,
+  &.anchor3 {
+    top: 15px;
+  }
 }
 
 /* transparent resize areas for absolute sized */
@@ -669,13 +513,17 @@ div#dashboard.grid {
 }
 
 .resize0 {
-  width: 5px;
   height: 100%;
+  border: 1px solid #13d389;
+  border-top: 0;
+  border-bottom: 0;
 }
 
 .resize1 {
   width: 100%;
-  height: 5px;
+  border: 1px solid #13d389;
+  border-right: 0;
+  border-left: 0;
 }
 
 .resize0_0 {

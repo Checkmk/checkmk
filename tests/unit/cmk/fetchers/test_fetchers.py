@@ -60,6 +60,21 @@ def clone_file_cache(file_cache):
 
 
 class TestFileCache:
+    @pytest.fixture(params=[DefaultAgentFileCache, NoCache, SNMPFileCache])
+    def file_cache(self, request):
+        return request.param(
+            path=Path(os.devnull),
+            max_age=0,
+            disabled=True,
+            use_outdated=False,
+            simulation=True,
+        )
+
+    def test_deserialization(self, file_cache):
+        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
+
+
+class TestSNMPFileCache:
     @pytest.fixture
     def path(self, tmp_path):
         return tmp_path / "database"
@@ -134,9 +149,6 @@ class TestIPMIFetcher:
             password="secret",
         )
 
-    def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
-
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, type(fetcher))
@@ -193,9 +205,6 @@ class TestPiggybackFetcher:
             time_settings=[],
         )
 
-    def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
-
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, type(fetcher))
@@ -223,9 +232,6 @@ class TestProgramFetcher:
             stdin=None,
             is_cmc=False,
         )
-
-    def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
@@ -336,9 +342,6 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
             use_outdated=True,
             simulation=True,
         )
-
-    def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
@@ -456,9 +459,6 @@ class TestTCPFetcher:
             encryption_settings={"encryption": "settings"},
             use_only_cache=False,
         )
-
-    def test_file_cache_deserialization(self, file_cache):
-        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))

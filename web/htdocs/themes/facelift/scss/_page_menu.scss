@@ -487,7 +487,16 @@ div#page_menu_popups {
       padding: 0;
     }
 
+    div.group {
+      padding-top: $spacing;
+
+      &:first-of-type {
+        padding-top: 0;
+      }
+    }
+
     form span.checkbox {
+      padding-right: $spacing;
       white-space: initial;
     }
 
@@ -497,6 +506,12 @@ div#page_menu_popups {
     input[type="checkbox"] + label::before,
     input:not(.reset):not([type="submit"]) {
       background-color: $bg-color;
+    }
+
+    input.button {
+      padding: 8px 12px;
+      margin-top: 0;
+      margin-bottom: 0;
     }
 
     input.submit {

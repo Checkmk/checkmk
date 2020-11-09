@@ -1212,7 +1212,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return ["host", "service"]
 
     def render(self, what):
-        html.button("_archive_events_of_hosts", _('Archive events'))
+        html.button("_archive_events_of_hosts", _('Archive events'), cssclass="hot")
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_archive_events_of_hosts"):

@@ -1008,7 +1008,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             self._current_settings[varname] = not def_value
 
         msg = _("Changed site specific configuration variable %s to %s.") % \
-              (varname, _("on") if self._current_settings[varname] else _("off"))
+            (varname, _("on") if self._current_settings[varname] else _("off"))
 
         self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
         self._site_mgmt.save_sites(self._configured_sites, activate=False)

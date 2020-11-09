@@ -512,7 +512,7 @@ class LoginPage(Page):
             html.close_div()
 
         html.open_div(id_="button_text")
-        html.button("_login", _('Login'))
+        html.button("_login", _('Login'), cssclass="hot")
         html.close_div()
         html.close_div()
 

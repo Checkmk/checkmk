@@ -313,7 +313,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [](const TableStatus & /*ts*/) { return 0.0; }));
     addColumn(std::make_unique<TimeLambdaColumn<TableStatus>>(
         "state_file_created", "The time when state file had been created",
-        offsets, [](const TableStatus& /*ts*/) {
+        offsets, [](const TableStatus & /*ts*/) {
             return std::chrono::system_clock::from_time_t(0);
         }));
 }

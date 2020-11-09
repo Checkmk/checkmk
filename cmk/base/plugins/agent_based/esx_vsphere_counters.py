@@ -318,6 +318,7 @@ def check_esx_vsphere_counters_diskio(
 
 register.check_plugin(
     name='esx_vsphere_counters_diskio',
+    sections=["esx_vsphere_counters"],
     service_name='Disk IO %s',
     discovery_function=discover_esx_vsphere_counters_diskio,
     check_function=check_esx_vsphere_counters_diskio,

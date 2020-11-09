@@ -1,0 +1,14 @@
+Title: esx_vsphere_counters_diskio: re-add section
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1604927863
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The section for the check plugin esx_vsphere_counters_diskio was lost in
+migration, which prevented the corresponding service from being discovered.
+Already discovered services crashed upon updating to version 2.0. This has
+been fixed.

@@ -651,6 +651,7 @@ class GUIViewRenderer(ABCViewRenderer):
             html.open_div(id_="data_container")
 
         if not has_done_actions:
+            html.div("", id_="row_info")
             if display_options.enabled(display_options.W):
                 if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
                                                          self.view.row_limit):
@@ -658,15 +659,14 @@ class GUIViewRenderer(ABCViewRenderer):
                     del rows[self.view.row_limit:]
             layout.render(rows, view_spec, group_cells, cells, num_columns, show_checkboxes and
                           not html.do_actions())
-            headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
+            row_info = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
             if show_checkboxes:
                 selected = filter_selected_rows(
                     view_spec, rows,
                     config.user.get_rowselection(weblib.selection_id(),
                                                  'view-' + view_spec['name']))
-                headinfo = "%d/%s" % (len(selected), headinfo)
-
-            html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+                row_info = "%d/%s" % (len(selected), row_info)
+            html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
             # The number of rows might have changed to enable/disable actions and checkboxes
             if self._show_buttons:

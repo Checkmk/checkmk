@@ -431,17 +431,17 @@ class DiscoveryPageRenderer:
 
     def render(self, discovery_result: DiscoveryResult, request: dict) -> str:
         with html.plugged():
+            html.div("", id_="row_info")
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry("inline_help")
             host_labels_row_count = self._show_discovered_host_labels(discovery_result)
             details_row_count = self._show_discovery_details(discovery_result, request)
-            self._update_header_info(host_labels_row_count + details_row_count)
+            self._update_row_info(host_labels_row_count + details_row_count)
             return html.drain()
 
-    def _update_header_info(self, abs_row_count: int):
-        headinfo = _("1 row") if abs_row_count == 1 else _("%d rows") % abs_row_count
-
-        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+    def _update_row_info(self, abs_row_count: int):
+        row_info = _("1 row") if abs_row_count == 1 else _("%d rows") % abs_row_count
+        html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
     def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> int:
         host_label_row_count = 0

@@ -1720,12 +1720,16 @@ class html(ABCHTMLGenerator):
         if not self.browser_reload:
             return None
 
+        top_line = self.render_span(_("%d sec. update") % self.browser_reload)
+        bottom_line = self.render_span(
+            self.render_a(
+                _("Reload now"),
+                href="javascript:void(0)",
+                onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."),
+            ))
+
         return PageState(
-            top_line=_("%d sec. update") % self.browser_reload,
-            bottom_line=self.render_a(_("Reload now"),
-                                      href="javascript:void(0)",
-                                      onclick="this.innerHTML=\'%s\'; document.location.reload();" %
-                                      _("Reloading...")),
+            text=self.render_span(top_line + bottom_line),
             icon_name="trans",
             css_classes=["default"],
         )

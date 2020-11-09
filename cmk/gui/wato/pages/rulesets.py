@@ -860,6 +860,7 @@ class ModeEditRuleset(WatoMode):
             if folder.is_transitive_parent_of(self._folder) or
             self._folder.is_transitive_parent_of(folder))
 
+        html.div("", id_="row_info")
         num_rows = 0
         for folder, folder_rules in groups:
             with table_element("rules_%s_%s" % (self._name, folder.ident()),
@@ -878,8 +879,8 @@ class ModeEditRuleset(WatoMode):
                     self._show_rule_icons(table, match_state, folder, rulenr, rule)
                     self._rule_cells(table, rule)
 
-        headinfo = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
-        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+        row_info = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
+        html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
     @staticmethod
     def _css_for_rule(search_options, rule):

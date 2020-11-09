@@ -54,8 +54,11 @@ def wato_html_footer(show_footer: bool = True, show_body_end: bool = True) -> No
 
 def _make_wato_page_state() -> PageState:
     changes_info = get_pending_changes_info()
-    return PageState(
-        top_line=changes_info or _("No pending changes"),
-        bottom_line=html.render_a(_("View changes"), href="wato.py?mode=changelog"),
-        icon_name="wato_changes" if changes_info else "wato_nochanges",
-    )
+    changelog_url = "wato.py?mode=changelog"
+    if changes_info:
+        return PageState(
+            text=changes_info,
+            icon_name="pending_changes",
+            url=changelog_url,
+        )
+    return PageState(text=_("No pending changes"), url=changelog_url)

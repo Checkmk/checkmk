@@ -712,6 +712,8 @@ class ModeFolder(WatoMode):
         hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
         search_text = html.request.var("search")
 
+        html.div("", id_="row_info")
+
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
         with table_element("hosts", title=_("Hosts"), searchable=False,
@@ -750,8 +752,8 @@ class ModeFolder(WatoMode):
                                                 'wato-folder-/' + self._folder.path())
 
         row_count = len(hostnames)
-        headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
-        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+        row_info = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
+        html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
         selection_properties = {
             "page_id": "wato-folder-%s" % ('/' + self._folder.path()),

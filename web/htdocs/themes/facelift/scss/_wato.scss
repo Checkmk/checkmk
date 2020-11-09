@@ -910,6 +910,15 @@ div.varname {
   pointer-events: none;
 }
 
+.wato h2.pending_changes_header {
+  span {
+    float: right;
+    padding-right: $spacing;
+    font-size: $font-size-global;
+    font-weight: $font-weight-default;
+  }
+}
+
 .wato table.changes {
   width: 100%;
 

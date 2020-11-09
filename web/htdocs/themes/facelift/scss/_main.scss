@@ -1498,3 +1498,10 @@ tr.hidden {
 body.main a.delete_button img {
   filter: $inpage-close-button-filter;
 }
+
+div#row_info {
+  padding-right: 10px;
+  float: right;
+  font-size: $font-size-global;
+  font-weight: $font-weight-default;
+}

@@ -247,7 +247,11 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         self._activation_status()
 
         if self.has_changes():
-            html.h2(_("Pending changes"))
+            html.open_h2(class_="pending_changes_header")
+            html.write_text(_("Pending changes"))
+            html.div("", id_="row_info")
+            html.close_h2()
+            html.final_javascript("cmk.utils.display_header_info();")
             self._change_table()
 
     def _activation_msg(self):

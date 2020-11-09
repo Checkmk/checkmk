@@ -236,10 +236,10 @@ function set_rowselection(action, rows) {
 
 // Update the header information (how many rows selected)
 function update_row_selection_information() {
-    if (!utils.has_header_info()) return; // Nothing to update
+    if (!utils.has_row_info()) return; // Nothing to update
 
     let count = selection_properties.selected_rows.length;
-    let current_text = utils.get_header_info();
+    let current_text = utils.get_row_info();
 
     // First remove the text added by previous calls to this functions
     if (current_text.indexOf("/") != -1) {
@@ -247,7 +247,7 @@ function update_row_selection_information() {
         current_text = parts[1];
     }
 
-    utils.update_header_info(count + "/" + current_text);
+    utils.update_row_info(count + "/" + current_text);
 }
 
 // Is used to select/deselect all rows in the current view. This can optionally

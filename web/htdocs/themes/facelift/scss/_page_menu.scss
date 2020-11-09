@@ -21,7 +21,7 @@ div#top_heading {
 
   div.titlebar {
     height: 53px;
-    padding: 5px 10px 0;
+    padding: 0.5 * $spacing $spacing 0;
     background-color: $color-background;
   }
 
@@ -41,30 +41,32 @@ div#top_heading {
 
   div.page_state {
     position: absolute;
-    top: 10px;
-    right: 10px;
-
+    top: 0.5 * $spacing;
+    right: 2 * $spacing;
     display: flex;
     align-items: center;
-    height: 30px;
+    height: inherit;
 
-    div.text {
-      right: 45px;
-      text-align: right;
+    > a {
+      display: inherit;
+      text-decoration: none;
 
-      > span:first-child {
-        /* break between top and bottom line */
-        display: table;
+      &:hover {
+        color: $success;
       }
     }
 
-    div.icon_container {
-      margin-left: 10px;
+    div.page_state_text span {
+      display: table;
+    }
+
+    div.page_state_icon {
+      margin-left: 8px;
 
       img.icon {
         display: block;
-        width: 30px;
-        height: 30px;
+        width: 14px;
+        height: 14px;
 
         &:hover {
           /* disable hover effect */
@@ -74,8 +76,8 @@ div#top_heading {
     }
 
     &.default {
-      div.icon_container,
-      div.icon_container > img.icon {
+      div.page_state_icon,
+      div.page_state_icon > img.icon {
         width: 18px;
         height: 18px;
         border: 4px solid rgba($font-color, 0.5);
@@ -84,12 +86,16 @@ div#top_heading {
         transition: clip-path 0.25s;
       }
 
-      div.icon_container > img.icon {
+      div.page_state_icon > img.icon {
         /* compensate border offset */
         position: relative;
         top: -4px;
         left: -4px;
       }
+    }
+
+    span#headinfo {
+      display: none;
     }
   }
 

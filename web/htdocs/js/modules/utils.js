@@ -219,19 +219,18 @@ export function update_header_timer() {
     date.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
 }
 
-export function has_header_info() {
-    return document.getElementById("headinfo") !== null;
+export function has_row_info() {
+    return document.getElementById("row_info") !== null;
 }
 
-export function get_header_info() {
-    // Return the current text (minus the separator prepended by update_header_info())
-    return document.getElementById("headinfo").innerHTML.substr(2);
+export function get_row_info() {
+    return document.getElementById("row_info").innerHTML;
 }
 
-export function update_header_info(text) {
-    var container = document.getElementById("headinfo");
+export function update_row_info(text) {
+    const container = document.getElementById("row_info");
     if (container) {
-        container.innerHTML = ", " + text;
+        container.innerHTML = text;
     }
 }
 

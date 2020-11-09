@@ -421,9 +421,8 @@ class Table:
     def _write_table(self, rows: TableRows, num_rows_unlimited: int, actions_enabled: bool,
                      actions_visible: bool, search_term: Optional[str]) -> None:
         if not self.options["omit_update_header"]:
-            headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
-
-            html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+            row_info = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
+            html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
         table_id = self.id
 

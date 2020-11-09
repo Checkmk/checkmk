@@ -22,9 +22,9 @@ from typing import Any, Dict, Final, Iterator, List, NamedTuple, Optional, Type,
 
 import cmk.utils.cleanup
 import cmk.utils.log as log
+import cmk.utils.paths as paths
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial, HostName, Protocol, result, SectionName
 
 from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
@@ -544,26 +544,26 @@ def _confirm_command_processed() -> Iterator[None]:
 def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout: int) -> None:
     """Entry point from bin/fetcher"""
     # check that file is present, because lack of the file is not an error at the moment
-    json_file = build_json_file_path(serial=serial, host_name=host_name)
+    local_config_path = make_local_config_path(serial=serial, host_name=host_name)
 
-    if not json_file.exists():
+    if not local_config_path.exists():
         log.logger.warning("fetcher file for host '%s' and %s is absent", host_name, serial)
         return
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
-    _run_fetchers_from_file(file_name=json_file, mode=mode, timeout=timeout)
+    _run_fetchers_from_file(file_name=local_config_path, mode=mode, timeout=timeout)
 
     # Cleanup different things (like object specific caches)
     cmk.utils.cleanup.cleanup_globals()
 
 
 def load_global_config(serial: ConfigSerial) -> None:
-    global_json_file = build_json_global_config_file_path(serial)
-    if not global_json_file.exists():
+    global_config_path = make_global_config_path(serial)
+    if not global_config_path.exists():
         log.logger.warning("fetcher global config %s is absent", serial)
         return
 
-    with global_json_file.open() as f:
+    with global_config_path.open() as f:
         config = json.load(f)["fetcher_config"]
         log.logger.setLevel(config["log_level"])
 
@@ -680,16 +680,16 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
 
 
 def read_json_file(serial: ConfigSerial, host_name: HostName) -> str:
-    json_file = build_json_file_path(serial=serial, host_name=host_name)
+    json_file = make_local_config_path(serial=serial, host_name=host_name)
     return json_file.read_text(encoding="utf-8")
 
 
-def build_json_file_path(serial: ConfigSerial, host_name: HostName) -> Path:
-    return Path(core_helper_config_dir, serial, "fetchers", "hosts", f"{host_name}.json")
+def make_local_config_path(serial: ConfigSerial, host_name: HostName) -> Path:
+    return paths.make_fetchers_config_path(serial) / "hosts" / f"{host_name}.json"
 
 
-def build_json_global_config_file_path(serial: ConfigSerial) -> Path:
-    return Path(core_helper_config_dir, serial, "fetchers", "global_config.json")
+def make_global_config_path(serial: ConfigSerial) -> Path:
+    return paths.make_fetchers_config_path(serial) / "global_config.json"
 
 
 # Idea is based on the cmk method:

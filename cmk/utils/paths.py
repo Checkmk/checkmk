@@ -10,6 +10,8 @@ import os
 from pathlib import Path
 from typing import Union
 
+from cmk.utils.type_defs import ConfigSerial, OptionalConfigSerial
+
 
 # One bright day, when every path is really a Path, this can die... :-)
 def _path(*args: Union[str, Path]) -> str:
@@ -109,3 +111,11 @@ local_mib_dir = _local_path(mib_dir)
 
 _local_base_plugins_dir = Path(local_lib_dir, "check_mk", "base", "plugins")
 local_agent_based_plugins_dir = _local_base_plugins_dir / "agent_based"
+
+
+def make_helper_config_path(serial: OptionalConfigSerial) -> Path:
+    return core_helper_config_dir / serial
+
+
+def make_fetchers_config_path(serial: ConfigSerial) -> Path:
+    return make_helper_config_path(serial) / "fetchers"

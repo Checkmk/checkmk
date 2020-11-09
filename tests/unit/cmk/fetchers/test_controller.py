@@ -34,8 +34,8 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 from cmk.fetchers import FetcherType
 from cmk.fetchers.controller import (
     AgentPayload,
-    build_json_file_path,
-    build_json_global_config_file_path,
+    make_local_config_path,
+    make_global_config_path,
     cmc_log_level_from_python,
     CMCHeader,
     CmcLogLevel,
@@ -89,13 +89,14 @@ class TestControllerApi:
     def test_controller_end_of_reply(self):
         assert make_end_of_reply_answer() == b"fetch:ENDREPL:        :0       :"
 
-    def test_build_json_file_path(self):
-        assert build_json_file_path(serial=ConfigSerial("_serial_"),
-                                    host_name="buzz") == (core_helper_config_dir / "_serial_" /
-                                                          "fetchers" / "hosts" / "buzz.json")
+    def test_local_config_path(self):
+        assert make_local_config_path(
+            serial=ConfigSerial("_serial_"),
+            host_name="buzz",
+        ) == (core_helper_config_dir / "_serial_" / "fetchers" / "hosts" / "buzz.json")
 
-    def test_build_json_global_config_file_path(self):
-        assert build_json_global_config_file_path(serial=ConfigSerial(
+    def test_global_config_path(self):
+        assert make_global_config_path(serial=ConfigSerial(
             "_serial_")) == core_helper_config_dir / "_serial_" / "fetchers" / "global_config.json"
 
     def test_run_fetcher_with_failure(self):

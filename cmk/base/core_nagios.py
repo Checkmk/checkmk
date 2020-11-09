@@ -927,7 +927,7 @@ class HostCheckStore:
     """Caring about persistence of the precompiled host check files"""
     @staticmethod
     def host_check_file_path(serial: ConfigSerial, hostname: HostName) -> Path:
-        return Path(config.make_helper_config_path(serial), "host_checks", hostname)
+        return cmk.utils.paths.make_helper_config_path(serial) / "host_checks" / hostname
 
     @staticmethod
     def host_check_source_file_path(serial: ConfigSerial, hostname: HostName) -> Path:

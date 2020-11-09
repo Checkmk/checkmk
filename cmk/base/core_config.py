@@ -60,9 +60,9 @@ class HelperConfig:
     link is only created in case the context is left without exception.
     """
     def __init__(self, serial: ConfigSerial) -> None:
-        self.serial: Final[ConfigSerial] = serial
-        self.serial_path: Final[Path] = config.make_helper_config_path(serial)
-        self.latest_path: Final[Path] = config.make_helper_config_path(LATEST_SERIAL)
+        self.serial: Final = serial
+        self.serial_path: Final = cmk.utils.paths.make_helper_config_path(serial)
+        self.latest_path: Final = cmk.utils.paths.make_helper_config_path(LATEST_SERIAL)
 
     @contextmanager
     def create(self) -> Iterator["HelperConfig"]:

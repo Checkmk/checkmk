@@ -739,7 +739,7 @@ class PackedConfigGenerator:
 class PackedConfigStore:
     """Caring about persistence of the packed configuration"""
     def __init__(self, serial: OptionalConfigSerial) -> None:
-        base_path: Final[Path] = make_helper_config_path(serial)
+        base_path: Final[Path] = cmk.utils.paths.make_helper_config_path(serial)
         self._compiled_path: Final[Path] = base_path / "precompiled_check_config.mk"
         self._source_path: Final[Path] = base_path / "precompiled_check_config.mk.orig"
 
@@ -760,16 +760,12 @@ class PackedConfigStore:
             return namespace
 
 
-def make_helper_config_path(serial: OptionalConfigSerial) -> Path:
-    return cmk.utils.paths.core_helper_config_dir / serial
-
-
 def make_core_autochecks_dir(serial: OptionalConfigSerial) -> Path:
-    return make_helper_config_path(serial) / "autochecks"
+    return cmk.utils.paths.make_helper_config_path(serial) / "autochecks"
 
 
 def make_core_discovered_host_labels_dir(serial: OptionalConfigSerial) -> Path:
-    return make_helper_config_path(serial) / "discovered_host_labels"
+    return cmk.utils.paths.make_helper_config_path(serial) / "discovered_host_labels"
 
 
 @contextlib.contextmanager

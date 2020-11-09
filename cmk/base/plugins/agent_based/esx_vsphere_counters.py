@@ -9,6 +9,7 @@ from typing import (
     Dict,
     List,
     Mapping,
+    Optional,
     Sequence,
     Tuple,
 )
@@ -56,7 +57,9 @@ from .utils import interfaces, diskstat
 # ...
 # sys.uptime||630664|second
 
-Section = Dict[str, Dict[str, List[Tuple[List[str], str]]]]
+Values = Sequence[str]
+SubSectionCounter = Dict[str, List[Tuple[Values, str]]]
+Section = Dict[str, SubSectionCounter]
 
 
 def parse_esx_vsphere_counters(string_table: StringTable) -> Section:
@@ -98,7 +101,7 @@ register.agent_section(
 )
 
 
-def average_parsed_data(values: Sequence[str]) -> float:
+def average_parsed_data(values: Values) -> float:
     """
     >>> average_parsed_data(['1', '2'])
     1.5
@@ -284,6 +287,14 @@ def _concat_instance_multivalues(parsed, key):
     return all_multivalues
 
 
+def _max_latency(latencies: SubSectionCounter) -> Optional[int]:
+    all_latencies: List[int] = []
+    for data in latencies.values():
+        multivalues, _unit = data[0]
+        all_latencies.extend(map(int, multivalues))
+    return max(all_latencies) if all_latencies else None
+
+
 def check_esx_vsphere_counters_diskio(
     item: str,
     params: Mapping[str, Any],
@@ -304,9 +315,9 @@ def check_esx_vsphere_counters_diskio(
             # these are absolute counts, every 20 seconds.
             summary["%s_ios" % op_type] = average_parsed_data(op_counts) / 20.0
 
-    latencies = _concat_instance_multivalues(section, "disk.deviceLatency")
-    if latencies:
-        summary['latency'] = max(int(l) for l in latencies) / 1000.0
+    latency = _max_latency(section.get("disk.deviceLatency", {}))
+    if latency is not None:
+        summary['latency'] = latency / 1000.0
 
     yield from diskstat.check_diskstat_dict(
         params=params,

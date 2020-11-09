@@ -104,7 +104,7 @@ loaded_with_language: Union[None, bool, str] = False
 # in order to allow the user to customize this.
 
 screen_margin = 12  # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding = 34, 4, -2, 4, 4  # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
+dashlet_padding = 26, 4, 4, 4, 4  # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 raster = 10  # Raster the dashlet coords are measured in (px)
 
 

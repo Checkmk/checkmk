@@ -43,9 +43,8 @@ function size_dashlets() {
 
         // check if dashlet has title and resize its width
         oDashTitle = document.getElementById("dashlet_title_" + d_number);
-        var has_title = false;
-        if (oDashTitle) {
-            has_title = true;
+        let has_title = Boolean(oDashTitle);
+        if (has_title) {
             //if browser window to small prevent js error
             if (d_width <= 20) {
                 d_width = 21;
@@ -54,7 +53,7 @@ function size_dashlets() {
             oDashTitle.style.width = d_width - 19 + "px";
             oDashTitle.style.display = disstyle;
             oDashTitle.style.left = dashboard_properties.dashlet_padding[3] + "px";
-            oDashTitle.style.top = dashboard_properties.dashlet_padding[4] + 8 + "px";
+            oDashTitle.style.top = dashboard_properties.dashlet_padding[4] + "px";
         }
 
         // resize outer div
@@ -87,13 +86,13 @@ function size_dashlets() {
             oDashInner.style.left = dashboard_properties.dashlet_padding[3] + "px";
             oDashInner.style.top = top_padding + "px";
             if (!has_title) {
-                oDashInner.style.top = top_padding + 8 + "px";
+                oDashInner.style.top = top_padding + "px";
             }
             if (netto_width > 0) oDashInner.style.width = netto_width + "px";
             if (netto_height > 0) {
                 oDashInner.style.height = netto_height + "px";
                 if (!has_title) {
-                    oDashInner.style.height = netto_height - 8 + "px";
+                    oDashInner.style.height = netto_height + "px";
                 }
             }
 

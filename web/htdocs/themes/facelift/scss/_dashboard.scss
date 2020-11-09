@@ -126,10 +126,6 @@ div.dashlet {
     }
   }
 
-  &.edit div.title span {
-    padding-left: 27px;
-  }
-
   div.title a {
     color: $font-color;
     text-decoration: none;
@@ -412,7 +408,7 @@ div.dashlet.edit {
   $dashlet-editor-active: #13d389;
   .anchor {
     position: absolute;
-    cursor: auto;
+    cursor: pointer;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
@@ -429,8 +425,8 @@ div.dashlet.edit {
     }
 
     &.anchor0 {
-      top: 4px;
-      left: 4px;
+      top: 0;
+      left: 0;
       border-top: $corner-size solid $dashlet-editor-free;
       border-right: $corner-size solid transparent;
       &.on {
@@ -444,8 +440,8 @@ div.dashlet.edit {
     }
 
     &.anchor1 {
-      top: 4px;
-      right: 4px;
+      top: 0;
+      right: 0;
       border-top: $corner-size solid $dashlet-editor-free;
       border-left: $corner-size solid transparent;
       &.on {
@@ -459,8 +455,8 @@ div.dashlet.edit {
     }
 
     &.anchor2 {
-      right: 4px;
-      bottom: 4px;
+      right: 0;
+      bottom: 0;
       border-bottom: $corner-size solid $dashlet-editor-free;
       border-left: $corner-size solid transparent;
       &.on {
@@ -473,8 +469,8 @@ div.dashlet.edit {
     }
 
     &.anchor3 {
-      bottom: 4px;
-      left: 4px;
+      bottom: 0;
+      left: 0;
       border-bottom: $corner-size solid $dashlet-editor-free;
       border-right: $corner-size solid transparent;
       &.on {

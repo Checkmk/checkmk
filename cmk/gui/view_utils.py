@@ -16,7 +16,7 @@ from cmk.gui.type_defs import HTTPVariables
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.htmllib import HTML
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 CSSClass = str

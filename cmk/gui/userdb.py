@@ -29,12 +29,12 @@ import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.valuespec import ValueSpec
 from cmk.gui.exceptions import MKUserError, MKInternalError, MKAuthException
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (
     TextAscii,
     DropdownChoice,
+    ValueSpec,
 )
 import cmk.gui.i18n
 from cmk.gui.i18n import _

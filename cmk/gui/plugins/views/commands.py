@@ -16,7 +16,7 @@ import cmk.gui.sites as sites
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _u, _, _l
 from cmk.gui.globals import html
-from cmk.gui.htmllib import Choices
+from cmk.gui.type_defs import Choices
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Age, AbsoluteDate, Seconds
 from cmk.gui.watolib.downtime import DowntimeSchedule, determine_downtime_mode

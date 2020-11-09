@@ -18,7 +18,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.htmllib import Choices
+from cmk.gui.type_defs import Choices
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (

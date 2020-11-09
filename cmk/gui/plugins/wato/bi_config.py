@@ -43,7 +43,8 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, request
-from cmk.gui.htmllib import HTML, Choices
+from cmk.gui.htmllib import HTML
+from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.plugins.wato import (

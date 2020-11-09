@@ -60,8 +60,6 @@ from typing import (
     Sequence,
     TYPE_CHECKING,
     TypeVar,
-    NamedTuple,
-    Text,
 )
 from pathlib import Path
 import urllib.parse
@@ -139,7 +137,14 @@ from cmk.gui.page_menu import (
     PageMenuPopupsRenderer,
     enable_page_menu_entry,
 )
-from cmk.gui.type_defs import CSSSpec, Icon
+from cmk.gui.type_defs import (
+    CSSSpec,
+    Icon,
+    Choices,
+    ChoiceGroup,
+    GroupedChoices,
+)
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -153,14 +158,7 @@ HTMLContent = Union[None, int, HTML, str]
 HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[str]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, str]
-Choices = List[Tuple[Optional[str], str]]
 DefaultChoice = str
-
-ChoiceGroup = NamedTuple("ChoiceGroup", [
-    ("title", Text),
-    ("choices", Choices),
-])
-GroupedChoices = List[ChoiceGroup]
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -1700,7 +1698,10 @@ class html(ABCHTMLGenerator):
         if page_menu:
             PageMenuRenderer().show(
                 page_menu,
-                hide_suggestions=not self.foldable_container_is_open("suggestions", "all", True))
+                hide_suggestions=not self.foldable_container_is_open("suggestions", "all", True),
+                has_changes=bool(get_pending_changes_info() and
+                                 (not page_state or self.browser_reload)),
+            )
 
         self.close_div()  # top_heading
 

@@ -454,7 +454,10 @@ def _make_form_abort_link(breadcrumb: Breadcrumb, abort_url: Optional[str]) -> P
 
 class PageMenuRenderer:
     """Renders the given page menu to the page header"""
-    def show(self, menu: PageMenu, hide_suggestions: bool = False) -> None:
+    def show(self,
+             menu: PageMenu,
+             hide_suggestions: bool = False,
+             has_changes: bool = False) -> None:
         html.open_table(id_="page_menu_bar",
                         class_=["menubar", "" if not hide_suggestions else "hide_suggestions"])
 
@@ -463,6 +466,8 @@ class PageMenuRenderer:
         if menu.inpage_search:
             self._show_inpage_search_field(menu.inpage_search)
         self._show_shortcuts(menu)
+        if has_changes:
+            self._show_pending_changes_icon()
         html.close_tr()
 
         self._show_suggestions(menu)
@@ -572,6 +577,11 @@ class PageMenuRenderer:
         inpage_search_form(mode=item.target_mode,
                            default_value=item.default_value,
                            placeholder=item.placeholder)
+        html.close_td()
+
+    def _show_pending_changes_icon(self) -> None:
+        html.open_td(class_="icon_container")
+        html.icon_button("wato.py?mode=changelog", _("View pending changes"), "activate_changes")
         html.close_td()
 
 

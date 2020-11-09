@@ -9,7 +9,17 @@ import copy
 import traceback
 import json
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Type, Union, NamedTuple
+from typing import (
+    Any,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Type,
+    TYPE_CHECKING,
+    Union,
+)
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -17,7 +27,6 @@ import cmk.utils.paths
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.htmllib import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
@@ -39,6 +48,9 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+
+if TYPE_CHECKING:
+    from cmk.gui.utils.html import HTML
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -301,7 +313,7 @@ ShortcutMenuItem = NamedTuple("ShortcutMenuItem", [
 
 
 class SidebarRenderer:
-    def show(self, title: Optional[str] = None, content: Optional[HTML] = None) -> None:
+    def show(self, title: Optional[str] = None, content: Optional['HTML'] = None) -> None:
         # TODO: Right now the method renders the full HTML page, i.e.
         # the header, sidebar, and page content. Ideallly we should
         # split this up. Possible solutions might be:
@@ -522,7 +534,7 @@ class SidebarRenderer:
             html.write(styles)
             html.close_style()
 
-    def _show_page_content(self, content: Optional[HTML]):
+    def _show_page_content(self, content: Optional['HTML']):
         html.open_div(id_="content_area")
         if content is not None:
             html.write(content)

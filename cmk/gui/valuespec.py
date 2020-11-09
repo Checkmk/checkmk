@@ -59,9 +59,9 @@ import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html, request as global_request
-from cmk.gui.htmllib import HTML
-from cmk.gui.htmllib import Choices, GroupedChoices, ChoiceGroup
+from cmk.gui.utils.html import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.type_defs import Choices, GroupedChoices, ChoiceGroup
 from cmk.gui.view_utils import render_labels
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 

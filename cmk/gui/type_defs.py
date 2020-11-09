@@ -6,15 +6,33 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, List, Mapping, NamedTuple, Optional, Tuple, TypedDict, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Text,
+    Tuple,
+    TypedDict,
+    Union,
+)
 from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
 LivestatusQuery = str
 PermissionName = str
 RoleName = str
-
 CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
+Choices = List[Tuple[Optional[str], str]]
+ChoiceGroup = NamedTuple("ChoiceGroup", [
+    ("title", Text),
+    ("choices", Choices),
+])
+GroupedChoices = List[ChoiceGroup]
 
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type

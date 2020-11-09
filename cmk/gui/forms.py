@@ -9,7 +9,7 @@ from typing import Union, Callable, Dict, Optional, Tuple, List, Any, TYPE_CHECK
 from six import ensure_binary, ensure_str
 
 import cmk.gui.escaping as escaping
-from cmk.gui.htmllib import HTML
+from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError

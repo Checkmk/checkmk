@@ -19,7 +19,7 @@ import cmk.gui.escaping as escaping
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import Choices
+from cmk.gui.type_defs import Choices
 from cmk.gui.type_defs import RoleName, PermissionName, Visual
 from cmk.gui.permissions import (
     permission_section_registry,

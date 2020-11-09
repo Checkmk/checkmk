@@ -28,7 +28,8 @@ import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html, g
-from cmk.gui.htmllib import Choices, HTML
+from cmk.gui.utils.html import HTML
+from cmk.gui.type_defs import Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import

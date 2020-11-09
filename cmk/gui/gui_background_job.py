@@ -18,7 +18,7 @@ import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import g, html, request
-from cmk.gui.htmllib import HTML
+from cmk.gui.utils.html import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.permissions import (
     permission_section_registry,

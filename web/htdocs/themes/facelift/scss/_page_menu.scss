@@ -132,7 +132,6 @@ div#top_heading {
         width: 100%;
         padding: 0 3px;
         background-color: $page-menu-bg-color;
-        border-right: 1px solid $headline-color;
 
         a.disabled {
           pointer-events: none;
@@ -144,6 +143,17 @@ div#top_heading {
 
         #menu_shortcut_toggle_suggestions img {
           filter: grayscale(100%) brightness(55%);
+        }
+      }
+
+      &.icon_container {
+        padding-right: 3px;
+        background-color: $page-menu-bg-color;
+        border-right: 1px solid $headline-color;
+
+        img {
+          width: 16px;
+          height: 16px;
         }
       }
     }

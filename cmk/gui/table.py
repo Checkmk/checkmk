@@ -7,30 +7,46 @@
 from contextlib import contextmanager
 import re
 import json
-from typing import Any, Dict, Iterator, List, Literal, NamedTuple, Optional, Tuple, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+    TYPE_CHECKING,
+    cast,
+)
 
 from six import ensure_str
 
+from cmk.gui.utils.html import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.htmllib import CSSSpec, HTML, HTMLContent, HTMLTagAttributes
 from cmk.gui.utils.urls import makeuri
+
+if TYPE_CHECKING:
+    from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
+    from cmk.gui.type_defs import CSSSpec
 
 TableHeader = NamedTuple(
     "TableHeader",
     [
         ("title", Union[int, HTML, str]),  # basically HTMLContent without None
-        ("css", CSSSpec),
+        ("css", 'CSSSpec'),
         ("help_txt", Optional[str]),
         ("sortable", bool),
     ])
 
 CellSpec = NamedTuple("CellSpec", [
     ("content", str),
-    ("css", CSSSpec),
+    ("css", 'CSSSpec'),
     ("colspan", Optional[int]),
 ])
 
@@ -39,13 +55,13 @@ TableRow = NamedTuple("TableRow", [
     ("css", Optional[str]),
     ("state", int),
     ("fixed", bool),
-    ("row_attributes", HTMLTagAttributes),
+    ("row_attributes", 'HTMLTagAttributes'),
 ])
 
 GroupHeader = NamedTuple("GroupHeader", [
     ("title", str),
     ("fixed", bool),
-    ("row_attributes", HTMLTagAttributes),
+    ("row_attributes", 'HTMLTagAttributes'),
 ])
 
 TableRows = List[Union[TableRow, GroupHeader]]
@@ -54,7 +70,7 @@ TableRows = List[Union[TableRow, GroupHeader]]
 @contextmanager
 def table_element(
     table_id: Optional[str] = None,
-    title: HTMLContent = None,
+    title: 'HTMLContent' = None,
     searchable: bool = True,
     sortable: bool = True,
     foldable: bool = False,
@@ -113,7 +129,7 @@ class Table:
     def __init__(
         self,
         table_id: Optional[str] = None,
-        title: HTMLContent = None,
+        title: 'HTMLContent' = None,
         searchable: bool = True,
         sortable: bool = True,
         foldable: bool = False,
@@ -171,9 +187,9 @@ class Table:
 
     def text_cell(
         self,
-        title: HTMLContent = "",
-        text: HTMLContent = "",
-        css: CSSSpec = None,
+        title: 'HTMLContent' = "",
+        text: 'HTMLContent' = "",
+        css: 'CSSSpec' = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -187,9 +203,9 @@ class Table:
 
     def cell(
         self,
-        title: HTMLContent = "",
-        text: HTMLContent = "",
-        css: CSSSpec = None,
+        title: 'HTMLContent' = "",
+        text: 'HTMLContent' = "",
+        css: 'CSSSpec' = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -230,9 +246,9 @@ class Table:
 
     def _add_cell(
         self,
-        title: HTMLContent = "",
-        text: HTMLContent = "",
-        css: CSSSpec = None,
+        title: 'HTMLContent' = "",
+        text: 'HTMLContent' = "",
+        css: 'CSSSpec' = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -476,7 +492,7 @@ class Table:
             else:
                 for k in ["class_", "class"]:
                     if k in row.row_attributes:
-                        cls_spec = cast(CSSSpec, row.row_attributes.pop(k))
+                        cls_spec = cast('CSSSpec', row.row_attributes.pop(k))
                         if isinstance(cls_spec, list):
                             class_.extend([c for c in cls_spec if c is not None])
                         elif cls_spec is not None:
@@ -562,7 +578,7 @@ class Table:
                 header_title = header.title
 
             if not isinstance(header.css, list):
-                css_class: CSSSpec = [header.css]
+                css_class: 'CSSSpec' = [header.css]
             else:
                 css_class = header.css
 

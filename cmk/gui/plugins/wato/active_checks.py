@@ -19,6 +19,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Age,
     TextUnicode,
+    TextAreaUnicode,
     DropdownChoice,
     RegExp,
     RegExpUnicode,
@@ -29,7 +30,6 @@ from cmk.gui.valuespec import (
     Password,
     Percentage,
     CascadingDropdown,
-    UploadOrPasteTextFile,
     Hostname,
     Optional,
 )
@@ -618,29 +618,31 @@ def _valuespec_active_checks_sql():
                  help=_('The password used to connect to the database'),
                  allow_empty=False,
              )),
-            ("sql",
-             Alternative(
-                 title=_("Query or SQL statement"),
-                 elements=[
-                     TextAscii(
-                         title=_("SQL statement or procedure name"),
-                         help=
-                         _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
-                           'a result table with one row and at least two columns. The first column must be '
-                           'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
-                           'Alternatively the first column can be interpreted as number value and you can '
-                           'define levels for this number. The '
-                           'second column is used as check output. The third column is optional and can '
-                           'contain performance data.'),
-                         allow_empty=False,
-                     ),
-                     UploadOrPasteTextFile(
-                         title=_("Import Query"),
-                         file_title=_("File including Query"),
-                         default_mode="upload",
-                     ),
-                 ],
-             )),
+            (
+                "sql",
+                Transform(
+                    TextAreaUnicode(
+                        title=_("Query or SQL statement"),
+                        help=
+                        _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
+                          'a result table with one row and at least two columns. The first column must be '
+                          'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
+                          'Alternatively the first column can be interpreted as number value and you can '
+                          'define levels for this number. The '
+                          'second column is used as check output. The third column is optional and can '
+                          'contain performance data.'),
+                        allow_empty=False,
+                        monospaced=True,
+                    ),
+                    # Former Alternative(Text, Alternative(FileUpload, Text)) based implementation
+                    # would save a string or a tuple with a string or a binary array as third element
+                    # which would then be turned into a string.
+                    # Just make all this a string
+                    forth=lambda old_val: [
+                        elem.decode() if isinstance(elem, bytes) else str(elem)
+                        for elem in ((old_val[-1] if isinstance(old_val, tuple) else old_val),)
+                    ][0],
+                )),
             (
                 "procedure",
                 Dictionary(

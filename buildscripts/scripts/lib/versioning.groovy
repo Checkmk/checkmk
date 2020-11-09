@@ -2,6 +2,7 @@
 import java.text.SimpleDateFormat
 
 // TODO: Add the rules to exclude mkp-able folder regarding ntop integration under "managed"
+@Field
 def REPO_PATCH_RULES = [\
 "raw": [\
     "folders_to_be_removed": [\

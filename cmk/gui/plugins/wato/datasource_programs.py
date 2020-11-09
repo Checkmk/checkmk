@@ -594,6 +594,19 @@ def _valuespec_generic_metrics_prometheus():
                 title=_('Prometheus web port'),
                 default_value=9090,
             )),
+            ('auth_basic',
+             Dictionary(elements=[
+                 ('username', TextAscii(
+                     title=_('Login username'),
+                     allow_empty=False,
+                 )),
+                 ("password", IndividualOrStoredPassword(
+                     title=_("Password"),
+                     allow_empty=False,
+                 )),
+             ],
+                        optional_keys=[],
+                        title=_("Basic authentication"))),
             ("protocol",
              DropdownChoice(title=_("Protocol"), choices=[
                  ("http", "HTTP"),

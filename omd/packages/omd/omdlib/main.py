@@ -2821,7 +2821,8 @@ def main_restore(version_info: VersionInfo, site: SiteContext, global_opts: 'Glo
         # Same for:
         # * discovered labels hard links
         # * local dir as the mkp mechanism may have resolved symlinks to hardlinks (in case --deference was used)
-        if tarinfo.islnk() and (tarinfo.name.startswith("var/check_mk/core/autochecks/") or
+        if tarinfo.islnk() and (tarinfo.name.startswith("var/check_mk/core/helper_config/") or
+                                tarinfo.name.startswith("var/check_mk/core/autochecks/") or
                                 tarinfo.name.startswith("var/check_mk/autochecks/") or
                                 tarinfo.name.startswith("var/check_mk/core/discovered_host_labels/")
                                 or tarinfo.name.startswith("var/check_mk/discovered_host_labels/")

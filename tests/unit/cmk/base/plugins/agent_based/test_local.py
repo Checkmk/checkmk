@@ -152,6 +152,19 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
                 )
             },
         ),
+        (
+            ['0', "With%20Spaces", '-', 'Check', 'with', 'spaces'],
+            {
+                "With Spaces": local.LocalResult(
+                    cached=None,
+                    item="With Spaces",
+                    state=0,
+                    text="",
+                    perfdata=[
+                    ],
+                )
+            },
+        ),
     ])
 def test_parse(string_table_row, expected_parsed_data):
     assert local.parse_local([string_table_row]) == expected_parsed_data

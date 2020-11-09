@@ -154,6 +154,7 @@ def _parse_perftxt(string):
 
 
 def parse_local(string_table):
+    import urllib.parse
     now = time.time()
     parsed: Dict[Optional[str], Union[LocalResult, List]] = {}
     for line in string_table:
@@ -174,7 +175,7 @@ def parse_local(string_table):
             continue
 
         raw_state, state_msg = _sanitize_state(stripped_line[0])
-        item = stripped_line[1]
+        item = urllib.parse.unquote(stripped_line[1])
         perfdata, perf_msg = _parse_perftxt(stripped_line[2])
         # convert escaped newline chars
         # (will be converted back later individually for the different cores)

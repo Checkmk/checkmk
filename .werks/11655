@@ -1,0 +1,13 @@
+Title: Fix page rendering if icon is missing
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1604910319
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+A missing icon could lead to performance issues on page rendering.
+
+Such icons are now exchanged with a standard icon.

@@ -566,6 +566,18 @@ TEST(Wtools, Registry) {
     }
 
     {
+        constexpr std::wstring_view expand_value{
+            LR"(%ProgramFiles(x86)%\checkmk\service\)"};
+        ASSERT_TRUE(SetRegistryValueExpand(path, name, expand_value));
+        std::filesystem::path in_registry(
+            GetRegistryValue(path, name, expand_value));
+        std::filesystem::path expected(
+            LR"(c:\Program Files (x86)\\checkmk\service\)");
+        EXPECT_TRUE(std::filesystem::equivalent(in_registry.lexically_normal(),
+                                                expected.lexically_normal()));
+    }
+
+    {
         constexpr std::wstring_view value = L"21";
         constexpr std::wstring_view weird_value = L"_____";
         constexpr uint32_t uint_value = 123;
@@ -592,6 +604,13 @@ TEST(Wtools, Win32) {
     EXPECT_TRUE(IsBadHandle(nullptr));
     EXPECT_TRUE(IsBadHandle(INVALID_HANDLE_VALUE));
     EXPECT_FALSE(IsBadHandle(reinterpret_cast<HANDLE>(4)));
+}
+
+TEST(Wtools, ExpandString) {
+    using namespace std::string_literals;
+    EXPECT_EQ(L"*Windows_NTWindows_NT*"s,
+              ExpandStringWithEnvironment(L"*%OS%%OS%*"));
+    EXPECT_EQ(L"%_1_2_a%"s, ExpandStringWithEnvironment(L"%_1_2_a%"));
 }
 
 }  // namespace wtools

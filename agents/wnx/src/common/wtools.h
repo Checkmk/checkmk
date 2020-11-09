@@ -1007,6 +1007,10 @@ bool DeleteRegistryValue(std::wstring_view path,
 bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                       std::wstring_view value);
 
+bool SetRegistryValueExpand(std::wstring_view path,
+                            std::wstring_view value_name,
+                            std::wstring_view value);
+
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                       uint32_t value) noexcept;
@@ -1117,6 +1121,8 @@ bool ChangeAccessRights(
     ACCESS_MODE access_mode,      // type of ACE
     DWORD inheritance             // inheritance flags for new ACE ???
 );
+
+std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 
 }  // namespace wtools
 

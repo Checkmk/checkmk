@@ -1868,9 +1868,10 @@ bool DeleteRegistryValue(std::wstring_view path,
     return true;
 }
 
+namespace {
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
-                      std::wstring_view value) {
+                      std::wstring_view value, DWORD type) {
     HKEY hKey;
     auto ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
                               REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL,
@@ -1878,10 +1879,23 @@ bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
     if (ERROR_SUCCESS != ret) return false;
 
     // Set full application path with a keyname to registry
-    ret = RegSetValueEx(hKey, value_name.data(), 0, REG_SZ,
+    ret =
+        ::RegSetValueEx(hKey, value_name.data(), 0, type,
                         reinterpret_cast<const BYTE*>(value.data()),
                         static_cast<uint32_t>(value.size() * sizeof(wchar_t)));
     return ERROR_SUCCESS == ret;
+}
+}  // namespace
+
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      std::wstring_view value) {
+    return SetRegistryValue(path, value_name, value, REG_SZ);
+}
+
+bool SetRegistryValueExpand(std::wstring_view path,
+                            std::wstring_view value_name,
+                            std::wstring_view value) {
+    return SetRegistryValue(path, value_name, value, REG_EXPAND_SZ);
 }
 
 // returns true on success
@@ -1922,7 +1936,8 @@ std::wstring GetRegistryValue(std::wstring_view path,
         return dflt.data();
     }
 
-    if (ret == ERROR_SUCCESS) return buffer;
+    if (ret == ERROR_SUCCESS)
+        return type == REG_SZ ? buffer : ExpandStringWithEnvironment(buffer);
 
     if (ret == ERROR_MORE_DATA) {
         // realloc required
@@ -1942,7 +1957,9 @@ std::wstring GetRegistryValue(std::wstring_view path,
             return dflt.data();
         }
 
-        if (ret == ERROR_SUCCESS) return buffer_big;
+        if (ret == ERROR_SUCCESS)
+            return type == REG_SZ ? buffer_big
+                                  : ExpandStringWithEnvironment(buffer_big);
     }
 
     // failure here
@@ -2671,6 +2688,26 @@ bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
     XLOG::l.i("User Access Protected '{}'", entry.u8string());
 
     return true;
+}
+
+std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
+    if (str.empty()) return std::wstring{str};
+
+    auto log_error_and_return_default = [](std::wstring_view str) {
+        XLOG::l("Can't expand the string #1 '{}' [{}]", ConvertToUTF8(str),
+                GetLastError());
+        return std::wstring{str};
+    };
+
+    std::wstring result;
+    auto ret = ::ExpandEnvironmentStringsW(str.data(), result.data(), 0);
+    if (ret == 0) return log_error_and_return_default(str);
+
+    result.resize(ret - 1);
+    ret = ::ExpandEnvironmentStringsW(str.data(), result.data(), ret);
+    if (ret == 0) return log_error_and_return_default(str);
+
+    return result;
 }
 
 }  // namespace wtools

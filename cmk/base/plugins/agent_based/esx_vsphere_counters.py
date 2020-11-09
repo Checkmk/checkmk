@@ -66,7 +66,7 @@ def parse_esx_vsphere_counters(string_table: StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_esx_vsphere_counters([
-    ... ['disk.numberRead', 'naa.5000cca05688e814', '0#0', 'number'],
+    ... ['disk.numberReadAveraged', 'naa.5000cca05688e814', '0#0', 'number'],
     ... ['disk.write',
     ...  'naa.6000eb39f31c58130000000000000015',
     ...  '0#0',
@@ -75,7 +75,7 @@ def parse_esx_vsphere_counters(string_table: StringTable) -> Section:
     ... ['net.droppedRx', 'vmnic1', '0#0', 'number'],
     ... ['net.errorsRx', '', '0#0', 'number'],
     ... ]))
-    {'disk.numberRead': {'naa.5000cca05688e814': [(['0', '0'], 'number')]},
+    {'disk.numberReadAveraged': {'naa.5000cca05688e814': [(['0', '0'], 'number')]},
      'disk.write': {'naa.6000eb39f31c58130000000000000015': [(['0', '0'],
                                                               'kiloBytesPerSecond')]},
      'net.bytesRx': {'vmnic0': [(['1', '1'], 'kiloBytesPerSecond')]},
@@ -279,12 +279,12 @@ def discover_esx_vsphere_counters_diskio(section: Section) -> DiscoveryResult:
         yield Service(item="SUMMARY")
 
 
-def _concat_instance_multivalues(parsed, key):
-    all_multivalues = []
-    for data in parsed.get(key, {}).values():
+def _sum_instance_counts(counts: SubSectionCounter) -> float:
+    summed_avgs = 0.
+    for data in counts.values():
         multivalues, _unit = data[0]
-        all_multivalues.extend(multivalues)
-    return all_multivalues
+        summed_avgs += average_parsed_data(multivalues)
+    return summed_avgs
 
 
 def _max_latency(latencies: SubSectionCounter) -> Optional[int]:
@@ -310,10 +310,9 @@ def check_esx_vsphere_counters_diskio(
             summary['%s_throughput' % op_type] = average_parsed_data(multivalues) * 1024
 
         # sum up all instances
-        op_counts = _concat_instance_multivalues(section, "disk.number%s" % op_type.title())
-        if op_counts:
-            # these are absolute counts, every 20 seconds.
-            summary["%s_ios" % op_type] = average_parsed_data(op_counts) / 20.0
+        op_counts_key = "disk.number%sAveraged" % op_type.title()
+        if op_counts_key in section:
+            summary["%s_ios" % op_type] = _sum_instance_counts(section[op_counts_key])
 
     latency = _max_latency(section.get("disk.deviceLatency", {}))
     if latency is not None:

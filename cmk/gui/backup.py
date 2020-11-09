@@ -48,7 +48,7 @@ from cmk.gui.valuespec import (
     Timeofday,
     ValueSpec,
 )
-from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, FinalizeRequest
+from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.main_menu import mega_menu_registry
@@ -61,9 +61,9 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, redirect
 
 #.
 #   .--Config--------------------------------------------------------------.
@@ -418,9 +418,11 @@ class Jobs(BackupEntityCollection):
             for job_ident, job in sorted(self.objects.items()):
                 table.row()
                 table.cell(_("Actions"), css="buttons")
-                delete_url = html.makeactionuri_contextless([("mode", "backup"),
-                                                             ("_action", "delete"),
-                                                             ("_job", job_ident)])
+                delete_url = make_confirm_link(
+                    url=html.makeactionuri_contextless([("mode", "backup"), ("_action", "delete"),
+                                                        ("_job", job_ident)]),
+                    message=_("Do you really want to delete this job?"),
+                )
                 edit_url = makeuri_contextless(
                     request,
                     [("mode", "edit_backup_job"), ("job", job_ident)],
@@ -621,41 +623,35 @@ class PageBackup:
 
         action = html.request.var("_action")
 
-        if action == "delete":
-            if not html.transaction_valid():
-                return None
-        else:
-            if not html.check_transaction():
-                return None
+        if not html.check_transaction():
+            return redirect(makeuri_contextless(request, [("mode", "backup")]))
 
         if action == "delete" and self._may_edit_config():
-            return self._delete_job(job)
+            self._delete_job(job)
 
-        if action == "start":
-            return self._start_job(job)
+        elif action == "start":
+            self._start_job(job)
 
-        if action == "stop":
-            return self._stop_job(job)
+        elif action == "stop":
+            self._stop_job(job)
 
-        raise NotImplementedError()
+        return redirect(makeuri_contextless(request, [("mode", "backup")]))
 
-    def _delete_job(self, job):
+    def _delete_job(self, job) -> None:
         if job.is_running():
             raise MKUserError("_job", _("This job is currently running."))
 
-        if html.confirm(_("Do you really want to delete this job?"), add_header=self.title()):
-            html.check_transaction()  # invalidate transid
-            job.cleanup()
-            jobs = self.jobs()
-            jobs.remove(job)
-            jobs.save()
-            flash(_("The job has been deleted."))
+        job.cleanup()
+        jobs = self.jobs()
+        jobs.remove(job)
+        jobs.save()
+        flash(_("The job has been deleted."))
 
-    def _start_job(self, job):
+    def _start_job(self, job) -> None:
         job.start()
         flash(_("The backup has been started."))
 
-    def _stop_job(self, job):
+    def _stop_job(self, job) -> None:
         job.stop()
         flash(_("The backup has been stopped."))
 
@@ -819,26 +815,28 @@ class PageEditBackupJob:
         return sorted(self.targets().choices(), key=lambda x_y1: x_y1[1].title())
 
     def action(self) -> ActionResult:
-        if html.transaction_valid():
-            vs = self.vs_backup_job()
+        if not html.check_transaction():
+            return redirect(makeuri_contextless(request, [("mode", "backup")]))
 
-            config = vs.from_html_vars("edit_job")
-            vs.validate_value(config, "edit_job")
+        vs = self.vs_backup_job()
 
-            if "ident" in config:
-                self._ident = config.pop("ident")
-            self._job_cfg = config
+        config = vs.from_html_vars("edit_job")
+        vs.validate_value(config, "edit_job")
 
-            jobs = self.jobs()
-            if self._new:
-                job = Job(self._ident, self._job_cfg)
-                jobs.add(job)
-            else:
-                job = jobs.get(self._ident)
-                job.from_config(self._job_cfg)
+        if "ident" in config:
+            self._ident = config.pop("ident")
+        self._job_cfg = config
 
-            jobs.save()
-        raise HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
+        jobs = self.jobs()
+        if self._new:
+            job = Job(self._ident, self._job_cfg)
+            jobs.add(job)
+        else:
+            job = jobs.get(self._ident)
+            job.from_config(self._job_cfg)
+
+        jobs.save()
+        return redirect(makeuri_contextless(request, [("mode", "backup")]))
 
     def page(self):
         html.begin_form("edit_job", method="POST")
@@ -992,10 +990,17 @@ class Target(BackupEntity):
                 table.row()
                 table.cell(_("Actions"), css="buttons")
 
-                delete_url = html.makeactionuri([("_action", "delete"), ("_backup", backup_ident)])
+                delete_url = make_confirm_link(
+                    url=html.makeactionuri([("_action", "delete"), ("_backup", backup_ident)]),
+                    message=_("Do you really want to delete this backup?"),
+                )
+
                 html.icon_button(delete_url, _("Delete this backup"), "delete")
 
-                start_url = html.makeactionuri([("_action", "start"), ("_backup", backup_ident)])
+                start_url = make_confirm_link(
+                    url=html.makeactionuri([("_action", "start"), ("_backup", backup_ident)]),
+                    message=_("Do you really want to start the restore of this backup?"),
+                )
 
                 html.icon_button(start_url, _("Start restore of this backup"),
                                  "backup_restore_start")
@@ -1064,8 +1069,11 @@ class Targets(BackupEntityCollection):
                                  "backup_restore")
 
                 if editable:
-                    delete_url = html.makeactionuri_contextless([("mode", "backup_targets"),
-                                                                 ("target", target_ident)])
+                    delete_url = make_confirm_link(
+                        url=html.makeactionuri_contextless([("mode", "backup_targets"),
+                                                            ("target", target_ident)]),
+                        message=_("Do you really want to delete this target?"),
+                    )
                     edit_url = makeuri_contextless(
                         request,
                         [("mode", "edit_backup_target"), ("target", target_ident)],
@@ -1128,27 +1136,22 @@ class PageBackupTargets:
         )
 
     def action(self) -> ActionResult:
-        if html.transaction_valid():
-            ident = html.request.var("target")
-            targets = self.targets()
-            try:
-                target = targets.get(ident)
-            except KeyError:
-                raise MKUserError("target", _("This backup target does not exist."))
+        if not html.check_transaction():
+            return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-            self._verify_not_used(target)
+        ident = html.request.var("target")
+        targets = self.targets()
+        try:
+            target = targets.get(ident)
+        except KeyError:
+            raise MKUserError("target", _("This backup target does not exist."))
 
-            confirm = html.confirm(_("Do you really want to delete this target?"),
-                                   add_header=self.title())
+        self._verify_not_used(target)
 
-            if confirm is False:
-                return FinalizeRequest(code=200)
-
-            if confirm:
-                targets.remove(target)
-                targets.save()
-                flash(_("The target has been deleted."))
-        return None
+        targets.remove(target)
+        targets.save()
+        flash(_("The target has been deleted."))
+        return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def _verify_not_used(self, target):
         job_titles = [j.title() for j in self.jobs().jobs_using_target(target)]
@@ -1243,26 +1246,28 @@ class PageEditBackupTarget:
             raise MKUserError(varprefix, _("This ID is already used by another backup target."))
 
     def action(self) -> ActionResult:
-        if html.transaction_valid():
-            vs = self.vs_backup_target()
+        if not html.check_transaction():
+            return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-            config = vs.from_html_vars("edit_target")
-            vs.validate_value(config, "edit_target")
+        vs = self.vs_backup_target()
 
-            if "ident" in config:
-                self._ident = config.pop("ident")
-            self._target_cfg = config
+        config = vs.from_html_vars("edit_target")
+        vs.validate_value(config, "edit_target")
 
-            targets = self.targets()
-            if self._new:
-                target = Target(self._ident, self._target_cfg)
-                targets.add(target)
-            else:
-                target = targets.get(self._ident)
-                target.from_config(self._target_cfg)
+        if "ident" in config:
+            self._ident = config.pop("ident")
+        self._target_cfg = config
 
-            targets.save()
-        raise HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
+        targets = self.targets()
+        if self._new:
+            target = Target(self._ident, self._target_cfg)
+            targets.add(target)
+        else:
+            target = targets.get(self._ident)
+            target.from_config(self._target_cfg)
+
+        targets.save()
+        return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def page(self):
         html.begin_form("edit_target", method="POST")
@@ -1656,8 +1661,14 @@ class PageBackupRestore:
                                 PageMenuEntry(
                                     title=_("Stop"),
                                     icon_name="backup_restore_stop",
-                                    item=make_simple_link(html.makeactionuri([("_action", "stop")
-                                                                             ])),
+                                    item=make_simple_link(
+                                        make_confirm_link(
+                                            url=html.makeactionuri([("_action", "stop")]),
+                                            message=_(
+                                                "Do you really want to stop the restore of "
+                                                "this backup? This will - leave your environment in "
+                                                "an undefined state."),
+                                        )),
                                     is_shortcut=True,
                                     is_suggested=True,
                                     is_enabled=self._restore_is_running(),
@@ -1686,24 +1697,24 @@ class PageBackupRestore:
         if action is None:
             return None  # Only choosen the target
 
-        if not html.transaction_valid():
-            return None
+        if not html.check_transaction():
+            return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
         if action == "delete":
-            return self._delete_backup(backup_ident)
+            self._delete_backup(backup_ident)
 
-        if action == "complete":
-            return self._complete_restore(backup_ident)
+        elif action == "complete":
+            self._complete_restore(backup_ident)
 
-        if action == "start":
+        elif action == "start":
             return self._start_restore(backup_ident)
 
-        if action == "stop":
-            return self._stop_restore(backup_ident)
+        elif action == "stop":
+            self._stop_restore(backup_ident)
 
-        raise NotImplementedError()
+        return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
-    def _delete_backup(self, backup_ident):
+    def _delete_backup(self, backup_ident) -> None:
         if self._restore_is_running():
             raise MKUserError(
                 None,
@@ -1715,17 +1726,8 @@ class PageBackupRestore:
         if backup_ident not in self._target.backups():
             raise MKUserError(None, _("This backup does not exist."))
 
-        confirm = html.confirm(_("Do you really want to delete this backup?"),
-                               add_header=self.title(),
-                               method="GET")
-
-        if confirm is False:
-            return FinalizeRequest(code=200)
-
-        if confirm:
-            html.check_transaction()  # invalidate transid
-            self._target.remove_backup(backup_ident)
-            flash(_("The backup has been deleted."))
+        self._target.remove_backup(backup_ident)
+        flash(_("The backup has been deleted."))
 
     def _restore_was_started(self):
         return RestoreJob(self._target_ident, None).was_started()
@@ -1741,12 +1743,10 @@ class PageBackupRestore:
             return self._start_encrypted_restore(backup_ident, backup_info)
         return self._start_unencrypted_restore(backup_ident)
 
-    # Mypy requires the explicit return, pylint does not like it.
-    def _complete_restore(self, backup_ident) -> ActionResult:  # pylint: disable=useless-return
+    def _complete_restore(self, backup_ident) -> None:
         RestoreJob(self._target_ident, None).complete()
-        return None
 
-    def _start_encrypted_restore(self, backup_ident, backup_info):
+    def _start_encrypted_restore(self, backup_ident, backup_info) -> ActionResult:
         key_digest = backup_info["config"]["encrypt"]
 
         try:
@@ -1769,7 +1769,8 @@ class PageBackupRestore:
 
                     html.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()
-                    return None, _("The restore has been started.")
+                    flash(_("The restore has been started."))
+                    return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
             except MKUserError as e:
                 html.add_user_error(e.varname, e)
 
@@ -1793,7 +1794,7 @@ class PageBackupRestore:
         html.hidden_fields()
         html.end_form()
         html.footer()
-        return False
+        return FinalizeRequest(code=200)
 
     def _vs_key(self):
         return Dictionary(
@@ -1810,32 +1811,14 @@ class PageBackupRestore:
             render="form",
         )
 
-    def _start_unencrypted_restore(self, backup_ident):
-        confirm = html.confirm(_("Do you really want to start the restore of this backup?"),
-                               add_header=self.title(),
-                               method="GET")
-        if confirm is False:
-            return False
+    def _start_unencrypted_restore(self, backup_ident) -> ActionResult:
+        RestoreJob(self._target_ident, backup_ident).start()
+        flash(_("The restore has been started."))
+        return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
-        if confirm:
-            html.check_transaction()  # invalidate transid
-            RestoreJob(self._target_ident, backup_ident).start()
-            return None, _("The restore has been started.")
-
-    def _stop_restore(self, backup_ident) -> ActionResult:
-        confirm = html.confirm(_("Do you really want to stop the restore of this backup? This will "
-                                 "leave your environment in an undefined state."),
-                               add_header=self.title(),
-                               method="GET")
-
-        if confirm is False:
-            return FinalizeRequest(code=200)
-
-        if confirm:
-            html.check_transaction()  # invalidate transid
-            RestoreJob(self._target_ident, backup_ident).stop()
-            flash(_("The restore has been stopped."))
-        return None
+    def _stop_restore(self, backup_ident) -> None:
+        RestoreJob(self._target_ident, backup_ident).stop()
+        flash(_("The restore has been stopped."))
 
     def page(self):
         if self._restore_was_started():

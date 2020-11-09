@@ -705,10 +705,11 @@ div.filter_buttons {
     margin: 0 8px 8px 0;
     background: $bg-color-secondary;
     border: 1px solid $color-table-border;
+    border-radius: $theme-border-radius;
     box-shadow: none;
 
     &:hover {
-      background: $wato-a-hover-bg-color;
+      background: $input-button-hover-bg-color;
     }
   }
 
@@ -716,12 +717,8 @@ div.filter_buttons {
     position: relative;
     float: left;
     width: 317px;
-    padding: 0 0 14px;
+    padding: 0 0 $spacing;
     border: $wato-a-border;
-
-    &:hover div.title {
-      color: $secondary-font-color;
-    }
   }
 
   div {
@@ -733,7 +730,6 @@ div.filter_buttons {
       left: 72px;
       padding: 0;
       font-weight: bold;
-      color: $secondary-link-color;
     }
 
     &.subtitle {

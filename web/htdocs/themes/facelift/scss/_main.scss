@@ -146,8 +146,7 @@ select.icon option {
 
 // TODO : Figure out where these can be found in the front end
 input.button,
-table.vs_duallist a.control,
-.wato div.mainmenu a {
+table.vs_duallist a.control {
   padding: 2px 6px;
   margin-left: 5px;
   color: rgb(255, 255, 255);
@@ -194,7 +193,6 @@ input.button.hot {
   &:active {
     color: $hot-font-color;
     background-color: rgb(17, 189, 123);
-    border: 1px solid rgb(17, 189, 123);
   }
 
   &:hover {

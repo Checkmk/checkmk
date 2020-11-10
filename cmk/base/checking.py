@@ -133,74 +133,74 @@ def do_check(
     long_infotexts: List[ServiceAdditionalDetails] = []
     perfdata: List[str] = []
     try:
+        license_usage.try_history_update()
+
+        # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
+        # address is unknown). When called as non keepalive ipaddress may be None or
+        # is already an address (2nd argument)
+        if ipaddress is None and not host_config.is_cluster:
+            ipaddress = ip_lookup.lookup_ip_address(host_config)
+
+        item_state.load(hostname)
+
+        # When monitoring Checkmk clusters, the cluster nodes are responsible for fetching all
+        # information from the monitored host and cache the result for the cluster checks to be
+        # performed on the cached information.
+        #
+        # This means that in case of SNMP nodes, they need to take the clustered services of the
+        # node into account, fetch the needed sections and cache them for the cluster host.
+        #
+        # But later, when checking the node services, the node has to only deal with the unclustered
+        # services.
+        belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
+
+        services_to_fetch = _get_services_to_fetch(
+            host_name=hostname,
+            belongs_to_cluster=belongs_to_cluster,
+            config_cache=config_cache,
+            only_check_plugins=only_check_plugin_names,
+        )
+
+        services_to_check = _filter_clustered_services(
+            config_cache=config_cache,
+            host_name=hostname,
+            belongs_to_cluster=belongs_to_cluster,
+            services=services_to_fetch,
+        )
+
+        # see which raw sections we may need
+        selected_raw_sections = agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=(s.check_plugin_name for s in services_to_fetch),
+            consider_inventory_plugins=host_config.do_status_data_inventory,
+        )
+
+        sources = checkers.make_sources(
+            host_config,
+            ipaddress,
+            mode=checkers.Mode.CHECKING,
+        )
+        nodes = checkers.make_nodes(
+            config_cache,
+            host_config,
+            ipaddress,
+            checkers.Mode.CHECKING,
+            sources,
+        )
+
+        if not fetcher_messages:
+            # Note: `fetch_all(sources)` is almost always called in similar
+            #       code in discovery and inventory.  The only other exception
+            #       is `cmk.base.discovery.check_discovery(...)`.  This does
+            #       not seem right.
+            fetcher_messages = list(
+                checkers.fetch_all(
+                    nodes,
+                    max_cachefile_age=host_config.max_cachefile_age,
+                    host_config=host_config,
+                    selected_raw_sections=selected_raw_sections,
+                ))
+
         with CPUTracker() as tracker:
-            license_usage.try_history_update()
-
-            # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
-            # address is unknown). When called as non keepalive ipaddress may be None or
-            # is already an address (2nd argument)
-            if ipaddress is None and not host_config.is_cluster:
-                ipaddress = ip_lookup.lookup_ip_address(host_config)
-
-            item_state.load(hostname)
-
-            # When monitoring Checkmk clusters, the cluster nodes are responsible for fetching all
-            # information from the monitored host and cache the result for the cluster checks to be
-            # performed on the cached information.
-            #
-            # This means that in case of SNMP nodes, they need to take the clustered services of the
-            # node into account, fetch the needed sections and cache them for the cluster host.
-            #
-            # But later, when checking the node services, the node has to only deal with the unclustered
-            # services.
-            belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
-
-            services_to_fetch = _get_services_to_fetch(
-                host_name=hostname,
-                belongs_to_cluster=belongs_to_cluster,
-                config_cache=config_cache,
-                only_check_plugins=only_check_plugin_names,
-            )
-
-            services_to_check = _filter_clustered_services(
-                config_cache=config_cache,
-                host_name=hostname,
-                belongs_to_cluster=belongs_to_cluster,
-                services=services_to_fetch,
-            )
-
-            # see which raw sections we may need
-            selected_raw_sections = agent_based_register.get_relevant_raw_sections(
-                check_plugin_names=(s.check_plugin_name for s in services_to_fetch),
-                consider_inventory_plugins=host_config.do_status_data_inventory,
-            )
-
-            sources = checkers.make_sources(
-                host_config,
-                ipaddress,
-                mode=checkers.Mode.CHECKING,
-            )
-            nodes = checkers.make_nodes(
-                config_cache,
-                host_config,
-                ipaddress,
-                checkers.Mode.CHECKING,
-                sources,
-            )
-
-            if not fetcher_messages:
-                # Note: `fetch_all(sources)` is almost always called in similar
-                #       code in discovery and inventory.  The only other exception
-                #       is `cmk.base.discovery.check_discovery(...)`.  This does
-                #       not seem right.
-                fetcher_messages = list(
-                    checkers.fetch_all(
-                        nodes,
-                        max_cachefile_age=host_config.max_cachefile_age,
-                        host_config=host_config,
-                        selected_raw_sections=selected_raw_sections,
-                    ))
-
             mhs = MultiHostSections()
             result = checkers.update_host_sections(
                 mhs,
@@ -247,7 +247,7 @@ def do_check(
                 infotexts.append(missing_data_infotext)
 
         total_times = tracker.duration
-        for msg in fetcher_messages if fetcher_messages else ():
+        for msg in fetcher_messages:
             total_times += msg.stats.cpu_tracker.duration
 
         infotexts.append("execution time %.1f sec" % total_times.run_time)

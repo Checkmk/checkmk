@@ -169,5 +169,3 @@ def handle_stats(response):
             sys.stdout.write("%s %s %s\n" %
                              (indice, sum(all_counts) / len(all_counts),
                               sum(all_sizes) / len(all_sizes)))  # fixed: true-division
-if __name__ == "__main__":
-    main()

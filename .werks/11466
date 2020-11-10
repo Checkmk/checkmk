@@ -1,0 +1,20 @@
+Title: Windows Agent supports environment variables in registry entries
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1604997782
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i2
+
+Previously Windows Agnet can't process registry entries with type 
+REG_EXPAND_SZ containing environment variable(s).
+
+For example ImagePath="%ProgramFiles(x86)%\checkmk\service\check_mk_agent.exe" 
+had not been expanded to the "c:\Program Files (x86)\checkmk..."
+
+This may lead to Agent malfunction on some Windows installation.
+
+With this release Windows agent fully supports einvironment variables 
+embedded in registry entries thus eliminating the problem.

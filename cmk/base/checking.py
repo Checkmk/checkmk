@@ -248,7 +248,7 @@ def do_check(
 
         total_times = tracker.duration
         for msg in fetcher_messages:
-            total_times += msg.stats.cpu_tracker.duration
+            total_times += msg.stats.duration
 
         infotexts.append("execution time %.1f sec" % total_times.process.elapsed)
         if config.check_mk_perfdata_with_times:
@@ -272,7 +272,7 @@ def do_check(
                         FetcherType.PROGRAM: "ds",
                         FetcherType.SNMP: "snmp",
                         FetcherType.TCP: "agent",
-                    }[msg.fetcher_type]] += msg.stats.cpu_tracker.duration
+                    }[msg.fetcher_type]] += msg.stats.duration
             for phase, duration in summary.items():
                 perfdata.append("cmk_time_%s=%.3f" % (phase, duration.idle))
         else:

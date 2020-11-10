@@ -74,22 +74,6 @@ class CPUTracker:
         self._end = Snapshot.take()
         console.vverbose("[cpu_tracking] Stop [%x - %s]\n", id(self), self.duration)
 
-    def serialize(self) -> Dict[str, Any]:
-        return {
-            "start": self._start.serialize(),
-            "end": self._end.serialize(),
-        }
-
-    @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "CPUTracker":
-        try:
-            tracker = CPUTracker()
-            tracker._start = Snapshot.deserialize(serialized["start"])
-            tracker._end = Snapshot.deserialize(serialized["end"])
-            return tracker
-        except (LookupError, TypeError, ValueError) as exc:
-            raise ValueError(serialized) from exc
-
     @property
     def duration(self) -> Snapshot:
         return self._end - self._start

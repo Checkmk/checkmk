@@ -10,7 +10,7 @@ import json
 
 import pytest
 
-from cmk.utils.cpu_tracking import Snapshot, CPUTracker
+from cmk.utils.cpu_tracking import Snapshot
 
 
 def json_identity(serializable):
@@ -59,12 +59,3 @@ class TestCpuTracking:
 
     def test_json_serialization_now(self, now):
         assert Snapshot.deserialize(json_identity(now.serialize())) == now
-
-
-class TestCPUTracker:
-    @pytest.fixture
-    def null(self):
-        return CPUTracker()
-
-    def test_json_serialization(self, null):
-        assert CPUTracker.deserialize(json_identity(null.serialize())).duration == null.duration

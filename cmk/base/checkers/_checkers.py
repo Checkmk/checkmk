@@ -237,7 +237,7 @@ def fetch_all(
                 raw_data = source.fetch()
             yield FetcherMessage.from_raw_data(
                 raw_data,
-                L3Stats(tracker),
+                L3Stats(tracker.duration),
                 source.fetcher_type,
             )
 

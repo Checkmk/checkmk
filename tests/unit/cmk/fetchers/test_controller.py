@@ -11,7 +11,7 @@ import pyghmi.exceptions  # type: ignore[import]
 import pytest  # type: ignore[import]
 
 import cmk.utils.log as log
-from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import (
     MKBailOut,
     MKException,
@@ -295,7 +295,7 @@ class TestFetcherHeaderEq:
 
     @pytest.fixture
     def stats_length(self):
-        return len(L3Stats(CPUTracker()))
+        return len(L3Stats(Snapshot.null()))
 
     @pytest.fixture
     def header(self, fetcher_type, payload_type, status, payload_length, stats_length):
@@ -380,12 +380,8 @@ class TestFetcherHeaderEq:
 
 class TestL3Stats:
     @pytest.fixture
-    def tracker(self):
-        return CPUTracker()
-
-    @pytest.fixture
-    def l3stats(self, tracker):
-        return L3Stats(tracker)
+    def l3stats(self):
+        return L3Stats(Snapshot.null())
 
     def test_encode_decode(self, l3stats):
         assert L3Stats.from_bytes(bytes(l3stats)) == l3stats
@@ -394,7 +390,7 @@ class TestL3Stats:
 class TestFetcherMessage:
     @pytest.fixture
     def stats(self):
-        return L3Stats(CPUTracker())
+        return L3Stats(Snapshot.null())
 
     @pytest.fixture
     def header(self, stats):

@@ -14,7 +14,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
-from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import ParsedSectionName, result, SectionName, SourceType
 
 from cmk.fetchers import (
@@ -539,7 +539,7 @@ class TestMakeHostSectionsHosts:
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK({}),
-                    L3Stats(CPUTracker()),
+                    L3Stats(Snapshot.null()),
                     FetcherType.SNMP,
                 ),
             ],
@@ -596,7 +596,7 @@ class TestMakeHostSectionsHosts:
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
-                    L3Stats(CPUTracker()),
+                    L3Stats(Snapshot.null()),
                     source.fetcher_type,
                 ),
             ],
@@ -650,7 +650,7 @@ class TestMakeHostSectionsHosts:
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
-                    L3Stats(CPUTracker()),
+                    L3Stats(Snapshot.null()),
                     source.fetcher_type,
                 ) for source in sources
             ],
@@ -693,7 +693,7 @@ class TestMakeHostSectionsHosts:
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
-                    L3Stats(CPUTracker()),
+                    L3Stats(Snapshot.null()),
                     source.fetcher_type,
                 )
                 for source in sources
@@ -795,7 +795,7 @@ class TestMakeHostSectionsClusters:
                 # We do not pass sources explicitly but still append Piggyback.
                 FetcherMessage.from_raw_data(
                     result.OK(b""),
-                    L3Stats(CPUTracker()),
+                    L3Stats(Snapshot.null()),
                     FetcherType.PIGGYBACK,
                 ),
             ],
@@ -888,7 +888,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
-                    L3Stats(CPUTracker()),
+                    L3Stats(Snapshot.null()),
                     source.fetcher_type,
                 )
                 for source in sources

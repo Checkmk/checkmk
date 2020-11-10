@@ -1621,7 +1621,7 @@ def mode_check(options: CheckingOptions, args: List[str]) -> None:
     if len(args) == 2:
         ipaddress = args[1]
 
-    return checking.do_check(hostname, ipaddress, only_check_plugin_names=options.get("checks"))
+    return checking.do_check(hostname, ipaddress, run_only_plugin_names=options.get("checks"))
 
 
 modes.register(

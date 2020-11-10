@@ -837,7 +837,7 @@ def test__find_candidates():
 
     assert discovery._find_candidates(
         mhs,
-        selected_check_plugins=None,
+        run_only_plugin_names=None,
     ) == {
         CheckPluginName('docker_container_status_uptime'),
         CheckPluginName("kernel"),
@@ -931,9 +931,11 @@ def test_do_discovery(monkeypatch):
     ts.apply(monkeypatch)
 
     with cmk_debug_enabled():
-        discovery.do_discovery(arg_hostnames={"test-host"},
-                               check_plugin_names=None,
-                               arg_only_new=False)
+        discovery.do_discovery(
+            arg_hostnames={"test-host"},
+            run_only_plugin_names=None,
+            arg_only_new=False,
+        )
 
     services = autochecks.parse_autochecks_file("test-host", config.service_description)
     found = {(s.check_plugin_name, s.item): s.service_labels.to_dict() for s in services}
@@ -1482,7 +1484,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
             scenario.ipaddress,
             scenario.multi_host_sections,
             discovery_parameters,
-            check_plugin_whitelist=None,
+            run_only_plugin_names=None,
         )
 
     services = {(s.check_plugin_name, s.item) for s in discovered_services}
@@ -1503,7 +1505,7 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
             scenario.ipaddress,
             scenario.multi_host_sections,
             discovery_parameters,
-            check_plugin_whitelist={CheckPluginName('df')},
+            run_only_plugin_names={CheckPluginName('df')},
         )
 
     assert host_label_discovery_result.per_plugin == discovery_test_case.on_realhost.expected_per_plugin

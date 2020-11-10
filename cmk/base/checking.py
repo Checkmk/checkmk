@@ -120,7 +120,7 @@ def do_check(
     # The next two *must* remain optional for Nagios and the `DiscoCheckExecutor`.
     #   See Also: `cmk.base.discovery.check_discovery()`
     fetcher_messages: Sequence[FetcherMessage] = (),
-    only_check_plugin_names: Optional[Set[CheckPluginName]] = None,
+    run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     console.verbose("Checkmk version %s\n", cmk_version.__version__)
 
@@ -159,7 +159,6 @@ def do_check(
             host_name=hostname,
             belongs_to_cluster=belongs_to_cluster,
             config_cache=config_cache,
-            only_check_plugins=only_check_plugin_names,
         )
 
         services_to_check = _filter_clustered_services(
@@ -167,6 +166,7 @@ def do_check(
             host_name=hostname,
             belongs_to_cluster=belongs_to_cluster,
             services=services_to_fetch,
+            run_only_plugin_names=run_only_plugin_names,
         )
 
         # see which raw sections we may need
@@ -218,15 +218,15 @@ def do_check(
                 ipaddress,
                 multi_host_sections=mhs,
                 services=services_to_check,
-                only_check_plugins=only_check_plugin_names,
             )
-            inventory.do_inventory_actions_during_checking_for(
-                config_cache,
-                host_config,
-                ipaddress,
-                sources=sources,
-                multi_host_sections=mhs,
-            )
+
+            if run_only_plugin_names is None:
+                inventory.do_inventory_actions_during_checking_for(
+                    config_cache,
+                    host_config,
+                    ipaddress,
+                    multi_host_sections=mhs,
+                )
 
             if _submit_to_core:
                 item_state.save(hostname)
@@ -331,7 +331,6 @@ def _do_all_checks_on_host(
     multi_host_sections: MultiHostSections,
     *,
     services: List[Service],
-    only_check_plugins: Optional[Set[CheckPluginName]] = None,
 ) -> Tuple[int, List[CheckPluginName]]:
     hostname: HostName = host_config.hostname
     num_success = 0
@@ -352,7 +351,6 @@ def _get_services_to_fetch(
     host_name: HostName,
     belongs_to_cluster: bool,
     config_cache: config.ConfigCache,
-    only_check_plugins: Optional[Set[CheckPluginName]] = None,
 ) -> List[Service]:
     """Gather list of services to fetch the sections for
 
@@ -366,29 +364,38 @@ def _get_services_to_fetch(
     # plugin names.
     return [
         service for service in services
-        if (only_check_plugins is None or service.check_plugin_name in only_check_plugins) and
-        not service_outside_check_period(config_cache, host_name, service.description)
+        if not service_outside_check_period(config_cache, host_name, service.description)
     ]
 
 
-def _filter_clustered_services(config_cache: config.ConfigCache, host_name: HostName,
-                               belongs_to_cluster: bool, services: List[Service]) -> List[Service]:
+def _filter_clustered_services(
+    *,
+    config_cache: config.ConfigCache,
+    host_name: HostName,
+    belongs_to_cluster: bool,
+    services: List[Service],
+    run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
+) -> List[Service]:
     """If the host belongs to a cluster, exclude the services that are not assigned to this host"""
     def _is_not_of_host(service):
         return host_name != config_cache.host_of_clustered_service(host_name, service.description)
 
+    if run_only_plugin_names is None:
+        used_plugins = {s.check_plugin_name for s in services}
+    else:
+        used_plugins = run_only_plugin_names.intersection(s.check_plugin_name for s in services)
+
     # Filter out check types which are not used on the node
-    only_check_plugins = {service.check_plugin_name for service in services}
     if belongs_to_cluster:
         removed_plugins = {
-            plugin for plugin in only_check_plugins if all(
+            plugin for plugin in used_plugins if all(
                 _is_not_of_host(service) for service in services
                 if service.check_plugin_name == plugin)
         }
-        only_check_plugins -= removed_plugins
+        used_plugins -= removed_plugins
 
     return [
-        service for service in services if (service.check_plugin_name in only_check_plugins and
+        service for service in services if (service.check_plugin_name in used_plugins and
                                             not (belongs_to_cluster and _is_not_of_host(service)))
     ]
 

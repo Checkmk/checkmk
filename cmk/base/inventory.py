@@ -17,6 +17,7 @@ from typing import (
     NamedTuple,
     Optional,
     Sequence,
+    Set,
     Tuple,
     Union,
 )
@@ -85,7 +86,11 @@ class ActiveInventoryResult(NamedTuple):
 #   '----------------------------------------------------------------------'
 
 
-def do_inv(hostnames: List[HostName]) -> None:
+def do_inv(
+    hostnames: List[HostName],
+    *,
+    run_only_plugin_names: Optional[Set[InventoryPluginName]] = None,
+) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
@@ -93,7 +98,10 @@ def do_inv(hostnames: List[HostName]) -> None:
         section.section_begin(hostname)
         try:
             host_config = config.HostConfig.make_host_config(hostname)
-            inv_result = _do_active_inventory_for(host_config)
+            inv_result = _do_active_inventory_for(
+                host_config,
+                run_only_plugin_names=run_only_plugin_names,
+            )
 
             _run_inventory_export_hooks(host_config, inv_result.trees.inventory)
             # TODO: inv_results.source_results is completely ignored here.
@@ -128,7 +136,10 @@ def do_inv_check(
 
     host_config = config.HostConfig.make_host_config(hostname)
 
-    inv_result = _do_active_inventory_for(host_config)
+    inv_result = _do_active_inventory_for(
+        host_config,
+        run_only_plugin_names=None,
+    )
     trees = inv_result.trees
 
     status = 0
@@ -189,7 +200,10 @@ def do_inv_check(
     return status, infotexts, long_infotexts, []
 
 
-def _do_active_inventory_for(host_config: config.HostConfig,) -> ActiveInventoryResult:
+def _do_active_inventory_for(
+    host_config: config.HostConfig,
+    run_only_plugin_names: Optional[Set[InventoryPluginName]],
+) -> ActiveInventoryResult:
     if host_config.is_cluster:
         return ActiveInventoryResult(
             trees=_do_inv_for_cluster(host_config),
@@ -208,6 +222,7 @@ def _do_active_inventory_for(host_config: config.HostConfig,) -> ActiveInventory
             host_config,
             ipaddress,
             multi_host_sections=multi_host_sections,
+            run_only_plugin_names=run_only_plugin_names,
         ),
         source_results=source_results,
         safe_to_write=_safe_to_write_tree(source_results),
@@ -280,7 +295,6 @@ def do_inventory_actions_during_checking_for(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    sources: Sequence[Source],
     multi_host_sections: MultiHostSections,
 ) -> None:
 
@@ -293,6 +307,7 @@ def do_inventory_actions_during_checking_for(
         host_config,
         ipaddress,
         multi_host_sections=multi_host_sections,
+        run_only_plugin_names=None,
     )
     _save_status_data_tree(host_config.hostname, trees.status_data)
 
@@ -328,6 +343,7 @@ def _do_inv_for_realhost(
     ipaddress: Optional[HostAddress],
     *,
     multi_host_sections: MultiHostSections,
+    run_only_plugin_names: Optional[Set[InventoryPluginName]],
 ) -> InventoryTrees:
     tree_aggregator = _TreeAggregator()
     _set_cluster_property(tree_aggregator.trees.inventory, host_config)
@@ -335,6 +351,8 @@ def _do_inv_for_realhost(
     section.section_step("Executing inventory plugins")
     console.verbose("Plugins:")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
+        if run_only_plugin_names and inventory_plugin.name not in run_only_plugin_names:
+            continue
 
         kwargs = multi_host_sections.get_section_kwargs(
             HostKey(host_config.hostname, ipaddress, SourceType.HOST),

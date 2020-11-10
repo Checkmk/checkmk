@@ -77,7 +77,6 @@ from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
-from cmk.base.config import SelectedRawSections
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import (
     DiscoveredHostLabels,
@@ -312,7 +311,7 @@ def _get_rediscovery_mode(params: Dict) -> str:
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(
     arg_hostnames: Set[HostName],
-    check_plugin_names: Optional[Set[CheckPluginName]],
+    run_only_plugin_names: Optional[Set[CheckPluginName]],
     arg_only_new: bool,
     only_host_labels: bool = False,
 ) -> None:
@@ -336,13 +335,6 @@ def do_discovery(
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-            # If check plugins are specified via command line,
-            # see which raw sections we may need
-            selected_raw_sections: Optional[SelectedRawSections] = None
-            if check_plugin_names is not None:
-                selected_raw_sections = agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=check_plugin_names, consider_inventory_plugins=False)
-
             sources = checkers.make_sources(
                 host_config,
                 ipaddress,
@@ -363,7 +355,7 @@ def do_discovery(
             checkers.update_host_sections(
                 multi_host_sections,
                 nodes,
-                selected_raw_sections=selected_raw_sections,
+                selected_raw_sections=None,
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
                 fetcher_messages=list(
@@ -371,7 +363,7 @@ def do_discovery(
                         nodes,
                         max_cachefile_age=max_cachefile_age,
                         host_config=host_config,
-                        selected_raw_sections=selected_raw_sections,
+                        selected_raw_sections=None,
                     )),
             )
 
@@ -379,7 +371,7 @@ def do_discovery(
                 hostname,
                 ipaddress,
                 multi_host_sections,
-                check_plugin_names,
+                run_only_plugin_names,
                 arg_only_new,
                 discovery_parameters,
             )
@@ -427,7 +419,7 @@ def _do_discovery_for(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
-    check_plugin_names: Optional[Set[CheckPluginName]],
+    run_only_plugin_names: Optional[Set[CheckPluginName]],
     only_new: bool,
     discovery_parameters: DiscoveryParameters,
 ) -> None:
@@ -437,7 +429,7 @@ def _do_discovery_for(
         ipaddress,
         multi_host_sections,
         discovery_parameters,
-        check_plugin_whitelist=check_plugin_names,
+        run_only_plugin_names=run_only_plugin_names,
     )
 
     # There are four ways of how to merge existing and new discovered checks:
@@ -453,7 +445,7 @@ def _do_discovery_for(
     # 4. -I --only-host-labels
     #    --> only discover new host labels
 
-    if not check_plugin_names and not only_new:
+    if not run_only_plugin_names and not only_new:
         existing_services: List[Service] = []
     else:
         existing_services = autochecks.parse_autochecks_file(hostname, config.service_description)
@@ -462,8 +454,8 @@ def _do_discovery_for(
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
     for existing_service in existing_services:
-        if only_new or (check_plugin_names and
-                        existing_service.check_plugin_name not in check_plugin_names):
+        if only_new or (run_only_plugin_names and
+                        existing_service.check_plugin_name not in run_only_plugin_names):
             new_services.append(existing_service)
 
     services_per_plugin: Counter[CheckPluginName] = Counter()
@@ -1286,7 +1278,7 @@ def _sort_sections_by_label_priority(sections):
 
 def _find_candidates(
     mhs: MultiHostSections,
-    selected_check_plugins: Optional[Set[CheckPluginName]],
+    run_only_plugin_names: Optional[Set[CheckPluginName]],
 ) -> Set[CheckPluginName]:
     """Return names of check plugins that this multi_host_section may
     contain data for.
@@ -1303,12 +1295,12 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    if selected_check_plugins is None:
+    if run_only_plugin_names is None:
         preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
     else:
         preliminary_candidates = [
             p for p in agent_based_register.iter_all_check_plugins()
-            if p.name in selected_check_plugins
+            if p.name in run_only_plugin_names
         ]
 
     parsed_sections_of_interest = {
@@ -1368,7 +1360,8 @@ def _discover_host_labels_and_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
-    check_plugin_whitelist: Optional[Set[CheckPluginName]],
+    *,
+    run_only_plugin_names: Optional[Set[CheckPluginName]],
 ) -> Tuple[List[Service], HostLabelDiscoveryResult]:
 
     # Discovers host labels and services per real host or node
@@ -1388,16 +1381,13 @@ def _discover_host_labels_and_services(
         discovery_parameters,
     )
 
-    if discovery_parameters.only_host_labels:
-        discovered_services = []
-    else:
-        discovered_services = _discover_services(
-            hostname,
-            ipaddress,
-            multi_host_sections,
-            discovery_parameters,
-            check_plugin_whitelist,
-        )
+    discovered_services = [] if discovery_parameters.only_host_labels else _discover_services(
+        hostname,
+        ipaddress,
+        multi_host_sections,
+        discovery_parameters,
+        run_only_plugin_names=run_only_plugin_names,
+    )
 
     return discovered_services, HostLabelDiscoveryResult(
         labels=host_labels,
@@ -1428,10 +1418,11 @@ def _discover_services(
     ipaddress: Optional[HostAddress],
     multi_host_sections: MultiHostSections,
     discovery_parameters: DiscoveryParameters,
-    check_plugin_whitelist: Optional[Set[CheckPluginName]],
+    *,
+    run_only_plugin_names: Optional[Set[CheckPluginName]],
 ) -> List[Service]:
     # find out which plugins we need to discover
-    plugin_candidates = _find_candidates(multi_host_sections, check_plugin_whitelist)
+    plugin_candidates = _find_candidates(multi_host_sections, run_only_plugin_names)
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
 
@@ -1618,7 +1609,7 @@ def _get_discovered_services(
         ipaddress,
         multi_host_sections,
         discovery_parameters,
-        check_plugin_whitelist=None,
+        run_only_plugin_names=None,
     )
 
     # Create a dict from check_plugin_name/item to check_source/paramstring

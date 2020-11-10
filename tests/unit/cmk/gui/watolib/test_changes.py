@@ -26,13 +26,13 @@ def test_clear_not_existing(store):
 
 
 def test_append(store):
-    entry: AuditLogStore.Entry = (int(time.time()), "link", "user", "action", "Mässädsch")
+    entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch")
     store.append(entry)
     assert list(store.read()) == [entry]
 
 
 def test_clear(store):
-    entry: AuditLogStore.Entry = (int(time.time()), "link", "user", "action", "Mässädsch")
+    entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch")
     store.append(entry)
     assert list(store.read()) == [entry]
 
@@ -44,7 +44,7 @@ def test_clear(store):
 
 
 def test_clear_produced_archive_file_per_clear(store):
-    entry: AuditLogStore.Entry = (int(time.time()), "link", "user", "action", "Mässädsch")
+    entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch")
 
     for n in range(5):
         store.append(entry)

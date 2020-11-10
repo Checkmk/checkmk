@@ -235,15 +235,15 @@ class ModeAuditLog(WatoMode):
                            limit=None,
                            sortable=False,
                            searchable=False) as table:
-            for t, linkinfo, user, _action, text in log:
+            for entry in log:
                 table.row()
-                table.cell(_("Object"), self._render_logfile_linkinfo(linkinfo))
-                table.cell(_("Time"), html.render_nobr(render.date_and_time(float(t))))
-                user = ('<i>%s</i>' % _('internal')) if user == '-' else user
+                table.cell(_("Object"), self._render_logfile_linkinfo(entry.linkinfo))
+                table.cell(_("Time"), html.render_nobr(render.date_and_time(float(entry.time))))
+                user = ('<i>%s</i>' % _('internal')) if entry.user_id == '-' else entry.user_id
                 table.cell(_("User"), html.render_text(user), css="nobreak")
 
                 # This must not be attrencoded: The entries are encoded when writing to the log.
-                table.cell(_("Change"), text.replace("\\n", "<br>\n"), css="fill")
+                table.cell(_("Change"), entry.text.replace("\\n", "<br>\n"), css="fill")
 
     def _get_next_daily_paged_log(self, log):
         start = self._get_start_date()
@@ -282,11 +282,11 @@ class ModeAuditLog(WatoMode):
         next_log_time = None
         first_log_index = None
         last_log_index = None
-        for index, (t, _linkinfo, _user, _action, _text) in enumerate(log):
-            if t >= end_time:
+        for index, entry in enumerate(log):
+            if entry.time >= end_time:
                 # This log is too new
                 continue
-            if first_log_index is None and start_time <= t < end_time:
+            if first_log_index is None and start_time <= entry.time < end_time:
                 # This is a log for this day. Save the first index
                 if first_log_index is None:
                     first_log_index = index
@@ -295,7 +295,7 @@ class ModeAuditLog(WatoMode):
                     if index > 0:
                         next_log_time = int(log[index - 1][0])
 
-            elif t < start_time and last_log_index is None:
+            elif entry.time < start_time and last_log_index is None:
                 last_log_index = index
                 # This is the next log after this day
                 previous_log_time = int(log[index][0])

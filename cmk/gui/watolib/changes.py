@@ -9,7 +9,8 @@ import ast
 import errno
 import os
 import time
-from typing import Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, Tuple, Iterator
+from typing import (Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, Iterator,
+                    NamedTuple)
 from pathlib import Path
 
 import cmk.utils
@@ -42,7 +43,13 @@ def _wato_var_dir() -> Path:
 
 
 class AuditLogStore:
-    Entry = Tuple[int, str, str, str, str]
+    Entry = NamedTuple("Entry", [
+        ("time", int),
+        ("linkinfo", str),
+        ("user_id", str),
+        ("action", str),
+        ("text", str),
+    ])
 
     @staticmethod
     def make_path() -> Path:
@@ -80,13 +87,13 @@ class AuditLogStore:
                 splitted = line.rstrip().split(None, 4)
                 if len(splitted) == 5 and splitted[0].isdigit():
                     t, linkinfo, user, action, text = splitted
-                    yield (int(t), linkinfo, user, action, text)
+                    yield AuditLogStore.Entry(int(t), linkinfo, user, action, text)
 
     def append(self, entry: "AuditLogStore.Entry") -> None:
         store.makedirs(self._path.parent)
         with self._path.open(mode="a", encoding='utf-8') as f:
             self._path.chmod(0o660)
-            f.write(" ".join((str(entry[0]),) + entry[1:]) + "\n")
+            f.write(" ".join((str(entry.time),) + entry[1:]) + "\n")
 
 
 def _log_entry(linkinfo: LinkInfoObject,
@@ -98,7 +105,7 @@ def _log_entry(linkinfo: LinkInfoObject,
     else:
         link = linkinfo
 
-    entry: AuditLogStore.Entry = (
+    entry = AuditLogStore.Entry(
         int(time.time()),
         link or "-",
         str(user_id or config.user.id or "-"),

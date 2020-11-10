@@ -4,6 +4,8 @@
 *.py.*.py
 *kate-swp
 *~
+*.cookie
+*.timer
 .*.swo
 .*.swp
 .DS_Store

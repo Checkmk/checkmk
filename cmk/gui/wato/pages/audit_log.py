@@ -7,13 +7,14 @@
 
 import re
 import time
-from typing import List, Tuple, Iterator
+from typing import List, Iterator
 
 import cmk.utils.render as render
 
 import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.watolib as watolib
+from cmk.gui.watolib.changes import AuditLogStore
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
     Dictionary,
@@ -58,7 +59,7 @@ class ModeAuditLog(WatoMode):
     def __init__(self):
         self._options = self._vs_audit_log_options().default_value()
         super(ModeAuditLog, self).__init__()
-        self.log_path = watolib.changes.audit_log_path()
+        self._store = AuditLogStore(AuditLogStore.make_path())
 
     def title(self):
         return _("Audit log")
@@ -175,7 +176,7 @@ class ModeAuditLog(WatoMode):
             return html.drain()
 
     def _log_exists(self):
-        return self.log_path.exists()
+        return self._store.exists()
 
     def action(self) -> ActionResult:
         if html.request.var("_action") == "clear":
@@ -401,21 +402,7 @@ class ModeAuditLog(WatoMode):
         return redirect(self.mode_url())
 
     def _clear_audit_log(self):
-        if not self.log_path.exists():
-            return
-
-        newpath = self.log_path.with_name(self.log_path.name + time.strftime(".%Y-%m-%d"))
-        # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
-        if newpath.exists():
-            n = 1
-            while True:
-                n += 1
-                with_num = newpath.with_name(newpath.name + "-%d" % n)
-                if not with_num.exists():
-                    newpath = with_num
-                    break
-
-        self.log_path.rename(newpath)
+        self._store.clear()
 
     def _render_logfile_linkinfo(self, linkinfo):
         if ':' in linkinfo:  # folder:host
@@ -465,27 +452,13 @@ class ModeAuditLog(WatoMode):
             if linkinfo == '-':
                 linkinfo = ''
 
-            if self._filter_entry(user, action, text):  # TODO: Already filtered?!
-                continue
-
             html.write_text(','.join((render.date(int(t)), render.time_of_day(int(t)), linkinfo,
                                       user, action, '"' + text + '"')) + '\n')
         return FinalizeRequest(code=200)
 
-    def _parse_audit_log(self) -> List[Tuple[int, str, str, str, str]]:
-        if not self.log_path.exists():
-            return []
-
-        entries = []
-        with self.log_path.open(encoding="utf-8") as fp:
-            for line in fp:
-                splitted = line.rstrip().split(None, 4)
-                if len(splitted) == 5 and splitted[0].isdigit():
-                    t, linkinfo, user, action, text = splitted
-                    if not self._filter_entry(user, action, text):
-                        entries.append((int(t), linkinfo, user, action, text))
-        entries.reverse()
-        return entries
+    def _parse_audit_log(self) -> List[AuditLogStore.Entry]:
+        return list(
+            reversed([e for e in self._store.read() if not self._filter_entry(e[2], e[3], e[4])]))
 
     def _filter_entry(self, user, action, text):
         if not self._options["filter_regex"]:

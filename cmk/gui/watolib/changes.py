@@ -9,7 +9,7 @@ import ast
 import errno
 import os
 import time
-from typing import Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any
+from typing import Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, Tuple, Iterator
 from pathlib import Path
 
 import cmk.utils
@@ -41,8 +41,46 @@ def _wato_var_dir() -> Path:
     return Path(cmk.utils.paths.var_dir, "wato")
 
 
-def audit_log_path() -> Path:
-    return _wato_var_dir() / "log" / "audit.log"
+class AuditLogStore:
+    Entry = Tuple[int, str, str, str, str]
+
+    @staticmethod
+    def make_path() -> Path:
+        return _wato_var_dir() / "log" / "audit.log"
+
+    def __init__(self, path: Path):
+        self._path = path
+
+    def exists(self) -> bool:
+        return self._path.exists()
+
+    def clear(self) -> None:
+        if not self.exists():
+            return
+
+        newpath = self._path.with_name(self._path.name + time.strftime(".%Y-%m-%d"))
+        # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
+        if newpath.exists():
+            n = 1
+            while True:
+                n += 1
+                with_num = newpath.with_name(newpath.name + "-%d" % n)
+                if not with_num.exists():
+                    newpath = with_num
+                    break
+
+        self._path.rename(newpath)
+
+    def read(self) -> Iterator["AuditLogStore.Entry"]:
+        if not self._path.exists():
+            return
+
+        with self._path.open(encoding="utf-8") as fp:
+            for line in fp:
+                splitted = line.rstrip().split(None, 4)
+                if len(splitted) == 5 and splitted[0].isdigit():
+                    t, linkinfo, user, action, text = splitted
+                    yield (int(t), linkinfo, user, action, text)
 
 
 def _log_entry(linkinfo: LinkInfoObject,
@@ -62,9 +100,10 @@ def _log_entry(linkinfo: LinkInfoObject,
         message.replace("\n", "\\n"),
     )
 
-    store.makedirs(audit_log_path().parent)
-    with audit_log_path().open(mode="a", encoding='utf-8') as f:
-        audit_log_path().chmod(0o660)
+    path = AuditLogStore.make_path()
+    store.makedirs(path.parent)
+    with path.open(mode="a", encoding='utf-8') as f:
+        path.chmod(0o660)
         f.write(" ".join(write_tokens) + "\n")
 
 

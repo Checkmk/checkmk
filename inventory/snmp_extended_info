@@ -42,7 +42,7 @@ def inv_snmp_extended_info(info):
     parsed = {}
     count_parents = 0
     for child, description, parent, child_type, name, software, \
-        serial, manufacturer, model in info[0]:
+        serial, manufacturer, model in info:
         if parent == "0":
             count_parents += 1
         if child_type in map_type:

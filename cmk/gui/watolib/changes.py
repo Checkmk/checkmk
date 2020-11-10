@@ -82,6 +82,12 @@ class AuditLogStore:
                     t, linkinfo, user, action, text = splitted
                     yield (int(t), linkinfo, user, action, text)
 
+    def append(self, entry: "AuditLogStore.Entry") -> None:
+        store.makedirs(self._path.parent)
+        with self._path.open(mode="a", encoding='utf-8') as f:
+            self._path.chmod(0o660)
+            f.write(" ".join((str(entry[0]),) + entry[1:]) + "\n")
+
 
 def _log_entry(linkinfo: LinkInfoObject,
                action: str,
@@ -92,19 +98,15 @@ def _log_entry(linkinfo: LinkInfoObject,
     else:
         link = linkinfo
 
-    write_tokens = (
-        time.strftime("%s"),
+    entry: AuditLogStore.Entry = (
+        int(time.time()),
         link or "-",
-        user_id or config.user.id or "-",
+        str(user_id or config.user.id or "-"),
         action,
         message.replace("\n", "\\n"),
     )
 
-    path = AuditLogStore.make_path()
-    store.makedirs(path.parent)
-    with path.open(mode="a", encoding='utf-8') as f:
-        path.chmod(0o660)
-        f.write(" ".join(write_tokens) + "\n")
+    AuditLogStore(AuditLogStore.make_path()).append(entry)
 
 
 def log_audit(linkinfo: LinkInfoObject,

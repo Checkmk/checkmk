@@ -43,6 +43,20 @@ class CmcLogLevel(str, enum.Enum):
     DEBUG = "debug"
 
 
+class GlobalConfig(NamedTuple):
+    log_level: int
+
+    @classmethod
+    def deserialize(cls, serialized: Dict[str, Any]):
+        try:
+            return cls(serialized["fetcher_config"]["log_level"])
+        except (LookupError, TypeError, ValueError) as exc:
+            raise ValueError(serialized) from exc
+
+    def serialize(self) -> Dict[str, Any]:
+        return {"fetcher_config": {"log_level": self.log_level}}
+
+
 def cmc_log_level_from_python(log_level: int) -> CmcLogLevel:
     try:
         return {
@@ -528,7 +542,8 @@ class Command(NamedTuple):
 
 def process_command(command: Command) -> None:
     with _confirm_command_processed():
-        load_global_config(command.serial)
+        global_config = load_global_config(command.serial)
+        log.logger.setLevel(global_config.log_level)
         run_fetchers(**command._asdict())
 
 
@@ -557,15 +572,13 @@ def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout:
     cmk.utils.cleanup.cleanup_globals()
 
 
-def load_global_config(serial: ConfigSerial) -> None:
-    global_config_path = make_global_config_path(serial)
-    if not global_config_path.exists():
+def load_global_config(serial: ConfigSerial) -> GlobalConfig:
+    try:
+        with make_global_config_path(serial).open() as f:
+            return GlobalConfig.deserialize(json.load(f))
+    except FileNotFoundError:
         log.logger.warning("fetcher global config %s is absent", serial)
-        return
-
-    with global_config_path.open() as f:
-        config = json.load(f)["fetcher_config"]
-        log.logger.setLevel(config["log_level"])
+        return GlobalConfig(log_level=5)
 
 
 def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:

@@ -42,6 +42,7 @@ from cmk.fetchers.controller import (
     ErrorPayload,
     FetcherHeader,
     FetcherMessage,
+    GlobalConfig,
     L3Stats,
     make_log_answer,
     make_result_answer,
@@ -52,6 +53,15 @@ from cmk.fetchers.controller import (
     write_bytes,
 )
 from cmk.fetchers.type_defs import Mode
+
+
+class TestGlobalConfig:
+    @pytest.fixture
+    def global_config(self):
+        return GlobalConfig(log_level=5)
+
+    def test_deserialization(self, global_config):
+        assert GlobalConfig.deserialize(global_config.serialize()) == global_config
 
 
 @pytest.mark.parametrize("status,log_level", [

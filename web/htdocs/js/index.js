@@ -42,6 +42,7 @@ import * as page_menu from "page_menu";
 
 import * as cmk_figures from "cmk_figures";
 import "cmk_figures_plugins";
+import * as graphs from "graphs";
 
 import * as cmk_tabs from "cmk_tabs";
 
@@ -54,11 +55,11 @@ import * as node_visualization_viewport_layers from "node_visualization_viewport
 import {fetch} from "whatwg-fetch";
 
 // Optional import is currently not possible using the ES6 imports
-var graphs;
+var graphs_cee;
 try {
-    graphs = require("graphs");
+    graphs_cee = require("graphs_cee");
 } catch (e) {
-    graphs = null;
+    graphs_cee = null;
 }
 
 var ntop_host_details;
@@ -124,6 +125,7 @@ export const cmk_export = {
         reload_pause: reload_pause,
         graph_integration: graph_integration,
         graphs: graphs,
+        graphs_cee: graphs_cee,
         dashboard: dashboard,
         page_menu: page_menu,
         // TODO: node_visualization cleanups

@@ -142,7 +142,7 @@ def _add_group_change(group, action_name, text):
         if not managed.is_global(cid):
             if cid is None:  # conditional caused by bad typing
                 raise Exception("cannot happen: no customer ID")
-            group_sites = managed.get_sites_of_customer(cid)
+            group_sites = list(managed.get_sites_of_customer(cid).keys())
 
     add_change(action_name, text, sites=group_sites)
 

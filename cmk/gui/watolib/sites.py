@@ -52,10 +52,7 @@ from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
 )
-from cmk.gui.watolib.utils import (
-    default_site,
-    multisite_dir,
-)
+from cmk.gui.watolib.utils import multisite_dir
 
 
 class SiteManagement:
@@ -338,7 +335,7 @@ class SiteManagement:
         cmk.gui.watolib.changes.add_change("edit-sites",
                                            _("Deleted site %s") % site_id,
                                            domains=domains,
-                                           sites=[default_site()])
+                                           sites=[config.omd_site()])
 
     @classmethod
     def _affected_config_domains(cls):

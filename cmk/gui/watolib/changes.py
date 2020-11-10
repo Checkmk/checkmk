@@ -9,13 +9,12 @@ import ast
 import errno
 import os
 import time
-from typing import Dict
+from typing import Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any
 from pathlib import Path
-
-from six import ensure_binary, ensure_str
 
 import cmk.utils
 import cmk.utils.store as store
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.utils
 from cmk.gui import config, escaping
@@ -28,23 +27,34 @@ import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui.watolib import search
 
-from cmk.gui.plugins.watolib import config_domain_registry
+from cmk.gui.plugins.watolib import config_domain_registry, ABCConfigDomain
 
-var_dir = cmk.utils.paths.var_dir + "/wato/"
-audit_log_path = Path(var_dir, "log", "audit.log")
+if TYPE_CHECKING:
+    from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
+
+LinkInfoObject = Union["CREFolder", "CREHost", str, None]
+ChangeSpec = Dict[str, Any]
+LogMessage = Union[str, HTML]
 
 
-def log_entry(linkinfo, action, message, user_id=None):
-    # TODO: Create a more generic referencing
-    # linkinfo identifies the object operated on. It can be a Host or a Folder
-    # or a text.
-    # linkinfo is either a Folder, or a Host or a hostname or None
-    if hasattr(linkinfo, "linkinfo"):
+def wato_var_dir() -> Path:
+    return Path(cmk.utils.paths.var_dir, "wato")
+
+
+def audit_log_path() -> Path:
+    return wato_var_dir() / "log" / "audit.log"
+
+
+def log_entry(linkinfo: LinkInfoObject,
+              action: str,
+              message: str,
+              user_id: Optional[UserId] = None) -> None:
+    if linkinfo and not isinstance(linkinfo, str):
         link = linkinfo.linkinfo()
     else:
         link = linkinfo
 
-    write_tokens_tuple = (
+    write_tokens = (
         time.strftime("%s"),
         link or "-",
         user_id or config.user.id or "-",
@@ -52,15 +62,16 @@ def log_entry(linkinfo, action, message, user_id=None):
         message.replace("\n", "\\n"),
     )
 
-    write_tokens = (ensure_str(t) for t in write_tokens_tuple)
-
-    store.makedirs(audit_log_path.parent)
-    with audit_log_path.open(mode="a", encoding='utf-8') as f:
-        audit_log_path.chmod(0o660)
-        f.write(u" ".join(write_tokens) + u"\n")
+    store.makedirs(audit_log_path().parent)
+    with audit_log_path().open(mode="a", encoding='utf-8') as f:
+        audit_log_path().chmod(0o660)
+        f.write(" ".join(write_tokens) + "\n")
 
 
-def log_audit(linkinfo, action, message, user_id=None):
+def log_audit(linkinfo: LinkInfoObject,
+              action: str,
+              message: LogMessage,
+              user_id: Optional[UserId] = None) -> None:
     if config.wato_use_git:
         if isinstance(message, HTML):
             message = escaping.strip_tags(message.value)
@@ -73,16 +84,16 @@ def log_audit(linkinfo, action, message, user_id=None):
     log_entry(linkinfo, action, message, user_id)
 
 
-def add_change(action_name,
-               text,
-               obj=None,
-               add_user=True,
-               need_sync=None,
-               need_restart=None,
-               domains=None,
-               sites=None):
+def add_change(action_name: str,
+               text: LogMessage,
+               obj: LinkInfoObject = None,
+               add_user: bool = True,
+               need_sync: Optional[bool] = None,
+               need_restart: Optional[bool] = None,
+               domains: Optional[List[Type[ABCConfigDomain]]] = None,
+               sites: Optional[List[SiteId]] = None) -> None:
 
-    log_audit(obj, action_name, text, config.user.id if add_user else '')
+    log_audit(obj, action_name, text, config.user.id if add_user else UserId(''))
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     search.update_and_store_index_background(action_name)
@@ -98,7 +109,10 @@ def add_change(action_name,
 
 
 class ActivateChangesWriter:
-    def add_change(self, action_name, text, obj, add_user, need_sync, need_restart, domains, sites):
+    def add_change(self, action_name: str, text: LogMessage, obj: LinkInfoObject, add_user: bool,
+                   need_sync: Optional[bool], need_restart: Optional[bool],
+                   domains: Optional[List[Type[ABCConfigDomain]]],
+                   sites: Optional[Iterable[SiteId]]) -> None:
         # Default to a core only change
         if domains is None:
             domains = [config_domain_registry["check_mk"]]
@@ -113,11 +127,13 @@ class ActivateChangesWriter:
             self._add_change_to_site(site_id, change_id, action_name, text, obj, add_user,
                                      need_sync, need_restart, domains)
 
-    def _new_change_id(self):
+    def _new_change_id(self) -> str:
         return cmk.gui.utils.gen_id()
 
-    def _add_change_to_site(self, site_id, change_id, action_name, text, obj, add_user, need_sync,
-                            need_restart, domains):
+    def _add_change_to_site(self, site_id: SiteId, change_id: str, action_name: str,
+                            text: LogMessage, obj: LinkInfoObject, add_user: bool,
+                            need_sync: Optional[bool], need_restart: Optional[bool],
+                            domains: List[Type[ABCConfigDomain]]) -> None:
         # Individual changes may override the domain restart default value
         if need_restart is None:
             need_restart = any([d.needs_activation for d in domains])
@@ -151,15 +167,15 @@ class ActivateChangesWriter:
 
 class SiteChanges:
     """Manage persisted changes of a single site"""
-    def __init__(self, site_id):
+    def __init__(self, site_id: SiteId) -> None:
         super(SiteChanges, self).__init__()
         self._site_id = site_id
 
     def _site_changes_path(self) -> Path:
-        return Path(var_dir) / ("replication_changes_%s.mk" % self._site_id)
+        return wato_var_dir() / ("replication_changes_%s.mk" % self._site_id)
 
     # TODO: Implement this locking as context manager
-    def load(self, lock=False):
+    def load(self, lock: bool = False) -> List[ChangeSpec]:
         """Parse the site specific changes file
 
         The file format has been choosen to be able to append changes without
@@ -175,7 +191,7 @@ class SiteChanges:
             with path.open("rb") as f:
                 for entry in f.read().split(b"\0"):
                     if entry:
-                        changes.append(ast.literal_eval(ensure_str(entry)))
+                        changes.append(ast.literal_eval(entry.decode("utf-8")))
         except IOError as e:
             if e.errno == errno.ENOENT:
                 pass
@@ -188,7 +204,7 @@ class SiteChanges:
 
         return changes
 
-    def save(self, changes):
+    def save(self, changes: List[ChangeSpec]) -> None:
         # First truncate the file
         with self._site_changes_path().open("wb"):
             pass
@@ -196,13 +212,13 @@ class SiteChanges:
         for change_spec in changes:
             self.save_change(change_spec)
 
-    def save_change(self, change_spec):
+    def save_change(self, change_spec: ChangeSpec) -> None:
         path = self._site_changes_path()
         try:
             store.aquire_lock(path)
 
             with path.open("ab+") as f:
-                f.write(ensure_binary(repr(change_spec)) + b"\0")
+                f.write(repr(change_spec).encode("utf-8") + b"\0")
                 f.flush()
                 os.fsync(f.fileno())
 
@@ -214,7 +230,7 @@ class SiteChanges:
         finally:
             store.release_lock(path)
 
-    def clear(self):
+    def clear(self) -> None:
         try:
             self._site_changes_path().unlink()
         except OSError as e:
@@ -224,7 +240,10 @@ class SiteChanges:
                 raise
 
 
-def add_service_change(host, action_name, text, need_sync=False):
+def add_service_change(host: "CREHost",
+                       action_name: str,
+                       text: str,
+                       need_sync: bool = False) -> None:
     add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=need_sync)
 
 

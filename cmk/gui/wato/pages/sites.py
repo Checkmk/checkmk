@@ -568,7 +568,7 @@ class ModeDistributedMonitoring(WatoMode):
         watolib.add_change("edit-site",
                            _("Logged out of remote site %s") % html.render_tt(site["alias"]),
                            domains=[watolib.ConfigDomainGUI],
-                           sites=[watolib.default_site()])
+                           sites=[config.omd_site()])
         flash(_("Logged out."))
         return redirect(mode_url("sites"))
 

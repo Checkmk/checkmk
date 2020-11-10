@@ -47,8 +47,6 @@ from cmk.gui.page_menu import (
 
 @mode_registry.register
 class ModeAuditLog(WatoMode):
-    log_path = watolib.changes.audit_log_path
-
     @classmethod
     def name(cls):
         return "auditlog"
@@ -60,6 +58,7 @@ class ModeAuditLog(WatoMode):
     def __init__(self):
         self._options = self._vs_audit_log_options().default_value()
         super(ModeAuditLog, self).__init__()
+        self.log_path = watolib.changes.audit_log_path()
 
     def title(self):
         return _("Audit log")

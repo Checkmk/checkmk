@@ -2677,7 +2677,7 @@ class CMEFolder(CREFolder):
         # The parents customer id may be the default customer or the same customer
         customer_id = self._get_customer_id()
         if customer_id not in [managed.default_customer_id(), new_customer_id]:
-            folder_sites = ", ".join(managed.get_sites_of_customer(customer_id))
+            folder_sites = ", ".join(list(managed.get_sites_of_customer(customer_id).keys()))
             raise MKUserError(
                 None,
                 _("The configured target site <i>%s</i> for this folder is invalid. The folder <i>%s</i> already belongs "

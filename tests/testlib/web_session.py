@@ -863,15 +863,28 @@ class CMKOpenAPISession:
         secret = _get_automation_secret(self.site).strip()
         return f"Bearer automation {secret}"
 
-    def request(self, method, endpoint, header_params=None, query_params=None, request_params=None):
+    def request(self,
+                method,
+                endpoint,
+                header_params=None,
+                query_params=None,
+                request_params=None,
+                assertion=False):
         url = f"{self.base_url}/{endpoint}"
-        return self.session.request(method,
-                                    url,
-                                    headers=header_params,
-                                    data=query_params,
-                                    json=request_params)
+        try:
+            resp = self.session.request(method,
+                                        url,
+                                        headers=header_params,
+                                        data=query_params,
+                                        json=request_params)
+            resp.raise_for_status()
+            return resp
+        except Exception:
+            if assertion:
+                assert False, f"REST API call failed: {resp.json()}"
+            raise
 
-    def add_host(self, host_name, folder="root", nodes=None, attributes=None):
+    def add_host(self, host_name, folder="/", nodes=None, attributes=None, assertion=False):
         request_params = {
             "folder": folder,
             "host_name": host_name,
@@ -881,49 +894,67 @@ class CMKOpenAPISession:
         if attributes:
             request_params["attributes"] = attributes
 
-        resp = self.request("post",
-                            "domain-types/host_config/collections/all",
-                            request_params=request_params)
-        try:
-            resp.raise_for_status()
-        except Exception:
-            print(resp.json())
-            raise
+        resp = self.request(
+            "post",
+            "domain-types/host_config/collections/all",
+            request_params=request_params,
+            assertion=assertion,
+        )
 
         return resp.json()
 
-    def activate_changes_async(self):
-        resp = self.request("post", "domain-types/activation_run/actions/activate-changes/invoke")
-        resp.raise_for_status()
+    def activate_changes_async(self, assertion=False):
+        resp = self.request(
+            "post",
+            "domain-types/activation_run/actions/activate-changes/invoke",
+            assertion=assertion,
+        )
         return resp.json()
 
-    def activate_changes_sync(self):
-        resp = self.request("post", "domain-types/activation_run/actions/activate-changes/invoke")
-        resp.raise_for_status()
+    def activate_changes_sync(self, assertion=False):
+        resp = self.request(
+            "post",
+            "domain-types/activation_run/actions/activate-changes/invoke",
+            assertion=assertion,
+        )
         activation_id = resp.json()["id"]
-        self.request("get",
-                     f"objects/activation_run/{activation_id}/actions/wait-for-completion/invoke")
+        self.request(
+            "get",
+            f"objects/activation_run/{activation_id}/actions/wait-for-completion/invoke",
+            assertion=assertion,
+        )
 
-    def get_baking_status(self):
-        return self.request("get", "domain-types/agent/actions/baking_status").json()
+    def get_baking_status(self, assertion=False):
+        return self.request(
+            "get",
+            "domain-types/agent/actions/baking_status",
+            assertion=assertion,
+        ).json()
 
-    def bake_agents(self):
-        resp = self.request("post", "domain-types/agent/actions/bake")
-        resp.raise_for_status()
+    def bake_agents(self, assertion):
+        resp = self.request(
+            "post",
+            "domain-types/agent/actions/bake",
+            assertion=assertion,
+        )
         return resp
 
-    def bake_and_sign_agents(self, key_id, passphrase):
+    def bake_and_sign_agents(self, key_id, passphrase, assertion=False):
         request_params = {"key_id": key_id, "passphrase": passphrase}
-        resp = self.request("post",
-                            "domain-types/agent/actions/bake_and_sign",
-                            request_params=request_params)
-        resp.raise_for_status()
+        resp = self.request(
+            "post",
+            "domain-types/agent/actions/bake_and_sign",
+            request_params=request_params,
+            assertion=assertion,
+        )
         return resp
 
-    def sign_agents(self, key_id, passphrase):
+    def sign_agents(self, key_id, passphrase, assertion=False):
         request_params = {"key_id": key_id, "passphrase": passphrase}
-        resp = self.request("post",
-                            "domain-types/agent/actions/sign",
-                            request_params=request_params)
-        resp.raise_for_status()
+        resp = self.request(
+            "post",
+            "domain-types/agent/actions/sign",
+            request_params=request_params,
+            assertion=assertion,
+        )
         return resp

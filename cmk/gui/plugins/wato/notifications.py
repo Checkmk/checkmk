@@ -39,6 +39,7 @@ from cmk.gui.plugins.wato import (
     NotificationParameter,
     passwordstore_choices,
     HTTPProxyReference,
+    IndividualOrStoredPassword,
 )
 
 from cmk.gui.plugins.wato.utils import (
@@ -393,6 +394,30 @@ class NotificationParameterPagerDuty(NotificationParameter):
                 ("webhook_url",
                  FixedValue("https://events.pagerduty.com/v2/enqueue",
                             title=_("API Endpoint from PagerDuty V2"))),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+            ],
+        )
+
+
+@notification_parameter_registry.register
+class NotificationParameterSIGNL4(NotificationParameter):
+    @property
+    def ident(self):
+        return "signl4"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            optional_keys=[],
+            elements=[
+                ("password",
+                 IndividualOrStoredPassword(
+                     title=_("Team Secret"),
+                     help=_("The team secret of your SIGNL4 team. That is the last part of "
+                            "your webhook URL: https://connect.signl4.com/webhook/<team_secret>"),
+                     allow_empty=False,
+                 )),
                 ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )

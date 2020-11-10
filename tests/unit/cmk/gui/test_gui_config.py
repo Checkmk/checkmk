@@ -240,6 +240,7 @@ def test_registered_permissions():
         'notification_plugin.pagerduty',
         'notification_plugin.pushover',
         'notification_plugin.servicenow',
+        'notification_plugin.signl4',
         'notification_plugin.slack',
         'notification_plugin.sms',
         'notification_plugin.spectrum',

@@ -244,6 +244,7 @@ class Worker(threading.Thread):
         if not parsed.path.startswith("/%s/check_mk" % self.crawler.site.id) \
            or "../pnp4nagios/" in parsed.path \
            or "../nagvis/" in parsed.path \
+           or "check_mk/plugin-api" in parsed.path \
            or "../nagios/" in parsed.path:
             raise InvalidUrl("Skipping non Check_MK URL: %s %s" % (url, parsed))
 

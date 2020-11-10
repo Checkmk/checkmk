@@ -1869,20 +1869,27 @@ bool DeleteRegistryValue(std::wstring_view path,
 }
 
 namespace {
+
+HKEY CreateRegistryKey(std::wstring_view path) {
+    HKEY key = nullptr;
+    auto ret = ::RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
+                                REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL,
+                                &key, NULL);
+    if (ERROR_SUCCESS != ret) return nullptr;
+    return key;
+}
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                       std::wstring_view value, DWORD type) {
-    HKEY hKey;
-    auto ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
-                              REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL,
-                              &hKey, NULL);
-    if (ERROR_SUCCESS != ret) return false;
+    auto key = CreateRegistryKey(path);
+    if (key == nullptr) return false;
 
     // Set full application path with a keyname to registry
-    ret =
-        ::RegSetValueEx(hKey, value_name.data(), 0, type,
+    auto ret =
+        ::RegSetValueEx(key, value_name.data(), 0, type,
                         reinterpret_cast<const BYTE*>(value.data()),
                         static_cast<uint32_t>(value.size() * sizeof(wchar_t)));
+    ::RegCloseKey(key);
     return ERROR_SUCCESS == ret;
 }
 }  // namespace

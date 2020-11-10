@@ -1393,7 +1393,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
         )
 
     def _get_builtin_icons(self):
-        return [(id_, id_) for id_ in icon_and_action_registry.keys()]
+        return [(id_, class_.title()) for id_, class_ in icon_and_action_registry.items()]
 
 
 @config_variable_registry.register

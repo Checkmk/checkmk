@@ -1024,6 +1024,7 @@ def transform_old_dict_based_icons():
                 "_ident": icon_id,
                 "_icon_spec": icon,
                 "ident": classmethod(lambda cls: cls._ident),
+                "title": classmethod(lambda cls: cls._title),
                 "sort_index": lambda self: self._icon_spec.get("sort_index", 30),
                 "toplevel": lambda self: self._icon_spec.get("toplevel", False),
                 "render": lambda self, *args: self._icon_spec["paint"](*args),

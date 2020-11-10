@@ -1,0 +1,12 @@
+Title: Add title to icon choices of global setting "Builtin icon visibility"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1605038065
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The dropdown choice showed internal names of icons. This has been changed to
+sonorous names.

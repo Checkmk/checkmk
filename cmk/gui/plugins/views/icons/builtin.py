@@ -76,6 +76,10 @@ class ActionMenuIcon(Icon):
     def ident(cls):
         return "action_menu"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Action menu")
+
     def default_toplevel(self):
         return True
 
@@ -125,6 +129,10 @@ class IconImageIcon(Icon):
     def ident(cls):
         return "icon_image"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Icon image")
+
     def columns(self):
         return ["icon_image"]
 
@@ -161,6 +169,10 @@ class RescheduleIcon(Icon):
     @classmethod
     def ident(cls):
         return "reschedule"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Reschedule")
 
     def columns(self):
         return ['check_type', 'active_checks_enabled', 'check_command']
@@ -223,6 +235,10 @@ class RuleEditorIcon(Icon):
     def ident(cls):
         return "rule_editor"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Rule editor")
+
     def columns(self):
         return ['check_type']
 
@@ -271,6 +287,10 @@ class ManpageIcon(Icon):
     def ident(cls):
         return "check_manpage"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Check manual page")
+
     def service_columns(self):
         return ['check_command']
 
@@ -318,6 +338,10 @@ class AcknowledgeIcon(Icon):
     def ident(cls):
         return "status_acknowledged"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status acknowledged")
+
     def columns(self):
         return ['acknowledged']
 
@@ -347,6 +371,10 @@ class PerfgraphIcon(Icon):
     @classmethod
     def ident(cls):
         return "perfgraph"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Performance graph")
 
     def columns(self):
         return ['pnpgraph_present']
@@ -406,6 +434,10 @@ class PredictionIcon(Icon):
     def ident(cls):
         return "prediction"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Prediction")
+
     def columns(self):
         return ['perf_data']
 
@@ -452,6 +484,10 @@ class CustomActionIcon(Icon):
     def ident(cls):
         return "custom_action"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Custom action")
+
     def columns(self):
         return ['action_url_expanded', 'pnpgraph_present']
 
@@ -483,6 +519,10 @@ class LogwatchIcon(Icon):
     @classmethod
     def ident(cls):
         return "logwatch"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Logwatch")
 
     def service_columns(self):
         return ['host_name', 'service_description', 'check_command']
@@ -522,6 +562,10 @@ class NotesIcon(Icon):
     def ident(cls):
         return "notes"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Notes")
+
     def columns(self):
         return ['notes_url_expanded', 'check_command']
 
@@ -553,6 +597,10 @@ class DowntimesIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_downtimes"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status downtimes")
 
     def default_toplevel(self):
         return True
@@ -622,6 +670,10 @@ class CommentsIcon(Icon):
     def ident(cls):
         return "status_comments"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status comments")
+
     def columns(self):
         return ['comments_with_extra_info']
 
@@ -659,6 +711,10 @@ class NotificationsIcon(Icon):
     def ident(cls):
         return "status_notifications_enabled"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status notifications enabled")
+
     def columns(self):
         return ['modified_attributes_list', 'notifications_enabled']
 
@@ -694,6 +750,10 @@ class FlappingIcon(Icon):
     def ident(cls):
         return "status_flapping"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status flapping")
+
     def columns(self):
         return ['is_flapping']
 
@@ -725,6 +785,10 @@ class StalenessIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_stale"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status stale")
 
     def columns(self):
         return ['staleness']
@@ -762,6 +826,10 @@ class ActiveChecksIcon(Icon):
     def ident(cls):
         return "status_active_checks"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status active checks")
+
     def columns(self):
         return ['modified_attributes_list', 'active_checks_enabled']
 
@@ -796,6 +864,10 @@ class PassiveChecksIcon(Icon):
     def ident(cls):
         return "status_passive_checks"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status passive checks")
+
     def columns(self):
         return ['modified_attributes_list', 'accept_passive_checks']
 
@@ -827,6 +899,10 @@ class NotificationPeriodIcon(Icon):
     def ident(cls):
         return "status_notification_period"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status notification period")
+
     def columns(self):
         return ['in_notification_period']
 
@@ -854,6 +930,10 @@ class ServicePeriodIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_service_period"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status service period")
 
     def columns(self):
         return ['in_service_period']
@@ -884,6 +964,10 @@ class AggregationsIcon(Icon):
     @classmethod
     def ident(cls):
         return "aggregations"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Aggregations")
 
     def render(self, what, row, tags, custom_vars):
         # Link to aggregations of the host/service
@@ -926,6 +1010,10 @@ class StarsIcon(Icon):
     def ident(cls):
         return "stars"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Stars")
+
     def render(self, what, row, tags, custom_vars):
         if 'stars' not in g:
             g.stars = config.user.stars.copy()
@@ -960,6 +1048,10 @@ class AggregationIcon(Icon):
     @classmethod
     def ident(cls):
         return "aggregation_checks"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Aggregation checks")
 
     def host_columns(self):
         return ['check_command', 'name', 'address']
@@ -1004,6 +1096,10 @@ class CrashdumpsIcon(Icon):
     @classmethod
     def ident(cls):
         return "crashed_check"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Crashed check")
 
     def default_toplevel(self):
         return True
@@ -1060,6 +1156,10 @@ class CheckPeriodIcon(Icon):
     @classmethod
     def ident(cls):
         return "check_period"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Check period")
 
     def columns(self):
         return ['in_check_period']

@@ -17,6 +17,10 @@ class InventoryIcon(Icon):
     def ident(cls):
         return "inventory"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("HW/SW inventory")
+
     def host_columns(self):
         return ["name"]
 

@@ -18,6 +18,10 @@ class WatoIcon(Icon):
     def ident(cls):
         return "wato"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Wato")
+
     def host_columns(self):
         return ['filename']
 
@@ -66,6 +70,10 @@ class DownloadAgentOutputIcon(Icon):
     def ident(cls):
         return "download_agent_output"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Download agent output")
+
     def default_sort_index(self):
         return 50
 
@@ -82,6 +90,10 @@ class DownloadSnmpWalkIcon(Icon):
     @classmethod
     def ident(cls):
         return "download_snmp_walk"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Download snmp walk")
 
     def host_columns(self):
         return ["filename", "check_type"]

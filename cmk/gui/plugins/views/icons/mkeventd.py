@@ -18,6 +18,10 @@ class MkeventdIcon(Icon):
     def ident(cls):
         return "mkeventd"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Events")
+
     def default_toplevel(self):
         return False
 

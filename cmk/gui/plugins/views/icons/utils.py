@@ -44,6 +44,11 @@ class Icon(metaclass=abc.ABCMeta):
         return "icon"
 
     @classmethod
+    @abc.abstractmethod
+    def title(cls) -> str:
+        raise NotImplementedError()
+
+    @classmethod
     def override_toplevel(cls, toplevel: bool) -> None:
         cls._custom_toplevel = toplevel
 

@@ -490,16 +490,6 @@ class ModeFolder(WatoMode):
             raise MKUserError(None,
                               _("Please select some hosts before doing bulk operations on hosts."))
 
-        if html.request.var("_bulk_inventory"):
-            return redirect(mode_url("bulkinventory", folder=watolib.Folder.current().path()))
-
-        if html.request.var("_parentscan"):
-            return redirect(mode_url("parentscan", folder=watolib.Folder.current().path()))
-
-        # Deletion
-        if html.request.var("_bulk_delete"):
-            return self._delete_hosts(selected_host_names)
-
         # Move
         if html.request.var("_bulk_move"):
             target_folder_path = html.request.var("_bulk_moveto",
@@ -516,11 +506,23 @@ class ModeFolder(WatoMode):
             self._move_to_imported_folders(selected_host_names)
             return None
 
-        if html.request.var("_bulk_edit"):
-            return redirect(mode_url("bulkedit", folder=watolib.Folder.current().path()))
+        # Deletion
+        if html.request.var("_bulk_delete"):
+            return self._delete_hosts(selected_host_names)
 
-        if html.request.var("_bulk_cleanup"):
-            return redirect(mode_url("bulkcleanup", folder=watolib.Folder.current().path()))
+        search_text = html.request.get_unicode_input_mandatory("search", "")
+        for request_var, mode_name in [
+            ("_bulk_inventory", "bulkinventory"),
+            ("_parentscan", "parentscan"),
+            ("_bulk_edit", "bulkedit"),
+            ("_bulk_cleanup", "bulkcleanup"),
+        ]:
+            if html.request.var(request_var):
+                return redirect(
+                    mode_url(mode_name,
+                             folder=watolib.Folder.current().path(),
+                             search=search_text,
+                             selection=weblib.selection_id()))
 
         return None
 

@@ -27,6 +27,7 @@
 @import "scss/_mega_menu.scss";
 @import "scss/_page_menu.scss";
 @import "scss/_more.scss";
+@import "scss/_graphs.scss";
 
 // CEE specific files. Would love to add some kind of conditional import here,
 // but that is simply not possible at the moment using SCSS. Hack around this
@@ -34,11 +35,11 @@
 // files during the build procedure of other editions.
 // Note: In case you add something here, you will have to add some dummy files
 // to buildscripts/scripts/lib/versioning.groovy (see patch_themes())
-@import "../facelift/scss/cee/_graphs.scss";
+@import "../facelift/scss/cee/_graphs_cee.scss";
 @import "../facelift/scss/cee/_reporting.scss";
 @import "../facelift/scss/cee/_ntop.scss";
 @if $ENTERPRISE = "yes" {
-  @include graphs;
+  @include graphs_cee;
   @include reporting;
   @include ntop;
 }

@@ -1,0 +1,251 @@
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: Check_MK Enterprise License
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+/* Styleshees for graphs */
+
+div.graph_hover_popup {
+  width: intrinsic; /* Safari/WebKit */
+  width: -moz-max-content; /* Firefox/Gecko */
+  width: -webkit-max-content; /* Chrome */
+  padding: 10px;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+}
+
+div#hover_menu div.graph {
+  float: left;
+  margin-right: 2px;
+  margin-bottom: 2px;
+}
+
+tr.data > td > div.graph_container {
+  vertical-align: top;
+}
+
+div.graph {
+  border-spacing: 0px;
+  padding: 0;
+  margin-bottom: 5px;
+  position: relative;
+  display: inline-block;
+}
+
+div.graph a {
+  text-decoration: none;
+}
+
+div.graph a:hover {
+  text-decoration: underline;
+}
+
+div.graph div.title {
+  margin-bottom: 1ex;
+  text-align: center;
+  font-weight: bold;
+}
+
+div.graph img.loading {
+  display: block;
+  margin: 20px auto;
+}
+
+div.graph div.time {
+  position: absolute;
+  margin-top: 5px;
+  top: 0;
+  right: 18px;
+  text-align: right;
+  z-index: 10;
+}
+
+div.graph div.v_axis_label {
+  position: absolute;
+  top: 10px;
+  left: 18px;
+  text-align: left;
+}
+
+div.graph img.resize {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 12px;
+  height: 12px;
+  cursor: se-resize;
+  z-index: 10;
+}
+
+div.graph img.iconbutton {
+  /* sync graphs currently only */
+  position: absolute;
+  bottom: 33px;
+  left: 9px;
+}
+
+div.graph canvas {
+  margin: 0px;
+  display: block;
+  cursor: crosshair;
+}
+
+table.prediction td {
+  padding: 0px;
+}
+
+div.graph table.legend {
+  border-collapse: collapse;
+}
+
+div.graph table.legend th,
+div.graph table,
+legend td {
+  padding: 2px 8px 2.5px 2px;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+div.graph table.legend .scalar {
+  padding: 1px 10px;
+  width: 80px;
+}
+
+div.graph table.legend th,
+div.graph table.legend th.scalar {
+  background-color: transparent;
+  border-style: none;
+  text-align: right;
+  padding-bottom: 3px;
+  font-weight: bold;
+}
+
+div.graph table.legend th.scalar.inactive {
+  cursor: pointer;
+}
+
+div.graph table.legend th.scalar.inactive:hover {
+  text-decoration: underline;
+}
+
+div.graph table.legend > tbody > tr:nth-child(2) td {
+  padding-top: 4px;
+}
+
+div.graph table.legend td {
+  text-align: left;
+}
+
+div.graph table.legend td.scalar {
+  text-align: right;
+}
+
+div.graph table.legend > tbody > tr.scalar.first {
+  border-top: 1px solid #000;
+}
+
+div.graph table.legend > tbody > tr.scalar.first td {
+  padding-top: 4px;
+}
+
+div.graph table.legend div {
+  display: inline-block;
+  float: none;
+}
+
+div.color {
+  height: 9px;
+  width: 9px;
+  vertical-align: top;
+  position: relative;
+  top: 1px;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+div.graph table.legend div.entry {
+  margin-right: 20px;
+  margin-left: 5px;
+}
+
+div.graph div.popup_trigger {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+}
+
+div.graph a.popup_trigger {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+div.graph a.popup_trigger:hover {
+  cursor: pointer;
+}
+
+div.graph div.indicator {
+  position: absolute;
+  width: 1px;
+  height: 30px;
+}
+
+/* Small preview graphs */
+
+div.graph.preview {
+  padding: 0;
+  margin: 0;
+}
+
+div.graph.preview > div.title {
+  position: absolute;
+  z-index: 10;
+  font-weight: normal;
+  font-size: 120%;
+  top: 5px;
+  width: 100%;
+}
+
+div.graph div.title.inline,
+div.graph div.time.inline {
+  position: absolute;
+  z-index: 10;
+
+  top: 10px;
+  margin: 0;
+
+  font-size: 100%;
+  text-align: center;
+  font-weight: bold;
+}
+
+div.graph div.title.inline {
+  width: 100%;
+}
+
+/* Graphs with timerange selection */
+
+div.graph_with_timeranges {
+  display: block;
+  white-space: nowrap;
+}
+
+div.graph_with_timeranges > div.graph_container {
+  display: inline-block;
+}
+
+div.graph_with_timeranges tr.data > td > div.timerange {
+  display: block;
+}
+
+div.graph_with_timeranges table.timeranges {
+  display: inline-block;
+  vertical-align: top;
+  border-spacing: 0;
+}
+
+div.graph_with_timeranges table.timeranges div.graph:hover {
+  cursor: pointer;
+  opacity: 0.75;
+}

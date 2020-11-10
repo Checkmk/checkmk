@@ -101,7 +101,7 @@ def patch_themes(EDITION) {
             // Workaround since scss does not support conditional includes
             THEME_LIST.each { THEME ->
                 sh """
-                    echo '@mixin graphs {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs.scss
+                    echo '@mixin graphs_cee {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs_cee.scss
                     echo '@mixin reporting {}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
                     echo '@mixin ntop {}' > web/htdocs/themes/${THEME}/scss/cee/_ntop.scss
                     echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss

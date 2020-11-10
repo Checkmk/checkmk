@@ -125,6 +125,9 @@ function update(handler_data, response) {
     utils.execute_javascript_by_object(container);
 
     page_menu.update_page_state_top_line(response.pending_changes_info);
+
+    // Also execute delayed active checks once to trigger delayed checks that are initially visible.
+    trigger_delayed_active_checks();
 }
 
 function get_state_independent_controls() {

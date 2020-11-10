@@ -1,0 +1,11 @@
+Title: Discovery page: Fix execution of active checks that are initially visible
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1604997163
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+

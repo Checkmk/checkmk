@@ -108,20 +108,20 @@ void PluginsProvider::UpdatePluginMapCmdLine(PluginMap& pm,
                                              cma::srv::ServiceProcessor* sp) {
     using namespace std::literals;
     for (auto& [name, entry] : pm) {
-        XLOG::l.i("checking entry");
+        XLOG::t.i("checking entry");
         entry.setCmdLine(L""sv);
         if (entry.path().empty()) continue;  // skip empty files
-        XLOG::l.i("checking host");
+        XLOG::t.i("checking host");
 
         if (sp == nullptr) continue;  // skip if no host(testing, etc)
 
         auto& mc = sp->getModuleCommander();
         auto fname = entry.path().u8string();
-        XLOG::l.i("checking our script");
+        XLOG::t.i("checking our script");
 
         if (!mc.isModuleScript(fname)) continue;  // skip non-module
 
-        XLOG::l.i("building command line");
+        XLOG::t.i("building command line");
 
         auto cmd_line = mc.buildCommandLine(fname);
         if (!cmd_line.empty()) {

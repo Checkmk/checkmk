@@ -869,7 +869,7 @@ class CMKOpenAPISession:
                 header_params=None,
                 query_params=None,
                 request_params=None,
-                assertion=False):
+                assertion=True):
         url = f"{self.base_url}/{endpoint}"
         try:
             resp = self.session.request(method,
@@ -884,7 +884,7 @@ class CMKOpenAPISession:
                 assert False, f"REST API call failed: {resp.json()}"
             raise
 
-    def add_host(self, host_name, folder="/", nodes=None, attributes=None, assertion=False):
+    def add_host(self, host_name, folder="/", nodes=None, attributes=None, assertion=True):
         request_params = {
             "folder": folder,
             "host_name": host_name,
@@ -903,7 +903,7 @@ class CMKOpenAPISession:
 
         return resp.json()
 
-    def activate_changes_async(self, assertion=False):
+    def activate_changes_async(self, assertion=True):
         resp = self.request(
             "post",
             "domain-types/activation_run/actions/activate-changes/invoke",
@@ -911,7 +911,7 @@ class CMKOpenAPISession:
         )
         return resp.json()
 
-    def activate_changes_sync(self, assertion=False):
+    def activate_changes_sync(self, assertion=True):
         resp = self.request(
             "post",
             "domain-types/activation_run/actions/activate-changes/invoke",
@@ -924,14 +924,14 @@ class CMKOpenAPISession:
             assertion=assertion,
         )
 
-    def get_baking_status(self, assertion=False):
+    def get_baking_status(self, assertion=True):
         return self.request(
             "get",
             "domain-types/agent/actions/baking_status",
             assertion=assertion,
         ).json()
 
-    def bake_agents(self, assertion):
+    def bake_agents(self, assertion=True):
         resp = self.request(
             "post",
             "domain-types/agent/actions/bake",
@@ -939,7 +939,7 @@ class CMKOpenAPISession:
         )
         return resp
 
-    def bake_and_sign_agents(self, key_id, passphrase, assertion=False):
+    def bake_and_sign_agents(self, key_id, passphrase, assertion=True):
         request_params = {"key_id": key_id, "passphrase": passphrase}
         resp = self.request(
             "post",
@@ -949,7 +949,7 @@ class CMKOpenAPISession:
         )
         return resp
 
-    def sign_agents(self, key_id, passphrase, assertion=False):
+    def sign_agents(self, key_id, passphrase, assertion=True):
         request_params = {"key_id": key_id, "passphrase": passphrase}
         resp = self.request(
             "post",

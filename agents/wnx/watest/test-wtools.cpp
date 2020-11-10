@@ -427,4 +427,73 @@ TEST(Wtools, LineEnding) {
     EXPECT_EQ(result, expected);
 }
 
+namespace {
+// copy paste from the 2.0
+bool DeleteRegistryValue(std::wstring_view path,
+                         std::wstring_view value_name) noexcept {
+    HKEY hkey = nullptr;
+    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);
+    if (ERROR_SUCCESS == ret && nullptr != hkey) {
+        ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
+        ret = ::RegDeleteValue(hkey, value_name.data());
+        if (ret == ERROR_SUCCESS) return true;
+        if (ret == ERROR_FILE_NOT_FOUND) {
+            XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}",
+                      ConvertToUTF8(path), ConvertToUTF8(value_name));
+            return true;
+        }
+
+        XLOG::l(XLOG_FLINE + "Failed to delete {}\\{} error [{}]",
+                ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+        return false;
+    }
+    //  here
+    XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}", ConvertToUTF8(path),
+              ConvertToUTF8(value_name));
+    return true;
+}
+}  // namespace
+
+TEST(Wtools, Registry) {
+    constexpr std::wstring_view path = LR"(SOFTWARE\checkmk_tst\unit_test)";
+    constexpr std::wstring_view name = L"cmk_test";
+
+    // clean
+    DeleteRegistryValue(path, name);
+    EXPECT_TRUE(DeleteRegistryValue(path, name));
+    ON_OUT_OF_SCOPE(DeleteRegistryValue(path, name));
+
+    {
+        constexpr uint32_t value = 2;
+        constexpr uint32_t weird_value = 546'444;
+        constexpr std::wstring_view str_value = L"aaa";
+        ASSERT_TRUE(SetRegistryValue(path, name, value));
+        EXPECT_EQ(GetRegistryValue(path, name, weird_value), value);
+        EXPECT_EQ(GetRegistryValue(path, name, str_value), str_value);
+        ASSERT_TRUE(SetRegistryValue(path, name, value + 1));
+        EXPECT_EQ(GetRegistryValue(path, name, weird_value), value + 1);
+        EXPECT_TRUE(DeleteRegistryValue(path, name));
+    }
+
+    {
+        constexpr std::wstring_view expand_value{
+            LR"(%ProgramFiles(x86)%\checkmk\service\)"};
+        ASSERT_TRUE(SetRegistryValueExpand(path, name, expand_value));
+        std::filesystem::path in_registry(
+            GetRegistryValue(path, name, expand_value));
+        std::filesystem::path expected(
+            LR"(c:\Program Files (x86)\\checkmk\service\)");
+        EXPECT_TRUE(std::filesystem::equivalent(in_registry.lexically_normal(),
+                                                expected.lexically_normal()));
+        EXPECT_TRUE(DeleteRegistryValue(path, name));
+    }
+}
+
+TEST(Wtools, ExpandString) {
+    using namespace std::string_literals;
+    EXPECT_EQ(L"*Windows_NTWindows_NT*"s,
+              ExpandStringWithEnvironment(L"*%OS%%OS%*"));
+    EXPECT_EQ(L"%_1_2_a%"s, ExpandStringWithEnvironment(L"%_1_2_a%"));
+}
+
 }  // namespace wtools

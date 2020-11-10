@@ -1666,114 +1666,125 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
 
 // gtest [+]
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                          uint32_t Default) noexcept {
+uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                          uint32_t dflt) noexcept {
     HKEY hkey = nullptr;
-    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
+    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);
     if (ERROR_SUCCESS == ret && nullptr != hkey) {
-        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
+        ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
         DWORD type = REG_DWORD;
-        uint32_t buffer;
+        uint32_t buffer = dflt;
         DWORD count = sizeof(buffer);
-        ret = RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
-                               reinterpret_cast<LPBYTE>(&buffer), &count);
+        ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
+                                 reinterpret_cast<LPBYTE>(&buffer), &count);
         if (ret == ERROR_SUCCESS && 0 != count && type == REG_DWORD) {
             return buffer;
         }
     }
     // failure here
-    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]",
-              ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()), ret);
-    return Default;
+    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]", ConvertToUTF8(path),
+              ConvertToUTF8(value_name), ret);
+    return dflt;
 }
 
+namespace {
 // returns true on success
-bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
-                      std::wstring_view value) {
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      std::wstring_view value, DWORD type) {
     HKEY hKey;
     auto ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
                               REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL,
                               &hKey, NULL);
     if (ERROR_SUCCESS != ret) return false;
 
-    /** Set full application path with a keyname to registry */
-    ret = RegSetValueEx(hKey, key.data(), 0, REG_SZ,
+    // Set full application path with a keyname to registry
+    ret =
+        ::RegSetValueEx(hKey, value_name.data(), 0, type,
                         reinterpret_cast<const BYTE*>(value.data()),
                         static_cast<uint32_t>(value.size() * sizeof(wchar_t)));
     return ERROR_SUCCESS == ret;
 }
+}  // namespace
+
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      std::wstring_view value) {
+    return SetRegistryValue(path, value_name, value, REG_SZ);
+}
+
+bool SetRegistryValueExpand(std::wstring_view path,
+                            std::wstring_view value_name,
+                            std::wstring_view value) {
+    return SetRegistryValue(path, value_name, value, REG_EXPAND_SZ);
+}
 
 // returns true on success
-bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                      uint32_t Data) noexcept {
-    auto ret = RegSetKeyValue(HKEY_LOCAL_MACHINE, Key.c_str(), Value.c_str(),
-                              REG_DWORD, &Data, 4);
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      uint32_t data) noexcept {
+    auto ret = RegSetKeyValue(HKEY_LOCAL_MACHINE, path.data(),
+                              value_name.data(), REG_DWORD, &data, 4);
     if (ret != 0) XLOG::d("Bad with reg set value {}", ret);
 
     return ret == ERROR_SUCCESS;
 }
 
-std::wstring GetRegistryValue(const std::wstring& Key,
-                              const std::wstring& Value,
-                              const std::wstring& Default) noexcept {
+std::wstring GetRegistryValue(std::wstring_view path,
+                              std::wstring_view value_name,
+                              std::wstring_view dflt) noexcept {
     HKEY hkey = nullptr;
-    auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
-    if (ERROR_SUCCESS == result && nullptr != hkey) {
-        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
+    auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);
+    if (ERROR_SUCCESS != result || nullptr == hkey) {
+        // failure here
+        XLOG::t.t(XLOG_FLINE + "Cannot open Key '{}' query return code [{}]",
+                  ConvertToUTF8(path), result);
+        return dflt.data();
+    }
+
+    ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
+    DWORD type = REG_SZ;
+    wchar_t buffer[512];
+    DWORD count = sizeof(buffer);
+    auto ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
+                                  reinterpret_cast<LPBYTE>(buffer), &count);
+
+    // check for errors
+    auto type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
+    if (count == 0 || !type_ok) {
+        // failure here
+        XLOG::t.t(XLOG_FLINE + "Can't open '{}\\{}' query returns [{}]",
+                  ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+        return dflt.data();
+    }
+
+    if (ret == ERROR_SUCCESS)
+        return type == REG_SZ ? buffer : ExpandStringWithEnvironment(buffer);
+
+    if (ret == ERROR_MORE_DATA) {
+        // realloc required
         DWORD type = REG_SZ;
-        wchar_t buffer[512];
-        DWORD count = sizeof(buffer);
-        auto ret = RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
-                                    reinterpret_cast<LPBYTE>(buffer), &count);
-
-        // check for errors
-        auto type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
-        if (count == 0 || !type_ok) {
-            // failure here
-            XLOG::t.t(XLOG_FLINE + "Absent on {}\\{} query return [{}]",
-                      ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()),
-                      ret);
-            return Default;
-        }
-
-        if (ret == ERROR_SUCCESS) {
-            return buffer;
-        }
-
-        if (ret == ERROR_MORE_DATA) {
-            // realloc required
-            DWORD type = REG_SZ;
-            auto buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
-            ON_OUT_OF_SCOPE(delete[] buffer_big);
-            DWORD count = sizeof(count);
-            ret =
-                RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
+        auto buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
+        ON_OUT_OF_SCOPE(delete[] buffer_big);
+        DWORD count = sizeof(count);
+        ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
                                  reinterpret_cast<LPBYTE>(buffer_big), &count);
 
-            // check for errors
-            type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
-            if (count == 0 || !type_ok) {
-                // failure here
-                XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query return [{}]",
-                          ConvertToUTF8(Key.c_str()),
-                          ConvertToUTF8(Value.c_str()), ret);
-                return Default;
-            }
-
-            if (ret == ERROR_SUCCESS) {
-                return buffer_big;
-            }
+        // check for errors
+        type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
+        if (count == 0 || !type_ok) {
             // failure here
-            XLOG::t.t(XLOG_FLINE + "Bad key {}\\{} query return [{}]",
-                      ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()),
-                      ret);
-            return Default;
+            XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query return [{}]",
+                      ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+            return dflt.data();
         }
+
+        if (ret == ERROR_SUCCESS)
+            return type == REG_SZ ? buffer_big
+                                  : ExpandStringWithEnvironment(buffer_big);
     }
+
     // failure here
-    XLOG::t.t(XLOG_FLINE + "Cannot open Key {} query return code {}",
-              ConvertToUTF8(Key.c_str()), result);
-    return Default;
+    XLOG::t.t(XLOG_FLINE + "Bad key {}\\{} query return [{}]",
+              ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+    return dflt.data();
 }
 
 // process terminators
@@ -2382,6 +2393,26 @@ bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
     }
 
     return true;
+}
+
+std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
+    if (str.empty()) return std::wstring{str};
+
+    auto log_error_and_return_default = [](std::wstring_view str) {
+        XLOG::l("Can't expand the string #1 '{}' [{}]", ConvertToUTF8(str),
+                GetLastError());
+        return std::wstring{str};
+    };
+
+    std::wstring result;
+    auto ret = ::ExpandEnvironmentStringsW(str.data(), result.data(), 0);
+    if (ret == 0) return log_error_and_return_default(str);
+
+    result.resize(ret - 1);
+    ret = ::ExpandEnvironmentStringsW(str.data(), result.data(), ret);
+    if (ret == 0) return log_error_and_return_default(str);
+
+    return result;
 }
 
 }  // namespace wtools

@@ -956,20 +956,23 @@ HMODULE LoadWindowsLibrary(const std::wstring& DllPath);
 std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath);
 
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                          uint32_t Default) noexcept;
+uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                          uint32_t dflt) noexcept;
 
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
                       std::wstring_view value);
 
-// returns true on success
-bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                      uint32_t Data) noexcept;
+bool SetRegistryValueExpand(std::wstring_view path,
+                            std::wstring_view value_name,
+                            std::wstring_view value);
 
-std::wstring GetRegistryValue(const std::wstring& Key,
-                              const std::wstring& Value,
-                              const std::wstring& Default) noexcept;
+// returns true on success
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      uint32_t data) noexcept;
+
+std::wstring GetRegistryValue(std::wstring_view key, std::wstring_view value,
+                              std::wstring_view dflt) noexcept;
 std::wstring GetArgv(uint32_t index) noexcept;
 
 size_t GetOwnVirtualSize() noexcept;
@@ -1016,7 +1019,6 @@ std::string ReadWholeFile(const std::filesystem::path& fname) noexcept;
 
 bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept;
 
-
 /// \brief Set correct access rights for the folder
 ///
 ///  Normally called once on the start of the service.
@@ -1029,6 +1031,9 @@ bool ProtectFolderFromUserWrite(const std::filesystem::path& folder);
 ///  Normally called once on the start of the service.
 ///  Removes Users Access to the specified path
 bool ProtectPathFromUserAccess(const std::filesystem::path& entry);
+
+std::wstring ExpandStringWithEnvironment(std::wstring_view str);
+
 }  // namespace wtools
 
 #endif  // wtools_h__

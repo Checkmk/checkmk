@@ -47,14 +47,17 @@ node: {
             stage('Integration Test for Docker Container') {
                 build(job: "${FOLDER_ID}/docker_integration")
             }
+        },
+
+        'Composition Test for Packages': {
+            stage('Composition Test for Packages') {
+                build(job: "${FOLDER_ID}/test-composition",
+                      parameters: [
+                        [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
+                        [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                    ]
+                )
+            }
         }
     ])
-    stage('Composition Test for Packages') {
-        build(job: "${FOLDER_ID}/test-composition",
-              parameters: [
-                [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-            ]
-        )
-    }
 }

@@ -1,0 +1,12 @@
+Title: Fix downtime command when selecting "next year" as time range
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1605000083
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The error "ValueError (invalid literal for int() with base 10: 'next_year')" occured
+in 2.0.0i1 when selecting next year as time range.

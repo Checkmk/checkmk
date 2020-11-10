@@ -1177,6 +1177,8 @@ def time_interval_to_human_readable(next_time_interval, prefix):
     Examples:
         >>> time_interval_to_human_readable("next_day", "schedule an immediate downtime")
         '<b>schedule an immediate downtime until 24:00:00</b> on'
+        >>> time_interval_to_human_readable("next_year", "schedule an immediate downtime")
+        '<b>schedule an immediate downtime until end of year</b> on'
 
     Returns:
         string representing the schedule downtime title
@@ -1185,6 +1187,7 @@ def time_interval_to_human_readable(next_time_interval, prefix):
         "next_day": _("<b>%s until 24:00:00</b> on"),
         "next_week": _("<b>%s until sunday night</b> on"),
         "next_month": _("<b>%s until end of month</b> on"),
+        "next_year": _("<b>%s until end of year</b> on"),
     }
     try:
         title = downtime_titles[next_time_interval]

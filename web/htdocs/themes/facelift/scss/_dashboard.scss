@@ -346,57 +346,45 @@ div.dashlet.edit {
     right: 0;
     left: 0;
     margin: auto;
-    height: 50px;
+    height: 20px;
+    width: 60px;
+    text-align: center;
 
-    /* dashlet edit button */
-    .edit {
+    a {
+      display: inline-block;
       width: 20px;
       height: 20px;
-      cursor: pointer;
-      /* background-color: rgba(0, 0, 0, 0.7); */
-      background-image: url("images/dashlet_edit_lo.png");
+      border-radius: 5px;
       background-size: 20px;
-      border-radius: 5px;
-      display: block;
-      /* IE < 9 */
-      filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
-
-      &:hover {
-        background-image: url("images/dashlet_edit_hi.png");
-      }
-    }
-
-    /* dashlet clone button */
-    .clone {
-      width: 14px;
-      height: 14px;
       cursor: pointer;
-      /* background-color: rgba(0, 0, 0, 0.7); */
-      background-image: url("images/dashlet_clone_lo.png");
-      border-radius: 5px;
-      display: block;
       /* IE < 9 */
       filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
-      &:hover {
-        background-image: url("images/dashlet_clone_hi.png");
+      /* dashlet edit button */
+      &.edit {
+        background-image: url("images/dashlet_edit_lo.png");
+
+        &:hover {
+          background-image: url("images/dashlet_edit_hi.png");
+        }
       }
-    }
 
-    /* dashlet delete button */
-    .del {
-      width: 14px;
-      height: 14px;
-      cursor: pointer;
-      /* background-color: rgba(0, 0, 0, 0.7); */
-      background-image: url("images/dashlet_del_lo.png");
-      border-radius: 5px;
-      display: block;
-      /* IE < 9 */
-      filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+      /* dashlet clone button */
+      &.clone {
+        background-image: url("images/dashlet_clone_lo.png");
 
-      &:hover {
-        background-image: url("images/dashlet_del_hi.png");
+        &:hover {
+          background-image: url("images/dashlet_clone_hi.png");
+        }
+      }
+
+      /* dashlet delete button */
+      &.del {
+        background-image: url("images/dashlet_del_lo.png");
+
+        &:hover {
+          background-image: url("images/dashlet_del_hi.png");
+        }
       }
     }
   }

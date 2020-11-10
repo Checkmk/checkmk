@@ -50,3 +50,19 @@ def escape_regex_chars(match: str) -> str:
             r += "\\"
         r += c
     return r
+
+
+def unescape(pattern: str) -> str:
+    r"""Reverse of re.escape()
+
+    >>> from cmk.utils.regex import unescape
+    >>> unescape(re.escape(r"a b c"))
+    'a b c'
+    >>> unescape(re.escape(r"http://abc.de/"))
+    'http://abc.de/'
+    >>> unescape(re.escape(r"\\u\n\c"))
+    '\\\\u\\n\\c'
+    >>> unescape(re.escape(r"ä b .*(C)"))
+    'ä b .*(C)'
+    """
+    return re.sub(r'\\(.)', r'\1', pattern)

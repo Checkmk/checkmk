@@ -18,6 +18,7 @@ from cmk.utils.type_defs import (
 )
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.regex import escape_regex_chars
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -1080,6 +1081,11 @@ class Rule:
         ] and self.conditions.host_tags == {} and self.conditions.has_only_explicit_service_conditions(
         ) and self.folder.is_transitive_parent_of(host.folder())
 
+    def is_discovery_rule(self):
+        return (self.conditions.host_name and len(self.conditions.host_name) == 1 and
+                self.conditions.host_tags == {} and
+                self.conditions.has_only_explicit_service_conditions())
+
     def replace_explicit_host_condition(self, old_name, new_name):
         """Does an in-place(!) replacement of explicit (non regex) hostnames in rules"""
         if self.conditions.host_name is None:
@@ -1109,3 +1115,14 @@ def _match_one_of_search_expression(search_options, attr_name, search_in_list):
         if _match_search_expression(search_options, attr_name, search_in):
             return True
     return False
+
+
+def service_description_to_condition(service_description: str) -> Dict[str, str]:
+    r"""Packs a service description to be used as explicit match condition
+
+    >>> service_description_to_condition("abc")
+    {'$regex': 'abc$'}
+    >>> service_description_to_condition("a / b / c \ d \ e")
+    {'$regex': 'a / b / c \\\\ d \\\\ e$'}
+    """
+    return {"$regex": "%s$" % escape_regex_chars(service_description)}

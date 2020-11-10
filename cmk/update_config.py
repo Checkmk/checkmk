@@ -31,6 +31,7 @@ from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-vio
 from cmk.base.api.agent_based import register  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
+from cmk.utils.regex import unescape
 from cmk.utils.log import VERBOSE
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
@@ -316,6 +317,7 @@ class UpdateConfig:
         all_rulesets.load()
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
+        self._transform_discovery_disabled_services(all_rulesets)
         all_rulesets.save()
 
     def _transform_replaced_wato_rulesets(self, all_rulesets):
@@ -353,6 +355,36 @@ class UpdateConfig:
 
         if num_errors:
             raise MKGeneralException("Failed to transform %d rule values" % num_errors)
+
+    def _transform_discovery_disabled_services(self, all_rulesets):
+        """Transform regex escaping of service descriptions
+
+        In 1.4.0 disabled services were not quoted in the rules configuration file. Later versions
+        quoted these services. Due to this the unquoted services were not found when re-enabling
+        them via the GUI in version 1.6.
+
+        Previous to Checkmk 2.0 we used re.escape() for storing service descriptions as exact match
+        regexes. With 2.0 we switched to cmk.utils.regex.escape_regex_chars(), because this escapes
+        less characters (like the " "), which makes the definitions more readable.
+
+        This transformation only applies to disabled services rules created by the service
+        discovery page (when enabling or disabling a single service using the "move to disabled" or
+        "move to enabled" icon)
+        """
+        ruleset = all_rulesets.get("ignored_services")
+        if not ruleset:
+            return
+
+        for _folder, _index, rule in ruleset.get_rules():
+            if not rule.is_discovery_rule():
+                continue
+
+            rule.conditions.service_description = [
+                cmk.gui.watolib.rulesets.service_description_to_condition(
+                    unescape(s["$regex"].rstrip("$")))
+                for s in rule.conditions.service_description
+                if "$regex" in s
+            ]
 
     def _initialize_gui_environment(self):
         self._logger.log(VERBOSE, "Loading GUI plugins...")

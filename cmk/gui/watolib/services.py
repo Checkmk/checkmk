@@ -9,7 +9,6 @@ import json
 import os
 import time
 import sys
-import re
 from hashlib import sha256
 from typing import Tuple, List, NamedTuple
 
@@ -23,7 +22,7 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.i18n import _
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
-from cmk.gui.watolib.rulesets import RuleConditions
+from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 
 from cmk.gui.watolib.automations import (
     sync_changes_before_remote_automation,
@@ -248,14 +247,6 @@ class Discovery:
         if not services:
             return
 
-        def _compile_patterns(_services, unescaped="exclude"):
-            ret = []
-            for svc in _services:
-                ret.append({"$regex": "%s$" % re.escape(svc)})
-                if unescaped == "include":
-                    ret.append({"$regex": "%s$" % svc})
-            return ret
-
         rulesets = watolib.AllRulesets()
         rulesets.load()
 
@@ -267,7 +258,7 @@ class Discovery:
 
         modified_folders = []
 
-        service_patterns = _compile_patterns(services, unescaped="include")
+        service_patterns = [service_description_to_condition(s) for s in services]
         modified_folders += self._remove_from_rule_of_host(ruleset,
                                                            service_patterns,
                                                            value=not value)
@@ -282,7 +273,7 @@ class Discovery:
                or value == value_without_host_rule:
                 services.remove(service)
 
-        service_patterns = _compile_patterns(services)
+        service_patterns = [service_description_to_condition(s) for s in services]
         modified_folders += self._update_rule_of_host(ruleset, service_patterns, value=value)
 
         for folder in modified_folders:

@@ -1,0 +1,13 @@
+Title: Discovery page: Improve escaping of services when creating disabled services rules
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1604995730
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Previous versions of Checkmk were escaping too many character, like the " " space, when
+creating a disabled services rule by clicking on "Move to disabled services" for a single
+service on the service discovery page.

@@ -108,3 +108,109 @@ def _instantiate_ruleset(ruleset_name, param_value):
     ruleset.append_rule(Folder(''), rule)
     assert ruleset.get_rules()
     return ruleset
+
+
+def _2_0_ignored_services():
+    return [
+        {
+            'value': True,
+            'condition': {
+                'host_name': ['heute'],
+                'service_description': [{
+                    '$regex': 'Filesystem /opt/omd/sites/heute/tmp$'
+                },]
+            }
+        },
+    ]
+
+
+def _non_discovery_ignored_services_ruleset():
+    return [
+        # Skip rule with multiple hostnames
+        {
+            'value': True,
+            'condition': {
+                'service_description': [{
+                    '$regex': 'abc\\ xyz$'
+                }, {
+                    '$regex': 'dd\\ ggg$'
+                }],
+                'host_name': ['stable', 'xyz']
+            }
+        },
+        # Skip rule service condition without $ at end
+        {
+            'value': True,
+            'condition': {
+                'service_description': [{
+                    '$regex': 'abc\\ xyz'
+                }, {
+                    '$regex': 'dd\\ ggg$'
+                }]
+            }
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    'ruleset_spec,expected_ruleset',
+    [
+        # Transform pre 2.0 to 2.0 service_description regex
+        ([
+            {
+                'condition': {
+                    'service_description': [
+                        {
+                            '$regex': u'Filesystem\\ \\/boot\\/efi$'
+                        },
+                        {
+                            '$regex': u'\\(a\\)\\ b\\?\\ c\\!$'
+                        },
+                    ],
+                    'host_name': ['stable']
+                },
+                'value': True
+            },
+        ], [
+            {
+                'condition': {
+                    'service_description': [
+                        {
+                            '$regex': u'Filesystem /boot/efi$'
+                        },
+                        {
+                            '$regex': u'\\(a\\) b\\? c!$'
+                        },
+                    ],
+                    'host_name': ['stable']
+                },
+                'value': True
+            },
+        ]),
+        # Do not touch rules saved with 2.0
+        (
+            _2_0_ignored_services(),
+            _2_0_ignored_services(),
+        ),
+        # Do not touch rules that have not been created by discovery page
+        (
+            _non_discovery_ignored_services_ruleset(),
+            _non_discovery_ignored_services_ruleset(),
+        ),
+    ])
+def test__transform_discovery_disabled_services(
+    ruleset_spec,
+    expected_ruleset,
+):
+    ruleset = Ruleset("ignored_services", {})
+    ruleset.from_config(Folder(''), ruleset_spec)
+    assert ruleset.get_rules()
+
+    rulesets = RulesetCollection()
+    rulesets.set_rulesets({"ignored_services": ruleset})
+
+    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+    uc._transform_discovery_disabled_services(rulesets)
+
+    folder_rules = ruleset.get_folder_rules(Folder(''))
+    assert [r.to_config() for r in folder_rules] == expected_ruleset

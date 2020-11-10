@@ -38,7 +38,10 @@ def main(argv=None):
 
                 auth = (args.user, args.password) if args.user and args.password else None
                 try:
-                    response = requests.get(url, auth=auth)
+                    if args.proto == 'https':
+                        response = requests.get(url, verify=args.ssl_verify, auth=auth)
+                    else:
+                        response = requests.get(url, auth=auth)
                 except requests.exceptions.RequestException as e:
                     sys.stderr.write("Error: %s\n" % e)
                     if args.debug:
@@ -76,6 +79,12 @@ def parse_arguments(argv):
                         default=9200,
                         type=int,
                         help="Use alternative port (default: 9200)")
+    parser.add_argument(
+        "--disable-ssl-verify",
+        dest='ssl_verify',
+        default=True,
+        action='store_false',
+        help="Disable verification of ElasticSearch SSL certificates. Useful when using self-signed certs")
     parser.add_argument(
         "-m",
         "--modules",
@@ -160,3 +169,5 @@ def handle_stats(response):
             sys.stdout.write("%s %s %s\n" %
                              (indice, sum(all_counts) / len(all_counts),
                               sum(all_sizes) / len(all_sizes)))  # fixed: true-division
+if __name__ == "__main__":
+    main()

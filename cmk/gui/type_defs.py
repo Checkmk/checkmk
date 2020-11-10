@@ -36,7 +36,9 @@ class PainterSpec(
             ('column_title', Optional[str]),
         ])):
     def __new__(cls, *value):
-        value = value + (None,) * (5 - len(value))
+        # Some legacy views have optional fields like "tooltip" set to "" instead of None
+        # in their definitions. Consolidate this case to None.
+        value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))
         return super(PainterSpec, cls).__new__(cls, *value)
 
     def __repr__(self):

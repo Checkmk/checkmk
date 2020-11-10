@@ -17,6 +17,8 @@ import cmk.utils.regex
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.werks import parse_check_mk_version
 import cmk.utils.version as cmk_version
+from cmk.utils.prediction import livestatus_lql
+from cmk.utils.type_defs import MetricName as _MetricName
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -24,6 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.valuespec import DropdownChoice
+import cmk.gui.sites as sites
 
 LegacyPerfometer = Tuple[str, Any]
 Perfometer = Dict[str, Any]
@@ -350,6 +353,48 @@ def translate_metrics(perf_data: List[Tuple], check_command: str) -> TranslatedM
     return translated_metrics
 
 
+def perf_data_string_from_metric_names(metric_names):
+    parts = []
+    for var_name in metric_names:
+        # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
+        # of the metric system. They are used as separators for the single parts of the expression and
+        # since the var_names are used as part of the expressions, they should better not be processed
+        # even when reported by the core.
+        if "," in var_name:
+            continue
+
+        if " " in var_name:
+            parts.append("\"%s\"=1" % var_name)
+        else:
+            parts.append("%s=1" % var_name)
+    return " ".join(parts)
+
+
+def available_metrics_translated(perf_data_string: str, rrd_metrics: List[_MetricName],
+                                 check_command: str) -> Dict:
+    # If we have no RRD files then we cannot paint any graph :-(
+    if not rrd_metrics:
+        return {}
+
+    perf_data, check_command = parse_perf_data(perf_data_string, check_command)
+
+    rrd_perf_data_string = perf_data_string_from_metric_names(rrd_metrics)
+    rrd_perf_data, check_command = parse_perf_data(rrd_perf_data_string, check_command)
+    if not rrd_perf_data + perf_data:
+        return {}
+
+    if not perf_data:
+        perf_data = rrd_perf_data
+
+    else:
+        current_variables = [x[0] for x in perf_data]
+        for entry in rrd_perf_data:
+            if entry[0] not in current_variables:
+                perf_data.append(entry)
+
+    return translate_metrics(perf_data, check_command)
+
+
 #.
 #   .--Evaluation----------------------------------------------------------.
 #   |          _____            _             _   _                        |
@@ -672,6 +717,22 @@ def _filter_renderable_graph_metrics(metric_definitions, translated_metrics, opt
             if metric_name in optional_metrics:
                 continue
             raise err
+
+
+def get_graph_data_from_livestatus(only_sites, host_name, service_description):
+    columns = [u'perf_data', u'metrics', u'check_command']
+    query = livestatus_lql([host_name], columns, service_description)
+    what = 'host' if service_description == "_HOST_" else 'service'
+    labels = [u"site"] + [u"%s_%s" % (what, col) for col in columns]
+
+    with sites.only_sites(only_sites), sites.prepend_site():
+        info = dict(zip(labels, sites.live().query_row(query)))
+
+    info['host_name'] = host_name
+    if what == 'service':
+        info['service_description'] = service_description
+
+    return info
 
 
 #.

@@ -679,11 +679,6 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
                        msg.raw_data.error)
 
 
-def read_json_file(serial: ConfigSerial, host_name: HostName) -> str:
-    json_file = make_local_config_path(serial=serial, host_name=host_name)
-    return json_file.read_text(encoding="utf-8")
-
-
 def make_local_config_path(serial: ConfigSerial, host_name: HostName) -> Path:
     return paths.make_fetchers_config_path(serial) / "hosts" / f"{host_name}.json"
 

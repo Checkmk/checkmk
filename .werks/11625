@@ -1,0 +1,17 @@
+Title: Splunk special agent: fix section <tt>splunk_jobs</tt>
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p19
+Date: 1605002014
+
+This werk fixes a bug in the section <tt>splunk_jobs</tt> of the
+Splunk special agent. This bug caused the agent to crash while
+producing the output for this section. As a result, the section
+<tt>splunk_jobs</tt> and any subsequent sections were not fetched,
+which made the corresponding services go stale (e.g. "Splunk
+Alerts" and "Splunk Health").

@@ -45,7 +45,6 @@ from cmk.fetchers.controller import (
     GlobalConfig,
     L3Stats,
     make_log_answer,
-    make_result_answer,
     make_end_of_reply_answer,
     PayloadType,
     run_fetcher,
@@ -78,20 +77,6 @@ def test_status_to_log_level(status, log_level):
 
 
 class TestControllerApi:
-    def test_controller_result(self):
-        payload = AgentPayload(69 * b"\0")
-        stats = L3Stats(CPUTracker())
-        header = FetcherHeader(
-            FetcherType.TCP,
-            PayloadType.AGENT,
-            status=42,
-            payload_length=len(payload),
-            stats_length=len(stats),
-        )
-        message = FetcherMessage(header, payload, stats)
-        assert make_result_answer(message) == (b"fetch:RESULT :        :240     :" + header +
-                                               payload + stats)
-
     def test_controller_log(self):
         assert make_log_answer(
             "payload", log_level=CmcLogLevel.WARNING) == b"fetch:LOG    :warning :7       :payload"

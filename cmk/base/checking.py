@@ -250,10 +250,10 @@ def do_check(
         for msg in fetcher_messages:
             total_times += msg.stats.cpu_tracker.duration
 
-        infotexts.append("execution time %.1f sec" % total_times.run_time)
+        infotexts.append("execution time %.1f sec" % total_times.process.elapsed)
         if config.check_mk_perfdata_with_times:
             perfdata += [
-                "execution_time=%.3f" % total_times.run_time,
+                "execution_time=%.3f" % total_times.process.elapsed,
                 "user_time=%.3f" % total_times.process.user,
                 "system_time=%.3f" % total_times.process.system,
                 "children_user_time=%.3f" % total_times.process.children_user,
@@ -274,10 +274,9 @@ def do_check(
                         FetcherType.TCP: "agent",
                     }[msg.fetcher_type]] += msg.stats.cpu_tracker.duration
             for phase, duration in summary.items():
-                t = duration.run_time - sum(duration.process[:4])  # real time - CPU time
-                perfdata.append("cmk_time_%s=%.3f" % (phase, t))
+                perfdata.append("cmk_time_%s=%.3f" % (phase, duration.idle))
         else:
-            perfdata.append("execution_time=%.3f" % total_times.run_time)
+            perfdata.append("execution_time=%.3f" % total_times.process.elapsed)
 
         return status, infotexts, long_infotexts, perfdata
     finally:

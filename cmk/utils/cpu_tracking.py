@@ -6,7 +6,6 @@
 
 import os
 import posix
-import time
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable
 
@@ -23,47 +22,38 @@ def times_result(seq: Iterable[float]) -> posix.times_result:
 @dataclass(frozen=True)
 class Snapshot:
     process: posix.times_result
-    run_time: float
+
+    @property
+    def idle(self) -> float:
+        return self.process.elapsed - sum(self.process[:4])
 
     @classmethod
     def null(cls):
-        return cls(
-            times_result((0.0, 0.0, 0.0, 0.0, 0.0)),
-            0.0,
-        )
+        return cls(times_result((0.0, 0.0, 0.0, 0.0, 0.0)))
 
     @classmethod
     def take(cls) -> "Snapshot":
-        return cls(os.times(), time.monotonic())
+        return cls(os.times())
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "Snapshot":
         try:
-            return cls(
-                times_result(serialized["process"]),
-                serialized["run_time"],
-            )
+            return cls(times_result(serialized["process"]))
         except LookupError as exc:
             raise ValueError(serialized) from exc
 
     def serialize(self) -> Dict[str, Any]:
-        return {"process": tuple(self.process), "run_time": self.run_time}
+        return {"process": tuple(self.process)}
 
     def __add__(self, other: "Snapshot") -> "Snapshot":
         if not isinstance(other, Snapshot):
             return NotImplemented
-        return Snapshot(
-            times_result(t0 + t1 for t0, t1 in zip(self.process, other.process)),
-            self.run_time + other.run_time,
-        )
+        return Snapshot(times_result(t0 + t1 for t0, t1 in zip(self.process, other.process)))
 
     def __sub__(self, other: "Snapshot") -> "Snapshot":
         if not isinstance(other, Snapshot):
             return NotImplemented
-        return Snapshot(
-            times_result(t0 - t1 for t0, t1 in zip(self.process, other.process)),
-            self.run_time - other.run_time,
-        )
+        return Snapshot(times_result(t0 - t1 for t0, t1 in zip(self.process, other.process)))
 
 
 class CPUTracker:

@@ -6,7 +6,8 @@
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")].
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 factory_settings["sap_hana_memrate_default_levels"] = {"levels": ('perc_used', (70.0, 80.0))}

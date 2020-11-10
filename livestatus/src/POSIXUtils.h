@@ -10,12 +10,14 @@
 
 #include <fcntl.h>
 #include <semaphore.h>
+#include <sys/types.h>
 
 #include <array>
 #include <cerrno>
 #include <chrono>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 class Logger;
 
@@ -127,4 +129,8 @@ private:
     bool try_lock_until_impl(const std::chrono::steady_clock::time_point &time,
                              short l_type, const char *msg);
 };
+
+ssize_t writeWithTimeout(int fd, std::string_view buffer,
+                         std::chrono::nanoseconds timeout);
+
 #endif  // POSIXUtils_h

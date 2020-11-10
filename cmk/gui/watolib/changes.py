@@ -37,18 +37,18 @@ ChangeSpec = Dict[str, Any]
 LogMessage = Union[str, HTML]
 
 
-def wato_var_dir() -> Path:
+def _wato_var_dir() -> Path:
     return Path(cmk.utils.paths.var_dir, "wato")
 
 
 def audit_log_path() -> Path:
-    return wato_var_dir() / "log" / "audit.log"
+    return _wato_var_dir() / "log" / "audit.log"
 
 
-def log_entry(linkinfo: LinkInfoObject,
-              action: str,
-              message: str,
-              user_id: Optional[UserId] = None) -> None:
+def _log_entry(linkinfo: LinkInfoObject,
+               action: str,
+               message: str,
+               user_id: Optional[UserId] = None) -> None:
     if linkinfo and not isinstance(linkinfo, str):
         link = linkinfo.linkinfo()
     else:
@@ -81,7 +81,7 @@ def log_audit(linkinfo: LinkInfoObject,
     # place where we can distinguish between HTML() encapsulated (already)
     # escaped / allowed HTML and strings to be escaped.
     message = escaping.escape_text(message).strip()
-    log_entry(linkinfo, action, message, user_id)
+    _log_entry(linkinfo, action, message, user_id)
 
 
 def add_change(action_name: str,
@@ -172,7 +172,7 @@ class SiteChanges:
         self._site_id = site_id
 
     def _site_changes_path(self) -> Path:
-        return wato_var_dir() / ("replication_changes_%s.mk" % self._site_id)
+        return _wato_var_dir() / ("replication_changes_%s.mk" % self._site_id)
 
     # TODO: Implement this locking as context manager
     def load(self, lock: bool = False) -> List[ChangeSpec]:

@@ -144,7 +144,6 @@ from cmk.gui.watolib.sites import (
     LivestatusViaTCP,
 )
 from cmk.gui.watolib.changes import (
-    log_entry,
     log_audit,
     add_change,
     add_service_change,

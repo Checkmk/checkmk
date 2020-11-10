@@ -500,8 +500,9 @@ static std::filesystem::path ExtractPathFromTheExecutable() {
     if (!fs::exists(exe, ec)) return {};  // something wrong probably
 
     fs::path path = FindServiceImagePath(cma::srv::kServiceName);
-    // TODO (sk): fix it with equivalent
-    if (path == exe) return path.parent_path().lexically_normal();
+
+    if (fs::equivalent(path.lexically_normal(), exe, ec))
+        return path.parent_path().lexically_normal();
 
     return {};
 }

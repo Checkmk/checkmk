@@ -68,8 +68,9 @@ std::filesystem::path Module::findBin(
         }
 
         // check for actual
+        std::error_code ec;
         if (fs::exists(actual_dir) && fs::is_directory(actual_dir) &&
-            !fs::equivalent(default_dir, actual_dir)) {
+            !fs::equivalent(default_dir, actual_dir, ec)) {
             // check symbolic link, actual is not the same as default
             XLOG::d("Module '{}' has predefined work folder", name());
         }
@@ -534,7 +535,7 @@ bool ModuleCommander::InstallModule(const Module &mod,
     fs::path actual_dir = user / mod.dir();
     if (!PrepareCleanTargetDir(default_dir)) return false;
 
-    if (!fs::equivalent(default_dir, actual_dir)) {
+    if (!fs::equivalent(default_dir, actual_dir, ec)) {
         // establish symbolic link
         CreateFileForTargetDir(default_dir, actual_dir);
     }

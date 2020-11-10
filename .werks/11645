@@ -1,0 +1,14 @@
+Title: Performance issues with PySNMP Backend
+Class: fix
+Compatible: compat
+Component: pysnmp
+Date: 1605014604
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+PySNMP had some huge Performance issues.
+These issues are resolved by
+1. Caching the SnmpEngines PySNMP uses
+2. Disabling lookupMib

@@ -9,8 +9,9 @@ import ast
 import errno
 import os
 import time
+import abc
 from typing import (Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, Iterator,
-                    NamedTuple)
+                    NamedTuple, TypeVar, Generic)
 from pathlib import Path
 
 import cmk.utils
@@ -36,6 +37,86 @@ if TYPE_CHECKING:
 LinkInfoObject = Union["CREFolder", "CREHost", str, None]
 ChangeSpec = Dict[str, Any]
 LogMessage = Union[str, HTML]
+
+_VT = TypeVar('_VT')
+
+
+class ABCAppendStore(Generic[_VT], metaclass=abc.ABCMeta):
+    """Managing a file with structured data that can be appended in a cheap way
+
+    The file holds basic python structures separated by "\0".
+    """
+    @staticmethod
+    @abc.abstractmethod
+    def make_path(*args: str) -> Path:
+        raise NotImplementedError()
+
+    def __init__(self, path: Path) -> None:
+        self._path = path
+
+    def exists(self) -> bool:
+        return self._path.exists()
+
+    # TODO: Implement this locking as context manager
+    def read(self, lock: bool = False) -> List[_VT]:
+        """Parse the file and return the entries"""
+        path = self._path
+
+        if lock:
+            store.aquire_lock(path)
+
+        entries = []
+        try:
+            with path.open("rb") as f:
+                for entry in f.read().split(b"\0"):
+                    if entry:
+                        entries.append(ast.literal_eval(entry.decode("utf-8")))
+        except IOError as e:
+            if e.errno == errno.ENOENT:
+                pass
+            else:
+                raise
+        except Exception:
+            if lock:
+                store.release_lock(path)
+            raise
+
+        return entries
+
+    def write(self, entries: List[_VT]) -> None:
+        # First truncate the file
+        with self._path.open("wb"):
+            pass
+
+        for entry in entries:
+            self.append(entry)
+
+    def append(self, entry: _VT) -> None:
+        path = self._path
+        try:
+            store.aquire_lock(path)
+
+            with path.open("ab+") as f:
+                f.write(repr(entry).encode("utf-8") + b"\0")
+                f.flush()
+                os.fsync(f.fileno())
+
+            path.chmod(0o660)
+
+        except Exception as e:
+            raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
+
+        finally:
+            store.release_lock(path)
+
+    def clear(self) -> None:
+        try:
+            self._path.unlink()
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                pass  # Not existant -> OK
+            else:
+                raise
 
 
 def _wato_var_dir() -> Path:
@@ -213,81 +294,11 @@ class ActivateChangesWriter:
         })
 
 
-class SiteChanges:
+class SiteChanges(ABCAppendStore[ChangeSpec]):
     """Manage persisted changes of a single site"""
-    def __init__(self, path: Path) -> None:
-        self._path = path
-
     @staticmethod
-    def make_path(site_id) -> Path:
-        return _wato_var_dir() / ("replication_changes_%s.mk" % site_id)
-
-    def exists(self) -> bool:
-        return self._path.exists()
-
-    # TODO: Implement this locking as context manager
-    def read(self, lock: bool = False) -> List[ChangeSpec]:
-        """Parse the site specific changes file
-
-        The file format has been choosen to be able to append changes without
-        much cost."""
-        path = self._path
-
-        if lock:
-            store.aquire_lock(path)
-
-        changes = []
-        try:
-            with path.open("rb") as f:
-                for entry in f.read().split(b"\0"):
-                    if entry:
-                        changes.append(ast.literal_eval(entry.decode("utf-8")))
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                pass
-            else:
-                raise
-        except Exception:
-            if lock:
-                store.release_lock(path)
-            raise
-
-        return changes
-
-    def write(self, changes: List[ChangeSpec]) -> None:
-        # First truncate the file
-        with self._path.open("wb"):
-            pass
-
-        for change_spec in changes:
-            self.append(change_spec)
-
-    def append(self, change_spec: ChangeSpec) -> None:
-        path = self._path
-        try:
-            store.aquire_lock(path)
-
-            with path.open("ab+") as f:
-                f.write(repr(change_spec).encode("utf-8") + b"\0")
-                f.flush()
-                os.fsync(f.fileno())
-
-            path.chmod(0o660)
-
-        except Exception as e:
-            raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
-
-        finally:
-            store.release_lock(path)
-
-    def clear(self) -> None:
-        try:
-            self._path.unlink()
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                pass  # Not existant -> OK
-            else:
-                raise
+    def make_path(*args: str) -> Path:
+        return _wato_var_dir() / ("replication_changes_%s.mk" % args[0])
 
 
 def add_service_change(host: "CREHost",

@@ -5,5 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk wide type definitions"""
 
-from ._misc import *  # TODO(ML): We should clean this up some day.
 from . import result
+from ._misc import *  # TODO(ML): We should clean this up some day.
+from .pluginname import *

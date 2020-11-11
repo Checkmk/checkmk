@@ -355,7 +355,6 @@ def do_discovery(
             checkers.update_host_sections(
                 multi_host_sections,
                 nodes,
-                selected_raw_sections=None,
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
                 fetcher_messages=list(
@@ -363,7 +362,6 @@ def do_discovery(
                         nodes,
                         max_cachefile_age=max_cachefile_age,
                         host_config=host_config,
-                        selected_raw_sections=None,
                     )),
             )
 
@@ -551,14 +549,12 @@ def discover_on_host(
             multi_host_sections,
             nodes,
             max_cachefile_age=max_cachefile_age,
-            selected_raw_sections=None,
             host_config=host_config,
             fetcher_messages=list(
                 checkers.fetch_all(
                     nodes,
                     max_cachefile_age=max_cachefile_age,
                     host_config=host_config,
-                    selected_raw_sections=None,
                 )),
         )
 
@@ -748,7 +744,6 @@ def check_discovery(
                 nodes,
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
-                selected_raw_sections=None,
             ))
 
     multi_host_sections = MultiHostSections()
@@ -758,7 +753,6 @@ def check_discovery(
         max_cachefile_age=max_cachefile_age,
         host_config=host_config,
         fetcher_messages=fetcher_messages,
-        selected_raw_sections=None,
     )
 
     services, host_label_discovery_result = _get_host_services(
@@ -1797,14 +1791,12 @@ def get_check_preview(
         multi_host_sections,
         nodes,
         max_cachefile_age=max_cachefile_age,
-        selected_raw_sections=None,
         host_config=host_config,
         fetcher_messages=list(
             checkers.fetch_all(
                 nodes,
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
-                selected_raw_sections=None,
             )),
     )
 

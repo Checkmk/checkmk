@@ -8,7 +8,6 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-import itertools
 from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 
 import cmk.utils.debug
@@ -21,11 +20,9 @@ from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 
 from cmk.fetchers.protocol import FetcherMessage
 
-import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.config import HostConfig, SelectedRawSections
+from cmk.base.config import HostConfig
 
 from ._abstract import HostSections, Mode, Source
 from .agent import AgentHostSections
@@ -196,28 +193,11 @@ def make_nodes(
     return _make_piggyback_nodes(mode, config_cache, host_config)
 
 
-def _make_piggybacked_sections(host_config) -> SelectedRawSections:
-    check_plugin_names = set(
-        itertools.chain.from_iterable(
-            check_table.get_needed_check_names(
-                node_name,
-                filter_mode="only_clustered",
-            ) for node_name in host_config.nodes))
-    return agent_based_register.get_relevant_raw_sections(
-        check_plugin_names=check_plugin_names,
-        # TODO: this was added when an optional argument became
-        # mandatory. So this makes the default explicit, but
-        # currently I am not sure if this is correct.
-        consider_inventory_plugins=False,
-    )
-
-
 def fetch_all(
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     *,
     max_cachefile_age: int,
     host_config: HostConfig,
-    selected_raw_sections: Optional[SelectedRawSections],
 ) -> Iterator[FetcherMessage]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     # TODO(ml): It is not clear to me in which case it is possible for the following to hold true
@@ -228,11 +208,9 @@ def fetch_all(
     for _hostname, _ipaddress, sources in nodes:
         for source in sources:
             console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
-            if host_config.nodes is None:
-                source.selected_raw_sections = selected_raw_sections
-            else:
-                source.selected_raw_sections = _make_piggybacked_sections(host_config)
+
             source.file_cache_max_age = max_cachefile_age
+
             with CPUTracker() as tracker:
                 raw_data = source.fetch()
             yield FetcherMessage.from_raw_data(
@@ -249,7 +227,6 @@ def update_host_sections(
     max_cachefile_age: int,
     host_config: HostConfig,
     fetcher_messages: Sequence[FetcherMessage],
-    selected_raw_sections: Optional[SelectedRawSections],
 ) -> Sequence[Tuple[Source, result.Result[HostSections, Exception]]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -265,10 +242,6 @@ def update_host_sections(
     for hostname, ipaddress, sources in nodes:
         for source_index, source in enumerate(sources):
             console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
-            if host_config.nodes is None:
-                source.selected_raw_sections = selected_raw_sections
-            else:
-                source.selected_raw_sections = _make_piggybacked_sections(host_config)
 
             source.file_cache_max_age = max_cachefile_age
 

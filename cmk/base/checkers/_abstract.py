@@ -42,7 +42,7 @@ from cmk.base.check_utils import (
     TSectionContent,
     TSections,
 )
-from cmk.base.config import HostConfig, SelectedRawSections
+from cmk.base.config import HostConfig
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 from ._cache import SectionStore
@@ -291,7 +291,6 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self.file_cache_path: Final[Path] = cache_dir / self.hostname
         self.file_cache_max_age: int = 0
         self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
-        self.selected_raw_sections: Optional[SelectedRawSections] = None
 
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.base.data_source.%s" % id_)

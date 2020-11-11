@@ -257,14 +257,12 @@ def _fetch_multi_host_sections_for_inv(
         multi_host_sections,
         nodes,
         max_cachefile_age=host_config.max_cachefile_age,
-        selected_raw_sections=None,
         host_config=host_config,
         fetcher_messages=list(
             checkers.fetch_all(
                 nodes,
                 max_cachefile_age=host_config.max_cachefile_age,
                 host_config=host_config,
-                selected_raw_sections=None,
             )),
     )
 

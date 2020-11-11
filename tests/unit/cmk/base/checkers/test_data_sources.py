@@ -16,7 +16,6 @@ from cmk.base import check_table, config
 from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.checkers import make_sources, Mode
-from cmk.base.checkers._checkers import _make_piggybacked_sections
 from cmk.base.checkers.piggyback import PiggybackSource
 from cmk.base.checkers.programs import DSProgramSource, SpecialAgentSource
 from cmk.base.checkers.snmp import SNMPSource
@@ -110,66 +109,3 @@ def test_host_config_creates_passing_source_sources(
         ipaddress,
         mode=mode,
     )] == sources
-
-
-@pytest.fixture(name="agent_section")
-def agent_section_fixture(monkeypatch):
-    section = section_plugins.create_agent_section_plugin(name="unit_test_agent_section",)
-    monkeypatch.setitem(
-        agent_based_register._config.registered_agent_sections,
-        section.name,
-        section,
-    )
-    yield section
-
-
-@pytest.fixture(name="check_plugin")
-def check_plugin_fixture(monkeypatch, agent_section):
-    check_plugin = CheckPlugin(
-        CheckPluginName("unit_test_check_plugin"),
-        [agent_section.parsed_section_name],
-        "Unit Test",
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-        None,  # type: ignore[arg-type]  # irrelevant for test
-    )
-    monkeypatch.setitem(
-        agent_based_register._config.registered_check_plugins,
-        check_plugin.name,
-        check_plugin,
-    )
-    yield check_plugin
-
-
-def test_make_piggybacked_sections(monkeypatch, check_plugin):
-    cluster_name = "cluster"
-    node_name = "node"
-
-    def get_needed_check_names(
-        hostname,
-        filter_mode=None,
-        skip_ignored=True,
-    ):
-        if hostname == node_name and filter_mode == 'only_clustered':
-            return {check_plugin.name}
-        return set()
-
-    monkeypatch.setattr(
-        check_table,
-        "get_needed_check_names",
-        get_needed_check_names,
-    )
-
-    Scenario().add_cluster(cluster_name, nodes=[node_name]).apply(monkeypatch)
-    host_config = config.HostConfig.make_host_config(cluster_name)
-    piggybacked_host_sections = _make_piggybacked_sections(host_config)
-
-    assert len(piggybacked_host_sections) == 1
-    # comparing cmk.utils.type_defs.SectionName and cmk.utils.type_defs.ParsedSectionName
-    assert str(next(iter(piggybacked_host_sections))) == str(check_plugin.sections[0])

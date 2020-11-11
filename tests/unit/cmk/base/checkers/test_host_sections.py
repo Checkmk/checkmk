@@ -496,7 +496,6 @@ class TestMakeHostSectionsHosts:
                 sources=(),
             ),
             max_cachefile_age=0,
-            selected_raw_sections=None,
             host_config=host_config,
             fetcher_messages=(),
         )
@@ -534,7 +533,6 @@ class TestMakeHostSectionsHosts:
                 ],
             ),
             max_cachefile_age=0,
-            selected_raw_sections=None,
             host_config=host_config,
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -591,7 +589,6 @@ class TestMakeHostSectionsHosts:
                 sources=[source],
             ),
             max_cachefile_age=0,
-            selected_raw_sections=None,
             host_config=host_config,
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -645,7 +642,6 @@ class TestMakeHostSectionsHosts:
                 sources=sources,
             ),
             max_cachefile_age=0,
-            selected_raw_sections=None,
             host_config=host_config,
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -688,7 +684,6 @@ class TestMakeHostSectionsHosts:
                 sources=sources,
             ),
             max_cachefile_age=0,
-            selected_raw_sections=None,
             host_config=host_config,
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -789,7 +784,6 @@ class TestMakeHostSectionsClusters:
                 sources=(),
             ),
             max_cachefile_age=0,
-            selected_raw_sections=None,
             host_config=host_config,
             fetcher_messages=[
                 # We do not pass sources explicitly but still append Piggyback.
@@ -834,11 +828,6 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
     def lookup_ip_address(host_config, family=None, for_mgmt_board=False):
         return hosts[host_config.hostname]
 
-    def make_piggybacked_sections(hc):
-        if hc.nodes == host_config.nodes:
-            return {section_name: True}
-        return {}
-
     def check(_, *args, **kwargs):
         return result.OK(AgentHostSections(sections={section_name: [[str(section_name)]]}))
 
@@ -846,11 +835,6 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         ip_lookup,
         "lookup_ip_address",
         lookup_ip_address,
-    )
-    monkeypatch.setattr(
-        _checkers,
-        "_make_piggybacked_sections",
-        make_piggybacked_sections,
     )
     monkeypatch.setattr(
         Source,
@@ -883,7 +867,6 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
             sources=sources,
         ),
         max_cachefile_age=host_config.max_cachefile_age,
-        selected_raw_sections=None,
         host_config=host_config,
         fetcher_messages=[
                 FetcherMessage.from_raw_data(

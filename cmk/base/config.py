@@ -107,7 +107,6 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.api.agent_based.type_defs import (
     Parameters,
-    SectionPlugin,
     SNMPSectionPlugin,
 )
 from cmk.base.caching import config_cache as _config_cache
@@ -148,7 +147,6 @@ RecurringDowntime = Dict[str, Union[int, str]]
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
-SelectedRawSections = Dict[SectionName, SectionPlugin]
 
 
 class ExitSpec(TypedDict, total=False):

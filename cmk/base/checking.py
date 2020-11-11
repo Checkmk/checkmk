@@ -169,12 +169,6 @@ def do_check(
             run_only_plugin_names=run_only_plugin_names,
         )
 
-        # see which raw sections we may need
-        selected_raw_sections = agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=(s.check_plugin_name for s in services_to_fetch),
-            consider_inventory_plugins=host_config.do_status_data_inventory,
-        )
-
         sources = checkers.make_sources(
             host_config,
             ipaddress,
@@ -198,7 +192,6 @@ def do_check(
                     nodes,
                     max_cachefile_age=host_config.max_cachefile_age,
                     host_config=host_config,
-                    selected_raw_sections=selected_raw_sections,
                 ))
 
         with CPUTracker() as tracker:
@@ -206,7 +199,6 @@ def do_check(
             result = checkers.update_host_sections(
                 mhs,
                 nodes,
-                selected_raw_sections=selected_raw_sections,
                 max_cachefile_age=host_config.max_cachefile_age,
                 host_config=host_config,
                 fetcher_messages=fetcher_messages,

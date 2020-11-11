@@ -1,0 +1,21 @@
+Title: Windows agent executable can be called using any letter case in it's path
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605104443
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Previously, calling Windows agent using full path may produce weird results.
+
+Errouneously Windows agent used case-sensitive comparison for filepaths, which 
+in Windows are case insensitive. For example such command line
+<tt>"c:\program files (x86)\checkmk\service\checmk_mk_agent.exe" test</tt> didn't 
+work correctly. But command line which uses correct letter case
+<tt>"C:\Program Files (x86)\checkmk\service\checmk_mk_agent.exe" test</tt> worked 
+fine.
+
+With this release the problem had been eliminated. You may use any letter case in 
+the path to the Windows agent.

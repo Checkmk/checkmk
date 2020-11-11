@@ -294,6 +294,7 @@ def test_perform_host_label_discovery(discovered_host_labels_dir, existing_label
         on_error="raise",
         load_labels=load_labels,
         save_labels=False,
+        only_host_labels=False,
     )
 
     new_host_labels, _host_labels_per_plugin = _perform_host_label_discovery(

@@ -1170,6 +1170,7 @@ _discovery_test_cases = [
             on_error="raise",
             load_labels=True,
             save_labels=True,
+            only_host_labels=False,
         ),
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
@@ -1255,6 +1256,7 @@ _discovery_test_cases = [
             on_error="raise",
             load_labels=True,
             save_labels=False,
+            only_host_labels=False,
         ),
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
@@ -1314,6 +1316,7 @@ _discovery_test_cases = [
             on_error="raise",
             load_labels=False,
             save_labels=True,
+            only_host_labels=False,
         ),
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
@@ -1368,10 +1371,61 @@ _discovery_test_cases = [
             on_error="raise",
             load_labels=False,
             save_labels=False,
+            only_host_labels=False,
         ),
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
         },
+        on_realhost=ExpectedDiscoveryResultRealHost(
+            expected_per_plugin=Counter({"labels": 1}),
+            expected_return_labels=DiscoveredHostLabels(
+                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),),
+            expected_stored_labels={
+                'another_label': {
+                    'plugin_name': 'labels',
+                    'value': 'true',
+                },
+                'existing_label': {
+                    'plugin_name': 'foo',
+                    'value': 'bar',
+                },
+            },
+        ),
+        on_cluster=ExpectedDiscoveryResultCluster(
+            expected_per_plugin=Counter({"labels": 2}),
+            expected_return_labels=DiscoveredHostLabels(
+                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+                HostLabel('node2_live_label', 'true', plugin_name='labels'),
+            ),
+            expected_stored_labels_cluster={
+                'another_label': {
+                    'plugin_name': 'labels',
+                    'value': 'true',
+                },
+                'existing_label': {
+                    'plugin_name': 'foo',
+                    'value': 'bar',
+                },
+            },
+            expected_stored_labels_node1={
+                'node1_existing_label': {
+                    'plugin_name': 'node1_plugin',
+                    'value': 'true',
+                },
+            },
+            expected_stored_labels_node2={},
+        ),
+    ),
+    # discover on host: mode == "only-host-labels"
+    # Only discover host labels
+    DiscoveryTestCase(
+        parameters=discovery.DiscoveryParameters(
+            on_error="raise",
+            load_labels=False,
+            save_labels=False,
+            only_host_labels=True,
+        ),
+        expected_services=set(),
         on_realhost=ExpectedDiscoveryResultRealHost(
             expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(

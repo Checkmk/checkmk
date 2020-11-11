@@ -120,6 +120,7 @@ DiscoveryParameters = NamedTuple("DiscoveryParameters", [
     ("on_error", str),
     ("load_labels", bool),
     ("save_labels", bool),
+    ("only_host_labels", bool),
 ])
 
 HostLabelDiscoveryResult = NamedTuple("HostLabelDiscoveryResult", [
@@ -309,8 +310,12 @@ def _get_rediscovery_mode(params: Dict) -> str:
 # being called from the main option parsing code. The list of
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
-def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[CheckPluginName]],
-                 arg_only_new: bool) -> None:
+def do_discovery(
+    arg_hostnames: Set[HostName],
+    check_plugin_names: Optional[Set[CheckPluginName]],
+    arg_only_new: bool,
+    only_host_labels: bool = False,
+) -> None:
     config_cache = config.get_config_cache()
     use_caches = not arg_hostnames or checkers.FileCacheFactory.maybe
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
@@ -319,9 +324,10 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
         on_error=on_error,
         load_labels=arg_only_new,
         save_labels=True,
+        only_host_labels=only_host_labels,
     )
 
-    host_names = _preprocess_hostnames(arg_hostnames, config_cache)
+    host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
     # Now loop through all hosts
     for hostname in sorted(host_names):
@@ -386,14 +392,20 @@ def do_discovery(arg_hostnames: Set[HostName], check_plugin_names: Optional[Set[
             cmk.utils.cleanup.cleanup_globals()
 
 
-def _preprocess_hostnames(arg_host_names: Set[HostName],
-                          config_cache: config.ConfigCache) -> Set[HostName]:
+def _preprocess_hostnames(
+    arg_host_names: Set[HostName],
+    config_cache: config.ConfigCache,
+    only_host_labels: bool,
+) -> Set[HostName]:
     """Default to all hosts and expand cluster names to their nodes"""
     if not arg_host_names:
-        console.verbose("Discovering services on all hosts\n")
+        console.verbose("Discovering %shost labels on all hosts\n" %
+                        ("services and " if not only_host_labels else ""))
         arg_host_names = config_cache.all_active_realhosts()
     else:
-        console.verbose("Discovering services on: %s\n" % ", ".join(sorted(arg_host_names)))
+        console.verbose(
+            "Discovering %shost labels on: %s\n" %
+            ("services and " if not only_host_labels else "", ", ".join(sorted(arg_host_names))))
 
     host_names: Set[HostName] = set()
     # For clusters add their nodes to the list. Clusters itself
@@ -428,7 +440,7 @@ def _do_discovery_for(
         check_plugin_whitelist=check_plugin_names,
     )
 
-    # There are three ways of how to merge existing and new discovered checks:
+    # There are four ways of how to merge existing and new discovered checks:
     # 1. -II without --checks=
     #        check_plugin_names is empty, only_new is False
     #    --> complete drop old services, only use new ones
@@ -438,6 +450,8 @@ def _do_discovery_for(
     # 3. -I
     #    --> just add new services
     #        only_new is True
+    # 4. -I --only-host-labels
+    #    --> only discover new host labels
 
     if not check_plugin_names and not only_new:
         existing_services: List[Service] = []
@@ -500,6 +514,7 @@ def discover_on_host(
         on_error=on_error,
         load_labels=(mode != "remove"),
         save_labels=(mode != "remove"),
+        only_host_labels=False,
     )
 
     if hostname not in config_cache.all_active_hosts():
@@ -700,6 +715,7 @@ def check_discovery(
         on_error="raise",
         load_labels=True,
         save_labels=False,
+        only_host_labels=False,
     )
 
     params = host_config.discovery_check_parameters
@@ -1372,13 +1388,17 @@ def _discover_host_labels_and_services(
         discovery_parameters,
     )
 
-    discovered_services = _discover_services(
-        hostname,
-        ipaddress,
-        multi_host_sections,
-        discovery_parameters,
-        check_plugin_whitelist,
-    )
+    if discovery_parameters.only_host_labels:
+        discovered_services = []
+    else:
+        discovered_services = _discover_services(
+            hostname,
+            ipaddress,
+            multi_host_sections,
+            discovery_parameters,
+            check_plugin_whitelist,
+        )
+
     return discovered_services, HostLabelDiscoveryResult(
         labels=host_labels,
         per_plugin=host_labels_per_plugin,
@@ -1759,6 +1779,7 @@ def get_check_preview(
         on_error=on_error,
         load_labels=False,
         save_labels=False,
+        only_host_labels=False,
     )
 
     mode = checkers.Mode.CACHED_DISCOVERY if use_caches else checkers.Mode.DISCOVERY

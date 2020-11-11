@@ -357,7 +357,7 @@ class Mode(Option):
         if self.sub_options:
             sub_texts = []
             for option in self.sub_options:
-                short_help_text = option.short_help_text(fmt="    %-21s")
+                short_help_text = option.short_help_text(fmt="    %-24s")
                 if short_help_text is not None:
                     sub_texts.append(short_help_text)
             text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))

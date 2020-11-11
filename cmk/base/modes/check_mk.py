@@ -1509,6 +1509,7 @@ DiscoverOptions = TypedDict(
     {
         'checks': _ChecksOption,
         'discover': int,
+        'only-host-labels': bool,
     },
     total=False,
 )
@@ -1523,7 +1524,12 @@ def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
         # new enough.
         checkers.FileCacheFactory.reset_maybe()
 
-    discovery.do_discovery(set(hostnames), options.get("checks"), options["discover"] == 1)
+    discovery.do_discovery(
+        set(hostnames),
+        options.get("checks"),
+        options["discover"] == 1,
+        "only-host-labels" in options,
+    )
 
 
 modes.register(
@@ -1542,6 +1548,8 @@ modes.register(
              "Can be restricted to certain check types. Write '--checks df -I' if "
              "you just want to look for new filesystems. Use 'cmk -L' for a "
              "list of all check types.",
+             "Can also be restricted to only discovering new host labels. "
+             "Use: '--only-host-labels' or '-L' ",
              "-II does the same as -I but deletes all existing checks of the "
              "specified types and hosts."
          ],
@@ -1553,6 +1561,11 @@ modes.register(
                  count=True,
              ),
              _option_checks,
+             Option(
+                 long_option="only-host-labels",
+                 short_option="L",
+                 short_help="Restrict discovery to host labels only",
+             ),
          ]))
 
 #.

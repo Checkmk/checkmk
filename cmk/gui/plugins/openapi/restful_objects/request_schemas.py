@@ -251,6 +251,14 @@ class RenameHost(BaseSchema):
     )
 
 
+class MoveHost(BaseSchema):
+    target_folder = fields.FolderField(
+        required=True,
+        description="The path of the target folder where the host is supposed to be moved to.",
+        example=urllib.parse.quote_plus('/my/fine/folder'),
+    )
+
+
 class Group(fields.String):
     """A field representing a group.
 

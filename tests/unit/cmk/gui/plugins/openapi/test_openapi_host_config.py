@@ -320,3 +320,94 @@ def test_openapi_host_rename_with_pending_activate_changes(
         headers={'If-Match': resp.headers['ETag']},
         status=409,
     )
+
+
+def test_openapi_host_move(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        content_type='application/json',
+        status=200,
+    )
+
+    _resp = wsgi_app.call_method(
+        'post',
+        base + "/objects/host_config/foobar/actions/move/invoke",
+        params='{"target_folder": "/new_folder"}',
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+        status=200,
+    )
+
+
+def test_openapi_host_move_to_non_valid_folder(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        content_type='application/json',
+        status=200,
+    )
+
+    _resp = wsgi_app.call_method(
+        'post',
+        base + "/objects/host_config/foobar/actions/move/invoke",
+        params='{"target_folder": "/"}',
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+        status=400,
+    )
+
+
+def test_openapi_host_move_of_non_existing_host(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    _resp = wsgi_app.call_method(
+        'post',
+        base + "/objects/host_config/foobaz/actions/move/invoke",
+        params='{"target_folder": "/"}',
+        content_type='application/json',
+        status=404,
+    )

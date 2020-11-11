@@ -2026,6 +2026,16 @@ components:
       required:
       - destination
       type: object
+    MoveHost:
+      properties:
+        target_folder:
+          description: Where the host has to be moved to.
+          example: '%2Fmy%2Ffine%2Ffolder'
+          pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
+          type: string
+      required:
+      - target_folder
+      type: object
     NotExpr:
       properties:
         op:
@@ -6284,6 +6294,101 @@ paths:
           \nPASSWORD=\"test123\"\n\nhttp PUT \"$API_URL/objects/host_config/example.com/actions/rename/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    new_name='newhost'\
+          \ \\\n    --json"
+  /objects/host_config/{host_name}/actions/move/invoke:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.host_config.move
+      parameters:
+      - description: The ETag of the object to be modified. This value comes from
+          the ETag HTTP header whenever the object is displayed. To update this object
+          the currently stored ETag needs to be the same as the one sent.
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          example: a20ceacf346041dc
+          type: string
+      - description: A hostname.
+        in: path
+        name: host_name
+        required: true
+        schema:
+          example: example.com
+          pattern: '[-0-9a-zA-Z_.]+'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveHost'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainObject'
+          description: The operation was done successfully.
+          headers:
+            ETag:
+              allowEmptyValue: false
+              description: The HTTP ETag header for this resource. It identifies the
+                current state of the object and needs to be sent along in the "If-Match"
+                request-header for subsequent modifications.
+              example: a20ceacf346041dc
+              required: false
+              schema:
+                pattern: '[0-9a-fA-F]{32}'
+                type: string
+      summary: Move a host
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.host_config
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/host_config/example.com/actions/move/invoke\"\
+          ,\n    headers={\n        \"If-Match\": \"a20ceacf346041dc\",  # (required)\
+          \ The ETag of the object to be modified.\n    },\n    json={'target_folder':\
+          \ '%2Fmy%2Ffine%2Ffolder'},\n)\nresp.raise_for_status()\ndata = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/objects/host_config/example.com/actions/move/invoke\"\
+          ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \        \"If-Match\": \"a20ceacf346041dc\",  # (required) The ETag of the\
+          \ object to be modified.\n    },\n    data=json.dumps({'target_folder':\
+          \ '%2Fmy%2Ffine%2Ffolder'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
+          \ \\\n    --header \"If-Match: a20ceacf346041dc\" \\ \\\n    --data '{\n\
+          \          \"target_folder\": \"%2Fmy%2Ffine%2Ffolder\"\n        }' \\\n\
+          \    \"$API_URL/objects/host_config/example.com/actions/move/invoke\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/host_config/example.com/actions/move/invoke\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    'If-Match:a20ceacf346041dc' \\\n\n    target_folder='%2Fmy%2Ffine%2Ffolder'\
           \ \\\n    --json"
   /domain-types/host_config/actions/bulk-delete/invoke:
     delete:

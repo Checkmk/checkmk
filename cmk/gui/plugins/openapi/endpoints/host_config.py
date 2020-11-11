@@ -20,6 +20,7 @@ import json
 import operator
 
 from cmk.gui import watolib
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -238,6 +239,40 @@ def rename_host(params):
             detail=f"It was not possible to rename the host {host_name} to {new_name}",
         )
     return _serve_host(host)
+
+
+@Endpoint(constructors.object_action_href('host_config', '{host_name}', action_name='move'),
+          'cmk/move',
+          method='post',
+          path_params=[HOST_NAME],
+          etag='both',
+          request_schema=request_schemas.MoveHost,
+          response_schema=response_schemas.DomainObject)
+def move(params):
+    """Move a host to another folder"""
+    host_name = params['host_name']
+    host = watolib.Host.host(host_name)
+    if host is None:
+        return _missing_host_problem(host_name)
+
+    current_folder = host.folder()
+    target_folder: watolib.CREFolder = params['body']['target_folder']
+    if target_folder is current_folder:
+        return problem(
+            status=400,
+            title="Invalid move action",
+            detail="The host is already part of the specified target folder",
+        )
+
+    try:
+        current_folder.move_hosts([host_name], target_folder)
+    except MKUserError as exc:
+        return problem(
+            status=400,
+            title="Problem moving host",
+            detail=exc.message,
+        )
+    return _serve_host(watolib.Host.host(host_name))
 
 
 @Endpoint(constructors.object_href('host_config', '{host_name}'),

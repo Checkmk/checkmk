@@ -9,4 +9,4 @@ Level: 1
 Version: 2.0.0i2
 
 This is a new check to monitor temperature levels received from temperature
-sensors of Vutlan EMS devices. This is an SNMP-based check.
+sensors of Vutlan EMS devices.

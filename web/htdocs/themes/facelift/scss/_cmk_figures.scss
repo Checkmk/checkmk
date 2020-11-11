@@ -252,8 +252,12 @@ div.cmk_figure {
     }
   }
 
-  g.title rect.highlighted {
-    fill: $headline-color;
+  g.title rect {
+    fill: $dashlet-inner-bg-color;
+
+    &.highlighted {
+      fill: $headline-color;
+    }
   }
 }
 

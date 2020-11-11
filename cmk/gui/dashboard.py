@@ -1158,9 +1158,10 @@ def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> Non
             title is not None,
             dashlet.show_title(),
     )):
+        title_background = ["highlighted"] if dashlet.show_title() is True else []
         html.div(html.render_span(title),
                  id_="dashlet_title_%d" % dashlet.dashlet_id,
-                 class_=["title"])
+                 class_=["title"] + title_background)
 
     css = ["dashlet_inner"]
     if dashlet.show_background():

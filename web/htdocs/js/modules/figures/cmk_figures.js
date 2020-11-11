@@ -457,6 +457,8 @@ export class FigureBase {
             .join("g")
             .classed("title", true);
 
+        let config = new URLSearchParams(this._post_body);
+        let highlight_container = JSON.parse(config.get("settings")).show_title == true;
         title_component
             .selectAll("rect")
             .data(d => [d])
@@ -465,7 +467,7 @@ export class FigureBase {
             .attr("y", 0)
             .attr("width", this.figure_size.width)
             .attr("height", 24)
-            .classed("highlighted", true);
+            .classed(highlight_container ? "highlighted" : "", true);
 
         title_component
             .selectAll("text")

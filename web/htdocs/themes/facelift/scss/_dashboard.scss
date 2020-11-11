@@ -66,6 +66,9 @@ div.dashlet {
     /* Dashlets with "background" set to True */
     &.background {
       background-color: $dashlet-inner-bg-color;
+      &:first-child {
+        border-radius: $dashlet-title-border-radius;
+      }
     }
 
     > div {
@@ -108,12 +111,15 @@ div.dashlet {
     color: $font-color;
     text-align: center;
     white-space: nowrap;
-    background: $headline-color;
+    background: $body-dashlet-bg-color;
     border: 1px solid $color-table-border;
     border-bottom: none;
     border-radius: $dashlet-title-border-radius;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#4c000000', endColorstr='#4c000000');
+    &.highlighted {
+      background: $headline-color;
+    }
 
     span {
       padding-left: 8px;
@@ -206,14 +212,6 @@ div.dashlet {
         text-decoration: underline;
       }
     }
-  }
-}
-
-.dashlet .dashlet_inner.background {
-  background-color: $dashlet-bg-color;
-
-  &:first-child {
-    border-radius: $dashlet-title-border-radius;
   }
 }
 

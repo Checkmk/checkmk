@@ -7,7 +7,7 @@
 import time
 import pytest  # type: ignore[import]
 
-from cmk.gui.watolib.changes import AuditLogStore
+from cmk.gui.watolib.changes import AuditLogStore, SiteChanges, ChangeSpec
 
 
 class TestAuditLogStore:
@@ -56,3 +56,39 @@ class TestAuditLogStore:
                                                           (archive_num + 1))
 
                 assert archive_path.exists()
+
+
+class TestSiteChanges:
+    @pytest.fixture(name="store")
+    def fixture_store(self, tmp_path):
+        return SiteChanges(tmp_path / ("replication_changes_mysite.mk"))
+
+    def test_read_not_existing(self, store):
+        assert not store.exists()
+        assert list(store.read()) == []
+
+    def test_clear_not_existing(self, store):
+        assert not store.exists()
+        store.clear()
+
+    def test_write(self, store):
+        entry1: ChangeSpec = {"a": "b"}
+        store.append(entry1)
+        assert list(store.read()) == [entry1]
+
+        entry2: ChangeSpec = {"x": "y"}
+        store.write([entry2])
+        assert list(store.read()) == [entry2]
+
+    def test_append(self, store):
+        entry: ChangeSpec = {"a": "b"}
+        store.append(entry)
+        assert list(store.read()) == [entry]
+
+    def test_clear(self, store):
+        entry: ChangeSpec = {"a": "b"}
+        store.append(entry)
+        assert list(store.read()) == [entry]
+
+        store.clear()
+        assert list(store.read()) == []

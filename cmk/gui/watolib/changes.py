@@ -222,6 +222,9 @@ class SiteChanges:
     def make_path(site_id) -> Path:
         return _wato_var_dir() / ("replication_changes_%s.mk" % site_id)
 
+    def exists(self) -> bool:
+        return self._path.exists()
+
     # TODO: Implement this locking as context manager
     def read(self, lock: bool = False) -> List[ChangeSpec]:
         """Parse the site specific changes file

@@ -47,7 +47,7 @@ def parse_if_brocade_lancom(
     ...   '12', '13', 'eth0', [0, 12, 206, 149, 55, 128], 'description']],
     ... [['a', 'b']]],
     ... []))
-    [Interface(index='1', descr='eth0', alias='eth0', type='2', speed=30000000, oper_status='1', in_octets=1, in_ucast=2, in_mcast=3, in_bcast=4, in_discards=5, in_errors=6, out_octets=7, out_ucast=8, out_mcast=9, out_bcast=10, out_discards=11, out_errors=12, out_qlen=13, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='1', descr='eth0', alias='eth0', type='2', speed=30000000, oper_status='1', in_octets=1, in_ucast=2, in_mcast=3, in_bcast=4, in_discards=5, in_errors=6, out_octets=7, out_ucast=8, out_mcast=9, out_bcast=10, out_discards=11, out_errors=12, out_qlen=13, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=8)]
     >>> pprint(parse_if_brocade_lancom([
     ... [['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
     ...   '12', '13', 'eth0', [0, 12, 206, 149, 55, 128], 'description']],
@@ -61,8 +61,8 @@ def parse_if_brocade_lancom(
     ...   '12', '13', 'eth1', [0, 12, 206, 149, 55, 128], 'Logical Network']],
     ... [['eth0', 'migration-fun']]],
     ... ['descr']))
-    [Interface(index='1', descr='eth0 Logical migration-fun', alias='eth0', type='2', speed=30000000, oper_status='1', in_octets=1, in_ucast=2, in_mcast=3, in_bcast=4, in_discards=5, in_errors=6, out_octets=7, out_ucast=8, out_mcast=9, out_bcast=10, out_discards=11, out_errors=12, out_qlen=13, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None),
-     Interface(index='2', descr='eth1 Logical', alias='eth1', type='2', speed=30000000, oper_status='1', in_octets=1, in_ucast=2, in_mcast=3, in_bcast=4, in_discards=5, in_errors=6, out_octets=7, out_ucast=8, out_mcast=9, out_bcast=10, out_discards=11, out_errors=12, out_qlen=13, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='1', descr='eth0 Logical migration-fun', alias='eth0', type='2', speed=30000000, oper_status='1', in_octets=1, in_ucast=2, in_mcast=3, in_bcast=4, in_discards=5, in_errors=6, out_octets=7, out_ucast=8, out_mcast=9, out_bcast=10, out_discards=11, out_errors=12, out_qlen=13, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=8),
+     Interface(index='2', descr='eth1 Logical', alias='eth1', type='2', speed=30000000, oper_status='1', in_octets=1, in_ucast=2, in_mcast=3, in_bcast=4, in_discards=5, in_errors=6, out_octets=7, out_ucast=8, out_mcast=9, out_bcast=10, out_discards=11, out_errors=12, out_qlen=13, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=8)]
     """
 
     if_table, ssid_table = string_table

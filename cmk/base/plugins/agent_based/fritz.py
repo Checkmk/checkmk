@@ -75,13 +75,13 @@ def _section_to_interface(section: Section) -> interfaces.Section:
     ... 'NewTotalBytesReceived': '178074787',
     ... 'NewTotalBytesSent': '40948982',
     ... }))
-    [Interface(index='0', descr='WAN', alias='WAN', type='6', speed=25088000, oper_status='1', in_octets=178074787, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=40948982, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='0', descr='WAN', alias='WAN', type='6', speed=25088000, oper_status='1', in_octets=178074787, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=40948982, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=219023769)]
     >>> pprint(_section_to_interface({
     ... 'NewLayer1DownstreamMaxBitRate': '25088000',
     ... 'NewTotalBytesReceived': '178074787',
     ... 'NewTotalBytesSent': '40948982',
     ... }))
-    [Interface(index='0', descr='WAN', alias='WAN', type='6', speed=25088000, oper_status='4', in_octets=178074787, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=40948982, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='unknown', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='0', descr='WAN', alias='WAN', type='6', speed=25088000, oper_status='4', in_octets=178074787, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=40948982, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='unknown', speed_as_text='', group=None, node=None, admin_status=None, total_octets=219023769)]
     """
     link_stat = section.get('NewLinkStatus')
     if not link_stat:

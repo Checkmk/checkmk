@@ -56,6 +56,12 @@ metric_info["if_out_bps"] = {
     "color": "#0080e0",
 }
 
+metric_info["if_total_bps"] = {
+    "title": _("Total bandwidth (in + out)"),
+    "unit": "bits/s",
+    "color": "#00e060",
+}
+
 metric_info["if_out_octets"] = {
     "title": _("Output Octets"),
     "unit": "bytes/s",

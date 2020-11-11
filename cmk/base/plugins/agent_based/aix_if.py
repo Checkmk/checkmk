@@ -38,8 +38,8 @@ def parse_aix_if(string_table: type_defs.StringTable) -> interfaces.Section:
     ... ['Driver', 'Flags:', 'Up', 'Broadcast', 'Running'],
     ... ['Simplex', '64BitSupport', 'ChecksumOffload'],
     ... ['DataRateSet']]))
-    [Interface(index='1', descr='en0', alias='en0', type='6', speed=20000000000, oper_status='1', in_octets=116117685059, in_ucast=252330366, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=366285856218, out_ucast=201485224, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='\x00\x00\x00\x00\x00\x00', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None),
-     Interface(index='2', descr='en1', alias='en1', type='6', speed=20000000000, oper_status='1', in_octets=70611010508, in_ucast=606173007, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=8701785086915, out_ucast=451364492, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='\x01\x02\x03\x04\x05\x06', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='1', descr='en0', alias='en0', type='6', speed=20000000000, oper_status='1', in_octets=116117685059, in_ucast=252330366, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=366285856218, out_ucast=201485224, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='\x00\x00\x00\x00\x00\x00', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=482403541277),
+     Interface(index='2', descr='en1', alias='en1', type='6', speed=20000000000, oper_status='1', in_octets=70611010508, in_ucast=606173007, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=8701785086915, out_ucast=451364492, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='\x01\x02\x03\x04\x05\x06', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=8772396097423)]
     """
     ifaces = {}
     flags = {}

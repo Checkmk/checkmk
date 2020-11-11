@@ -171,7 +171,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
     ... 'net.unknownProtos': {'vmnic4': [(['0', '0'], 'number')]},
     ... 'net.usage': {'vmnic4': [(['53', '305'], 'kiloBytesPerSecond')]},
     ... }))
-    [Interface(index='0', descr='vmnic4', alias='vmnic4', type='6', speed=10000000000, oper_status='1', in_octets=105472, in_ucast=2437, in_mcast=113, in_bcast=208, in_discards=0, in_errors=0, out_octets=76800, out_ucast=1146, out_mcast=0, out_bcast=2, out_discards=0, out_errors=0, out_qlen=0, phys_address='dQ\x06ðÅÐ', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='0', descr='vmnic4', alias='vmnic4', type='6', speed=10000000000, oper_status='1', in_octets=105472, in_ucast=2437, in_mcast=113, in_bcast=208, in_discards=0, in_errors=0, out_octets=76800, out_ucast=1146, out_mcast=0, out_bcast=2, out_discards=0, out_errors=0, out_qlen=0, phys_address='dQ\x06ðÅÐ', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=182272)]
     """
     rates: Dict[str, Dict[str, int]] = {}
     mac_addresses: Dict[str, str] = {}

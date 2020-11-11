@@ -866,6 +866,10 @@ if_translation = {
         "name": "if_out_bps",
         "scale": 8
     },
+    "total": {
+        "name": "if_total_bps",
+        "scale": 8
+    },
     "indisc": {
         "name": "if_in_discards"
     },

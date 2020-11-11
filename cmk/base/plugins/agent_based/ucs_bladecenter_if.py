@@ -143,8 +143,8 @@ def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.
     ... ['fabricFcSanEp', 'Dn fabric/san/A/phys-slot-1-port-5', 'EpDn sys/switch-A/slot-1/switch-fc/port-5', 'AdminState disabled', 'OperState up', 'PortId 5', 'SwitchId A', 'SlotId 1'],
     ... ['fabricFcSanEp', 'Dn fabric/san/B/phys-slot-1-port-5', 'EpDn sys/switch-B/slot-1/switch-fc/port-5', 'AdminState disabled', 'OperState up', 'PortId 5', 'SwitchId B', 'SlotId 1'],
     ... ]))
-    [Interface(index='0', descr='Slot 1 FC-Switch A Port 5', alias='Slot 1 FC-Switch A Port 5', type='6', speed=0, oper_status='2', in_octets=6269002983258720, in_ucast=3349919871277380, in_mcast=0, in_bcast=0, in_discards=0, in_errors=748131763181460, out_octets=11970108210903360, out_ucast=2992509872856660, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None),
-     Interface(index='1', descr='Slot 1 FC-Switch B Port 5', alias='Slot 1 FC-Switch B Port 5', type='6', speed=0, oper_status='2', in_octets=6000859585097280, in_ucast=3199011900400260, in_mcast=0, in_bcast=0, in_discards=0, in_errors=714588068607510, out_octets=11433477817196880, out_ucast=2858352274430040, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='0', descr='Slot 1 FC-Switch A Port 5', alias='Slot 1 FC-Switch A Port 5', type='6', speed=0, oper_status='2', in_octets=6269002983258720, in_ucast=3349919871277380, in_mcast=0, in_bcast=0, in_discards=0, in_errors=748131763181460, out_octets=11970108210903360, out_ucast=2992509872856660, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None, total_octets=18239111194162080),
+     Interface(index='1', descr='Slot 1 FC-Switch B Port 5', alias='Slot 1 FC-Switch B Port 5', type='6', speed=0, oper_status='2', in_octets=6000859585097280, in_ucast=3199011900400260, in_mcast=0, in_bcast=0, in_discards=0, in_errors=714588068607510, out_octets=11433477817196880, out_ucast=2858352274430040, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None, total_octets=17434337402294160)]
     """
     data = ucs_bladecenter.generic_parse(string_table)
     converted = []
@@ -195,19 +195,13 @@ def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.
                 speed=interfaces.saveint(speed),
                 oper_status=is_up and "1" or "2",
                 group=group,
-            )
-
-            for iface_field, ctr_keys in _UCS_FIELDS_TO_IF_FIELDS[what].items():
-                ctr_value = 0
                 # On summing keys there is a possiblility to overlook some counter wraps.
                 # Right now, it's only Recv-Errors (therefore unlikely). We can live with that
-                for ctr_class, ctr_key in ctr_keys:  # compute value from data
-                    ctr_value += int(values[ctr_class].get(ctr_key, "0"))
-                setattr(
-                    iface,
-                    iface_field,
-                    ctr_value,
-                )
+                **{  # type: ignore[arg-type]
+                    iface_field: sum(
+                        int(values[ctr_class].get(ctr_key, "0")) for ctr_class, ctr_key in ctr_keys)
+                    for iface_field, ctr_keys in _UCS_FIELDS_TO_IF_FIELDS[what].items()
+                })
 
             converted.append(iface)
 

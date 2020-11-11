@@ -5,10 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
-from dataclasses import (
-    asdict,
-    dataclass,
-)
+from dataclasses import (asdict, dataclass)
 import time
 from typing import (
     Any,
@@ -119,6 +116,7 @@ class Interface:
     group: Optional[str] = None
     node: Optional[str] = None
     admin_status: Optional[str] = None
+    total_octets: float = 0
 
     def __post_init__(self) -> None:
         self.finalize()
@@ -133,6 +131,8 @@ class Interface:
 
         self.descr = cleanup_if_strings(self.descr)
         self.alias = cleanup_if_strings(self.alias)
+
+        self.total_octets = self.in_octets + self.out_octets
 
 
 Section = Sequence[Interface]
@@ -257,6 +257,7 @@ def get_traffic_levels(params: type_defs.Parameters) -> GeneralTrafficLevels:
         traffic_levels = new_traffic
     else:
         traffic_levels = params.get('traffic', [])
+        traffic_levels += params.get('total_traffic', [])
 
     # Now bring the levels in a structure which is easily usable for the check
     # and also convert direction="both" to single in/out entries
@@ -265,6 +266,8 @@ def get_traffic_levels(params: type_defs.Parameters) -> GeneralTrafficLevels:
         ('out', 'upper'): (None, (None, None)),
         ('in', 'lower'): (None, (None, None)),
         ('out', 'lower'): (None, (None, None)),
+        ('total', 'lower'): (None, (None, None)),
+        ('total', 'upper'): (None, (None, None)),
     }
     for level in traffic_levels:
         traffic_dir = level[0]
@@ -287,9 +290,9 @@ SpecificTrafficLevels = Dict[Union[Tuple[str, str], Tuple[str, str, str]], Any]
 def get_specific_traffic_levels(
     general_traffic_levels: GeneralTrafficLevels,
     unit: str,
-    ref_speed: Optional[float],
-    assumed_speed_in: Optional[float],
-    assumed_speed_out: Optional[float],
+    speed_in: Optional[float],
+    speed_out: Optional[float],
+    speed_total: Optional[float],
 ) -> SpecificTrafficLevels:
     traffic_levels: SpecificTrafficLevels = {}
     for (traffic_dir, up_or_low), (level_type, levels) in general_traffic_levels.items():
@@ -308,21 +311,33 @@ def get_specific_traffic_levels(
                 assert isinstance(level_value, int)
                 level_value = level_value // 8
             elif level_type == 'perc':
-                # convert percentages to absolute values. Use either the assumed speed
-                # or the reference speed. When none of both are available, ignore
-                # the percentual levels
                 assert isinstance(level_value, float)
-                if traffic_dir == 'in' and assumed_speed_in:
-                    level_value = level_value / 100.0 * assumed_speed_in / 8
-                elif traffic_dir == 'out' and assumed_speed_out:
-                    level_value = level_value / 100.0 * assumed_speed_out / 8
-                elif ref_speed:
-                    level_value = level_value / 100.0 * ref_speed
-                else:
-                    level_value = None
+                level_value = _get_scaled_traffic_level(traffic_dir, level_value, speed_in,
+                                                        speed_out, speed_total)
 
             traffic_levels[(traffic_dir, up_or_low, what)] = level_value  # bytes
     return traffic_levels
+
+
+def _get_scaled_traffic_level(
+    direction: str,
+    level_value: float,
+    speed_in: Optional[float],
+    speed_out: Optional[float],
+    speed_total: Optional[float],
+) -> Optional[float]:
+    """convert percentages to absolute values.
+    """
+    def _scale(speed: float) -> float:
+        return level_value / 100.0 * speed
+
+    for direction_id, speed in zip(("in", "out", "total"), (speed_in, speed_out, speed_total)):
+        if direction == direction_id:
+            if speed is None:
+                return None
+            return _scale(speed)
+
+    return None
 
 
 def _uses_description_and_alias(item_appearance: str) -> Tuple[bool, bool]:
@@ -759,7 +774,7 @@ def _check_grouped_ifs(
             # Only these values are packed into counters
             # We might need to enlarge this table
             # However, more values leads to more MKCounterWrapped...
-            for name, counter in [
+            rate_counter = [
                 ("in", interface.in_octets),
                 ("inucast", interface.in_ucast),
                 ("inmcast", interface.in_mcast),
@@ -772,7 +787,10 @@ def _check_grouped_ifs(
                 ("outbcast", interface.out_bcast),
                 ("outdisc", interface.out_discards),
                 ("outerr", interface.out_errors),
-            ]:
+            ]
+            if "total_traffic" in params:
+                rate_counter.append(("total", interface.total_octets))
+            for name, counter in rate_counter:
                 try:
                     # We make sure that every group member has valid rates before adding up the
                     # counters
@@ -803,6 +821,8 @@ def _check_grouped_ifs(
         cumulated_interface.out_discards += interface.out_discards
         cumulated_interface.out_errors += interface.out_errors
         cumulated_interface.out_qlen += interface.out_qlen
+        cumulated_interface.total_octets += interface.total_octets
+
         # This is the fallback ifType if None is set in the parameters
         cumulated_interface.type = interface.type
 
@@ -1035,6 +1055,8 @@ def check_single_interface(
     # Convert the traffic related levels to a common format
     general_traffic_levels = get_traffic_levels(params)
 
+    monitor_total_traffic = "total_traffic" in params
+
     if group_members:
         # The detailed group info is added later on
         info_interface = group_name
@@ -1146,14 +1168,15 @@ def check_single_interface(
     elif targetspeed:
         ref_speed = targetspeed / 8.0
 
-    # Convert the traffic levels to interface specific levels, for example where the percentage
-    # levels are converted to absolute levels or assumed speeds of an interface are treated correctly
-    traffic_levels = get_specific_traffic_levels(general_traffic_levels, unit, ref_speed,
-                                                 assumed_speed_in, assumed_speed_out)
-
     # Speed in bytes
     speed_b_in = (assumed_speed_in // 8) if assumed_speed_in else ref_speed
     speed_b_out = (assumed_speed_out // 8) if assumed_speed_out else ref_speed
+    speed_b_total = speed_b_in + speed_b_out if speed_b_in and speed_b_out else None
+
+    # Convert the traffic levels to interface specific levels, for example where the percentage
+    # levels are converted to absolute levels or assumed speeds of an interface are treated correctly
+    traffic_levels = get_specific_traffic_levels(general_traffic_levels, unit, speed_b_in,
+                                                 speed_b_out, speed_b_total)
 
     #
     # All internal values within this check after this point are bytes, not bits!
@@ -1171,26 +1194,29 @@ def check_single_interface(
     rates = []
     caught_ignore_results_error = False
     metrics = []
-    for name, counter, warn, crit, mmin, mmax in [
-        ("in", interface.in_octets, traffic_levels[('in', 'upper', 'warn')],
-         traffic_levels[('in', 'upper', 'crit')], 0, speed_b_in),
-        ("inmcast", interface.in_mcast, mcast_warn, mcast_crit, None, None),
-        ("inbcast", interface.in_bcast, bcast_warn, bcast_crit, None, None),
-        ("inucast", interface.in_ucast, None, None, None, None),
-        ("innucast", saveint(interface.in_mcast) + saveint(interface.in_bcast), nucast_warn,
-         nucast_crit, None, None),
-        ("indisc", interface.in_discards, disc_warn, disc_crit, None, None),
-        ("inerr", interface.in_errors, err_in_warn, err_in_crit, None, None),
-        ("out", interface.out_octets, traffic_levels[('out', 'upper', 'warn')],
-         traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
-        ("outmcast", interface.out_mcast, mcast_warn, mcast_crit, None, None),
-        ("outbcast", interface.out_bcast, bcast_warn, bcast_crit, None, None),
-        ("outucast", interface.out_ucast, None, None, None, None),
-        ("outnucast", saveint(interface.out_mcast) + saveint(interface.out_bcast), nucast_warn,
-         nucast_crit, None, None),
-        ("outdisc", interface.out_discards, disc_warn, disc_crit, None, None),
-        ("outerr", interface.out_errors, err_out_warn, err_out_crit, None, None),
-    ]:
+    metric_content = [("in", interface.in_octets, traffic_levels[('in', 'upper', 'warn')],
+                       traffic_levels[('in', 'upper', 'crit')], 0, speed_b_in),
+                      ("inmcast", interface.in_mcast, mcast_warn, mcast_crit, None, None),
+                      ("inbcast", interface.in_bcast, bcast_warn, bcast_crit, None, None),
+                      ("inucast", interface.in_ucast, None, None, None, None),
+                      ("innucast", saveint(interface.in_mcast) + saveint(interface.in_bcast),
+                       nucast_warn, nucast_crit, None, None),
+                      ("indisc", interface.in_discards, disc_warn, disc_crit, None, None),
+                      ("inerr", interface.in_errors, err_in_warn, err_in_crit, None, None),
+                      ("out", interface.out_octets, traffic_levels[('out', 'upper', 'warn')],
+                       traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
+                      ("outmcast", interface.out_mcast, mcast_warn, mcast_crit, None, None),
+                      ("outbcast", interface.out_bcast, bcast_warn, bcast_crit, None, None),
+                      ("outucast", interface.out_ucast, None, None, None, None),
+                      ("outnucast", saveint(interface.out_mcast) + saveint(interface.out_bcast),
+                       nucast_warn, nucast_crit, None, None),
+                      ("outdisc", interface.out_discards, disc_warn, disc_crit, None, None),
+                      ("outerr", interface.out_errors, err_out_warn, err_out_crit, None, None)]
+    if monitor_total_traffic:
+        metric_content.append(
+            ("total", interface.total_octets, traffic_levels[('total', 'upper', 'warn')],
+             traffic_levels[('total', 'upper', 'crit')], 0, speed_b_total))
+    for name, counter, warn, crit, mmin, mmax in metric_content:
         try:
             rate = _get_rate(
                 value_store,
@@ -1230,11 +1256,13 @@ def check_single_interface(
         bandwidth_renderer = render.iobandwidth
 
     # loop over incoming and outgoing traffic
-    for what, traffic, mrate, brate, urate, nurate, discrate, errorrate, speed in [
-        ("in", rates[0], rates[1], rates[2], rates[3], rates[4], rates[5], rates[6], speed_b_in),
-        ("out", rates[7], rates[8], rates[9], rates[10], rates[11], rates[12], rates[13],
-         speed_b_out)
-    ]:
+    bandwidth_content = [
+        ("in", rates[0], speed_b_in),
+        ("out", rates[7], speed_b_out),
+    ]
+    if monitor_total_traffic:
+        bandwidth_content.append(("total", rates[14], speed_b_total))
+    for what, traffic, speed in bandwidth_content:
         if (what, 'predictive') in traffic_levels:
             levels_predictive = traffic_levels[(what, 'predictive')]
             bw_warn, bw_crit = None, None
@@ -1303,6 +1331,10 @@ def check_single_interface(
         else:
             yield result
 
+    for what, mrate, brate, urate, nurate, discrate, errorrate in [
+        ("in", rates[1], rates[2], rates[3], rates[4], rates[5], rates[6]),
+        ("out", rates[8], rates[9], rates[10], rates[11], rates[12], rates[13])
+    ]:
         # check error, broadcast, multicast and non-unicast packets and discards
         pacrate = urate + nurate + errorrate
         if pacrate > 0.0:  # any packets transmitted?

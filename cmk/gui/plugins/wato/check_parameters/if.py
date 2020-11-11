@@ -768,6 +768,20 @@ def _parameter_valuespec_if():
                      help=_("Setting levels on the used bandwidth is optional. If you do set "
                             "levels you might also consider using averaging."),
                  )),
+                ("total_traffic",
+                 ListOf(
+                     CascadingDropdown(title=_("Direction"),
+                                       orientation="horizontal",
+                                       choices=[
+                                           ('total', _("Total traffic"), vs_interface_traffic()),
+                                       ]),
+                     title=_("Used total bandwidth (in + out) (minimum or maximum traffic)"),
+                     help=
+                     _("By activating this item, the sum of incoming and outgoing traffic will "
+                       "be monitored via a seperate metric. Setting levels on the used total bandwidth "
+                       "is optional. If you do set levels you might also consider using averaging."
+                      ),
+                 )),
                 ("average",
                  Integer(
                      title=_("Average values for used bandwidth"),

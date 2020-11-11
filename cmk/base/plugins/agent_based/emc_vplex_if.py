@@ -23,7 +23,7 @@ def parse_emc_vplex_if(string_table: List[type_defs.StringTable]) -> interfaces.
     ... [['director-1-1-A', '128.221.252.35']],
     ... [['A0-FC00', '159850409786880', '118814791148032', '128.221.252.35.1']],
     ... []]))
-    [Interface(index='1', descr='A0-FC00', alias='director-1-1-A A0-FC00', type='', speed=0, oper_status='1', in_octets=159850409786880, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=118814791148032, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='1', descr='A0-FC00', alias='director-1-1-A A0-FC00', type='', speed=0, oper_status='1', in_octets=159850409786880, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=0, out_octets=118814791148032, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=278665200934912)]
     """
     directors = {}
     for director, ip in string_table[0]:

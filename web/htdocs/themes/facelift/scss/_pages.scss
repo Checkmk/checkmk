@@ -825,7 +825,7 @@ div.snapin textarea,
   height: auto;
   padding: 3px 6px;
   color: $font-color;
-  background-color: $bg-color;
+  background-color: $input-bg-color;
   background-image: none;
   border-radius: $theme-border-radius;
   box-shadow: none;
@@ -833,6 +833,10 @@ div.snapin textarea,
 
 span.select2 .select2-selection {
   background-color: $select2-bg-color;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 input[type="text"],

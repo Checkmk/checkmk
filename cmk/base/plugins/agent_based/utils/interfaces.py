@@ -1353,18 +1353,20 @@ def check_single_interface(
                             notice_only=True,
                         )
 
-        for _txt, _rate, _warn, _crit in [("non-unicast packets", nurate, nucast_warn, nucast_crit),
-                                          ("discards", discrate, disc_warn, disc_crit)]:
+        for name, rate, warn, crit in [
+            ("Non-unicast packets", nurate, nucast_warn, nucast_crit),
+            ("Discards", discrate, disc_warn, disc_crit),
+        ]:
 
-            if _crit is not None and _warn is not None:
+            if crit is not None and warn is not None:
                 yield from check_levels(
-                    _rate,
-                    levels_upper=(_warn, _crit),
-                    metric_name=_txt,
+                    rate,
+                    levels_upper=(warn, crit),
                     render_func=lambda x: "%.2f/s" % x,
-                    label="%s %s" % (what, _txt),
+                    label=f"{name} {what}",
                     notice_only=True,
                 )
+
     yield _check_speed(interface, targetspeed)
 
 

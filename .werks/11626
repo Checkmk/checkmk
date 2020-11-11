@@ -1,0 +1,14 @@
+Title: if-checks: handle levels for non-unicast packets and discards correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605110022
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+When levels on non-unicast packets or discards are configured and
+exceeded, the interface checks are supposed to produce additional
+output, but not additional metrics. This was not the case, which
+led to a bug and crashed the if-checks. This has been fixed.

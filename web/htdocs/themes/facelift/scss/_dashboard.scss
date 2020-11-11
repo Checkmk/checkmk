@@ -407,6 +407,9 @@ div.dashlet.edit {
 
   /* position anchors */
   $corner-size: 26px;
+  $corner-size-on: 40px;
+  $dashlet-editor-free: #4e5d69;
+  $dashlet-editor-active: #13d389;
   .anchor {
     position: absolute;
     cursor: auto;
@@ -416,43 +419,70 @@ div.dashlet.edit {
     // Edit with this tricks
     // https://css-tricks.com/the-shapes-of-css/#triangle-top-left-shape
 
+    &.on div {
+      position: absolute;
+      border-radius: 12px;
+      padding: 2px 6px;
+      text-align: center;
+      background-color: $dashlet-editor-active;
+      color: #172127;
+    }
+
     &.anchor0 {
       top: 4px;
       left: 4px;
-      border-top: $corner-size solid #13d389;
+      border-top: $corner-size solid $dashlet-editor-free;
       border-right: $corner-size solid transparent;
-      &.off {
-        border-top: $corner-size solid #4e5d69;
+      &.on {
+        border-top: $corner-size-on solid $dashlet-editor-active;
+        border-right: $corner-size-on solid transparent;
+        & div {
+          left: $corner-size;
+          top: -$corner-size;
+        }
       }
     }
 
     &.anchor1 {
       top: 4px;
       right: 4px;
-      border-top: $corner-size solid #13d389;
+      border-top: $corner-size solid $dashlet-editor-free;
       border-left: $corner-size solid transparent;
-      &.off {
-        border-top: $corner-size solid #4e5d69;
+      &.on {
+        border-top: $corner-size-on solid $dashlet-editor-active;
+        border-left: $corner-size-on solid transparent;
+        & div {
+          right: $corner-size;
+          top: -$corner-size;
+        }
       }
     }
 
     &.anchor2 {
       right: 4px;
       bottom: 4px;
-      border-bottom: $corner-size solid #13d389;
+      border-bottom: $corner-size solid $dashlet-editor-free;
       border-left: $corner-size solid transparent;
-      &.off {
-        border-bottom: $corner-size solid #4e5d69;
+      &.on {
+        border-bottom: $corner-size-on solid $dashlet-editor-active;
+        border-left: $corner-size-on solid transparent;
+        & div {
+          right: $corner-size;
+        }
       }
     }
 
     &.anchor3 {
       bottom: 4px;
       left: 4px;
-      border-bottom: $corner-size solid #13d389;
+      border-bottom: $corner-size solid $dashlet-editor-free;
       border-right: $corner-size solid transparent;
-      &.off {
-        border-bottom: $corner-size solid #4e5d69;
+      &.on {
+        border-bottom: $corner-size-on solid $dashlet-editor-active;
+        border-right: $corner-size-on solid transparent;
+        & div {
+          left: $corner-size;
+        }
       }
     }
   }

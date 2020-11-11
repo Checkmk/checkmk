@@ -526,12 +526,17 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
 
         // Create the anchors
         for (let i = 0; i < 4; i++) {
-            let anchor = create_a_button("anchor anchor" + i, "Currently growing from here", () =>
-                toggle_anchor(nr, i)
+            let anchor = create_a_button(
+                "anchor anchor" + i,
+                "Click to start growing from here",
+                () => toggle_anchor(nr, i)
             );
-            if (anchor_id != i) {
-                anchor.className += " off";
-                anchor.title = "Click to start growing from here";
+            if (anchor_id == i) {
+                anchor.className += " on";
+                anchor.title = "Currently growing from here";
+                let helper = document.createElement("div");
+                helper.innerHTML = "Anchor";
+                anchor.appendChild(helper);
             }
             controls.appendChild(anchor);
         }

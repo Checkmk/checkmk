@@ -3,7 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checkmk wide type definitions"""
 
 import abc
 import enum
@@ -26,7 +25,6 @@ from typing import (
     TypeVar,
     Union,
 )
-import cmk.utils._type_defs_result as result  # pylint: disable=unused-import
 
 HostName = str
 HostAddress = str

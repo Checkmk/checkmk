@@ -442,10 +442,13 @@ function toggle_grid() {
 //
 // render top/bottom or left/right areas depending on dimension i
 function render_resize_controls(controls, i) {
-    for (var a = 0; a < 2; a++) {
-        var resize = document.createElement("div");
+    for (let a = 0; a < 2; a++) {
+        const resize = document.createElement("div");
         resize.className = "resize resize" + i + " resize" + i + "_" + a;
         controls.appendChild(resize);
+        const indication = document.createElement("div");
+        indication.className = "resize resize" + i + " resize" + i + "_" + a + " circle_handle";
+        controls.appendChild(indication);
     }
 }
 

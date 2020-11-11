@@ -469,40 +469,46 @@ div#dashboard.grid {
   cursor: pointer;
   border-radius: 12px;
   padding: 2px 6px;
-}
-
-.sizer.grow {
-  background-color: #10181d;
-}
-
-.sizer.abs {
-  background-color: #13d389;
+  text-align: center;
+  &.grow {
+    background-color: #10181d;
+  }
+  &.abs {
+    background-color: #13d389;
+    color: #172127;
+  }
 }
 
 .sizer0 {
-  top: 50%;
+  margin: auto;
+  top: 0;
+  bottom: 0;
+  height: 1.5em;
 
   &.anchor0,
   &.anchor3 {
-    right: 15px;
+    right: 27px;
   }
 
   &.anchor1,
   &.anchor2 {
-    left: 15px;
+    left: 27px;
   }
 }
 .sizer1 {
-  left: 50%;
+  margin: auto;
+  left: 0;
+  right: 0;
+  width: 90px;
 
   &.anchor0,
   &.anchor1 {
-    bottom: 15px;
+    bottom: 27px;
   }
 
   &.anchor2,
   &.anchor3 {
-    top: 15px;
+    top: 27;
   }
 }
 
@@ -517,6 +523,30 @@ div#dashboard.grid {
   border: 1px solid #13d389;
   border-top: 0;
   border-bottom: 0;
+  background-color: #13d389;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+
+  &.resize0_0 {
+    left: -1px;
+    cursor: w-resize;
+    &.circle_handle {
+      width: 16px;
+      height: 32px;
+      border-radius: 0 32px 32px 0;
+    }
+  }
+
+  &.resize0_1 {
+    right: -1px;
+    cursor: e-resize;
+    &.circle_handle {
+      width: 16px;
+      height: 32px;
+      border-radius: 32px 0 0 32px;
+    }
+  }
 }
 
 .resize1 {
@@ -524,26 +554,30 @@ div#dashboard.grid {
   border: 1px solid #13d389;
   border-right: 0;
   border-left: 0;
-}
-
-.resize0_0 {
+  background-color: #13d389;
   left: 0;
-  cursor: w-resize;
-}
-
-.resize0_1 {
   right: 0;
-  cursor: e-resize;
-}
+  margin: auto;
 
-.resize1_0 {
-  top: 0;
-  cursor: n-resize;
-}
+  &.resize1_0 {
+    top: -1px;
+    cursor: n-resize;
+    &.circle_handle {
+      width: 32px;
+      height: 16px;
+      border-radius: 0 0 32px 32px;
+    }
+  }
 
-.resize1_1 {
-  bottom: 0;
-  cursor: s-resize;
+  &.resize1_1 {
+    bottom: -1px;
+    cursor: s-resize;
+    &.circle_handle {
+      width: 32px;
+      height: 16px;
+      border-radius: 32px 32px 0 0;
+    }
+  }
 }
 
 .resize_corner {

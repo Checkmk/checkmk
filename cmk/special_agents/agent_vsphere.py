@@ -1810,6 +1810,7 @@ def get_section_vm(vms, time_reference):
                 'time_reference %d' % time_reference
             ]
             section_lines.extend("%s %s" % entry for entry in sorted(vm_data.items()))
+    section_lines += ["<<<<>>>>"]
     return section_lines
 
 

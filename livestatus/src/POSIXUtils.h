@@ -15,6 +15,7 @@
 #include <array>
 #include <cerrno>
 #include <chrono>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -129,6 +130,10 @@ private:
     bool try_lock_until_impl(const std::chrono::steady_clock::time_point &time,
                              short l_type, const char *msg);
 };
+
+ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,
+                              std::chrono::nanoseconds timeout,
+                              const std::function<bool()> &pred);
 
 ssize_t writeWithTimeout(int fd, std::string_view buffer,
                          std::chrono::nanoseconds timeout);

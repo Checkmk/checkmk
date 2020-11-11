@@ -150,10 +150,11 @@ bool file_lock::try_lock_until_impl(const steady_clock::time_point &time,
     } while (true);
 }
 
-ssize_t writeWithTimeout(int fd, std::string_view buffer,
-                         std::chrono::nanoseconds timeout) {
+ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,
+                              std::chrono::nanoseconds timeout,
+                              const std::function<bool()> &pred) {
     auto size = buffer.size();
-    while (!buffer.empty()) {
+    while (!buffer.empty() && pred()) {
         auto ret = ::write(fd, buffer.data(), buffer.size());
         if (ret == -1 && errno == EWOULDBLOCK) {
             ret = Poller{}.wait(timeout, fd, PollEvents::out)
@@ -167,4 +168,9 @@ ssize_t writeWithTimeout(int fd, std::string_view buffer,
         }
     }
     return size;
+}
+
+ssize_t writeWithTimeout(int fd, std::string_view buffer,
+                         std::chrono::nanoseconds timeout) {
+    return writeWithTimeoutWhile(fd, buffer, timeout, []() { return true; });
 }

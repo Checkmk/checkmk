@@ -32,7 +32,6 @@ from cmk.gui.valuespec import (
     Integer,
     ListOf,
     Percentage,
-    TextAscii,
     Tuple,
 )
 
@@ -41,6 +40,8 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_database_file
 
 
 def levels_absolute_or_dynamic(name, value):
@@ -104,7 +105,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_datafiles",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Database Name"), allow_empty=False),
+        item_spec=mssql_item_spec_instance_database_file,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_datafiles,
         title=lambda: _("MSSQL Datafile Sizes"),

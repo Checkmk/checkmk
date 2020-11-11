@@ -7,5 +7,6 @@
 
 from . import result
 from ._misc import *  # TODO(ML): We should clean this up some day.
+from .bakery import *
 from .pluginname import *
 from .protocol import *

@@ -322,7 +322,7 @@ class ActivateChanges:
         changes = {}
 
         for site_id in activation_sites():
-            site_changes = SiteChanges(site_id).load()
+            site_changes = SiteChanges(SiteChanges.make_path(site_id)).read()
             self._changes_by_site[site_id] = site_changes
 
             if not site_changes:
@@ -341,13 +341,13 @@ class ActivateChanges:
         self._changes = sorted(changes.items(), key=lambda k_v: k_v[1]["time"])
 
     def confirm_site_changes(self, site_id):
-        SiteChanges(site_id).clear()
+        SiteChanges(SiteChanges.make_path(site_id)).clear()
         cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     def get_changes_estimate(self) -> Optional[str]:
         changes_counter = 0
         for site_id in activation_sites():
-            changes_counter += len(SiteChanges(site_id).load())
+            changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
             if changes_counter > 10:
                 return _("10+ changes")
         if changes_counter == 1:
@@ -1645,22 +1645,22 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return sorted(list(domains))
 
     def _confirm_activated_changes(self):
-        site_changes = SiteChanges(self._site_id)
-        changes = site_changes.load(lock=True)
+        site_changes = SiteChanges(SiteChanges.make_path(self._site_id))
+        changes = site_changes.read(lock=True)
 
         try:
             changes = changes[len(self._site_changes):]
         finally:
-            site_changes.save(changes)
+            site_changes.write(changes)
 
     def _confirm_synchronized_changes(self):
-        site_changes = SiteChanges(self._site_id)
-        changes = site_changes.load(lock=True)
+        site_changes = SiteChanges(SiteChanges.make_path(self._site_id))
+        changes = site_changes.read(lock=True)
         try:
             for change in changes:
                 change["need_sync"] = False
         finally:
-            site_changes.save(changes)
+            site_changes.write(changes)
 
     def _set_result(self, phase, status_text, status_details=None, state=STATE_SUCCESS):
         self._phase = phase

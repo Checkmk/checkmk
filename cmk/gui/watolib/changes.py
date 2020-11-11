@@ -200,7 +200,7 @@ class ActivateChangesWriter:
         # escaped / allowed HTML and strings to be escaped.
         text = escaping.escape_text(text)
 
-        SiteChanges(site_id).save_change({
+        SiteChanges(SiteChanges.make_path(site_id)).append({
             "id": change_id,
             "action_name": action_name,
             "text": "%s" % text,
@@ -215,21 +215,20 @@ class ActivateChangesWriter:
 
 class SiteChanges:
     """Manage persisted changes of a single site"""
-    def __init__(self, site_id: SiteId) -> None:
-        super(SiteChanges, self).__init__()
-        self._site_id = site_id
+    def __init__(self, path: Path) -> None:
+        self._path = path
 
-    def _site_changes_path(self) -> Path:
-        return _wato_var_dir() / ("replication_changes_%s.mk" % self._site_id)
+    @staticmethod
+    def make_path(site_id) -> Path:
+        return _wato_var_dir() / ("replication_changes_%s.mk" % site_id)
 
     # TODO: Implement this locking as context manager
-    def load(self, lock: bool = False) -> List[ChangeSpec]:
+    def read(self, lock: bool = False) -> List[ChangeSpec]:
         """Parse the site specific changes file
 
         The file format has been choosen to be able to append changes without
-        much cost. This is just a intermmediate format for 1.4.x. In 1.5 we will
-        reimplement WATO changes and this very specific file format will vanish."""
-        path = self._site_changes_path()
+        much cost."""
+        path = self._path
 
         if lock:
             store.aquire_lock(path)
@@ -252,16 +251,16 @@ class SiteChanges:
 
         return changes
 
-    def save(self, changes: List[ChangeSpec]) -> None:
+    def write(self, changes: List[ChangeSpec]) -> None:
         # First truncate the file
-        with self._site_changes_path().open("wb"):
+        with self._path.open("wb"):
             pass
 
         for change_spec in changes:
-            self.save_change(change_spec)
+            self.append(change_spec)
 
-    def save_change(self, change_spec: ChangeSpec) -> None:
-        path = self._site_changes_path()
+    def append(self, change_spec: ChangeSpec) -> None:
+        path = self._path
         try:
             store.aquire_lock(path)
 
@@ -280,7 +279,7 @@ class SiteChanges:
 
     def clear(self) -> None:
         try:
-            self._site_changes_path().unlink()
+            self._path.unlink()
         except OSError as e:
             if e.errno == errno.ENOENT:
                 pass  # Not existant -> OK

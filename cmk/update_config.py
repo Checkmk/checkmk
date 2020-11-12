@@ -695,7 +695,14 @@ class UpdateConfig:
                 splitted = line.rstrip().split(None, 4)
                 if len(splitted) == 5 and splitted[0].isdigit():
                     t, linkinfo, user, action, text = splitted
-                    yield AuditLogStore.Entry(int(t), linkinfo, user, action, text)
+                    yield AuditLogStore.Entry(
+                        time=int(t),
+                        linkinfo=linkinfo,
+                        user_id=user,
+                        action=action,
+                        text=text,
+                        diff_text=None,
+                    )
 
 
 def _set_show_mode(users, user_id):

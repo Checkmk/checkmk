@@ -7,7 +7,9 @@
 import time
 import pytest  # type: ignore[import]
 
-from cmk.gui.watolib.changes import AuditLogStore, SiteChanges, ChangeSpec
+from testlib import on_time
+from cmk.utils.type_defs import UserId
+from cmk.gui.watolib.changes import AuditLogStore, SiteChanges, ChangeSpec, log_audit
 
 
 class TestAuditLogStore:
@@ -24,12 +26,12 @@ class TestAuditLogStore:
         store.clear()
 
     def test_append(self, store):
-        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch")
+        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
 
     def test_clear(self, store):
-        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch")
+        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -40,7 +42,7 @@ class TestAuditLogStore:
         assert archive_path.exists()
 
     def test_clear_produced_archive_file_per_clear(self, store):
-        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch")
+        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch", None)
 
         for n in range(5):
             store.append(entry)
@@ -92,3 +94,35 @@ class TestSiteChanges:
 
         store.clear()
         assert list(store.read()) == []
+
+
+def test_log_audit_with_object_diff():
+    old = {
+        "a": "b",
+        "b": "c",
+    }
+    new = {
+        "b": "c",
+    }
+
+    with on_time('2018-04-15 16:50', 'CET'):
+        log_audit(
+            linkinfo=None,
+            action="bla",
+            message="Message",
+            user_id=UserId("calvin"),
+            old_object=old,
+            new_object=new,
+        )
+
+    store = AuditLogStore(AuditLogStore.make_path())
+    assert store.read() == [
+        AuditLogStore.Entry(
+            time=1523811000,
+            linkinfo='-',
+            user_id='calvin',
+            action='bla',
+            text='Message',
+            diff_text='Attribute "a" with value "b" removed.',
+        ),
+    ]

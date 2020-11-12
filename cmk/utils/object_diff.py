@@ -9,11 +9,8 @@ from typing import Any
 from deepdiff import DeepDiff  # type: ignore[import]
 from deepdiff.helper import get_type  # type: ignore[import]
 
-ObjectDiff = str
-
 __all__ = [
     "make_object_diff",
-    "ObjectDiff",
 ]
 
 

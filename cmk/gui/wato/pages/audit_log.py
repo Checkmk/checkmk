@@ -448,12 +448,17 @@ class ModeAuditLog(WatoMode):
             _('Text'),
         )
         html.write(','.join(titles) + '\n')
-        for t, linkinfo, user, action, text in self._parse_audit_log():
-            if linkinfo == '-':
-                linkinfo = ''
+        for entry in self._parse_audit_log():
+            linkinfo = '' if entry.linkinfo == '-' else entry.linkinfo
 
-            html.write_text(','.join((render.date(int(t)), render.time_of_day(int(t)), linkinfo,
-                                      user, action, '"' + text + '"')) + '\n')
+            html.write_text(','.join((
+                render.date(int(entry.time)),
+                render.time_of_day(int(entry.time)),
+                linkinfo,
+                entry.user_id,
+                entry.action,
+                '"' + entry.text + '"',
+            )) + '\n')
         return FinalizeRequest(code=200)
 
     def _parse_audit_log(self) -> List[AuditLogStore.Entry]:

@@ -17,6 +17,7 @@ from pathlib import Path
 import cmk.utils
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
+from cmk.utils.object_diff import make_object_diff
 
 import cmk.gui.utils
 from cmk.gui import config, escaping
@@ -144,6 +145,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
         ("user_id", str),
         ("action", str),
         ("text", str),
+        ("diff_text", Optional[str]),
     ])
 
     @staticmethod
@@ -164,7 +166,6 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
             return
 
         newpath = self._path.with_name(self._path.name + time.strftime(".%Y-%m-%d"))
-        # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
         if newpath.exists():
             n = 1
             while True:
@@ -180,18 +181,20 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
 def _log_entry(linkinfo: LinkInfoObject,
                action: str,
                message: str,
-               user_id: Optional[UserId] = None) -> None:
+               user_id: Optional[UserId] = None,
+               diff_text: Optional[str] = None) -> None:
     if linkinfo and not isinstance(linkinfo, str):
         link = linkinfo.linkinfo()
     else:
         link = linkinfo
 
     entry = AuditLogStore.Entry(
-        int(time.time()),
-        link or "-",
-        str(user_id or config.user.id or "-"),
-        action,
-        message.replace("\n", "\\n"),
+        time=int(time.time()),
+        linkinfo=link or "-",
+        user_id=str(user_id or config.user.id or "-"),
+        action=action,
+        text=message.replace("\n", "\\n"),
+        diff_text=diff_text,
     )
 
     AuditLogStore(AuditLogStore.make_path()).append(entry)
@@ -200,7 +203,14 @@ def _log_entry(linkinfo: LinkInfoObject,
 def log_audit(linkinfo: LinkInfoObject,
               action: str,
               message: LogMessage,
-              user_id: Optional[UserId] = None) -> None:
+              user_id: Optional[UserId] = None,
+              old_object: Any = None,
+              new_object: Any = None) -> None:
+
+    diff_text: Optional[str] = None
+    if old_object is not None and new_object is not None:
+        diff_text = make_object_diff(old_object, new_object)
+
     if config.wato_use_git:
         if isinstance(message, HTML):
             message = escaping.strip_tags(message.value)
@@ -210,7 +220,7 @@ def log_audit(linkinfo: LinkInfoObject,
     # place where we can distinguish between HTML() encapsulated (already)
     # escaped / allowed HTML and strings to be escaped.
     message = escaping.escape_text(message).strip()
-    _log_entry(linkinfo, action, message, user_id)
+    _log_entry(linkinfo, action, message, user_id, diff_text)
 
 
 def add_change(action_name: str,

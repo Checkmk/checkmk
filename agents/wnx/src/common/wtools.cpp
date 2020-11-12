@@ -818,6 +818,8 @@ DataSequence ReadPerformanceDataFromRegistry(
         try {
             buffer = new BYTE[buf_size];
         } catch (...) {
+            XLOG::l(XLOG_FUNC + " Out of memory allocating [{}] bytes",
+                    buf_size);
             return cma::tools::DataBlock<BYTE>();  // ups
         }
 
@@ -829,12 +831,14 @@ DataSequence ReadPerformanceDataFromRegistry(
 
         if (ret == ERROR_SUCCESS) break;  // normal exit
 
-        if (ret == ERROR_MORE_DATA) {
-            buf_size *= 2;    // :)
-            delete[] buffer;  // realloc part one
-            continue;         // to be safe
-        } else
+        if (ret != ERROR_MORE_DATA) {
+            XLOG::l("Can't read counter '{}' error [{}]",
+                    wtools::ConvertToUTF8(counter_name), ret);
             return {};
+        }
+
+        buf_size *= 2;    // this is not optimal, may be reworked
+        delete[] buffer;  // realloc part one
     }
 
     return DataSequence((int)buf_size, buffer);

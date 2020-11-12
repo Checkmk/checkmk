@@ -33,6 +33,12 @@ class TestAuditLogStore:
         store.append(entry)
         assert list(store.read()) == [entry]
 
+    def test_append_multiple(self, store):
+        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch", None)
+        store.append(entry)
+        store.append(entry)
+        assert list(store.read()) == [entry, entry]
+
     def test_transport_html(self, store, register_builtin_html):
         entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action",
                                     HTML("Mäss<b>ädsch</b>"), None)

@@ -95,6 +95,8 @@ class SNMPTreeTuple(NamedTuple):
     oids: Sequence[OIDSpecTuple]
 
 
+RuleSetType = Literal["merged", "all"]
+
 StringTable = List[List[str]]
 StringByteTable = List[List[Union[str, List[int]]]]
 

@@ -6,15 +6,16 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Dict, Generator, get_args, List, Optional
+from typing import Any, Callable, Dict, Generator, List, Optional
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
+
+from cmk.base.api.agent_based.type_defs import RuleSetType
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
     DiscoveryFunction,
-    DiscoveryRuleSetType,
     IgnoreResults,
     Metric,
     Result,
@@ -26,6 +27,7 @@ from cmk.base.api.agent_based.register.utils import (
     ITEM_VARIABLE,
     validate_function_arguments,
     validate_default_parameters,
+    validate_ruleset_type,
 )
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
@@ -105,12 +107,6 @@ def _validate_discovery_ruleset(ruleset_name: Optional[str],
     return
 
 
-def _validate_discovery_ruleset_type(ruleset_type: DiscoveryRuleSetType) -> None:
-    if ruleset_type not in get_args(DiscoveryRuleSetType):
-        raise ValueError("invalid discovery ruleset type %r. Allowed are %s" %
-                         (ruleset_type, ",".join(repr(c) for c in get_args(DiscoveryRuleSetType))))
-
-
 def _validate_check_ruleset(ruleset_name: Optional[str],
                             default_parameters: Optional[dict]) -> None:
     if ruleset_name is None:
@@ -132,7 +128,7 @@ def _validate_kwargs(
     discovery_function: Callable,
     discovery_default_parameters: Optional[Dict],
     discovery_ruleset_name: Optional[str],
-    discovery_ruleset_type: DiscoveryRuleSetType,
+    discovery_ruleset_type: RuleSetType,
     check_function: Callable,
     check_default_parameters: Optional[Dict],
     check_ruleset_name: Optional[str],
@@ -150,7 +146,7 @@ def _validate_kwargs(
     #     discovery_ruleset_name,
     #     discovery_default_parameters,
     # )
-    _validate_discovery_ruleset_type(discovery_ruleset_type,)
+    validate_ruleset_type(discovery_ruleset_type)
     validate_function_arguments(
         type_label="discovery",
         function=discovery_function,
@@ -210,7 +206,7 @@ def create_check_plugin(
     discovery_function: Callable,
     discovery_default_parameters: Optional[Dict] = None,
     discovery_ruleset_name: Optional[str] = None,
-    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
+    discovery_ruleset_type: RuleSetType = "merged",
     check_function: Callable,
     check_default_parameters: Optional[Dict] = None,
     check_ruleset_name: Optional[str] = None,

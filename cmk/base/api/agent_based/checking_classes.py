@@ -12,7 +12,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Literal,
     NamedTuple,
     Optional,
     overload,
@@ -23,7 +22,7 @@ from typing import (
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import PluginSuppliedLabel
+from cmk.base.api.agent_based.type_defs import PluginSuppliedLabel, RuleSetType
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
@@ -356,7 +355,6 @@ CheckResult = Iterable[Union[IgnoreResults, Metric, Result]]
 CheckFunction = Callable[..., CheckResult]
 DiscoveryResult = Iterable[Service]
 DiscoveryFunction = Callable[..., DiscoveryResult]
-DiscoveryRuleSetType = Literal["merged", "all"]
 
 CheckPlugin = NamedTuple(
     "CheckPlugin",
@@ -367,7 +365,7 @@ CheckPlugin = NamedTuple(
         ("discovery_function", DiscoveryFunction),
         ("discovery_default_parameters", Optional[Dict[str, Any]]),
         ("discovery_ruleset_name", Optional[RuleSetName]),
-        ("discovery_ruleset_type", DiscoveryRuleSetType),
+        ("discovery_ruleset_type", RuleSetType),
         ("check_function", CheckFunction),
         ("check_default_parameters", Optional[Dict[str, Any]]),
         ("check_ruleset_name", Optional[RuleSetName]),

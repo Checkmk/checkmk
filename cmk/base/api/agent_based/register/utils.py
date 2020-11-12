@@ -33,7 +33,7 @@ from cmk.utils.type_defs import (
 from cmk.utils.paths import agent_based_plugins_dir
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import SectionPlugin
+from cmk.base.api.agent_based.type_defs import RuleSetType, SectionPlugin
 
 ITEM_VARIABLE = "%s"
 
@@ -159,6 +159,12 @@ def _validate_optional_section_annotation(params: Mapping[str, inspect.Parameter
     if all(none_type in get_args(p.annotation) for p in section_args):
         return  # good, all sections are Optional.
     raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
+
+
+def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
+    if ruleset_type not in get_args(RuleSetType):
+        raise ValueError("invalid discovery ruleset type %r. Allowed are %s" %
+                         (ruleset_type, ",".join(repr(c) for c in get_args(RuleSetType))))
 
 
 def validate_default_parameters(

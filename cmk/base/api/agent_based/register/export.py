@@ -11,7 +11,6 @@ from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     DiscoveryFunction,
-    DiscoveryRuleSetType,
 )
 
 from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name
@@ -34,6 +33,7 @@ from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification, SN
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     HostLabelFunction,
+    RuleSetType,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
 )
@@ -198,7 +198,7 @@ def check_plugin(
     discovery_function: DiscoveryFunction,
     discovery_default_parameters: Optional[Dict[str, Any]] = None,
     discovery_ruleset_name: Optional[str] = None,
-    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
+    discovery_ruleset_type: RuleSetType = "merged",
     check_function: CheckFunction,
     check_default_parameters: Optional[Dict[str, Any]] = None,
     check_ruleset_name: Optional[str] = None,

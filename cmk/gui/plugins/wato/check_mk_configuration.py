@@ -4996,25 +4996,30 @@ def _valuespec_snmp_fetch_interval():
     return Tuple(
         title=_('Fetch intervals for SNMP sections'),
         help=_(
-            'This rule can be used to customize the data acquisition interval of each SNMP based '
-            'section. With this option it is possible to configure a longer interval for specific '
-            'sections, than then normal check interval.'),
+            'This rule can be used to customize the data acquisition interval of SNMP based '
+            'sections. This can be useful for cases where fetching the data takes close to or '
+            'longer than the usual check interval or where it puts a lot of load on the target '
+            'device. Note that it is strongly recommended to also adjust the actual '
+            '<a href="wato.py?mode=edit_ruleset&varname=extra_service_conf%3Acheck_interval">check interval</a> '
+            'in such cases to a number at least as high as the number you choose in this rule. '
+            'This is especially important for counter-based checks such as the interface checks. A '
+            'check interval which is shorter then the interval for fetching the data might result '
+            'in misleading output (e.g. far too large interface throughputs) in such cases.'),
         elements=[
             Transform(
                 DropdownChoice(
-                    title=_("Check"),
-                    help=_("You can only configure \"section names\" here and not choose "
-                           "individual checks here. It is only possible to define "
-                           "SNMP fetch intervals for SNMP based sections. "
-                           "The reason for this is that the check plugins themselves are not "
-                           "aware wether or not they are processing SNMP based data."),
+                    title=_("Section"),
+                    help=_("You can only configure section names here, but not choose individual "
+                           "check plugins. The reason for this is that the check plugins "
+                           "themselves are not aware whether or not they are processing SNMP based "
+                           "data."),
                     choices=lambda: [(None, _('All SNMP sections'))] + get_snmp_section_names(),
                 ),
                 # Transform check types to section names
                 forth=lambda e: e.split(".")[0] if e is not None else None,
             ),
             Integer(
-                title=_("Do check every"),
+                title=_("Fetch every"),
                 unit=_("minutes"),
                 minvalue=1,
                 default_value=1,

@@ -9,14 +9,20 @@ from typing import Optional, List, Tuple
 
 import cmk.utils.paths
 from cmk.utils.diagnostics import (
-    DiagnosticsParameters,
-    serialize_wato_parameters,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
     OPT_CHECKMK_OVERVIEW,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_COMP_NOTIFICATIONS,
+    DiagnosticsParameters,
+    serialize_wato_parameters,
     get_checkmk_config_files_map,
+    get_checkmk_log_files_map,
+    CheckmkFileInfo,
+    CheckmkFileSensitivity,
+    get_checkmk_file_sensitivity_for_humans,
+    get_checkmk_file_info,
 )
 import cmk.utils.version as cmk_version
 
@@ -75,6 +81,8 @@ class ModeDiagnostics(WatoMode):
         return ["diagnostics"]
 
     def _from_vars(self) -> None:
+        self._checkmk_config_files_map = get_checkmk_config_files_map()
+        self._checkmk_log_files_map = get_checkmk_log_files_map()
         self._start = bool(html.request.get_ascii_input("_start"))
         self._diagnostics_parameters = self._get_diagnostics_parameters()
         self._job = DiagnosticsDumpBackgroundJob()
@@ -157,6 +165,11 @@ class ModeDiagnostics(WatoMode):
                      title=_("Optional information"),
                      elements=self._get_optional_information_elements(),
                  )),
+                ("comp_specific",
+                 Dictionary(
+                     title=_("Component specific information"),
+                     elements=self._get_component_specific_elements(),
+                 )),
             ],
             optional_keys=False,
         )
@@ -195,7 +208,11 @@ class ModeDiagnostics(WatoMode):
             (OPT_CHECKMK_CONFIG_FILES,
              CascadingDropdown(
                  title=_("Checkmk Configuration Files"),
-                 help=_("Configuration files '*.mk' or '*.conf' from etc/check_mk"),
+                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk"
+                        "<br>Note: Some files may contain sensitive date like usernames"
+                        " or passwords. These files are marked with '!!'."
+                        " Other files include hostnames or addresses and are marked"
+                        " with '!'."),
                  choices=self._get_checkmk_config_files_choices(),
                  default_value="global_settings",
              )),
@@ -215,7 +232,7 @@ class ModeDiagnostics(WatoMode):
         return elements
 
     def _get_checkmk_config_files_choices(self) -> List[CascadingDropdownChoice]:
-        sorted_checkmk_config_files = sorted(get_checkmk_config_files_map())
+        sorted_checkmk_config_files = sorted(self._checkmk_config_files_map)
         checkmk_config_files = []
         global_settings = []
         host_and_folders = []
@@ -253,16 +270,109 @@ class ModeDiagnostics(WatoMode):
              )),
             ("explicit_list_of_files", _("Explicit list of files"),
              DualListChoice(
-                 choices=[
-                     (rel_filepath, rel_filepath) for rel_filepath in sorted_checkmk_config_files
-                 ],
+                 choices=self._list_of_files_choices(sorted_checkmk_config_files),
                  size=80,
                  rows=20,
              )),
         ]
 
+    def _get_component_specific_elements(self) -> List[Tuple[str, ValueSpec]]:
+        elements: List[Tuple[str, ValueSpec]] = [
+            (OPT_COMP_NOTIFICATIONS,
+             Dictionary(
+                 title=_("Notifications"),
+                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk"
+                        " or log files ('*.log' or '*.state') from var/log."
+                        "<br>Note: Some files may contain sensitive date like usernames"
+                        " or passwords. These files are marked with '!!'."
+                        " Other files include hostnames or addresses and are marked"
+                        " with '!'."),
+                 elements=self._get_component_specific_checkmk_files_elements(
+                     OPT_COMP_NOTIFICATIONS),
+             )),
+        ]
+        return elements
+
+    def _get_component_specific_checkmk_files_elements(
+        self,
+        component,
+    ) -> List[Tuple[str, ValueSpec]]:
+        elements = []
+        config_files = [(f, fi)
+                        for f in self._checkmk_config_files_map
+                        for fi in [get_checkmk_file_info(f)]
+                        if component in fi.components]
+        if config_files:
+            elements.append(
+                ("config_files",
+                 self._get_component_specific_checkmk_files_choices("Configuration files",
+                                                                    config_files)))
+
+        log_files = [(f, fi)
+                     for f in self._checkmk_log_files_map
+                     for fi in [get_checkmk_file_info(f)]
+                     if component in fi.components]
+        if log_files:
+            elements.append(
+                ("log_files",
+                 self._get_component_specific_checkmk_files_choices("Log files", log_files)))
+        return elements
+
+    def _get_component_specific_checkmk_files_choices(
+        self,
+        title: str,
+        checkmk_files: List[Tuple[str, CheckmkFileInfo]],
+    ) -> ValueSpec:
+        high_sensitive_files = []
+        sensitive_files = []
+        insensitive_files = []
+        for rel_filepath, file_info in checkmk_files:
+            if file_info.sensitivity == CheckmkFileSensitivity.high_sensitive:
+                high_sensitive_files.append(rel_filepath)
+            elif file_info.sensitivity == CheckmkFileSensitivity.sensitive:
+                sensitive_files.append(rel_filepath)
+            else:
+                insensitive_files.append(rel_filepath)
+
+        sorted_files = sorted(high_sensitive_files + sensitive_files + insensitive_files)
+        sorted_non_high_sensitive_files = sorted(sensitive_files + insensitive_files)
+        sorted_insensitive_files = sorted(insensitive_files)
+        return CascadingDropdown(
+            title=_(title),
+            choices=[
+                ("all", _("Pack all files"),
+                 FixedValue(
+                     sorted_files,
+                     totext=self._list_of_files_to_text(sorted_files),
+                 )),
+                ("non_high_sensitive", _("Pack sensitive and insensitive files"),
+                 FixedValue(
+                     sorted_non_high_sensitive_files,
+                     totext=self._list_of_files_to_text(sorted_non_high_sensitive_files),
+                 )),
+                ("insensitive", _("Pack only insensitive files"),
+                 FixedValue(
+                     sorted_insensitive_files,
+                     totext=self._list_of_files_to_text(sorted_insensitive_files),
+                 )),
+                ("explicit_list_of_files", _("Explicit list of files"),
+                 DualListChoice(
+                     choices=self._list_of_files_choices(sorted_files),
+                     size=80,
+                     rows=10,
+                 )),
+            ],
+            default_value="non_high_sensitive",
+        )
+
     def _list_of_files_to_text(self, list_of_files: List[str]) -> str:
-        return "<br>%s" % ",<br>".join(list_of_files)
+        return "<br>%s" % ",<br>".join([
+            get_checkmk_file_sensitivity_for_humans(rel_filepath) for rel_filepath in list_of_files
+        ])
+
+    def _list_of_files_choices(self, files: List[str]) -> List[Tuple[str, str]]:
+        return [(rel_filepath, get_checkmk_file_sensitivity_for_humans(rel_filepath))
+                for rel_filepath in files]
 
 
 @gui_background_job.job_registry.register

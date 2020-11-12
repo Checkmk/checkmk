@@ -69,11 +69,8 @@ class APICallGrafanaConnector(APICallCollection):
         return self._query_for_host_names(request.get("site_id"))
 
     def _query_for_host_names(self, site_id):
-        try:
-            sites.live().set_only_sites([site_id] if site_id else None)
+        with sites.only_sites(site_id):
             return sites.live().query_column("GET hosts\nColumns: name\n")
-        finally:
-            sites.live().set_only_sites(None)
 
     def _get_metrics_of_host(self, request):
         return self._query_for_metrics_of_host(request["hostname"], request.get("site_id"))
@@ -88,11 +85,8 @@ class APICallGrafanaConnector(APICallCollection):
 
         response = {}
 
-        try:
-            sites.live().set_only_sites([site_id] if site_id else None)
+        with sites.only_sites(site_id):
             rows = sites.live().query(query)
-        finally:
-            sites.live().set_only_sites(None)
 
         for service_description, check_command, metrics in rows:
             response[service_description] = {

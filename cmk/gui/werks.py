@@ -279,6 +279,8 @@ def _page_menu_entries_ack_werk(werk: Dict[str, Any]) -> Iterator[PageMenuEntry]
         icon_name="werk_ack",
         item=make_simple_link(ack_url),
         is_enabled=werk["compatible"] == "incomp_unack",
+        is_shortcut=True,
+        is_suggested=True,
     )
 
 

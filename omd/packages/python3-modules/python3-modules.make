@@ -125,6 +125,8 @@ PYTHON3_MODULES_LIST += yapf-0.30.0.tar.gz  # formatter for REST-API documentati
 PYTHON3_MODULES_LIST += pyprof2calltree-1.4.5.tar.gz  # converts cProfile info into cachegrind files
 PYTHON3_MODULES_LIST += repoze.profile-2.3.tar.gz  # very minimal wsgi profiling middleware
 PYTHON3_MODULES_LIST += pyparsing-2.4.7.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += ordered-set-4.0.2.tar.gz # needed by deepdiff
+PYTHON3_MODULES_LIST += deepdiff-5.0.2.tar.gz  # used for recording setup audit log
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target

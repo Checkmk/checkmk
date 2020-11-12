@@ -128,7 +128,8 @@ docstring_parser = "==0.7.2"  # direct dependency
 yapf = "==0.30.0"  # formatter for REST-API documentation code examples
 pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
 repoze-profile = "==2.3"  # used for GUI/API profiling
-pyparsing = "==2.4.7"
+pyparsing = "==2.4.7"  # direct dependency
+deepdiff = "==5.0.2" # used for recording setup audit log
 
 [requires]
 python_version = "3.8"

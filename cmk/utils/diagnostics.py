@@ -93,6 +93,8 @@ def get_checkmk_config_files_map() -> CheckmkConfigFilesMap:
     config_files_map: CheckmkConfigFilesMap = {}
     for root, _dirs, files in os.walk(cmk.utils.paths.default_config_dir):
         for file_name in files:
+            if file_name == "ca-certificates.mk":
+                continue
             filepath = Path(root).joinpath(file_name)
             if filepath.suffix in (".mk", ".conf") or filepath.name == ".wato":
                 config_files_map.setdefault(

@@ -5,15 +5,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import Literal, NewType, TypedDict, Union
+from typing import Any, Dict, Literal, NewType, TypedDict, Union
 
 __all__ = [
+    "AgentConfig",
+    "AgentHash",
+    "AgentPackagePlatform",
     "BakeryOpSys",
     "BuiltinBakeryHostName",
     "OrdinaryBakeryHostName",
     "BakeryHostName",
     "BakerySigningCredentials",
 ]
+
+AgentHash = NewType("AgentHash", str)
+AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
+
+
+class AgentPackagePlatform(enum.Enum):
+    LINUX_DEB = "linux_deb"
+    LINUX_RPM = "linux_rpm"
+    SOLARIS_PKG = "solaris_pkg"
+    WINDOWS_MSI = "windows_msi"
+    LINUX_TGZ = "linux_tgz"
+    SOLARIS_TGZ = "solaris_tgz"
+    AIX_TGZ = "aix_tgz"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
 
 # TODO(au): Replace usage with AgentPackagePlatform
 # But we need complete typing in cmk.gui.cee.agent_bakery first before we can safely do this.

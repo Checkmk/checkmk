@@ -69,9 +69,6 @@ SetAutochecksTable = Dict[Tuple[str, Item], Tuple[ServiceName, LegacyCheckParame
 UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this
 
-AgentHash = NewType("AgentHash", str)
-AgentConfig = Dict[str, Any]  # TODO Split into more sub configs
-
 LATEST_SERIAL: Final[Literal["latest"]] = "latest"
 ConfigSerial = NewType("ConfigSerial", str)
 OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
@@ -79,20 +76,6 @@ OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
 # This def is used to keep the API-exposed object in sync with our
 # implementation.
 SNMPDetectBaseType = List[List[Tuple[str, str, bool]]]
-
-
-class AgentPackagePlatform(enum.Enum):
-    LINUX_DEB = "linux_deb"
-    LINUX_RPM = "linux_rpm"
-    SOLARIS_PKG = "solaris_pkg"
-    WINDOWS_MSI = "windows_msi"
-    LINUX_TGZ = "linux_tgz"
-    SOLARIS_TGZ = "solaris_tgz"
-    AIX_TGZ = "aix_tgz"
-
-    def __str__(self) -> str:
-        return str(self.value)
-
 
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.

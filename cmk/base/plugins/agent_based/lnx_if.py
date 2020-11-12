@@ -253,6 +253,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
 register.agent_section(
     name="lnx_if",
     parse_function=parse_lnx_if,
+    supersedes=["if", "if64"],
 )
 
 

@@ -31,6 +31,10 @@ def parse_docker_container_cpu(info):
     return parsed
 
 
+# Migration NOTE: Create a separate section, but a common check plugin for
+# tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
+# lxc_container_cpu, docker_container_cpu.
+# Migration via cmk/update_config.py!
 check_info["docker_container_cpu"] = {
     "parse_function": parse_docker_container_cpu,
     "inventory_function": discover_single,

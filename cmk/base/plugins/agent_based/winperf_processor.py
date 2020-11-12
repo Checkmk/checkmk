@@ -55,6 +55,7 @@ def parse_winperf_processor(string_table: StringTable) -> Optional[Section]:
 register.agent_section(
     name="winperf_processor",
     parse_function=parse_winperf_processor,
+    supersedes=['hr_cpu'],
 )
 
 

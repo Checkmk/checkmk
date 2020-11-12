@@ -150,6 +150,7 @@ def parse_proc_meminfo_bytes(string_table: type_defs.StringTable) -> Optional[Di
 
 register.agent_section(
     name="mem",
+    supersedes=["hr_mem"],
     parse_function=parse_proc_meminfo_bytes,
 )
 

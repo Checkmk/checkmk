@@ -414,6 +414,7 @@ def parse_winperf_if(string_table: type_defs.StringTable) -> Section:
 register.agent_section(
     name='winperf_if',
     parse_function=parse_winperf_if,
+    supersedes=["if", "if64"],
 )
 
 

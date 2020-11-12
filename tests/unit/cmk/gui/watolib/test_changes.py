@@ -8,7 +8,10 @@ import time
 import pytest  # type: ignore[import]
 
 from testlib import on_time
+
 from cmk.utils.type_defs import UserId
+
+from cmk.gui.htmllib import HTML
 from cmk.gui.watolib.changes import AuditLogStore, SiteChanges, ChangeSpec, log_audit
 
 
@@ -27,6 +30,12 @@ class TestAuditLogStore:
 
     def test_append(self, store):
         entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch", None)
+        store.append(entry)
+        assert list(store.read()) == [entry]
+
+    def test_transport_html(self, store, register_builtin_html):
+        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action",
+                                    HTML("Mäss<b>ädsch</b>"), None)
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -124,5 +133,27 @@ def test_log_audit_with_object_diff():
             action='bla',
             text='Message',
             diff_text='Attribute "a" with value "b" removed.',
+        ),
+    ]
+
+
+def test_log_audit_with_html_message(register_builtin_html):
+    with on_time('2018-04-15 16:50', 'CET'):
+        log_audit(
+            linkinfo=None,
+            user_id=UserId('calvin'),
+            action="bla",
+            message=HTML("Message <b>bla</b>"),
+        )
+
+    store = AuditLogStore(AuditLogStore.make_path())
+    assert store.read() == [
+        AuditLogStore.Entry(
+            time=1523811000,
+            linkinfo='-',
+            user_id='calvin',
+            action='bla',
+            text=HTML("Message <b>bla</b>"),
+            diff_text=None,
         ),
     ]

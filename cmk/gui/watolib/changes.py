@@ -144,7 +144,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
         ("linkinfo", str),
         ("user_id", str),
         ("action", str),
-        ("text", str),
+        ("text", LogMessage),
         ("diff_text", Optional[str]),
     ])
 
@@ -153,11 +153,15 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
         return _wato_var_dir() / "log" / "wato_audit.log"
 
     @staticmethod
-    def _serialize(raw: "AuditLogStore.Entry") -> Dict:
-        return raw._asdict()
+    def _serialize(entry: "AuditLogStore.Entry") -> Dict:
+        raw = entry._asdict()
+        raw["text"] = (("html", str(entry.text)) if isinstance(entry.text, HTML) else
+                       ("str", entry.text))
+        return raw
 
     @staticmethod
     def _deserialize(raw: Dict) -> "AuditLogStore.Entry":
+        raw["text"] = (HTML(raw["text"][1]) if raw["text"][0] == "html" else raw["text"][1])
         return AuditLogStore.Entry(**raw)
 
     def clear(self) -> None:
@@ -180,7 +184,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
 
 def _log_entry(linkinfo: LinkInfoObject,
                action: str,
-               message: str,
+               message: Union[HTML, str],
                user_id: Optional[UserId] = None,
                diff_text: Optional[str] = None) -> None:
     if linkinfo and not isinstance(linkinfo, str):
@@ -193,7 +197,7 @@ def _log_entry(linkinfo: LinkInfoObject,
         linkinfo=link or "-",
         user_id=str(user_id or config.user.id or "-"),
         action=action,
-        text=message.replace("\n", "\\n"),
+        text=message,
         diff_text=diff_text,
     )
 
@@ -215,24 +219,27 @@ def log_audit(linkinfo: LinkInfoObject,
         if isinstance(message, HTML):
             message = escaping.strip_tags(message.value)
         cmk.gui.watolib.git.add_message(message)
-    # Using escape_attribute here is against our regular rule to do the escaping
-    # at the last possible time: When rendering. But this here is the last
-    # place where we can distinguish between HTML() encapsulated (already)
-    # escaped / allowed HTML and strings to be escaped.
-    message = escaping.escape_text(message).strip()
+
     _log_entry(linkinfo, action, message, user_id, diff_text)
 
 
 def add_change(action_name: str,
                text: LogMessage,
                obj: LinkInfoObject = None,
+               old_object: Any = None,
+               new_object: Any = None,
                add_user: bool = True,
                need_sync: Optional[bool] = None,
                need_restart: Optional[bool] = None,
                domains: Optional[List[Type[ABCConfigDomain]]] = None,
                sites: Optional[List[SiteId]] = None) -> None:
 
-    log_audit(obj, action_name, text, config.user.id if add_user else UserId(''))
+    log_audit(linkinfo=obj,
+              action=action_name,
+              message=text,
+              user_id=config.user.id if add_user else UserId(''),
+              old_object=old_object,
+              new_object=new_object)
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     search.update_and_store_index_background(action_name)

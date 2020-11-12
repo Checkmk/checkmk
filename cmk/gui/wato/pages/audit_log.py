@@ -14,6 +14,7 @@ import cmk.utils.render as render
 import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.watolib as watolib
+from cmk.gui import escaping
 from cmk.gui.watolib.changes import AuditLogStore
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
@@ -242,8 +243,8 @@ class ModeAuditLog(WatoMode):
                 user = ('<i>%s</i>' % _('internal')) if entry.user_id == '-' else entry.user_id
                 table.cell(_("User"), html.render_text(user), css="nobreak")
 
-                # This must not be attrencoded: The entries are encoded when writing to the log.
-                table.cell(_("Change"), entry.text.replace("\\n", "<br>\n"), css="fill")
+                text = escaping.escape_text(entry.text).replace("\n", "<br>\n")
+                table.text_cell(_("Change"), text, css="fill")
 
     def _get_next_daily_paged_log(self, log):
         start = self._get_start_date()
@@ -457,7 +458,7 @@ class ModeAuditLog(WatoMode):
                 linkinfo,
                 entry.user_id,
                 entry.action,
-                '"' + entry.text + '"',
+                '"' + escaping.strip_tags(entry.text) + '"',
             )) + '\n')
         return FinalizeRequest(code=200)
 

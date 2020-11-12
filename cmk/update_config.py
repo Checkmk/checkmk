@@ -564,7 +564,7 @@ class UpdateConfig:
                 "title": topic,
                 "description": "",
                 "public": spec["public"],
-                "icon_name": "topic_unknown",
+                "icon_name": "missing",
                 "sort_index": 99,
                 "owner": spec["owner"],
             }),

@@ -1,0 +1,14 @@
+Title: Add icon for custom topics on update to 2.0
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1605182432
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+After updating to 2.0.0i1, custom topics that already existed in version 1.6
+had no icon set.
+
+Such topics will now get a standard icon while the config update.

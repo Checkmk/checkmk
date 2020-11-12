@@ -1,0 +1,34 @@
+@startuml
+rectangle "Host" {
+  () "SNMP Trap" as snmptrap
+  () "SNMP" as snmp
+  () "TCP/IP" as tcpip
+  () "Special Agents" as specialagents
+  () "IPMI" as ipmi
+  () "Windows Agents" as windowsagents
+  () "Event Console" as eventconsole
+}
+rectangle "3rd Party" as 3rdparty {
+  () "Notification"
+}
+rectangle "End User" as enduser {
+  () "RestAPI"
+  () "WebAPI"
+  () "Livestatus"
+  () "GUI"
+  () "Config Files" as configfiles
+}
+[Checkmk] --> snmptrap: SNMP
+[Checkmk] --> snmp: SNMP
+[Checkmk] --> tcpip: "TCP/IP"
+[Checkmk] --> specialagents: "TCP/IP"
+[Checkmk] --> ipmi: IPMI
+[Checkmk] --> windowsagents: "CMK Protocol"
+[Checkmk] --> eventconsole
+[Checkmk] -up-> Notification
+[Checkmk] --> RestAPI: "REST over TCP/IP"
+[Checkmk] --> WebAPI: "TCP/IP"
+[Checkmk] --> Livestatus: "LSQ/Unix socket"
+[Checkmk] --> GUI
+[Checkmk] --> configfiles
+@enduml

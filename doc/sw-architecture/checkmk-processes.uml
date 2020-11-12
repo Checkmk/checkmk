@@ -1,0 +1,21 @@
+@startuml
+[OMD]
+node "OMD Processes" as omd_p {
+    [mknotifyd]
+    [mkeventd]
+    [rrdcached]
+    [crontab]
+    [DCD]
+    [Apache]
+    [CMC]
+}
+node "CMC Processes" as cmc_p {
+    [Check Helper] as checker
+    [ICMPSender]
+    [ICMPReceiver]
+    [Fetcher]
+    [CMK]
+}
+OMD -> omd_p
+CMC -> cmc_p
+@enduml

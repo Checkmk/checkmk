@@ -25,7 +25,7 @@ from cmk.fetchers import (
     SNMPFetcher,
     TCPFetcher,
 )
-from cmk.fetchers.protocol import FetcherMessage, L3Stats
+from cmk.fetchers.protocol import FetcherMessage
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
@@ -539,7 +539,7 @@ class TestMakeHostSectionsHosts:
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK({}),
-                    L3Stats(Snapshot.null()),
+                    Snapshot.null(),
                     FetcherType.SNMP,
                 ),
             ],
@@ -596,7 +596,7 @@ class TestMakeHostSectionsHosts:
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
-                    L3Stats(Snapshot.null()),
+                    Snapshot.null(),
                     source.fetcher_type,
                 ),
             ],
@@ -650,7 +650,7 @@ class TestMakeHostSectionsHosts:
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
-                    L3Stats(Snapshot.null()),
+                    Snapshot.null(),
                     source.fetcher_type,
                 ) for source in sources
             ],
@@ -693,7 +693,7 @@ class TestMakeHostSectionsHosts:
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
-                    L3Stats(Snapshot.null()),
+                    Snapshot.null(),
                     source.fetcher_type,
                 )
                 for source in sources
@@ -795,7 +795,7 @@ class TestMakeHostSectionsClusters:
                 # We do not pass sources explicitly but still append Piggyback.
                 FetcherMessage.from_raw_data(
                     result.OK(b""),
-                    L3Stats(Snapshot.null()),
+                    Snapshot.null(),
                     FetcherType.PIGGYBACK,
                 ),
             ],
@@ -888,7 +888,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
-                    L3Stats(Snapshot.null()),
+                    Snapshot.null(),
                     source.fetcher_type,
                 )
                 for source in sources

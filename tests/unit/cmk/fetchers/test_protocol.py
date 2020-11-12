@@ -305,8 +305,12 @@ class TestL3Stats:
 
 class TestFetcherMessage:
     @pytest.fixture
-    def stats(self):
-        return L3Stats(Snapshot.null())
+    def duration(self):
+        return Snapshot.null()
+
+    @pytest.fixture
+    def stats(self, duration):
+        return L3Stats(duration)
 
     @pytest.fixture
     def header(self, stats):
@@ -350,23 +354,23 @@ class TestFetcherMessage:
         assert len(message) == len(header) + len(payload) + len(stats)
 
     @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP])
-    def test_from_raw_data_standard(self, agent_raw_data, stats, fetcher_type):
+    def test_from_raw_data_standard(self, agent_raw_data, duration, fetcher_type):
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, stats, fetcher_type)
+        message = FetcherMessage.from_raw_data(raw_data, duration, fetcher_type)
         assert message.header.fetcher_type is fetcher_type
         assert message.header.payload_type is PayloadType.AGENT
         assert message.raw_data == raw_data
 
-    def test_from_raw_data_snmp(self, snmp_raw_data, stats):
+    def test_from_raw_data_snmp(self, snmp_raw_data, duration):
         raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, stats, FetcherType.SNMP)
+        message = FetcherMessage.from_raw_data(raw_data, duration, FetcherType.SNMP)
         assert message.header.fetcher_type is FetcherType.SNMP
         assert message.header.payload_type is PayloadType.SNMP
         assert message.raw_data == raw_data
 
-    def test_from_raw_data_exception(self, stats):
+    def test_from_raw_data_exception(self, duration):
         error: result.Result[AgentRawData, Exception] = result.Error(ValueError("zomg!"))
-        message = FetcherMessage.from_raw_data(error, stats, FetcherType.TCP)
+        message = FetcherMessage.from_raw_data(error, duration, FetcherType.TCP)
         assert message.header.fetcher_type is FetcherType.TCP
         assert message.header.payload_type is PayloadType.ERROR
         # Comparison of exception is "interesting" in Python so we check the type and args.
@@ -374,18 +378,18 @@ class TestFetcherMessage:
         assert message.raw_data.error.args == error.error.args
 
     @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP])
-    def test_raw_data_tcp_standard(self, agent_raw_data, stats, fetcher_type):
+    def test_raw_data_tcp_standard(self, agent_raw_data, duration, fetcher_type):
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, stats, fetcher_type)
+        message = FetcherMessage.from_raw_data(raw_data, duration, fetcher_type)
         assert message.raw_data == raw_data
 
-    def test_raw_data_snmp(self, snmp_raw_data, stats):
+    def test_raw_data_snmp(self, snmp_raw_data, duration):
         raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, stats, FetcherType.SNMP)
+        message = FetcherMessage.from_raw_data(raw_data, duration, FetcherType.SNMP)
         assert message.raw_data == raw_data
 
-    def test_raw_data_exception(self, stats):
+    def test_raw_data_exception(self, duration):
         raw_data: result.Result[AgentRawData, Exception] = result.Error(Exception("zomg!"))
-        message = FetcherMessage.from_raw_data(raw_data, stats, FetcherType.TCP)
+        message = FetcherMessage.from_raw_data(raw_data, duration, FetcherType.TCP)
         assert isinstance(message.raw_data.error, Exception)
         assert str(message.raw_data.error) == "zomg!"

@@ -25,7 +25,6 @@ from . import FetcherType
 
 __all__ = [
     "L3Message",
-    "L3Stats",
     "PayloadType",
     "FetcherHeader",
     "FetcherMessage",
@@ -315,9 +314,10 @@ class FetcherMessage(Protocol):
     def from_raw_data(
         cls,
         raw_data: result.Result[AbstractRawData, Exception],
-        stats: L3Stats,
+        duration: Snapshot,
         fetcher_type: FetcherType,
     ) -> "FetcherMessage":
+        stats = L3Stats(duration)
         if raw_data.is_error():
             error_payload = ErrorPayload(raw_data.error)
             return cls(
@@ -502,8 +502,9 @@ def make_error_message(fetcher_type: FetcherType, exc: Exception) -> FetcherMess
 def make_fetcher_timeout_message(
     fetcher_type: FetcherType,
     exc: MKTimeout,
-    stats: L3Stats,
+    duration: Snapshot,
 ) -> FetcherMessage:
+    stats = L3Stats(duration)
     payload = ErrorPayload(exc)
     return FetcherMessage(
         FetcherHeader(

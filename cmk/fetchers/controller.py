@@ -143,7 +143,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:
 
     return protocol.FetcherMessage.from_raw_data(
         raw_data,
-        protocol.L3Stats(tracker.duration),
+        tracker.duration,
         fetcher_type,
     )
 
@@ -183,7 +183,7 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
                 protocol.make_fetcher_timeout_message(
                     FetcherType[entry["fetcher_type"]],
                     exc,
-                    protocol.L3Stats(Snapshot.null()),
+                    Snapshot.null(),
                 ) for entry in fetchers[len(messages):]
             ])
 

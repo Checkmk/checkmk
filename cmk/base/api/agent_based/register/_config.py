@@ -35,7 +35,12 @@ registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
 registered_check_plugins: Dict[CheckPluginName, CheckPlugin] = {}
 registered_inventory_plugins: Dict[InventoryPluginName, InventoryPlugin] = {}
 
-stored_discovery_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
+# N O T E: This currently contains discovery *and* host_label rulesets.
+# The rules are deliberately put the same dictionary, as we allow for
+# the host_label_function and the discovery_function to share a ruleset.
+# We provide seperate API functions however, should the need arise to
+# seperate them.
+stored_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
 
 # Lookup table for optimizing validate_check_ruleset_item_consistency()
 _check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]] = defaultdict(list)
@@ -48,7 +53,11 @@ def add_check_plugin(check_plugin: CheckPlugin) -> None:
 
 
 def add_discovery_ruleset(ruleset_name: RuleSetName) -> None:
-    stored_discovery_rulesets.setdefault(ruleset_name, [])
+    stored_rulesets.setdefault(ruleset_name, [])
+
+
+def add_host_label_ruleset(ruleset_name: RuleSetName) -> None:
+    stored_rulesets.setdefault(ruleset_name, [])
 
 
 def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
@@ -81,7 +90,12 @@ def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
 
 def get_discovery_ruleset(ruleset_name: RuleSetName) -> List[Dict[str, Any]]:
     """Returns all rulesets of a given name"""
-    return stored_discovery_rulesets.get(ruleset_name, [])
+    return stored_rulesets.get(ruleset_name, [])
+
+
+def get_host_label_ruleset(ruleset_name: RuleSetName) -> List[Dict[str, Any]]:
+    """Returns all rulesets of a given name"""
+    return stored_rulesets.get(ruleset_name, [])
 
 
 def get_inventory_plugin(plugin_name: InventoryPluginName) -> Optional[InventoryPlugin]:
@@ -162,7 +176,11 @@ def iter_all_check_plugins() -> Iterable[CheckPlugin]:
 
 
 def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:
-    return stored_discovery_rulesets.keys()  # pylint: disable=dict-keys-not-iterating
+    return stored_rulesets.keys()  # pylint: disable=dict-keys-not-iterating
+
+
+def iter_all_host_label_rulesets() -> Iterable[RuleSetName]:
+    return stored_rulesets.keys()  # pylint: disable=dict-keys-not-iterating
 
 
 def iter_all_inventory_plugins() -> Iterable[InventoryPlugin]:
@@ -178,4 +196,12 @@ def set_discovery_ruleset(
     rules: List[Dict[str, Any]],
 ) -> None:
     """Set a ruleset to a given value"""
-    stored_discovery_rulesets[ruleset_name] = rules
+    stored_rulesets[ruleset_name] = rules
+
+
+def set_host_label_ruleset(
+    ruleset_name: RuleSetName,
+    rules: List[Dict[str, Any]],
+) -> None:
+    """Set a ruleset to a given value"""
+    stored_rulesets[ruleset_name] = rules

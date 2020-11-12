@@ -82,6 +82,15 @@ def parse_ceph_df(info):
                     'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
                 ]
 
+            elif line == [
+                    'POOL', 'ID', 'PGS', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX', 'AVAIL',
+                    'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES', 'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+            ]:
+                pools_headers = [
+                    'POOL', 'ID', 'PGS', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX AVAIL',
+                    'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
+                ]
+
             elif pools_headers is not None:
                 parsed.setdefault(line[0], dict(zip(pools_headers[1:], line[1:])))
 

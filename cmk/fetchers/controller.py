@@ -594,19 +594,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
     try:
         fetcher_params = entry["fetcher_params"]
     except KeyError as exc:
-        stats = L3Stats(Snapshot.null())
-        payload = ErrorPayload(exc)
-        return FetcherMessage(
-            FetcherHeader(
-                fetcher_type,
-                PayloadType.ERROR,
-                status=logging.CRITICAL,
-                payload_length=len(payload),
-                stats_length=len(stats),
-            ),
-            payload,
-            stats,
-        )
+        return make_error_message(fetcher_type, exc)
 
     try:
         with CPUTracker() as tracker, fetcher_type.from_json(fetcher_params) as fetcher:
@@ -621,10 +609,26 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> FetcherMessage:
     )
 
 
-def _make_fetcher_timeout_message(
+def make_error_message(fetcher_type: FetcherType, exc: Exception) -> FetcherMessage:
+    stats = L3Stats(Snapshot.null())
+    payload = ErrorPayload(exc)
+    return FetcherMessage(
+        FetcherHeader(
+            fetcher_type,
+            PayloadType.ERROR,
+            status=logging.CRITICAL,
+            payload_length=len(payload),
+            stats_length=len(stats),
+        ),
+        payload,
+        stats,
+    )
+
+
+def make_fetcher_timeout_message(
     fetcher_type: FetcherType,
-    stats: L3Stats,
     exc: MKTimeout,
+    stats: L3Stats,
 ) -> FetcherMessage:
     payload = ErrorPayload(exc)
     return FetcherMessage(
@@ -672,10 +676,10 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
         except MKTimeout as exc:
             # fill missing entries with timeout errors
             messages.extend([
-                _make_fetcher_timeout_message(
+                make_fetcher_timeout_message(
                     FetcherType[entry["fetcher_type"]],
-                    L3Stats(Snapshot.null()),
                     exc,
+                    L3Stats(Snapshot.null()),
                 ) for entry in fetchers[len(messages):]
             ])
 

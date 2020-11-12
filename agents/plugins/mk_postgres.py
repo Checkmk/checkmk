@@ -30,12 +30,22 @@ OS = sys.platform
 IS_LINUX = OS == "linux"
 IS_WINDOWS = OS == "win32"
 LOGGER = logging.getLogger(__name__)
-ENCODING = "utf-8"
 
 if IS_LINUX:
     import resource
 if IS_WINDOWS:
     import time
+
+# Borrowed from six
+def ensure_str(s):
+    if sys.version_info[0] >= 3:
+        if isinstance(s, bytes):
+            return s.decode("utf-8")
+    else:
+        if isinstance(s, unicode):  # pylint: disable=undefined-variable
+            return s.encode("utf-8")
+    return s
+
 
 #   .--Postgres Base-------------------------------------------------------.
 #   |    ____           _                        ____                      |
@@ -230,7 +240,7 @@ class PostgresBase:
             self.instance.get("pg_port", "5432")
         ],)
 
-        sys.stdout.write("%s\n" % six.ensure_str(out, encoding=ENCODING))
+        sys.stdout.write("%s\n" % ensure_str(out))
 
     def execute_all_queries(self):
         """Executes all queries and writes the output formatted to stdout"""
@@ -312,7 +322,7 @@ class PostgresWin(PostgresBase):
             env=self.my_env,
             stdout=subprocess.PIPE,
         )
-        out = six.ensure_str(proc.communicate()[0], encoding=ENCODING)
+        out = ensure_str(proc.communicate()[0])
         return out.rstrip()
 
     def get_psql_and_bin_path(self):
@@ -356,9 +366,8 @@ class PostgresWin(PostgresBase):
             [r"(.*)bin\\postgres(.*)", r"(.*)bin\\postmaster(.*)", r"(.*)bin\\edb-postgres(.*)"]
         ]
 
-        taskslist = six.ensure_str(subprocess.check_output(
-            ["wmic", "process", "get", "processid,commandline", "/format:list"]),
-                                   encoding=ENCODING).split("\r\r\n\r\r\n\r\r\n")
+        taskslist = ensure_str(subprocess.check_output(
+            ["wmic", "process", "get", "processid,commandline", "/format:list"])).split("\r\r\n\r\r\n\r\r\n")
 
         out = ""
         for task in taskslist:
@@ -606,13 +615,13 @@ class PostgresLinux(PostgresBase):
                                               stdin=cmd_to_pipe.stdout,
                                               stdout=subprocess.PIPE,
                                               env=self.my_env)
-            out = six.ensure_str(receiving_pipe.communicate()[0], encoding=ENCODING)
+            out = ensure_str(receiving_pipe.communicate()[0])
 
         else:
             base_cmd_list[-1] = base_cmd_list[-1] % (self.psql, extra_args, field_sep,
                                                      " -c \"%s\" " % sql_cmd)
             proc = subprocess.Popen(base_cmd_list, env=self.my_env, stdout=subprocess.PIPE)
-            out = six.ensure_str(proc.communicate()[0], encoding=ENCODING)
+            out = ensure_str(proc.communicate()[0])
 
         return out.rstrip()
 
@@ -638,7 +647,7 @@ class PostgresLinux(PostgresBase):
         # type: () -> Tuple[str, str]
         try:
             proc = subprocess.Popen(["which", "psql"], stdout=subprocess.PIPE)
-            out = six.ensure_str(proc.communicate()[0], encoding=ENCODING)
+            out = ensure_str(proc.communicate()[0])
         except subprocess.CalledProcessError:
             raise RuntimeError("Could not determine psql executable.")
 
@@ -652,8 +661,7 @@ class PostgresLinux(PostgresBase):
             ["(.*)bin/postgres(.*)", "(.*)bin/postmaster(.*)", "(.*)bin/edb-postgres(.*)"]
         ]
 
-        procs_list = six.ensure_str(subprocess.check_output(["ps", "h", "-eo", "pid:1,command:1"]),
-                                    encoding=ENCODING).split("\n")
+        procs_list = ensure_str(subprocess.check_output(["ps", "h", "-eo", "pid:1,command:1"])).split("\n")
         out = ""
         for proc in procs_list:
             proc_list = proc.split(" ")

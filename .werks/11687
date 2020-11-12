@@ -1,0 +1,11 @@
+Title: mk_postgres supports CentOS7
+Class: fix
+Compatible: compat
+Component: core
+Date: 1605175357
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+added native ensure_str implementation

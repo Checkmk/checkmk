@@ -10,7 +10,6 @@
 #include <ctime>
 #include <mutex>
 #include <optional>
-#include <ostream>
 #include <set>
 #include <stdexcept>
 #include <utility>

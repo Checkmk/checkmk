@@ -5,8 +5,6 @@
 
 #include "ListFilter.h"
 
-#include <sstream>
-
 #include "Logger.h"
 #include "RegExp.h"
 

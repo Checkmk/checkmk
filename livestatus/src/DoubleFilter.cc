@@ -6,7 +6,6 @@
 #include "DoubleFilter.h"
 
 #include <cstdlib>
-#include <ostream>
 
 #include "DoubleColumn.h"
 #include "Logger.h"

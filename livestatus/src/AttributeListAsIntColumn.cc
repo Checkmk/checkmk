@@ -8,7 +8,6 @@
 #include <bitset>
 #include <cctype>
 #include <map>
-#include <ostream>
 #include <utility>
 
 #include "IntFilter.h"

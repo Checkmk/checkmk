@@ -5,7 +5,6 @@
 
 #include "CrashReport.h"
 
-#include <iosfwd>
 #include <optional>
 #include <regex>
 #include <system_error>

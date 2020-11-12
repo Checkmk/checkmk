@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <ostream>
 
 #include "ListFilter.h"
 #include "Logger.h"

@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <memory>
-#include <ostream>
 #include <utility>
 
 #include "DowntimeOrComment.h"

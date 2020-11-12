@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <ostream>
 
 #include "Logger.h"
 #include "MonitoringCore.h"

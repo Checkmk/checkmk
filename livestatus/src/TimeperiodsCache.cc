@@ -6,7 +6,6 @@
 #include "TimeperiodsCache.h"
 
 // IWYU pragma: no_include <type_traits>
-#include <ostream>
 #include <utility>
 
 #include "Logger.h"

@@ -5,8 +5,6 @@
 
 #include "DowntimesOrComments.h"
 
-#include <iosfwd>
-
 #include "Logger.h"
 #include "MonitoringCore.h"
 

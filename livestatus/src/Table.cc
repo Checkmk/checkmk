@@ -6,7 +6,6 @@
 #include "Table.h"
 
 #include <cstdlib>
-#include <ostream>
 #include <stdexcept>
 
 #include "Column.h"

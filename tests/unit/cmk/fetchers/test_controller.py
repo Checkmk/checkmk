@@ -20,12 +20,7 @@ from cmk.fetchers.controller import (
     run_fetcher,
     write_bytes,
 )
-from cmk.fetchers.protocol import (
-    cmc_log_level_from_python,
-    CmcLogLevel,
-    make_end_of_reply_answer,
-    make_log_answer,
-)
+from cmk.fetchers.protocol import CMCLogLevel, make_end_of_reply_answer, make_log_answer
 from cmk.fetchers.type_defs import Mode
 
 
@@ -38,23 +33,12 @@ class TestGlobalConfig:
         assert GlobalConfig.deserialize(global_config.serialize()) == global_config
 
 
-@pytest.mark.parametrize("status,log_level", [
-    (logging.CRITICAL, CmcLogLevel.CRITICAL),
-    (logging.ERROR, CmcLogLevel.ERROR),
-    (logging.WARNING, CmcLogLevel.WARNING),
-    (logging.INFO, CmcLogLevel.INFO),
-    (log.VERBOSE, CmcLogLevel.INFO),
-    (logging.DEBUG, CmcLogLevel.DEBUG),
-    (5, CmcLogLevel.WARNING),
-])
-def test_status_to_log_level(status, log_level):
-    assert log_level == cmc_log_level_from_python(status)
-
-
 class TestControllerApi:
     def test_controller_log(self):
         assert make_log_answer(
-            "payload", log_level=CmcLogLevel.WARNING) == b"fetch:LOG    :warning :7       :payload"
+            "payload",
+            logging.WARNING,
+        ) == b"fetch:LOG    :warning :7       :payload"
 
     def test_controller_end_of_reply(self):
         assert make_end_of_reply_answer() == b"fetch:ENDREPL:        :0       :"

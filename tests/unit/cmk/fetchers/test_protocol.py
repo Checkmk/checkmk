@@ -27,6 +27,7 @@ from cmk.fetchers import FetcherType
 from cmk.fetchers.protocol import (
     AgentPayload,
     CMCHeader,
+    CMCLogLevel,
     ErrorPayload,
     FetcherHeader,
     FetcherMessage,
@@ -34,6 +35,11 @@ from cmk.fetchers.protocol import (
     PayloadType,
     SNMPPayload,
 )
+
+
+class TestCMCLogLevel:
+    def test_from_level(self):
+        assert CMCLogLevel.from_level(2000) is CMCLogLevel.WARNING
 
 
 class TestCMCHeader:

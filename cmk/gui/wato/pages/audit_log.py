@@ -452,13 +452,13 @@ class ModeAuditLog(WatoMode):
         for entry in self._parse_audit_log():
             linkinfo = '' if entry.linkinfo == '-' else entry.linkinfo
 
-            html.write_text(','.join((
+            html.write(','.join((
                 render.date(int(entry.time)),
                 render.time_of_day(int(entry.time)),
                 linkinfo,
                 entry.user_id,
                 entry.action,
-                '"' + escaping.strip_tags(entry.text) + '"',
+                '"' + escaping.strip_tags(entry.text).replace('"', "'") + '"',
             )) + '\n')
         return FinalizeRequest(code=200)
 

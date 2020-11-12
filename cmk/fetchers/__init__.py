@@ -6,7 +6,7 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import Any, Dict, Literal, Type, Optional
+from typing import Any, Dict, Literal, Optional, Type
 
 from ._base import ABCFetcher, ABCFileCache, MKFetcherError, verify_ipaddress
 from .agent import AgentFileCache

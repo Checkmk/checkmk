@@ -165,6 +165,10 @@ enable=
     range-builtin-not-iterating,
     zip-builtin-not-iterating,
 
+[IMPORTS]
+# This complies with PEP 8 and avoids code duplication in some cases.
+allow-wildcard-with-all=yes
+
 [REPORTS]
 output-format=cmk_colorized
 msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}

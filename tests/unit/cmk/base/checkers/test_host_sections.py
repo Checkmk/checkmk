@@ -25,7 +25,7 @@ from cmk.fetchers import (
     SNMPFetcher,
     TCPFetcher,
 )
-from cmk.fetchers.controller import FetcherMessage, L3Stats
+from cmk.fetchers.protocol import FetcherMessage, L3Stats
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
@@ -34,10 +34,10 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers import (
     _checkers,
     HostSections,
-    Source,
     make_nodes,
     make_sources,
     Mode,
+    Source,
     update_host_sections,
 )
 from cmk.base.checkers.agent import AgentHostSections

@@ -36,6 +36,7 @@ import cmk.utils.debug
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
@@ -52,16 +53,16 @@ from cmk.utils.type_defs import (
     ServiceState,
     SourceType,
 )
-from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.fetchers.controller import FetcherMessage, FetcherType
+
+from cmk.fetchers.protocol import FetcherMessage, FetcherType
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
+import cmk.base.checkers as checkers
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.checkers as checkers
 import cmk.base.decorator
 import cmk.base.inventory as inventory
 import cmk.base.ip_lookup as ip_lookup

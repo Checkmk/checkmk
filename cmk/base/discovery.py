@@ -37,10 +37,7 @@ import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import (
-    unwrap_parameters,
-    wrap_parameters,
-)
+from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
 from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
@@ -59,18 +56,18 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers.controller import FetcherMessage
+from cmk.fetchers.protocol import FetcherMessage
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
+import cmk.base.checkers as checkers
 import cmk.base.checking as checking
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.checkers as checkers
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
@@ -79,9 +76,9 @@ from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
+from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.config import SelectedRawSections
 from cmk.base.core_config import MonitoringCore
-from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.discovered_labels import (
     DiscoveredHostLabels,
     DiscoveredHostLabelsDict,

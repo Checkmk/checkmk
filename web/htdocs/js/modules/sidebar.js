@@ -510,17 +510,21 @@ export function toggle_sidebar_snapin(oH2, url) {
     ajax.get_url(url + (closed ? "open" : "closed"));
 }
 
+function reload_main_plus_sidebar() {
+    window.top.location.reload();
+}
+
 // TODO move to managed/web/htdocs/js
 export function switch_customer(customer_id, switch_state) {
     ajax.get_url(
         "switch_customer.py?_customer_switch=" + customer_id + ":" + switch_state,
-        utils.reload_whole_page,
+        reload_main_plus_sidebar,
         null
     );
 }
 
 export function switch_site(url) {
-    ajax.get_url(url, utils.reload_whole_page, null);
+    ajax.get_url(url, reload_main_plus_sidebar, null);
 }
 
 function bulk_update_contents(ids, codes) {
@@ -1108,7 +1112,7 @@ export function toggle_user_attribute(mode) {
         response_handler: function (handler_data, ajax_response) {
             const data = JSON.parse(ajax_response);
             if (data.result_code == 0) {
-                utils.reload_whole_page();
+                window.location.reload();
             }
         },
     });

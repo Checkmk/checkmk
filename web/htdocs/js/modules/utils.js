@@ -334,10 +334,6 @@ export function reload_sidebar() {
     window.top.cmk.sidebar.reset_sidebar_scheduler();
 }
 
-export function reload_whole_page() {
-    window.top.location.reload();
-}
-
 //#.
 //#   .-Page Reload--------------------------------------------------------.
 //#   |        ____                    ____      _                 _       |

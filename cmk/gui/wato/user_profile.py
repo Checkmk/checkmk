@@ -26,7 +26,7 @@ from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.pages import page_registry, AjaxPage, Page
 from cmk.gui.page_menu import (
     PageMenu,
@@ -37,13 +37,14 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.wato.pages.users import select_language
 
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
+
+from cmk.gui.utils.urls import makeuri
 
 
 def _get_current_theme_titel() -> str:
@@ -296,9 +297,6 @@ class ABCUserProfilePage(Page):
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         html.header(title, breadcrumb, self._page_menu(breadcrumb))
 
-        for message in get_flashed_messages():
-            html.show_message(message)
-
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously
         if profile_changed and config.user.authorized_login_sites():
@@ -476,9 +474,10 @@ class UserProfile(ABCUserProfilePage):
         users = userdb.load_users()
 
         if profile_changed:
-            flash(_("Successfully updated user profile."))
+            html.reload_sidebar()
+            html.show_message(_("Successfully updated user profile."))
             # Ensure theme changes are applied without additional user interaction
-            html.reload_whole_page()
+            html.immediate_browser_redirect(0.5, makeuri(global_request, []))
 
         if html.has_user_errors():
             html.show_user_errors()

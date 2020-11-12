@@ -611,7 +611,7 @@ class ModeEditUser(WatoMode):
             user_attrs = {}
         else:
             self._user_id = html.request.get_unicode_input_mandatory("edit").strip()
-            user_attrs = self._users[UserId(self._user_id)]
+            user_attrs = self._users[UserId(self._user_id)].copy()
 
         # Full name
         user_attrs["alias"] = html.request.get_unicode_input_mandatory("alias").strip()

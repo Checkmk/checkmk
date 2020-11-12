@@ -29,7 +29,7 @@ from cmk.gui.valuespec import (
     Alternative,
     EmailAddress,
 )
-from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.changes import add_change, log_audit
 from cmk.gui.watolib.user_scripts import (
     user_script_title,
     user_script_choices,
@@ -72,14 +72,30 @@ def edit_users(changed_users):
         if is_new_user:
             add_internal_attributes(user_attrs)
 
+        old_object = make_user_audit_log_object(all_users.get(user_id, {}))
+        log_audit(linkinfo=None,
+                  action="edit-users",
+                  message=(_("Created new user: %s") %
+                           user_id if is_new_user else _("Modified user: %s") % user_id),
+                  old_object=old_object,
+                  new_object=make_user_audit_log_object(user_attrs))
+
         all_users[user_id] = user_attrs
 
     if new_users_info:
-        add_change("edit-users", _("Created new user: %s") % ", ".join(new_users_info))
+        add_change("edit-users", _("Created new users: %s") % ", ".join(new_users_info))
     if modified_users_info:
-        add_change("edit-users", _("Modified user: %s") % ", ".join(modified_users_info))
+        add_change("edit-users", _("Modified users: %s") % ", ".join(modified_users_info))
 
     userdb.save_users(all_users)
+
+
+def make_user_audit_log_object(attributes):
+    """The resulting object is used for building object diffs"""
+    obj = attributes.copy()
+    obj.pop("password", None)
+    obj.pop("user_scheme_serial", None)
+    return obj
 
 
 def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):

@@ -168,7 +168,7 @@ def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
 
 
 def validate_default_parameters(
-    params_type: Literal["check", "discovery", "inventory"],
+    params_type: Literal["check", "discovery", "host_label", "inventory"],
     ruleset_name: Optional[str],
     default_parameters: Optional[Dict],
 ) -> None:

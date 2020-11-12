@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from typing import (
     Any,
     Callable,
+    Dict,
     Generator,
     List,
     Literal,
@@ -25,6 +26,7 @@ import pprint
 
 from cmk.utils.type_defs import (
     ParsedSectionName,
+    RuleSetName,
     SectionName,
     SNMPDetectBaseType,
 )
@@ -115,32 +117,32 @@ SimpleSNMPParseFunction = Union[  #
     Callable[[StringByteTable], Any],  #
 ]
 
-AgentSectionPlugin = NamedTuple(
-    "AgentSectionPlugin",
-    [
-        ("name", SectionName),
-        ("parsed_section_name", ParsedSectionName),
-        ("parse_function", AgentParseFunction),
-        ("host_label_function", HostLabelFunction),
-        ("supersedes", Set[SectionName]),
-        ("module", Optional[str]),  # not available for auto migrated plugins.
-    ],
-)
 
-SNMPSectionPlugin = NamedTuple(
-    "SNMPSectionPlugin",
-    [
-        ("name", SectionName),
-        ("parsed_section_name", ParsedSectionName),
-        ("parse_function", SNMPParseFunction),
-        ("host_label_function", HostLabelFunction),
-        ("supersedes", Set[SectionName]),
-        ("detect_spec", SNMPDetectBaseType),
-        ("trees", Sequence[SNMPTreeTuple]),
-        ("module", Optional[str]),  # not available for auto migrated plugins.
-    ],
-)
+class AgentSectionPlugin(NamedTuple):
+    name: SectionName
+    parsed_section_name: ParsedSectionName
+    parse_function: AgentParseFunction
+    host_label_function: HostLabelFunction
+    host_label_default_parameters: Optional[Dict[str, Any]]
+    host_label_ruleset_name: Optional[RuleSetName]
+    host_label_ruleset_type: RuleSetType
+    supersedes: Set[SectionName]
+    module: Optional[str]  # not available for auto migrated plugins.
+
+
+class SNMPSectionPlugin(NamedTuple):
+    name: SectionName
+    parsed_section_name: ParsedSectionName
+    parse_function: SNMPParseFunction
+    host_label_function: HostLabelFunction
+    host_label_default_parameters: Optional[Dict[str, Any]]
+    host_label_ruleset_name: Optional[RuleSetName]
+    host_label_ruleset_type: RuleSetType
+    detect_spec: SNMPDetectBaseType
+    trees: Sequence[SNMPTreeTuple]
+    supersedes: Set[SectionName]
+    module: Optional[str]  # not available for auto migrated plugins.
+
 
 SectionPlugin = Union[AgentSectionPlugin, SNMPSectionPlugin]
-
 ValueStore = MutableMapping[str, Any]

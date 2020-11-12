@@ -107,11 +107,14 @@ def test_create_agent_section_plugin():
     )
 
     assert isinstance(plugin, AgentSectionPlugin)
-    assert len(plugin) == 6
+    assert len(plugin) == 9
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
+    assert plugin.host_label_default_parameters is None
+    assert plugin.host_label_ruleset_name is None
+    assert plugin.host_label_ruleset_type == "merged"
     assert plugin.supersedes == {SectionName("bar"), SectionName("foo")}
 
 
@@ -138,11 +141,14 @@ def test_create_snmp_section_plugin():
     )
 
     assert isinstance(plugin, SNMPSectionPlugin)
-    assert len(plugin) == 8
+    assert len(plugin) == 11
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
+    assert plugin.host_label_default_parameters is None
+    assert plugin.host_label_ruleset_name is None
+    assert plugin.host_label_ruleset_type == "merged"
     assert plugin.detect_spec == detect
     assert plugin.trees == trees
     assert plugin.supersedes == {SectionName("bar"), SectionName("foo")}

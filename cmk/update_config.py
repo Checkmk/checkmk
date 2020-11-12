@@ -17,6 +17,8 @@ from typing import List, Tuple, Any, Dict, Set
 import argparse
 import logging
 import copy
+import subprocess
+import gzip
 
 from werkzeug.test import create_environ
 
@@ -150,6 +152,7 @@ class UpdateConfig:
             (self._create_search_index, "Creating search index"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._set_user_scheme_serial, "Set version specific user attributes"),
+            (self._rewrite_inventory_data_2to3, "Rewriting inventory data with 2to3"),
         ]
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->2.0
@@ -625,6 +628,47 @@ class UpdateConfig:
 
             users[user_id]["user_scheme_serial"] = USER_SCHEME_SERIAL
         save_users(users)
+
+    def _rewrite_inventory_data_2to3(self):
+        dirpaths = [
+            Path(cmk.utils.paths.var_dir + "/inventory/"),
+            Path(cmk.utils.paths.var_dir + "/inventory_archive/"),
+            Path(cmk.utils.paths.tmp_dir + "/status_data/"),
+        ]
+        files = []
+        for dirpath in dirpaths:
+            if not dirpath.exists():
+                self._logger.log(VERBOSE, "Skipping path %r (empty)\n" % str(dirpath))
+                continue
+
+            # Create a list of all files that need to be converted with 2to3
+            files += [
+                str(f)
+                for f in dirpath.iterdir()
+                if not f.name.endswith(".gz") and not f.name.startswith(".")
+            ]
+
+        # Execute 2to3
+        cmd = [
+            '2to3',
+            '--write',
+            '--nobackups',
+        ] + files
+        self._logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
+        p = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=False,
+        )
+        if p.wait() != 0:
+            self._logger.error("Failed to run 2to3 (Exit code: %d): %s", p.returncode,
+                               p.communicate()[0])
+
+        # Rewriting .gz files
+        for filepath in files:
+            with open(filepath, 'rb') as f_in, gzip.open(str(filepath) + '.gz', 'wb') as f_out:
+                f_out.writelines(f_in)
 
 
 def _set_show_mode(users, user_id):

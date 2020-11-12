@@ -1,0 +1,14 @@
+Title: Crash after reading HW/SW-Inventory from old datafiles
+Class: fix
+Compatible: compat
+Component: core
+Date: 1604906321
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The HW/SW-Inventory data from old versions can include Python 2 Longints.
+This caused exceptions when reading the data.
+Now the old datafiles are migrated so Checkmk can read the data.
+

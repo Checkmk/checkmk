@@ -1270,7 +1270,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'bdtms_tape_info',
         'bdtms_tape_module',
         'bdtms_tape_status',
-        'bi_aggregation',
         'bi_aggregation_connection',
         'bintec_brrp_status',
         'bintec_cpu',

@@ -8,9 +8,9 @@ from cmk.utils.object_diff import make_object_diff
 
 
 def test_make_object_diff_nothing_changed():
-    assert make_object_diff(None, None) == ''
-    assert make_object_diff({}, {}) == ''
-    assert make_object_diff([], []) == ''
+    assert make_object_diff(None, None) == 'Nothing was changed.'
+    assert make_object_diff({}, {}) == 'Nothing was changed.'
+    assert make_object_diff([], []) == 'Nothing was changed.'
 
 
 def test_make_object_diff_str():

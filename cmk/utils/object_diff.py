@@ -6,6 +6,7 @@
 
 from typing import Any
 
+from cmk.utils.i18n import _
 from deepdiff import DeepDiff  # type: ignore[import]
 from deepdiff.helper import get_type  # type: ignore[import]
 
@@ -17,7 +18,8 @@ __all__ = [
 def make_object_diff(old: Any, new: Any) -> str:
     """Creates a text representing the object differences for humans"""
     diff = DeepDiff(old, new, view="tree")
-    return pretty(diff)
+    text = pretty(diff)
+    return text or _("Nothing was changed.")
 
 
 def pretty(diff: DeepDiff) -> str:
@@ -33,17 +35,17 @@ def pretty(diff: DeepDiff) -> str:
 
 
 PRETTY_FORM_TEXTS = {
-    "type_changes": "Value of {diff_path} changed from {val_t1} to {val_t2}.",
-    "values_changed": "Value of {diff_path} changed from {val_t1} to {val_t2}.",
-    "dictionary_item_added": "Attribute {diff_path} with value {val_t2} added.",
-    "dictionary_item_removed": "Attribute {diff_path} with value {val_t1} removed.",
-    "iterable_item_added": "Item {diff_path} with value {val_t2} added.",
-    "iterable_item_removed": "Item {diff_path} with value {val_t1} removed.",
-    "attribute_added": "Attribute {diff_path} with value {val_t2} added.",
-    "attribute_removed": "Attribute {diff_path} with value {val_t1} removed.",
-    "set_item_added": "Item {val_t2} with value {val_t2} added.",
-    "set_item_removed": "Item {val_t1} with value {val_t1} removed.",
-    "repetition_change": "Repetition change for item {diff_path}.",
+    "type_changes": _("Value of {diff_path} changed from {val_t1} to {val_t2}."),
+    "values_changed": _("Value of {diff_path} changed from {val_t1} to {val_t2}."),
+    "dictionary_item_added": _("Attribute {diff_path} with value {val_t2} added."),
+    "dictionary_item_removed": _("Attribute {diff_path} with value {val_t1} removed."),
+    "iterable_item_added": _("Item {diff_path} with value {val_t2} added."),
+    "iterable_item_removed": _("Item {diff_path} with value {val_t1} removed."),
+    "attribute_added": _("Attribute {diff_path} with value {val_t2} added."),
+    "attribute_removed": _("Attribute {diff_path} with value {val_t1} removed."),
+    "set_item_added": _("Item {val_t2} with value {val_t2} added."),
+    "set_item_removed": _("Item {val_t1} with value {val_t1} removed."),
+    "repetition_change": _("Repetition change for item {diff_path}."),
 }
 
 

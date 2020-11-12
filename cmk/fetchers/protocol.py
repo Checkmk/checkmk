@@ -37,11 +37,13 @@ __all__ = [
 
 
 class CMCLogLevel(str, enum.Enum):
+    """The CMC logging level from `Logger.h::LogLevel`."""
     EMERGENCY = "emergenc"  # truncated!
     ALERT = "alert"
     CRITICAL = "critical"
     ERROR = "error"
     WARNING = "warning"
+    NOTICE = "notice"
     INFO = "info"
     DEBUG = "debug"
 
@@ -51,7 +53,7 @@ class CMCLogLevel(str, enum.Enum):
             logging.CRITICAL: CMCLogLevel.CRITICAL,
             logging.ERROR: CMCLogLevel.ERROR,
             logging.WARNING: CMCLogLevel.WARNING,
-            logging.INFO: CMCLogLevel.INFO,
+            logging.INFO: CMCLogLevel.NOTICE,
             log.VERBOSE: CMCLogLevel.INFO,
             logging.DEBUG: CMCLogLevel.DEBUG,
         }.get(level, CMCLogLevel.WARNING)

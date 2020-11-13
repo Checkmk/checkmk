@@ -489,33 +489,39 @@ static std::vector<std::filesystem::path> FillExternalCommandPaths() {
     return v;
 }
 
-static std::filesystem::path ExtractPathFromTheExecutable() {
+std::filesystem::path FindRootByExePath(const std::wstring& cmd_line) {
+    if (cmd_line.empty()) return {};  // something strange
+
     namespace fs = std::filesystem;
     std::error_code ec;
-    std::wstring cmd_line = wtools::GetArgv(0);
-    if (cmd_line.empty()) return {};  // something really bad
 
     fs::path exe = cma::tools::RemoveQuotes(cmd_line);
     exe = exe.lexically_normal();
+    if (!exe.has_extension()) {
+        exe += ".exe";
+    }
     if (!fs::exists(exe, ec)) return {};  // something wrong probably
 
     fs::path path = FindServiceImagePath(cma::srv::kServiceName);
 
-    if (fs::equivalent(path.lexically_normal(), exe, ec))
+    if (fs::equivalent(path.lexically_normal().parent_path(), exe.parent_path(),
+                       ec))
         return path.parent_path().lexically_normal();
 
     return {};
 }
 
 std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept {
+    using namespace std::literals;
     if (service_name.empty()) return {};
 
     XLOG::l.t("Try registry '{}'", wtools::ConvertToUTF8(service_name));
 
-    std::wstring key_path = L"System\\CurrentControlSet\\services\\";
+    auto key_path = L"System\\CurrentControlSet\\services\\"s;
     key_path += service_name;
+
     auto service_path_new =
-        wtools::GetRegistryValue(key_path, L"ImagePath", std::wstring());
+        wtools::GetRegistryValue(key_path, L"ImagePath"sv, std::wstring());
 
     return cma::tools::RemoveQuotes(service_path_new);
 }
@@ -570,7 +576,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
     }
 
     // argv[0]
-    auto ret = ExtractPathFromTheExecutable();
+    auto ret = FindRootByExePath(wtools::GetArgv(0));
     if (!ret.empty()) {
         root_ = ret.lexically_normal();
         XLOG::l.i("Set root '{}' from executable", root_.u8string());

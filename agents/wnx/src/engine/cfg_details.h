@@ -31,6 +31,8 @@ std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept;
 std::filesystem::path ExtractPathFromServiceName(
     std::wstring_view service_name) noexcept;
 
+std::filesystem::path FindRootByExePath(const std::wstring& cmd_line);
+
 enum class CleanMode { none, smart, all };
 
 CleanMode GetCleanDataFolderMode();

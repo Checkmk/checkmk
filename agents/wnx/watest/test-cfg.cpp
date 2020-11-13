@@ -370,6 +370,27 @@ TEST(CmaToolsDetails, ExtractPathFromServiceName) {
                                         "c:\\Program Files (x86)\\check_mk"));
     }
 }
+
+TEST(CmaToolsDetails, FindRootByExePath) {
+    using namespace std::literals;
+    auto x = ExtractPathFromServiceName(L"checkmkservice");
+    if (std::filesystem::exists(x)) {
+        auto x_no_ext = x / "check_mk_agent";
+        auto x_with_ext = x / "check_mk_agent.exe";
+        auto path = L"\""s + x_with_ext.wstring() + L"\""s;
+        auto upper_path = path;
+        cma::tools::WideUpper(upper_path);
+
+        auto valid_path = x.wstring();
+
+        EXPECT_EQ(valid_path, FindRootByExePath(path));
+        EXPECT_EQ(valid_path, FindRootByExePath(upper_path));
+        EXPECT_EQ(valid_path, FindRootByExePath(x_no_ext.wstring()));
+    } else {
+        GTEST_SKIP() << "agent not installed test is not possible";
+    }
+}
+
 }  // namespace details
 
 TEST(Cma, OnStart) {

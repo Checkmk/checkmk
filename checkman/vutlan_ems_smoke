@@ -1,4 +1,4 @@
-title: Vutlan EMS Smoke
+title: Vutlan EMS: Smoke
 catalog: hw/environment/vutlan
 agents: snmp
 license: GPL

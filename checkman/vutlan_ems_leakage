@@ -1,4 +1,4 @@
-title: Vutlan EMS Leakage
+title: Vutlan EMS: Leakage
 catalog: hw/environment/vutlan
 agents: snmp
 license: GPL

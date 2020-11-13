@@ -1,6 +1,6 @@
 title: Vutlan EMS: Humidity
 agents: snmp
-catalog: hw/environment/tinkerforge
+catalog: hw/environment/vutlan
 license: GPL
 distribution: check_mk
 description:

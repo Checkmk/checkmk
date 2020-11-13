@@ -83,6 +83,8 @@ $button-height: 28px;
 // Forms
 // -----------------------------------------------------------------------------
 
+$form-element-color: $inpage-highlight-color;
+
 // -----------------------------------------------------------------------------
 // General
 // -----------------------------------------------------------------------------
@@ -250,11 +252,9 @@ $tr-data-border-bottom: 1.8px solid $grey-7;
 
 $floatfilter-bg-color: null;
 
-$select2-bg-color: $inpage-highlight-color;
 $select2-search-field-color: rgb(63, 75, 93);
 $select2-border-color: $input-button-hover-bg-color;
 $select2-rendered-color: $font-color;
-$select2-dropdown-bg-color: $inpage-highlight-color;
 $select2-search-field-border: none;
 
 $td-single-bg-color: null;
@@ -490,8 +490,6 @@ $navigation-bg-color: $navbar-color;
 $page-menu-bg-color: $navbar-color;
 $snapin-bg-color: $navbar-color;
 $sidebar-border-color: $headline-color;
-$checkbox-bg-color: $inpage-highlight-color;
-$input-bg-color: $inpage-highlight-color;
 $form-font-color: rgb(234, 234, 234);
 $filter-group-title-font-color: $white;
 $popup-filters-border-radius: 2px;

@@ -512,7 +512,7 @@ class UserProfile(ABCUserProfilePage):
         if config.user.may('general.edit_user_attributes'):
             custom_user_attr_topics = get_user_attributes_by_topic()
             _show_custom_user_attr(user, custom_user_attr_topics.get("personal", []))
-            forms.header(_("Interface settings"), isopen=False)
+            forms.header(_("User interface settings"))
             _show_custom_user_attr(user, custom_user_attr_topics.get("interface", []))
 
         forms.end()

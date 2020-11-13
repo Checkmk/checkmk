@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import NamedTuple, List, Tuple, Set, Dict, Optional
+from typing import NamedTuple, List, Tuple, Set, Dict, Optional, Iterator
 
+import cmk.utils.plugin_registry
 from cmk.utils.type_defs import ServiceName
 from cmk.utils.bi.bi_lib import RequiredBIElement, BIHostSpec
 from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledAggregation, NodeResultBundle
@@ -19,6 +20,33 @@ BIAggregationFilter = NamedTuple("BIAggregationFilter", [
     ("group_names", List[str]),
     ("group_path_prefix", List[str]),
 ])
+
+
+class ABCPostprocessComputeResult:
+    def postprocess(self, bi_aggregation: BICompiledAggregation,
+                    node_result_bundle: NodeResultBundle) -> NodeResultBundle:
+        raise NotImplementedError()
+
+
+class BIComputerPostprocessingRegistry(
+        cmk.utils.plugin_registry.Registry[ABCPostprocessComputeResult]):
+    def plugin_name(self, instance: ABCPostprocessComputeResult) -> str:
+        return instance.__class__.__name__
+
+    def postprocess(
+        self,
+        compiled_aggregation: BICompiledAggregation,
+        node_result_bundles: List[NodeResultBundle],
+    ) -> Iterator[NodeResultBundle]:
+        for node_result_bundle in node_result_bundles:
+            postprocessed_bundle = node_result_bundle
+            for postprocessor in self.values():
+                postprocessed_bundle = postprocessor.postprocess(compiled_aggregation,
+                                                                 postprocessed_bundle)
+            yield postprocessed_bundle
+
+
+bi_computer_postprocessing_registry = BIComputerPostprocessingRegistry()
 
 
 class BIComputer:
@@ -73,9 +101,19 @@ class BIComputer:
     ) -> List[Tuple[BICompiledAggregation, List[NodeResultBundle]]]:
         results = []
         for compiled_aggregation, branches in required_aggregations:
-            results.append((compiled_aggregation,
-                            compiled_aggregation.compute_branches(branches,
-                                                                  self._bi_status_fetcher)))
+            node_result_bundles = compiled_aggregation.compute_branches(
+                branches,
+                self._bi_status_fetcher,
+            )
+
+            # Postprocess results. Custom user plugins may add additional information for each node
+            node_result_bundles = list(
+                bi_computer_postprocessing_registry.postprocess(
+                    compiled_aggregation,
+                    node_result_bundles,
+                ))
+
+            results.append((compiled_aggregation, node_result_bundles))
         return results
 
     def get_filtered_aggregation_branches(

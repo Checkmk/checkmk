@@ -2525,6 +2525,10 @@ class html(ABCHTMLGenerator):
             classes.append(class_)
 
         icon_name = icon["icon"] if isinstance(icon, dict) else icon
+        src = icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon")
+        if src.endswith("/icon_missing.svg") and title:
+            title += " (%s)" % _("icon not found")
+
         icon_element = self._render_start_tag(
             'img',
             close_tag=True,
@@ -2532,7 +2536,7 @@ class html(ABCHTMLGenerator):
             id_=id_,
             class_=classes,
             align='absmiddle' if middle else None,
-            src=icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon"),
+            src=src,
         )
 
         if isinstance(icon, dict) and icon["emblem"] is not None:
@@ -2554,16 +2558,21 @@ class html(ABCHTMLGenerator):
         7. images/icons/[name].png in site local hierarchy
         8. images/icons/[name].png in standard hierarchy
         """
+        path = "share/check_mk/web/htdocs"
         for theme in self.icon_themes():
-            path = "share/check_mk/web/htdocs/themes/%s/images/%s_%s" % (theme, prefix, icon_name)
+            theme_path = path + "/themes/%s/images/%s_%s" % (theme, prefix, icon_name)
             for file_type in ["svg", "png"]:
-                for base_dir in [cmk.utils.paths.omd_root, cmk.utils.paths.omd_root + "/local"]:
-                    if os.path.exists(base_dir + "/" + path + "." + file_type):
+                for base_dir in [
+                        cmk.utils.paths.omd_root + "/", cmk.utils.paths.omd_root + "/local/"
+                ]:
+                    if os.path.exists(base_dir + theme_path + "." + file_type):
                         return "themes/%s/images/%s_%s.%s" % (self._theme, prefix, icon_name,
                                                               file_type)
+                    if os.path.exists(base_dir + path + "/images/icons/%s.%s" %
+                                      (icon_name, file_type)):
+                        return "images/icons/%s.%s" % (icon_name, file_type)
 
-        # TODO: This fallback is odd. Find use cases and clean this up
-        return "images/icons/%s.png" % icon_name
+        return "themes/facelift/images/icon_missing.svg"
 
     def render_icon_button(self,
                            url: Union[None, str, str],

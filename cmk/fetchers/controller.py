@@ -6,6 +6,7 @@
 
 import contextlib
 import json
+import logging
 import os
 import signal
 from pathlib import Path
@@ -13,7 +14,6 @@ from types import FrameType
 from typing import Any, Dict, Iterator, List, NamedTuple, Optional
 
 import cmk.utils.cleanup
-import cmk.utils.log as log
 import cmk.utils.paths as paths
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
@@ -21,6 +21,8 @@ from cmk.utils.type_defs import ConfigSerial, HostName, result
 
 from . import FetcherType, protocol
 from .type_defs import Mode
+
+logger = logging.getLogger("cmk.helper")
 
 
 class GlobalConfig(NamedTuple):
@@ -82,7 +84,7 @@ class Command(NamedTuple):
 def process_command(command: Command) -> None:
     with _confirm_command_processed():
         global_config = load_global_config(command.serial)
-        log.logger.setLevel(global_config.log_level)
+        logger.setLevel(global_config.log_level)
         run_fetchers(**command._asdict())
 
 
@@ -91,7 +93,7 @@ def _confirm_command_processed() -> Iterator[None]:
     try:
         yield
     finally:
-        log.logger.info("Command done")
+        logger.info("Command done")
         write_bytes(protocol.make_end_of_reply_answer())
 
 
@@ -101,7 +103,7 @@ def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout:
     local_config_path = make_local_config_path(serial=serial, host_name=host_name)
 
     if not local_config_path.exists():
-        log.logger.warning("fetcher file for host '%s' and %s is absent", host_name, serial)
+        logger.warning("fetcher file for host %r and %s is absent", host_name, serial)
         return
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
@@ -116,7 +118,7 @@ def load_global_config(serial: ConfigSerial) -> GlobalConfig:
         with make_global_config_path(serial).open() as f:
             return GlobalConfig.deserialize(json.load(f))
     except FileNotFoundError:
-        log.logger.warning("fetcher global config %s is absent", serial)
+        logger.warning("fetcher global config %s is absent", serial)
         return GlobalConfig(log_level=5)
 
 
@@ -128,7 +130,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:
     except KeyError as exc:
         raise RuntimeError from exc
 
-    log.logger.debug("Executing fetcher: %s", entry["fetcher_type"])
+    logger.debug("Executing fetcher: %s", entry["fetcher_type"])
 
     try:
         fetcher_params = entry["fetcher_params"]
@@ -187,14 +189,14 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
                 ) for entry in fetchers[len(messages):]
             ])
 
-    log.logger.debug("Produced %d messages", len(messages))
+    logger.debug("Produced %d messages", len(messages))
     write_bytes(protocol.make_result_answer(*messages))
     for msg in filter(
             lambda msg: msg.header.payload_type is protocol.PayloadType.ERROR,
             messages,
     ):
-        log.logger.log(msg.header.status, "Error in %s fetcher: %s", msg.header.fetcher_type.name,
-                       msg.raw_data.error)
+        logger.log(msg.header.status, "Error in %s fetcher: %s", msg.header.fetcher_type.name,
+                   msg.raw_data.error)
 
 
 def make_local_config_path(serial: ConfigSerial, host_name: HostName) -> Path:

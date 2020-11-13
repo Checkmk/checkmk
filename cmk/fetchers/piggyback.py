@@ -24,7 +24,7 @@ class PiggybackFetcher(AgentFetcher):
         address: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.fetchers.piggyback"))
+        super().__init__(file_cache, logging.getLogger("cmk.helper.piggyback"))
         self.hostname: Final = hostname
         self.address: Final = address
         self.time_settings: Final = time_settings

@@ -31,7 +31,7 @@ class TCPFetcher(AgentFetcher):
         encryption_settings: Mapping[str, str],
         use_only_cache: bool,
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.fetchers.tcp"))
+        super().__init__(file_cache, logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
         assert address[0] is not None

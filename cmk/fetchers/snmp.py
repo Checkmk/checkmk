@@ -118,7 +118,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         do_status_data_inventory: bool,
         snmp_config: SNMPHostConfig,
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.fetchers.snmp"))
+        super().__init__(file_cache, logging.getLogger("cmk.helper.snmp"))
         self.snmp_plugin_store: Final = snmp_plugin_store
         self.disabled_sections: Final = disabled_sections
         self.configured_snmp_sections: Final = configured_snmp_sections

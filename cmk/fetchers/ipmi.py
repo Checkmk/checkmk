@@ -30,7 +30,7 @@ class IPMIFetcher(AgentFetcher):
         username: str,
         password: str,
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.fetchers.ipmi"))
+        super().__init__(file_cache, logging.getLogger("cmk.helper.ipmi"))
         self.address: Final = address
         self.username: Final = username
         self.password: Final = password

@@ -29,7 +29,7 @@ class ProgramFetcher(AgentFetcher):
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.fetchers.program"))
+        super().__init__(file_cache, logging.getLogger("cmk.helper.program"))
         self.cmdline: Final = cmdline
         self.stdin: Final = stdin
         self.is_cmc: Final = is_cmc

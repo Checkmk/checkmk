@@ -14,7 +14,6 @@ from typing import Any, Dict, final, Final, Generic, Literal, Optional, Type, Ty
 import cmk.utils
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException, MKIPAddressLookupError
-from cmk.utils.log import logger as cmk_logger
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, result
 
@@ -48,7 +47,7 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
         self.disabled: Final[bool] = disabled
         self.use_outdated: Final[bool] = use_outdated
         self.simulation: Final[bool] = simulation
-        self._logger: Final[logging.Logger] = cmk_logger
+        self._logger: Final[logging.Logger] = logging.getLogger("cmk.helper")
 
     def __hash__(self) -> int:
         *_rest, last = itertools.accumulate(

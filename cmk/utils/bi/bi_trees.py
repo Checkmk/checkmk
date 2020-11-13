@@ -131,9 +131,14 @@ class BICompiledLeaf(ABCBICompiledNode):
                 (self.site_id, self.host_name, self.service_description))
             if assumed_state is not None:
                 assumed_result = NodeComputeResult(
-                    int(assumed_state), downtime_state, bool(entity.acknowledged),
+                    int(assumed_state),
+                    downtime_state,
+                    bool(entity.acknowledged),
                     _("Assumed to be %s" % self._get_state_name(assumed_state)),
-                    entity.in_service_period, {})
+                    entity.in_service_period,
+                    {},
+                    {},
+                )
 
         return NodeResultBundle(
             NodeComputeResult(
@@ -142,6 +147,7 @@ class BICompiledLeaf(ABCBICompiledNode):
                 bool(entity.acknowledged),
                 entity.plugin_output,
                 bool(entity.in_service_period),
+                {},
                 {},
             ),
             assumed_result,
@@ -299,9 +305,11 @@ class BICompiledRule(ABCBICompiledNode):
             state,
             downtime_state,
             is_acknowledged,
-            self.properties.state_messages.get(state, ""),
+            # TODO: fix str casting in later commit
+            self.properties.state_messages.get(str(state), ""),
             in_service_period,
             self.properties.state_messages,
+            {},
         )
 
 

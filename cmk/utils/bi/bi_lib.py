@@ -77,6 +77,7 @@ NodeComputeResult = NamedTuple("NodeComputeResult", [
     ("output", str),
     ("in_service_period", bool),
     ("state_messages", dict),
+    ("custom_infos", dict),
 ])
 
 NodeResultBundle = NamedTuple("NodeResultBundle", [

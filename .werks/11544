@@ -1,0 +1,13 @@
+Title: Revert changes related to werk 10150: 'mssql_transactionlogs: Do not discover unneeded transaction logs'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605254968
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Werk 10150 introduced changes which are not applicable in a general manner leading to services
+being not discovered where they should.
+This change reverts those changes.

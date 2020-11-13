@@ -9,7 +9,6 @@ import pytest  # type: ignore[import]
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Service, Result, State as state
 import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
-import cmk.base.plugins.agent_based.mssql_databases as msdb
 
 
 @pytest.fixture(name="section", scope="module")
@@ -40,39 +39,28 @@ def _get_section():
 
 
 def test_discovery_mssql_transactionlogs(section):
-
-    section_db = msdb.parse_mssql_databases([
-        ['MSSQL46', 'master', 'ONLINE', 'SIMPLE', '0', '0'],
-        ['MSSQL46', 'tempdb', 'ONLINE', 'SIMPLE', '0', '0'],
-        ['MSSQL46', 'model', 'ONLINE', 'FULL', '0', '0'],
-        ['MSSQL46', 'msdb', 'ONLINE', 'SIMPLE', '0', '0'],
-        ['MSSQL46', 'NOC_CONFIG_T', 'ONLINE', 'FULL', '0', '0'],
-        ['MSSQL46', 'DASH_CONFIG_T', 'ONLINE', 'FULL', '0', '0'],
-        ['MSSQL46', 'NOC_ALARM_T', 'ONLINE', 'FULL', '0', '1'],
-        ['MSSQL46', 'CorreLog_Report_T', 'ONLINE', 'FULL', '0', '0'],
-        ['MSSQL46', 'test_autoclose', 'ONLINE', 'FULL', '1', '0'],
-    ])
-
     assert sorted(
-        msdt.discover_mssql_transactionlogs([Parameters({})], section, section_db),
+        msdt.discover_mssql_transactionlogs([Parameters({})], section),
         key=lambda s: s.item or "",  # type: ignore[attr-defined]
     ) == [
         Service(item='MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log'),
         Service(item='MSSQL46.DASH_CONFIG_T.DASH_CONFIG_T_log'),
         Service(item='MSSQL46.NOC_ALARM_T.NOC_ALARM_T_log'),
         Service(item='MSSQL46.NOC_CONFIG_T.NOC_CONFIG_T_log'),
+        Service(item='MSSQL46.master.mastlog'),
         Service(item='MSSQL46.model.modellog'),
+        Service(item='MSSQL46.msdb.MSDBLog'),
+        Service(item='MSSQL46.tempdb.templog'),
         Service(item='MSSQL46.test_autoclose.test_autoclose_log'),
     ]
 
 
 def test_check_mssql_transactionlogs(section):
     assert list(
-        msdt.check_mssql_transactionlogs(
+        msdt.check_mssql_common(
             'MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log',
             Parameters({}),
             section,
-            None,
         ),) == [
             Result(
                 state=state.OK,

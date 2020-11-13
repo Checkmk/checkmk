@@ -299,8 +299,11 @@ TheMiniBox::StartMode GetStartMode(const std::filesystem::path& filepath) {
     auto fname = filepath.filename();
     auto filename = fname.u8string();
     cma::tools::StringLower(filename);
-    if (filename == cma::cfg::files::kAgentUpdater)
+    if (filename ==
+        wtools::ConvertToUTF8(cma::cfg::files::kAgentUpdaterPython)) {
+        XLOG::d.i("Plugin '{}' has updater start mode", filepath.u8string());
         return TheMiniBox::StartMode::updater;
+    }
 
     return TheMiniBox::StartMode::job;
 }

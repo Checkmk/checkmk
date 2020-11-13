@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 
@@ -57,7 +58,6 @@ constexpr const wchar_t* kDefaultUserExt = L".user.yml";
 // special
 constexpr std::string_view kUpgradeProtocol = "upgrade.protocol";
 constexpr std::string_view kInstallProtocol = "install.protocol";
-constexpr std::string_view kAgentUpdater = "cmk-update-agent.exe";
 
 // located in test_files/config
 // constexpr const wchar_t* kDefaultDevConfig = L"check_mk_dev.yml";
@@ -65,6 +65,8 @@ constexpr const wchar_t* kDefaultDevConfigUTF16 = L"check_mk_dev_utf16.yml";
 constexpr const wchar_t* kDefaultDevMinimum = L"check_mk_dev_minimum.yml";
 
 constexpr const wchar_t* kDefaultDevUt = L"check_mk_dev_unit_testing.yml";
+
+constexpr const wchar_t* kAgentUpdaterPython = L"cmk_update_agent.checkmk.py";
 
 }  // namespace files
 

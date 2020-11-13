@@ -593,7 +593,7 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
         XLOG::l.e("Plugins directory '{}' not found", dir.u8string());
         return 1;
     }
-    auto f = dir / "cmk_update_agent.checkmk.py";
+    auto f = dir / cma::cfg::files::kAgentUpdaterPython;
     if (!fs::exists(f)) {
         XLOG::l.w("Agent Updater File '{}' not found", f.u8string());
         XLOG::SendStringToStdio(

@@ -2324,8 +2324,8 @@ TEST(CmaMain, Config) {
     std::filesystem::path path = ".";
 
     EXPECT_EQ(TheMiniBox::StartMode::updater,
-              GetStartMode(path / cfg::files::kAgentUpdater));
-    auto str = (path / cfg::files::kAgentUpdater).wstring();
+              GetStartMode(path / cma::cfg::files::kAgentUpdaterPython));
+    auto str = (path / cma::cfg::files::kAgentUpdaterPython).wstring();
     cma::tools::WideUpper(str);
 
     EXPECT_EQ(TheMiniBox::StartMode::updater, GetStartMode(str));

@@ -1,0 +1,11 @@
+Title: Fix crash in some check previews during discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605274944
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Some check plugins crashed due to missing external information (such as host name) when trying to render the service preview during discovery.

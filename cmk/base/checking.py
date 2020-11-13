@@ -11,6 +11,7 @@ import os
 import signal
 import time
 from collections import defaultdict
+from contextlib import contextmanager
 from random import Random
 from types import FrameType
 from typing import (
@@ -141,8 +142,6 @@ def do_check(
         # is already an address (2nd argument)
         if ipaddress is None and not host_config.is_cluster:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
-
-        item_state.load(hostname)
 
         # When monitoring Checkmk clusters, the cluster nodes are responsible for fetching all
         # information from the monitored host and cache the result for the cluster checks to be
@@ -324,19 +323,37 @@ def _do_all_checks_on_host(
     *,
     services: List[Service],
 ) -> Tuple[int, List[CheckPluginName]]:
-    hostname: HostName = host_config.hostname
     num_success = 0
     plugins_missing_data: Set[CheckPluginName] = set()
 
-    check_api_utils.set_hostname(hostname)
-    for service in services:
-        success = execute_check(multi_host_sections, host_config, ipaddress, service)
-        if success:
-            num_success += 1
-        else:
-            plugins_missing_data.add(service.check_plugin_name)
+    with host_context(host_config.hostname, write_state=_submit_to_core):
+        for service in services:
+            success = execute_check(multi_host_sections, host_config, ipaddress, service)
+            if success:
+                num_success += 1
+            else:
+                plugins_missing_data.add(service.check_plugin_name)
 
     return num_success, sorted(plugins_missing_data)
+
+
+@contextmanager
+def host_context(host_name: HostName, *, write_state: bool):
+    """Make a bit of context information globally available
+
+    So that functions called by checks know this context.
+    This is used for both legacy and agent_based API.
+    """
+    # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
+    try:
+        check_api_utils.set_hostname(host_name)
+        item_state.load(host_name)
+        yield
+    finally:
+        check_api_utils.reset_hostname()
+        if write_state:
+            item_state.save(host_name)
+        item_state.cleanup_item_states()
 
 
 def _get_services_to_fetch(
@@ -408,6 +425,20 @@ def service_outside_check_period(config_cache: config.ConfigCache, hostname: Hos
     return True
 
 
+@contextmanager
+def _service_context(service: Service):
+    """Make a bit of context information globally available
+
+    So that functions called by checks know this context.
+    set_service is needed for predictive levels!
+    This is used for both legacy and agent_based API.
+    """
+    # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
+    check_api_utils.set_service(str(service.check_plugin_name), service.description)
+    with value_store.context(service.check_plugin_name, service.item):
+        yield
+
+
 def execute_check(multi_host_sections: MultiHostSections, host_config: config.HostConfig,
                   ipaddress: Optional[HostAddress], service: Service) -> bool:
 
@@ -422,12 +453,13 @@ def execute_check(multi_host_sections: MultiHostSections, host_config: config.Ho
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
-        return _execute_check_legacy_mode(
-            multi_host_sections,
-            host_config.hostname,
-            ipaddress,
-            service,
-        )
+        with _service_context(service):
+            return _execute_check_legacy_mode(
+                multi_host_sections,
+                host_config.hostname,
+                ipaddress,
+                service,
+            )
 
     submit, data_received, result = get_aggregated_result(
         multi_host_sections,
@@ -521,7 +553,7 @@ def get_aggregated_result(
         if plugin.check_default_parameters is not None:
             kwargs["params"] = params_function()
 
-        with value_store.context(plugin.name, service.item):
+        with _service_context(service):
             result = _aggregate_results(check_function(**kwargs))
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
@@ -556,11 +588,6 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
     if check_function is None:
         _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
         return True
-
-    # Make a bit of context information globally available, so that functions
-    # called by checks know this context. check_api_utils.set_service has
-    # already been called.
-    item_state.set_item_state_prefix(str(service.check_plugin_name), service.item)
 
     section_name = legacy_check_plugin_name.split('.')[0]
 

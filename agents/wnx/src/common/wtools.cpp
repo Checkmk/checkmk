@@ -833,7 +833,7 @@ DataSequence ReadPerformanceDataFromRegistry(
 
         if (ret != ERROR_MORE_DATA) {
             XLOG::l("Can't read counter '{}' error [{}]",
-                    wtools::ConvertToUTF8(counter_name), ret);
+                    wtools::ConvertToUTF8(CounterName), ret);
             return {};
         }
 

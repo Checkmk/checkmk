@@ -99,7 +99,7 @@ def api_get_aggregation_state(filter_names: Optional[List[str]] = None,
         if actual_result.custom_infos:
             own_infos["custom"] = actual_result.custom_infos
 
-        if actual_result.state != BIStates.OK:
+        if actual_result.state not in [BIStates.OK, BIStates.PENDING]:
             node_instance = node_result_bundle.instance
             line_tokens = []
             if isinstance(node_instance, BICompiledRule):

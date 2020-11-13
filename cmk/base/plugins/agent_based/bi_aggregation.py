@@ -6,6 +6,7 @@
 from typing import Any, Dict
 import ast
 
+from cmk.base.check_api_utils import state_markers  # pylint: disable=cmk-module-layer-violation
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .agent_based_api.v1 import register, Result, State, Service
 
@@ -30,14 +31,35 @@ def discover_bi_aggregation(section: Section) -> DiscoveryResult:
         yield Service(item=aggr_name)
 
 
+def render_bi_infos(infos):
+    if not infos:
+        return None
+
+    own_infos, nested_infos = infos
+    lines = []
+    if "error" in own_infos:
+        lines.append("%s %s" %
+                     (state_markers[own_infos["error"]["state"]], own_infos["error"]["output"]))
+    if "custom" in own_infos:
+        lines.append(own_infos["custom"]["output"])
+
+    for nested_info in nested_infos:
+        nested_lines = render_bi_infos(nested_info)
+        for idx, line in enumerate(nested_lines):
+            if idx == 0:
+                lines.append("+-- %s" % line)
+            else:
+                lines.append("| %s" % line)
+
+    return lines
+
+
 def check_bi_aggregation(item: str, section: Section) -> CheckResult:
     bi_data = section.get(item)
     if not bi_data:
         return
 
-    aggr_state = bi_data["aggr_state"]
-
-    overall_state = aggr_state["state_computed_by_agent"]
+    overall_state = bi_data["state_computed_by_agent"]
     yield Result(
         state=State(overall_state),
         summary="Aggregation state: %s" % ['Ok', 'Warning', 'Critical', 'Unknown'][overall_state],
@@ -45,12 +67,17 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
 
     yield Result(
         state=State.OK,
-        summary="In downtime: %s" % ("yes" if aggr_state.get("in_downtime") else "no"),
+        summary="In downtime: %s" % ("yes" if bi_data["in_downtime"] else "no"),
     )
     yield Result(
         state=State.OK,
-        summary="Acknowledged: %s" % ("yes" if aggr_state.get("acknowledged") else "no"),
+        summary="Acknowledged: %s" % ("yes" if bi_data["acknowledged"] else "no"),
     )
+
+    if bi_data["infos"]:
+        infos = ["", "Aggregation Errors"]
+        infos.extend(render_bi_infos(bi_data["infos"]))
+        yield Result(state=State.OK, notice="\n".join(infos))
 
 
 register.check_plugin(

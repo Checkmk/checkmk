@@ -32,7 +32,6 @@ from cmk.gui.valuespec import (
     ListChoiceChoices,
     TextAscii,
     Timerange,
-    IconSelector,
 )
 from cmk.gui.view_utils import CellContent
 
@@ -215,14 +214,9 @@ def paint_icons(what, row):
         return 'icons', ' '.join([i[1] for i in toplevel_icons])
 
     output = HTML()
-    icon_class = IconSelector()
-    available_icons = icon_class.available_icons()
     for icon in toplevel_icons:
         if len(icon) == 4:
             icon_name, title, url_spec = icon[1:]
-            if icon_name not in available_icons:
-                icon_name = "missing"
-                title += " (%s)" % _("icon not found")
             if url_spec:
                 url, target_frame = transform_action_url(url_spec)
                 url = replace_action_url_macros(url, what, row)

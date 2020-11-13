@@ -61,14 +61,13 @@ PYTHON3_MODULES_LIST += zipp-0.6.0.tar.gz # needed by importlib_metadata
 PYTHON3_MODULES_LIST += attrs-20.2.0.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += importlib_metadata-1.2.0.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += pyrsistent-0.15.6.tar.gz # needed by jsonschema
-PYTHON3_MODULES_LIST += Click-7.0.tar.gz # needed by clickclick
 PYTHON3_MODULES_LIST += Werkzeug-0.16.0.tar.gz # Needed by Flask
 PYTHON3_MODULES_LIST += jsonschema-3.2.0.tar.gz # needed by openapi-spec-validator
 PYTHON3_MODULES_LIST += Flask-1.1.1.tar.gz # direct dependency
 PYTHON3_MODULES_LIST += pytz-2020.1.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Babel-2.8.0.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Flask-Babel-1.0.0.tar.gz # needed by GUI for i18n support (lazy gettext)
-PYTHON3_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += openapi-spec-validator-0.2.9.tar.gz # direct dependency
 PYTHON3_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
@@ -225,16 +224,16 @@ python3-modules-dump-Pipfile:
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
 	@echo 'pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml'
-	@echo 'responses = "*" # used for unit tests'
+	@echo 'pytest-profiling = "*"  # used to analyze test run performance'
+	@echo 'responses = "*"  # used for unit tests'
 	@echo 'polib = "*"  # used by locale/add-authors for working with .po files'
 	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
-	@echo 'pyfakefs = "*" # used for unit tests'
 	@echo 'flake8 = "*"'
-	@echo 'sphinx = "*" # used for the plugin API documentation'
-	@echo 'sphinx-autodoc-typehints = "*" # used for the plugin API documentation'
-	@echo 'sphinx-rtd-theme = "*" # used for the plugin API documentation'
-	@echo '3to2 = "*" # used for converting agent plugins from py3 to 2'
+	@echo 'sphinx = "*"  # used for the plugin API documentation'
+	@echo 'sphinx-autodoc-typehints = "*"  # used for the plugin API documentation'
+	@echo 'sphinx-rtd-theme = "*"  # used for the plugin API documentation'
+	@echo '3to2 = "*"  # used for converting agent plugins from py3 to 2'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

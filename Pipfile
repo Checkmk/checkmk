@@ -25,16 +25,16 @@ pytest = "*"  # used by various test/Makefile targets
 pytest-cov = "*"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
 pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture
 pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml
-pytest-profiling = "*" # used to analyze test run performance
-responses = "*" # used for unit tests
+pytest-profiling = "*"  # used to analyze test run performance
+responses = "*"  # used for unit tests
 polib = "*"  # used by locale/add-authors for working with .po files
 webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before commiting changes
 flake8 = "*"
-sphinx = "*" # used for the plugin API documentation
-sphinx-autodoc-typehints = "*" # used for the plugin API documentation
-sphinx-rtd-theme = "*" # used for the plugin API documentation
-3to2 = "*" # used for converting agent plugins from py3 to 2
+sphinx = "*"  # used for the plugin API documentation
+sphinx-autodoc-typehints = "*"  # used for the plugin API documentation
+sphinx-rtd-theme = "*"  # used for the plugin API documentation
+3to2 = "*"  # used for converting agent plugins from py3 to 2
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py
@@ -64,61 +64,61 @@ certifi = "==2019.11.28"  # needed by requests
 chardet = "==3.0.4"  # needed by requests
 urllib3 = "==1.25.10"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
-pyghmi = "==1.5.13" # needed by base for IPMI
+pyghmi = "==1.5.13"  # needed by base for IPMI
 requests = {version = "==2.22.0",extras = ["security"]}  # needed by DCD, connexion
-pykerberos = "==1.2.1" # needed by check_bi_aggr
-requests-kerberos = "==0.12.0" # needed by check_bi_aggr
-MarkupSafe = "==1.1.1" # needed by Jinja2
-itsdangerous = "==1.1.0" # needed by Flask
-Jinja2 = "==2.10.3" # needed by Flask
+pykerberos = "==1.2.1"  # needed by check_bi_aggr
+requests-kerberos = "==0.12.0"  # needed by check_bi_aggr
+MarkupSafe = "==1.1.1"  # needed by Jinja2
+itsdangerous = "==1.1.0"  # needed by Flask
+Jinja2 = "==2.10.3"  # needed by Flask
 more-itertools = "==8.0.2"  # needed by connexion through zipp, pytest
-zipp = "==0.6.0" # needed by importlib_metadata
-attrs = "==20.2.0" # needed by jsonschema
-importlib_metadata = "==1.2.0" # needed by jsonschema
-pyrsistent = "==0.15.6" # needed by jsonschema
-Werkzeug = "==0.16.0" # Needed by Flask
-jsonschema = "==3.2.0" # needed by openapi-spec-validator
-Flask = "==1.1.1" # direct dependency
-pytz = "==2020.1" # needed by Flask-Babel
-Babel = "==2.8.0" # needed by Flask-Babel
-Flask-Babel = "==1.0.0" # needed by GUI for i18n support (lazy gettext)
-swagger_ui_bundle = "==0.0.6" # direct dependency
-psutil = "==5.6.7" # needed for omdlib
-passlib = "==1.7.2" # needed for omdlib
-defusedxml = "==0.6.0" # needed by jira
-oauthlib = "==3.1.0" # needed by requests-oauthlib and jira
-pbr = "==5.4.4" # needed by jira
-requests-oauthlib = "==1.3.0" # needed by jira
-requests-toolbelt = "==0.9.1" # needed by jira
-PyJWT = "==1.7.1" # needed by jira
-jira = "==2.0.0" # needed by jira
-adal = "==1.2.0" # needed by agent_azure
-Pillow = "==7.2.0" # needed by GUI
-python-ldap = "==3.3.1" # needed by GUI (User sync), python-active-directory
-dicttoxml = "==1.7.4" # needed by GUI (API XML format)
-Cython = "==0.29.19" # needed by numpy
-numpy = "==1.18.4" # needed by GUI (metrics)
-reportlab = "==3.5.34" # needed by GUI (reporting)
-PyPDF2 = "==1.26.0" # needed by GUI (reporting)
-roman = "==3.2" # needed by GUI (reporting)
-cachetools = "==4.1.1" # needed by kubernetes
-google-auth = "==1.21.3" # needed by kubernetes
-rsa = "==4.6" # needed by kubernetes
-websocket_client = "==0.57.0" # needed by kubernetes
-kubernetes = "==10.0.1" # needed by kubernetes
-docutils = "==0.15.2" # needed by boto3 (aws)
-jmespath = "==0.9.4" # needed by boto3 (aws)
-botocore = "==1.14.11" # needed by boto3 (aws)
-s3transfer = "==0.3.2" # needed by boto3 (aws)
-boto3 = "==1.11.11" # needed by boto3 (aws)
-python-snap7 = "==0.10" # needed by Siemens PLC special agent
-PyMySQL = "==0.9.3" # needed by check_sql active check
-psycopg2-binary = "==2.8.4" # needed by check_sql active check
+zipp = "==0.6.0"  # needed by importlib_metadata
+attrs = "==20.2.0"  # needed by jsonschema
+importlib_metadata = "==1.2.0"  # needed by jsonschema
+pyrsistent = "==0.15.6"  # needed by jsonschema
+Werkzeug = "==0.16.0"  # Needed by Flask
+jsonschema = "==3.2.0"  # needed by openapi-spec-validator
+Flask = "==1.1.1"  # direct dependency
+pytz = "==2020.1"  # needed by Flask-Babel
+Babel = "==2.8.0"  # needed by Flask-Babel
+Flask-Babel = "==1.0.0"  # needed by GUI for i18n support (lazy gettext)
+openapi-spec-validator = "==0.2.9"  # direct dependency
+swagger_ui_bundle = "==0.0.6"  # direct dependency
+psutil = "==5.6.7"  # needed for omdlib
+passlib = "==1.7.2"  # needed for omdlib
+defusedxml = "==0.6.0"  # needed by jira
+oauthlib = "==3.1.0"  # needed by requests-oauthlib and jira
+pbr = "==5.4.4"  # needed by jira
+requests-oauthlib = "==1.3.0"  # needed by jira
+requests-toolbelt = "==0.9.1"  # needed by jira
+PyJWT = "==1.7.1"  # needed by jira
+jira = "==2.0.0"  # needed by jira
+adal = "==1.2.0"  # needed by agent_azure
+Pillow = "==7.2.0"  # needed by GUI
+python-ldap = "==3.3.1"  # needed by GUI (User sync), python-active-directory
+dicttoxml = "==1.7.4"  # needed by GUI (API XML format)
+Cython = "==0.29.19"  # needed by numpy
+numpy = "==1.18.4"  # needed by GUI (metrics)
+reportlab = "==3.5.34"  # needed by GUI (reporting)
+PyPDF2 = "==1.26.0"  # needed by GUI (reporting)
+roman = "==3.2"  # needed by GUI (reporting)
+cachetools = "==4.1.1"  # needed by kubernetes
+google-auth = "==1.21.3"  # needed by kubernetes
+rsa = "==4.6"  # needed by kubernetes
+websocket_client = "==0.57.0"  # needed by kubernetes
+kubernetes = "==10.0.1"  # needed by kubernetes
+docutils = "==0.15.2"  # needed by boto3 (aws)
+jmespath = "==0.9.4"  # needed by boto3 (aws)
+botocore = "==1.14.11"  # needed by boto3 (aws)
+s3transfer = "==0.3.2"  # needed by boto3 (aws)
+boto3 = "==1.11.11"  # needed by boto3 (aws)
+python-snap7 = "==0.10"  # needed by Siemens PLC special agent
+PyMySQL = "==0.9.3"  # needed by check_sql active check
+psycopg2-binary = "==2.8.4"  # needed by check_sql active check
 apispec = "==3.3.1"  # direct dependency
 marshmallow = "==3.7.1"  # direct dependency
 marshmallow-oneofschema = "==2.0.1"  # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
-openapi-spec-validator = "==0.2.9" # direct dependency
 mypy_extensions = "==0.4.3"  # direct dependency
 typing_extensions = "==3.7.4.1"  # direct dependency
 dnspython = "==1.16.0"  # needed by python-active-directory
@@ -129,7 +129,8 @@ yapf = "==0.30.0"  # formatter for REST-API documentation code examples
 pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
 repoze-profile = "==2.3"  # used for GUI/API profiling
 pyparsing = "==2.4.7"  # direct dependency
-deepdiff = "==5.0.2" # used for recording setup audit log
+ordered-set = "==4.0.2"  # needed by deepdiff
+deepdiff = "==5.0.2"  # used for recording setup audit log
 
 [requires]
 python_version = "3.8"

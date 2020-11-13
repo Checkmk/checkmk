@@ -244,10 +244,10 @@ class ModeAuditLog(WatoMode):
                 table.cell(_("User"), html.render_text(user), css="nobreak")
 
                 text = escaping.escape_text(entry.text).replace("\n", "<br>\n")
-                table.text_cell(_("Summary"), text, css="fill")
+                table.cell(_("Summary"), text, css="fill")
 
                 diff_text = entry.diff_text.replace("\n", "<br>\n") if entry.diff_text else ""
-                table.text_cell(_("Changed attributes"), diff_text, css="fill")
+                table.cell(_("Changed attributes"), diff_text, css="fill")
 
     def _get_next_daily_paged_log(self, log):
         start = self._get_start_date()

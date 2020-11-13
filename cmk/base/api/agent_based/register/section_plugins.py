@@ -78,12 +78,11 @@ def _validate_parse_function(
 
 
 def _validate_host_label_kwargs(
-        *,
-        host_label_function: HostLabelFunction,
-        host_label_default_parameters: Optional[Dict[str, Any]],
-        host_label_ruleset_name: Optional[str],
-        host_label_ruleset_type: RuleSetType,
-        name: str = "",  # TODO: remove this
+    *,
+    host_label_function: HostLabelFunction,
+    host_label_default_parameters: Optional[Dict[str, Any]],
+    host_label_ruleset_name: Optional[str],
+    host_label_ruleset_type: RuleSetType,
 ) -> None:
     validate_ruleset_type(host_label_ruleset_type)
     validate_default_parameters(
@@ -91,12 +90,6 @@ def _validate_host_label_kwargs(
         host_label_ruleset_name,
         host_label_default_parameters,
     )
-
-    # TODO:
-    # The following is a special case for the ps plugin. This should be done
-    # in a more general sense when CMK-5158 is addressed. Make sure to grep for
-    # "CMK-5158" in the code base.
-    host_label_default_parameters = {} if name in ("ps", "ps_lnx") else None
 
     validate_function_arguments(
         type_label="host_label",
@@ -252,7 +245,6 @@ def create_agent_section_plugin(
                 host_label_default_parameters=host_label_default_parameters,
                 host_label_ruleset_name=host_label_ruleset_name,
                 host_label_ruleset_type=host_label_ruleset_type,
-                name=name,
             )
 
     return AgentSectionPlugin(

@@ -45,6 +45,9 @@ def agent_section(
     parse_function: Optional[AgentParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[Dict[str, Any]] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = "merged",
     supersedes: Optional[List[str]] = None,
 ) -> None:
     """Register an agent section to checkmk
@@ -72,6 +75,15 @@ def agent_section(
                            returned by the parse function.
                            It is expected to yield objects of type :class:`HostLabel`.
 
+      host_label_default_parameters: Default parameters for the host label function. Must match
+                           the ValueSpec of the corresponding WATO ruleset, if it exists.
+
+      host_label_ruleset_name: The name of the host label ruleset.
+
+      host_label_ruleset_type: The ruleset type is either "all" or "merged". It describes wether
+                           this plugins needs the merged result of the effective rules,
+                           or every individual rule matching for the current host.
+
       supersedes:          A list of section names which are superseded by this sections. If this
                            section will be parsed to something that is not `None` (see above) all
                            superseded section will not be considered at all.
@@ -82,6 +94,9 @@ def agent_section(
         parsed_section_name=parsed_section_name,
         parse_function=parse_function,
         host_label_function=host_label_function,
+        host_label_default_parameters=host_label_default_parameters,
+        host_label_ruleset_name=host_label_ruleset_name,
+        host_label_ruleset_type=host_label_ruleset_type,
         supersedes=supersedes,
         module=get_validated_plugin_module_name(),
     )
@@ -101,6 +116,9 @@ def snmp_section(
     parse_function: Optional[SimpleSNMPParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[Dict[str, Any]] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = "merged",
     supersedes: Optional[List[str]] = None,
 ) -> None:
     pass
@@ -115,6 +133,9 @@ def snmp_section(
     parse_function: Optional[SNMPParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[Dict[str, Any]] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = "merged",
     supersedes: Optional[List[str]] = None,
 ) -> None:
     pass
@@ -128,6 +149,9 @@ def snmp_section(
     parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[Dict[str, Any]] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = "merged",
     supersedes: Optional[List[str]] = None,
 ) -> None:
     """Register an snmp section to checkmk
@@ -168,6 +192,15 @@ def snmp_section(
                            returned by the parse function.
                            It is expected to yield objects of type :class:`HostLabel`.
 
+      host_label_default_parameters: Default parameters for the host label function. Must match
+                           the ValueSpec of the corresponding WATO ruleset, if it exists.
+
+      host_label_ruleset_name: The name of the host label ruleset.
+
+      host_label_ruleset_type: The ruleset type is either "all" or "merged". It describes wether
+                           this plugins needs the merged result of the effective rules,
+                           or every individual rule matching for the current host.
+
       supersedes:          A list of section names which are superseded by this sections. If this
                            section will be parsed to something that is not `None` (see above) all
                            superseded section will not be considered at all.
@@ -178,6 +211,9 @@ def snmp_section(
         parsed_section_name=parsed_section_name,
         parse_function=parse_function,
         host_label_function=host_label_function,
+        host_label_default_parameters=host_label_default_parameters,
+        host_label_ruleset_name=host_label_ruleset_name,
+        host_label_ruleset_type=host_label_ruleset_type,
         detect_spec=detect,
         fetch=fetch,
         supersedes=supersedes,
@@ -232,6 +268,10 @@ def check_plugin(
                                 ValueSpec of the corresponding WATO ruleset, if it exists.
 
       discovery_ruleset_name:   The name of the discovery ruleset.
+
+      discovery_ruleset_type:   The ruleset type is either "all" or "merged". It describes wether
+                                this plugins needs the merged result of the effective rules,
+                                or every individual rule matching for the current host.
 
       check_function:           The check_function. Arguments must be 'item' (if the service has an
                                 item), 'params' (if check default parameters are defined) and

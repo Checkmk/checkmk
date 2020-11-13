@@ -172,6 +172,9 @@ register.agent_section(
     name="ps",
     parse_function=parse_ps,
     host_label_function=ps.host_labels_ps,
+    host_label_ruleset_name="inventory_processes_rules",
+    host_label_default_parameters={},
+    host_label_ruleset_type="all",
 )
 
 
@@ -221,5 +224,8 @@ register.agent_section(
     parsed_section_name="ps",
     parse_function=parse_ps_lnx,
     host_label_function=ps.host_labels_ps,
+    host_label_ruleset_name="inventory_processes_rules",
+    host_label_default_parameters={},
+    host_label_ruleset_type="all",
     supersedes=['ps'],
 )

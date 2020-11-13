@@ -1209,22 +1209,15 @@ def _discover_host_labels_for_source_type(
         console.vverbose("Trying host label discovery with: %s\n" %
                          ", ".join(str(s.name) for s in applicable_sections))
         for section_plugin in _sort_sections_by_label_priority(applicable_sections):
-            parsed = multi_host_sections.get_parsed_section(host_key,
-                                                            section_plugin.parsed_section_name)
 
-            if parsed is None:
-                # just for mypy. if parsed was None, the section would not have been in the list
-                continue
+            kwargs = {
+                'section': multi_host_sections.get_parsed_section(
+                    host_key, section_plugin.parsed_section_name),
+            }
 
-            kwargs = {"section": parsed}
-            # TODO:
-            # The following block is a special case for the ps section. This should be done
-            # in a more general sense when CMK-5158 is addressed. Make sure to grep for
-            # "CMK-5158" in the code base.
-            if str(section_plugin.parsed_section_name) == "ps":
-                ps_check_plugin = agent_based_register.get_check_plugin(CheckPluginName("ps"))
-                assert ps_check_plugin
-                kwargs["params"] = config.get_discovery_parameters(host_key[0], ps_check_plugin)
+            host_label_params = config.get_host_label_parameters(host_key.hostname, section_plugin)
+            if host_label_params is not None:
+                kwargs["params"] = host_label_params
 
             try:
                 for label in section_plugin.host_label_function(**kwargs):

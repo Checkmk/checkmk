@@ -78,6 +78,7 @@ from cmk.utils.type_defs import (
     LabelSources,
     Ruleset,
     RulesetName,  # alias for str
+    RuleSetName,
     SectionName,
     ServicegroupName,
     ServiceName,
@@ -107,6 +108,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.api.agent_based.type_defs import (
     Parameters,
+    SectionPlugin,
     SNMPSectionPlugin,
 )
 from cmk.base.caching import config_cache as _config_cache
@@ -2073,34 +2075,63 @@ def initialize_check_type_caches() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def get_discovery_parameters(
+def _get_plugin_parameters(
+    *,
     host_name: HostName,
-    check_plugin: CheckPlugin,
+    default_parameters: Optional[Dict[str, Any]],
+    ruleset_name: Optional[RuleSetName],
+    ruleset_type: Literal["all", "merged"],
+    rules_getter_function: Callable[[RuleSetName], List[Dict[str, Any]]],
 ) -> Union[None, Parameters, List[Parameters]]:
-    if check_plugin.discovery_default_parameters is None:
+    if default_parameters is None:
         # This means the function will not acctept any params.
         return None
-    if check_plugin.discovery_ruleset_name is None:
+    if ruleset_name is None:
         # This means we have default params, but no rule set.
         # Not very sensical for discovery functions, but not forbidden by the API either.
-        return Parameters(check_plugin.discovery_default_parameters)
+        return Parameters(default_parameters)
 
     config_cache = get_config_cache()
-    rules = agent_based_register.get_discovery_ruleset(check_plugin.discovery_ruleset_name)
+    rules = rules_getter_function(ruleset_name)
 
-    if check_plugin.discovery_ruleset_type == "all":
+    if ruleset_type == "all":
         host_rules = config_cache.host_extra_conf(host_name, rules)
-        host_rules.append(check_plugin.discovery_default_parameters)
+        host_rules.append(default_parameters)
         return [Parameters(d) for d in host_rules]
 
-    if check_plugin.discovery_ruleset_type == "merged":
-        params = check_plugin.discovery_default_parameters.copy()
+    if ruleset_type == "merged":
+        params = default_parameters.copy()
         params.update(config_cache.host_extra_conf_merged(host_name, rules))
         return Parameters(params)
 
     # validation should have prevented this
-    raise NotImplementedError("unknown discovery rule set type %r" %
-                              check_plugin.discovery_ruleset_type)
+    raise NotImplementedError(f"unknown discovery rule set type {ruleset_type!r}")
+
+
+def get_discovery_parameters(
+    host_name: HostName,
+    check_plugin: CheckPlugin,
+) -> Union[None, Parameters, List[Parameters]]:
+    return _get_plugin_parameters(
+        host_name=host_name,
+        default_parameters=check_plugin.discovery_default_parameters,
+        ruleset_name=check_plugin.discovery_ruleset_name,
+        ruleset_type=check_plugin.discovery_ruleset_type,
+        rules_getter_function=agent_based_register.get_discovery_ruleset,
+    )
+
+
+def get_host_label_parameters(
+    host_name: HostName,
+    section_plugin: SectionPlugin,
+) -> Union[None, Parameters, List[Parameters]]:
+    return _get_plugin_parameters(
+        host_name=host_name,
+        default_parameters=section_plugin.host_label_default_parameters,
+        ruleset_name=section_plugin.host_label_ruleset_name,
+        ruleset_type=section_plugin.host_label_ruleset_type,
+        rules_getter_function=agent_based_register.get_host_label_ruleset,
+    )
 
 
 def compute_check_parameters(

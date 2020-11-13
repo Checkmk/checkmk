@@ -378,19 +378,21 @@ clean:
 
 mrproper:
 	git clean -d --force -x \
-	    --exclude="**/.vscode"\
-	    --exclude="**/.idea"\
-	    --exclude='\.werks/.last'\
-	    --exclude='\.werks/.my_ids'
+	    --exclude="**/.vscode" \
+	    --exclude="**/.idea" \
+	    --exclude=".werks/.last" \
+	    --exclude=".werks/.my_ids"
 
 mrclean:
 	git clean -d --force -x \
-	    --exclude="**/.vscode"\
-	    --exclude="**/.idea" \
-	    --exclude='\.werks/.last' \
-	    --exclude='\.werks/.my_ids' \
+	    --exclude="**/.vscode" \
+	    --exclude="**/.idea"  \
+	    --exclude=".werks/.last" \
+	    --exclude=".werks/.my_ids" \
 	    --exclude=".venv" \
-	    --exclude=".venv.lock"
+	    --exclude=".venv.lock" \
+	    --exclude="livestatus/src/doc/plantuml.jar" \
+	    --exclude="enterprise/core/src/doc/plantuml.jar"
 
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment

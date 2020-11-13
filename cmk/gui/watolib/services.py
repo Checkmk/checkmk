@@ -10,7 +10,7 @@ import os
 import time
 import sys
 from hashlib import sha256
-from typing import Tuple, List, NamedTuple
+from typing import Tuple, List, NamedTuple, Set
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import SetAutochecksTable
@@ -129,15 +129,20 @@ class Discovery:
         self.do_discovery(discovery_result)
 
     def do_discovery(self, discovery_result):
+        old_autochecks: SetAutochecksTable = {}
         autochecks_to_save: SetAutochecksTable = {}
         remove_disabled_rule, add_disabled_rule, saved_services = set(), set(), set()
         apply_changes = False
+
         for (table_source, check_type, _checkgroup, item, discovered_params, _check_params, descr,
              _state, _output, _perfdata, service_labels) in discovery_result.check_table:
 
             table_target = self._get_table_target(table_source, check_type, item)
             key = check_type, item
             value = descr, discovered_params, service_labels
+
+            if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
+                old_autochecks[key] = value
 
             if table_source != table_target:
                 if table_target == DiscoveryState.UNDECIDED:
@@ -223,12 +228,20 @@ class Discovery:
                 self._save_host_service_enable_disable_rules(remove_disabled_rule,
                                                              add_disabled_rule)
                 need_sync = True
-            self._save_services(autochecks_to_save, need_sync)
+            self._save_services(old_autochecks, autochecks_to_save, need_sync)
 
-    def _save_services(self, checks: SetAutochecksTable, need_sync: bool) -> None:
+    def _save_services(self, old_autochecks: SetAutochecksTable, checks: SetAutochecksTable,
+                       need_sync: bool) -> None:
         message = _("Saved check configuration of host '%s' with %d services") % (self._host.name(),
                                                                                   len(checks))
-        watolib.add_service_change(self._host, "set-autochecks", message, need_sync=need_sync)
+        watolib.add_service_change(
+            host=self._host,
+            action_name="set-autochecks",
+            text=message,
+            need_sync=need_sync,
+            old_object=_make_host_audit_log_object(old_autochecks),
+            new_object=_make_host_audit_log_object(checks),
+        )
         check_mk_automation(self._host.site_id(), "set-autochecks", [self._host.name()], checks)
 
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
@@ -352,6 +365,11 @@ class Discovery:
                 return update_target
 
         return table_source
+
+
+def _make_host_audit_log_object(checks: SetAutochecksTable) -> Set[str]:
+    """The resulting object is used for building object diffs"""
+    return {v[0] for v in checks.values()}
 
 
 def checkbox_id(check_type, item):

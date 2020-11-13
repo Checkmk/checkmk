@@ -247,7 +247,7 @@ class ModeAuditLog(WatoMode):
                 table.cell(_("Summary"), text, css="fill")
 
                 diff_text = entry.diff_text.replace("\n", "<br>\n") if entry.diff_text else ""
-                table.cell(_("Changed attributes"), diff_text, css="fill")
+                table.cell(_("Details"), diff_text, css="fill")
 
     def _get_next_daily_paged_log(self, log):
         start = self._get_start_date()
@@ -449,8 +449,8 @@ class ModeAuditLog(WatoMode):
             _('Linkinfo'),
             _('User'),
             _('Action'),
-            _('Text'),
-            _('Changed attributes'),
+            _('Summary'),
+            _('Details'),
         )
         html.write(','.join(titles) + '\n')
         for entry in self._parse_audit_log():

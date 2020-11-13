@@ -321,8 +321,16 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
 def add_service_change(host: "CREHost",
                        action_name: str,
                        text: str,
+                       old_object: Any = None,
+                       new_object: Any = None,
                        need_sync: bool = False) -> None:
-    add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=need_sync)
+    add_change(action_name,
+               text,
+               obj=host,
+               sites=[host.site_id()],
+               old_object=old_object,
+               new_object=new_object,
+               need_sync=need_sync)
 
 
 def activation_sites() -> Dict[SiteId, SiteConfiguration]:

@@ -31,7 +31,7 @@ def pretty(diff: DeepDiff) -> str:
         for item_key in diff.tree[key]:
             result += [pretty_print_diff(item_key)]
 
-    return '\n'.join(result)
+    return '\n'.join(sorted(result))
 
 
 PRETTY_FORM_TEXTS = {
@@ -43,8 +43,8 @@ PRETTY_FORM_TEXTS = {
     "iterable_item_removed": _("Item {diff_path} with value {val_t1} removed."),
     "attribute_added": _("Attribute {diff_path} with value {val_t2} added."),
     "attribute_removed": _("Attribute {diff_path} with value {val_t1} removed."),
-    "set_item_added": _("Item {val_t2} with value {val_t2} added."),
-    "set_item_removed": _("Item {val_t1} with value {val_t1} removed."),
+    "set_item_added": _("Item {val_t2} added."),
+    "set_item_removed": _("Item {val_t1} removed."),
     "repetition_change": _("Repetition change for item {diff_path}."),
 }
 

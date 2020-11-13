@@ -475,20 +475,27 @@ def test_diagnostics_element_checkmk_overview_content(monkeypatch, tmp_path, _fa
     shutil.rmtree(str(inventory_dir))
 
 
-def test_diagnostics_element_checkmk_config_files():
-    diagnostics_element = diagnostics.CheckmkConfigFilesDiagnosticsElement(
-        ["/path/to/raw-conf-file1", "/path/to/raw-conf-file2"])
-    assert diagnostics_element.ident == "checkmk_config_files"
-    assert diagnostics_element.title == "Checkmk Configuration Files"
-    assert diagnostics_element.description == (
-        "Configuration files '*.mk' or '*.conf' from etc/checkmk: "
-        "/path/to/raw-conf-file1, /path/to/raw-conf-file2")
+@pytest.mark.parametrize("diag_elem, ident, title, description", [
+    (diagnostics.CheckmkConfigFilesDiagnosticsElement, "checkmk_config_files",
+     "Checkmk Configuration Files", "Configuration files ('*.mk' or '*.conf') from etc/checkmk:"),
+    (diagnostics.CheckmkLogFilesDiagnosticsElement, "checkmk_log_files", "Checkmk Log Files",
+     "Log files ('*.log' or '*.state') from var/log:"),
+])
+def test_diagnostics_element_checkmk_files(diag_elem, ident, title, description):
+    files = ["/path/to/raw-conf-file1", "/path/to/raw-conf-file2"]
+    diagnostics_element = diag_elem(files)
+    assert diagnostics_element.ident == ident
+    assert diagnostics_element.title == title
+    assert diagnostics_element.description == ("%s %s" % (description, ", ".join(files)))
 
 
-def test_diagnostics_element_checkmk_config_files_error(tmp_path, _collectors):
+@pytest.mark.parametrize("diag_elem", [
+    diagnostics.CheckmkConfigFilesDiagnosticsElement,
+    diagnostics.CheckmkLogFilesDiagnosticsElement,
+])
+def test_diagnostics_element_checkmk_files_error(tmp_path, _collectors, diag_elem):
     short_test_conf_filepath = "/no/such/file"
-    diagnostics_element = diagnostics.CheckmkConfigFilesDiagnosticsElement(
-        [short_test_conf_filepath])
+    diagnostics_element = diag_elem([short_test_conf_filepath])
     tmppath = Path(tmp_path).joinpath("tmp")
 
     with pytest.raises(diagnostics.DiagnosticsElementError) as e:
@@ -496,22 +503,26 @@ def test_diagnostics_element_checkmk_config_files_error(tmp_path, _collectors):
         assert "No such files %s" % short_test_conf_filepath == str(e)
 
 
-def test_diagnostics_element_checkmk_config_files_content(tmp_path, _collectors):
-    test_conf_dir = Path(cmk.utils.paths.default_config_dir) / "test"
+@pytest.mark.parametrize("diag_elem, test_dir, test_filename", [
+    (diagnostics.CheckmkConfigFilesDiagnosticsElement, cmk.utils.paths.default_config_dir,
+     "test.conf"),
+    (diagnostics.CheckmkLogFilesDiagnosticsElement, cmk.utils.paths.log_dir, "test.log"),
+])
+def test_diagnostics_element_checkmk_files_content(tmp_path, _collectors, diag_elem, test_dir,
+                                                   test_filename):
+    test_conf_dir = Path(test_dir) / "test"
     test_conf_dir.mkdir(parents=True, exist_ok=True)
-    test_conf_filepath = test_conf_dir.joinpath("test.conf")
+    test_conf_filepath = test_conf_dir.joinpath(test_filename)
     with test_conf_filepath.open("w", encoding="utf-8") as f:
         f.write("testvar = testvalue")
 
-    short_test_conf_filepath = str(
-        Path(test_conf_filepath).relative_to(cmk.utils.paths.default_config_dir))
-    diagnostics_element = diagnostics.CheckmkConfigFilesDiagnosticsElement(
-        [short_test_conf_filepath])
+    short_test_conf_filepath = str(Path(test_conf_filepath).relative_to(test_dir))
+    diagnostics_element = diag_elem([short_test_conf_filepath])
     tmppath = Path(tmp_path).joinpath("tmp")
     tmppath.mkdir(parents=True, exist_ok=True)
     filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
 
-    assert filepath == tmppath.joinpath("test-test.conf")
+    assert filepath == tmppath.joinpath("test-%s" % test_filename)
 
     with filepath.open("r", encoding="utf-8") as f:
         content = f.read()

@@ -37,8 +37,11 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
     OPT_CHECKMK_OVERVIEW,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_LOG_FILES,
     DiagnosticsOptionalParameters,
+    CheckmkFilesMap,
     get_checkmk_config_files_map,
+    get_checkmk_log_files_map,
 )
 
 import cmk.base.section as section
@@ -139,10 +142,13 @@ class DiagnosticsDump:
         if parameters.get(OPT_CHECKMK_OVERVIEW):
             optional_elements.append(CheckmkOverviewDiagnosticsElement())
 
-        rel_checkmk_config_filepaths = parameters.get(OPT_CHECKMK_CONFIG_FILES)
-        if rel_checkmk_config_filepaths:
-            optional_elements.append(
-                CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_filepaths))
+        rel_checkmk_config_files = parameters.get(OPT_CHECKMK_CONFIG_FILES)
+        if rel_checkmk_config_files:
+            optional_elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
+
+        rel_checkmk_log_files = parameters.get(OPT_CHECKMK_LOG_FILES)
+        if rel_checkmk_log_files:
+            optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
 
         if not cmk_version.is_raw_edition() and parameters.get(OPT_PERFORMANCE_GRAPHS):
             optional_elements.append(PerformanceGraphsDiagnosticsElement())
@@ -419,34 +425,23 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return node.get_raw_tree()
 
 
-#   ---other dumps----------------------------------------------------------
+#   ---collect exiting files------------------------------------------------
 
 
-class CheckmkConfigFilesDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(self, rel_checkmk_config_filepaths: List[str]) -> None:
-        self.rel_checkmk_config_filepaths = rel_checkmk_config_filepaths
+class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
+    def __init__(self, rel_checkmk_files: List[str]) -> None:
+        self.rel_checkmk_files = rel_checkmk_files
 
-    @property
-    def ident(self) -> str:
-        # Unused because we directly pack the .mk or .conf file
-        return "checkmk_config_files"
-
-    @property
-    def title(self) -> str:
-        return _("Checkmk Configuration Files")
-
-    @property
-    def description(self) -> str:
-        return _("Configuration files '*.mk' or '*.conf' from etc/checkmk: %s") % ", ".join(
-            self.rel_checkmk_config_filepaths)
+    @abc.abstractproperty
+    def _checkmk_files_map(self) -> CheckmkFilesMap:
+        raise NotImplementedError
 
     def add_or_get_files(self, tmp_dump_folder: Path,
                          collectors: Collectors) -> DiagnosticsElementFilepaths:
-        checkmk_config_files_map = get_checkmk_config_files_map()
+        checkmk_files_map = self._checkmk_files_map
         unknown_files = []
-
-        for rel_filepath in self.rel_checkmk_config_filepaths:
-            filepath = checkmk_config_files_map.get(rel_filepath)
+        for rel_filepath in self.rel_checkmk_files:
+            filepath = checkmk_files_map.get(rel_filepath)
             if filepath is None or not filepath.exists():
                 unknown_files.append(rel_filepath)
                 continue
@@ -469,6 +464,46 @@ class CheckmkConfigFilesDiagnosticsElement(ABCDiagnosticsElement):
 
         if unknown_files:
             raise DiagnosticsElementError("No such files: %s" % ", ".join(unknown_files))
+
+
+class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        # Unused because we directly pack the .mk or .conf file
+        return "checkmk_config_files"
+
+    @property
+    def title(self) -> str:
+        return _("Checkmk Configuration Files")
+
+    @property
+    def description(self) -> str:
+        return _("Configuration files ('*.mk' or '*.conf') from etc/checkmk: %s") % ", ".join(
+            self.rel_checkmk_files)
+
+    @property
+    def _checkmk_files_map(self) -> CheckmkFilesMap:
+        return get_checkmk_config_files_map()
+
+
+class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        # Unused because we directly pack the .log or .state file
+        return "checkmk_log_files"
+
+    @property
+    def title(self) -> str:
+        return _("Checkmk Log Files")
+
+    @property
+    def description(self) -> str:
+        return _("Log files ('*.log' or '*.state') from var/log: %s") % ", ".join(
+            self.rel_checkmk_files)
+
+    @property
+    def _checkmk_files_map(self) -> CheckmkFilesMap:
+        return get_checkmk_log_files_map()
 
 
 #   ---cee dumps------------------------------------------------------------

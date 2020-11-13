@@ -21,11 +21,12 @@ import cmk.utils.version as cmk_version
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
-    OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_LOG_FILES,
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
@@ -1783,7 +1784,13 @@ def _get_diagnostics_dump_sub_options() -> List[Option]:
         ),
         Option(
             long_option=OPT_CHECKMK_CONFIG_FILES,
-            short_help="Pack configuration files '*.mk' and '*.conf' from etc/check_mk",
+            short_help="Pack configuration files ('*.mk' or '*.conf') from etc/checkmk",
+            argument=True,
+            argument_descr="FILE,FILE...",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_LOG_FILES,
+            short_help="Pack log files ('*.log' or '*.state') from var/log",
             argument=True,
             argument_descr="FILE,FILE...",
         ),

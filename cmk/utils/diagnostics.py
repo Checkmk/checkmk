@@ -20,19 +20,27 @@ DiagnosticsParameters = TypedDict("DiagnosticsParameters", {
     "general": None,
     "opt_info": Optional[DiagnosticsOptionalParameters],
 })
-CheckmkConfigFilesMap = Dict[str, Path]
+CheckmkFilesMap = Dict[str, Path]
 
 OPT_LOCAL_FILES = "local-files"
 OPT_OMD_CONFIG = "omd-config"
-OPT_PERFORMANCE_GRAPHS = "performance-graphs"
 OPT_CHECKMK_OVERVIEW = "checkmk-overview"
 OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
+OPT_CHECKMK_LOG_FILES = "checkmk-log-files"
+
+# CEE specific options
+OPT_PERFORMANCE_GRAPHS = "performance-graphs"
 
 _BOOLEAN_CONFIG_OPTS = [
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
     OPT_CHECKMK_OVERVIEW,
+]
+
+_FILES_OPTS = [
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_LOG_FILES,
 ]
 
 
@@ -46,7 +54,7 @@ def serialize_wato_parameters(wato_parameters: DiagnosticsParameters) -> Diagnos
         if key in _BOOLEAN_CONFIG_OPTS and value:
             serialized_parameters.append(key)
 
-        elif key == OPT_CHECKMK_CONFIG_FILES:
+        elif key in _FILES_OPTS:
             serialized_parameters.append(key)
             _ty, list_of_files = value
             serialized_parameters.append(",".join(list_of_files))
@@ -67,7 +75,7 @@ def deserialize_cl_parameters(
             if parameter in _BOOLEAN_CONFIG_OPTS:
                 deserialized_parameters[parameter] = True
 
-            elif parameter == OPT_CHECKMK_CONFIG_FILES:
+            elif parameter in _FILES_OPTS:
                 deserialized_parameters[parameter] = next(parameters).split(",")
 
         except StopIteration:
@@ -83,20 +91,31 @@ def deserialize_modes_parameters(
         if key in _BOOLEAN_CONFIG_OPTS:
             deserialized_parameters[key] = value
 
-        elif key == OPT_CHECKMK_CONFIG_FILES:
+        elif key in _FILES_OPTS:
             deserialized_parameters[key] = value.split(",")
 
     return deserialized_parameters
 
 
-def get_checkmk_config_files_map() -> CheckmkConfigFilesMap:
-    config_files_map: CheckmkConfigFilesMap = {}
+def get_checkmk_config_files_map() -> CheckmkFilesMap:
+    files_map: CheckmkFilesMap = {}
     for root, _dirs, files in os.walk(cmk.utils.paths.default_config_dir):
         for file_name in files:
             if file_name == "ca-certificates.mk":
                 continue
             filepath = Path(root).joinpath(file_name)
             if filepath.suffix in (".mk", ".conf") or filepath.name == ".wato":
-                config_files_map.setdefault(
-                    str(filepath.relative_to(cmk.utils.paths.default_config_dir)), filepath)
-    return config_files_map
+                rel_filepath = str(filepath.relative_to(cmk.utils.paths.default_config_dir))
+                files_map.setdefault(rel_filepath, filepath)
+    return files_map
+
+
+def get_checkmk_log_files_map() -> CheckmkFilesMap:
+    files_map: CheckmkFilesMap = {}
+    for root, _dirs, files in os.walk(cmk.utils.paths.log_dir):
+        for file_name in files:
+            filepath = Path(root).joinpath(file_name)
+            if filepath.suffix in (".log", ".state") or filepath.name == "stats":
+                rel_filepath = str(filepath.relative_to(cmk.utils.paths.log_dir))
+                files_map.setdefault(rel_filepath, filepath)
+    return files_map

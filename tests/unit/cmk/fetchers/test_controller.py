@@ -8,7 +8,6 @@ import logging
 
 import pytest  # type: ignore[import]
 
-import cmk.utils.log as log
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial
 
@@ -20,14 +19,14 @@ from cmk.fetchers.controller import (
     run_fetcher,
     write_bytes,
 )
-from cmk.fetchers.protocol import CMCLogLevel, make_end_of_reply_answer, make_log_answer
+from cmk.fetchers.protocol import make_end_of_reply_answer, make_log_answer
 from cmk.fetchers.type_defs import Mode
 
 
 class TestGlobalConfig:
     @pytest.fixture
     def global_config(self):
-        return GlobalConfig(log_level=5)
+        return GlobalConfig(cmc_log_level=5)
 
     def test_deserialization(self, global_config):
         assert GlobalConfig.deserialize(global_config.serialize()) == global_config

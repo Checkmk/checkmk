@@ -1,0 +1,14 @@
+Title: Wrong handling of 'None' values in bonding checks
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p19
+Date: 1605092033
+
+Discovery and check functions for *_bonding would are provided with "None" instead of
+None values but don't handle them correctly. This fix doesn't turn "None" into None
+but handles those values correctly

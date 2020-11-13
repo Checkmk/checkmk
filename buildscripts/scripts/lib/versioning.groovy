@@ -2,7 +2,8 @@
 import java.text.SimpleDateFormat
 import groovy.transform.Field
 
-// TODO: Add the rules to exclude mkp-able folder regarding ntop integration under "managed"
+// TODO: Use ntop_rules.json as soon as we want to exclude ntop-mkp-able files from the enterprise build
+// as this logic is shared by the script to create the ntop mkp
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\

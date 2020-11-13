@@ -15,7 +15,7 @@ import subprocess
 import tarfile
 import time
 from contextlib import suppress
-from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Final
+from typing import cast, Any, Callable, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Final
 
 from six import ensure_binary, ensure_str
 
@@ -112,6 +112,14 @@ def get_config_parts() -> List[PackagePart]:
     ]
 
 
+def get_repo_ntop_parts() -> List[PackagePart]:
+    # This function is meant to return the location of mkp-able ntop files within the git repository.
+    # It is used for building a mkp which enables the ntop integration
+    return [
+        PackagePart("web", _("ntop GUI extensions"), "enterprise/cmk/gui/cee/"),
+    ]
+
+
 def get_package_parts() -> List[PackagePart]:
     return [
         PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
@@ -170,7 +178,12 @@ def release(pacname: PackageName) -> None:
     _remove_package_info(pacname)
 
 
-def write_file(package: PackageInfo, file_object: Optional[BinaryIO] = None) -> None:
+def write_file(
+    package: PackageInfo,
+    file_object: Optional[BinaryIO] = None,
+    package_parts: Callable = get_package_parts,
+    config_parts: Callable = get_config_parts,
+) -> None:
     package["version.packaged"] = cmk_version.__version__
     tar = tarfile.open(fileobj=file_object, mode="w:gz")
 
@@ -197,7 +210,7 @@ def write_file(package: PackageInfo, file_object: Optional[BinaryIO] = None) -> 
     add_file("info.json", ensure_binary(json.dumps(package)))
 
     # Now pack the actual files into sub tars
-    for part in get_package_parts() + get_config_parts():
+    for part in package_parts() + config_parts():
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
             logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)

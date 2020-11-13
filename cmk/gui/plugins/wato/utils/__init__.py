@@ -1047,25 +1047,6 @@ def Levels(**kwargs):
     )
 
 
-def may_edit_ruleset(varname):
-    if varname == "ignored_services":
-        return config.user.may("wato.services") or config.user.may("wato.rulesets")
-    if varname in [
-            "custom_checks",
-            "datasource_programs",
-            "agent_config:mrpe",
-            "agent_config:agent_paths",
-            "agent_config:runas",
-            "agent_config:only_from",
-    ]:
-        return config.user.may("wato.rulesets") and config.user.may(
-            "wato.add_or_modify_executables")
-    if varname == "agent_config:custom_files":
-        return config.user.may("wato.rulesets") and config.user.may(
-            "wato.agent_deploy_custom_files")
-    return config.user.may("wato.rulesets")
-
-
 class CheckTypeSelection(DualListChoice):
     def __init__(self, **kwargs):
         super(CheckTypeSelection, self).__init__(rows=25, **kwargs)

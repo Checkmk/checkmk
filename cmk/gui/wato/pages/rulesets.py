@@ -73,7 +73,6 @@ from cmk.gui.plugins.wato import (
     make_action_link,
     make_confirm_link,
     add_change,
-    may_edit_ruleset,
     search_form,
     ConfigHostname,
     HostTagCondition,
@@ -86,6 +85,8 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.utils import LabelCondition
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless_ruleset_group
+
+from cmk.gui.watolib.utils import may_edit_ruleset
 
 if watolib.has_agent_bakery():
     import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module

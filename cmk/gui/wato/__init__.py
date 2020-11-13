@@ -262,7 +262,6 @@ ALL_HOSTS = watolib.ALL_HOSTS
 ALL_SERVICES = watolib.ALL_SERVICES
 NEGATE = watolib.NEGATE
 from cmk.gui.plugins.wato import (
-    may_edit_ruleset,
     monitoring_macro_help,
     UserIconOrAction,
     SNMPCredentials,

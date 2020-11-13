@@ -70,7 +70,6 @@ from cmk.gui.plugins.wato.utils import (
     MainMenu,
     make_action_link,
     make_confirm_link,
-    may_edit_ruleset,
     MenuItem,
     mode_registry,
     monitoring_macro_help,

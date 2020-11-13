@@ -58,12 +58,13 @@ from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 from cmk.gui.plugins.wato import (
-    may_edit_ruleset,
     mode_registry,
     WatoMode,
 )
 
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
+
+from cmk.gui.watolib.utils import may_edit_ruleset
 
 AjaxDiscoveryRequest = Dict[str, Any]
 

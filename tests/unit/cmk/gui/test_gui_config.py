@@ -23,7 +23,7 @@ from cmk.gui.permissions import (
     permission_registry,
     Permission,
 )
-from cmk.gui.plugins.wato import may_edit_ruleset
+from cmk.gui.watolib.utils import may_edit_ruleset
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 

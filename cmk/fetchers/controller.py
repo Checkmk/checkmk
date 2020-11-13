@@ -187,10 +187,7 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
                 ) for entry in fetchers[len(messages):]
             ])
 
-    log.logger.debug("Produced %d messages:", len(messages))
-    for message in messages:
-        log.logger.debug("  message: %s", message.header)
-
+    log.logger.debug("Produced %d messages", len(messages))
     write_bytes(protocol.make_result_answer(*messages))
     for msg in filter(
             lambda msg: msg.header.payload_type is protocol.PayloadType.ERROR,

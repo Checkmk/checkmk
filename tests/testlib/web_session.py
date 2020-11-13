@@ -225,6 +225,9 @@ class CMKWebSession:
             },
             add_transid=True)
 
+        # message is shown next page call with flash
+        r = self.get("user_profile.py")
+
         if lang == "":
             assert "Successfully updated" in r.text, "Body: %s" % r.text
         else:

@@ -51,12 +51,12 @@ def mobile_html_head(title: str) -> None:
     html.meta(name="apple-mobile-web-app-title", content="Check_MK")
     html.title(title)
     html.stylesheet(href="jquery/jquery.mobile-1.2.1.css")
-    html.stylesheet(href="themes/classic/theme.css")
+    html.stylesheet(href="themes/facelift/theme.css")
 
     html.write(
         html._render_start_tag("link",
                                rel="apple-touch-icon",
-                               href="themes/classic/images/ios_logo.png",
+                               href="themes/facelift/images/ios_logo.png",
                                close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
 
@@ -192,17 +192,20 @@ def page_login() -> None:
     origtarget = html.get_url_input("_origtarget", default_origtarget)
     html.hidden_field('_origtarget', escaping.escape_attribute(origtarget))
 
-    html.text_input("_username", label=_("Username:"), autocomplete="username")
-    html.password_input("_password",
-                        size=None,
-                        label=_("Password:"),
-                        autocomplete="current-password")
+    html.text_input("_username", label=_("Username:"), autocomplete="username", id_="input_user")
+    html.password_input(
+        "_password",
+        size=None,
+        label=_("Password:"),
+        autocomplete="current-password",
+        id_="input_pass",
+    )
     html.br()
     html.button("_login", _('Login'))
     html.set_focus("_username")
     html.end_form()
     html.open_div(id_="loginfoot")
-    html.img("themes/classic/images/logo_cmk_small.png", class_="logomk")
+    html.img("themes/facelift/images/logo_cmk_small.png", class_="logomk")
     html.div(HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>")),
              class_="copyright")
     html.close_div()  # close content-div

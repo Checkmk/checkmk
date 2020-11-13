@@ -56,7 +56,7 @@ class CMCLogLevel(str, enum.Enum):
             logging.INFO: CMCLogLevel.NOTICE,
             log.VERBOSE: CMCLogLevel.INFO,
             logging.DEBUG: CMCLogLevel.DEBUG,
-        }.get(level, CMCLogLevel.WARNING)
+        }[level]
 
 
 class Header(Protocol):

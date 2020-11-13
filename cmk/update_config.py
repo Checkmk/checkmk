@@ -49,6 +49,7 @@ from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-mod
 from cmk.gui.plugins.dashboard.utils import builtin_dashboards, get_all_dashboards, transform_topology_dashlet  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.changes import AuditLogStore  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
@@ -153,6 +154,7 @@ class UpdateConfig:
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._set_user_scheme_serial, "Set version specific user attributes"),
             (self._rewrite_inventory_data_2to3, "Rewriting inventory data with 2to3"),
+            (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
         ]
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->2.0
@@ -669,6 +671,31 @@ class UpdateConfig:
         for filepath in files:
             with open(filepath, 'rb') as f_in, gzip.open(str(filepath) + '.gz', 'wb') as f_out:
                 f_out.writelines(f_in)
+
+    def _migrate_pre_2_0_audit_log(self):
+        old_path = Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")
+        new_path = Path(cmk.utils.paths.var_dir, "wato", "log", "wato_audit.log")
+
+        if not old_path.exists():
+            self._logger.log(VERBOSE, "No audit log present. Skipping.")
+            return
+
+        if new_path.exists():
+            self._logger.log(VERBOSE, "New audit log already existing. Skipping.")
+            return
+
+        store = AuditLogStore(AuditLogStore.make_path())
+        store.write(list(self._read_pre_2_0_audit_log(old_path)))
+
+        old_path.unlink()
+
+    def _read_pre_2_0_audit_log(self, old_path: Path):
+        with old_path.open(encoding="utf-8") as fp:
+            for line in fp:
+                splitted = line.rstrip().split(None, 4)
+                if len(splitted) == 5 and splitted[0].isdigit():
+                    t, linkinfo, user, action, text = splitted
+                    yield AuditLogStore.Entry(int(t), linkinfo, user, action, text)
 
 
 def _set_show_mode(users, user_id):

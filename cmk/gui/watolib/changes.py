@@ -10,8 +10,8 @@ import errno
 import os
 import time
 import abc
-from typing import (Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, Iterator,
-                    NamedTuple, TypeVar, Generic)
+from typing import (Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, NamedTuple,
+                    TypeVar, Generic)
 from pathlib import Path
 
 import cmk.utils
@@ -51,6 +51,20 @@ class ABCAppendStore(Generic[_VT], metaclass=abc.ABCMeta):
     def make_path(*args: str) -> Path:
         raise NotImplementedError()
 
+    @staticmethod
+    def _serialize(raw: _VT) -> Any:
+        """Prepare _VT objects for serialization
+
+        Override this to execute some logic before repr()"""
+        return raw
+
+    @staticmethod
+    def _deserialize(raw: Any) -> _VT:
+        """Create _VT objects from serialized data
+
+        Override this to execute some logic after literal_eval() to produce _VT objects"""
+        return raw
+
     def __init__(self, path: Path) -> None:
         self._path = path
 
@@ -70,7 +84,7 @@ class ABCAppendStore(Generic[_VT], metaclass=abc.ABCMeta):
             with path.open("rb") as f:
                 for entry in f.read().split(b"\0"):
                     if entry:
-                        entries.append(ast.literal_eval(entry.decode("utf-8")))
+                        entries.append(self._deserialize(ast.literal_eval(entry.decode("utf-8"))))
         except IOError as e:
             if e.errno == errno.ENOENT:
                 pass
@@ -97,7 +111,7 @@ class ABCAppendStore(Generic[_VT], metaclass=abc.ABCMeta):
             store.aquire_lock(path)
 
             with path.open("ab+") as f:
-                f.write(repr(entry).encode("utf-8") + b"\0")
+                f.write(repr(self._serialize(entry)).encode("utf-8") + b"\0")
                 f.flush()
                 os.fsync(f.fileno())
 
@@ -123,7 +137,7 @@ def _wato_var_dir() -> Path:
     return Path(cmk.utils.paths.var_dir, "wato")
 
 
-class AuditLogStore:
+class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
     Entry = NamedTuple("Entry", [
         ("time", int),
         ("linkinfo", str),
@@ -133,16 +147,19 @@ class AuditLogStore:
     ])
 
     @staticmethod
-    def make_path() -> Path:
-        return _wato_var_dir() / "log" / "audit.log"
+    def make_path(*args: str) -> Path:
+        return _wato_var_dir() / "log" / "wato_audit.log"
 
-    def __init__(self, path: Path):
-        self._path = path
+    @staticmethod
+    def _serialize(raw: "AuditLogStore.Entry") -> Dict:
+        return raw._asdict()
 
-    def exists(self) -> bool:
-        return self._path.exists()
+    @staticmethod
+    def _deserialize(raw: Dict) -> "AuditLogStore.Entry":
+        return AuditLogStore.Entry(**raw)
 
     def clear(self) -> None:
+        """Instead of just removing, like ABCAppendStore, archive the existing file"""
         if not self.exists():
             return
 
@@ -158,23 +175,6 @@ class AuditLogStore:
                     break
 
         self._path.rename(newpath)
-
-    def read(self) -> Iterator["AuditLogStore.Entry"]:
-        if not self._path.exists():
-            return
-
-        with self._path.open(encoding="utf-8") as fp:
-            for line in fp:
-                splitted = line.rstrip().split(None, 4)
-                if len(splitted) == 5 and splitted[0].isdigit():
-                    t, linkinfo, user, action, text = splitted
-                    yield AuditLogStore.Entry(int(t), linkinfo, user, action, text)
-
-    def append(self, entry: "AuditLogStore.Entry") -> None:
-        store.makedirs(self._path.parent)
-        with self._path.open(mode="a", encoding='utf-8') as f:
-            self._path.chmod(0o660)
-            f.write(" ".join((str(entry.time),) + entry[1:]) + "\n")
 
 
 def _log_entry(linkinfo: LinkInfoObject,

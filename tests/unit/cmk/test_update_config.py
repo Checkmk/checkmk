@@ -17,6 +17,7 @@ import cmk.gui.config
 import cmk.utils.paths
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
+from cmk.gui.watolib.changes import AuditLogStore
 
 
 @pytest.fixture()
@@ -214,3 +215,102 @@ def test__transform_discovery_disabled_services(
 
     folder_rules = ruleset.get_folder_rules(Folder(''))
     assert [r.to_config() for r in folder_rules] == expected_ruleset
+
+
+@pytest.fixture(name="old_path")
+def fixture_old_path():
+    return Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")
+
+
+@pytest.fixture(name="new_path")
+def fixture_new_path():
+    return Path(cmk.utils.paths.var_dir, "wato", "log", "wato_audit.log")
+
+
+@pytest.fixture(name="old_audit_log")
+def fixture_old_audit_log(old_path):
+    old_path.parent.mkdir(exist_ok=True, parents=True)
+    with old_path.open("w") as f:
+        f.write("""
+1604991356 - cmkadmin liveproxyd-activate Activating changes of Livestatus Proxy configuration
+1604991356 - cmkadmin liveproxyd-activate Activating changes of Livestatus Proxy configuration
+1604992040 :heute2 cmkadmin create-host Created new host heute2.
+1604992159 :heute2 cmkadmin delete-host Deleted host heute2
+1604992163 :heute1 cmkadmin create-host Created new host heute1.
+1604992166 :heute12 cmkadmin create-host Created new host heute12.
+""")
+    return old_path
+
+
+def test__migrate_pre_2_0_audit_log(tmp_path, old_audit_log, new_path):
+    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+
+    assert not new_path.exists()
+    assert old_audit_log.exists()
+
+    uc._migrate_pre_2_0_audit_log()
+
+    assert new_path.exists()
+    assert not old_audit_log.exists()
+
+    # Now try to parse the migrated log with the new logic
+    store = AuditLogStore(new_path)
+    assert store.read() == [
+        AuditLogStore.Entry(time=1604991356,
+                            linkinfo='-',
+                            user_id='cmkadmin',
+                            action='liveproxyd-activate',
+                            text='Activating changes of Livestatus Proxy configuration'),
+        AuditLogStore.Entry(time=1604991356,
+                            linkinfo='-',
+                            user_id='cmkadmin',
+                            action='liveproxyd-activate',
+                            text='Activating changes of Livestatus Proxy configuration'),
+        AuditLogStore.Entry(time=1604992040,
+                            linkinfo=':heute2',
+                            user_id='cmkadmin',
+                            action='create-host',
+                            text='Created new host heute2.'),
+        AuditLogStore.Entry(time=1604992159,
+                            linkinfo=':heute2',
+                            user_id='cmkadmin',
+                            action='delete-host',
+                            text='Deleted host heute2'),
+        AuditLogStore.Entry(time=1604992163,
+                            linkinfo=':heute1',
+                            user_id='cmkadmin',
+                            action='create-host',
+                            text='Created new host heute1.'),
+        AuditLogStore.Entry(time=1604992166,
+                            linkinfo=':heute12',
+                            user_id='cmkadmin',
+                            action='create-host',
+                            text='Created new host heute12.'),
+    ]
+
+
+def test__migrate_pre_2_0_audit_log_not_existing(tmp_path, old_path, new_path):
+    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+
+    assert not new_path.exists()
+    assert not old_path.exists()
+    uc._migrate_pre_2_0_audit_log()
+    assert not new_path.exists()
+    assert not old_path.exists()
+
+
+def test__migrate_pre_2_0_audit_log_not_migrate_already_migrated(tmp_path, old_audit_log, new_path):
+    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+
+    assert not new_path.exists()
+    assert old_audit_log.exists()
+
+    new_path.parent.mkdir(exist_ok=True, parents=True)
+    with new_path.open("w") as f:
+        f.write("abc\n")
+    assert new_path.exists()
+
+    uc._migrate_pre_2_0_audit_log()
+
+    assert new_path.open().read() == "abc\n"
+    assert old_audit_log.exists()

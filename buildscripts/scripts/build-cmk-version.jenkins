@@ -339,7 +339,7 @@ try {
                                 --exclude '*dbgsym*.deb' \
                                 -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR} -p 52022" \
                                 ${PACKAGE_DIR}/${CMK_VERS} \
-                                ${UPLOAD_DEST}/${CMK_VERS}
+                                ${UPLOAD_DEST}/
                         """
                     } else {
                             dir(ARCHIVE_DIR) {

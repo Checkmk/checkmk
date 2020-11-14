@@ -822,13 +822,14 @@ class SiteFactory:
         site = self._site_obj(name)
 
         site.create()
+        self._sites[site.id] = site
+
         site.open_livestatus_tcp(encrypted=False)
         site.start()
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
         CMKWebSession(site).activate_changes()
         logger.debug("Created site %s", site.id)
-        self._sites[site.id] = site
         return site
 
     def save_results(self):

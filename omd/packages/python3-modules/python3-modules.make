@@ -61,6 +61,7 @@ PYTHON3_MODULES_LIST += zipp-0.6.0.tar.gz # needed by importlib_metadata
 PYTHON3_MODULES_LIST += attrs-20.2.0.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += importlib_metadata-1.2.0.tar.gz # needed by jsonschema
 PYTHON3_MODULES_LIST += pyrsistent-0.15.6.tar.gz # needed by jsonschema
+PYTHON3_MODULES_LIST += click-7.1.2.tar.gz # needed by Flask
 PYTHON3_MODULES_LIST += Werkzeug-0.16.0.tar.gz # Needed by Flask
 PYTHON3_MODULES_LIST += jsonschema-3.2.0.tar.gz # needed by openapi-spec-validator
 PYTHON3_MODULES_LIST += Flask-1.1.1.tar.gz # direct dependency

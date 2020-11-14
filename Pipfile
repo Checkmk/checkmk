@@ -76,6 +76,7 @@ zipp = "==0.6.0"  # needed by importlib_metadata
 attrs = "==20.2.0"  # needed by jsonschema
 importlib_metadata = "==1.2.0"  # needed by jsonschema
 pyrsistent = "==0.15.6"  # needed by jsonschema
+click = "==7.1.2"  # needed by Flask
 Werkzeug = "==0.16.0"  # Needed by Flask
 jsonschema = "==3.2.0"  # needed by openapi-spec-validator
 Flask = "==1.1.1"  # direct dependency

@@ -6,6 +6,7 @@
 
 import enum
 import sys
+from dataclasses import dataclass, asdict
 from typing import (
     Any,
     Dict,
@@ -65,6 +66,39 @@ ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
 
 LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
 SetAutochecksTable = Dict[Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels]]
+
+
+@dataclass
+class DiscoveryResult:
+    self_new: int = 0
+    self_removed: int = 0
+    self_kept: int = 0
+    self_total: int = 0
+    self_new_host_labels: int = 0
+    self_total_host_labels: int = 0
+    clustered_new: int = 0
+    clustered_old: int = 0
+    clustered_vanished: int = 0
+
+    # None  -> No error occured
+    # ""    -> Not monitored (disabled host)
+    # "..." -> An error message about the failed discovery
+    error_text: Optional[str] = None
+
+
+@dataclass
+class AutomationDiscoveryResponse:
+    results: Dict[HostName, DiscoveryResult]
+
+    def serialize(self):
+        return {
+            "results": {k: asdict(v) for k, v in self.results.items()},
+        }
+
+    @classmethod
+    def deserialize(cls, serialized: Dict[str, Any]) -> "AutomationDiscoveryResponse":
+        return cls(results={k: DiscoveryResult(**v) for k, v in serialized["results"].items()})
+
 
 UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this

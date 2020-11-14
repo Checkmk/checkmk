@@ -23,6 +23,7 @@ from six import ensure_str
 from livestatus import SiteId, SiteConfiguration
 
 from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import AutomationDiscoveryResponse, DiscoveryResult
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
@@ -513,3 +514,36 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
         store.save_object_to_file(result_file_path, result)
 
         job_interface.send_result_message(_("Finished."))
+
+
+def execute_automation_discovery(*,
+                                 site_id: SiteId,
+                                 args: Sequence[str],
+                                 timeout=None,
+                                 non_blocking_http=False) -> AutomationDiscoveryResponse:
+    raw_response = check_mk_automation(site_id,
+                                       "inventory",
+                                       args,
+                                       timeout=timeout,
+                                       non_blocking_http=True)
+    # This automation may be executed agains 1.6 remote sites. Be compatible to old structure
+    # (counts, failed_hosts).
+    if isinstance(raw_response, tuple) and len(raw_response) == 2:
+        results = {
+            hostname: DiscoveryResult(
+                self_new=v[0],
+                self_removed=v[1],
+                self_kept=v[2],
+                self_total=v[3],
+                self_new_host_labels=v[4],
+                self_total_host_labels=v[5],
+            ) for hostname, v in raw_response[0].items()
+        }
+
+        for hostname, error_text in raw_response[1].items():
+            results[hostname].error_text = error_text
+
+        return AutomationDiscoveryResponse(results=results)
+    if isinstance(raw_response, dict):
+        return AutomationDiscoveryResponse.deserialize(raw_response)
+    raise NotImplementedError()

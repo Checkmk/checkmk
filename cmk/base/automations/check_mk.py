@@ -36,6 +36,8 @@ from cmk.utils.type_defs import (
     ServiceDetails,
     ServiceState,
     SetAutochecksTable,
+    AutomationDiscoveryResponse,
+    DiscoveryResult,
 )
 
 import cmk.snmplib.snmp_modes as snmp_modes
@@ -112,7 +114,7 @@ class AutomationDiscovery(DiscoveryAutomation):
     # "refresh" - drop all services and reinventorize
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
-    def execute(self, args: List[str]) -> Tuple[Dict[str, List[int]], Dict[HostName, str]]:
+    def execute(self, args: List[str]) -> Dict[str, Any]:
         # Error sensivity
         if args[0] == "@raiseerrors":
             args = args[1:]
@@ -140,12 +142,11 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
 
-        counts = {}
-        failed_hosts = {}
+        results: Dict[HostName, DiscoveryResult] = {}
 
         for hostname in hostnames:
             host_config = config_cache.get_host_config(hostname)
-            result, error = discovery.discover_on_host(
+            results[hostname] = discovery.discover_on_host(
                 config_cache,
                 host_config,
                 mode,
@@ -153,21 +154,13 @@ class AutomationDiscovery(DiscoveryAutomation):
                 service_filters,
                 on_error=on_error,
             )
-            counts[hostname] = [
-                result["self_new"],
-                result["self_removed"],
-                result["self_kept"],
-                result["self_total"],
-                result["self_new_host_labels"],
-                result["self_total_host_labels"],
-            ]
 
-            if error is not None:
-                failed_hosts[hostname] = error
-            else:
+            if results[hostname].error_text is None:
+                # Trigger the discovery service right after performing the discovery to
+                # make the service reflect the new state as soon as possible.
                 self._trigger_discovery_check(config_cache, host_config)
 
-        return counts, failed_hosts
+        return AutomationDiscoveryResponse(results).serialize()
 
 
 automations.register(AutomationDiscovery())

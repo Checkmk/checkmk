@@ -13,7 +13,7 @@ from typing import Dict, Set, NamedTuple, Counter, Tuple
 from testlib.base import Scenario  # type: ignore[import]
 from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType
+from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType, DiscoveryResult
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 import cmk.base.ip_lookup as ip_lookup
@@ -384,7 +384,7 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
-    counts = discovery._empty_counts()
+    result = DiscoveryResult()
 
     params = {"inventory_rediscovery": parameters_rediscovery}
     service_filters = discovery.get_service_filter_funcs(params)
@@ -394,7 +394,7 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
             "hostname",
             grouped_services,
             service_filters,
-            counts,
+            result,
             mode,
         )
     ]
@@ -402,9 +402,9 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
     count_new, count_kept, count_removed = result_counts
 
     assert sorted(new_item_names) == sorted(result_new_item_names)
-    assert counts["self_new"] == count_new
-    assert counts["self_kept"] == count_kept
-    assert counts["self_removed"] == count_removed
+    assert result.self_new == count_new
+    assert result.self_kept == count_kept
+    assert result.self_removed == count_removed
 
 
 @pytest.mark.parametrize(

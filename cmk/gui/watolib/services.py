@@ -553,9 +553,9 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         sys.stdout.write(result["output"])
 
     def _perform_automatic_refresh(self, request):
-        _counts, _failed_hosts = check_mk_automation(
-            request.host.site_id(), "inventory",
-            ["@scan", "refresh", request.host.name()])
+        #
+        check_mk_automation(request.host.site_id(), "inventory",
+                            ["@scan", "refresh", request.host.name()])
         # In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
         #count_added, _count_removed, _count_kept, _count_new = counts[request.host.name()]

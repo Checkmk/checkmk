@@ -14,6 +14,7 @@ from typing import Any, Dict, List
 from six import ensure_str
 
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import DiscoveryResult
 
 import cmk.utils.tags
 import cmk.gui.config as config
@@ -39,6 +40,7 @@ from cmk.gui.groups import (
 )
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.utils import try_bake_agents_for_hosts
+from cmk.gui.watolib.automations import execute_automation_discovery
 
 import cmk.gui.bi as bi
 
@@ -1112,52 +1114,51 @@ class APICallOther(APICallCollection):
             # This is currently the only way to get some actual discovery statitics.
             # Start a dry-run -> Get statistics
             # Do an actual discovery on the nodes -> data is written
-            result = watolib.check_mk_automation(host_attributes.get("site"), "try-inventory",
-                                                 ["@scan"] + [hostname])
-            # TODO: This *way* too general, even for our very low standards...
-            counts: Dict[Any, Any] = {"new": 0, "old": 0}
-            for entry in result["check_table"]:
-                if entry[0] in counts:
-                    counts[entry[0]] += 1
+            try_result = watolib.check_mk_automation(host_attributes.get("site"), "try-inventory",
+                                                     ["@scan"] + [hostname])
 
-            counts = {
-                hostname: (
-                    counts["new"],
-                    0,  # this info is not available for clusters
-                    counts["old"],
-                    counts["new"] + counts["old"])
-            }
+            new = 0
+            old = 0
+            for entry in try_result["check_table"]:
+                if entry[0] == "new":
+                    new += 1
+                elif entry[0] == "old":
+                    old += 1
 
-            # A cluster cannot fail, just the nodes. This information is currently discarded
-            failed_hosts = None
+            result = DiscoveryResult(self_new=new, self_kept=old, self_total=new + old)
             watolib.check_mk_automation(host_attributes.get("site"), "inventory",
                                         ["@scan", mode] + host.cluster_nodes())
         else:
-            counts, failed_hosts = watolib.check_mk_automation(host_attributes.get("site"),
-                                                               "inventory",
-                                                               ["@scan", mode] + [hostname])
+            response = execute_automation_discovery(site_id=host_attributes.get("site"),
+                                                    args=["@scan", mode, hostname])
+            result = response.results[hostname]
 
-        if failed_hosts:
+        if result.error_text:
             if not host.discovery_failed():
                 host.set_discovery_failed()
-            raise MKUserError(
-                None,
-                _("Failed to inventorize %s: %s") % (hostname, failed_hosts[hostname]))
+            raise MKUserError(None, _("Failed to discover %s: %s") % (hostname, result.error_text))
 
         if host.discovery_failed():
             host.clear_discovery_failed()
 
         if mode == "refresh":
             message = _("Refreshed check configuration of host [%s] with %d services") % (
-                hostname, counts[hostname][3])
+                hostname, result.self_total)
             watolib.add_service_change(host, "refresh-autochecks", message)
         else:
             message = _("Saved check configuration of host [%s] with %d services") % (
-                hostname, counts[hostname][3])
+                hostname, result.self_total)
             watolib.add_service_change(host, "set-autochecks", message)
 
         msg = _("Service discovery successful. Added %d, removed %d, kept %d, total %d services "
-                "and %d new, %d total host labels") % tuple(counts[hostname])
+                "and %d new, %d total host labels") % (
+                    result.self_new,
+                    result.self_removed,
+                    result.self_kept,
+                    result.self_total,
+                    result.self_new_host_labels,
+                    result.self_total_host_labels,
+                )
         return msg
 
     def _activate_changes(self, request):

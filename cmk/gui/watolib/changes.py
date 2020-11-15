@@ -208,12 +208,7 @@ def log_audit(linkinfo: LinkInfoObject,
               action: str,
               message: LogMessage,
               user_id: Optional[UserId] = None,
-              old_object: Any = None,
-              new_object: Any = None) -> None:
-
-    diff_text: Optional[str] = None
-    if old_object is not None and new_object is not None:
-        diff_text = make_object_diff(old_object, new_object)
+              diff_text: Optional[str] = None) -> None:
 
     if config.wato_use_git:
         if isinstance(message, HTML):
@@ -223,11 +218,16 @@ def log_audit(linkinfo: LinkInfoObject,
     _log_entry(linkinfo, action, message, user_id, diff_text)
 
 
+def make_diff_text(old_object: Any, new_object: Any) -> Optional[str]:
+    if old_object is not None and new_object is not None:
+        return make_object_diff(old_object, new_object)
+    return None
+
+
 def add_change(action_name: str,
                text: LogMessage,
                obj: LinkInfoObject = None,
-               old_object: Any = None,
-               new_object: Any = None,
+               diff_text: Optional[str] = None,
                add_user: bool = True,
                need_sync: Optional[bool] = None,
                need_restart: Optional[bool] = None,
@@ -238,8 +238,7 @@ def add_change(action_name: str,
               action=action_name,
               message=text,
               user_id=config.user.id if add_user else UserId(''),
-              old_object=old_object,
-              new_object=new_object)
+              diff_text=diff_text)
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     search.update_and_store_index_background(action_name)
@@ -321,15 +320,13 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
 def add_service_change(host: "CREHost",
                        action_name: str,
                        text: str,
-                       old_object: Any = None,
-                       new_object: Any = None,
+                       diff_text: Optional[str] = None,
                        need_sync: bool = False) -> None:
     add_change(action_name,
                text,
                obj=host,
                sites=[host.site_id()],
-               old_object=old_object,
-               new_object=new_object,
+               diff_text=diff_text,
                need_sync=need_sync)
 
 

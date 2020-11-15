@@ -73,6 +73,7 @@ from cmk.gui.plugins.wato import (
     make_action_link,
     make_confirm_link,
     add_change,
+    make_diff_text,
     search_form,
     ConfigHostname,
     HostTagCondition,
@@ -1467,8 +1468,7 @@ class ABCEditRuleMode(WatoMode):
                   "folder \"%s\" to \"%s\"") %
                 (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
                 sites=affected_sites,
-                old_object=self._orig_rule.to_web_api(),
-                new_object=self._rule.to_web_api())
+                diff_text=make_diff_text(self._orig_rule.to_web_api(), self._rule.to_web_api()))
 
         flash(self._success_message())
         return redirect(self._back_url())
@@ -2242,8 +2242,7 @@ class ModeNewRule(ABCEditRuleMode):
                    _("Created new rule #%d in ruleset \"%s\" in folder \"%s\"") %
                    (index, self._ruleset.title(), self._folder.alias_path()),
                    sites=self._folder.all_site_ids(),
-                   old_object={},
-                   new_object=self._rule.to_web_api())
+                   diff_text=make_diff_text({}, self._rule.to_web_api()))
 
     def _success_message(self):
         return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \

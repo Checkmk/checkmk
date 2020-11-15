@@ -147,6 +147,7 @@ from cmk.gui.watolib.changes import (
     log_audit,
     add_change,
     add_service_change,
+    make_diff_text,
 )
 from cmk.gui.watolib.activate_changes import (
     get_replication_paths,

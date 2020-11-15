@@ -12,7 +12,8 @@ from testlib import on_time
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.htmllib import HTML
-from cmk.gui.watolib.changes import AuditLogStore, SiteChanges, ChangeSpec, log_audit
+from cmk.gui.watolib.changes import (AuditLogStore, SiteChanges, ChangeSpec, log_audit,
+                                     make_diff_text)
 
 
 class TestAuditLogStore:
@@ -126,8 +127,7 @@ def test_log_audit_with_object_diff():
             action="bla",
             message="Message",
             user_id=UserId("calvin"),
-            old_object=old,
-            new_object=new,
+            diff_text=make_diff_text(old, new),
         )
 
     store = AuditLogStore(AuditLogStore.make_path())

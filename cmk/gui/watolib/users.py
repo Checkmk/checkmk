@@ -29,7 +29,7 @@ from cmk.gui.valuespec import (
     Alternative,
     EmailAddress,
 )
-from cmk.gui.watolib.changes import add_change, log_audit
+from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text
 from cmk.gui.watolib.user_scripts import (
     user_script_title,
     user_script_choices,
@@ -77,8 +77,7 @@ def edit_users(changed_users):
                   action="edit-users",
                   message=(_("Created new user: %s") %
                            user_id if is_new_user else _("Modified user: %s") % user_id),
-                  old_object=old_object,
-                  new_object=make_user_audit_log_object(user_attrs))
+                  diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)))
 
         all_users[user_id] = user_attrs
 

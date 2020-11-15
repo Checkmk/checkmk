@@ -44,7 +44,7 @@ from cmk.gui.watolib.utils import (
     ALL_SERVICES,
     try_bake_agents_for_hosts,
 )
-from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.changes import add_change, make_diff_text
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.host_attributes import (
@@ -1686,8 +1686,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                    _("Created new folder %s") % new_subfolder.alias_path(),
                    obj=new_subfolder,
                    sites=[new_subfolder.site_id()],
-                   old_object=make_folder_audit_log_object({}),
-                   new_object=make_folder_audit_log_object(new_subfolder.attributes()))
+                   diff_text=make_diff_text(
+                       make_folder_audit_log_object({}),
+                       make_folder_audit_log_object(new_subfolder.attributes())))
         hooks.call("folder-created", new_subfolder)
         self._clear_id_cache()
         need_sidebar_reload()
@@ -1815,8 +1816,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                    _("Edited properties of folder %s") % self.title(),
                    obj=self,
                    sites=affected_sites,
-                   old_object=old_object,
-                   new_object=make_folder_audit_log_object(self._attributes))
+                   diff_text=make_diff_text(old_object,
+                                            make_folder_audit_log_object(self._attributes)))
         self._clear_id_cache()
 
     def _get_cgconf_from_attributes(self, attributes):
@@ -1845,9 +1846,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                        _("Created new host %s.") % host_name,
                        obj=host,
                        sites=[host.site_id()],
-                       old_object={},
-                       new_object=make_host_audit_log_object(host.attributes(),
-                                                             host.cluster_nodes()))
+                       diff_text=make_diff_text({},
+                                                make_host_audit_log_object(
+                                                    host.attributes(), host.cluster_nodes())))
 
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
@@ -2529,8 +2530,7 @@ class CREHost(WithPermissions, WithAttributes):
                    _("Modified host %s.") % self.name(),
                    obj=self,
                    sites=affected_sites,
-                   old_object=old_object,
-                   new_object=new_object)
+                   diff_text=make_diff_text(old_object, new_object))
 
     def update_attributes(self, changed_attributes):
         new_attributes = self.attributes().copy()
@@ -2556,8 +2556,8 @@ class CREHost(WithPermissions, WithAttributes):
                    _("Removed explicit attributes of host %s.") % self.name(),
                    obj=self,
                    sites=affected_sites,
-                   old_object=old,
-                   new_object=make_host_audit_log_object(self._attributes, self._cluster_nodes))
+                   diff_text=make_diff_text(
+                       old, make_host_audit_log_object(self._attributes, self._cluster_nodes)))
 
     def _need_folder_write_permissions(self):
         if not self.folder().may("write"):

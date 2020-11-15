@@ -87,7 +87,7 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ConfigDomainOMD, LivestatusViaTCP, ac_test_registry, add_change, add_replication_paths,
     config_domain_registry, folder_preserving_link, get_rulegroup, is_wato_slave_site, log_audit,
     make_action_link, multisite_dir, register_rule, site_neutral_path, user_script_choices,
-    user_script_title, wato_fileheader, wato_root_dir,
+    user_script_title, wato_fileheader, wato_root_dir, make_diff_text,
 )
 from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
     ReplicationPath,)

@@ -239,8 +239,8 @@ class Discovery:
             action_name="set-autochecks",
             text=message,
             need_sync=need_sync,
-            old_object=_make_host_audit_log_object(old_autochecks),
-            new_object=_make_host_audit_log_object(checks),
+            diff_text=watolib.make_diff_text(_make_host_audit_log_object(old_autochecks),
+                                             _make_host_audit_log_object(checks)),
         )
         check_mk_automation(self._host.site_id(), "set-autochecks", [self._host.name()], checks)
 

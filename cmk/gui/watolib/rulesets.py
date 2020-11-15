@@ -27,7 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.watolib.utils import has_agent_bakery
-from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.changes import add_change, make_diff_text
 from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
     rulespec_group_registry,
@@ -505,8 +505,7 @@ class Ruleset:
                    _("Cloned rule in ruleset \"%s\" in folder \"%s\"") %
                    (self.title(), rule.folder.alias_path()),
                    sites=rule.folder.all_site_ids(),
-                   old_object={},
-                   new_object=rule.to_web_api())
+                   diff_text=make_diff_text({}, rule.to_web_api()))
 
     def append_rule(self, folder, rule) -> int:
         rules = self._rules.setdefault(folder.path(), [])
@@ -653,8 +652,7 @@ class Ruleset:
                    _("Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\"") %
                    (index, self.title(), rule.folder.alias_path()),
                    sites=rule.folder.all_site_ids(),
-                   old_object=orig_rule.to_web_api(),
-                   new_object=rule.to_web_api())
+                   diff_text=make_diff_text(orig_rule.to_web_api(), rule.to_web_api()))
         self._on_change()
 
     def delete_rule(self, rule, create_change=True):

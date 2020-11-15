@@ -30,6 +30,7 @@ from cmk.gui.plugins.wato.utils import (
     ACTestCategories,
     ac_test_registry,
     add_change,
+    make_diff_text,
     add_replication_paths,
     ReplicationPath,
     CheckTypeSelection,

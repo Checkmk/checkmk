@@ -1,0 +1,13 @@
+Title: infoblox_dns_stats: use correct OID value for recursion
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605511024
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The check plugin <tt>infoblox_dns_stats</tt> displayed the wrong value
+for the queries received using recursion (it instead displayed the number
+of successful responses). This has been fixed.

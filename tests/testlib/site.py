@@ -524,7 +524,7 @@ class Site:
             i = 0
             while not self.is_running():
                 i += 1
-                if i > 10:
+                if i > 50:
                     self.execute(["/usr/bin/omd", "status"]).wait()
                     print("= BEGIN PROCESSES FAIL ==============================")
                     self.execute(["ps", "aux"]).wait()

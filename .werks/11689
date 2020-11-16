@@ -1,0 +1,13 @@
+Title: mem_linux: switch to mem_used to monitor memory statistics via SNMP
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605565884
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Memory statistics from an SNMP data source were monitored by the mem_linux
+check, which caused it to crash as it is not suitable to evaluate SNMP data
+(KeyError). With this fix, SNMP data is monitored by the mem_used check.

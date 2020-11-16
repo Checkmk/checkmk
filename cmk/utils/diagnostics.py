@@ -34,7 +34,9 @@ OPT_CHECKMK_LOG_FILES = "checkmk-log-files"
 # CEE specific options
 OPT_PERFORMANCE_GRAPHS = "performance-graphs"
 
-# GUI specific options
+# GUI, component specific options
+OPT_COMP_GLOBAL_SETTINGS = "global-settings"
+OPT_COMP_HOSTS_AND_FOLDERS = "hosts-and-folders"
 OPT_COMP_NOTIFICATIONS = "notifications"
 
 _BOOLEAN_CONFIG_OPTS = [
@@ -59,7 +61,7 @@ def serialize_wato_parameters(wato_parameters: DiagnosticsParameters) -> Diagnos
 
     comp_specific_parameters = wato_parameters.get("comp_specific")
     if comp_specific_parameters is not None:
-        parameters.update(comp_specific_parameters)
+        parameters.update(dict(comp_specific_parameters))
 
     config_files: Set[str] = set()
     log_files: Set[str] = set()
@@ -74,7 +76,11 @@ def serialize_wato_parameters(wato_parameters: DiagnosticsParameters) -> Diagnos
         elif key == OPT_CHECKMK_LOG_FILES:
             log_files |= _extract_list_of_files(value)
 
-        elif key == OPT_COMP_NOTIFICATIONS:
+        elif key in [
+                OPT_COMP_GLOBAL_SETTINGS,
+                OPT_COMP_HOSTS_AND_FOLDERS,
+                OPT_COMP_NOTIFICATIONS,
+        ]:
             config_files |= _extract_list_of_files(value.get("config_files"))
             log_files |= _extract_list_of_files(value.get("log_files"))
 
@@ -170,8 +176,8 @@ CheckmkFileInfo = NamedTuple("CheckmkFileInfo", [
 ])
 
 
-def get_checkmk_file_sensitivity_for_humans(rel_filepath: str) -> str:
-    sensitivity = get_checkmk_file_info(rel_filepath).sensitivity
+def get_checkmk_file_sensitivity_for_humans(rel_filepath: str, file_info: CheckmkFileInfo) -> str:
+    sensitivity = file_info.sensitivity
     if sensitivity == CheckmkFileSensitivity.high_sensitive:
         return "%s (!)" % rel_filepath
     if sensitivity == CheckmkFileSensitivity.sensitive:
@@ -182,14 +188,36 @@ def get_checkmk_file_sensitivity_for_humans(rel_filepath: str) -> str:
     return rel_filepath
 
 
-def get_checkmk_file_info(rel_filepath: str) -> CheckmkFileInfo:
+def get_checkmk_file_info(rel_filepath: str, component: Optional[str] = None) -> CheckmkFileInfo:
+    # Some files like hosts.mk or rules.mk may be located in folder hierarchies.
+    # Thus we have to find them via name. The presedence is as following:
+    # 1. CheckmkFileInfoByNameMap
+    # 2. CheckmkFileInfoByRelFilePathMap
+
+    # Note:
+    # A combination FILE + COMPONENT may be only in ONE of these two maps. Otherwise
+    # a component collects too many files.
+    # Example:
+    # - 'Global settings' collects
+    #       all 'global.mk'
+    #   => ONE entry in CheckmkFileInfoByNameMap
+    #
+    # - 'Notifications' collects
+    #       conf.d/wato/global.mk
+    #       mknotify.d/wato/global.mk
+    #       multisite.d/wato/global.mk
+    #   => MULTIPLE entries in CheckmkFileInfoByRelFilePathMap
+    #      (Otherwise all other 'global.mk' would be associated with 'Notifications')
+
     file_info_by_name = CheckmkFileInfoByNameMap.get(Path(rel_filepath).name)
     if file_info_by_name is not None:
-        return file_info_by_name
+        if component is None or component in file_info_by_name.components:
+            return file_info_by_name
 
-    file_info_by_folder = CheckmkFileInfoByFolderMap.get(rel_filepath)
-    if file_info_by_folder is not None:
-        return file_info_by_folder
+    file_info_by_rel_filepath = CheckmkFileInfoByRelFilePathMap.get(rel_filepath)
+    if file_info_by_rel_filepath is not None:
+        if component is None or component in file_info_by_rel_filepath.components:
+            return file_info_by_rel_filepath
 
     return CheckmkFileInfo(
         components=[],
@@ -197,56 +225,55 @@ def get_checkmk_file_info(rel_filepath: str) -> CheckmkFileInfo:
     )
 
 
-# Feel free to extend the maps CheckmkFileInfoByNameMap or CheckmkFileInfoByFolderMap.
+# Feel free to extend the maps:
 # - config file entries are relative to "etc/check_mk".
 # - log file entries are relative to "var/log".
-
-# Some files like hosts.mk or rules.mk may be located in folder hierarchies.
-# Thus we have to find them via name. CheckmkFileInfoByNameMap takes precedence
-# over CheckmkFileInfoByFolderMap.
 CheckmkFileInfoByNameMap: Dict[str, CheckmkFileInfo] = {
+    # config files
+    "sites.mk": CheckmkFileInfo(
+        components=[
+            OPT_COMP_GLOBAL_SETTINGS,
+        ],
+        sensitivity=CheckmkFileSensitivity(0),
+    ),
+    "global.mk": CheckmkFileInfo(
+        components=[
+            OPT_COMP_GLOBAL_SETTINGS,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
+    ),
     "hosts.mk": CheckmkFileInfo(
         components=[
+            OPT_COMP_HOSTS_AND_FOLDERS,
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(2),
     ),
     "rules.mk": CheckmkFileInfo(
         components=[
+            OPT_COMP_HOSTS_AND_FOLDERS,
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(2),
     ),
-}
-
-CheckmkFileInfoByFolderMap: Dict[str, CheckmkFileInfo] = {
-    # config files
-    "apache.conf": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
+    "tags.mk": CheckmkFileInfo(
+        components=[
+            OPT_COMP_HOSTS_AND_FOLDERS,
+            OPT_COMP_NOTIFICATIONS,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
     ),
-    "apache.d/wato/global.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "conf.d/microcore.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "conf.d/mkeventd.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "conf.d/pnp4nagios.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "conf.d/wato/.wato": CheckmkFileInfo(
+    ".wato": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
+            OPT_COMP_HOSTS_AND_FOLDERS,
         ],
         sensitivity=CheckmkFileSensitivity(0),
     ),
+}
+
+CheckmkFileInfoByRelFilePathMap: Dict[str, CheckmkFileInfo] = {
+    # config files
     "conf.d/wato/alert_handlers.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
@@ -277,28 +304,10 @@ CheckmkFileInfoByFolderMap: Dict[str, CheckmkFileInfo] = {
         ],
         sensitivity=CheckmkFileSensitivity(2),
     ),
-    "conf.d/wato/tags.mk": CheckmkFileInfo(
-        components=[
-            OPT_COMP_NOTIFICATIONS,
-        ],
-        sensitivity=CheckmkFileSensitivity(1),
-    ),
-    "dcd.d/wato/global.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "liveproxyd.d/wato/global.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
     "main.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "mkeventd.mk": CheckmkFileInfo(
-        components=[],
         sensitivity=CheckmkFileSensitivity(0),
     ),
     "mknotifyd.d/wato/global.mk": CheckmkFileInfo(
@@ -307,19 +316,11 @@ CheckmkFileInfoByFolderMap: Dict[str, CheckmkFileInfo] = {
         ],
         sensitivity=CheckmkFileSensitivity(1),
     ),
-    "multisite.d/liveproxyd.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "multisite.d/mkeventd.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
     "multisite.d/wato/global.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
-        sensitivity=CheckmkFileSensitivity(0),
+        sensitivity=CheckmkFileSensitivity(1),
     ),
     "multisite.d/wato/groups.mk": CheckmkFileInfo(
         components=[
@@ -327,68 +328,18 @@ CheckmkFileInfoByFolderMap: Dict[str, CheckmkFileInfo] = {
         ],
         sensitivity=CheckmkFileSensitivity(0),
     ),
-    "multisite.d/wato/tags.mk": CheckmkFileInfo(
-        components=[
-            OPT_COMP_NOTIFICATIONS,
-        ],
-        sensitivity=CheckmkFileSensitivity(1),
-    ),
     "multisite.d/wato/users.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(2),
     ),
-    "multisite.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "rrdcached.d/wato/global.mk": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
     # Log files
-    "alerts.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "access_log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "error_log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "stats": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
     "cmc.log": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "dcd.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "diskspace.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "liveproxyd.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "liveproxyd.state": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "mkeventd.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
+        sensitivity=CheckmkFileSensitivity(1),
     ),
     "mknotifyd.log": CheckmkFileInfo(
         components=[
@@ -407,13 +358,5 @@ CheckmkFileInfoByFolderMap: Dict[str, CheckmkFileInfo] = {
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
-    ),
-    "rrdcached.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
-    ),
-    "web.log": CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(0),
     ),
 }

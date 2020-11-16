@@ -14,6 +14,8 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
     OPT_CHECKMK_OVERVIEW,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_COMP_GLOBAL_SETTINGS,
+    OPT_COMP_HOSTS_AND_FOLDERS,
     OPT_COMP_NOTIFICATIONS,
     DiagnosticsParameters,
     serialize_wato_parameters,
@@ -40,6 +42,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
     DualListChoice,
+    ListOf,
 )
 from cmk.gui.page_menu import (
     PageMenu,
@@ -68,6 +71,12 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.pages import page_registry, Page
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+
+_CHECKMK_FILES_NOTE = _("<br>Note: Some files may contain highly sensitive data like"
+                        " passwords. These files are marked with '!'."
+                        " Other files may include IP adresses, hostnames, usernames,"
+                        " mail adresses or phone numbers and are marked with '?'."
+                        " Files with '-' are not classified yet.")
 
 
 @mode_registry.register
@@ -166,9 +175,9 @@ class ModeDiagnostics(WatoMode):
                      elements=self._get_optional_information_elements(),
                  )),
                 ("comp_specific",
-                 Dictionary(
+                 ListOf(
                      title=_("Component specific information"),
-                     elements=self._get_component_specific_elements(),
+                     valuespec=CascadingDropdown(choices=self._get_component_specific_choices()),
                  )),
             ],
             optional_keys=False,
@@ -206,17 +215,9 @@ class ModeDiagnostics(WatoMode):
                         "(Agent plugin mk_inventory needs to be installed)"),
              )),
             (OPT_CHECKMK_CONFIG_FILES,
-             CascadingDropdown(
-                 title=_("Checkmk Configuration Files"),
-                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk."
-                        "<br>Note: Some files may contain highly sensitive data like"
-                        " passwords. These files are marked with '!'."
-                        " Other files may include IP adresses, hostnames, usernames,"
-                        " mail adresses or phone numbers and are marked with '?'."
-                        " Files with '-' are not classified yet."),
-                 choices=self._get_checkmk_config_files_choices(),
-                 default_value="global_settings",
-             )),
+             self._get_component_specific_checkmk_files_choices(
+                 "Checkmk Configuration files",
+                 [(f, get_checkmk_file_info(f)) for f in self._checkmk_config_files_map])),
         ]
 
         if not cmk_version.is_raw_edition():
@@ -232,63 +233,29 @@ class ModeDiagnostics(WatoMode):
                  )))
         return elements
 
-    def _get_checkmk_config_files_choices(self) -> List[CascadingDropdownChoice]:
-        sorted_checkmk_config_files = sorted(self._checkmk_config_files_map)
-        checkmk_config_files = []
-        global_settings = []
-        host_and_folders = []
-
-        for rel_config_file in sorted_checkmk_config_files:
-            checkmk_config_files.append(rel_config_file)
-
-            rel_config_file_path = Path(rel_config_file)
-            rel_config_file_name = rel_config_file_path.name
-            rel_config_file_parts = rel_config_file_path.parts
-
-            if (rel_config_file_name == "sites.mk" or
-                (rel_config_file_name == "global.mk" and rel_config_file_parts and
-                 rel_config_file_parts[0] == "conf.d")):
-                global_settings.append(rel_config_file)
-
-            if rel_config_file_name in ["hosts.mk", "tags.mk", "rules.mk", ".wato"]:
-                host_and_folders.append(rel_config_file)
-
-        return [
-            ("all", _("Pack all files"),
-             FixedValue(
-                 checkmk_config_files,
-                 totext=self._list_of_files_to_text(checkmk_config_files),
-             )),
-            ("global_settings", _("Only global settings"),
-             FixedValue(
-                 global_settings,
-                 totext=self._list_of_files_to_text(global_settings),
-             )),
-            ("hosts_and_folders", _("Only hosts and folders"),
-             FixedValue(
-                 host_and_folders,
-                 totext=self._list_of_files_to_text(host_and_folders),
-             )),
-            ("explicit_list_of_files", _("Explicit list of files"),
-             DualListChoice(
-                 choices=self._list_of_files_choices(sorted_checkmk_config_files),
-                 size=80,
-                 rows=20,
-             )),
-        ]
-
-    def _get_component_specific_elements(self) -> List[Tuple[str, ValueSpec]]:
-        elements: List[Tuple[str, ValueSpec]] = [
-            (OPT_COMP_NOTIFICATIONS,
+    def _get_component_specific_choices(self) -> List[CascadingDropdownChoice]:
+        elements: List[CascadingDropdownChoice] = [
+            (OPT_COMP_GLOBAL_SETTINGS, _("Global Settings"),
              Dictionary(
-                 title=_("Notifications"),
+                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s" %
+                        _CHECKMK_FILES_NOTE),
+                 elements=self._get_component_specific_checkmk_files_elements(
+                     OPT_COMP_GLOBAL_SETTINGS),
+                 default_keys=["config_files"],
+             )),
+            (OPT_COMP_HOSTS_AND_FOLDERS, _("Hosts and Folders"),
+             Dictionary(
+                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s" %
+                        _CHECKMK_FILES_NOTE),
+                 elements=self._get_component_specific_checkmk_files_elements(
+                     OPT_COMP_HOSTS_AND_FOLDERS),
+                 default_keys=["config_files"],
+             )),
+            (OPT_COMP_NOTIFICATIONS, _("Notifications"),
+             Dictionary(
                  help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk"
-                        " or log files ('*.log' or '*.state') from var/log."
-                        "<br>Note: Some files may contain highly sensitive data like"
-                        " passwords. These files are marked with '!'."
-                        " Other files may include IP adresses, hostnames, usernames,"
-                        " mail adresses or phone numbers and are marked with '?'."
-                        " Files with '-' are not be classified yet."),
+                        " or log files ('*.log' or '*.state') from var/log.%s" %
+                        _CHECKMK_FILES_NOTE),
                  elements=self._get_component_specific_checkmk_files_elements(
                      OPT_COMP_NOTIFICATIONS),
                  default_keys=["config_files"],
@@ -303,7 +270,7 @@ class ModeDiagnostics(WatoMode):
         elements = []
         config_files = [(f, fi)
                         for f in self._checkmk_config_files_map
-                        for fi in [get_checkmk_file_info(f)]
+                        for fi in [get_checkmk_file_info(f, component)]
                         if component in fi.components]
         if config_files:
             elements.append(
@@ -313,7 +280,7 @@ class ModeDiagnostics(WatoMode):
 
         log_files = [(f, fi)
                      for f in self._checkmk_log_files_map
-                     for fi in [get_checkmk_file_info(f)]
+                     for fi in [get_checkmk_file_info(f, component)]
                      if component in fi.components]
         if log_files:
             elements.append(
@@ -331,15 +298,17 @@ class ModeDiagnostics(WatoMode):
         insensitive_files = []
         for rel_filepath, file_info in checkmk_files:
             if file_info.sensitivity == CheckmkFileSensitivity.high_sensitive:
-                high_sensitive_files.append(rel_filepath)
+                high_sensitive_files.append((rel_filepath, file_info))
             elif file_info.sensitivity == CheckmkFileSensitivity.sensitive:
-                sensitive_files.append(rel_filepath)
+                sensitive_files.append((rel_filepath, file_info))
             else:
-                insensitive_files.append(rel_filepath)
+                insensitive_files.append((rel_filepath, file_info))
 
-        sorted_files = sorted(high_sensitive_files + sensitive_files + insensitive_files)
-        sorted_non_high_sensitive_files = sorted(sensitive_files + insensitive_files)
-        sorted_insensitive_files = sorted(insensitive_files)
+        sorted_files = sorted(high_sensitive_files + sensitive_files + insensitive_files,
+                              key=lambda t: t[0])
+        sorted_non_high_sensitive_files = sorted(sensitive_files + insensitive_files,
+                                                 key=lambda t: t[0])
+        sorted_insensitive_files = sorted(insensitive_files, key=lambda t: t[0])
         return CascadingDropdown(
             title=_(title),
             choices=[
@@ -368,14 +337,18 @@ class ModeDiagnostics(WatoMode):
             default_value="non_high_sensitive",
         )
 
-    def _list_of_files_to_text(self, list_of_files: List[str]) -> str:
+    def _list_of_files_to_text(self, list_of_files: List[Tuple[str, CheckmkFileInfo]]) -> str:
         return "<br>%s" % ",<br>".join([
-            get_checkmk_file_sensitivity_for_humans(rel_filepath) for rel_filepath in list_of_files
+            get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info)
+            for rel_filepath, file_info in list_of_files
         ])
 
-    def _list_of_files_choices(self, files: List[str]) -> List[Tuple[str, str]]:
-        return [(rel_filepath, get_checkmk_file_sensitivity_for_humans(rel_filepath))
-                for rel_filepath in files]
+    def _list_of_files_choices(
+        self,
+        files: List[Tuple[str, CheckmkFileInfo]],
+    ) -> List[Tuple[str, str]]:
+        return [(rel_filepath, get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info))
+                for rel_filepath, file_info in files]
 
 
 @gui_background_job.job_registry.register

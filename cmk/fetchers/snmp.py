@@ -180,9 +180,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
     def _detect(self, *, select_from: Set[SectionName]) -> Set[SectionName]:
         """Detect the applicable sections for the device in question"""
-        sections = select_from - self.disabled_sections
         return gather_available_raw_section_names(
-            sections=[(name, self.snmp_plugin_store[name].detect_spec) for name in sections],
+            sections=[(name, self.snmp_plugin_store[name].detect_spec) for name in select_from],
             on_error=self.on_error,
             missing_sys_description=self.missing_sys_description,
             backend=self._backend,
@@ -213,17 +212,17 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def _get_sections_fetched_unconditionally(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
-            return self.configured_snmp_sections
+            return self.configured_snmp_sections - self.disabled_sections
 
         return set()
 
     def _get_sections_fetch_detected(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched after successful detection"""
         if mode is Mode.INVENTORY or mode is Mode.CHECKING and self.do_status_data_inventory:
-            return self.inventory_snmp_sections
+            return self.inventory_snmp_sections - self.disabled_sections
 
         if mode in (Mode.DISCOVERY, Mode.CACHED_DISCOVERY):
-            return set(self.snmp_plugin_store)
+            return set(self.snmp_plugin_store) - self.disabled_sections
 
         return set()
 

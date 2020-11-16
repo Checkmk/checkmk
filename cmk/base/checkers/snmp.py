@@ -6,7 +6,6 @@
 
 import logging
 import time
-from functools import cached_property
 from pathlib import Path
 from typing import Final, Optional, Set
 
@@ -175,7 +174,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return self.host_config.disabled_snmp_sections()
 
     def _make_configured_snmp_sections(self) -> Set[SectionName]:
-        return self._enabled_snmp_sections.intersection(
+        return set(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=check_table.get_needed_check_names(
                     self.hostname,
@@ -186,17 +185,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             ))
 
     def _make_inventory_snmp_sections(self) -> Set[SectionName]:
-        return self._enabled_snmp_sections.intersection(
+        return set(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=(),
                 consider_inventory_plugins=True,
             ))
-
-    # TODO: filter out disabled sections in fetcher. They need to known them anyway.
-    @cached_property
-    def _enabled_snmp_sections(self) -> Set[SectionName]:
-        return {s.name for s in agent_based_register.iter_all_snmp_sections()
-               } - self.host_config.disabled_snmp_sections()
 
     @staticmethod
     def _make_description(

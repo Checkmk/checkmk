@@ -18,6 +18,7 @@ import argparse
 import logging
 import copy
 import subprocess
+import ast
 import gzip
 
 from werkzeug.test import create_environ
@@ -153,7 +154,7 @@ class UpdateConfig:
             (self._create_search_index, "Creating search index"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._set_user_scheme_serial, "Set version specific user attributes"),
-            (self._rewrite_inventory_data_2to3, "Rewriting inventory data with 2to3"),
+            (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
         ]
 
@@ -631,31 +632,48 @@ class UpdateConfig:
             users[user_id]["user_scheme_serial"] = USER_SCHEME_SERIAL
         save_users(users)
 
-    def _rewrite_inventory_data_2to3(self):
+    def _rewrite_py2_inventory_data(self):
         dirpaths = [
             Path(cmk.utils.paths.var_dir + "/inventory/"),
             Path(cmk.utils.paths.var_dir + "/inventory_archive/"),
             Path(cmk.utils.paths.tmp_dir + "/status_data/"),
         ]
-        files = []
+        filepaths: List[Path] = []
         for dirpath in dirpaths:
             if not dirpath.exists():
                 self._logger.log(VERBOSE, "Skipping path %r (empty)\n" % str(dirpath))
                 continue
 
             # Create a list of all files that need to be converted with 2to3
-            files += [
-                str(f)
-                for f in dirpath.iterdir()
-                if not f.name.endswith(".gz") and not f.name.startswith(".")
-            ]
+            if "inventory_archive" in str(dirpath):
+                self._find_files_recursively(filepaths, dirpath)
+            else:
+                filepaths += [
+                    f for f in dirpath.iterdir()
+                    if not f.name.endswith(".gz") and not f.name.startswith(".")
+                ]
 
-        # Execute 2to3
+        py2_files: List[str] = [str(f) for f in filepaths if self._needs_to_be_converted(f)]
+
+        if not py2_files:
+            return
+
+        self._fix_with_2to3(py2_files)
+
+        # Rewriting .gz files
+        for filepath in py2_files:
+            if "inventory_archive" not in str(filepath):
+                with open(filepath, 'rb') as f_in, gzip.open(str(filepath) + '.gz', 'wb') as f_out:
+                    f_out.writelines(f_in)
+
+    def _fix_with_2to3(self, files: List[str]):
+        self._logger.log(VERBOSE, "Try to fix corrupt files with 2to3")
         cmd = [
             '2to3',
             '--write',
             '--nobackups',
         ] + files
+
         self._logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
         p = subprocess.Popen(
             cmd,
@@ -663,14 +681,30 @@ class UpdateConfig:
             stderr=subprocess.STDOUT,
             shell=False,
         )
-        if p.wait() != 0:
-            self._logger.error("Failed to run 2to3 (Exit code: %d): %s", p.returncode,
-                               p.communicate()[0])
+        output = p.communicate()[0]
+        if p.returncode != 0:
+            self._logger.error("Failed to run 2to3 (Exit code: %d): %s", p.returncode, output)
+        self._logger.log(VERBOSE, "Finished.")
 
-        # Rewriting .gz files
-        for filepath in files:
-            with open(filepath, 'rb') as f_in, gzip.open(str(filepath) + '.gz', 'wb') as f_out:
-                f_out.writelines(f_in)
+    def _needs_to_be_converted(self, filepath: Path):
+        with filepath.open(encoding="utf-8") as f:
+            # Try to evaluate data with ast.literal_eval
+            try:
+                data = f.read()
+                self._logger.debug("Evaluating %r" % str(filepath))
+                ast.literal_eval(data)
+                return False
+            except SyntaxError:
+                self._logger.log(VERBOSE, "Found corrupt file %r" % str(filepath))
+                return True
+
+    def _find_files_recursively(self, files: List[Path], path: Path):
+        for f in path.iterdir():
+            if f.is_file():
+                if not f.name.endswith(".gz") and not f.name.startswith("."):
+                    files.append(f)
+            elif f.is_dir():
+                self._find_files_recursively(files, f)
 
     def _migrate_pre_2_0_audit_log(self):
         old_path = Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")

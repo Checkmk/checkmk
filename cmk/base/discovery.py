@@ -1452,7 +1452,6 @@ def _configure_sources(
     if isinstance(source, checkers.snmp.SNMPSource):
         source.on_snmp_scan_error = discovery_parameters.on_error
         source.use_snmpwalk_cache = False
-        source.ignore_check_interval = True
         checkers.FileCacheFactory.snmp_disabled = disable_snmp_caches
 
 

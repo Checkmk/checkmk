@@ -88,7 +88,6 @@ def _patch_data_source(mocker, **kwargs):
         "use_outdated_persisted_sections": False,
         "on_error": "raise",
         "_use_snmpwalk_cache": True,
-        "_ignore_check_interval": True,
     }
     defaults.update(kwargs)
 
@@ -107,7 +106,6 @@ def _patch_data_source(mocker, **kwargs):
         elif isinstance(self, SNMPSource):
             assert self.on_snmp_scan_error == defaults["on_error"]
             assert self.use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
-            assert self.ignore_check_interval == defaults["_ignore_check_interval"]
 
         result = callback(self, *args, **kwargs)
         if result.is_error():

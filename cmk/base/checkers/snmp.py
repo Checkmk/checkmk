@@ -98,7 +98,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         self.on_snmp_scan_error = on_error
         # Attributes below are wrong
         self.use_snmpwalk_cache = True
-        self.ignore_check_interval = False
 
     @classmethod
     def snmp(

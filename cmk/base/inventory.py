@@ -272,7 +272,6 @@ def _fetch_multi_host_sections_for_inv(
 def _configure_source_for_inv(source: checkers.Source):
     if isinstance(source, checkers.snmp.SNMPSource):
         source.use_snmpwalk_cache = False
-        source.ignore_check_interval = True
         checkers.FileCacheFactory.snmp_disabled = True
 
 

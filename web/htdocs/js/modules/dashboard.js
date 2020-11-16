@@ -447,6 +447,9 @@ function render_resize_controls(controls, i) {
         controls.appendChild(resize);
         const indication = document.createElement("div");
         indication.className = "resize resize" + i + " resize" + i + "_" + a + " circle_handle";
+        const resize_image = document.createElement("div");
+        resize_image.className = "resize_image";
+        indication.appendChild(resize_image);
         controls.appendChild(indication);
     }
 }
@@ -525,7 +528,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
 
         // Create the anchors
         for (let i = 0; i < 4; i++) {
-            let anchor = create_a_button(
+            const anchor = create_a_button(
                 "anchor anchor" + i,
                 "Click to start growing from here",
                 () => toggle_anchor(nr, i)
@@ -533,7 +536,10 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
             if (anchor_id == i) {
                 anchor.className += " on";
                 anchor.title = "Currently growing from here";
-                let helper = document.createElement("div");
+                const drag_image = document.createElement("div");
+                drag_image.className = "drag_image";
+                anchor.appendChild(drag_image);
+                const helper = document.createElement("div");
                 helper.innerHTML = "Anchor";
                 anchor.appendChild(helper);
             }

@@ -330,7 +330,7 @@ div.dashlet.edit {
     width: 100%;
     height: 100%;
     cursor: auto;
-    background-color: rgba(50, 80, 90, 0.6);
+    background-color: rgba(50, 80, 90, 0.9);
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#fffffff', endColorstr='#7fffffff');
 
@@ -346,54 +346,40 @@ div.dashlet.edit {
     right: 0;
     left: 0;
     margin: auto;
-    height: 20px;
-    width: 60px;
+    height: $dashlet-editor-icon-size;
+    width: 3 * $dashlet-editor-icon-size;
     text-align: center;
 
     a {
       display: inline-block;
-      width: 20px;
-      height: 20px;
+      width: $dashlet-editor-icon-size;
+      height: $dashlet-editor-icon-size;
       border-radius: 5px;
-      background-size: 20px;
+      background-size: $dashlet-editor-icon-size;
+      background-repeat: no-repeat;
       cursor: pointer;
       /* IE < 9 */
       filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
-      /* dashlet edit button */
+      &:hover {
+        opacity: 0.7;
+      }
+
       &.edit {
-        background-image: url("images/dashlet_edit_lo.png");
-
-        &:hover {
-          background-image: url("images/dashlet_edit_hi.png");
-        }
+        background-image: url("images/dashlet_edit.svg");
       }
 
-      /* dashlet clone button */
       &.clone {
-        background-image: url("images/dashlet_clone_lo.png");
-
-        &:hover {
-          background-image: url("images/dashlet_clone_hi.png");
-        }
+        background-image: url("images/dashlet_clone.svg");
       }
 
-      /* dashlet delete button */
       &.del {
-        background-image: url("images/dashlet_del_lo.png");
-
-        &:hover {
-          background-image: url("images/dashlet_del_hi.png");
-        }
+        background-image: url("images/dashlet_delete.svg");
       }
     }
   }
 
   /* position anchors */
-  $corner-size: 26px;
-  $corner-size-on: 40px;
-  $dashlet-editor-free: #4e5d69;
-  $dashlet-editor-active: #13d389;
   .anchor {
     position: absolute;
     cursor: pointer;
@@ -410,19 +396,34 @@ div.dashlet.edit {
       text-align: center;
       background-color: $dashlet-editor-active;
       color: #172127;
+
+      &.drag_image {
+        height: 15px;
+        width: 15px;
+        padding: 0;
+        background-image: url("images/dashlet_drag.svg");
+        background-repeat: no-repeat;
+      }
     }
 
     &.anchor0 {
       top: 0;
       left: 0;
-      border-top: $corner-size solid $dashlet-editor-free;
-      border-right: $corner-size solid transparent;
+      border-top: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-right: $dashlet-anchor-size solid transparent;
+
       &.on {
-        border-top: $corner-size-on solid $dashlet-editor-active;
-        border-right: $corner-size-on solid transparent;
+        border-top: $dashlet-anchor-on-size solid $dashlet-editor-active;
+        border-right: $dashlet-anchor-on-size solid transparent;
+
         & div {
-          left: $corner-size;
-          top: -$corner-size;
+          left: $dashlet-anchor-size;
+          top: -$dashlet-anchor-size;
+
+          &.drag_image {
+            top: -$dashlet-anchor-size - $spacing;
+            left: 3px;
+          }
         }
       }
     }
@@ -430,14 +431,21 @@ div.dashlet.edit {
     &.anchor1 {
       top: 0;
       right: 0;
-      border-top: $corner-size solid $dashlet-editor-free;
-      border-left: $corner-size solid transparent;
+      border-top: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-left: $dashlet-anchor-size solid transparent;
+
       &.on {
-        border-top: $corner-size-on solid $dashlet-editor-active;
-        border-left: $corner-size-on solid transparent;
+        border-top: $dashlet-anchor-on-size solid $dashlet-editor-active;
+        border-left: $dashlet-anchor-on-size solid transparent;
+
         & div {
-          right: $corner-size;
-          top: -$corner-size;
+          right: $dashlet-anchor-size;
+          top: -$dashlet-anchor-size;
+
+          &.drag_image {
+            top: -$dashlet-anchor-size - $spacing;
+            right: 3px;
+          }
         }
       }
     }
@@ -445,13 +453,20 @@ div.dashlet.edit {
     &.anchor2 {
       right: 0;
       bottom: 0;
-      border-bottom: $corner-size solid $dashlet-editor-free;
-      border-left: $corner-size solid transparent;
+      border-bottom: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-left: $dashlet-anchor-size solid transparent;
+
       &.on {
-        border-bottom: $corner-size-on solid $dashlet-editor-active;
-        border-left: $corner-size-on solid transparent;
+        border-bottom: $dashlet-anchor-on-size solid $dashlet-editor-active;
+        border-left: $dashlet-anchor-on-size solid transparent;
+
         & div {
-          right: $corner-size;
+          right: $dashlet-anchor-size;
+
+          &.drag_image {
+            right: 3px;
+            bottom: -$dashlet-anchor-size - $spacing;
+          }
         }
       }
     }
@@ -459,13 +474,20 @@ div.dashlet.edit {
     &.anchor3 {
       bottom: 0;
       left: 0;
-      border-bottom: $corner-size solid $dashlet-editor-free;
-      border-right: $corner-size solid transparent;
+      border-bottom: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-right: $dashlet-anchor-size solid transparent;
+
       &.on {
-        border-bottom: $corner-size-on solid $dashlet-editor-active;
-        border-right: $corner-size-on solid transparent;
+        border-bottom: $dashlet-anchor-on-size solid $dashlet-editor-active;
+        border-right: $dashlet-anchor-on-size solid transparent;
+
         & div {
-          left: $corner-size;
+          left: $dashlet-anchor-size;
+
+          &.drag_image {
+            bottom: -$dashlet-anchor-size - $spacing;
+            left: 3px;
+          }
         }
       }
     }
@@ -528,6 +550,19 @@ div#dashboard.grid {
 .resize {
   position: absolute;
   z-index: 70;
+
+  &.circle_handle .resize_image {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 10px;
+    width: 10px;
+    margin: auto;
+    background-image: url("images/dashlet_resize.svg");
+    background-repeat: no-repeat;
+  }
 }
 
 .resize0 {
@@ -547,6 +582,10 @@ div#dashboard.grid {
       width: 16px;
       height: 32px;
       border-radius: 0 32px 32px 0;
+
+      .resize_image {
+        transform: rotate(90deg);
+      }
     }
   }
 
@@ -557,6 +596,10 @@ div#dashboard.grid {
       width: 16px;
       height: 32px;
       border-radius: 32px 0 0 32px;
+
+      .resize_image {
+        transform: rotate(-90deg);
+      }
     }
   }
 }
@@ -578,6 +621,10 @@ div#dashboard.grid {
       width: 32px;
       height: 16px;
       border-radius: 0 0 32px 32px;
+
+      .resize_image {
+        transform: rotate(180deg);
+      }
     }
   }
 

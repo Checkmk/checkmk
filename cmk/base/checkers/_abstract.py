@@ -183,8 +183,7 @@ class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionCont
         section: TSectionContent,
     ) -> None:
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
-        # TODO: Find out why mypy complains about this
-        self.sections[section_name] = section  # type: ignore[assignment]
+        self.sections[section_name] = section
 
 
 THostSections = TypeVar("THostSections", bound=HostSections)

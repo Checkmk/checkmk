@@ -20,6 +20,7 @@ def test_registered_ac_tests():
         'ACTestBrokenGUIExtension',
         'ACTestCheckMKHelperUsage',
         'ACTestCheckMKFetcherUsage',
+        'ACTestCheckMKCheckerNumber',
         'ACTestCheckMKCheckerUsage',
         'ACTestConnectivity',
         'ACTestESXDatasources',

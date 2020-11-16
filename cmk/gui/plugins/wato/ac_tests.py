@@ -11,6 +11,7 @@ from typing import Type, Iterator
 
 import requests
 import urllib3  # type: ignore[import]
+import multiprocessing
 
 from livestatus import LocalConnection
 
@@ -1047,3 +1048,36 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         return [(folder.title(), state_map[rule.value.get('restricted_address_mismatch', 1)])
                 for folder, _rule_index, rule in ruleset.get_rules()
                 if rule.value.get('restricted_address_mismatch') != '1']
+
+
+@ac_test_registry.register
+class ACTestCheckMKCheckerNumber(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.performance
+
+    def title(self) -> str:
+        return _("Checkmk checker count")
+
+    def help(self) -> str:
+        return _(
+            "The Checkmk Microcore uses Checkmk checker processes to process the results "
+            "from the Checkmk fetchers. Since the checker processes are not IO bound, they are "
+            "most effective when each checker gets a dedicated CPU. Configuring more checkers than "
+            "the number of available CPUs has a negative effect, because it increases the "
+            "the amount of context switches.")
+
+    def is_relevant(self) -> bool:
+        return self._uses_microcore()
+
+    def execute(self) -> Iterator[ACResult]:
+        try:
+            num_cpu = multiprocessing.cpu_count()
+            if self._get_effective_global_setting("cmc_checker_helpers") > num_cpu:
+                yield ACResultWARN(
+                    _("Configuring more checkers than the number of available CPUs (%d) have "
+                      "a detrimental effect, since they are not IO bound.") % num_cpu)
+            else:
+                yield ACResultOK(_("Number of Checkmk checkers is less than number of CPUs"))
+        except NotImplementedError:
+            yield ACResultOK(
+                _("Cannot test. Unable to determine the number of CPUs on target system."))

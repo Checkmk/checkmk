@@ -395,6 +395,7 @@ class Site:
             #self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
             self._enable_cmc_debug_logging()
+            self._enable_gui_debug_logging()
 
         if self.install_test_python_modules:
             self._install_test_python_modules()
@@ -492,6 +493,18 @@ class Site:
                 'cmk.notification': 7,
                 'cmk.rrd': 7,
                 'cmk.smartping': 7,
+            })
+
+    def _enable_gui_debug_logging(self):
+        self.makedirs("etc/check_mk/multisite.d")
+        self.write_file(
+            "etc/check_mk/multisite.d/logging.mk", "log_levels = %r\n" % {
+                "cmk.web": 10,
+                "cmk.web.ldap": 10,
+                "cmk.web.auth": 10,
+                "cmk.web.bi.compilation": 10,
+                "cmk.web.automations": 10,
+                "cmk.web.background-job": 10,
             })
 
     def _install_test_python_modules(self):

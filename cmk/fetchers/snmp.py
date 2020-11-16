@@ -188,7 +188,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             backend=self._backend,
         )
 
-    def _is_cache_enabled(self, mode: Mode) -> bool:
+    def _is_cache_read_enabled(self, mode: Mode) -> bool:
         """Decide whether to try to read data from cache
 
         Fetching for SNMP data is special in that we have to list the sections to fetch
@@ -199,6 +199,16 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         which can be many more.
         """
         return mode is Mode.CACHED_DISCOVERY
+
+    def _is_cache_write_enabled(self, mode: Mode) -> bool:
+        """Decide whether to write data to cache
+
+        If we write the fetching result for SNMP, we also "override" the resulting
+        sections for the next call that uses the cache. Since we use the cache for
+        CACHED_DISCOVERY only, we must only write it if we're dealing with the right
+        sections for discovery.
+        """
+        return mode in (Mode.CACHED_DISCOVERY, Mode.DISCOVERY)
 
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
         """Select the sections we need to fetch and do that

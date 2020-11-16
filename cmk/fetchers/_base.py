@@ -215,17 +215,22 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
             return result.Error(exc)
 
     @abc.abstractmethod
-    def _is_cache_enabled(self, mode: Mode) -> bool:
+    def _is_cache_read_enabled(self, mode: Mode) -> bool:
         """Decide whether to try to read data from cache"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _is_cache_write_enabled(self, mode: Mode) -> bool:
+        """Decide whether to write data to cache"""
         raise NotImplementedError()
 
     def _fetch(self, mode: Mode) -> TRawData:
         self._logger.debug("[%s] Fetch with cache settings: %r, Cache enabled: %r",
                            self.__class__.__name__, self.file_cache.to_json(),
-                           self._is_cache_enabled(mode))
+                           self._is_cache_read_enabled(mode))
 
         # TODO(ml): EAFP would significantly simplify the code.
-        if self.file_cache.simulation or self._is_cache_enabled(mode):
+        if self.file_cache.simulation or self._is_cache_read_enabled(mode):
             raw_data = self._fetch_from_cache()
             if raw_data:
                 self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
@@ -233,7 +238,8 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
 
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
         raw_data = self._fetch_from_io(mode)
-        self.file_cache.write(raw_data)
+        if self._is_cache_write_enabled(mode):
+            self.file_cache.write(raw_data)
         return raw_data
 
     @abc.abstractmethod

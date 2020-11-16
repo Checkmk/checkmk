@@ -483,7 +483,7 @@ def _do_discovery_for(
 
 
 # determine changed services on host.
-# param mode: can be one of "new", "remove", "fixall", "refresh"
+# param mode: can be one of "new", "remove", "fixall", "refresh", "only-host-labels"
 # param servic_filter: if a filter is set, it controls whether items are touched by the discovery.
 #                       if it returns False for a new item it will not be added, if it returns
 #                       False for a vanished item, that item is kept
@@ -504,7 +504,7 @@ def discover_on_host(
         on_error=on_error,
         load_labels=(mode != "remove"),
         save_labels=(mode != "remove"),
-        only_host_labels=False,
+        only_host_labels=(mode == "only-host-labels"),
     )
 
     if hostname not in config_cache.all_active_hosts():
@@ -1551,13 +1551,19 @@ def _get_host_services(
 ) -> Tuple[ServicesByTransition, HostLabelDiscoveryResult]:
 
     if host_config.is_cluster:
-        services, host_label_discovery_result = _get_cluster_services(host_config, ipaddress,
-                                                                      multi_host_sections,
-                                                                      discovery_parameters)
+        services, host_label_discovery_result = _get_cluster_services(
+            host_config,
+            ipaddress,
+            multi_host_sections,
+            discovery_parameters,
+        )
     else:
-        services, host_label_discovery_result = _get_node_services(host_config, ipaddress,
-                                                                   multi_host_sections,
-                                                                   discovery_parameters)
+        services, host_label_discovery_result = _get_node_services(
+            host_config,
+            ipaddress,
+            multi_host_sections,
+            discovery_parameters,
+        )
 
     # Now add manual and active service and handle ignored services
     return _merge_manual_services(host_config, services,
@@ -1573,9 +1579,12 @@ def _get_node_services(
 ) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
 
     hostname = host_config.hostname
-    services, host_label_discovery_result = _get_discovered_services(hostname, ipaddress,
-                                                                     multi_host_sections,
-                                                                     discovery_parameters)
+    services, host_label_discovery_result = _get_discovered_services(
+        hostname,
+        ipaddress,
+        multi_host_sections,
+        discovery_parameters,
+    )
 
     config_cache = config.get_config_cache()
     # Identify clustered services

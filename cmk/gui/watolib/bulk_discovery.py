@@ -83,6 +83,7 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
                      ("fixall",
                       _("Add unmonitored services and new host labels, remove vanished services")),
                      ("refresh", _("Refresh all services (tabula rasa), add new host labels")),
+                     ("only-host-labels", _("Only discover new host labels")),
                  ],
              )),
             ("selection", Tuple(title=_("Selection"), elements=selection_elements)),

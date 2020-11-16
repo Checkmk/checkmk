@@ -1,0 +1,19 @@
+Title: Discovery of host labels only
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1605511180
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+You can now use
+* cmk -I --only-host-labels
+* cmk -I -L
+to discover only host labels on the command line
+interface
+
+You can now choose the option
+"only-host-labels"
+in the bulk discovery to discover only host labels

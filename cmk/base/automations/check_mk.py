@@ -131,7 +131,8 @@ class AutomationDiscovery(DiscoveryAutomation):
         _set_cache_opts_of_checkers(use_caches)
 
         if len(args) < 2:
-            raise MKAutomationError("Need two arguments: new|remove|fixall|refresh HOSTNAME")
+            raise MKAutomationError(
+                "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME")
 
         mode = args[0]
         hostnames = args[1:]

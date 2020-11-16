@@ -394,6 +394,7 @@ class Site:
             self._set_number_of_helpers()
             #self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
+            self._enable_cmc_debug_logging()
 
         if self.install_test_python_modules:
             self._install_test_python_modules()
@@ -476,6 +477,21 @@ class Site:
                 'cmk.mkeventd.EventStatus': 10,
                 'cmk.mkeventd.StatusServer': 10,
                 'cmk.mkeventd.lock': 20
+            })
+
+    def _enable_cmc_debug_logging(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file(
+            "etc/check_mk/conf.d/cmc-logging.mk", "cmc_log_levels = %r\n" % {
+                'cmk.alert': 7,
+                'cmk.carbon': 7,
+                'cmk.core': 7,
+                'cmk.downtime': 7,
+                'cmk.helper': 7,
+                'cmk.livestatus': 7,
+                'cmk.notification': 7,
+                'cmk.rrd': 7,
+                'cmk.smartping': 7,
             })
 
     def _install_test_python_modules(self):

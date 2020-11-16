@@ -17,6 +17,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui import escaping
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRefType
 from cmk.gui.display_options import display_options
+from cmk.gui.userdb import UserSelection
 from cmk.gui.valuespec import (
     Dictionary,
     RegExp,
@@ -24,6 +25,7 @@ from cmk.gui.valuespec import (
     Integer,
     AbsoluteDate,
     DropdownChoice,
+    TextAscii,
 )
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.urls import makeuri
@@ -408,6 +410,15 @@ class ModeAuditLog(WatoMode):
                     title=_("Object type"),
                     choices=object_types,
                 )),
+                ("object_ident", TextAscii(title=_("Object"),)),
+                (
+                    "user_id",
+                    UserSelection(
+                        title=_("User"),
+                        only_contacts=False,
+                        none=_("All users"),
+                    ),
+                ),
                 ("filter_regex", RegExp(
                     title=_("Filter pattern (RegExp)"),
                     mode="infix",
@@ -501,6 +512,16 @@ class ModeAuditLog(WatoMode):
                 return False
             if (entry.object_ref and
                     entry.object_ref.object_type.name != self._options["object_type"]):
+                return False
+
+        if self._options["object_ident"] != "":
+            if entry.object_ref is None and self._options["object_ident"] is not None:
+                return False
+            if (entry.object_ref and entry.object_ref.ident != self._options["object_ident"]):
+                return False
+
+        if self._options["user_id"] is not None:
+            if entry.user_id != self._options["user_id"]:
                 return False
 
         if self._options["filter_regex"]:

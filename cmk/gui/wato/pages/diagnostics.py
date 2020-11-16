@@ -208,11 +208,12 @@ class ModeDiagnostics(WatoMode):
             (OPT_CHECKMK_CONFIG_FILES,
              CascadingDropdown(
                  title=_("Checkmk Configuration Files"),
-                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk"
-                        "<br>Note: Some files may contain sensitive date like usernames"
-                        " or passwords. These files are marked with '!!'."
-                        " Other files include hostnames or addresses and are marked"
-                        " with '!'."),
+                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk."
+                        "<br>Note: Some files may contain highly sensitive data like"
+                        " passwords. These files are marked with '!'."
+                        " Other files may include IP adresses, hostnames, usernames,"
+                        " mail adresses or phone numbers and are marked with '?'."
+                        " Files with '-' are not classified yet."),
                  choices=self._get_checkmk_config_files_choices(),
                  default_value="global_settings",
              )),
@@ -283,12 +284,14 @@ class ModeDiagnostics(WatoMode):
                  title=_("Notifications"),
                  help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk"
                         " or log files ('*.log' or '*.state') from var/log."
-                        "<br>Note: Some files may contain sensitive date like usernames"
-                        " or passwords. These files are marked with '!!'."
-                        " Other files include hostnames or addresses and are marked"
-                        " with '!'."),
+                        "<br>Note: Some files may contain highly sensitive data like"
+                        " passwords. These files are marked with '!'."
+                        " Other files may include IP adresses, hostnames, usernames,"
+                        " mail adresses or phone numbers and are marked with '?'."
+                        " Files with '-' are not be classified yet."),
                  elements=self._get_component_specific_checkmk_files_elements(
                      OPT_COMP_NOTIFICATIONS),
+                 default_keys=["config_files"],
              )),
         ]
         return elements

@@ -172,11 +172,14 @@ CheckmkFileInfo = NamedTuple("CheckmkFileInfo", [
 
 def get_checkmk_file_sensitivity_for_humans(rel_filepath: str) -> str:
     sensitivity = get_checkmk_file_info(rel_filepath).sensitivity
-    if sensitivity == CheckmkFileSensitivity.insensitive:
-        return rel_filepath
-    if sensitivity == CheckmkFileSensitivity.unknown:
+    if sensitivity == CheckmkFileSensitivity.high_sensitive:
+        return "%s (!)" % rel_filepath
+    if sensitivity == CheckmkFileSensitivity.sensitive:
         return "%s (?)" % rel_filepath
-    return "%s (%s)" % (rel_filepath, sensitivity.value * "!")
+    if sensitivity == CheckmkFileSensitivity.unknown:
+        return "%s (-)" % rel_filepath
+    # insensitive
+    return rel_filepath
 
 
 def get_checkmk_file_info(rel_filepath: str) -> CheckmkFileInfo:

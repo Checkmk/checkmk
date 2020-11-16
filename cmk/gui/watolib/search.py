@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import pathlib
 import pickle
 from typing import (
+    Callable,
     Dict,
     Final,
     Iterable,
@@ -17,20 +18,29 @@ from typing import (
     Sequence,
     Tuple,
 )
+from werkzeug.test import create_environ
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
+from cmk.gui.config import UserContext, user
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
+from cmk.gui.exceptions import MKAuthException
+from cmk.gui.globals import RequestContext
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
+from cmk.gui.htmllib import html
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
+from cmk.gui.pages import get_page_handler
 from cmk.gui.plugins.watolib.utils import (
     ConfigVariableRegistry,
     SampleConfigGenerator,
     config_variable_registry,
     sample_config_generator_registry,
 )
+from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
+from cmk.gui.watolib.utils import may_edit_ruleset
+from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 
 
 class IndexNotFoundException(MKGeneralException):
@@ -42,9 +52,7 @@ class MatchItem:
     title: str
     topic: str
     url: str
-    permissions: None = None
-    contact_group: None = None
-    match_texts: Iterable[str] = field(default_factory=list)
+    match_texts: Iterable[str]
 
     def __post_init__(self):
         self.match_texts = [match_text.lower() for match_text in self.match_texts]
@@ -137,22 +145,82 @@ class IndexStore:
             match_item for match_items in self.load_index().values() for match_item in match_items)
 
 
+class URLChecker:
+    def __init__(self):
+        self._user_id = user.ident
+        self._request = Request(create_environ())
+
+    def _set_query_vars(self, query_vars: QueryVars) -> None:
+        for name, vals in query_vars.items():
+            self._request.set_var(name, vals[0])
+
+    def is_permitted(self, url: str) -> bool:
+        file_name, query_vars = file_name_and_query_vars_from_url(url)
+        self._set_query_vars(query_vars)
+        try:
+            with RequestContext(html_obj=html(self._request), req=self._request):
+                with UserContext(self._user_id):
+                    page_handler = get_page_handler(file_name)
+                    if page_handler:
+                        page_handler()
+            return True
+        except MKAuthException:
+            return False
+
+
+class PermissionsHandler:
+    def __init__(self):
+        self._url_checker = URLChecker()
+
+    @staticmethod
+    def _permissions_rule(url: str) -> bool:
+        _, query_vars = file_name_and_query_vars_from_url(url)
+        return may_edit_ruleset(query_vars['varname'][0])
+
+    def _permissions_host(self, url: str) -> bool:
+        return self._url_checker.is_permitted(url)
+
+    @staticmethod
+    def permissions_for_topics() -> Mapping[str, bool]:
+        return {
+            "global_settings": user.may("wato.global"),
+            "folders": user.may("wato.hosts"),
+            "hosts": user.may("wato.hosts"),
+        }
+
+    def permissions_for_items(self) -> Mapping[str, Callable[[str], bool]]:
+        return {
+            "rules": self._permissions_rule,
+            "hosts": self._permissions_host,
+        }
+
+
 class IndexSearcher:
     def __init__(self, index_store: IndexStore) -> None:
         self._index_store = index_store
+        permissions_handler = PermissionsHandler()
+        self._may_see_topic = permissions_handler.permissions_for_topics()
+        self._may_see_item_func = permissions_handler.permissions_for_items()
 
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
         query_lowercase = query.lower()
         results: Dict[str, List[SearchResult]] = {}
-        for match_item in self._index_store.all_match_items():
-            if any(query_lowercase in match_text for match_text in match_item.match_texts):
-                results.setdefault(
-                    match_item.topic,
-                    [],
-                ).append(SearchResult(
-                    match_item.title,
-                    match_item.url,
-                ))
+
+        for topic, match_items in self._index_store.load_index().items():
+            if not self._may_see_topic.get(topic, True):
+                continue
+            permissions_check = self._may_see_item_func.get(topic, lambda _: True)
+
+            for match_item in match_items:
+                if (any(query_lowercase in match_text for match_text in match_item.match_texts) and
+                        permissions_check(match_item.url)):
+                    results.setdefault(
+                        match_item.topic,
+                        [],
+                    ).append(SearchResult(
+                        match_item.title,
+                        match_item.url,
+                    ))
         return results
 
 

@@ -462,7 +462,7 @@ class LoggedInUser:
         self._tableoptions: Dict[str, Dict[str, Any]] = {}
 
     @property
-    def ident(self) -> str:
+    def ident(self) -> UserId:
         """Return the user-id as a string, or crash.
 
         Returns:

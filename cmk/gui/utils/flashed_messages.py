@@ -36,7 +36,7 @@ def get_flashed_messages() -> List[HTML]:
     """
     flashes = _request_ctx_stack.top.flashes
     if flashes is None:
-        if not session.session_info.flashes:
+        if not hasattr(session, 'session_info') or not session.session_info.flashes:
             _request_ctx_stack.top.flashes = []
         else:
             _request_ctx_stack.top.flashes = session.session_info.flashes

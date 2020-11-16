@@ -145,9 +145,9 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ).make()
 
     def _make_fetcher(self) -> SNMPFetcher:
+        SNMPFetcher.snmp_plugin_store = make_plugin_store()
         return SNMPFetcher(
             self._make_file_cache(),
-            snmp_plugin_store=self._make_snmp_plugin_store(),
             disabled_sections=self._make_disabled_sections(),
             configured_snmp_sections=self._make_configured_snmp_sections(),
             inventory_snmp_sections=self._make_inventory_snmp_sections(),
@@ -171,10 +171,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
 
     def _make_summarizer(self) -> "SNMPSummarizer":
         return SNMPSummarizer(self.exit_spec)
-
-    @staticmethod
-    def _make_snmp_plugin_store() -> SNMPPluginStore:
-        return make_plugin_store()
 
     def _make_disabled_sections(self) -> Set[SectionName]:
         return self.host_config.disabled_snmp_sections()

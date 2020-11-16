@@ -333,42 +333,40 @@ class ABCTestSNMPFetcher(ABC):
 
     @pytest.fixture(name="fetcher")
     def fetcher_fixture(self, file_cache):
+        SNMPFetcher.snmp_plugin_store = SNMPPluginStore({
+            SectionName("pim"): SNMPPluginStoreItem(
+                trees=[
+                    BackendSNMPTree(base=".1.1.1",
+                                    oids=[
+                                        BackendOIDSpec("1.2", "string", False),
+                                        BackendOIDSpec("3.4", "string", False)
+                                    ])
+                ],
+                detect_spec=SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
+            ),
+            SectionName("pam"): SNMPPluginStoreItem(
+                trees=[
+                    BackendSNMPTree(
+                        base=".1.2.3",
+                        oids=[
+                            BackendOIDSpec("4.5", "string", False),
+                            BackendOIDSpec("6.7", "string", False),
+                            BackendOIDSpec("8.9", "string", False)
+                        ],
+                    ),
+                ],
+                detect_spec=SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
+            ),
+            SectionName("pum"): SNMPPluginStoreItem(
+                trees=[
+                    BackendSNMPTree(base=".2.2.2", oids=[BackendOIDSpec("2.2", "string", False)]),
+                    BackendSNMPTree(base=".3.3.3", oids=[BackendOIDSpec("2.2", "string", False)]),
+                ],
+                detect_spec=SNMPDetectSpec([[]]),
+            ),
+        })
         return SNMPFetcher(
             file_cache,
-            snmp_plugin_store=SNMPPluginStore({
-                SectionName("pim"): SNMPPluginStoreItem(
-                    trees=[
-                        BackendSNMPTree(base=".1.1.1",
-                                        oids=[
-                                            BackendOIDSpec("1.2", "string", False),
-                                            BackendOIDSpec("3.4", "string", False)
-                                        ])
-                    ],
-                    detect_spec=SNMPDetectSpec([[("1.2.3.4", "pim device", True)]]),
-                ),
-                SectionName("pam"): SNMPPluginStoreItem(
-                    trees=[
-                        BackendSNMPTree(
-                            base=".1.2.3",
-                            oids=[
-                                BackendOIDSpec("4.5", "string", False),
-                                BackendOIDSpec("6.7", "string", False),
-                                BackendOIDSpec("8.9", "string", False)
-                            ],
-                        ),
-                    ],
-                    detect_spec=SNMPDetectSpec([[("1.2.3.4", "pam device", True)]]),
-                ),
-                SectionName("pum"): SNMPPluginStoreItem(
-                    trees=[
-                        BackendSNMPTree(base=".2.2.2",
-                                        oids=[BackendOIDSpec("2.2", "string", False)]),
-                        BackendSNMPTree(base=".3.3.3",
-                                        oids=[BackendOIDSpec("2.2", "string", False)]),
-                    ],
-                    detect_spec=SNMPDetectSpec([[]]),
-                ),
-            }),
             disabled_sections=set(),
             configured_snmp_sections=set(),
             inventory_snmp_sections=set(),

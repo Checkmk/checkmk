@@ -10,7 +10,7 @@ import os
 import time
 import sys
 from hashlib import sha256
-from typing import Tuple, List, NamedTuple, Set
+from typing import Tuple, List, NamedTuple, Set, Dict, Any
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import SetAutochecksTable
@@ -306,7 +306,8 @@ class Discovery:
 
         return []
 
-    def _update_rule_of_host(self, ruleset, service_patterns, value):
+    def _update_rule_of_host(self, ruleset: watolib.Ruleset, service_patterns: List[Dict[str, str]],
+                             value: Any) -> List[watolib.CREFolder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
 
@@ -320,7 +321,10 @@ class Discovery:
 
             conditions = RuleConditions(folder.path())
             conditions.host_name = [self._host.name()]
-            conditions.service_description = sorted(service_patterns)
+            # mypy is wrong here vor some reason:
+            # Invalid index type "str" for "Union[Dict[str, str], str]"; expected type "Union[int, slice]"  [index]
+            conditions.service_description = sorted(
+                service_patterns, key=lambda x: x["$regex"])  # type: ignore[index]
             rule.update_conditions(conditions)
 
             rule.value = value

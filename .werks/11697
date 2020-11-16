@@ -1,0 +1,13 @@
+Title: esx_vsphere_vm: change order of parameter in rule "Virtual Machine Snapshots"
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1605544535
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+This werk changes the order of the parameters of the rule "Virtual Machine Snapshot".
+The ones that are most likely to be used are more prominently at the top.
+Existing rules do not need changing.

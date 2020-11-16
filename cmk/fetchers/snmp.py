@@ -210,6 +210,23 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         """
         return mode in (Mode.CACHED_DISCOVERY, Mode.DISCOVERY)
 
+    def _get_sections_fetched_unconditionally(self, mode: Mode) -> Set[SectionName]:
+        """Determine the sections fetched unconditionally (without detection)"""
+        if mode is Mode.CHECKING:
+            return self.configured_snmp_sections
+
+        return set()
+
+    def _get_sections_fetch_detected(self, mode: Mode) -> Set[SectionName]:
+        """Determine the sections fetched after successful detection"""
+        if mode is Mode.INVENTORY or mode is Mode.CHECKING and self.do_status_data_inventory:
+            return self.inventory_snmp_sections
+
+        if mode in (Mode.DISCOVERY, Mode.CACHED_DISCOVERY):
+            return set(self.snmp_plugin_store)
+
+        return set()
+
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
         """Select the sections we need to fetch and do that
 
@@ -232,15 +249,9 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
            which are fetched for checking anyway.
 
         """
-        if mode == Mode.CHECKING:
-            selected_sections = self.configured_snmp_sections
-            if self.do_status_data_inventory:
-                selected_sections |= self._detect(select_from=set(self.inventory_snmp_sections) -
-                                                  selected_sections,)
-        elif mode == Mode.INVENTORY:
-            selected_sections = self._detect(select_from=set(self.inventory_snmp_sections))
-        else:
-            selected_sections = self._detect(select_from=set(self.snmp_plugin_store))
+        selected_sections = self._get_sections_fetched_unconditionally(mode)
+        selected_sections |= self._detect(select_from=self._get_sections_fetch_detected(mode) -
+                                          selected_sections,)
 
         if self.use_snmpwalk_cache:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"

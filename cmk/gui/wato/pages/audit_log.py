@@ -24,8 +24,9 @@ from cmk.gui.valuespec import (
     Integer,
     AbsoluteDate,
 )
+from cmk.gui.utils.urls import makeuri
 from cmk.gui.exceptions import FinalizeRequest
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -41,6 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
+    PageMenuCheckbox,
     PageMenuPopup,
     make_simple_link,
     make_display_options_dropdown,
@@ -61,6 +63,7 @@ class ModeAuditLog(WatoMode):
         self._options = self._vs_audit_log_options().default_value()
         super(ModeAuditLog, self).__init__()
         self._store = AuditLogStore(AuditLogStore.make_path())
+        self._show_details = html.request.get_integer_input_mandatory("show_details", 1) == 1
 
     def title(self):
         return _("Audit log")
@@ -171,6 +174,25 @@ class ModeAuditLog(WatoMode):
                 ],
             ))
 
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Details"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Show details"),
+                        icon_name="trans",
+                        item=PageMenuCheckbox(
+                            is_checked=self._show_details,
+                            check_url=makeuri(request, [("show_details", "1")]),
+                            uncheck_url=makeuri(request, [("show_details", "0")]),
+                        ),
+                        name="show_details",
+                        css_classes=["toggle"],
+                    )
+                ],
+            ))
+
     def _render_filter_form(self) -> str:
         with html.plugged():
             self._display_audit_log_options()
@@ -238,16 +260,19 @@ class ModeAuditLog(WatoMode):
                            searchable=False) as table:
             for entry in log:
                 table.row()
-                table.cell(_("Object"), self._render_logfile_linkinfo(entry.linkinfo))
-                table.cell(_("Time"), html.render_nobr(render.date_and_time(float(entry.time))))
+                table.cell(_("Object"), self._render_logfile_linkinfo(entry.linkinfo), css="narrow")
+                table.cell(_("Time"),
+                           html.render_nobr(render.date_and_time(float(entry.time))),
+                           css="narrow")
                 user = ('<i>%s</i>' % _('internal')) if entry.user_id == '-' else entry.user_id
-                table.cell(_("User"), html.render_text(user), css="nobreak")
+                table.cell(_("User"), html.render_text(user), css="nobreak narrow")
 
                 text = escaping.escape_text(entry.text).replace("\n", "<br>\n")
-                table.cell(_("Summary"), text, css="fill")
+                table.cell(_("Summary"), text)
 
-                diff_text = entry.diff_text.replace("\n", "<br>\n") if entry.diff_text else ""
-                table.cell(_("Details"), diff_text, css="fill")
+                if self._show_details:
+                    diff_text = entry.diff_text.replace("\n", "<br>\n") if entry.diff_text else ""
+                    table.cell(_("Details"), diff_text)
 
     def _get_next_daily_paged_log(self, log):
         start = self._get_start_date()
@@ -439,32 +464,38 @@ class ModeAuditLog(WatoMode):
         else:
             filename = "wato-auditlog-%s_%s_days.csv" % (render.date(
                 time.time()), self._options["display"][1])
-        html.write(filename)
 
         html.response.headers["Content-Disposition"] = "attachment; filename=\"%s\"" % filename
 
-        titles = (
+        titles = [
             _('Date'),
             _('Time'),
             _('Linkinfo'),
             _('User'),
             _('Action'),
             _('Summary'),
-            _('Details'),
-        )
+        ]
+
+        if self._show_details:
+            titles.append(_('Details'))
+
         html.write(','.join(titles) + '\n')
         for entry in self._parse_audit_log():
             linkinfo = '' if entry.linkinfo == '-' else entry.linkinfo
 
-            html.write(','.join((
+            columns = [
                 render.date(int(entry.time)),
                 render.time_of_day(int(entry.time)),
                 linkinfo,
                 entry.user_id,
                 entry.action,
                 '"' + escaping.strip_tags(entry.text).replace('"', "'") + '"',
-                '"' + escaping.strip_tags(entry.diff_text).replace('"', "'") + '"',
-            )) + '\n')
+            ]
+
+            if self._show_details:
+                columns.append('"' + escaping.strip_tags(entry.diff_text).replace('"', "'") + '"')
+
+            html.write(','.join(columns) + '\n')
         return FinalizeRequest(code=200)
 
     def _parse_audit_log(self) -> List[AuditLogStore.Entry]:

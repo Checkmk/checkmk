@@ -35,14 +35,23 @@ from ..agent_based_api.v1 import (
     render,
     Result,
     Service,
+    ServiceLabel,
     State as state,
     type_defs,
 )
 
+ServiceLabels = Dict[str, str]
 
-class SingleInterfaceDiscoveryParams(TypedDict):
+
+class SingleInterfaceDiscoveryParams(TypedDict, total=False):
     item_appearance: str
     pad_portnumbers: bool
+    labels: ServiceLabels
+
+
+class InterfaceGroupsDiscoveryParams(TypedDict, total=False):
+    group_items: Iterable[Mapping[str, str]]
+    labels: ServiceLabels
 
 
 MatchingConditions = Dict[str, List[str]]
@@ -50,7 +59,7 @@ MatchingConditions = Dict[str, List[str]]
 
 class DiscoveryParams(TypedDict, total=False):
     discovery_single: Tuple[bool, Union[Mapping, SingleInterfaceDiscoveryParams]]
-    grouping: Tuple[bool, Iterable[Mapping[str, str]]]
+    grouping: Tuple[bool, InterfaceGroupsDiscoveryParams]
     matching_conditions: Tuple[bool, MatchingConditions]
 
 
@@ -404,6 +413,7 @@ class GroupConfiguration(TypedDict, total=False):
     member_appearance: str
     inclusion_condition: MatchingConditions
     exclusion_conditions: Iterable[MatchingConditions]
+    labels: ServiceLabels
 
 
 def _check_group_matching_conditions(
@@ -484,14 +494,17 @@ def _groups_from_params(
     # from the most specific rule wins (the one highest up in the hierarchy). We also gather all
     # exclusion conditions (setting 'Do not group interfaces').
     for rule_importance, rule in enumerate(discovery_params[::-1]):
-        create_groups, group_configs = rule.get('grouping', (True, []))
+        create_groups, group_config = rule.get('grouping', (True, {'group_items': []}))
         if create_groups:
-            for group_config in group_configs:
-                groups[group_config['group_name']] = {
-                    'member_appearance': group_config['member_appearance'],
+            for group_item in group_config['group_items']:
+                groups[group_item['group_name']] = {
+                    'member_appearance': group_item['member_appearance'],
                     'inclusion_condition': rule['matching_conditions'][1],
                 }
-                inclusion_importances[group_config['group_name']] = rule_importance
+                if 'labels' in group_config:
+                    groups[group_item['group_name']]['labels'] = group_config['labels']
+
+                inclusion_importances[group_item['group_name']] = rule_importance
         else:
             exclusion_conditions.append((rule['matching_conditions'][1], rule_importance))
 
@@ -579,7 +592,8 @@ def discover_interfaces(
                 index_as_item = False
 
             pre_inventory.append(
-                (item, discovered_params_single, int(interface.index), index_as_item))
+                (item, discovered_params_single, int(interface.index), index_as_item,
+                 single_interface_settings.get("labels")))
             seen_indices.add(interface.index)
 
         # special case: the agent output already set this interface to grouped, in this case, we do
@@ -602,6 +616,9 @@ def discover_interfaces(
         group_oper_status = "2"  # operation status, default is down (2)
         group_speed = 0.  # total maximum speed of all interfaces in this group
 
+        # Extract labels, they will be handled seperately.
+        group_labels = group_configuration.pop("labels", None)
+
         # find all interfaces matching the group to compute state and speed
         for interface in section:
             if _check_group_matching_conditions(
@@ -623,10 +640,10 @@ def discover_interfaces(
             }
 
             # Note: the group interface index is always set to 1
-            pre_inventory.append((group_name, discovered_params_group, 1, False))
+            pre_inventory.append((group_name, discovered_params_group, 1, False, group_labels))
 
     # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
-    for item, discovered_params, index, index_as_item in pre_inventory:
+    for item, discovered_params, index, index_as_item, labels in pre_inventory:
         if not index_as_item and n_times_item_seen[item] > 1:
             new_item = "%s %d" % (item, index)
         else:
@@ -634,6 +651,7 @@ def discover_interfaces(
         yield Service(
             item=new_item,
             parameters=dict(discovered_params),
+            labels=[ServiceLabel(key, value) for key, value in labels.items()] if labels else None,
         )
 
 

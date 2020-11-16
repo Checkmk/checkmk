@@ -389,12 +389,12 @@ def test_winperf_if_group_patterns(value_store):
                     ),
                     'grouping': (
                         True,
-                        [
-                            {
+                        {
+                            'group_items': [{
                                 'group_name': 'isatap',
                                 'member_appearance': 'descr',
-                            },
-                        ],
+                            },],
+                        },
                     ),
                     'matching_conditions': (
                         False,
@@ -413,12 +413,12 @@ def test_winperf_if_group_patterns(value_store):
                 type_defs.Parameters({
                     'grouping': (
                         True,
-                        [
-                            {
+                        {
+                            'group_items': [{
                                 'group_name': 'Broadcom',
                                 'member_appearance': 'descr',
-                            },
-                        ],
+                            },],
+                        },
                     ),
                     'matching_conditions': (
                         False,

@@ -17,6 +17,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
     FixedValue,
     Integer,
+    Labels,
     ListChoice,
     ListOf,
     ListOfStrings,
@@ -173,8 +174,17 @@ def _vs_single_discovery():
                                     "sorted correctly in the GUI."),
                             ),
                         ),
+                        (
+                            "labels",
+                            Labels(
+                                world=Labels.World.CONFIG,
+                                label_source=Labels.Source.RULESET,
+                                help=_("Create service labels that get discovered by this rule."),
+                                title=_("Generate service labels for discovered interfaces"),
+                            ),
+                        ),
                     ],
-                    optional_keys=False,
+                    optional_keys=["labels"],
                 ),
             ),
             (
@@ -203,39 +213,58 @@ def _vs_grouping():
                 False,
                 _("Do not group interfaces"),
                 FixedValue(
-                    [],
+                    {"group_items": []},
                     totext="",
                 ),
             ),
             (
                 True,
                 _("Create the following interface groups"),
-                ListOf(
-                    title=_("Interface groups"),
-                    add_label=_("Add pattern"),
-                    valuespec=Dictionary(
-                        elements=[
-                            (
-                                "group_name",
-                                TextAscii(
-                                    title=_("Group name"),
-                                    help=_("Name of group in service description"),
-                                    allow_empty=False,
+                Dictionary(
+                    elements=[
+                        (
+                            "group_items",
+                            ListOf(
+                                title=_("Interface groups"),
+                                add_label=_("Add pattern"),
+                                valuespec=Dictionary(
+                                    elements=[
+                                        (
+                                            "group_name",
+                                            TextAscii(
+                                                title=_("Group name"),
+                                                help=_("Name of group in service description"),
+                                                allow_empty=False,
+                                            ),
+                                        ),
+                                        (
+                                            'member_appearance',
+                                            _vs_item_appearance(
+                                                _("Appearance of group members in service output"),
+                                                _("When listing the group members in the output of the service "
+                                                  "monitoring the group, this option makes checkmk use either "
+                                                  "the interface description, alias or port number."
+                                                 ),
+                                            ),
+                                        ),
+                                    ],
+                                    optional_keys=False,
                                 ),
+                                allow_empty=False,
                             ),
-                            (
-                                'member_appearance',
-                                _vs_item_appearance(
-                                    _("Appearance of group members in service output"),
-                                    _("When listing the group members in the output of the service "
-                                      "monitoring the group, this option makes checkmk use either "
-                                      "the interface description, alias or port number."),
-                                ),
+                        ),
+                        (
+                            "labels",
+                            Labels(
+                                world=Labels.World.CONFIG,
+                                label_source=Labels.Source.RULESET,
+                                help=_("Create service labels for all groups "
+                                       "that result from this rule."),
+                                title=_("Generate service labels for created groups"),
                             ),
-                        ],
-                        optional_keys=False,
-                    ),
-                    allow_empty=False,
+                        ),
+                    ],
+                    optional_keys=["labels"],
                 ),
             ),
         ],

@@ -11,6 +11,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
     Service,
+    ServiceLabel,
     State as state,
     type_defs,
 )
@@ -436,12 +437,14 @@ def test_discovery_grouped_simple():
             [
                 type_defs.Parameters({
                     'matching_conditions': (True, {}),
-                    "grouping": (
+                    'grouping': (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
                 }),
                 DEFAULT_DISCOVERY_PARAMS,
@@ -477,20 +480,24 @@ def test_discovery_grouped_hierarchy():
                     ),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'alias',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'alias',
+                            }],
+                        },
                     ),
                 }),
                 type_defs.Parameters({
                     'matching_conditions': (True, {}),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
                 }),
                 DEFAULT_DISCOVERY_PARAMS,
@@ -528,17 +535,21 @@ def test_discovery_grouped_exclusion_condition():
                     ),
                     "grouping": (
                         False,
-                        [],
+                        {
+                            'group_items': [],
+                        },
                     ),
                 }),
                 type_defs.Parameters({
                     'matching_conditions': (True, {}),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
                 }),
                 DEFAULT_DISCOVERY_PARAMS,
@@ -576,10 +587,12 @@ def test_discovery_grouped_empty():
                     ),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
                 }),
                 DEFAULT_DISCOVERY_PARAMS,
@@ -621,10 +634,12 @@ def test_discovery_grouped_by_agent_and_in_rules():
                     'matching_conditions': (True, {}),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
                 }),
                 DEFAULT_DISCOVERY_PARAMS,
@@ -644,6 +659,129 @@ def test_discovery_grouped_by_agent_and_in_rules():
                 },
                 labels=[],
             ),
+        ]
+
+
+def test_discovery_labels():
+    assert list(
+        interfaces.discover_interfaces(
+            [
+                type_defs.Parameters({
+                    'discovery_single': (
+                        True,
+                        {
+                            'item_appearance': 'alias',
+                            'pad_portnumbers': True,
+                            'labels': {
+                                'single': 'wlp'
+                            },
+                        },
+                    ),
+                    "grouping": (
+                        True,
+                        {
+                            'group_items': [{
+                                'group_name': 'wlp_group',
+                                'member_appearance': 'index',
+                            }],
+                            'labels': {
+                                'group': 'wlp'
+                            },
+                        },
+                    ),
+                    'matching_conditions': (False, {
+                        'match_desc': ['wlp']
+                    }),
+                }),
+                type_defs.Parameters({
+                    'discovery_single': (
+                        True,
+                        {
+                            'item_appearance': 'alias',
+                            'pad_portnumbers': True,
+                            'labels': {
+                                'single': 'default'
+                            },
+                        },
+                    ),
+                    "grouping": (
+                        True,
+                        {
+                            'group_items': [{
+                                'group_name': 'default_group',
+                                'member_appearance': 'index',
+                            }],
+                            'labels': {
+                                'group': 'default'
+                            },
+                        },
+                    ),
+                    'matching_conditions': (True, {}),
+                }),
+                DEFAULT_DISCOVERY_PARAMS,
+            ],
+            _create_interfaces(0),
+        )) == [
+            Service(item='lo',
+                    parameters={
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 0
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='docker0',
+                    parameters={
+                        'discovered_oper_status': ['2'],
+                        'discovered_speed': 0
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='enp0s31f6',
+                    parameters={
+                        'discovered_oper_status': ['2'],
+                        'discovered_speed': 0
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='enxe4b97ab99f99',
+                    parameters={
+                        'discovered_oper_status': ['2'],
+                        'discovered_speed': 10000000
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='vboxnet0',
+                    parameters={
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 10000000
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='wlp2s0',
+                    parameters={
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 0
+                    },
+                    labels=[ServiceLabel('single', 'wlp')]),
+            Service(item='default_group',
+                    parameters={
+                        'aggregate': {
+                            'member_appearance': 'index',
+                            'inclusion_condition': {},
+                            'exclusion_conditions': []
+                        },
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 20000000.0
+                    },
+                    labels=[ServiceLabel('group', 'default')]),
+            Service(item='wlp_group',
+                    parameters={
+                        'aggregate': {
+                            'member_appearance': 'index',
+                            'inclusion_condition': {
+                                'match_desc': ['wlp']
+                            },
+                            'exclusion_conditions': []
+                        },
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 0.0
+                    },
+                    labels=[ServiceLabel('group', 'wlp')]),
         ]
 
 

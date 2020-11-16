@@ -1167,6 +1167,17 @@ class MenuSearchResultsRenderer:
             results = self._generate_results(query)
         except MKException as error:
             return self._render_error(error)
+        return self._render_results(results)
+
+    def _render_error(self, error: MKException) -> str:
+        with html.plugged():
+            html.open_div(class_="error")
+            html.write_text(f"{error}")
+            html.close_div()
+            error_as_html = html.drain()
+        return error_as_html
+
+    def _render_results(self, results) -> str:
         with html.plugged():
             for topic, search_results in results.items():
                 html.open_div(id_=topic, class_="topic")
@@ -1185,14 +1196,6 @@ class MenuSearchResultsRenderer:
             html.div(None, class_=["topic", "sentinel"])
             html_text = html.drain()
         return html_text
-
-    def _render_error(self, error: MKException) -> str:
-        with html.plugged():
-            html.open_div(class_="error")
-            html.write_text(f"{error}")
-            html.close_div()
-            error_as_html = html.drain()
-        return error_as_html
 
     def _render_topic(self, topic):
         html.open_h2()

@@ -226,11 +226,13 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_hosts_succeeded += 1
 
         add_service_change(
-            host, "bulk-discovery",
+            host,
+            "bulk-discovery",
             _("Did service discovery on host %s: %d added, %d removed, %d kept, "
               "%d total services and %d host labels added, %d host labels total") %
             (host.name(), result.self_new, result.self_removed, result.self_kept, result.self_total,
-             result.self_new_host_labels, result.self_total_host_labels))
+             result.self_new_host_labels, result.self_total_host_labels),
+            diff_text=result.diff_text)
 
         if not host.locked():
             host.clear_discovery_failed()

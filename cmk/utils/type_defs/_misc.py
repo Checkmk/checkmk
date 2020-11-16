@@ -85,6 +85,9 @@ class DiscoveryResult:
     # "..." -> An error message about the failed discovery
     error_text: Optional[str] = None
 
+    # An optional text to describe the services changed by the operation
+    diff_text: Optional[str] = None
+
 
 @dataclass
 class AutomationDiscoveryResponse:

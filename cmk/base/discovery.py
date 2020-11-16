@@ -37,6 +37,7 @@ import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
+from cmk.utils.object_diff import make_object_diff
 from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
 from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
@@ -567,10 +568,15 @@ def discover_on_host(
             discovery_parameters,
         )
 
+        old_services = services.get("old", [])
+
         # Create new list of checks
         new_services = _get_post_discovery_services(hostname, services, service_filters, result,
                                                     mode)
         host_config.set_autochecks(new_services)
+
+        result.diff_text = make_object_diff(_make_services_audit_log_object(old_services),
+                                            _make_services_audit_log_object(new_services))
 
     except MKTimeout:
         raise  # let general timeout through
@@ -586,6 +592,11 @@ def discover_on_host(
 
     result.self_total = result.self_new + result.self_kept
     return result
+
+
+def _make_services_audit_log_object(services: List[Service]) -> Set[str]:
+    """The resulting object is used for building object diffs"""
+    return {s.description for s in services}
 
 
 def _get_post_discovery_services(

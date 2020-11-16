@@ -27,6 +27,7 @@ from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_cond
 from cmk.gui.watolib.automations import (
     sync_changes_before_remote_automation,
     check_mk_automation,
+    execute_automation_discovery,
 )
 
 
@@ -557,11 +558,11 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         sys.stdout.write(result["output"])
 
     def _perform_automatic_refresh(self, request):
-        #
-        check_mk_automation(request.host.site_id(), "inventory",
-                            ["@scan", "refresh", request.host.name()])
-        # In distributed sites this must not add a change on the remote site. We need to build
+        # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
+        execute_automation_discovery(site_id=request.host.site_id(),
+                                     args=["@scan", "refresh",
+                                           request.host.name()])
         #count_added, _count_removed, _count_kept, _count_new = counts[request.host.name()]
         #message = _("Refreshed check configuration of host '%s' with %d services") % \
         #            (request.host.name(), count_added)

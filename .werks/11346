@@ -1,0 +1,28 @@
+Title: ntopng Intergration into Checkmk
+Class: feature
+Compatible: compat
+Component: core
+Date: 1605538661
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+This werk integrates a single <b>ntopng</b> instance via its REST API.
+
+H3: Features
+<ul>
+<li>Traffic dashboards for your network</li>
+<li>Find top talker and top remote destinations</li>
+<li>Real-time traffic for application and interfaces</li>
+<li>Historic detailed traffic views</li>
+<li>View alerts, characterized by duration, severy and alert type</li>
+<li>Filter flows in many dimensions to analyze your networks</li>
+<li>Detailed views for your hosts: traffic, packets, ports, peers</li>
+</ul>
+
+H3: Remarks
+<ul>
+<li>Currently <b>Checkmk</b> will provide compatibility to the nightly builds of <b>ntopng</b>.</li>
+<li>The ntopng integration will be offered as an add-on (in mkp format) for the enterprise edition from the offical 2.0 release.</li>
+</ul>

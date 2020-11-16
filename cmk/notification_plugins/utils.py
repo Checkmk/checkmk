@@ -12,8 +12,9 @@ import re
 import socket
 import subprocess
 import sys
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, NamedTuple
 
+from http.client import responses as http_responses
 import requests
 
 from cmk.utils.notify import find_wato_folder
@@ -283,22 +284,67 @@ def retrieve_from_passwordstore(parameter):
     return value
 
 
-def post_request(message_constructor, success_code=200):
+def post_request(message_constructor, url=None):
     context = collect_context()
 
-    url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
+    if not url:
+        url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
     proxy_url = context.get("PARAMETER_PROXY_URL")
     proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
 
     try:
-        r = requests.post(url=url, json=message_constructor(context), proxies=proxies)
+        response = requests.post(url=url, json=message_constructor(context), proxies=proxies)
     except requests.exceptions.ProxyError:
         sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
         sys.exit(2)
 
-    if r.status_code == success_code:
+    return response
+
+
+def process_by_status_code(response: requests.models.Response, success_code: int = 200):
+    status_code = response.status_code
+    summary = f"{status_code}: {http_responses[status_code]}"
+
+    if status_code == success_code:
+        sys.stderr.write(summary)
         sys.exit(0)
+    elif 500 <= status_code <= 599:
+        sys.stderr.write(summary)
+        sys.exit(1)  # Checkmk gives a retry if exited with 1. Makes sense in case of a server error
     else:
-        sys.stderr.write("Failed to send notification. Status: %i, Response: %s\n" %
-                         (r.status_code, r.text))
+        sys.stderr.write(f"Failed to send notification.\nResponse: {response.text}\n{summary}")
         sys.exit(2)
+
+
+StateInfo = NamedTuple('StateInfo', [('state', int), ('type', str), ('title', str)])
+StatusCodeRange = Tuple[int, int]
+
+
+def process_by_result_map(response: requests.models.Response, result_map: Dict[StatusCodeRange,
+                                                                               StateInfo]):
+    def get_details_from_json(json_response, what):
+        for key, value in json_response.items():
+            if key == what:
+                return value
+            if isinstance(value, dict):
+                result = get_details_from_json(value, what)
+                if result:
+                    return result
+
+    status_code = response.status_code
+    summary = f"{status_code}: {http_responses[status_code]}"
+    details = ""
+
+    for status_code_range, state_info in result_map.items():
+        if status_code in status_code_range:
+            if state_info.type == 'json':
+                details = response.json()
+                details = get_details_from_json(details, state_info.title)
+            elif state_info.type == 'str':
+                details = response.text
+
+            sys.stderr.write(f"{state_info.title}: {details}\n{summary}\n")
+            sys.exit(state_info.state)
+
+    sys.stderr.write(f"Details for Status Code are not defined\n{summary}\n")
+    sys.exit(3)

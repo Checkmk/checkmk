@@ -15,6 +15,7 @@ from typing import (
     Iterator,
     Mapping,
     NamedTuple,
+    Optional,
     Sequence,
     Set,
 )
@@ -59,8 +60,11 @@ class SNMPPluginStoreItem(NamedTuple):
 
 
 class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
-    def __init__(self, store: Mapping[SectionName, SNMPPluginStoreItem]) -> None:
-        self._store: Final = store
+    def __init__(
+        self,
+        store: Optional[Mapping[SectionName, SNMPPluginStoreItem]] = None,
+    ) -> None:
+        self._store: Final[Mapping[SectionName, SNMPPluginStoreItem]] = store if store else {}
 
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self._store)

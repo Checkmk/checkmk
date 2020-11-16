@@ -20,13 +20,14 @@ from cmk.fetchers.controller import (
     write_bytes,
 )
 from cmk.fetchers.protocol import make_end_of_reply_answer, make_log_answer
+from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.fetchers.type_defs import Mode
 
 
 class TestGlobalConfig:
     @pytest.fixture
     def global_config(self):
-        return GlobalConfig(cmc_log_level=5)
+        return GlobalConfig(cmc_log_level=5, snmp_plugin_store=SNMPPluginStore())
 
     def test_deserialization(self, global_config):
         assert GlobalConfig.deserialize(global_config.serialize()) == global_config

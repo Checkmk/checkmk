@@ -20,6 +20,7 @@ from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import ConfigSerial, HostName, result
 
 from . import FetcherType, protocol
+from .snmp import SNMPPluginStore
 from .type_defs import Mode
 
 logger = logging.getLogger("cmk.helper")
@@ -27,6 +28,7 @@ logger = logging.getLogger("cmk.helper")
 
 class GlobalConfig(NamedTuple):
     cmc_log_level: int
+    snmp_plugin_store: SNMPPluginStore
 
     @property
     def log_level(self) -> int:
@@ -49,13 +51,22 @@ class GlobalConfig(NamedTuple):
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "GlobalConfig":
+        fetcher_config = serialized["fetcher_config"]
         try:
-            return cls(serialized["fetcher_config"]["cmc_log_level"])
+            return cls(
+                cmc_log_level=fetcher_config["cmc_log_level"],
+                snmp_plugin_store=SNMPPluginStore.deserialize(fetcher_config["snmp_plugin_store"]),
+            )
         except (LookupError, TypeError, ValueError) as exc:
             raise ValueError(serialized) from exc
 
     def serialize(self) -> Dict[str, Any]:
-        return {"fetcher_config": {"cmc_log_level": self.cmc_log_level}}
+        return {
+            "fetcher_config": {
+                "cmc_log_level": self.cmc_log_level,
+                "snmp_plugin_store": self.snmp_plugin_store.serialize(),
+            },
+        }
 
 
 def _disable_timeout() -> None:
@@ -138,7 +149,7 @@ def load_global_config(serial: ConfigSerial) -> GlobalConfig:
             return GlobalConfig.deserialize(json.load(f))
     except FileNotFoundError:
         logger.warning("fetcher global config %s is absent", serial)
-        return GlobalConfig(cmc_log_level=5)
+        return GlobalConfig(cmc_log_level=5, snmp_plugin_store=SNMPPluginStore())
 
 
 def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:

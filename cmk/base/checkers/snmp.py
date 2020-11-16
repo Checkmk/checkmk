@@ -31,6 +31,14 @@ import cmk.base.config as config
 from ._abstract import HostSections, Parser, Source, Summarizer, FileCacheFactory, Mode
 
 
+def make_plugin_store() -> SNMPPluginStore:
+    return SNMPPluginStore({
+        s.name: SNMPPluginStoreItem(
+            [BackendSNMPTree.from_frontend(base=t.base, oids=t.oids) for t in s.trees],
+            SNMPDetectSpec(s.detect_spec)) for s in agent_based_register.iter_all_snmp_sections()
+    })
+
+
 class SNMPHostSections(HostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
                                     SNMPSectionContent]):
     pass
@@ -166,12 +174,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
 
     @staticmethod
     def _make_snmp_plugin_store() -> SNMPPluginStore:
-        return SNMPPluginStore({
-            s.name: SNMPPluginStoreItem(
-                [BackendSNMPTree.from_frontend(base=t.base, oids=t.oids) for t in s.trees],
-                SNMPDetectSpec(s.detect_spec))
-            for s in agent_based_register.iter_all_snmp_sections()
-        })
+        return make_plugin_store()
 
     def _make_disabled_sections(self) -> Set[SectionName]:
         return self.host_config.disabled_snmp_sections()

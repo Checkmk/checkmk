@@ -1,7 +1,7 @@
 Title: mk_postgres supports CentOS7
 Class: fix
 Compatible: compat
-Component: core
+Component: agents
 Date: 1605175357
 Edition: cre
 Knowledge: doc

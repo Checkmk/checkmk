@@ -44,7 +44,7 @@ from cmk.gui.watolib.utils import (
     ALL_SERVICES,
     try_bake_agents_for_hosts,
 )
-from cmk.gui.watolib.changes import add_change, make_diff_text
+from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.host_attributes import (
@@ -1130,8 +1130,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             return "/"
         return "/wato/%s/" % self.path()
 
-    def linkinfo(self):
-        return self.path() + ":"
+    def object_ref(self) -> ObjectRef:
+        return ObjectRef(ObjectRefType.Folder, self.path())
 
     def hosts(self):
         self._load_hosts_on_demand()
@@ -1684,7 +1684,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         new_subfolder.save()
         add_change("new-folder",
                    _("Created new folder %s") % new_subfolder.alias_path(),
-                   obj=new_subfolder,
+                   object_ref=new_subfolder.object_ref(),
                    sites=[new_subfolder.site_id()],
                    diff_text=make_diff_text(
                        make_folder_audit_log_object({}),
@@ -1715,7 +1715,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         hooks.call("folder-deleted", subfolder)
         add_change("delete-folder",
                    _("Deleted folder %s") % subfolder.alias_path(),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=subfolder.all_site_ids())
         del self._subfolders[name]
         shutil.rmtree(subfolder.filesystem_path())
@@ -1771,7 +1771,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         affected_sites = list(set(affected_sites + subfolder.all_site_ids()))
         add_change("move-folder",
                    _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
-                   obj=subfolder,
+                   object_ref=subfolder.object_ref(),
                    sites=affected_sites)
         need_sidebar_reload()
         Folder.delete_host_lookup_cache()
@@ -1814,7 +1814,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         affected_sites = list(set(affected_sites + self.all_site_ids()))
         add_change("edit-folder",
                    _("Edited properties of folder %s") % self.title(),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=affected_sites,
                    diff_text=make_diff_text(old_object,
                                             make_folder_audit_log_object(self._attributes)))
@@ -1844,7 +1844,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._num_hosts = len(self._hosts)
             add_change("create-host",
                        _("Created new host %s.") % host_name,
-                       obj=host,
+                       object_ref=host.object_ref(),
                        sites=[host.site_id()],
                        diff_text=make_diff_text({},
                                                 make_host_audit_log_object(
@@ -1886,7 +1886,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._num_hosts = len(self._hosts)
             add_change("delete-host",
                        _("Deleted host %s") % host_name,
-                       obj=host,
+                       object_ref=host.object_ref(),
                        sites=[host.site_id()])
 
         self.persist_instance()  # num_hosts has changed
@@ -1941,7 +1941,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             affected_sites = list(set(affected_sites + [host.site_id()]))
             add_change("move-host",
                        _("Moved host from %s to %s") % (self.path(), target_folder.path()),
-                       obj=host,
+                       object_ref=host.object_ref(),
                        sites=affected_sites)
 
         self.persist_instance()  # num_hosts has changed
@@ -1967,7 +1967,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._hosts[newname] = host
         add_change("rename-host",
                    _("Renamed host from %s to %s") % (oldname, newname),
-                   obj=host,
+                   object_ref=host.object_ref(),
                    sites=[host.site_id()])
 
         Folder.delete_hosts_from_lookup_cache([oldname])
@@ -1985,7 +1985,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         add_change("rename-parent",
                    _("Renamed parent from %s to %s in folder \"%s\"") %
                    (oldname, newname, self.alias_path()),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=self.all_site_ids())
         self.save_hosts()
         self.save()
@@ -2314,8 +2314,8 @@ class CREHost(WithPermissions, WithAttributes):
     def folder(self) -> CREFolder:
         return self._folder
 
-    def linkinfo(self):
-        return self.folder().path() + ":" + self.name()
+    def object_ref(self) -> ObjectRef:
+        return ObjectRef(ObjectRefType.Host, self.name())
 
     def locked(self):
         return self.folder().locked_hosts()
@@ -2528,7 +2528,7 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         add_change("edit-host",
                    _("Modified host %s.") % self.name(),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=affected_sites,
                    diff_text=make_diff_text(old_object, new_object))
 
@@ -2554,7 +2554,7 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         add_change("edit-host",
                    _("Removed explicit attributes of host %s.") % self.name(),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=affected_sites,
                    diff_text=make_diff_text(
                        old, make_host_audit_log_object(self._attributes, self._cluster_nodes)))
@@ -2598,7 +2598,7 @@ class CREHost(WithPermissions, WithAttributes):
 
         add_change("rename-node",
                    _("Renamed cluster node from %s into %s.") % (oldname, newname),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=[self.site_id()])
         self.folder().save_hosts()
         return True
@@ -2611,7 +2611,7 @@ class CREHost(WithPermissions, WithAttributes):
 
         add_change("rename-parent",
                    _("Renamed parent from %s into %s.") % (oldname, newname),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=[self.site_id()])
         self.folder().save_hosts()
         return True
@@ -2619,7 +2619,7 @@ class CREHost(WithPermissions, WithAttributes):
     def rename(self, new_name):
         add_change("rename-host",
                    _("Renamed host from %s into %s.") % (self.name(), new_name),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=[self.site_id()])
         self._name = new_name
 

@@ -47,6 +47,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_display_options_dropdown,
 )
+from cmk.gui.wato.pages.activate_changes import render_object_ref
 
 
 @mode_registry.register
@@ -260,12 +261,16 @@ class ModeAuditLog(WatoMode):
                            searchable=False) as table:
             for entry in log:
                 table.row()
-                table.cell(_("Object"), self._render_logfile_linkinfo(entry.linkinfo), css="narrow")
                 table.cell(_("Time"),
                            html.render_nobr(render.date_and_time(float(entry.time))),
                            css="narrow")
                 user = ('<i>%s</i>' % _('internal')) if entry.user_id == '-' else entry.user_id
                 table.cell(_("User"), html.render_text(user), css="nobreak narrow")
+
+                table.cell(_("Object type"),
+                           entry.object_ref.object_type.name if entry.object_ref else "",
+                           css="narrow")
+                table.cell(_("Object"), render_object_ref(entry.object_ref), css="narrow")
 
                 text = escaping.escape_text(entry.text).replace("\n", "<br>\n")
                 table.cell(_("Summary"), text)
@@ -433,28 +438,6 @@ class ModeAuditLog(WatoMode):
     def _clear_audit_log(self):
         self._store.clear()
 
-    def _render_logfile_linkinfo(self, linkinfo):
-        if ':' in linkinfo:  # folder:host
-            path, host_name = linkinfo.split(':', 1)
-            if watolib.Folder.folder_exists(path):
-                folder = watolib.Folder.folder(path)
-                if host_name:
-                    if folder.has_host(host_name):
-                        host = folder.host(host_name)
-                        url = host.edit_url()
-                        title = host_name
-                    else:
-                        return host_name
-                else:  # only folder
-                    url = folder.url()
-                    title = folder.title()
-            else:
-                return linkinfo
-        else:
-            return ""
-
-        return html.render_a(title, href=url)
-
     def _export_audit_log(self) -> ActionResult:
         html.set_output_format("csv")
 
@@ -470,7 +453,8 @@ class ModeAuditLog(WatoMode):
         titles = [
             _('Date'),
             _('Time'),
-            _('Linkinfo'),
+            _('Object type'),
+            _('Object ident'),
             _('User'),
             _('Action'),
             _('Summary'),
@@ -481,12 +465,11 @@ class ModeAuditLog(WatoMode):
 
         html.write(','.join(titles) + '\n')
         for entry in self._parse_audit_log():
-            linkinfo = '' if entry.linkinfo == '-' else entry.linkinfo
-
             columns = [
                 render.date(int(entry.time)),
                 render.time_of_day(int(entry.time)),
-                linkinfo,
+                entry.object_ref.object_type.name if entry.object_ref else "",
+                entry.object_ref.ident if entry.object_ref else "",
                 entry.user_id,
                 entry.action,
                 '"' + escaping.strip_tags(entry.text).replace('"', "'") + '"',

@@ -556,7 +556,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
             add_change("edit-ruleset",
                        _("Renamed host in %d rulesets of folder %s") %
                        (len(changed_rulesets), folder.title),
-                       obj=folder,
+                       object_ref=folder.object_ref(),
                        sites=folder.all_site_ids())
             rulesets.save()
 

@@ -12,8 +12,8 @@ from testlib import on_time
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.htmllib import HTML
-from cmk.gui.watolib.changes import (AuditLogStore, SiteChanges, ChangeSpec, log_audit,
-                                     make_diff_text)
+from cmk.gui.watolib.changes import (AuditLogStore, SiteChanges, log_audit, make_diff_text,
+                                     ObjectRef, ObjectRefType)
 
 
 class TestAuditLogStore:
@@ -30,24 +30,24 @@ class TestAuditLogStore:
         store.clear()
 
     def test_append(self, store):
-        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch", None)
+        entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
 
     def test_append_multiple(self, store):
-        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch", None)
+        entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         store.append(entry)
         assert list(store.read()) == [entry, entry]
 
     def test_transport_html(self, store, register_builtin_html):
-        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action",
+        entry = AuditLogStore.Entry(int(time.time()), None, "user", "action",
                                     HTML("Mäss<b>ädsch</b>"), None)
         store.append(entry)
         assert list(store.read()) == [entry]
 
     def test_clear(self, store):
-        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch", None)
+        entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -58,7 +58,7 @@ class TestAuditLogStore:
         assert archive_path.exists()
 
     def test_clear_produced_archive_file_per_clear(self, store):
-        entry = AuditLogStore.Entry(int(time.time()), "link", "user", "action", "Mässädsch", None)
+        entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
 
         for n in range(5):
             store.append(entry)
@@ -81,6 +81,20 @@ class TestSiteChanges:
     def fixture_store(self, tmp_path):
         return SiteChanges(tmp_path / ("replication_changes_mysite.mk"))
 
+    @pytest.fixture(name="entry")
+    def fixture_entry(self):
+        return {
+            'id': 'd60ca3d4-7201-4a89-b66f-2f156192cad2',
+            'action_name': 'create-host',
+            'text': 'Created new host node1.',
+            'object': ObjectRef(ObjectRefType.Host, "node1"),
+            'user_id': 'cmkadmin',
+            'domains': ['check_mk'],
+            'time': 1605461248.786142,
+            'need_sync': True,
+            'need_restart': True,
+        }
+
     def test_read_not_existing(self, store):
         assert not store.exists()
         assert list(store.read()) == []
@@ -89,27 +103,49 @@ class TestSiteChanges:
         assert not store.exists()
         store.clear()
 
-    def test_write(self, store):
-        entry1: ChangeSpec = {"a": "b"}
-        store.append(entry1)
-        assert list(store.read()) == [entry1]
-
-        entry2: ChangeSpec = {"x": "y"}
-        store.write([entry2])
-        assert list(store.read()) == [entry2]
-
-    def test_append(self, store):
-        entry: ChangeSpec = {"a": "b"}
+    def test_write(self, store, entry):
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_clear(self, store):
-        entry: ChangeSpec = {"a": "b"}
+        entry2 = entry.copy()
+        entry2["id"] = "1"
+
+        store.write([entry2])
+        assert list(store.read()) == [entry2]
+
+    def test_append(self, store, entry):
+        store.append(entry)
+        assert list(store.read()) == [entry]
+
+    def test_clear(self, store, entry):
         store.append(entry)
         assert list(store.read()) == [entry]
 
         store.clear()
         assert list(store.read()) == []
+
+    @pytest.mark.parametrize("old_type,ref_type", [
+        ("CREHost", ObjectRefType.Host),
+        ("CMEHost", ObjectRefType.Host),
+        ("CREFolder", ObjectRefType.Folder),
+        ("CMEFolder", ObjectRefType.Folder),
+    ])
+    def test_read_pre_20_host_change(self, store, old_type, ref_type):
+        with store._path.open("wb") as f:
+            f.write(
+                repr({
+                    'id': 'd60ca3d4-7201-4a89-b66f-2f156192cad2',
+                    'action_name': 'create-host',
+                    'text': 'Created new host node1.',
+                    'object': (old_type, 'node1'),
+                    'user_id': 'cmkadmin',
+                    'domains': ['check_mk'],
+                    'time': 1605461248.786142,
+                    'need_sync': True,
+                    'need_restart': True,
+                }).encode("utf-8") + b"\0")
+
+        assert store.read()[0]["object"] == ObjectRef(ref_type, 'node1')
 
 
 def test_log_audit_with_object_diff():
@@ -123,7 +159,7 @@ def test_log_audit_with_object_diff():
 
     with on_time('2018-04-15 16:50', 'CET'):
         log_audit(
-            linkinfo=None,
+            object_ref=None,
             action="bla",
             message="Message",
             user_id=UserId("calvin"),
@@ -134,7 +170,7 @@ def test_log_audit_with_object_diff():
     assert store.read() == [
         AuditLogStore.Entry(
             time=1523811000,
-            linkinfo='-',
+            object_ref=None,
             user_id='calvin',
             action='bla',
             text='Message',
@@ -146,7 +182,7 @@ def test_log_audit_with_object_diff():
 def test_log_audit_with_html_message(register_builtin_html):
     with on_time('2018-04-15 16:50', 'CET'):
         log_audit(
-            linkinfo=None,
+            object_ref=None,
             user_id=UserId('calvin'),
             action="bla",
             message=HTML("Message <b>bla</b>"),
@@ -156,7 +192,7 @@ def test_log_audit_with_html_message(register_builtin_html):
     assert store.read() == [
         AuditLogStore.Entry(
             time=1523811000,
-            linkinfo='-',
+            object_ref=None,
             user_id='calvin',
             action='bla',
             text=HTML("Message <b>bla</b>"),

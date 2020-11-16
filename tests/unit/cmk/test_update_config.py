@@ -17,7 +17,7 @@ import cmk.gui.config
 import cmk.utils.paths
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
-from cmk.gui.watolib.changes import AuditLogStore
+from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
 
 
 @pytest.fixture()
@@ -257,37 +257,37 @@ def test__migrate_pre_2_0_audit_log(tmp_path, old_audit_log, new_path):
     store = AuditLogStore(new_path)
     assert store.read() == [
         AuditLogStore.Entry(time=1604991356,
-                            linkinfo='-',
+                            object_ref=None,
                             user_id='cmkadmin',
                             action='liveproxyd-activate',
                             text='Activating changes of Livestatus Proxy configuration',
                             diff_text=None),
         AuditLogStore.Entry(time=1604991356,
-                            linkinfo='-',
+                            object_ref=None,
                             user_id='cmkadmin',
                             action='liveproxyd-activate',
                             text='Activating changes of Livestatus Proxy configuration',
                             diff_text=None),
         AuditLogStore.Entry(time=1604992040,
-                            linkinfo=':heute2',
+                            object_ref=ObjectRef(ObjectRefType.Host, "heute2"),
                             user_id='cmkadmin',
                             action='create-host',
                             text='Created new host heute2.',
                             diff_text=None),
         AuditLogStore.Entry(time=1604992159,
-                            linkinfo=':heute2',
+                            object_ref=ObjectRef(ObjectRefType.Host, "heute2"),
                             user_id='cmkadmin',
                             action='delete-host',
                             text='Deleted host heute2',
                             diff_text=None),
         AuditLogStore.Entry(time=1604992163,
-                            linkinfo=':heute1',
+                            object_ref=ObjectRef(ObjectRefType.Host, "heute1"),
                             user_id='cmkadmin',
                             action='create-host',
                             text='Created new host heute1.',
                             diff_text=None),
         AuditLogStore.Entry(time=1604992166,
-                            linkinfo=':heute12',
+                            object_ref=ObjectRef(ObjectRefType.Host, "heute12"),
                             user_id='cmkadmin',
                             action='create-host',
                             text='Created new host heute12.',

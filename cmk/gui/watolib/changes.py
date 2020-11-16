@@ -10,6 +10,8 @@ import errno
 import os
 import time
 import abc
+import enum
+from dataclasses import dataclass
 from typing import (Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, NamedTuple,
                     TypeVar, Generic)
 from pathlib import Path
@@ -33,13 +35,38 @@ from cmk.gui.watolib import search
 from cmk.gui.plugins.watolib import config_domain_registry, ABCConfigDomain
 
 if TYPE_CHECKING:
-    from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
+    from cmk.gui.watolib.hosts_and_folders import CREHost
 
-LinkInfoObject = Union["CREFolder", "CREHost", str, None]
 ChangeSpec = Dict[str, Any]
 LogMessage = Union[str, HTML]
 
 _VT = TypeVar('_VT')
+
+
+class ObjectRefType(enum.Enum):
+    """Known types of objects"""
+    Folder = "Folder"
+    Host = "Host"
+
+
+@dataclass
+class ObjectRef:
+    """Persisted in audit log and site changes to reference a Checkmk configuration object"""
+    object_type: ObjectRefType
+    ident: str
+
+    def serialize(self):
+        return {
+            "object_type": self.object_type.name,
+            "ident": self.ident,
+        }
+
+    @classmethod
+    def deserialize(cls, serialized: Dict[str, Any]) -> "ObjectRef":
+        return cls(
+            object_type=ObjectRefType(serialized["object_type"]),
+            ident=serialized["ident"],
+        )
 
 
 class ABCAppendStore(Generic[_VT], metaclass=abc.ABCMeta):
@@ -141,7 +168,7 @@ def _wato_var_dir() -> Path:
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
     Entry = NamedTuple("Entry", [
         ("time", int),
-        ("linkinfo", str),
+        ("object_ref", Optional[ObjectRef]),
         ("user_id", str),
         ("action", str),
         ("text", LogMessage),
@@ -157,11 +184,13 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
         raw = entry._asdict()
         raw["text"] = (("html", str(entry.text)) if isinstance(entry.text, HTML) else
                        ("str", entry.text))
+        raw["object_ref"] = raw["object_ref"].serialize() if raw["object_ref"] else None
         return raw
 
     @staticmethod
     def _deserialize(raw: Dict) -> "AuditLogStore.Entry":
         raw["text"] = (HTML(raw["text"][1]) if raw["text"][0] == "html" else raw["text"][1])
+        raw["object_ref"] = ObjectRef.deserialize(raw["object_ref"]) if raw["object_ref"] else None
         return AuditLogStore.Entry(**raw)
 
     def clear(self) -> None:
@@ -182,19 +211,12 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
         self._path.rename(newpath)
 
 
-def _log_entry(linkinfo: LinkInfoObject,
-               action: str,
-               message: Union[HTML, str],
-               user_id: Optional[UserId] = None,
-               diff_text: Optional[str] = None) -> None:
-    if linkinfo and not isinstance(linkinfo, str):
-        link = linkinfo.linkinfo()
-    else:
-        link = linkinfo
+def _log_entry(action: str, message: Union[HTML, str], object_ref: Optional[ObjectRef],
+               user_id: Optional[UserId], diff_text: Optional[str]) -> None:
 
     entry = AuditLogStore.Entry(
         time=int(time.time()),
-        linkinfo=link or "-",
+        object_ref=object_ref,
         user_id=str(user_id or config.user.id or "-"),
         action=action,
         text=message,
@@ -204,7 +226,8 @@ def _log_entry(linkinfo: LinkInfoObject,
     AuditLogStore(AuditLogStore.make_path()).append(entry)
 
 
-def log_audit(linkinfo: LinkInfoObject,
+# TODO: Make object_ref an optional argument
+def log_audit(object_ref: Optional[ObjectRef],
               action: str,
               message: LogMessage,
               user_id: Optional[UserId] = None,
@@ -215,7 +238,7 @@ def log_audit(linkinfo: LinkInfoObject,
             message = escaping.strip_tags(message.value)
         cmk.gui.watolib.git.add_message(message)
 
-    _log_entry(linkinfo, action, message, user_id, diff_text)
+    _log_entry(action, message, object_ref, user_id, diff_text)
 
 
 def make_diff_text(old_object: Any, new_object: Any) -> Optional[str]:
@@ -226,7 +249,7 @@ def make_diff_text(old_object: Any, new_object: Any) -> Optional[str]:
 
 def add_change(action_name: str,
                text: LogMessage,
-               obj: LinkInfoObject = None,
+               object_ref: Optional[ObjectRef] = None,
                diff_text: Optional[str] = None,
                add_user: bool = True,
                need_sync: Optional[bool] = None,
@@ -234,9 +257,9 @@ def add_change(action_name: str,
                domains: Optional[List[Type[ABCConfigDomain]]] = None,
                sites: Optional[List[SiteId]] = None) -> None:
 
-    log_audit(linkinfo=obj,
-              action=action_name,
+    log_audit(action=action_name,
               message=text,
+              object_ref=object_ref,
               user_id=config.user.id if add_user else UserId(''),
               diff_text=diff_text)
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
@@ -249,13 +272,13 @@ def add_change(action_name: str,
     #    import cmk.gui.cee.agent_bakery as agent_bakery
     #    agent_bakery.mark_need_to_bake_agents()
 
-    ActivateChangesWriter().add_change(action_name, text, obj, add_user, need_sync, need_restart,
-                                       domains, sites)
+    ActivateChangesWriter().add_change(action_name, text, object_ref, add_user, need_sync,
+                                       need_restart, domains, sites)
 
 
 class ActivateChangesWriter:
-    def add_change(self, action_name: str, text: LogMessage, obj: LinkInfoObject, add_user: bool,
-                   need_sync: Optional[bool], need_restart: Optional[bool],
+    def add_change(self, action_name: str, text: LogMessage, object_ref: Optional[ObjectRef],
+                   add_user: bool, need_sync: Optional[bool], need_restart: Optional[bool],
                    domains: Optional[List[Type[ABCConfigDomain]]],
                    sites: Optional[Iterable[SiteId]]) -> None:
         # Default to a core only change
@@ -269,14 +292,14 @@ class ActivateChangesWriter:
         change_id = self._new_change_id()
 
         for site_id in sites:
-            self._add_change_to_site(site_id, change_id, action_name, text, obj, add_user,
+            self._add_change_to_site(site_id, change_id, action_name, text, object_ref, add_user,
                                      need_sync, need_restart, domains)
 
     def _new_change_id(self) -> str:
         return cmk.gui.utils.gen_id()
 
     def _add_change_to_site(self, site_id: SiteId, change_id: str, action_name: str,
-                            text: LogMessage, obj: LinkInfoObject, add_user: bool,
+                            text: LogMessage, object_ref: Optional[ObjectRef], add_user: bool,
                             need_sync: Optional[bool], need_restart: Optional[bool],
                             domains: List[Type[ABCConfigDomain]]) -> None:
         # Individual changes may override the domain restart default value
@@ -285,11 +308,6 @@ class ActivateChangesWriter:
 
         if need_sync is None:
             need_sync = any([d.needs_sync for d in domains])
-
-        def serialize_object(obj):
-            if obj is None:
-                return None
-            return obj.__class__.__name__, obj.ident()
 
         # Using attrencode here is against our regular rule to do the escaping
         # at the last possible time: When rendering. But this here is the last
@@ -301,7 +319,7 @@ class ActivateChangesWriter:
             "id": change_id,
             "action_name": action_name,
             "text": "%s" % text,
-            "object": serialize_object(obj),
+            "object": object_ref,
             "user_id": config.user.id if add_user else None,
             "domains": [d.ident for d in domains],
             "time": time.time(),
@@ -316,6 +334,26 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
     def make_path(*args: str) -> Path:
         return _wato_var_dir() / ("replication_changes_%s.mk" % args[0])
 
+    @staticmethod
+    def _serialize(entry: Dict) -> Dict:
+        raw = entry.copy()
+        raw["object"] = raw["object"].serialize() if raw["object"] else None
+        return raw
+
+    @staticmethod
+    def _deserialize(raw: Dict) -> Dict:
+        if isinstance(raw["object"], tuple):
+            # Migrate the pre 2.0 change entries (Two element tuple: ("Folder/Host", "ident"))
+            type_name, ident = raw["object"]
+            if type_name in ("CMEHost", "CREHost"):
+                type_name = "Host"
+            elif type_name in ("CMEFolder", "CREFolder"):
+                type_name = "Folder"
+            raw["object"] = ObjectRef(ObjectRefType(type_name), ident)
+        else:
+            raw["object"] = ObjectRef.deserialize(raw["object"]) if raw["object"] else None
+        return raw
+
 
 def add_service_change(host: "CREHost",
                        action_name: str,
@@ -324,7 +362,7 @@ def add_service_change(host: "CREHost",
                        need_sync: bool = False) -> None:
     add_change(action_name,
                text,
-               obj=host,
+               object_ref=host.object_ref(),
                sites=[host.site_id()],
                diff_text=diff_text,
                need_sync=need_sync)

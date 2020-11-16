@@ -13,7 +13,7 @@ be called manually.",
 import re
 from pathlib import Path
 import errno
-from typing import List, Tuple, Any, Dict, Set
+from typing import List, Tuple, Any, Dict, Set, Optional
 import argparse
 import logging
 import copy
@@ -50,7 +50,7 @@ from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-mod
 from cmk.gui.plugins.dashboard.utils import builtin_dashboards, get_all_dashboards, transform_topology_dashlet  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.watolib.changes import AuditLogStore  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
@@ -745,14 +745,24 @@ class UpdateConfig:
                 splitted = line.rstrip().split(None, 4)
                 if len(splitted) == 5 and splitted[0].isdigit():
                     t, linkinfo, user, action, text = splitted
+
                     yield AuditLogStore.Entry(
                         time=int(t),
-                        linkinfo=linkinfo,
+                        object_ref=self._object_ref_from_linkinfo(linkinfo),
                         user_id=user,
                         action=action,
                         text=text,
                         diff_text=None,
                     )
+
+    def _object_ref_from_linkinfo(self, linkinfo: str) -> Optional[ObjectRef]:
+        if ':' not in linkinfo:
+            return None
+
+        folder_path, host_name = linkinfo.split(':', 1)
+        if not host_name:
+            return ObjectRef(ObjectRefType.Folder, folder_path)
+        return ObjectRef(ObjectRefType.Host, host_name)
 
 
 def _set_show_mode(users, user_id):

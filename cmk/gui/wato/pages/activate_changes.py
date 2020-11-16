@@ -10,7 +10,7 @@ import ast
 import tarfile
 import os
 import json
-from typing import Dict, NamedTuple, List, Optional, Iterator
+from typing import Dict, NamedTuple, List, Optional, Iterator, Tuple
 
 from six import ensure_str
 
@@ -22,7 +22,7 @@ import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
-from cmk.gui.watolib.changes import activation_sites
+from cmk.gui.watolib.changes import activation_sites, ObjectRef, ObjectRefType
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
@@ -44,6 +44,7 @@ from cmk.gui.page_menu import (
     make_javascript_link,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.html import HTML
 
 
 @mode_registry.register
@@ -331,7 +332,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 table.row(css=" ".join(css))
 
                 table.cell(_("Object"), css="narrow nobr")
-                rendered = self._render_change_object(change["object"])
+                rendered = render_object_ref(change["object"])
                 if rendered:
                     html.write(rendered)
 
@@ -348,28 +349,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     html.write_text("<i>%s</i>" % _("All sites"))
                 else:
                     html.write_text(", ".join(sorted(change["affected_sites"])))
-
-    def _render_change_object(self, obj):
-        if not obj:
-            return
-
-        ty, ident = obj
-        url, title = None, None
-
-        if ty == "Host":
-            host = watolib.Host.host(ident)
-            if host:
-                url = host.edit_url()
-                title = host.name()
-
-        elif ty == "Folder":
-            if watolib.Folder.folder_exists(ident):
-                folder = watolib.Folder.folder(ident)
-                url = folder.url()
-                title = folder.title()
-
-        if url and title:
-            return html.render_a(title, href=url)
 
     def _activation_status(self):
         with table_element("site-status", searchable=False, sortable=False,
@@ -486,6 +465,33 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                                     json.dumps(last_state))
 
                 html.close_div()
+
+
+def render_object_ref(object_ref: Optional[ObjectRef]) -> Optional[HTML]:
+    url, title = _get_object_reference(object_ref)
+    if not url or not title:
+        return None
+    return html.render_a(title, href=url)
+
+
+# TODO: Move this to some generic place
+def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str], Optional[str]]:
+    if object_ref is None:
+        return None, None
+
+    if object_ref.object_type is ObjectRefType.Host:
+        host = watolib.Host.host(object_ref.ident)
+        if host:
+            return host.edit_url(), host.name()
+        return None, None
+
+    if object_ref.object_type is ObjectRefType.Folder:
+        if watolib.Folder.folder_exists(object_ref.ident):
+            folder = watolib.Folder.folder(object_ref.ident)
+            return folder.url(), folder.title()
+        return None, None
+
+    return None, None
 
 
 def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary]:

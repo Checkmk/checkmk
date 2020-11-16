@@ -154,6 +154,9 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 		    --install-purelib=/lib/python3 ; \
 		cd .. ; \
 	    done
+	echo ======================================== DEBUG INSTALL START
+	ls -lRa $(PYTHON3_MODULES_INSTALL_DIR)/lib/python3/importlib_metadata
+	echo ======================================== DEBUG INSTALL END
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(PYTHON3_MODULES_LIST))

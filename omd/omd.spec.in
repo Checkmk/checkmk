@@ -52,9 +52,9 @@ rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 rm -f $RPM_BUILD_ROOT/etc/systemd/system/omd.service
 
-echo ======================================== DEBUG START
+echo ======================================== DEBUG RPM START
 ls -lRa $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/python3/importlib_metadata
-echo ======================================== DEBUG END
+echo ======================================== DEBUG RPM END
 
 %files
 %defattr(-,root,root)

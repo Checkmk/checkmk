@@ -121,7 +121,7 @@ class TestCMCMessage:
 
     @pytest.fixture
     def fetcher_payload(self):
-        return AgentPayload(69 * b"\0")
+        return AgentPayload(AgentRawData(69 * b"\0"))
 
     @pytest.fixture
     def fetcher_messages(self, fetcher_payload, fetcher_stats):
@@ -167,11 +167,11 @@ class TestEndOfReply:
 
 class TestAgentPayload:
     @pytest.fixture
-    def payload(self):
-        return AgentPayload(b"<<<hello>>>\nworld")
+    def agent_payload(self):
+        return AgentPayload(AgentRawData(b"<<<hello>>>\nworld"))
 
-    def test_from_bytes_success(self, payload):
-        assert AgentPayload.from_bytes(bytes(payload)) == payload
+    def test_from_bytes_success(self, agent_payload):
+        assert AgentPayload.from_bytes(bytes(agent_payload)) == agent_payload
 
 
 class TestSNMPPayload:
@@ -401,7 +401,7 @@ class TestFetcherMessage:
 
     @pytest.fixture
     def agent_raw_data(self):
-        return b"<<<check_mk>>>"
+        return AgentRawData(b"<<<check_mk>>>")
 
     def test_accessors(self, message, header, payload):
         assert message.header == header

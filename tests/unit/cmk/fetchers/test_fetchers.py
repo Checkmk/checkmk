@@ -90,24 +90,24 @@ class TestNoCache:
         )
 
     @pytest.fixture
-    def raw_data(self):
-        return b"<<<check_mk>>>\nagent raw data"
+    def agent_raw_data(self):
+        return AgentRawData(b"<<<check_mk>>>\nagent raw data")
 
-    def test_write_and_read_is_noop(self, file_cache, raw_data):
+    def test_write_and_read_is_noop(self, file_cache, agent_raw_data):
         assert not file_cache.disabled
         assert not file_cache.path.exists()
 
-        file_cache.write(raw_data)
+        file_cache.write(agent_raw_data)
 
         assert not file_cache.path.exists()
         assert file_cache.read() is None
 
-    def test_disabled_write_and_read(self, file_cache, raw_data):
+    def test_disabled_write_and_read(self, file_cache, agent_raw_data):
         file_cache.disabled = True
         assert file_cache.disabled is True
         assert not file_cache.path.exists()
 
-        file_cache.write(raw_data)
+        file_cache.write(agent_raw_data)
 
         assert not file_cache.path.exists()
         assert file_cache.read() is None
@@ -131,7 +131,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
     @pytest.fixture
     def raw_data(self, file_cache):
         if isinstance(file_cache, DefaultAgentFileCache):
-            return b"<<<check_mk>>>\nagent raw data"
+            return AgentRawData(b"<<<check_mk>>>\nagent raw data")
         assert isinstance(file_cache, SNMPFileCache)
         table: SNMPTable = []
         raw_data = SNMPRawData({SectionName("X"): table})
@@ -484,7 +484,7 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
     @pytest.fixture(autouse=True)
     def populate_cache(self, fetcher):
         assert isinstance(fetcher.file_cache, StubFileCache)
-        fetcher.file_cache.cache = b"cached_section"
+        fetcher.file_cache.cache = AgentRawData(b"cached_section")
 
     @pytest.fixture(autouse=True)
     def patch_io(self, fetcher, monkeypatch):
@@ -532,7 +532,7 @@ class TestTCPFetcher:
 
     def test_decrypt_plaintext_is_noop(self, file_cache):
         settings = {"use_regular": "allow"}
-        output = b"<<<section:sep(0)>>>\nbody\n"
+        output = AgentRawData(b"<<<section:sep(0)>>>\nbody\n")
         fetcher = TCPFetcher(
             file_cache,
             family=socket.AF_INET,
@@ -545,7 +545,7 @@ class TestTCPFetcher:
 
     def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(self, file_cache):
         settings = {"use_regular": "enforce"}
-        output = b"<<<section:sep(0)>>>\nbody\n"
+        output = AgentRawData(b"<<<section:sep(0)>>>\nbody\n")
         fetcher = TCPFetcher(
             file_cache,
             family=socket.AF_INET,
@@ -560,7 +560,7 @@ class TestTCPFetcher:
 
     def test_decrypt_payload_with_wrong_protocol_raises_MKFetcherError(self, file_cache):
         settings = {"use_regular": "enforce"}
-        output = b"the first two bytes are not a number"
+        output = AgentRawData(b"the first two bytes are not a number")
         fetcher = TCPFetcher(
             file_cache,
             family=socket.AF_INET,
@@ -613,7 +613,7 @@ class TestFetcherCaching:
     @pytest.fixture(autouse=True)
     def populate_cache(self, fetcher):
         assert isinstance(fetcher.file_cache, StubFileCache)
-        fetcher.file_cache.cache = b"cached_section"
+        fetcher.file_cache.cache = AgentRawData(b"cached_section")
 
     @pytest.fixture(autouse=True)
     def patch_io(self, fetcher, monkeypatch):

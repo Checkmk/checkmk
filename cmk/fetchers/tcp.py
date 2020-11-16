@@ -105,7 +105,7 @@ class TCPFetcher(AgentFetcher):
     def _raw_data(self) -> AgentRawData:
         self._logger.debug("Reading data from agent")
         if not self._socket:
-            return b""
+            return AgentRawData(b"")
 
         def recvall(sock: socket.socket) -> bytes:
             buffer: List[bytes] = []
@@ -114,10 +114,10 @@ class TCPFetcher(AgentFetcher):
                 if not data:
                     break
                 buffer.append(data)
-            return b"".join(buffer)
+            return AgentRawData(b"".join(buffer))
 
         try:
-            return recvall(self._socket)
+            return AgentRawData(recvall(self._socket))
         except socket.error as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -179,4 +179,4 @@ class TCPFetcher(AgentFetcher):
         decryption_suite = AES.new(key, AES.MODE_CBC, iv)
         decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
         # Strip of fill bytes of openssl
-        return decrypted_pkg[0:-decrypted_pkg[-1]]
+        return AgentRawData(decrypted_pkg[0:-decrypted_pkg[-1]])

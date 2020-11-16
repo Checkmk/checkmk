@@ -7,18 +7,19 @@
 import errno
 import logging
 import os
-from pathlib import Path
 import tempfile
-from typing import Optional, Dict, Iterator, List, Tuple, NamedTuple
+from pathlib import Path
+from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
 
 import cmk.utils
 import cmk.utils.paths
-import cmk.utils.translations
 import cmk.utils.store as store
+import cmk.utils.translations
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.render import Age
-from cmk.utils.regex import regex
 from cmk.utils.log import VERBOSE
+from cmk.utils.regex import regex
+from cmk.utils.render import Age
+from cmk.utils.type_defs import AgentRawData
 
 logger = logging.getLogger("cmk.base")
 
@@ -36,7 +37,7 @@ PiggybackRawDataInfo = NamedTuple('PiggybackRawDataInfo', [
     ('successfully_processed', bool),
     ('reason', str),
     ('reason_status', int),
-    ('raw_data', bytes),
+    ('raw_data', AgentRawData),
 ])
 
 PiggybackTimeSettings = List[Tuple[Optional[str], str, int]]
@@ -59,8 +60,10 @@ PiggybackTimeSettings = List[Tuple[Optional[str], str, int]]
 # - Path(tmp/check_mk/piggyback_sources/SOURCE).name
 
 
-def get_piggyback_raw_data(piggybacked_hostname: str,
-                           time_settings: PiggybackTimeSettings) -> List[PiggybackRawDataInfo]:
+def get_piggyback_raw_data(
+    piggybacked_hostname: str,
+    time_settings: PiggybackTimeSettings,
+) -> List[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
@@ -85,16 +88,18 @@ def get_piggyback_raw_data(piggybacked_hostname: str,
             # Raw data is always stored as bytes. Later the content is
             # converted to unicode in abstact.py:_parse_info which respects
             # 'encoding' in section options.
-            raw_data = store.load_bytes_from_file(file_info.file_path)
+            raw_data = AgentRawData(store.load_bytes_from_file(file_info.file_path))
 
         except IOError as e:
             reason = "Cannot read piggyback raw data from source '%s'" % file_info.source_hostname
-            piggyback_raw_data = PiggybackRawDataInfo(source_hostname=file_info.source_hostname,
-                                                      file_path=str(file_info.file_path),
-                                                      successfully_processed=False,
-                                                      reason=reason,
-                                                      reason_status=0,
-                                                      raw_data=b'')
+            piggyback_raw_data = PiggybackRawDataInfo(
+                source_hostname=file_info.source_hostname,
+                file_path=str(file_info.file_path),
+                successfully_processed=False,
+                reason=reason,
+                reason_status=0,
+                raw_data=AgentRawData(b''),
+            )
             logger.log(
                 VERBOSE,
                 "Piggyback file '%s': %s, %s",
@@ -104,11 +109,14 @@ def get_piggyback_raw_data(piggybacked_hostname: str,
             )
 
         else:
-            piggyback_raw_data = PiggybackRawDataInfo(file_info.source_hostname,
-                                                      str(file_info.file_path),
-                                                      file_info.successfully_processed,
-                                                      file_info.reason, file_info.reason_status,
-                                                      raw_data)
+            piggyback_raw_data = PiggybackRawDataInfo(
+                file_info.source_hostname,
+                str(file_info.file_path),
+                file_info.successfully_processed,
+                file_info.reason,
+                file_info.reason_status,
+                raw_data,
+            )
             if file_info.successfully_processed:
                 logger.log(
                     VERBOSE,

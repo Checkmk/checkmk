@@ -15,7 +15,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import ParsedSectionName, result, SectionName, SourceType
+from cmk.utils.type_defs import AgentRawData, ParsedSectionName, result, SectionName, SourceType
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -789,7 +789,7 @@ class TestMakeHostSectionsClusters:
             fetcher_messages=[
                 # We do not pass sources explicitly but still append Piggyback.
                 FetcherMessage.from_raw_data(
-                    result.OK(b""),
+                    result.OK(AgentRawData(b"")),
                     Snapshot.null(),
                     FetcherType.PIGGYBACK,
                 ),

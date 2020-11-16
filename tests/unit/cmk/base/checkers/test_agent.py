@@ -16,7 +16,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.type_defs import result, SectionName, SourceType
+from cmk.utils.type_defs import AgentRawData, result, SectionName, SourceType
 
 from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
@@ -61,7 +61,7 @@ class TestParser:
 
     @pytest.mark.usefixtures("scenario")
     def test_raw_section_populates_sections(self, hostname, logger, store):
-        raw_data = b"\n".join((
+        raw_data = AgentRawData(b"\n".join((
             b"<<<a_section>>>",
             b"first line",
             b"second line",
@@ -70,7 +70,7 @@ class TestParser:
             b"first line",
             b"second line",
             b"<<<>>>",  # to be skipped
-        ))
+        )))
 
         ahs = AgentParser(hostname, store, False, logger).parse(raw_data)
 
@@ -94,7 +94,7 @@ class TestParser:
         monkeypatch.setattr(time, "time", lambda: time_time)
         monkeypatch.setattr(config.HostConfig, "check_mk_check_interval", 10)
 
-        raw_data = b"\n".join((
+        raw_data = AgentRawData(b"\n".join((
             b"<<<<piggyback header>>>>",  # <- space is OK
             b"<<<section>>>",
             b"first line",
@@ -111,7 +111,7 @@ class TestParser:
             b"<<<</b_l-u/>>>>",
             b"<<<section>>>",
             b"first line",
-        ))
+        )))
 
         ahs = AgentParser(hostname, store, False, logger).parse(raw_data)
 
@@ -151,11 +151,11 @@ class TestParser:
         time_delta = 50
         monkeypatch.setattr(time, "time", lambda: time_time)
 
-        raw_data = b"\n".join((
+        raw_data = AgentRawData(b"\n".join((
             b"<<<section:persist(%i)>>>" % (time_time + time_delta),
             b"first line",
             b"second line",
-        ))
+        )))
 
         ahs = AgentParser(hostname, store, False, logger).parse(raw_data)
 

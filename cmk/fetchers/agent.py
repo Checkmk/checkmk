@@ -18,7 +18,7 @@ class AgentFileCache(ABCFileCache[AgentRawData]):
 class DefaultAgentFileCache(AgentFileCache):
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> AgentRawData:
-        return raw_data
+        return AgentRawData(raw_data)
 
     @staticmethod
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
@@ -36,7 +36,7 @@ class NoCache(AgentFileCache):
 
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> AgentRawData:
-        return raw_data
+        return AgentRawData(raw_data)
 
     @staticmethod
     def _to_cache_file(raw_data: AgentRawData) -> bytes:

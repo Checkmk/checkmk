@@ -13,7 +13,7 @@ import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginNameStr
+from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 
 import cmk.snmplib.snmp_cache as snmp_cache
 from cmk.snmplib.type_defs import ABCSNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
@@ -127,7 +127,8 @@ class StoredWalkSNMPBackend(ABCSNMPBackend):
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
                     # FIXME: This encoding ping-pong os horrible...
-                    value = ensure_str(agent_simulator.process(ensure_binary(parts[1])))
+                    value = ensure_str(
+                        agent_simulator.process(AgentRawData(ensure_binary(parts[1]),),),)
                 else:
                     value = ""
                 # Fix for missing starting oids

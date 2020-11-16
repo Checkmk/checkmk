@@ -16,7 +16,7 @@ from typing import Final, Type, Union
 import cmk.utils.log as log
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.type_defs import result, SectionName
+from cmk.utils.type_defs import AgentRawData, result, SectionName
 from cmk.utils.type_defs.protocol import Protocol
 
 from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
@@ -110,7 +110,7 @@ class PayloadType(enum.Enum):
 class AgentPayload(L3Message):
     payload_type = PayloadType.AGENT
 
-    def __init__(self, value: bytes) -> None:
+    def __init__(self, value: AgentRawData) -> None:
         self._value: Final = value
 
     def __repr__(self) -> str:
@@ -126,7 +126,7 @@ class AgentPayload(L3Message):
             data[:L3Message.length],
         )
         try:
-            return cls(data[L3Message.length:L3Message.length + length])
+            return cls(AgentRawData(data[L3Message.length:L3Message.length + length]))
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 

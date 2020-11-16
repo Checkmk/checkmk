@@ -27,7 +27,7 @@ def process(output: AgentRawData) -> AgentRawData:
                 break
             simfunc = output[i + 2:e]
             replacement = str(eval(b"agentsim_" + simfunc)).encode("utf-8")  # nosec
-            output = output[:i] + replacement + output[e + 1:]
+            output = AgentRawData(output[:i] + replacement + output[e + 1:])
     except Exception as e:
         if cmk.utils.debug.enabled():
             raise

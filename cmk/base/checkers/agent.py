@@ -111,7 +111,7 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             source_type=source_type,
             fetcher_type=fetcher_type,
             description=description,
-            default_raw_data=AgentRawData(),
+            default_raw_data=AgentRawData(b""),
             default_host_sections=AgentHostSections(),
             id_=id_,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
@@ -340,7 +340,6 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
-        assert isinstance(raw_data, AgentRawData), type(raw_data)
         host_sections = self._parse_host_section(raw_data, self.host_config.check_mk_check_interval)
         host_sections.add_persisted_sections(
             self.persisted_sections_file_path,

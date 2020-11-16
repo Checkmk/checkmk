@@ -59,13 +59,10 @@ class PiggybackFetcher(AgentFetcher):
         return True
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        raw_data = b""
-        raw_data += self._get_main_section()
-        raw_data += self._get_source_labels_section()
-        return raw_data
+        return AgentRawData(b"" + self._get_main_section() + self._get_source_labels_section())
 
     def _get_main_section(self) -> AgentRawData:
-        raw_data = b""
+        raw_data = AgentRawData(b"")
         for src in self._sources:
             if src.successfully_processed:
                 # !! Important for Check_MK and Check_MK Discovery service !!
@@ -75,17 +72,17 @@ class PiggybackFetcher(AgentFetcher):
                 #     it's service details
                 #   - Check_MK Discovery: Only shows vanished/new/... if raw data is not
                 #     added; ie. if file_info is not successfully processed
-                raw_data += src.raw_data
+                raw_data = AgentRawData(raw_data + src.raw_data)
         return raw_data
 
     def _get_source_labels_section(self) -> AgentRawData:
         """Return a <<<labels>>> agent section which adds the piggyback sources
         to the labels of the current host"""
         if not self._sources:
-            return b""
+            return AgentRawData(b"")
 
         labels = {"cmk/piggyback_source_%s" % src.source_hostname: "yes" for src in self._sources}
-        return b'<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels).encode("utf-8")
+        return AgentRawData(b'<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels).encode("utf-8"))
 
     @staticmethod
     def _raw_data(

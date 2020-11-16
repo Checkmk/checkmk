@@ -162,7 +162,7 @@ def _read_agent_output(hostname: str) -> Optional[AgentRawData]:
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
     try:
         with cache_path.open(mode="rb") as f:
-            return f.read()
+            return AgentRawData(f.read())
     except IOError:
         pass
     return None

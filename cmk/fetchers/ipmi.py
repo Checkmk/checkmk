@@ -61,10 +61,7 @@ class IPMIFetcher(AgentFetcher):
         if self._command is None:
             raise MKFetcherError("Not connected")
 
-        output = b""
-        output += self._sensors_section()
-        output += self._firmware_section()
-        return output
+        return AgentRawData(b"" + self._sensors_section() + self._firmware_section())
 
     def open(self) -> None:
         self._logger.debug(
@@ -125,7 +122,7 @@ class IPMIFetcher(AgentFetcher):
         except NotImplementedError as e:
             self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
             self._logger.debug("Exception", exc_info=True)
-            return b""
+            return AgentRawData(b"")
 
         sensors = []
         has_no_gpu = not self._has_gpu()
@@ -146,8 +143,8 @@ class IPMIFetcher(AgentFetcher):
                     continue
                 sensors.append(IPMIFetcher._parse_sensor_reading(sensor.sensor_number, reading))
 
-        return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
-            [b"|".join(sensor) + b"\n" for sensor in sensors])
+        return AgentRawData(b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" +
+                            b"".join(b"|".join(sensor) + b"\n" for sensor in sensors))
 
     def _firmware_section(self) -> AgentRawData:
         if self._command is None:
@@ -159,7 +156,7 @@ class IPMIFetcher(AgentFetcher):
         except Exception as e:
             self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
             self._logger.debug("Exception", exc_info=True)
-            return b""
+            return AgentRawData(b"")
 
         output = b"<<<mgmt_ipmi_firmware:sep(124)>>>\n"
         for entity_name, attributes in firmware_entries:
@@ -167,7 +164,7 @@ class IPMIFetcher(AgentFetcher):
                 output += b"|".join(f.encode("utf8") for f in (entity_name, attribute_name, value))
                 output += b"\n"
 
-        return output
+        return AgentRawData(output)
 
     def _has_gpu(self) -> bool:
         if self._command is None:
@@ -203,12 +200,14 @@ class IPMIFetcher(AgentFetcher):
             health_txt = b"OK"
 
         return [
-            b"%d" % number,
-            ensure_binary(reading.name),
-            ensure_binary(reading.type),
-            (b"%0.2f" % reading.value) if reading.value else b"N/A",
-            ensure_binary(reading.units) if reading.units != b"\xc2\xb0C" else b"C",
-            health_txt,
+            AgentRawData(_) for _ in (
+                b"%d" % number,
+                ensure_binary(reading.name),
+                ensure_binary(reading.type),
+                (b"%0.2f" % reading.value) if reading.value else b"N/A",
+                ensure_binary(reading.units) if reading.units != b"\xc2\xb0C" else b"C",
+                health_txt,
+            )
         ]
 
     @staticmethod
@@ -233,12 +232,12 @@ class IPMIFetcher(AgentFetcher):
         states = [s.encode("utf-8") for s in reading.states if not s.startswith("Unknown state ")]
 
         if not states:
-            return b"no state reported"
+            return AgentRawData(b"no state reported")
 
         if any(b"non-critical" in s for s in states):
-            return b"WARNING"
+            return AgentRawData(b"WARNING")
 
         # just keep all the available info. It should be dealt with in
         # ipmi_sensors.include (freeipmi_status_txt_mapping),
         # where it will default to 2(CRIT)
-        return b', '.join(states)
+        return AgentRawData(b', '.join(states))

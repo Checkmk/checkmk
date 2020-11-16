@@ -83,12 +83,12 @@ class ModeDiagnostics(WatoMode):
     def _from_vars(self) -> None:
         self._checkmk_config_files_map = get_checkmk_config_files_map()
         self._checkmk_log_files_map = get_checkmk_log_files_map()
-        self._start = bool(html.request.get_ascii_input("_start"))
+        self._collect_dump = bool(html.request.get_ascii_input("_collect_dump"))
         self._diagnostics_parameters = self._get_diagnostics_parameters()
         self._job = DiagnosticsDumpBackgroundJob()
 
     def _get_diagnostics_parameters(self) -> Optional[DiagnosticsParameters]:
-        if self._start:
+        if self._collect_dump:
             return self._vs_diagnostics().from_html_vars("diagnostics")
         return None
 
@@ -98,8 +98,8 @@ class ModeDiagnostics(WatoMode):
     def page_menu(self, breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(breadcrumb,
                                           form_name="diagnostics",
-                                          button_name="_start",
-                                          save_title="Start")
+                                          button_name="_collect_dump",
+                                          save_title=_("Collect dump"))
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(

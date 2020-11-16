@@ -595,3 +595,20 @@ export function content_scrollbar(scrollable_id) {
     if (g_content_scrollbar === null) g_content_scrollbar = add_simplebar_scrollbar(scrollable_id);
     return g_content_scrollbar;
 }
+
+export function set_focus_by_name(form_name, field_name) {
+    set_focus(document.getElementById("form_" + form_name).elements[field_name]);
+}
+
+export function set_focus_by_id(dom_id) {
+    set_focus(document.getElementById(dom_id));
+}
+
+function set_focus(focus_obj) {
+    if (focus_obj) {
+        focus_obj.focus();
+        if (focus_obj.select) {
+            focus_obj.select();
+        }
+    }
+}

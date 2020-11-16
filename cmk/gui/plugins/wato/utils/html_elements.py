@@ -44,12 +44,12 @@ def wato_html_head(*,
     html.open_div(class_="wato")
 
 
-def wato_html_footer(show_footer: bool = True, show_body_end: bool = True) -> None:
+def wato_html_footer(show_body_end: bool = True) -> None:
     if not _html_head_open:
         return
 
     html.close_div()
-    html.footer(show_footer, show_body_end)
+    html.footer(show_body_end)
 
 
 def _make_wato_page_state() -> PageState:

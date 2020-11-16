@@ -698,9 +698,6 @@ class GUIViewRenderer(ABCViewRenderer):
 
         if display_options.enabled(display_options.T):
             html.end_page_content()
-        html.bottom_focuscode()
-        if display_options.enabled(display_options.Z):
-            html.bottom_footer()
 
         if display_options.enabled(display_options.H):
             html.body_end()

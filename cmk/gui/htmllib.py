@@ -1017,7 +1017,6 @@ class html(ABCHTMLGenerator):
 
         # Browser options
         self.user_errors: Dict[Optional[str], str] = {}
-        self.focus_object: Union[None, Tuple[Optional[str], str], str] = None
         self.final_javascript_code = ""
         self.page_context: 'VisualContext' = {}
 
@@ -1333,10 +1332,11 @@ class html(ABCHTMLGenerator):
         self.link_target = framename
 
     def set_focus(self, varname: str) -> None:
-        self.focus_object = (self.form_name, varname)
+        self.final_javascript("cmk.utils.set_focus_by_name(%s, %s)" %
+                              (json.dumps(self.form_name), json.dumps(varname)))
 
     def set_focus_by_id(self, dom_id: str) -> None:
-        self.focus_object = dom_id
+        self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
 
     def set_render_headfoot(self, render: bool) -> None:
         self.render_headfoot = render
@@ -1742,36 +1742,12 @@ class html(ABCHTMLGenerator):
     def end_page_content(self):
         self.close_div()
 
-    def footer(self, show_footer: bool = True, show_body_end: bool = True) -> None:
+    def footer(self, show_body_end: bool = True) -> None:
         if self.output_format == "html":
             self.end_page_content()
-            if show_footer:
-                self.bottom_footer()
 
             if show_body_end:
                 self.body_end()
-
-    def bottom_footer(self) -> None:
-        self.bottom_focuscode()
-
-    def bottom_focuscode(self) -> None:
-        if self.focus_object:
-            if isinstance(self.focus_object, tuple):
-                formname, varname = self.focus_object
-                assert formname is not None
-                obj_ident = formname + "." + varname
-            else:
-                obj_ident = "getElementById(\"%s\")" % self.focus_object
-
-            js_code = "<!--\n" \
-                      "var focus_obj = document.%s;\n" \
-                      "if (focus_obj) {\n" \
-                      "    focus_obj.focus();\n" \
-                      "    if (focus_obj.select)\n" \
-                      "        focus_obj.select();\n" \
-                      "}\n" \
-                      "// -->\n" % obj_ident
-            self.javascript(js_code)
 
     def focus_here(self) -> None:
         self.a("", href="#focus_me", id_="focus_me")

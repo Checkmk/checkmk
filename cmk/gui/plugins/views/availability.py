@@ -325,9 +325,6 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
 
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
 
-    if display_options.enabled(display_options.Z):
-        html.bottom_footer()
-
     if display_options.enabled(display_options.H):
         html.body_end()
 
@@ -932,7 +929,6 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
         html.write(timewarpcode)
         do_render_availability("bi", av_rawdata, av_data, av_mode, None, avoptions)
 
-    html.bottom_footer()
     html.body_end()
 
 
@@ -1124,7 +1120,6 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
     html.hidden_fields()
     html.end_form()
 
-    html.bottom_footer()
     html.body_end()
     return True
 

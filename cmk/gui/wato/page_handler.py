@@ -177,8 +177,7 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
     if config.wato_use_git and html.is_transaction():
         do_git_commit()
 
-    wato_html_footer(show_footer=display_options.enabled(display_options.Z),
-                     show_body_end=display_options.enabled(display_options.H))
+    wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 
 def _get_mode_permission_and_class(mode_name: str) -> Tuple[List[PermissionName], Type[WatoMode]]:

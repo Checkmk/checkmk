@@ -34,10 +34,10 @@ def discover_k8s_nodes(section: Dict) -> DiscoveryResult:
 
 
 def check_k8s_nodes(params: Parameters, section: Dict) -> CheckResult:
-    yield check_levels(  # type: ignore[call-overload]  # yes, it's tuples in the params.
+    yield from check_levels(  # type: ignore[call-overload]  # yes, it's tuples in the params.
         len(section.get('nodes', [])),
         metric_name='k8s_nodes',
-        levels_uppper=params.get('levels'),
+        levels_upper=params.get('levels'),
         levels_lower=params.get('levels_lower'),
         render_func=lambda x: str(int(x)),
         label='Number of nodes',

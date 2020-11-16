@@ -15,7 +15,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.watolib as watolib
 from cmk.gui import escaping
-from cmk.gui.watolib.changes import AuditLogStore
+from cmk.gui.watolib.changes import AuditLogStore, ObjectRefType
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
     Dictionary,
@@ -23,7 +23,9 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Integer,
     AbsoluteDate,
+    DropdownChoice,
 )
+from cmk.gui.type_defs import Choices
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.globals import html, request
@@ -224,7 +226,7 @@ class ModeAuditLog(WatoMode):
         audit = self._parse_audit_log()
 
         if not audit:
-            html.show_message(_("The audit log is empty."))
+            html.show_message(_("Found no matching entry."))
 
         elif self._options["display"] == "daily":
             self._display_daily_audit_log(audit)
@@ -270,7 +272,7 @@ class ModeAuditLog(WatoMode):
                 table.cell(_("Object type"),
                            entry.object_ref.object_type.name if entry.object_ref else "",
                            css="narrow")
-                table.cell(_("Object"), render_object_ref(entry.object_ref), css="narrow")
+                table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css="narrow")
 
                 text = escaping.escape_text(entry.text).replace("\n", "<br>\n")
                 table.cell(_("Summary"), text)
@@ -394,9 +396,18 @@ class ModeAuditLog(WatoMode):
         html.end_form()
 
     def _vs_audit_log_options(self):
+        object_types: Choices = [
+            ("", _("All object types")),
+            (None, _("No object type")),
+        ] + [(t.name, t.name) for t in ObjectRefType]
+
         return Dictionary(
             title=_("Options"),
             elements=[
+                ("object_type", DropdownChoice(
+                    title=_("Object type"),
+                    choices=object_types,
+                )),
                 ("filter_regex", RegExp(
                     title=_("Filter pattern (RegExp)"),
                     mode="infix",
@@ -454,7 +465,7 @@ class ModeAuditLog(WatoMode):
             _('Date'),
             _('Time'),
             _('Object type'),
-            _('Object ident'),
+            _('Object'),
             _('User'),
             _('Action'),
             _('Summary'),
@@ -482,15 +493,19 @@ class ModeAuditLog(WatoMode):
         return FinalizeRequest(code=200)
 
     def _parse_audit_log(self) -> List[AuditLogStore.Entry]:
-        return list(
-            reversed([e for e in self._store.read() if not self._filter_entry(e[2], e[3], e[4])]))
+        return list(reversed([e for e in self._store.read() if self._filter_entry(e)]))
 
-    def _filter_entry(self, user, action, text):
-        if not self._options["filter_regex"]:
-            return False
-
-        for val in [user, action, text]:
-            if re.search(self._options["filter_regex"], val):
+    def _filter_entry(self, entry: AuditLogStore.Entry) -> bool:
+        if self._options["object_type"] != "":
+            if entry.object_ref is None and self._options["object_type"] is not None:
                 return False
+            if (entry.object_ref and
+                    entry.object_ref.object_type.name != self._options["object_type"]):
+                return False
+
+        if self._options["filter_regex"]:
+            for val in [entry.user_id, entry.action, entry.text]:
+                if not re.search(self._options["filter_regex"], val):
+                    return False
 
         return True

@@ -34,6 +34,11 @@ def transform_graph_render_options_title_format(p) -> List[str]:
             return ["plain"] + p[1]
         if p[0] == "plain":
             return ["plain"]
+
+    # Because the spec could come from a JSON request CMK-6339
+    if isinstance(p, list) and len(p) == 2 and p[0] == "add_title_infos":
+        return ["plain"] + p[1]
+
     return p
 
 

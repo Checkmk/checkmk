@@ -17,6 +17,10 @@ from cmk.gui.plugins.metrics import valuespecs
                  ["plain", "add_host_alias", "add_service_description"],
                  id="1.5.0i2->2.0.0i1 infos from CascadingDropdown"),
     pytest.param(["add_host_name"], ["add_host_name"], id="2.0.0i1 fixpoint"),
+    pytest.param(["add_host_name"], ["add_host_name"], id="2.0.0i1 fixpoint"),
+    pytest.param(['add_title_infos', ['add_host_name', 'add_service_description']],
+                 ["plain", "add_host_name", "add_service_description"],
+                 id="Format from JSON request CMK-6339")
 ])
 def test_transform_graph_render_options_title_format(entry, result):
     assert valuespecs.transform_graph_render_options_title_format(entry) == result

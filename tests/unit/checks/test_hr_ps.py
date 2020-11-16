@@ -55,7 +55,41 @@ pytestmark = pytest.mark.checks
             'descr': 'sshd',
             'match_name_or_path': ('match_path', '/usr/sbin/sshd'),
         },
-        [],
+        [
+            (
+                'sshd',
+                {
+                    'match_name_or_path': ('match_path', '/usr/sbin/sshd'),
+                    'match_status': None,
+                    'match_groups': [],
+                },
+            ),
+        ],
+    ),
+    (
+        [
+            ['systemd', '/usr/lib/systemd/systemd', '2'],
+            ['lvmetad', '/usr/sbin/lvmetad', '2'],
+            ['tuned', '/usr/bin/python2', '2'],
+            ['sshd', '/usr/sbin/sshd', '2'],
+            ['java', '/usr/lib/jvm/jre-11-openjdk/bin/java', '2'],
+            ['sssd', '/usr/sbin/sssd', '2'],
+            ['snmpd', '/usr/sbin/snmpd', '1'],
+        ],
+        {
+            'descr': 'sshd',
+            'match_name_or_path': ('match_path', '~.*/sshd$'),
+        },
+        [
+            (
+                'sshd',
+                {
+                    'match_name_or_path': ('match_path', '~.*/sshd$'),
+                    'match_status': None,
+                    'match_groups': [],
+                },
+            ),
+        ],
     ),
 ])
 def test_hr_ps_discovery(check_manager, info, discovery_params, expected_discovery_result):

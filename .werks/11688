@@ -1,0 +1,15 @@
+Title: hr_ps: fixed no results when using path to discover processes
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1605521456
+
+The hr_process check uses discovery rules to discover processes that are
+relevant for monitoring. The user can choose to discover these processes based
+on process name or path. However, when activating the path option, the check
+did not return the mathing processes. This has been fixed.

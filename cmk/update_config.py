@@ -633,6 +633,12 @@ class UpdateConfig:
         save_users(users)
 
     def _rewrite_py2_inventory_data(self):
+        done_path = Path(cmk.utils.paths.var_dir, "update_config")
+        done_file = done_path / "py2conversion.done"
+        if done_file.exists():
+            self._logger.log(VERBOSE, "Skipping py2 inventory data update (already done)")
+            return
+
         dirpaths = [
             Path(cmk.utils.paths.var_dir + "/inventory/"),
             Path(cmk.utils.paths.var_dir + "/inventory_archive/"),
@@ -656,9 +662,10 @@ class UpdateConfig:
         py2_files: List[str] = [str(f) for f in filepaths if self._needs_to_be_converted(f)]
 
         if not py2_files:
+            self._create_donefile(done_file)
             return
 
-        self._fix_with_2to3(py2_files)
+        returncode = self._fix_with_2to3(py2_files)
 
         # Rewriting .gz files
         for filepath in py2_files:
@@ -666,7 +673,15 @@ class UpdateConfig:
                 with open(filepath, 'rb') as f_in, gzip.open(str(filepath) + '.gz', 'wb') as f_out:
                     f_out.writelines(f_in)
 
-    def _fix_with_2to3(self, files: List[str]):
+        if returncode == 0:
+            self._create_donefile(done_file)
+
+    def _create_donefile(self, done_file: Path):
+        self._logger.log(VERBOSE, "Creating file %r" % str(done_file))
+        done_file.parent.mkdir(parents=True, exist_ok=True)
+        done_file.touch(exist_ok=True)
+
+    def _fix_with_2to3(self, files: List[str]) -> int:
         self._logger.log(VERBOSE, "Try to fix corrupt files with 2to3")
         cmd = [
             '2to3',
@@ -685,6 +700,7 @@ class UpdateConfig:
         if p.returncode != 0:
             self._logger.error("Failed to run 2to3 (Exit code: %d): %s", p.returncode, output)
         self._logger.log(VERBOSE, "Finished.")
+        return p.returncode
 
     def _needs_to_be_converted(self, filepath: Path):
         with filepath.open(encoding="utf-8") as f:

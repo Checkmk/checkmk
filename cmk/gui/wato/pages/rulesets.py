@@ -36,6 +36,7 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
+    FixedValue,
     Transform,
     Checkbox,
     ListChoice,
@@ -1465,8 +1466,10 @@ class ABCEditRuleMode(WatoMode):
 
     def _update_rule_from_vars(self):
         # Additional options
-        rule_options = self._vs_rule_options().from_html_vars("options")
-        self._vs_rule_options().validate_value(rule_options, "options")
+        rule_options = self._vs_rule_options(self._rule.id).from_html_vars("options")
+        self._vs_rule_options(self._rule.id).validate_value(rule_options, "options")
+
+        del rule_options["id"]
         self._rule.rule_options = rule_options
 
         if self._get_condition_type_from_vars() == "predefined":
@@ -1533,7 +1536,7 @@ class ABCEditRuleMode(WatoMode):
         html.begin_form("rule_editor", method="POST")
 
         # Additonal rule options
-        self._vs_rule_options().render_input("options", self._rule.rule_options)
+        self._vs_rule_options(self._rule.id).render_input("options", self._rule.rule_options)
 
         # Value
         valuespec = self._ruleset.valuespec()
@@ -1561,7 +1564,7 @@ class ABCEditRuleMode(WatoMode):
         forms.end()
 
         html.hidden_fields()
-        self._vs_rule_options().set_focus("options")
+        self._vs_rule_options(self._rule.id).set_focus("options")
         html.end_form()
 
     def _show_conditions(self):
@@ -1655,12 +1658,18 @@ class ABCEditRuleMode(WatoMode):
         html.close_table()
         html.close_center()
 
-    def _vs_rule_options(self, disabling=True):
+    def _vs_rule_options(self, rule_id: str, disabling=True):
         return Dictionary(
             title=_("Rule Properties"),
             optional_keys=False,
             render="form",
-            elements=rule_option_elements(disabling),
+            elements=rule_option_elements(disabling) + [
+                ("id", FixedValue(
+                    rule_id,
+                    title=_("Rule ID"),
+                )),
+            ],
+            show_more_keys=["id"],
         )
 
 

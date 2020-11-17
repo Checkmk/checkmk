@@ -199,6 +199,10 @@
           display: none;
         }
 
+        div.error {
+          margin: $spacing;
+        }
+
         div.topic {
           flex-grow: 1;
           width: 250px;

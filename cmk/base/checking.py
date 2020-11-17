@@ -219,9 +219,6 @@ def do_check(
                     multi_host_sections=mhs,
                 )
 
-            if _submit_to_core:
-                item_state.save(hostname)
-
             for source, host_sections in result:
                 source_state, source_output, source_perfdata = source.summarize(host_sections)
                 if source_output != "":

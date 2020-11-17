@@ -235,7 +235,7 @@ def _execute_walks_for_dump(oids: List[OID], *,
                             backend: ABCSNMPBackend) -> Iterable[SNMPRowInfoForStoredWalk]:
     for oid in oids:
         try:
-            console.verbose("Walk on \"%s\"..." % oid)
+            console.verbose("Walk on \"%s\"...\n" % oid)
             yield walk_for_export(oid, backend=backend)
         except Exception as e:
             console.error("Error: %s\n" % e)

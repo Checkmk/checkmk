@@ -580,11 +580,11 @@ class SidebarRenderer:
     def _get_check_mk_edition_title(self):
         if cmk_version.is_enterprise_edition():
             if cmk_version.is_demo():
-                return "Enterprise (Demo)"
-            return "Enterprise"
+                return "CFE"
+            return "CEE"
         if cmk_version.is_managed_edition():
-            return "Managed"
-        return "Raw"
+            return "CME"
+        return "CRE"
 
     # TODO: Re-add with new UX?
     #def _sidebar_foot(self, user_config):

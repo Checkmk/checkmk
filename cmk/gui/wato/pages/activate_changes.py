@@ -491,6 +491,14 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
             return folder.url(), folder.title()
         return None, None
 
+    if object_ref.object_type is ObjectRefType.User:
+        url = makeuri_contextless(global_request, [
+            ("mode", "edit_user"),
+            ("edit", object_ref.ident),
+        ],
+                                  filename="wato.py")
+        return url, object_ref.ident
+
     return None, None
 
 

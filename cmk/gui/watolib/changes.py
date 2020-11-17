@@ -47,6 +47,7 @@ class ObjectRefType(enum.Enum):
     """Known types of objects"""
     Folder = "Folder"
     Host = "Host"
+    User = "User"
 
 
 @dataclass

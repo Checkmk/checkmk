@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.type_defs import UserId
 import cmk.gui.userdb as userdb
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
 import cmk.gui.config as config
@@ -29,7 +30,7 @@ from cmk.gui.valuespec import (
     Alternative,
     EmailAddress,
 )
-from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text
+from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text, ObjectRef, ObjectRefType
 from cmk.gui.watolib.user_scripts import (
     user_script_title,
     user_script_choices,
@@ -52,6 +53,10 @@ def delete_users(users_to_delete):
             raise MKUserError(None, _("Unknown user: %s") % entry)
 
     if deleted_users:
+        for user_id in deleted_users:
+            log_audit("edit-user",
+                      _("Deleted user: %s") % user_id,
+                      object_ref=make_user_object_ref(user_id))
         add_change("edit-users", _("Deleted user: %s") % ", ".join(deleted_users))
         userdb.save_users(all_users)
 
@@ -73,10 +78,11 @@ def edit_users(changed_users):
             add_internal_attributes(user_attrs)
 
         old_object = make_user_audit_log_object(all_users.get(user_id, {}))
-        log_audit(action="edit-users",
+        log_audit(action="edit-user",
                   message=(_("Created new user: %s") %
                            user_id if is_new_user else _("Modified user: %s") % user_id),
-                  diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)))
+                  diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
+                  object_ref=make_user_object_ref(user_id))
 
         all_users[user_id] = user_attrs
 
@@ -94,6 +100,10 @@ def make_user_audit_log_object(attributes):
     obj.pop("password", None)
     obj.pop("user_scheme_serial", None)
     return obj
+
+
+def make_user_object_ref(user_id: UserId) -> ObjectRef:
+    return ObjectRef(ObjectRefType.User, str(user_id))
 
 
 def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):

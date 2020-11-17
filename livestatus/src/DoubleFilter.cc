@@ -24,7 +24,6 @@
 
 #include "DoubleFilter.h"
 #include <cstdlib>
-#include <ostream>
 #include "DoubleColumn.h"
 #include "Filter.h"
 #include "Logger.h"

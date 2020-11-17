@@ -25,7 +25,6 @@
 #include "LogwatchListColumn.h"
 #include <algorithm>
 #include <iterator>
-#include <ostream>
 #include "FileSystem.h"
 #include "Logger.h"
 #include "MonitoringCore.h"

@@ -25,7 +25,6 @@
 #include "ServiceGroupMembersColumn.h"
 #include <algorithm>
 #include <iterator>
-#include <ostream>
 #include "Filter.h"
 #include "ListFilter.h"
 #include "Logger.h"

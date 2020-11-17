@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DowntimesOrComments.h"
-#include <iosfwd>
 #include "DowntimeOrComment.h"
 #include "Logger.h"
 

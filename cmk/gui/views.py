@@ -885,7 +885,11 @@ class GUIViewRenderer(ABCViewRenderer):
             item=make_simple_link(
                 makeuri(
                     global_request,
-                    [("show_checkboxes", "0" if self.view.checkboxes_displayed else "1")],
+                    [
+                        ("show_checkboxes", "0" if self.view.checkboxes_displayed else "1"),
+                        ("selection",
+                         "" if self.view.checkboxes_displayed else weblib.selection_id()),
+                    ],
                 )),
             is_shortcut=True,
             is_suggested=True,

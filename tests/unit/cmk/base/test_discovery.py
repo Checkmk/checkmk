@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name,protected-access
+from typing import Dict, Set, NamedTuple, Counter, Tuple
 
 import pytest  # type: ignore[import]
-from typing import Dict, Set, NamedTuple, Counter, Tuple
 
 # No stub files
 from testlib.base import Scenario  # type: ignore[import]

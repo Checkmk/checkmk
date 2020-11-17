@@ -22,22 +22,18 @@ import cmk.base.config as config
 from cmk.base.config import HostConfig, IPMICredentials
 from cmk.base.exceptions import MKAgentError
 
-from ._abstract import Mode
+from ._abstract import Mode, PreselectedSectionNames
 from .agent import AgentSource, AgentHostSections, AgentSummarizer, DefaultAgentFileCacheFactory
 
 
 class IPMISource(AgentSource):
-    def __init__(
-        self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        *,
-        mode: Mode,
-    ):
+    def __init__(self, hostname: HostName, ipaddress: Optional[HostAddress], *, mode: Mode,
+                 preselected_sections: PreselectedSectionNames):
         super().__init__(
             hostname,
             ipaddress,
             mode=mode,
+            preselected_sections=preselected_sections,
             source_type=SourceType.MANAGEMENT,
             fetcher_type=FetcherType.IPMI,
             description=IPMISource._make_description(

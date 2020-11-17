@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import enum
 import logging
 import sys
 from pathlib import Path
@@ -42,12 +43,22 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 from ._cache import PersistedSections
 
 __all__ = [
+    "AUTO_DETECT",
     "HostSections",
     "Source",
     "FileCacheFactory",
     "Mode",
     "set_cache_opts",
 ]
+
+
+class _Autodetection(enum.Enum):
+    sentinel = enum.auto()
+
+
+PreselectedSectionNames = Union[_Autodetection, Set[SectionName]]
+
+AUTO_DETECT: Final = _Autodetection.sentinel
 
 THostSections = TypeVar("THostSections", bound="HostSections")
 
@@ -257,7 +268,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         description: str,
         default_raw_data: TRawData,
         default_host_sections: THostSections,
-        preselected_sections: Optional[Set[SectionName]] = None,
+        preselected_sections: PreselectedSectionNames,
         id_: str,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
@@ -273,7 +284,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         # If preselected sections are given, we assume that we are interested in these
         # and only these sections, so we may omit others and in the SNMP case (TODO (mo))
         # must try to fetch them (regardles of detection).
-        self.preselected_sections: Final[Optional[Set[SectionName]]] = preselected_sections
+        self.preselected_sections: Final[PreselectedSectionNames] = preselected_sections
 
         self.id: Final[str] = id_
         if not cache_dir:
@@ -335,11 +346,11 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         # This could be optimized by telling the parser object about the
         # preselected sections and dismissing raw data at an earlier stage.
         # For now we don't need that, so we keep it simple.
-        if self.preselected_sections is None:
+        if self.preselected_sections is AUTO_DETECT:
             return parsed_result
 
         def filterer(host_section: THostSections) -> THostSections:
-            assert self.preselected_sections is not None  # just for you, mypy <3
+            assert self.preselected_sections is not AUTO_DETECT  # just for you, mypy <3
             return host_section.filter(self.preselected_sections)
 
         return parsed_result.map(filterer)

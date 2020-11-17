@@ -41,7 +41,15 @@ from cmk.base.check_utils import (
 from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
-from ._abstract import FileCacheFactory, HostSections, Mode, Parser, Source, Summarizer
+from ._abstract import (
+    Source,
+    HostSections,
+    Parser,
+    PreselectedSectionNames,
+    Summarizer,
+    FileCacheFactory,
+    Mode,
+)
 from ._cache import PersistedSections
 
 __all__ = ["AgentSource", "AgentHostSections"]
@@ -91,6 +99,7 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
         mode: Mode,
         source_type: SourceType,
         fetcher_type: FetcherType,
+        preselected_sections: PreselectedSectionNames,
         description: str,
         id_: str,
         main_data_source: bool,
@@ -104,6 +113,7 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             description=description,
             default_raw_data=AgentRawData(b""),
             default_host_sections=AgentHostSections(),
+            preselected_sections=preselected_sections,
             id_=id_,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
             persisted_section_dir=(Path(cmk.utils.paths.var_dir) /

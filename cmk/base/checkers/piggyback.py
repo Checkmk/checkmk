@@ -16,7 +16,7 @@ from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
 
-from ._abstract import Mode
+from ._abstract import Mode, PreselectedSectionNames
 from .agent import AgentSource, AgentHostSections, AgentSummarizer, NoCacheFactory
 
 
@@ -27,6 +27,7 @@ class PiggybackSource(AgentSource):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
+        preselected_sections: PreselectedSectionNames,
     ) -> None:
         super().__init__(
             hostname,
@@ -35,6 +36,7 @@ class PiggybackSource(AgentSource):
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
             description=PiggybackSource._make_description(hostname),
+            preselected_sections=preselected_sections,
             id_="piggyback",
             main_data_source=False,
         )

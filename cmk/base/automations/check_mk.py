@@ -1149,6 +1149,7 @@ class AutomationDiagHost(Automation):
                     source.hostname,
                     source.ipaddress,
                     mode=source.mode,
+                    preselected_sections=checkers.AUTO_DETECT,
                     template=cmd,
                 )
             elif isinstance(source, checkers.tcp.TCPSource):

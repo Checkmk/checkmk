@@ -24,7 +24,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
-from ._abstract import HostSections, Mode, Source
+from ._abstract import AUTO_DETECT, HostSections, Mode, PreselectedSectionNames, Source
 from .agent import AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMISource
@@ -44,12 +44,14 @@ class _Builder:
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
+        preselected_sections: PreselectedSectionNames,
     ) -> None:
         super().__init__()
         self._host_config = host_config
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
         self._mode = mode
+        self._preselected_sections = preselected_sections
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -92,21 +94,25 @@ class _Builder:
             ))
 
         if "no-piggyback" not in self._host_config.tags:
-            self._add(PiggybackSource(
-                self._hostname,
-                self._ipaddress,
-                mode=self._mode,
-            ))
+            self._add(
+                PiggybackSource(
+                    self._hostname,
+                    self._ipaddress,
+                    mode=self._mode,
+                    preselected_sections=self._preselected_sections,
+                ))
 
     def _initialize_snmp_based(self,) -> None:
         if not self._host_config.is_snmp_host:
             return
         assert self._ipaddress is not None
-        self._add(SNMPSource.snmp(
-            self._hostname,
-            self._ipaddress,
-            mode=self._mode,
-        ))
+        self._add(
+            SNMPSource.snmp(
+                self._hostname,
+                self._ipaddress,
+                mode=self._mode,
+                preselected_sections=self._preselected_sections,
+            ))
 
     def _initialize_mgmt_boards(self) -> None:
         protocol = self._host_config.management_protocol
@@ -115,17 +121,21 @@ class _Builder:
 
         ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._host_config)
         if protocol == "snmp":
-            self._add(SNMPSource.management_board(
-                self._hostname,
-                ip_address,
-                mode=self._mode,
-            ))
+            self._add(
+                SNMPSource.management_board(
+                    self._hostname,
+                    ip_address,
+                    mode=self._mode,
+                    preselected_sections=self._preselected_sections,
+                ))
         elif protocol == "ipmi":
-            self._add(IPMISource(
-                self._hostname,
-                ip_address,
-                mode=self._mode,
-            ))
+            self._add(
+                IPMISource(
+                    self._hostname,
+                    ip_address,
+                    mode=self._mode,
+                    preselected_sections=self._preselected_sections,
+                ))
         else:
             raise LookupError()
 
@@ -148,6 +158,7 @@ class _Builder:
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
+                preselected_sections=self._preselected_sections,
                 main_data_source=main_data_source,
                 template=datasource_program,
             )
@@ -157,6 +168,7 @@ class _Builder:
             self._ipaddress,
             mode=self._mode,
             main_data_source=main_data_source,
+            preselected_sections=self._preselected_sections,
         )
 
     def _get_special_agents(self) -> Sequence[Source]:
@@ -165,6 +177,7 @@ class _Builder:
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
+                preselected_sections=self._preselected_sections,
                 special_agent_id=agentname,
                 params=params,
             ) for agentname, params in self._host_config.special_agents
@@ -176,9 +189,17 @@ def make_sources(
     ipaddress: Optional[HostAddress],
     *,
     mode: Mode,
+    preselected_sections: Optional[PreselectedSectionNames] = None,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
-    return _Builder(host_config, ipaddress, mode=mode).sources
+    if preselected_sections is None:
+        preselected_sections = AUTO_DETECT
+    return _Builder(
+        host_config,
+        ipaddress,
+        mode=mode,
+        preselected_sections=preselected_sections,
+    ).sources
 
 
 def make_nodes(

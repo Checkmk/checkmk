@@ -25,6 +25,7 @@ from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
 from cmk.base.check_utils import AgentSectionContent
+from cmk.base.checkers._abstract import AUTO_DETECT, HostSections
 from cmk.base.checkers import Mode
 from cmk.base.checkers._abstract import HostSections
 from cmk.base.checkers._cache import PersistedSections
@@ -200,6 +201,7 @@ class StubSource(AgentSource):
         super().__init__(
             *args,
             fetcher_type=FetcherType.NONE,
+            preselected_sections=AUTO_DETECT,
             main_data_source=False,
             **kwargs,
         )

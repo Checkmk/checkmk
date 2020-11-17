@@ -9,7 +9,9 @@ import pytest  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName
+from testlib.debug_utils import cmk_debug_enabled
+
+from cmk.utils.type_defs import CheckPluginName, result, SectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import check_table, config
@@ -109,3 +111,41 @@ def test_host_config_creates_passing_source_sources(
         ipaddress,
         mode=mode,
     )] == sources
+
+
+@pytest.mark.parametrize("source, kwargs", [
+    (SpecialAgentSource, {
+        "special_agent_id": None,
+        "params": None
+    }),
+    (DSProgramSource, {
+        "template": ""
+    }),
+    (PiggybackSource, {}),
+    (TCPSource, {}),
+])
+def test_data_source_preselected(monkeypatch, source, kwargs):
+
+    preselected_sections = {SectionName("keep")}  # <- this is what we care about
+
+    # a lot of hocus pocus to instantiate a source:
+    make_scenario("hostname", {}).apply(monkeypatch)
+    monkeypatch.setattr(config, "special_agent_info", {None: lambda *a: []})
+    source_inst = source(
+        "hostname",
+        "127.0.0.1",
+        mode=None,
+        preselected_sections=preselected_sections,
+        **kwargs,
+    )
+
+    parse_result = source_inst.parse(
+        result.OK(b"<<<dismiss>>>\n"
+                  b"this is not\n"
+                  b"a preselected section\n"
+                  b"<<<keep>>>\n"
+                  b"but this is!\n"))
+    assert parse_result.is_ok()
+
+    sections = parse_result.value(None).sections
+    assert set(sections) == preselected_sections

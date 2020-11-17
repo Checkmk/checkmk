@@ -41,6 +41,7 @@ from cmk.base.checkers import (
     Source,
     update_host_sections,
 )
+from cmk.base.checkers._abstract import AUTO_DETECT
 from cmk.base.checkers._cache import PersistedSections
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
@@ -556,6 +557,7 @@ class TestMakeHostSectionsHosts:
                         hostname,
                         ipaddress,
                         mode=mode,
+                        preselected_sections=AUTO_DETECT,
                     ),
                 ],
             ),
@@ -587,17 +589,20 @@ class TestMakeHostSectionsHosts:
                 hostname,
                 ipaddress,
                 mode=mode,
+                preselected_sections=AUTO_DETECT,
             ),
             lambda hostname, ipaddress, *, mode: ProgramSource.ds(
                 hostname,
                 ipaddress,
                 mode=mode,
+                preselected_sections=AUTO_DETECT,
                 template="",
             ),
             lambda hostname, ipaddress, *, mode: TCPSource(
                 hostname,
                 ipaddress,
                 mode=mode,
+                preselected_sections=AUTO_DETECT,
             ),
         ],
     )
@@ -649,12 +654,14 @@ class TestMakeHostSectionsHosts:
                 hostname,
                 ipaddress,
                 mode=mode,
+                preselected_sections=AUTO_DETECT,
                 template="",
             ),
             TCPSource(
                 hostname,
                 ipaddress,
                 mode=mode,
+                preselected_sections=AUTO_DETECT,
             ),
         ]
 
@@ -693,11 +700,10 @@ class TestMakeHostSectionsHosts:
 
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, mode, config_cache, host_config):
         sources = [
-            ProgramSource.ds(hostname + "0", ipaddress,
-                                                    mode=mode,
-                                                   template="",),
-            TCPSource(hostname + "1", ipaddress, mode=mode,),
-            TCPSource(hostname + "2", ipaddress, mode=mode,),
+            ProgramSource.ds(hostname + "0", ipaddress, mode=mode, preselected_sections=AUTO_DETECT,
+                             template="",),
+            TCPSource(hostname + "1", ipaddress, mode=mode, preselected_sections=AUTO_DETECT),
+            TCPSource(hostname + "2", ipaddress, mode=mode, preselected_sections=AUTO_DETECT),
         ]
 
         mhs = MultiHostSections()

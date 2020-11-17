@@ -25,7 +25,16 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 
-from ._abstract import FileCacheFactory, HostSections, Mode, Parser, Source, Summarizer
+from ._abstract import (
+    AUTO_DETECT,
+    HostSections,
+    Parser,
+    PreselectedSectionNames,
+    Source,
+    Summarizer,
+    FileCacheFactory,
+    Mode,
+)
 from ._cache import PersistedSections
 
 
@@ -60,6 +69,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         *,
         mode: Mode,
         source_type: SourceType,
+        preselected_sections: PreselectedSectionNames,
         id_: str,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
@@ -75,6 +85,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             description=SNMPSource._make_description(hostname, ipaddress, title=title),
             default_raw_data=SNMPRawData({}),
             default_host_sections=SNMPHostSections(),
+            preselected_sections=preselected_sections,
             id_=id_,
             cache_dir=cache_dir,
             persisted_section_dir=persisted_section_dir,
@@ -103,6 +114,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ipaddress: HostAddress,
         *,
         mode: Mode,
+        preselected_sections: PreselectedSectionNames,
     ) -> "SNMPSource":
         assert ipaddress is not None
         return cls(
@@ -110,6 +122,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             ipaddress,
             mode=mode,
             source_type=SourceType.HOST,
+            preselected_sections=preselected_sections,
             id_="snmp",
             title="SNMP",
         )
@@ -121,6 +134,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
+        preselected_sections: PreselectedSectionNames,
     ) -> "SNMPSource":
         if ipaddress is None:
             raise TypeError(ipaddress)
@@ -129,6 +143,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             ipaddress,
             mode=mode,
             source_type=SourceType.MANAGEMENT,
+            preselected_sections=preselected_sections,
             id_="mgmt_snmp",
             title="Management board - SNMP",
         )
@@ -172,7 +187,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return self.host_config.disabled_snmp_sections()
 
     def _make_configured_snmp_sections(self) -> Set[SectionName]:
-        return set(
+        return (set(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=check_table.get_needed_check_names(
                     self.hostname,
@@ -180,7 +195,9 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                     skip_ignored=True,
                 ),
                 consider_inventory_plugins=False,
-            )).intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
+            ),) if self.preselected_sections is AUTO_DETECT else
+                self.preselected_sections).intersection(
+                    s.name for s in agent_based_register.iter_all_snmp_sections())
 
     def _make_inventory_snmp_sections(self) -> Set[SectionName]:
         return set(

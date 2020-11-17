@@ -157,6 +157,9 @@ export function on_key_down(id) {
         case "Enter":
             follow_current_search_query(current_search);
             break;
+        case "Escape":
+            on_click_reset(id);
+            break;
     }
 }
 

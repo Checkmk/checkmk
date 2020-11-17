@@ -125,7 +125,7 @@
       height: $height;
 
       div.navigation_bar {
-        height: 0;
+        height: 30px;
       }
 
       div.content.inner {
@@ -135,11 +135,17 @@
     }
 
     &.help_links > div.popup_menu {
-      @include small-menu(200px);
+      @include small-menu(230px);
     }
 
     &.user > div.popup_menu {
-      @include small-menu(235px);
+      @include small-menu(265px);
+    }
+
+    #info_line {
+      margin: auto 0 auto 40px;
+      font-size: $font-size-default;
+      color: rgba($font-color, 0.7);
     }
 
     div.popup_menu {

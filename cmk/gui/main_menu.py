@@ -12,6 +12,7 @@ in this module as small as possible.
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
+from cmk.utils.version import __version__, edition_title
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
 
@@ -125,10 +126,9 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
 
 
 mega_menu_registry.register(
-    MegaMenu(
-        name="help_links",
-        title=_l("Help"),
-        icon="main_help",
-        sort_index=18,
-        topics=_help_menu_topics,
-    ))
+    MegaMenu(name="help_links",
+             title=_l("Help"),
+             icon="main_help",
+             sort_index=18,
+             topics=_help_menu_topics,
+             info_line=lambda: f"Checkmk {__version__} ({edition_title()})"))

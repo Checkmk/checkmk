@@ -140,13 +140,12 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
 
 
 mega_menu_registry.register(
-    MegaMenu(
-        name="user",
-        title=_l("User"),
-        icon="main_user",
-        sort_index=20,
-        topics=_user_menu_topics,
-    ))
+    MegaMenu(name="user",
+             title=_l("User"),
+             icon="main_user",
+             sort_index=20,
+             topics=_user_menu_topics,
+             info_line=lambda: f"{config.user.id} ({config.user.baserole_id})"))
 
 
 @page_registry.register_page("ajax_ui_theme")

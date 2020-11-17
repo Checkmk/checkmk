@@ -159,6 +159,7 @@ class MegaMenu(NamedTuple):
     sort_index: int
     topics: Callable[[], List[TopicMenuTopic]]
     search: Optional[ABCMegaMenuSearch] = None
+    info_line: Optional[Callable[[], str]] = None
 
 
 SearchQuery = str

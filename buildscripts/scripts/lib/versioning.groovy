@@ -124,8 +124,7 @@ def patch_demo(DEMO) {
     if (DEMO == 'yes') {
         sh '''sed -ri 's/^(DEMO_SUFFIX[[:space:]]*:?= *).*/\\1'" .demo/" defines.make'''
         sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
-        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/TrialManager.h'''
-        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/test/test_TrialManager.cc'''
+        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{TrialManager.h,test/test_TrialManager.cc}'''
     }
 }
 

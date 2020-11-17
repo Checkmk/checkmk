@@ -25,7 +25,7 @@ class Snapshot:
 
     @property
     def idle(self) -> float:
-        return self.process.elapsed - sum(self.process[:4])
+        return max(self.process.elapsed - sum(self.process[:4]), 0.0)
 
     @classmethod
     def null(cls):

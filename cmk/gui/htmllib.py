@@ -144,7 +144,6 @@ from cmk.gui.type_defs import (
     ChoiceGroup,
     GroupedChoices,
 )
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -1705,8 +1704,6 @@ class html(ABCHTMLGenerator):
             PageMenuRenderer().show(
                 page_menu,
                 hide_suggestions=not self.foldable_container_is_open("suggestions", "all", True),
-                has_changes=bool(get_pending_changes_info() and
-                                 (not page_state or self.browser_reload)),
             )
 
         self.close_div()  # top_heading

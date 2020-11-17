@@ -191,6 +191,7 @@ class PageMenu:
     dropdowns: List[PageMenuDropdown] = field(default_factory=list)
     breadcrumb: Optional[Breadcrumb] = None
     inpage_search: Optional[PageMenuSearch] = None
+    has_pending_changes: bool = False
 
     def __post_init__(self):
         # Add the display options dropdown
@@ -457,7 +458,7 @@ class PageMenuRenderer:
     def show(self,
              menu: PageMenu,
              hide_suggestions: bool = False,
-             has_changes: bool = False) -> None:
+             has_pending_changes: bool = False) -> None:
         html.open_table(id_="page_menu_bar",
                         class_=["menubar", "" if not hide_suggestions else "hide_suggestions"])
 
@@ -466,7 +467,7 @@ class PageMenuRenderer:
         if menu.inpage_search:
             self._show_inpage_search_field(menu.inpage_search)
         self._show_shortcuts(menu)
-        if has_changes:
+        if menu.has_pending_changes:
             self._show_pending_changes_icon()
         html.close_tr()
 

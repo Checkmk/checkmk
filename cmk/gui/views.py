@@ -33,6 +33,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
@@ -752,6 +753,7 @@ class GUIViewRenderer(ABCViewRenderer):
             self._page_menu_dropdowns_context(rows) + self._page_menu_dropdown_add_to() +
             export_dropdown,
             breadcrumb=breadcrumb,
+            has_pending_changes=bool(get_pending_changes_info()),
         )
 
         self._extend_display_dropdown(menu, show_filters)

@@ -30,6 +30,7 @@ from cmk.gui.valuespec import (
     Checkbox,
 )
 from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -801,7 +802,9 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
             ),
         ],
         breadcrumb=breadcrumb,
+        has_pending_changes=bool(get_pending_changes_info()),
     )
+
     _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
 
     return menu

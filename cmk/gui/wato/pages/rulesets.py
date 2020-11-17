@@ -690,7 +690,7 @@ class ModeEditRuleset(WatoMode):
     # working before. Focus this rule row again to make multiple actions with a single
     # rule easier to handle
     def _just_edited_rule_from_vars(self):
-        if not html.request.has_var("rule_folder") or not html.request.has_var("rulenr"):
+        if not html.request.has_var("rule_folder") or not html.request.has_var("rule_id"):
             self._just_edited_rule = None
             return
 
@@ -702,12 +702,12 @@ class ModeEditRuleset(WatoMode):
         self._just_edited_rule = None
 
         # rule number relative to folder
-        rulenr = html.request.get_integer_input("rulenr")
-        if rulenr is None:
+        rule_id = html.request.get_ascii_input("rule_id")
+        if rule_id is None:
             return
 
         try:
-            self._just_edited_rule = ruleset.get_rule(rule_folder, rulenr)
+            self._just_edited_rule = ruleset.get_rule_by_id(rule_id)
         except KeyError:
             pass
 
@@ -794,10 +794,10 @@ class ModeEditRuleset(WatoMode):
 
         try:
             # rule number relative to folder
-            rulenr = html.request.get_integer_input_mandatory("_rulenr")
-            rule = ruleset.get_rule(rule_folder, rulenr)
+            rule_id = html.request.get_ascii_input_mandatory("_rule_id")
+            rule = ruleset.get_rule_by_id(rule_id)
         except (IndexError, TypeError, ValueError, KeyError):
-            raise MKUserError("rulenr",
+            raise MKUserError("_rule_id",
                               _("You are trying to edit a rule which does not exist "
                                 "anymore."))
 
@@ -874,11 +874,11 @@ class ModeEditRuleset(WatoMode):
                                sortable=False,
                                limit=None,
                                foldable=True) as table:
-                for _folder, rulenr, rule in folder_rules:
+                for _folder, _rulenr, rule in folder_rules:
                     num_rows += 1
                     table.row(css=self._css_for_rule(search_options, rule))
-                    self._set_focus(rulenr, rule)
-                    self._show_rule_icons(table, match_state, folder, rulenr, rule)
+                    self._set_focus(rule)
+                    self._show_rule_icons(table, match_state, folder, rule)
                     self._rule_cells(table, rule)
 
         row_info = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
@@ -896,12 +896,11 @@ class ModeEditRuleset(WatoMode):
             css.append("matches_search")
         return " ".join(css) if css else None
 
-    def _set_focus(self, rulenr, rule):
-        if self._just_edited_rule and self._just_edited_rule.folder == rule.folder and self._just_edited_rule.index(
-        ) == rulenr:
+    def _set_focus(self, rule: watolib.Rule) -> None:
+        if self._just_edited_rule and self._just_edited_rule.id == rule.id:
             html.focus_here()
 
-    def _show_rule_icons(self, table, match_state, folder, rulenr, rule):
+    def _show_rule_icons(self, table, match_state, folder, rule):
         if self._hostname:
             table.cell(_("Ma."))
             title, img = self._match(match_state, rule)
@@ -918,7 +917,7 @@ class ModeEditRuleset(WatoMode):
             ("mode", "edit_rule"),
             ("ruleset_back_mode", self._back_mode),
             ("varname", self._name),
-            ("rulenr", rulenr),
+            ("rule_id", rule.id),
             ("host", self._hostname),
             ("item", ensure_str(watolib.mk_repr(self._item))),
             ("service", ensure_str(watolib.mk_repr(self._service))),
@@ -930,7 +929,7 @@ class ModeEditRuleset(WatoMode):
             ("mode", "clone_rule"),
             ("ruleset_back_mode", self._back_mode),
             ("varname", self._name),
-            ("rulenr", rulenr),
+            ("rule_id", rule.id),
             ("host", self._hostname),
             ("item", ensure_str(watolib.mk_repr(self._item))),
             ("service", ensure_str(watolib.mk_repr(self._service))),
@@ -938,13 +937,12 @@ class ModeEditRuleset(WatoMode):
         ])
         html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
 
-        html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rulenr))
+        html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
 
         html.icon_button(
             url=make_confirm_link(
-                url=self._action_url("delete", folder, rulenr),
-                message=_("Delete rule number %d of folder '%s'?") %
-                (rulenr + 1, folder.alias_path()),
+                url=self._action_url("delete", folder, rule.id),
+                message=_("Delete rule %s of folder '%s'?") % (rule.id, folder.alias_path()),
             ),
             title=_("Delete this rule"),
             icon="delete",
@@ -980,13 +978,13 @@ class ModeEditRuleset(WatoMode):
             (_(" and the %s '%s'.") % (ruleset.item_name(), self._item) if ruleset.item_type() else "."), \
             'match'
 
-    def _action_url(self, action, folder, rulenr):
+    def _action_url(self, action, folder, rule_id):
         vars_ = [
             ("mode", html.request.var('mode', 'edit_ruleset')),
             ("ruleset_back_mode", self._back_mode),
             ("varname", self._name),
             ("_folder", folder.path()),
-            ("_rulenr", str(rulenr)),
+            ("_rule_id", rule_id),
             ("_action", action),
         ]
         if html.request.var("rule_folder"):
@@ -1343,14 +1341,14 @@ class ABCEditRuleMode(WatoMode):
         self._folder = watolib.Folder.folder(html.request.get_ascii_input_mandatory("rule_folder"))
 
     def _set_rule(self):
-        if html.request.has_var("rulenr"):
+        if html.request.has_var("rule_id"):
             try:
-                rulenr = html.request.get_integer_input_mandatory("rulenr")
-                self._rule = self._ruleset.get_rule(self._folder, rulenr)
+                rule_id = html.request.get_ascii_input_mandatory("rule_id")
+                self._rule = self._ruleset.get_rule_by_id(rule_id)
             except (KeyError, TypeError, ValueError, IndexError):
                 raise MKUserError(
-                    "rulenr", _("You are trying to edit a rule which does "
-                                "not exist anymore."))
+                    "rule_id", _("You are trying to edit a rule which does "
+                                 "not exist anymore."))
         elif html.request.has_var("_export_rule"):
             self._rule = watolib.Rule(self._folder, self._ruleset)
             self._update_rule_from_vars()

@@ -435,17 +435,16 @@ class SearchedRulesets(FilteredRulesetCollection):
                 self._rulesets[ruleset.name] = ruleset
 
 
-# TODO: Cleanup the rule indexing by position in the rules list. The "rule_nr" is used
-# as index accross several HTTP requests where other users may have done something with
-# the ruleset. In worst cases the user modifies a rule which should not be modified.
 class Ruleset:
     def __init__(self, name, tag_to_group_map):
         super(Ruleset, self).__init__()
         self.name = name
         self.tag_to_group_map = tag_to_group_map
         self.rulespec = rulespec_registry[name]
+
         # Holds list of the rules. Using the folder paths as keys.
         self._rules = {}
+        self._rules_by_id = {}
 
         # Temporary needed during search result processing
         self.search_matching_rules = []
@@ -471,7 +470,7 @@ class Ruleset:
         return not bool(self.get_folder_rules(folder))
 
     def num_rules(self):
-        return sum([len(rules) for rules in self._rules.values()])
+        return len(self._rules_by_id)
 
     def num_rules_in_folder(self, folder):
         return len(self.get_folder_rules(folder))
@@ -494,13 +493,14 @@ class Ruleset:
     def prepend_rule(self, folder, rule):
         rules = self._rules.setdefault(folder.path(), [])
         rules.insert(0, rule)
+        self._rules_by_id[rule.id] = rule
         self._on_change()
 
     def clone_rule(self, orig_rule, rule):
         if rule.folder == orig_rule.folder:
-            self.insert_rule_after(rule, orig_rule)
+            self.insert_rule_after(rule.clone(), orig_rule)
         else:
-            self.append_rule(rule.folder, rule)
+            self.append_rule(rule.folder, rule.clone())
 
         add_change("clone-ruleset",
                    _("Cloned rule in ruleset \"%s\" in folder \"%s\"") %
@@ -512,17 +512,23 @@ class Ruleset:
         rules = self._rules.setdefault(folder.path(), [])
         index = len(rules)
         rules.append(rule)
+        self._rules_by_id[rule.id] = rule
         self._on_change()
         return index
 
     def insert_rule_after(self, rule, after):
         index = self._rules[rule.folder.path()].index(after) + 1
         self._rules[rule.folder.path()].insert(index, rule)
+        self._rules_by_id[rule.id] = rule
         self._on_change()
 
     def from_config(self, folder, rules_config):
         if not rules_config:
             return
+
+        if folder.path() in self._rules:
+            for rule in self._rules[folder.path()]:
+                del self._rules_by_id[rule.id]
 
         # Resets the rules of this ruleset for this folder!
         self._rules[folder.path()] = []
@@ -536,6 +542,7 @@ class Ruleset:
             rule = Rule(folder, self)
             rule.from_config(rule_config)
             self._rules[folder.path()].append(rule)
+            self._rules_by_id[rule.id] = rule
 
     def to_config(self, folder):
         content = ""
@@ -643,6 +650,9 @@ class Ruleset:
     def get_rule(self, folder, rule_index):
         return self._rules[folder.path()][rule_index]
 
+    def get_rule_by_id(self, rule_id: str) -> "Rule":
+        return self._rules_by_id[rule_id]
+
     def edit_rule(self, orig_rule, rule):
         folder_rules = self._rules[orig_rule.folder.path()]
         index = folder_rules.index(orig_rule)
@@ -661,6 +671,7 @@ class Ruleset:
         index = folder_rules.index(rule)
 
         folder_rules.remove(rule)
+        del self._rules_by_id[rule.id]
 
         if create_change:
             add_change("edit-ruleset",

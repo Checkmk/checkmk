@@ -159,8 +159,21 @@ def test_automation_discovery_not_existing_host(test_cfg, site):
     assert isinstance(data, dict)
     assert len(data) == 1
 
-    assert data["results"]["xxxhost"]["diff_text"] == "Nothing was changed."
-    assert data["results"]["xxxhost"]["error_text"] is None
+    assert data["results"] == {
+        u'xxxheute': {
+            u'clustered_new': 0,
+            u'clustered_old': 0,
+            u'clustered_vanished': 0,
+            u'diff_text': None,
+            u'error_text': u'',
+            u'self_kept': 0,
+            u'self_new': 0,
+            u'self_new_host_labels': 0,
+            u'self_removed': 0,
+            u'self_total': 0,
+            u'self_total_host_labels': 0,
+        }
+    }
 
 
 def test_automation_discovery_with_cache_option(test_cfg, site):

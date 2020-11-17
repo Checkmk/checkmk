@@ -8,7 +8,7 @@ import abc
 import logging
 import sys
 from pathlib import Path
-from typing import Container, final, Final, Generic, Optional, TypeVar, Union
+from typing import Container, final, Final, Generic, Optional, Set, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -280,6 +280,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         description: str,
         default_raw_data: TRawData,
         default_host_sections: THostSections,
+        preselected_sections: Optional[Set[SectionName]] = None,
         id_: str,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
@@ -292,6 +293,11 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self.description: Final[str] = description
         self.default_raw_data: Final = default_raw_data
         self.default_host_sections: Final[THostSections] = default_host_sections
+        # If preselected sections are given, we assume that we are interested in these
+        # and only these sections, so we may omit others and in the SNMP case (TODO (mo))
+        # must try to fetch them (regardles of detection).
+        self.preselected_sections: Final[Optional[Set[SectionName]]] = preselected_sections
+
         self.id: Final[str] = id_
         if not cache_dir:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
@@ -337,12 +343,29 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         raw_data: result.Result[TRawData, Exception],
     ) -> result.Result[THostSections, Exception]:
         try:
-            return raw_data.map(self._make_parser().parse)
+            parsed_data = raw_data.map(self._make_parser().parse)
+            return self._filter_parsed_result(parsed_data)
         except Exception as exc:
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
             return result.Error(exc)
+
+    def _filter_parsed_result(
+        self, parsed_result: result.Result[THostSections, Exception]
+    ) -> result.Result[THostSections, Exception]:
+        """Filter for preselected sections"""
+        # This could be optimized by telling the parser object about the
+        # preselected sections and dismissing raw data at an earlier stage.
+        # For now we don't need that, so we keep it simple.
+        if self.preselected_sections is None:
+            return parsed_result
+
+        def filterer(host_section: THostSections) -> THostSections:
+            assert self.preselected_sections is not None  # just for you, mypy <3
+            return host_section.filter(self.preselected_sections)
+
+        return parsed_result.map(filterer)
 
     @final
     def summarize(

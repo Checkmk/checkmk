@@ -8,14 +8,13 @@ Knowledge: undoc
 Level: 1
 Version: 2.0.0i2
 
-This werk integrates a single <b>ntopng</b> instance via its REST API.
+This werk describes the current integration stage of <b>ntopng</b>.
+Currently, a single <b>ntopng</b> instance is integrated into <b>Checkmk</b> via its REST API.
 
 H3: Features
 <ul>
 <li>Traffic dashboards for your network</li>
-<li>Find top talker and top remote destinations</li>
-<li>Real-time traffic for application and interfaces</li>
-<li>Historic detailed traffic views</li>
+<li>Real-time traffic for applications</li>
 <li>View alerts, characterized by duration, severy and alert type</li>
 <li>Filter flows in many dimensions to analyze your networks</li>
 <li>Detailed views for your hosts: traffic, packets, ports, peers</li>

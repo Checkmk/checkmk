@@ -19,7 +19,6 @@ from cmk.gui.watolib.changes import AuditLogStore, ObjectRefType
 from cmk.gui.display_options import display_options
 from cmk.gui.userdb import UserSelection
 from cmk.gui.valuespec import (
-    Dictionary,
     RegExp,
     CascadingDropdown,
     Integer,
@@ -29,7 +28,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.urls import makeuri
-from cmk.gui.exceptions import FinalizeRequest
+from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
@@ -47,7 +46,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     PageMenuCheckbox,
-    PageMenuPopup,
+    PageMenuSidePopup,
     make_simple_link,
     make_display_options_dropdown,
 )
@@ -65,7 +64,7 @@ class ModeAuditLog(WatoMode):
         return ["auditlog"]
 
     def __init__(self):
-        self._options = self._vs_audit_log_options().default_value()
+        self._options = {key: vs.default_value() for key, vs in self._audit_log_options()}
         super(ModeAuditLog, self).__init__()
         self._store = AuditLogStore(AuditLogStore.make_path())
         self._show_details = html.request.get_integer_input_mandatory("show_details", 1) == 1
@@ -172,7 +171,7 @@ class ModeAuditLog(WatoMode):
                     PageMenuEntry(
                         title=_("Filter view"),
                         icon_name="filters_set" if html.form_submitted("options") else "filters",
-                        item=PageMenuPopup(self._render_filter_form()),
+                        item=PageMenuSidePopup(self._render_filter_form()),
                         name="filters",
                         is_shortcut=True,
                     ),
@@ -213,10 +212,13 @@ class ModeAuditLog(WatoMode):
             config.user.need_permission("wato.edit")
             return self._clear_audit_log_after_confirm()
 
-        vs_options = self._vs_audit_log_options()
-        value = vs_options.from_html_vars("options")
-        vs_options.validate_value(value, "options")
-        self._options = value
+        for name, vs in self._audit_log_options():
+            try:
+                value = vs.from_html_vars("options_" + name)
+                vs.validate_value(value, "options_" + name)
+                self._options[name] = value
+            except MKUserError as e:
+                html.add_user_error(e.varname, e)
 
         if html.request.var("_action") == "csv":
             config.user.need_permission("wato.auditlog")
@@ -388,69 +390,82 @@ class ModeAuditLog(WatoMode):
         if display_options.disabled(display_options.C):
             return
 
-        valuespec = self._vs_audit_log_options()
-
         html.begin_form("options", method="GET")
-        valuespec.render_input_as_form("options", {})
 
-        html.button("options", _("Apply"))
+        self._show_audit_log_options_controls()
+
+        html.open_div(class_="side_popup_content")
+        if html.has_user_errors():
+            html.show_user_errors()
+
+        for name, vs in self._audit_log_options():
+            html.render_floating_option(name, "single", "options_", vs, self._options[name])
+
+        html.close_div()
+
         html.hidden_fields()
         html.end_form()
 
-    def _vs_audit_log_options(self):
+    def _show_audit_log_options_controls(self):
+        html.open_div(class_="side_popup_controls")
+
+        html.open_div(class_="update_buttons")
+        html.button("apply", _("Apply"), "submit")
+        html.buttonlink(makeuri(request, [], remove_prefix="options_"), _("Reset"))
+        html.close_div()
+
+        html.close_div()
+
+    def _audit_log_options(self):
         object_types: Choices = [
             ("", _("All object types")),
             (None, _("No object type")),
         ] + [(t.name, t.name) for t in ObjectRefType]
 
-        return Dictionary(
-            title=_("Options"),
-            elements=[
-                ("object_type", DropdownChoice(
-                    title=_("Object type"),
-                    choices=object_types,
-                )),
-                ("object_ident", TextAscii(title=_("Object"),)),
-                (
-                    "user_id",
-                    UserSelection(
-                        title=_("User"),
-                        only_contacts=False,
-                        none=_("All users"),
-                    ),
+        return [
+            ("object_type", DropdownChoice(
+                title=_("Object type"),
+                choices=object_types,
+            )),
+            ("object_ident", TextAscii(title=_("Object"),)),
+            (
+                "user_id",
+                UserSelection(
+                    title=_("User"),
+                    only_contacts=False,
+                    none=_("All users"),
                 ),
-                ("filter_regex", RegExp(
-                    title=_("Filter pattern (RegExp)"),
-                    mode="infix",
-                )),
-                ("start",
-                 CascadingDropdown(
-                     title=_("Start log from"),
-                     default_value="now",
-                     orientation="horizontal",
-                     choices=[
-                         ("now", _("Current date")),
-                         ("time", _("Specific date"), AbsoluteDate()),
-                     ],
-                 )),
-                ("display",
-                 CascadingDropdown(
-                     title=_("Display mode of entries"),
-                     default_value="daily",
-                     orientation="horizontal",
-                     choices=[
-                         ("daily", _("Daily paged display")),
-                         ("number_of_days", _("Number of days from now (single page)"),
-                          Integer(
-                              minvalue=1,
-                              unit=_("days"),
-                              default_value=1,
-                          )),
-                     ],
-                 )),
-            ],
-            optional_keys=[],
-        )
+            ),
+            ("filter_regex", RegExp(
+                title=_("Filter pattern (RegExp)"),
+                mode="infix",
+            )),
+            ("start",
+             CascadingDropdown(
+                 title=_("Start log from"),
+                 default_value="now",
+                 orientation="horizontal",
+                 choices=[
+                     ("now", _("Current date")),
+                     ("time", _("Specific date"), AbsoluteDate()),
+                 ],
+             )),
+            ("display",
+             CascadingDropdown(
+                 title=_("Display mode of entries"),
+                 default_value="daily",
+                 orientation="horizontal",
+                 choices=[
+                     ("daily", _("Daily paged display")),
+                     ("number_of_days", _("Number of days from now (single page)"),
+                      Integer(
+                          minvalue=1,
+                          unit=_("days"),
+                          default_value=1,
+                      )),
+                 ],
+             )),
+        ]
 
     def _clear_audit_log_after_confirm(self) -> ActionResult:
         self._clear_audit_log()

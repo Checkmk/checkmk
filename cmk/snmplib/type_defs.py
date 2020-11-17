@@ -46,7 +46,7 @@ SNMPTable = List[List[SNMPDecodedValues]]
 SNMPContext = Optional[str]
 SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
 SNMPSections = Mapping[_SectionName, SNMPSectionContent]
-SNMPPersistedSection = Tuple[int, int, SNMPSectionContent]
+SNMPPersistedSection = NewType("SNMPPersistedSection", Tuple[int, int, SNMPSectionContent])
 SNMPPersistedSections = NewType(
     "SNMPPersistedSections",
     MutableMapping[_SectionName, SNMPPersistedSection],

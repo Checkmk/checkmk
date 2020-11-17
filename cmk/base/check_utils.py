@@ -17,7 +17,7 @@ RulesetName = str
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 
 AgentSectionContent = List[List[str]]
-AgentPersistedSection = Tuple[int, int, AgentSectionContent]
+AgentPersistedSection = NewType("AgentPersistedSection", Tuple[int, int, AgentSectionContent])
 AgentPersistedSections = NewType(
     "AgentPersistedSections",
     MutableMapping[SectionName, AgentPersistedSection],

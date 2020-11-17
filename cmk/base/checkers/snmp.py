@@ -14,6 +14,7 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheck
 from cmk.snmplib.type_defs import (
     BackendSNMPTree,
     SNMPDetectSpec,
+    SNMPPersistedSection,
     SNMPPersistedSections,
     SNMPRawData,
     SNMPSectionContent,
@@ -274,7 +275,8 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             cached_at = int(time.time())
             until = cached_at + (fetch_interval * 60)
             # pylint does not seem to understand `NewType`... leave the checking up to mypy.
-            persisted_sections[section_name] = (cached_at, until, section_content)  # pylint: disable=E1137
+            persisted_sections[section_name] = (  # false positive: pylint: disable=E1137
+                SNMPPersistedSection((cached_at, until, section_content)))
 
         return persisted_sections
 

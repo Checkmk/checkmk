@@ -34,6 +34,7 @@ from cmk.fetchers.controller import FetcherType
 import cmk.base.config as config
 from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (
+    AgentPersistedSection,
     AgentPersistedSections,
     AgentSectionContent,
     AgentSections,
@@ -419,7 +420,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     cache_interval = int(until - cached_at)
                     agent_cache_info[section_name] = (cached_at, cache_interval)
                     # pylint does not seem to understand `NewType`... leave the checking up to mypy.
-                    persisted_sections[section_name] = (cached_at, until, section_content)  # pylint: disable=E1137
+                    persisted_sections[section_name] = (  # false positive: pylint: disable=E1137
+                        AgentPersistedSection((cached_at, until, section_content)))
 
                 raw_cached = section_options.get("cached")
                 if raw_cached is not None:

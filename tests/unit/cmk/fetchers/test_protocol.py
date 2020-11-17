@@ -28,6 +28,7 @@ from cmk.fetchers import FetcherType
 from cmk.fetchers.protocol import (
     AgentPayload,
     CMCHeader,
+    CMCMessage,
     CMCLogLevel,
     ErrorPayload,
     FetcherHeader,
@@ -107,6 +108,61 @@ class TestCMCHeader:
         assert CMCHeader.State.RESULT.value == "RESULT "
         assert CMCHeader.State.END_OF_REPLY.value == "ENDREPL"
         assert CMCHeader.default_protocol_name() == "fetch"
+
+
+class TestCMCMessage:
+    @pytest.fixture
+    def duration(self):
+        return Snapshot.null()
+
+    @pytest.fixture
+    def fetcher_stats(self, duration):
+        return L3Stats(duration)
+
+    @pytest.fixture
+    def fetcher_payload(self):
+        return AgentPayload(69 * b"\0")
+
+    @pytest.fixture
+    def fetcher_messages(self, fetcher_payload, fetcher_stats):
+        return [
+            FetcherMessage(
+                FetcherHeader(
+                    FetcherType.TCP,
+                    PayloadType.AGENT,
+                    status=42,
+                    payload_length=len(fetcher_payload),
+                    stats_length=len(fetcher_stats),
+                ),
+                fetcher_payload,
+                fetcher_stats,
+            ),
+        ]
+
+    @pytest.fixture
+    def header(self, fetcher_messages):
+        return CMCHeader(
+            "name",
+            CMCHeader.State.RESULT,
+            "",
+            sum(len(msg) for msg in fetcher_messages),
+        )
+
+    @pytest.fixture
+    def message(self, header, fetcher_messages):
+        return CMCMessage(header, *fetcher_messages)
+
+    def test_from_bytes(self, message):
+        assert CMCMessage.from_bytes(bytes(message)) == message
+
+
+class TestEndOfReply:
+    @pytest.fixture
+    def eor(self):
+        return CMCMessage.end_of_reply()
+
+    def test_from_bytes(self, eor):
+        assert CMCMessage.from_bytes(bytes(eor)) == eor
 
 
 class TestAgentPayload:

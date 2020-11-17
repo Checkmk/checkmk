@@ -29,6 +29,7 @@ __all__ = [
     "FetcherHeader",
     "FetcherMessage",
     "CMCHeader",
+    "CMCMessage",
     "make_result_answer",
     "make_log_answer",
     "make_end_of_reply_answer",
@@ -451,15 +452,56 @@ class CMCHeader(Header):
         return "fetch"
 
 
+class CMCMessage(Protocol):
+    def __init__(
+        self,
+        header: CMCHeader,
+        *payload: FetcherMessage,
+    ) -> None:
+        self.header: Final = header
+        self.payload: Final = payload
+
+    def __repr__(self) -> str:
+        return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
+
+    def __bytes__(self) -> bytes:
+        return self.header + b"".join(bytes(msg) for msg in self.payload)
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "CMCMessage":
+        header = CMCHeader.from_bytes(data)
+        index = len(header)
+        messages = []
+        while index < len(header) + header.payload_length:
+            message = FetcherMessage.from_bytes(data[index:])
+            index += len(message)
+            messages.append(message)
+        return CMCMessage(header, *messages)
+
+    @classmethod
+    def end_of_reply(cls) -> "CMCMessage":
+        return _END_OF_REPLY
+
+
+_END_OF_REPLY = CMCMessage(  # Singleton
+    CMCHeader(
+        name=CMCHeader.default_protocol_name(),
+        state=CMCHeader.State.END_OF_REPLY,
+        log_level=" ",
+        payload_length=0,
+    ), *())
+
+
 def make_result_answer(*messages: FetcherMessage) -> bytes:
     """ Provides valid binary payload to be send from fetcher to checker"""
-    payload = b"".join(bytes(msg) for msg in messages)
-    return CMCHeader(
-        name=CMCHeader.default_protocol_name(),
-        state=CMCHeader.State.RESULT,
-        log_level=" ",
-        payload_length=len(payload),
-    ) + payload
+    return bytes(
+        CMCMessage(
+            CMCHeader(
+                name=CMCHeader.default_protocol_name(),
+                state=CMCHeader.State.RESULT,
+                log_level=" ",
+                payload_length=sum(len(msg) for msg in messages),
+            ), *messages))
 
 
 def make_log_answer(message: str, level: int) -> bytes:
@@ -479,13 +521,7 @@ def make_log_answer(message: str, level: int) -> bytes:
 
 
 def make_end_of_reply_answer() -> bytes:
-    return bytes(
-        CMCHeader(
-            name=CMCHeader.default_protocol_name(),
-            state=CMCHeader.State.END_OF_REPLY,
-            log_level=" ",
-            payload_length=0,
-        ))
+    return bytes(CMCMessage.end_of_reply())
 
 
 def make_error_message(fetcher_type: FetcherType, exc: Exception) -> FetcherMessage:

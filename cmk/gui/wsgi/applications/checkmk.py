@@ -26,7 +26,7 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import html, request, RequestContext, AppContext
+from cmk.gui.globals import html, request, RequestContext, AppContext, g
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -46,6 +46,11 @@ def _auth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
         with login.authenticate(request) as authenticated:
             if not authenticated:
                 return _handle_not_authenticated()
+
+            # When displaying the crash report message, the user authentication context
+            # has already been left. We need to preserve this information to be able to
+            # show the correct message for the current user.
+            g.may_see_crash_reports = config.user.may("general.see_crash_reports")
 
             # This may raise an exception with error messages, which will then be displayed to the user.
             _ensure_general_access()
@@ -311,7 +316,9 @@ def _process_request(environ, start_response) -> Response:  # pylint: disable=to
 
     except Exception:
         crash_reporting.handle_exception_as_gui_crash_report(plain_error=_plain_error(),
-                                                             fail_silently=_fail_silently())
+                                                             fail_silently=_fail_silently(),
+                                                             show_crash_link=getattr(
+                                                                 g, "may_see_crash_reports", False))
         # This needs to be cleaned up.
         response = html.response
 

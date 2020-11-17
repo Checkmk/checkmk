@@ -61,22 +61,27 @@ CrashInfo = Dict
 
 def handle_exception_as_gui_crash_report(details: Optional[Dict] = None,
                                          plain_error: bool = False,
-                                         fail_silently: bool = False) -> None:
+                                         fail_silently: bool = False,
+                                         show_crash_link: Optional[bool] = None) -> None:
     crash = GUICrashReport.from_exception(details=details)
     CrashReportStore().save(crash)
 
     logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
-    show_crash_dump_message(crash, plain_error, fail_silently)
+    _show_crash_dump_message(crash, plain_error, fail_silently, show_crash_link)
 
 
-def show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_silently: bool) -> None:
+def _show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_silently: bool,
+                             show_crash_link: Optional[bool]) -> None:
     """Create a crash dump from a GUI exception and display a message to the user"""
+
+    if show_crash_link is None:
+        show_crash_link = config.user.may("general.see_crash_reports")
 
     title = _("Internal error")
     message = u"%s: %s<br>\n<br>\n" % (title, crash.crash_info["exc_value"])
     # Do not reveal crash context information to unauthenticated users or not permitted
     # users to prevent disclosure of internal information
-    if not config.user.may("general.see_crash_reports"):
+    if not show_crash_link:
         message += _("An internal error occurred while processing your request. "
                      "You can report this issue to your Checkmk administrator. "
                      "Detailed information can be found on the crash report page "

@@ -2037,7 +2037,9 @@ class html(ABCHTMLGenerator):
                    onblur: Optional[str] = None,
                    placeholder: Optional[str] = None,
                    data_world: Optional[str] = None,
-                   data_max_labels: Optional[int] = None) -> None:
+                   data_max_labels: Optional[int] = None,
+                   required: bool = False,
+                   title: Optional[str] = None) -> None:
 
         # Model
         error = self.user_errors.get(varname)
@@ -2086,6 +2088,8 @@ class html(ABCHTMLGenerator):
             "placeholder": placeholder,
             "data-world": data_world,
             "data-max-labels": None if data_max_labels is None else str(data_max_labels),
+            "required": "" if required else None,
+            "title": title,
         }
 
         if error:

@@ -731,13 +731,19 @@ def inpage_search_form(mode: Optional[str] = None,
     reset_button_id = "%s_reset" % form_name
     was_submitted = html.request.get_ascii_input("filled_in") == form_name
     html.begin_form(form_name, add_transid=False)
-    html.text_input("search", size=32, default_value=default_value, placeholder=placeholder)
+    html.text_input("search",
+                    size=32,
+                    default_value=default_value,
+                    placeholder=placeholder,
+                    required=True,
+                    title="")
     html.hidden_fields()
     if mode:
         html.hidden_field("mode", mode, add_var=True)
     reset_url = html.request.get_ascii_input_mandatory("reset_url",
                                                        requested_file_with_query(request))
     html.hidden_field("reset_url", reset_url, add_var=True)
+    html.button("submit", "", cssclass="submit", help_=_("Apply"))
     html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
     html.end_form()
     html.javascript("cmk.page_menu.inpage_search_init(%s, %s)" %

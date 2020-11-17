@@ -224,9 +224,14 @@ export function side_popup_add_simplebar_scrollbar(popup_id) {
 }
 
 export function inpage_search_init(reset_button_id, was_submitted) {
-    let reset_button = document.getElementById(reset_button_id);
+    const reset_button = document.getElementById(reset_button_id);
+    const submit_button = reset_button.parentNode.getElementsByClassName("button submit")[0];
+
     if (reset_button && !was_submitted) {
         reset_button.disabled = true;
         reset_button.title = "";
+    } else {
+        submit_button.disabled = true;
+        submit_button.title = "";
     }
 }

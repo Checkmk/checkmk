@@ -366,24 +366,32 @@ div#top_heading {
         height: 18px;
       }
 
-      input#inpage_search_form_reset {
-        width: 11px;
-        height: 11px;
+      input#inpage_search_form_reset,
+      input.submit {
         margin: 0 4px;
         padding: 0;
         background-repeat: no-repeat;
-        background-size: 11px 11px;
-        border-radius: 0;
-        background-image: url("images/icon_close.png");
-        filter: $inpage-close-button-filter;
 
         &:disabled {
-          width: 10px;
-          height: 10px;
-          background-size: 10px 10px;
-          background-image: url("images/icon_filter_line.svg");
-          filter: none;
+          display: none;
         }
+      }
+
+      input#inpage_search_form_reset {
+        width: 11px;
+        height: 11px;
+        background-image: url("images/icon_close.png");
+        background-size: 11px 11px;
+        border-radius: 0;
+        filter: $inpage-close-button-filter;
+      }
+
+      input.submit {
+        width: 10px;
+        height: 10px;
+        background-image: url("images/icon_filter_line.svg");
+        background-size: 10px 10px;
+        filter: none;
       }
 
       img {

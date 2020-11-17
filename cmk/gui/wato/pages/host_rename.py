@@ -34,6 +34,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.watolib.changes import log_audit, add_change, make_diff_text
 from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
@@ -60,7 +61,6 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     ActionResult,
     mode_registry,
-    add_change,
     redirect,
     flash,
 )
@@ -545,20 +545,28 @@ def rename_host_in_rulesets(folder, oldname, newname):
         rulesets = watolib.FolderRulesets(folder)
         rulesets.load()
 
-        changed = False
+        changed_folder_rulesets = []
         for varname, ruleset in rulesets.get_rulesets().items():
             for _rule_folder, _rulenr, rule in ruleset.get_rules():
+                orig_rule = rule.clone(preserve_id=True)
                 if rule.replace_explicit_host_condition(oldname, newname):
-                    changed_rulesets.append(varname)
-                    changed = True
+                    changed_folder_rulesets.append(varname)
 
-        if changed:
+                    log_audit("edit-rule",
+                              _("Renamed host condition from \"%s\" to \"%s\"") %
+                              (oldname, newname),
+                              diff_text=make_diff_text(orig_rule.to_web_api(), rule.to_web_api()),
+                              object_ref=rule.object_ref())
+
+        if changed_folder_rulesets:
             add_change("edit-ruleset",
                        _("Renamed host in %d rulesets of folder %s") %
-                       (len(changed_rulesets), folder.title),
+                       (len(changed_folder_rulesets), folder.title()),
                        object_ref=folder.object_ref(),
                        sites=folder.all_site_ids())
             rulesets.save()
+
+        changed_rulesets.extend(changed_folder_rulesets)
 
         for subfolder in folder.subfolders():
             rename_host_in_folder_rules(subfolder)

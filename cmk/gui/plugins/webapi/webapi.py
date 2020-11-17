@@ -735,7 +735,8 @@ class APICallRules(APICallCollection):
                                    folder.title(),
                                    len(rules),
                                ),
-                               sites=folder.all_site_ids())
+                               sites=folder.all_site_ids(),
+                               object_ref=new_ruleset.object_ref())
             folder_rulesets.set(ruleset_name, new_ruleset)
             folder_rulesets.save()
 
@@ -745,16 +746,19 @@ class APICallRules(APICallCollection):
 
             folder_rulesets = watolib.FolderRulesets(folder)
             folder_rulesets.load()
-            # TODO: This add_change() call should be made by the data classes
-            watolib.add_change("edit-ruleset",
-                               _("Deleted ruleset '%s' for '%s'") % (
-                                   watolib.Ruleset(ruleset_name, tag_to_group_map).title(),
-                                   folder.title(),
-                               ),
-                               sites=folder.all_site_ids())
 
             new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, [])
+
+            # TODO: This add_change() call should be made by the data classes
+            watolib.add_change("edit-ruleset",
+                               _("Deleted ruleset '%s' for '%s'") % (
+                                   new_ruleset.title(),
+                                   folder.title(),
+                               ),
+                               sites=folder.all_site_ids(),
+                               object_ref=new_ruleset.object_ref())
+
             folder_rulesets.set(ruleset_name, new_ruleset)
             folder_rulesets.save()
 

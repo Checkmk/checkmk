@@ -463,6 +463,9 @@ class Ruleset:
     def set_name(self, name):
         self.name = name
 
+    def object_ref(self) -> ObjectRef:
+        return ObjectRef(ObjectRefType.Ruleset, self.name)
+
     def is_empty(self):
         return self.num_rules() == 0
 
@@ -689,9 +692,10 @@ class Ruleset:
         rules.remove(rule)
         rules.insert(index, rule)
         add_change("edit-ruleset",
-                   _("Moved rule #%d to #%d in ruleset \"%s\" in folder \"%s\"") %
-                   (old_index, index, self.title(), rule.folder.alias_path()),
-                   sites=rule.folder.all_site_ids())
+                   _("Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\"") %
+                   (rule.id, old_index, index, self.title(), rule.folder.alias_path()),
+                   sites=rule.folder.all_site_ids(),
+                   object_ref=self.object_ref())
 
     # TODO: Remove these getters
     def valuespec(self):

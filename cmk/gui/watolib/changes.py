@@ -49,6 +49,7 @@ class ObjectRefType(enum.Enum):
     Host = "Host"
     User = "User"
     Rule = "Rule"
+    Ruleset = "Ruleset"
 
 
 @dataclass

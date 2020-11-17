@@ -48,6 +48,7 @@ class ObjectRefType(enum.Enum):
     Folder = "Folder"
     Host = "Host"
     User = "User"
+    Rule = "Rule"
 
 
 @dataclass

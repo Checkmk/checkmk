@@ -1331,7 +1331,28 @@ class ABCEditRuleMode(WatoMode):
         self._set_rule()
 
     def _set_folder(self):
-        self._folder = watolib.Folder.folder(html.request.get_ascii_input_mandatory("rule_folder"))
+        """Determine the folder object of the requested rule
+
+        In case it is possible the call sites should set the folder. This makes loading the page
+        much faster, because we not have to read all rules.mk files from all folders to find the
+        correct folder. But in some cases (e.g. audit log), it is not possible to find the folder
+        when linking to this page (for performance reasons in the audit log).
+        """
+        rule_folder = html.request.get_ascii_input("rule_folder")
+        if rule_folder:
+            self._folder = watolib.Folder.folder(rule_folder)
+        else:
+            rule_id = html.request.get_ascii_input_mandatory("rule_id")
+
+            collection = watolib.SingleRulesetRecursively(self._name)
+            collection.load()
+            ruleset = collection.get(self._name)
+            try:
+                self._folder = ruleset.get_rule_by_id(rule_id).folder
+            except KeyError:
+                raise MKUserError(
+                    "rule_id", _("You are trying to edit a rule which does "
+                                 "not exist anymore."))
 
     def _set_rule(self):
         if html.request.has_var("rule_id"):
@@ -1459,7 +1480,8 @@ class ABCEditRuleMode(WatoMode):
                   "folder \"%s\" to \"%s\"") %
                 (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
                 sites=affected_sites,
-                diff_text=make_diff_text(self._orig_rule.to_web_api(), self._rule.to_web_api()))
+                diff_text=make_diff_text(self._orig_rule.to_web_api(), self._rule.to_web_api()),
+                object_ref=self._rule.object_ref())
 
         flash(self._success_message())
         return redirect(self._back_url())
@@ -2237,11 +2259,12 @@ class ModeNewRule(ABCEditRuleMode):
     def _save_rule(self):
         index = self._ruleset.append_rule(self._folder, self._rule)
         self._rulesets.save()
-        add_change("edit-rule",
+        add_change("new-rule",
                    _("Created new rule #%d in ruleset \"%s\" in folder \"%s\"") %
                    (index, self._ruleset.title(), self._folder.alias_path()),
                    sites=self._folder.all_site_ids(),
-                   diff_text=make_diff_text({}, self._rule.to_web_api()))
+                   diff_text=make_diff_text({}, self._rule.to_web_api()),
+                   object_ref=self._rule.object_ref())
 
     def _success_message(self):
         return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \

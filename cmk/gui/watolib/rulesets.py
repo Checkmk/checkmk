@@ -28,7 +28,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui import utils
 
 from cmk.gui.watolib.utils import has_agent_bakery
-from cmk.gui.watolib.changes import add_change, make_diff_text
+from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
 from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
     rulespec_group_registry,
@@ -498,15 +498,16 @@ class Ruleset:
 
     def clone_rule(self, orig_rule, rule):
         if rule.folder == orig_rule.folder:
-            self.insert_rule_after(rule.clone(), orig_rule)
+            self.insert_rule_after(rule, orig_rule)
         else:
-            self.append_rule(rule.folder, rule.clone())
+            self.append_rule(rule.folder, rule)
 
-        add_change("clone-ruleset",
-                   _("Cloned rule in ruleset \"%s\" in folder \"%s\"") %
-                   (self.title(), rule.folder.alias_path()),
+        add_change("new-rule",
+                   _("Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\"") %
+                   (orig_rule.id, self.title(), rule.folder.alias_path()),
                    sites=rule.folder.all_site_ids(),
-                   diff_text=make_diff_text({}, rule.to_web_api()))
+                   diff_text=make_diff_text({}, rule.to_web_api()),
+                   object_ref=rule.object_ref())
 
     def append_rule(self, folder, rule) -> int:
         rules = self._rules.setdefault(folder.path(), [])
@@ -663,7 +664,8 @@ class Ruleset:
                    _("Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\"") %
                    (index, self.title(), rule.folder.alias_path()),
                    sites=rule.folder.all_site_ids(),
-                   diff_text=make_diff_text(orig_rule.to_web_api(), rule.to_web_api()))
+                   diff_text=make_diff_text(orig_rule.to_web_api(), rule.to_web_api()),
+                   object_ref=rule.object_ref())
         self._on_change()
 
     def delete_rule(self, rule, create_change=True):
@@ -674,10 +676,11 @@ class Ruleset:
         del self._rules_by_id[rule.id]
 
         if create_change:
-            add_change("edit-ruleset",
+            add_change("edit-rule",
                        _("Deleted rule #%d in ruleset \"%s\" in folder \"%s\"") %
                        (index, self.title(), rule.folder.alias_path()),
-                       sites=rule.folder.all_site_ids())
+                       sites=rule.folder.all_site_ids(),
+                       object_ref=rule.object_ref())
         self._on_change()
 
     def move_rule_to(self, rule, index):
@@ -894,6 +897,9 @@ class Rule:
                 ro[k] = v
 
         return ro
+
+    def object_ref(self) -> ObjectRef:
+        return ObjectRef(ObjectRefType.Rule, "|".join([self.ruleset.name, self.id]))
 
     def is_ineffective(self):
         """Whether or not this rule does not match at all

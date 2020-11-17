@@ -501,6 +501,16 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
                                   filename="wato.py")
         return url, object_ref.ident
 
+    if object_ref.object_type is ObjectRefType.Rule:
+        ruleset_name, rule_id = object_ref.ident.split("|", 1)
+        url = makeuri_contextless(global_request, [
+            ("mode", "edit_rule"),
+            ("varname", ruleset_name),
+            ("rule_id", rule_id),
+        ],
+                                  filename="wato.py")
+        return url, rule_id
+
     return None, object_ref.ident
 
 

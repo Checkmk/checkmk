@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+
 from typing import Optional
 
 from cmk.gui.i18n import _, ungettext
@@ -62,7 +64,7 @@ def _make_wato_page_state() -> PageState:
             url=changelog_url,
             tooltip_text=ungettext(singular=_("Currently there is one change to activate"),
                                    plural=_("Currently there are %s to activate." % changes_info),
-                                   n=int(changes_info.rstrip("+ changes"))) + \
+                                   n=int(re.findall(r"\d+", changes_info)[0])) + \
                          "\n" + _("Click here to go to pending changes."),
         )
     return PageState(text=_("No pending changes"),

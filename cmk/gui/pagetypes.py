@@ -982,34 +982,12 @@ class Overridable(Base):
                             is_shortcut=True,
                             is_suggested=True,
                         ),
-                    ],
-                ),
-                PageMenuTopic(
-                    title=_("On selected customized"),
-                    entries=[
                         PageMenuEntry(
-                            title=_("Delete"),
+                            title=_("Delete selected"),
                             icon_name="delete",
                             item=make_confirmed_form_submit_link(
-                                form_name="bulk_delete_my",
-                                button_name="_bulk_delete_my",
-                                message=_("Do you really want to delete the selected %s?") %
-                                cls.phrase("title_plural"),
-                            ),
-                            is_shortcut=True,
-                            is_suggested=True,
-                        ),
-                    ],
-                ),
-                PageMenuTopic(
-                    title=_("On selected owned by other users"),
-                    entries=[
-                        PageMenuEntry(
-                            title=_("Delete"),
-                            icon_name="delete",
-                            item=make_confirmed_form_submit_link(
-                                form_name="bulk_delete_foreign",
-                                button_name="_bulk_delete_foreign",
+                                form_name="bulk_delete",
+                                button_name="_bulk_delete",
                                 message=_("Do you really want to delete the selected %s?") %
                                 cls.phrase("title_plural"),
                             ),
@@ -1047,11 +1025,8 @@ class Overridable(Base):
             except MKUserError as e:
                 html.user_error(e)
 
-        elif html.request.var("_bulk_delete_my") and html.check_transaction():
-            cls._bulk_delete_after_confirm("my")
-
-        elif html.request.var("_bulk_delete_foreign") and html.check_transaction():
-            cls._bulk_delete_after_confirm("foreign")
+        elif html.request.var("_bulk_delete") and html.check_transaction():
+            cls._bulk_delete_after_confirm()
 
         my_instances, foreign_instances, builtin_instances = cls.get_instances()
         for what, title, instances in [
@@ -1067,7 +1042,7 @@ class Overridable(Base):
             html.close_h3()
 
             if what != "builtin":
-                html.begin_form("bulk_delete_%s" % what, method="POST")
+                html.begin_form("bulk_delete", method="POST")
 
             with table_element(limit=None) as table:
                 for instance in instances:
@@ -1082,7 +1057,7 @@ class Overridable(Base):
                             value='X'),
                                    sortable=False,
                                    css="checkbox")
-                        html.checkbox("_c_%s+%s+%s" % (what, instance.owner(), instance.name()))
+                        html.checkbox("_c_%s+%s" % (instance.owner(), instance.name()))
 
                     # Actions
                     table.cell(_('Actions'), css='buttons visuals')
@@ -1156,12 +1131,11 @@ class Overridable(Base):
         return my_instances, foreign_instances, builtin_instances
 
     @classmethod
-    def _bulk_delete_after_confirm(cls, what):
+    def _bulk_delete_after_confirm(cls):
         to_delete: List[Tuple[UserId, str]] = []
-        for varname, _value in html.request.itervars(prefix="_c_%s+" % what):
+        for varname, _value in html.request.itervars(prefix="_c_"):
             if html.get_checkbox(varname):
-                checkbox_ident = varname.split("_c_%s+" % what)[-1]
-                raw_user, name = checkbox_ident.split("+", 1)
+                raw_user, name = varname[3:].split("+")
                 to_delete.append((UserId(raw_user), name))
 
         if not to_delete:

@@ -69,6 +69,16 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
+def edition_title():
+    if is_enterprise_edition():
+        if is_demo():
+            return "CFE"
+        return "CEE"
+    if is_managed_edition():
+        return "CME"
+    return "CRE"
+
+
 #   .--general infos-------------------------------------------------------.
 #   |                                      _   _        __                 |
 #   |       __ _  ___ _ __   ___ _ __ __ _| | (_)_ __  / _| ___  ___       |

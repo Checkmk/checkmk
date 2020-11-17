@@ -562,7 +562,7 @@ class SidebarRenderer:
         if config.sidebar_show_version_in_sidebar:
             html.open_div(id_="side_version")
             html.open_a(href="version.py", target="main", title=_("Open release notes"))
-            html.write(self._get_check_mk_edition_title())
+            html.write(cmk_version.edition_title())
             html.br()
             html.write(cmk_version.__version__)
 
@@ -576,15 +576,6 @@ class SidebarRenderer:
 
             html.close_a()
             html.close_div()
-
-    def _get_check_mk_edition_title(self):
-        if cmk_version.is_enterprise_edition():
-            if cmk_version.is_demo():
-                return "CFE"
-            return "CEE"
-        if cmk_version.is_managed_edition():
-            return "CME"
-        return "CRE"
 
     # TODO: Re-add with new UX?
     #def _sidebar_foot(self, user_config):

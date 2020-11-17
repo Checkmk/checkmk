@@ -1,0 +1,13 @@
+Title: Show missing text input field in filters
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1605622653
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i2
+
+Some filters like e.g. "Network interface: VLAN type" did not
+display a text input field. This is fixed.

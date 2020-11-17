@@ -43,8 +43,7 @@ class FilterInvtableText(Filter):
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
         value = html.request.get_unicode_input(htmlvar)
-        if value is not None:
-            html.text_input(htmlvar, value)
+        html.text_input(htmlvar, value if value is not None else '')
 
     def filter_table(self, rows: Rows) -> Rows:
         htmlvar = self.htmlvars[0]

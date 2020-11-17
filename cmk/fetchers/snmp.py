@@ -95,7 +95,8 @@ class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
 class SNMPFileCache(ABCFileCache[SNMPRawData]):
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> SNMPRawData:
-        return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
+        return SNMPRawData(
+            {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()})
 
     @staticmethod
     def _to_cache_file(raw_data: SNMPRawData) -> bytes:
@@ -259,7 +260,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             walk_cache_msg = "SNMP walk cache is disabled"
             get_snmp = partial(snmp_table.get_snmp_table, backend=self._backend)
 
-        fetched_data: SNMPRawData = {}
+        fetched_data = {}
         for section_name in self._sort_section_names(selected_sections):
             self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
 
@@ -271,7 +272,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             if any(fetched_section_data):
                 fetched_data[section_name] = fetched_section_data
 
-        return fetched_data
+        return SNMPRawData(fetched_data)
 
     @classmethod
     def _sort_section_names(

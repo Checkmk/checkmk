@@ -17,6 +17,8 @@ import cmk.utils.piggyback
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import ParsedSectionName, result, SectionName, SourceType
 
+from cmk.snmplib.type_defs import SNMPRawData
+
 from cmk.fetchers import (
     FetcherType,
     IPMIFetcher,
@@ -32,7 +34,6 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers import (
-    _checkers,
     HostSections,
     make_nodes,
     make_sources,
@@ -536,7 +537,7 @@ class TestMakeHostSectionsHosts:
             host_config=host_config,
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
-                    result.OK({}),
+                    result.OK(SNMPRawData({})),
                     Snapshot.null(),
                     FetcherType.SNMP,
                 ),

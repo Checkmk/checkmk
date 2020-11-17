@@ -17,7 +17,9 @@ from typing import (
     Iterable,
     List,
     Literal,
+    Mapping,
     NamedTuple,
+    NewType,
     Optional,
     Sequence,
     Tuple,
@@ -42,10 +44,10 @@ SNMPValueEncoding = Literal["string", "binary"]
 SNMPTable = List[List[SNMPDecodedValues]]
 SNMPContext = Optional[str]
 SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
-SNMPSections = Dict[_SectionName, SNMPSectionContent]
+SNMPSections = Mapping[_SectionName, SNMPSectionContent]
 SNMPPersistedSection = Tuple[int, int, SNMPSectionContent]
 SNMPPersistedSections = Dict[_SectionName, SNMPPersistedSection]
-SNMPRawData = SNMPSections
+SNMPRawData = NewType("SNMPRawData", SNMPSections)
 OID = str
 OIDFunction = Callable[[OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]],
                        Optional[SNMPDecodedString]]

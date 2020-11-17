@@ -168,7 +168,8 @@ class SNMPPayload(L3Message):
     @staticmethod
     def _deserialize(data: bytes) -> SNMPRawData:
         try:
-            return {SectionName(k): v for k, v in json.loads(data.decode("utf8")).items()}
+            return SNMPRawData(
+                {SectionName(k): v for k, v in json.loads(data.decode("utf8")).items()})
         except json.JSONDecodeError:
             raise ValueError(repr(data))
 

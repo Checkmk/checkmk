@@ -134,7 +134,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
             return b"<<<check_mk>>>\nagent raw data"
         assert isinstance(file_cache, SNMPFileCache)
         table: SNMPTable = []
-        raw_data: SNMPRawData = {SectionName("X"): table}
+        raw_data = SNMPRawData({SectionName("X"): table})
         return raw_data
 
     def test_write_and_read(self, file_cache, raw_data):

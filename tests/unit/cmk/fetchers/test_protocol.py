@@ -176,12 +176,12 @@ class TestAgentPayload:
 
 class TestSNMPPayload:
     @pytest.fixture
-    def payload(self):
+    def snmp_payload(self):
         table: SNMPTable = []
-        return SNMPPayload({SectionName("name"): table})
+        return SNMPPayload(SNMPRawData({SectionName("name"): table}))
 
-    def test_from_bytes_success(self, payload):
-        assert SNMPPayload.from_bytes(bytes(payload)) == payload
+    def test_from_bytes_success(self, snmp_payload):
+        assert SNMPPayload.from_bytes(bytes(snmp_payload)) == snmp_payload
 
 
 class TestErrorPayload:
@@ -396,7 +396,7 @@ class TestFetcherMessage:
     @pytest.fixture
     def snmp_raw_data(self):
         table: SNMPTable = [[[6500337, 11822045]]]
-        raw_data: SNMPRawData = {SectionName('snmp_uptime'): table}
+        raw_data = SNMPRawData({SectionName('snmp_uptime'): table})
         return raw_data
 
     @pytest.fixture

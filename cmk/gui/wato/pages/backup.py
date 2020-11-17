@@ -246,7 +246,7 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
         return ModeBackupKeyManagement
 
     def _upload_key(self, key_file, value):
-        watolib.log_audit(None, "upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
+        watolib.log_audit("upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
         super(ModeBackupUploadKey, self)._upload_key(key_file, value)
 
 

@@ -599,7 +599,7 @@ class ModeDistributedMonitoring(WatoMode):
                 self._site_mgmt.save_sites(configured_sites)
                 message = _("Successfully logged into remote site %s.") % html.render_tt(
                     site["alias"])
-                watolib.log_audit(None, "edit-site", message)
+                watolib.log_audit("edit-site", message)
                 flash(message)
                 return None
 

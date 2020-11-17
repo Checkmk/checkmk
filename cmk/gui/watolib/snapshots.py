@@ -59,7 +59,7 @@ def create_snapshot(comment):
     _do_create_snapshot(data)
     _do_snapshot_maintenance()
 
-    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+    log_audit("snapshot-created", _("Created snapshot %s") % snapshot_name)
     logger.debug("Backup snapshot creation took %.4f", time.time() - start)
 
 
@@ -179,7 +179,7 @@ def _do_snapshot_maintenance():
 
     snapshots.sort(reverse=True)
     while len(snapshots) > config.wato_max_snapshots:
-        #log_audit(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
+        #log_audit("snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
         os.remove(snapshot_dir + snapshots.pop())
 
 

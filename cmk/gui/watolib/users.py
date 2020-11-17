@@ -73,8 +73,7 @@ def edit_users(changed_users):
             add_internal_attributes(user_attrs)
 
         old_object = make_user_audit_log_object(all_users.get(user_id, {}))
-        log_audit(None,
-                  action="edit-users",
+        log_audit(action="edit-users",
                   message=(_("Created new user: %s") %
                            user_id if is_new_user else _("Modified user: %s") % user_id),
                   diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)))

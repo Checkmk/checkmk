@@ -226,10 +226,9 @@ def _log_entry(action: str, message: Union[HTML, str], object_ref: Optional[Obje
     AuditLogStore(AuditLogStore.make_path()).append(entry)
 
 
-# TODO: Make object_ref an optional argument
-def log_audit(object_ref: Optional[ObjectRef],
-              action: str,
+def log_audit(action: str,
               message: LogMessage,
+              object_ref: Optional[ObjectRef] = None,
               user_id: Optional[UserId] = None,
               diff_text: Optional[str] = None) -> None:
 

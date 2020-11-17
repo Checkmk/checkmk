@@ -2274,7 +2274,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         else:
             new_mode = "takeover"
         cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
-        watolib.log_audit(None, "mkeventd-switchmode",
+        watolib.log_audit("mkeventd-switchmode",
                           _("Switched replication slave mode to %s") % new_mode)
         flash(_("Switched to %s mode") % new_mode)
         return None

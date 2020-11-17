@@ -103,8 +103,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         self.activate()
 
     def activate(self):
-        log_audit(None, "liveproxyd-activate",
-                  _("Activating changes of Livestatus Proxy configuration"))
+        log_audit("liveproxyd-activate", _("Activating changes of Livestatus Proxy configuration"))
 
         try:
             pidfile = Path(cmk.utils.paths.livestatus_unix_socket).with_name("liveproxyd.pid")
@@ -171,8 +170,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
     def activate(self):
         if getattr(config, "mkeventd_enabled", False):
             mkeventd.execute_command("RELOAD", site=config.omd_site())
-            log_audit(None, "mkeventd-activate",
-                      _("Activated changes of event console configuration"))
+            log_audit("mkeventd-activate", _("Activated changes of event console configuration"))
             if hooks.registered('mkeventd-activate-changes'):
                 hooks.call("mkeventd-activate-changes")
 

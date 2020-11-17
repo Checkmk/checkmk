@@ -796,10 +796,10 @@ class ActivateChangesManager(ActivateChanges):
 
     def _log_activation(self):
         log_msg = _("Starting activation (Sites: %s)") % ",".join(self._sites)
-        log_audit(None, "activate-changes", log_msg)
+        log_audit("activate-changes", log_msg)
 
         if self._comment:
-            log_audit(None, "activate-changes", "%s: %s" % (_("Comment"), self._comment))
+            log_audit("activate-changes", "%s: %s" % (_("Comment"), self._comment))
 
     def get_state(self) -> ActivationState:
         return {
@@ -1336,7 +1336,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             # The PID itself is used to detect whether the sites activation process is still running
             self._mark_running()
 
-            log_audit(None, "activate-changes", _("Started activation of site %s") % self._site_id)
+            log_audit("activate-changes", _("Started activation of site %s") % self._site_id)
 
             if self.is_sync_needed(self._site_id):
                 self._synchronize_site()
@@ -1789,7 +1789,7 @@ def _execute_post_config_sync_actions(site_id):
               "Please note that the site configuration has been synchronized "
               "partially.") % traceback.format_exc())
 
-    cmk.gui.watolib.changes.log_audit(None, "replication",
+    cmk.gui.watolib.changes.log_audit("replication",
                                       _("Synchronized with master (my site id is %s.)") % site_id)
 
 

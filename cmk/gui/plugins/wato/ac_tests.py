@@ -1072,12 +1072,15 @@ class ACTestCheckMKCheckerNumber(ACTest):
     def execute(self) -> Iterator[ACResult]:
         try:
             num_cpu = multiprocessing.cpu_count()
-            if self._get_effective_global_setting("cmc_checker_helpers") > num_cpu:
-                yield ACResultWARN(
-                    _("Configuring more checkers than the number of available CPUs (%d) have "
-                      "a detrimental effect, since they are not IO bound.") % num_cpu)
-            else:
-                yield ACResultOK(_("Number of Checkmk checkers is less than number of CPUs"))
         except NotImplementedError:
             yield ACResultOK(
                 _("Cannot test. Unable to determine the number of CPUs on target system."))
+            return
+
+        if self._get_effective_global_setting("cmc_checker_helpers") > num_cpu:
+            yield ACResultWARN(
+                _("Configuring more checkers than the number of available CPUs (%d) have "
+                  "a detrimental effect, since they are not IO bound.") % num_cpu)
+            return
+
+        yield ACResultOK(_("Number of Checkmk checkers is less than number of CPUs"))

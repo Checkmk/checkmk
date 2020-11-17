@@ -1122,7 +1122,9 @@ class html(ABCHTMLGenerator):
             # TODO: Make private
             self.mobile = bool(self.request.var("mobile"))
             # Persist the explicitly set state in a cookie to have it maintained through further requests
-            self.response.set_http_cookie("mobile", str(int(self.mobile)))
+            self.response.set_http_cookie("mobile",
+                                          str(int(self.mobile)),
+                                          secure=self.request.is_secure)
 
         elif self.request.has_cookie("mobile"):
             self.mobile = self.request.cookie("mobile", "0") == "1"

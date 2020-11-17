@@ -368,7 +368,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         piggybacked_cache_age = int(1.5 * 60 * check_interval)
 
         # handle sections with option persist(...)
-        persisted_sections: AgentPersistedSections = {}
+        persisted_sections = AgentPersistedSections({})
         section_content: Optional[AgentSectionContent] = None
         section_options: Dict[str, Optional[str]] = {}
         agent_cache_info: SectionCacheInfo = {}
@@ -418,7 +418,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = int(until - cached_at)
                     agent_cache_info[section_name] = (cached_at, cache_interval)
-                    persisted_sections[section_name] = (cached_at, until, section_content)
+                    # pylint does not seem to understand `NewType`... leave the checking up to mypy.
+                    persisted_sections[section_name] = (cached_at, until, section_content)  # pylint: disable=E1137
 
                 raw_cached = section_options.get("cached")
                 if raw_cached is not None:

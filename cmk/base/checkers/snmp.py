@@ -264,7 +264,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         the raw data, calculate the times and store the persisted info for
         later use.
         """
-        persisted_sections: SNMPPersistedSections = {}
+        persisted_sections = SNMPPersistedSections({})
 
         for section_name, section_content in raw_data.items():
             fetch_interval = host_config.snmp_fetch_interval(section_name)
@@ -273,7 +273,8 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
 
             cached_at = int(time.time())
             until = cached_at + (fetch_interval * 60)
-            persisted_sections[section_name] = (cached_at, until, section_content)
+            # pylint does not seem to understand `NewType`... leave the checking up to mypy.
+            persisted_sections[section_name] = (cached_at, until, section_content)  # pylint: disable=E1137
 
         return persisted_sections
 

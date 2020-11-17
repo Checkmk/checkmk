@@ -160,7 +160,7 @@ def test_automation_discovery_not_existing_host(test_cfg, site):
     assert len(data) == 1
 
     assert data["results"] == {
-        u'xxxheute': {
+        u'xxxhost': {
             u'clustered_new': 0,
             u'clustered_old': 0,
             u'clustered_vanished': 0,

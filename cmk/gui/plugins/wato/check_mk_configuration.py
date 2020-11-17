@@ -771,26 +771,6 @@ class ConfigVariableRescheduleTimeout(ConfigVariable):
 
 
 @config_variable_registry.register
-class ConfigVariableSidebarShowVersionInSidebar(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupUserInterface
-
-    def domain(self):
-        return ConfigDomainGUI
-
-    def ident(self):
-        return "sidebar_show_version_in_sidebar"
-
-    def valuespec(self):
-        return Checkbox(
-            title=_("Show Checkmk edition & version in sidebar"),
-            label=_("Show the edition ad version"),
-            help=_("Use this option to hide the Check_MK edition and version information from "
-                   "the header of the sidebar."),
-        )
-
-
-@config_variable_registry.register
 class ConfigVariableSidebarUpdateInterval(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface

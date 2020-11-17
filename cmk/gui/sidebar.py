@@ -31,7 +31,6 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.notify as notify
-import cmk.gui.werks as werks
 import cmk.gui.sites as sites
 import cmk.gui.pages
 import cmk.gui.plugins.sidebar
@@ -558,24 +557,6 @@ class SidebarRenderer:
         html.icon("sidebar")
         html.div(_("Sidebar"))
         html.close_div()
-
-        if config.sidebar_show_version_in_sidebar:
-            html.open_div(id_="side_version")
-            html.open_a(href="version.py", target="main", title=_("Open release notes"))
-            html.write(cmk_version.edition_title())
-            html.br()
-            html.write(cmk_version.__version__)
-
-            if werks.may_acknowledge():
-                num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
-                if num_unacknowledged_werks:
-                    html.span(num_unacknowledged_werks,
-                              class_="unack_werks",
-                              title=_("%d unacknowledged incompatible werks") %
-                              num_unacknowledged_werks)
-
-            html.close_a()
-            html.close_div()
 
     # TODO: Re-add with new UX?
     #def _sidebar_foot(self, user_config):

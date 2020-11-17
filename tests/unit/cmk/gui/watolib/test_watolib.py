@@ -148,7 +148,6 @@ def test_registered_configvars():
         'service_view_grouping',
         'show_livestatus_errors',
         'sidebar_notify_interval',
-        'sidebar_show_version_in_sidebar',
         'sidebar_update_interval',
         'simulation_mode',
         'single_user_session',

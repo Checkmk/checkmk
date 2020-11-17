@@ -53,6 +53,7 @@ rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 rm -f $RPM_BUILD_ROOT/etc/systemd/system/omd.service
 
 echo ======================================== DEBUG RPM START
+umask
 ls -lRa $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/python3/importlib_metadata
 echo ======================================== DEBUG RPM END
 

@@ -155,6 +155,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 		cd .. ; \
 	    done
 	echo ======================================== DEBUG INSTALL START
+	umask
 	ls -lRa $(PYTHON3_MODULES_INSTALL_DIR)/lib/python3/importlib_metadata
 	echo ======================================== DEBUG INSTALL END
 	$(TOUCH) $@

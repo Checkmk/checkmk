@@ -114,6 +114,7 @@ def _instantiate_ruleset(ruleset_name, param_value):
 def _2_0_ignored_services():
     return [
         {
+            'id': '1',
             'value': True,
             'condition': {
                 'host_name': ['heute'],
@@ -129,6 +130,7 @@ def _non_discovery_ignored_services_ruleset():
     return [
         # Skip rule with multiple hostnames
         {
+            'id': '1',
             'value': True,
             'condition': {
                 'service_description': [{
@@ -141,6 +143,7 @@ def _non_discovery_ignored_services_ruleset():
         },
         # Skip rule service condition without $ at end
         {
+            'id': '1',
             'value': True,
             'condition': {
                 'service_description': [{
@@ -159,6 +162,7 @@ def _non_discovery_ignored_services_ruleset():
         # Transform pre 2.0 to 2.0 service_description regex
         ([
             {
+                'id': '1',
                 'condition': {
                     'service_description': [
                         {
@@ -174,6 +178,7 @@ def _non_discovery_ignored_services_ruleset():
             },
         ], [
             {
+                'id': '1',
                 'condition': {
                     'service_description': [
                         {

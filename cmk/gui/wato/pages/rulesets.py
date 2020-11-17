@@ -1359,7 +1359,7 @@ class ABCEditRuleMode(WatoMode):
             raise NotImplementedError()
 
         self._orig_rule = self._rule
-        self._rule = self._orig_rule.clone()
+        self._rule = self._orig_rule.clone(preserve_id=True)
 
     def title(self):
         return _("Edit rule: %s") % self._rulespec.title
@@ -2168,7 +2168,7 @@ class ModeCloneRule(ABCEditRuleMode):
         return _("Copy rule: %s") % self._rulespec.title
 
     def _save_rule(self):
-        self._ruleset.clone_rule(self._orig_rule, self._rule)
+        self._ruleset.clone_rule(self._orig_rule, self._rule.clone())
         self._rulesets.save()
 
     def _remove_from_orig_folder(self):

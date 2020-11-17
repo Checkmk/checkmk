@@ -25,6 +25,7 @@ from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui import utils
 
 from cmk.gui.watolib.utils import has_agent_bakery
 from cmk.gui.watolib.changes import add_change, make_diff_text
@@ -821,6 +822,7 @@ class Rule:
     @classmethod
     def create(cls, folder, ruleset):
         rule = Rule(folder, ruleset)
+        rule.id = utils.gen_id()
         rule.value = rule.ruleset.valuespec().default_value()
         return rule
 
@@ -832,15 +834,18 @@ class Rule:
         # Content of the rule itself
         self._initialize()
 
-    def clone(self):
+    def clone(self, preserve_id: bool = False) -> "Rule":
         cloned = Rule(self.folder, self.ruleset)
         cloned.from_config(self.to_config())
+        if not preserve_id:
+            cloned.id = utils.gen_id()
         return cloned
 
     def _initialize(self):
         self.conditions = RuleConditions(self.folder.path())
         self.rule_options = {}
         self.value = True if self.ruleset.rulespec.is_binary_ruleset else None
+        self.id = ""  # Will be populated later
 
     def from_config(self, rule_config):
         try:
@@ -857,6 +862,14 @@ class Rule:
             raise NotImplementedError()
 
     def _parse_dict_rule(self, rule_config):
+        # cmk-update-config uses this to load rules from the config file for rewriting them To make
+        # this possible, we need to accept missing "id" fields here. During runtime this is not
+        # needed anymore, since cmk-update-config has updated all rules from the user configuration.
+        if "id" in rule_config:
+            self.id = rule_config["id"]
+        else:
+            self.id = utils.gen_id()
+
         self.rule_options = rule_config.get("options", {})
         self.value = rule_config["value"]
 
@@ -882,6 +895,7 @@ class Rule:
 
     def _to_config(self, conditions):
         result = {
+            "id": self.id,
             "value": self.value,
             "condition": conditions,
         }

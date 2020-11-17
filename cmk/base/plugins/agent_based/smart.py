@@ -161,6 +161,9 @@ def discover_smart_stats(section: Section) -> DiscoveryResult:
             yield Service(item=disk_name, parameters=cleaned)
 
 
+# currently unused, until we agree on which output is only
+# needed in the details. Then use it in place of "_summary"
+# in the OUTPUT_FIELDS data structure.
 def _notice(state: State, text: str) -> Result:
     return Result(state=state, notice=text)
 
@@ -174,23 +177,23 @@ OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, str, Callable], 
     (_summary, 'Power_Cycle_Count', 'Power cycles', str),
     (_summary, 'Reported_Uncorrect', 'Uncorrectable errors', str),
     (_summary, 'Uncorrectable_Error_Cnt', 'Uncorrectable errors', str),
-    (_notice, 'Reallocated_Sector_Ct', 'Reallocated sectors', str),
-    (_notice, 'Reallocated_Event_Count', 'Reallocated events', str),
-    (_notice, 'Spin_Retry_Count', 'Spin retries', str),
-    (_notice, 'Current_Pending_Sector', 'Pending sectors', str),
-    (_notice, 'Command_Timeout', 'Command timeouts', str),
-    (_notice, 'End-to-End_Error', 'End-to-End errors', str),
-    (_notice, 'UDMA_CRC_Error_Count', 'UDMA CRC errors', str),
-    (_notice, 'CRC_Error_Count', 'UDMA CRC errors', str),
+    (_summary, 'Reallocated_Sector_Ct', 'Reallocated sectors', str),
+    (_summary, 'Reallocated_Event_Count', 'Reallocated events', str),
+    (_summary, 'Spin_Retry_Count', 'Spin retries', str),
+    (_summary, 'Current_Pending_Sector', 'Pending sectors', str),
+    (_summary, 'Command_Timeout', 'Command timeouts', str),
+    (_summary, 'End-to-End_Error', 'End-to-End errors', str),
+    (_summary, 'UDMA_CRC_Error_Count', 'UDMA CRC errors', str),
+    (_summary, 'CRC_Error_Count', 'UDMA CRC errors', str),
     # nvme
     (_summary, 'Power_Cycles', 'Power cycles', str),
-    (_notice, 'Critical_Warning', 'Critical warning', str),
-    (_notice, 'Available_Spare', 'Available spare', render.percent),
-    (_notice, 'Percentage_Used', 'Percentage used', render.percent),
+    (_summary, 'Critical_Warning', 'Critical warning', str),
+    (_summary, 'Available_Spare', 'Available spare', render.percent),
+    (_summary, 'Percentage_Used', 'Percentage used', render.percent),
     (_summary, 'Media_and_Data_Integrity_Errors', 'Media and data integrity errors', str),
-    (_notice, 'Error_Information_Log_Entries', 'Error information log entries', str),
-    (_notice, 'Data_Units_Read', 'Data units read', render.bytes),
-    (_notice, 'Data_Units_Written', 'Data units written', render.bytes),
+    (_summary, 'Error_Information_Log_Entries', 'Error information log entries', str),
+    (_summary, 'Data_Units_Read', 'Data units read', render.bytes),
+    (_summary, 'Data_Units_Written', 'Data units written', render.bytes),
 )
 
 

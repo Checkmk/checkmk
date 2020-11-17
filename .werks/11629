@@ -1,0 +1,20 @@
+Title: Juniper Trapeze monitoring: discover additional devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1605683363
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+The check plugins monitoring Juniper Trapeze devices will now be
+discovered for additional devices. This includes the following
+plugins:
+<ul>
+<li><tt>juniper_trpz_cpu_util</tt></li>
+<li><tt>juniper_trpz_flash</tt></li>
+<li><tt>juniper_trpz_info</tt></li>
+<li><tt>juniper_trpz_mem</tt></li>
+<li><tt>juniper_trpz_power</tt></li>
+</ul>

@@ -1,0 +1,14 @@
+Title: Simplified design of page reload
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1605589286
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+The page reload information in the upper right corner of view headers was simplified.
+The number of seconds of one reload interval is shown in the center of a circle.
+This circle grows clockwise and thereby visually displays the remaining time until the next reload.
+Clicking on the number/circle triggers an instant reload.

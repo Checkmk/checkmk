@@ -38,9 +38,10 @@ class PageStateRenderer:
         html.close_div()
 
     def _show_content(self, page_state: PageState) -> None:
-        html.div(page_state.text, class_="page_state_text")
+        html.div(page_state.text, class_="text_container")
         if page_state.icon_name:
-            html.div(html.render_icon(page_state.icon_name), class_="page_state_icon")
+            html.div(html.render_icon(page_state.icon_name, id_="page_state_icon"),
+                     class_="icon_container")
 
     def _get_css_classes(self, page_state: PageState) -> CSSSpec:
         classes = ["page_state"]

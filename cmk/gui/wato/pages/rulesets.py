@@ -804,16 +804,8 @@ class ModeEditRuleset(WatoMode):
         action = html.request.get_ascii_input_mandatory("_action")
         if action == "delete":
             ruleset.delete_rule(rule)
-        elif action == "up":
-            ruleset.move_rule_up(rule)
-        elif action == "down":
-            ruleset.move_rule_down(rule)
-        elif action == "top":
-            ruleset.move_rule_to_top(rule)
         elif action == "move_to":
             ruleset.move_rule_to(rule, html.request.get_integer_input_mandatory("_index"))
-        else:
-            ruleset.move_rule_to_bottom(rule)
 
         rulesets.save()
         return redirect(self.mode_url(varname=self._name))

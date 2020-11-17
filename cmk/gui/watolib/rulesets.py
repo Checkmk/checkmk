@@ -680,46 +680,6 @@ class Ruleset:
                        sites=rule.folder.all_site_ids())
         self._on_change()
 
-    def move_rule_up(self, rule):
-        rules = self._rules[rule.folder.path()]
-        index = rules.index(rule)
-        del rules[index]
-        rules[index - 1:index - 1] = [rule]
-        add_change("edit-ruleset",
-                   _("Moved rule #%d up in ruleset \"%s\" in folder \"%s\"") %
-                   (index, self.title(), rule.folder.alias_path()),
-                   sites=rule.folder.all_site_ids())
-
-    def move_rule_down(self, rule):
-        rules = self._rules[rule.folder.path()]
-        index = rules.index(rule)
-        del rules[index]
-        rules[index + 1:index + 1] = [rule]
-        add_change("edit-ruleset",
-                   _("Moved rule #%d down in ruleset \"%s\" in folder \"%s\"") %
-                   (index, self.title(), rule.folder.alias_path()),
-                   sites=rule.folder.all_site_ids())
-
-    def move_rule_to_top(self, rule):
-        rules = self._rules[rule.folder.path()]
-        index = rules.index(rule)
-        rules.remove(rule)
-        rules.insert(0, rule)
-        add_change("edit-ruleset",
-                   _("Moved rule #%d to top in ruleset \"%s\" in folder \"%s\"") %
-                   (index, self.title(), rule.folder.alias_path()),
-                   sites=rule.folder.all_site_ids())
-
-    def move_rule_to_bottom(self, rule):
-        rules = self._rules[rule.folder.path()]
-        index = rules.index(rule)
-        rules.remove(rule)
-        rules.append(rule)
-        add_change("edit-ruleset",
-                   _("Moved rule #%d to bottom in ruleset \"%s\" in folder \"%s\"") %
-                   (index, self.title(), rule.folder.alias_path()),
-                   sites=rule.folder.all_site_ids())
-
     def move_rule_to(self, rule, index):
         rules = self._rules[rule.folder.path()]
         old_index = rules.index(rule)

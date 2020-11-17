@@ -10,7 +10,7 @@ import ast
 import tarfile
 import os
 import json
-from typing import Dict, NamedTuple, List, Optional, Iterator, Tuple
+from typing import Dict, NamedTuple, List, Optional, Iterator, Tuple, Union
 
 from six import ensure_str
 
@@ -467,9 +467,11 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 html.close_div()
 
 
-def render_object_ref(object_ref: Optional[ObjectRef]) -> Optional[HTML]:
+def render_object_ref(object_ref: Optional[ObjectRef]) -> Union[str, HTML, None]:
     url, title = _get_object_reference(object_ref)
-    if not url or not title:
+    if title and not url:
+        return title
+    if not title:
         return None
     return html.render_a(title, href=url)
 
@@ -483,13 +485,13 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
         host = watolib.Host.host(object_ref.ident)
         if host:
             return host.edit_url(), host.name()
-        return None, None
+        return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Folder:
         if watolib.Folder.folder_exists(object_ref.ident):
             folder = watolib.Folder.folder(object_ref.ident)
             return folder.url(), folder.title()
-        return None, None
+        return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.User:
         url = makeuri_contextless(global_request, [
@@ -499,7 +501,7 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
                                   filename="wato.py")
         return url, object_ref.ident
 
-    return None, None
+    return None, object_ref.ident
 
 
 def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary]:

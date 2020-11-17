@@ -8,7 +8,7 @@ import abc
 import logging
 import sys
 from pathlib import Path
-from typing import final, Final, Generic, Optional, TypeVar, Union
+from typing import Container, final, Final, Generic, Optional, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -55,6 +55,8 @@ __all__ = [
     "set_cache_opts",
 ]
 
+THostSections = TypeVar("THostSections", bound="HostSections")
+
 
 class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionContent],
                    metaclass=abc.ABCMeta):
@@ -90,6 +92,18 @@ class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionCont
             self.piggybacked_raw_data,
             self.persisted_sections,
         )
+
+    def filter(self: THostSections, section_names: Container[SectionName]) -> THostSections:
+        """Remove all data not belonging to the provided sections"""
+        self.sections = {k: v for k, v in self.sections.items() if k in section_names}
+        self.cache_info = {k: v for k, v in self.cache_info.items() if k in section_names}
+        self.piggybacked_raw_data = {
+            k: v for k, v in self.piggybacked_raw_data.items() if SectionName(k) in section_names
+        }
+        self.persisted_sections = {
+            k: v for k, v in self.persisted_sections.items() if k in section_names
+        }
+        return self
 
     # TODO: It should be supported that different sources produce equal sections.
     # this is handled for the self.sections data by simply concatenating the lines
@@ -184,9 +198,6 @@ class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionCont
     ) -> None:
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
         self.sections[section_name] = section
-
-
-THostSections = TypeVar("THostSections", bound=HostSections)
 
 
 class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):

@@ -243,7 +243,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             raw_data,
             self.host_config,
         )
-        host_sections = SNMPHostSections(raw_data, persisted_sections=persisted_sections)
+        host_sections = SNMPHostSections(dict(raw_data), persisted_sections=persisted_sections)
         host_sections.add_persisted_sections(
             self.persisted_sections_file_path,
             self.use_outdated_persisted_sections,

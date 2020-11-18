@@ -266,7 +266,9 @@ def get_traffic_levels(params: type_defs.Parameters) -> GeneralTrafficLevels:
         traffic_levels = new_traffic
     else:
         traffic_levels = params.get('traffic', [])
-        traffic_levels += params.get('total_traffic', [])
+        traffic_levels += [
+            ('total', vs) for vs in params.get('total_traffic', {}).get("levels", [])
+        ]
 
     # Now bring the levels in a structure which is easily usable for the check
     # and also convert direction="both" to single in/out entries

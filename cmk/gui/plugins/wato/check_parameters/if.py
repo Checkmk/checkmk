@@ -798,18 +798,24 @@ def _parameter_valuespec_if():
                             "levels you might also consider using averaging."),
                  )),
                 ("total_traffic",
-                 ListOf(
-                     CascadingDropdown(title=_("Direction"),
-                                       orientation="horizontal",
-                                       choices=[
-                                           ('total', _("Total traffic"), vs_interface_traffic()),
-                                       ]),
-                     title=_("Used total bandwidth (in + out) (minimum or maximum traffic)"),
+                 Dictionary(
+                     title=_("Activate total bandwidth metric (sum of in and out)"),
                      help=
                      _("By activating this item, the sum of incoming and outgoing traffic will "
                        "be monitored via a seperate metric. Setting levels on the used total bandwidth "
                        "is optional. If you do set levels you might also consider using averaging."
                       ),
+                     elements=[(
+                         "levels",
+                         ListOf(
+                             vs_interface_traffic(),
+                             title=_("Provide levels"),
+                             help=_(
+                                 "Levels on the total bandwidth will act the same way as they do for "
+                                 "in/out bandwidth."),
+                         ),
+                     )],
+                     optional_keys=["levels"],
                  )),
                 ("average",
                  Integer(

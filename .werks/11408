@@ -1,4 +1,4 @@
-Title: Monitoring of total traffic for newtwork interface checks
+Title: Monitoring of total traffic for network interface checks
 Class: feature
 Compatible: compat
 Component: checks
@@ -12,7 +12,7 @@ Additional to "Input bandwith" and "Output bandwidth" metrics, a "Total
 bandwidth" metric, that sums up the incoming and outcoming traffic, can
 now be activated for network interface checks.
 
-You can activate the metric by applying the "Used total bandwidth (in + out)
-(minimum or maximum traffic)" checkbox within the "Network interfaces and switch
+You can activate the metric by applying the "Activate total bandwidth metric
+(sum of in and out)" checkbox within the "Network interfaces and switch
 ports" ruleset. There, you can also optionally set levels, that work the same
-way as the do for the input and output bandwidth metrics.
+way as they do for the input and output bandwidth metrics.

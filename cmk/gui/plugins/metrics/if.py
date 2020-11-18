@@ -57,7 +57,7 @@ metric_info["if_out_bps"] = {
 }
 
 metric_info["if_total_bps"] = {
-    "title": _("Total bandwidth (in + out)"),
+    "title": _("Total bandwidth (sum of in and out)"),
     "unit": "bits/s",
     "color": "#00e060",
 }

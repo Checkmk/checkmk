@@ -792,7 +792,6 @@ ITEM_PARAMS_RESULTS = (
             'errors': (0.01, 0.1),
             'speed': 10_000_000,
             'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
-            'total_traffic': [('total', ('upper', ('perc', (10.0, 30.0)))),],
             'state': ['1'],
         }),
         [
@@ -813,11 +812,9 @@ ITEM_PARAMS_RESULTS = (
             Metric('outnucast', 0.0),
             Metric('outdisc', 0.0),
             Metric('outerr', 0.0, levels=(0.01, 0.1)),
-            Metric('total', 0.0, levels=(250_000, 750_000.0), boundaries=(0.0, 2_500_000.0)),
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
             Result(state=state.OK, summary='Out: 0.00 B/s (0%)'),
-            Result(state=state.OK, summary='Total: 0.00 B/s (0%)'),
             Result(state=state.OK, summary='Speed: 10 MBit/s'),
         ],
     ),
@@ -827,7 +824,7 @@ ITEM_PARAMS_RESULTS = (
             'errors': (0.01, 0.1),
             'speed': 100_000_000,
             'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
-            'total_traffic': [('total', ('upper', ('perc', (10.0, 30.0)))),],
+            'total_traffic': {},
             'state': ['1'],
         }),
         [
@@ -852,17 +849,13 @@ ITEM_PARAMS_RESULTS = (
             Metric('outnucast', 0.0),
             Metric('outdisc', 0.0),
             Metric('outerr', 0.0, levels=(0.01, 0.1)),
-            Metric('total',
-                   4_000_000.0,
-                   levels=(2_500_000, 7_500_000.0),
-                   boundaries=(0.0, 25_000_000.0)),
+            Metric('total', 4_000_000.0, boundaries=(0.0, 25_000_000.0)),
             Metric('outqlen', 0.0),
             Result(state=state.WARN,
                    summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.4%)'),
             Result(state=state.CRIT,
                    summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
-            Result(state=state.WARN,
-                   summary='Total: 4.00 MB/s (warn/crit at 2.50 MB/s/7.50 MB/s) (16.0%)'),
+            Result(state=state.OK, summary='Total: 4.00 MB/s (16.0%)'),
             Result(state=state.OK, summary='Speed: 100 MBit/s (assumed)'),
         ],
     ),
@@ -1050,14 +1043,11 @@ def test_check_single_interface_ignore_state(value_store, item, params, result):
     (
         ITEM_PARAMS_RESULTS[0][0],
         ITEM_PARAMS_RESULTS[0][1],
-        ITEM_PARAMS_RESULTS[0][2][:-4] + [
+        ITEM_PARAMS_RESULTS[0][2][:-3] + [
             Metric('in_avg_5', 0.0, levels=(62_500.0, 250_000.0), boundaries=(0.0, 1_250_000.0)),
             Result(state=state.OK, summary='In average 5min: 0.00 B/s (0%)'),
             Metric('out_avg_5', 0.0, levels=(62_500.0, 250_000.0), boundaries=(0.0, 1_250_000.0)),
             Result(state=state.OK, summary='Out average 5min: 0.00 B/s (0%)'),
-            Metric('total_avg_5', 0.0, levels=(250_000.0, 750_000.0),
-                   boundaries=(0.0, 2_500_000.0)),
-            Result(state=state.OK, summary='Total average 5min: 0.00 B/s (0%)'),
         ] + [ITEM_PARAMS_RESULTS[0][2][-1]],
     ),
     (
@@ -1076,13 +1066,8 @@ def test_check_single_interface_ignore_state(value_store, item, params, result):
                    boundaries=(0.0, 12_500_000.0)),
             Result(state=state.CRIT,
                    summary='Out average 5min: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
-            Metric('total_avg_5',
-                   4_000_000.0,
-                   levels=(2_500_000.0, 7_500_000.0),
-                   boundaries=(0.0, 25_000_000.0)),
-            Result(
-                state=state.WARN,
-                summary='Total average 5min: 4.00 MB/s (warn/crit at 2.50 MB/s/7.50 MB/s) (16.0%)'),
+            Metric('total_avg_5', 4_000_000.0, boundaries=(0.0, 25_000_000.0)),
+            Result(state=state.OK, summary='Total average 5min: 4.00 MB/s (16.0%)'),
         ] + [ITEM_PARAMS_RESULTS[1][2][-1]],
     ),
 ])
@@ -1328,7 +1313,9 @@ def test_check_multiple_interfaces_group_simple(value_store):
     params = type_defs.Parameters({
         'errors': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
-        'total_traffic': [('total', ('upper', ('perc', (10.0, 30.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'aggregate': {
             'member_appearance': 'index',
             'inclusion_condition': {},
@@ -1388,7 +1375,9 @@ def test_check_multiple_interfaces_group_exclude(value_store):
     params = type_defs.Parameters({
         'errors': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
-        'total_traffic': [('total', ('upper', ('perc', (10.0, 30.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'aggregate': {
             'member_appearance': 'index',
             'inclusion_condition': {},
@@ -1447,7 +1436,9 @@ def test_check_multiple_interfaces_group_by_agent(value_store):
     params = type_defs.Parameters({
         'errors': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
-        'total_traffic': [('total', ('upper', ('perc', (10.0, 30.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'aggregate': {
             'member_appearance': 'index',
         },
@@ -1547,7 +1538,9 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
     params = type_defs.Parameters({
         'errors': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
-        'total_traffic': [('total', ('upper', ('perc', (10.0, 30.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'aggregate': {
             'member_appearance': 'index',
             'inclusion_condition': {
@@ -1621,7 +1614,9 @@ def test_cluster_check(monkeypatch, value_store):
         'errors': (0.01, 0.1),
         'speed': 10000000,
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
-        'total_traffic': [('total', ('upper', ('perc', (10.0, 30.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'state': ['1'],
     })
     section = {}

@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import textwrap
-from typing import Union, Tuple, Callable, Optional, Dict, List
+from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 
+from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.type_defs import HostName
@@ -207,12 +208,15 @@ class Option:
                  argument_conv: Optional[ConvertFunction] = None,
                  argument_optional: bool = False,
                  count: bool = False,
-                 handler_function: Optional[OptionFunction] = None) -> None:
+                 handler_function: Optional[OptionFunction] = None,
+                 *,
+                 deprecated_long_options: Optional[Set[str]] = None) -> None:
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(Option, self).__init__()  # pylint: disable=bad-super-call
         self.long_option = long_option
         self.short_help = short_help
         self.short_option = short_option
+        self._deprecated_long_options = deprecated_long_options or set()
 
         # An option can either
         # a) have an argument
@@ -231,9 +235,13 @@ class Option:
     def options(self) -> List[str]:
         options = []
         if self.short_option:
-            options.append("-%s" % self.short_option)
-        options.append("--%s" % self.long_option)
+            options.append(f"-{self.short_option}")
+        options.append(f"--{self.long_option}")
+        options.extend(f"--{opt}" for opt in self._deprecated_long_options)
         return options
+
+    def is_deprecated_option(self, opt_str: str) -> bool:
+        return opt_str.lstrip('-') in self._deprecated_long_options
 
     def has_short_option(self) -> bool:
         return self.short_option is not None
@@ -276,10 +284,11 @@ class Option:
         return [spec]
 
     def long_getopt_specs(self) -> List[str]:
-        spec = self.long_option
+        specs = [self.long_option]
+        specs.extend(self._deprecated_long_options)
         if self.argument and not self.argument_optional:
-            spec += "="
-        return [spec]
+            return [f"{spec}=" for spec in specs]
+        return specs
 
 
 class Mode(Option):
@@ -375,6 +384,9 @@ class Mode(Option):
             for option in self.sub_options:
                 if o not in option.options():
                     continue
+
+                if option.is_deprecated_option(o):
+                    console.warning("%r is deprecated in favour of option %r", o, option.name())
 
                 if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)

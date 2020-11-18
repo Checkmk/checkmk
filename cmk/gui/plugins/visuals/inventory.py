@@ -364,8 +364,7 @@ class FilterInvText(Filter):
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
         value = html.request.var(htmlvar)
-        if value is not None:
-            html.text_input(htmlvar, value)
+        html.text_input(htmlvar, value if value is not None else "")
 
     def filter_table(self, rows: Rows) -> Rows:
         filtertext = self.filtertext

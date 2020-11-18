@@ -1583,13 +1583,13 @@ def _show_filter_form_buttons(varprefix: str, filter_list_id: str,
     html.close_a()
 
     html.open_div(class_="update_buttons")
+    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply hot")
     html.jsbutton("%s_reset" % varprefix,
                   _("Reset"),
                   cssclass="reset",
                   onclick="cmk.valuespecs.visual_filter_list_reset(%s, %s, %s, %s)" %
                   (json.dumps(varprefix), json.dumps(page_request_vars), json.dumps(view_name),
                    json.dumps(reset_ajax_page)))
-    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply hot")
     html.close_div()
     html.close_div()
 

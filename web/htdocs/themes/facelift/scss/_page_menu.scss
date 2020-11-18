@@ -694,12 +694,12 @@ div#page_menu_popups div.side_popup {
       div.update_buttons {
         margin-left: auto;
 
-        input.apply {
-          margin-right: 0;
+        input.apply:disabled {
+          opacity: 0.5;
+        }
 
-          &:disabled {
-            opacity: 0.5;
-          }
+        input.reset {
+          margin-right: 0;
         }
       }
     }

@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import signal
+import traceback
 from pathlib import Path
 from types import FrameType
 from typing import Any, Dict, Iterator, List, NamedTuple, Optional
@@ -226,8 +227,14 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
             lambda msg: msg.header.payload_type is protocol.PayloadType.ERROR,
             messages,
     ):
-        logger.log(msg.header.status, "Error in %s fetcher: %s", msg.header.fetcher_type.name,
+        logger.log(msg.header.status, "Error in %s fetcher: %r", msg.header.fetcher_type.name,
                    msg.raw_data.error)
+        logger.debug("".join(
+            traceback.format_exception(
+                msg.raw_data.error.__class__,
+                msg.raw_data.error,
+                msg.raw_data.error.__traceback__,
+            )))
 
 
 def make_local_config_path(serial: ConfigSerial, host_name: HostName) -> Path:

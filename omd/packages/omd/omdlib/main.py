@@ -2166,11 +2166,15 @@ def config_set(site, config_hooks, args):
     config_set_value(site, config_hooks, hook_name, value)
 
 
-def config_set_all(site):
+def config_set_all(site, ignored_hooks=None):
+    # type: (SiteContext, list) -> None
+    if ignored_hooks is None:
+        ignored_hooks = []
+
     for hook_name in sort_hooks(site.conf.keys()):
         value = site.conf[hook_name]
         # Hooks might vanish after and up- or downdate
-        if hook_exists(site, hook_name):
+        if hook_exists(site, hook_name) and hook_name not in ignored_hooks:
             exitcode, output = call_hook(site, hook_name, ["set", value])
             if not exitcode:
                 if output and output != value:
@@ -2870,7 +2874,9 @@ def finalize_site(site, what, apache_reload):
             # From now on we run as normal site user!
             switch_to_site_user(site)
 
-            finalize_site_as_user(site, what)
+            # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
+            # see CMK-3067
+            finalize_site_as_user(site, what, ignored_hooks=["TMPFS"])
             sys.exit(0)
         except Exception as e:
             bail_out(e)
@@ -2888,7 +2894,7 @@ def finalize_site(site, what, apache_reload):
         restart_apache()
 
 
-def finalize_site_as_user(site, what):
+def finalize_site_as_user(site, what, ignored_hooks=None):
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
     # users. They could create files below tmp which would be shadowed
@@ -2897,7 +2903,7 @@ def finalize_site_as_user(site, what):
 
     # Run all hooks in order to setup things according to the
     # configuration settings
-    config_set_all(site)
+    config_set_all(site, ignored_hooks)
     initialize_site_ca(site)
     save_site_conf(site)
 

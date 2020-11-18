@@ -71,7 +71,6 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
-    PageMenuCheckbox,
     make_simple_link,
     make_simple_form_page_menu,
     make_display_options_dropdown,
@@ -486,31 +485,33 @@ class ModeNotifications(ABCNotificationsMode):
                 title=_("Toggle elements"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Show user rules"),
-                        icon_name="trans",
-                        item=PageMenuCheckbox(
-                            is_checked=self._show_user_rules,
-                            check_url=html.makeactionuri([("_show_user", "1")]),
-                            uncheck_url=html.makeactionuri([("_show_user", "")]),
-                        ),
+                        title=_("Hide user rules")
+                        if self._show_user_rules else _("Show user rules"),
+                        icon_name="checkbox",
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("_show_user", "" if self._show_user_rules else "1"),
+                            ])),
                     ),
                     PageMenuEntry(
-                        title=_("Show analysis"),
-                        icon_name="trans",
-                        item=PageMenuCheckbox(
-                            is_checked=self._show_backlog,
-                            check_url=html.makeactionuri([("_show_backlog", "1")]),
-                            uncheck_url=html.makeactionuri([("_show_backlog", "")]),
-                        ),
+                        title=_("Hide analysis") if self._show_backlog else _("Show analysis"),
+                        icon_name="checkbox",
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("_show_backlog", "" if self._show_backlog else "1"),
+                            ])),
+                        is_shortcut=True,
+                        is_suggested=True,
                     ),
                     PageMenuEntry(
-                        title=_("Show bulks"),
-                        icon_name="trans",
-                        item=PageMenuCheckbox(
-                            is_checked=self._show_bulks,
-                            check_url=html.makeactionuri([("_show_bulks", "1")]),
-                            uncheck_url=html.makeactionuri([("_show_bulks", "")]),
-                        ),
+                        title=_("Hide bulks") if self._show_bulks else _("Show bulks"),
+                        icon_name="checkbox",
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("_show_bulks", "" if self._show_bulks else "1"),
+                            ])),
+                        is_shortcut=True,
+                        is_suggested=True,
                     ),
                 ],
             ))

@@ -71,6 +71,7 @@ void ConcreteLogger::setLevel(LogLevel level) { _level = level; }
 Handler *ConcreteLogger::getHandler() const { return _handler; }
 
 void ConcreteLogger::setHandler(std::unique_ptr<Handler> handler) {
+    std::scoped_lock l(_lock);
     delete _handler;
     _handler = handler.release();
 }
@@ -90,6 +91,7 @@ void ConcreteLogger::log(const LogRecord &record) {
     }
     for (Logger *logger = this; logger != nullptr;
          logger = logger->getParent()) {
+        std::scoped_lock l(_lock);
         if (Handler *handler = logger->getHandler()) {
             handler->publish(record);
         }

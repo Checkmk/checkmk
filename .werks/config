@@ -8,7 +8,7 @@ components = [
    ( "core",          "Core & setup" ),
    ( "checks",        "Checks & agents" ),
    ( "multisite",     "Multisite" ),
-   ( "wato",          "WATO" ),
+   ( "wato",          "Setup" ),
    ( "notifications", "Notifications" ),
    ( "bi",            "BI" ),
    ( "reporting",     "Reporting & Availability" ),
@@ -16,7 +16,7 @@ components = [
    ( "livestatus",    "Livestatus" ),
    ( "liveproxy",     "Livestatus Proxy" ),
    ( "inv",           "HW/SW Inventory" ),
-   ( "dcd",           "DCD" ),
+   ( "dcd",           "Dynamic host configuration" ),
 
    ( "omd",           "Site Management" ),
    ( "rpm",           "RPM Packaging" ),

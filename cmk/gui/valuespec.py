@@ -1038,10 +1038,11 @@ class TextAsciiAutocomplete(TextAscii):
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
-        onkeyup = "cmk.valuespecs.autocomplete(this, %s, %s, %s);%s" % \
-                            (json.dumps(completion_ident),
-                             json.dumps(completion_params),
-                             json.dumps(onkeyup), onkeyup)
+        onkeyup = "cmk.valuespecs.autocomplete(this, %s, %s, %s)" % (
+            json.dumps(completion_ident),
+            json.dumps(completion_params),
+            json.dumps(onkeyup),
+        )
         super().__init__(
             label=label,
             size=size,
@@ -4862,8 +4863,8 @@ class Dictionary(ValueSpec):
         for param, vs in self._get_elements():
             vp = varprefix + "_p_" + param
             if not self._optional_keys \
-                or param in self._required_keys \
-                or html.get_checkbox(vp + "_USE"):
+                    or param in self._required_keys \
+                    or html.get_checkbox(vp + "_USE"):
                 value[param] = vs.from_html_vars(vp)
         return value
 

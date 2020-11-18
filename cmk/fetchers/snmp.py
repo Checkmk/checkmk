@@ -217,6 +217,9 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         if mode is Mode.CHECKING:
             return self.configured_snmp_sections - self.disabled_sections
 
+        if mode is Mode.FORCE_SECTIONS:
+            return self.configured_snmp_sections
+
         return set()
 
     def _get_sections_fetch_detected(self, mode: Mode) -> Set[SectionName]:

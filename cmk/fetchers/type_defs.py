@@ -20,3 +20,7 @@ class Mode(enum.Enum):
     CACHED_DISCOVERY = enum.auto()
     INVENTORY = enum.auto()
     RTC = enum.auto()
+    # Special case for discovery/checking/inventory command line argument where we specify in
+    # advance all sections we want. Should disable caching, and in the SNMP case also detection.
+    # Disabled sections must *not* be discarded in this mode.
+    FORCE_SECTIONS = enum.auto()

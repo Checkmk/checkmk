@@ -53,7 +53,7 @@ class PiggybackFetcher(AgentFetcher):
         self._sources.clear()
 
     def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode is not Mode.CHECKING
+        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
 
     def _is_cache_write_enabled(self, mode: Mode) -> bool:
         return True

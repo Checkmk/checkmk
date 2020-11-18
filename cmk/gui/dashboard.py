@@ -58,6 +58,7 @@ from cmk.gui.page_menu import (
 )
 
 from cmk.gui.exceptions import (
+    FinalizeRequest,
     HTTPRedirect,
     MKGeneralException,
     MKAuthException,
@@ -1637,14 +1638,9 @@ class EditDashletPage(Page):
                 save_all_dashboards()
 
                 next_url = html.get_url_input('next', html.get_url_input('back'))
-                html.immediate_browser_redirect(1, next_url)
-                if mode == 'edit':
-                    html.show_message(_('The dashlet has been saved.'))
-                else:
-                    html.show_message(_('The dashlet has been added to the dashboard.'))
-                html.reload_sidebar()
+                html.reload_whole_page("index.py?start_url=%s" % next_url)
                 html.footer()
-                return
+                raise FinalizeRequest(code=200)
 
             except MKUserError as e:
                 html.user_error(e)

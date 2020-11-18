@@ -15,6 +15,7 @@ from typing import Any, Dict, Union, Iterator
 
 from six import ensure_str
 
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.store as store
 import cmk.utils.paths
 from cmk.utils.version import __version__
@@ -125,6 +126,9 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
                     _release_notes_page_menu(breadcrumb, werk_table_options),
                     page_state=_release_switch(major=False))
 
+        for message in get_flashed_messages():
+            html.show_message(message)
+
         handle_acknowledgement()
         render_werks_table(werk_table_options)
 
@@ -146,17 +150,15 @@ def handle_acknowledgement():
             html.show_message(
                 _("Werk %s - %s has been acknowledged.") %
                 (render_werk_id(werk, with_link=True), render_werk_title(werk)))
-            html.reload_sidebar()
             load_werks()  # reload ack states after modification
+            render_unacknowleged_werks()
 
     elif html.request.var("_ack_all"):
         num = len(unacknowledged_incompatible_werks())
         acknowledge_all_werks()
-        html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
-        html.reload_sidebar()
+        flash(_("%d incompatible Werks have been acknowledged.") % num)
         load_werks()  # reload ack states after modification
-
-    render_unacknowleged_werks()
+        html.reload_whole_page()
 
 
 def _release_notes_breadcrumb() -> Breadcrumb:

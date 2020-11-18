@@ -14,6 +14,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Un
 
 from livestatus import SiteId
 
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
@@ -476,6 +477,9 @@ def page_list(what,
     page_menu = pagetypes.customize_page_menu(breadcrumb, current_type_dropdown, what)
     html.header(title, breadcrumb, page_menu)
 
+    for message in get_flashed_messages():
+        html.show_message(message)
+
     # Deletion of visuals
     delname = html.request.var("_delete")
     if delname and html.check_transaction():
@@ -491,7 +495,8 @@ def page_list(what,
 
             del visuals[(user_id, delname)]
             save(what, visuals, user_id)
-            html.reload_sidebar()
+            flash(_('Your %s has been deleted.') % visual_type.title)
+            html.reload_whole_page()
         except MKUserError as e:
             html.user_error(e)
 
@@ -1024,9 +1029,8 @@ def page_edit_visual(what,
                                                         varstring + visual["name"])
                     save(what, all_visuals, owner_user_id)
 
-                html.immediate_browser_redirect(1, back_url)
-                html.show_message(_('Your %s has been saved.') % visual_type.title)
-                html.reload_sidebar()
+                flash(_('Your %s has been saved.') % visual_type.title)
+                html.reload_whole_page("index.py?start_url=%s" % back_url)
                 html.footer()
                 return
 

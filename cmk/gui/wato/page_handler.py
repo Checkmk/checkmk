@@ -172,7 +172,7 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
     mode.handle_page()
 
     if is_sidebar_reload_needed():
-        html.reload_sidebar()
+        html.reload_whole_page()
 
     if config.wato_use_git and html.is_transaction():
         do_git_commit()

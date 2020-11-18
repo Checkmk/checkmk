@@ -364,13 +364,12 @@ export function time() {
     return new Date().getTime() / 1000;
 }
 
-// reload sidebar, but preserve quicksearch field value and focus
-export function reload_sidebar() {
-    window.top.cmk.sidebar.reset_sidebar_scheduler();
-}
-
-export function reload_whole_page() {
-    window.top.location.reload();
+export function reload_whole_page(url) {
+    if (url) {
+        window.top.location = url;
+    } else {
+        window.top.location.reload();
+    }
 }
 
 //#.

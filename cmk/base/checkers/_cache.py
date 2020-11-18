@@ -41,6 +41,23 @@ class PersistedSections(
     def __len__(self) -> int:
         return self._store.__len__()
 
+    def determine(
+        self,
+        cache_path: Path,
+        use_outdated: bool,
+        *,
+        logger: logging.Logger,
+    ) -> "PersistedSections[TSectionContent]":
+        section_store: SectionStore[TSectionContent] = SectionStore(
+            cache_path,
+            logger,
+        )
+        persisted_sections = section_store.load(use_outdated)
+        if persisted_sections != self:
+            persisted_sections.update(self)
+            section_store.store(persisted_sections)
+        return persisted_sections
+
 
 class SectionStore(Generic[TSectionContent]):
     def __init__(self, path: Union[str, Path], logger: logging.Logger) -> None:

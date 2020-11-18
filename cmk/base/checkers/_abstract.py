@@ -39,7 +39,7 @@ from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo, TSectionCon
 from cmk.base.config import HostConfig
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
-from ._cache import PersistedSections, SectionStore
+from ._cache import PersistedSections
 
 __all__ = [
     "HostSections",
@@ -125,7 +125,7 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
         logger: logging.Logger,
     ) -> None:
         """Add information from previous persisted infos."""
-        persisted_sections = self._determine_persisted_sections(
+        persisted_sections = self.persisted_sections.determine(
             persisted_sections_file_path,
             use_outdated_persisted_sections,
             logger=logger,
@@ -134,25 +134,6 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
             persisted_sections,
             logger=logger,
         )
-
-    def _determine_persisted_sections(
-        self,
-        persisted_sections_file_path: Path,
-        use_outdated_persisted_sections: bool,
-        *,
-        logger: logging.Logger,
-    ) -> PersistedSections[TSectionContent]:
-        # TODO(ml): This function should take a PersistedSections
-        #           instead of the host_section but mypy does not allow it.
-        section_store: SectionStore[TSectionContent] = SectionStore(
-            persisted_sections_file_path,
-            logger,
-        )
-        persisted_sections = section_store.load(use_outdated_persisted_sections)
-        if persisted_sections != self.persisted_sections:
-            persisted_sections.update(self.persisted_sections)
-            section_store.store(persisted_sections)
-        return persisted_sections
 
     def _add_persisted_sections(
         self,

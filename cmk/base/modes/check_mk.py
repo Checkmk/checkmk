@@ -35,6 +35,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostgroupName,
     HostName,
+    SectionName,
     TagValue,
 )
 
@@ -1379,7 +1380,27 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+_SectionsOption = Optional[Set[SectionName]]
+
 _ChecksOption = Optional[Set[CheckPluginName]]
+
+
+def _convert_sections_argument(arg: str) -> _SectionsOption:
+    try:
+        # kindly forgive empty strings
+        return {SectionName(n) for n in arg.split(",") if n}
+    except ValueError as exc:
+        raise MKBailOut("Error in --detect-sections argument: %s" % exc)
+
+
+_option_sections = Option(
+    long_option="detect-sections",
+    short_help=("Comma separated list of sections. The provided sections (but no more) will be"
+                " available (skipping SNMP detection)"),
+    argument=True,
+    argument_descr="S",
+    argument_conv=_convert_sections_argument,
+)
 
 
 def _convert_checks_argument(arg: str) -> _ChecksOption:
@@ -1404,6 +1425,7 @@ _option_checks = Option(
 DiscoverOptions = TypedDict(
     'DiscoverOptions',
     {
+        'detect-sections': _SectionsOption,
         'checks': _ChecksOption,
         'discover': int,
         'only-host-labels': bool,
@@ -1423,9 +1445,10 @@ def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
 
     discovery.do_discovery(
         set(hostnames),
-        options.get("checks"),
-        options["discover"] == 1,
-        "only-host-labels" in options,
+        preselected_section_names=options.get("detect-sections"),
+        run_only_plugin_names=options.get("checks"),
+        arg_only_new=options["discover"] == 1,
+        only_host_labels="only-host-labels" in options,
     )
 
 
@@ -1457,6 +1480,7 @@ modes.register(
                  short_help="Delete existing services before starting discovery",
                  count=True,
              ),
+             _option_sections,
              _option_checks,
              Option(
                  long_option="only-host-labels",
@@ -1480,6 +1504,7 @@ CheckingOptions = TypedDict(
     {
         'no-submit': bool,
         'perfdata': bool,
+        'detect-sections': _SectionsOption,
         'checks': _ChecksOption,
         'keepalive': bool,
         'keepalive-fd': int,
@@ -1518,7 +1543,12 @@ def mode_check(options: CheckingOptions, args: List[str]) -> None:
     if len(args) == 2:
         ipaddress = args[1]
 
-    return checking.do_check(hostname, ipaddress, run_only_plugin_names=options.get("checks"))
+    return checking.do_check(
+        hostname,
+        ipaddress,
+        preselected_section_names=options.get("detect-sections"),
+        run_only_plugin_names=options.get("checks"),
+    )
 
 
 modes.register(
@@ -1553,6 +1583,7 @@ modes.register(
                  short_option="p",
                  short_help="Also show performance data (use with -v)",
              ),
+             _option_sections,
              _option_checks,
              keepalive_option,
              Option(
@@ -1574,8 +1605,17 @@ modes.register(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
+InventoryOptions = TypedDict(
+    'InventoryOptions',
+    {
+        'force': bool,
+        'detect-sections': _SectionsOption,
+    },
+    total=False,
+)
 
-def mode_inventory(options: Dict, args: List[str]) -> None:
+
+def mode_inventory(options: InventoryOptions, args: List[str]) -> None:
     config_cache = config.get_config_cache()
 
     if args:
@@ -1590,7 +1630,7 @@ def mode_inventory(options: Dict, args: List[str]) -> None:
     if "force" in options:
         checkers.agent.AgentSource.use_outdated_persisted_sections = True
 
-    inventory.do_inv(hostnames)
+    inventory.do_inv(hostnames, preselected_section_names=options.get("detect-sections"))
 
 
 modes.register(
@@ -1612,6 +1652,7 @@ modes.register(
                  short_option="f",
                  short_help="Use cached agent data even if it's outdated.",
              ),
+             _option_sections,
          ]))
 
 #.

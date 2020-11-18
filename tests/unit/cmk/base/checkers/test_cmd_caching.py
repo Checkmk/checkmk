@@ -196,7 +196,7 @@ def test_mode_inventory_caching(hosts, cache, force, mocker):
     elif cache[0] is False:
         cmk.base.modes.check_mk.option_no_cache()  # --no-cache
 
-    options = {}
+    options: cmk.base.modes.check_mk.InventoryOptions = {}
     if force[0]:
         options["force"] = True
 

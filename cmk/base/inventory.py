@@ -38,6 +38,7 @@ from cmk.utils.type_defs import (
     InventoryPluginName,
     MetricTuple,
     result,
+    SectionName,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
@@ -89,6 +90,7 @@ class ActiveInventoryResult(NamedTuple):
 def do_inv(
     hostnames: List[HostName],
     *,
+    preselected_section_names: Optional[Set[SectionName]] = None,
     run_only_plugin_names: Optional[Set[InventoryPluginName]] = None,
 ) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
@@ -99,7 +101,8 @@ def do_inv(
         try:
             host_config = config.HostConfig.make_host_config(hostname)
             inv_result = _do_active_inventory_for(
-                host_config,
+                host_config=host_config,
+                preselected_section_names=preselected_section_names,
                 run_only_plugin_names=run_only_plugin_names,
             )
 
@@ -137,7 +140,8 @@ def do_inv_check(
     host_config = config.HostConfig.make_host_config(hostname)
 
     inv_result = _do_active_inventory_for(
-        host_config,
+        host_config=host_config,
+        preselected_section_names=None,
         run_only_plugin_names=None,
     )
     trees = inv_result.trees
@@ -201,7 +205,9 @@ def do_inv_check(
 
 
 def _do_active_inventory_for(
+    *,
     host_config: config.HostConfig,
+    preselected_section_names: Optional[Set[SectionName]],
     run_only_plugin_names: Optional[Set[InventoryPluginName]],
 ) -> ActiveInventoryResult:
     if host_config.is_cluster:
@@ -215,7 +221,11 @@ def _do_active_inventory_for(
     config_cache = config.get_config_cache()
 
     multi_host_sections, source_results = _fetch_multi_host_sections_for_inv(
-        config_cache, host_config, ipaddress)
+        config_cache,
+        host_config,
+        ipaddress,
+        preselected_section_names,
+    )
 
     return ActiveInventoryResult(
         trees=_do_inv_for_realhost(
@@ -225,7 +235,7 @@ def _do_active_inventory_for(
             run_only_plugin_names=run_only_plugin_names,
         ),
         source_results=source_results,
-        safe_to_write=_safe_to_write_tree(source_results),
+        safe_to_write=_safe_to_write_tree(source_results) and preselected_section_names is None,
     )
 
 
@@ -233,14 +243,18 @@ def _fetch_multi_host_sections_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
+    preselected_sections: Optional[Set[SectionName]],
 ) -> Tuple[MultiHostSections, Sequence[Tuple[Source, result.Result[HostSections, Exception]]]]:
     if host_config.is_cluster:
         return MultiHostSections(), []
 
+    mode = checkers.Mode.INVENTORY if preselected_sections is None else checkers.Mode.FORCE_SECTIONS
+
     sources = checkers.make_sources(
         host_config,
         ipaddress,
-        mode=checkers.Mode.INVENTORY,
+        mode=mode,
+        preselected_sections=preselected_sections,
     )
     for source in sources:
         _configure_source_for_inv(source)
@@ -249,7 +263,7 @@ def _fetch_multi_host_sections_for_inv(
         config_cache,
         host_config,
         ipaddress,
-        checkers.Mode.INVENTORY,
+        mode,
         sources,
     )
     multi_host_sections = MultiHostSections()

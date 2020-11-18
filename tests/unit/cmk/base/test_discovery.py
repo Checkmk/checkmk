@@ -933,6 +933,7 @@ def test_do_discovery(monkeypatch):
     with cmk_debug_enabled():
         discovery.do_discovery(
             arg_hostnames={"test-host"},
+            preselected_section_names=None,
             run_only_plugin_names=None,
             arg_only_new=False,
         )

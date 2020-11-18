@@ -118,9 +118,10 @@ def do_check(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     *,
-    # The next two *must* remain optional for Nagios and the `DiscoCheckExecutor`.
+    # The following arguments *must* remain optional for Nagios and the `DiscoCheckExecutor`.
     #   See Also: `cmk.base.discovery.check_discovery()`
     fetcher_messages: Sequence[FetcherMessage] = (),
+    preselected_section_names: Optional[Set[SectionName]] = None,
     run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     console.verbose("Checkmk version %s\n", cmk_version.__version__)
@@ -129,6 +130,9 @@ def do_check(
     host_config = config_cache.get_host_config(hostname)
 
     exit_spec = host_config.exit_code_spec()
+
+    mode = (checkers.Mode.CHECKING
+            if preselected_section_names is None else checkers.Mode.FORCE_SECTIONS)
 
     status: ServiceState = 0
     infotexts: List[ServiceDetails] = []
@@ -152,6 +156,10 @@ def do_check(
         #
         # But later, when checking the node services, the node has to only deal with the unclustered
         # services.
+        #
+        # TODO: clean this up. The fetched sections are computed in the checkers
+        #       _make_configured_snmp_sections now.
+        #
         belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
 
         services_to_fetch = _get_services_to_fetch(
@@ -171,13 +179,14 @@ def do_check(
         sources = checkers.make_sources(
             host_config,
             ipaddress,
-            mode=checkers.Mode.CHECKING,
+            mode=mode,
+            preselected_sections=preselected_section_names,
         )
         nodes = checkers.make_nodes(
             config_cache,
             host_config,
             ipaddress,
-            checkers.Mode.CHECKING,
+            mode,
             sources,
         )
 

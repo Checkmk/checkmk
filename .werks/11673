@@ -1,0 +1,25 @@
+Title: Developer option: --detect-sections
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1605694172
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i2
+
+This werk adds the new commandline option "<tt>--detect-sections</tt>" to the <tt>cmk -I my_host</tt>,
+<tt>cmk -i my_host</tt> and <tt>cmk my_host</tt> commands.
+
+It is mainly a debugging feature for check and inventory plugin developers; regular users are most unlikely
+to ever need it.
+
+Setting this option to a comma separated list of section names will have the effect that no more than the
+passed sections are available to the check or inventory plugins (depending on the command).
+
+SNMP sections will be fetched without SNMP detection.
+
+For instance if you execute <tt>cmk -II --detect-sections=hr_mem,uptime my_host</tt>, a rediscovery
+on <i>my_host</i> will be done, with (only) the sections <i>hr_mem</i> and <i>uptime</i> available.
+Note that the SNMP table corresponding to the <i>hr_mem</i> section will be fetched from the host,
+regardles of whether this host supports this MIB.

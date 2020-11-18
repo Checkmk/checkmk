@@ -313,6 +313,8 @@ def _get_rediscovery_mode(params: Dict) -> str:
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(
     arg_hostnames: Set[HostName],
+    *,
+    preselected_section_names: Optional[Set[SectionName]],
     run_only_plugin_names: Optional[Set[CheckPluginName]],
     arg_only_new: bool,
     only_host_labels: bool = False,
@@ -330,17 +332,20 @@ def do_discovery(
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
+    mode = (checkers.Mode.DISCOVERY
+            if preselected_section_names is None else checkers.Mode.FORCE_SECTIONS)
+
     # Now loop through all hosts
     for hostname in sorted(host_names):
         host_config = config_cache.get_host_config(hostname)
         section.section_begin(hostname)
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
-
             sources = checkers.make_sources(
                 host_config,
                 ipaddress,
-                mode=checkers.Mode.DISCOVERY,
+                mode=mode,
+                preselected_sections=preselected_section_names,
             )
             for source in sources:
                 _configure_sources(source, discovery_parameters=discovery_parameters)
@@ -348,7 +353,7 @@ def do_discovery(
                 config_cache,
                 host_config,
                 ipaddress,
-                checkers.Mode.DISCOVERY,
+                mode,
                 sources,
             )
             max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
@@ -366,7 +371,6 @@ def do_discovery(
                         host_config=host_config,
                     )),
             )
-
             _do_discovery_for(
                 hostname,
                 ipaddress,

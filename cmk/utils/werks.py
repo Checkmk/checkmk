@@ -35,7 +35,7 @@ class WerkTranslator:
             "core": _("Core & setup"),
             "checks": _("Checks & agents"),
             "multisite": _("User interface"),
-            "wato": _("WATO"),
+            "wato": _("Setup"),
             "notifications": _("Notifications"),
             "bi": _("BI"),
             "reporting": _("Reporting & availability"),
@@ -52,6 +52,7 @@ class WerkTranslator:
             "agents": _("Agent bakery"),
             "metrics": _("Metrics system"),
             "alerts": _("Alert handlers"),
+            "dcd": _("Dynamic host configuration"),
 
             # CMK-OMD
             "omd": _("Site management"),

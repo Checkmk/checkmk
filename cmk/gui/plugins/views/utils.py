@@ -1770,6 +1770,7 @@ class Cell:
            and _get_sorter_name_of_painter(self.painter_name()) is not None:
             params: HTTPVariables = [
                 ('sort', self._sort_url()),
+                ('_show_filter_form', 0),
             ]
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))

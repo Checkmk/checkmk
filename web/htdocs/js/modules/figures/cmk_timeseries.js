@@ -932,6 +932,8 @@ class AreaPlot extends SubPlot {
                 else return base;
             });
 
+        this._render_grid();
+
         let color = this.get_color();
         let gradient_color =
             "url(#area-gradient-" + this.definition.id + this._renderer.get_id() + ")";
@@ -961,6 +963,26 @@ class AreaPlot extends SubPlot {
             .style("stroke", color)
             .style("stroke-width", stroke_width)
             .style("opacity", opacity);
+    }
+
+    _render_grid() {
+        // Grid
+        let height = this._renderer.plot_size.height;
+        this.svg
+            .selectAll("g.grid.vertical")
+            .data([null])
+            .join("g")
+            .classed("grid vertical", true)
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(this._renderer.scale_x).ticks(5).tickSize(-height).tickFormat(""));
+
+        let width = this._renderer.plot_size.width;
+        this.svg
+            .selectAll("g.grid.horizontal")
+            .data([null])
+            .join("g")
+            .classed("grid horizontal", true)
+            .call(d3.axisLeft(this._renderer.scale_y).ticks(5).tickSize(-width).tickFormat(""));
     }
 
     get_color() {

@@ -787,6 +787,15 @@ div.dashlet.single_metric {
     }
   }
 
+  g.grid path {
+    stroke-width: 0;
+  }
+  g.grid line {
+    stroke: #8097b1;
+    stroke-opacity: 0.61;
+    stroke-width: 0.5px;
+  }
+
   div.dashlet_inner div.metric {
     height: inherit;
     padding: 0 4px 4px;

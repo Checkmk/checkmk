@@ -59,23 +59,19 @@ def authenticate(request: Request) -> Iterator[bool]:
         yield False
         return
 
-    with UserContext(user_id):
+    with UserSessionContext(user_id):
         yield True
 
 
 @contextlib.contextmanager
-def UserContext(user_id: UserId) -> Iterator[None]:
-    """Managing authenticated user context
-
-    After the user has been authenticated, initialize the global user object.
-    Also cleanup when leaving"""
-    try:
-        config.set_user_by_id(user_id)
-        yield
-    finally:
-        html.transaction_manager.store_new()
-        userdb.on_end_of_request(user_id)
-        config.clear_user_login()
+def UserSessionContext(user_id: UserId) -> Iterator[None]:
+    """Managing context of authenticated user session with cleanup before logout."""
+    with config.UserContext(user_id):
+        try:
+            yield
+        finally:
+            html.transaction_manager.store_new()
+            userdb.on_end_of_request(user_id)
 
 
 def auth_cookie_name() -> str:

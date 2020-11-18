@@ -29,7 +29,7 @@ def test_flash(user_id):
     # Execute the first request flash some message
     with AppContext(DummyApplication(environ, None)), \
             RequestContext(htmllib.html(http.Request(environ))) as request, \
-            login.UserContext(user_id):
+            login.UserSessionContext(user_id):
         session_id = on_succeeded_login(user_id)  # Create and activate session
         assert request.session is not None
 
@@ -39,7 +39,7 @@ def test_flash(user_id):
     # Now create the second request to get the previously flashed message
     with AppContext(DummyApplication(environ, None)), \
             RequestContext(htmllib.html(http.Request(environ))), \
-            login.UserContext(user_id):
+            login.UserSessionContext(user_id):
         on_access(user_id, session_id)
         assert request.session is not None
         assert session.session_info.flashes == ["abc"]
@@ -55,7 +55,7 @@ def test_flash(user_id):
     # second one consumed them.
     with AppContext(DummyApplication(environ, None)), \
             RequestContext(htmllib.html(http.Request(environ))), \
-            login.UserContext(user_id):
+            login.UserSessionContext(user_id):
         on_access(user_id, session_id)
         assert request.session is not None
         assert session.session_info.flashes == []
@@ -63,7 +63,7 @@ def test_flash(user_id):
 
 
 def test_flash_escape_html_in_str(user_id, module_wide_request_context):
-    with login.UserContext(user_id):
+    with login.UserSessionContext(user_id):
         on_succeeded_login(user_id)  # Create and activate session
 
         flash("<script>aaa</script>")
@@ -71,7 +71,7 @@ def test_flash_escape_html_in_str(user_id, module_wide_request_context):
 
 
 def test_flash_dont_escape_html(user_id, module_wide_request_context):
-    with login.UserContext(user_id):
+    with login.UserSessionContext(user_id):
         on_succeeded_login(user_id)  # Create and activate session
 
         flash(HTML("<script>aaa</script>"))

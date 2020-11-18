@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import sys
 import errno
 import os
 import copy
 import json
 from types import ModuleType
-from typing import Set, Any, AnyStr, Callable, Dict, List, Optional, Tuple, Union
+from typing import Set, Any, AnyStr, Callable, Dict, Iterator, List, Optional, Tuple, Union
 from pathlib import Path
 import time
 
@@ -806,6 +807,18 @@ def _set_user(_user: LoggedInUser) -> None:
     local.user will set the current RequestContext to _user and it will be accessible via
     cmk.gui.globals.user directly. This is imported here."""
     local.user = _user
+
+
+@contextlib.contextmanager
+def UserContext(user_id: UserId) -> Iterator[None]:
+    """Managing authenticated user context
+
+    After the user has been authenticated, initialize the global user object."""
+    try:
+        set_user_by_id(user_id)
+        yield
+    finally:
+        clear_user_login()
 
 
 #.

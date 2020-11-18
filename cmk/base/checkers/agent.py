@@ -7,7 +7,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import cast, Dict, Final, List, Optional, Tuple
+from typing import cast, Dict, Final, List, MutableMapping, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -35,7 +35,6 @@ import cmk.base.config as config
 from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (
     AgentSectionContent,
-    AgentSections,
     PiggybackRawData,
     SectionCacheInfo,
 )
@@ -48,7 +47,7 @@ from ._cache import PersistedSections
 __all__ = ["AgentSource", "AgentHostSections"]
 
 
-class AgentHostSections(HostSections[AgentRawData, AgentSections, AgentSectionContent]):
+class AgentHostSections(HostSections[AgentRawData, AgentSectionContent]):
     pass
 
 
@@ -350,7 +349,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         Returns a HostSections() object.
         """
         hostname = self.hostname
-        sections: AgentSections = {}
+        sections: MutableMapping[SectionName, AgentSectionContent] = {}
         # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
         # The value is a list of lines which were received for this host.
         piggybacked_raw_data: PiggybackRawData = {}

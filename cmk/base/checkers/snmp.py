@@ -16,7 +16,6 @@ from cmk.snmplib.type_defs import (
     SNMPDetectSpec,
     SNMPRawData,
     SNMPSectionContent,
-    SNMPSections,
 )
 
 from cmk.fetchers import FetcherType, SNMPFetcher
@@ -38,7 +37,7 @@ def make_plugin_store() -> SNMPPluginStore:
     })
 
 
-class SNMPHostSections(HostSections[SNMPRawData, SNMPSections, SNMPSectionContent]):
+class SNMPHostSections(HostSections[SNMPRawData, SNMPSectionContent]):
     pass
 
 

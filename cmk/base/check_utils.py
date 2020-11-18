@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from cmk.utils.type_defs import CheckPluginName, HostName, Item, LegacyCheckParameters, SectionName
 
-from cmk.snmplib.type_defs import SNMPSectionContent, SNMPSections
+from cmk.snmplib.type_defs import SNMPSectionContent
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
@@ -17,16 +17,12 @@ RulesetName = str
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 
 AgentSectionContent = List[List[str]]
-AgentSections = Dict[SectionName, AgentSectionContent]
 
 PiggybackRawData = Dict[HostName, List[bytes]]
 ParsedSectionContent = Any
 
 AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
-AbstractSections = Union[AgentSections, SNMPSections]
-
 TSectionContent = TypeVar("TSectionContent", bound=AbstractSectionContent)
-TSections = TypeVar("TSections", bound=AbstractSections)
 
 ServiceID = Tuple[CheckPluginName, Item]
 CheckTable = Dict[ServiceID, 'Service']

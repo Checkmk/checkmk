@@ -8,7 +8,7 @@ import abc
 import logging
 import sys
 from pathlib import Path
-from typing import final, Final, Generic, Iterable, Optional, Set, TypeVar, Union
+from typing import cast, final, Final, Generic, Iterable, MutableMapping, Optional, Set, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -35,7 +35,7 @@ from cmk.fetchers.type_defs import Mode
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
-from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo, TSectionContent, TSections
+from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo, TSectionContent
 from cmk.base.config import HostConfig
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
@@ -52,7 +52,7 @@ __all__ = [
 THostSections = TypeVar("THostSections", bound="HostSections")
 
 
-class HostSections(Generic[TRawData, TSections, TSectionContent], metaclass=abc.ABCMeta):
+class HostSections(Generic[TRawData, TSectionContent], metaclass=abc.ABCMeta):
     """A wrapper class for the host information read by the data sources
 
     It contains the following information:
@@ -66,7 +66,7 @@ class HostSections(Generic[TRawData, TSections, TSectionContent], metaclass=abc.
     """
     def __init__(
         self,
-        sections: Optional[TSections] = None,
+        sections: Optional[MutableMapping[SectionName, TSectionContent]] = None,
         cache_info: Optional[SectionCacheInfo] = None,
         piggybacked_raw_data: Optional[PiggybackRawData] = None,
         persisted_sections: Optional[PersistedSections[TSectionContent]] = None,
@@ -180,7 +180,10 @@ class HostSections(Generic[TRawData, TSections, TSectionContent], metaclass=abc.
         section_name: SectionName,
         section_content: TSectionContent,
     ) -> None:
-        self.sections.setdefault(section_name, []).extend(section_content)
+        self.sections.setdefault(
+            section_name,
+            cast(TSectionContent, []),
+        ).extend(section_content)  # type: ignore[arg-type]
 
     def _add_cached_section(
         self,

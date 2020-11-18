@@ -859,64 +859,6 @@ class AreaPlot extends SubPlot {
         return "area";
     }
 
-    update_transformed_data() {
-        SubPlot.prototype.update_transformed_data.call(this);
-        this._compute_quantiles();
-    }
-
-    _compute_quantiles() {
-        let all_values = [];
-        this.transformed_data.forEach(point => {
-            all_values.push(point.value);
-        });
-
-        all_values.sort((a, b) => a - b);
-
-        this._quantiles = {
-            top_20_perc: d3.quantile(all_values, 0.8),
-        };
-    }
-
-    prepare_render() {
-        let plot_size = this._renderer.plot_size;
-        SubPlot.prototype.prepare_render.call(this);
-
-        let color = this.get_color();
-        let y2 = 0;
-        if (this._quantiles) y2 = this._renderer.scale_y(this._quantiles.top_20_perc);
-
-        this.svg
-            .selectAll("linearGradient")
-            .data([null])
-            .enter()
-            .append("linearGradient")
-            .attr("id", "area-gradient-" + this.definition.id + this._renderer.get_id())
-            .attr("gradientUnits", "userSpaceOnUse")
-            .selectAll("stop")
-            .data([
-                {offset: "0%", color: "#000000", opacity: 0.2},
-                {offset: "95%", color: color, opacity: 1},
-            ])
-            .enter()
-            .append("stop")
-            .attr("offset", function (d) {
-                return d.offset;
-            })
-            .attr("stop-color", function (d) {
-                return d.color;
-            })
-            .attr("stop-opacity", function (d) {
-                return d.opacity;
-            });
-
-        this.svg
-            .selectAll("linearGradient")
-            .attr("x1", 0)
-            .attr("y1", plot_size.height)
-            .attr("x2", 0)
-            .attr("y2", y2);
-    }
-
     render() {
         let shift_y = this.get_coord_shifts()[1];
         let base = this._renderer.scale_y(shift_y);
@@ -935,8 +877,6 @@ class AreaPlot extends SubPlot {
         this._render_grid();
 
         let color = this.get_color();
-        let gradient_color =
-            "url(#area-gradient-" + this.definition.id + this._renderer.get_id() + ")";
         let opacity = this.get_opacity();
         let stroke_width = this.get_stroke_width();
         if (this.definition.stack_on) gradient_color = color;
@@ -945,24 +885,17 @@ class AreaPlot extends SubPlot {
             .selectAll("g.graph_data path")
             .data([this.transformed_data])
             .join(enter =>
-                enter
-                    .append("g")
-                    .classed("graph_data", true)
-                    .append("path")
-                    .style("stroke", color)
-                    .style("fill", gradient_color)
-                    .style("opacity", opacity)
-                    .classed("area", true)
+                enter.append("g").classed("graph_data", true).append("path").classed("area", true)
             )
             .classed((this.definition.css_classes || []).join(" "), true);
 
         this._renderer
             .transition(path)
             .attr("d", d => area(d))
-            .style("fill", gradient_color)
+            .style("fill", color)
             .style("stroke", color)
             .style("stroke-width", stroke_width)
-            .style("opacity", opacity);
+            .style("fill-opacity", opacity);
     }
 
     _render_grid() {
@@ -992,7 +925,7 @@ class AreaPlot extends SubPlot {
     }
 
     get_opacity() {
-        let opacity = SubPlot.prototype.get_opacity.call(this);
+        let opacity = this.definition.opacity;
         let classes = (this.definition.css_classes || []).concat("area");
         return opacity != undefined ? opacity : this._get_css("opacity", "path", classes);
     }

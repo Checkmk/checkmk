@@ -12,6 +12,7 @@ from cmk.gui.valuespec import (
     Timerange,
     CascadingDropdown,
     DropdownChoice,
+    GraphColor,
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
@@ -117,23 +118,26 @@ class SingleMetricDataGenerator(ABCDataGenerator):
         # Historic values are always added as plot_type area
         if properties["time_range"] != "current":
             for row_id, metric, row in metrics:
+                color = metric.get('color', "#008EFF") if properties.get(
+                    "color", "default") == "default" else properties.get('color', "#008EFF")
                 plot_definition = {
-                    "plot_type": "area",
                     "label": row['host_name'],
                     "id": row_id,
-                    "use_tags": [row_id]
+                    "plot_type": "area",
+                    "use_tags": [row_id],
+                    "color": color,
+                    "fill": properties.get("fill", True),
+                    "opacity": 0.1 if properties.get('fill', True) is True else 0
                 }
-                if "color" in metric:
-                    plot_definition["color"] = metric["color"]
                 plot_definitions.append(plot_definition)
 
         # The current/last value definition also gets the metric levels
         for row_id, metric, row in metrics:
             plot_definition = {
-                "plot_type": "single_value",
-                "id": "%s_single" % row_id,
-                "use_tags": [row_id],
                 "label": row['host_name'],
+                "id": "%s_single" % row_id,
+                "plot_type": "single_value",
+                "use_tags": [row_id],
                 "svc_state": svc_map(row),
                 "metrics": {
                     "warn": metric["scalar"].get("warn"),
@@ -167,7 +171,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
 @page_registry.register_page("single_metric_data")
 class SingleMetricPage(AjaxPage):
     def page(self):
-        return SingleMetricDataGenerator.generate_response_from_request()
+        return SingleMetricStyledDataGenerator.generate_response_from_request()
 
 
 #   .--Gauge---------------------------------------------------------------.
@@ -253,6 +257,22 @@ class BarplotDashlet(ABCFigureDashlet):
 #   +----------------------------------------------------------------------+
 
 
+class SingleMetricStyledDataGenerator(SingleMetricDataGenerator):
+    @classmethod
+    def _vs_elements(cls):
+        vs_el = super()._vs_elements()
+        vs_el.extend([("fill",
+                       DropdownChoice(choices=[
+                           (False, _("Don't fill area plot")),
+                           (True, _("Fill area plot")),
+                       ],
+                                      default_value=True,
+                                      title=_("Fill area plot when displaying historic values"))),
+                      ("color", GraphColor(title=_("Color metric plot"), default_value="default"))])
+
+        return vs_el
+
+
 @dashlet_registry.register
 class SingleMetricDashlet(ABCFigureDashlet):
     """Dashlet that displays a single metric"""
@@ -271,7 +291,7 @@ class SingleMetricDashlet(ABCFigureDashlet):
 
     @classmethod
     def data_generator(cls):
-        return SingleMetricDataGenerator
+        return SingleMetricStyledDataGenerator
 
     @classmethod
     def description(cls):

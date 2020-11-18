@@ -4397,6 +4397,12 @@ class Alternative(ValueSpec):
             return output + vs.value_to_text(value)
         return _("invalid:") + " " + escaping.escape_attribute(str(value))
 
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
+
     def from_html_vars(self, varprefix):
         nr = html.request.get_integer_input_mandatory(varprefix + "_use")
         vs = self._elements[nr]

@@ -39,6 +39,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.watolib.hosts_and_folders import CREHost
+from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.utils.flashed_messages import flash
 
@@ -439,6 +440,13 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                     message=_("Do you really want to delete the host <tt>%s</tt>?") % host.name(),
                 )),
         )
+
+        if config.user.may("wato.auditlog"):
+            yield PageMenuEntry(
+                title=_("Audit log"),
+                icon_name="auditlog",
+                item=make_simple_link(make_object_audit_log_url(host.object_ref())),
+            )
 
 
 class CreateHostMode(ABCHostMode):

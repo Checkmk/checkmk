@@ -22,11 +22,14 @@ from cmk.utils.type_defs import UserId
 from cmk.utils.object_diff import make_object_diff
 
 import cmk.gui.utils
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.globals import request
 from cmk.gui import config, escaping
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.valuespec import DropdownChoice
 
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
@@ -380,3 +383,12 @@ def activation_sites() -> Dict[SiteId, SiteConfiguration]:
             unfiltered_sites=config.configured_sites()).items()
         if config.site_is_local(site_id) or site.get("replication")
     }
+
+
+def make_object_audit_log_url(object_ref: ObjectRef) -> str:
+    return makeuri_contextless(request, [
+        ("mode", "auditlog"),
+        ("options_p_object_type", DropdownChoice.option_id(object_ref.object_type)),
+        ("options_p_object_ident", object_ref.ident),
+    ],
+                               filename="wato.py")

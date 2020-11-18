@@ -56,6 +56,7 @@ from cmk.gui.watolib.services import (DiscoveryState, Discovery, checkbox_id, ex
                                       DiscoveryResult, DiscoveryOptions, StartDiscoveryRequest)
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.changes import make_object_audit_log_url
 
 from cmk.gui.plugins.wato import (
     mode_registry,
@@ -1162,6 +1163,13 @@ def _page_menu_host_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry]:
         )
 
     yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
+
+    if config.user.may("wato.auditlog"):
+        yield PageMenuEntry(
+            title=_("Audit log"),
+            icon_name="auditlog",
+            item=make_simple_link(make_object_audit_log_url(host.object_ref())),
+        )
 
 
 def _page_menu_settings_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry]:

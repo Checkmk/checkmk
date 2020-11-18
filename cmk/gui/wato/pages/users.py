@@ -52,9 +52,10 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_confirmed_form_submit_link,
 )
-from cmk.gui.watolib.users import delete_users, edit_users
+from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.changes import make_object_audit_log_url
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -577,22 +578,16 @@ class ModeEditUser(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(breadcrumb, form_name="user", button_name="save")
 
-        menu.dropdowns.insert(
-            1,
-            PageMenuDropdown(
-                name="related",
-                title=_("Related"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Setup"),
-                        entries=list(self._page_menu_entries_related()),
-                    ),
-                ],
+        action_dropdown = menu.dropdowns[0]
+        action_dropdown.topics.append(
+            PageMenuTopic(
+                title=_("This user"),
+                entries=list(self._page_menu_entries_this_user()),
             ))
 
         return menu
 
-    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_this_user(self) -> Iterator[PageMenuEntry]:
         if self._rbn_enabled and not self._is_new_user:
             yield PageMenuEntry(
                 title=_("Notifications"),
@@ -600,6 +595,15 @@ class ModeEditUser(WatoMode):
                 item=make_simple_link(
                     watolib.folder_preserving_link([("mode", "user_notifications"),
                                                     ("user", self._user_id)])),
+            )
+
+        if config.user.may("wato.auditlog") and not self._is_new_user:
+            assert self._user_id is not None
+            yield PageMenuEntry(
+                title=_("Audit log"),
+                icon_name="auditlog",
+                item=make_simple_link(
+                    make_object_audit_log_url(make_user_object_ref(UserId(self._user_id)))),
             )
 
     def action(self) -> ActionResult:

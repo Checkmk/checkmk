@@ -66,6 +66,7 @@ from cmk.gui.watolib.rulespecs import (
     Rulespec,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -1386,14 +1387,8 @@ class ABCEditRuleMode(WatoMode):
         action_dropdown = menu.dropdowns[0]
         action_dropdown.topics.append(
             PageMenuTopic(
-                title=_("For Web API"),
-                entries=[
-                    PageMenuEntry(
-                        title=_("Export for API"),
-                        icon_name="export",
-                        item=make_form_submit_link("rule_editor", "_export_rule"),
-                    ),
-                ],
+                title=_("This rule"),
+                entries=list(self._page_menu_entries_this_rule()),
             ))
 
         menu.dropdowns.insert(
@@ -1414,6 +1409,20 @@ class ABCEditRuleMode(WatoMode):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield _page_menu_entry_predefined_conditions()
         yield _page_menu_entry_rule_search()
+
+    def _page_menu_entries_this_rule(self) -> Iterable[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Export for API"),
+            icon_name="export",
+            item=make_form_submit_link("rule_editor", "_export_rule"),
+        )
+
+        if config.user.may("wato.auditlog"):
+            yield PageMenuEntry(
+                title=_("Audit log"),
+                icon_name="auditlog",
+                item=make_simple_link(make_object_audit_log_url(self._rule.object_ref())),
+            )
 
     def breadcrumb(self) -> Breadcrumb:
         # Let the ModeRulesetGroup know the group we are currently editing

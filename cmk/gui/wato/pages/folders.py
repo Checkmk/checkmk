@@ -24,6 +24,7 @@ import cmk.gui.view_utils
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.plugins.wato.utils import (
     mode_registry,
     configure_attributes,
@@ -396,6 +397,13 @@ class ModeFolder(WatoMode):
                         ("search_p_ruleset_used", DropdownChoice.option_id(True)),
                         ("search_p_ruleset_used_USE", "on"),
                     ])),
+            )
+
+        if config.user.may("wato.auditlog"):
+            yield PageMenuEntry(
+                title=_("Audit log"),
+                icon_name="auditlog",
+                item=make_simple_link(make_object_audit_log_url(self._folder.object_ref())),
             )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:

@@ -111,9 +111,9 @@ class MegaMenuRenderer:
         html.open_div(class_="search_bar")
         if menu.search:
             menu.search.show_search_field()
+        html.close_div()
         if menu.info_line:
             html.span(menu.info_line(), id_="info_line")
-        html.close_div()
         topics = menu.topics()
         if any_show_more_items(topics):
             html.open_div()

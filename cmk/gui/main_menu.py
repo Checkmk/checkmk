@@ -131,4 +131,4 @@ mega_menu_registry.register(
              icon="main_help",
              sort_index=18,
              topics=_help_menu_topics,
-             info_line=lambda: f"Checkmk {__version__} ({edition_title()})"))
+             info_line=lambda: f"{__version__} ({edition_title()})"))

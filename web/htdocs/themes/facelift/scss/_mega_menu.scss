@@ -143,7 +143,7 @@
     }
 
     #info_line {
-      margin: auto 0 auto 40px;
+      margin: auto $spacing auto 0;
       font-size: $font-size-default;
       color: rgba($font-color, 0.7);
     }

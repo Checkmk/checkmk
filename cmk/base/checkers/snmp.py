@@ -183,14 +183,14 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                     skip_ignored=True,
                 ),
                 consider_inventory_plugins=False,
-            ))
+            )).intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
 
     def _make_inventory_snmp_sections(self) -> Set[SectionName]:
         return set(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=(),
                 consider_inventory_plugins=True,
-            ))
+            )).intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
 
     @staticmethod
     def _make_description(

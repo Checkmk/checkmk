@@ -1403,12 +1403,13 @@ def configure_attributes(new,
 
     for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
+        topic_attributes = watolib.get_sorted_host_attributes_by_topic(topic_id)
 
         forms.header(
             topic_title,
             isopen=topic_id in ["basic", "address", "data_sources"],
             table_id=topic_id,
-            show_more_toggle=True,
+            show_more_toggle=any(attribute.is_show_more() for attribute in topic_attributes),
             show_more_mode=show_more_mode,
         )
 
@@ -1417,7 +1418,7 @@ def configure_attributes(new,
                 forms.section(_u(vs.title()))
                 vs.render_input(attr_varprefix, default_value)
 
-        for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
+        for attr in topic_attributes:
             attrname = attr.name()
             if attrname in without_attributes:
                 continue  # e.g. needed to skip ipaddress in CSV-Import

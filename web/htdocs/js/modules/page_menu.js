@@ -212,11 +212,6 @@ export function update_filter_list_scroll(filter_list_id) {
     }
 }
 
-export function update_page_state_top_line(text) {
-    let container = document.getElementById("page_state_top_line");
-    container.innerHTML = text;
-}
-
 export function side_popup_add_simplebar_scrollbar(popup_id) {
     let popup = document.getElementById(popup_id);
     let content = popup.getElementsByClassName("side_popup_content")[0];

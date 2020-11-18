@@ -668,3 +668,10 @@ function set_focus(focus_obj) {
         }
     }
 }
+
+export function update_pending_changes(changes_info) {
+    const container = document.getElementById("pending_changes");
+    if (changes_info && container) {
+        container.innerHTML = changes_info;
+    }
+}

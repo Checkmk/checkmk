@@ -124,7 +124,9 @@ function update(handler_data, response) {
     container.innerHTML = response.body;
     utils.execute_javascript_by_object(container);
 
-    page_menu.update_page_state_top_line(response.pending_changes_info);
+    if (response.pending_changes_info) {
+        utils.update_pending_changes(response.pending_changes_info);
+    }
 
     // Also execute delayed active checks once to trigger delayed checks that are initially visible.
     trigger_delayed_active_checks();

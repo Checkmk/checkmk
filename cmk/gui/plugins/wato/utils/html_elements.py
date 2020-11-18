@@ -57,9 +57,10 @@ def wato_html_footer(show_body_end: bool = True) -> None:
 def _make_wato_page_state() -> PageState:
     changes_info = get_pending_changes_info()
     changelog_url = "wato.py?mode=changelog"
+    span_id = "pending_changes"
     if changes_info:
         return PageState(
-            text=changes_info,
+            text=html.render_span(changes_info, id_=span_id),
             icon_name="pending_changes",
             url=changelog_url,
             tooltip_text=ungettext(singular=_("Currently there is one change to activate"),
@@ -67,6 +68,6 @@ def _make_wato_page_state() -> PageState:
                                    n=int(re.findall(r"\d+", changes_info)[0])) + \
                          "\n" + _("Click here to go to pending changes."),
         )
-    return PageState(text=_("No pending changes"),
+    return PageState(text=html.render_span(_("No pending changes"), id_=span_id),
                      url=changelog_url,
                      tooltip_text=_("Click here to see the activation status per site."))

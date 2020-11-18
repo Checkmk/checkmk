@@ -20,13 +20,7 @@ See Also:
 """
 
 import abc
-# TODO: Quickfix for fixing update_check_mk_werks.py on lastrechner:
-# lastrechner has python 3.6 installed, which does not ship Final.
-# Remove this as soon as we switch to the new website and server, which should use our Pipenv
-try:
-    from typing import Any, Callable, Final, Generic, Iterable, NoReturn, Optional, TypeVar
-except ImportError:
-    pass
+from typing import Any, Callable, Final, Generic, Iterable, NoReturn, Optional, TypeVar
 
 __all__ = ["Result", "OK", "Error"]
 

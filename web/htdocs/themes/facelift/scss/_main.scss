@@ -97,11 +97,11 @@ form {
 input:hover,
 select:hover,
 textarea:hover,
-input[type="checkbox"]:hover + label:before {
+input[type="checkbox"]:hover + label::before {
   background-color: $input-hover-bg-color;
 }
 
-td.checkbox input[type="checkbox"] + label:before {
+td.checkbox input[type="checkbox"] + label::before {
   margin: 0;
 }
 
@@ -123,14 +123,10 @@ input[type="checkbox"] {
   }
 
   &:checked {
-    + label:before {
+    + label::before {
       color: $checkbox-checked-color;
       text-align: center;
       content: "\2716";
-    }
-
-    + label:after {
-      font-weight: bold;
     }
   }
 }

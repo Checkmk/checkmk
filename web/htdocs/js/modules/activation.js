@@ -229,5 +229,5 @@ function finish_activation(result) {
     utils.schedule_reload(utils.makeuri({_finished: "1"}), 1000);
 
     // Trigger a reload of the sidebar (to update changes in WATO snapin)
-    utils.reload_sidebar();
+    utils.reload_whole_page();
 }

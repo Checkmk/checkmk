@@ -35,8 +35,7 @@ function handle_job_detail_response(handler_data, response_body) {
     if (!had_message) {
         refresh_job_details(handler_data["url"], handler_data["ident"], handler_data["is_site"]);
     } else {
-        utils.reload_sidebar();
-        window.location.reload();
+        utils.reload_whole_page();
     }
 }
 

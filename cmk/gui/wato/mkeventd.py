@@ -1120,7 +1120,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         rfc = cmk.gui.mkeventd.send_event(event)
         flash(
             _("Test event generated and sent to Event Console.") + html.render_br() +
-            html.render_pre(rfc) + html.render_reload_sidebar())
+            html.render_pre(rfc))
         return True
 
     def _add_change(self, what, message):

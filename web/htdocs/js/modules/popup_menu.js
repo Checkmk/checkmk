@@ -387,7 +387,7 @@ export function pagetype_add_to_container(page_type, page_name) {
             // sidebar.
             if (response_body) {
                 var parts = response_body.split("\n");
-                if (parts[1] == "true") utils.reload_sidebar();
+                if (parts[1] == "true") utils.reload_whole_page();
                 if (parts[0]) window.location.href = parts[0];
             }
         },

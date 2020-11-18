@@ -23,6 +23,7 @@ from typing import Dict, Any, List, Tuple, Optional as _Optional, Iterator
 
 from six import ensure_str
 
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
 
@@ -1003,10 +1004,14 @@ class Overridable(Base):
         page_menu = customize_page_menu(breadcrumb, current_type_dropdown, cls.type_name())
         html.header(cls.phrase("title_plural"), breadcrumb, page_menu)
 
+        for message in get_flashed_messages():
+            html.show_message(message)
+
         # Deletion
         delname = html.request.var("_delete")
         if delname and html.check_transaction():
             owner = UserId(html.request.get_unicode_input_mandatory('_owner', config.user.id))
+            pagetype_title = cls.phrase("title")
 
             try:
                 instance = cls.instance((owner, delname))
@@ -1014,7 +1019,7 @@ class Overridable(Base):
                 raise MKUserError(
                     "_delete",
                     _("The %s you are trying to delete "
-                      "does not exist.") % cls.phrase("title"))
+                      "does not exist.") % pagetype_title)
 
             if not instance.may_delete():
                 raise MKUserError("_delete", _("You are not permitted to perform this action."))
@@ -1022,9 +1027,11 @@ class Overridable(Base):
             try:
                 cls.remove_instance((owner, delname))
                 cls.save_user_instances(owner)
-                html.reload_sidebar()
+                html.reload_whole_page()
             except MKUserError as e:
                 html.user_error(e)
+
+            flash(_('Your %s has been deleted.') % pagetype_title)
 
         elif html.request.var("_bulk_delete") and html.check_transaction():
             cls._bulk_delete_after_confirm()
@@ -1148,7 +1155,7 @@ class Overridable(Base):
         for owner in {e[0] for e in to_delete}:
             cls.save_user_instances(owner)
 
-        html.reload_sidebar()
+        html.reload_whole_page()
 
     # Override this in order to display additional columns of an instance
     # in the table of all instances.
@@ -1274,8 +1281,7 @@ class Overridable(Base):
                 else:
                     redirect_url = back_url
 
-                html.show_message(_('Your changes haven been saved.'))
-                html.immediate_browser_redirect(0.5, redirect_url)
+                flash(_('Your changes haven been saved.'))
 
                 # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
                 # can we simply move it there?
@@ -1285,7 +1291,7 @@ class Overridable(Base):
                 # or not to reload the sidebar.
                 if (not page_dict.get("hidden") or
                         new_page_dict.get("hidden") != page_dict.get("hidden")):
-                    html.reload_sidebar()
+                    html.reload_whole_page("index.py?start_url=%s" % redirect_url)
 
         else:
             html.show_localization_hint()
@@ -1551,8 +1557,8 @@ class OverridableContainer(Overridable, Container):
                 title=page.title(),
                 icon_name=cls.type_name(),
                 item=make_javascript_link(
-                    "cmk.popup_menu.pagetype_add_to_container(%s, %s);cmk.utils.reload_sidebar();" %
-                    (json.dumps(cls.type_name()), json.dumps(page.name()))),
+                    "cmk.popup_menu.pagetype_add_to_container(%s, %s);cmk.utils.reload_whole_page();"
+                    % (json.dumps(cls.type_name()), json.dumps(page.name()))),
             )
 
     @classmethod

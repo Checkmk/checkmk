@@ -189,4 +189,4 @@ def page_clear():
     failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
     render_page_confirm(acktime, prev_url, failed_notifications)
     if html.request.var('_confirm'):
-        html.reload_sidebar()
+        html.reload_whole_page()

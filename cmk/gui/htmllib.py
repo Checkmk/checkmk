@@ -1365,16 +1365,9 @@ class html(ABCHTMLGenerator):
     def final_javascript(self, code: str) -> None:
         self.final_javascript_code += code + "\n"
 
-    def reload_sidebar(self) -> None:
+    def reload_whole_page(self, url: Optional[str] = None) -> None:
         if not self.request.has_var("_ajaxid"):
-            self.write_html(self.render_reload_sidebar())
-
-    def render_reload_sidebar(self) -> HTML:
-        return self.render_javascript("cmk.utils.reload_sidebar()")
-
-    def reload_whole_page(self) -> None:
-        if not self.request.has_var("_ajaxid"):
-            return self.final_javascript("cmk.utils.reload_whole_page()")
+            return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
 
     def finalize(self) -> None:
         """Finish the HTTP request processing before handing over to the application server"""

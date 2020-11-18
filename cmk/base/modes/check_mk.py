@@ -1236,110 +1236,6 @@ modes.register(
     ))
 
 #.
-#   .--inventory-----------------------------------------------------------.
-#   |             _                      _                                 |
-#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
-#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
-#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
-#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
-#   |                                                  |___/               |
-#   '----------------------------------------------------------------------'
-
-
-def mode_inventory(options: Dict, args: List[str]) -> None:
-    config_cache = config.get_config_cache()
-
-    if args:
-        hostnames = modes.parse_hostname_list(args, with_clusters=True)
-        console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
-    else:
-        # No hosts specified: do all hosts and force caching
-        hostnames = sorted(config_cache.all_active_hosts())
-        checkers.FileCacheFactory.reset_maybe()
-        console.verbose("Doing HW/SW inventory on all hosts\n")
-
-    if "force" in options:
-        checkers.agent.AgentSource.use_outdated_persisted_sections = True
-
-    inventory.do_inv(hostnames)
-
-
-modes.register(
-    Mode(long_option="inventory",
-         short_option="i",
-         handler_function=mode_inventory,
-         argument=True,
-         argument_descr="HOST1 HOST2...",
-         argument_optional=True,
-         short_help="Do a HW/SW-Inventory on some ar all hosts",
-         long_help=[
-             "Does a HW/SW-Inventory for all, one or several "
-             "hosts. If you add the option -f, --force then persisted sections "
-             "will be used even if they are outdated."
-         ],
-         sub_options=[
-             Option(
-                 long_option="force",
-                 short_option="f",
-                 short_help="Use cached agent data even if it's outdated.",
-             ),
-         ]))
-
-#.
-#   .--inventory-as-check--------------------------------------------------.
-#   | _                      _                              _     _        |
-#   |(_)_ ____   _____ _ __ | |_ ___  _ __ _   _        ___| |__ | | __    |
-#   || | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |_____ / __| '_ \| |/ /    |
-#   || | | | \ V /  __/ | | | || (_) | |  | |_| |_____| (__| | | |   < _   |
-#   ||_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |      \___|_| |_|_|\_(_)  |
-#   |                                      |___/                           |
-#   '----------------------------------------------------------------------'
-
-
-def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
-    return inventory.do_inv_check(hostname, options)
-
-
-modes.register(
-    Mode(
-        long_option="inventory-as-check",
-        handler_function=mode_inventory_as_check,
-        argument=True,
-        argument_descr="HOST",
-        short_help="Do HW/SW-Inventory, behave like check plugin",
-        sub_options=[
-            Option(
-                long_option="hw-changes",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for HW changes",
-            ),
-            Option(
-                long_option="sw-changes",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for SW changes",
-            ),
-            Option(
-                long_option="sw-missing",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for missing SW packages info",
-            ),
-            Option(
-                long_option="inv-fail-status",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S in case of error",
-            ),
-        ],
-    ))
-
-#.
 #   .--automation----------------------------------------------------------.
 #   |                   _                        _   _                     |
 #   |        __ _ _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __          |
@@ -1667,6 +1563,110 @@ modes.register(
                  short_help="File descriptor to send output to",
              ),
          ]))
+
+#.
+#   .--inventory-----------------------------------------------------------.
+#   |             _                      _                                 |
+#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
+#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
+#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
+#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+
+def mode_inventory(options: Dict, args: List[str]) -> None:
+    config_cache = config.get_config_cache()
+
+    if args:
+        hostnames = modes.parse_hostname_list(args, with_clusters=True)
+        console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
+    else:
+        # No hosts specified: do all hosts and force caching
+        hostnames = sorted(config_cache.all_active_hosts())
+        checkers.FileCacheFactory.reset_maybe()
+        console.verbose("Doing HW/SW inventory on all hosts\n")
+
+    if "force" in options:
+        checkers.agent.AgentSource.use_outdated_persisted_sections = True
+
+    inventory.do_inv(hostnames)
+
+
+modes.register(
+    Mode(long_option="inventory",
+         short_option="i",
+         handler_function=mode_inventory,
+         argument=True,
+         argument_descr="HOST1 HOST2...",
+         argument_optional=True,
+         short_help="Do a HW/SW-Inventory on some ar all hosts",
+         long_help=[
+             "Does a HW/SW-Inventory for all, one or several "
+             "hosts. If you add the option -f, --force then persisted sections "
+             "will be used even if they are outdated."
+         ],
+         sub_options=[
+             Option(
+                 long_option="force",
+                 short_option="f",
+                 short_help="Use cached agent data even if it's outdated.",
+             ),
+         ]))
+
+#.
+#   .--inventory-as-check--------------------------------------------------.
+#   | _                      _                              _     _        |
+#   |(_)_ ____   _____ _ __ | |_ ___  _ __ _   _        ___| |__ | | __    |
+#   || | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |_____ / __| '_ \| |/ /    |
+#   || | | | \ V /  __/ | | | || (_) | |  | |_| |_____| (__| | | |   < _   |
+#   ||_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |      \___|_| |_|_|\_(_)  |
+#   |                                      |___/                           |
+#   '----------------------------------------------------------------------'
+
+
+def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
+    return inventory.do_inv_check(hostname, options)
+
+
+modes.register(
+    Mode(
+        long_option="inventory-as-check",
+        handler_function=mode_inventory_as_check,
+        argument=True,
+        argument_descr="HOST",
+        short_help="Do HW/SW-Inventory, behave like check plugin",
+        sub_options=[
+            Option(
+                long_option="hw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for HW changes",
+            ),
+            Option(
+                long_option="sw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for SW changes",
+            ),
+            Option(
+                long_option="sw-missing",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for missing SW packages info",
+            ),
+            Option(
+                long_option="inv-fail-status",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S in case of error",
+            ),
+        ],
+    ))
 
 #.
 #   .--version-------------------------------------------------------------.

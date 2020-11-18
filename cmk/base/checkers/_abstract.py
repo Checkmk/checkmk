@@ -80,22 +80,18 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
         sections: Optional[MutableMapping[SectionName, TSectionContent]] = None,
         cache_info: Optional[SectionCacheInfo] = None,
         piggybacked_raw_data: Optional[PiggybackRawData] = None,
-        persisted_sections: Optional[PersistedSections[TSectionContent]] = None,
     ) -> None:
         super().__init__()
         self.sections = sections if sections else {}
         self.cache_info = cache_info if cache_info else {}
         self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data else {}
-        self.persisted_sections = (persisted_sections if persisted_sections is not None else
-                                   PersistedSections[TSectionContent]({}))
 
     def __repr__(self):
-        return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r, persisted_sections=%r)" % (
+        return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r)" % (
             type(self).__name__,
             self.sections,
             self.cache_info,
             self.piggybacked_raw_data,
-            self.persisted_sections,
         )
 
     def filter(self: THostSections, section_names: Iterable[SectionName]) -> THostSections:
@@ -105,8 +101,6 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
         self.piggybacked_raw_data = {
             k: v for k, v in self.piggybacked_raw_data.items() if SectionName(k) in section_names
         }
-        for key in frozenset(self.persisted_sections).difference(section_names):
-            del self.persisted_sections[key]
         return self
 
     # TODO: It should be supported that different sources produce equal sections.
@@ -125,24 +119,23 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
         if host_sections.cache_info:
             self.cache_info.update(host_sections.cache_info)
 
-        if host_sections.persisted_sections:
-            self.persisted_sections.update(host_sections.persisted_sections)
-
     def add_persisted_sections(
         self,
         persisted_sections_file_path: Path,
         use_outdated_persisted_sections: bool,
         *,
+        persisted_sections,
         logger: logging.Logger,
     ) -> None:
         """Add information from previous persisted infos."""
-        persisted_sections = self.persisted_sections.determine(
-            persisted_sections_file_path,
-            use_outdated_persisted_sections,
-            logger=logger,
-        )
+        if persisted_sections is None:
+            persisted_sections = PersistedSections[TSectionContent]({})
         self._add_persisted_sections(
-            persisted_sections,
+            persisted_sections.determine(
+                persisted_sections_file_path,
+                use_outdated_persisted_sections,
+                logger=logger,
+            ),
             logger=logger,
         )
 

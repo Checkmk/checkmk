@@ -18,18 +18,13 @@ from testlib.base import Scenario
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData, result, SectionName, SourceType
 
-from cmk.snmplib.type_defs import SNMPSectionContent
-
 from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
-from cmk.base.check_utils import AgentSectionContent
-from cmk.base.checkers._abstract import AUTO_DETECT, HostSections
 from cmk.base.checkers import Mode
-from cmk.base.checkers._abstract import HostSections
-from cmk.base.checkers._cache import PersistedSections
-from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer
+from cmk.base.checkers._abstract import AUTO_DETECT, HostSections
+from cmk.base.checkers.agent import AgentHostSections, AgentParser, AgentSource, AgentSummarizer
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 
@@ -85,7 +80,6 @@ class TestParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert ahs.persisted_sections == PersistedSections[SNMPSectionContent]({})
 
     @pytest.mark.usefixtures("scenario")
     def test_piggyback_populates_piggyback_raw_data(
@@ -142,7 +136,6 @@ class TestParser:
                 b"first line",
             ],
         }
-        assert ahs.persisted_sections == PersistedSections[SNMPSectionContent]({})
 
     @pytest.mark.usefixtures("scenario")
     def test_persist_option_populates_cache_info_and_persisted_sections(
@@ -150,11 +143,16 @@ class TestParser:
         hostname,
         store,
         logger,
+        mocker,
         monkeypatch,
     ):
         time_time = 1000
         time_delta = 50
         monkeypatch.setattr(time, "time", lambda: time_time)
+        add_persisted_sections = mocker.patch.object(
+            AgentHostSections,
+            "add_persisted_sections",
+        )
 
         raw_data = AgentRawData(b"\n".join((
             b"<<<section:persist(%i)>>>" % (time_time + time_delta),
@@ -167,9 +165,9 @@ class TestParser:
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
         assert ahs.piggybacked_raw_data == {}
-        assert ahs.persisted_sections == PersistedSections[AgentSectionContent]({
+        assert add_persisted_sections.call_args.kwargs["persisted_sections"] == {
             SectionName("section"): (1000, 1050, [["first", "line"], ["second", "line"]]),
-        })
+        }
 
     @pytest.mark.parametrize(
         "headerline, section_name, section_options",

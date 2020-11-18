@@ -42,7 +42,6 @@ from cmk.base.checkers import (
     update_host_sections,
 )
 from cmk.base.checkers._abstract import AUTO_DETECT
-from cmk.base.checkers._cache import PersistedSections
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.checkers.piggyback import PiggybackSource
@@ -135,9 +134,6 @@ def test_abstract_hostsections_filter():
             "moo": [b''],
             "bar": [b''],
         },
-        persisted_sections=PersistedSections({
-            SectionName("gee"): (0, 0, NODE_1),
-        }),
     )
 
     filtered = host_sections.filter({SectionName("bar")})
@@ -146,7 +142,6 @@ def test_abstract_hostsections_filter():
     assert list(filtered.sections) == [SectionName("bar")]
     assert not filtered.cache_info
     assert list(filtered.piggybacked_raw_data) == ["bar"]
-    assert not filtered.persisted_sections
 
 
 @pytest.mark.parametrize("node_section_content,expected_result", [
@@ -491,8 +486,7 @@ class TestMakeHostSectionsHosts:
                     {SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                     cache_info={},
                     piggybacked_raw_data={},
-                    persisted_sections=None,
-                ),),
+                )),
         )
 
     @pytest.fixture
@@ -541,7 +535,6 @@ class TestMakeHostSectionsHosts:
         assert not section.sections
         assert not section.cache_info
         assert not section.piggybacked_raw_data
-        assert not section.persisted_sections
 
     def test_one_snmp_source(self, hostname, ipaddress, mode, config_cache, host_config):
         mhs = MultiHostSections()
@@ -766,7 +759,6 @@ class TestMakeHostSectionsClusters:
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
-                persisted_sections=None,
             ),
         ),
         )
@@ -842,7 +834,6 @@ class TestMakeHostSectionsClusters:
                     == [["section_content"]])
             assert not section.cache_info
             assert not section.piggybacked_raw_data
-            assert not section.persisted_sections
 
 
 def test_get_host_sections_cluster(mode, monkeypatch, mocker):
@@ -924,4 +915,3 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         assert next(iter(section.sections)) == section_name
         assert not section.cache_info
         assert not section.piggybacked_raw_data
-        assert not section.persisted_sections

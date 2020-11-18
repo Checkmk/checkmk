@@ -341,10 +341,12 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
-        host_sections = self._parse_host_section(raw_data, self.host_config.check_mk_check_interval)
+        host_sections, persisted_sections = self._parse_host_section(
+            raw_data, self.host_config.check_mk_check_interval)
         host_sections.add_persisted_sections(
             self.persisted_sections_file_path,
             self.use_outdated_persisted_sections,
+            persisted_sections=persisted_sections,
             logger=self._logger,
         )
         return host_sections
@@ -353,7 +355,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         self,
         raw_data: AgentRawData,
         check_interval: int,
-    ) -> AgentHostSections:
+    ) -> Tuple[AgentHostSections, PersistedSections[AgentSectionContent]]:
         """Split agent output in chunks, splits lines by whitespaces.
 
         Returns a HostSections() object.
@@ -448,8 +450,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             sections,
             agent_cache_info,
             piggybacked_raw_data,
-            persisted_sections,
-        )
+        ), persisted_sections
 
     @staticmethod
     def _parse_section_header(

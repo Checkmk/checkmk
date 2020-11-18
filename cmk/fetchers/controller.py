@@ -77,18 +77,18 @@ def _disable_timeout() -> None:
     signal.alarm(0)
 
 
-def _enable_timeout(timeout: int) -> None:
+def _enable_timeout(host_name: HostName, timeout: int) -> None:
     """ Raises MKTimeout exception after timeout seconds"""
     def _handler(signum: int, frame: Optional[FrameType]) -> None:
-        raise MKTimeout(f"Fetcher timed out after {timeout} seconds")
+        raise MKTimeout(f"Fetcher for host \"{host_name}\" timed out after {timeout} seconds")
 
     signal.signal(signal.SIGALRM, _handler)
     signal.alarm(timeout)
 
 
 @contextlib.contextmanager
-def timeout_control(timeout: int) -> Iterator[None]:
-    _enable_timeout(timeout)
+def timeout_control(host_name: HostName, timeout: int) -> Iterator[None]:
+    _enable_timeout(host_name, timeout)
     try:
         yield
     finally:
@@ -139,7 +139,7 @@ def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout:
         return
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
-    _run_fetchers_from_file(file_name=local_config_path, mode=mode, timeout=timeout)
+    _run_fetchers_from_file(host_name, file_name=local_config_path, mode=mode, timeout=timeout)
 
     # Cleanup different things (like object specific caches)
     cmk.utils.cleanup.cleanup_globals()
@@ -182,7 +182,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:
     )
 
 
-def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
+def _run_fetchers_from_file(host_name: HostName, file_name: Path, mode: Mode, timeout: int) -> None:
     """ Writes to the stdio next data:
     Count Answer        Content               Action
     ----- ------        -------               ------
@@ -206,7 +206,7 @@ def _run_fetchers_from_file(file_name: Path, mode: Mode, timeout: int) -> None:
     # functionality of the Microcore.
 
     messages: List[protocol.FetcherMessage] = []
-    with timeout_control(timeout):
+    with timeout_control(host_name, timeout):
         try:
             # fill as many messages as possible before timeout exception raised
             for entry in fetchers:

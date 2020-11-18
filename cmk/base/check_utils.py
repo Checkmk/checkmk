@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, MutableMapping, NewType, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName, LegacyCheckParameters
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, LegacyCheckParameters, SectionName
 
-from cmk.snmplib.type_defs import SNMPPersistedSections, SNMPSectionContent, SNMPSections
+from cmk.snmplib.type_defs import SNMPSectionContent, SNMPSections
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
@@ -17,11 +17,6 @@ RulesetName = str
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 
 AgentSectionContent = List[List[str]]
-AgentPersistedSection = NewType("AgentPersistedSection", Tuple[int, int, AgentSectionContent])
-AgentPersistedSections = NewType(
-    "AgentPersistedSections",
-    MutableMapping[SectionName, AgentPersistedSection],
-)
 AgentSections = Dict[SectionName, AgentSectionContent]
 
 PiggybackRawData = Dict[HostName, List[bytes]]
@@ -29,11 +24,9 @@ ParsedSectionContent = Any
 
 AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
 AbstractSections = Union[AgentSections, SNMPSections]
-AbstractPersistedSections = Union[AgentPersistedSections, SNMPPersistedSections]
 
 TSectionContent = TypeVar("TSectionContent", bound=AbstractSectionContent)
 TSections = TypeVar("TSections", bound=AbstractSections)
-TPersistedSections = TypeVar("TPersistedSections", bound=AbstractPersistedSections)
 
 ServiceID = Tuple[CheckPluginName, Item]
 CheckTable = Dict[ServiceID, 'Service']

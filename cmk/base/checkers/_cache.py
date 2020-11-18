@@ -8,34 +8,61 @@
 import logging
 import time
 from pathlib import Path
-from typing import Generic, Union
+from typing import Generic, Iterator, MutableMapping, Tuple, Union
 
-import cmk.utils.store as store
+import cmk.utils.store as _store
 from cmk.utils.type_defs import SectionName
 
-from cmk.base.check_utils import TPersistedSections
+from cmk.base.check_utils import TSectionContent
 
 
-class SectionStore(Generic[TPersistedSections]):
+class PersistedSections(
+        Generic[TSectionContent],
+        MutableMapping[SectionName, Tuple[int, int, TSectionContent]],
+):
+    def __init__(self, store: MutableMapping[SectionName, Tuple[int, int, TSectionContent]]):
+        self._store = store
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self._store)
+
+    def __getitem__(self, key: SectionName) -> Tuple[int, int, TSectionContent]:
+        return self._store.__getitem__(key)
+
+    def __setitem__(self, key: SectionName, value: Tuple[int, int, TSectionContent]) -> None:
+        return self._store.__setitem__(key, value)
+
+    def __delitem__(self, key: SectionName) -> None:
+        return self._store.__delitem__(key)
+
+    def __iter__(self) -> Iterator[SectionName]:
+        return self._store.__iter__()
+
+    def __len__(self) -> int:
+        return self._store.__len__()
+
+
+class SectionStore(Generic[TSectionContent]):
     def __init__(self, path: Union[str, Path], logger: logging.Logger) -> None:
         super(SectionStore, self).__init__()
         self.path = Path(path)
         self._logger = logger
 
-    def store(self, sections: TPersistedSections) -> None:
+    def store(self, sections: PersistedSections[TSectionContent]) -> None:
         if not sections:
             return
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        store.save_object_to_file(self.path, {str(k): v for k, v in sections.items()}, pretty=False)
+        _store.save_object_to_file(self.path, {str(k): v for k, v in sections.items()},
+                                   pretty=False)
         self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
     # reading and unlock after writing
-    def load(self, keep_outdated: bool) -> TPersistedSections:
-        raw_sections_data = store.load_object_from_file(self.path, default={})
-        sections: TPersistedSections = {  # type: ignore[assignment]
+    def load(self, keep_outdated: bool) -> PersistedSections[TSectionContent]:
+        raw_sections_data = _store.load_object_from_file(self.path, default={})
+        sections: PersistedSections[TSectionContent] = {  # type: ignore[assignment]
             SectionName(k): v for k, v in raw_sections_data.items()
         }
         if not keep_outdated:
@@ -47,7 +74,10 @@ class SectionStore(Generic[TPersistedSections]):
 
         return sections
 
-    def _filter(self, sections: TPersistedSections) -> TPersistedSections:
+    def _filter(
+        self,
+        sections: PersistedSections[TSectionContent],
+    ) -> PersistedSections[TSectionContent]:
         now = time.time()
         for section_name, entry in list(sections.items()):
             if len(entry) == 2:

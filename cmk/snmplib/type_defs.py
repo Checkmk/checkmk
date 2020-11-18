@@ -18,7 +18,6 @@ from typing import (
     List,
     Literal,
     Mapping,
-    MutableMapping,
     NamedTuple,
     NewType,
     Optional,
@@ -46,11 +45,6 @@ SNMPTable = List[List[SNMPDecodedValues]]
 SNMPContext = Optional[str]
 SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
 SNMPSections = Mapping[_SectionName, SNMPSectionContent]
-SNMPPersistedSection = NewType("SNMPPersistedSection", Tuple[int, int, SNMPSectionContent])
-SNMPPersistedSections = NewType(
-    "SNMPPersistedSections",
-    MutableMapping[_SectionName, SNMPPersistedSection],
-)
 SNMPRawData = NewType("SNMPRawData", SNMPSections)
 OID = str
 OIDFunction = Callable[[OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]],

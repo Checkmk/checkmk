@@ -18,12 +18,16 @@ from testlib.base import Scenario
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData, result, SectionName, SourceType
 
+from cmk.snmplib.type_defs import SNMPSectionContent
+
 from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
-from cmk.base.checkers._abstract import HostSections
+from cmk.base.check_utils import AgentSectionContent
 from cmk.base.checkers import Mode
+from cmk.base.checkers._abstract import HostSections
+from cmk.base.checkers._cache import PersistedSections
 from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
@@ -80,7 +84,7 @@ class TestParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert ahs.persisted_sections == {}
+        assert ahs.persisted_sections == PersistedSections[SNMPSectionContent]({})
 
     @pytest.mark.usefixtures("scenario")
     def test_piggyback_populates_piggyback_raw_data(
@@ -137,7 +141,7 @@ class TestParser:
                 b"first line",
             ],
         }
-        assert ahs.persisted_sections == {}
+        assert ahs.persisted_sections == PersistedSections[SNMPSectionContent]({})
 
     @pytest.mark.usefixtures("scenario")
     def test_persist_option_populates_cache_info_and_persisted_sections(
@@ -162,9 +166,9 @@ class TestParser:
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
         assert ahs.piggybacked_raw_data == {}
-        assert ahs.persisted_sections == {
+        assert ahs.persisted_sections == PersistedSections[AgentSectionContent]({
             SectionName("section"): (1000, 1050, [["first", "line"], ["second", "line"]]),
-        }
+        })
 
     @pytest.mark.parametrize(
         "headerline, section_name, section_options",

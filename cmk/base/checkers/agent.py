@@ -13,8 +13,8 @@ from six import ensure_binary, ensure_str
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.misc
-from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.encoding import ensure_str_with_fallback
+from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.type_defs import (
     AgentRawData,
     HostAddress,
@@ -34,8 +34,6 @@ from cmk.fetchers.controller import FetcherType
 import cmk.base.config as config
 from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (
-    AgentPersistedSection,
-    AgentPersistedSections,
     AgentSectionContent,
     AgentSections,
     PiggybackRawData,
@@ -44,20 +42,13 @@ from cmk.base.check_utils import (
 from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
-from ._abstract import (
-    Source,
-    HostSections,
-    Parser,
-    Summarizer,
-    FileCacheFactory,
-    Mode,
-)
+from ._abstract import FileCacheFactory, HostSections, Mode, Parser, Source, Summarizer
+from ._cache import PersistedSections
 
 __all__ = ["AgentSource", "AgentHostSections"]
 
 
-class AgentHostSections(HostSections[AgentRawData, AgentSections, AgentPersistedSections,
-                                     AgentSectionContent]):
+class AgentHostSections(HostSections[AgentRawData, AgentSections, AgentSectionContent]):
     pass
 
 
@@ -369,7 +360,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         piggybacked_cache_age = int(1.5 * 60 * check_interval)
 
         # handle sections with option persist(...)
-        persisted_sections = AgentPersistedSections({})
+        persisted_sections = PersistedSections[AgentSectionContent]({})
         section_content: Optional[AgentSectionContent] = None
         section_options: Dict[str, Optional[str]] = {}
         agent_cache_info: SectionCacheInfo = {}
@@ -421,7 +412,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     agent_cache_info[section_name] = (cached_at, cache_interval)
                     # pylint does not seem to understand `NewType`... leave the checking up to mypy.
                     persisted_sections[section_name] = (  # false positive: pylint: disable=E1137
-                        AgentPersistedSection((cached_at, until, section_content)))
+                        (cached_at, until, section_content))
 
                 raw_cached = section_options.get("cached")
                 if raw_cached is not None:

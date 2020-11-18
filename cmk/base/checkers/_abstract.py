@@ -8,7 +8,7 @@ import abc
 import logging
 import sys
 from pathlib import Path
-from typing import Container, final, Final, Generic, Optional, Set, TypeVar, Union
+from typing import final, Final, Generic, Iterable, Optional, Set, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -35,17 +35,11 @@ from cmk.fetchers.type_defs import Mode
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
-from cmk.base.check_utils import (
-    PiggybackRawData,
-    SectionCacheInfo,
-    TPersistedSections,
-    TSectionContent,
-    TSections,
-)
+from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo, TSectionContent, TSections
 from cmk.base.config import HostConfig
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
-from ._cache import SectionStore
+from ._cache import PersistedSections, SectionStore
 
 __all__ = [
     "HostSections",
@@ -58,8 +52,7 @@ __all__ = [
 THostSections = TypeVar("THostSections", bound="HostSections")
 
 
-class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionContent],
-                   metaclass=abc.ABCMeta):
+class HostSections(Generic[TRawData, TSections, TSectionContent], metaclass=abc.ABCMeta):
     """A wrapper class for the host information read by the data sources
 
     It contains the following information:
@@ -76,13 +69,14 @@ class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionCont
         sections: Optional[TSections] = None,
         cache_info: Optional[SectionCacheInfo] = None,
         piggybacked_raw_data: Optional[PiggybackRawData] = None,
-        persisted_sections: Optional[TPersistedSections] = None,
+        persisted_sections: Optional[PersistedSections[TSectionContent]] = None,
     ) -> None:
         super().__init__()
         self.sections = sections if sections else {}
         self.cache_info = cache_info if cache_info else {}
         self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data else {}
-        self.persisted_sections = persisted_sections if persisted_sections else {}
+        self.persisted_sections = (persisted_sections if persisted_sections is not None else
+                                   PersistedSections[TSectionContent]({}))
 
     def __repr__(self):
         return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r, persisted_sections=%r)" % (
@@ -93,16 +87,15 @@ class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionCont
             self.persisted_sections,
         )
 
-    def filter(self: THostSections, section_names: Container[SectionName]) -> THostSections:
+    def filter(self: THostSections, section_names: Iterable[SectionName]) -> THostSections:
         """Remove all data not belonging to the provided sections"""
         self.sections = {k: v for k, v in self.sections.items() if k in section_names}
         self.cache_info = {k: v for k, v in self.cache_info.items() if k in section_names}
         self.piggybacked_raw_data = {
             k: v for k, v in self.piggybacked_raw_data.items() if SectionName(k) in section_names
         }
-        self.persisted_sections = {
-            k: v for k, v in self.persisted_sections.items() if k in section_names
-        }
+        for key in frozenset(self.persisted_sections).difference(section_names):
+            del self.persisted_sections[key]
         return self
 
     # TODO: It should be supported that different sources produce equal sections.
@@ -148,10 +141,10 @@ class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionCont
         use_outdated_persisted_sections: bool,
         *,
         logger: logging.Logger,
-    ) -> TPersistedSections:
-        # TODO(ml): This function should take a TPersistedSections
+    ) -> PersistedSections[TSectionContent]:
+        # TODO(ml): This function should take a PersistedSections
         #           instead of the host_section but mypy does not allow it.
-        section_store: SectionStore[TPersistedSections] = SectionStore(
+        section_store: SectionStore[TSectionContent] = SectionStore(
             persisted_sections_file_path,
             logger,
         )
@@ -163,7 +156,7 @@ class HostSections(Generic[TRawData, TSections, TPersistedSections, TSectionCont
 
     def _add_persisted_sections(
         self,
-        persisted_sections: TPersistedSections,
+        persisted_sections: PersistedSections[TSectionContent],
         *,
         logger: logging.Logger,
     ) -> None:

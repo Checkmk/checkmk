@@ -14,8 +14,6 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheck
 from cmk.snmplib.type_defs import (
     BackendSNMPTree,
     SNMPDetectSpec,
-    SNMPPersistedSection,
-    SNMPPersistedSections,
     SNMPRawData,
     SNMPSectionContent,
     SNMPSections,
@@ -28,7 +26,8 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 
-from ._abstract import HostSections, Parser, Source, Summarizer, FileCacheFactory, Mode
+from ._abstract import FileCacheFactory, HostSections, Mode, Parser, Source, Summarizer
+from ._cache import PersistedSections
 
 
 def make_plugin_store() -> SNMPPluginStore:
@@ -39,8 +38,7 @@ def make_plugin_store() -> SNMPPluginStore:
     })
 
 
-class SNMPHostSections(HostSections[SNMPRawData, SNMPSections, SNMPPersistedSections,
-                                    SNMPSectionContent]):
+class SNMPHostSections(HostSections[SNMPRawData, SNMPSections, SNMPSectionContent]):
     pass
 
 
@@ -258,14 +256,14 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
     def _extract_persisted_sections(
         raw_data: SNMPRawData,
         host_config: config.HostConfig,
-    ) -> SNMPPersistedSections:
+    ) -> PersistedSections[SNMPSectionContent]:
         """Extract the sections to be persisted from the raw_data and return it
 
         Gather the check types to be persisted, extract the related data from
         the raw data, calculate the times and store the persisted info for
         later use.
         """
-        persisted_sections = SNMPPersistedSections({})
+        persisted_sections = PersistedSections[SNMPSectionContent]({})
 
         for section_name, section_content in raw_data.items():
             fetch_interval = host_config.snmp_fetch_interval(section_name)
@@ -276,7 +274,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             until = cached_at + (fetch_interval * 60)
             # pylint does not seem to understand `NewType`... leave the checking up to mypy.
             persisted_sections[section_name] = (  # false positive: pylint: disable=E1137
-                SNMPPersistedSection((cached_at, until, section_content)))
+                (cached_at, until, section_content))
 
         return persisted_sections
 

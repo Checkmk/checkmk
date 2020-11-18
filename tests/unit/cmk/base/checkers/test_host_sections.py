@@ -41,6 +41,7 @@ from cmk.base.checkers import (
     Source,
     update_host_sections,
 )
+from cmk.base.checkers._cache import PersistedSections
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.checkers.piggyback import PiggybackSource
@@ -123,7 +124,6 @@ def _fixture_patch_register(monkeypatch):
 
 
 def test_abstract_hostsections_filter():
-
     host_sections: HostSections = HostSections(
         sections={
             SectionName("foo"): NODE_1,  # data does not matter, NODE_1 is the correct type.
@@ -134,7 +134,9 @@ def test_abstract_hostsections_filter():
             "moo": [b''],
             "bar": [b''],
         },
-        persisted_sections={SectionName("gee"): (0, 0, NODE_1)},
+        persisted_sections=PersistedSections({
+            SectionName("gee"): (0, 0, NODE_1),
+        }),
     )
 
     filtered = host_sections.filter({SectionName("bar")})
@@ -488,7 +490,7 @@ class TestMakeHostSectionsHosts:
                     {SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                     cache_info={},
                     piggybacked_raw_data={},
-                    persisted_sections="",
+                    persisted_sections=None,
                 ),),
         )
 
@@ -758,7 +760,7 @@ class TestMakeHostSectionsClusters:
                 sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
                 cache_info={},
                 piggybacked_raw_data={},
-                persisted_sections="",
+                persisted_sections=None,
             ),
         ),
         )

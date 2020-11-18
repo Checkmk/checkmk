@@ -37,7 +37,7 @@ def make_plugin_store() -> SNMPPluginStore:
     })
 
 
-class SNMPHostSections(HostSections[SNMPRawData, SNMPSectionContent]):
+class SNMPHostSections(HostSections[SNMPSectionContent]):
     pass
 
 

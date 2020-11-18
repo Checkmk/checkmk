@@ -52,7 +52,7 @@ __all__ = [
 THostSections = TypeVar("THostSections", bound="HostSections")
 
 
-class HostSections(Generic[TRawData, TSectionContent], metaclass=abc.ABCMeta):
+class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
     """A wrapper class for the host information read by the data sources
 
     It contains the following information:

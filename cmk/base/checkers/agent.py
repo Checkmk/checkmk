@@ -47,7 +47,7 @@ from ._cache import PersistedSections
 __all__ = ["AgentSource", "AgentHostSections"]
 
 
-class AgentHostSections(HostSections[AgentRawData, AgentSectionContent]):
+class AgentHostSections(HostSections[AgentSectionContent]):
     pass
 
 

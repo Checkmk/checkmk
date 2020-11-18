@@ -365,6 +365,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         ruleset_config = {
             # Make the tag 'offline' remove hosts from the monitoring
             'only_hosts': [{
+                'id': '10843c55-11ea-4eb2-bfbc-bce65cd2ae22',
                 'condition': {
                     'host_tags': {
                         'criticality': {
@@ -380,6 +381,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # Rule for WAN hosts with adapted PING levels
             'ping_levels': [{
+                'id': '0365b634-30bf-40a3-8516-08e86051508e',
                 'condition': {
                     'host_tags': {
                         'networking': 'wan',
@@ -398,6 +400,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # All hosts should use SNMP v2c if not specially tagged
             'bulkwalk_hosts': [{
+                'id': 'b92a5406-1d57-4f1d-953d-225b111239e5',
                 'condition': {
                     'host_tags': {
                         'snmp': 'snmp',
@@ -414,6 +417,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # Put all hosts and the contact group 'all'
             'host_contactgroups': [{
+                'id': 'efd67dab-68f8-4d3c-a417-9f7e29ab48d5',
                 'condition': {},
                 'value': 'all',
                 'options': {
@@ -423,6 +427,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # Docker container specific host check commands
             'host_check_commands': [{
+                'id': '24da4ccd-0d1b-40e3-af87-0097df8668f2',
                 'condition': {
                     'host_labels': {
                         u'cmk/docker_object': u'container'
@@ -439,6 +444,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             'active_checks': {
                 'cmk_inv': [
                     {
+                        'id': '7ba2ac2a-5a49-47ce-bc3c-1630fb191c7f',
                         'condition': {
                             'host_labels': {
                                 u'cmk/docker_object': u'node',
@@ -449,6 +455,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                         },
                     },
                     {
+                        'id': 'b4b151f9-c7cc-4127-87a6-9539931fcd73',
                         'condition': {
                             'host_labels': {
                                 u'cmk/check_mk_server': u'yes',
@@ -464,6 +471,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             # Interval for HW/SW-Inventory check
             'extra_service_conf': {
                 'check_interval': [{
+                    'id': 'b3847203-84b3-4f5b-ac67-0f06d4403905',
                     'condition': {
                         'service_description': [{
                             '$regex': 'Check_MK HW/SW Inventory$'
@@ -479,6 +487,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             # Disable unreachable notifications by default
             'extra_host_conf': {
                 'notification_options': [{
+                    'id': '814bf932-6341-4f96-983d-283525b5416d',
                     'condition': {},
                     'value': 'd,r,f,s'
                 },],
@@ -486,6 +495,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # Periodic service discovery
             'periodic_discovery': [{
+                'id': '95a56ffc-f17e-44e7-a162-be656f19bedf',
                 'condition': {},
                 'value': {
                     'severity_unmonitored': 1,
@@ -500,6 +510,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # Include monitoring of checkmk's tmpfs
             'inventory_df_rules': [{
+                'id': 'b0ee8a51-703c-47e4-aec4-76430281604d',
                 'condition': {
                     'host_labels': {
                         u'cmk/check_mk_server': u'yes',

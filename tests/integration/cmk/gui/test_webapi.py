@@ -211,11 +211,12 @@ def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert response == {
         'ruleset': {
             '': [{
+                'id': '814bf932-6341-4f96-983d-283525b5416d',
                 'value': 'd,r,f,s',
                 'condition': {}
             }]
         },
-        'configuration_hash': 'b76f205bbe674300f677a282d9ccd71f',
+        'configuration_hash': 'a8ee55e0ced14609df741e5a82462e3a',
     }
 
     # TODO: Move testing of initial wato rules to unit tests
@@ -223,6 +224,7 @@ def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert response == {
         'ruleset': {
             '': [{
+                'id': 'b0ee8a51-703c-47e4-aec4-76430281604d',
                 'condition': {
                     'host_labels': {
                         u'cmk/check_mk_server': u'yes',
@@ -234,7 +236,7 @@ def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
                 }
             }]
         },
-        'configuration_hash': '0ef816195d483f9ed828a4dc84bdf706',
+        'configuration_hash': '68e05dd8ab82cea5bebc9c6184c0ee08',
     }
 
 
@@ -243,6 +245,7 @@ def test_set_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert orig_ruleset == {
         'ruleset': {
             '': [{
+                'id': 'b92a5406-1d57-4f1d-953d-225b111239e5',
                 'value': True,
                 'condition': {
                     'host_tags': {
@@ -257,7 +260,7 @@ def test_set_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
                 }
             }]
         },
-        'configuration_hash': '0cca93426feb558f7c9f09631340c63c',
+        'configuration_hash': '9abf6316805b3daf10ac7745864f13f8',
     }
 
     # Now modify something

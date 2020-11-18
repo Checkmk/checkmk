@@ -39,7 +39,10 @@ def parse_snmp_extended_info(string_table: List[StringTable]) -> List[SNMPExtend
 def host_label_snmp_extended_info(section: List[SNMPExtendedInfo]) -> HostLabelGenerator:
     for device_type in SNMPDeviceTypes:
         if device_type in section[0].entPhysDescr.lower():
-            yield HostLabel("cmk/device_type", device_type)
+            if device_type == "switch" and "fc" in section[0].entPhysDescr.lower():
+                yield HostLabel("cmk/device_type", "fcswitch")
+            else:
+                yield HostLabel("cmk/device_type", device_type)
             return
 
 

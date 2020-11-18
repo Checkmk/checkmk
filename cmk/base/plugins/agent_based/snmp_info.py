@@ -40,7 +40,10 @@ def parse_snmp_info(string_table: List[StringTable]) -> SNMPInfo:
 def host_label_snmp_info(section: SNMPInfo) -> HostLabelGenerator:
     for device_type in SNMPDeviceTypes:
         if device_type in section.description.lower():
-            yield HostLabel("cmk/device_type", device_type)
+            if device_type == "switch" and "fc" in section.description.lower():
+                yield HostLabel("cmk/device_type", "fcswitch")
+            else:
+                yield HostLabel("cmk/device_type", device_type)
             return
 
 

@@ -1,0 +1,13 @@
+Title: Hostlabels of Fibrechannel switches: "fcswitch"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605694864
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Fibrechannel switches used to get the label "cmk/device_type:switch" although
+they are not real switches. Now they are declared as "cmk/device_type:fcswitch".
+

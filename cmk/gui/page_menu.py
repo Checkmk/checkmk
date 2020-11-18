@@ -526,7 +526,12 @@ class PageMenuRenderer:
 
     def _show_topic(self, topic: PageMenuTopic) -> None:
         html.open_div(class_="topic")
-        html.div(topic.title, class_="topic_title")
+        html.div(topic.title,
+                 class_=[
+                     "topic_title",
+                     "show_more_mode" if all(
+                         entry.is_show_more for entry in topic.entries) else None,
+                 ])
 
         for entry in topic.entries:
             if not entry.is_list_entry:

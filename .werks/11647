@@ -1,0 +1,23 @@
+Title: snmp_extended_info: Add host label 'cmk/device_type' discovery
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1605687990
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+From now on, the physical entity (physEnt) is parsed for the following strings:
+
+<li>appliance</li>
+<li>firewall</li>
+<li>printer</li>
+<li>router</li>
+<li>sensor</li>
+<li>switch</li>
+<li>ups</li>
+<li>wlc</li><br>
+
+If one string (switch in this example) is found, the host will discover the host
+label <b>"cmk/device_type:switch"</b>.

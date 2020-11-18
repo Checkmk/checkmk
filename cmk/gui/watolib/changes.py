@@ -388,7 +388,7 @@ def activation_sites() -> Dict[SiteId, SiteConfiguration]:
 def make_object_audit_log_url(object_ref: ObjectRef) -> str:
     return makeuri_contextless(request, [
         ("mode", "auditlog"),
-        ("options_p_object_type", DropdownChoice.option_id(object_ref.object_type)),
-        ("options_p_object_ident", object_ref.ident),
+        ("options_object_type", DropdownChoice.option_id(object_ref.object_type)),
+        ("options_object_ident", object_ref.ident),
     ],
                                filename="wato.py")

@@ -211,23 +211,16 @@ class ModeAuditLog(WatoMode):
             config.user.need_permission("wato.clear_auditlog")
             config.user.need_permission("wato.edit")
             return self._clear_audit_log_after_confirm()
-
-        for name, vs in self._audit_log_options():
-            try:
-                value = vs.from_html_vars("options_" + name)
-                vs.validate_value(value, "options_" + name)
-                self._options[name] = value
-            except MKUserError as e:
-                html.add_user_error(e.varname, e)
-
-        if html.request.var("_action") == "csv":
-            config.user.need_permission("wato.auditlog")
-            return self._export_audit_log()
-
         return None
 
     def page(self):
+        self._options.update(self._get_audit_log_options_from_request())
+
         audit = self._parse_audit_log()
+
+        if html.request.var("_action") == "csv":
+            config.user.need_permission("wato.auditlog")
+            return self._export_audit_log(audit)
 
         if not audit:
             html.show_message(_("Found no matching entry."))
@@ -237,6 +230,20 @@ class ModeAuditLog(WatoMode):
 
         else:
             self._display_multiple_days_audit_log(audit)
+
+    def _get_audit_log_options_from_request(self):
+        options = {}
+        for name, vs in self._audit_log_options():
+            if not list(html.request.itervars("options_" + name)):
+                continue
+
+            try:
+                value = vs.from_html_vars("options_" + name)
+                vs.validate_value(value, "options_" + name)
+                options[name] = value
+            except MKUserError as e:
+                html.add_user_error(e.varname, e)
+        return options
 
     def _display_daily_audit_log(self, log):
         log, times = self._get_next_daily_paged_log(log)
@@ -475,7 +482,7 @@ class ModeAuditLog(WatoMode):
     def _clear_audit_log(self):
         self._store.clear()
 
-    def _export_audit_log(self) -> ActionResult:
+    def _export_audit_log(self, audit: List[AuditLogStore.Entry]) -> ActionResult:
         html.set_output_format("csv")
 
         if self._options["display"] == "daily":
@@ -501,7 +508,7 @@ class ModeAuditLog(WatoMode):
             titles.append(_('Details'))
 
         html.write(','.join(titles) + '\n')
-        for entry in self._parse_audit_log():
+        for entry in audit:
             columns = [
                 render.date(int(entry.time)),
                 render.time_of_day(int(entry.time)),

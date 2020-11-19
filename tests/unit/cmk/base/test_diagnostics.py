@@ -114,6 +114,7 @@ def test_diagnostics_element_general_content(tmp_path, _collectors):
 
     info_keys = [
         "time",
+        "time_human_readable",
         "os",
         "version",
         "edition",

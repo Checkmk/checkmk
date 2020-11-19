@@ -18,6 +18,7 @@ import urllib.parse
 import textwrap
 import shutil
 import requests
+from datetime import datetime
 
 import livestatus
 
@@ -321,7 +322,7 @@ class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
             raise DiagnosticsElementError("No information")
 
         filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
-        store.save_text_to_file(filepath, json.dumps(infos))
+        store.save_text_to_file(filepath, json.dumps(infos, sort_keys=True, indent=4))
         yield filepath
 
     @abc.abstractmethod
@@ -349,6 +350,8 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
         version_infos = cmk_version.get_general_version_infos()
         version_infos["arch"] = platform.machine()
+        time_obj = datetime.fromtimestamp(version_infos.get("time", 0))
+        version_infos["time_human_readable"] = time_obj.isoformat(sep=" ")
         return version_infos
 
 

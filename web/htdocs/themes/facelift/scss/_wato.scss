@@ -18,6 +18,11 @@
   color: $font-color;
 }
 
+.wato .dots {
+  overflow: hidden;
+  opacity: 0.2;
+}
+
 /* Icon image place inline in some documentation text */
 /* TODO: Reproduce this html element */
 .wato img.icon.docu {
@@ -798,10 +803,6 @@ div.filter_buttons {
     &:hover {
       text-decoration: underline;
     }
-  }
-
-  .dots {
-    overflow: hidden;
   }
 
   div.rulecount {

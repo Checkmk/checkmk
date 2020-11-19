@@ -1065,10 +1065,6 @@ table.nform {
       font-weight: $font-weight-bold;
       white-space: nowrap;
 
-      .dots {
-        opacity: 0.2;
-      }
-
       &.withcheckbox {
         max-width: 361px;
         margin: 5px 6px 5px 0;
@@ -1087,11 +1083,6 @@ table.nform {
 
   &.narrow td.legend {
     height: 18px;
-  }
-
-  .dots {
-    margin-left: 5px;
-    color: $span-dots-color;
   }
 
   td.content {

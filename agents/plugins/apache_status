@@ -201,7 +201,7 @@ def main():
 
         try:
             response = get_response(proto, cafile, address, portspec, page)
-            for line in response.read().split('\n'):
+            for line in response.read().splitlines():
                 if not line.strip():
                     continue
                 if line.lstrip()[0] == '<':
@@ -209,7 +209,7 @@ def main():
                     break
                 if not name:
                     name = get_instance_name(address, port, get_instance_name_map(config))
-                sys.stdout.write("%s|%s|%s|%s\n" % (address, port, name, line))
+                sys.stdout.write("%s|%s|%s|%s\n" % (address, port, name, line.encode('utf-8'))
         except HTTPError as exc:
             sys.stderr.write('HTTP-Error (%s%s): %s %s\n' % (address, portspec, exc.code, exc))
 

@@ -1,0 +1,21 @@
+Title: Developer option: --plugins
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1605772656
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i2
+
+This werk adds the new commandline option "<tt>--plugins</tt>" to the <tt>cmk -I my_host</tt>,
+<tt>cmk -i my_host</tt> and <tt>cmk my_host</tt> commands.
+
+Setting this option to a comma separated list of pluing names will have the effect that the specified
+command (that is, checking, inventory or discovery) will only be done for the provided plugins.
+
+Unlike the deprecated "--checks" option (see werk 11675) this will have no effect on the fetching
+process whatsoever.
+
+For instance if you execute <tt>cmk -i --plugins mem my_host</tt>, the inventory plugin <i>mem</i>
+will be executed (and nothing else).

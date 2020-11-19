@@ -238,7 +238,7 @@ def _check_inodes(
     ... }
     >>> for r in _check_inodes(levels, 80, 60): print(r)
     Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
-    Result(state=<State.OK: 0>, summary='', details='Inodes used: 20, Inodes available: 60 (75.0%)')
+    Result(state=<State.OK: 0>, notice='Inodes used: 20, Inodes available: 60 (75.0%)')
 
     >>> levels["show_inodes"] = "always"
     >>> for r in _check_inodes(levels, 80, 20): print(r)

@@ -293,8 +293,13 @@ class Result(
         )
 
     def __repr__(self) -> str:
-        details = f", details={self.details!r}" if self.summary != self.details else ""
-        return f"{self.__class__.__name__}(state={self.state!r}, summary={self.summary!r}{details})"
+        if not self.summary:
+            text_args = f"notice={self.details!r}"
+        elif self.summary != self.details:
+            text_args = f"summary={self.summary!r}, details={self.details!r}"
+        else:
+            text_args = f"summary={self.summary!r}"
+        return f"{self.__class__.__name__}(state={self.state!r}, {text_args})"
 
 
 def _create_result_fields(

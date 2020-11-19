@@ -149,6 +149,11 @@ def get_ssl_no_verify_context():
     return context
 
 
+def get_response_body(proto, cafile, address, portspec, page):
+    response = get_response(proto, cafile, address, portspec, page)
+    return response.read().decode(get_response_charset(response))
+
+
 def get_response(proto, cafile, address, portspec, page):
     url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
     request = Request(url, headers={"Accept": "text/plain"})
@@ -167,6 +172,14 @@ def get_response(proto, cafile, address, portspec, page):
             url = 'http://%s%s/server-status?auto' % (address, portspec)
             return urlopen(url, timeout=5)
         raise
+
+
+def get_response_charset(response):
+    if sys.version_info[0] == 2:
+        charset = response.headers.getparam("charset")
+    else:
+        charset = response.info().get_content_charset()
+    return charset or "utf-8"
 
 
 def get_instance_name_map(cfg):
@@ -200,8 +213,8 @@ def main():
         portspec = ':%d' % port if port else ''
 
         try:
-            response = get_response(proto, cafile, address, portspec, page)
-            for line in response.read().split('\n'):
+            response_body = get_response_body(proto, cafile, address, portspec, page)
+            for line in response_body.split('\n'):
                 if not line.strip():
                     continue
                 if line.lstrip()[0] == '<':

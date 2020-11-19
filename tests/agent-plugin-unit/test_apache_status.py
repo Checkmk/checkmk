@@ -5,8 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access,redefined-outer-name
-import sys
-import io
 import pytest  # type: ignore[import]
 from utils import import_module
 
@@ -20,9 +18,7 @@ def apache_status():
 
 @pytest.fixture
 def response():
-    if sys.version_info[0] == 2:
-        return io.BytesIO(RESPONSE)
-    return io.StringIO(RESPONSE)
+    return RESPONSE
 
 
 @pytest.mark.parametrize("cfg", [
@@ -63,7 +59,7 @@ def test_https_cfg_versions(apache_status, cfg):
 ])
 def test_agent(apache_status, cfg, response, monkeypatch, capsys):
     monkeypatch.setattr(apache_status, "get_config", lambda: {"servers": cfg, "ssl_ports": [443]})
-    monkeypatch.setattr(apache_status, "get_response", lambda *args: response)
+    monkeypatch.setattr(apache_status, "get_response_body", lambda *args: response)
     apache_status.main()
     captured_stdout = capsys.readouterr()[0]
     assert captured_stdout == ("<<<apache_status:sep(124)>>>\n" + "\n".join(

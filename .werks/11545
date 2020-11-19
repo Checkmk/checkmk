@@ -1,0 +1,12 @@
+Title: False positive CRIT status in lnx_bonding check
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605774446
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Starting with werk 11543 bonding checks would turn CRIT when no interface was marked active.
+This change just removes that state transition.

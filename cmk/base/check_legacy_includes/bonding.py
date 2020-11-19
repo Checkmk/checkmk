@@ -78,10 +78,6 @@ def check_bonding(item, params, parsed):
         yield 2, "Interface is " + properties["status"]
         return
 
-    active_if = properties.get("active", "None")
-    if active_if == "None":
-        yield 2, "No active interface"
-
     mode = properties["mode"]
     yield 0, "Mode: %s" % mode
     if "IEEE 802.3ad" in mode:
@@ -102,6 +98,7 @@ def check_bonding(item, params, parsed):
         "ignore": None,
     }.get(params["expect_active"])
 
+    active_if = properties.get("active", "None")
     if expected_active is None:
         # we don't expect an interface to be up and others to be down so check whether all
         # interfaces are up

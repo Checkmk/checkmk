@@ -283,6 +283,16 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "Whether or not at alert handler rules are configured (0/1)", offsets,
         [](const TableStatus & /*r*/) { return g_any_event_handler_enabled; }));
 
+    addColumn(std::make_unique<BoolLambdaColumn<TableStatus>>(
+        "is_trial_expired", "Whether or not expired trial of demo version",
+        offsets, [](const TableStatus& /*r*/) {
+#ifdef DEMOVERSION  // will be patched by version.groovy for DEMO release
+            return true;
+#else
+            return false;
+#endif
+        }));
+
     // Special stuff for Check_MK
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>>(
         "mk_inventory_last",

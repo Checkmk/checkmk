@@ -621,12 +621,13 @@ class QuicksearchManager:
         search_objects: List[ABCQuicksearchConductor],
     ) -> SearchResultsByTopic:
         """Generates elements out of the raw data"""
-        results_by_topic: Dict[str, List[SearchResult]] = {}
-        for search_object in search_objects:
-            results = search_object.create_results()
-            if results:
-                results_by_topic[search_object.get_match_topic()] = results
-        return results_by_topic
+        yield from ((
+            search_object.get_match_topic(),
+            results,
+        )
+                    for search_object in search_objects
+                    for results in [search_object.create_results()]
+                    if results)
 
 
 def _maybe_strip(param: Optional[str]) -> Optional[str]:
@@ -719,9 +720,10 @@ class QuicksearchResultRenderer:
 
         Show search topic if at least two search objects provide elements
         """
-        show_match_topics = len(results_by_topic) > 1
+        sorted_results = sorted(results_by_topic, key=lambda x: x[0])
+        show_match_topics = len(sorted_results) > 1
 
-        for match_topic, results in sorted(results_by_topic.items(), key=lambda x: x[0]):
+        for match_topic, results in sorted_results:
             if show_match_topics:
                 html.div(match_topic, class_="topic")
 
@@ -1177,9 +1179,9 @@ class MenuSearchResultsRenderer:
             error_as_html = html.drain()
         return error_as_html
 
-    def _render_results(self, results) -> str:
+    def _render_results(self, results: SearchResultsByTopic) -> str:
         with html.plugged():
-            for topic, search_results in results.items():
+            for topic, search_results in results:
                 html.open_div(id_=topic, class_="topic")
                 self._render_topic(topic)
                 html.open_ul()

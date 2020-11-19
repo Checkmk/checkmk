@@ -12,7 +12,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Mapping,
     NamedTuple,
     Optional,
     Text,
@@ -172,4 +171,4 @@ class SearchResult:
     url: str
 
 
-SearchResultsByTopic = Mapping[str, Iterable[SearchResult]]
+SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]

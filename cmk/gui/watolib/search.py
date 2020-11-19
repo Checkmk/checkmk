@@ -10,10 +10,9 @@ import pathlib
 import pickle
 from typing import (
     Callable,
-    Dict,
+    DefaultDict,
     Final,
     Iterable,
-    List,
     Mapping,
     Sequence,
     Tuple,
@@ -204,7 +203,7 @@ class IndexSearcher:
 
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
         query_lowercase = query.lower()
-        results: Dict[str, List[SearchResult]] = {}
+        results = DefaultDict(list)
 
         for topic, match_items in self._index_store.load_index().items():
             if not self._may_see_topic.get(topic, True):
@@ -214,14 +213,12 @@ class IndexSearcher:
             for match_item in match_items:
                 if (any(query_lowercase in match_text for match_text in match_item.match_texts) and
                         permissions_check(match_item.url)):
-                    results.setdefault(
-                        match_item.topic,
-                        [],
-                    ).append(SearchResult(
+                    results[match_item.topic].append(SearchResult(
                         match_item.title,
                         match_item.url,
                     ))
-        return results
+
+        yield from results.items()
 
 
 def get_index_store() -> IndexStore:

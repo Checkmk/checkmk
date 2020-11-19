@@ -1022,15 +1022,21 @@ bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept;
 /// \brief Set correct access rights for the folder
 ///
 ///  Normally called once on the start of the service.
-///  Removes Users write access from the specified folder(usually it is
+///  Removes Users write access from the specified path(usually it is
 ///  %ProgramData%/checkmk)
-bool ProtectFolderFromUserWrite(const std::filesystem::path& folder);
+bool ProtectPathFromUserWrite(const std::filesystem::path& path);
 
 /// \brief Remove user access to the path
 ///
 ///  Normally called once on the start of the service.
 ///  Removes Users Access to the specified path
 bool ProtectPathFromUserAccess(const std::filesystem::path& entry);
+
+/// \brief Remove user access to the file
+///
+///  Normally called once on the start of the service.
+///  Removes Users Access Writes to the specified file
+bool ProtectFileFromUserWrite(const std::filesystem::path& path);
 
 std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 

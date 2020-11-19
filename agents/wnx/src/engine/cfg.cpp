@@ -1182,6 +1182,9 @@ void ConfigInfo::initFolders(
     folders_.setRoot(ServiceValidName, RootFolder);
     auto root = folders_.getRoot();
 
+    // Protection for the Program Files folder is absent in 1.6
+    // The valid code is in 2.0 (if required)
+
     if (folders_.getData().empty())
         XLOG::l.crit("Data folder is empty.This is bad.");
     else {

@@ -339,13 +339,14 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         host_sections, persisted_sections = self._parse_host_section(
             raw_data, self.host_config.check_mk_check_interval)
+        SectionStore[AgentSectionContent](
+            self.persisted_sections_file_path,
+            keep_outdated=self.use_outdated_persisted_sections,
+            logger=self._logger,
+        ).update(persisted_sections)
         host_sections.add_persisted_sections(
-            persisted_sections=persisted_sections,
-            section_store=SectionStore[AgentSectionContent](
-                self.persisted_sections_file_path,
-                keep_outdated=self.use_outdated_persisted_sections,
-                logger=self._logger,
-            ),
+            persisted_sections,
+            logger=self._logger,
         )
         return host_sections
 
@@ -446,8 +447,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         return AgentHostSections(
             sections,
-            agent_cache_info,
-            piggybacked_raw_data,
+            cache_info=agent_cache_info,
+            piggybacked_raw_data=piggybacked_raw_data,
         ), persisted_sections
 
     @staticmethod

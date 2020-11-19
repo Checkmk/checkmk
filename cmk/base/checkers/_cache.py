@@ -20,6 +20,8 @@ class PersistedSections(
         Generic[TSectionContent],
         MutableMapping[SectionName, Tuple[int, int, TSectionContent]],
 ):
+    __slots__ = ("_store",)
+
     def __init__(self, store: MutableMapping[SectionName, Tuple[int, int, TSectionContent]]):
         self._store = store
 
@@ -41,16 +43,6 @@ class PersistedSections(
     def __len__(self) -> int:
         return self._store.__len__()
 
-    def add_from_store(
-        self,
-        section_store: "SectionStore[TSectionContent]",
-    ) -> "PersistedSections[TSectionContent]":
-        persisted_sections = section_store.load()
-        if persisted_sections != self:
-            persisted_sections.update(self)
-            section_store.store(persisted_sections)
-        return persisted_sections
-
 
 class SectionStore(Generic[TSectionContent]):
     def __init__(
@@ -64,6 +56,15 @@ class SectionStore(Generic[TSectionContent]):
         self.path: Final = Path(path)
         self.keep_outdated: Final = keep_outdated
         self._logger: Final = logger
+
+    def update(
+        self,
+        persisted_sections: PersistedSections[TSectionContent],
+    ) -> None:
+        stored = self.load()
+        if persisted_sections != stored:
+            persisted_sections.update(stored)
+            self.store(persisted_sections)
 
     def store(self, sections: PersistedSections[TSectionContent]) -> None:
         if not sections:

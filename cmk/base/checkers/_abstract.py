@@ -40,7 +40,7 @@ from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo, TSectionCon
 from cmk.base.config import HostConfig
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
-from ._cache import SectionStore, PersistedSections
+from ._cache import PersistedSections
 
 __all__ = [
     "AUTO_DETECT",
@@ -78,6 +78,7 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
     def __init__(
         self,
         sections: Optional[MutableMapping[SectionName, TSectionContent]] = None,
+        *,
         cache_info: Optional[SectionCacheInfo] = None,
         piggybacked_raw_data: Optional[PiggybackRawData] = None,
     ) -> None:
@@ -121,25 +122,11 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
 
     def add_persisted_sections(
         self,
-        *,
-        persisted_sections: PersistedSections[TSectionContent],
-        section_store: SectionStore[TSectionContent],
-    ) -> None:
-        """Add information from previous persisted infos."""
-        self._add_persisted_sections(
-            persisted_sections.add_from_store(section_store),
-            logger=section_store._logger,
-        )
-
-    def _add_persisted_sections(
-        self,
         persisted_sections: PersistedSections[TSectionContent],
         *,
         logger: logging.Logger,
     ) -> None:
-        if not persisted_sections:
-            return
-
+        """Add information from previous persisted infos."""
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
                 continue  # Skip entries of "old" format

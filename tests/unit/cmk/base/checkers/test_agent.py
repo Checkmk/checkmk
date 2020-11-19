@@ -165,7 +165,7 @@ class TestParser:
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
         assert ahs.piggybacked_raw_data == {}
-        assert add_persisted_sections.call_args.kwargs["persisted_sections"] == {
+        assert add_persisted_sections.call_args.args[0] == {
             SectionName("section"): (1000, 1050, [["first", "line"], ["second", "line"]]),
         }
 

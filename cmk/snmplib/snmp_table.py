@@ -3,7 +3,18 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Provide methods to get an snmp table with or without caching
 
+NOTE on caching:
+
+*Before* fetching the data for every individual OID the cached version tries to read
+the OIDs data from a cache file.
+
+*After* having fetched live data both the cached and the uncached version do write the
+fetched data to a file if the respective OID is marked as being cached by the plugin
+using `OIDCached` (that is: if the save_to_cache attribute of the OID object is true).
+
+"""
 import os
 from typing import Callable, List, Optional, Set, Tuple
 
@@ -39,7 +50,7 @@ def get_snmp_table(
     *,
     backend: ABCSNMPBackend,
 ) -> SNMPTable:
-    return _get_snmp_table(section_name, oid_info, False, backend=backend)
+    return _get_snmp_table(section_name, oid_info, read_walk_cache=False, backend=backend)
 
 
 def get_snmp_table_cached(
@@ -48,14 +59,14 @@ def get_snmp_table_cached(
     *,
     backend: ABCSNMPBackend,
 ) -> SNMPTable:
-    return _get_snmp_table(section_name, oid_info, True, backend=backend)
+    return _get_snmp_table(section_name, oid_info, read_walk_cache=True, backend=backend)
 
 
 def _get_snmp_table(
     section_name: Optional[SectionName],
     tree: BackendSNMPTree,
-    use_snmpwalk_cache: bool,
     *,
+    read_walk_cache: bool,
     backend: ABCSNMPBackend,
 ) -> SNMPTable:
 
@@ -89,8 +100,8 @@ def _get_snmp_table(
                 section_name,
                 tree.base,
                 fetchoid,
-                use_snmpwalk_cache,
-                save_to_cache=oid.save_to_cache,
+                read_walk_cache=read_walk_cache,
+                save_walk_cache=oid.save_to_cache,
                 backend=backend,
             )
             if len(rowinfo) > max_len:
@@ -179,17 +190,20 @@ def _get_snmpwalk(
     section_name: Optional[SectionName],
     base: str,
     fetchoid: OID,
-    use_snmpwalk_cache: bool,
     *,
-    save_to_cache: bool,
+    read_walk_cache: bool,
+    save_walk_cache: bool,
     backend: ABCSNMPBackend,
 ) -> SNMPRowInfo:
-    get_from_cache = save_to_cache and use_snmpwalk_cache
-    cached = _get_cached_snmpwalk(backend.hostname, fetchoid) if get_from_cache else None
-    if cached is not None:
-        return cached
+    if save_walk_cache and read_walk_cache:  # no point in reading if OID isn't saved
+        try:
+            return _get_cached_snmpwalk(backend.hostname, fetchoid)
+        except Exception:
+            if cmk.utils.debug.enabled():
+                raise
+
     rowinfo = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
-    if save_to_cache:
+    if save_walk_cache:
         _save_snmpwalk_cache(backend.hostname, fetchoid, rowinfo)
     return rowinfo
 
@@ -319,16 +333,14 @@ def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> SNMPTable:
     return new_info
 
 
-def _get_cached_snmpwalk(hostname: HostName, fetchoid: OID) -> Optional[SNMPRowInfo]:
+def _get_cached_snmpwalk(hostname: HostName, fetchoid: OID) -> SNMPRowInfo:
     path = _snmpwalk_cache_path(hostname, fetchoid)
+    console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
     try:
-        console.vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
         return store.load_object_from_file(path)
     except Exception:
-        if cmk.utils.debug.enabled():
-            raise
-        console.verbose("  Failed loading walk cache from %s. Continue without it.\n" % path)
-        return None
+        console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+        raise
 
 
 def _save_snmpwalk_cache(hostname: HostName, fetchoid: OID, rowinfo: SNMPRowInfo) -> None:

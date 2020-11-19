@@ -1,0 +1,21 @@
+Title: Improve GUI security: Prevent changing content type
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1605771497
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+All web pages served by Checkmk will now have the HTTP header <tt>Header always
+set X-Content-Type-Options: "nosniff"</tt> set.  It prevents a client from
+guessing the content type based on the provided file. This is a way to opt out
+of MIME type sniffing, or, in other words, to say that the MIME types are
+deliberately configured.
+
+Further information can be found here:
+
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+https://www.chromium.org/Home/chromium-security/corb-for-developers
+

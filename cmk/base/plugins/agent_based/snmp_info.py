@@ -37,10 +37,18 @@ def parse_snmp_info(string_table: List[StringTable]) -> SNMPInfo:
     return SNMPInfo(*string_table[0][0])
 
 
+def is_fibrechannel_switch(description):
+    patterns = ["fc", "fibrechannel", "fibre channel"]
+    for pattern in patterns:
+        if pattern in description.lower():
+            return True
+    return False
+
+
 def host_label_snmp_info(section: SNMPInfo) -> HostLabelGenerator:
     for device_type in SNMPDeviceTypes:
         if device_type in section.description.lower():
-            if device_type == "switch" and "fc" in section.description.lower():
+            if device_type == "switch" and is_fibrechannel_switch(section.description):
                 yield HostLabel("cmk/device_type", "fcswitch")
             else:
                 yield HostLabel("cmk/device_type", device_type)

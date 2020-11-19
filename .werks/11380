@@ -1,0 +1,14 @@
+Title: mk_oracle: Fixed reference to all found SIDs in custom sqls
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605801600
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+In the help text is the assignment of <i>SQLS_SIDS="\$SIDS"</i> an example
+to assign a custom sql to all found instances. This has not been working,
+since the config loaded before the script looked for running instances. The
+example configuration of the help text will finally work with this fix.

@@ -71,7 +71,7 @@ tearDown () {
     unset ONLY_SIDS SKIP_SIDS EXCLUDE_MYSID EXCLUDE_OtherSID SYNC_SECTIONS_MYSID ASYNC_SECTIONS_MYSID
     unset MK_SYNC_SECTIONS_QUERY MK_ASYNC_SECTIONS_QUERY
     unset ORACLE_SID MK_SID MK_ORA_SECTIONS
-    unset custom_sqls_sections
+    unset custom_sqls_sections custom_sqls_sids
 }
 
 #.
@@ -111,6 +111,18 @@ EOF
     assertEquals "/other/path" "$OLRLOC"
 }
 
+test_mk_oracle_load_config_custom_all_sids () {
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
+# custom sqls assignement
+SQLS_SIDS="\$SIDS"
+EOF
+
+    export SIDS="XE MYSID"
+    load_config
+
+    #shellcheck disable=SC2154
+    assertEquals "XE MYSID" "$custom_sqls_sids"
+}
 
 test_mk_oracle_load_config_sections_opt () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"

@@ -2900,9 +2900,6 @@ fi
 logging "--------------------------------------------------------------------"
 
 #   ---preliminaries--------------------------------------------------------
-
-load_config
-
 set_os_env
 
 # Get list of all running databases. Do not work on ASM in this plugin.
@@ -2911,6 +2908,9 @@ set_os_env
 SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' |\
        "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_' |\
        cut -d"_" -f3- | sort)
+
+# Load config AFTER we got the SIDS since we allow users to use this variable in their config
+load_config
 
 # Are there any remote configurations?
 for remote_instance in $(compgen -A variable | "${GREP}" -E "^REMOTE_INSTANCE_.*"); do

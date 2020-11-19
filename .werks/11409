@@ -12,9 +12,11 @@ As an addition to the reworked "Network interface and switch port discovery"
 ruleset, as described in Werk #11361, it is now possible to automatically
 generate service labels via discovery.
 
-To achieve this, you can specify a set of service labels per created "Network
-interface and switch port discovery" rule, that will be applied to the matching
-single interfaces and interface groups on discovery.
+You can specify a set of labels each for all discovered single interfaces and
+for all discovered interface groups per created "Network interface and switch
+port discovery" rule. To achieve this, you have to activate and fill the entries
+"Generate service labels...", that can be found under the congurations for single
+interfaces, and interface groups, respectively.
 
 In order to apply the configured labels, you have to (re)discover the services
 that correspond to the matching interfaces and interface groups.

@@ -33,24 +33,20 @@ from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
 from cmk.base.check_api_utils import state_markers
-from cmk.base.check_utils import (
-    AgentSectionContent,
-    PiggybackRawData,
-    SectionCacheInfo,
-)
+from cmk.base.check_utils import AgentSectionContent, PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import (
-    Source,
+    FileCacheFactory,
     HostSections,
+    Mode,
     Parser,
     PreselectedSectionNames,
+    Source,
     Summarizer,
-    FileCacheFactory,
-    Mode,
 )
-from ._cache import PersistedSections
+from ._cache import PersistedSections, SectionStore
 
 __all__ = ["AgentSource", "AgentHostSections"]
 
@@ -344,10 +340,12 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         host_sections, persisted_sections = self._parse_host_section(
             raw_data, self.host_config.check_mk_check_interval)
         host_sections.add_persisted_sections(
-            self.persisted_sections_file_path,
-            self.use_outdated_persisted_sections,
             persisted_sections=persisted_sections,
-            logger=self._logger,
+            section_store=SectionStore[AgentSectionContent](
+                self.persisted_sections_file_path,
+                keep_outdated=self.use_outdated_persisted_sections,
+                logger=self._logger,
+            ),
         )
         return host_sections
 

@@ -8,7 +8,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import Generic, Iterator, MutableMapping, Tuple, Union
+from typing import Final, Generic, Iterator, MutableMapping, Tuple, Union
 
 import cmk.utils.store as _store
 from cmk.utils.type_defs import SectionName
@@ -41,18 +41,11 @@ class PersistedSections(
     def __len__(self) -> int:
         return self._store.__len__()
 
-    def determine(
+    def add_from_store(
         self,
-        cache_path: Path,
-        use_outdated: bool,
-        *,
-        logger: logging.Logger,
+        section_store: "SectionStore[TSectionContent]",
     ) -> "PersistedSections[TSectionContent]":
-        section_store: SectionStore[TSectionContent] = SectionStore(
-            cache_path,
-            logger,
-        )
-        persisted_sections = section_store.load(use_outdated)
+        persisted_sections = section_store.load()
         if persisted_sections != self:
             persisted_sections.update(self)
             section_store.store(persisted_sections)
@@ -60,10 +53,17 @@ class PersistedSections(
 
 
 class SectionStore(Generic[TSectionContent]):
-    def __init__(self, path: Union[str, Path], logger: logging.Logger) -> None:
-        super(SectionStore, self).__init__()
-        self.path = Path(path)
-        self._logger = logger
+    def __init__(
+        self,
+        path: Union[str, Path],
+        *,
+        keep_outdated: bool,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__()
+        self.path: Final = Path(path)
+        self.keep_outdated: Final = keep_outdated
+        self._logger: Final = logger
 
     def store(self, sections: PersistedSections[TSectionContent]) -> None:
         if not sections:
@@ -77,12 +77,12 @@ class SectionStore(Generic[TSectionContent]):
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
     # reading and unlock after writing
-    def load(self, keep_outdated: bool) -> PersistedSections[TSectionContent]:
+    def load(self) -> PersistedSections[TSectionContent]:
         raw_sections_data = _store.load_object_from_file(self.path, default={})
         sections: PersistedSections[TSectionContent] = {  # type: ignore[assignment]
             SectionName(k): v for k, v in raw_sections_data.items()
         }
-        if not keep_outdated:
+        if not self.keep_outdated:
             sections = self._filter(sections)
 
         if not sections:

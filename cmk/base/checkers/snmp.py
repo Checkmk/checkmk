@@ -11,12 +11,7 @@ from typing import Final, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
-from cmk.snmplib.type_defs import (
-    BackendSNMPTree,
-    SNMPDetectSpec,
-    SNMPRawData,
-    SNMPSectionContent,
-)
+from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPSectionContent
 
 from cmk.fetchers import FetcherType, SNMPFetcher
 from cmk.fetchers.snmp import SNMPFileCache, SNMPPluginStore, SNMPPluginStoreItem
@@ -27,15 +22,15 @@ import cmk.base.config as config
 
 from ._abstract import (
     AUTO_DETECT,
+    FileCacheFactory,
     HostSections,
+    Mode,
     Parser,
     PreselectedSectionNames,
     Source,
     Summarizer,
-    FileCacheFactory,
-    Mode,
 )
-from ._cache import PersistedSections
+from ._cache import PersistedSections, SectionStore
 
 
 def make_plugin_store() -> SNMPPluginStore:
@@ -262,10 +257,12 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         )
         host_sections = SNMPHostSections(dict(raw_data))
         host_sections.add_persisted_sections(
-            self.persisted_sections_file_path,
-            self.use_outdated_persisted_sections,
             persisted_sections=persisted_sections,
-            logger=self._logger,
+            section_store=SectionStore[SNMPSectionContent](
+                self.persisted_sections_file_path,
+                keep_outdated=self.use_outdated_persisted_sections,
+                logger=self._logger,
+            ),
         )
         return host_sections
 

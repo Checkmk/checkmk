@@ -6,6 +6,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from itertools import chain
 import pathlib
 import pickle
 from typing import (
@@ -218,7 +219,46 @@ class IndexSearcher:
                         match_item.url,
                     ))
 
-        yield from results.items()
+        yield from self._sort_search_results(results)
+
+    def _sort_search_results(
+        self,
+        results: Mapping[str, Iterable[SearchResult]],
+    ) -> SearchResultsByTopic:
+        first_topics = self._first_topics()
+        last_topics = self._last_topics()
+        middle_topics = sorted(set(results.keys()) - set(first_topics) - set(last_topics))
+        yield from ((
+            topic,
+            results[topic],
+        ) for topic in chain(
+            first_topics,
+            middle_topics,
+            last_topics,
+        ) if topic in results)
+
+    @staticmethod
+    def _first_topics() -> Iterable[str]:
+        # Note: this could just be a class attribute, however, due to the string concatenation,
+        # this would mess up the localization
+        return (
+            _("Hosts"),
+            _("Services") + " > " + _("Service monitoring rules"),
+            _("Services") + " > " + _("Discovery rules"),
+        )
+
+    @staticmethod
+    def _last_topics() -> Iterable[str]:
+        # Note: this could just be a class attribute, however, due to the string concatenation,
+        # this would mess up the localization
+        return (
+            # _("Business Intelligence"),
+            # _("Events"),
+            # _("Users"),
+            _("Services") + " > " + _("Enforced services"),
+            _("Global settings"),
+            # _("Maintenance"),
+        )
 
 
 def get_index_store() -> IndexStore:

@@ -1,5 +1,4 @@
 PIPENV := ../../scripts/run-pipenv
-RUN_IN_DOCKER := ../../scripts/run-in-docker.sh
 THREE_TO_TWO := $(PIPENV) run 3to2
 
 # New plugins are expected to all have a .py extension. This will discover them
@@ -32,5 +31,5 @@ clean:
 
 %.py2: %.py
 	cat "$<" | gawk -v text="# Do not test generated 2.x files\n# yapf: disable\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
-	$(RUN_IN_DOCKER) $(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
+	$(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
 	chmod +x "$@"

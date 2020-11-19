@@ -166,7 +166,7 @@ msgstr ""
 msgid " spread over %d minutes "
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:191 ../cmk/gui/wato/mkeventd.py:753
+#: ../cmk/gui/wato/pages/notifications.py:190 ../cmk/gui/wato/mkeventd.py:753
 #: ../cmk/gui/wato/mkeventd.py:782 ../cmk/gui/wato/mkeventd.py:827
 #: ../cmk/gui/watolib/users.py:315
 #: ../cmk/gui/plugins/wato/utils/__init__.py:1312
@@ -420,7 +420,7 @@ msgstr ""
 msgid "%d columns"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:310
+#: ../cmk/gui/wato/pages/notifications.py:309
 #: ../cmk/gui/cee/plugins/wato/alert_handling.py:270
 #, python-format
 msgid "%d conditions"
@@ -970,7 +970,7 @@ msgstr ""
 msgid "(no command line, passive check)"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:321
+#: ../cmk/gui/wato/pages/notifications.py:320
 #: ../cmk/gui/cee/plugins/wato/alert_handling.py:272
 msgid "(no conditions)"
 msgstr ""
@@ -987,7 +987,7 @@ msgstr ""
 msgid "(no hosts)"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:301
+#: ../cmk/gui/wato/pages/notifications.py:300
 msgid "(no one)"
 msgstr ""
 
@@ -1432,7 +1432,7 @@ msgstr ""
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:571
+#: ../cmk/gui/wato/pages/notifications.py:572
 #, python-format
 msgid ""
 "<b>Warning</b><br><br>Rule based notifications are disabled in your global "
@@ -1442,7 +1442,7 @@ msgid ""
 "<a href=\"%s\">here</a>."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:582
+#: ../cmk/gui/wato/pages/notifications.py:583
 #, python-format
 msgid ""
 "<b>Warning</b><br><br>You haven't configured a <a href=\"%s\">fallback email "
@@ -2940,7 +2940,7 @@ msgstr ""
 msgid "Acknowledged incompatible Werks"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:702
+#: ../cmk/gui/wato/pages/notifications.py:703
 #: ../cmk/gui/plugins/views/painters.py:3838
 msgid "Acknowledgement"
 msgstr ""
@@ -2994,7 +2994,7 @@ msgid "Action on Error"
 msgstr ""
 
 #: ../cmk/gui/wato/pages/roles.py:202 ../cmk/gui/wato/pages/timeperiods.py:303
-#: ../cmk/gui/wato/pages/notifications.py:250 ../cmk/gui/wato/pages/ldap.py:158
+#: ../cmk/gui/wato/pages/notifications.py:249 ../cmk/gui/wato/pages/ldap.py:158
 #: ../cmk/gui/wato/pages/rulesets.py:909 ../cmk/gui/wato/pages/tags.py:330
 #: ../cmk/gui/wato/pages/tags.py:377 ../cmk/gui/wato/pages/tags.py:491
 #: ../cmk/gui/wato/pages/tags.py:539 ../cmk/gui/wato/pages/sites.py:683
@@ -3460,7 +3460,7 @@ msgstr ""
 msgid "Add Exception"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1146
+#: ../cmk/gui/wato/pages/notifications.py:1147
 msgid "Add Group"
 msgstr ""
 
@@ -3484,7 +3484,7 @@ msgstr ""
 msgid "Add Prefix"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:177
+#: ../cmk/gui/wato/pages/notifications.py:176
 msgid "Add Rule ID"
 msgstr ""
 
@@ -3558,7 +3558,7 @@ msgstr ""
 msgid "Add comment"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1135
+#: ../cmk/gui/wato/pages/notifications.py:1136
 msgid "Add condition"
 msgstr ""
 
@@ -3707,8 +3707,8 @@ msgstr ""
 msgid "Add name"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:460
-#: ../cmk/gui/wato/pages/notifications.py:895
+#: ../cmk/gui/wato/pages/notifications.py:459
+#: ../cmk/gui/wato/pages/notifications.py:896
 #: ../cmk/gui/cee/plugins/wato/alert_handling.py:184
 msgid "Add new"
 msgstr ""
@@ -3814,11 +3814,11 @@ msgstr ""
 msgid "Add notification"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1433
+#: ../cmk/gui/wato/pages/notifications.py:1434
 msgid "Add notification rule"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1492
+#: ../cmk/gui/wato/pages/notifications.py:1493
 #, python-format
 msgid "Add notification rule for user %s"
 msgstr ""
@@ -3883,9 +3883,9 @@ msgstr ""
 msgid "Add role rule"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:463
-#: ../cmk/gui/wato/pages/notifications.py:898
-#: ../cmk/gui/wato/pages/notifications.py:963 ../cmk/gui/wato/mkeventd.py:1649
+#: ../cmk/gui/wato/pages/notifications.py:462
+#: ../cmk/gui/wato/pages/notifications.py:899
+#: ../cmk/gui/wato/pages/notifications.py:964 ../cmk/gui/wato/mkeventd.py:1649
 #: ../cmk/gui/wato/mkeventd.py:1652 ../cmk/gui/wato/mkeventd.py:2111
 #: ../cmk/gui/cee/plugins/wato/alert_handling.py:187
 #: ../cmk/gui/plugins/wato/bi_config.py:567
@@ -4051,7 +4051,7 @@ msgstr ""
 msgid "Add unmonitored services, new host labels"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1098
+#: ../cmk/gui/wato/pages/notifications.py:1099
 #: ../cmk/gui/wato/pages/users.py:105 ../cmk/gui/wato/pages/users.py:108
 #: ../cmk/gui/wato/pages/users.py:575 ../cmk/gui/wato/pages/read_only.py:129
 msgid "Add user"
@@ -4441,7 +4441,7 @@ msgstr ""
 msgid "Age"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:627
+#: ../cmk/gui/wato/pages/notifications.py:628
 msgid "Age (sec)"
 msgstr ""
 
@@ -4505,7 +4505,7 @@ msgstr ""
 msgid "Age of never analyzed/vacuumed tables"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:629
+#: ../cmk/gui/wato/pages/notifications.py:630
 msgid "Age of oldest notification is over maximum age"
 msgstr ""
 
@@ -5118,7 +5118,7 @@ msgstr ""
 msgid "All components"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1076
+#: ../cmk/gui/wato/pages/notifications.py:1077
 msgid "All contacts of the notified object"
 msgstr ""
 
@@ -5446,12 +5446,12 @@ msgstr ""
 msgid "All unknown services of a certain hostgroup"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1081
+#: ../cmk/gui/wato/pages/notifications.py:1082
 #: ../cmk/gui/wato/pages/audit_log.py:443
 msgid "All users"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1086
+#: ../cmk/gui/wato/pages/notifications.py:1087
 msgid "All users with an email address"
 msgstr ""
 
@@ -5600,7 +5600,7 @@ msgid ""
 "actions"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1230
+#: ../cmk/gui/wato/pages/notifications.py:1231
 msgid "Also bulk outside of timeperiod"
 msgstr ""
 
@@ -5670,7 +5670,7 @@ msgstr ""
 msgid "Always assume host to be up"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1273
+#: ../cmk/gui/wato/pages/notifications.py:1274
 msgid "Always bulk"
 msgstr ""
 
@@ -5892,7 +5892,7 @@ msgstr ""
 msgid "Analyze patterns"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:658
+#: ../cmk/gui/wato/pages/notifications.py:659
 msgid "Analyze ruleset with this notification"
 msgstr ""
 
@@ -6292,7 +6292,7 @@ msgstr ""
 msgid "As client"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1118
+#: ../cmk/gui/wato/pages/notifications.py:1119
 msgid "As configured in the users settings. Do not add a leading underscore."
 msgstr ""
 
@@ -6464,7 +6464,7 @@ msgid ""
 "status line logic (ex: 3xx, 4xx, 5xx processing)"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1168
+#: ../cmk/gui/wato/pages/notifications.py:1169
 msgid ""
 "At most that many Notifications are kept back for bulking. A value of 1 "
 "essentially turns off notification bulking."
@@ -8116,7 +8116,7 @@ msgstr ""
 msgid "Build duration"
 msgstr ""
 
-#: ../cmk/gui/watolib/search.py:170
+#: ../cmk/gui/watolib/search.py:238
 msgid "Building of search index started"
 msgstr ""
 
@@ -8146,7 +8146,7 @@ msgstr ""
 msgid "Builtin: Radial"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:284
+#: ../cmk/gui/wato/pages/notifications.py:283
 msgid "Bulk"
 msgstr ""
 
@@ -8154,7 +8154,7 @@ msgstr ""
 msgid "Bulk Discovery"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:625
+#: ../cmk/gui/wato/pages/notifications.py:626
 msgid "Bulk ID"
 msgstr ""
 
@@ -8184,7 +8184,7 @@ msgstr ""
 msgid "Bulk discovery successful"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1285
+#: ../cmk/gui/wato/pages/notifications.py:1286
 msgid "Bulk during timeperiod"
 msgstr ""
 
@@ -8213,8 +8213,8 @@ msgstr ""
 msgid "Bulk renaming of hosts"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1166
-#: ../cmk/gui/wato/pages/notifications.py:1215
+#: ../cmk/gui/wato/pages/notifications.py:1167
+#: ../cmk/gui/wato/pages/notifications.py:1216
 msgid "Bulk up to"
 msgstr ""
 
@@ -8230,7 +8230,7 @@ msgstr ""
 msgid "Bulk walk: Number of OIDs per bulk"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:771
+#: ../cmk/gui/wato/pages/notifications.py:772
 msgid "Bulking"
 msgstr ""
 
@@ -8642,7 +8642,7 @@ msgid ""
 "exclude patterns will be excluded from the group and monitored individually."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1288
+#: ../cmk/gui/wato/pages/notifications.py:1289
 msgid ""
 "By enabling this option notifications will be bulked only if the specified "
 "timeperiod is active. When the timeperiod ends a bulk containing all "
@@ -8651,7 +8651,7 @@ msgid ""
 "of timeperiod\" can be used."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1231
+#: ../cmk/gui/wato/pages/notifications.py:1232
 msgid ""
 "By enabling this option notifications will be bulked outside of the defined "
 "timeperiod as well."
@@ -9231,7 +9231,7 @@ msgstr ""
 msgid "Call legs"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1327
+#: ../cmk/gui/wato/pages/notifications.py:1328
 #: ../cmk/gui/plugins/wato/utils/__init__.py:1737
 msgid "Call with the following parameters:"
 msgstr ""
@@ -9284,11 +9284,11 @@ msgstr ""
 msgid "Can still edit"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:278
+#: ../cmk/gui/wato/pages/notifications.py:277
 msgid "Cancel notifications for this plugin type"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1339
+#: ../cmk/gui/wato/pages/notifications.py:1340
 msgid "Cancel previous notifications"
 msgstr ""
 
@@ -9780,12 +9780,12 @@ msgstr ""
 msgid "Changed host selection of agent updates"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1439
+#: ../cmk/gui/wato/pages/notifications.py:1440
 #, python-format
 msgid "Changed notification rule %d"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1466
+#: ../cmk/gui/wato/pages/notifications.py:1467
 #, python-format
 msgid "Changed notification rule %d of user %s"
 msgstr ""
@@ -9804,7 +9804,7 @@ msgstr ""
 msgid "Changed position of LDAP connection %s to %d"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:828
+#: ../cmk/gui/wato/pages/notifications.py:829
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
 msgstr ""
@@ -10217,7 +10217,7 @@ msgstr ""
 msgid "Check timeout for services (Microcore)"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:334
+#: ../cmk/gui/wato/pages/notifications.py:333
 #: ../cmk/gui/plugins/views/painters.py:3173
 msgid "Check type"
 msgstr ""
@@ -10929,11 +10929,11 @@ msgstr ""
 msgid "Click here to change the graphs consolidation function to \"%s\"."
 msgstr ""
 
-#: ../cmk/gui/plugins/wato/utils/html_elements.py:68
+#: ../cmk/gui/plugins/wato/utils/html_elements.py:69
 msgid "Click here to go to pending changes."
 msgstr ""
 
-#: ../cmk/gui/plugins/wato/utils/html_elements.py:72
+#: ../cmk/gui/plugins/wato/utils/html_elements.py:73
 msgid "Click here to see the activation status per site."
 msgstr ""
 
@@ -11693,8 +11693,8 @@ msgstr ""
 msgid "Condition type"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:307
-#: ../cmk/gui/wato/pages/notifications.py:1246
+#: ../cmk/gui/wato/pages/notifications.py:306
+#: ../cmk/gui/wato/pages/notifications.py:1247
 #: ../cmk/gui/wato/pages/rulesets.py:1001 ../cmk/gui/wato/pages/rulesets.py:1602
 #: ../cmk/gui/wato/pages/predefined_conditions.py:137
 #: ../cmk/gui/cee/plugins/wato/alert_handling.py:267
@@ -12343,7 +12343,7 @@ msgstr ""
 msgid "Consumers"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:623 ../cmk/gui/notifications.py:147
+#: ../cmk/gui/wato/pages/notifications.py:624 ../cmk/gui/notifications.py:147
 #: ../cmk/gui/plugins/visuals/infos.py:198
 #: ../cmk/gui/plugins/views/painters.py:4301
 #: ../cmk/gui/plugins/views/mkeventd.py:513
@@ -12364,7 +12364,7 @@ msgstr ""
 msgid "Contact Person"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1061
+#: ../cmk/gui/wato/pages/notifications.py:1062
 msgid "Contact Selection"
 msgstr ""
 
@@ -12419,7 +12419,7 @@ msgstr ""
 msgid "Contactgroups that have permission on this folder"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:297
+#: ../cmk/gui/wato/pages/notifications.py:296
 #: ../cmk/gui/plugins/visuals/infos.py:202
 #: ../cmk/gui/plugins/views/painters.py:686
 #: ../cmk/gui/plugins/views/painters.py:2914
@@ -12522,7 +12522,7 @@ msgstr ""
 msgid "Context information about this connection"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:292
+#: ../cmk/gui/wato/pages/notifications.py:291
 #: ../cmk/gui/wato/pages/rulesets.py:1024 ../cmk/gui/wato/mkeventd.py:1916
 #: ../cmk/gui/bi.py:549 ../cmk/gui/cee/plugins/wato/alert_handling.py:261
 msgid "Context information about this rule"
@@ -12816,7 +12816,7 @@ msgstr ""
 msgid "Could not save changes: %s"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:632 ../cmk/gui/availability.py:1331
+#: ../cmk/gui/wato/pages/notifications.py:633 ../cmk/gui/availability.py:1331
 #: ../cmk/gui/cee/plugins/wato/agent_bakery/misc.py:1253
 #: ../cmk/gui/plugins/metrics/docker.py:60 ../cmk/gui/plugins/metrics/unit.py:59
 msgid "Count"
@@ -13052,7 +13052,7 @@ msgstr ""
 msgid "Create a copy of this group"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:253
+#: ../cmk/gui/wato/pages/notifications.py:252
 msgid "Create a copy of this notification rule"
 msgstr ""
 
@@ -13073,7 +13073,7 @@ msgstr ""
 msgid "Create a new event for each incident - never merge"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:280
+#: ../cmk/gui/wato/pages/notifications.py:279
 msgid "Create a notification"
 msgstr ""
 
@@ -13174,7 +13174,7 @@ msgstr ""
 msgid "Create new host"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1531
+#: ../cmk/gui/wato/pages/notifications.py:1532
 msgid "Create new notification rule"
 msgstr ""
 
@@ -13242,11 +13242,11 @@ msgstr ""
 msgid "Create separate Service for memory information"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:328
+#: ../cmk/gui/wato/pages/notifications.py:327
 msgid "Create separate notification bulks based on"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1182
+#: ../cmk/gui/wato/pages/notifications.py:1183
 msgid ""
 "Create separate notification bulks for different values of the following "
 "custom macros"
@@ -13348,11 +13348,11 @@ msgstr ""
 msgid "Created new host tag group '%s'"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1438
+#: ../cmk/gui/wato/pages/notifications.py:1439
 msgid "Created new notification rule"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1465
+#: ../cmk/gui/wato/pages/notifications.py:1466
 #, python-format
 msgid "Created new notification rule for user %s"
 msgstr ""
@@ -14796,7 +14796,7 @@ msgstr ""
 msgid "Currently there are %d changes to activate."
 msgstr ""
 
-#: ../cmk/gui/plugins/wato/utils/html_elements.py:66
+#: ../cmk/gui/plugins/wato/utils/html_elements.py:67
 #, python-format
 msgid "Currently there are %s to activate."
 msgstr ""
@@ -14808,11 +14808,11 @@ msgstr ""
 msgid "Currently there are no changes to activate."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:604
+#: ../cmk/gui/wato/pages/notifications.py:605
 msgid "Currently there are no unsent notification bulks pending."
 msgstr ""
 
-#: ../cmk/gui/plugins/wato/utils/html_elements.py:65
+#: ../cmk/gui/plugins/wato/utils/html_elements.py:66
 msgid "Currently there is one change to activate"
 msgstr ""
 
@@ -14966,7 +14966,7 @@ msgstr ""
 msgid "Custom notification"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:805
+#: ../cmk/gui/wato/pages/notifications.py:806
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr ""
@@ -15172,7 +15172,7 @@ msgstr ""
 msgid "Customize login screen"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1198
+#: ../cmk/gui/wato/pages/notifications.py:1199
 msgid ""
 "Customize the subject for bulk notifications and overwrite default subject "
 "<tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for HOST</tt> resp. "
@@ -15862,7 +15862,7 @@ msgstr ""
 msgid "Date range"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:683
+#: ../cmk/gui/wato/pages/notifications.py:684
 #: ../cmk/gui/plugins/views/inventory.py:1457
 msgid "Date/Time"
 msgstr ""
@@ -16144,7 +16144,7 @@ msgid ""
 "used by the check."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:184 ../cmk/gui/wato/mkeventd.py:743
+#: ../cmk/gui/wato/pages/notifications.py:183 ../cmk/gui/wato/mkeventd.py:743
 msgid "Define a range of syslog priorities this rule matches"
 msgstr ""
 
@@ -16487,7 +16487,7 @@ msgstr ""
 msgid "Delete this metric"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:256
+#: ../cmk/gui/wato/pages/notifications.py:255
 msgid "Delete this notification rule"
 msgstr ""
 
@@ -16606,7 +16606,7 @@ msgstr ""
 msgid "Deleted host %s"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:816
+#: ../cmk/gui/wato/pages/notifications.py:817
 #, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr ""
@@ -17062,7 +17062,7 @@ msgstr ""
 
 #: ../cmk/gui/crash_reporting.py:549 ../cmk/gui/werks.py:303
 #: ../cmk/gui/wato/pages/check_catalog.py:501
-#: ../cmk/gui/wato/pages/notifications.py:288 ../cmk/gui/wato/pages/ldap.py:187
+#: ../cmk/gui/wato/pages/notifications.py:287 ../cmk/gui/wato/pages/ldap.py:187
 #: ../cmk/gui/wato/pages/rulesets.py:1021 ../cmk/gui/wato/pages/rulesets.py:1227
 #: ../cmk/gui/wato/mkeventd.py:1912 ../cmk/gui/wato/mkeventd.py:3742
 #: ../cmk/gui/valuespec.py:6094
@@ -18605,7 +18605,7 @@ msgstr ""
 msgid "Do not impose levels, always be OK"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:167
+#: ../cmk/gui/wato/pages/notifications.py:166
 msgid "Do not match Event Console alerts"
 msgstr ""
 
@@ -18812,7 +18812,7 @@ msgstr ""
 msgid "Do you really want to delete the icon <b>%s</b>?"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:398
+#: ../cmk/gui/wato/pages/notifications.py:397
 #, python-format
 msgid "Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?"
 msgstr ""
@@ -19233,7 +19233,7 @@ msgstr ""
 msgid "Downstream power"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:699 ../cmk/gui/availability.py:135
+#: ../cmk/gui/wato/pages/notifications.py:700 ../cmk/gui/availability.py:135
 #: ../cmk/gui/availability.py:150 ../cmk/gui/availability.py:164
 #: ../cmk/gui/availability.py:277
 #: ../cmk/gui/cee/plugins/reporting/availability.py:411
@@ -19831,13 +19831,13 @@ msgstr ""
 msgid "Edit model"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1434
-#: ../cmk/gui/wato/pages/notifications.py:1532
+#: ../cmk/gui/wato/pages/notifications.py:1435
+#: ../cmk/gui/wato/pages/notifications.py:1533
 #, python-format
 msgid "Edit notification rule %d"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1493
+#: ../cmk/gui/wato/pages/notifications.py:1494
 #, python-format
 msgid "Edit notification rule %d of user %s"
 msgstr ""
@@ -19994,7 +19994,7 @@ msgstr ""
 msgid "Edit this host"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:252
+#: ../cmk/gui/wato/pages/notifications.py:251
 msgid "Edit this notification rule"
 msgstr ""
 
@@ -20016,7 +20016,7 @@ msgstr ""
 msgid "Edit this tag group"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:349
+#: ../cmk/gui/wato/pages/notifications.py:348
 msgid "Edit this user's notifications"
 msgstr ""
 
@@ -20579,7 +20579,7 @@ msgstr ""
 msgid "Enabling"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1276
+#: ../cmk/gui/wato/pages/notifications.py:1277
 msgid ""
 "Enabling the bulk notifications will collect several subsequent notifications "
 "for the same contact into one single notification, which lists of all the "
@@ -20797,7 +20797,7 @@ msgstr ""
 msgid "Enter"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1095
+#: ../cmk/gui/wato/pages/notifications.py:1096
 msgid ""
 "Enter a list of user IDs to be notified here. These users need to be members "
 "of at least one contact group in order to be notified."
@@ -21103,11 +21103,11 @@ msgstr ""
 msgid "Event Console Performance"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:161
+#: ../cmk/gui/wato/pages/notifications.py:160
 msgid "Event Console alerts"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:337
+#: ../cmk/gui/wato/pages/notifications.py:336
 msgid "Event Console comment"
 msgstr ""
 
@@ -21120,7 +21120,7 @@ msgstr ""
 msgid "Event Console configuration matching '%s'"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:336
+#: ../cmk/gui/wato/pages/notifications.py:335
 msgid "Event Console contact"
 msgstr ""
 
@@ -23155,7 +23155,7 @@ msgstr ""
 msgid "Flap detection settings for services"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:705 ../cmk/gui/availability.py:134
+#: ../cmk/gui/wato/pages/notifications.py:706 ../cmk/gui/availability.py:134
 #: ../cmk/gui/availability.py:148 ../cmk/gui/availability.py:275
 #: ../cmk/gui/cee/plugins/reporting/availability.py:400
 #: ../cmk/gui/cee/plugins/reporting/availability.py:408
@@ -23232,7 +23232,7 @@ msgstr ""
 msgid "Foldable tree"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:330
+#: ../cmk/gui/wato/pages/notifications.py:329
 #: ../cmk/gui/wato/pages/rulesets.py:1274 ../cmk/gui/wato/pages/rulesets.py:1714
 #: ../cmk/gui/wato/pages/rulesets.py:1844
 #: ../cmk/gui/wato/pages/predefined_conditions.py:141
@@ -24259,7 +24259,7 @@ msgstr ""
 msgid "Global notification rule"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:351
+#: ../cmk/gui/wato/pages/notifications.py:350
 msgid "Global notification rules"
 msgstr ""
 
@@ -25187,7 +25187,7 @@ msgid ""
 "context."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1142
+#: ../cmk/gui/wato/pages/notifications.py:1143
 msgid ""
 "Here you can <i>restrict</i> the list of contacts that has been built up by "
 "the previous options to those that are members of selected contact groups. If "
@@ -25195,7 +25195,7 @@ msgid ""
 "<i>all</i> these groups."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1130
+#: ../cmk/gui/wato/pages/notifications.py:1131
 msgid ""
 "Here you can <i>restrict</i> the list of contacts that has been built up by "
 "the previous options to those who have certain values in certain custom "
@@ -25773,8 +25773,16 @@ msgstr ""
 msgid "Hide Checkmk version"
 msgstr ""
 
+#: ../cmk/gui/wato/pages/notifications.py:497
+msgid "Hide analysis"
+msgstr ""
+
 #: ../cmk/gui/plugins/views/availability.py:1157
 msgid "Hide annotation in report"
+msgstr ""
+
+#: ../cmk/gui/wato/pages/notifications.py:507
+msgid "Hide bulks"
 msgstr ""
 
 #: ../cmk/gui/views.py:885
@@ -25837,6 +25845,10 @@ msgstr ""
 #: ../cmk/gui/visuals.py:873
 #, python-format
 msgid "Hide this %s in the monitor menu"
+msgstr ""
+
+#: ../cmk/gui/wato/pages/notifications.py:488
+msgid "Hide user rules"
 msgstr ""
 
 #: ../cmk/gui/plugins/wato/check_mk_configuration.py:548
@@ -25987,8 +25999,8 @@ msgstr ""
 msgid "Horizontal spacing"
 msgstr ""
 
-#: ../cmk/gui/crash_reporting.py:543 ../cmk/gui/wato/pages/notifications.py:331
-#: ../cmk/gui/wato/pages/notifications.py:709
+#: ../cmk/gui/crash_reporting.py:543 ../cmk/gui/wato/pages/notifications.py:330
+#: ../cmk/gui/wato/pages/notifications.py:710
 #: ../cmk/gui/wato/pages/rulesets.py:1054 ../cmk/gui/wato/pages/rulesets.py:2011
 #: ../cmk/gui/wato/pages/host_rename.py:409
 #: ../cmk/gui/wato/pages/services.py:1113 ../cmk/gui/availability.py:1345
@@ -26645,7 +26657,7 @@ msgstr ""
 msgid "Host/Service"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:335
+#: ../cmk/gui/wato/pages/notifications.py:334
 msgid "Host/Service state"
 msgstr ""
 
@@ -28313,7 +28325,7 @@ msgid ""
 "service gets no item when the \"Application\" field is also not configured."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1185
+#: ../cmk/gui/wato/pages/notifications.py:1186
 msgid ""
 "If you enter the names of host/service-custom macros here then for each "
 "different combination of values of those macros a separate bulk will be "
@@ -28479,7 +28491,7 @@ msgid ""
 "permissions configuration."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1155
+#: ../cmk/gui/wato/pages/notifications.py:1156
 msgid ""
 "If you uncheck this option then users are not allowed to deactive "
 "notifications that are created by this rule."
@@ -30514,7 +30526,7 @@ msgstr ""
 msgid "Issuer"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1349
+#: ../cmk/gui/wato/pages/notifications.py:1350
 msgid "It does not make sense to add a bulk configuration for cancelling rules."
 msgstr ""
 
@@ -31477,7 +31489,7 @@ msgstr ""
 msgid "Left"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1361
+#: ../cmk/gui/wato/pages/notifications.py:1362
 msgid ""
 "Legacy ASCII Emails do not support bulking. You can either disable "
 "notification bulking or choose another notification plugin which allows "
@@ -31549,13 +31561,13 @@ msgstr ""
 msgid "Let through notifications counting from this number"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:107
+#: ../cmk/gui/wato/pages/notifications.py:106
 msgid ""
 "Let through notifications counting from this number. The first notification "
 "always has the number 1."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:115 ../cmk/gui/watolib/users.py:293
+#: ../cmk/gui/wato/pages/notifications.py:114 ../cmk/gui/watolib/users.py:293
 msgid "Let through notifications counting upto this number"
 msgstr ""
 
@@ -34247,7 +34259,7 @@ msgstr ""
 msgid "Make stored reports available for other users"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:200
+#: ../cmk/gui/wato/pages/notifications.py:199
 msgid ""
 "Make the rule match only if the event has a certain syslog facility. Messages "
 "not having a facility are classified as <tt>user</tt>."
@@ -34651,11 +34663,11 @@ msgstr ""
 msgid "Match behaviour"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:207
+#: ../cmk/gui/wato/pages/notifications.py:206
 msgid "Match event comment"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:173
+#: ../cmk/gui/wato/pages/notifications.py:172
 msgid "Match event rule"
 msgstr ""
 
@@ -34680,11 +34692,11 @@ msgstr ""
 msgid "Match interface %s (regex)"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:149
+#: ../cmk/gui/wato/pages/notifications.py:148
 msgid "Match notification comment"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:169
+#: ../cmk/gui/wato/pages/notifications.py:168
 msgid "Match only Event Console alerts"
 msgstr ""
 
@@ -34735,11 +34747,11 @@ msgstr ""
 msgid "Match syslog application (tag)"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:198 ../cmk/gui/wato/mkeventd.py:761
+#: ../cmk/gui/wato/pages/notifications.py:197 ../cmk/gui/wato/mkeventd.py:761
 msgid "Match syslog facility"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:183 ../cmk/gui/wato/mkeventd.py:742
+#: ../cmk/gui/wato/pages/notifications.py:182 ../cmk/gui/wato/mkeventd.py:742
 msgid "Match syslog priority"
 msgstr ""
 
@@ -34846,11 +34858,11 @@ msgstr ""
 msgid "Max file descriptors"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:626
+#: ../cmk/gui/wato/pages/notifications.py:627
 msgid "Max. Age (sec)"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:631
+#: ../cmk/gui/wato/pages/notifications.py:632
 msgid "Max. Count"
 msgstr ""
 
@@ -35082,7 +35094,7 @@ msgstr ""
 msgid "Maximum amount of non-operational access points"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1165
+#: ../cmk/gui/wato/pages/notifications.py:1166
 msgid "Maximum bulk size"
 msgstr ""
 
@@ -35127,7 +35139,7 @@ msgstr ""
 msgid "Maximum connections per second"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:774
+#: ../cmk/gui/wato/pages/notifications.py:775
 msgid "Maximum count"
 msgstr ""
 
@@ -35740,7 +35752,7 @@ msgstr ""
 msgid "Meta usage"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:624
+#: ../cmk/gui/wato/pages/notifications.py:625
 #: ../cmk/gui/cee/plugins/wato/agent_bakery/rulespecs/mk_apt.py:39
 msgid "Method"
 msgstr ""
@@ -37284,7 +37296,7 @@ msgstr ""
 msgid "Name of the license"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1116
+#: ../cmk/gui/wato/pages/notifications.py:1117
 msgid "Name of the macro"
 msgstr ""
 
@@ -38141,7 +38153,7 @@ msgstr ""
 msgid "No password given."
 msgstr ""
 
-#: ../cmk/gui/plugins/wato/utils/html_elements.py:70
+#: ../cmk/gui/plugins/wato/utils/html_elements.py:71
 msgid "No pending changes"
 msgstr ""
 
@@ -38791,8 +38803,8 @@ msgstr ""
 msgid "Notification"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1242
-#: ../cmk/gui/wato/pages/notifications.py:1264
+#: ../cmk/gui/wato/pages/notifications.py:1243
+#: ../cmk/gui/wato/pages/notifications.py:1265
 #: ../cmk/gui/wato/pages/users.py:1043
 #: ../cmk/gui/cee/plugins/wato/mknotifyd.py:219 ../cmk/gui/watolib/users.py:231
 msgid "Notification Method"
@@ -38810,11 +38822,11 @@ msgstr ""
 msgid "Notification Plugin"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:837
+#: ../cmk/gui/wato/pages/notifications.py:838
 msgid "Notification Rules"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:780
+#: ../cmk/gui/wato/pages/notifications.py:781
 msgid "Notification Script"
 msgstr ""
 
@@ -38838,7 +38850,7 @@ msgstr ""
 msgid "Notification Spooling"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:450
+#: ../cmk/gui/wato/pages/notifications.py:449
 msgid "Notification configuration"
 msgstr ""
 
@@ -38885,13 +38897,13 @@ msgid "Notification rule of user '%s'"
 msgstr ""
 
 #: ../cmk/gui/wato/user_profile.py:119 ../cmk/gui/wato/user_profile.py:613
-#: ../cmk/gui/wato/pages/notifications.py:346
-#: ../cmk/gui/wato/pages/notifications.py:457
-#: ../cmk/gui/wato/pages/notifications.py:892
+#: ../cmk/gui/wato/pages/notifications.py:345
+#: ../cmk/gui/wato/pages/notifications.py:456
+#: ../cmk/gui/wato/pages/notifications.py:893
 msgid "Notification rules"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:350 ../cmk/gui/watolib/groups.py:326
+#: ../cmk/gui/wato/pages/notifications.py:349 ../cmk/gui/watolib/groups.py:326
 #, python-format
 msgid "Notification rules of user %s"
 msgstr ""
@@ -38917,7 +38929,7 @@ msgid "Notification timeline"
 msgstr ""
 
 #: ../cmk/gui/wato/user_profile.py:505
-#: ../cmk/gui/wato/pages/notifications.py:1167
+#: ../cmk/gui/wato/pages/notifications.py:1168
 #: ../cmk/gui/wato/pages/custom_attributes.py:294
 #: ../cmk/gui/wato/pages/diagnostics.py:254 ../cmk/gui/wato/pages/users.py:459
 #: ../cmk/gui/wato/pages/users.py:593 ../cmk/gui/wato/pages/users.py:982
@@ -38945,7 +38957,7 @@ msgstr ""
 msgid "Notifications are disabled, but is configured to be periodic"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1216
+#: ../cmk/gui/wato/pages/notifications.py:1217
 msgid "Notifications are kept back for bulking at most for this time."
 msgstr ""
 
@@ -38985,15 +38997,15 @@ msgstr ""
 msgid "Notified events for services"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1077
+#: ../cmk/gui/wato/pages/notifications.py:1078
 msgid "Notify all contacts of the notified host or service."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1082
+#: ../cmk/gui/wato/pages/notifications.py:1083
 msgid "Notify all users"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1088
+#: ../cmk/gui/wato/pages/notifications.py:1089
 msgid "Notify all users that have configured an email address in their profile"
 msgstr ""
 
@@ -39010,7 +39022,7 @@ msgstr ""
 msgid "November"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:675
+#: ../cmk/gui/wato/pages/notifications.py:676
 msgid "Nr."
 msgstr ""
 
@@ -39496,7 +39508,7 @@ msgstr ""
 msgid "Number of nodes scheduled with up-to-date pods"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:635
+#: ../cmk/gui/wato/pages/notifications.py:636
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr ""
 
@@ -40360,7 +40372,7 @@ msgid ""
 "is being used."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1224
+#: ../cmk/gui/wato/pages/notifications.py:1225
 msgid "Only bulk notifications during the following timeperiod"
 msgstr ""
 
@@ -40554,7 +40566,7 @@ msgstr ""
 msgid "Open Log"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:615
+#: ../cmk/gui/wato/pages/notifications.py:616
 msgid "Open bulk notifications"
 msgstr ""
 
@@ -41271,7 +41283,7 @@ msgstr ""
 msgid "Overall utilization"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:615
+#: ../cmk/gui/wato/pages/notifications.py:616
 msgid "Overdue bulk notifications!"
 msgstr ""
 
@@ -41309,7 +41321,7 @@ msgstr ""
 msgid "Override unit of sensor"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1153
+#: ../cmk/gui/wato/pages/notifications.py:1154
 msgid "Overriding by users"
 msgstr ""
 
@@ -42759,7 +42771,7 @@ msgstr ""
 msgid "Personal Settings"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:960
+#: ../cmk/gui/wato/pages/notifications.py:961
 msgid "Personal rules"
 msgstr ""
 
@@ -42984,7 +42996,7 @@ msgstr ""
 msgid "Placement"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:282
+#: ../cmk/gui/wato/pages/notifications.py:281
 msgid "Plain Email"
 msgstr ""
 
@@ -43513,8 +43525,8 @@ msgstr ""
 msgid "Plug item number or name"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:282
-#: ../cmk/gui/wato/pages/notifications.py:769 ../cmk/gui/notifications.py:148
+#: ../cmk/gui/wato/pages/notifications.py:281
+#: ../cmk/gui/wato/pages/notifications.py:770 ../cmk/gui/notifications.py:148
 #: ../cmk/gui/cee/plugins/wato/agent_bakery/rulespecs/win_script_cache_age.py:31
 #: ../cmk/gui/cee/plugins/wato/agent_bakery/rulespecs/win_script_runas.py:48
 #: ../cmk/gui/cee/plugins/wato/agent_bakery/rulespecs/win_script_runas.py:78
@@ -43544,7 +43556,7 @@ msgstr ""
 msgid "Plugin heartbeat timeout"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:714
+#: ../cmk/gui/wato/pages/notifications.py:715
 #: ../cmk/gui/plugins/views/commands.py:404
 msgid "Plugin output"
 msgstr ""
@@ -43553,7 +43565,7 @@ msgstr ""
 msgid "Plugin output in case of absent updates"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:770
+#: ../cmk/gui/wato/pages/notifications.py:771
 msgid "Plugin parameters"
 msgstr ""
 
@@ -45448,7 +45460,7 @@ msgstr ""
 msgid "Recent hardware/software inventory"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:651
+#: ../cmk/gui/wato/pages/notifications.py:652
 msgid "Recent notifications (for analysis)"
 msgstr ""
 
@@ -45456,7 +45468,7 @@ msgstr ""
 msgid "Recently changed services"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:768
+#: ../cmk/gui/wato/pages/notifications.py:769
 msgid "Recipient"
 msgstr ""
 
@@ -45771,7 +45783,7 @@ msgstr ""
 #: ../cmk/gui/wato/pages/pattern_editor.py:96
 #: ../cmk/gui/wato/pages/check_catalog.py:465
 #: ../cmk/gui/wato/pages/global_settings.py:365
-#: ../cmk/gui/wato/pages/notifications.py:914 ../cmk/gui/wato/pages/ldap.py:103
+#: ../cmk/gui/wato/pages/notifications.py:915 ../cmk/gui/wato/pages/ldap.py:103
 #: ../cmk/gui/wato/pages/rulesets.py:336 ../cmk/gui/wato/pages/rulesets.py:462
 #: ../cmk/gui/wato/pages/rulesets.py:735 ../cmk/gui/wato/pages/rulesets.py:1398
 #: ../cmk/gui/wato/pages/custom_attributes.py:448
@@ -46339,11 +46351,11 @@ msgstr ""
 msgid "Replacement"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:668
+#: ../cmk/gui/wato/pages/notifications.py:669
 msgid "Replay this notification, send it again!"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:538
+#: ../cmk/gui/wato/pages/notifications.py:539
 #, python-format
 msgid "Replayed notifiation number %d"
 msgstr ""
@@ -46587,7 +46599,7 @@ msgstr ""
 msgid "Required context filters"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1123
+#: ../cmk/gui/wato/pages/notifications.py:1124
 msgid "Required match (regular expression)"
 msgstr ""
 
@@ -46778,11 +46790,11 @@ msgstr ""
 msgid "Restrict access to the following source IP addresses"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1140
+#: ../cmk/gui/wato/pages/notifications.py:1141
 msgid "Restrict by contact groups"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1129
+#: ../cmk/gui/wato/pages/notifications.py:1130
 msgid "Restrict by custom macros"
 msgstr ""
 
@@ -46815,7 +46827,7 @@ msgstr ""
 msgid "Restrict to n<sup>th</sup> to m<sup>th</sup> check attempt"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:102
+#: ../cmk/gui/wato/pages/notifications.py:101
 msgid "Restrict to n<sup>th</sup> to m<sup>th</sup> notification"
 msgstr ""
 
@@ -46848,7 +46860,7 @@ msgstr ""
 msgid "Result:"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:763
+#: ../cmk/gui/wato/pages/notifications.py:764
 msgid "Resulting notifications"
 msgstr ""
 
@@ -47128,16 +47140,16 @@ msgstr ""
 msgid "Rule ID"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:174
+#: ../cmk/gui/wato/pages/notifications.py:173
 msgid "Rule ID:"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:178
+#: ../cmk/gui/wato/pages/notifications.py:177
 msgid "Rule IDs"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1240
-#: ../cmk/gui/wato/pages/notifications.py:1258
+#: ../cmk/gui/wato/pages/notifications.py:1241
+#: ../cmk/gui/wato/pages/notifications.py:1259
 #: ../cmk/gui/wato/pages/rulesets.py:1694 ../cmk/gui/wato/mkeventd.py:929
 #: ../cmk/gui/wato/mkeventd.py:956 ../cmk/gui/plugins/wato/bi_config.py:1242
 #: ../cmk/gui/plugins/wato/bi_config.py:1247
@@ -47245,7 +47257,7 @@ msgstr ""
 msgid "Rulebased notifications are activated"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:957
+#: ../cmk/gui/wato/pages/notifications.py:958
 #: ../cmk/gui/wato/pages/rulesets.py:318 ../cmk/gui/wato/pages/rulesets.py:1170
 #: ../cmk/gui/wato/pages/object_parameters.py:401
 #: ../cmk/gui/wato/pages/groups.py:106 ../cmk/gui/wato/pages/folders.py:390
@@ -48354,19 +48366,19 @@ msgstr ""
 msgid "Search in this folder"
 msgstr ""
 
-#: ../cmk/gui/watolib/search.py:225 ../cmk/gui/watolib/search.py:231
+#: ../cmk/gui/watolib/search.py:293 ../cmk/gui/watolib/search.py:299
 msgid "Search index"
 msgstr ""
 
-#: ../cmk/gui/watolib/search.py:198
+#: ../cmk/gui/watolib/search.py:266
 msgid "Search index file not found, re-building from scratch"
 msgstr ""
 
-#: ../cmk/gui/watolib/search.py:172
+#: ../cmk/gui/watolib/search.py:240
 msgid "Search index successfully built"
 msgstr ""
 
-#: ../cmk/gui/watolib/search.py:207
+#: ../cmk/gui/watolib/search.py:275
 msgid "Search index successfully updated"
 msgstr ""
 
@@ -48996,7 +49008,7 @@ msgstr ""
 msgid "Server performance"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:710
+#: ../cmk/gui/wato/pages/notifications.py:711
 #: ../cmk/gui/wato/pages/rulesets.py:2014 ../cmk/gui/wato/pages/services.py:640
 #: ../cmk/gui/availability.py:1350 ../cmk/gui/notifications.py:150
 #: ../cmk/gui/cee/plugins/reporting/availability.py:50
@@ -49258,7 +49270,7 @@ msgstr ""
 msgid "Service custom field ID"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:332
+#: ../cmk/gui/wato/pages/notifications.py:331
 #: ../cmk/gui/cee/plugins/metrics/graphs.py:1270
 #: ../cmk/gui/cee/plugins/wato/agent_bakery/rulespecs/mrpe.py:58
 #: ../cmk/gui/plugins/metrics/valuespecs.py:72
@@ -49385,7 +49397,7 @@ msgstr ""
 msgid "Service labels"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:333
+#: ../cmk/gui/wato/pages/notifications.py:332
 msgid "Service level"
 msgstr ""
 
@@ -50134,7 +50146,7 @@ msgid ""
 msgstr ""
 
 #: ../cmk/gui/wato/pages/global_settings.py:368
-#: ../cmk/gui/wato/pages/notifications.py:917 ../cmk/gui/wato/pages/ldap.py:106
+#: ../cmk/gui/wato/pages/notifications.py:918 ../cmk/gui/wato/pages/ldap.py:106
 #: ../cmk/gui/wato/pages/rulesets.py:339 ../cmk/gui/wato/pages/rulesets.py:465
 #: ../cmk/gui/wato/pages/rulesets.py:738 ../cmk/gui/wato/pages/rulesets.py:1401
 #: ../cmk/gui/wato/pages/custom_attributes.py:451
@@ -50301,7 +50313,7 @@ msgstr ""
 msgid "Show %ss for services"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:662
+#: ../cmk/gui/wato/pages/notifications.py:663
 msgid "Show / hide notification context"
 msgstr ""
 
@@ -50379,7 +50391,7 @@ msgstr ""
 msgid "Show all rules"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:498
+#: ../cmk/gui/wato/pages/notifications.py:497
 msgid "Show analysis"
 msgstr ""
 
@@ -52534,11 +52546,11 @@ msgid "Startup overhead in shared pool"
 msgstr ""
 
 #: ../cmk/gui/wato/pages/pattern_editor.py:258
-#: ../cmk/gui/wato/pages/notifications.py:696
-#: ../cmk/gui/wato/pages/notifications.py:698
-#: ../cmk/gui/wato/pages/notifications.py:701
-#: ../cmk/gui/wato/pages/notifications.py:704
-#: ../cmk/gui/wato/pages/notifications.py:707 ../cmk/gui/wato/pages/ldap.py:345
+#: ../cmk/gui/wato/pages/notifications.py:697
+#: ../cmk/gui/wato/pages/notifications.py:699
+#: ../cmk/gui/wato/pages/notifications.py:702
+#: ../cmk/gui/wato/pages/notifications.py:705
+#: ../cmk/gui/wato/pages/notifications.py:708 ../cmk/gui/wato/pages/ldap.py:345
 #: ../cmk/gui/wato/pages/users.py:406 ../cmk/gui/wato/pages/services.py:639
 #: ../cmk/gui/wato/pages/activate_changes.py:456 ../cmk/gui/wato/mkeventd.py:360
 #: ../cmk/gui/wato/mkeventd.py:1864 ../cmk/gui/wato/mkeventd.py:1882
@@ -53809,7 +53821,7 @@ msgstr ""
 msgid "Subject"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1196
+#: ../cmk/gui/wato/pages/notifications.py:1197
 msgid "Subject for bulk notifications"
 msgstr ""
 
@@ -55301,7 +55313,7 @@ msgstr ""
 msgid "The Event Console Daemon is currently not running. "
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:162
+#: ../cmk/gui/wato/pages/notifications.py:161
 msgid ""
 "The Event Console can have events create notifications in Check_MK. These "
 "notifications will be processed by the rule based notification system of "
@@ -56579,7 +56591,7 @@ msgstr ""
 msgid "The folder's permitted contact groups are <b>%s</b>."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1109
+#: ../cmk/gui/wato/pages/notifications.py:1110
 msgid "The following explicit email addresses"
 msgstr ""
 
@@ -56615,7 +56627,7 @@ msgid ""
 "hosts."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1093
+#: ../cmk/gui/wato/pages/notifications.py:1094
 msgid "The following users"
 msgstr ""
 
@@ -56669,7 +56681,7 @@ msgstr ""
 msgid "The given ldap filter \"%s\" is invalid (%s)"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1329
+#: ../cmk/gui/wato/pages/notifications.py:1330
 msgid ""
 "The given parameters are available in scripts as NOTIFY_PARAMETER_1, "
 "NOTIFY_PARAMETER_2, etc."
@@ -57255,7 +57267,7 @@ msgstr ""
 msgid "The maximum value length is 256 characters."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1103
+#: ../cmk/gui/wato/pages/notifications.py:1104
 msgid "The members of certain contact groups"
 msgstr ""
 
@@ -57512,7 +57524,7 @@ msgstr ""
 msgid "The notification is being processed"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1357
+#: ../cmk/gui/wato/pages/notifications.py:1358
 #, python-format
 msgid "The notification script %s does not allow bulking."
 msgstr ""
@@ -57984,7 +57996,7 @@ msgid "The requested site does not exist"
 msgstr ""
 
 #: ../cmk/gui/wato/user_profile.py:571
-#: ../cmk/gui/wato/pages/notifications.py:796
+#: ../cmk/gui/wato/pages/notifications.py:797
 msgid "The requested user does not exist"
 msgstr ""
 
@@ -58631,7 +58643,7 @@ msgstr ""
 msgid "The user you are trying to edit does not exist."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1447
+#: ../cmk/gui/wato/pages/notifications.py:1448
 msgid "The user you are trying to edit notification rules for does not exist."
 msgstr ""
 
@@ -59144,8 +59156,8 @@ msgid ""
 "configure the localizations %s."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1041
-#: ../cmk/gui/wato/pages/notifications.py:1048
+#: ../cmk/gui/wato/pages/notifications.py:1042
+#: ../cmk/gui/wato/pages/notifications.py:1049
 #: ../cmk/gui/cee/plugins/wato/dcd.py:330 ../cmk/gui/cee/plugins/wato/dcd.py:545
 #: ../cmk/gui/plugins/wato/utils/simple_modes.py:208
 #: ../cmk/gui/plugins/wato/utils/simple_modes.py:291
@@ -59643,7 +59655,7 @@ msgstr ""
 msgid "This event has not reached the target count yet."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1124
+#: ../cmk/gui/wato/pages/notifications.py:1125
 msgid "This expression must match the value of the variable"
 msgstr ""
 
@@ -59765,7 +59777,7 @@ msgstr ""
 msgid "This is a front matter Template"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:209
+#: ../cmk/gui/wato/pages/notifications.py:208
 msgid "This is a regular expression for matching the event's comment."
 msgstr ""
 
@@ -59923,7 +59935,7 @@ msgid ""
 "the given line."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:151
+#: ../cmk/gui/wato/pages/notifications.py:150
 msgid ""
 "This match only makes sense for custom notifications. When a user creates a "
 "custom notification then he/she can enter a comment. This comment is shipped "
@@ -59932,7 +59944,7 @@ msgid ""
 "beginning of the comment."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:126
+#: ../cmk/gui/wato/pages/notifications.py:125
 msgid ""
 "This match option allows you to throttle periodic notifications after a "
 "certain number of notifications have been created by the monitoring core. If "
@@ -60865,7 +60877,7 @@ msgid ""
 "too large interface throughputs) in such cases."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:286
+#: ../cmk/gui/wato/pages/notifications.py:285
 msgid "This rule configures bulk notifications."
 msgstr ""
 
@@ -60917,7 +60929,7 @@ msgstr ""
 msgid "This rule does a cancelling match."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:247
+#: ../cmk/gui/wato/pages/notifications.py:246
 #: ../cmk/gui/wato/pages/rulesets.py:951
 #, python-format
 msgid "This rule does not match: %s"
@@ -60949,7 +60961,7 @@ msgid ""
 "printer queue."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:265
+#: ../cmk/gui/wato/pages/notifications.py:264
 #: ../cmk/gui/wato/pages/rulesets.py:905 ../cmk/gui/wato/mkeventd.py:1821
 #: ../cmk/gui/cee/plugins/wato/alert_handling.py:246
 #: ../cmk/gui/plugins/wato/bi_config.py:850
@@ -60978,7 +60990,7 @@ msgid ""
 "Siemens PLC devices."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:245
+#: ../cmk/gui/wato/pages/notifications.py:244
 msgid "This rule matches"
 msgstr ""
 
@@ -62076,7 +62088,7 @@ msgstr ""
 msgid "Thresholds on message count"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:124
+#: ../cmk/gui/wato/pages/notifications.py:123
 msgid "Throttle periodic notifications"
 msgstr ""
 
@@ -62194,8 +62206,8 @@ msgstr ""
 msgid "Time frame"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:773
-#: ../cmk/gui/wato/pages/notifications.py:1214
+#: ../cmk/gui/wato/pages/notifications.py:774
+#: ../cmk/gui/wato/pages/notifications.py:1215
 #: ../cmk/gui/plugins/wato/utils/__init__.py:909
 msgid "Time horizon"
 msgstr ""
@@ -62526,7 +62538,7 @@ msgid "Timeout waiting for a free channel"
 msgstr ""
 
 #: ../cmk/gui/wato/pages/timeperiods.py:206
-#: ../cmk/gui/wato/pages/notifications.py:630 ../cmk/gui/watolib/users.py:270
+#: ../cmk/gui/wato/pages/notifications.py:631 ../cmk/gui/watolib/users.py:270
 msgid "Timeperiod"
 msgstr ""
 
@@ -62731,7 +62743,7 @@ msgstr ""
 msgid "Toggle checkboxes"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:486
+#: ../cmk/gui/wato/pages/notifications.py:485
 msgid "Toggle elements"
 msgstr ""
 
@@ -63599,8 +63611,8 @@ msgstr ""
 msgid "Tx power level"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/roles.py:221 ../cmk/gui/wato/pages/notifications.py:276
-#: ../cmk/gui/wato/pages/notifications.py:685
+#: ../cmk/gui/wato/pages/roles.py:221 ../cmk/gui/wato/pages/notifications.py:275
+#: ../cmk/gui/wato/pages/notifications.py:686
 #: ../cmk/gui/wato/pages/custom_attributes.py:502
 #: ../cmk/gui/cee/ntop/pages.py:1163
 #: ../cmk/gui/cee/plugins/wato/agent_bakery/rulespecs/win_script_cache_age.py:28
@@ -64404,7 +64416,7 @@ msgstr ""
 msgid "Unknown configuration change"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:681
+#: ../cmk/gui/wato/pages/notifications.py:682
 msgid "Unknown date"
 msgstr ""
 
@@ -64689,7 +64701,7 @@ msgstr ""
 msgid "Updates are expected at least every"
 msgstr ""
 
-#: ../cmk/gui/watolib/search.py:189
+#: ../cmk/gui/watolib/search.py:257
 msgid "Updating of search index started"
 msgstr ""
 
@@ -66525,7 +66537,7 @@ msgstr ""
 msgid "Username:"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/roles.py:231 ../cmk/gui/wato/pages/notifications.py:929
+#: ../cmk/gui/wato/pages/roles.py:231 ../cmk/gui/wato/pages/notifications.py:930
 #: ../cmk/gui/wato/pages/ldap.py:117
 #: ../cmk/gui/wato/pages/custom_attributes.py:527
 #: ../cmk/gui/wato/pages/groups.py:365 ../cmk/gui/wato/pages/users.py:95
@@ -70477,7 +70489,7 @@ msgstr ""
 msgid "You already have an element with the ID <b>%s</b>"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:673
+#: ../cmk/gui/wato/pages/notifications.py:674
 msgid "You are analysing this notification"
 msgstr ""
 
@@ -71501,7 +71513,7 @@ msgid ""
 "you have activated <i>Force message archiving</i> in the global settings."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:226
+#: ../cmk/gui/wato/pages/notifications.py:225
 #: ../cmk/gui/cee/plugins/wato/alert_handling.py:214
 msgid "You have not created any rules yet."
 msgstr ""
@@ -71881,7 +71893,7 @@ msgstr ""
 msgid "Your password is too old, you need to choose a new password."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:991
+#: ../cmk/gui/wato/pages/notifications.py:992
 msgid "Your personal notification rules"
 msgstr ""
 
@@ -72092,7 +72104,7 @@ msgstr ""
 msgid "alerts"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:356
+#: ../cmk/gui/wato/pages/notifications.py:355
 msgid "all contacts of the notified object"
 msgstr ""
 
@@ -72113,11 +72125,11 @@ msgstr ""
 msgid "all logfiles on all hosts"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:358
+#: ../cmk/gui/wato/pages/notifications.py:357
 msgid "all users"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:360
+#: ../cmk/gui/wato/pages/notifications.py:359
 msgid "all users with and email address"
 msgstr ""
 
@@ -72134,7 +72146,7 @@ msgstr ""
 msgid "allow execution of commands and actions via TCP"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1157
+#: ../cmk/gui/wato/pages/notifications.py:1158
 msgid "allow users to deactivate this notification"
 msgstr ""
 
@@ -72196,7 +72208,7 @@ msgstr ""
 msgid "bar"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:135
+#: ../cmk/gui/wato/pages/notifications.py:134
 msgid "beginning from notification number"
 msgstr ""
 
@@ -72400,7 +72412,7 @@ msgstr ""
 msgid "connections"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:364
+#: ../cmk/gui/wato/pages/notifications.py:363
 msgid "contact groups: "
 msgstr ""
 
@@ -72785,7 +72797,7 @@ msgstr ""
 msgid "echo"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:366
+#: ../cmk/gui/wato/pages/notifications.py:365
 msgid "email addresses: "
 msgstr ""
 
@@ -73004,7 +73016,7 @@ msgstr ""
 msgid "free space"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:106
+#: ../cmk/gui/wato/pages/notifications.py:105
 #: ../cmk/gui/cee/plugins/wato/alert_handling.py:103
 #: ../cmk/gui/watolib/users.py:282 ../cmk/gui/plugins/visuals/inventory.py:89
 msgid "from"
@@ -73018,7 +73030,7 @@ msgstr ""
 msgid "from the end"
 msgstr ""
 
-#: ../cmk/gui/werks.py:458 ../cmk/gui/wato/pages/notifications.py:188
+#: ../cmk/gui/werks.py:458 ../cmk/gui/wato/pages/notifications.py:187
 #: ../cmk/gui/wato/mkeventd.py:748 ../cmk/gui/wato/mkeventd.py:777
 #: ../cmk/gui/wato/mkeventd.py:822 ../cmk/gui/watolib/users.py:312
 #: ../cmk/gui/plugins/visuals/inventory.py:142
@@ -73035,7 +73047,7 @@ msgstr ""
 msgid "graph number %d"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:776
+#: ../cmk/gui/wato/pages/notifications.py:777
 msgid "group by"
 msgstr ""
 
@@ -73767,7 +73779,7 @@ msgstr ""
 msgid "notif."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:543
+#: ../cmk/gui/wato/pages/notifications.py:544
 msgid "notification rule"
 msgstr ""
 
@@ -74137,7 +74149,7 @@ msgstr ""
 msgid "pretty-print configuration files"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:1338
+#: ../cmk/gui/wato/pages/notifications.py:1339
 msgid "previous notifications of this type are cancelled"
 msgstr ""
 
@@ -74429,7 +74441,7 @@ msgstr ""
 msgid "send notifications of contactgroup:"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:140
+#: ../cmk/gui/wato/pages/notifications.py:139
 msgid "send only every"
 msgstr ""
 
@@ -74591,7 +74603,7 @@ msgstr ""
 msgid "testing"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:142
+#: ../cmk/gui/wato/pages/notifications.py:141
 msgid "th notification"
 msgstr ""
 
@@ -74658,7 +74670,7 @@ msgstr ""
 msgid "times the standard deviation below the predicted value"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:114
+#: ../cmk/gui/wato/pages/notifications.py:113
 #: ../cmk/gui/cee/plugins/wato/alert_handling.py:112
 #: ../cmk/gui/watolib/users.py:291 ../cmk/gui/plugins/visuals/inventory.py:96
 #: ../cmk/gui/plugins/visuals/inventory.py:144
@@ -74781,7 +74793,7 @@ msgstr ""
 msgid "users"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/notifications.py:362
+#: ../cmk/gui/wato/pages/notifications.py:361
 msgid "users: "
 msgstr ""
 

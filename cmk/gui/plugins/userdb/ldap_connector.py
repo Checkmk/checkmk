@@ -1182,7 +1182,7 @@ class LDAPUserConnector(UserConnector):
 
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore
-        for user_id, user in users.items():
+        for user_id, user in list(users.items()):
             user_connection_id = cleanup_connection_id(user.get('connector'))
             if user_connection_id == connection_id and self._strip_suffix(
                     user_id) not in ldap_users:

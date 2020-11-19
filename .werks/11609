@@ -1,0 +1,14 @@
+Title: LDAP: Fix broken sync when trying to delete users
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1605780838
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The LDAP sync terminated when trying to delete users in
+Checkmk that do not exist in LDAP anymore.
+
+The error message was: "RuntimeError: dictionary changed size during iteration"

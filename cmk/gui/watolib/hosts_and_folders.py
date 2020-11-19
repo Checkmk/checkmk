@@ -3057,32 +3057,7 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
         return 'host' in change_action_name
 
 
-class MatchItemGeneratorFolders(ABCMatchItemGenerator):
-    def __init__(
-        self,
-        name: str,
-        folder_collector: Callable[[], Mapping[str, CREFolder]],
-    ) -> None:
-        super().__init__(name)
-        self._folder_collector = folder_collector
-
-    def generate_match_items(self) -> MatchItems:
-        yield from (MatchItem(
-            title=folder.title(),
-            topic="Folders",
-            url=folder.url(),
-            match_texts=[folder.title()],
-        ) for folder in self._folder_collector().values())
-
-    def is_affected_by_change(self, change_action_name: str) -> bool:
-        return 'folder' in change_action_name
-
-
 match_item_generator_registry.register(MatchItemGeneratorHosts(
     'hosts',
     collect_all_hosts,
-))
-match_item_generator_registry.register(MatchItemGeneratorFolders(
-    'folders',
-    Folder.all_folders,
 ))

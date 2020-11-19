@@ -1892,8 +1892,16 @@ class html(ABCHTMLGenerator):
                cssclass: Optional[str] = None,
                style: Optional[str] = None,
                help_: Optional[str] = None,
-               form: Optional[str] = None) -> None:
-        self.write_html(self.render_button(varname, title, cssclass, style, help_=help_, form=form))
+               form: Optional[str] = None,
+               formnovalidate: bool = False) -> None:
+        self.write_html(
+            self.render_button(varname,
+                               title,
+                               cssclass,
+                               style,
+                               help_=help_,
+                               form=form,
+                               formnovalidate=formnovalidate))
 
     def render_button(self,
                       varname: str,
@@ -1901,7 +1909,8 @@ class html(ABCHTMLGenerator):
                       cssclass: Optional[str] = None,
                       style: Optional[str] = None,
                       help_: Optional[str] = None,
-                      form: Optional[str] = None) -> HTML:
+                      form: Optional[str] = None,
+                      formnovalidate: bool = False) -> HTML:
         self.add_form_var(varname)
         return self.render_input(name=varname,
                                  type_="submit",
@@ -1910,7 +1919,8 @@ class html(ABCHTMLGenerator):
                                  value=title,
                                  title=help_,
                                  style=style,
-                                 form=form)
+                                 form=form,
+                                 formnovalidate='' if formnovalidate else None)
 
     def buttonlink(self,
                    href: str,
@@ -2097,7 +2107,7 @@ class html(ABCHTMLGenerator):
 
         if label:
             assert id_ is not None
-            self.label(label, for_=id_)
+            self.label(label, for_=id_, class_="required" if required else None)
 
         input_type = "text" if type_ is None else type_
         assert isinstance(input_type, str)

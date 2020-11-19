@@ -92,6 +92,15 @@ input[type="file"] {
 
 form {
   margin: 0;
+
+  label + input:not([type="checkbox"]) {
+    margin-left: $spacing;
+  }
+
+  label.required::after {
+    color: $success;
+    content: " (required)";
+  }
 }
 
 input:hover,

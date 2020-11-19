@@ -104,7 +104,7 @@ class CommandReschedule(Command):
 
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_("Spread over:") + " ")
+        html.write_text(_("Spread over") + " ")
         html.text_input("_resched_spread", default_value="0", size=3, cssclass="number")
         html.write_text(" " + _("minutes"))
         html.close_div()
@@ -401,25 +401,25 @@ class CommandFakeCheckResult(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text("%s: " % _("Plugin output"))
+        html.write_text(_("Plugin output"))
         html.close_td()
         html.open_td()
-        html.text_input("_fake_output", "", size=50)
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        html.open_td()
-        html.write_text("%s: " % _("Performance data"))
-        html.close_td()
-        html.open_td()
-        html.text_input("_fake_perfdata", "", size=50)
+        html.text_input("_fake_output", "", size=60)
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Result:"))
+        html.write_text(_("Performance data"))
+        html.close_td()
+        html.open_td()
+        html.text_input("_fake_perfdata", "", size=60)
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Result"))
         html.close_td()
         html.open_td()
         if what == "host":
@@ -501,8 +501,12 @@ class CommandCustomNotification(Command):
 
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_('Comment') + ": ")
-        html.text_input("_cusnot_comment", "TEST", size=20, submit="_customnotification")
+        html.text_input("_cusnot_comment",
+                        "TEST",
+                        id_="cusnot_comment",
+                        size=60,
+                        submit="_customnotification",
+                        label=_("Comment"))
         html.close_div()
 
         html.open_div(class_="group")
@@ -595,8 +599,12 @@ class CommandAcknowledge(Command):
 
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_("Comment") + ": ")
-        html.text_input("_ack_comment", size=48, submit="_acknowledge")
+        html.text_input("_ack_comment",
+                        id_="ack_comment",
+                        size=60,
+                        submit="_acknowledge",
+                        label=_("Comment"),
+                        required=True)
         html.close_div()
 
         html.open_div(class_="group")
@@ -618,7 +626,7 @@ class CommandAcknowledge(Command):
 
         html.open_div(class_="group")
         html.button("_acknowledge", _("Acknowledge"), cssclass="hot")
-        html.button("_remove_ack", _("Remove Acknowledgement"))
+        html.button("_remove_ack", _("Remove acknowledgement"), formnovalidate=True)
         html.close_div()
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
@@ -727,8 +735,12 @@ class CommandAddComment(Command):
 
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_('Comment') + ": ")
-        html.text_input("_comment", size=33, submit="_add_comment")
+        html.text_input("_comment",
+                        id_="comment",
+                        size=60,
+                        submit="_add_comment",
+                        label=_("Comment"),
+                        required=True)
         html.close_div()
 
         html.div(html.render_button("_add_comment", _("Add comment"), cssclass="hot"),
@@ -820,8 +832,11 @@ class CommandScheduleDowntimes(Command):
 
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_('Comment') + ": ")
-        html.text_input("_down_comment", "", size=60, submit="")
+        html.text_input("_down_comment",
+                        id_="down_comment",
+                        size=60,
+                        label=_("Comment"),
+                        required=True)
         html.close_div()
 
         html.open_div(class_="group")

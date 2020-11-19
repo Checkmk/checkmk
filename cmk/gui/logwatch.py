@@ -29,7 +29,6 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
-    PageMenuCheckbox,
     make_simple_link,
     make_display_options_dropdown,
 )
@@ -409,19 +408,19 @@ def _show_file_page_menu(breadcrumb: Breadcrumb, site_id: config.SiteId, host_na
 
 def _extend_display_dropdown(menu: PageMenu) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+    context_hidden = html.request.var('_hidecontext', 'no') == 'yes'
     display_dropdown.topics.insert(
         0,
         PageMenuTopic(
             title=_("Context"),
             entries=[
                 PageMenuEntry(
-                    title=_("Hide context"),
-                    icon_name="trans",
-                    item=PageMenuCheckbox(
-                        is_checked=html.request.var('_hidecontext', 'no') == 'yes',
-                        check_url=makeuri(request, [("_hidecontext", "yes")]),
-                        uncheck_url=makeuri(request, [("_show_backlog", "no")]),
-                    ),
+                    title=_("Show context") if context_hidden else _("Hide context"),
+                    icon_name="checkbox",
+                    item=make_simple_link(
+                        html.makeactionuri([
+                            ("_show_backlog", "no") if context_hidden else ("_hidecontext", "yes"),
+                        ])),
                 ),
             ],
         ))

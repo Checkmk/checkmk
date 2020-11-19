@@ -120,14 +120,6 @@ class PageMenuSidePopup(PageMenuPopup):
 
 
 @dataclass
-class PageMenuCheckbox(ABCPageMenuItem):
-    """A binary item that can be toggled in the menu directly"""
-    is_checked: bool
-    check_url: str
-    uncheck_url: str
-
-
-@dataclass
 class PageMenuSearch(ABCPageMenuItem):
     """A text input box right in the menu, primarily for in page quick search"""
     target_mode: Optional[str] = None
@@ -666,8 +658,6 @@ class DropdownEntryRenderer:
             self._show_link_item(entry.title, entry.icon_name, entry.item)
         elif isinstance(entry.item, PageMenuPopup):
             self._show_popup_link_item(entry, entry.item)
-        elif isinstance(entry.item, PageMenuCheckbox):
-            self._show_checkbox_link_item(entry, entry.item)
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
@@ -692,16 +682,6 @@ class DropdownEntryRenderer:
                         target=None,
                         icon_name=entry.icon_name,
                         title=entry.title)
-
-    def _show_checkbox_link_item(self, entry: PageMenuEntry, item: PageMenuCheckbox) -> None:
-        if item.is_checked:
-            url = item.uncheck_url
-            icon_name = "menu_item_checked"
-        else:
-            url = item.check_url
-            icon_name = "menu_item_unchecked"
-
-        self._show_link(url=url, onclick=None, target=None, icon_name=icon_name, title=entry.title)
 
     def _show_link(self, url: str, onclick: Optional[str], target: Optional[str],
                    icon_name: Optional[str], title: str) -> None:

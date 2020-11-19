@@ -45,7 +45,6 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
-    PageMenuCheckbox,
     PageMenuSidePopup,
     make_simple_link,
     make_display_options_dropdown,
@@ -184,13 +183,12 @@ class ModeAuditLog(WatoMode):
                 title=_("Details"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Show details"),
-                        icon_name="trans",
-                        item=PageMenuCheckbox(
-                            is_checked=self._show_details,
-                            check_url=makeuri(request, [("show_details", "1")]),
-                            uncheck_url=makeuri(request, [("show_details", "0")]),
-                        ),
+                        title=_("Hide details") if self._show_details else _("Show details"),
+                        icon_name="checkbox",
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("show_details", "0" if self._show_details else "1"),
+                            ])),
                         name="show_details",
                         css_classes=["toggle"],
                     )

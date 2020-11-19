@@ -25,7 +25,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
@@ -35,7 +35,6 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
-    PageMenuCheckbox,
     PageMenuSearch,
     make_simple_link,
     make_confirmed_form_submit_link,
@@ -43,7 +42,6 @@ from cmk.gui.page_menu import (
     make_display_options_dropdown,
 )
 
-from cmk.gui.utils.urls import makeuri
 from cmk.gui.utils.flashed_messages import flash
 
 
@@ -397,13 +395,13 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
-            title=_("Show only modified settings"),
-            icon_name="trans",
-            item=PageMenuCheckbox(
-                is_checked=self._show_only_modified,
-                check_url=makeuri(request, [("_show_only_modified", "1")]),
-                uncheck_url=makeuri(request, [("_show_only_modified", "0")]),
-            ),
+            title=_("Show all settings")
+            if self._show_only_modified else _("Show only modified settings"),
+            icon_name="checkbox",
+            item=make_simple_link(
+                html.makeactionuri([
+                    ("_show_only_modified", "0" if self._show_only_modified else "1"),
+                ])),
         )
 
     def action(self) -> ActionResult:

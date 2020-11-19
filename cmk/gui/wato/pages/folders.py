@@ -53,7 +53,6 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
-    PageMenuCheckbox,
     PageMenuSearch,
     PageMenuPopup,
     make_simple_link,
@@ -437,18 +436,17 @@ class ModeFolder(WatoMode):
 
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
         for toggle_id, title, setting in [
-            ("_show_host_tags", _("Show host tags"), config.user.wato_folders_show_tags),
-            ("_show_explicit_labels", _("Show explicit host labels"),
+            ("_show_host_tags", _("host tags"), config.user.wato_folders_show_tags),
+            ("_show_explicit_labels", _("explicit host labels"),
              config.user.wato_folders_show_labels),
         ]:
             yield PageMenuEntry(
-                title=title,
-                icon_name="trans",
-                item=PageMenuCheckbox(
-                    is_checked=setting,
-                    check_url=makeuri(global_request, [(toggle_id, "1")]),
-                    uncheck_url=makeuri(global_request, [(toggle_id, "")]),
-                ),
+                title=_("Hide %s" % title) if setting else _("Show %s" % title),
+                icon_name="checkbox",
+                item=make_simple_link(
+                    makeuri(global_request, [
+                        (toggle_id, "" if setting else "1"),
+                    ])),
             )
 
     def action(self) -> ActionResult:

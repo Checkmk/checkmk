@@ -532,7 +532,6 @@ class KubeStateExporter:
         self.cluster_name = clustername
 
     # CLUSTER SECTION
-
     def cluster_resources_summary(self) -> List[Dict[str, Dict[str, Any]]]:
         # Cluster Section
         resources_list = [
@@ -974,6 +973,58 @@ class PromQLResponse:
         return metric_labels_holder
 
 
+class PromQLResult:
+    """The PromQL result object representation for internal usage"""
+    def __init__(self, raw_response: Dict[str, Any]):
+        """
+
+        Args:
+            raw_response:
+                the raw format of a single PromQl queried result
+                metric key represents the labels of the entry
+
+                {"metric": {"job": "sample", "instance": "minikube"},
+                "value": [0, 1.45]}
+
+        """
+        self.labels = raw_response["metric"]
+        self.internal_values = raw_response["value"]
+
+    def label_value(self, key: str) -> str:
+        return self.labels[key]
+
+    def has_labels(self, keys: List[str]) -> bool:
+        for key in keys:
+            if key not in self.labels:
+                return False
+        return True
+
+    def value(self) -> float:
+        return float(self.internal_values[1])
+
+
+def parse_piggybacked_services(
+    promql_results: List[PromQLResult],
+    metric_description: str,
+    label_as_piggyback_host: str,
+    values_as_int: bool = False,
+) -> Dict[str, Dict[str, Union[int, float]]]:
+
+    result: Dict[str, Dict[str, Union[int, float]]] = {}
+    for promql_result in promql_results:
+        piggyback_host = promql_result.label_value(label_as_piggyback_host)
+        if piggyback_host == "":
+            continue
+
+        if values_as_int:
+            metric_value: Union[int, float] = int(promql_result.value())
+        else:
+            metric_value = promql_result.value()
+
+        result.setdefault(piggyback_host, {})[metric_description] = metric_value
+    return result
+
+
 class PromQLMultiResponse(PromQLResponse):
     """PromQL Response where one or more metric results are expected
     """
@@ -1312,7 +1363,8 @@ class PrometheusAPI:
                     "levels": metric.get("levels")
                 }
                 try:
-                    promql_response = PromQLResponse(self._query_promql(metric["promql_query"]))
+                    promql_response = PromQLResponse(
+                        self._perform_promql_query(metric["promql_query"]))
                 except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
                     LOGGER.exception(exc)
                     continue
@@ -1341,15 +1393,21 @@ class PrometheusAPI:
         """Performs a PromQL query where multi metrics response is allowed
         """
         try:
-            promql_response = PromQLMultiResponse(self._query_promql(promql_expression))
+            promql_response = PromQLMultiResponse(self._perform_promql_query(promql_expression))
         except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
             logging.exception(exc)
             return None
 
         return promql_response
 
-    def _query_promql(self, promql: str) -> List[Dict[str, Any]]:
+    def query_promql(self, promql: str) -> List[PromQLResult]:
+        try:
+            return [PromQLResult(info) for info in self._perform_promql_query(promql)]
+        except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
+            logging.exception(exc)
+            return []
 
+    def _perform_promql_query(self, promql: str) -> List[Dict[str, Any]]:
         api_query_expression = "query?query=%s" % quote(promql)
         result = self._process_json_request(api_query_expression)["data"]["result"]
         return result

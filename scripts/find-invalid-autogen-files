@@ -11,14 +11,14 @@ REPO_PATH=$(dirname $(dirname $(realpath "$0")))
 cd "$REPO_PATH"
 
 AGENT_UNIT_DIR="$REPO_PATH/tests/agent-plugin-unit"
-PY26_DIR="$AGENT_UNIT_DIR/py26"
+PY2_DIR="$AGENT_UNIT_DIR/py2"
 
 source_test_files=$(find -L "$AGENT_UNIT_DIR" -maxdepth 1 -name "*.py" -printf "%f\n")
-autogen_test_files=$(find -L "$PY26_DIR" -maxdepth 1 -name "*.py" -printf "%f\n")
+autogen_test_files=$(find -L "$PY2_DIR" -maxdepth 1 -name "*.py" -printf "%f\n")
 
 for autogen_file in $autogen_test_files; do
     if [[ "$source_test_files" != *"$autogen_file"* ]]; then
-        echo "No source file for $autogen_file found. Removing file from py26 dir."
-        rm "$PY26_DIR/$autogen_file"
+        echo "No source file for $autogen_file found. Removing file from py2 dir."
+        rm "$PY2_DIR/$autogen_file"
     fi
 done

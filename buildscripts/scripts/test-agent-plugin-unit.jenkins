@@ -9,7 +9,7 @@ withFolderProperties{
     DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
-def PYTHON_VERSIONS = [ "2.6", "2.7", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8" ]
+def PYTHON_VERSIONS = [ "2.6", "2.7", "3.4", "3.5", "3.6", "3.7", "3.8" ]
 
 node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

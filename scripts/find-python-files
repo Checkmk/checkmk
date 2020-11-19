@@ -71,7 +71,7 @@ find -L \
     -name iwyu_tool -prune -o \
     -name chroot -prune -o \
     -name conftest.py -prune -o \
-    -name py26 -prune -o \
+    -name py2 -prune -o \
     $PRUNE \
     -type f -print | sort | while read F; do
     if head -n 1 "$F" | grep -q '^#!.*python3$' >/dev/null 2>&1; then

@@ -15,10 +15,11 @@ FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 MYPY := $(SCRIPTS)/run-mypy
 ADDITIONAL_MYPY_ARGS :=
 
-# Since the unit tests (that are written for Python 3) are executed with Python 2.6, we need to
-# convert them, just like it is done for the agent plugins (see agents/plugins/Makefile)
+# Since the unit tests (that are written for Python 3) are executed with Python
+# 2.6 and 2.7, we need to convert them, just like it is done for the agent
+# plugins (see agents/plugins/Makefile)
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
-AGENT_PLUGIN_UNIT_TEST_FILES_PY26 := $(subst agent-plugin-unit,agent-plugin-unit/py26,$(AGENT_PLUGIN_UNIT_TEST_FILES))
+AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
 # TODO: Complete this list
 SHELL_FILES := \
@@ -51,7 +52,7 @@ endif
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
 
 clean:
-	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
+	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
 help:
 	@echo "format-shell                        - Format shell agents"
@@ -109,12 +110,12 @@ bandit.ini:
 format-shell:
 	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
 
-agent-plugin-unit/py26/test_%.py: agent-plugin-unit/test_%.py
+agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
-	cat "$<" | gawk -v text="# Do not test generated 2.6 files\n# yapf: disable\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
+	cat "$<" | gawk -v text="# Do not test generated 2.x files\n# yapf: disable\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
 	$(RUN_IN_DOCKER) $(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
 
-$(foreach VERS,$(filter 2.%,$(PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY26)
+$(foreach VERS,$(filter 2.%,$(PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
 $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	# Clean up auto-generated files, which do not have a corresponding source file anymore
@@ -123,7 +124,7 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	flock ../agents/plugins $(MAKE) -C ../agents/plugins
 	PYTHON_VERSION="$(patsubst test-agent-plugin-unit-py%-docker,%,$@)" ; \
 	case $$PYTHON_VERSION in \
-	    2.*) SUFFIX="/py26" ;; \
+	    2.*) SUFFIX="/py2" ;; \
 	    *) SUFFIX="" ;; \
 	esac ; \
 	TEST_PATH="$(realpath agent-plugin-unit)$$SUFFIX" ; \
@@ -137,7 +138,7 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \
 	    -v "$(realpath ../agents/plugins):/plugins" \
 	    $$IMAGE_HASH \
-	    python$$PYTHON_VERSION -m pytest --ignore=tests/py26/ "/tests"
+	    python$$PYTHON_VERSION -m pytest --ignore=tests/py2/ "/tests"
 
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,

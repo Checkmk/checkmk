@@ -1592,11 +1592,7 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
         keepalive.check.do_keepalive()
         return
 
-    if "perfdata" in options:
-        checking.show_perfdata()
-
     if "no-submit" in options:
-        checking.disable_submit()
         item_state.continue_on_counter_wrap()
 
     # handle adhoc-check
@@ -1611,6 +1607,8 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
         ipaddress,
         section_selection=section_selection,
         run_only_plugin_names=run_only_plugin_names,
+        submit_to_core=not options.get("no-submit", False),
+        show_perfdata=options.get("perfdata", False),
     )
 
 

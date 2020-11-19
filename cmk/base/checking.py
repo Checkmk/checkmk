@@ -89,9 +89,6 @@ _nagios_command_pipe: Union[bool, IO[bytes], None] = None
 _checkresult_file_fd = None
 _checkresult_file_path = None
 
-_submit_to_core = True
-_show_perfdata = False
-
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
 
 #.
@@ -123,6 +120,8 @@ def do_check(
     fetcher_messages: Sequence[FetcherMessage] = (),
     run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
     section_selection: checkers.SectionNameCollection = checkers.NO_SELECTION,
+    submit_to_core: bool = True,
+    show_perfdata: bool = False,
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     console.verbose("Checkmk version %s\n", cmk_version.__version__)
 
@@ -218,6 +217,8 @@ def do_check(
                 ipaddress,
                 multi_host_sections=mhs,
                 services=services_to_check,
+                submit_to_core=submit_to_core,
+                show_perfdata=show_perfdata,
             )
 
             if run_only_plugin_names is None:
@@ -328,13 +329,22 @@ def _do_all_checks_on_host(
     multi_host_sections: MultiHostSections,
     *,
     services: List[Service],
+    submit_to_core: bool,
+    show_perfdata: bool,
 ) -> Tuple[int, List[CheckPluginName]]:
     num_success = 0
     plugins_missing_data: Set[CheckPluginName] = set()
 
-    with host_context(host_config.hostname, write_state=_submit_to_core):
+    with host_context(host_config.hostname, write_state=submit_to_core):
         for service in services:
-            success = execute_check(multi_host_sections, host_config, ipaddress, service)
+            success = execute_check(
+                multi_host_sections,
+                host_config,
+                ipaddress,
+                service,
+                submit_to_core=submit_to_core,
+                show_perfdata=show_perfdata,
+            )
             if success:
                 num_success += 1
             else:
@@ -445,8 +455,15 @@ def _service_context(service: Service):
         yield
 
 
-def execute_check(multi_host_sections: MultiHostSections, host_config: config.HostConfig,
-                  ipaddress: Optional[HostAddress], service: Service) -> bool:
+def execute_check(
+    multi_host_sections: MultiHostSections,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+    *,
+    submit_to_core: bool,
+    show_perfdata: bool,
+) -> bool:
 
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
 
@@ -465,6 +482,8 @@ def execute_check(multi_host_sections: MultiHostSections, host_config: config.Ho
                 host_config.hostname,
                 ipaddress,
                 service,
+                submit_to_core=submit_to_core,
+                show_perfdata=show_perfdata,
             )
 
     submit, data_received, result = get_aggregated_result(
@@ -482,6 +501,8 @@ def execute_check(multi_host_sections: MultiHostSections, host_config: config.Ho
             service.description,
             result,
             multi_host_sections.get_cache_info(plugin.sections) if plugin else None,
+            submit_to_core=submit_to_core,
+            show_perfdata=show_perfdata,
         )
     elif data_received:
         console.verbose("%-20s PEND - %s\n", ensure_str(service.description), result[1])
@@ -583,16 +604,37 @@ def get_aggregated_result(
     return True, True, result
 
 
-def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname: HostName,
-                               ipaddress: Optional[HostAddress], service: Service) -> bool:
+def _execute_check_legacy_mode(
+    multi_host_sections: MultiHostSections,
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    service: Service,
+    *,
+    submit_to_core: bool,
+    show_perfdata: bool,
+) -> bool:
     legacy_check_plugin_name = config.legacy_check_plugin_names.get(service.check_plugin_name)
     if legacy_check_plugin_name is None:
-        _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
+        _submit_check_result(
+            hostname,
+            service.description,
+            CHECK_NOT_IMPLEMENTED,
+            None,
+            submit_to_core=submit_to_core,
+            show_perfdata=show_perfdata,
+        )
         return True
 
     check_function = config.check_info[legacy_check_plugin_name].get("check_function")
     if check_function is None:
-        _submit_check_result(hostname, service.description, CHECK_NOT_IMPLEMENTED, None)
+        _submit_check_result(
+            hostname,
+            service.description,
+            CHECK_NOT_IMPLEMENTED,
+            None,
+            submit_to_core=submit_to_core,
+            show_perfdata=show_perfdata,
+        )
         return True
 
     section_name = legacy_check_plugin_name.split('.')[0]
@@ -659,6 +701,8 @@ def _execute_check_legacy_mode(multi_host_sections: MultiHostSections, hostname:
         service.description,
         result,
         _legacy_determine_cache_info(multi_host_sections, SectionName(section_name)),
+        submit_to_core=submit_to_core,
+        show_perfdata=show_perfdata,
     )
     return True
 
@@ -951,6 +995,9 @@ def _submit_check_result(
     servicedesc: ServiceDetails,
     result: ServiceCheckResult,
     cache_info: Optional[Tuple[int, int]],
+    *,
+    submit_to_core: bool,
+    show_perfdata: bool,
 ) -> None:
     state, infotext, perfdata = result
 
@@ -976,15 +1023,21 @@ def _submit_check_result(
     else:
         perftext = ""
 
-    if _submit_to_core:
+    if submit_to_core:
         _do_submit_to_core(host, servicedesc, state, infotext + perftext, cache_info)
 
-    _output_check_result(servicedesc, state, infotext, perftexts)
+    _output_check_result(servicedesc, state, infotext, perftexts, show_perfdata=show_perfdata)
 
 
-def _output_check_result(servicedesc: ServiceName, state: ServiceState, infotext: ServiceDetails,
-                         perftexts: List[str]) -> None:
-    if _show_perfdata:
+def _output_check_result(
+    servicedesc: ServiceName,
+    state: ServiceState,
+    infotext: ServiceDetails,
+    perftexts: List[str],
+    *,
+    show_perfdata: bool,
+) -> None:
+    if show_perfdata:
         infotext_fmt = "%-56s"
         p = ' (%s)' % (" ".join(perftexts))
     else:
@@ -1172,16 +1225,6 @@ def _core_pipe_open_timeout(signum: int, stackframe: Optional[FrameType]) -> Non
 #   +----------------------------------------------------------------------+
 #   | Various helper functions                                             |
 #   '----------------------------------------------------------------------'
-
-
-def show_perfdata() -> None:
-    global _show_perfdata
-    _show_perfdata = True
-
-
-def disable_submit() -> None:
-    global _submit_to_core
-    _submit_to_core = False
 
 
 def _in_keepalive_mode() -> bool:

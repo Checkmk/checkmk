@@ -314,17 +314,17 @@ class ModeDiagnostics(WatoMode):
             choices=[
                 ("all", _("Pack all files"),
                  FixedValue(
-                     sorted_files,
+                     [f for f, fi in sorted_files],
                      totext=self._list_of_files_to_text(sorted_files),
                  )),
                 ("non_high_sensitive", _("Pack sensitive and insensitive files"),
                  FixedValue(
-                     sorted_non_high_sensitive_files,
+                     [f for f, fi in sorted_non_high_sensitive_files],
                      totext=self._list_of_files_to_text(sorted_non_high_sensitive_files),
                  )),
                 ("insensitive", _("Pack only insensitive files"),
                  FixedValue(
-                     sorted_insensitive_files,
+                     [f for f, fi in sorted_insensitive_files],
                      totext=self._list_of_files_to_text(sorted_insensitive_files),
                  )),
                 ("explicit_list_of_files", _("Explicit list of files"),

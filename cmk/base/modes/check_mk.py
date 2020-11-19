@@ -406,7 +406,7 @@ def mode_dump_agent(hostname: HostName) -> None:
                 continue
 
             raw_data = source.fetch()
-            host_sections = source.parse(raw_data)
+            host_sections = source.parse(raw_data, selection=checkers.NO_SELECTION)
             source_state, source_output, _source_perfdata = source.summarize(host_sections)
             if source_state != 0:
                 console.error(
@@ -1443,10 +1443,12 @@ _option_detect_plugins = Option(
 def _extract_plugin_selection(
     options: Union["_CheckingOptions", "_DiscoveryOptions", "_InventoryOptions"],
     type_: Type[_TName],
-) -> Tuple[_OptionalNameSet[SectionName], _OptionalNameSet]:
+) -> Tuple[checkers.SectionNameCollection, _OptionalNameSet]:
     detect_plugins = options.get("detect-plugins")
     if detect_plugins is None:
-        return options.get("detect-sections"), options.get("plugins")
+        section_selection = options.get("detect-sections", checkers.NO_SELECTION)
+        assert section_selection is not None  # for mypy false positive
+        return section_selection, options.get("plugins")
 
     conflicting_options = {'detect-sections', 'plugins'}
     if conflicting_options.intersection(options):
@@ -1457,7 +1459,7 @@ def _extract_plugin_selection(
         # this is the same as ommitting the option entirely.
         # (mo) ... which is weird, because specifiying *all* plugins would do
         # something different. Keeping this for compatibility with old --checks
-        return None, None
+        return checkers.NO_SELECTION, None
 
     if type_ is CheckPluginName:
         check_plugin_names = {CheckPluginName(p) for p in detect_plugins}
@@ -1500,12 +1502,10 @@ def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
         # new enough.
         checkers.FileCacheFactory.reset_maybe()
 
-    preselected_section_names, run_only_plugin_names = _extract_plugin_selection(
-        options, CheckPluginName)
-
+    section_selection, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.do_discovery(
         set(hostnames),
-        preselected_section_names=preselected_section_names,
+        section_selection=section_selection,
         run_only_plugin_names=run_only_plugin_names,
         arg_only_new=options["discover"] == 1,
         only_host_labels="only-host-labels" in options,
@@ -1605,13 +1605,11 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
     if len(args) == 2:
         ipaddress = args[1]
 
-    preselected_section_names, run_only_plugin_names = _extract_plugin_selection(
-        options, CheckPluginName)
-
+    section_selection, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     return checking.do_check(
         hostname,
         ipaddress,
-        preselected_section_names=preselected_section_names,
+        section_selection=section_selection,
         run_only_plugin_names=run_only_plugin_names,
     )
 
@@ -1698,12 +1696,10 @@ def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
     if "force" in options:
         checkers.agent.AgentSource.use_outdated_persisted_sections = True
 
-    preselected_section_names, run_only_plugin_names = _extract_plugin_selection(
-        options, CheckPluginName)
-
+    section_selection, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     inventory.do_inv(
         hostnames,
-        preselected_section_names=preselected_section_names,
+        section_selection=section_selection,
         run_only_plugin_names=run_only_plugin_names,
     )
 

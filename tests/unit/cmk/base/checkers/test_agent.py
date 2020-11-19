@@ -24,9 +24,9 @@ from cmk.fetchers.agent import NoCache
 import cmk.base.config as config
 from cmk.base.check_utils import AgentSectionContent
 from cmk.base.checkers import Mode
-from cmk.base.checkers._abstract import AUTO_DETECT, HostSections
+from cmk.base.checkers._abstract import NO_SELECTION, HostSections
 from cmk.base.checkers._cache import SectionStore
-from cmk.base.checkers.agent import AgentHostSections, AgentParser, AgentSource, AgentSummarizer
+from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 
@@ -86,7 +86,7 @@ class TestParser:
             b"<<<>>>",  # to be skipped
         )))
 
-        ahs = parser.parse(raw_data)
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
 
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
@@ -120,7 +120,7 @@ class TestParser:
             b"first line",
         )))
 
-        ahs = parser.parse(raw_data)
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
 
         assert ahs.sections == {}
         assert ahs.cache_info == {}
@@ -152,7 +152,7 @@ class TestParser:
         time_delta = 50
         monkeypatch.setattr(time, "time", lambda: time_time)
         add_persisted_sections = mocker.patch.object(
-            AgentHostSections,
+            HostSections,
             "add_persisted_sections",
         )
 
@@ -162,7 +162,7 @@ class TestParser:
             b"second line",
         )))
 
-        ahs = parser.parse(raw_data)
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
 
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
@@ -201,7 +201,6 @@ class StubSource(AgentSource):
         super().__init__(
             *args,
             fetcher_type=FetcherType.NONE,
-            preselected_sections=AUTO_DETECT,
             main_data_source=False,
             **kwargs,
         )

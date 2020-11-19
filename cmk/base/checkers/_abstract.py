@@ -8,8 +8,9 @@ import abc
 import enum
 import logging
 import sys
+from functools import partial
 from pathlib import Path
-from typing import cast, final, Final, Generic, Iterable, MutableMapping, Optional, Set, TypeVar, Union
+from typing import cast, final, Final, Generic, MutableMapping, Optional, Set, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -43,8 +44,9 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 from ._cache import PersistedSections
 
 __all__ = [
-    "AUTO_DETECT",
+    "NO_SELECTION",
     "HostSections",
+    "SectionNameCollection",
     "Source",
     "FileCacheFactory",
     "Mode",
@@ -52,13 +54,16 @@ __all__ = [
 ]
 
 
-class _Autodetection(enum.Enum):
-    sentinel = enum.auto()
+class SelectionType(enum.Enum):
+    NONE = enum.auto()
 
 
-PreselectedSectionNames = Union[_Autodetection, Set[SectionName]]
+SectionNameCollection = Union[SelectionType, Set[SectionName]]
+# If preselected sections are given, we assume that we are interested in these
+# and only these sections, so we may omit others and in the SNMP case (TODO (mo))
+# must try to fetch them (regardles of detection).
 
-AUTO_DETECT: Final = _Autodetection.sentinel
+NO_SELECTION: Final = SelectionType.NONE
 
 THostSections = TypeVar("THostSections", bound="HostSections")
 
@@ -71,8 +76,7 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
         1. sections:                A dictionary from section_name to a list of rows,
                                     the section content
         2. piggybacked_raw_data:    piggy-backed data for other hosts
-        3. persisted_sections:      Sections to be persisted for later usage
-        4. cache_info:              Agent cache information
+        3. cache_info:              Agent cache information
                                     (dict section name -> (cached_at, cache_interval))
     """
     def __init__(
@@ -95,14 +99,20 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
             self.piggybacked_raw_data,
         )
 
-    def filter(self: THostSections, section_names: Iterable[SectionName]) -> THostSections:
-        """Remove all data not belonging to the provided sections"""
-        self.sections = {k: v for k, v in self.sections.items() if k in section_names}
-        self.cache_info = {k: v for k, v in self.cache_info.items() if k in section_names}
-        self.piggybacked_raw_data = {
-            k: v for k, v in self.piggybacked_raw_data.items() if SectionName(k) in section_names
-        }
-        return self
+    def filter(self, selection: SectionNameCollection) -> "HostSections[TSectionContent]":
+        """Filter for preselected sections"""
+        # This could be optimized by telling the parser object about the
+        # preselected sections and dismissing raw data at an earlier stage.
+        # For now we don't need that, so we keep it simple.
+        if selection is NO_SELECTION:
+            return self
+        return HostSections(
+            {k: v for k, v in self.sections.items() if k in selection},
+            cache_info={k: v for k, v in self.cache_info.items() if k in selection},
+            piggybacked_raw_data={
+                k: v for k, v in self.piggybacked_raw_data.items() if SectionName(k) in selection
+            },
+        )
 
     # TODO: It should be supported that different sources produce equal sections.
     # this is handled for the self.sections data by simply concatenating the lines
@@ -163,7 +173,7 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
 class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     """Parse raw data into host sections."""
     @abc.abstractmethod
-    def parse(self, raw_data: TRawData) -> THostSections:
+    def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
         raise NotImplementedError
 
 
@@ -240,7 +250,6 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         description: str,
         default_raw_data: TRawData,
         default_host_sections: THostSections,
-        preselected_sections: PreselectedSectionNames,
         id_: str,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
@@ -253,11 +262,6 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self.description: Final[str] = description
         self.default_raw_data: Final = default_raw_data
         self.default_host_sections: Final[THostSections] = default_host_sections
-        # If preselected sections are given, we assume that we are interested in these
-        # and only these sections, so we may omit others and in the SNMP case (TODO (mo))
-        # must try to fetch them (regardles of detection).
-        self.preselected_sections: Final[PreselectedSectionNames] = preselected_sections
-
         self.id: Final[str] = id_
         if not cache_dir:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
@@ -301,31 +305,16 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     def parse(
         self,
         raw_data: result.Result[TRawData, Exception],
+        *,
+        selection: SectionNameCollection,
     ) -> result.Result[THostSections, Exception]:
         try:
-            parsed_data = raw_data.map(self._make_parser().parse)
-            return self._filter_parsed_result(parsed_data)
+            return raw_data.map(partial(self._make_parser().parse, selection=selection))
         except Exception as exc:
             self._logger.log(VERBOSE, "ERROR: %s", exc)
             if cmk.utils.debug.enabled():
                 raise
             return result.Error(exc)
-
-    def _filter_parsed_result(
-        self, parsed_result: result.Result[THostSections, Exception]
-    ) -> result.Result[THostSections, Exception]:
-        """Filter for preselected sections"""
-        # This could be optimized by telling the parser object about the
-        # preselected sections and dismissing raw data at an earlier stage.
-        # For now we don't need that, so we keep it simple.
-        if self.preselected_sections is AUTO_DETECT:
-            return parsed_result
-
-        def filterer(host_section: THostSections) -> THostSections:
-            assert self.preselected_sections is not AUTO_DETECT  # just for you, mypy <3
-            return host_section.filter(self.preselected_sections)
-
-        return parsed_result.map(filterer)
 
     @final
     def summarize(

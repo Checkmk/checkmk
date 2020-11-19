@@ -41,12 +41,12 @@ from cmk.base.checkers import (
     Source,
     update_host_sections,
 )
-from cmk.base.checkers._abstract import AUTO_DETECT
+from cmk.base.checkers import NO_SELECTION
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
 from cmk.base.checkers.piggyback import PiggybackSource
 from cmk.base.checkers.programs import ProgramSource
-from cmk.base.checkers.snmp import SNMPHostSections, SNMPSource
+from cmk.base.checkers.snmp import SNMPSource
 from cmk.base.checkers.tcp import TCPSource
 
 _TestSection = collections.namedtuple(
@@ -138,7 +138,6 @@ def test_abstract_hostsections_filter():
 
     filtered = host_sections.filter({SectionName("bar")})
 
-    assert filtered is host_sections
     assert list(filtered.sections) == [SectionName("bar")]
     assert not filtered.cache_info
     assert list(filtered.piggybacked_raw_data) == ["bar"]
@@ -480,7 +479,7 @@ class TestMakeHostSectionsHosts:
         monkeypatch.setattr(
             Source,
             "parse",
-            lambda self, raw_data: result.OK(
+            lambda self, raw_data, *, selection: result.OK(
                 DummyHostSection(
                     sections=
                     {SectionName("section_name_%s" % self.hostname): [["section_content"]]},
@@ -520,6 +519,7 @@ class TestMakeHostSectionsHosts:
             max_cachefile_age=0,
             host_config=host_config,
             fetcher_messages=(),
+            section_selection=NO_SELECTION,
         )
         # The length is not zero because the function always sets,
         # at least, a piggy back section.
@@ -529,7 +529,6 @@ class TestMakeHostSectionsHosts:
         assert key in mhs
 
         section = mhs[key]
-        assert isinstance(section, AgentHostSections)
 
         # Public attributes from HostSections:
         assert not section.sections
@@ -550,7 +549,7 @@ class TestMakeHostSectionsHosts:
                         hostname,
                         ipaddress,
                         mode=mode,
-                        preselected_sections=AUTO_DETECT,
+                        section_selection=NO_SELECTION,
                     ),
                 ],
             ),
@@ -563,6 +562,7 @@ class TestMakeHostSectionsHosts:
                     FetcherType.SNMP,
                 ),
             ],
+            section_selection=NO_SELECTION,
         )
         assert len(mhs) == 1
 
@@ -570,7 +570,6 @@ class TestMakeHostSectionsHosts:
         assert key in mhs
 
         section = mhs[key]
-        assert isinstance(section, SNMPHostSections)
 
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
@@ -582,20 +581,17 @@ class TestMakeHostSectionsHosts:
                 hostname,
                 ipaddress,
                 mode=mode,
-                preselected_sections=AUTO_DETECT,
             ),
             lambda hostname, ipaddress, *, mode: ProgramSource.ds(
                 hostname,
                 ipaddress,
                 mode=mode,
-                preselected_sections=AUTO_DETECT,
                 template="",
             ),
             lambda hostname, ipaddress, *, mode: TCPSource(
                 hostname,
                 ipaddress,
                 mode=mode,
-                preselected_sections=AUTO_DETECT,
             ),
         ],
     )
@@ -622,6 +618,7 @@ class TestMakeHostSectionsHosts:
                     source.fetcher_type,
                 ),
             ],
+            section_selection=NO_SELECTION,
         )
         assert len(mhs) == 1
 
@@ -629,7 +626,6 @@ class TestMakeHostSectionsHosts:
         assert key in mhs
 
         section = mhs[key]
-        assert isinstance(section, AgentHostSections)
 
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
@@ -647,14 +643,12 @@ class TestMakeHostSectionsHosts:
                 hostname,
                 ipaddress,
                 mode=mode,
-                preselected_sections=AUTO_DETECT,
                 template="",
             ),
             TCPSource(
                 hostname,
                 ipaddress,
                 mode=mode,
-                preselected_sections=AUTO_DETECT,
             ),
         ]
 
@@ -677,6 +671,7 @@ class TestMakeHostSectionsHosts:
                     source.fetcher_type,
                 ) for source in sources
             ],
+            section_selection=NO_SELECTION,
         )
         assert len(mhs) == 1
 
@@ -684,7 +679,6 @@ class TestMakeHostSectionsHosts:
         assert key in mhs
 
         section = mhs[key]
-        assert isinstance(section, AgentHostSections)
 
         assert len(section.sections) == 1
         # yapf: disable
@@ -693,10 +687,9 @@ class TestMakeHostSectionsHosts:
 
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, mode, config_cache, host_config):
         sources = [
-            ProgramSource.ds(hostname + "0", ipaddress, mode=mode, preselected_sections=AUTO_DETECT,
-                             template="",),
-            TCPSource(hostname + "1", ipaddress, mode=mode, preselected_sections=AUTO_DETECT),
-            TCPSource(hostname + "2", ipaddress, mode=mode, preselected_sections=AUTO_DETECT),
+            ProgramSource.ds(hostname + "0", ipaddress, mode=mode, template=""),
+            TCPSource(hostname + "1", ipaddress, mode=mode),
+            TCPSource(hostname + "2", ipaddress, mode=mode),
         ]
 
         mhs = MultiHostSections()
@@ -719,6 +712,7 @@ class TestMakeHostSectionsHosts:
                 )
                 for source in sources
             ],
+            section_selection=NO_SELECTION,
         )
         assert len(mhs) == 1
 
@@ -726,7 +720,6 @@ class TestMakeHostSectionsHosts:
         assert key in mhs
 
         section = mhs[key]
-        assert isinstance(section, AgentHostSections)
 
         assert len(section.sections) == len(sources)
         for source in sources:
@@ -818,6 +811,7 @@ class TestMakeHostSectionsClusters:
                     FetcherType.PIGGYBACK,
                 ),
             ],
+            section_selection=NO_SELECTION,
         )
         assert len(mhs) == len(nodes)
 
@@ -900,6 +894,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
                 )
                 for source in sources
             ],
+        section_selection=NO_SELECTION,
     )
     assert len(mhs) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]

@@ -21,12 +21,12 @@ import cmk.base.check_table as check_table
 import cmk.base.config as config
 
 from ._abstract import (
-    AUTO_DETECT,
+    NO_SELECTION,
     FileCacheFactory,
     HostSections,
     Mode,
     Parser,
-    PreselectedSectionNames,
+    SectionNameCollection,
     Source,
     Summarizer,
 )
@@ -41,8 +41,7 @@ def make_plugin_store() -> SNMPPluginStore:
     })
 
 
-class SNMPHostSections(HostSections[SNMPSectionContent]):
-    pass
+SNMPHostSections = HostSections[SNMPSectionContent]
 
 
 class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
@@ -64,7 +63,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         *,
         mode: Mode,
         source_type: SourceType,
-        preselected_sections: PreselectedSectionNames,
+        section_selection: SectionNameCollection,
         id_: str,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
@@ -80,11 +79,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             description=SNMPSource._make_description(hostname, ipaddress, title=title),
             default_raw_data=SNMPRawData({}),
             default_host_sections=SNMPHostSections(),
-            preselected_sections=preselected_sections,
             id_=id_,
             cache_dir=cache_dir,
             persisted_section_dir=persisted_section_dir,
         )
+        self.section_selection = section_selection
         if self.ipaddress is None:
             # snmp_config.ipaddress is not Optional.
             #
@@ -109,7 +108,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ipaddress: HostAddress,
         *,
         mode: Mode,
-        preselected_sections: PreselectedSectionNames,
+        section_selection: SectionNameCollection,
     ) -> "SNMPSource":
         assert ipaddress is not None
         return cls(
@@ -117,7 +116,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             ipaddress,
             mode=mode,
             source_type=SourceType.HOST,
-            preselected_sections=preselected_sections,
+            section_selection=section_selection,
             id_="snmp",
             title="SNMP",
         )
@@ -129,7 +128,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-        preselected_sections: PreselectedSectionNames,
+        section_selection: SectionNameCollection,
     ) -> "SNMPSource":
         if ipaddress is None:
             raise TypeError(ipaddress)
@@ -138,7 +137,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             ipaddress,
             mode=mode,
             source_type=SourceType.MANAGEMENT,
-            preselected_sections=preselected_sections,
+            section_selection=section_selection,
             id_="mgmt_snmp",
             title="Management board - SNMP",
         )
@@ -192,8 +191,8 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                     filter_mode="include_clustered",
                     skip_ignored=True,
                 ),
-                inventory_plugin_names=())) if self.preselected_sections is AUTO_DETECT else
-                self.preselected_sections).intersection(
+                inventory_plugin_names=()))
+                if self.section_selection is NO_SELECTION else self.section_selection).intersection(
                     s.name for s in agent_based_register.iter_all_snmp_sections())
 
     def _make_inventory_snmp_sections(self) -> Set[SectionName]:
@@ -251,6 +250,8 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
     def parse(
         self,
         raw_data: SNMPRawData,
+        *,
+        selection: SectionNameCollection,
     ) -> SNMPHostSections:
         persisted_sections = SNMPParser._extract_persisted_sections(
             raw_data,

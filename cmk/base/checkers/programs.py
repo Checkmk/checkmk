@@ -19,7 +19,7 @@ import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.config import SpecialAgentConfiguration
 
-from ._abstract import Mode, PreselectedSectionNames
+from ._abstract import Mode
 from .agent import AgentSource, AgentSummarizerDefault, DefaultAgentFileCacheFactory
 
 
@@ -30,7 +30,6 @@ class ProgramSource(AgentSource):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-        preselected_sections: PreselectedSectionNames,
         id_: str,
         main_data_source: bool,
         cmdline: str,
@@ -40,7 +39,6 @@ class ProgramSource(AgentSource):
             hostname,
             ipaddress,
             mode=mode,
-            preselected_sections=preselected_sections,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PROGRAM,
             description=ProgramSource._make_description(
@@ -59,7 +57,6 @@ class ProgramSource(AgentSource):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-        preselected_sections: PreselectedSectionNames,
         main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
@@ -68,7 +65,6 @@ class ProgramSource(AgentSource):
             hostname,
             ipaddress,
             mode=mode,
-            preselected_sections=preselected_sections,
             main_data_source=main_data_source,
             special_agent_id=special_agent_id,
             params=params,
@@ -80,7 +76,6 @@ class ProgramSource(AgentSource):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-        preselected_sections: PreselectedSectionNames,
         main_data_source: bool = False,
         template: str,
     ) -> "DSProgramSource":
@@ -88,7 +83,6 @@ class ProgramSource(AgentSource):
             hostname,
             ipaddress,
             mode=mode,
-            preselected_sections=preselected_sections,
             main_data_source=main_data_source,
             template=template,
         )
@@ -126,7 +120,6 @@ class DSProgramSource(ProgramSource):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-        preselected_sections: PreselectedSectionNames,
         main_data_source: bool = False,
         template: str,
     ) -> None:
@@ -134,7 +127,6 @@ class DSProgramSource(ProgramSource):
             hostname,
             ipaddress,
             mode=mode,
-            preselected_sections=preselected_sections,
             id_="agent",
             main_data_source=main_data_source,
             cmdline=DSProgramSource._translate(
@@ -194,7 +186,6 @@ class SpecialAgentSource(ProgramSource):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-        preselected_sections: PreselectedSectionNames,
         main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
@@ -203,7 +194,6 @@ class SpecialAgentSource(ProgramSource):
             hostname,
             ipaddress,
             mode=mode,
-            preselected_sections=preselected_sections,
             id_="special_%s" % special_agent_id,
             main_data_source=main_data_source,
             cmdline=SpecialAgentSource._make_cmdline(

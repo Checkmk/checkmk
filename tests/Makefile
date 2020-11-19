@@ -209,7 +209,7 @@ test-mypy:
 	`: filter out plugins, they are not real modules` \
 	grep -v $$(realpath '../checks') | \
 	grep -v $$(realpath '../inventory') | \
-	xargs -n 1500 $(MYPY) $(ADDITIONAL_MYPY_ARGS)
+	xargs $(MYPY) $(ADDITIONAL_MYPY_ARGS)
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"

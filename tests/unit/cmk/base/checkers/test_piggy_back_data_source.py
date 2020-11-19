@@ -11,7 +11,6 @@ from testlib.base import Scenario
 from cmk.utils.type_defs import result
 
 from cmk.base.checkers import Mode
-from cmk.base.checkers._abstract import AUTO_DETECT
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.piggyback import PiggybackSource
 
@@ -26,7 +25,7 @@ def test_attribute_defaults(monkeypatch, ipaddress, mode):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
 
-    source = PiggybackSource(hostname, ipaddress, mode=mode, preselected_sections=AUTO_DETECT)
+    source = PiggybackSource(hostname, ipaddress, mode=mode)
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.mode is mode

@@ -16,11 +16,7 @@ import cmk.utils.paths
 import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 from cmk.base.checkers import Mode
-from cmk.base.checkers._abstract import AUTO_DETECT
-from cmk.base.checkers.programs import (
-    DSProgramSource,
-    SpecialAgentSource,
-)
+from cmk.base.checkers.programs import DSProgramSource, SpecialAgentSource
 
 fun_args_stdin: Tuple[  #
     Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]  #
@@ -59,7 +55,6 @@ class TestDSProgramChecker:
             hostname,
             ipaddress,
             mode=mode,
-            preselected_sections=AUTO_DETECT,
             template=template,
         )
         assert source.hostname == hostname
@@ -79,7 +74,6 @@ class TestDSProgramChecker:
             hostname,
             ipaddress,
             mode=mode,
-            preselected_sections=AUTO_DETECT,
             template=template,
         )
 
@@ -140,7 +134,6 @@ class TestSpecialAgentChecker:
             hostname,
             ipaddress,
             mode=mode,
-            preselected_sections=AUTO_DETECT,
             special_agent_id=special_agent_id,
             params=params,
         )

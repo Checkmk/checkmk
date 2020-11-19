@@ -12,7 +12,6 @@ from cmk.utils.type_defs import result, SourceType
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.checkers._abstract import AUTO_DETECT
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.ipmi import IPMISource, IPMISummarizer
@@ -30,7 +29,7 @@ def test_attribute_defaults(mode, monkeypatch):
     host_config = config.get_config_cache().get_host_config(hostname)
     ipaddress = ip_lookup.lookup_mgmt_board_ip_address(host_config)
 
-    source = IPMISource(hostname, ipaddress, mode=mode, preselected_sections=AUTO_DETECT)
+    source = IPMISource(hostname, ipaddress, mode=mode)
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.mode is mode
@@ -59,7 +58,7 @@ def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
         },
     })
 
-    source = IPMISource(hostname, ipaddress, mode=mode, preselected_sections=AUTO_DETECT)
+    source = IPMISource(hostname, ipaddress, mode=mode)
     assert source.host_config.management_address == ipaddress
 
 

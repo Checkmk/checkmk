@@ -254,9 +254,9 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
            which are fetched for checking anyway.
 
         """
-        selected_sections = self._get_sections_fetched_unconditionally(mode)
-        selected_sections |= self._detect(select_from=self._get_sections_fetch_detected(mode) -
-                                          selected_sections,)
+        section_names = self._get_sections_fetched_unconditionally(mode)
+        section_names |= self._detect(select_from=self._get_sections_fetch_detected(mode) -
+                                      section_names)
 
         if self.use_snmpwalk_cache:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
@@ -266,7 +266,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             get_snmp = partial(snmp_table.get_snmp_table, backend=self._backend)
 
         fetched_data: MutableMapping[SectionName, SNMPSectionContent] = {}
-        for section_name in self._sort_section_names(selected_sections):
+        for section_name in self._sort_section_names(section_names):
             self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
 
             fetched_section_data = [

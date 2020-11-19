@@ -38,7 +38,6 @@ from cmk.utils.type_defs import (
     InventoryPluginName,
     MetricTuple,
     result,
-    SectionName,
     ServiceAdditionalDetails,
     ServiceDetails,
     ServiceState,
@@ -90,7 +89,7 @@ class ActiveInventoryResult(NamedTuple):
 def do_inv(
     hostnames: List[HostName],
     *,
-    preselected_section_names: Optional[Set[SectionName]] = None,
+    section_selection: checkers.SectionNameCollection,
     run_only_plugin_names: Optional[Set[InventoryPluginName]] = None,
 ) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
@@ -102,7 +101,7 @@ def do_inv(
             host_config = config.HostConfig.make_host_config(hostname)
             inv_result = _do_active_inventory_for(
                 host_config=host_config,
-                preselected_section_names=preselected_section_names,
+                section_selection=section_selection,
                 run_only_plugin_names=run_only_plugin_names,
             )
 
@@ -141,7 +140,7 @@ def do_inv_check(
 
     inv_result = _do_active_inventory_for(
         host_config=host_config,
-        preselected_section_names=None,
+        section_selection=checkers.NO_SELECTION,
         run_only_plugin_names=None,
     )
     trees = inv_result.trees
@@ -207,8 +206,8 @@ def do_inv_check(
 def _do_active_inventory_for(
     *,
     host_config: config.HostConfig,
-    preselected_section_names: Optional[Set[SectionName]],
     run_only_plugin_names: Optional[Set[InventoryPluginName]],
+    section_selection: checkers.SectionNameCollection,
 ) -> ActiveInventoryResult:
     if host_config.is_cluster:
         return ActiveInventoryResult(
@@ -224,7 +223,7 @@ def _do_active_inventory_for(
         config_cache,
         host_config,
         ipaddress,
-        preselected_section_names,
+        section_selection,
     )
 
     return ActiveInventoryResult(
@@ -235,7 +234,8 @@ def _do_active_inventory_for(
             run_only_plugin_names=run_only_plugin_names,
         ),
         source_results=source_results,
-        safe_to_write=_safe_to_write_tree(source_results) and preselected_section_names is None,
+        safe_to_write=_safe_to_write_tree(source_results) and
+        section_selection is checkers.NO_SELECTION,
     )
 
 
@@ -243,18 +243,19 @@ def _fetch_multi_host_sections_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    preselected_sections: Optional[Set[SectionName]],
+    section_selection: checkers.SectionNameCollection,
 ) -> Tuple[MultiHostSections, Sequence[Tuple[Source, result.Result[HostSections, Exception]]]]:
     if host_config.is_cluster:
         return MultiHostSections(), []
 
-    mode = checkers.Mode.INVENTORY if preselected_sections is None else checkers.Mode.FORCE_SECTIONS
+    mode = (checkers.Mode.INVENTORY
+            if section_selection is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS)
 
     sources = checkers.make_sources(
         host_config,
         ipaddress,
         mode=mode,
-        preselected_sections=preselected_sections,
+        section_selection=section_selection,
     )
     for source in sources:
         _configure_source_for_inv(source)
@@ -278,6 +279,7 @@ def _fetch_multi_host_sections_for_inv(
                 max_cachefile_age=host_config.max_cachefile_age,
                 host_config=host_config,
             )),
+        section_selection=section_selection,
     )
 
     return multi_host_sections, results
@@ -491,8 +493,10 @@ class _TreeAggregator:
 #   '----------------------------------------------------------------------'
 
 
-def _save_inventory_tree(hostname: HostName,
-                         inventory_tree: StructuredDataTree) -> Optional[StructuredDataTree]:
+def _save_inventory_tree(
+    hostname: HostName,
+    inventory_tree: StructuredDataTree,
+) -> Optional[StructuredDataTree]:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
 
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname

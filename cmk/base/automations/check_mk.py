@@ -1149,7 +1149,6 @@ class AutomationDiagHost(Automation):
                     source.hostname,
                     source.ipaddress,
                     mode=source.mode,
-                    preselected_sections=checkers.AUTO_DETECT,
                     template=cmd,
                 )
             elif isinstance(source, checkers.tcp.TCPSource):
@@ -1447,7 +1446,7 @@ class AutomationGetAgentOutput(Automation):
                         continue
 
                     raw_data = source.fetch()
-                    host_sections = source.parse(raw_data)
+                    host_sections = source.parse(raw_data, selection=checkers.NO_SELECTION)
                     source_state, source_output, _source_perfdata = source.summarize(host_sections)
                     if source_state != 0:
                         # Optionally show errors of problematic data sources

@@ -24,7 +24,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
-from ._abstract import AUTO_DETECT, HostSections, Mode, PreselectedSectionNames, Source
+from ._abstract import NO_SELECTION, HostSections, Mode, SectionNameCollection, Source
 from .agent import AgentHostSections
 from .host_sections import HostKey, MultiHostSections
 from .ipmi import IPMISource
@@ -44,14 +44,14 @@ class _Builder:
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-        preselected_sections: PreselectedSectionNames,
+        section_selection: SectionNameCollection,
     ) -> None:
         super().__init__()
         self._host_config = host_config
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
         self._mode = mode
-        self._preselected_sections = preselected_sections
+        self._section_selection = section_selection
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -94,13 +94,11 @@ class _Builder:
             ))
 
         if "no-piggyback" not in self._host_config.tags:
-            self._add(
-                PiggybackSource(
-                    self._hostname,
-                    self._ipaddress,
-                    mode=self._mode,
-                    preselected_sections=self._preselected_sections,
-                ))
+            self._add(PiggybackSource(
+                self._hostname,
+                self._ipaddress,
+                mode=self._mode,
+            ))
 
     def _initialize_snmp_based(self,) -> None:
         if not self._host_config.is_snmp_host:
@@ -111,7 +109,7 @@ class _Builder:
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
-                preselected_sections=self._preselected_sections,
+                section_selection=self._section_selection,
             ))
 
     def _initialize_mgmt_boards(self) -> None:
@@ -126,16 +124,14 @@ class _Builder:
                     self._hostname,
                     ip_address,
                     mode=self._mode,
-                    preselected_sections=self._preselected_sections,
+                    section_selection=self._section_selection,
                 ))
         elif protocol == "ipmi":
-            self._add(
-                IPMISource(
-                    self._hostname,
-                    ip_address,
-                    mode=self._mode,
-                    preselected_sections=self._preselected_sections,
-                ))
+            self._add(IPMISource(
+                self._hostname,
+                ip_address,
+                mode=self._mode,
+            ))
         else:
             raise LookupError()
 
@@ -158,7 +154,6 @@ class _Builder:
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
-                preselected_sections=self._preselected_sections,
                 main_data_source=main_data_source,
                 template=datasource_program,
             )
@@ -168,7 +163,6 @@ class _Builder:
             self._ipaddress,
             mode=self._mode,
             main_data_source=main_data_source,
-            preselected_sections=self._preselected_sections,
         )
 
     def _get_special_agents(self) -> Sequence[Source]:
@@ -177,7 +171,6 @@ class _Builder:
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
-                preselected_sections=self._preselected_sections,
                 special_agent_id=agentname,
                 params=params,
             ) for agentname, params in self._host_config.special_agents
@@ -189,16 +182,14 @@ def make_sources(
     ipaddress: Optional[HostAddress],
     *,
     mode: Mode,
-    preselected_sections: Optional[PreselectedSectionNames] = None,
+    section_selection: SectionNameCollection = NO_SELECTION,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
-    if preselected_sections is None:
-        preselected_sections = AUTO_DETECT
     return _Builder(
         host_config,
         ipaddress,
         mode=mode,
-        preselected_sections=preselected_sections,
+        section_selection=section_selection,
     ).sources
 
 
@@ -248,6 +239,7 @@ def update_host_sections(
     max_cachefile_age: int,
     host_config: HostConfig,
     fetcher_messages: Sequence[FetcherMessage],
+    section_selection: SectionNameCollection,
 ) -> Sequence[Tuple[Source, result.Result[HostSections, Exception]]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -279,7 +271,7 @@ def update_host_sections(
             #    raise LookupError("Checker and fetcher missmatch")
             raw_data = fetcher_message.raw_data
 
-            source_result = source.parse(raw_data)
+            source_result = source.parse(raw_data, selection=section_selection)
             data.append((source, source_result))
             if source_result.is_ok():
                 console.vverbose("  -> Add sections: %s\n" %

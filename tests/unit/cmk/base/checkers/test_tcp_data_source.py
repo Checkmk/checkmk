@@ -14,7 +14,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import result
 
-from cmk.base.checkers._abstract import AUTO_DETECT, Mode
+from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentHostSections, AgentSummarizerDefault
 from cmk.base.checkers.tcp import TCPSource
 
@@ -38,7 +38,7 @@ def test_tcpdatasource_only_from(mode, monkeypatch, res, reported, rule):
     ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
     config_cache = ts.apply(monkeypatch)
 
-    source = TCPSource("hostname", "ipaddress", mode=mode, preselected_sections=AUTO_DETECT)
+    source = TCPSource("hostname", "ipaddress", mode=mode)
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
     summarizer = AgentSummarizerDefault(source.exit_spec, source)
@@ -87,7 +87,7 @@ def test_tcpdatasource_restricted_address_mismatch(
         ])
 
     ts.apply(monkeypatch)
-    source = TCPSource(hostname, "ipaddress", mode=mode, preselected_sections=AUTO_DETECT)
+    source = TCPSource(hostname, "ipaddress", mode=mode)
     summarizer = AgentSummarizerDefault(source.exit_spec, source)
 
     assert summarizer._sub_result_only_from({"onlyfrom": only_from}) == res
@@ -98,7 +98,7 @@ def test_attribute_defaults(mode, monkeypatch):
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
 
-    source = TCPSource(hostname, ipaddress, mode=mode, preselected_sections=AUTO_DETECT)
+    source = TCPSource(hostname, ipaddress, mode=mode)
     monkeypatch.setattr(source, "file_cache_path", Path("/my/path/"))
     assert source.fetcher_configuration == {
         "file_cache": {
@@ -130,12 +130,7 @@ class TestSummaryResult:
     def test_defaults(self, ipaddress, mode, monkeypatch):
         hostname = "testhost"
         Scenario().add_host(hostname).apply(monkeypatch)
-        source = TCPSource(
-            hostname,
-            ipaddress,
-            mode=mode,
-            preselected_sections=AUTO_DETECT,
-        )
+        source = TCPSource(hostname, ipaddress, mode=mode)
 
         assert source.summarize(result.OK(AgentHostSections())) == (
             0,

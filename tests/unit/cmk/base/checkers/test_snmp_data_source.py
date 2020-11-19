@@ -15,12 +15,9 @@ from cmk.utils.type_defs import result, SourceType, CheckPluginName, ParsedSecti
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.api.agent_based import register
-from cmk.base.api.agent_based.register import _config
-from cmk.base.api.agent_based.register import section_plugins
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.checkers import Mode
-from cmk.base.checkers._abstract import AUTO_DETECT
+from cmk.base.checkers._abstract import NO_SELECTION
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.snmp import SNMPSource
 
@@ -47,7 +44,7 @@ def scenario_fixture(hostname, monkeypatch):
 
 @pytest.fixture(name="source")
 def source_fixture(scenario, hostname, ipaddress, mode):
-    return SNMPSource.snmp(hostname, ipaddress, mode=mode, preselected_sections=AUTO_DETECT)
+    return SNMPSource.snmp(hostname, ipaddress, mode=mode, section_selection=NO_SELECTION)
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
@@ -84,7 +81,7 @@ class TestSNMPSource_SNMP:
 
         Scenario().add_host(hostname).apply(monkeypatch)
 
-        source = SNMPSource.snmp(hostname, ipaddress, mode=mode, preselected_sections=AUTO_DETECT)
+        source = SNMPSource.snmp(hostname, ipaddress, mode=mode, section_selection=NO_SELECTION)
         assert source.description == (
             "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
 
@@ -111,7 +108,7 @@ class TestSNMPSource_MGMT:
             hostname,
             ipaddress,
             mode=mode,
-            preselected_sections=AUTO_DETECT,
+            section_selection=NO_SELECTION,
         )
         assert source.description == (
             "Management board - SNMP "
@@ -140,7 +137,7 @@ class TestSNMPSummaryResult:
             hostname,
             "1.2.3.4",
             mode=mode,
-            preselected_sections=AUTO_DETECT,
+            section_selection=NO_SELECTION,
             source_type=SourceType.HOST,
             id_="snmp_id",
             title="snmp title",

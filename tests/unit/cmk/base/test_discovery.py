@@ -17,6 +17,7 @@ from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType, Discov
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.checkers import NO_SELECTION
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.snmp import SNMPHostSections
 from cmk.base.checkers.host_sections import HostKey, MultiHostSections
@@ -933,7 +934,7 @@ def test_do_discovery(monkeypatch):
     with cmk_debug_enabled():
         discovery.do_discovery(
             arg_hostnames={"test-host"},
-            preselected_section_names=None,
+            section_selection=NO_SELECTION,
             run_only_plugin_names=None,
             arg_only_new=False,
         )

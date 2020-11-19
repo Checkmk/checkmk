@@ -42,7 +42,7 @@ from ._abstract import (
     HostSections,
     Mode,
     Parser,
-    PreselectedSectionNames,
+    SectionNameCollection,
     Source,
     Summarizer,
 )
@@ -50,9 +50,7 @@ from ._cache import PersistedSections, SectionStore
 
 __all__ = ["AgentSource", "AgentHostSections"]
 
-
-class AgentHostSections(HostSections[AgentSectionContent]):
-    pass
+AgentHostSections = HostSections[AgentSectionContent]
 
 
 class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
@@ -95,7 +93,6 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
         mode: Mode,
         source_type: SourceType,
         fetcher_type: FetcherType,
-        preselected_sections: PreselectedSectionNames,
         description: str,
         id_: str,
         main_data_source: bool,
@@ -109,7 +106,6 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             description=description,
             default_raw_data=AgentRawData(b""),
             default_host_sections=AgentHostSections(),
-            preselected_sections=preselected_sections,
             id_=id_,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
             persisted_section_dir=(Path(cmk.utils.paths.var_dir) /
@@ -334,7 +330,12 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
     #   and AgentHostSections.persisted_sections) and a few simple helper functions.
     #   Moreover, the main loop of the parser (at `for line in raw_data.split(b"\n")`)
     #   is an FSM and shoule be written as such.  (See CMK-5004)
-    def parse(self, raw_data: AgentRawData) -> AgentHostSections:
+    def parse(
+        self,
+        raw_data: AgentRawData,
+        *,
+        selection: SectionNameCollection,
+    ) -> AgentHostSections:
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
@@ -345,7 +346,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             persisted_sections,
             logger=self._logger,
         )
-        return host_sections
+        return host_sections.filter(selection)
 
     def _parse_host_section(
         self,

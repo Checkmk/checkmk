@@ -121,8 +121,8 @@ def do_check(
     # The following arguments *must* remain optional for Nagios and the `DiscoCheckExecutor`.
     #   See Also: `cmk.base.discovery.check_discovery()`
     fetcher_messages: Sequence[FetcherMessage] = (),
-    preselected_section_names: Optional[Set[SectionName]] = None,
     run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
+    section_selection: checkers.SectionNameCollection = checkers.NO_SELECTION,
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
     console.verbose("Checkmk version %s\n", cmk_version.__version__)
 
@@ -131,8 +131,7 @@ def do_check(
 
     exit_spec = host_config.exit_code_spec()
 
-    mode = (checkers.Mode.CHECKING
-            if preselected_section_names is None else checkers.Mode.FORCE_SECTIONS)
+    mode = checkers.Mode.CHECKING if section_selection is None else checkers.Mode.FORCE_SECTIONS
 
     status: ServiceState = 0
     infotexts: List[ServiceDetails] = []
@@ -180,7 +179,7 @@ def do_check(
             host_config,
             ipaddress,
             mode=mode,
-            preselected_sections=preselected_section_names,
+            section_selection=section_selection,
         )
         nodes = checkers.make_nodes(
             config_cache,
@@ -210,6 +209,7 @@ def do_check(
                 max_cachefile_age=host_config.max_cachefile_age,
                 host_config=host_config,
                 fetcher_messages=fetcher_messages,
+                section_selection=section_selection,
             )
 
             num_success, plugins_missing_data = _do_all_checks_on_host(

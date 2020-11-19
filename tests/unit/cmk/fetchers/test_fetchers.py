@@ -372,7 +372,6 @@ class ABCTestSNMPFetcher(ABC):
             inventory_snmp_sections=set(),
             on_error="raise",
             missing_sys_description=False,
-            use_snmpwalk_cache=False,
             do_status_data_inventory=False,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
@@ -411,7 +410,6 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
         assert other.configured_snmp_sections == fetcher.configured_snmp_sections
         assert other.on_error == fetcher.on_error
         assert other.missing_sys_description == fetcher.missing_sys_description
-        assert other.use_snmpwalk_cache == fetcher.use_snmpwalk_cache
         assert other.snmp_config == fetcher.snmp_config
 
     def test_fetcher_deserialization_snmpv3_credentials(self, fetcher):
@@ -436,7 +434,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
-            "get_snmp_table",
+            "_get_snmp_table",
             lambda *_, **__: table,
         )
         section_name = SectionName('pim')
@@ -449,7 +447,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
-            "get_snmp_table",
+            "_get_snmp_table",
             lambda _, oid_info, **__: table
             if oid_info.base == fetcher.snmp_plugin_store[section_name].trees[0].base else [],
         )

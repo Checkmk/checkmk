@@ -121,7 +121,6 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         inventory_snmp_sections: Set[SectionName],
         on_error: str,
         missing_sys_description: bool,
-        use_snmpwalk_cache: bool,
         do_status_data_inventory: bool,
         snmp_config: SNMPHostConfig,
     ) -> None:
@@ -131,7 +130,6 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self.inventory_snmp_sections: Final = inventory_snmp_sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
-        self.use_snmpwalk_cache: Final = use_snmpwalk_cache
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.snmp_config: Final = snmp_config
         self._backend = factory.backend(self.snmp_config, self._logger)
@@ -157,7 +155,6 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             },
             on_error=serialized["on_error"],
             missing_sys_description=serialized["missing_sys_description"],
-            use_snmpwalk_cache=serialized["use_snmpwalk_cache"],
             do_status_data_inventory=serialized["do_status_data_inventory"],
             snmp_config=SNMPHostConfig(**serialized["snmp_config"]),
         )
@@ -170,7 +167,6 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             "inventory_snmp_sections": [str(s) for s in self.inventory_snmp_sections],
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
-            "use_snmpwalk_cache": self.use_snmpwalk_cache,
             "do_status_data_inventory": self.do_status_data_inventory,
             "snmp_config": self.snmp_config._asdict(),
         }
@@ -189,6 +185,14 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             missing_sys_description=self.missing_sys_description,
             backend=self._backend,
         )
+
+    def _use_snmpwalk_cache(self, mode: Mode) -> bool:
+        """Decide whether to use the SNMP walk cache
+
+        The SNMP walk cache applies to individual OIDs that are marked as to-be-cached
+        in the section definition plugins using `OIDCached`.
+        """
+        return mode in (Mode.CACHED_DISCOVERY, Mode.CHECKING)
 
     def _is_cache_read_enabled(self, mode: Mode) -> bool:
         """Decide whether to try to read data from cache
@@ -258,7 +262,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         section_names |= self._detect(select_from=self._get_sections_fetch_detected(mode) -
                                       section_names)
 
-        if self.use_snmpwalk_cache:
+        if self._use_snmpwalk_cache(mode):
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
             get_snmp = partial(snmp_table.get_snmp_table_cached, backend=self._backend)
         else:

@@ -718,23 +718,21 @@ def check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-    sources = checkers.make_sources(
-        host_config,
-        ipaddress,
-        mode=checkers.Mode.DISCOVERY,
-    )
+    mode = (checkers.Mode.DISCOVERY
+            if params['inventory_check_do_scan'] else checkers.Mode.CACHED_DISCOVERY)
+
+    sources = checkers.make_sources(host_config, ipaddress, mode=mode)
     for source in sources:
         _configure_sources(
             source,
             discovery_parameters=discovery_parameters,
-            disable_snmp_caches=params['inventory_check_do_scan'],
         )
 
     nodes = checkers.make_nodes(
         config_cache,
         host_config,
         ipaddress,
-        checkers.Mode.DISCOVERY,
+        mode,
         sources,
     )
     use_caches = checkers.FileCacheFactory.maybe
@@ -1443,12 +1441,9 @@ def _configure_sources(
     source: checkers.Source,
     *,
     discovery_parameters: DiscoveryParameters,
-    disable_snmp_caches: bool = False,
 ):
     if isinstance(source, checkers.snmp.SNMPSource):
         source.on_snmp_scan_error = discovery_parameters.on_error
-        source.use_snmpwalk_cache = False
-        checkers.FileCacheFactory.snmp_disabled = disable_snmp_caches
 
 
 def _execute_discovery(

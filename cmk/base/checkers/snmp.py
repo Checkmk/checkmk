@@ -98,8 +98,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             self.host_config.snmp_config(self.ipaddress)
             if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
         self.on_snmp_scan_error = on_error
-        # Attributes below are wrong
-        self.use_snmpwalk_cache = True
 
     @classmethod
     def snmp(
@@ -161,7 +159,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                 self.snmp_config.hostname,
                 config.snmp_without_sys_descr,
             ),
-            use_snmpwalk_cache=self.use_snmpwalk_cache,
             do_status_data_inventory=self.host_config.do_status_data_inventory,
             snmp_config=self.snmp_config,
         )

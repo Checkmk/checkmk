@@ -257,8 +257,6 @@ def _fetch_multi_host_sections_for_inv(
         mode=mode,
         section_selection=section_selection,
     )
-    for source in sources:
-        _configure_source_for_inv(source)
 
     nodes = checkers.make_nodes(
         config_cache,
@@ -283,12 +281,6 @@ def _fetch_multi_host_sections_for_inv(
     )
 
     return multi_host_sections, results
-
-
-def _configure_source_for_inv(source: checkers.Source):
-    if isinstance(source, checkers.snmp.SNMPSource):
-        source.use_snmpwalk_cache = False
-        checkers.FileCacheFactory.snmp_disabled = True
 
 
 def _safe_to_write_tree(

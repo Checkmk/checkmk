@@ -21,7 +21,7 @@ discovery = {'': [(None, {})]}
 checks = {
     '': [(None, {
         'alert_delay': (300, 3600),
-        'last_synchronised': (3600, 7200),
+        'last_synchronized': (3600, 7200),
         'quality_levels': (200, 500),
         'stratum_level': 9
     }, [

@@ -15,7 +15,7 @@ factory_settings["timesyncd_default_levels"] = {
     "stratum_level": 10,
     "quality_levels": (200.0, 500.0),
     "alert_delay": (300, 3600),
-    "last_synchronised": (3600, 7200)
+    "last_synchronized": (3600, 7200)
 }
 
 
@@ -90,7 +90,7 @@ def check_timesyncd(_item, params, parsed):
         # now we have set it, but not yet checked it. Check it!
         yield from tolerance_check(
             set_sync_time=None,  # use the time we just set.
-            levels=params.get("last_synchronised"),
+            levels=params.get("last_synchronized"),
         )
 
     server = parsed.get("server")
@@ -112,7 +112,7 @@ def check_timesyncd(_item, params, parsed):
                            human_readable_func=get_age_human_readable,
                            infoname="Jitter")
 
-    yield 0, "synchronised on %s" % server
+    yield 0, "synchronized on %s" % server
 
 
 check_info["timesyncd"] = {

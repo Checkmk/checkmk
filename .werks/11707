@@ -1,0 +1,14 @@
+Title: timesyncd: Custom limits for "Time since last sync" work now
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605794461
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The WATO ruleset for timesyncd did write "last_synchronized" and
+the default settings were called "last_synchronise" the Check also used these.
+Now the correct value for the limits is used in the Check.
+

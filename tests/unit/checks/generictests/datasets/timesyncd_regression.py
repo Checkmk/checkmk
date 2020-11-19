@@ -29,7 +29,7 @@ checks = {
     '': [
         (None, {
             'alert_delay': (300, 3600),
-            'last_synchronised': (3600, 7200),
+            'last_synchronized': (3600, 7200),
             'quality_levels': (200.0, 500.0),
             'stratum_level': 10
          }, [
@@ -38,7 +38,7 @@ checks = {
                  '(warn/crit at 1 hour 0 minutes/2 hours 0 minutes)'), []),
              (0, 'Stratum: 2.00', []),
              (0, 'Jitter: 0.00 s', [('jitter', 0.0, 0.2, 0.5)]),
-             (0, u'synchronised on 91.189.91.157', []),
+             (0, u'synchronized on 91.189.91.157', []),
         ]),
     ],
 }

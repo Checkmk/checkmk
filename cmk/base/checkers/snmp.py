@@ -170,8 +170,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
     def _make_parser(self) -> "SNMPParser":
         return SNMPParser(
             self.hostname,
-            self.persisted_sections_file_path,
-            self.use_outdated_persisted_sections,
+            SectionStore[SNMPSectionContent](
+                self.persisted_sections_file_path,
+                keep_outdated=self.use_outdated_persisted_sections,
+                logger=self._logger,
+            ),
             self._logger,
         )
 
@@ -236,15 +239,13 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
     def __init__(
         self,
         hostname: HostName,
-        persisted_sections_file_path: Path,
-        use_outdated_persisted_sections: bool,
+        section_store: SectionStore[SNMPSectionContent],
         logger: logging.Logger,
     ) -> None:
         super().__init__()
-        self.hostname: Final[HostName] = hostname
-        self.host_config = config.HostConfig.make_host_config(self.hostname)
-        self.persisted_sections_file_path: Final[Path] = persisted_sections_file_path
-        self.use_outdated_persisted_sections: Final[bool] = use_outdated_persisted_sections
+        self.hostname: Final = hostname
+        self.host_config: Final = config.HostConfig.make_host_config(self.hostname)
+        self.section_store: Final = section_store
         self._logger = logger
 
     def parse(
@@ -255,12 +256,8 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             raw_data,
             self.host_config,
         )
+        self.section_store.update(persisted_sections)
         host_sections = SNMPHostSections(dict(raw_data))
-        SectionStore[SNMPSectionContent](
-            self.persisted_sections_file_path,
-            keep_outdated=self.use_outdated_persisted_sections,
-            logger=self._logger,
-        ).update(persisted_sections)
         host_sections.add_persisted_sections(
             persisted_sections,
             logger=self._logger,

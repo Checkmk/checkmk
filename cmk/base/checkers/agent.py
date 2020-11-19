@@ -122,8 +122,11 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
     def _make_parser(self) -> "AgentParser":
         return AgentParser(
             self.hostname,
-            self.persisted_sections_file_path,
-            self.use_outdated_persisted_sections,
+            SectionStore[AgentSectionContent](
+                self.persisted_sections_file_path,
+                keep_outdated=self.use_outdated_persisted_sections,
+                logger=self._logger,
+            ),
             self._logger,
         )
 
@@ -316,15 +319,13 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
     def __init__(
         self,
         hostname: HostName,
-        persisted_sections_file_path: Path,
-        use_outdated_persisted_sections: bool,
+        section_store: SectionStore[AgentSectionContent],
         logger: logging.Logger,
     ) -> None:
         super().__init__()
-        self.hostname: Final[HostName] = hostname
-        self.host_config = config.HostConfig.make_host_config(self.hostname)
-        self.persisted_sections_file_path: Final[Path] = persisted_sections_file_path
-        self.use_outdated_persisted_sections: Final[bool] = use_outdated_persisted_sections
+        self.hostname: Final = hostname
+        self.host_config: Final = config.HostConfig.make_host_config(self.hostname)
+        self.section_store: Final = section_store
         self._logger = logger
 
     # TODO(ml): Refactor, we should structure the code so that we have one
@@ -339,11 +340,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         host_sections, persisted_sections = self._parse_host_section(
             raw_data, self.host_config.check_mk_check_interval)
-        SectionStore[AgentSectionContent](
-            self.persisted_sections_file_path,
-            keep_outdated=self.use_outdated_persisted_sections,
-            logger=self._logger,
-        ).update(persisted_sections)
+        self.section_store.update(persisted_sections)
         host_sections.add_persisted_sections(
             persisted_sections,
             logger=self._logger,

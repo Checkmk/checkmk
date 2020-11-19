@@ -22,8 +22,10 @@ from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
+from cmk.base.check_utils import AgentSectionContent
 from cmk.base.checkers import Mode
 from cmk.base.checkers._abstract import AUTO_DETECT, HostSections
+from cmk.base.checkers._cache import SectionStore
 from cmk.base.checkers.agent import AgentHostSections, AgentParser, AgentSource, AgentSummarizer
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
@@ -56,11 +58,23 @@ class TestParser:
         )
 
     @pytest.fixture
-    def store(self, tmp_path, patch_io):
+    def store_path(self, tmp_path, patch_io):
         return tmp_path / "store"
 
+    @pytest.fixture
+    def store(self, store_path, logger):
+        return SectionStore[AgentSectionContent](
+            store_path,
+            keep_outdated=False,
+            logger=logger,
+        )
+
+    @pytest.fixture
+    def parser(self, hostname, store, logger):
+        return AgentParser(hostname, store, logger)
+
     @pytest.mark.usefixtures("scenario")
-    def test_raw_section_populates_sections(self, hostname, logger, store):
+    def test_raw_section_populates_sections(self, parser):
         raw_data = AgentRawData(b"\n".join((
             b"<<<a_section>>>",
             b"first line",
@@ -72,7 +86,7 @@ class TestParser:
             b"<<<>>>",  # to be skipped
         )))
 
-        ahs = AgentParser(hostname, store, False, logger).parse(raw_data)
+        ahs = parser.parse(raw_data)
 
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
@@ -82,13 +96,7 @@ class TestParser:
         assert ahs.piggybacked_raw_data == {}
 
     @pytest.mark.usefixtures("scenario")
-    def test_piggyback_populates_piggyback_raw_data(
-        self,
-        hostname,
-        store,
-        logger,
-        monkeypatch,
-    ):
+    def test_piggyback_populates_piggyback_raw_data(self, parser, monkeypatch):
         time_time = 1000
         monkeypatch.setattr(time, "time", lambda: time_time)
         monkeypatch.setattr(config.HostConfig, "check_mk_check_interval", 10)
@@ -112,7 +120,7 @@ class TestParser:
             b"first line",
         )))
 
-        ahs = AgentParser(hostname, store, False, logger).parse(raw_data)
+        ahs = parser.parse(raw_data)
 
         assert ahs.sections == {}
         assert ahs.cache_info == {}
@@ -139,13 +147,7 @@ class TestParser:
 
     @pytest.mark.usefixtures("scenario")
     def test_persist_option_populates_cache_info_and_persisted_sections(
-        self,
-        hostname,
-        store,
-        logger,
-        mocker,
-        monkeypatch,
-    ):
+            self, parser, mocker, monkeypatch):
         time_time = 1000
         time_delta = 50
         monkeypatch.setattr(time, "time", lambda: time_time)
@@ -160,7 +162,7 @@ class TestParser:
             b"second line",
         )))
 
-        ahs = AgentParser(hostname, store, False, logger).parse(raw_data)
+        ahs = parser.parse(raw_data)
 
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}

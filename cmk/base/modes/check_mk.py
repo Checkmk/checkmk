@@ -7,7 +7,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Type, TypedDict, TypeVar, Union
+from typing import Dict, List, Optional, Set, Tuple, Type, TypedDict, TypeVar, Union
 
 from six import ensure_str
 
@@ -1381,7 +1381,7 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-_TName = TypeVar('_TName', bound=Union[CheckPluginName, InventoryPluginName, SectionName])
+_TName = TypeVar('_TName', str, CheckPluginName, InventoryPluginName, SectionName)
 
 _OptionalNameSet = Optional[Set[_TName]]
 
@@ -1403,29 +1403,6 @@ _option_sections = Option(
     argument_conv=_convert_sections_argument,
 )
 
-# TODO (mo): bring this back as '--detect-plugins', with '--checks' alias
-# def _convert_detect_plugins_argument(arg: str) -> _ChecksOption:
-#     if arg == "@all":
-#         # this is the same as ommitting the option entirely.
-#         # (mo) ... which is weird, because specifiying *all* plugins would do
-#         # something different. Keeping this for compatibility.
-#         return None
-#
-#     try:
-#         # kindly forgive empty strings
-#         return {CheckPluginName(maincheckify(n)) for n in arg.split(",") if n}
-#     except ValueError as exc:
-#         raise MKBailOut("Error in --checks argument: %s" % exc)
-#
-#
-# _option_checks = Option(
-#     long_option="checks",
-#     short_help="Restrict discovery/checking to these check plugins",
-#     argument=True,
-#     argument_descr="C",
-#     argument_conv=_convert_checks_argument,
-# )
-
 
 def _get_plugins_option(type_: Type[_TName]) -> Option:
     def _convert_plugins_argument(arg: str) -> _OptionalNameSet:
@@ -1444,11 +1421,69 @@ def _get_plugins_option(type_: Type[_TName]) -> Option:
     )
 
 
-DiscoverOptions = TypedDict(
-    'DiscoverOptions',
+def _convert_detect_plugins_argument(arg: str) -> _OptionalNameSet[str]:
+    try:
+        # kindly forgive empty strings
+        # also maincheckify, as we may be dealing with old "--checks" input including dots.
+        return {maincheckify(n) for n in arg.split(",") if n}
+    except ValueError as exc:
+        raise MKBailOut("Error in --detect-plugins argument: %s" % exc) from exc
+
+
+_option_detect_plugins = Option(
+    long_option="detect-plugins",
+    deprecated_long_options={"checks"},
+    short_help="Same as '--plugins', but implies a best efford guess for --detect-sections",
+    argument=True,
+    argument_descr="P",
+    argument_conv=_convert_detect_plugins_argument,
+)
+
+
+def _extract_plugin_selection(
+    options: Union["_CheckingOptions", "_DiscoveryOptions", "_InventoryOptions"],
+    type_: Type[_TName],
+) -> Tuple[_OptionalNameSet[SectionName], _OptionalNameSet]:
+    detect_plugins = options.get("detect-plugins")
+    if detect_plugins is None:
+        return options.get("detect-sections"), options.get("plugins")
+
+    conflicting_options = {'detect-sections', 'plugins'}
+    if conflicting_options.intersection(options):
+        raise MKBailOut("Option '--detect-plugins' must not be combined with %s" %
+                        "/".join(f"--{o}" for o in conflicting_options))
+
+    if detect_plugins == {"@all"}:
+        # this is the same as ommitting the option entirely.
+        # (mo) ... which is weird, because specifiying *all* plugins would do
+        # something different. Keeping this for compatibility with old --checks
+        return None, None
+
+    if type_ is CheckPluginName:
+        check_plugin_names = {CheckPluginName(p) for p in detect_plugins}
+        return set(
+            agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=check_plugin_names,
+                inventory_plugin_names=(),
+            )), check_plugin_names
+
+    if type_ is InventoryPluginName:
+        inventory_plugin_names = {InventoryPluginName(p) for p in detect_plugins}
+        return set(
+            agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=(),
+                inventory_plugin_names=inventory_plugin_names,
+            )), inventory_plugin_names
+
+    raise NotImplementedError(f"unknown plugin name {type_}")
+
+
+_DiscoveryOptions = TypedDict(
+    '_DiscoveryOptions',
     {
         'detect-sections': _OptionalNameSet[SectionName],
         'plugins': _OptionalNameSet[CheckPluginName],
+        'detect-plugins': _OptionalNameSet[str],
         'discover': int,
         'only-host-labels': bool,
     },
@@ -1456,7 +1491,7 @@ DiscoverOptions = TypedDict(
 )
 
 
-def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
+def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
     hostnames = modes.parse_hostname_list(args)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
@@ -1465,10 +1500,13 @@ def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
         # new enough.
         checkers.FileCacheFactory.reset_maybe()
 
+    preselected_section_names, run_only_plugin_names = _extract_plugin_selection(
+        options, CheckPluginName)
+
     discovery.do_discovery(
         set(hostnames),
-        preselected_section_names=options.get("detect-sections"),
-        run_only_plugin_names=options.get("plugins"),
+        preselected_section_names=preselected_section_names,
+        run_only_plugin_names=run_only_plugin_names,
         arg_only_new=options["discover"] == 1,
         only_host_labels="only-host-labels" in options,
     )
@@ -1504,6 +1542,7 @@ modes.register(
              ),
              _option_sections,
              _get_plugins_option(CheckPluginName),
+             _option_detect_plugins,
              Option(
                  long_option="only-host-labels",
                  short_option="L",
@@ -1521,13 +1560,14 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-CheckingOptions = TypedDict(
-    'CheckingOptions',
+_CheckingOptions = TypedDict(
+    '_CheckingOptions',
     {
         'no-submit': bool,
         'perfdata': bool,
         'detect-sections': _OptionalNameSet[SectionName],
         'plugins': _OptionalNameSet[CheckPluginName],
+        'detect-plugins': _OptionalNameSet[str],
         'keepalive': bool,
         'keepalive-fd': int,
     },
@@ -1535,7 +1575,7 @@ CheckingOptions = TypedDict(
 )
 
 
-def mode_check(options: CheckingOptions, args: List[str]) -> None:
+def mode_check(options: _CheckingOptions, args: List[str]) -> None:
     import cmk.base.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
     try:
@@ -1565,11 +1605,14 @@ def mode_check(options: CheckingOptions, args: List[str]) -> None:
     if len(args) == 2:
         ipaddress = args[1]
 
+    preselected_section_names, run_only_plugin_names = _extract_plugin_selection(
+        options, CheckPluginName)
+
     return checking.do_check(
         hostname,
         ipaddress,
-        preselected_section_names=options.get("detect-sections"),
-        run_only_plugin_names=options.get("plugins"),
+        preselected_section_names=preselected_section_names,
+        run_only_plugin_names=run_only_plugin_names,
     )
 
 
@@ -1607,6 +1650,7 @@ modes.register(
              ),
              _option_sections,
              _get_plugins_option(CheckPluginName),
+             _option_detect_plugins,
              keepalive_option,
              Option(
                  long_option="keepalive-fd",
@@ -1627,18 +1671,19 @@ modes.register(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-InventoryOptions = TypedDict(
-    'InventoryOptions',
+_InventoryOptions = TypedDict(
+    '_InventoryOptions',
     {
         'force': bool,
         'detect-sections': _OptionalNameSet[SectionName],
-        'plugins': _OptionalNameSet[InventoryPluginName]
+        'plugins': _OptionalNameSet[InventoryPluginName],
+        'detect-plugins': _OptionalNameSet[str],
     },
     total=False,
 )
 
 
-def mode_inventory(options: InventoryOptions, args: List[str]) -> None:
+def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
     config_cache = config.get_config_cache()
 
     if args:
@@ -1653,10 +1698,13 @@ def mode_inventory(options: InventoryOptions, args: List[str]) -> None:
     if "force" in options:
         checkers.agent.AgentSource.use_outdated_persisted_sections = True
 
+    preselected_section_names, run_only_plugin_names = _extract_plugin_selection(
+        options, CheckPluginName)
+
     inventory.do_inv(
         hostnames,
-        preselected_section_names=options.get("detect-sections"),
-        run_only_plugin_names=options.get("plugins"),
+        preselected_section_names=preselected_section_names,
+        run_only_plugin_names=run_only_plugin_names,
     )
 
 
@@ -1681,6 +1729,7 @@ modes.register(
              ),
              _option_sections,
              _get_plugins_option(InventoryPluginName),
+             _option_detect_plugins,
          ]))
 
 #.

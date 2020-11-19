@@ -60,9 +60,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
     }
 
     render() {
-        this._update_domain();
         this._render_levels();
-        this._render_histogram();
         this._render_text();
         this.render_title(this._data.title);
 
@@ -71,9 +69,36 @@ class GaugeFigure extends cmk_figures.FigureBase {
         cmk_figures.state_component(this, plot.svc_state);
     }
 
-    _update_domain() {
+    _calculate_domain() {
         const [lower, upper] = d3.extent(this._crossfilter.allFiltered(), d => d.value);
-        this._domain = [lower - upper / 9, upper / 0.9];
+        return [lower + upper * (1 - 1 / 0.95), upper / 0.95];
+    }
+
+    _calculate_domain_and_levels(domain) {
+        let [dmin, dmax] = domain;
+
+        let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
+        if (!plot || !plot.metrics) return [domain, []];
+
+        let metrics = plot.metrics;
+        if (metrics.max != null && metrics.max <= dmax) dmax = metrics.max;
+        if (metrics.min != null && dmin <= metrics.min) dmin = metrics.min;
+
+        if (metrics.warn == null || metrics.warn >= dmax) metrics.warn = dmax;
+        if (metrics.crit == null || metrics.crit >= dmax) metrics.crit = dmax;
+
+        return [
+            [dmin, dmax],
+            [
+                {from: dmin, to: metrics.warn, color: "green"},
+                {
+                    from: metrics.warn,
+                    to: metrics.crit,
+                    color: "yellow",
+                },
+                {from: metrics.crit, to: dmax, color: "red"},
+            ],
+        ];
     }
 
     _render_fixed_elements() {
@@ -94,29 +119,40 @@ class GaugeFigure extends cmk_figures.FigureBase {
                     .endAngle(limit)
             );
     }
-
-    _render_levels() {
-        let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
-        if (!plot) return;
-
-        const data = this._crossfilter.allFiltered();
-        if (!data.length) return;
-
-        let metrics = plot.metrics;
-        if (!metrics) return;
-
-        const levels = [
-            {from: this._domain[0], to: metrics.warn || this._domain[1], color: "green"},
+    _render_gauge_range_labels(domain) {
+        let limit = (15 * Math.PI) / 24;
+        let label_rad = 0.8 * this._radius;
+        let domain_labels = [
             {
-                from: metrics.warn || this._domain[1],
-                to: metrics.crit || this._domain[1],
-                color: "yellow",
+                value: domain[0].toFixed(2),
+                y: -label_rad * Math.cos(limit),
+                x: label_rad * Math.sin(-limit),
             },
-            {from: metrics.crit || this._domain[1], to: this._domain[1], color: "red"},
+            {
+                value: domain[1].toFixed(2),
+                y: -label_rad * Math.cos(limit),
+                x: label_rad * Math.sin(limit),
+            },
         ];
 
+        this.plot
+            .selectAll("text.range")
+            .data(domain_labels)
+            .join("text")
+            .classed("range", true)
+            .text(d => d.value)
+            .attr("text-anchor", "middle")
+            .style("font-size", "12px")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y);
+    }
+
+    _render_levels() {
+        let [domain, levels] = this._calculate_domain_and_levels(this._calculate_domain());
+        this._render_gauge_range_labels(domain);
+
         let limit = (7 * Math.PI) / 12;
-        const scale_x = d3.scaleLinear().domain(this._domain).range([-limit, limit]);
+        const scale_x = d3.scaleLinear().domain(domain).range([-limit, limit]);
         this.plot
             .selectAll("path.level")
             .data(levels)
@@ -137,12 +173,17 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .join("title")
             .text(d => d.from + " -> " + d.to);
 
+        const data = this._crossfilter.allFiltered();
+        if (!data.length) return;
         const value = data[data.length - 1].value;
-        const color = levels.find(element => value < element.to).color;
+        const bar = {
+            value: value,
+            color: levels.find(element => value < element.to).color,
+        };
         // gauge bar
         this.plot
             .selectAll("path.value")
-            .data([{color: color, value: value}])
+            .data([bar])
             .join(enter => enter.append("path").classed("value", true))
             .attr("fill", d => d.color)
             .attr("opacity", 0.9)
@@ -155,12 +196,13 @@ class GaugeFigure extends cmk_figures.FigureBase {
                     .startAngle(d => -limit)
                     .endAngle(d => scale_x(d.value))
             );
+
+        this._render_histogram(domain, data);
     }
 
-    _render_histogram() {
-        let data = this._crossfilter.allFiltered();
+    _render_histogram(domain, data) {
         let num_bins = 20;
-        const x = d3.scaleLinear().domain([0, num_bins]).range(this._domain);
+        const x = d3.scaleLinear().domain([0, num_bins]).range(domain);
         const bins = d3
             .histogram()
             .value(d => d.value)

@@ -189,8 +189,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                     filter_mode="include_clustered",
                     skip_ignored=True,
                 ),
-                consider_inventory_plugins=False,
-            ),) if self.preselected_sections is AUTO_DETECT else
+                inventory_plugin_names=())) if self.preselected_sections is AUTO_DETECT else
                 self.preselected_sections).intersection(
                     s.name for s in agent_based_register.iter_all_snmp_sections())
 
@@ -198,7 +197,8 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return set(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=(),
-                consider_inventory_plugins=True,
+                inventory_plugin_names=(
+                    p.name for p in agent_based_register.iter_all_inventory_plugins()),
             )).intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
 
     @staticmethod

@@ -120,7 +120,7 @@ def get_ranked_sections(
 def get_relevant_raw_sections(
     *,
     check_plugin_names: Iterable[CheckPluginName],
-    consider_inventory_plugins: bool,
+    inventory_plugin_names: Iterable[InventoryPluginName],
 ) -> Dict[SectionName, SectionPlugin]:
     """return the raw sections potentially relevant for the given check or inventory plugins"""
     parsed_section_names: Set[ParsedSectionName] = set()
@@ -130,8 +130,9 @@ def get_relevant_raw_sections(
         if check_plugin:
             parsed_section_names.update(check_plugin.sections)
 
-    if consider_inventory_plugins:
-        for inventory_plugin in iter_all_inventory_plugins():
+    for inventory_plugin_name in inventory_plugin_names:
+        inventory_plugin = get_inventory_plugin(inventory_plugin_name)
+        if inventory_plugin:
             parsed_section_names.update(inventory_plugin.sections)
 
     iter_all_sections: Iterable[SectionPlugin] = itertools.chain(

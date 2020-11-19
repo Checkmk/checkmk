@@ -1275,10 +1275,9 @@ def _get_needed_agent_based_modules(
                     for plugin in
                     [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
                     if plugin is not None and plugin.module is not None))
-    modules.update((
-        section.module for section in agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=check_plugin_names,
-            consider_inventory_plugins=bool(inventory_plugin_names),  # TODO (mo): clean this up
-        ).values() if section.module is not None))
+    modules.update((section.module for section in agent_based_register.get_relevant_raw_sections(
+        check_plugin_names=check_plugin_names,
+        inventory_plugin_names=inventory_plugin_names,
+    ).values() if section.module is not None))
 
     return sorted(modules)

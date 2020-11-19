@@ -19,6 +19,7 @@
 }
 
 .wato .dots {
+  margin-left: 5px;
   overflow: hidden;
   opacity: 0.2;
 }
@@ -795,7 +796,6 @@ div.filter_buttons {
   }
 
   a {
-    margin-right: 3px;
     color: $primary-font-color;
     text-decoration: none;
     white-space: nowrap;

@@ -347,7 +347,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         html.begin_form("role", method="POST")
 
         # ID
-        forms.header(_("Basic Properties"))
+        forms.header(_("Basic properties"), css="wide")
         forms.section(_("Internal ID"), simple="builtin" in self._role)
         if self._role.get("builtin"):
             html.write_text("%s (%s)" % (self._role_id, _("builtin role")))
@@ -405,7 +405,7 @@ class ModeEditRole(RoleManagement, WatoMode):
             if not filtered_perms:
                 continue
 
-            forms.header(section.title, isopen=search is not None)
+            forms.header(section.title, isopen=search is not None, css="wide")
             for perm in filtered_perms:
                 forms.section(perm.title)
 

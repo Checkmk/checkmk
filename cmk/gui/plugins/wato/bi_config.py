@@ -1176,14 +1176,14 @@ class ModeBIEditRule(ABCBIMode):
              )),
             ("node_visualization",
              NodeVisualizationLayoutStyle(
-                 title="BI visualization layout style",
+                 title=_("Layout"),
                  help=_("The following layout style is applied to the matching node"))),
             ("icon", IconSelector(title=_("Icon"), with_emblem=False)),
             ("nodes",
              ListOf(
                  bi_valuespecs.get_bi_rule_node_choices_vs(),
                  add_label=_("Add child node generator"),
-                 title=_("Nodes that are aggregated by this rule"),
+                 title=_("Aggregated nodes"),
              )),
             ("state_messages",
              Optional(
@@ -1201,7 +1201,7 @@ class ModeBIEditRule(ABCBIMode):
                                            ("3",
                                             "UNKNOWN"),
                                        ]]),
-                 title=_("Additional messages describing rule state"),
+                 title=_("Display additional messages"),
                  help=
                  _("This option allows you to display an additional, freely configurable text, to the rule outcome, "
                    "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "

@@ -687,7 +687,7 @@ class Overridable(Base):
             Permission(
                 section=PermissionSectionGeneral,
                 name="edit_" + cls.type_name(),
-                title=_l("Customize %s and use them") % cls.phrase("title_plural"),
+                title=_l("Customize and use %s") % cls.phrase("title_plural"),
                 description=_l("Allows to create own %s, customize builtin %s and use them.") %
                 (cls.phrase("title_plural"), cls.phrase("title_plural")),
                 defaults=["admin", "user"],

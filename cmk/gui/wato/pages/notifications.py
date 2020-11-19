@@ -98,11 +98,10 @@ class ABCNotificationsMode(ABCEventsMode):
         return [
             ("match_escalation",
              Tuple(
-                 title=_("Restrict to n<sup>th</sup> to m<sup>th</sup> notification"),
+                 title=_("Restrict to notification number"),
                  orientation="float",
                  elements=[
                      Integer(
-                         label=_("from"),
                          help=_("Let through notifications counting from this number. "
                                 "The first notification always has the number 1."),
                          default_value=1,
@@ -1101,13 +1100,13 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 ("contact_groups",
                  ListOf(
                      cmk.gui.plugins.wato.ContactGroupSelection(),
-                     title=_("The members of certain contact groups"),
+                     title=_("Members of contact groups"),
                      movable=False,
                  )),
                 ("contact_emails",
                  ListOfStrings(
                      valuespec=EmailAddress(size=44),
-                     title=_("The following explicit email addresses"),
+                     title=_("Explicit email addresses"),
                      orientation="vertical",
                  )),
                 ("contact_match_macros",

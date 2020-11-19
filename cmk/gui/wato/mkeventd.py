@@ -458,7 +458,7 @@ def vs_mkeventd_rule(customer=None):
          )),
         ("cancel_action_phases",
          DropdownChoice(
-             title=_("Do Cancelling-Actions when..."),
+             title=_("Do cancelling actions"),
              choices=[
                  ("always", _("Always when an event is being cancelled")),
                  ("open", _("Only when the cancelled event is in phase OPEN")),
@@ -476,7 +476,7 @@ def vs_mkeventd_rule(customer=None):
          )),
         ("event_limit",
          Alternative(
-             title=_("Custom rule event limit"),
+             title=_("Custom event limit"),
              help=_("Use this option to override the "
                     "<a href=\"wato.py?mode=mkeventd_edit_configvar&site=&varname=event_limit\">"
                     "global rule event limit</a>"),
@@ -491,7 +491,7 @@ def vs_mkeventd_rule(customer=None):
          )),
         ("count",
          Dictionary(
-             title=_("Count messages in defined interval"),
+             title=_("Count messages in interval"),
              help=_("With this option you can make the rule being executed not before "
                     "the matching message is seen a couple of times in a defined "
                     "time interval. Also counting activates the aggregation of messages "

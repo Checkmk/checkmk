@@ -1178,13 +1178,13 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
             ("match_servicelabels",
              Labels(
                  Labels.World.CORE,
-                 title=_("Match Service Labels"),
+                 title=_("Match service labels"),
                  help=_(
                      "Use this condition to select hosts based on the configured service labels."),
              )),
             ("match_servicegroups",
              ServiceGroupChoice(
-                 title=_("Match Service Groups"),
+                 title=_("Match service groups"),
                  help=_(
                      "The service must be in one of the selected service groups. For host events this condition "
                      "never matches as soon as at least one group is selected."),
@@ -1192,7 +1192,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_exclude_servicegroups",
              ServiceGroupChoice(
-                 title=_("Exclude Service Groups"),
+                 title=_("Exclude service groups"),
                  help=_(
                      "The service must not be in one of the selected service groups. For host events this condition "
                      "is simply ignored."),
@@ -1200,7 +1200,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_servicegroups_regex",
              Tuple(
-                 title=_("Match Service Groups (regex)"),
+                 title=_("Match service groups (regex)"),
                  elements=[
                      DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
                                              ("match_alias", _("Match the alias"))],
@@ -1219,7 +1219,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                  ])),
             ("match_exclude_servicegroups_regex",
              Tuple(
-                 title=_("Exclude Service Groups (regex)"),
+                 title=_("Exclude service groups (regex)"),
                  elements=[
                      DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
                                              ("match_alias", _("Match the alias"))],
@@ -1237,7 +1237,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                  ])),
             ("match_services",
              ListOfStrings(
-                 title=_("Match only the following services"),
+                 title=_("Match services"),
                  help=
                  _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
                    "service name in order for the rule to match. Note: Host notifications never match this "
@@ -1254,7 +1254,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_exclude_services",
              ListOfStrings(
-                 title=_("Exclude the following services"),
+                 title=_("Exclude services"),
                  valuespec=RegExpUnicode(
                      size=32,
                      mode=RegExpUnicode.prefix,
@@ -1263,7 +1263,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_checktype",
              CheckTypeSelection(
-                 title=_("Match the following check types"),
+                 title=_("Match check types"),
                  help=
                  _("Only apply the rule if the notification originates from certain types of check plugins. "
                    "Note: Host notifications never match this rule if this option is being used."),
@@ -1271,7 +1271,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
             (
                 "match_plugin_output",
                 RegExp(
-                    title=_("Match the output of the check plugin"),
+                    title=_("Match check plugin output"),
                     help=_(
                         "This text is a regular expression that is being searched in the output "
                         "of the check plugins that produced the alert. It is not a prefix but an infix match."
@@ -1282,7 +1282,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
             ("match_contacts",
              ListOf(
                  userdb.UserSelection(only_contacts=True),
-                 title=_("Match Contacts"),
+                 title=_("Match contacts"),
                  help=_("The host/service must have one of the selected contacts."),
                  movable=False,
                  allow_empty=False,
@@ -1290,7 +1290,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_contactgroups",
              ContactGroupChoice(
-                 title=_("Match Contact Groups"),
+                 title=_("Match contact groups"),
                  help=_(
                      "The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. "
                      "If you don't use the CMC that filter will not apply"),
@@ -2173,7 +2173,7 @@ def _site_rule_match_condition():
     return (
         "match_site",
         DualListChoice(
-            title=_("Match site"),
+            title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of "
                    "the selected sites."),
             choices=config.site_attribute_choices,
@@ -2198,23 +2198,23 @@ def _multi_folder_rule_match_condition():
 
 def _common_host_rule_match_conditions():
     return [
-        ("match_hosttags", HostTagCondition(title=_("Match Host Tags"))),
+        ("match_hosttags", HostTagCondition(title=_("Match host tags"))),
         ("match_hostlabels",
          Labels(
              Labels.World.CORE,
-             title=_("Match Host Labels"),
+             title=_("Match host labels"),
              help=_("Use this condition to select hosts based on the configured host labels."),
          )),
         ("match_hostgroups",
          HostGroupChoice(
-             title=_("Match Host Groups"),
+             title=_("Match host groups"),
              help=_("The host must be in one of the selected host groups"),
              allow_empty=False,
          )),
         ("match_hosts",
          ListOfStrings(
              valuespec=MonitoredHostname(),
-             title=_("Match only the following hosts"),
+             title=_("Match hosts"),
              size=24,
              orientation="horizontal",
              allow_empty=False,
@@ -2225,7 +2225,7 @@ def _common_host_rule_match_conditions():
         ("match_exclude_hosts",
          ListOfStrings(
              valuespec=MonitoredHostname(),
-             title=_("Exclude the following hosts"),
+             title=_("Exclude hosts"),
              size=24,
              orientation="horizontal",
          ))

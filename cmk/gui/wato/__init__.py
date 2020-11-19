@@ -981,7 +981,7 @@ permission_registry.register(
     Permission(
         section=cmk.gui.plugins.wato.utils.PermissionSectionWATO,
         name="analyze_config",
-        title=_l("Access the best analyze configuration functionality provided by WATO"),
+        title=_l("Access analyze configuration"),
         description=_l(
             "WATO has a module that gives you hints on how to tune your Check_MK installation."),
         defaults=["admin"],
@@ -1000,7 +1000,7 @@ permission_registry.register(
     Permission(
         section=cmk.gui.plugins.wato.utils.PermissionSectionWATO,
         name="add_or_modify_executables",
-        title=_l("Can add or modify executables"),
+        title=_l("Add or modify executables"),
         description=_l(
             "There are different places in Check_MK where an admin can use the GUI to add "
             "executable code to Check_MK. For example when configuring "

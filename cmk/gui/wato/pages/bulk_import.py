@@ -43,6 +43,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
+from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 from cmk.gui.valuespec import (
     Hostname,
@@ -176,11 +177,11 @@ class ModeBulkImport(WatoMode):
         fail_messages = []
         selected = []
 
-        for row in self._csv_reader:
+        for row_num, row in enumerate(self._csv_reader):
             if not row:
                 continue  # skip empty lines
 
-            host_name, attributes = self._get_host_info_from_row(row)
+            host_name, attributes = self._get_host_info_from_row(row, row_num)
             try:
                 watolib.Folder.current().create_hosts([(host_name, attributes, None)])
                 selected.append('_c_%s' % host_name)
@@ -213,7 +214,7 @@ class ModeBulkImport(WatoMode):
     def _delete_csv_file(self):
         os.unlink(self._file_path())
 
-    def _get_host_info_from_row(self, row):
+    def _get_host_info_from_row(self, row, row_num):
         host_name = None
         attributes = {}
         for col_num, value in enumerate(row):
@@ -230,7 +231,14 @@ class ModeBulkImport(WatoMode):
                           "You can not populate one attribute from multiple columns. "
                           "The column to attribute associations need to be unique.") % attribute)
 
-                # FIXME: Couldn't we decode all attributes?
+                attr = host_attribute_registry[attribute]()
+
+                # TODO: The value handling here is incorrect. The correct way would be to use the
+                # host attributes from_html_vars and validate_input, just like collect_attributes()
+                # from cmk/gui/watolib/host_attributes.py is doing it.
+                # The problem here is that we get the value in a different way (from row instead of
+                # HTTP request vars) which from_html_vars can not work with.
+
                 if attribute == "alias":
                     attributes[attribute] = value.decode("utf-8")
                 else:
@@ -241,12 +249,22 @@ class ModeBulkImport(WatoMode):
                             None,
                             _("Non-ASCII characters are not allowed in the "
                               "attribute \"%s\".") % attribute)
+
+                    try:
+                        attr.validate_input(value, "")
+                    except MKUserError as e:
+                        raise MKUserError(
+                            None,
+                            _("Invalid value in column %d (%s) of row %d: %s") %
+                            (col_num, attribute, row_num, e))
+
                     attributes[attribute] = value
 
-        if host_name is None:
-            raise MKUserError(None, _("The host name attribute needs to be assigned to a column."))
+                    if host_name is None:
+                        raise MKUserError(
+                            None, _("The host name attribute needs to be assigned to a column."))
 
-        return host_name, attributes
+                    return host_name, attributes
 
     def page(self):
         if not html.request.has_var("file_id"):

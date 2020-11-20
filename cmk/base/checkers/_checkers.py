@@ -276,7 +276,7 @@ def update_host_sections(
             if source_result.is_ok():
                 console.vverbose("  -> Add sections: %s\n" %
                                  sorted([str(s) for s in source_result.ok.sections.keys()]))
-                host_sections.update(source_result.ok)
+                host_sections.add(source_result.ok)
             else:
                 console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
 

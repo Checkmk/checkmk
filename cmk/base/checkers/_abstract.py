@@ -119,8 +119,8 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
     # of the sections, but for the self.cache_info this is not done. Why?
     # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
     #       Would this be correct here?
-    def update(self, host_sections: "HostSections") -> None:
-        """Update this host info object with the contents of another one"""
+    def add(self, host_sections: "HostSections") -> None:
+        """Add the content of `host_sections` to this HostSection."""
         for section_name, section_content in host_sections.sections.items():
             self.sections.setdefault(
                 section_name,

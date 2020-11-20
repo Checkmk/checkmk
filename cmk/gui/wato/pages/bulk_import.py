@@ -260,11 +260,10 @@ class ModeBulkImport(WatoMode):
 
                     attributes[attribute] = value
 
-                    if host_name is None:
-                        raise MKUserError(
-                            None, _("The host name attribute needs to be assigned to a column."))
+        if host_name is None:
+            raise MKUserError(None, _("The host name attribute needs to be assigned to a column."))
 
-                    return host_name, attributes
+        return host_name, attributes
 
     def page(self):
         if not html.request.has_var("file_id"):

@@ -9,6 +9,7 @@ withFolderProperties{
     DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
+def TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + DOCKER_TAG_DEFAULT
 def PYTHON_VERSIONS = [ "2.6", "2.7", "3.4", "3.5", "3.6", "3.7", "3.8" ]
 
 node(NODE) {
@@ -46,12 +47,13 @@ try {
                 stage("prepare virtual environment") {
                     sh("make .venv")
                 }
-
                 PYTHON_VERSIONS.each { PYTHON_VERSION ->
                     DOCKER_BUILDS[PYTHON_VERSION] = {
                         stage('test agent plugin unit ' + PYTHON_VERSION) {
                             dir('tests') {
-                                sh("bash -c \"make test-agent-plugin-unit-py" + PYTHON_VERSION + "-docker\"")
+                                withEnv(["TEST_CONTAINER=" + TEST_CONTAINER]) {
+                                    sh("bash -c \"make test-agent-plugin-unit-py" + PYTHON_VERSION + "-docker\"")
+                                }
                             }
                         }
                     }

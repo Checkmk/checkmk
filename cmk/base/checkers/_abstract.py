@@ -125,7 +125,7 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
             self.sections.setdefault(
                 section_name,
                 cast(TSectionContent, []),
-            ).extend(section_content)  # type: ignore[arg-type]
+            ).extend(section_content)
 
         for hostname, raw_lines in host_sections.piggybacked_raw_data.items():
             self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)

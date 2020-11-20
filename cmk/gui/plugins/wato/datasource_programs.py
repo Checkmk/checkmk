@@ -666,6 +666,20 @@ def _valuespec_generic_metrics_prometheus():
                                      " will be used to create a piggyback host for the cluster related services."
                                     ),
                                )),
+                              ("prepend_namespaces",
+                               DropdownChoice(
+                                   title=_("Prepend namespace prefix for hosts"),
+                                   help=
+                                   _("If a cluster uses multiple namespaces you need to activate this option. "
+                                     "Hosts for namespaced Kubernetes objects will then be prefixed with the "
+                                     "name of their namespace. This makes Kubernetes resources in different "
+                                     "namespaces that have the same name distinguishable, but results in "
+                                     "longer hostnames."),
+                                   choices=[
+                                       ("use_namespace", _("Use a namespace prefix")),
+                                       ("omit_namespace", _("Don't use a namespace prefix")),
+                                   ],
+                               )),
                               ("entities",
                                ListChoice(
                                    choices=[

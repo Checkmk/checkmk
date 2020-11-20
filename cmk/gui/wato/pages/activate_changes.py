@@ -331,8 +331,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
                 table.row(css=" ".join(css))
 
-                table.cell(_("Object"), css="narrow nobr")
-                rendered = render_object_ref(change["object"])
+                table.cell("", css="buttons")
+                rendered = render_object_ref_as_icon(change["object"])
                 if rendered:
                     html.write(rendered)
 
@@ -465,6 +465,31 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                                     json.dumps(last_state))
 
                 html.close_div()
+
+
+def render_object_ref_as_icon(object_ref: Optional[ObjectRef]) -> Optional[HTML]:
+    if object_ref is None:
+        return None
+
+    url, title = _get_object_reference(object_ref)
+    if not url:
+        return None
+
+    icons = {
+        ObjectRefType.Host: "host",
+        ObjectRefType.Folder: "folder",
+        ObjectRefType.User: "users",
+        ObjectRefType.Rule: "rule",
+        ObjectRefType.Ruleset: "rulesets",
+    }
+
+    return html.render_a(
+        content=html.render_icon(
+            icons.get(object_ref.object_type, "link"),
+            title="%s: %s" % (object_ref.object_type.name, title) if title else None,
+        ),
+        href=url,
+    )
 
 
 def render_object_ref(object_ref: Optional[ObjectRef]) -> Union[str, HTML, None]:

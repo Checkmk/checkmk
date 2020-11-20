@@ -9,8 +9,12 @@ Level: 1
 Version: 2.0.0i2
 
 You can now use
-* cmk -I --only-host-labels
-* cmk -I -L
+
+<ul>
+<li>cmk -I --only-host-labels</li>
+<li>cmk -I -L</li>
+</ul>
+
 to discover only host labels on the command line
 interface
 

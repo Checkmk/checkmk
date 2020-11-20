@@ -10,5 +10,7 @@ Version: 2.0.0i2
 
 PySNMP had some huge Performance issues.
 These issues are resolved by
-1. Caching the SnmpEngines PySNMP uses
-2. Disabling lookupMib
+<ol>
+<li>Caching the SnmpEngines PySNMP uses</li>
+<li>Disabling lookupMib</li>
+</ol>

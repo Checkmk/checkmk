@@ -7,7 +7,6 @@
 import abc
 import enum
 import logging
-import sys
 from functools import partial
 from pathlib import Path
 from typing import cast, final, Final, Generic, MutableMapping, Optional, Set, TypeVar, Union
@@ -17,7 +16,6 @@ import cmk.utils.debug
 import cmk.utils.log  # TODO: Remove this!
 import cmk.utils.misc
 import cmk.utils.paths
-import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKIPAddressLookupError, MKSNMPError, MKTimeout
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
@@ -330,15 +328,6 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     def _make_summarizer(self) -> "Summarizer[THostSections]":
         """Create a summarizer with this configuration."""
         raise NotImplementedError
-
-    def _setup_logger(self) -> None:
-        """Add the source log prefix to the class logger"""
-        self._logger.propagate = False
-        handler = logging.StreamHandler(stream=sys.stdout)
-        fmt = " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id, tty.bold, tty.normal)
-        handler.setFormatter(logging.Formatter(fmt))
-        del self._logger.handlers[:]  # Remove all previously existing handlers
-        self._logger.addHandler(handler)
 
 
 class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):

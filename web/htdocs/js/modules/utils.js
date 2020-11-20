@@ -644,7 +644,10 @@ export function add_simplebar_scrollbar(scrollable_id) {
 }
 
 export function add_simplebar_scrollbar_to_object(obj) {
-    return new SimpleBar(obj);
+    if (obj) {
+        return new SimpleBar(obj);
+    }
+    console.log("Missing object for SimpleBar initiation.");
 }
 
 export function content_scrollbar(scrollable_id) {

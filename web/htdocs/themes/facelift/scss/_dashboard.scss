@@ -111,7 +111,7 @@ div.dashlet {
     color: $font-color;
     text-align: center;
     white-space: nowrap;
-    background: $body-dashlet-bg-color;
+    background: $dashlet-body-bg-color;
     border: 1px solid $color-table-border;
     border-bottom: none;
     border-radius: $dashlet-title-border-radius;
@@ -247,7 +247,7 @@ div.dashlet_inner div.stats {
 
 body.main.dashlet {
   padding: 8px;
-  background: $body-dashlet-bg-color;
+  background-color: $dashlet-body-bg-color;
   border-top: none;
   box-sizing: border-box;
 
@@ -297,6 +297,24 @@ body.main.dashlet {
     margin-bottom: 10px;
     border-radius: 0;
     box-shadow: 0;
+  }
+
+  &.view {
+    padding: 4px 0 0 8px;
+
+    div#dashlet_content_wrapper[data-simplebar="init"] {
+      height: 100%;
+      overflow: auto;
+
+      div#data_container {
+        padding-right: 12px;
+        padding-bottom: 12px;
+      }
+
+      div.simplebar-track {
+        background-color: $dashlet-body-bg-color;
+      }
+    }
   }
 }
 

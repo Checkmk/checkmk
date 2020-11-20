@@ -5,7 +5,6 @@
 import * as utils from "utils";
 import * as ajax from "ajax";
 import * as forms from "forms";
-import * as page_menu from "page_menu";
 
 var reload_on_resize = {};
 export var dashboard_properties = {};

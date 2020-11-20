@@ -34,6 +34,9 @@ class ABCViewDashlet(IFrameDashlet):
         return True
 
     def _show_view_as_dashlet(self, view_spec):
+        html.add_body_css_class("view")
+        html.open_div(id_="dashlet_content_wrapper")
+
         is_reload = html.request.has_var("_reload")
 
         display_options = "SIXLW"
@@ -54,6 +57,8 @@ class ABCViewDashlet(IFrameDashlet):
 
         view_renderer = views.GUIViewRenderer(view, show_buttons=False)
         views.process_view(view, view_renderer)
+
+        html.close_div()
 
     def _get_infos_from_view_spec(self, view_spec):
         ds_name = view_spec["datasource"]
@@ -97,6 +102,7 @@ class ViewDashlet(ABCViewDashlet):
 
     def update(self):
         self._show_view_as_dashlet(self._dashlet_spec)
+        html.javascript("cmk.utils.add_simplebar_scrollbar(\"dashlet_content_wrapper\");")
 
     def infos(self):
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the

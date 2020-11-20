@@ -277,8 +277,9 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
             ],
             {},
             [
-              (3, 'No group pattern found in autocheck. Please rediscover the services ' \
-                  'of this host to get this fixed automatically'),
+             (3, "No group pattern found in autocheck. Temporarily disable this service "
+                 "to get this fixed. See "
+                 "https://checkmk.com/cms_wato_services.html#Removing%20unwanted%20services"),
             ],
         ),
         (
@@ -287,8 +288,9 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
             ],
             {},
             [
-              (3, 'No group pattern found in autocheck. Please rediscover the services ' \
-                  'of this host to get this fixed automatically'),
+             (3, "No group pattern found in autocheck. Temporarily disable this service "
+                 "to get this fixed. See "
+                 "https://checkmk.com/cms_wato_services.html#Removing%20unwanted%20services"),
             ],
         ),
         (

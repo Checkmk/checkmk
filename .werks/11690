@@ -1,0 +1,13 @@
+Title: fileinfo.groups: improved instructions on how to fix "no group patterns found in autocheck"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605887627
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+This relates to the removal of the precompile function released in 2.0.0i1
+(werk #11109). More detailed instructions have been added regarding how to fix
+the UNKNOWN status that can arise from this change.

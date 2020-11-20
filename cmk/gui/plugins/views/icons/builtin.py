@@ -297,7 +297,9 @@ class ManpageIcon(Icon):
     def render(self, what, row, tags, custom_vars):
         if what == "service" and config.wato_enabled and config.user.may("wato.use"):
             command = row["service_check_command"]
-            if command.startswith("check_mk-"):
+            if command.startswith("check_mk-mgmt_"):
+                check_type = command[14:]
+            elif command.startswith("check_mk-"):
                 check_type = command[9:]
             elif command.startswith("check_mk_active-"):
                 check_name = command[16:].split("!")[0]

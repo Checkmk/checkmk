@@ -1373,6 +1373,8 @@ class PainterCheckManpage(Painter):
             checktype = "check-mk-inventory"
         elif "check_mk_active-cmk_inv" in command:
             checktype = "check_cmk_inv"
+        elif command.startswith("check_mk-mgmt_"):
+            checktype = command[14:]
         else:
             checktype = command[9:]
 

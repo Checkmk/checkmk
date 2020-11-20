@@ -5,6 +5,7 @@
 SHELL := /bin/bash -e
 SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
+RUN_IN_DOCKER := $(SCRIPTS)/run-in-docker.sh
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run py.test -vv $(PYTEST_ARGS)
 YAPF := $(PIPENV) run yapf
@@ -112,7 +113,7 @@ format-shell:
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
 	cat "$<" | gawk -v text="# Do not test generated 2.x files\n# yapf: disable\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
-	$(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
+	$(RUN_IN_DOCKER) $(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
 
 $(foreach VERS,$(filter 2.%,$(PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 

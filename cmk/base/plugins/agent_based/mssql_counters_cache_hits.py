@@ -107,7 +107,6 @@ register.check_plugin(
     discovery_function=discovery_mssql_counters_cache_hits,
     discovery_ruleset_name='inventory_mssql_counters_rules',
     discovery_default_parameters={},
-    discovery_ruleset_type='merged',
     check_function=check_mssql_counters_cache_hits,
     cluster_check_function=cluster_check_mssql_counters_cache_hits,
 )

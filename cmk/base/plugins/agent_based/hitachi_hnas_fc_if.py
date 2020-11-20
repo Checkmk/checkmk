@@ -77,7 +77,7 @@ register.check_plugin(
     name="hitachi_hnas_fc_if",
     service_name="Interface FC %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=interfaces.discover_interfaces,
     check_ruleset_name="if",

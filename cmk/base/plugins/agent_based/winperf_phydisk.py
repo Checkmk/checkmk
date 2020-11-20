@@ -261,7 +261,7 @@ def cluster_check_winperf_phydisk(
 register.check_plugin(
     name="winperf_phydisk",
     service_name="Disk IO %s",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={'summary': True},
     discovery_ruleset_name="diskstat_inventory",
     discovery_function=discover_winperf_phydisk,

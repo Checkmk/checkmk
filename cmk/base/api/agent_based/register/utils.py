@@ -3,8 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
+import inspect
 import sys
+import pathlib
+
 from typing import (
     Callable,
     Dict,
@@ -19,10 +22,6 @@ from typing import (
     Union,
 )
 
-import inspect
-
-from pathlib import Path
-
 from cmk.utils.type_defs import (
     CheckPluginName,
     InventoryPluginName,
@@ -33,7 +32,7 @@ from cmk.utils.type_defs import (
 from cmk.utils.paths import agent_based_plugins_dir
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import RuleSetType, SectionPlugin
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 
 ITEM_VARIABLE = "%s"
 
@@ -47,7 +46,7 @@ def get_validated_plugin_module_name() -> Optional[str]:
         return None
     calling_from = frame.f_code.co_filename
 
-    path = Path(calling_from)
+    path = pathlib.Path(calling_from)
     if not path.parent.parts[-3:] == agent_based_plugins_dir.parts[-3:]:
         raise ImportError("do not register from %r" % path)
 
@@ -161,10 +160,20 @@ def _validate_optional_section_annotation(params: Mapping[str, inspect.Parameter
     raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
 
 
+class RuleSetType(enum.Enum):
+    """Indicate the type of the rule set
+
+    Discovery and host label functions may either use all rules of a rule set matching
+    the current host, or the merged rules.
+    """
+    MERGED = enum.auto()
+    ALL = enum.auto()
+
+
 def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
-    if ruleset_type not in get_args(RuleSetType):
-        raise ValueError("invalid discovery ruleset type %r. Allowed are %s" %
-                         (ruleset_type, ",".join(repr(c) for c in get_args(RuleSetType))))
+    if not isinstance(ruleset_type, RuleSetType):
+        allowed = ", ".join(str(c) for c in RuleSetType)
+        raise ValueError(f"invalid ruleset type {ruleset_type!r}. Allowed are {allowed}")
 
 
 def validate_default_parameters(

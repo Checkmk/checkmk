@@ -119,7 +119,7 @@ register.check_plugin(
     sections=['if64', 'if64adm'],
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_if64,
     check_ruleset_name="if",

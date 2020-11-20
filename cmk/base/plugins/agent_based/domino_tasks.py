@@ -109,7 +109,7 @@ register.check_plugin(
     sections=["domino_tasks", "mem"],
     discovery_function=discover_domino_tasks,
     discovery_ruleset_name="inv_domino_tasks_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={},
     check_function=check_domino_tasks,
     # Note: domino_tasks is a ManualCheckParameterRulespec. If the user specifies an already

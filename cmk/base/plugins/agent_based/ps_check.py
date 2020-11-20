@@ -76,7 +76,7 @@ register.check_plugin(
     discovery_function=ps.discover_ps,
     discovery_ruleset_name="inventory_processes_rules",
     discovery_default_parameters={},
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_ps,
     check_default_parameters={
         "levels": (1, 1, 99999, 99999),

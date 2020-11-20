@@ -97,7 +97,7 @@ class SNMPTreeTuple(NamedTuple):
     oids: Sequence[OIDSpecTuple]
 
 
-RuleSetType = Literal["merged", "all"]
+RuleSetTypeName = Literal["merged", "all"]
 
 StringTable = List[List[str]]
 StringByteTable = List[List[Union[str, List[int]]]]
@@ -125,7 +125,7 @@ class AgentSectionPlugin(NamedTuple):
     host_label_function: HostLabelFunction
     host_label_default_parameters: Optional[Dict[str, Any]]
     host_label_ruleset_name: Optional[RuleSetName]
-    host_label_ruleset_type: RuleSetType
+    host_label_ruleset_type: RuleSetTypeName
     supersedes: Set[SectionName]
     module: Optional[str]  # not available for auto migrated plugins.
 
@@ -137,7 +137,7 @@ class SNMPSectionPlugin(NamedTuple):
     host_label_function: HostLabelFunction
     host_label_default_parameters: Optional[Dict[str, Any]]
     host_label_ruleset_name: Optional[RuleSetName]
-    host_label_ruleset_type: RuleSetType
+    host_label_ruleset_type: RuleSetTypeName
     detect_spec: SNMPDetectBaseType
     trees: Sequence[SNMPTreeTuple]
     supersedes: Set[SectionName]

@@ -104,7 +104,7 @@ register.check_plugin(
     name="mcdata_fcport",
     service_name="Port %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=interfaces.discover_interfaces,
     check_ruleset_name="if",

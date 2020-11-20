@@ -10,8 +10,6 @@ from typing import Any, Callable, Dict, Generator, List, Optional
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import RuleSetType
-
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
@@ -25,6 +23,7 @@ from cmk.base.api.agent_based.checking_classes import (
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
+    RuleSetType,
     validate_function_arguments,
     validate_default_parameters,
     validate_ruleset_type,
@@ -206,7 +205,7 @@ def create_check_plugin(
     discovery_function: Callable,
     discovery_default_parameters: Optional[Dict] = None,
     discovery_ruleset_name: Optional[str] = None,
-    discovery_ruleset_type: RuleSetType = "merged",
+    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: Callable,
     check_default_parameters: Optional[Dict] = None,
     check_ruleset_name: Optional[str] = None,
@@ -256,7 +255,8 @@ def create_check_plugin(
         discovery_function=disco_func,
         discovery_default_parameters=discovery_default_parameters,
         discovery_ruleset_name=disco_ruleset_name,
-        discovery_ruleset_type=discovery_ruleset_type,
+        discovery_ruleset_type=("merged"
+                                if discovery_ruleset_type is RuleSetType.MERGED else "all"),
         check_function=_filter_check(check_function),
         check_default_parameters=check_default_parameters,
         check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,

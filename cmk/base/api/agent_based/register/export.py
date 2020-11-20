@@ -13,7 +13,7 @@ from cmk.base.api.agent_based.checking_classes import (
     DiscoveryFunction,
 )
 
-from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name
+from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name, RuleSetType
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
 from cmk.base.api.agent_based.register.section_plugins import (
@@ -33,10 +33,17 @@ from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification, SN
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     HostLabelFunction,
-    RuleSetType,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
 )
+
+__all__ = [
+    "agent_section",
+    "snmp_section",
+    "check_plugin",
+    "inventory_plugin",
+    "RuleSetType",
+]
 
 
 def agent_section(
@@ -47,7 +54,7 @@ def agent_section(
     host_label_function: Optional[HostLabelFunction] = None,
     host_label_default_parameters: Optional[Dict[str, Any]] = None,
     host_label_ruleset_name: Optional[str] = None,
-    host_label_ruleset_type: RuleSetType = "merged",
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
 ) -> None:
     """Register an agent section to checkmk
@@ -80,9 +87,10 @@ def agent_section(
 
       host_label_ruleset_name: The name of the host label ruleset.
 
-      host_label_ruleset_type: The ruleset type is either "all" or "merged". It describes wether
-                           this plugins needs the merged result of the effective rules,
-                           or every individual rule matching for the current host.
+      host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
+                           :class:`RuleSetType.MERGED`.
+                           It describes whether this plugins needs the merged result of the
+                           effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this sections. If this
                            section will be parsed to something that is not `None` (see above) all
@@ -118,7 +126,7 @@ def snmp_section(
     host_label_function: Optional[HostLabelFunction] = None,
     host_label_default_parameters: Optional[Dict[str, Any]] = None,
     host_label_ruleset_name: Optional[str] = None,
-    host_label_ruleset_type: RuleSetType = "merged",
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
 ) -> None:
     pass
@@ -135,7 +143,7 @@ def snmp_section(
     host_label_function: Optional[HostLabelFunction] = None,
     host_label_default_parameters: Optional[Dict[str, Any]] = None,
     host_label_ruleset_name: Optional[str] = None,
-    host_label_ruleset_type: RuleSetType = "merged",
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
 ) -> None:
     pass
@@ -151,7 +159,7 @@ def snmp_section(
     host_label_function: Optional[HostLabelFunction] = None,
     host_label_default_parameters: Optional[Dict[str, Any]] = None,
     host_label_ruleset_name: Optional[str] = None,
-    host_label_ruleset_type: RuleSetType = "merged",
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
 ) -> None:
     """Register an snmp section to checkmk
@@ -197,9 +205,10 @@ def snmp_section(
 
       host_label_ruleset_name: The name of the host label ruleset.
 
-      host_label_ruleset_type: The ruleset type is either "all" or "merged". It describes wether
-                           this plugins needs the merged result of the effective rules,
-                           or every individual rule matching for the current host.
+      host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
+                           :class:`RuleSetType.MERGED`.
+                           It describes whether this plugins needs the merged result of the
+                           effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this sections. If this
                            section will be parsed to something that is not `None` (see above) all
@@ -234,7 +243,7 @@ def check_plugin(
     discovery_function: DiscoveryFunction,
     discovery_default_parameters: Optional[Dict[str, Any]] = None,
     discovery_ruleset_name: Optional[str] = None,
-    discovery_ruleset_type: RuleSetType = "merged",
+    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: CheckFunction,
     check_default_parameters: Optional[Dict[str, Any]] = None,
     check_ruleset_name: Optional[str] = None,
@@ -269,8 +278,9 @@ def check_plugin(
 
       discovery_ruleset_name:   The name of the discovery ruleset.
 
-      discovery_ruleset_type:   The ruleset type is either "all" or "merged". It describes wether
-                                this plugins needs the merged result of the effective rules,
+      discovery_ruleset_type:   The ruleset type is either :class:`RuleSetType.ALL` or
+                                :class:`RuleSetType.MERGED`.
+                                It describes whether this plugins needs the merged result of the effective rules,
                                 or every individual rule matching for the current host.
 
       check_function:           The check_function. Arguments must be 'item' (if the service has an
@@ -361,11 +371,3 @@ def inventory_plugin(
         raise ValueError("duplicate inventory plugin definition: %s" % plugin.name)
 
     add_inventory_plugin(plugin)
-
-
-__all__ = [
-    "agent_section",
-    "snmp_section",
-    "check_plugin",
-    "inventory_plugin",
-]

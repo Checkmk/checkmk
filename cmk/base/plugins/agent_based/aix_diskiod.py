@@ -127,7 +127,7 @@ def cluster_check_aix_diskiod(
 register.check_plugin(
     name="aix_diskiod",
     service_name="Disk IO %s",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={'summary': True},
     discovery_ruleset_name="diskstat_inventory",
     discovery_function=diskstat.discovery_diskstat_generic,

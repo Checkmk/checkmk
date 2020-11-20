@@ -202,7 +202,7 @@ def cluster_check_windows_services(
 register.check_plugin(
     name="services",
     service_name="Service %s",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_ruleset_name="inventory_services_rules",
     discovery_function=discovery_windows_services,
     discovery_default_parameters=WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,

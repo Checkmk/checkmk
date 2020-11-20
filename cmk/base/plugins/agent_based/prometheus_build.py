@@ -87,7 +87,7 @@ def check_prometheus_build(section: Section) -> CheckResult:
 register.check_plugin(
     name="prometheus_build",
     service_name="Prometheus Build",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_function=discovery_prometheus_build,
     check_function=check_prometheus_build,
 )

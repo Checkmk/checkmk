@@ -517,7 +517,7 @@ register.check_plugin(
     name="brocade_optical",
     service_name="Interface %s Optical",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_brocade_optical,
     check_ruleset_name="brocade_optical",

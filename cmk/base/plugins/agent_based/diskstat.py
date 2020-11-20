@@ -446,7 +446,7 @@ register.check_plugin(
     sections=["diskstat", "multipath"],
     service_name="Disk IO %s",
     discovery_ruleset_name="diskstat_inventory",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={'summary': True},
     discovery_function=discover_diskstat,
     check_ruleset_name="diskstat",

@@ -22,7 +22,7 @@ from typing import (
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import PluginSuppliedLabel, RuleSetType
+from cmk.base.api.agent_based.type_defs import PluginSuppliedLabel, RuleSetTypeName
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
@@ -361,20 +361,17 @@ CheckFunction = Callable[..., CheckResult]
 DiscoveryResult = Iterable[Service]
 DiscoveryFunction = Callable[..., DiscoveryResult]
 
-CheckPlugin = NamedTuple(
-    "CheckPlugin",
-    [
-        ("name", CheckPluginName),
-        ("sections", List[ParsedSectionName]),
-        ("service_name", str),
-        ("discovery_function", DiscoveryFunction),
-        ("discovery_default_parameters", Optional[Dict[str, Any]]),
-        ("discovery_ruleset_name", Optional[RuleSetName]),
-        ("discovery_ruleset_type", RuleSetType),
-        ("check_function", CheckFunction),
-        ("check_default_parameters", Optional[Dict[str, Any]]),
-        ("check_ruleset_name", Optional[RuleSetName]),
-        ("cluster_check_function", CheckFunction),
-        ("module", Optional[str]),  # not available for auto migrated plugins.
-    ],
-)
+
+class CheckPlugin(NamedTuple):
+    name: CheckPluginName
+    sections: List[ParsedSectionName]
+    service_name: str
+    discovery_function: DiscoveryFunction
+    discovery_default_parameters: Optional[Dict[str, Any]]
+    discovery_ruleset_name: Optional[RuleSetName]
+    discovery_ruleset_type: RuleSetTypeName
+    check_function: CheckFunction
+    check_default_parameters: Optional[Dict[str, Any]]
+    check_ruleset_name: Optional[RuleSetName]
+    cluster_check_function: CheckFunction
+    module: Optional[str]  # not available for auto migrated plugins.

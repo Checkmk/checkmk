@@ -15,6 +15,7 @@ from cmk.utils.regex import regex
 from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
 
 from cmk.base.api.agent_based.register.utils import (
+    RuleSetType,
     validate_default_parameters,
     validate_function_arguments,
     validate_ruleset_type,
@@ -27,7 +28,6 @@ from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     HostLabel,
     HostLabelFunction,
-    RuleSetType,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
@@ -220,7 +220,7 @@ def create_agent_section_plugin(
     host_label_function: Optional[HostLabelFunction] = None,
     host_label_default_parameters: Optional[Dict] = None,
     host_label_ruleset_name: Optional[str] = None,
-    host_label_ruleset_type: RuleSetType = "merged",
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
     module: Optional[str] = None,
     validate_creation_kwargs: bool = True,
@@ -256,7 +256,8 @@ def create_agent_section_plugin(
         host_label_default_parameters=host_label_default_parameters,
         host_label_ruleset_name=(None if host_label_ruleset_name is None else
                                  RuleSetName(host_label_ruleset_name)),
-        host_label_ruleset_type=host_label_ruleset_type,
+        host_label_ruleset_type=("merged"
+                                 if host_label_ruleset_type is RuleSetType.MERGED else "all"),
         supersedes=_create_supersedes(section_name, supersedes),
         module=module,
     )
@@ -272,7 +273,7 @@ def create_snmp_section_plugin(
     host_label_function: Optional[HostLabelFunction] = None,
     host_label_default_parameters: Optional[Dict] = None,
     host_label_ruleset_name: Optional[str] = None,
-    host_label_ruleset_type: RuleSetType = "merged",
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
     module: Optional[str] = None,
     validate_creation_kwargs: bool = True,
@@ -318,7 +319,8 @@ def create_snmp_section_plugin(
         host_label_default_parameters=host_label_default_parameters,
         host_label_ruleset_name=(None if host_label_ruleset_name is None else
                                  RuleSetName(host_label_ruleset_name)),
-        host_label_ruleset_type=host_label_ruleset_type,
+        host_label_ruleset_type=("merged"
+                                 if host_label_ruleset_type is RuleSetType.MERGED else "all"),
         supersedes=_create_supersedes(section_name, supersedes),
         detect_spec=detect_spec,
         trees=tree_list,

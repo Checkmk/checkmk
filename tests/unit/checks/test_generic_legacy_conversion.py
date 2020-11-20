@@ -1721,8 +1721,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'esx_vsphere_vm.guest_tools',
         'esx_vsphere_vm.heartbeat',
         'esx_vsphere_vm.cpu',
-        'esx_vsphere_vm.snapshots',
-        'esx_vsphere_vm.snapshots_summary',
         'esx_vsphere_vm.mounted_devices',
         'etherbox.temp',
         'etherbox.humidity',

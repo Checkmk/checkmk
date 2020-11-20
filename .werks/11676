@@ -1,0 +1,17 @@
+Title: esx_vsphere_vm_snapshots: New display defaults for summary service
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1606139488
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The display of the 'ESX Snapshots' and "ESX Snapshots Summary" was half-baked.
+
+The "ESX Snapshots" service is now unconditionally displayed on the VM related to the
+snapshots. The "ESX Snapshots Summary" service is created for the vCenter by default.
+Users who do not have a vCenter included in their monitoring (or at all) can choose to
+display the summary service on their respective ESX hosts by activating the check box
+"Display snapshot summary on ESX hosts" in the agents rule ("VMWare ESX via vSphere").

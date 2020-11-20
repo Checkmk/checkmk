@@ -425,8 +425,8 @@ class SoapTemplates:
         '      <ns1:pathSet>guestHeartbeatStatus</ns1:pathSet>'
         '      <ns1:pathSet>name</ns1:pathSet>'
         '      <ns1:pathSet>summary.guest.hostName</ns1:pathSet>'
-        '      <ns1:pathSet>config.guestFullName</ns1:pathSet>' # Guest OS
-        '      <ns1:pathSet>config.version</ns1:pathSet>' # Compatibility
+        '      <ns1:pathSet>config.guestFullName</ns1:pathSet>'  # Guest OS
+        '      <ns1:pathSet>config.version</ns1:pathSet>'  # Compatibility
         '      <ns1:pathSet>config.uuid</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet>'
@@ -885,7 +885,7 @@ class SoapTemplates:
         self.esxhostsofcluster = SoapTemplates.ESXHOSTSOFCLUSTER % system_fields
 
 
-#.
+# .
 #   .--args----------------------------------------------------------------.
 #   |                                                                      |
 #   |                          __ _ _ __ __ _ ___                          |
@@ -977,15 +977,13 @@ def parse_arguments(argv):
         choices=('vm', 'esxhost'),
         default=None,
         help="""Specifies where the ESX hosts power state should be shown. Default (no option)
-        is on the queried vCenter or ESX-Host. Possible WHERE options: esxhost - show on ESX host,
+        is on the queried vCenter or ESX-Host. Possible options: esxhost - show on ESX host,
         vm - show on virtual machine.""")
     parser.add_argument(
-        "--snapshot_display",
-        choices=('vCenter', 'esxhost'),
-        default=None,
-        help="""Specifies where the virtual machines snapshots should be shown. Default (no
-        option) is on the VM. Possible WHERE options: esxhost - show on ESX host, vCenter -
-        show on vCenter.""")
+        "--snapshots-on-host",
+        action="store_true",
+        help="""If provided, virtual machine snapshots summary service will be generated on the ESX
+        host. By default, it will only be created for the vCenter.""")
     parser.add_argument(
         "-H",
         "--hostname",
@@ -1609,25 +1607,20 @@ def get_pattern(pattern, line):
     return re.findall(pattern, line, re.DOTALL) if line else []
 
 
-def get_sections_aggregated_snapshots(vms, hostsystems, time_reference):
-    aggregated: Dict[str, List[Any]] = {}
-    for data in vms.values():
-        if hostsystems is not None:
-            running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
-        else:
-            running_on = ''
-        snapshots = data.get("snapshot.rootSnapshotList")
-        if snapshots is not None:
-            aggregated.setdefault(running_on, []).append(snapshots)
-
-    section_lines = []
-    for piggytarget, sn_list in aggregated.items():
-        section_lines += [
-            '<<<<%s>>>>' % piggytarget, '<<<esx_vsphere_vm>>>',
-            'time_reference %d' % time_reference,
-            'snapshot.rootSnapshotList.summary %s' % '|'.join(sn_list), '<<<<>>>>'
-        ]
-    return section_lines
+# snapshot.rootSnapshotList.summary 871 1605626114 poweredOn SnapshotName| 834 1605632160 poweredOff Snapshotname2
+def get_section_snapshot_summary(vms):
+    snapshots = [
+        vm.get("snapshot.rootSnapshotList").split(' ')
+        for vm in vms.values()
+        if vm.get("snapshot.rootSnapshotList")
+    ]
+    return ["<<<esx_vsphere_snapshots_summary:sep(0)>>>"] + [
+        json.dumps({
+            "time": int(snapshot[1]),
+            "state": snapshot[2],
+            "name": snapshot[3],
+        }) for snapshot in snapshots
+    ]
 
 
 def get_section_systemtime(connection, opt):
@@ -1916,8 +1909,8 @@ def fetch_data(connection, opt):
         output += get_section_vm(vms, time_reference)
         output += get_section_virtual_machines(vms)
 
-        used_hostsystems = hostsystems if opt.snapshot_display == 'esxhost' else None
-        output += get_sections_aggregated_snapshots(vms, used_hostsystems, time_reference)
+        if not opt.direct or opt.snapshots_on_host:
+            output += get_section_snapshot_summary(vms)
     else:
         vms, vm_esx_host = {}, {}
 

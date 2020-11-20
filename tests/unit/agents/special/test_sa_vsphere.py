@@ -20,7 +20,7 @@ DEFAULT_AGRS = {
     "skip_placeholder_vm": False,
     "host_pwr_display": None,
     "vm_pwr_display": None,
-    "snapshot_display": None,
+    "snapshots_on_host": False,
     "vm_piggyname": "alias",
     "spaces": "underscore",
     "no_cert_check": False,
@@ -75,8 +75,8 @@ DEFAULT_AGRS = {
     (['--vm_pwr_display', 'esxhost'], {
         "vm_pwr_display": "esxhost"
     }),
-    (['--snapshot_display', 'vCenter'], {
-        "snapshot_display": "vCenter"
+    (['--snapshots-on-host'], {
+        "snapshots_on_host": True
     }),
     (['--vm_piggyname', 'hostname'], {
         "vm_piggyname": "hostname"
@@ -123,7 +123,6 @@ def test_parse_arguments(argv, expected_non_default_args):
     ['--spaces', 'safe'],
     ['--host_pwr_display', 'whoopdeedoo'],
     ['--vm_pwr_display', 'whoopdeedoo'],
-    ['--snapshot_display', 'whoopdeedoo'],
     ['--vm_piggyname', 'MissPiggy'],
 ])
 def test_parse_arguments_invalid(invalid_argv):

@@ -904,8 +904,25 @@ def _factory_default_special_agents_vsphere():
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
 
 
+def _transform_agent_vsphere(params):
+    params.setdefault("skip_placeholder_vms", True)
+    params.setdefault("ssl", False)
+    params.setdefault("use_pysphere", False)
+    params.setdefault("spaces", "underscore")
+
+    if "snapshot_on_host" not in params:
+        params["snapshot_on_host"] = params.pop("snapshot_display", "vCenter") == "esxhost"
+
+    return params
+
+
 def _valuespec_special_agents_vsphere():
-    return Transform(valuespec=Dictionary(
+    return Transform(Dictionary(
+        title=_("VMWare ESX via vSphere"),
+        help=_(
+            "This rule selects the vSphere agent instead of the normal Check_MK Agent and allows "
+            "monitoring of VMWare ESX via the vSphere API. You can configure your connection "
+            "settings here.",),
         elements=[
             ("user", TextAscii(
                 title=_("vSphere User name"),
@@ -1013,20 +1030,15 @@ def _valuespec_special_agents_vsphere():
                  ],
                  default_value=None,
              )),
-            ("snapshot_display",
-             DropdownChoice(
-                 title=_("<i>Additionally</i> display snapshots on"),
-                 help=_("The created snapshots can be displayed additionally either "
-                        "on the ESX host or the vCenter. This will result in services "
-                        "for <i>both</i> the queried system and the ESX host / vCenter. "
-                        "By disabling the unwanted services it is then possible "
-                        "to configure where the services are displayed."),
-                 choices=[
-                     (None, _("The Virtual Machine")),
-                     ("esxhost", _("The ESX Host")),
-                     ("vCenter", _("The queried ESX system (vCenter / Host)")),
-                 ],
-                 default_value=None,
+            ("snapshots_on_host",
+             Checkbox(
+                 title=_("Display snapshot summary on ESX hosts"),
+                 default_value=False,
+                 help=_(
+                     "By default the snapshot summary service is displayed on the vCenter. "
+                     "Users who run an ESX host on its own or do not include their vCenter in the "
+                     "monitoring can choose to display the snapshot summary on the ESX host itself."
+                 ),
              )),
             ("vm_piggyname",
              DropdownChoice(
@@ -1053,19 +1065,11 @@ def _valuespec_special_agents_vsphere():
             "timeout",
             "vm_pwr_display",
             "host_pwr_display",
-            "snapshot_display",
             "vm_piggyname",
         ],
         ignored_keys=["use_pysphere"],
     ),
-                     title=_("VMWare ESX via vSphere"),
-                     help=_(
-                         "This rule selects the vSphere agent instead of the normal Check_MK Agent "
-                         "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
-                         "your connection settings here."),
-                     forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False),
-                                           ("use_pysphere", False),
-                                           ("spaces", "underscore")] + list(a.items())))
+                     forth=_transform_agent_vsphere)
 
 
 rulespec_registry.register(

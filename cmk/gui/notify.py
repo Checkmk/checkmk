@@ -196,6 +196,8 @@ def _vs_notify():
             ('text',
              TextAreaUnicode(title=_('Text'),
                              help=_('Insert the text to be sent to all reciepents.'),
+                             allow_empty=False,
+                             empty_text=_('You need to provide a text.'),
                              cols=50,
                              rows=10)),
             ('dest',
@@ -208,6 +210,7 @@ def _vs_notify():
             ('methods',
              ListChoice(
                  title=_('How to notify'),
+                 allow_empty=False,
                  choices=[(k, v['title']) for k, v in _notify_methods().items()],
                  default_value=['popup'],
              )),
@@ -228,9 +231,6 @@ def _vs_notify():
 
 
 def _validate_msg(msg, varprefix):
-    if not msg.get('text'):
-        raise MKUserError('text', _('You need to provide a text.'))
-
     if not msg.get('methods'):
         raise MKUserError('methods', _('Please select at least one notification method.'))
 

@@ -144,6 +144,10 @@ class ValueSpec:
         assert isinstance(self._help, str)
         return ensure_str(self._help)
 
+    def allow_empty(self) -> bool:
+        """Whether the valuespec is allowed to be left empty."""
+        return True
+
     def render_input(self, varprefix: str, value: Any) -> None:
         """Create HTML-form elements that represent a given
         value and let the user edit that value
@@ -570,6 +574,9 @@ class TextAscii(ValueSpec):
         self._hidden = hidden
         self._placeholder = placeholder
 
+    def allow_empty(self):
+        return self._allow_empty
+
     def canonical_value(self) -> str:
         return ""
 
@@ -630,7 +637,10 @@ class TextAscii(ValueSpec):
                                       _("The character <tt>%s</tt> is not allowed here.") % c)
 
         if not self._allow_empty and value.strip() == "":
-            raise MKUserError(varprefix, _("An empty value is not allowed here."))
+            raise MKUserError(
+                varprefix,
+                self._empty_text or _("An empty value is not allowed here."),
+            )
         if value and self._regex:
             if not self._regex.match(ensure_str(value)):
                 raise MKUserError(varprefix, self._regex_error)
@@ -1681,6 +1691,9 @@ class ListOfStrings(ValueSpec):
 
         return u" ".join(u"%s" % t for t in help_texts if t)
 
+    def allow_empty(self):
+        return self._allow_empty
+
     def render_input(self, varprefix: str, value: List[str]) -> None:
         # Form already submitted?
         if html.request.has_var(varprefix + "_0"):
@@ -1830,6 +1843,9 @@ class ListOf(ValueSpec):
         # tuples that contain input field elements directly. The value of sort_by
         # refers to the index of the sort values in the tuple
         self._sort_by = sort_by
+
+    def allow_empty(self) -> bool:
+        return self._allow_empty
 
     # Implementation idea: we render our element-valuespec
     # once in a hidden div that is not evaluated. All occurances
@@ -2093,6 +2109,9 @@ class ListOfMultiple(ValueSpec):
         self._del_label = del_label if del_label is not None else _("Delete this entry")
         self._delete_style = delete_style  # or "filter"
         self._allow_empty = allow_empty
+
+    def allow_empty(self) -> bool:
+        return self._allow_empty
 
     def del_button(self, varprefix: str, ident: str) -> None:
         js = "cmk.valuespecs.listofmultiple_del(%s, %s)" % (json.dumps(varprefix),
@@ -3027,6 +3046,9 @@ class ListChoice(ValueSpec):
         self._no_elements_text = no_elements_text if no_elements_text is not None else \
             _("There are no elements defined for this selection")
 
+    def allow_empty(self) -> bool:
+        return self._allow_empty
+
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
         if self._choices is None:
@@ -3515,6 +3537,9 @@ class AbsoluteDate(ValueSpec):
         self._none_means_empty = kwargs.get("none_means_empty", False)
         self._submit_form_name = kwargs.get("submit_form_name")
 
+    def allow_empty(self) -> bool:
+        return self._allow_empty
+
     def default_value(self):
         if self._default_value is not None:
             return self._default_value
@@ -3715,6 +3740,9 @@ class Timeofday(ValueSpec):
         self._allow_24_00 = allow_24_00
         self._allow_empty = allow_empty
 
+    def allow_empty(self) -> bool:
+        return self._allow_empty
+
     def canonical_value(self) -> _Optional[TimeofdayValue]:
         if self._allow_empty:
             return None
@@ -3806,6 +3834,9 @@ class TimeofdayRange(ValueSpec):
             Timeofday(allow_empty=self._allow_empty, allow_24_00=True),
             Timeofday(allow_empty=self._allow_empty, allow_24_00=True),
         )
+
+    def allow_empty(self) -> bool:
+        return self._allow_empty
 
     def canonical_value(self) -> _Optional[TimeofdayRangeValue]:
         if self._allow_empty:
@@ -3958,6 +3989,9 @@ class Timerange(CascadingDropdown):
         self._allow_empty = allow_empty
         self._include_time = include_time
         self._fixed_choices = choices
+
+    def allow_empty(self) -> bool:
+        return self._allow_empty
 
     def _prepare_choices(self) -> List[CascadingDropdownChoice]:
         # TODO: We have dispatching code like this all over place...
@@ -4791,7 +4825,10 @@ class Dictionary(ValueSpec):
                               is_show_more=param in self._show_more_keys)
             else:
                 visible = True
-                forms.section(vs.title(), css=css, is_show_more=param in self._show_more_keys)
+                forms.section(vs.title(),
+                              css=css,
+                              is_show_more=param in self._show_more_keys,
+                              is_required=not vs.allow_empty())
 
             html.open_div(id_=div_id, style="display:none;" if not visible else None)
             html.help(vs.help())
@@ -5109,6 +5146,9 @@ class Transform(ValueSpec):
         self._back = back
         self._forth = forth
 
+    def allow_empty(self) -> bool:
+        return self._valuespec.allow_empty()
+
     def forth(self, value: Any) -> Any:
         if self._forth:
             return self._forth(value)
@@ -5252,6 +5292,9 @@ class FileUpload(ValueSpec):
         self._allow_empty = kwargs.get('allow_empty', True)
         self._allowed_extensions = kwargs.get('allowed_extensions')
         self._allow_empty_content = kwargs.get('allow_empty_content', True)
+
+    def allow_empty(self) -> bool:
+        return self._allow_empty
 
     def canonical_value(self):
         if self._allow_empty:
@@ -5579,6 +5622,9 @@ class IconSelector(ValueSpec):
             'empty',
         ]
 
+    def allow_empty(self) -> bool:
+        return self._allow_empty
+
     @classmethod
     def categories(cls):
         return config.wato_icon_categories
@@ -5870,6 +5916,9 @@ class Color(ValueSpec):
         super().__init__(**kwargs)
         self._on_change = kwargs.get("on_change")
         self._allow_empty = kwargs.get("allow_empty", True)
+
+    def allow_empty(self) -> bool:
+        return self._allow_empty
 
     def render_input(self, varprefix, value):
         if not value:

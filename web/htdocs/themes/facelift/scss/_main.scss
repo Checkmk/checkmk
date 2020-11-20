@@ -283,7 +283,12 @@ input.button.hot {
 .dots {
   margin-left: 5px;
   overflow: hidden;
-  opacity: 0.2;
+  color: rgba($font-color, 0.2);
+
+  &.required::before {
+    color: $success;
+    content: "(required) ";
+  }
 }
 
 a.button {

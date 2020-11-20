@@ -223,7 +223,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         html.begin_form("attr")
         forms.header(_("Properties"))
-        forms.section(_("Name"), simple=not self._new)
+        forms.section(_("Name"), simple=not self._new, is_required=True)
         html.help(
             _("The name of the attribute is used as an internal key. It cannot be "
               "changed later."))
@@ -234,7 +234,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
             html.write_text(self._name)
             html.set_focus("title")
 
-        forms.section(_("Title") + "<sup>*</sup>")
+        forms.section(_("Title") + "<sup>*</sup>", is_required=True)
         html.help(_("The title is used to label this attribute."))
         html.text_input("title", self._attr.get('title', ''))
 

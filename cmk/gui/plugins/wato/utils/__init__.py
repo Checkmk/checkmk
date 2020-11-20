@@ -1415,7 +1415,7 @@ def configure_attributes(new,
 
         if topic_id == "basic":
             for attr_varprefix, vs, default_value in basic_attributes:
-                forms.section(_u(vs.title()))
+                forms.section(_u(vs.title()), is_required=True)
                 vs.render_input(attr_varprefix, default_value)
 
         for attr in topic_attributes:

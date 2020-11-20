@@ -295,6 +295,8 @@ class ModeEditRole(RoleManagement, WatoMode):
             raise MKUserError("alias", info)
 
         new_id = html.request.get_ascii_input_mandatory("id")
+        if not new_id:
+            raise MKUserError("id", "You have to provide a ID.")
         if not re.match("^[-a-z0-9A-Z_]*$", new_id):
             raise MKUserError(
                 "id", _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
@@ -348,7 +350,7 @@ class ModeEditRole(RoleManagement, WatoMode):
 
         # ID
         forms.header(_("Basic properties"), css="wide")
-        forms.section(_("Internal ID"), simple="builtin" in self._role)
+        forms.section(_("Internal ID"), simple="builtin" in self._role, is_required=True)
         if self._role.get("builtin"):
             html.write_text("%s (%s)" % (self._role_id, _("builtin role")))
             html.hidden_field("id", self._role_id)

@@ -2877,7 +2877,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         html.begin_form("upload_form", method="POST")
         forms.header(_("Upload MIB file"))
 
-        forms.section(_("Select file"))
+        forms.section(_("Select file"), is_required=True)
         html.upload_file("_upload_mib")
         forms.end()
 

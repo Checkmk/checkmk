@@ -1003,10 +1003,6 @@ class ModeBIEditRule(ABCBIMode):
                   "It is in the pack <b>%s</b> and as the title <b>%s</b>") %
                 (self._rule_id, existing_bi_pack.title, existing_bi_rule.title))
 
-        if new_bi_rule.num_nodes() == 0:
-            raise MKUserError(None,
-                              _("Please add at least one child node. Empty rules are useless."))
-
         self.bi_pack.add_rule(new_bi_rule)
         try:
             self._bi_packs.save_config()
@@ -1189,6 +1185,8 @@ class ModeBIEditRule(ABCBIMode):
                  bi_valuespecs.get_bi_rule_node_choices_vs(),
                  add_label=_("Add child node generator"),
                  title=_("Aggregated nodes"),
+                 allow_empty=False,
+                 empty_text=_("Please add at least one child node."),
              )),
             ("state_messages",
              Optional(
@@ -1470,9 +1468,6 @@ class BIModeEditAggregation(ABCBIMode):
 
         new_bi_aggregation = BIAggregation(vs_aggregation_config)
 
-        if new_bi_aggregation.groups.count() == 0:
-            raise MKUserError('rule_p_groups_0', _("Please define at least one aggregation group"))
-
         aggregation_ids = self._get_aggregations_by_id()
         if new_bi_aggregation.id in aggregation_ids and aggregation_ids[
                 new_bi_aggregation.id][1].id != self._bi_aggregation.id:
@@ -1570,7 +1565,9 @@ class BIModeEditAggregation(ABCBIMode):
                     ],
                 ),
                 default_value={},
-                title=_("Aggregation Groups"),
+                title=_("Aggregation groups"),
+                allow_empty=False,
+                empty_text=_("Please define at least one aggregation group"),
             ),
             forth=convert_to_vs,
             back=convert_from_vs,

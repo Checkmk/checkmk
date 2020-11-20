@@ -766,7 +766,7 @@ class ModeEditUser(WatoMode):
         forms.header(_("Identity"))
 
         # ID
-        forms.section(_("Username"), simple=not self._is_new_user)
+        forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
         if self._is_new_user:
             vs_user_id = UserID(allow_empty=False)
 
@@ -782,7 +782,7 @@ class ModeEditUser(WatoMode):
                 html.hidden_field(name, self._user.get(name, dflt))
 
         # Full name
-        forms.section(_("Full name"))
+        forms.section(_("Full name"), is_required=True)
         lockable_input('alias', self._user_id)
         html.help(_("Full name or alias of the user"))
 

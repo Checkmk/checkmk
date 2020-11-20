@@ -186,7 +186,8 @@ def section(title: Union[None, HTML, str] = None,
             hide: bool = False,
             legend: bool = True,
             css: Optional[str] = None,
-            is_show_more: bool = False) -> None:
+            is_show_more: bool = False,
+            is_required: bool = False) -> None:
     global g_section_open
     section_close()
     html.open_tr(
@@ -201,7 +202,7 @@ def section(title: Union[None, HTML, str] = None,
             html.open_div(class_=["title", "withcheckbox" if checkbox else None],
                           title=escaping.strip_tags(title))
             html.write(escaping.escape_text(title))
-            html.span('.' * 200, class_="dots")
+            html.span('.' * 200, class_=["dots", "required" if is_required else None])
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")

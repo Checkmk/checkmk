@@ -253,7 +253,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
     def page(self) -> None:
         html.begin_form("group")
         forms.header(_("Properties"))
-        forms.section(_("Name"), simple=not self._new)
+        forms.section(_("Name"), simple=not self._new, is_required=True)
         html.help(
             _("The name of the group is used as an internal key. It cannot be "
               "changed later. It is also visible in the status GUI."))
@@ -264,7 +264,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
             html.write_text(self._name)
             html.set_focus("alias")
 
-        forms.section(_("Alias"))
+        forms.section(_("Alias"), is_required=True)
         html.help(_("An alias or description of this group."))
         html.text_input("alias", self.group["alias"])
 

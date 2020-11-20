@@ -145,19 +145,17 @@ node (NODE) {
             TEXT_ON_SKIP: 'No CSS files changed. Skipping.'
          )
 
-         PYTHON_VERSIONS.each { PYTHON_VERSION ->
-            gerrit_stages.run(
-               NAME: 'Agent Plugin Unit Tests ' + PYTHON_VERSION,
-               CONDITION: CHANGED_AGENT_PLUGINS != "",
-               DIR: 'tests',
-               ENV_VARS: [
-                   "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-" + PYTHON_VERSION + "-junit.xml",
-                   "DOCKER_ADDOPTS=-v $RESULTS:$RESULTS"
-               ],
-               COMMAND: "make test-agent-plugin-unit-py" + PYTHON_VERSION + "-docker",
-               TEXT_ON_SKIP: 'No agent files changed. Skipping.'
-            )
-         }
+        gerrit_stages.run(
+            NAME: 'Agent Plugin Unit Tests',
+            CONDITION: CHANGED_AGENT_PLUGINS != "",
+            DIR: 'tests',
+            ENV_VARS: [
+            "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-junit.xml",
+            "DOCKER_ADDOPTS=-v $RESULTS:$RESULTS"
+            ],
+            COMMAND: "make test-agent-plugin-docker",
+            TEXT_ON_SKIP: 'No agent files changed. Skipping.'
+        )
 
          gerrit_stages.run(
             NAME: 'NEB/CMC Compile',

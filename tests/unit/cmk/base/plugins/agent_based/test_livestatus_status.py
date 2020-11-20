@@ -344,9 +344,9 @@ def test_discovery():
 def fixture_fetcher_checker_counters_list():
     return [
         Result(state=state.OK, notice='Fetcher helper usage: 0%'),
-        Metric('helper_usage_fetcher', 0.0, levels=(40.0, 80.0)),
+        Metric('helper_usage_fetcher', 0.0, levels=(80.0, 90.0)),
         Result(state=state.OK, notice='Checker helper usage: 0%'),
-        Metric('helper_usage_checker', 0.0, levels=(40.0, 80.0)),
+        Metric('helper_usage_checker', 0.0, levels=(80.0, 90.0)),
     ]
 
 
@@ -411,15 +411,15 @@ def test_check():
         Result(state=state.OK, notice='Average fetcher latency: 0.000s'),
         Metric('average_latency_fetcher', 2.01088e-05, levels=(30.0, 60.0)),
         Result(state=state.OK, notice='Check helper usage: 1.4%'),
-        Metric('helper_usage_generic', 1.42967, levels=(60.0, 90.0)),
+        Metric('helper_usage_generic', 1.42967, levels=(80.0, 90.0)),
         Result(state=state.OK, notice='Checkmk helper usage: 0.044%'),
-        Metric('helper_usage_cmk', 0.043827200000000004, levels=(60.0, 90.0)),
+        Metric('helper_usage_cmk', 0.043827200000000004, levels=(80.0, 90.0)),
         Result(state=state.OK, notice='Fetcher helper usage: 0.044%'),
-        Metric('helper_usage_fetcher', 0.043827200000000004, levels=(40.0, 80.0)),
+        Metric('helper_usage_fetcher', 0.043827200000000004, levels=(80.0, 90.0)),
         Result(state=state.OK, notice='Checker helper usage: 0.044%'),
-        Metric('helper_usage_checker', 0.043827200000000004, levels=(40.0, 80.0)),
+        Metric('helper_usage_checker', 0.043827200000000004, levels=(80.0, 90.0)),
         Result(state=state.OK, notice='Livestatus usage: 0.000000000000%'),
-        Metric('livestatus_usage', 3.46e-321, levels=(80.0, 90.0)),
+        Metric('livestatus_usage', 3.46e-321, levels=(60.0, 80.0)),
         Result(state=state.OK, notice='Livestatus overflow rate: 0.0/s'),
         Metric('livestatus_overflows_rate', 0.0, levels=(0.01, 0.02)),
         Result(state=state.OK, notice='Hosts: 2.00'),

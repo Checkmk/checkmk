@@ -52,11 +52,11 @@ livestatus_status_default_levels = {
     "average_latency_generic": (30, 60),
     "average_latency_cmk": (30, 60),
     "average_latency_fetcher": (30, 60),
-    "helper_usage_generic": (60.0, 90.0),
-    "helper_usage_cmk": (60.0, 90.0),
-    "helper_usage_fetcher": (40.0, 80.0),
-    "helper_usage_checker": (40.0, 80.0),
-    "livestatus_usage": (80.0, 90.0),
+    "helper_usage_generic": (80.0, 90.0),
+    "helper_usage_cmk": (80.0, 90.0),
+    "helper_usage_fetcher": (80.0, 90.0),
+    "helper_usage_checker": (80.0, 90.0),
+    "livestatus_usage": (60.0, 80.0),
     "livestatus_overflows_rate": (0.01, 0.02),
 }
 

@@ -1,4 +1,4 @@
-Title: Developer option: --detect-sections
+Title: cmk command: New option: --detect-sections
 Class: feature
 Compatible: compat
 Component: checks

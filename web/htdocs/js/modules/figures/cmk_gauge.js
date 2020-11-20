@@ -61,44 +61,11 @@ class GaugeFigure extends cmk_figures.FigureBase {
 
     render() {
         this._render_levels();
-        this._render_text();
         this.render_title(this._data.title);
 
         let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
         if (!plot) return;
         cmk_figures.state_component(this, plot.svc_state);
-    }
-
-    _calculate_domain() {
-        const [lower, upper] = d3.extent(this._crossfilter.allFiltered(), d => d.value);
-        return [lower + upper * (1 - 1 / 0.95), upper / 0.95];
-    }
-
-    _calculate_domain_and_levels(domain) {
-        let [dmin, dmax] = domain;
-
-        let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
-        if (!plot || !plot.metrics) return [domain, []];
-
-        let metrics = plot.metrics;
-        if (metrics.max != null && metrics.max <= dmax) dmax = metrics.max;
-        if (metrics.min != null && dmin <= metrics.min) dmin = metrics.min;
-
-        if (metrics.warn == null || metrics.warn >= dmax) metrics.warn = dmax;
-        if (metrics.crit == null || metrics.crit >= dmax) metrics.crit = dmax;
-
-        return [
-            [dmin, dmax],
-            [
-                {from: dmin, to: metrics.warn, color: "green"},
-                {
-                    from: metrics.warn,
-                    to: metrics.crit,
-                    color: "yellow",
-                },
-                {from: metrics.crit, to: dmax, color: "red"},
-            ],
-        ];
     }
 
     _render_fixed_elements() {
@@ -148,10 +115,21 @@ class GaugeFigure extends cmk_figures.FigureBase {
     }
 
     _render_levels() {
-        let [domain, levels] = this._calculate_domain_and_levels(this._calculate_domain());
+        const data = this._crossfilter.allFiltered();
+        const plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
+        if (!data.length || !plot || !plot.metrics) {
+            this.plot.selectAll("path.level").remove();
+            this.plot.selectAll("path.value").remove();
+            this.plot.selectAll("a.single_value").remove();
+            return;
+        }
+
+        const domain = cmk_figures.adjust_domain(cmk_figures.calculate_domain(data), plot.metrics);
+        const levels = cmk_figures.make_levels(domain, plot.metrics);
+
         this._render_gauge_range_labels(domain);
 
-        let limit = (7 * Math.PI) / 12;
+        const limit = (7 * Math.PI) / 12;
         const scale_x = d3.scaleLinear().domain(domain).range([-limit, limit]);
         this.plot
             .selectAll("path.level")
@@ -173,17 +151,14 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .join("title")
             .text(d => d.from + " -> " + d.to);
 
-        const data = this._crossfilter.allFiltered();
-        if (!data.length) return;
         const value = data[data.length - 1].value;
-        const bar = {
-            value: value,
-            color: levels.find(element => value < element.to).color,
-        };
+        const color = levels.length ? levels.find(element => value < element.to).color : "#3CC2FF";
+
+        this._render_text(data, color);
         // gauge bar
         this.plot
             .selectAll("path.value")
-            .data([bar])
+            .data([{value, color}])
             .join(enter => enter.append("path").classed("value", true))
             .attr("fill", d => d.color)
             .attr("opacity", 0.9)
@@ -221,7 +196,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .selectAll("path.bin")
             .data(bins)
             .join(enter => enter.append("path").classed("bin", true))
-            .attr("fill", "steelblue")
+            .attr("fill", "#0F62AF")
             .attr("stroke", d => (d.length > 0 ? "black" : null))
             .attr(
                 "d",
@@ -245,18 +220,13 @@ class GaugeFigure extends cmk_figures.FigureBase {
             });
     }
 
-    _render_text() {
-        let data = this._crossfilter.allFiltered();
-        if (data.length) {
-            let value = cmk_figures.split_unit(data[data.length - 1]);
-            cmk_figures.metric_value_component(
-                this.plot,
-                value,
-                this._radius / 3.5,
-                0,
-                -this._radius / 5
-            );
-        }
+    _render_text(data, color) {
+        cmk_figures.metric_value_component(
+            this.plot,
+            cmk_figures.split_unit(data[data.length - 1]),
+            {x: 0, y: -this._radius / 5},
+            {font_size: this._radius / 3.5, color: color}
+        );
     }
 }
 

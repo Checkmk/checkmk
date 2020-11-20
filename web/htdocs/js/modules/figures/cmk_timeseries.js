@@ -1078,17 +1078,28 @@ class SingleValuePlot extends SubPlot {
     }
 
     render() {
-        let plot_size = this._renderer.plot_size;
-        let value = cmk_figures.split_unit(
-            this.transformed_data.find(element => element.formatted_value)
+        const plot = this._renderer._data.plot_definitions.filter(
+            d => d.plot_type == "single_value"
+        )[0];
+        const domain = cmk_figures.adjust_domain(
+            cmk_figures.calculate_domain(this.transformed_data),
+            plot.metrics
         );
-        let font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
+        const levels = cmk_figures.make_levels(domain, plot.metrics);
+
+        const data_point = this.transformed_data.find(element => element.formatted_value);
+        const plot_size = this._renderer.plot_size;
+        const color = levels.length
+            ? levels.find(element => data_point.value < element.to).color
+            : "#FFFFFF";
+        const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
+
+        const value = cmk_figures.split_unit(data_point);
         cmk_figures.metric_value_component(
             this.svg,
             value,
-            font_size,
-            plot_size.width / 2,
-            plot_size.height / 2 + font_size / 3
+            {x: plot_size.width / 2, y: plot_size.height / 2 + font_size / 3},
+            {font_size, color}
         );
         cmk_figures.state_component(this._renderer, this.definition.svc_state);
     }

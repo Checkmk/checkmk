@@ -481,6 +481,36 @@ export class FigureBase {
     }
 }
 
+export function calculate_domain(data) {
+    const [lower, upper] = d3.extent(data, d => d.value);
+    return [lower + upper * (1 - 1 / 0.95), upper / 0.95];
+}
+
+export function adjust_domain(domain, metrics) {
+    let [dmin, dmax] = domain;
+
+    if (metrics.max != null && metrics.max <= dmax) dmax = metrics.max;
+    if (metrics.min != null && dmin <= metrics.min) dmin = metrics.min;
+    return [dmin, dmax];
+}
+
+export function make_levels(domain, metrics) {
+    let [dmin, dmax] = domain;
+    if (metrics.warn == null || metrics.crit == null) return [];
+
+    if (metrics.warn >= dmax) metrics.warn = dmax;
+    if (metrics.crit >= dmax) metrics.crit = dmax;
+
+    return [
+        {from: dmin, to: metrics.warn, color: "#13D389"},
+        {
+            from: metrics.warn,
+            to: metrics.crit,
+            color: "#FFFE44",
+        },
+        {from: metrics.crit, to: dmax, color: "#FF3232"},
+    ];
+}
 // Base class for dc.js based figures (using crossfilter)
 export class DCFigureBase extends FigureBase {
     constructor(div_selector, crossfilter, graph_group) {
@@ -668,7 +698,7 @@ export function split_unit(recipe) {
     return {value: text, unit: "", url: recipe.url};
 }
 
-export function metric_value_component(selection, value, font_size, x, y) {
+export function metric_value_component(selection, value, attr, style) {
     let link = selection
         .selectAll("a.single_value")
         .data([value])
@@ -680,15 +710,16 @@ export function metric_value_component(selection, value, font_size, x, y) {
         .data(d => [d])
         .join("text")
         .text(d => d.value)
-        .attr("x", x)
-        .attr("y", y)
+        .attr("x", attr.x)
+        .attr("y", attr.y)
         .attr("text-anchor", "middle")
-        .style("font-size", font_size + "px");
+        .style("fill", style.color)
+        .style("font-size", style.font_size + "px");
 
     let unit = text
         .selectAll("tspan")
         .data(d => [d])
         .join("tspan")
-        .style("font-size", font_size / 2 + "px")
+        .style("font-size", style.font_size / 2 + "px")
         .text(d => d.unit);
 }

@@ -31,7 +31,6 @@
 #include "StatsColumn.h"
 #include "Triggers.h"
 #include "contact_fwd.h"
-#include "data_encoding.h"
 class Column;
 class Logger;
 class OutputBuffer;

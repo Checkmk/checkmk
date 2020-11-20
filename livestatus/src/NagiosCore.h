@@ -21,7 +21,6 @@
 #include "Store.h"
 #include "Triggers.h"
 #include "auth.h"
-#include "data_encoding.h"
 #include "nagios.h"
 class InputBuffer;
 class Logger;

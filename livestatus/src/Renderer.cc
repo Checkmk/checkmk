@@ -17,6 +17,7 @@
 #include "RendererJSON.h"
 #include "RendererPython.h"
 #include "RendererPython3.h"
+#include "data_encoding.h"
 
 Renderer::Renderer(std::ostream &os, Logger *logger, Encoding data_encoding)
     : _os(os), _data_encoding(data_encoding), _logger(logger) {}

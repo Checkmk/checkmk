@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#include "data_encoding.h"
+enum class Encoding;
 class CSVSeparators;
 class Logger;
 

@@ -6,7 +6,8 @@
 #include "RendererJSON.h"
 
 #include <ostream>
-class Logger;
+
+#include "data_encoding.h"
 
 RendererJSON::RendererJSON(std::ostream &os, Logger *logger,
                            Encoding data_encoding)

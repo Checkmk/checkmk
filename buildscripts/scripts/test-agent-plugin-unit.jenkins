@@ -4,12 +4,12 @@ properties([
 
 def NODE = ''
 def DOCKER_TAG_DEFAULT
+def TEST_CONTAINER
 withFolderProperties{
     NODE = env.BUILD_NODE
     DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
-def TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + DOCKER_TAG_DEFAULT
 def PYTHON_VERSIONS = [ "2.6", "2.7", "3.4", "3.5", "3.6", "3.7", "3.8" ]
 
 node(NODE) {
@@ -29,10 +29,12 @@ node(NODE) {
             }
             notify = load('buildscripts/scripts/lib/notify.groovy')
             versioning = load('buildscripts/scripts/lib/versioning.groovy')
+            str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
         }
     }
 }
 
+def TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + DOCKER_TAG_DEFAULT
 def DOCKER_BUILDS = [:]
 
 try {

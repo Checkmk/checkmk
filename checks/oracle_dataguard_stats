@@ -167,6 +167,9 @@ def check_oracle_dataguard_stats(item, params, parsed):
 
         for dgstat_param in sorted(dgdata['dgstat']):
 
+            if dgstat_param == 'apply lag' and not dgdata['dgstat'][dgstat_param]:
+                yield 1, 'No value for apply lag'
+
             if dgstat_param in ('apply lag', 'transport lag') and dgdata['dgstat'][dgstat_param]:
                 seconds = get_seconds(dgdata['dgstat'][dgstat_param])
                 state = 0

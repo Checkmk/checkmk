@@ -285,7 +285,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
 
     addColumn(std::make_unique<BoolLambdaColumn<TableStatus>>(
         "is_trial_expired", "Whether or not expired trial of demo version",
-        offsets, [](const TableStatus& /*r*/) {
+        offsets, [](const TableStatus & /*r*/) {
 #ifdef DEMOVERSION  // will be patched by version.groovy for DEMO release
             return true;
 #else

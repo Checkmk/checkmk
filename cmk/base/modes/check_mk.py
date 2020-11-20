@@ -1593,6 +1593,8 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
         return
 
     if "no-submit" in options:
+        # this has no effect for the new Check API. For the old one (cmk/base/check_api.py)
+        # it makes get_rate return 0 instead of raising MKCounterError
         item_state.continue_on_counter_wrap()
 
     # handle adhoc-check

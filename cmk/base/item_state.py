@@ -229,6 +229,7 @@ def _unique_item_state_key(user_key: str) -> None:
 
 
 def continue_on_counter_wrap() -> None:
+    """Make get_rate always return 0 if something goes wrong"""
     global g_suppress_on_wrap
     g_suppress_on_wrap = False
 

@@ -1,0 +1,17 @@
+Title: oracle_dataguard_stats: Issue warning about missing apply lag
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1605885715
+
+This change addresses the error "Apply lag has NULL value in v$dataguard_stats"
+that can occur when checking the DataGuard configuration status and that results
+in an empty "apply lag" field.
+
+The checkmk will now yield a WARN state with description "No value for apply lag"
+when encoutering an empty "apply lag" field.

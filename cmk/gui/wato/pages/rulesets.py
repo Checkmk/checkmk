@@ -868,11 +868,11 @@ class ModeEditRuleset(WatoMode):
                                sortable=False,
                                limit=None,
                                foldable=True) as table:
-                for _folder, _rulenr, rule in folder_rules:
+                for _folder, rulenr, rule in folder_rules:
                     num_rows += 1
                     table.row(css=self._css_for_rule(search_options, rule))
                     self._set_focus(rule)
-                    self._show_rule_icons(table, match_state, folder, rule)
+                    self._show_rule_icons(table, match_state, folder, rule, rulenr)
                     self._rule_cells(table, rule)
 
         row_info = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
@@ -894,7 +894,7 @@ class ModeEditRuleset(WatoMode):
         if self._just_edited_rule and self._just_edited_rule.id == rule.id:
             html.focus_here()
 
-    def _show_rule_icons(self, table, match_state, folder, rule):
+    def _show_rule_icons(self, table, match_state, folder, rule, rulenr):
         if self._hostname:
             table.cell(_("Ma."))
             title, img = self._match(match_state, rule)
@@ -936,7 +936,8 @@ class ModeEditRuleset(WatoMode):
         html.icon_button(
             url=make_confirm_link(
                 url=self._action_url("delete", folder, rule.id),
-                message=_("Delete rule %s of folder '%s'?") % (rule.id, folder.alias_path()),
+                message=_("Delete rule #%d (ID: %s) of folder '%s'?") %
+                (rulenr, rule.id, folder.alias_path()),
             ),
             title=_("Delete this rule"),
             icon="delete",

@@ -4,7 +4,6 @@ properties([
 
 def NODE = ''
 def DOCKER_TAG_DEFAULT
-def TEST_CONTAINER
 withFolderProperties{
     NODE = env.BUILD_NODE
     DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER

@@ -122,7 +122,10 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
     def update(self, host_sections: "HostSections") -> None:
         """Update this host info object with the contents of another one"""
         for section_name, section_content in host_sections.sections.items():
-            self._extend_section(section_name, section_content)
+            self.sections.setdefault(
+                section_name,
+                cast(TSectionContent, []),
+            ).extend(section_content)  # type: ignore[arg-type]
 
         for hostname, raw_lines in host_sections.piggybacked_raw_data.items():
             self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
@@ -147,27 +150,9 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
                 continue
 
             logger.debug("Using persisted section %r", section_name)
-            self._add_cached_section(section_name, *entry)
-
-    def _extend_section(
-        self,
-        section_name: SectionName,
-        section_content: TSectionContent,
-    ) -> None:
-        self.sections.setdefault(
-            section_name,
-            cast(TSectionContent, []),
-        ).extend(section_content)  # type: ignore[arg-type]
-
-    def _add_cached_section(
-        self,
-        section_name: SectionName,
-        persisted_from: int,
-        persisted_until: int,
-        section: TSectionContent,
-    ) -> None:
-        self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
-        self.sections[section_name] = section
+            persisted_from, persisted_until, section = entry
+            self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
+            self.sections[section_name] = section
 
 
 class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):

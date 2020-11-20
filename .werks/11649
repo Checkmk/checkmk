@@ -9,8 +9,10 @@ Level: 1
 Version: 2.0.0i2
 
 The values
-<li>total_ram_usable<\li>
-<li>total_swap<\li>
-<li>total_vmalloc<\li>
+<ul>
+<li>total_ram_usable</li>
+<li>total_swap</li>
+<li>total_vmalloc</li>
+</ul>
 were missing in the inventory.
 Now the inventory function is migrated to the new CheckAPI.

@@ -115,7 +115,7 @@ class Command(NamedTuple):
 def process_command(command: Command) -> None:
     with _confirm_command_processed():
         global_config = load_global_config(command.serial)
-        logger.setLevel(global_config.log_level)
+        logging.getLogger().setLevel(global_config.log_level)
         SNMPFetcher.snmp_plugin_store = global_config.snmp_plugin_store
         run_fetchers(**command._asdict())
 

@@ -17,6 +17,6 @@ Setting this option to a comma separated list of plugin names will have the effe
 command (that is, checking, inventory or discovery) will only be done for the provided plugins,
 in the same way "--plugins" would.
 
-In addition, Checkmk makes a besst effort guess which sections should be fetched, that is:
+In addition, Checkmk makes a best effort guess which sections should be fetched, that is:
 It sets the "--detect-sections" option to all sections that may be needed for the provided plugins.
 

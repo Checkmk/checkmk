@@ -6,7 +6,7 @@
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Submount, Rule
 
-from cmk.gui.wsgi.applications import CheckmkApp, CheckmkRESTAPI
+from cmk.gui.wsgi.applications import CheckmkApp, CheckmkRESTAPI, CheckmkSetupSearchApp
 from cmk.gui.wsgi.applications.helper_apps import dump_environ_app, test_formdata
 
 WSGI_ENV_ARGS_NAME = 'x-checkmk.args'
@@ -21,6 +21,7 @@ def create_url_map(debug=False):
 
     cmk_app = CheckmkApp()
     api_app = CheckmkRESTAPI(debug=debug).wsgi_app
+    setup_search_app = CheckmkSetupSearchApp()
 
     return Map([
         Submount('/<string:site>', [
@@ -28,6 +29,7 @@ def create_url_map(debug=False):
                 Rule("/", endpoint=cmk_app),
                 *(debug_rules if debug else []),
                 Rule("/api/<string:version>/<path:path>", endpoint=api_app),
+                Rule("/ajax_search_setup.py", endpoint=setup_search_app),
                 Rule("/<string:script>", endpoint=cmk_app),
             ]),
         ])

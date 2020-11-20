@@ -11,7 +11,6 @@ import traceback
 
 import livestatus
 
-import cmk.gui.crash_reporting as crash_reporting
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
@@ -26,7 +25,7 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import html, RequestContext, AppContext, g
+from cmk.gui.globals import html, RequestContext, AppContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -34,6 +33,7 @@ from cmk.gui.http import Response
 from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
     fail_silently,
+    handle_unhandled_exception,
     load_all_plugins,
     plain_error,
 )
@@ -201,11 +201,6 @@ def _process_request(environ, start_response) -> Response:  # pylint: disable=to
         logger.error("MKGeneralException: %s", e)
 
     except Exception:
-        crash_reporting.handle_exception_as_gui_crash_report(plain_error=plain_error(),
-                                                             fail_silently=fail_silently(),
-                                                             show_crash_link=getattr(
-                                                                 g, "may_see_crash_reports", False))
-        # This needs to be cleaned up.
-        response = html.response
+        response = handle_unhandled_exception()
 
     return response(environ, start_response)

@@ -12,6 +12,7 @@ import cmk.utils.profile
 import cmk.utils.store
 
 from cmk.gui import config, login, pages, modules
+from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import (
     MKAuthException,
     MKUnauthenticatedException,
@@ -143,3 +144,13 @@ def _localize_request() -> None:
     # Otherwise the load_all_plugins() at the beginning of the request is sufficient.
     if cmk.gui.i18n.get_current_language() != previous_language:
         load_all_plugins()
+
+
+def handle_unhandled_exception() -> Response:
+    handle_exception_as_gui_crash_report(
+        plain_error=plain_error(),
+        fail_silently=fail_silently(),
+        show_crash_link=getattr(g, "may_see_crash_reports", False),
+    )
+    # This needs to be cleaned up.
+    return html.response

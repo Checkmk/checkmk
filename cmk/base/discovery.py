@@ -1351,10 +1351,7 @@ def _discover_host_labels_and_services(
     *,
     run_only_plugin_names: Optional[Set[CheckPluginName]],
 ) -> Tuple[List[Service], HostLabelDiscoveryResult]:
-
-    # Discovers host labels and services per real host or node
-
-    check_api_utils.set_hostname(hostname)
+    """Discovers host labels and services per real host or node"""
 
     discovered_host_labels = _discover_host_labels(
         hostname,
@@ -1413,6 +1410,9 @@ def _discover_services(
     plugin_candidates = _find_candidates(multi_host_sections, run_only_plugin_names)
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
+    # The hostname must be set for the host_name() calls commonly used to determine the
+    # hostname for host_extra_conf{_merged,} calls in the legacy checks.
+    check_api_utils.set_hostname(hostname)
 
     service_table: cmk.base.check_utils.CheckTable = {}
     try:

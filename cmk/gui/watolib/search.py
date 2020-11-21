@@ -244,7 +244,7 @@ class IndexSearcher:
         return (
             _("Hosts"),
             _("Services") + " > " + _("Service monitoring rules"),
-            _("Services") + " > " + _("Discovery rules"),
+            _("Services") + " > " + _("Service discovery rules"),
         )
 
     @staticmethod

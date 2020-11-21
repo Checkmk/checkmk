@@ -290,13 +290,13 @@ def create_source_package(WORKSPACE, CMK_VERS) {
     sign_package(WORKSPACE + "/git/agents/check-mk-agent-" + CMK_VERS + "-1.noarch.rpm", "Vanilla agent", WORKSPACE)
 
     stage('Create source package') {
-        if (!params.FAKE_WINDOWS_ARTIFACTS) {
-        } else {
-            sh "mkdir -p agents"
+        if (params.FAKE_WINDOWS_ARTIFACTS) {
+            sh "mkdir -p ${WORKSPACE}/agents"
             if(EDITION != 'raw') {
-                sh "touch agents/cmk-update-agent agents/cmk-update-agent-32"
+                sh "touch ${WORKSPACE}/agents/cmk-update-agent"
+                sh "touch ${WORKSPACE}/agents/cmk-update-agent-32"
             }
-            sh "touch check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml python-3.8.zip"
+            sh "touch ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.zip}"
         }
 
         dir("git") {

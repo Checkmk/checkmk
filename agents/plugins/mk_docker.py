@@ -17,8 +17,6 @@ plugin ("pip install docker").
 This plugin it will be called by the agent without any arguments.
 """
 
-__version__ = "2.1.0i1"
-
 # N O T E:
 # docker is available for python versions from 2.6 / 3.3
 
@@ -35,6 +33,7 @@ import functools
 import multiprocessing
 import logging
 
+__version__ = "2.1.0i1"
 
 def which(prg):
     for path in os.environ["PATH"].split(os.pathsep):
@@ -211,7 +210,7 @@ class MKDockerClient(docker.DockerClient):
                 length -= len(data)
                 LOGGER.debug("Received data: %r", data)
                 if actual_descriptor == descriptor:
-                    yield data
+                    yield data.decode('UTF-8')
             header = docker.utils.socket.read(sock, 8)
 
     def get_stdout(self, exec_return_val):

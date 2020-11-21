@@ -75,6 +75,7 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     joe \
     iputils-ping \
     vim \
+    valgrind \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

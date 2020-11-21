@@ -61,6 +61,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     joe \
     iputils \
     vim \
+    valgrind \
     && zypper clean -a
 
 # Install our standard tool chain for building

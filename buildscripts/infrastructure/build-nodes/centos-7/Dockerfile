@@ -82,6 +82,7 @@ RUN yum -y makecache \
     joe \
     ping \
     vim \
+    valgrind \
     && yum clean all
 
 # Install our standard tool chain for building

@@ -85,6 +85,7 @@ RUN zypper ref -s \
     joe \
     iputils \
     vim \
+    valgrind \
     && zypper clean -a
 
 # Install our standard tool chain for building

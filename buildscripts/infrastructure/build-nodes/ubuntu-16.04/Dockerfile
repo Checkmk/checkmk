@@ -72,6 +72,7 @@ RUN apt-get update \
     joe \
     iputils-ping \
     vim \
+    valgrind \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

@@ -106,6 +106,7 @@ RUN yum -y makecache \
     joe \
     iputils \
     vim \
+    valgrind \
     --nogpgcheck \
     && yum clean all
 

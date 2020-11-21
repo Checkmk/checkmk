@@ -1,0 +1,19 @@
+Title: Transformation of interface discovery parameters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1605962746
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+This werk fixes a bug in the transformation of the discovery
+parameters for network interfaces and switch ports. This bug
+only affected users who updated from Checkmk 1.6 to Checkmk
+2.0. For certain parameter configurations, it resulted in the
+discovery of different interfaces after the update. The reason
+for this was that the parameter transformation did not properly
+take into account the hard-coded default discovery conditions
+from Checkmk 1.6, which were always applied, unless the user
+specifically configured different settings.

@@ -395,28 +395,39 @@ def _transform_discovery_if_rules(params):
 
     # Up to v1.6, the host rulespec inventory_if_rules had the option to activate the discovery of
     # the check rmon_stats under this key. However, rmon_stats does honor any of the other options
-    # offered by inventory_if_rules. Therefore, in v1.7, the activation of the discovery of
+    # offered by inventory_if_rules. Therefore, in v2.0, the activation of the discovery of
     # rmon_stats has been moved to a separate host rulespec (rmon_discovery).
     params.pop('rmon', None)
 
-    single_interface_discovery_settings = {}
-    for key in ["item_appearance", "pad_portnumbers"]:
-        if key in params:
-            single_interface_discovery_settings[key] = params.pop(key)
-    if single_interface_discovery_settings:
-        single_interface_discovery_settings.setdefault("item_appearance", "index")
-        single_interface_discovery_settings.setdefault("pad_portnumbers", True)
+    single_interface_discovery_settings = {
+        # pre-2.0 default settings that were effectively added to any user-defined rule, unless the
+        # user specifically configured these fields
+        "item_appearance": "index",
+        "pad_portnumbers": True,
+        **{key: params.pop(key) for key in ["item_appearance", "pad_portnumbers"] if key in params},
+    }
+    if 'discovery_single' not in params:
         params['discovery_single'] = (True, single_interface_discovery_settings)
 
     if 'matching_conditions' not in params:
-        params['matching_conditions'] = (True, {})
+        params['matching_conditions'] = (
+            False,
+            {
+                # pre-2.0 default matching conditions that were effectively added to any
+                # user-defined rule, unless the user specifically configured these fields
+                'portstates': ['1'],
+                'porttypes': [
+                    '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'
+                ],
+            },
+        )
     for key in ['match_alias', 'match_desc', 'portstates', 'porttypes']:
         if key in params:
             params['matching_conditions'][1][key] = params.pop(key)
             params['matching_conditions'] = (False, params['matching_conditions'][1])
 
     # Up to and including v1.6, port state '9' was used to represent an ifAdminStatus of 2. From
-    # v1.7 onwards, ifAdminStatus is handled completely separately from the port state. Note that
+    # v2.0 onwards, ifAdminStatus is handled completely separately from the port state. Note that
     # a unique transform is unfortunately not possible here. For example, translating
     # {'portstates': [1, 2, 9]}
     # into

@@ -143,10 +143,42 @@ from cmk.gui.plugins.wato.check_parameters.interfaces import _transform_discover
             'portstates': ['1', '2', '9'],
         },
         {
+            'discovery_single': (
+                True,
+                {
+                    'item_appearance': 'index',
+                    'pad_portnumbers': True,
+                },
+            ),
             'matching_conditions': (
                 False,
                 {
                     'portstates': ['1', '2'],
+                    'porttypes': [
+                        '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205',
+                        '229'
+                    ]
+                },
+            ),
+        },
+    ),
+    (
+        {
+            'porttypes': ['6'],
+        },
+        {
+            'discovery_single': (
+                True,
+                {
+                    'item_appearance': 'index',
+                    'pad_portnumbers': True,
+                },
+            ),
+            'matching_conditions': (
+                False,
+                {
+                    'portstates': ['1'],
+                    'porttypes': ['6'],
                 },
             ),
         },
@@ -156,10 +188,70 @@ from cmk.gui.plugins.wato.check_parameters.interfaces import _transform_discover
             'portstates': ['9'],
         },
         {
+            'discovery_single': (
+                True,
+                {
+                    'item_appearance': 'index',
+                    'pad_portnumbers': True,
+                },
+            ),
             'matching_conditions': (
                 False,
                 {
                     'admin_states': ['2'],
+                    'porttypes': [
+                        '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205',
+                        '229'
+                    ],
+                },
+            ),
+        },
+    ),
+    (
+        {
+            'match_alias': ['uplink'],
+            'match_desc': ['eth.*'],
+        },
+        {
+            'discovery_single': (
+                True,
+                {
+                    'item_appearance': 'index',
+                    'pad_portnumbers': True,
+                },
+            ),
+            'matching_conditions': (
+                False,
+                {
+                    'portstates': ['1'],
+                    'porttypes': [
+                        '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205',
+                        '229'
+                    ],
+                    'match_alias': ['uplink'],
+                    'match_desc': ['eth.*'],
+                },
+            ),
+        },
+    ),
+    (
+        {},
+        {
+            'discovery_single': (
+                True,
+                {
+                    'item_appearance': 'index',
+                    'pad_portnumbers': True,
+                },
+            ),
+            'matching_conditions': (
+                False,
+                {
+                    'portstates': ['1'],
+                    'porttypes': [
+                        '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205',
+                        '229'
+                    ],
                 },
             ),
         },

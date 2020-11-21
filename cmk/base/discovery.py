@@ -340,20 +340,18 @@ def do_discovery(
         section.section_begin(hostname)
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
-            sources = checkers.make_sources(
-                host_config,
-                ipaddress,
-                mode=mode,
-                selected_sections=selected_sections,
-            )
-            for source in sources:
-                _configure_sources(source, discovery_parameters=discovery_parameters)
             nodes = checkers.make_nodes(
                 config_cache,
                 host_config,
                 ipaddress,
                 mode,
-                sources,
+                checkers.make_sources(
+                    host_config,
+                    ipaddress,
+                    mode=mode,
+                    selected_sections=selected_sections,
+                    on_scan_error=on_error,
+                ),
             )
             max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
 
@@ -534,21 +532,19 @@ def discover_on_host(
         else:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-        sources = checkers.make_sources(
-            host_config,
-            ipaddress,
-            mode=checkers.Mode.DISCOVERY,
-        )
-        for source in sources:
-            _configure_sources(source, discovery_parameters=discovery_parameters)
-
         nodes = checkers.make_nodes(
             config_cache,
             host_config,
             ipaddress,
             checkers.Mode.DISCOVERY,
-            sources,
+            checkers.make_sources(
+                host_config,
+                ipaddress,
+                mode=checkers.Mode.DISCOVERY,
+                on_scan_error=on_error,
+            ),
         )
+
         max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
         multi_host_sections = MultiHostSections()
         checkers.update_host_sections(
@@ -721,19 +717,12 @@ def check_discovery(
     mode = (checkers.Mode.DISCOVERY
             if params['inventory_check_do_scan'] else checkers.Mode.CACHED_DISCOVERY)
 
-    sources = checkers.make_sources(host_config, ipaddress, mode=mode)
-    for source in sources:
-        _configure_sources(
-            source,
-            discovery_parameters=discovery_parameters,
-        )
-
     nodes = checkers.make_nodes(
         config_cache,
         host_config,
         ipaddress,
         mode,
-        sources,
+        checkers.make_sources(host_config, ipaddress, mode=mode),
     )
     use_caches = checkers.FileCacheFactory.maybe
     max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
@@ -1437,15 +1426,6 @@ def _discover_services(
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def _configure_sources(
-    source: checkers.Source,
-    *,
-    discovery_parameters: DiscoveryParameters,
-):
-    if isinstance(source, checkers.snmp.SNMPSource):
-        source.on_snmp_scan_error = discovery_parameters.on_error
-
-
 def _execute_discovery(
     multi_host_sections: MultiHostSections,
     hostname: HostName,
@@ -1768,21 +1748,14 @@ def get_check_preview(
 
     mode = checkers.Mode.CACHED_DISCOVERY if use_caches else checkers.Mode.DISCOVERY
 
-    sources = checkers.make_sources(
-        host_config,
-        ip_address,
-        mode=mode,
-    )
-    for source in sources:
-        _configure_sources(source, discovery_parameters=discovery_parameters)
-
     nodes = checkers.make_nodes(
-        config_cache,
-        host_config,
-        ip_address,
-        mode,
-        sources,
-    )
+        config_cache, host_config, ip_address, mode,
+        checkers.make_sources(
+            host_config,
+            ip_address,
+            mode=mode,
+            on_scan_error=on_error,
+        ))
     max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
 
     multi_host_sections = MultiHostSections()

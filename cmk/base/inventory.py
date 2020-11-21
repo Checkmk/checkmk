@@ -239,19 +239,17 @@ def _fetch_multi_host_sections_for_inv(
     mode = (checkers.Mode.INVENTORY
             if selected_sections is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS)
 
-    sources = checkers.make_sources(
-        host_config,
-        ipaddress,
-        mode=mode,
-        selected_sections=selected_sections,
-    )
-
     nodes = checkers.make_nodes(
         config_cache,
         host_config,
         ipaddress,
         mode,
-        sources,
+        checkers.make_sources(
+            host_config,
+            ipaddress,
+            mode=mode,
+            selected_sections=selected_sections,
+        ),
     )
     multi_host_sections = MultiHostSections()
     results = checkers.update_host_sections(

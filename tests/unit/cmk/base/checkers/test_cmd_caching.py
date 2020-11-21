@@ -103,7 +103,7 @@ def _patch_data_source(mocker, **kwargs):
                 self.use_outdated_persisted_sections == defaults["use_outdated_persisted_sections"])
 
         elif isinstance(self, SNMPSource):
-            assert self.on_snmp_scan_error == defaults["on_error"]
+            assert self._on_snmp_scan_error == defaults["on_error"]
 
         result = callback(self, *args, **kwargs)
         if result.is_error():

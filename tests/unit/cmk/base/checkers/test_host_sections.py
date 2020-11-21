@@ -549,6 +549,7 @@ class TestMakeHostSectionsHosts:
                         ipaddress,
                         mode=mode,
                         selected_sections=NO_SELECTION,
+                        on_scan_error="raise",
                     ),
                 ],
             ),

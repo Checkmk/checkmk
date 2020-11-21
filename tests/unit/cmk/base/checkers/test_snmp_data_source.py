@@ -45,7 +45,13 @@ def scenario_fixture(hostname, monkeypatch):
 
 @pytest.fixture(name="source")
 def source_fixture(scenario, hostname, ipaddress, mode):
-    return SNMPSource.snmp(hostname, ipaddress, mode=mode, selected_sections=NO_SELECTION)
+    return SNMPSource.snmp(
+        hostname,
+        ipaddress,
+        mode=mode,
+        selected_sections=NO_SELECTION,
+        on_scan_error="raise",
+    )
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
@@ -67,7 +73,7 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
-    assert source.on_snmp_scan_error == "raise"
+    assert source._on_snmp_scan_error == "raise"
 
 
 def test_description_with_ipaddress(source, monkeypatch):
@@ -83,7 +89,13 @@ class TestSNMPSource_SNMP:
 
         Scenario().add_host(hostname).apply(monkeypatch)
 
-        source = SNMPSource.snmp(hostname, ipaddress, mode=mode, selected_sections=NO_SELECTION)
+        source = SNMPSource.snmp(
+            hostname,
+            ipaddress,
+            mode=mode,
+            selected_sections=NO_SELECTION,
+            on_scan_error="raise",
+        )
         assert source.description == (
             "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: %s)" %
             ("Classic" if cmk_version.is_raw_edition() else "Inline"))
@@ -112,6 +124,7 @@ class TestSNMPSource_MGMT:
             ipaddress,
             mode=mode,
             selected_sections=NO_SELECTION,
+            on_scan_error="raise",
         )
         assert source.description == (
             "Management board - SNMP "
@@ -145,6 +158,7 @@ class TestSNMPSummaryResult:
             source_type=SourceType.HOST,
             id_="snmp_id",
             title="snmp title",
+            on_scan_error="raise",
         )
 
     @pytest.mark.usefixtures("scenario")

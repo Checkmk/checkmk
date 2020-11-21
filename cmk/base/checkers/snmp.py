@@ -60,7 +60,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
         title: str,
-        on_error: str = "raise",
+        on_scan_error: str,
     ):
         super().__init__(
             hostname,
@@ -89,7 +89,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             # Because of crap inheritance.
             self.host_config.snmp_config(self.ipaddress)
             if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
-        self.on_snmp_scan_error = on_error
+        self._on_snmp_scan_error = on_scan_error
 
     @classmethod
     def snmp(
@@ -99,6 +99,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         *,
         mode: Mode,
         selected_sections: SectionNameCollection,
+        on_scan_error: str,
     ) -> "SNMPSource":
         assert ipaddress is not None
         return cls(
@@ -109,6 +110,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             selected_sections=selected_sections,
             id_="snmp",
             title="SNMP",
+            on_scan_error=on_scan_error,
         )
 
     @classmethod
@@ -119,6 +121,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         *,
         mode: Mode,
         selected_sections: SectionNameCollection,
+        on_scan_error: str,
     ) -> "SNMPSource":
         if ipaddress is None:
             raise TypeError(ipaddress)
@@ -130,6 +133,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             selected_sections=selected_sections,
             id_="mgmt_snmp",
             title="Management board - SNMP",
+            on_scan_error=on_scan_error,
         )
 
     def _make_file_cache(self) -> SNMPFileCache:
@@ -144,7 +148,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return SNMPFetcher(
             self._make_file_cache(),
             sections=self._make_sections(),
-            on_error=self.on_snmp_scan_error,
+            on_error=self._on_snmp_scan_error,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 self.snmp_config.hostname,
                 config.snmp_without_sys_descr,

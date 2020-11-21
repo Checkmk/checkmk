@@ -174,18 +174,17 @@ def do_check(
             run_only_plugin_names=run_only_plugin_names,
         )
 
-        sources = checkers.make_sources(
-            host_config,
-            ipaddress,
-            mode=mode,
-            selected_sections=selected_sections,
-        )
         nodes = checkers.make_nodes(
             config_cache,
             host_config,
             ipaddress,
             mode,
-            sources,
+            checkers.make_sources(
+                host_config,
+                ipaddress,
+                mode=mode,
+                selected_sections=selected_sections,
+            ),
         )
 
         if not fetcher_messages:

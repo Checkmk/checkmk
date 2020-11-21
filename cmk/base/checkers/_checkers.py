@@ -46,6 +46,7 @@ class _Builder:
         *,
         mode: Mode,
         selected_sections: SectionNameCollection,
+        on_scan_error: str,
     ) -> None:
         super().__init__()
         self._host_config = host_config
@@ -53,6 +54,7 @@ class _Builder:
         self._ipaddress = ipaddress
         self._mode = mode
         self._selected_sections = selected_sections
+        self._on_scan_error = on_scan_error
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -111,6 +113,7 @@ class _Builder:
                 self._ipaddress,
                 mode=self._mode,
                 selected_sections=self._selected_sections,
+                on_scan_error=self._on_scan_error,
             ))
 
     def _initialize_mgmt_boards(self) -> None:
@@ -126,6 +129,7 @@ class _Builder:
                     ip_address,
                     mode=self._mode,
                     selected_sections=self._selected_sections,
+                    on_scan_error=self._on_scan_error,
                 ))
         elif protocol == "ipmi":
             self._add(IPMISource(
@@ -184,6 +188,7 @@ def make_sources(
     *,
     mode: Mode,
     selected_sections: SectionNameCollection = NO_SELECTION,
+    on_scan_error: str = "raise",
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
@@ -191,6 +196,7 @@ def make_sources(
         ipaddress,
         mode=mode,
         selected_sections=selected_sections,
+        on_scan_error=on_scan_error,
     ).sources
 
 

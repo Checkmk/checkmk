@@ -49,21 +49,15 @@ class SingleInterfaceDiscoveryParams(TypedDict, total=False):
     labels: ServiceLabels
 
 
-class InterfaceGroupsDiscoveryParams(TypedDict, total=False):
-    group_items: Iterable[Mapping[str, str]]
-    labels: ServiceLabels
+MatchingConditions = Mapping[str, List[str]]
 
 
-MatchingConditions = Dict[str, List[str]]
-
-
-class DiscoveryParams(TypedDict, total=False):
-    discovery_single: Tuple[bool, Union[Mapping, SingleInterfaceDiscoveryParams]]
-    grouping: Tuple[bool, InterfaceGroupsDiscoveryParams]
+class DiscoveryDefaultParams(TypedDict, total=False):
+    discovery_single: Tuple[bool, SingleInterfaceDiscoveryParams]
     matching_conditions: Tuple[bool, MatchingConditions]
 
 
-DISCOVERY_DEFAULT_PARAMETERS: DiscoveryParams = {
+DISCOVERY_DEFAULT_PARAMETERS: DiscoveryDefaultParams = {
     'matching_conditions': (
         False,
         {
@@ -439,55 +433,8 @@ def _check_group_matching_conditions(
         ) for exclusion_condition in group_configuration['exclusion_conditions'])
 
 
-def transform_discovery_rules(params: type_defs.Parameters) -> DiscoveryParams:
-    # See cmk.gui.plugins.wato.check_parameters.if._transform_discovery_if_rules for more
-    # information
-
-    params_mutable = dict(**params)
-
-    if 'use_alias' in params:
-        params_mutable['item_appearance'] = 'alias'
-    if 'use_desc' in params:
-        params_mutable['item_appearance'] = 'descr'
-
-    params_transformed: DiscoveryParams = {}
-    for key in ['discovery_single', 'grouping', 'matching_conditions']:
-        if key in params_mutable:
-            params_transformed[key] = params_mutable[key]  # type: ignore[misc]
-
-    if 'discovery_single' not in params_transformed:
-        single_interface_discovery_settings = {}
-        for key in ["item_appearance", "pad_portnumbers"]:
-            if key in params_mutable:
-                single_interface_discovery_settings[key] = params_mutable[key]
-        if single_interface_discovery_settings:
-            single_interface_discovery_settings.setdefault("item_appearance", "index")
-            single_interface_discovery_settings.setdefault("pad_portnumbers", True)
-            params_transformed['discovery_single'] = (True, single_interface_discovery_settings)
-
-    if 'matching_conditions' not in params_transformed:
-        params_transformed['matching_conditions'] = (True, {})
-    for key in ['match_alias', 'match_desc', 'portstates', 'porttypes']:
-        if key in params_mutable:
-            params_transformed['matching_conditions'][1][key] = params_mutable[key]
-            params_transformed['matching_conditions'] = (
-                False, params_transformed['matching_conditions'][1])
-
-    matching_conditions_spec = params_transformed['matching_conditions'][1]
-    try:
-        matching_conditions_spec.get('portstates', []).remove('9')
-        removed_port_state_9 = True
-    except ValueError:
-        removed_port_state_9 = False
-    if removed_port_state_9 and matching_conditions_spec.get('portstates') == []:
-        del matching_conditions_spec['portstates']
-        matching_conditions_spec['admin_states'] = ['2']
-
-    return params_transformed
-
-
 def _groups_from_params(
-    discovery_params: Sequence[DiscoveryParams],) -> Dict[str, GroupConfiguration]:
+    discovery_params: Sequence[type_defs.Parameters],) -> Dict[str, GroupConfiguration]:
     groups: Dict[str, GroupConfiguration] = {}
     inclusion_importances = {}
     exclusion_conditions = []
@@ -529,8 +476,6 @@ def discover_interfaces(
     if len(section) == 0:
         return
 
-    rulesets = [transform_discovery_rules(par) for par in params]
-
     pre_inventory = []
     seen_indices: Set[str] = set()
     n_times_item_seen: Dict[str, int] = defaultdict(int)
@@ -544,12 +489,12 @@ def discover_interfaces(
         single_interface_settings = DISCOVERY_DEFAULT_PARAMETERS['discovery_single'][1]
         # find the most specific rule which applies to this interface and which has single-interface
         # discovery settings
-        for ruleset in rulesets:
-            if 'discovery_single' in ruleset and _check_single_matching_conditions(
+        for rule in params:
+            if 'discovery_single' in rule and _check_single_matching_conditions(
                     interface,
-                    ruleset['matching_conditions'][1],
+                    rule['matching_conditions'][1],
             ):
-                discover_single_interface, single_interface_settings = ruleset['discovery_single']
+                discover_single_interface, single_interface_settings = rule['discovery_single']
                 break
 
         # add all ways of describing this interface to the seen items (even for unmonitored ports)
@@ -612,7 +557,7 @@ def discover_interfaces(
     # ==============================================================================================
     # GROUPING
     # ==============================================================================================
-    interface_groups.update(_groups_from_params(rulesets))
+    interface_groups.update(_groups_from_params(params))
     for group_name, group_configuration in interface_groups.items():
         groups_has_members = False
         group_oper_status = "2"  # operation status, default is down (2)

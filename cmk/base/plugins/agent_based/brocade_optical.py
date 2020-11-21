@@ -299,17 +299,15 @@ def discover_brocade_optical(
     else:
         pad_width = 0
 
-    rulesets = [interfaces.transform_discovery_rules(par) for par in params]
-
     for key, entry in section.items():
         # find the most specific rule which applies to this interface and which has single-interface
         # discovery settings
-        for ruleset in rulesets:
-            if 'discovery_single' in ruleset and _check_matching_conditions(
+        for rule in params:
+            if 'discovery_single' in rule and _check_matching_conditions(
                     entry,
-                    ruleset['matching_conditions'][1],
+                    rule['matching_conditions'][1],
             ):
-                if ruleset['discovery_single'][0]:
+                if rule['discovery_single'][0]:
                     # if pad_width == 0 then "0" * -X == ""
                     yield Service(item="0" * (pad_width - len(key)) + key)
                 break

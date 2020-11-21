@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 from testlib import get_value_store_fixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
@@ -127,10 +127,26 @@ def test_discovery_ungrouped_empty_section():
 
 
 def test_discovery_ungrouped_admin_status():
+    ifaces = _create_interfaces(0, admin_status='1')
+    ifaces[-1].admin_status = '2'
     assert list(
         interfaces.discover_interfaces(
-            [DEFAULT_DISCOVERY_PARAMS],
-            _create_interfaces(0, admin_status='1'),
+            [
+                type_defs.Parameters({
+                    'discovery_single': (
+                        False,
+                        {},
+                    ),
+                    'matching_conditions': (
+                        False,
+                        {
+                            'admin_states': ['2']
+                        },
+                    ),
+                }),
+                DEFAULT_DISCOVERY_PARAMS,
+            ],
+            ifaces,
         )) == [
             Service(
                 item='5',
@@ -138,15 +154,6 @@ def test_discovery_ungrouped_admin_status():
                     'discovered_oper_status': ['1'],
                     'discovered_speed': 10000000,
                     'discovered_admin_status': ['1'],
-                },
-                labels=[],
-            ),
-            Service(
-                item='6',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 0,
-                    'discovered_admin_status': ['1']
                 },
                 labels=[],
             ),
@@ -184,111 +191,6 @@ def test_discovery_ungrouped_off():
             ],
             _create_interfaces(0),
         )) == []
-
-
-def test_discovery_legacy_parameters_1():
-    assert list(
-        interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'pad_portnumbers': False,
-                    'item_appearance': 'alias',
-                    'match_desc': ['enxe4b97ab99f99', 'vboxnet0', 'lo'],
-                    'portstates': ['1', '2', '3'],
-                    'porttypes': ['6'],
-                    'match_alias': ['enxe4b97ab99f99', 'vboxnet0', 'lo'],
-                }),
-                type_defs.Parameters({
-                    'matching_conditions': (True, {}),
-                    'discovery_single': (False, {}),
-                }),
-                DEFAULT_DISCOVERY_PARAMS,
-            ],
-            _create_interfaces(0),
-        )) == [
-            Service(
-                item='enxe4b97ab99f99',
-                parameters={
-                    'discovered_oper_status': ['2'],
-                    'discovered_speed': 10000000,
-                },
-                labels=[],
-            ),
-            Service(
-                item='vboxnet0',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 10000000,
-                },
-                labels=[],
-            ),
-        ]
-
-
-def test_discovery_legacy_parameters_2():
-    assert list(
-        interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'item_appearance': 'index',
-                    'portstates': ['1', '9'],
-                }),
-            ],
-            _create_interfaces(0, admin_status='3'),
-        )) == [
-            Service(
-                item='1',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 0,
-                    'discovered_admin_status': ['3'],
-                },
-                labels=[],
-            ),
-            Service(
-                item='5',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 10000000,
-                    'discovered_admin_status': ['3'],
-                },
-                labels=[],
-            ),
-            Service(
-                item='6',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 0,
-                    'discovered_admin_status': ['3'],
-                },
-                labels=[],
-            ),
-        ]
-
-
-def test_discovery_legacy_parameters_3():
-    ifaces = _create_interfaces(0, admin_status='1')
-    ifaces[0].admin_status = '2'
-    assert list(
-        interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'item_appearance': 'alias',
-                    'portstates': ['9'],
-                }),
-            ],
-            ifaces,
-        )) == [
-            Service(
-                item='lo',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 0,
-                    'discovered_admin_status': ['2'],
-                },
-                labels=[],
-            )
-        ]
 
 
 def test_discovery_duplicate_index():

@@ -629,6 +629,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         }
 
         if cmk_version.is_demo():
+            # CMC may not run here, we will base the decision on is_demo only
             settings["cmc_cmk_helpers"] = 3
 
         return settings

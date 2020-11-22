@@ -21,6 +21,7 @@ from typing import Any, Dict
 from six import ensure_str
 
 import cmk.utils.paths
+import livestatus
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
@@ -77,6 +78,21 @@ def edition_title():
     if is_managed_edition():
         return "CME"
     return "CRE"
+
+
+def is_expired() -> bool:
+    try:
+        query = "GET status\nColumns: is_trial_expired\n"
+        response = livestatus.LocalConnection().query(query)
+        return response[0][0] == "1"
+    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+        # If livestatus is absent we assume that trial is not expired
+        pass
+    return False
+
+
+def is_expired_trial() -> bool:
+    return is_demo() and is_expired()
 
 
 #   .--general infos-------------------------------------------------------.

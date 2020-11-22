@@ -134,7 +134,7 @@ class ModeEditSite(WatoMode):
         self._clone_id = html.request.get_ascii_input("clone")
         self._new = self._site_id is None
 
-        if cmk_version.is_demo() and self._new:
+        if cmk_version.is_expired_trial() and self._new:
             num_sites = len(self._site_mgmt.load_sites())
             if num_sites > 1:
                 raise MKUserError(None, _get_demo_message())

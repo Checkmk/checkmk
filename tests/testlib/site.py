@@ -567,7 +567,7 @@ class Site:
             "The site does not have a tmpfs mounted! We require this for good performing tests"
 
     def stop(self):
-        if not self.is_running():
+        if self.is_stopped():
             return  # Nothing to do
 
         #logger.debug("= BEGIN PROCESSES BEFORE =======================================")
@@ -583,7 +583,7 @@ class Site:
         #logger.debug("= END PROCESSES AFTER STOP =======================================")
 
         i = 0
-        while self.is_running():
+        while not self.is_stopped():
             i += 1
             if i > 10:
                 raise Exception("Could not stop site %s" % self.id)
@@ -597,6 +597,13 @@ class Site:
     def is_running(self):
         return self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull,
                                                                               "w")).wait() == 0
+
+    def is_stopped(self):
+        # 0 -> fully running
+        # 1 -> fully stopped
+        # 2 -> partially running
+        return self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull,
+                                                                              "w")).wait() == 1
 
     def set_config(self, key, val, with_restart=False):
         if self.get_config(key) == val:
@@ -726,7 +733,7 @@ class Site:
         Not free of races, but should be sufficient."""
         start_again = False
 
-        if self.is_running():
+        if not self.is_stopped():
             start_again = True
             self.stop()
 

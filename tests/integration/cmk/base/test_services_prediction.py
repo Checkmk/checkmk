@@ -84,8 +84,8 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
 
     with on_time(utcdate, timezone):
         timestamp = time.time()
-        _, from_time, until_time, _ = prediction.get_prediction_timegroup(
-            int(timestamp), prediction.prediction_periods[period])
+        _, from_time, until_time, _ = prediction._get_prediction_timegroup(
+            int(timestamp), prediction._PREDICTION_PERIODS[period])
 
     timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
                                                    from_time, until_time)
@@ -153,19 +153,19 @@ def test_get_rrd_data_point_max(cfg_setup, max_entries, result):
 def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, reference):
     "This mostly verifies the up-sampling"
 
-    period_info = prediction.prediction_periods[params['period']]
+    period_info = prediction._PREDICTION_PERIODS[params['period']]
     with on_time(utcdate, timezone):
         now = int(time.time())
         groupby = period_info["groupby"]
         assert callable(groupby)
         timegroup = groupby(now)[0]
-        time_windows = prediction.time_slices(now, int(params["horizon"] * 86400), period_info,
-                                              timegroup)
+        time_windows = prediction._time_slices(now, int(params["horizon"] * 86400), period_info,
+                                               timegroup)
 
     hostname, service_description, dsname = 'test-prediction', "CPU load", 'load15'
     rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname,
                                                         "MAX")
-    result = prediction.retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
+    result = prediction._retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
 
     assert result == reference
 
@@ -197,20 +197,20 @@ def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, ref
 ])
 def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
 
-    period_info = prediction.prediction_periods[params['period']]
+    period_info = prediction._PREDICTION_PERIODS[params['period']]
     with on_time(utcdate, timezone):
         now = int(time.time())
         groupby = period_info["groupby"]
         assert callable(groupby)
         timegroup = groupby(now)[0]
 
-        time_windows = prediction.time_slices(now, int(params["horizon"] * 86400), period_info,
-                                              timegroup)
+        time_windows = prediction._time_slices(now, int(params["horizon"] * 86400), period_info,
+                                               timegroup)
 
     hostname, service_description, dsname = 'test-prediction', "CPU load", 'load15'
     rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname,
                                                         "MAX")
-    data_for_pred = prediction.calculate_data_for_prediction(time_windows, rrd_datacolumn)
+    data_for_pred = prediction._calculate_data_for_prediction(time_windows, rrd_datacolumn)
 
     path = "%s/tests/integration/cmk/base/test-files/%s/%s" % (repo_path(), timezone, timegroup)
     reference = cmk.utils.prediction.retrieve_data_for_prediction(path, timegroup)
@@ -241,8 +241,8 @@ def test_get_rrd_data_incomplete(cfg_setup, timerange, result):
 
 def test_get_rrd_data_fails(cfg_setup):
     timestamp = time.mktime(datetime.strptime("2018-11-28 12", "%Y-%m-%d %H").timetuple())
-    _, from_time, until_time, _ = prediction.get_prediction_timegroup(
-        int(timestamp), prediction.prediction_periods["hour"])
+    _, from_time, until_time, _ = prediction._get_prediction_timegroup(
+        int(timestamp), prediction._PREDICTION_PERIODS["hour"])
 
     # Fail to get data, because non-existent check
     with pytest.raises(MKGeneralException, match="Cannot get historic metrics via Livestatus:"):

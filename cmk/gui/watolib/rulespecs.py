@@ -135,9 +135,6 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
 
         main_groups = [g_class() for g_class in self.get_main_groups()]
         for main_group in sorted(main_groups, key=lambda g: g.title):
-            if main_group.name == "static":
-                continue
-
             choices.append((main_group.name, main_group.choice_title))
 
             sub_groups = [g_class() for g_class in self._get_sub_groups_of(main_group.__class__)]

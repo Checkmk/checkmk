@@ -159,11 +159,6 @@ class ABCRulesetMode(WatoMode):
         self._search_options: SearchOptions = ModeRuleSearchForm().search_options
 
     def _group_name_from_vars(self) -> Optional[str]:
-        # Static check rulesets are treated like a separate world from the other rulesets. They can
-        # not be searched, so we have to handle them in a sepcial way here.
-        if html.request.get_ascii_input("group") == "static":
-            return "static"
-
         # Transform group argument to the "rule search arguments"
         # Keeping this for compatibility reasons for the moment
         # This is either given via "group" parameter or via search (see blow)
@@ -283,6 +278,8 @@ class ModeRuleSearch(ABCRulesetMode):
         return PageType.RuleSearch
 
     def _rulesets(self):
+        if self._group_name == "static":
+            return watolib.StaticChecksRulesets()
         return watolib.NonStaticChecksRulesets()
 
     def _set_title_and_help(self):
@@ -327,7 +324,7 @@ class ModeRuleSearch(ABCRulesetMode):
                         ),
                         PageMenuTopic(
                             title=_("Predefined searches"),
-                            entries=list(_page_menu_entries_predefined_searches()),
+                            entries=list(_page_menu_entries_predefined_searches(self._group_name)),
                         ),
                     ],
                 ),
@@ -358,13 +355,19 @@ class ModeRuleSearch(ABCRulesetMode):
         super().page()
 
 
-def _page_menu_entries_predefined_searches() -> Iterable[PageMenuEntry]:
+def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[PageMenuEntry]:
+    if group is None:
+        return
+
     yield PageMenuEntry(
         title=_("Used rulesets"),
         icon_name="usedrulesets",
         item=make_simple_link(
             watolib.folder_preserving_link([
                 ("mode", "rule_search"),
+                ("group", group),
+                ("search_p_ruleset_group", DropdownChoice.option_id(group)),
+                ("search_p_ruleset_group_USE", "on"),
                 ("search_p_ruleset_used", DropdownChoice.option_id(True)),
                 ("search_p_ruleset_used_USE", "on"),
             ])),
@@ -376,6 +379,9 @@ def _page_menu_entries_predefined_searches() -> Iterable[PageMenuEntry]:
         item=make_simple_link(
             watolib.folder_preserving_link([
                 ("mode", "rule_search"),
+                ("group", group),
+                ("search_p_ruleset_group", DropdownChoice.option_id(group)),
+                ("search_p_ruleset_group_USE", "on"),
                 ("search_p_rule_ineffective", DropdownChoice.option_id(True)),
                 ("search_p_rule_ineffective_USE", "on"),
             ])),
@@ -387,6 +393,9 @@ def _page_menu_entries_predefined_searches() -> Iterable[PageMenuEntry]:
         item=make_simple_link(
             watolib.folder_preserving_link([
                 ("mode", "rule_search"),
+                ("group", group),
+                ("search_p_ruleset_group", DropdownChoice.option_id(group)),
+                ("search_p_ruleset_group_USE", "on"),
                 ("search_p_ruleset_deprecated", DropdownChoice.option_id(True)),
                 ("search_p_ruleset_deprecated_USE", "on"),
             ])),
@@ -502,9 +511,14 @@ class ModeRulesetGroup(ABCRulesetMode):
                 item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
             )
 
-        yield _page_menu_entry_rule_search()
+        yield _page_menu_entry_search_rules(
+            self._search_options,
+            "rulesets",
+            self._page_type,
+        )
 
-        yield from _page_menu_entries_predefined_searches()
+        assert self._group_name is not None
+        yield from _page_menu_entries_predefined_searches(self._group_name)
 
 
 def _page_menu_entry_predefined_conditions() -> PageMenuEntry:

@@ -1300,6 +1300,15 @@ def _expected_rulespec_group_choices():
         ('datasource_programs/os', '&nbsp;&nbsp;⌙ Operating systems'),
         ('datasource_programs/testing', '&nbsp;&nbsp;⌙ Testing'),
         ('snmp', 'SNMP settings'),
+        ('static', 'Enforced services'),
+        ('static/applications', '&nbsp;&nbsp;⌙ Applications, Processes & Services'),
+        ('static/environment', '&nbsp;&nbsp;⌙ Temperature, Humidity, Electrical Parameters, etc.'),
+        ('static/hardware', '&nbsp;&nbsp;⌙ Hardware, BIOS'),
+        ('static/networking', '&nbsp;&nbsp;⌙ Networking'),
+        ('static/os', '&nbsp;&nbsp;⌙ Operating System Resources'),
+        ('static/printers', '&nbsp;&nbsp;⌙ Printers'),
+        ('static/storage', '&nbsp;&nbsp;⌙ Storage, Filesystems and Files'),
+        ('static/virtualization', '&nbsp;&nbsp;⌙ Virtualization'),
         ('vm_cloud_container', 'VM, Cloud, Container'),
     ]
 

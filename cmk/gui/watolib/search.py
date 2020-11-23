@@ -5,17 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import chain
 import pathlib
 import pickle
 from typing import (
     Callable,
     DefaultDict,
+    Dict,
     Final,
     Iterable,
     Mapping,
-    Sequence,
     Tuple,
 )
 from werkzeug.test import create_environ
@@ -30,7 +30,7 @@ from cmk.gui.globals import RequestContext
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.pages import get_page_handler
 from cmk.gui.plugins.watolib.utils import (
     ConfigVariableRegistry,
@@ -42,9 +42,12 @@ from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.watolib.utils import may_edit_ruleset
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 
+_NAME_DEFAULT_LANGUAGE = 'default'
+
 
 class IndexNotFoundException(MKGeneralException):
-    """Raised when trying to load a non-existing search index file"""
+    """Raised when trying to load a non-existing search index file or when the current language is
+    missing in the search index"""
 
 
 @dataclass
@@ -59,7 +62,19 @@ class MatchItem:
 
 
 MatchItems = Iterable[MatchItem]
-Index = Mapping[str, Sequence[MatchItem]]
+MatchItemsByTopic = Dict[str, MatchItems]
+
+
+@dataclass
+class Index:
+    localization_independent: MatchItemsByTopic = field(default_factory=dict)
+    localization_dependent: Dict[str, MatchItemsByTopic] = field(default_factory=dict)
+
+    # TODO: Would be nice to use the positional-only syntax here (, /) once yapf supports it
+    def update(self, newer_index: 'Index'):
+        self.localization_independent.update(newer_index.localization_independent)
+        for language, match_items_by_topic in newer_index.localization_dependent.items():
+            self.localization_dependent.setdefault(language, {}).update(match_items_by_topic)
 
 
 class ABCMatchItemGenerator(ABC):
@@ -92,13 +107,38 @@ class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
 class IndexBuilder:
     def __init__(self, registry: MatchItemGeneratorRegistry):
         self._registry = registry
+        self._all_languages = {
+            name: name or _NAME_DEFAULT_LANGUAGE for language in get_languages()
+            for name in [language[0]]
+        }
+
+    def _build_index(
+        self,
+        names_and_generators: Iterable[Tuple[str, ABCMatchItemGenerator]],
+    ) -> Index:
+        index = Index()
+        localization_dependent_generators = []
+
+        for name, match_item_generator in names_and_generators:
+            if match_item_generator.is_localization_dependent:
+                localization_dependent_generators.append((name, match_item_generator))
+                continue
+            index.localization_independent[name] = self._evaluate_match_item_generator(
+                match_item_generator)
+
+        index.localization_dependent = {
+            language_name: {
+                name: self._evaluate_match_item_generator(match_item_generator)
+                for name, match_item_generator in localization_dependent_generators
+            } for language, language_name in self._all_languages.items()
+            for _ in [localize(language)]  # type: ignore[func-returns-value]
+        }
+
+        return index
 
     @staticmethod
-    def _build_index(names_and_generators: Iterable[Tuple[str, ABCMatchItemGenerator]]) -> Index:
-        return {
-            name: list(match_item_generator.generate_match_items())
-            for name, match_item_generator in names_and_generators
-        }
+    def _evaluate_match_item_generator(match_item_generator: ABCMatchItemGenerator) -> MatchItems:
+        return list(match_item_generator.generate_match_items())
 
     def build_full_index(self) -> Index:
         return self._build_index(self._registry.items())
@@ -111,7 +151,7 @@ class IndexBuilder:
 
 
 class IndexStore:
-    _cached_index: Index = {}
+    _cached_index = None
     _cached_mtime = 0.
 
     def __init__(self, path: pathlib.Path) -> None:
@@ -129,25 +169,21 @@ class IndexStore:
         try:
             current_mtime = self._path.stat().st_mtime
             if self._is_cache_valid(current_mtime):
-                return self._cached_index
+                return self.__class__._cached_index  # type: ignore[return-value]
             self.__class__._cached_index = self._load_index_from_file()
             self.__class__._cached_mtime = current_mtime
-            return self._cached_index
+            return self.__class__._cached_index
         except FileNotFoundError:
             if launch_rebuild_if_missing:
                 build_and_store_index_background()
             raise IndexNotFoundException
 
     def _is_cache_valid(self, current_mtime: float) -> bool:
-        return bool(self._cached_index) and self._cached_mtime >= current_mtime
+        return self.__class__._cached_index is not None and self._cached_mtime >= current_mtime
 
     def _load_index_from_file(self) -> Index:
         with self._path.open(mode="rb") as index_file:
             return pickle.load(index_file)
-
-    def all_match_items(self) -> MatchItems:
-        yield from (
-            match_item for match_items in self.load_index().values() for match_item in match_items)
 
 
 class URLChecker:
@@ -206,12 +242,21 @@ class IndexSearcher:
         permissions_handler = PermissionsHandler()
         self._may_see_topic = permissions_handler.permissions_for_topics()
         self._may_see_item_func = permissions_handler.permissions_for_items()
+        self._current_language = get_current_language() or _NAME_DEFAULT_LANGUAGE
 
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
         query_lowercase = query.lower()
         results = DefaultDict(list)
 
-        for topic, match_items in self._index_store.load_index().items():
+        index = self._index_store.load_index()
+        if self._current_language not in index.localization_dependent:
+            build_and_store_index_background()
+            raise IndexNotFoundException
+
+        for topic, match_items in chain(
+                index.localization_independent.items(),
+                index.localization_dependent[self._current_language].items(),
+        ):
             if not self._may_see_topic.get(topic, True):
                 continue
             permissions_check = self._may_see_item_func.get(topic, lambda _: True)
@@ -309,10 +354,8 @@ def _update_and_store_index_background(
         _build_and_store_index_background(job_interface)
         return
 
-    index_store.store_index({
-        **current_index,
-        **index_builder.build_changed_sub_indices(change_action_name)
-    })
+    current_index.update(index_builder.build_changed_sub_indices(change_action_name))
+    index_store.store_index(current_index)
 
     job_interface.send_result_message(_("Search index successfully updated"))
 

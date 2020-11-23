@@ -355,7 +355,7 @@ def wsgi_app_debug_off(monkeypatch):
 
 @pytest.fixture(scope='function', autouse=True)
 def store_search_index():
-    search.get_index_store().store_index({})
+    search.get_index_store().store_index(search.Index())
 
 
 @pytest.fixture(scope='function', autouse=True)

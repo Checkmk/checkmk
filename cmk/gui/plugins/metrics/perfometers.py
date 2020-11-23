@@ -369,13 +369,6 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "logarithmic",
-    "metric": "dedup_rate",
-    "half_value": 30.0,
-    "exponent": 1.2,
-})
-
-perfometer_info.append({
-    "type": "logarithmic",
     "metric": "major_page_faults",
     "half_value": 1000.0,
     "exponent": 2.0
@@ -533,6 +526,13 @@ perfometer_info.append({
     ],
     "total": 100,
     "label": ("fs_used(%)", "%"),
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "dedup_rate",
+    "half_value": 30.0,
+    "exponent": 1.2,
 })
 
 perfometer_info.append({

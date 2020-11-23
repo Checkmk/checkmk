@@ -1,0 +1,15 @@
+Title: Swap perfometer definitions for fs_size/_usage and dedup_rate
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606141308
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+In case a check provides metrics for deduplication rate ({{dedup_rate}}) and filesystem
+usage ({{fs_size}} and {{fs_usage}}) the Perf-O-Meter would display the (less important)
+deduplication rate.
+This change makes perfometer definition for {{dedup_rate}} appear after {{fs_size}} and
+{{fs_usage}}.

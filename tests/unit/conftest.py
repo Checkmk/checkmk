@@ -147,7 +147,7 @@ def _config_load_all_inventory_plugins():
             inventory_legacy.get_inventory_context,
         )
 
-    assert len(inventory_plugins.inv_info) > 90  # sanitiy check, may decrease as we migrate
+    assert len(inventory_plugins.inv_info) > 60  # sanitiy check, may decrease as we migrate
 
 
 @pytest.fixture(scope="session")

@@ -50,12 +50,13 @@ class CMCLogLevel(str, enum.Enum):
 
     @staticmethod
     def from_level(level: int) -> "CMCLogLevel":
+        # Table from `cmk.utils.log._level`.
         return {
             logging.CRITICAL: CMCLogLevel.CRITICAL,
             logging.ERROR: CMCLogLevel.ERROR,
             logging.WARNING: CMCLogLevel.WARNING,
-            logging.INFO: CMCLogLevel.NOTICE,
-            log.VERBOSE: CMCLogLevel.INFO,
+            logging.INFO: CMCLogLevel.INFO,
+            log.VERBOSE: CMCLogLevel.DEBUG,
             logging.DEBUG: CMCLogLevel.DEBUG,
         }[level]
 

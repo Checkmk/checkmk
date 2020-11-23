@@ -78,6 +78,11 @@ class ABCMatchItemGenerator(ABC):
     def is_affected_by_change(self, change_action_name: str) -> bool:
         ...
 
+    @property
+    @abstractmethod
+    def is_localization_dependent(self) -> bool:
+        ...
+
 
 class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
     def plugin_name(self, instance: ABCMatchItemGenerator) -> str:
@@ -376,6 +381,10 @@ class MatchItemGeneratorGlobalSettings(ABCMatchItemGenerator):
 
     def is_affected_by_change(self, *_, **__) -> bool:
         return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
 
 
 match_item_generator_registry = MatchItemGeneratorRegistry()

@@ -1274,6 +1274,10 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
     def is_affected_by_change(self, *_, **__) -> bool:
         return False
 
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
+
 
 rulespec_registry = RulespecRegistry(rulespec_group_registry)
 

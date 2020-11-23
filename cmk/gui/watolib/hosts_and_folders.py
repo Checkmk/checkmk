@@ -3056,6 +3056,10 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
     def is_affected_by_change(self, change_action_name: str) -> bool:
         return 'host' in change_action_name
 
+    @property
+    def is_localization_dependent(self) -> bool:
+        return False
+
 
 match_item_generator_registry.register(MatchItemGeneratorHosts(
     'hosts',

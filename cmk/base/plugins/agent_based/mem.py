@@ -52,9 +52,11 @@ def inventory_mem(section: Dict[str, int]):
     yield Attributes(
         path=["hardware", "memory"],
         inventory_attributes={
-            "total_ram_usable": section["MemTotal"],
-            "total_swap": section["SwapTotal"],
-            "total_vmalloc": section["VmallocTotal"],
+            key_inventory: section[key_section] for key_inventory, key_section in [
+                ("total_ram_usable", "MemTotal"),
+                ("total_swap", "SwapTotal"),
+                ("total_vmalloc", "VmallocTotal"),
+            ] if key_section in section
         },
     )
 

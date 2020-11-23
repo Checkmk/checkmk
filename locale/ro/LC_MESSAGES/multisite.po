@@ -3285,13 +3285,13 @@ msgstr ""
 msgid "Activate changes finished"
 msgstr "Activare Schimbări!"
 
-#: ../cmk/gui/wato/pages/activate_changes.py:547
+#: ../cmk/gui/wato/pages/activate_changes.py:572
 #, fuzzy
 #| msgid "Activate Changes!"
 msgid "Activate changes of other users"
 msgstr "Activare Schimbări!"
 
-#: ../cmk/gui/wato/pages/activate_changes.py:546
+#: ../cmk/gui/wato/pages/activate_changes.py:571
 #, fuzzy
 #| msgid "Activate Changes!"
 msgid "Activate foreign changes"
@@ -12182,7 +12182,7 @@ msgstr ""
 
 #: ../cmk/gui/wato/pages/pattern_editor.py:260
 #: ../cmk/gui/wato/pages/rulesets.py:1234
-#: ../cmk/gui/wato/pages/activate_changes.py:533 ../cmk/gui/valuespec.py:6123
+#: ../cmk/gui/wato/pages/activate_changes.py:558 ../cmk/gui/valuespec.py:6123
 #: ../cmk/gui/watolib/activate_changes.py:802
 #: ../cmk/gui/plugins/visuals/infos.py:156
 #: ../cmk/gui/plugins/wato/bi_config.py:886
@@ -12199,7 +12199,7 @@ msgstr ""
 msgid "Comment"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/activate_changes.py:533
+#: ../cmk/gui/wato/pages/activate_changes.py:558
 msgid "Comment (optional)"
 msgstr ""
 
@@ -31903,7 +31903,7 @@ msgstr ""
 msgid "Invalid report element type '%s'"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/activate_changes.py:646
+#: ../cmk/gui/wato/pages/activate_changes.py:671
 #, fuzzy, python-format
 msgid "Invalid request: %r"
 msgstr " Parametrul este: %r"
@@ -38210,8 +38210,8 @@ msgstr ""
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr ""
 
-#: ../cmk/gui/wato/pages/activate_changes.py:572
-#: ../cmk/gui/wato/pages/activate_changes.py:620
+#: ../cmk/gui/wato/pages/activate_changes.py:597
+#: ../cmk/gui/wato/pages/activate_changes.py:645
 #, fuzzy, python-format
 #| msgid "(no parameters)"
 msgid "Missing parameter \"%s\"."
@@ -42483,7 +42483,6 @@ msgstr ""
 #: ../cmk/gui/wato/pages/audit_log.py:284
 #: ../cmk/gui/wato/pages/audit_log.py:435
 #: ../cmk/gui/wato/pages/audit_log.py:499
-#: ../cmk/gui/wato/pages/activate_changes.py:334
 msgid "Object"
 msgstr ""
 
@@ -74595,7 +74594,7 @@ msgid ""
 "communicating only with authentic update servers."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/activate_changes.py:537
+#: ../cmk/gui/wato/pages/activate_changes.py:562
 msgid ""
 "You can provide an optional comment for the current activation. This can be "
 "useful to document the reason why the changes you activate have been made."

@@ -3706,11 +3706,11 @@ msgstr ""
 msgid "Activate changes finished"
 msgstr "Änderungen durch %s aktiviert."
 
-#: ../cmk/gui/wato/pages/activate_changes.py:547
+#: ../cmk/gui/wato/pages/activate_changes.py:572
 msgid "Activate changes of other users"
 msgstr "Änderungen anderer Nutzer aktivieren"
 
-#: ../cmk/gui/wato/pages/activate_changes.py:546
+#: ../cmk/gui/wato/pages/activate_changes.py:571
 msgid "Activate foreign changes"
 msgstr "Aktiviere fremde Änderungen"
 
@@ -13271,7 +13271,7 @@ msgstr "Befehle für Hosts/Services"
 
 #: ../cmk/gui/wato/pages/pattern_editor.py:260
 #: ../cmk/gui/wato/pages/rulesets.py:1234
-#: ../cmk/gui/wato/pages/activate_changes.py:533 ../cmk/gui/valuespec.py:6123
+#: ../cmk/gui/wato/pages/activate_changes.py:558 ../cmk/gui/valuespec.py:6123
 #: ../cmk/gui/watolib/activate_changes.py:802
 #: ../cmk/gui/plugins/visuals/infos.py:156
 #: ../cmk/gui/plugins/wato/bi_config.py:886
@@ -13288,7 +13288,7 @@ msgstr "Befehle für Hosts/Services"
 msgid "Comment"
 msgstr "Kommentar"
 
-#: ../cmk/gui/wato/pages/activate_changes.py:533
+#: ../cmk/gui/wato/pages/activate_changes.py:558
 msgid "Comment (optional)"
 msgstr "Kommentar (optional)"
 
@@ -34674,7 +34674,7 @@ msgstr "Ungültiger regulärer Ausdruck: %s"
 msgid "Invalid report element type '%s'"
 msgstr "Es gibt kein Berichtselement vom Typ '%s'"
 
-#: ../cmk/gui/wato/pages/activate_changes.py:646
+#: ../cmk/gui/wato/pages/activate_changes.py:671
 #, python-format
 msgid "Invalid request: %r"
 msgstr "Ungültige Anfrage: %r"
@@ -41152,8 +41152,8 @@ msgstr "Der Parameter host ist nicht gesetzt."
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr "Fehlender oder ungültiger Modus. Erlaubt sind 'agent' und 'status'."
 
-#: ../cmk/gui/wato/pages/activate_changes.py:572
-#: ../cmk/gui/wato/pages/activate_changes.py:620
+#: ../cmk/gui/wato/pages/activate_changes.py:597
+#: ../cmk/gui/wato/pages/activate_changes.py:645
 #, python-format
 msgid "Missing parameter \"%s\"."
 msgstr "Der Parameter \"%s\" fehlt."
@@ -45558,7 +45558,6 @@ msgstr "OSN Laser Dämpfung"
 #: ../cmk/gui/wato/pages/audit_log.py:284
 #: ../cmk/gui/wato/pages/audit_log.py:435
 #: ../cmk/gui/wato/pages/audit_log.py:499
-#: ../cmk/gui/wato/pages/activate_changes.py:334
 msgid "Object"
 msgstr "Objekt"
 
@@ -81620,7 +81619,7 @@ msgid ""
 "communicating only with authentic update servers."
 msgstr ""
 
-#: ../cmk/gui/wato/pages/activate_changes.py:537
+#: ../cmk/gui/wato/pages/activate_changes.py:562
 msgid ""
 "You can provide an optional comment for the current activation. This can be "
 "useful to document the reason why the changes you activate have been made."

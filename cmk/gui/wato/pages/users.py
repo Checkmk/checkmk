@@ -701,6 +701,11 @@ class ModeEditUser(WatoMode):
         elif "authorized_sites" in user_attrs:
             del user_attrs["authorized_sites"]
 
+        # ntopng
+        ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+        if ntop_connection.get("use_custom_attribute_as_ntop_username"):
+            user_attrs["ntop_alias"] = html.request.get_unicode_input_mandatory("ntop_alias")
+
         # Roles
         user_attrs["roles"] = [
             role for role in self._roles.keys() if html.get_checkbox("role_" + role)
@@ -817,6 +822,16 @@ class ModeEditUser(WatoMode):
         custom_user_attr_topics = userdb_utils.get_user_attributes_by_topic()
 
         self._show_custom_user_attributes(custom_user_attr_topics.get('ident', []))
+
+        # ntopng
+        ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+        if ntop_connection.get("use_custom_attribute_as_ntop_username"):
+            forms.section(_("ntopng Username"))
+            lockable_input('ntop_alias', '')
+            html.help(
+                _("The corresponding username in ntopng of the current checkmk user. "
+                  "It is used, in case the user mapping to ntopng is configured to use this "
+                  "custom attribute"))
 
         forms.header(_("Security"))
         forms.section(_("Authentication"))

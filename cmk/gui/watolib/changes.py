@@ -11,14 +11,14 @@ import os
 import time
 import abc
 import enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import (Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, NamedTuple,
                     TypeVar, Generic)
 from pathlib import Path
 
 import cmk.utils
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import UserId, Labels
 from cmk.utils.object_diff import make_object_diff
 
 import cmk.gui.utils
@@ -60,18 +60,23 @@ class ObjectRef:
     """Persisted in audit log and site changes to reference a Checkmk configuration object"""
     object_type: ObjectRefType
     ident: str
+    labels: Labels = field(default_factory=dict)
 
     def serialize(self):
-        return {
+        serialized: Dict[str, Any] = {
             "object_type": self.object_type.name,
             "ident": self.ident,
         }
+        if self.labels:
+            serialized["labels"] = self.labels
+        return serialized
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "ObjectRef":
         return cls(
             object_type=ObjectRefType(serialized["object_type"]),
             ident=serialized["ident"],
+            labels=serialized.get("labels", {}),
         )
 
 

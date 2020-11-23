@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+import ast
 import pytest  # type: ignore[import]
 
 from testlib import on_time
@@ -14,6 +15,48 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.htmllib import HTML
 from cmk.gui.watolib.changes import (AuditLogStore, SiteChanges, log_audit, make_diff_text,
                                      ObjectRef, ObjectRefType)
+
+
+class TestObjectRef:
+    def test_serialize(self):
+        ty = ObjectRefType.Host
+        ident = "node1"
+        assert ObjectRef(ty, ident).serialize() == {'ident': 'node1', 'object_type': 'Host'}
+
+    def test_serialization_with_labels(self):
+        ty = ObjectRefType.Host
+        ident = "node1"
+        assert ObjectRef(ty, ident, {
+            "a": "b"
+        }).serialize() == {
+            'ident': 'node1',
+            'object_type': 'Host',
+            'labels': {
+                'a': 'b'
+            }
+        }
+
+    def test_serialize_represented_as_native_types(self):
+        serialized = ObjectRef(ObjectRefType.Host, "h1").serialize()
+        as_text = repr(serialized)
+        assert ast.literal_eval(as_text) == serialized
+
+    def test_serialize_in_sync_with_deserialize(self):
+        ty = ObjectRefType.Host
+        ident = "node1"
+        ref = ObjectRef.deserialize(ObjectRef(ty, ident).serialize())
+        assert ref.object_type == ty
+        assert ref.ident == ident
+        assert ref.labels == {}
+
+    def test_serialize_in_sync_with_deserialize_with_labels(self):
+        ty = ObjectRefType.Host
+        ident = "node1"
+        labels = {"abc": "123"}
+        ref = ObjectRef.deserialize(ObjectRef(ty, ident, labels).serialize())
+        assert ref.object_type == ty
+        assert ref.ident == ident
+        assert ref.labels == labels
 
 
 class TestAuditLogStore:

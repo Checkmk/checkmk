@@ -903,7 +903,9 @@ class Rule:
         return ro
 
     def object_ref(self) -> ObjectRef:
-        return ObjectRef(ObjectRefType.Rule, "|".join([self.ruleset.name, self.id]))
+        return ObjectRef(ObjectRefType.Rule, self.id, {
+            "ruleset": self.ruleset.name,
+        })
 
     def is_ineffective(self):
         """Whether or not this rule does not match at all

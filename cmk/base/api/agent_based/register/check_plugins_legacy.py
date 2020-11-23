@@ -284,8 +284,20 @@ def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
     # copy signature of check function:
     @functools.wraps(check_function, ('__attributes__',))
     def cluster_legacy_mode_from_hell(*args, **kwargs):
-        raise NotImplementedError("This just a dummy to pass validation is.")
-        yield  # pylint: disable=unreachable
+        # This function will *almost* never be called:
+        #
+        # If legacy plugins are executed on clusters, the original check function is called,
+        # as it is impossible to recreate the "complex" behavior of the legacy API using the new API.
+        # We maintain an extra code path in cmk/base/checking.py for those cases.
+        #
+        # Unfortunately, when discovering cluster hosts, this function will still be called, as
+        # part of the code designed for the new API is used.
+        # Since fixing this issue would dramatically worsen the code in cmk/base/checking.py,
+        # We simply issue an Message here, similar to the preview for counter based checks:
+        yield Result(
+            state=State.OK,
+            summary="Service preview for legacy plugins on clusters not available.",
+        )
 
     return cluster_legacy_mode_from_hell
 

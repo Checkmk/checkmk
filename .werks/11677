@@ -1,0 +1,11 @@
+Title: Crash when discovering legacy plugins on cluster hosts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606143192
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+During the discovery of services on cluster hosts, checkmk 2.0.0i1 would crash if plugins that are not yet migrated to the new API had been part of the preview table.

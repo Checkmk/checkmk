@@ -228,7 +228,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
     def _get_sections_fetch_detected(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched after successful detection"""
-        if mode is Mode.INVENTORY or mode is Mode.CHECKING and self.do_status_data_inventory:
+        if mode in (Mode.INVENTORY, Mode.CHECKING) and self.do_status_data_inventory:
             return self.inventory_snmp_sections - self.disabled_sections
 
         if mode in (Mode.DISCOVERY, Mode.CACHED_DISCOVERY):

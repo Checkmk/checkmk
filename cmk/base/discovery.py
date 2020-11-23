@@ -314,7 +314,7 @@ def _get_rediscovery_mode(params: Dict) -> str:
 def do_discovery(
     arg_hostnames: Set[HostName],
     *,
-    section_selection: checkers.SectionNameCollection,
+    selected_sections: checkers.SectionNameCollection,
     run_only_plugin_names: Optional[Set[CheckPluginName]],
     arg_only_new: bool,
     only_host_labels: bool = False,
@@ -332,7 +332,7 @@ def do_discovery(
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
-    mode = checkers.Mode.DISCOVERY if section_selection is None else checkers.Mode.FORCE_SECTIONS
+    mode = checkers.Mode.DISCOVERY if selected_sections is None else checkers.Mode.FORCE_SECTIONS
 
     # Now loop through all hosts
     for hostname in sorted(host_names):
@@ -344,7 +344,7 @@ def do_discovery(
                 host_config,
                 ipaddress,
                 mode=mode,
-                section_selection=section_selection,
+                selected_sections=selected_sections,
             )
             for source in sources:
                 _configure_sources(source, discovery_parameters=discovery_parameters)
@@ -369,7 +369,7 @@ def do_discovery(
                         max_cachefile_age=max_cachefile_age,
                         host_config=host_config,
                     )),
-                section_selection=section_selection,
+                selected_sections=selected_sections,
             )
             _do_discovery_for(
                 hostname,
@@ -562,7 +562,7 @@ def discover_on_host(
                     max_cachefile_age=max_cachefile_age,
                     host_config=host_config,
                 )),
-            section_selection=checkers.NO_SELECTION,
+            selected_sections=checkers.NO_SELECTION,
         )
 
         # Compute current state of new and existing checks
@@ -754,7 +754,7 @@ def check_discovery(
         max_cachefile_age=max_cachefile_age,
         host_config=host_config,
         fetcher_messages=fetcher_messages,
-        section_selection=checkers.NO_SELECTION,
+        selected_sections=checkers.NO_SELECTION,
     )
 
     services, host_label_discovery_result = _get_host_services(
@@ -1797,7 +1797,7 @@ def get_check_preview(
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
             )),
-        section_selection=checkers.NO_SELECTION,
+        selected_sections=checkers.NO_SELECTION,
     )
 
     grouped_services, host_label_discovery_result = _get_host_services(

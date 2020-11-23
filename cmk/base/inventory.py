@@ -89,7 +89,7 @@ class ActiveInventoryResult(NamedTuple):
 def do_inv(
     hostnames: List[HostName],
     *,
-    section_selection: checkers.SectionNameCollection,
+    selected_sections: checkers.SectionNameCollection,
     run_only_plugin_names: Optional[Set[InventoryPluginName]] = None,
 ) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
@@ -101,7 +101,7 @@ def do_inv(
             host_config = config.HostConfig.make_host_config(hostname)
             inv_result = _do_active_inventory_for(
                 host_config=host_config,
-                section_selection=section_selection,
+                selected_sections=selected_sections,
                 run_only_plugin_names=run_only_plugin_names,
             )
 
@@ -140,7 +140,7 @@ def do_inv_check(
 
     inv_result = _do_active_inventory_for(
         host_config=host_config,
-        section_selection=checkers.NO_SELECTION,
+        selected_sections=checkers.NO_SELECTION,
         run_only_plugin_names=None,
     )
     trees = inv_result.trees
@@ -207,7 +207,7 @@ def _do_active_inventory_for(
     *,
     host_config: config.HostConfig,
     run_only_plugin_names: Optional[Set[InventoryPluginName]],
-    section_selection: checkers.SectionNameCollection,
+    selected_sections: checkers.SectionNameCollection,
 ) -> ActiveInventoryResult:
     if host_config.is_cluster:
         return ActiveInventoryResult(
@@ -223,7 +223,7 @@ def _do_active_inventory_for(
         config_cache,
         host_config,
         ipaddress,
-        section_selection,
+        selected_sections,
     )
 
     return ActiveInventoryResult(
@@ -235,7 +235,7 @@ def _do_active_inventory_for(
         ),
         source_results=source_results,
         safe_to_write=_safe_to_write_tree(source_results) and
-        section_selection is checkers.NO_SELECTION,
+        selected_sections is checkers.NO_SELECTION,
     )
 
 
@@ -243,19 +243,19 @@ def _fetch_multi_host_sections_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    section_selection: checkers.SectionNameCollection,
+    selected_sections: checkers.SectionNameCollection,
 ) -> Tuple[MultiHostSections, Sequence[Tuple[Source, result.Result[HostSections, Exception]]]]:
     if host_config.is_cluster:
         return MultiHostSections(), []
 
     mode = (checkers.Mode.INVENTORY
-            if section_selection is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS)
+            if selected_sections is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS)
 
     sources = checkers.make_sources(
         host_config,
         ipaddress,
         mode=mode,
-        section_selection=section_selection,
+        selected_sections=selected_sections,
     )
 
     nodes = checkers.make_nodes(
@@ -277,7 +277,7 @@ def _fetch_multi_host_sections_for_inv(
                 max_cachefile_age=host_config.max_cachefile_age,
                 host_config=host_config,
             )),
-        section_selection=section_selection,
+        selected_sections=selected_sections,
     )
 
     return multi_host_sections, results

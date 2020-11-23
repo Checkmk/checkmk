@@ -63,7 +63,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         *,
         mode: Mode,
         source_type: SourceType,
-        section_selection: SectionNameCollection,
+        selected_sections: SectionNameCollection,
         id_: str,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
@@ -83,7 +83,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             cache_dir=cache_dir,
             persisted_section_dir=persisted_section_dir,
         )
-        self.section_selection = section_selection
+        self.selected_sections = selected_sections
         if self.ipaddress is None:
             # snmp_config.ipaddress is not Optional.
             #
@@ -106,7 +106,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ipaddress: HostAddress,
         *,
         mode: Mode,
-        section_selection: SectionNameCollection,
+        selected_sections: SectionNameCollection,
     ) -> "SNMPSource":
         assert ipaddress is not None
         return cls(
@@ -114,7 +114,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             ipaddress,
             mode=mode,
             source_type=SourceType.HOST,
-            section_selection=section_selection,
+            selected_sections=selected_sections,
             id_="snmp",
             title="SNMP",
         )
@@ -126,7 +126,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-        section_selection: SectionNameCollection,
+        selected_sections: SectionNameCollection,
     ) -> "SNMPSource":
         if ipaddress is None:
             raise TypeError(ipaddress)
@@ -135,7 +135,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             ipaddress,
             mode=mode,
             source_type=SourceType.MANAGEMENT,
-            section_selection=section_selection,
+            selected_sections=selected_sections,
             id_="mgmt_snmp",
             title="Management board - SNMP",
         )
@@ -148,12 +148,12 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ).make()
 
     def _make_fetcher(self) -> SNMPFetcher:
-        SNMPFetcher.snmp_plugin_store = make_plugin_store()
+        SNMPFetcher.plugin_store = make_plugin_store()
         return SNMPFetcher(
             self._make_file_cache(),
             disabled_sections=self._make_disabled_sections(),
-            configured_snmp_sections=self._make_configured_snmp_sections(),
-            inventory_snmp_sections=self._make_inventory_snmp_sections(),
+            selected_sections=self._make_selected_sections(),
+            inventory_sections=self._make_inventory_sections(),
             on_error=self.on_snmp_scan_error,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 self.snmp_config.hostname,
@@ -180,8 +180,8 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
     def _make_disabled_sections(self) -> Set[SectionName]:
         return self.host_config.disabled_snmp_sections()
 
-    def _make_configured_snmp_sections(self) -> Set[SectionName]:
-        selection = self.section_selection
+    def _make_selected_sections(self) -> Set[SectionName]:
+        selection = self.selected_sections
         if selection is NO_SELECTION:
             selection = set(
                 agent_based_register.get_relevant_raw_sections(
@@ -193,7 +193,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                     inventory_plugin_names=()))
         return selection.intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
 
-    def _make_inventory_snmp_sections(self) -> Set[SectionName]:
+    def _make_inventory_sections(self) -> Set[SectionName]:
         return set(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=(),

@@ -110,15 +110,15 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         SectionName("brocade_sys"),
         SectionName("bvip_util"),
     }
-    snmp_plugin_store: SNMPPluginStore = SNMPPluginStore()
+    plugin_store: SNMPPluginStore = SNMPPluginStore()
 
     def __init__(
         self,
         file_cache: SNMPFileCache,
         *,
         disabled_sections: Set[SectionName],
-        configured_snmp_sections: Set[SectionName],
-        inventory_snmp_sections: Set[SectionName],
+        selected_sections: Set[SectionName],
+        inventory_sections: Set[SectionName],
         on_error: str,
         missing_sys_description: bool,
         do_status_data_inventory: bool,
@@ -126,8 +126,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.helper.snmp"))
         self.disabled_sections: Final = disabled_sections
-        self.configured_snmp_sections: Final = configured_snmp_sections
-        self.inventory_snmp_sections: Final = inventory_snmp_sections
+        self.selected_sections: Final = selected_sections
+        self.inventory_sections: Final = inventory_sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
@@ -147,12 +147,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         return cls(
             file_cache=SNMPFileCache.from_json(serialized.pop("file_cache")),
             disabled_sections={SectionName(name) for name in serialized["disabled_sections"]},
-            configured_snmp_sections={
-                SectionName(name) for name in serialized["configured_snmp_sections"]
-            },
-            inventory_snmp_sections={
-                SectionName(name) for name in serialized["inventory_snmp_sections"]
-            },
+            selected_sections={SectionName(name) for name in serialized["selected_sections"]},
+            inventory_sections={SectionName(name) for name in serialized["inventory_sections"]},
             on_error=serialized["on_error"],
             missing_sys_description=serialized["missing_sys_description"],
             do_status_data_inventory=serialized["do_status_data_inventory"],
@@ -163,8 +159,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         return {
             "file_cache": self.file_cache.to_json(),
             "disabled_sections": [str(s) for s in self.disabled_sections],
-            "configured_snmp_sections": [str(s) for s in self.configured_snmp_sections],
-            "inventory_snmp_sections": [str(s) for s in self.inventory_snmp_sections],
+            "selected_sections": [str(s) for s in self.selected_sections],
+            "inventory_sections": [str(s) for s in self.inventory_sections],
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
             "do_status_data_inventory": self.do_status_data_inventory,
@@ -180,7 +176,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def _detect(self, *, select_from: Set[SectionName]) -> Set[SectionName]:
         """Detect the applicable sections for the device in question"""
         return gather_available_raw_section_names(
-            sections=[(name, self.snmp_plugin_store[name].detect_spec) for name in select_from],
+            sections=[(name, self.plugin_store[name].detect_spec) for name in select_from],
             on_error=self.on_error,
             missing_sys_description=self.missing_sys_description,
             backend=self._backend,
@@ -216,23 +212,23 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         """
         return mode in (Mode.CACHED_DISCOVERY, Mode.DISCOVERY)
 
-    def _get_sections_fetched_unconditionally(self, mode: Mode) -> Set[SectionName]:
+    def _get_selection(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
-            return self.configured_snmp_sections - self.disabled_sections
+            return self.selected_sections - self.disabled_sections
 
         if mode is Mode.FORCE_SECTIONS:
-            return self.configured_snmp_sections
+            return self.selected_sections
 
         return set()
 
-    def _get_sections_fetch_detected(self, mode: Mode) -> Set[SectionName]:
+    def _get_detected_sections(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched after successful detection"""
         if mode in (Mode.INVENTORY, Mode.CHECKING) and self.do_status_data_inventory:
-            return self.inventory_snmp_sections - self.disabled_sections
+            return self.inventory_sections - self.disabled_sections
 
         if mode in (Mode.DISCOVERY, Mode.CACHED_DISCOVERY):
-            return set(self.snmp_plugin_store) - self.disabled_sections
+            return set(self.plugin_store) - self.disabled_sections
 
         return set()
 
@@ -258,9 +254,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
            which are fetched for checking anyway.
 
         """
-        section_names = self._get_sections_fetched_unconditionally(mode)
-        section_names |= self._detect(select_from=self._get_sections_fetch_detected(mode) -
-                                      section_names)
+        section_names = self._get_selection(mode)
+        section_names |= self._detect(select_from=self._get_detected_sections(mode) - section_names)
 
         if self._use_snmpwalk_cache(mode):
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
@@ -274,8 +269,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
 
             fetched_section_data = [
-                get_snmp(section_name, entry)
-                for entry in self.snmp_plugin_store[section_name].trees
+                get_snmp(section_name, entry) for entry in self.plugin_store[section_name].trees
             ]
 
             if any(fetched_section_data):

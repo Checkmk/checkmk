@@ -519,7 +519,7 @@ class TestMakeHostSectionsHosts:
             max_cachefile_age=0,
             host_config=host_config,
             fetcher_messages=(),
-            section_selection=NO_SELECTION,
+            selected_sections=NO_SELECTION,
         )
         # The length is not zero because the function always sets,
         # at least, a piggy back section.
@@ -549,7 +549,7 @@ class TestMakeHostSectionsHosts:
                         hostname,
                         ipaddress,
                         mode=mode,
-                        section_selection=NO_SELECTION,
+                        selected_sections=NO_SELECTION,
                     ),
                 ],
             ),
@@ -562,7 +562,7 @@ class TestMakeHostSectionsHosts:
                     FetcherType.SNMP,
                 ),
             ],
-            section_selection=NO_SELECTION,
+            selected_sections=NO_SELECTION,
         )
         assert len(mhs) == 1
 
@@ -618,7 +618,7 @@ class TestMakeHostSectionsHosts:
                     source.fetcher_type,
                 ),
             ],
-            section_selection=NO_SELECTION,
+            selected_sections=NO_SELECTION,
         )
         assert len(mhs) == 1
 
@@ -671,7 +671,7 @@ class TestMakeHostSectionsHosts:
                     source.fetcher_type,
                 ) for source in sources
             ],
-            section_selection=NO_SELECTION,
+            selected_sections=NO_SELECTION,
         )
         assert len(mhs) == 1
 
@@ -712,7 +712,7 @@ class TestMakeHostSectionsHosts:
                 )
                 for source in sources
             ],
-            section_selection=NO_SELECTION,
+            selected_sections=NO_SELECTION,
         )
         assert len(mhs) == 1
 
@@ -811,7 +811,7 @@ class TestMakeHostSectionsClusters:
                     FetcherType.PIGGYBACK,
                 ),
             ],
-            section_selection=NO_SELECTION,
+            selected_sections=NO_SELECTION,
         )
         assert len(mhs) == len(nodes)
 
@@ -894,7 +894,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
                 )
                 for source in sources
             ],
-        section_selection=NO_SELECTION,
+        selected_sections=NO_SELECTION,
     )
     assert len(mhs) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]

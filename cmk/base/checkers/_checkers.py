@@ -44,14 +44,14 @@ class _Builder:
         ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
-        section_selection: SectionNameCollection,
+        selected_sections: SectionNameCollection,
     ) -> None:
         super().__init__()
         self._host_config = host_config
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
         self._mode = mode
-        self._section_selection = section_selection
+        self._selected_sections = selected_sections
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -109,7 +109,7 @@ class _Builder:
                 self._hostname,
                 self._ipaddress,
                 mode=self._mode,
-                section_selection=self._section_selection,
+                selected_sections=self._selected_sections,
             ))
 
     def _initialize_mgmt_boards(self) -> None:
@@ -124,7 +124,7 @@ class _Builder:
                     self._hostname,
                     ip_address,
                     mode=self._mode,
-                    section_selection=self._section_selection,
+                    selected_sections=self._selected_sections,
                 ))
         elif protocol == "ipmi":
             self._add(IPMISource(
@@ -182,14 +182,14 @@ def make_sources(
     ipaddress: Optional[HostAddress],
     *,
     mode: Mode,
-    section_selection: SectionNameCollection = NO_SELECTION,
+    selected_sections: SectionNameCollection = NO_SELECTION,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
         host_config,
         ipaddress,
         mode=mode,
-        section_selection=section_selection,
+        selected_sections=selected_sections,
     ).sources
 
 
@@ -239,7 +239,7 @@ def update_host_sections(
     max_cachefile_age: int,
     host_config: HostConfig,
     fetcher_messages: Sequence[FetcherMessage],
-    section_selection: SectionNameCollection,
+    selected_sections: SectionNameCollection,
 ) -> Sequence[Tuple[Source, result.Result[HostSections, Exception]]]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
@@ -271,7 +271,7 @@ def update_host_sections(
             #    raise LookupError("Checker and fetcher missmatch")
             raw_data = fetcher_message.raw_data
 
-            source_result = source.parse(raw_data, selection=section_selection)
+            source_result = source.parse(raw_data, selection=selected_sections)
             data.append((source, source_result))
             if source_result.is_ok():
                 console.vverbose("  -> Add sections: %s\n" %

@@ -333,7 +333,7 @@ class ABCTestSNMPFetcher(ABC):
 
     @pytest.fixture(name="fetcher")
     def fetcher_fixture(self, file_cache):
-        SNMPFetcher.snmp_plugin_store = SNMPPluginStore({
+        SNMPFetcher.plugin_store = SNMPPluginStore({
             SectionName("pim"): SNMPPluginStoreItem(
                 trees=[
                     BackendSNMPTree(base=".1.1.1",
@@ -368,8 +368,8 @@ class ABCTestSNMPFetcher(ABC):
         return SNMPFetcher(
             file_cache,
             disabled_sections=set(),
-            configured_snmp_sections=set(),
-            inventory_snmp_sections=set(),
+            selected_sections=set(),
+            inventory_sections=set(),
             on_error="raise",
             missing_sys_description=False,
             do_status_data_inventory=False,
@@ -406,8 +406,8 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, SNMPFetcher)
-        assert other.snmp_plugin_store == fetcher.snmp_plugin_store
-        assert other.configured_snmp_sections == fetcher.configured_snmp_sections
+        assert other.plugin_store == fetcher.plugin_store
+        assert other.selected_sections == fetcher.selected_sections
         assert other.on_error == fetcher.on_error
         assert other.missing_sys_description == fetcher.missing_sys_description
         assert other.snmp_config == fetcher.snmp_config
@@ -438,7 +438,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             lambda *_, **__: table,
         )
         section_name = SectionName('pim')
-        fetcher.configured_snmp_sections = {section_name}
+        fetcher.selected_sections = {section_name}
         assert fetcher.fetch(Mode.INVENTORY) == result.OK({})  # 'pim' is not an inventory section
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table]})
 
@@ -449,9 +449,9 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             snmp_table,
             "_get_snmp_table",
             lambda _, oid_info, **__: table
-            if oid_info.base == fetcher.snmp_plugin_store[section_name].trees[0].base else [],
+            if oid_info.base == fetcher.plugin_store[section_name].trees[0].base else [],
         )
-        fetcher.configured_snmp_sections = {section_name}
+        fetcher.selected_sections = {section_name}
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table, []]})
 
     def test_fetch_from_io_empty(self, monkeypatch, fetcher):

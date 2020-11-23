@@ -119,7 +119,7 @@ def do_check(
     #   See Also: `cmk.base.discovery.check_discovery()`
     fetcher_messages: Sequence[FetcherMessage] = (),
     run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
-    section_selection: checkers.SectionNameCollection = checkers.NO_SELECTION,
+    selected_sections: checkers.SectionNameCollection = checkers.NO_SELECTION,
     submit_to_core: bool = True,
     show_perfdata: bool = False,
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
@@ -130,7 +130,7 @@ def do_check(
 
     exit_spec = host_config.exit_code_spec()
 
-    mode = checkers.Mode.CHECKING if section_selection is None else checkers.Mode.FORCE_SECTIONS
+    mode = checkers.Mode.CHECKING if selected_sections is None else checkers.Mode.FORCE_SECTIONS
 
     status: ServiceState = 0
     infotexts: List[ServiceDetails] = []
@@ -178,7 +178,7 @@ def do_check(
             host_config,
             ipaddress,
             mode=mode,
-            section_selection=section_selection,
+            selected_sections=selected_sections,
         )
         nodes = checkers.make_nodes(
             config_cache,
@@ -208,7 +208,7 @@ def do_check(
                 max_cachefile_age=host_config.max_cachefile_age,
                 host_config=host_config,
                 fetcher_messages=fetcher_messages,
-                section_selection=section_selection,
+                selected_sections=selected_sections,
             )
 
             num_success, plugins_missing_data = _do_all_checks_on_host(

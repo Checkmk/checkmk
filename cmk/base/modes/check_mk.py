@@ -1446,9 +1446,9 @@ def _extract_plugin_selection(
 ) -> Tuple[checkers.SectionNameCollection, _OptionalNameSet]:
     detect_plugins = options.get("detect-plugins")
     if detect_plugins is None:
-        section_selection = options.get("detect-sections", checkers.NO_SELECTION)
-        assert section_selection is not None  # for mypy false positive
-        return section_selection, options.get("plugins")
+        selected_sections = options.get("detect-sections", checkers.NO_SELECTION)
+        assert selected_sections is not None  # for mypy false positive
+        return selected_sections, options.get("plugins")
 
     conflicting_options = {'detect-sections', 'plugins'}
     if conflicting_options.intersection(options):
@@ -1502,10 +1502,10 @@ def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
         # new enough.
         checkers.FileCacheFactory.reset_maybe()
 
-    section_selection, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.do_discovery(
         set(hostnames),
-        section_selection=section_selection,
+        selected_sections=selected_sections,
         run_only_plugin_names=run_only_plugin_names,
         arg_only_new=options["discover"] == 1,
         only_host_labels="only-host-labels" in options,
@@ -1603,11 +1603,11 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
     if len(args) == 2:
         ipaddress = args[1]
 
-    section_selection, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     return checking.do_check(
         hostname,
         ipaddress,
-        section_selection=section_selection,
+        selected_sections=selected_sections,
         run_only_plugin_names=run_only_plugin_names,
         submit_to_core=not options.get("no-submit", False),
         show_perfdata=options.get("perfdata", False),
@@ -1696,10 +1696,10 @@ def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
     if "force" in options:
         checkers.agent.AgentSource.use_outdated_persisted_sections = True
 
-    section_selection, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     inventory.do_inv(
         hostnames,
-        section_selection=section_selection,
+        selected_sections=selected_sections,
         run_only_plugin_names=run_only_plugin_names,
     )
 

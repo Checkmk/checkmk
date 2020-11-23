@@ -80,7 +80,7 @@ def edition_title():
     return "CRE"
 
 
-def is_expired() -> bool:
+def _is_expired() -> bool:
     try:
         query = "GET status\nColumns: is_trial_expired\n"
         response = livestatus.LocalConnection().query(query)
@@ -92,7 +92,7 @@ def is_expired() -> bool:
 
 
 def is_expired_trial() -> bool:
-    return is_demo() and is_expired()
+    return is_demo() and _is_expired()
 
 
 #   .--general infos-------------------------------------------------------.

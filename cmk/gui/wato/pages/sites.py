@@ -90,11 +90,12 @@ def _site_globals_editable(site_id, site):
     return site["replication"] or config.site_is_local(site_id)
 
 
-def _get_demo_message():
-    return _("With the Checkmk Enterprise Free Edition you can create a distributed setup "
-             "with two sites, one central and one remote site. In case you want to test "
-             "more complex distributed setups, please "
-             "<a href=\"mailto:info@checkmk.com\">contact us</a>.")
+def _get_trial_expired_message():
+    return _(
+        "The Checkmk Enterprise Free Edition is expired and you can create a distributed setup "
+        "with only two sites: one central and one remote site. In case you want to test "
+        "more complex distributed setups, please "
+        "<a href=\"mailto:info@checkmk.com\">contact us</a>.")
 
 
 @mode_registry.register
@@ -137,7 +138,7 @@ class ModeEditSite(WatoMode):
         if cmk_version.is_expired_trial() and self._new:
             num_sites = len(self._site_mgmt.load_sites())
             if num_sites > 1:
-                raise MKUserError(None, _get_demo_message())
+                raise MKUserError(None, _get_trial_expired_message())
 
         configured_sites = self._site_mgmt.load_sites()
 
@@ -654,8 +655,8 @@ class ModeDistributedMonitoring(WatoMode):
     def page(self):
         sites = sort_sites(self._site_mgmt.load_sites())
 
-        if cmk_version.is_demo():
-            html.show_message(_get_demo_message())
+        if cmk_version.is_expired_trial():
+            html.show_message(_get_trial_expired_message())
 
         html.div("", id_="message_container")
         with table_element(

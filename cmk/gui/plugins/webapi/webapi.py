@@ -918,7 +918,7 @@ class APICallHosttags(APICallCollection):
 @api_call_collection_registry.register
 class APICallSites(APICallCollection):
     def get_api_calls(self):
-        if cmk_version.is_demo():
+        if cmk_version.is_expired_trial():
             return {}
 
         required_permissions = ["wato.sites"]

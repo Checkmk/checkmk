@@ -3120,8 +3120,8 @@ class HostConfig:
         hostnames = self.nodes if self.nodes else [self.hostname]
         return sum(
             autochecks.remove_autochecks_of_host(
-                hostname, self._config_cache.host_of_clustered_service, service_description)  #
-            for hostname in hostnames)
+                hostname, self._config_cache.host_of_clustered_service, service_description,
+                self.is_cluster) for hostname in hostnames)
 
     @property
     def max_cachefile_age(self) -> int:

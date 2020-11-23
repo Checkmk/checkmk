@@ -97,8 +97,19 @@ def edit_users(changed_users):
 def make_user_audit_log_object(attributes):
     """The resulting object is used for building object diffs"""
     obj = attributes.copy()
+
+    # Password hashes should not be logged
     obj.pop("password", None)
+
+    # Skip internal attributes
     obj.pop("user_scheme_serial", None)
+
+    # Skip default values (that will not be persisted)
+    if obj.get("ui_sidebar_position") is None:
+        obj.pop("ui_sidebar_position", None)
+    if obj.get("ui_theme") is None:
+        obj.pop("ui_theme", None)
+
     return obj
 
 

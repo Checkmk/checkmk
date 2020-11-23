@@ -49,6 +49,16 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
         self.simulation: Final[bool] = simulation
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.helper")
 
+    def __repr__(self) -> str:
+        return "%s(path=%r, max_age=%r, disabled=%r, use_outdated=%r, simulation=%r" % (
+            type(self).__name__,
+            self.path,
+            self.max_age,
+            self.disabled,
+            self.use_outdated,
+            self.simulation,
+        )
+
     def __hash__(self) -> int:
         *_rest, last = itertools.accumulate(
             (self.path, self.max_age, self.disabled, self.use_outdated, self.simulation),
@@ -226,7 +236,7 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
 
     def _fetch(self, mode: Mode) -> TRawData:
         self._logger.debug("[%s] Fetch with cache settings: %r, Cache enabled: %r",
-                           self.__class__.__name__, self.file_cache.to_json(),
+                           self.__class__.__name__, self.file_cache,
                            self._is_cache_read_enabled(mode))
 
         # TODO(ml): EAFP would significantly simplify the code.

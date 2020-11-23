@@ -465,11 +465,22 @@ class _TreeAggregator:
         leg_path = ".".join(table_row.path) + ":"
         row_key = self._make_row_key(table_row.key_columns)
 
-        self._get_row(leg_path, "inventory", row_key,
-                      table_row.key_columns).update(table_row.inventory_columns)
+        # do this always, it sets key_columns!
+        self._get_row(
+            leg_path,
+            "inventory",
+            row_key,
+            table_row.key_columns,
+        ).update(table_row.inventory_columns)
 
-        self._get_row(leg_path, "status_data", row_key,
-                      table_row.key_columns).update(table_row.status_columns)
+        # do this only if not empty:
+        if table_row.status_columns:
+            self._get_row(
+                leg_path,
+                "status_data",
+                row_key,
+                table_row.key_columns,
+            ).update(table_row.status_columns)
 
 
 #.

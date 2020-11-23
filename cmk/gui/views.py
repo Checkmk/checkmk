@@ -2885,7 +2885,7 @@ def do_actions(view, what, action_rows, backurl):
         message = _("No matching data row. No command sent.")
 
     if message:
-        backurl += "&filled_in=filter"
+        backurl += "&filled_in=filter&_show_filter_form=0"
         message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
         if html.request.var("show_checkboxes") == "1":
             html.request.del_var("selection")

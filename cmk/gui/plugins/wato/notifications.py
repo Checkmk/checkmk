@@ -449,6 +449,59 @@ $LONGSERVICEOUTPUT$
 
 
 @notification_parameter_registry.register
+class NotificationILert(NotificationParameter):
+    @property
+    def ident(self):
+        return "ilert"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            optional_keys=[],
+            elements=[
+                ("ilert_api_key",
+                 CascadingDropdown(title=_("iLert alert source API key"),
+                                   help=_("API key for iLert alert server"),
+                                   choices=[(
+                                       "ilert_api_key",
+                                       _("API key"),
+                                       TextAscii(size=80, allow_empty=False),
+                                   ),
+                                            ("store", _("API key from password store"),
+                                             DropdownChoice(sorted=True,
+                                                            choices=passwordstore_choices))])),
+                ("ilert_priority",
+                 DropdownChoice(
+                     sorted=True,
+                     choices=[
+                         ("HIGH", _("High (with escalation)")),
+                         ('LOW', _("Low (without escalation")),
+                     ],
+                     title=
+                     _("Notification priority (This will override the priority configured in the alert source)"
+                      ),
+                     default_value='HIGH')),
+                ("ilert_summary_host",
+                 TextUnicode(
+                     title=_("Custom incident summary for host alerts"),
+                     default_value=
+                     "$NOTIFICATIONTYPE$ Host Alert: $HOSTNAME$ is $HOSTSTATE$ - $HOSTOUTPUT$",
+                     size=64,
+                 )),
+                ("ilert_summary_service",
+                 TextUnicode(
+                     title=_("Custom incident summary for service alerts"),
+                     default_value=
+                     "$NOTIFICATIONTYPE$ Service Alert: $HOSTALIAS$/$SERVICEDESC$ is $SERVICESTATE$ - $SERVICEOUTPUT$",
+                     size=64,
+                 )),
+                ("url_prefix", _get_url_prefix_specs(local_site_url, default_value="automatic_https")),
+            ],
+        )
+
+
+@notification_parameter_registry.register
 class NotificationParameterJIRA_ISSUES(NotificationParameter):
     @property
     def ident(self):

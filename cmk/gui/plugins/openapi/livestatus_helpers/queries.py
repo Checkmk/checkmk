@@ -3,15 +3,18 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Dict, Generator, List, Optional, Tuple, Type
 
+from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.gui.plugins.openapi.livestatus_helpers.base import BaseQuery
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
     And,
+    BinaryExpression,
     NothingExpression,
+    Or,
     QueryExpression,
 )
-from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, Table
+from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, expr_to_tree, Table
 
 
 class ResultRow(dict):
@@ -151,9 +154,9 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         self.columns = columns
         self.column_names = [col.query_name for col in columns]
         self.filter_expr = filter_expr
-        tables = {column.table for column in columns}
-        assert len(tables) == 1
-        self.table: Table = tables.pop()
+        _tables = {column.table for column in columns}
+        assert len(_tables) == 1
+        self.table: Table = _tables.pop()
 
     def filter(self, filter_expr: QueryExpression) -> 'Query':
         """Apply additional filters to an existing query.
@@ -353,7 +356,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             The LiveStatus-Query as a string.
 
         """
-        _query = []
+        _query: List[Tuple[str, str]] = []
         column_names = ' '.join(column.name for column in self.columns)
         _query.append(("Columns", column_names))
         _query.extend(self.filter_expr.render())
@@ -361,3 +364,118 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             'GET %s' % self.table.__tablename__,
             *[': '.join(line) for line in _query],
         ])
+
+    def dict_repr(self):
+        return expr_to_tree(self.table.__class__, self.filter_expr)
+
+    @classmethod
+    def from_string(
+        cls,
+        string_query: str,
+    ) -> 'Query':
+        """Constructs a Query instance from a string based LiveStatus-Query
+
+        Args:
+            string_query:
+                A LiveStatus query as a string.
+
+        Examples:
+
+            >>> q = Query.from_string('GET hosts\\n'
+            ...                       'Columns: name\\n'
+            ...                       'Filter: name = heute\\n'
+            ...                       'Filter: alias = heute\\n'
+            ...                       'Or: 2')
+
+            >>> q.columns
+            [Column(hosts.name: string)]
+
+            >>> q.filter_expr
+            Or(Filter(name = heute), Filter(alias = heute))
+
+            >>> print(q)
+            GET hosts
+            Columns: name
+            Filter: name = heute
+            Filter: alias = heute
+            Or: 2
+
+            So in essence this says that round trips work
+
+                >>> assert str(q) == str(Query.from_string(str(q)))
+
+        Returns:
+            A Query instance.
+        """
+        lines = string_query.split("\n")
+        for line in lines:
+            if line.startswith('GET '):
+                parts = line.split()
+                if len(parts) < 2:
+                    raise ValueError(f"No table found in line: {line!r}")
+
+                table_name = parts[1]
+                try:
+                    table_class: Type[Table] = getattr(tables, table_name.title())
+                except AttributeError:
+                    raise ValueError(f"Table {table_name} was not defined in the tables module.")
+                break
+        else:
+            raise ValueError("No table found")
+
+        for line in lines:
+            if line.startswith('Columns: '):
+                column_names = line.split(": ", 1)[1].lstrip().split()
+                columns: List[Column] = [getattr(table_class, col) for col in column_names]
+                break
+        else:
+            raise ValueError("No columns found")
+
+        filters: List[QueryExpression] = []
+        for line in lines:
+            if line.startswith('Filter: '):
+                filters.append(_parse_line(table_class, line))
+            elif line.startswith('Or: ') or line.startswith("And: "):
+                op, _count = line.split(": ")
+                count = int(_count)
+                # I'm sorry. :)
+                # We take the last `count` filters and pass them into the BooleanExpression
+                expr = {'or': Or, 'and': And}[op.lower()](*filters[-count:])
+                filters = filters[:-count]
+                filters.append(expr)
+
+        return cls(
+            columns=columns,
+            filter_expr=filters[0],
+        )
+
+
+def _parse_line(
+    table: Type[Table],
+    filter_string: str,
+) -> BinaryExpression:
+    """Parse a single filter line into a BinaryExpression
+
+    Args:
+        table:
+            A Table instance.
+
+        filter_string:
+            One "Filter:" line. Has to start with "Filter:". Other expressions are
+            not yet supported.
+
+    Examples:
+
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> _parse_line(Hosts, "Filter: name !>= value")
+        Filter(name !>= value)
+
+
+    Returns:
+        A BinaryExpression
+    """
+    if not filter_string.startswith("Filter:"):
+        raise ValueError(f"Illegal filter string: {filter_string!r}")
+    _, column_name, op, value = filter_string.split(None, 3)
+    column: Column = getattr(table, column_name)
+    return column.op(op, value)

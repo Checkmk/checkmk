@@ -13,16 +13,14 @@ from cmk.base.api.agent_based.inventory_classes import Attributes
 
 import cmk.base.api.agent_based.register as agent_based_register
 
-import cmk.base.check_api as check_api
 import cmk.base.inventory_plugins as inventory_plugins
-import cmk.base.inventory as inventory
 
 pytestmark = pytest.mark.checks
 
 
 @pytest.fixture(scope="module", name="inv_info")
 def _get_inv_info(config_load_all_checks):  # no idea why usefixtures will not work.
-    assert len(inventory_plugins.inv_info) > 90  # sanity check
+    assert len(inventory_plugins.inv_info) > 60  # sanity check
     return inventory_plugins.inv_info.copy()
 
 

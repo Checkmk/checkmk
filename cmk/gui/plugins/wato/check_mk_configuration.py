@@ -1029,7 +1029,10 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
         return Transform(
             ListOf(
                 Tuple(elements=[
-                    ID(title=_("ID")),
+                    ID(
+                        title=_("ID"),
+                        allow_empty=False,
+                    ),
                     Dictionary(
                         elements=[
                             ('icon',

@@ -144,6 +144,7 @@ class Base:
                  _("The ID will be used do identify this page in URLs. If this page has the "
                    "same ID as a builtin page of the type <i>%s</i> then it will shadow the builtin one."
                   ) % cls.phrase("title"),
+                 allow_empty=False,
              )),
             (1.2, 'title',
              TextUnicode(

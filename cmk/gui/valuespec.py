@@ -985,8 +985,6 @@ def IPv4Network(  # pylint: disable=redefined-builtin
 
 
 def IPv4Address(  # pylint: disable=redefined-builtin
-    # TextAscii
-    allow_empty: bool = True,
     # From ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
@@ -1004,7 +1002,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
         title=title,
         help=help,
         default_value=default_value,
-        allow_empty=allow_empty,
+        allow_empty=False,
     )
 
 

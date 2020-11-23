@@ -354,7 +354,6 @@ def _do_inv_for_realhost(
     _set_cluster_property(tree_aggregator.trees.inventory, host_config)
 
     section.section_step("Executing inventory plugins")
-    console.verbose("Plugins:")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
         if run_only_plugin_names and inventory_plugin.name not in run_only_plugin_names:
             continue
@@ -364,9 +363,9 @@ def _do_inv_for_realhost(
             inventory_plugin.sections,
         )
         if not kwargs:
+            console.vverbose(" %s%s%s%s: skipped (no data)\n", tty.yellow, tty.bold,
+                             inventory_plugin.name, tty.normal)
             continue
-
-        console.verbose(" %s%s%s%s" % (tty.green, tty.bold, inventory_plugin.name, tty.normal))
 
         # Inventory functions can optionally have a second argument: parameters.
         # These are configured via rule sets (much like check parameters).
@@ -374,11 +373,16 @@ def _do_inv_for_realhost(
             kwargs["params"] = host_config.inventory_parameters(
                 str(inventory_plugin.inventory_ruleset_name))  # TODO (mo): keep type!
 
-        tree_aggregator.aggregate_results(
+        exception = tree_aggregator.aggregate_results(
             inventory_plugin.inventory_function(**kwargs),
             inventory_plugin.name,
         )
-
+        if exception:
+            console.warning(" %s%s%s%s: failed: %s", tty.red, tty.bold, inventory_plugin.name,
+                            tty.normal, exception)
+        else:
+            console.verbose(" %s%s%s%s", tty.green, tty.bold, inventory_plugin.name, tty.normal)
+            console.vverbose(": ok\n")
     console.verbose("\n")
 
     tree_aggregator.trees.inventory.normalize_nodes()
@@ -406,15 +410,14 @@ class _TreeAggregator:
         self,
         inventory_generator: InventoryResult,
         plugin_name: InventoryPluginName,
-    ) -> None:
+    ) -> Optional[Exception]:
 
         try:
             inventory_items = list(inventory_generator)
         except Exception as exc:
             if cmk.utils.debug.enabled():
                 raise
-            console.warning(f"Error in inventory plugin {plugin_name}: {exc}")
-            return
+            return exc
 
         for item in inventory_items:
             if isinstance(item, Attributes):
@@ -423,6 +426,8 @@ class _TreeAggregator:
                 self._integrate_table_row(item)
             else:  # can't happen
                 raise NotImplementedError()
+
+        return None
 
     def _integrate_attributes(
         self,

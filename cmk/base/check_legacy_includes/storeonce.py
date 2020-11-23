@@ -75,4 +75,5 @@ def check_storeonce_space(item, params, values):
 
     dedupl_ratio_str = values.get('Deduplication Ratio') or values.get("dedupeRatio")
     if dedupl_ratio_str is not None:
-        yield 0, "Dedup ratio: %.2f" % float(dedupl_ratio_str)
+        dedupl_ratio = float(dedupl_ratio_str)
+        yield 0, "Dedup ratio: %.2f" % dedupl_ratio, [("dedup_rate", dedupl_ratio)]

@@ -181,16 +181,17 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return self.host_config.disabled_snmp_sections()
 
     def _make_configured_snmp_sections(self) -> Set[SectionName]:
-        return (set(
-            agent_based_register.get_relevant_raw_sections(
-                check_plugin_names=check_table.get_needed_check_names(
-                    self.hostname,
-                    filter_mode="include_clustered",
-                    skip_ignored=True,
-                ),
-                inventory_plugin_names=()))
-                if self.section_selection is NO_SELECTION else self.section_selection).intersection(
-                    s.name for s in agent_based_register.iter_all_snmp_sections())
+        selection = self.section_selection
+        if selection is NO_SELECTION:
+            selection = set(
+                agent_based_register.get_relevant_raw_sections(
+                    check_plugin_names=check_table.get_needed_check_names(
+                        self.hostname,
+                        filter_mode="include_clustered",
+                        skip_ignored=True,
+                    ),
+                    inventory_plugin_names=()))
+        return selection.intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
 
     def _make_inventory_snmp_sections(self) -> Set[SectionName]:
         return set(

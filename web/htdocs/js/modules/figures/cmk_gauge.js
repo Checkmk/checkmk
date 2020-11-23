@@ -127,7 +127,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
         const domain = cmk_figures.adjust_domain(cmk_figures.calculate_domain(data), plot.metrics);
         const levels = cmk_figures.make_levels(domain, plot.metrics);
 
-        this._render_gauge_range_labels(domain);
+        // this._render_gauge_range_labels(domain);
 
         const limit = (7 * Math.PI) / 12;
         const scale_x = d3.scaleLinear().domain(domain).range([-limit, limit]);

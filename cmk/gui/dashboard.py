@@ -1294,7 +1294,7 @@ def page_edit_dashboard() -> None:
     visuals.page_edit_visual('dashboards',
                              get_all_dashboards(),
                              create_handler=create_dashboard,
-                             custom_field_handler=custom_field_handler,
+                             custom_field_handler=dashboard_fields_handler,
                              info_handler=_dashboard_info_handler)
 
 
@@ -1304,7 +1304,7 @@ def _dashboard_info_handler(visual):
     return ["host", "service"]
 
 
-def custom_field_handler(dashboard: DashboardConfig) -> None:
+def dashboard_fields_handler(dashboard: DashboardConfig) -> None:
     _vs_dashboard().render_input('dashboard', dashboard and dashboard or None)
 
 
@@ -1634,13 +1634,12 @@ def page_edit_dashlet() -> None:
 
     html.begin_form("dashlet", method="POST")
     vs_general.render_input("general", dashlet_spec)
+    visuals.render_context_specs(dashlet_spec, context_specs)
 
     if vs_type:
         vs_type.render_input("type", dashlet_spec)
     elif render_input_func:
         render_input_func(dashlet_spec)
-
-    visuals.render_context_specs(dashlet_spec, context_specs)
 
     forms.end()
     html.show_localization_hint()

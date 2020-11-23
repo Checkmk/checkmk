@@ -1051,10 +1051,13 @@ def page_edit_visual(what,
 
     vs_general.render_input("general", visual)
 
-    if custom_field_handler:
+    if custom_field_handler and custom_field_handler.__name__ != 'dashboard_fields_handler':
         custom_field_handler(visual)
 
     render_context_specs(visual, context_specs)
+
+    if custom_field_handler and custom_field_handler.__name__ == 'dashboard_fields_handler':
+        custom_field_handler(visual)
 
     forms.end()
     html.show_localization_hint()

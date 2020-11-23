@@ -4,15 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple as _Tuple, Optional
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Dictionary,
-    Timerange,
     CascadingDropdown,
+    Dictionary,
     DropdownChoice,
+    Float,
     GraphColor,
+    Timerange,
+    Tuple,
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
@@ -67,6 +69,21 @@ class SingleMetricDataGenerator(ABCDataGenerator):
                           ])),
                  ],
                  default_value="current")),
+            ("display_range",
+             CascadingDropdown(title=_("Display range"),
+                               choices=[
+                                   ("infer", _("Infer range from available data and check output")),
+                                   ("fixed", _("Fixed range"),
+                                    Tuple(title=_("Fixed range"),
+                                          help=_("Use a fixed range for the Data displayed. This "
+                                                 "value has no scaling. If your metric is in the "
+                                                 "range of MB, you'll need to place 9 zeros for "
+                                                 "display to make sense."),
+                                          elements=[
+                                              Float(title=_("Minimum")),
+                                              Float(title=_("Maximum")),
+                                          ])),
+                               ])),
             ("status_border",
              DropdownChoice(title=_("Status border"),
                             choices=[
@@ -90,7 +107,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
 
             from_time, until_time = map(int, Timerange().compute_range(params['window'])[0])
             data_range = "%s:%s:%s" % (from_time, until_time, 60)
-            _metrics: List[Tuple[str, Optional[str], float]] = [
+            _metrics: List[_Tuple[str, Optional[str], float]] = [
                 (name, None, scale)
                 for name, scale in reverse_translate_metric_name(properties["metric"])
             ]
@@ -155,7 +172,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
             "plot_definitions": plot_definitions,
             "data": data,
         }
-        title: List[Tuple[str, Optional[str]]] = []
+        title: List[_Tuple[str, Optional[str]]] = []
         title_format = settings.get("title_format", ["plain"])
 
         if settings.get("show_title", True):

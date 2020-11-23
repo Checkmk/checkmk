@@ -124,7 +124,12 @@ class GaugeFigure extends cmk_figures.FigureBase {
             return;
         }
 
-        const domain = cmk_figures.adjust_domain(cmk_figures.calculate_domain(data), plot.metrics);
+        const config = new URLSearchParams(this._post_body);
+        const display_range = JSON.parse(config.get("properties")).display_range;
+
+        let domain = cmk_figures.adjust_domain(cmk_figures.calculate_domain(data), plot.metrics);
+        if (Array.isArray(display_range) && display_range[0] === "fixed") domain = display_range[1];
+
         const levels = cmk_figures.make_levels(domain, plot.metrics);
 
         // this._render_gauge_range_labels(domain);

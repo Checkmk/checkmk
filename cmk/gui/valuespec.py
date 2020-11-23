@@ -2278,6 +2278,12 @@ class Float(ValueSpec):
         txt = self._renderer.format_text(self._render_value(value))
         return txt.replace(".", self._decimal_separator)
 
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
+
     def validate_datatype(self, value: float, varprefix: str) -> None:
         if isinstance(value, float):
             return

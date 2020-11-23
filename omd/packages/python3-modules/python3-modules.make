@@ -154,14 +154,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 		    --install-purelib=/lib/python3 ; \
 		cd .. ; \
 	    done
-	echo ======================================== DEBUG INSTALL START
-	umask
-	ls -lRa $(PYTHON3_MODULES_INSTALL_DIR)/lib/python3/importlib_metadata
-	echo ======================================== DEBUG INSTALL FIXING...
 # For some highly obscure unknown reason some files end up world-writable. Fix that!
 	chmod o-w $(PYTHON3_MODULES_INSTALL_DIR)/lib/python3/importlib_metadata/{docs/{changelog,index,using}.rst,tests/data/example-21.12-py3{-none-any.whl,.6.egg}}
-	ls -lRa $(PYTHON3_MODULES_INSTALL_DIR)/lib/python3/importlib_metadata
-	echo ======================================== DEBUG INSTALL END
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(PYTHON3_MODULES_LIST))

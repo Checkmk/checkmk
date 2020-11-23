@@ -7,7 +7,6 @@
 # type: ignore[typeddict-item]
 
 import pytest
-from pathlib import Path
 
 import cmk.utils.diagnostics as diagnostics
 
@@ -36,16 +35,20 @@ def test_diagnostics_serialize_wato_parameters_boolean():
     }, []),
     ({
         "opt_info": {},
-        "comp_specific": [(diagnostics.OPT_COMP_NOTIFICATIONS, {})],
+        "comp_specific": {
+            diagnostics.OPT_COMP_NOTIFICATIONS: {}
+        },
     }, []),
     ({
         "opt_info": {
             diagnostics.OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a", "b"]),
         },
-        "comp_specific": [(diagnostics.OPT_COMP_NOTIFICATIONS, {
-            "config_files": ("_ty", ["a", "b"]),
-            "log_files": ("_ty", ["a", "b"]),
-        })],
+        "comp_specific": {
+            diagnostics.OPT_COMP_NOTIFICATIONS: {
+                "config_files": ("_ty", ["a", "b"]),
+                "log_files": ("_ty", ["a", "b"]),
+            },
+        },
     }, [
         diagnostics.OPT_CHECKMK_CONFIG_FILES,
         "a,b",
@@ -56,10 +59,12 @@ def test_diagnostics_serialize_wato_parameters_boolean():
         "opt_info": {
             diagnostics.OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a1", "a2"]),
         },
-        "comp_specific": [(diagnostics.OPT_COMP_NOTIFICATIONS, {
-            "config_files": ("_ty", ["b1", "b2"]),
-            "log_files": ("_ty", ["c1", "c2"]),
-        })],
+        "comp_specific": {
+            diagnostics.OPT_COMP_NOTIFICATIONS: {
+                "config_files": ("_ty", ["b1", "b2"]),
+                "log_files": ("_ty", ["c1", "c2"]),
+            },
+        },
     }, [
         diagnostics.OPT_CHECKMK_CONFIG_FILES,
         "a1,a2,b1,b2",

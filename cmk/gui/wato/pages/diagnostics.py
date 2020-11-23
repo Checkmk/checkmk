@@ -39,10 +39,8 @@ from cmk.gui.valuespec import (
     Filename,
     FixedValue,
     ValueSpec,
-    CascadingDropdown,
-    CascadingDropdownChoice,
     DualListChoice,
-    ListOf,
+    CascadingDropdown,
 )
 from cmk.gui.page_menu import (
     PageMenu,
@@ -73,10 +71,9 @@ from cmk.gui.pages import page_registry, Page
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 _CHECKMK_FILES_NOTE = _("<br>Note: Some files may contain highly sensitive data like"
-                        " passwords. These files are marked with '!'."
+                        " passwords. These files are marked with 'H'."
                         " Other files may include IP adresses, hostnames, usernames,"
-                        " mail adresses or phone numbers and are marked with '?'."
-                        " Files with '-' are not classified yet.")
+                        " mail adresses or phone numbers and are marked with 'M'.")
 
 
 @mode_registry.register
@@ -171,13 +168,13 @@ class ModeDiagnostics(WatoMode):
                                    "Time, Core, Python version and paths, Architecture"))),
                 ("opt_info",
                  Dictionary(
-                     title=_("Optional information"),
+                     title=_("Optional general information"),
                      elements=self._get_optional_information_elements(),
                  )),
                 ("comp_specific",
-                 ListOf(
+                 Dictionary(
                      title=_("Component specific information"),
-                     valuespec=CascadingDropdown(choices=self._get_component_specific_choices()),
+                     elements=self._get_component_specific_elements(),
                  )),
             ],
             optional_keys=False,
@@ -233,26 +230,29 @@ class ModeDiagnostics(WatoMode):
                  )))
         return elements
 
-    def _get_component_specific_choices(self) -> List[CascadingDropdownChoice]:
-        elements: List[CascadingDropdownChoice] = [
-            (OPT_COMP_GLOBAL_SETTINGS, _("Global Settings"),
+    def _get_component_specific_elements(self) -> List[Tuple[str, ValueSpec]]:
+        elements: List[Tuple[str, ValueSpec]] = [
+            (OPT_COMP_GLOBAL_SETTINGS,
              Dictionary(
+                 title=_("Global Settings"),
                  help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s" %
                         _CHECKMK_FILES_NOTE),
                  elements=self._get_component_specific_checkmk_files_elements(
                      OPT_COMP_GLOBAL_SETTINGS),
                  default_keys=["config_files"],
              )),
-            (OPT_COMP_HOSTS_AND_FOLDERS, _("Hosts and Folders"),
+            (OPT_COMP_HOSTS_AND_FOLDERS,
              Dictionary(
+                 title=_("Hosts and Folders"),
                  help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s" %
                         _CHECKMK_FILES_NOTE),
                  elements=self._get_component_specific_checkmk_files_elements(
                      OPT_COMP_HOSTS_AND_FOLDERS),
                  default_keys=["config_files"],
              )),
-            (OPT_COMP_NOTIFICATIONS, _("Notifications"),
+            (OPT_COMP_NOTIFICATIONS,
              Dictionary(
+                 title=_("Notifications"),
                  help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk"
                         " or log files ('*.log' or '*.state') from var/log.%s" %
                         _CHECKMK_FILES_NOTE),
@@ -311,23 +311,24 @@ class ModeDiagnostics(WatoMode):
         sorted_insensitive_files = sorted(insensitive_files, key=lambda t: t[0])
         return CascadingDropdown(
             title=_(title),
+            sorted=False,
             choices=[
-                ("all", _("Pack all files"),
+                ("all", _("Pack all files: High, Medium, Low sensitivity"),
                  FixedValue(
                      [f for f, fi in sorted_files],
                      totext=self._list_of_files_to_text(sorted_files),
                  )),
-                ("non_high_sensitive", _("Pack sensitive and insensitive files"),
+                ("non_high_sensitive", _("Pack only Medium and Low sensitivity files"),
                  FixedValue(
                      [f for f, fi in sorted_non_high_sensitive_files],
                      totext=self._list_of_files_to_text(sorted_non_high_sensitive_files),
                  )),
-                ("insensitive", _("Pack only insensitive files"),
+                ("insensitive", _("Pack only Low sensitivity files"),
                  FixedValue(
                      [f for f, fi in sorted_insensitive_files],
                      totext=self._list_of_files_to_text(sorted_insensitive_files),
                  )),
-                ("explicit_list_of_files", _("Explicit list of files"),
+                ("explicit_list_of_files", _("Select individual files from list"),
                  DualListChoice(
                      choices=self._list_of_files_choices(sorted_files),
                      size=80,
@@ -394,7 +395,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
             button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
 
             job_interface.send_progress_update(_("Dump file: %s") % tarfile_path)
-            job_interface.send_result_message(_("%s Creating dump file successfully") % button)
+            job_interface.send_result_message(_("%s Retrieve created dump file") % button)
 
         else:
             job_interface.send_result_message(_("Creating dump file failed"))

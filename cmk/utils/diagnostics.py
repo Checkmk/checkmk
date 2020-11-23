@@ -61,7 +61,7 @@ def serialize_wato_parameters(wato_parameters: DiagnosticsParameters) -> Diagnos
 
     comp_specific_parameters = wato_parameters.get("comp_specific")
     if comp_specific_parameters is not None:
-        parameters.update(dict(comp_specific_parameters))
+        parameters.update(comp_specific_parameters)
 
     config_files: Set[str] = set()
     log_files: Set[str] = set()
@@ -179,13 +179,11 @@ CheckmkFileInfo = NamedTuple("CheckmkFileInfo", [
 def get_checkmk_file_sensitivity_for_humans(rel_filepath: str, file_info: CheckmkFileInfo) -> str:
     sensitivity = file_info.sensitivity
     if sensitivity == CheckmkFileSensitivity.high_sensitive:
-        return "%s (!)" % rel_filepath
+        return "%s (H)" % rel_filepath
     if sensitivity == CheckmkFileSensitivity.sensitive:
-        return "%s (?)" % rel_filepath
-    if sensitivity == CheckmkFileSensitivity.unknown:
-        return "%s (-)" % rel_filepath
+        return "%s (M)" % rel_filepath
     # insensitive
-    return rel_filepath
+    return "%s (L)" % rel_filepath
 
 
 def get_checkmk_file_info(rel_filepath: str, component: Optional[str] = None) -> CheckmkFileInfo:

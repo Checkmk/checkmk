@@ -11,7 +11,7 @@ import json
 import logging
 import pickle
 import struct
-from typing import Final, Type, Union
+from typing import Final, Iterator, Type, Union
 
 import cmk.utils.log as log
 from cmk.utils.cpu_tracking import Snapshot
@@ -86,8 +86,8 @@ class L3Stats(Protocol):
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self.duration)
 
-    def __bytes__(self) -> bytes:
-        return json.dumps({"duration": self.duration.serialize()}).encode("ascii")
+    def __iter__(self) -> Iterator[bytes]:
+        yield json.dumps({"duration": self.duration.serialize()}).encode("ascii")
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "L3Stats":
@@ -117,8 +117,12 @@ class AgentPayload(L3Message):
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._value)
 
-    def __bytes__(self) -> bytes:
-        return struct.pack(L3Message.fmt, self.payload_type.value, len(self._value)) + self._value
+    def __len__(self) -> int:
+        return L3Message.length + len(self._value)
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield struct.pack(L3Message.fmt, self.payload_type.value, len(self._value))
+        yield self._value
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "AgentPayload":
@@ -144,9 +148,13 @@ class SNMPPayload(L3Message):
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._value)
 
-    def __bytes__(self) -> bytes:
+    def __len__(self) -> int:
+        return L3Message.length + len(self._value)
+
+    def __iter__(self) -> Iterator[bytes]:
         payload = self._serialize(self._value)
-        return struct.pack(SNMPPayload.fmt, self.payload_type.value, len(payload)) + payload
+        yield struct.pack(SNMPPayload.fmt, self.payload_type.value, len(payload))
+        yield payload
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "SNMPPayload":
@@ -184,9 +192,10 @@ class ErrorPayload(L3Message):
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._error)
 
-    def __bytes__(self) -> bytes:
+    def __iter__(self) -> Iterator[bytes]:
         payload = self._serialize(self._error)
-        return struct.pack(L3Message.fmt, self.payload_type.value, len(payload)) + payload
+        yield struct.pack(L3Message.fmt, self.payload_type.value, len(payload))
+        yield payload
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "ErrorPayload":
@@ -258,8 +267,8 @@ class FetcherHeader(Header):
     def __len__(self) -> int:
         return FetcherHeader.length
 
-    def __bytes__(self) -> bytes:
-        return struct.pack(
+    def __iter__(self) -> Iterator[bytes]:
+        yield struct.pack(
             FetcherHeader.fmt,
             self.fetcher_type.value,
             self.payload_type.value,
@@ -300,8 +309,13 @@ class FetcherMessage(Protocol):
     def __repr__(self) -> str:
         return "%s(%r, %r, %r)" % (type(self).__name__, self.header, self.payload, self.stats)
 
-    def __bytes__(self) -> bytes:
-        return self.header + self.payload + self.stats
+    def __len__(self) -> int:
+        return len(self.header) + len(self.payload) + len(self.stats)
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield from self.header
+        yield from self.payload
+        yield from self.stats
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "FetcherMessage":
@@ -424,8 +438,8 @@ class CMCHeader(Header):
         return CMCHeader.length
 
     # E0308: false positive, see https://github.com/PyCQA/pylint/issues/3599
-    def __bytes__(self) -> bytes:  # pylint: disable=E0308
-        return CMCHeader.fmt.format(
+    def __iter__(self) -> Iterator[bytes]:  # pylint: disable=E0308
+        yield CMCHeader.fmt.format(
             self.name[:5],
             self.state[:7],
             self.log_level[:8],
@@ -466,8 +480,13 @@ class CMCMessage(Protocol):
     def __repr__(self) -> str:
         return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
 
-    def __bytes__(self) -> bytes:
-        return self.header + b"".join(bytes(msg) for msg in self.payload)
+    def __len__(self) -> int:
+        return len(self.header) + sum(len(_) for _ in self.payload)
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield from self.header
+        for msg in self.payload:
+            yield from msg
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "CMCMessage":

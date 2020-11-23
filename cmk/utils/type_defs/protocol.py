@@ -6,7 +6,7 @@
 
 import abc
 from contextlib import suppress
-from typing import Any, Type, TypeVar
+from typing import Any, Iterator, Type, TypeVar
 
 __all__ = ["Protocol"]
 
@@ -41,8 +41,11 @@ class Protocol(abc.ABC):
     def __len__(self) -> int:
         return len(bytes(self))
 
-    @abc.abstractmethod
     def __bytes__(self) -> bytes:
+        return b"".join(self)
+
+    @abc.abstractmethod
+    def __iter__(self) -> Iterator[bytes]:
         raise NotImplementedError
 
     @classmethod

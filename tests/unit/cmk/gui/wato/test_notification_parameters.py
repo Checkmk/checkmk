@@ -13,6 +13,7 @@ import cmk.gui.watolib.rulespecs as rulespecs
 expected_plugins = [
     'asciimail',
     'cisco_webex_teams',
+    'ilert',
     'jira_issues',
     'mail',
     'mkeventd',

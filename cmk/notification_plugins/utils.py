@@ -289,7 +289,7 @@ def retrieve_from_passwordstore(parameter):
     return value
 
 
-def post_request(message_constructor, url=None):
+def post_request(message_constructor, url=None, headers=None):
     context = collect_context()
 
     if not url:
@@ -298,7 +298,10 @@ def post_request(message_constructor, url=None):
     proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
 
     try:
-        response = requests.post(url=url, json=message_constructor(context), proxies=proxies)
+        response = requests.post(url=url,
+                                 json=message_constructor(context),
+                                 proxies=proxies,
+                                 headers=headers)
     except requests.exceptions.ProxyError:
         sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
         sys.exit(2)

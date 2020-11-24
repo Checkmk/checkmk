@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# iLert
+
+from cmk.notification_plugins import ilert
+from cmk.notification_plugins.utils import (post_request, process_by_result_map, collect_context)
+
+if __name__ == "__main__":
+    response = post_request(collect_context(), url=ilert.ilert_url(), headers=ilert.HEADERS)
+    process_by_result_map(response, ilert.RESULT_MAP)

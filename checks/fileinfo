@@ -338,22 +338,12 @@ def check_fileinfo_groups(_item, params, parsed):
         yield 3, "Missing reference timestamp"
         return
 
-    patterns = params.get('group_patterns')
-    if not patterns:
-        if all_files:
-            yield 3, ("No group pattern found in autocheck. Please rediscover the services "
-                      "of this host to get this fixed automatically")
-            return
-        default_files = files_matching['default']
-        check_definition = _define_fileinfo_group_check(default_files, date_inclusion)
-        yield from _fileinfo_check_function(
-            check_definition,
-            default_files['rules'],
-            outof_range_txt,
-        )
+    try:
+        group_patterns = set((p, '') if isinstance(p, str) else p for p in params['group_patterns'])
+    except KeyError:
+        yield 3, ("No group pattern found in autocheck. Please rediscover the services "
+                  "of this host to get this fixed automatically")
         return
-
-    group_patterns = set((p, '') if isinstance(p, str) else p for p in patterns)
 
     additional_rules = params.get('additional_rules', [])
 

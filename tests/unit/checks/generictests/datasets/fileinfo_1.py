@@ -83,12 +83,11 @@ checks = {
             (1, "Newest age: 4.00 s (warn/crit below 5.00 s/2.00 s)", [("age_newest", 4, None, None,
                                                                         None, None)]),
             (0,
-             "\nInclude patterns: *syslog*\n(Remaining) files in file group:\n[/var/log/syslog] Age: 4.00 s, Size: 1307632 B(!)\n[/var/log/syslog.1] Age: 7 h, Size: 1235157 B(!!)",
+             "\nInclude patterns: *syslog*\n[/var/log/syslog] Age: 4.00 s, Size: 1307632 B(!)\n[/var/log/syslog.1] Age: 7 h, Size: 1235157 B(!!)",
              []),
         ]),
         ("today", {
-            "group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")],
-            "shorten_multiline_output": False,
+            "group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]
         }, [
             (0, 'Count: 1', [('count', 1, None, None, None, None)]),
             (0, 'Size: 1235157 B', [('size', 1235157, None, None, None, None)]),
@@ -98,7 +97,7 @@ checks = {
             (0, 'Newest age: 7 h', [('age_newest', 28741, None, None, None, None)]),
             (0, 'Date pattern: /tmp/20190716.txt', []),
             (0,
-             '\nInclude patterns: /tmp/$DATE:%Y%m%d$.txt\n(Remaining) files in file group:\n[/tmp/20190716.txt] Age: 7 h, Size: 1235157 B',
+             '\nInclude patterns: /tmp/$DATE:%Y%m%d$.txt\n[/tmp/20190716.txt] Age: 7 h, Size: 1235157 B',
              []),
         ]),
     ]

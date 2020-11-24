@@ -438,7 +438,6 @@ def check_fileinfo_groups(_item, params, parsed):
             check_definition,
             file_specs['rules'],
             outof_range_txt,
-            return_metrics=False,
         )
         long_output.append('Files matching %s:' % expression)
         long_output.extend(
@@ -455,7 +454,7 @@ def check_fileinfo_groups(_item, params, parsed):
     yield 0, '\n' + '\n'.join(long_output)
 
 
-def _fileinfo_check_function(check_definition, params, outof_range_txt, return_metrics=True):
+def _fileinfo_check_function(check_definition, params, outof_range_txt):
     infotexts = []
     states = []
     allperfdata = []
@@ -464,7 +463,7 @@ def _fileinfo_check_function(check_definition, params, outof_range_txt, return_m
             continue
         levels = params.get("max" + key, (None, None)) + params.get("min" + key, (None, None))
         state, infotext, perfdata = check_levels(value,
-                                                 key if return_metrics else None,
+                                                 key,
                                                  levels,
                                                  human_readable_func=verbfunc,
                                                  infoname=title)

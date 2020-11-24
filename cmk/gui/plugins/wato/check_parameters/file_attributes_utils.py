@@ -9,9 +9,6 @@ from cmk.gui.valuespec import (
     Tuple,
     Age,
     Filesize,
-    ListOf,
-    RegExpUnicode,
-    Dictionary,
 )
 
 
@@ -53,23 +50,3 @@ def max_size_levels():
             Filesize(title=_("Critical if above")),
         ],
     )
-
-
-def additional_rules():
-    return "additional_rules", ListOf(
-        Tuple(elements=[
-            RegExpUnicode(title=_("Filename/- expression"), mode="case_sensitive"),
-            Dictionary(elements=[
-                ("maxage", max_age_levels()),
-                ("minage", min_age_levels()),
-                ("maxsize", max_size_levels()),
-                ("minsize", min_size_levels()),
-            ]),
-        ],),
-        title=_("Additional rules for files"),
-        help=_("You can specify a filename or a regular expresion, and additional "
-               "rules that are applied to the matching files. This means that the "
-               "rules set for the whole file group are overwritten for those files. "
-               "Note that the order in which you specify the rules matters: "
-               "in case of multiple matching rules, the first matching rule is "
-               "applied."))

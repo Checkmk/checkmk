@@ -424,7 +424,6 @@ class ModeFolder(WatoMode):
                 icon_name="dcd_connections",
                 item=make_simple_link(watolib.folder_preserving_link([("mode", "dcd_connections")
                                                                      ])),
-                is_show_more=True,
             )
 
     def _page_menu_entries_search(self) -> Iterator[PageMenuEntry]:

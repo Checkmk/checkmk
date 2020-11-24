@@ -605,17 +605,21 @@ just to signal that real build script was not called -->
                          Name="Remove_Legacy"
                          Value="[WIXUI_REMOVELEGACY]"/>
 
-            <RegistryValue Type="string"
-                           Name="Clean_Installation"
-                           Value="[WIXUI_CLEANINSTALL]"/>
+          <RegistryValue Type="string"
+                         Name="Clean_Installation"
+                         Value="[WIXUI_CLEANINSTALL]"/>
 
-            <RegistryValue Type="string"
-                           Name="Migration"
-                           Value="[WIXUI_MIGRATELEGACY]"/>
+          <RegistryValue Type="string"
+                         Name="Migration"
+                         Value="[WIXUI_MIGRATELEGACY]"/>
 
-            <RegistryValue Type="string"
+          <RegistryValue Type="string"
                          Name="Install_Service"
                          Value="[INSTALLSERVICE]"/>
+            
+          <RegistryValue Type="string"
+                         Name="PostInstall_Required"
+                         Value="yes"/>
         </RegistryKey>
       </Component>
     </ComponentGroup>

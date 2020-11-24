@@ -5,9 +5,11 @@
 #include "pch.h"
 // system C
 // system C++
+#include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "common/yaml.h"
 
@@ -400,6 +402,18 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
 
     if (argc == 1) {
         return cma::srv::RunService(Argv[0]);
+    }
+
+    int count = 0;
+    while (cma::install::IsPostInstallRequired()) {
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(1s);
+        std::cout << ".";
+        ++count;
+        if (count > 240) {
+            std::cout << "Service is failed or nor running";
+            ::exit(73);
+        }
     }
 
     std::wstring param(Argv[1]);

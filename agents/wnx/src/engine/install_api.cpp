@@ -339,5 +339,24 @@ bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
     return cma::tools::RunStdCommand(command, false, TRUE) != 0;
 }
 
+/// \brief - checks that post install flag is set by MSI
+///
+/// Must be called by any executable to check that installation is finalized
+bool IsPostInstallRequired() {
+    return std::wstring(registry::kMsiPostInstallRequest) ==
+           wtools::GetRegistryValue(registry::GetMsiRegistryPath(),
+                                    registry::kMsiPostInstallRequired,
+                                    registry::kMsiPostInstallDefault);
+}
+
+/// \brief - cleans post install flag
+///
+/// Normally called only by service after installation Python module
+void ClearPostInstallFlag() {
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiPostInstallRequired,
+                             registry::kMsiPostInstallDefault);
+}
+
 }  // namespace install
 };  // namespace cma

@@ -15,6 +15,7 @@
 #include "common/wtools_service.h"
 #include "common/yaml.h"
 #include "external_port.h"
+#include "install_api.h"
 #include "realtime.h"
 #include "tools/_process.h"
 #include "upgrade.h"
@@ -617,6 +618,10 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
             mc_.InstallDefault(cma::cfg::modules::InstallMode::normal);
         } else
             mc_.LoadDefault();
+
+        if (cma::IsService()) {
+            cma::install::ClearPostInstallFlag();
+        }
 
         preStartBinaries();
         // *******************

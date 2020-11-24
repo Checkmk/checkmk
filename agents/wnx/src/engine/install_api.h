@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides api to automatic install MSI files by service
 
@@ -43,6 +44,10 @@ const std::wstring kMsiRemoveLegacyDefault = L"";
 const std::wstring kMsiRemoveLegacyRequest = L"1";
 const std::wstring kMsiRemoveLegacyAlready = L"0";
 
+constexpr std::wstring_view kMsiPostInstallRequired = L"PostInstall_Required";
+constexpr std::wstring_view kMsiPostInstallDefault = L"no";
+constexpr std::wstring_view kMsiPostInstallRequest = L"yes";
+
 inline const std::wstring GetMsiRegistryPath() {
     return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;
 }
@@ -80,8 +85,10 @@ bool NeedInstall(const std::filesystem::path& IncomingFile,
                  const std::filesystem::path& BackupDir) noexcept;
 // ****************************************
 
-}  // namespace install
+bool IsPostInstallRequired();
+void ClearPostInstallFlag();
 
-};  // namespace cma
+}  // namespace install
+}  // namespace cma
 
 #endif  // install_api_h__

@@ -72,7 +72,7 @@ register.check_plugin(
     name="test_check_1",
     discovery_function=discover,
     discovery_ruleset_name="discover_test_check_1",
-    discovery_ruleset_type="merged",
+    discovery_ruleset_type=register.RuleSetType.MERGED,
     discovery_default_parameters={"default": 42},
     check_function=check,
     service_name="Foo %s",
@@ -146,7 +146,7 @@ register.check_plugin(
     name="test_check_2",
     discovery_function=discover,
     discovery_ruleset_name="discover_test_check_2",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={"default": 42},
     check_function=check,
     service_name="Foo %s",
@@ -162,6 +162,7 @@ register.check_plugin(
 
     # Verify that the discovery worked as expected
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
+
     for service in services:
         if str(service.check_plugin_name) == "test_check_2":
             assert service.item == "[Parameters({'default': 42})]"

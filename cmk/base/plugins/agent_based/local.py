@@ -288,9 +288,11 @@ def _aggregate_worst(
     aggregated_results: Dict[str, Tuple[State, Optional[str]]],
 ) -> Generator[Union[Result, Metric], None, None]:
 
-    states = (state for state, text in aggregated_results.values() if text is not None)
-    global_worst_state = State.worst(*states)
+    states = [state for state, text in aggregated_results.values() if text is not None]
+    if not states:
+        return
 
+    global_worst_state = State.worst(*states)
     worst_node = sorted(node for node, (state, text) in aggregated_results.items()
                         if text is not None and state == global_worst_state)[0]
 
@@ -314,9 +316,11 @@ def _aggregate_best(
     aggregated_results: Dict[str, Tuple[State, Optional[str]]],
 ) -> Generator[Union[Result, Metric], None, None]:
 
-    states = (state for (state, text) in aggregated_results.values() if text is not None)
-    global_best_state = State.best(*states)
+    states = [state for (state, text) in aggregated_results.values() if text is not None]
+    if not states:
+        return
 
+    global_best_state = State.best(*states)
     best_node = sorted(node for node, (state, text) in aggregated_results.items()
                        if text is not None and state == global_best_state)[0]
 

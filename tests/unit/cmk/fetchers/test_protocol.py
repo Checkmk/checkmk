@@ -26,16 +26,16 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
 from cmk.fetchers import FetcherType
 from cmk.fetchers.protocol import (
-    AgentPayload,
+    AgentResultMessage,
     CMCHeader,
     CMCMessage,
     CMCLogLevel,
-    ErrorPayload,
+    ErrorResultMessage,
     FetcherHeader,
     FetcherMessage,
-    L3Stats,
+    ResultStats,
     PayloadType,
-    SNMPPayload,
+    SNMPResultMessage,
 )
 
 
@@ -117,11 +117,11 @@ class TestCMCMessage:
 
     @pytest.fixture
     def fetcher_stats(self, duration):
-        return L3Stats(duration)
+        return ResultStats(duration)
 
     @pytest.fixture
     def fetcher_payload(self):
-        return AgentPayload(AgentRawData(69 * b"\0"))
+        return AgentResultMessage(AgentRawData(69 * b"\0"))
 
     @pytest.fixture
     def fetcher_messages(self, fetcher_payload, fetcher_stats):
@@ -165,26 +165,26 @@ class TestEndOfReply:
         assert CMCMessage.from_bytes(bytes(eor)) == eor
 
 
-class TestAgentPayload:
+class TestAgentResultMessage:
     @pytest.fixture
     def agent_payload(self):
-        return AgentPayload(AgentRawData(b"<<<hello>>>\nworld"))
+        return AgentResultMessage(AgentRawData(b"<<<hello>>>\nworld"))
 
     def test_from_bytes_success(self, agent_payload):
-        assert AgentPayload.from_bytes(bytes(agent_payload)) == agent_payload
+        assert AgentResultMessage.from_bytes(bytes(agent_payload)) == agent_payload
 
 
-class TestSNMPPayload:
+class TestSNMPResultMessage:
     @pytest.fixture
     def snmp_payload(self):
         table: SNMPTable = []
-        return SNMPPayload(SNMPRawData({SectionName("name"): table}))
+        return SNMPResultMessage(SNMPRawData({SectionName("name"): table}))
 
     def test_from_bytes_success(self, snmp_payload):
-        assert SNMPPayload.from_bytes(bytes(snmp_payload)) == snmp_payload
+        assert SNMPResultMessage.from_bytes(bytes(snmp_payload)) == snmp_payload
 
 
-class TestErrorPayload:
+class TestErrorResultMessage:
     @pytest.fixture(params=[
         # Our special exceptions.
         MKException,
@@ -206,10 +206,10 @@ class TestErrorPayload:
         pyghmi.exceptions.IpmiException,
     ])
     def error(self, request):
-        return ErrorPayload(request.param("a very helpful message"))
+        return ErrorResultMessage(request.param("a very helpful message"))
 
     def test_from_bytes_success(self, error):
-        other = ErrorPayload.from_bytes(bytes(error))
+        other = ErrorResultMessage.from_bytes(bytes(error))
         assert other is not error
         assert other == error
         assert type(other.result().error) == type(error.result().error)  # pylint: disable=C0123
@@ -217,7 +217,7 @@ class TestErrorPayload:
 
     def test_from_bytes_failure(self):
         with pytest.raises(ValueError):
-            ErrorPayload.from_bytes(b"random bytes")
+            ErrorResultMessage.from_bytes(b"random bytes")
 
     def test_hash(self, error):
         assert hash(error) == hash(bytes(error))
@@ -274,7 +274,7 @@ class TestFetcherHeaderEq:
 
     @pytest.fixture
     def stats_length(self):
-        return len(L3Stats(Snapshot.null()))
+        return len(ResultStats(Snapshot.null()))
 
     @pytest.fixture
     def header(self, fetcher_type, payload_type, status, payload_length, stats_length):
@@ -357,13 +357,13 @@ class TestFetcherHeaderEq:
         assert message[len(header):] == payload
 
 
-class TestL3Stats:
+class TestResultStats:
     @pytest.fixture
     def l3stats(self):
-        return L3Stats(Snapshot.null())
+        return ResultStats(Snapshot.null())
 
     def test_encode_decode(self, l3stats):
-        assert L3Stats.from_bytes(bytes(l3stats)) == l3stats
+        assert ResultStats.from_bytes(bytes(l3stats)) == l3stats
 
 
 class TestFetcherMessage:
@@ -373,7 +373,7 @@ class TestFetcherMessage:
 
     @pytest.fixture
     def stats(self, duration):
-        return L3Stats(duration)
+        return ResultStats(duration)
 
     @pytest.fixture
     def header(self, stats):
@@ -387,7 +387,7 @@ class TestFetcherMessage:
 
     @pytest.fixture
     def payload(self, header):
-        return AgentPayload(b"\0" * (header.payload_length - AgentPayload.length))
+        return AgentResultMessage(b"\0" * (header.payload_length - AgentResultMessage.length))
 
     @pytest.fixture
     def message(self, header, payload, stats):

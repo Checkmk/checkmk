@@ -24,7 +24,7 @@ from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
 from . import FetcherType
 
 __all__ = [
-    "L3Message",
+    "ResultMessage",
     "PayloadType",
     "FetcherHeader",
     "FetcherMessage",
@@ -39,17 +39,18 @@ __all__ = [
 
 We call "message" a header followed by the corresponding payload.
 
-+---------------+----------------+---------------+---------------------+
-| Layer         | Message type   | Header type   | Payload type        |
-+===============+================+===============+=====================+
-| CMC Layer     | CMCMessage     | CMCHeader     | FetcherMessage      |
-+---------------+----------------+---------------+---------------------+
-| Fetcher Layer | FetcherMessage | FetcherHeader | L3Message + L3Stats |
-+---------------+----------------+---------------+---------------------+
-|               |                |               | AgentPayload        |
-| Result Layer  | L3Message      | `!HQ`         | SNMPPayload         |
-|               |                |               | ErrorPayload        |
-+---------------+----------------+---------------+---------------------+
++---------------+----------------+---------------+----------------+
+| Layer         | Message type   | Header type   | Payload type   |
++===============+================+===============+================+
+| CMC Layer     | CMCMessage     | CMCHeader     | FetcherMessage |
++---------------+----------------+---------------+----------------+
+| Fetcher Layer | FetcherMessage | FetcherHeader | ResultMessage  |
+|               |                |               | + ResultStats  |
++---------------+----------------+---------------+----------------+
+|               |                |      AgentResultMessage        |
+| Result Layer  | ResultMessage  |      SNMPResultMessage         |
+|               |                |      ErrorResultMessage        |
++---------------+----------------+--------------------------------+
 
 """
 
@@ -82,9 +83,18 @@ class Header(Protocol):
     pass
 
 
-class L3Message(Protocol):
+class ResultMessage(Protocol):
     fmt = "!HQ"
     length = struct.calcsize(fmt)
+
+    @property
+    def header(self) -> bytes:
+        return struct.pack(ResultMessage.fmt, self.payload_type.value, len(self.payload))
+
+    @property
+    @abc.abstractmethod
+    def payload(self) -> bytes:
+        raise NotImplementedError
 
     @property
     @abc.abstractmethod
@@ -96,7 +106,7 @@ class L3Message(Protocol):
         raise NotImplementedError
 
 
-class L3Stats(Protocol):
+class ResultStats(Protocol):
     def __init__(self, duration: Snapshot) -> None:
         self.duration: Final = duration
 
@@ -107,8 +117,8 @@ class L3Stats(Protocol):
         yield json.dumps({"duration": self.duration.serialize()}).encode("ascii")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "L3Stats":
-        return L3Stats(Snapshot.deserialize(json.loads(data.decode("ascii"))["duration"]))
+    def from_bytes(cls, data: bytes) -> "ResultStats":
+        return ResultStats(Snapshot.deserialize(json.loads(data.decode("ascii"))["duration"]))
 
 
 class PayloadType(enum.Enum):
@@ -116,16 +126,16 @@ class PayloadType(enum.Enum):
     AGENT = enum.auto()
     SNMP = enum.auto()
 
-    def make(self) -> Type[L3Message]:
+    def make(self) -> Type[ResultMessage]:
         # This typing error is a false positive.  There are tests to demonstrate that.
         return {  # type: ignore[return-value]
-            PayloadType.ERROR: ErrorPayload,
-            PayloadType.AGENT: AgentPayload,
-            PayloadType.SNMP: SNMPPayload,
+            PayloadType.ERROR: ErrorResultMessage,
+            PayloadType.AGENT: AgentResultMessage,
+            PayloadType.SNMP: SNMPResultMessage,
         }[self]
 
 
-class AgentPayload(L3Message):
+class AgentResultMessage(ResultMessage):
     payload_type = PayloadType.AGENT
 
     def __init__(self, value: AgentRawData) -> None:
@@ -135,20 +145,24 @@ class AgentPayload(L3Message):
         return "%s(%r)" % (type(self).__name__, self._value)
 
     def __len__(self) -> int:
-        return L3Message.length + len(self._value)
+        return ResultMessage.length + len(self._value)
 
     def __iter__(self) -> Iterator[bytes]:
-        yield struct.pack(L3Message.fmt, self.payload_type.value, len(self._value))
-        yield self._value
+        yield self.header
+        yield self.payload
+
+    @property
+    def payload(self) -> bytes:
+        return self._value
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "AgentPayload":
+    def from_bytes(cls, data: bytes) -> "AgentResultMessage":
         _type, length, *_rest = struct.unpack(
-            L3Message.fmt,
-            data[:L3Message.length],
+            ResultMessage.fmt,
+            data[:ResultMessage.length],
         )
         try:
-            return cls(AgentRawData(data[L3Message.length:L3Message.length + length]))
+            return cls(AgentRawData(data[ResultMessage.length:ResultMessage.length + length]))
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
@@ -156,7 +170,7 @@ class AgentPayload(L3Message):
         return result.OK(self._value)
 
 
-class SNMPPayload(L3Message):
+class SNMPResultMessage(ResultMessage):
     payload_type = PayloadType.SNMP
 
     def __init__(self, value: SNMPRawData) -> None:
@@ -166,21 +180,25 @@ class SNMPPayload(L3Message):
         return "%s(%r)" % (type(self).__name__, self._value)
 
     def __len__(self) -> int:
-        return L3Message.length + len(self._value)
+        return ResultMessage.length + len(self._value)
 
     def __iter__(self) -> Iterator[bytes]:
-        payload = self._serialize(self._value)
-        yield struct.pack(SNMPPayload.fmt, self.payload_type.value, len(payload))
+        payload = self.payload
+        yield struct.pack(ResultMessage.fmt, self.payload_type.value, len(payload))
         yield payload
 
+    @property
+    def payload(self) -> bytes:
+        return self._serialize(self._value)
+
     @classmethod
-    def from_bytes(cls, data: bytes) -> "SNMPPayload":
+    def from_bytes(cls, data: bytes) -> "SNMPResultMessage":
         _type, length, *_rest = struct.unpack(
-            SNMPPayload.fmt,
-            data[:L3Message.length],
+            ResultMessage.fmt,
+            data[:ResultMessage.length],
         )
         try:
-            return cls(cls._deserialize(data[L3Message.length:L3Message.length + length]))
+            return cls(cls._deserialize(data[ResultMessage.length:ResultMessage.length + length]))
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
@@ -200,7 +218,7 @@ class SNMPPayload(L3Message):
             raise ValueError(repr(data))
 
 
-class ErrorPayload(L3Message):
+class ErrorResultMessage(ResultMessage):
     payload_type = PayloadType.ERROR
 
     def __init__(self, error: Exception) -> None:
@@ -210,18 +228,22 @@ class ErrorPayload(L3Message):
         return "%s(%r)" % (type(self).__name__, self._error)
 
     def __iter__(self) -> Iterator[bytes]:
-        payload = self._serialize(self._error)
-        yield struct.pack(L3Message.fmt, self.payload_type.value, len(payload))
+        payload = self.payload
+        yield struct.pack(ResultMessage.fmt, self.payload_type.value, len(payload))
         yield payload
 
+    @property
+    def payload(self) -> bytes:
+        return self._serialize(self._error)
+
     @classmethod
-    def from_bytes(cls, data: bytes) -> "ErrorPayload":
+    def from_bytes(cls, data: bytes) -> "ErrorResultMessage":
         _type, length, *_rest = struct.unpack(
-            L3Message.fmt,
-            data[:L3Message.length],
+            ResultMessage.fmt,
+            data[:ResultMessage.length],
         )
         try:
-            return cls(cls._deserialize(data[L3Message.length:L3Message.length + length]))
+            return cls(cls._deserialize(data[ResultMessage.length:ResultMessage.length + length]))
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
@@ -316,12 +338,12 @@ class FetcherMessage(Protocol):
     def __init__(
         self,
         header: FetcherHeader,
-        payload: L3Message,
-        stats: L3Stats,
+        payload: ResultMessage,
+        stats: ResultStats,
     ) -> None:
         self.header: Final[FetcherHeader] = header
-        self.payload: Final[L3Message] = payload
-        self.stats: Final[L3Stats] = stats
+        self.payload: Final[ResultMessage] = payload
+        self.stats: Final[ResultStats] = stats
 
     def __repr__(self) -> str:
         return "%s(%r, %r, %r)" % (type(self).__name__, self.header, self.payload, self.stats)
@@ -339,8 +361,8 @@ class FetcherMessage(Protocol):
         header = FetcherHeader.from_bytes(data)
         payload = header.payload_type.make().from_bytes(
             data[len(header):len(header) + header.payload_length],)
-        stats = L3Stats.from_bytes(data[len(header) + header.payload_length:len(header) +
-                                        header.payload_length + header.stats_length])
+        stats = ResultStats.from_bytes(data[len(header) + header.payload_length:len(header) +
+                                            header.payload_length + header.stats_length])
         return cls(header, payload, stats)
 
     @classmethod
@@ -350,9 +372,9 @@ class FetcherMessage(Protocol):
         duration: Snapshot,
         fetcher_type: FetcherType,
     ) -> "FetcherMessage":
-        stats = L3Stats(duration)
+        stats = ResultStats(duration)
         if raw_data.is_error():
-            error_payload = ErrorPayload(raw_data.error)
+            error_payload = ErrorResultMessage(raw_data.error)
             return cls(
                 FetcherHeader(
                     fetcher_type,
@@ -367,7 +389,7 @@ class FetcherMessage(Protocol):
 
         if fetcher_type is FetcherType.SNMP:
             assert isinstance(raw_data.ok, dict)
-            snmp_payload = SNMPPayload(raw_data.ok)
+            snmp_payload = SNMPResultMessage(raw_data.ok)
             return cls(
                 FetcherHeader(
                     fetcher_type,
@@ -381,7 +403,7 @@ class FetcherMessage(Protocol):
             )
 
         assert isinstance(raw_data.ok, bytes)
-        agent_payload = AgentPayload(raw_data.ok)
+        agent_payload = AgentResultMessage(raw_data.ok)
         return cls(
             FetcherHeader(
                 fetcher_type,
@@ -563,8 +585,8 @@ def make_end_of_reply_answer() -> bytes:
 
 
 def make_error_message(fetcher_type: FetcherType, exc: Exception) -> FetcherMessage:
-    stats = L3Stats(Snapshot.null())
-    payload = ErrorPayload(exc)
+    stats = ResultStats(Snapshot.null())
+    payload = ErrorResultMessage(exc)
     return FetcherMessage(
         FetcherHeader(
             fetcher_type,
@@ -583,8 +605,8 @@ def make_fetcher_timeout_message(
     exc: MKTimeout,
     duration: Snapshot,
 ) -> FetcherMessage:
-    stats = L3Stats(duration)
-    payload = ErrorPayload(exc)
+    stats = ResultStats(duration)
+    payload = ErrorResultMessage(exc)
     return FetcherMessage(
         FetcherHeader(
             fetcher_type,

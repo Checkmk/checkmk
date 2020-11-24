@@ -84,10 +84,12 @@ def _is_expired() -> bool:
     try:
         query = "GET status\nColumns: is_trial_expired\n"
         response = livestatus.LocalConnection().query(query)
-        return response[0][0] == "1"
+        return response[0][0] == 1
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        # If livestatus is absent we assume that trial is not expired
-        pass
+        # NOTE: If livestatus is absent we assume that trial is expired.
+        # Livestatus may be absent only when the cmc missing and this case for demo version means
+        # just expiration(impossibility to check)
+        return True
     return False
 
 

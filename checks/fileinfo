@@ -389,13 +389,8 @@ def check_fileinfo_groups(_item, params, parsed):
                     'rules': rules,
                     'file_text': {},
                 })
-
-            files_matching['default']['count_all'] += 1
-            files_matching['default']['size_all'] += file_stat.size
-
-            if file_group_key != 'default':
-                file_specs['count_all'] += 1
-                file_specs['size_all'] += file_stat.size
+            file_specs['count_all'] += 1
+            file_specs['size_all'] += file_stat.size
 
             file_specs['size_minmax'] = _update_minmax(file_stat.size, file_specs['size_minmax'])
 

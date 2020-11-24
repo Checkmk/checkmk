@@ -33,20 +33,12 @@ from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
 from cmk.base.check_api_utils import state_markers
-from cmk.base.check_utils import AgentSectionContent, PiggybackRawData, SectionCacheInfo
 from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
-from ._abstract import (
-    FileCacheFactory,
-    HostSections,
-    Mode,
-    Parser,
-    SectionNameCollection,
-    Source,
-    Summarizer,
-)
-from ._cache import PersistedSections, SectionStore
+from ._abstract import FileCacheFactory, Mode, Parser, SectionNameCollection, Source, Summarizer
+from .host_sections import HostSections, PersistedSections, SectionStore
+from .type_defs import AgentSectionContent, PiggybackRawData, SectionCacheInfo
 
 __all__ = ["AgentSource", "AgentHostSections"]
 

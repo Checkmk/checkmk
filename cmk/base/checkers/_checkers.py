@@ -24,14 +24,15 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
-from ._abstract import NO_SELECTION, HostSections, Mode, SectionNameCollection, Source
+from ._abstract import Mode, Source
 from .agent import AgentHostSections
-from .host_sections import HostKey, MultiHostSections
+from .host_sections import HostKey, HostSections, MultiHostSections
 from .ipmi import IPMISource
 from .piggyback import PiggybackSource
 from .programs import DSProgramSource, SpecialAgentSource
 from .snmp import SNMPSource
 from .tcp import TCPSource
+from .type_defs import NO_SELECTION, SectionNameCollection
 
 __all__ = ["fetch_all", "update_host_sections", "make_sources", "make_nodes"]
 

@@ -22,11 +22,10 @@ from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
-from cmk.base.check_utils import AgentSectionContent
 from cmk.base.checkers import Mode
-from cmk.base.checkers._abstract import NO_SELECTION, HostSections
-from cmk.base.checkers._cache import SectionStore
-from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer
+from cmk.base.checkers.agent import AgentParser, AgentSectionContent, AgentSource, AgentSummarizer
+from cmk.base.checkers.host_sections import HostSections, SectionStore
+from cmk.base.checkers.type_defs import NO_SELECTION
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 

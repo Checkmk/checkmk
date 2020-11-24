@@ -20,17 +20,9 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 
-from ._abstract import (
-    NO_SELECTION,
-    FileCacheFactory,
-    HostSections,
-    Mode,
-    Parser,
-    SectionNameCollection,
-    Source,
-    Summarizer,
-)
-from ._cache import PersistedSections, SectionStore
+from ._abstract import FileCacheFactory, Mode, Parser, Source, Summarizer
+from .host_sections import HostSections, PersistedSections, SectionStore
+from .type_defs import NO_SELECTION, SectionNameCollection
 
 
 def make_plugin_store() -> SNMPPluginStore:

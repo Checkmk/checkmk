@@ -4,26 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Optional, Tuple
 
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, LegacyCheckParameters, SectionName
-
-from cmk.snmplib.type_defs import SNMPSectionContent
+from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
 RulesetName = str
-
-SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
-
-AgentSectionContent = List[List[str]]
-
-PiggybackRawData = Dict[HostName, List[bytes]]
-ParsedSectionContent = Any
-
-AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
-TSectionContent = TypeVar("TSectionContent", bound=AbstractSectionContent)
-
 ServiceID = Tuple[CheckPluginName, Item]
 CheckTable = Dict[ServiceID, 'Service']
 

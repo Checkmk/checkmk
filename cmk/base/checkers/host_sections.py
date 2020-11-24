@@ -4,12 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
+import logging
 import sys
+import time
+from pathlib import Path
 from typing import (
     Any,
     Callable,
     cast,
     Dict,
+    Final,
+    Generic,
     ItemsView,
     Iterator,
     KeysView,
@@ -18,11 +24,13 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    TypeVar,
     Union,
     ValuesView,
 )
 
 import cmk.utils.debug
+import cmk.utils.store as _store
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
@@ -33,16 +41,214 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.snmplib.type_defs import SNMPSectionContent
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.caching as caching
 import cmk.base.item_state as item_state
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
-from cmk.base.check_utils import AbstractSectionContent, ParsedSectionContent
 from cmk.base.exceptions import MKParseFunctionError
 
-from ._abstract import HostSections
+from .type_defs import (
+    AgentSectionContent,
+    NO_SELECTION,
+    PiggybackRawData,
+    SectionCacheInfo,
+    SectionNameCollection,
+)
+
+# AbstractSectionContent is wrong from a typing point of view.
+# AgentSectionContent and SNMPSectionContent are not correct either,
+# at best, they should be List[<element>] because this is what they
+# have in common and, more importantly, what is used here.
+AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
+
+ParsedSectionContent = Any
+TSectionContent = TypeVar("TSectionContent", bound=AbstractSectionContent)
+THostSections = TypeVar("THostSections", bound="HostSections")
+
+
+class PersistedSections(
+        Generic[TSectionContent],
+        MutableMapping[SectionName, Tuple[int, int, TSectionContent]],
+):
+    __slots__ = ("_store",)
+
+    def __init__(self, store: MutableMapping[SectionName, Tuple[int, int, TSectionContent]]):
+        self._store = store
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self._store)
+
+    def __getitem__(self, key: SectionName) -> Tuple[int, int, TSectionContent]:
+        return self._store.__getitem__(key)
+
+    def __setitem__(self, key: SectionName, value: Tuple[int, int, TSectionContent]) -> None:
+        return self._store.__setitem__(key, value)
+
+    def __delitem__(self, key: SectionName) -> None:
+        return self._store.__delitem__(key)
+
+    def __iter__(self) -> Iterator[SectionName]:
+        return self._store.__iter__()
+
+    def __len__(self) -> int:
+        return self._store.__len__()
+
+
+class SectionStore(Generic[TSectionContent]):
+    def __init__(
+        self,
+        path: Union[str, Path],
+        *,
+        keep_outdated: bool,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__()
+        self.path: Final = Path(path)
+        self.keep_outdated: Final = keep_outdated
+        self._logger: Final = logger
+
+    def update(
+        self,
+        persisted_sections: PersistedSections[TSectionContent],
+    ) -> None:
+        stored = self.load()
+        if persisted_sections != stored:
+            persisted_sections.update(stored)
+            self.store(persisted_sections)
+
+    def store(self, sections: PersistedSections[TSectionContent]) -> None:
+        if not sections:
+            return
+
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        _store.save_object_to_file(self.path, {str(k): v for k, v in sections.items()},
+                                   pretty=False)
+        self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
+
+    # TODO: This is not race condition free when modifying the data. Either remove
+    # the possible write here and simply ignore the outdated sections or lock when
+    # reading and unlock after writing
+    def load(self) -> PersistedSections[TSectionContent]:
+        raw_sections_data = _store.load_object_from_file(self.path, default={})
+        sections: PersistedSections[TSectionContent] = {  # type: ignore[assignment]
+            SectionName(k): v for k, v in raw_sections_data.items()
+        }
+        if not self.keep_outdated:
+            sections = self._filter(sections)
+
+        if not sections:
+            self._logger.debug("No persisted sections loaded")
+            self.path.unlink(missing_ok=True)
+
+        return sections
+
+    def _filter(
+        self,
+        sections: PersistedSections[TSectionContent],
+    ) -> PersistedSections[TSectionContent]:
+        now = time.time()
+        for section_name, entry in list(sections.items()):
+            if len(entry) == 2:
+                persisted_until = entry[0]
+            else:
+                persisted_until = entry[1]
+
+            if now > persisted_until:
+                self._logger.debug("Persisted section %s is outdated by %d seconds. Skipping it.",
+                                   section_name, now - persisted_until)
+                del sections[section_name]
+        return sections
+
+
+class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
+    """A wrapper class for the host information read by the data sources
+
+    It contains the following information:
+
+        1. sections:                A dictionary from section_name to a list of rows,
+                                    the section content
+        2. piggybacked_raw_data:    piggy-backed data for other hosts
+        3. cache_info:              Agent cache information
+                                    (dict section name -> (cached_at, cache_interval))
+    """
+    def __init__(
+        self,
+        sections: Optional[MutableMapping[SectionName, TSectionContent]] = None,
+        *,
+        cache_info: Optional[SectionCacheInfo] = None,
+        piggybacked_raw_data: Optional[PiggybackRawData] = None,
+    ) -> None:
+        super().__init__()
+        self.sections = sections if sections else {}
+        self.cache_info = cache_info if cache_info else {}
+        self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data else {}
+
+    def __repr__(self):
+        return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r)" % (
+            type(self).__name__,
+            self.sections,
+            self.cache_info,
+            self.piggybacked_raw_data,
+        )
+
+    def filter(self, selection: SectionNameCollection) -> "HostSections[TSectionContent]":
+        """Filter for preselected sections"""
+        # This could be optimized by telling the parser object about the
+        # preselected sections and dismissing raw data at an earlier stage.
+        # For now we don't need that, so we keep it simple.
+        if selection is NO_SELECTION:
+            return self
+        return HostSections(
+            {k: v for k, v in self.sections.items() if k in selection},
+            cache_info={k: v for k, v in self.cache_info.items() if k in selection},
+            piggybacked_raw_data={
+                k: v for k, v in self.piggybacked_raw_data.items() if SectionName(k) in selection
+            },
+        )
+
+    # TODO: It should be supported that different sources produce equal sections.
+    # this is handled for the self.sections data by simply concatenating the lines
+    # of the sections, but for the self.cache_info this is not done. Why?
+    # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
+    #       Would this be correct here?
+    def add(self, host_sections: "HostSections") -> None:
+        """Add the content of `host_sections` to this HostSection."""
+        for section_name, section_content in host_sections.sections.items():
+            self.sections.setdefault(
+                section_name,
+                cast(TSectionContent, []),
+            ).extend(section_content)
+
+        for hostname, raw_lines in host_sections.piggybacked_raw_data.items():
+            self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
+
+        if host_sections.cache_info:
+            self.cache_info.update(host_sections.cache_info)
+
+    def add_persisted_sections(
+        self,
+        persisted_sections: PersistedSections[TSectionContent],
+        *,
+        logger: logging.Logger,
+    ) -> None:
+        """Add information from previous persisted infos."""
+        for section_name, entry in persisted_sections.items():
+            if len(entry) == 2:
+                continue  # Skip entries of "old" format
+
+            # Don't overwrite sections that have been received from the source with this call
+            if section_name in self.sections:
+                logger.debug("Skipping persisted section %r, live data available", section_name)
+                continue
+
+            logger.debug("Using persisted section %r", section_name)
+            persisted_from, persisted_until, section = entry
+            self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
+            self.sections[section_name] = section
 
 
 class MultiHostSections(MutableMapping[HostKey, HostSections]):
@@ -50,7 +256,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""
     def __init__(self, data: Optional[Dict[HostKey, HostSections]] = None) -> None:
-        super(MultiHostSections, self).__init__()
+        super().__init__()
         self._data: Dict[HostKey, HostSections] = {} if data is None else data
         self._section_content_cache = caching.DictCache()
         # The following are not quite the same as section_content_cache.

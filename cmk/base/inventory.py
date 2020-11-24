@@ -9,19 +9,8 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from typing import (
-    Dict,
-    Hashable,
-    List,
-    Literal,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
 from contextlib import suppress
+from typing import Dict, Hashable, List, Literal, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -46,20 +35,19 @@ from cmk.utils.type_defs import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
-import cmk.base.config as config
 import cmk.base.checkers as checkers
+import cmk.base.config as config
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
-
 from cmk.base.api.agent_based.inventory_classes import (
     AttrDict,
     Attributes,
-    TableRow,
     InventoryResult,
+    TableRow,
 )
-from cmk.base.checkers import HostSections, Source
-from cmk.base.checkers.host_sections import HostKey, MultiHostSections
+from cmk.base.checkers import Source
+from cmk.base.checkers.host_sections import HostKey, HostSections, MultiHostSections
 
 
 class InventoryTrees(NamedTuple):

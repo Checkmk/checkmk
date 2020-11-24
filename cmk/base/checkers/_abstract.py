@@ -5,11 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import enum
 import logging
 from functools import partial
 from pathlib import Path
-from typing import cast, final, Final, Generic, MutableMapping, Optional, Set, TypeVar, Union
+from typing import final, Final, Generic, Optional, Union
 
 import cmk.utils
 import cmk.utils.debug
@@ -18,14 +17,7 @@ import cmk.utils.misc
 import cmk.utils.paths
 from cmk.utils.exceptions import MKIPAddressLookupError, MKSNMPError, MKTimeout
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    result,
-    SectionName,
-    ServiceCheckResult,
-    SourceType,
-)
+from cmk.utils.type_defs import HostAddress, HostName, result, ServiceCheckResult, SourceType
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -35,122 +27,13 @@ from cmk.fetchers.type_defs import Mode
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
-from cmk.base.check_utils import PiggybackRawData, SectionCacheInfo, TSectionContent
 from cmk.base.config import HostConfig
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
-from ._cache import PersistedSections
+from .host_sections import THostSections
+from .type_defs import SectionNameCollection
 
-__all__ = [
-    "NO_SELECTION",
-    "HostSections",
-    "SectionNameCollection",
-    "Source",
-    "FileCacheFactory",
-    "Mode",
-    "set_cache_opts",
-]
-
-
-class SelectionType(enum.Enum):
-    NONE = enum.auto()
-
-
-SectionNameCollection = Union[SelectionType, Set[SectionName]]
-# If preselected sections are given, we assume that we are interested in these
-# and only these sections, so we may omit others and in the SNMP case (TODO (mo))
-# must try to fetch them (regardles of detection).
-
-NO_SELECTION: Final = SelectionType.NONE
-
-THostSections = TypeVar("THostSections", bound="HostSections")
-
-
-class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
-    """A wrapper class for the host information read by the data sources
-
-    It contains the following information:
-
-        1. sections:                A dictionary from section_name to a list of rows,
-                                    the section content
-        2. piggybacked_raw_data:    piggy-backed data for other hosts
-        3. cache_info:              Agent cache information
-                                    (dict section name -> (cached_at, cache_interval))
-    """
-    def __init__(
-        self,
-        sections: Optional[MutableMapping[SectionName, TSectionContent]] = None,
-        *,
-        cache_info: Optional[SectionCacheInfo] = None,
-        piggybacked_raw_data: Optional[PiggybackRawData] = None,
-    ) -> None:
-        super().__init__()
-        self.sections = sections if sections else {}
-        self.cache_info = cache_info if cache_info else {}
-        self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data else {}
-
-    def __repr__(self):
-        return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r)" % (
-            type(self).__name__,
-            self.sections,
-            self.cache_info,
-            self.piggybacked_raw_data,
-        )
-
-    def filter(self, selection: SectionNameCollection) -> "HostSections[TSectionContent]":
-        """Filter for preselected sections"""
-        # This could be optimized by telling the parser object about the
-        # preselected sections and dismissing raw data at an earlier stage.
-        # For now we don't need that, so we keep it simple.
-        if selection is NO_SELECTION:
-            return self
-        return HostSections(
-            {k: v for k, v in self.sections.items() if k in selection},
-            cache_info={k: v for k, v in self.cache_info.items() if k in selection},
-            piggybacked_raw_data={
-                k: v for k, v in self.piggybacked_raw_data.items() if SectionName(k) in selection
-            },
-        )
-
-    # TODO: It should be supported that different sources produce equal sections.
-    # this is handled for the self.sections data by simply concatenating the lines
-    # of the sections, but for the self.cache_info this is not done. Why?
-    # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
-    #       Would this be correct here?
-    def add(self, host_sections: "HostSections") -> None:
-        """Add the content of `host_sections` to this HostSection."""
-        for section_name, section_content in host_sections.sections.items():
-            self.sections.setdefault(
-                section_name,
-                cast(TSectionContent, []),
-            ).extend(section_content)
-
-        for hostname, raw_lines in host_sections.piggybacked_raw_data.items():
-            self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
-
-        if host_sections.cache_info:
-            self.cache_info.update(host_sections.cache_info)
-
-    def add_persisted_sections(
-        self,
-        persisted_sections: PersistedSections[TSectionContent],
-        *,
-        logger: logging.Logger,
-    ) -> None:
-        """Add information from previous persisted infos."""
-        for section_name, entry in persisted_sections.items():
-            if len(entry) == 2:
-                continue  # Skip entries of "old" format
-
-            # Don't overwrite sections that have been received from the source with this call
-            if section_name in self.sections:
-                logger.debug("Skipping persisted section %r, live data available", section_name)
-                continue
-
-            logger.debug("Using persisted section %r", section_name)
-            persisted_from, persisted_until, section = entry
-            self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
-            self.sections[section_name] = section
+__all__ = ["Source", "FileCacheFactory", "Mode", "set_cache_opts"]
 
 
 class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):

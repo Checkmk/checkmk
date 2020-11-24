@@ -11,15 +11,15 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.exceptions import MKIPAddressLookupError
-from cmk.utils.type_defs import result, SourceType, CheckPluginName, ParsedSectionName
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, result, SourceType
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.checkers import Mode
-from cmk.base.checkers._abstract import NO_SELECTION
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.snmp import SNMPSource
+from cmk.base.checkers.type_defs import NO_SELECTION
 
 
 @pytest.fixture(name="mode", params=Mode)

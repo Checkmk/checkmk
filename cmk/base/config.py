@@ -2614,8 +2614,10 @@ class HostConfig:
         # Previous to 1.5 "match" could be a check name (including subchecks) instead of
         # only main check names -> section names. This has been cleaned up, but we still
         # need to be compatible. Strip of the sub check part of "match".
-        for match, minutes in self._config_cache.host_extra_conf(self.hostname,
-                                                                 snmp_check_interval):
+        for match, minutes in self._config_cache.host_extra_conf(
+                self.hostname,
+                snmp_check_interval,
+        ):
             if match is None or match.split(".")[0] == str(section_name):
                 return minutes  # use first match
 

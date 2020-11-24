@@ -635,7 +635,7 @@ class GUIViewRenderer(ABCViewRenderer):
         # Also execute commands in cases without command form (needed for Python-
         # web service e.g. for NagStaMon)
         elif row_count > 0 and config.user.may("general.act") \
-             and html.do_actions() and html.transaction_valid():
+                and html.do_actions() and html.transaction_valid():
 
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
@@ -863,7 +863,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         yield PageMenuEntry(
             title=_("Filter view"),
-            icon_name="filters_set" if is_filter_set else "filters",
+            icon_name="filters_set" if is_filter_set else "filter",
             item=PageMenuSidePopup(self._render_filter_form(show_filters)),
             name="filters",
             is_shortcut=True,
@@ -1968,7 +1968,7 @@ def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
     # E.g. on a "single host" page the host labels are needed for the decision.
     # This is currently realized explicitly until we need a more flexible mechanism.
     if display_options.enabled(display_options.B) \
-        and "host" in datasource.infos:
+            and "host" in datasource.infos:
         columns.add("host_labels")
 
     return list(columns)
@@ -2494,7 +2494,7 @@ def _get_combined_graphs_entry(view: View, info: VisualInfo,
     )
     return PageMenuEntry(
         title=_("All metrics of same type in one graph"),
-        icon_name="pnp",
+        icon_name="graph",
         item=make_simple_link(url),
     )
 
@@ -2563,7 +2563,7 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
 
     yield PageMenuEntry(
         title=_("Host configuration"),
-        icon_name="wato",
+        icon_name="folder",
         item=make_simple_link(_link_to_host_by_name(host_name)),
     )
 
@@ -3113,13 +3113,13 @@ class PageRescheduleCheck(AjaxPage):
             site)
 
         query = u"GET %ss\n" \
-                 "WaitObject: %s\n" \
-                 "WaitCondition: last_check >= %d\n" \
-                 "WaitTimeout: %d\n" \
-                 "WaitTrigger: check\n" \
-                 "Columns: last_check state plugin_output\n" \
-                 "Filter: host_name = %s\n%s" \
-                 % (what, livestatus.lqencode(wait_spec), now, config.reschedule_timeout * 1000, livestatus.lqencode(host), add_filter)
+            "WaitObject: %s\n" \
+            "WaitCondition: last_check >= %d\n" \
+            "WaitTimeout: %d\n" \
+            "WaitTrigger: check\n" \
+            "Columns: last_check state plugin_output\n" \
+            "Filter: host_name = %s\n%s" \
+            % (what, livestatus.lqencode(wait_spec), now, config.reschedule_timeout * 1000, livestatus.lqencode(host), add_filter)
         with sites.only_sites(site):
             row = sites.live().query_row(query)
 

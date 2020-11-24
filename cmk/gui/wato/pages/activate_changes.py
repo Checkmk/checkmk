@@ -131,7 +131,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         yield PageMenuEntry(
             title=_("Discard all pending changes"),
-            icon_name="discard",
+            icon_name="delete",
             item=make_simple_link(html.makeactionuri([("_action", "discard")])),
             name="discard_changes",
             is_enabled=self.has_changes() and self._get_last_wato_snapshot_file(),

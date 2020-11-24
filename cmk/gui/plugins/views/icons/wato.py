@@ -28,7 +28,7 @@ class WatoIcon(Icon):
     def render(self, what, row, tags, custom_vars):
         def may_see_hosts():
             return config.user.may("wato.use") and \
-              (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
+                (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
 
         if not may_see_hosts() or html.mobile:
             return None
@@ -49,7 +49,7 @@ class WatoIcon(Icon):
 
         if display_options.enabled(display_options.X):
             url = "wato.py?folder=%s&host=%s" % \
-              (html.urlencode(folder), html.urlencode(hostname))
+                (html.urlencode(folder), html.urlencode(hostname))
             if where == "inventory":
                 url += "&mode=inventory"
                 help_txt = _("Edit services")
@@ -140,7 +140,7 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
             title = _("Download SNMP walk")
 
         url = makeuri_contextless(request, params, filename="fetch_agent_output.py")
-        return "agent_output", title, url
+        return "agents", title, url
 
 
 def _wato_folder_from_filename(filename):

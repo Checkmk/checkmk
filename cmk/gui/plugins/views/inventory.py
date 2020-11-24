@@ -757,7 +757,9 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
     sub_invpath = invpath + "*." + name
     hint = inventory_displayhints.get(sub_invpath, {})
 
-    cmp_func = lambda a, b: (a > b) - (a < b)
+    def cmp_func(a, b):
+        return (a > b) - (a < b)
+
     sortfunc = hint.get("sort", cmp_func)
     if "paint" in hint:
         paint_name = hint["paint"]
@@ -1250,7 +1252,7 @@ multisite_builtin_views["inv_host"] = {
     'topic': 'inventory',
     'title': _('Inventory of host'),
     'description': _('The complete hardware- and software inventory of a host'),
-    'icon': 'inv',
+    'icon': 'inventory',
     'hidebutton': False,
     'public': True,
     'hidden': True,
@@ -1566,7 +1568,7 @@ multisite_builtin_views["inv_host_history"] = {
     'topic': 'inventory',
     'title': _('Inventory history of host'),
     'description': _('The history for changes in hardware- and software inventory of a host'),
-    'icon': 'inv',
+    'icon': 'inventory',
     'hidebutton': False,
     'public': True,
     'hidden': True,
@@ -1788,7 +1790,8 @@ class NodeRenderer:
                              Callable[[Tuple[str, Any]], str]] = partial(_sort_by_index, keyorder)
         else:
             # Simply sort by keys
-            sort_func = lambda item: item[0]
+            def sort_func(item):
+                return item[0]
 
         html.open_table()
         for key, value in sorted(attributes.get_child_data().items(), key=sort_func):

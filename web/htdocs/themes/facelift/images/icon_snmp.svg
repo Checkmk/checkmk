@@ -1,36 +1,31 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 384 368" style="enable-background:new 0 0 384 368;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:none;stroke:#979797;stroke-width:32;}
-	.st1{fill:#FFC107;}
-	.st2{fill:#FFCA28;}
-	.st3{fill:#DEA806;}
-	.st4{fill:#FFD90A;}
-</style>
-<g id="Menu-Icons-EXPORT">
-	<g id="EXPORT" transform="translate(-514.000000, -549.000000)">
-		<g id="snmp-settings" transform="translate(514.000000, 549.000000)">
-			<polygon id="Path-3" class="st0" points="96,256 288,256 192,96 			"/>
-			<g id="_x30_1" transform="translate(104.000000, 0.000000)">
-				<polygon id="Path" class="st1" points="88,0 176,40 88,80 0,40 				"/>
-				<polygon id="Path_1_" class="st2" points="88,176 176,136 176,40 88,80 				"/>
-				<polygon id="Path_2_" class="st3" points="88,0 0,40 88,80 				"/>
-				<polygon id="Path_3_" class="st4" points="0,40 0,136 88,176 88,80 				"/>
-			</g>
-			<g id="_x30_2" transform="translate(0.000000, 192.000000)">
-				<polygon id="Path_4_" class="st1" points="88,0 176,40 88,80 0,40 				"/>
-				<polygon id="Path_5_" class="st2" points="88,176 176,136 176,40 88,80 				"/>
-				<polygon id="Path_6_" class="st3" points="88,0 0,40 88,80 				"/>
-				<polygon id="Path_7_" class="st4" points="0,40 0,136 88,176 88,80 				"/>
-			</g>
-			<g id="_x30_3" transform="translate(208.000000, 192.000000)">
-				<polygon id="Path_8_" class="st1" points="88,0 176,40 88,80 0,40 				"/>
-				<polygon id="Path_9_" class="st2" points="88,176 176,136 176,40 88,80 				"/>
-				<polygon id="Path_10_" class="st3" points="88,0 0,40 88,80 				"/>
-				<polygon id="Path_11_" class="st4" points="0,40 0,136 88,176 88,80 				"/>
-			</g>
-		</g>
-	</g>
-</g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240px" height="230px" viewBox="0 0 240 230" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
+    <title>snmp settings</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="EXPORT" transform="translate(-124.000000, -110.000000)">
+            <g id="snmp-settings" transform="translate(124.000000, 110.000000)">
+                <polygon id="Path-3" stroke="#979797" stroke-width="20" points="60 160 180 160 120 60"></polygon>
+                <g id="01" transform="translate(65.000000, 0.000000)" fill-rule="nonzero">
+                    <polygon id="Path" fill="#43A047" points="55 2.22044605e-16 110 25 55 50 0 25"></polygon>
+                    <polygon id="Path" fill="#43A047" points="55 110 110 85 110 25 55 50"></polygon>
+                    <polygon id="Path" fill="#348D38" points="55 2.22044605e-16 0 25 55 50"></polygon>
+                    <polygon id="Path" fill="#58A94C" points="0 25 0 85 55 110 55 50"></polygon>
+                </g>
+                <g id="02" transform="translate(0.000000, 120.000000)" fill-rule="nonzero">
+                    <polygon id="Path" fill="#43A047" points="55 0 110 25 55 50 4.4408921e-16 25"></polygon>
+                    <polygon id="Path" fill="#43A047" points="55 110 110 85 110 25 55 50"></polygon>
+                    <polygon id="Path" fill="#348D38" points="55 0 2.22044605e-16 25 55 50"></polygon>
+                    <polygon id="Path" fill="#58A94C" points="2.22044605e-16 25 2.22044605e-16 85 55 110 55 50"></polygon>
+                </g>
+                <g id="03" transform="translate(130.000000, 120.000000)" fill-rule="nonzero">
+                    <polygon id="Path" fill="#43A047" points="55 0 110 25 55 50 0 25"></polygon>
+                    <polygon id="Path" fill="#43A047" points="55 110 110 85 110 25 55 50"></polygon>
+                    <polygon id="Path" fill="#348D38" points="55 0 2.22044605e-16 25 55 50"></polygon>
+                    <polygon id="Path" fill="#58A94C" points="2.22044605e-16 25 2.22044605e-16 85 55 110 55 50"></polygon>
+                </g>
+            </g>
+        </g>
+    </g>
 </svg>

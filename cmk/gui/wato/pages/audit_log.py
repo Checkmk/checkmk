@@ -132,7 +132,7 @@ class ModeAuditLog(WatoMode):
         if config.user.may("wato.clear_auditlog"):
             yield PageMenuEntry(
                 title=_("Clear log"),
-                icon_name="trash",
+                icon_name="delete",
                 item=make_simple_link(
                     make_confirm_link(
                         url=html.makeactionuri([("_action", "clear")]),
@@ -169,7 +169,7 @@ class ModeAuditLog(WatoMode):
                 entries=[
                     PageMenuEntry(
                         title=_("Filter view"),
-                        icon_name="filters_set" if html.form_submitted("options") else "filters",
+                        icon_name="filters_set" if html.form_submitted("options") else "filter",
                         item=PageMenuSidePopup(self._render_filter_form()),
                         name="filters",
                         is_shortcut=True,
@@ -310,8 +310,8 @@ class ModeAuditLog(WatoMode):
 
     def _get_multiple_days_log_entries(self, log):
         start_time = self._get_start_date() + 86399
-        end_time   = start_time \
-                     - ((self._options["display"][1] * 86400) + 86399)
+        end_time = start_time \
+            - ((self._options["display"][1] * 86400) + 86399)
 
         logs = []
 

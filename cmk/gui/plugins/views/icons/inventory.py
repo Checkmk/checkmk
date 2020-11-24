@@ -25,11 +25,11 @@ class InventoryIcon(Icon):
         return ["name"]
 
     def render(self, what, row, tags, custom_vars):
-        if (what == "host" or row.get("service_check_command","").startswith("check_mk_active-cmk_inv!")) \
-            and inventory.has_inventory(row["host_name"]):
+        if (what == "host" or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")) \
+                and inventory.has_inventory(row["host_name"]):
 
             if not config.user.may("view.inv_host"):
                 return
 
-            return 'inv', _("Show Hardware/Software Inventory of this host"), url_to_view(
+            return 'inventory', _("Show Hardware/Software Inventory of this host"), url_to_view(
                 row, 'inv_host')

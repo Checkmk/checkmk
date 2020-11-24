@@ -175,7 +175,7 @@ class ModeUsers(WatoMode):
         if config.user.may("general.notify"):
             yield PageMenuEntry(
                 title=_("Notify users"),
-                icon_name="notification",
+                icon_name="notifications",
                 item=make_simple_link("notify.py"),
             )
 

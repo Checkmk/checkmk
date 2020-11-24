@@ -223,7 +223,7 @@ def _extend_display_dropdown(menu, werk_table_options: Dict[str, Any]) -> None:
             entries=[
                 PageMenuEntry(
                     title=_("Filter view"),
-                    icon_name="filters",
+                    icon_name="filter",
                     item=PageMenuSidePopup(_render_werk_options_form(werk_table_options)),
                     name="filters",
                     is_shortcut=True,

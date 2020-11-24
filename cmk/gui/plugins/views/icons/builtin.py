@@ -191,9 +191,9 @@ class RescheduleIcon(Icon):
         if row[what + "_check_type"] == 2:
             return  # shadow hosts/services cannot be rescheduled
 
-        if (row[what + "_active_checks_enabled"] == 1
-            or row[what + '_check_command'].startswith('check_mk-')) \
-            and config.user.may('action.reschedule'):
+        if (row[what + "_active_checks_enabled"] == 1 or
+                row[what + '_check_command'].startswith('check_mk-')) \
+                and config.user.may('action.reschedule'):
 
             servicedesc = ''
             wait_svc = ''
@@ -402,7 +402,7 @@ class PerfgraphIcon(Icon):
             return
 
         return html.render_a(
-            content=html.render_icon('pnp', ''),
+            content=html.render_icon('graph', ''),
             href=url,
             onmouseout="cmk.hover.hide()",
             onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s);" % (
@@ -1111,8 +1111,8 @@ class CrashdumpsIcon(Icon):
 
     def render(self, what, row, tags, custom_vars):
         if what == "service" \
-            and row["service_state"] == 3 \
-            and "check failed - please submit a crash report!" in row["service_plugin_output"]:
+                and row["service_state"] == 3 \
+                and "check failed - please submit a crash report!" in row["service_plugin_output"]:
 
             if not config.user.may("general.see_crash_reports"):
                 return 'crash', _(

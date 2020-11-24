@@ -195,9 +195,9 @@ def substitute_help():
     ]
 
     return _("The following macros will be substituted by value from the actual event:")\
-         + html.render_br()\
-         + html.render_br()\
-         + html.render_table(HTML().join(_help_rows), class_="help")
+        + html.render_br()\
+        + html.render_br()\
+        + html.render_table(HTML().join(_help_rows), class_="help")
 
 
 def ActionList(vs, **kwargs):
@@ -2921,7 +2921,7 @@ def _page_menu_entry_rulesets():
 def _page_menu_entry_status():
     return PageMenuEntry(
         title=_("Status"),
-        icon_name="status",
+        icon_name="event console_status",
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_status")])),
     )
 
@@ -3015,7 +3015,7 @@ class MainModuleEventConsole(ABCMainModule):
 
     @property
     def icon(self):
-        return "event"
+        return "event_console"
 
     @property
     def permission(self):

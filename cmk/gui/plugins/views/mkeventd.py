@@ -1293,7 +1293,7 @@ def mkeventd_view(d):
         'topic': "events",
         'browser_reload': 60,
         'column_headers': 'pergroup',
-        'icon': 'event',
+        'icon': 'event_console',
         'mobile': False,
         'hidden': False,
         'mustsearch': False,
@@ -1489,7 +1489,7 @@ multisite_builtin_views['ec_history_recent'] = mkeventd_view({
     'title': _('Recent Event History'),
     'description': _('Information about events and actions on events during the recent 24 hours.'),
     'icon': {
-        'icon': 'event',
+        'icon': 'event_console',
         'emblem': 'time'
     },
     'datasource': 'mkeventd_history',

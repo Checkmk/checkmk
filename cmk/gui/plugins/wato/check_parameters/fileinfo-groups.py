@@ -237,10 +237,7 @@ def _parameter_valuespec_fileinfo_groups():
                    "and any number of upper or lower levels. If all of the configured levels within "
                    "a conjunction are reached then the related state is reported."),
              )),
-            (additional_rules(maxage_name='maxage',
-                              minage_name='minage',
-                              maxsize_name='maxsize',
-                              minsize_name='minsize')),
+            (additional_rules()),
         ],
         ignored_keys=["precompiled_patterns", "group_patterns"],
     )

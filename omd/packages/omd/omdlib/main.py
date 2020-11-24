@@ -2352,7 +2352,7 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     # is different from the current version of the site.
     if not global_opts.force and not dialog_yesno(
             "You are going to update the site %s from version %s to version %s. "
-            "This will include updating all of you configuration files and merging "
+            "This will include updating all of your configuration files and merging "
             "changes in the default files with changes made by you. In case of conflicts "
             "your help will be needed." %
         (site.name, from_version, to_version), "Update!", "Abort"):

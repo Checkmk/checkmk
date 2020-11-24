@@ -40,8 +40,11 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
                     title.append(host_title)
             if "add_service_description" in settings.get("title_format", []):
                 service = context.get("service")
-                if service:
+                if isinstance(service, str):
                     title.append(service)
+                elif isinstance(service, dict):
+                    if service.get('service'):
+                        title.append(service['service'])
 
         return " / ".join(txt for txt in title)
 

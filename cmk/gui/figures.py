@@ -10,6 +10,7 @@ import abc
 import json
 from typing import cast, Type, Dict, Any
 
+import cmk.gui.visuals as visuals
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_vs_general_settings, dashlet_registry
@@ -67,9 +68,13 @@ def dashlet_http_variables(dashlet: Dashlet) -> HTTPVariables:
     assert isinstance(dashlet_params, ValueSpec)  # help mypy
     dashlet_properties = dashlet_params.value_to_json(dashlet._dashlet_spec)
 
+    context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(["host", "service"], dashlet.single_infos()),
+        dashlet._dashlet_spec["context"])
+
     args: HTTPVariables = []
     args.append(("settings", json.dumps(dashlet_settings)))
-    args.append(("context", json.dumps(dashlet._dashlet_spec["context"])))
+    args.append(("context", json.dumps(context)))
     args.append(("properties", json.dumps(dashlet_properties)))
 
     return args

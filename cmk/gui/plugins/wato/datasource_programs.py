@@ -910,8 +910,8 @@ def _transform_agent_vsphere(params):
     params.setdefault("use_pysphere", False)
     params.setdefault("spaces", "underscore")
 
-    if "snapshot_on_host" not in params:
-        params["snapshot_on_host"] = params.pop("snapshot_display", "vCenter") == "esxhost"
+    if "snapshots_on_host" not in params:
+        params["snapshots_on_host"] = params.pop("snapshot_display", "vCenter") == "esxhost"
 
     return params
 
@@ -1032,7 +1032,8 @@ def _valuespec_special_agents_vsphere():
              )),
             ("snapshots_on_host",
              Checkbox(
-                 title=_("Display snapshot summary on ESX hosts"),
+                 title=_("VM snapshot summary"),
+                 label=_("Display snapshot summary on ESX hosts"),
                  default_value=False,
                  help=_(
                      "By default the snapshot summary service is displayed on the vCenter. "

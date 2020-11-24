@@ -95,6 +95,10 @@ class CommandReschedule(Command):
         return _("Reschedule active checks")
 
     @property
+    def icon_name(self):
+        return "service_duration"
+
+    @property
     def permission(self):
         return PermissionActionReschedule
 
@@ -385,6 +389,10 @@ class CommandFakeCheckResult(Command):
         return _("Fake check results")
 
     @property
+    def icon_name(self):
+        return "fake_check_result"
+
+    @property
     def permission(self):
         return PermissionActionFakeChecks
 
@@ -492,6 +500,10 @@ class CommandCustomNotification(Command):
         return _("Custom notification")
 
     @property
+    def icon_name(self):
+        return "notifications"
+
+    @property
     def permission(self):
         return PermissionActionCustomNotification
 
@@ -576,6 +588,10 @@ class CommandAcknowledge(Command):
     @property
     def title(self):
         return _("Acknowledge problems")
+
+    @property
+    def icon_name(self):
+        return "host_svc_problems"
 
     @property
     def is_shortcut(self):
@@ -726,6 +742,10 @@ class CommandAddComment(Command):
         return _("Add comment")
 
     @property
+    def icon_name(self):
+        return "comment"
+
+    @property
     def permission(self):
         return PermissionActionAddComment
 
@@ -809,6 +829,10 @@ class CommandScheduleDowntimes(Command):
     @property
     def title(self):
         return _("Schedule downtimes")
+
+    @property
+    def icon_name(self):
+        return "downtime"
 
     @property
     def is_shortcut(self):
@@ -1330,6 +1354,10 @@ class CommandFavorites(Command):
     @property
     def title(self):
         return _("Favorites")
+
+    @property
+    def icon_name(self):
+        return "favorite"
 
     @property
     def permission(self):

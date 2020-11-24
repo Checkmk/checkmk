@@ -439,7 +439,10 @@ function resize_mega_menu_popup(menu_popup) {
             return;
         }
         const topic = visible_topics[visible_topics.length - 1];
-        const menu_width = Math.min(maximum_popup_width(), topic.offsetLeft + topic.offsetWidth);
+        let menu_width = Math.min(maximum_popup_width(), topic.offsetLeft + topic.offsetWidth);
+        // HACK: When the number of columns changes between show more and show less a wrong menu_width is
+        // calculated. We reduce the width here so that it is divisibly by the width the topics.
+        menu_width -= menu_width % topic.offsetWidth;
         menu_popup.style.width = menu_width + "px";
     } else {
         const items = extended_topic.getElementsByTagName("ul")[0];

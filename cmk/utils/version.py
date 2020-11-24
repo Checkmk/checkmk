@@ -11,6 +11,7 @@ does not offer stable APIs. The code may change at any time."""
 __version__ = "2.0.0i2"
 
 import errno
+import enum
 import os
 from pathlib import Path
 import subprocess
@@ -80,21 +81,27 @@ def edition_title():
     return "CRE"
 
 
-def _is_expired() -> bool:
+class TrialState(enum.Enum):
+    """All possible states of the demo version"""
+    VALID = enum.auto()
+    EXPIRED = enum.auto()
+    NO_LIVESTATUS = enum.auto()  # special case, no cmc impossible to determine status
+
+
+def _get_expired_status() -> TrialState:
     try:
         query = "GET status\nColumns: is_trial_expired\n"
         response = livestatus.LocalConnection().query(query)
-        return response[0][0] == 1
+        return TrialState.EXPIRED if response[0][0] == 1 else TrialState.VALID
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         # NOTE: If livestatus is absent we assume that trial is expired.
         # Livestatus may be absent only when the cmc missing and this case for demo version means
         # just expiration(impossibility to check)
-        return True
-    return False
+        return TrialState.NO_LIVESTATUS
 
 
 def is_expired_trial() -> bool:
-    return is_demo() and _is_expired()
+    return is_demo() and _get_expired_status() == TrialState.EXPIRED
 
 
 #   .--general infos-------------------------------------------------------.

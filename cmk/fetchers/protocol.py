@@ -35,6 +35,23 @@ __all__ = [
     "make_end_of_reply_answer",
     "make_fetcher_timeout_message",
 ]
+"""Defines a layered protocol.
+
+We call "message" a header followed by the corresponding payload.
+
++---------------+----------------+---------------+---------------------+
+| Layer         | Message type   | Header type   | Payload type        |
++===============+================+===============+=====================+
+| CMC Layer     | CMCMessage     | CMCHeader     | FetcherMessage      |
++---------------+----------------+---------------+---------------------+
+| Fetcher Layer | FetcherMessage | FetcherHeader | L3Message + L3Stats |
++---------------+----------------+---------------+---------------------+
+|               |                |               | AgentPayload        |
+| Result Layer  | L3Message      | `!HQ`         | SNMPPayload         |
+|               |                |               | ErrorPayload        |
++---------------+----------------+---------------+---------------------+
+
+"""
 
 
 class CMCLogLevel(str, enum.Enum):

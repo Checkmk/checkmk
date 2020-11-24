@@ -1129,10 +1129,10 @@ def check_single_interface(
     if monitor_total_traffic:
         bandwidth_content.append(("total", rates[14], speed_b_total))
     for what, traffic, speed in bandwidth_content:
-        if (what, 'predictive') in traffic_levels:
+        predictive = (what, 'predictive') in traffic_levels
+        if predictive:
             levels_predictive = traffic_levels[(what, 'predictive')]
             bw_warn, bw_crit = None, None
-            predictive = True
         else:
             bw_warn = traffic_levels[(what, 'upper', 'warn')]
             bw_crit = traffic_levels[(what, 'upper', 'crit')]
@@ -1140,7 +1140,6 @@ def check_single_interface(
             bw_crit_min = traffic_levels[(what, 'lower', 'crit')]
             levels_uppper = bw_warn, bw_crit
             levels_lower = bw_warn_min, bw_crit_min
-            predictive = False
 
         # handle computation of average
         if average:
@@ -1165,14 +1164,13 @@ def check_single_interface(
 
         # Check bandwidth thresholds incl. prediction
         if predictive:
-            result, _metric, *ref_curve = list(
-                check_levels_predictive(
-                    traffic,
-                    levels=levels_predictive,
-                    metric_name=dsname,
-                    render_func=bandwidth_renderer,
-                    label=title,
-                ))
+            result, _metric, *ref_curve = check_levels_predictive(
+                traffic,
+                levels=levels_predictive,
+                metric_name=dsname,
+                render_func=bandwidth_renderer,
+                label=title,
+            )
             assert isinstance(result, Result)
             if ref_curve:
                 yield from ref_curve  # reference curve for predictive levels

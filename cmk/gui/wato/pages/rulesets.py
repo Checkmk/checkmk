@@ -398,6 +398,8 @@ def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[Pag
                 ("search_p_ruleset_group_USE", "on"),
                 ("search_p_ruleset_deprecated", DropdownChoice.option_id(True)),
                 ("search_p_ruleset_deprecated_USE", "on"),
+                ("search", ""),
+                ("filled_in", "search"),
             ])),
     )
 

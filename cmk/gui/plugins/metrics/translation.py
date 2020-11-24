@@ -687,7 +687,7 @@ check_metrics["check_mk_active-disk_smb"] = {
 }
 df_basic_perfvarnames = [
     "inodes_used", "fs_size", "growth", "trend", "reserved", "fs_free", "fs_provisioning",
-    "uncommitted", "overprovisioned"
+    "uncommitted", "overprovisioned", "dedup_rate", "file_count"
 ]
 df_translation = {
     "~(?!%s).*$" % "|".join(df_basic_perfvarnames): {
@@ -760,6 +760,7 @@ check_metrics["check_mk-3par_volumes"] = df_translation
 check_metrics["check_mk-storeonce_clusterinfo_space"] = df_translation
 check_metrics["check_mk-storeonce_servicesets_capacity"] = df_translation
 check_metrics["check_mk-storeonce4x_appliances_storage"] = df_translation
+check_metrics["check_mk-storeonce4x_cat_stores"] = df_translation
 check_metrics["check_mk-numble_volumes"] = df_translation
 check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation

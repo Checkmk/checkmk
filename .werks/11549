@@ -1,0 +1,13 @@
+Title: Fix drawing of deduplication rate and file count
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606231790
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Deduplication rate and file count metrics specially in {{storeonce4x_cat_stores}} would the drawn
+incorrectly.
+This change corrects drawings for {{dedup_rate}} and {{file_count}} and {{storeonce4x_cat_stores}}.

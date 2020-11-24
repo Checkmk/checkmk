@@ -194,9 +194,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
                     'state': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[docker0]'),
-                    Result(state=state.OK, notice='Operational state: up'),
-                    Result(state=state.OK, notice='MAC: AA:AA:AA:AA:AA:AA'),
+                    Result(state=state.OK, summary='[docker0]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
                     Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
@@ -208,9 +208,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
                     'state': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[wlp3s0]'),
-                    Result(state=state.OK, notice='Operational state: up'),
-                    Result(state=state.OK, notice='MAC: AA:AA:AA:AA:AA:BB'),
+                    Result(state=state.OK, summary='[wlp3s0]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:BB'),
                     Result(state=state.OK, summary='Speed: unknown')
                 ],
             ),
@@ -295,9 +295,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
                     'state': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[docker0]'),
-                    Result(state=state.OK, notice='Operational state: up'),
-                    Result(state=state.OK, notice='MAC: AA:AA:AA:AA:AA:AA'),
+                    Result(state=state.OK, summary='[docker0]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
                     Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
@@ -309,9 +309,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
                     'state': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[wlp3s0]'),
-                    Result(state=state.OK, notice='Operational state: up'),
-                    Result(state=state.OK, notice='MAC: AA:AA:AA:AA:AA:AA'),
+                    Result(state=state.OK, summary='[wlp3s0]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
                     Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
@@ -396,9 +396,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
                     'state': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[docker0]'),
-                    Result(state=state.OK, notice='Operational state: up'),
-                    Result(state=state.OK, notice='MAC: AA:AA:AA:AA:AA:AA'),
+                    Result(state=state.OK, summary='[docker0]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
                     Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
@@ -410,9 +410,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
                     'state': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[wlp3s0]'),
-                    Result(state=state.OK, notice='Operational state: up'),
-                    Result(state=state.OK, notice='MAC: AA:AA:AA:AA:AA:AA'),
+                    Result(state=state.OK, summary='[wlp3s0]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
                     Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
@@ -460,9 +460,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
                     'state': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[em0]'),
-                    Result(state=state.OK, notice='Operational state: up'),
-                    Result(state=state.OK, notice='MAC: 00:AA:11:BB:22:CC'),
+                    Result(state=state.OK, summary='[em0]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='MAC: 00:AA:11:BB:22:CC'),
                     Result(state=state.OK, summary='Speed: 1 GBit/s'),
                 ],
             ),
@@ -474,8 +474,8 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
                     'state': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[tun0]'),
-                    Result(state=state.OK, notice='Operational state: up'),
+                    Result(state=state.OK, summary='[tun0]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
@@ -487,8 +487,8 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
                     'state': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[tun1]'),
-                    Result(state=state.OK, notice='Operational state: up'),
+                    Result(state=state.OK, summary='[tun1]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),

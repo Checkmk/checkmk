@@ -14,6 +14,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    MutableMapping,
     Optional,
     Sequence,
     Set,
@@ -882,16 +883,6 @@ def _get_map_states(defined_mapping: Iterable[Tuple[Iterable[str], int]]) -> Map
     return map_states
 
 
-def _render_status_info_main_interface(
-    oper_status_name: str,
-    admin_status: Optional[str],
-) -> Tuple[str, Optional[str]]:
-    oper_status_info = "Operational state: %s" % oper_status_name
-    if admin_status is None:
-        return oper_status_info, None
-    return oper_status_info, "Admin state: %s" % statename(admin_status)
-
-
 def _render_status_info_group_members(
     oper_status_name: str,
     admin_status_name: Optional[str],
@@ -994,12 +985,8 @@ def check_single_interface(
     # be set to None
     if use_discovered_state_and_speed:
         targetspeed = params.get("speed", params.get("discovered_speed"))
-        target_oper_states = params.get("state", params.get("discovered_oper_status"))
-        target_admin_states = params.get("admin_state", params.get("discovered_admin_status"))
     else:
         targetspeed = params.get("speed")
-        target_oper_states = params.get("state")
-        target_admin_states = params.get("admin_state")
     assumed_speed_in = params.get("assumed_speed_in")
     assumed_speed_out = params.get("assumed_speed_out")
     average = params.get("average")
@@ -1022,109 +1009,24 @@ def check_single_interface(
 
     monitor_total_traffic = "total_traffic" in params
 
-    if group_members:
-        # The detailed group info is added later on
-        info_interface = group_name
-    else:
-        if "infotext_format" in params:
-            bracket_info = ""
-            if params["infotext_format"] == "alias":
-                bracket_info = interface.alias
-            elif params["infotext_format"] == "description":
-                bracket_info = interface.descr
-            elif params["infotext_format"] == "alias_and_description":
-                bracket_info = ", ".join([i for i in [interface.alias, interface.descr] if i])
-            elif params["infotext_format"] == "alias_or_description":
-                bracket_info = interface.alias if interface.alias else interface.descr
-            elif params["infotext_format"] == "desription_or_alias":
-                bracket_info = interface.descr if interface.descr else interface.alias
-
-            if bracket_info:
-                info_interface = "[%s]" % bracket_info
-            else:
-                info_interface = ""
-        else:
-            # Display port number or alias in summary_interface if that is not part
-            # of the service description anyway
-            if ((item == interface.index or item.lstrip("0") == interface.index) and
-                (item == interface.alias or interface.alias == '') and
-                (item == interface.descr or interface.descr == '')):  # description trivial
-                info_interface = ""
-            elif item == "%s %s" % (interface.alias,
-                                    interface.index) and interface.descr != '':  # non-unique Alias
-                info_interface = "[%s/%s]" % (interface.alias, interface.descr)
-            elif item != interface.alias and interface.alias != '':  # alias useful
-                info_interface = "[%s]" % interface.alias
-            elif item != interface.descr and interface.descr != '':  # description useful
-                info_interface = "[%s]" % interface.descr
-            else:
-                info_interface = "[%s]" % interface.index
-
-        if interface.node is not None:
-            if info_interface:
-                info_interface = "%s on %s" % (
-                    info_interface,
-                    interface.node,
-                )
-            else:
-                info_interface = "On %s" % interface.node
-
-    if info_interface:
-        yield Result(
-            state=state.OK,
-            notice=info_interface,
-        )
-
-    info_oper_status, info_admin_status = _render_status_info_main_interface(
-        interface.oper_status_name,
-        interface.admin_status,
+    yield from _interface_name(
+        group_name=group_name if group_members else None,
+        item=item,
+        params=params,
+        interface=interface,
     )
 
-    yield Result(
-        state=_check_status(
-            interface.oper_status,
-            target_oper_states,
-            _get_map_states(params.get("map_operstates", [])),
-        ),
-        notice=info_oper_status,
+    yield from _interface_status(
+        params=params,
+        interface=interface,
+        use_discovered_states=use_discovered_state_and_speed,
     )
 
-    if info_admin_status:
-        yield Result(
-            state=_check_status(
-                str(interface.admin_status),
-                target_admin_states,
-                _get_map_states(params.get("map_admin_states", [])),
-            ),
-            notice=info_admin_status,
-        )
+    yield from _interface_mac(interface=interface)
 
-    if group_members:
-        infos_group = []
-        for group_node, members in group_members.items():
-            member_info = []
-            for member in members:
-                member_info.append("%s %s" % (member["name"],
-                                              _render_status_info_group_members(
-                                                  member["oper_status_name"],
-                                                  member.get("admin_status_name"),
-                                              )))
+    yield from _group_members(group_members=group_members)
 
-            nodeinfo = ""
-            if group_node is not None and len(group_members) > 1:
-                nodeinfo = " on node %s" % group_node
-            infos_group.append("[%s%s]" % (", ".join(member_info), nodeinfo))
-
-        yield Result(
-            state=state.OK,
-            notice='Members: %s' % ' '.join(infos_group),
-        )
-
-    if interface.phys_address:
-        yield Result(
-            state=state.OK,
-            notice='MAC: %s' % render_mac_address(interface.phys_address),
-        )
+    yield _check_speed(interface, targetspeed)
 
     # prepare reference speed for computing relative bandwidth usage
     ref_speed = None
@@ -1203,7 +1105,6 @@ def check_single_interface(
 
     # if at least one counter wrapped, we do not handle the counters at all
     if caught_ignore_results_error:
-        yield _check_speed(interface, targetspeed)
         # If there is a threshold on the bandwidth, we cannot proceed
         # further (the check would be flapping to green on a wrap)
         if any(traffic_levels.values()):
@@ -1296,6 +1197,182 @@ def check_single_interface(
         else:
             yield result
 
+    yield from _io_rates(
+        err_warn,
+        err_crit,
+        mcast_warn,
+        mcast_crit,
+        bcast_warn,
+        bcast_crit,
+        nucast_warn,
+        nucast_crit,
+        disc_warn,
+        disc_crit,
+        average_bmcast,
+        dsname,
+        item=item,
+        rates=rates,
+        value_store=value_store,
+        timestamp=timestamp,
+    )
+
+
+def _interface_name(
+    *,
+    group_name: Optional[str],
+    item: str,
+    params: Mapping[str, Any],
+    interface: Interface,
+) -> Iterable[Result]:
+    if group_name:
+        # The detailed group info is added later on
+        yield Result(state=state.OK, summary=group_name)
+        return
+
+    if "infotext_format" in params:
+        bracket_info = ""
+        if params["infotext_format"] == "alias":
+            bracket_info = interface.alias
+        elif params["infotext_format"] == "description":
+            bracket_info = interface.descr
+        elif params["infotext_format"] == "alias_and_description":
+            bracket_info = ", ".join([i for i in [interface.alias, interface.descr] if i])
+        elif params["infotext_format"] == "alias_or_description":
+            bracket_info = interface.alias if interface.alias else interface.descr
+        elif params["infotext_format"] == "desription_or_alias":
+            bracket_info = interface.descr if interface.descr else interface.alias
+
+        if bracket_info:
+            info_interface = "[%s]" % bracket_info
+        else:
+            info_interface = ""
+    else:
+        # Display port number or alias in summary_interface if that is not part
+        # of the service description anyway
+        if ((item == interface.index or item.lstrip("0") == interface.index) and
+            (item == interface.alias or interface.alias == '') and
+            (item == interface.descr or interface.descr == '')):  # description trivial
+            info_interface = ""
+        elif item == "%s %s" % (interface.alias,
+                                interface.index) and interface.descr != '':  # non-unique Alias
+            info_interface = "[%s/%s]" % (interface.alias, interface.descr)
+        elif item != interface.alias and interface.alias != '':  # alias useful
+            info_interface = "[%s]" % interface.alias
+        elif item != interface.descr and interface.descr != '':  # description useful
+            info_interface = "[%s]" % interface.descr
+        else:
+            info_interface = "[%s]" % interface.index
+
+    if interface.node is not None:
+        if info_interface:
+            info_interface = "%s on %s" % (
+                info_interface,
+                interface.node,
+            )
+        else:
+            info_interface = "On %s" % interface.node
+
+    if info_interface:
+        yield Result(
+            state=state.OK,
+            summary=info_interface,
+        )
+
+
+def _interface_mac(*, interface: Interface) -> Iterable[Result]:
+    if interface.phys_address:
+        yield Result(
+            state=state.OK,
+            summary='MAC: %s' % render_mac_address(interface.phys_address),
+        )
+
+
+def _interface_status(
+    *,
+    params: Mapping[str, Any],
+    interface: Interface,
+    use_discovered_states: bool,
+) -> Iterable[Result]:
+
+    if use_discovered_states:
+        target_oper_states = params.get("state", params.get("discovered_oper_status"))
+        target_admin_states = params.get("admin_state", params.get("discovered_admin_status"))
+    else:
+        target_oper_states = params.get("state")
+        target_admin_states = params.get("admin_state")
+
+    yield Result(
+        state=_check_status(
+            interface.oper_status,
+            target_oper_states,
+            _get_map_states(params.get("map_operstates", [])),
+        ),
+        summary=f"({interface.oper_status_name})",
+        details=f"Operational state: {interface.oper_status_name}",
+    )
+
+    if not interface.admin_status:
+        return
+
+    yield Result(
+        state=_check_status(
+            str(interface.admin_status),
+            target_admin_states,
+            _get_map_states(params.get("map_admin_states", [])),
+        ),
+        summary=f"Admin state: {statename(interface.admin_status)}",
+    )
+
+
+def _group_members(
+    *,
+    group_members: Optional[GroupMembers],
+) -> Iterable[Result]:
+    if not group_members:
+        return
+
+    infos_group = []
+    for group_node, members in group_members.items():
+        member_info = []
+        for member in members:
+            member_info.append("%s %s" % (
+                member["name"],
+                _render_status_info_group_members(
+                    member["oper_status_name"],
+                    member.get("admin_status_name"),
+                ),
+            ))
+
+        nodeinfo = ""
+        if group_node is not None and len(group_members) > 1:
+            nodeinfo = " on node %s" % group_node
+        infos_group.append("[%s%s]" % (", ".join(member_info), nodeinfo))
+
+    yield Result(
+        state=state.OK,
+        summary='Members: %s' % ' '.join(infos_group),
+    )
+
+
+def _io_rates(
+    err_warn,
+    err_crit,
+    mcast_warn,
+    mcast_crit,
+    bcast_warn,
+    bcast_crit,
+    nucast_warn,
+    nucast_crit,
+    disc_warn,
+    disc_crit,
+    average_bmcast,
+    dsname,
+    *,
+    item: str,
+    rates: List,  # FIXME
+    value_store: MutableMapping[str, Any],
+    timestamp: float,
+) -> type_defs.CheckResult:
     for what, mrate, brate, urate, nurate, discrate, errorrate in [
         ("in", rates[1], rates[2], rates[3], rates[4], rates[5], rates[6]),
         ("out", rates[8], rates[9], rates[10], rates[11], rates[12], rates[13])
@@ -1363,8 +1440,6 @@ def check_single_interface(
                     label=f"{name} {what}",
                     notice_only=True,
                 )
-
-    yield _check_speed(interface, targetspeed)
 
 
 def cluster_check(

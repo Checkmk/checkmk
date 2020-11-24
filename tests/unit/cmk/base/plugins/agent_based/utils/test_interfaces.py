@@ -72,17 +72,18 @@ def _add_group_info_to_results(results, members):
     return [
         Result(
             state=state.OK,
-            notice='Interface group',
+            summary='Interface group',
         ),
         Result(
             state=state.OK,
-            notice='Operational state: up',
-        ),
+            summary='(up)',
+            details='Operational state: up',
+        ), results[2],
         Result(
             state=state.OK,
-            notice=members,
+            summary=members,
         )
-    ] + results[2:]
+    ] + results[3:]
 
 
 DEFAULT_DISCOVERY_PARAMS = type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)
@@ -697,9 +698,10 @@ ITEM_PARAMS_RESULTS = (
             'state': ['1'],
         }),
         [
-            Result(state=state.OK, notice='[vboxnet0]'),
-            Result(state=state.OK, notice='Operational state: up'),
-            Result(state=state.OK, notice='MAC: 0A:00:27:00:00:00'),
+            Result(state=state.OK, summary='[vboxnet0]'),
+            Result(state=state.OK, summary='(up)', details='Operational state: up'),
+            Result(state=state.OK, summary='MAC: 0A:00:27:00:00:00'),
+            Result(state=state.OK, summary='Speed: 10 MBit/s'),
             Metric('in', 0.0, levels=(62_500.0, 25_0000.0), boundaries=(0.0, 1_250_000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -717,7 +719,6 @@ ITEM_PARAMS_RESULTS = (
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
             Result(state=state.OK, summary='Out: 0.00 B/s (0%)'),
-            Result(state=state.OK, summary='Speed: 10 MBit/s'),
         ],
     ),
     (
@@ -730,9 +731,10 @@ ITEM_PARAMS_RESULTS = (
             'state': ['1'],
         }),
         [
-            Result(state=state.OK, notice='[wlp2s0]'),
-            Result(state=state.OK, notice='Operational state: up'),
-            Result(state=state.OK, notice='MAC: 64:5D:86:E4:50:2F'),
+            Result(state=state.OK, summary='[wlp2s0]'),
+            Result(state=state.OK, summary='(up)', details='Operational state: up'),
+            Result(state=state.OK, summary='MAC: 64:5D:86:E4:50:2F'),
+            Result(state=state.OK, summary='Speed: 100 MBit/s (assumed)'),
             Metric('in', 800_000.0, levels=(625_000.0, 2_500_000.0),
                    boundaries=(0.0, 12_500_000.0)),
             Metric('inmcast', 0.0),
@@ -758,7 +760,6 @@ ITEM_PARAMS_RESULTS = (
             Result(state=state.CRIT,
                    summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
             Result(state=state.OK, summary='Total: 4.00 MB/s (16.0%)'),
-            Result(state=state.OK, summary='Speed: 100 MBit/s (assumed)'),
         ],
     ),
     (
@@ -772,9 +773,10 @@ ITEM_PARAMS_RESULTS = (
             'discards': (1, 2),
         }),
         [
-            Result(state=state.OK, notice='[wlp2s0]'),
-            Result(state=state.OK, notice='Operational state: up'),
-            Result(state=state.OK, notice='MAC: 64:5D:86:E4:50:2F'),
+            Result(state=state.OK, summary='[wlp2s0]'),
+            Result(state=state.OK, summary='(up)', details='Operational state: up'),
+            Result(state=state.OK, summary='MAC: 64:5D:86:E4:50:2F'),
+            Result(state=state.OK, summary='Speed: 100 MBit/s (assumed)'),
             Metric('in', 800000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -798,7 +800,6 @@ ITEM_PARAMS_RESULTS = (
             Result(state=state.OK, notice='Discards in: 0.00/s'),
             Result(state=state.OK, notice='Non-unicast packets out: 0.00/s'),
             Result(state=state.OK, notice='Discards out: 0.00/s'),
-            Result(state=state.OK, summary='Speed: 100 MBit/s (assumed)'),
         ],
     ),
 )
@@ -833,7 +834,8 @@ def test_check_single_interface_same_index_descr_alias(value_store):
         ))
     assert result == Result(
         state=state.OK,
-        notice='Operational state: up',
+        summary='(up)',
+        details='Operational state: up',
     )
 
 
@@ -858,7 +860,7 @@ def test_check_single_interface_admin_status(value_store, item, params, result):
             _create_interfaces(4000000, admin_status='1')[int(item) - 1],
             timestamp=5,
         )) == result[:2] + [
-            Result(state=state.OK, notice='Admin state: up'),
+            Result(state=state.OK, summary='Admin state: up'),
         ] + result[2:]
 
 
@@ -885,7 +887,7 @@ def test_check_single_interface_legacy_parameters_1(value_store, item, params, r
             _create_interfaces(4000000, admin_status='1')[int(item) - 1],
             timestamp=5,
         )) == result[:2] + [
-            Result(state=state.CRIT, notice='Admin state: up'),
+            Result(state=state.CRIT, summary='Admin state: up'),
         ] + result[2:]
 
 
@@ -912,7 +914,7 @@ def test_check_single_interface_legacy_parameters_2(value_store, item, params, r
             _create_interfaces(4000000, admin_status='2')[int(item) - 1],
             timestamp=5,
         )) == result[:2] + [
-            Result(state=state.UNKNOWN, notice='Admin state: down'),
+            Result(state=state.UNKNOWN, summary='Admin state: down'),
         ] + result[2:]
 
 
@@ -945,17 +947,17 @@ def test_check_single_interface_ignore_state(value_store, item, params, result):
     (
         ITEM_PARAMS_RESULTS[0][0],
         ITEM_PARAMS_RESULTS[0][1],
-        ITEM_PARAMS_RESULTS[0][2][:-3] + [
+        ITEM_PARAMS_RESULTS[0][2][:-2] + [
             Metric('in_avg_5', 0.0, levels=(62_500.0, 250_000.0), boundaries=(0.0, 1_250_000.0)),
             Result(state=state.OK, summary='In average 5min: 0.00 B/s (0%)'),
             Metric('out_avg_5', 0.0, levels=(62_500.0, 250_000.0), boundaries=(0.0, 1_250_000.0)),
             Result(state=state.OK, summary='Out average 5min: 0.00 B/s (0%)'),
-        ] + [ITEM_PARAMS_RESULTS[0][2][-1]],
+        ],
     ),
     (
         ITEM_PARAMS_RESULTS[1][0],
         ITEM_PARAMS_RESULTS[1][1],
-        ITEM_PARAMS_RESULTS[1][2][:-4] + [
+        ITEM_PARAMS_RESULTS[1][2][:-3] + [
             Metric('in_avg_5',
                    800_000.0,
                    levels=(625_000.0, 2_500_000.0),
@@ -970,7 +972,7 @@ def test_check_single_interface_ignore_state(value_store, item, params, result):
                    summary='Out average 5min: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
             Metric('total_avg_5', 4_000_000.0, boundaries=(0.0, 25_000_000.0)),
             Result(state=state.OK, summary='Total average 5min: 4.00 MB/s (16.0%)'),
-        ] + [ITEM_PARAMS_RESULTS[1][2][-1]],
+        ],
     ),
 ])
 def test_check_single_interface_averaging(value_store, item, params, result):
@@ -1206,7 +1208,7 @@ def test_check_multiple_interfaces_duplicate_alias(value_store, item, params, re
     )) == [
         Result(
             state=state.OK,
-            notice='[%s/%s]' % (alias, ifaces[int(index) - 1].descr),
+            summary='[%s/%s]' % (alias, ifaces[int(index) - 1].descr),
         ),
     ] + result[1:]
 
@@ -1243,10 +1245,11 @@ def test_check_multiple_interfaces_group_simple(value_store):
             _create_interfaces(4000000),
             timestamp=5,
         )) == [
-            Result(state=state.OK, notice='Interface group'),
-            Result(state=state.OK, notice='Operational state: degraded'),
+            Result(state=state.OK, summary='Interface group'),
+            Result(state=state.OK, summary='(degraded)', details='Operational state: degraded'),
             Result(state=state.OK,
-                   notice='Members: [1 (up), 2 (down), 3 (down), 4 (down), 5 (up), 6 (up)]'),
+                   summary='Members: [1 (up), 2 (down), 3 (down), 4 (down), 5 (up), 6 (up)]'),
+            Result(state=state.WARN, summary='Speed: 10 MBit/s (expected: 123 kBit/s)'),
             Metric('in', 800000.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -1269,7 +1272,6 @@ def test_check_multiple_interfaces_group_simple(value_store):
                    summary='Out: 3.20 MB/s (warn/crit at 62.5 kB/s/250 kB/s) (256%)'),
             Result(state=state.CRIT,
                    summary='Total: 4.00 MB/s (warn/crit at 250 kB/s/750 kB/s) (160%)'),
-            Result(state=state.WARN, summary='Speed: 10 MBit/s (expected: 123 kBit/s)'),
         ]
 
 
@@ -1305,9 +1307,10 @@ def test_check_multiple_interfaces_group_exclude(value_store):
             _create_interfaces(4000000),
             timestamp=5,
         )) == [
-            Result(state=state.OK, notice='Interface group'),
-            Result(state=state.CRIT, notice='Operational state: degraded'),
-            Result(state=state.OK, notice='Members: [1 (up), 2 (down), 3 (down), 6 (up)]'),
+            Result(state=state.OK, summary='Interface group'),
+            Result(state=state.CRIT, summary='(degraded)', details='Operational state: degraded'),
+            Result(state=state.OK, summary='Members: [1 (up), 2 (down), 3 (down), 6 (up)]'),
+            Result(state=state.OK, summary='Speed: 20 MBit/s (assumed)'),
             Metric('in', 800000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
             Metric('inmcast', 0.0),
             Metric('inbcast', 0.0),
@@ -1330,7 +1333,6 @@ def test_check_multiple_interfaces_group_exclude(value_store):
                    summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128%)'),
             Result(state=state.CRIT,
                    summary='Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.0%)'),
-            Result(state=state.OK, summary='Speed: 20 MBit/s (assumed)'),
         ]
 
 
@@ -1367,9 +1369,10 @@ def test_check_multiple_interfaces_group_by_agent(value_store):
         ifaces,
         timestamp=5,
     )) == [
-        Result(state=state.OK, notice='Interface group'),
-        Result(state=state.CRIT, notice='Operational state: degraded'),
-        Result(state=state.OK, notice='Members: [4 (down), 6 (up)]'),
+        Result(state=state.OK, summary='Interface group'),
+        Result(state=state.CRIT, summary='(degraded)', details='Operational state: degraded'),
+        Result(state=state.OK, summary='Members: [4 (down), 6 (up)]'),
+        Result(state=state.OK, summary='Speed: 20 MBit/s (assumed)'),
         Metric('in', 800000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Metric('inmcast', 0.0),
         Metric('inbcast', 0.0),
@@ -1390,7 +1393,6 @@ def test_check_multiple_interfaces_group_by_agent(value_store):
         Result(state=state.CRIT, summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128%)'),
         Result(state=state.CRIT,
                summary='Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.0%)'),
-        Result(state=state.OK, summary='Speed: 20 MBit/s (assumed)'),
     ]
 
 
@@ -1480,13 +1482,14 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
             timestamp=5,
         )
     ) == [
-        Result(state=state.OK, notice='Interface group'),
-        Result(state=state.OK, notice='Operational state: up'),
+        Result(state=state.OK, summary='Interface group'),
+        Result(state=state.OK, summary='(up)', details='Operational state: up'),
         Result(
             state=state.OK,
-            notice='Members: [5 (op. state: up, admin state: up), 6 (op. state: up, admin state: '
+            summary='Members: [5 (op. state: up, admin state: up), 6 (op. state: up, admin state: '
             'up) on node node1] [5 (op. state: up, admin state: down), 6 (op. state: up, '
             'admin state: down) on node node2]'),
+        Result(state=state.OK, summary='Speed: 20 MBit/s'),
         Metric('in', 1600000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Metric('inmcast', 0.0),
         Metric('inbcast', 0.0),
@@ -1507,7 +1510,6 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
         Result(state=state.CRIT, summary='Out: 6.40 MB/s (warn/crit at 125 kB/s/500 kB/s) (256%)'),
         Result(state=state.CRIT,
                summary='Total: 8.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (160%)'),
-        Result(state=state.OK, summary='Speed: 20 MBit/s'),
     ]
 
 

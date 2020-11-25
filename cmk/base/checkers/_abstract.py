@@ -163,8 +163,8 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             with self._make_fetcher() as fetcher:
                 return fetcher.fetch(self.mode)
         except Exception as exc:
-            # if cmk.utils.debug.enabled():
-            #    raise
+            if cmk.utils.debug.enabled():
+                raise
             return result.Error(exc)
 
     @final

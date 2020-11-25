@@ -96,7 +96,7 @@ def _parse_zfs(lines):
     for entry in data.values():
         if entry["mountpoint"].startswith("/"):
             entry["is_pool"] = "/" not in entry["name"]
-            if entry["available"] != 0 and entry["type"] == "filesystem":
+            if entry["type"] == "filesystem":
                 parsed[entry["name"]] = entry
     return parsed
 

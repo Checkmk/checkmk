@@ -44,7 +44,7 @@ def ensure_binary(s, encoding='utf-8', errors='strict'):
 
 @pytest.fixture(scope="module")
 def mk_logwatch():
-    return import_module("mk_logwatch")
+    return import_module("mk_logwatch.py")
 
 
 def test_options_defaults(mk_logwatch):

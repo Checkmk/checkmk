@@ -13,7 +13,7 @@ RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
 
 @pytest.fixture(scope="module")
 def apache_status():
-    return import_module("apache_status")
+    return import_module("apache_status.py")
 
 
 @pytest.fixture

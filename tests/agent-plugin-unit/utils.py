@@ -28,7 +28,7 @@ def import_module(modpath):
 
     # Python 2.6: Use the previously generated .py2 agent plugin
     if sys.version_info <= (2, 7):
-        modpath = os.path.splitext(modpath)[0] + ".py2"
+        modpath = os.path.splitext(modpath)[0] + "_2.py"
 
     if sys.version_info[0] >= 3:
         import importlib  # pylint: disable=import-outside-toplevel

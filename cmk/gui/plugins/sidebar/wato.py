@@ -16,6 +16,12 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
 from cmk.gui.globals import html
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
 
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
@@ -102,6 +108,28 @@ mega_menu_registry.register(
         topics=get_wato_menu_items,
         search=search.SetupSearch("setup_search"),
     ))
+
+
+class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=topic_menu_item.title,
+            topic=_("Setup"),
+            url=topic_menu_item.url,
+            match_texts=[topic_menu_item.title],
+        )
+                    for topic_menu_topic in mega_menu_registry["setup"].topics()
+                    for topic_menu_item in topic_menu_topic.items)
+
+    def is_affected_by_change(self, _: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
+
+
+match_item_generator_registry.register(MatchItemGeneratorSetupMenu("setup"))
 
 
 @snapin_registry.register

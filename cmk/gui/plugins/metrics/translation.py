@@ -2123,3 +2123,13 @@ check_metrics["check_mk-aws_s3_requests_http_errors"] = {
         "name": "aws_http_5xx_perc"
     },
 }
+check_metrics["check_mk-ups_capacity"] = {
+    "capacity": {
+        "name": "battery_seconds_remaining",
+        "deprecated": "2.0.0b2",
+    },
+    "percent": {
+        "name": "battery_capacity",
+        "deprecated": "2.0.0b2",
+    },
+}

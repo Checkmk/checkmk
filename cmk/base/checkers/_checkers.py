@@ -250,37 +250,39 @@ def update_host_sections(
     or source.exception to get the exception object.
     """
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
+
+    flat_node_sources = [(hn, ip, src) for hn, ip, sources in nodes for src in sources]
+
+    # TODO (ml): Can we somehow verify that this is correct?
+    #if fetcher_message["fetcher_type"] != source.id:
+    #    raise LookupError("Checker and fetcher missmatch")
+    # (mo): this is not enough, but better than nothing:
+    if len(flat_node_sources) != len(fetcher_messages):
+        raise LookupError("Checker and fetcher missmatch")
+
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     data: List[Tuple[Source, result.Result[HostSections, Exception]]] = []
-    for hostname, ipaddress, sources in nodes:
-        for source_index, source in enumerate(sources):
-            console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
+    for fetcher_message, (hostname, ipaddress, source) in zip(fetcher_messages, flat_node_sources):
+        console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
-            source.file_cache_max_age = max_cachefile_age
+        source.file_cache_max_age = max_cachefile_age
 
-            host_sections = multi_host_sections.setdefault(
-                HostKey(hostname, ipaddress, source.source_type),
-                source.default_host_sections,
-            )
+        host_sections = multi_host_sections.setdefault(
+            HostKey(hostname, ipaddress, source.source_type),
+            source.default_host_sections,
+        )
 
-            # The Microcore has handed over results from the previously executed fetcher.
-            # Extract the raw_data for the source we currently
-            fetcher_message = fetcher_messages[source_index]
-            # TODO (ml): Can we somehow verify that this is correct?
-            #if fetcher_message["fetcher_type"] != source.id:
-            #    raise LookupError("Checker and fetcher missmatch")
-            raw_data = fetcher_message.raw_data
+        source_result = source.parse(fetcher_message.raw_data, selection=selected_sections)
+        data.append((source, source_result))
+        if source_result.is_ok():
+            console.vverbose("  -> Add sections: %s\n" %
+                             sorted([str(s) for s in source_result.ok.sections.keys()]))
+            host_sections.add(source_result.ok)
+        else:
+            console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
 
-            source_result = source.parse(raw_data, selection=selected_sections)
-            data.append((source, source_result))
-            if source_result.is_ok():
-                console.vverbose("  -> Add sections: %s\n" %
-                                 sorted([str(s) for s in source_result.ok.sections.keys()]))
-                host_sections.add(source_result.ok)
-            else:
-                console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
-
+    for hostname, ipaddress, _sources in nodes:
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
         host_sections = multi_host_sections.setdefault(

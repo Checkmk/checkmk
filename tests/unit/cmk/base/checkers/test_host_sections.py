@@ -684,6 +684,7 @@ class TestMakeHostSectionsHosts:
         assert (section.sections[SectionName("section_name_%s" % hostname)]
                 == len(sources) * [["section_content"]])
 
+    # shouldn't this be tested for a cluster?
     def test_multiple_sources_from_different_hosts(self, hostname, ipaddress, mode, config_cache, host_config):
         sources = [
             ProgramSource.ds(hostname + "0", ipaddress, mode=mode, template=""),
@@ -691,16 +692,18 @@ class TestMakeHostSectionsHosts:
             TCPSource(hostname + "2", ipaddress, mode=mode),
         ]
 
+        nodes = make_nodes(
+            config_cache,
+            host_config,
+            ipaddress,
+            mode=mode,
+            sources=sources,
+        )
+
         mhs = MultiHostSections()
         update_host_sections(
             mhs,
-            make_nodes(
-                config_cache,
-                host_config,
-                ipaddress,
-                mode=mode,
-                sources=sources,
-            ),
+            nodes,
             max_cachefile_age=0,
             host_config=host_config,
             fetcher_messages=[
@@ -709,7 +712,7 @@ class TestMakeHostSectionsHosts:
                     Snapshot.null(),
                     source.fetcher_type,
                 )
-                for source in sources
+                for _h, _i, sources in nodes for source in sources
             ],
             selected_sections=NO_SELECTION,
         )
@@ -748,7 +751,7 @@ class TestMakeHostSectionsClusters:
             Source,
             "parse",
             lambda self, *args, **kwargs: result.OK(DummyHostSection(
-                sections={SectionName("section_name_%s" % self.hostname): [["section_content"]]},
+                sections={SectionName("section_name_%s" % self.hostname): [["section_content_%s" % self.hostname]]},
                 cache_info={},
                 piggybacked_raw_data={},
             ),
@@ -790,16 +793,18 @@ class TestMakeHostSectionsClusters:
         assert host_config.nodes
 
     def test_no_sources(self, cluster, nodes, config_cache, host_config, mode):
+        made_nodes = make_nodes(
+            config_cache,
+            host_config,
+            None,
+            mode=mode,
+            sources=(),
+        )
+
         mhs = MultiHostSections()
         update_host_sections(
             mhs,
-            make_nodes(
-                config_cache,
-                host_config,
-                None,
-                mode=mode,
-                sources=(),
-            ),
+            made_nodes,
             max_cachefile_age=0,
             host_config=host_config,
             fetcher_messages=[
@@ -808,7 +813,7 @@ class TestMakeHostSectionsClusters:
                     result.OK(AgentRawData(b"")),
                     Snapshot.null(),
                     FetcherType.PIGGYBACK,
-                ),
+                ) for _n in made_nodes
             ],
             selected_sections=NO_SELECTION,
         )
@@ -824,7 +829,7 @@ class TestMakeHostSectionsClusters:
             section = mhs[key]
             # yapf: disable
             assert (section.sections[SectionName("section_name_%s" % hostname)]
-                    == [["section_content"]])
+                    == [["section_content_%s" % hostname]])
             assert not section.cache_info
             assert not section.piggybacked_raw_data
 
@@ -872,17 +877,18 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
     # Create a cluster
     host_config.nodes = list(hosts.keys())
 
+    nodes = make_nodes(
+        config_cache,
+        host_config,
+        address,
+        mode=mode,
+        sources=make_sources(host_config, address, mode=mode)
+    )
+
     mhs = MultiHostSections()
-    sources = make_sources(host_config, address, mode=mode)
     update_host_sections(
         mhs,
-        make_nodes(
-            config_cache,
-            host_config,
-            address,
-            mode=mode,
-            sources=sources,
-        ),
+        nodes,
         max_cachefile_age=host_config.max_cachefile_age,
         host_config=host_config,
         fetcher_messages=[
@@ -891,7 +897,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
                     Snapshot.null(),
                     source.fetcher_type,
                 )
-                for source in sources
+                for _h, _i, sources in nodes for source in sources
             ],
         selected_sections=NO_SELECTION,
     )

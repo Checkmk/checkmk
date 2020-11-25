@@ -1,0 +1,13 @@
+Title: fileinfo.groups: removed "Additional rules for files" functionality
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1606301740
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+The recently added "Additional rules for files" functionality has been removed
+from the fileinfo.groups check. This functionality is not required as users are
+encouraged to use mk_filestats to monitor files.

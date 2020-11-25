@@ -10,11 +10,19 @@ import os
 import sys
 import time
 import signal
-import ConfigParser
+try:
+    import configparser
+except ImportError:  # Python 2
+    import ConfigParser as configparser  # type: ignore
+
+try:
+    from typing import Dict, List, Any, Set
+except ImportError:
+    pass
 
 try:
     # TODO: We should probably ship this package.
-    import pyinotify  # pylint: disable=import-error
+    import pyinotify  # type: ignore[import] # pylint: disable=import-error
 except ImportError:
     sys.stderr.write("Error: Python plugin pyinotify is not installed\n")
     sys.exit(1)
@@ -38,7 +46,7 @@ config_filename = mk_confdir + "/mk_inotify.cfg"
 configured_paths = mk_vardir + "/mk_inotify.configured"
 pid_filename = mk_vardir + "/mk_inotify.pid"
 
-config = ConfigParser.SafeConfigParser({})
+config = configparser.SafeConfigParser({})
 if not os.path.exists(config_filename):
     sys.exit(0)
 config_mtime = os.stat(config_filename).st_mtime
@@ -131,8 +139,10 @@ if not opt_foreground:
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-folder_configs = {}  # Computed configuration
-output = []  # Data to be written to disk
+# Computed configuration
+folder_configs = {}  # type: Dict[str, Dict[str, Any]]
+# Data to be written to disk
+output = []  # type: List[str]
 
 
 def get_watched_files():
@@ -307,7 +317,7 @@ def main():
             if mode not in attributes["all_del_modes"]:
                 required_modes.add(mode)
 
-        files_to_monitor = {}
+        files_to_monitor = {}  # type: Dict[str, Set]
         skip_modes = set([])
         for mode in required_modes:
             files_to_monitor.setdefault(mode, set([]))

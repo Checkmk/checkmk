@@ -22,7 +22,7 @@ __version__ = "2.1.0i1"
 import os
 import re
 import sys
-import urllib2
+import urllib2  # type: ignore[import] # pylint: disable=import-error
 
 # tell urllib2 not to honour "http(s)_proxy" env variables
 urllib2.getproxies = lambda: {}
@@ -70,8 +70,8 @@ def try_detect_servers():
         pids.append(pid)
 
         server_proto = 'http'
-        server_address, server_port = parts[3].rsplit(':', 1)
-        server_port = int(server_port)
+        server_address, _server_port = parts[3].rsplit(':', 1)
+        server_port = int(_server_port)
 
         # Use localhost when listening globally
         if server_address == '0.0.0.0':

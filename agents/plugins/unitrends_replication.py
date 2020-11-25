@@ -8,7 +8,7 @@ __version__ = "2.1.0i1"
 
 import sys
 import time
-import urllib
+import urllib.request
 from xml.dom import minidom
 
 now = int(time.time())
@@ -18,7 +18,8 @@ dpu = 1
 
 url = "http://localhost/recoveryconsole/bpl/syncstatus.php?type=replicate&arguments=start:%s,end:%s&sid=%s&auth=1:" % (
     start, end, dpu)
-xml = urllib.urlopen(url)
+
+xml = urllib.request.urlopen(url)
 
 sys.stdout.write("<<<unitrends_replication:sep(124)>>>\n")
 dom = minidom.parse(xml)

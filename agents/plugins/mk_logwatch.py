@@ -85,7 +85,7 @@ if PY3:
     text_type = str
     binary_type = bytes
 else:
-    text_type = unicode
+    text_type = unicode  # pylint: disable=undefined-variable
     binary_type = str
 
 
@@ -120,7 +120,7 @@ def init_logging(verbosity):
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(lineno)s: %(message)s")
 
 
-class ArgsParser(object):  # pylint: disable=too-few-public-methods
+class ArgsParser(object):  # pylint: disable=too-few-public-methods, useless-object-inheritance
     """
     Custom argument parsing.
     (Neither use optparse which is Python 2.3 to 2.7 only.
@@ -335,7 +335,7 @@ def read_config(files, debug=False):
     return logfiles_configs, cluster_configs
 
 
-class State(object):
+class State(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, filename, data=None):
         super(State, self).__init__()
         self.filename = filename
@@ -381,7 +381,7 @@ class State(object):
         return self._data.setdefault(key, {'file': key})
 
 
-class LogLinesIter(object):
+class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
     # this is supposed to become a proper iterator.
     # for now, we need a persistent buffer to fix things
     BLOCKSIZE = 8192
@@ -616,7 +616,7 @@ def process_logfile(section, filestate, debug):
                             cont_line = log_iter.next_line()
                             if cont_line is None:  # end of file
                                 break
-                            elif cont_pattern.search(cont_line[:-1]):
+                            if cont_pattern.search(cont_line[:-1]):
                                 line = line[:-1] + "\1" + cont_line
                             else:
                                 log_iter.push_back_line(cont_line)  # sorry for stealing this line
@@ -662,7 +662,7 @@ def process_logfile(section, filestate, debug):
     return header, []
 
 
-class Options(object):
+class Options(object):  # pylint: disable=useless-object-inheritance
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
     MAP_OVERFLOW = {'C': 2, 'W': 1, 'I': 0, 'O': 0}
     MAP_BOOL = {'true': True, 'false': False, '1': True, '0': False, 'yes': True, 'no': False}
@@ -753,7 +753,7 @@ class Options(object):
                 if value not in Options.MAP_OVERFLOW.keys():
                     raise ValueError("Invalid overflow: %r (choose from %r)" % (
                         value,
-                        Options.MAP_OVERFLOW.keys(),
+                        Options.MAP_OVERFLOW.keys(),  # pylint: disable=dict-keys-not-iterating
                     ))
                 self.values['overflow'] = value
             elif key in ('regex', 'iregex'):
@@ -764,7 +764,7 @@ class Options(object):
                     raise ValueError("Invalid %s: %r (choose from %r)" % (
                         key,
                         value,
-                        Options.MAP_BOOL.keys(),
+                        Options.MAP_BOOL.keys(),  # pylint: disable=dict-keys-not-iterating
                     ))
                 self.values[key] = Options.MAP_BOOL[value.lower()]
             elif key == 'maxcontextlines':
@@ -777,14 +777,14 @@ class Options(object):
             raise
 
 
-class PatternConfigBlock(object):
+class PatternConfigBlock(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, files, patterns):
         super(PatternConfigBlock, self).__init__()
         self.files = files
         self.patterns = patterns
 
 
-class ClusterConfigBlock(object):
+class ClusterConfigBlock(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name, ips_or_subnets):
         super(ClusterConfigBlock, self).__init__()
         self.name = name
@@ -797,7 +797,7 @@ def _decode_to_unicode(match):
     # we can't use 'six': this code may be executed using Python 2.5/2.6
     if sys.version_info[0] == 2:
         # Python 2: str @Windows && @Linux
-        return match if isinstance(match, unicode) else match.decode('utf8', 'replace')
+        return match if isinstance(match, unicode) else match.decode('utf8', 'replace')  # pylint: disable=undefined-variable
 
     # Python 3: bytes @Linux and unicode @Windows
     return match.decode('utf-8', 'replace') if isinstance(match, bytes) else match
@@ -862,7 +862,7 @@ def _compile_continuation_pattern(raw_pattern):
         return re.compile(_search_optimize_raw_pattern(raw_pattern), re.UNICODE)
 
 
-class LogfileSection(object):
+class LogfileSection(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, logfile_ref):
         super(LogfileSection, self).__init__()
         self.name_fs = logfile_ref[0]

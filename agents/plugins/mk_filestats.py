@@ -165,7 +165,7 @@ def parse_arguments(argv=None):
     return parsed_args
 
 
-class FileStat(object):
+class FileStat(object):  # pylint: disable=useless-object-inheritance
     """Wrapper arount os.stat
 
     Only call os.stat once.
@@ -234,7 +234,7 @@ class FileStat(object):
 #   '----------------------------------------------------------------------'
 
 
-class PatternIterator(object):
+class PatternIterator(object):  # pylint: disable=useless-object-inheritance
     """Recursively iterate over all files"""
     def __init__(self, pattern_list):
         super(PatternIterator, self).__init__()
@@ -283,7 +283,7 @@ def get_file_iterator(config):
 #   '----------------------------------------------------------------------'
 
 
-class AbstractFilter(object):
+class AbstractFilter(object):  # pylint: disable=useless-object-inheritance
     """Abstract filter interface"""
     def matches(self, filestat):
         """return a boolean"""

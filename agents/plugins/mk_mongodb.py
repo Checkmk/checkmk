@@ -26,7 +26,12 @@ import json
 from collections import defaultdict
 
 try:
-    import pymongo  # pylint: disable=import-error
+    from typing import Callable, Dict, Any
+except ImportError:
+    pass
+
+try:
+    import pymongo  # type: ignore[import] # pylint: disable=import-error
 except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(
@@ -34,7 +39,7 @@ except ImportError:
     )
     sys.exit(1)
 
-from bson.json_util import dumps
+from bson.json_util import dumps  # type: ignore[import]
 
 MK_VARDIR = os.environ.get("MK_VARDIR")
 
@@ -47,7 +52,7 @@ def get_database_info(client):
     else:
         db_names = []
 
-    databases = defaultdict(dict)
+    databases = defaultdict(dict)  # type: Dict[str, Dict[str, Any]]
     for name in db_names:
         database = client[name]
         databases[name]["collections"] = database.collection_names()
@@ -357,7 +362,7 @@ def _get_collections_information(client):
     :param client: mongodb client
     :return: dictionary with collections information
     """
-    collections_def_dict = lambda: defaultdict(collections_def_dict)
+    collections_def_dict = lambda: defaultdict(collections_def_dict)  # type: Callable
     collections_dict = collections_def_dict()
     for collection in client.config.collections.find({},
                                                      set(["_id", "unique", "dropped",
@@ -388,7 +393,7 @@ def _count_chunks_per_shard(client, databases):
     :param client: mongodb client
     :return: dictionary with shards and sum of chunks and jumbo chunks
     """
-    chunks_def_dict = lambda: defaultdict(chunks_def_dict)
+    chunks_def_dict = lambda: defaultdict(chunks_def_dict)  # type: Callable
     chunks_dict = chunks_def_dict()
 
     # initialize dictionary
@@ -425,7 +430,9 @@ def _count_chunks_per_shard(client, databases):
         database_set.add(database_name)
 
         # count number of chunks per shard
-        chunks_dict.get(database_name).get(collection_name).get(shard_name)["numberOfChunks"] += 1
+        if chunks_dict:
+            chunks_dict.get(database_name).get(collection_name).get(
+                shard_name)["numberOfChunks"] += 1
 
         # count number of jumbo chunks per shard
         if "jumbo" in chunk:
@@ -522,7 +529,7 @@ def _get_indexes_information(client, databases):
     :param client: mongodb client
     :return: dictionary with shards information
     """
-    indexes_def_dict = lambda: defaultdict(indexes_def_dict)
+    indexes_def_dict = lambda: defaultdict(indexes_def_dict)  # type: Callable
     indexes_dict = indexes_def_dict()
     for database_name in databases:
         database = databases.get(database_name)

@@ -45,8 +45,13 @@ __version__ = "2.1.0i1"
 import sys
 import os
 
-from optparse import OptionParser
+from optparse import OptionParser  # pylint: disable=deprecated-module
 import time
+
+try:
+    from typing import List
+except ImportError:
+    pass
 
 
 def install():
@@ -188,7 +193,7 @@ def display_on_segment(conn, settings, text):
 
     from tinkerforge.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7  # type: ignore[import]
     br = BrickletSegmentDisplay4x7(segment_display, conn)
-    segments = []
+    segments = []  # type: List
     for letter in text:
         if len(segments) >= 4:
             break

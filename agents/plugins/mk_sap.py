@@ -26,13 +26,17 @@ import time
 import fcntl
 import fnmatch
 import datetime
+try:
+    from typing import Tuple, List, Dict, Union, Any
+except ImportError:
+    pass
 
 # sapnwrfc needs to know where the libs are located. During
 # development the import failed, since the module did not
 # find the libraries. So we preload the library to have it
 # already loaded.
 try:
-    import sapnwrfc
+    import sapnwrfc  # type: ignore[import]
 except ImportError as e:
     if 'sapnwrfc.so' in str(e):
         sys.stderr.write(
@@ -128,10 +132,10 @@ local_cfg = {
 monitor_paths = [
     'SAP CCMS Monitor Templates/Dialog Overview/*',
 ]
-monitor_types = []
+monitor_types = []  # type: List[str]
 config_file = MK_CONFDIR + '/sap.cfg'
 
-cfg = {}
+cfg = {}  # type: Union[List[Dict[Any, Any]], Dict[Any, Any]]
 if os.path.exists(config_file):
     exec(open(config_file).read())
     if isinstance(cfg, dict):
@@ -185,7 +189,8 @@ def node_path(tree, node, path=''):
 
 
 def query(what, params, debug=False):
-    fd = conn.discover(what)
+    if conn:
+        fd = conn.discover(what)
 
     if debug:
         sys.stdout.write("Name: %s Params: %s\n" % (fd.name, fd.handle.parameters))
@@ -377,8 +382,8 @@ def check(cfg_entry):
     conn = sapnwrfc.base.rfc_connect(cfg_entry)
     login()
 
-    logs = {}
-    sap_data = {}
+    logs = {}  # type: Dict[str, Dict[str, List]]
+    sap_data = {}  # type: Dict[str, List]
 
     # This loop is used to collect all information from SAP
     for ms_name, mon_name in mon_list(cfg_entry):
@@ -392,7 +397,7 @@ def check(cfg_entry):
                 continue
             #sys.stdout.write("%s\n" % node["PATH"])
 
-            status_details = ''
+            status_details = ''  # type: Union[str, Tuple[str, Any]]
             perfvalue = '-'
             uom = '-'
 
@@ -502,7 +507,7 @@ try:
         new_file = STATE_FILE + '.new'
         state_fd = os.open(new_file, os.O_WRONLY | os.O_CREAT)
         fcntl.flock(state_fd, fcntl.LOCK_EX)
-        os.write(state_fd, repr(states))
+        os.write(state_fd, repr(states).encode("utf-8"))
         os.close(state_fd)
         os.rename(STATE_FILE + '.new', STATE_FILE)
 

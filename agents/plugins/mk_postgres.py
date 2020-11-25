@@ -75,7 +75,7 @@ class PostgresBase:
     _agent_prefix = "postgres"
 
     def __init__(self, db_user, instance=None):
-        # type: (str, Dict) -> None
+        # type: (str, Optional[Dict]) -> None
         self.db_user = db_user
 
         if instance:
@@ -893,7 +893,7 @@ class PostgresLinux(PostgresBase):
 
 
 def postgres_factory(db_user, pg_instance=None):
-    # type: (str, Dict[str, str]) -> PostgresBase
+    # type: (str, Optional[Dict[str, str]]) -> PostgresBase
     if IS_LINUX:
         return PostgresLinux(db_user, pg_instance)
     if IS_WINDOWS:

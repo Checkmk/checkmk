@@ -17,7 +17,10 @@ __version__ = "2.1.0i1"
 #    MTR results are stored in $VARDIR/mtr_${host}.report
 # return previous host data
 
-import ConfigParser
+try:
+    import configparser
+except ImportError:  # Python 2
+    import ConfigParser as configparser  # type: ignore
 import glob
 import os
 import re
@@ -25,6 +28,11 @@ import subprocess
 import sys
 import time
 from unicodedata import normalize
+
+try:
+    from typing import Dict, Any
+except ImportError:
+    pass
 
 mk_confdir = os.getenv("MK_CONFDIR") or "/etc/check_mk"
 mk_vardir = os.getenv("MK_VARDIR") or "/var/lib/check_mk_agent"
@@ -35,6 +43,16 @@ status_filename = mk_vardir + "/mtr.state"
 report_filepre = mk_vardir + "/mtr.report."
 
 debug = '-d' in sys.argv[2:] or '--debug' in sys.argv[1:]
+
+
+def ensure_str(s):
+    if sys.version_info[0] >= 3:
+        if isinstance(s, bytes):
+            return s.decode("utf-8")
+    else:
+        if isinstance(s, unicode):  # pylint: disable=undefined-variable
+            return s.encode("utf-8")
+    return s
 
 
 def which(program):
@@ -71,17 +89,17 @@ def read_config():
         'size': "64",
         'time': "0",
         'dns': "0",
-        'port': None,
-        'address': None,
-        'interval': None,
-        'timeout': None
+        'port': "",
+        'address': "",
+        'interval': "",
+        'timeout': ""
     }
     if not os.path.exists(config_filename):
         if debug:
             sys.stdout.write("Not configured, %s missing\n" % config_filename)
         sys.exit(0)
 
-    cfg = ConfigParser.SafeConfigParser(default_options)
+    cfg = configparser.SafeConfigParser(default_options)
     # Let ConfigParser figure it out
     for config_file in [config_filename] + glob.glob(config_dir):
         try:
@@ -102,7 +120,7 @@ def read_config():
 # # HOST        |LASTTIME |HOPCOUNT|HOP1|Loss%|Snt|Last|Avg|Best|Wrst|StDev|HOP2|...|HOP8|...|StdDev
 # www.google.com|145122481|8|192.168.1.1|0.0%|10|32.6|3.6|0.3|32.6|10.2|192.168.0.1|...|9.8
 def read_status():
-    current_status = {}
+    current_status = {}  # type: Dict[str, Dict[str, Any]]
     if not os.path.exists(status_filename):
         return current_status
 
@@ -114,7 +132,7 @@ def read_status():
                 sys.stdout.write("%s\n" % parts)
                 continue
             host = parts[0]
-            lasttime = int(float(parts[1]))
+            lasttime = int(parts[1])
             current_status[host] = {'hops': {}, 'lasttime': lasttime}
             hops = int(parts[2])
             for i in range(0, hops):
@@ -162,10 +180,10 @@ _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
 def host_to_filename(host, delim=u'-'):
     # Get rid of gibberish chars, stolen from Django
     """Generates an slightly worse ASCII-only slug."""
-    host = host.decode("utf8")
+    hostname = host.decode("utf8")
     result = []
-    for word in _punct_re.split(host.lower()):
-        word = normalize('NFKD', word).encode('ascii', 'ignore')
+    for word in _punct_re.split(hostname.lower()):
+        word = ensure_str(normalize('NFKD', word))
         if word:
             result.append(word)
     return delim.join(result).decode("utf8")

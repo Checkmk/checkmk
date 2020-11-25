@@ -19,7 +19,12 @@ import time
 from ftplib import FTP  # nosec
 
 try:
-    import MySQLdb
+    from typing import List, Any
+except ImportError:
+    pass
+
+try:
+    import MySQLdb  # type: ignore[import] # pylint: disable=import-error
 except ImportError as e:
     sys.stdout.write(
         "<<<plesk_backups>>>\n%s. Please install missing module via pip install <module>." % e)
@@ -91,7 +96,7 @@ for domain, p in domains.items():
         )
 
         # Zeilen holen
-        files = []
+        files = []  # type: List[str]
         ftp.retrlines('LIST %s' % p['backup_ftp_settingdirectory'], callback=files.append)
         # example line:
         # -rw----r--   1 b091045  cust     13660160 Dec  3 01:50 bla_v8_bla-v8.bla0.net_1212030250.tar
@@ -114,7 +119,7 @@ for domain, p in domains.items():
             continue
 
         # Get total size of all files on FTP
-        f = []
+        f = []  # type: List[Any]
 
         def get_size(ftp_conn, base_dir, l=None):
             if l and l.split()[-1] in ['.', '..']:
@@ -123,7 +128,7 @@ for domain, p in domains.items():
             size = 0
             if not l or l[0] == 'd':
                 subdir = '/' + l.split()[-1] if l else ''
-                dir_files = []
+                dir_files = []  # type: List[str]
                 ftp_conn.retrlines('LIST %s%s' % (base_dir, subdir), callback=dir_files.append)
                 for ln in dir_files:
                     size += get_size(ftp_conn, '%s%s' % (base_dir, subdir), ln)
@@ -132,9 +137,9 @@ for domain, p in domains.items():
             return size
 
         total_size = get_size(ftp, '')
-
-        output.append('%s 0 %s %d %d' %
-                      (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
+        if last_backup:
+            output.append('%s 0 %s %d %d' %
+                          (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
 
     except Exception as e:
         output.append('%s 2 %s' % (domain, e))

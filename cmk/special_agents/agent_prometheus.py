@@ -61,6 +61,14 @@ def setup_logging(verbosity):
     logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
 
 
+def parse_pod_name(labels: Dict[str, str], prepend_namespace: bool = False):
+    pod = labels["pod"]
+    namespace = labels["namespace"]
+    if prepend_namespace:
+        return f"{namespace}_{pod}"
+    return pod
+
+
 class FilesystemInfo:
     def __init__(self, name, fstype, mountpoint, size=None, available=None, used=None):
         self.name = name
@@ -307,6 +315,10 @@ class CAdvisorExporter:
         self.container_name_option = options.get("container_id", "short")
         self.pod_containers = {}
         self.container_ids = {}
+        self.prepend_namespaces = options.get("prepend_namespaces", True)
+
+    def _pod_name(self, labels):
+        return parse_pod_name(labels, self.prepend_namespaces)
 
     def update_pod_containers(self):
         result: Dict[str, List[str]] = {}
@@ -314,7 +326,7 @@ class CAdvisorExporter:
         temp_result = self.api_client.query_promql('container_last_seen{container!="", pod!=""}')
         for container_info in temp_result:
             container_name = container_info.label_value("name")
-            result.setdefault(container_info.label_value("pod"), []).append(container_name)
+            result.setdefault(self._pod_name(container_info.labels), []).append(container_name)
 
             id_long = container_info.label_value("id").split("/")[-1]
             container_ids[container_name] = {
@@ -375,10 +387,12 @@ class CAdvisorExporter:
         memory_info = [
             ("memory_usage_pod", 'container_memory_usage_bytes{pod!="", container=""}'),
             ("memory_limit",
-             'sum by(pod, instance)(container_spec_memory_limit_bytes{container!=""})'),
-            ("memory_rss", 'sum by(pod, instance)(container_memory_rss{container!=""})'),
-            ("memory_swap", 'sum by(pod, instance)(container_memory_swap{container!=""})'),
-            ("memory_cache", 'sum by(pod, instance)(container_memory_cache{container!=""})'),
+             'sum by(pod, namespace, instance)(container_spec_memory_limit_bytes{container!=""})'),
+            ("memory_rss", 'sum by(pod, namespace, instance)(container_memory_rss{container!=""})'),
+            ("memory_swap",
+             'sum by(pod, namespace, instance)(container_memory_swap{container!=""})'),
+            ("memory_cache",
+             'sum by(pod, namespace, instance)(container_memory_cache{container!=""})'),
         ]
 
         pods_raw, pod_machine_associations = self._retrieve_pods_memory_summary(memory_info)
@@ -391,6 +405,25 @@ class CAdvisorExporter:
             self._complement_machine_memory(pods_missing_limit, pod_machine_associations))
         return self._format_for_service(pods_complete)
 
+    def _retrieve_pods_memory_summary(
+            self,
+            memory_info: List[Tuple[str, str]]) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, str]]:
+
+        result: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {}
+        associations = {}
+        for memory_stat, promql_query in memory_info:
+            for pod_memory_info in self.api_client.query_promql(promql_query):
+                pod_name = self._pod_name(pod_memory_info.labels)
+                pod = result.setdefault(pod_name, {})
+                pod[memory_stat] = {
+                    "value": pod_memory_info.value(),
+                    "labels": pod_memory_info.labels,
+                }
+                if pod_name not in associations:
+                    associations[pod_name] = pod_memory_info.label_value("instance")
+
+        return result, associations
+
     def _format_for_service(self, pods: Dict) -> List[Dict[str, Dict[str, Any]]]:
         result = []
         for pod_name, pod_info in pods.items():
@@ -399,25 +432,6 @@ class CAdvisorExporter:
             }
             result.append(pod_formatted)
         return result
-
-    def _retrieve_pods_memory_summary(
-        self,
-        memory_info: List[Tuple[str, str]],
-    ) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, str]]:
-
-        result: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {}
-        associations = {}
-        for memory_stat, promql_query in memory_info:
-            for pod_memory_info in self.api_client.query_promql(promql_query):
-                pod_name = pod_memory_info.label_value("pod")
-                pod = result.setdefault(pod_name, {})
-                pod[memory_stat] = {
-                    "value": pod_memory_info.value(),
-                    "labels": pod_memory_info.labels,
-                }
-                if pod_name not in associations:
-                    associations[pod_name] = pod_memory_info.label_value("instance")
-        return result, associations
 
     def _filter_out_incomplete(
             self, pods_memory: Dict[str, Dict[str, Any]], required_stats: List[str]
@@ -468,7 +482,7 @@ class CAdvisorExporter:
     def memory_container_summary(self, _group_element: str) -> List[Dict[str, Dict[str, Any]]]:
         logging.debug("Parsing cAdvisor container memory")
         memory_info = {
-            "memory_usage_container": 'sum by (pod, container, name)(container_memory_usage_bytes{container!=""})',
+            "memory_usage_container": 'sum by (pod, namespace, container, name)(container_memory_usage_bytes{container!=""})',
             "memory_rss": 'container_memory_rss{container!=""}',
             "memory_swap": 'container_memory_swap{container!=""}',
             "memory_cache": 'container_memory_cache{container!=""}',
@@ -477,8 +491,8 @@ class CAdvisorExporter:
 
         extra_result = {}
         for pod_memory_info in self.api_client.query_promql(
-                'sum by (pod)(container_memory_usage_bytes{pod!="", container=""})'):
-            pod_name = pod_memory_info.label_value("pod")
+                'sum by (pod, namespace)(container_memory_usage_bytes{pod!="", container=""})'):
+            pod_name = self._pod_name(pod_memory_info.labels)
             for container_name in self.pod_containers[pod_name]:
                 extra_result[container_name] = {
                     "memory_usage_pod": [{
@@ -502,22 +516,26 @@ class CAdvisorExporter:
 
     def _retrieve_cadvisor_info(self, entity_info: Dict[str, str],
                                 group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+
         result = []
-        group_element = "name" if group_element == "container" else group_element
+        group_element = "name" if group_element in ("name", "container") else "pod, namespace"
         for entity_name, entity_promql in entity_info.items():
+            promql_result = self.api_client.query_promql(
+                self._prepare_query(entity_promql, group_element))
 
-            promql_query = self._prepare_query(entity_promql, group_element)
+            if group_element in ("container", "name"):
+                piggybacked_services = parse_piggybacked_services(
+                    promql_result,
+                    metric_description=entity_name,
+                    label_as_piggyback_host=group_element)
+                if self.container_name_option in ("short", "long"):
+                    piggybacked_services = self._apply_container_name_option(piggybacked_services)
+            else:
+                piggybacked_services = parse_piggybacked_services(promql_result,
+                                                                  metric_description=entity_name,
+                                                                  piggyback_parser=self._pod_name)
 
-            promql_result = parse_piggybacked_services(
-                self.api_client.query_promql(promql_query),
-                metric_description=entity_name,
-                label_as_piggyback_host=group_element,
-            )
-
-            if group_element in ("name", "container") and self.container_name_option in ("short",
-                                                                                         "long"):
-                promql_result = self._apply_container_name_option(promql_result)
-            result.append(promql_result)
+            result.append(piggybacked_services)
         return result
 
     def _prepare_query(self, entity_promql, group_element):
@@ -541,12 +559,8 @@ class KubeStateExporter:
         self.cluster_name = options["cluster_name"]
         self.prepend_namespaces = options.get("prepend_namespaces", True)
 
-    def _pod_name(self, labels: Dict[str, str], detailed: bool = False):
-        pod_name = labels["pod"]
-        namespace = labels["namespace"]
-        if self.prepend_namespaces or detailed:
-            return f"{namespace}_{pod_name}"
-        return pod_name
+    def _pod_name(self, labels: Dict[str, str]):
+        return parse_pod_name(labels, self.prepend_namespaces)
 
     # CLUSTER SECTION
     def cluster_resources_summary(self) -> List[Dict[str, Dict[str, Any]]]:
@@ -997,10 +1011,15 @@ class PromQLResult:
                 return False
         return True
 
-    def value(self, default_value=None) -> float:
+    def value(self,
+              default_value: Optional[Union[float, int]] = None,
+              as_string: bool = False) -> float:
         try:
-            return float(self.internal_values[1])
-        except IndexError as e:
+            value = self.internal_values[1]
+            if as_string:
+                return value
+            return float(value)
+        except (KeyError, AttributeError) as e:
             if default_value:
                 return default_value
             raise e
@@ -1842,11 +1861,17 @@ def _extract_config_args(config: Dict[str, Any]) -> Dict[str, Any]:
         exporter_name, exporter_info = exporter
         if exporter_name == "cadvisor":
 
+            grouping_info = exporter_info["entity_level"]
+            grouping_option = grouping_info[0]
             exporter_options[exporter_name] = {
-                "grouping_option": exporter_info["entity_level"][0],
-                "container_id": exporter_info["entity_level"][1].get("container_id", "short"),
+                "grouping_option": grouping_option,
+                "container_id": grouping_info[1].get("container_id", "short"),
                 "entities": exporter_info["entities"],
             }
+            if grouping_option in ("pod", "both"):
+                exporter_options[exporter_name].update({
+                    "prepend_namespaces": grouping_info[1]["prepend_namespaces"] != "omit_namespace"
+                })
         elif exporter_name == "node_exporter":
             exporter_info.update({
                 "host_address": config["host_address"],

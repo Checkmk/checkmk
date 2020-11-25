@@ -566,6 +566,20 @@ def _check_not_empty_exporter_dict(value, _varprefix):
 
 
 def _valuespec_generic_metrics_prometheus():
+    namespace_element = (
+        "prepend_namespaces",
+        DropdownChoice(
+            title=_("Prepend namespace prefix for hosts"),
+            help=_("If a cluster uses multiple namespaces you need to activate this option. "
+                   "Hosts for namespaced Kubernetes objects will then be prefixed with the "
+                   "name of their namespace. This makes Kubernetes resources in different "
+                   "namespaces that have the same name distinguishable, but results in "
+                   "longer hostnames."),
+            choices=[
+                ("use_namespace", _("Use a namespace prefix")),
+                ("omit_namespace", _("Don't use a namespace prefix")),
+            ],
+        ))
     return Dictionary(
         elements=[
             ("connection",
@@ -666,20 +680,7 @@ def _valuespec_generic_metrics_prometheus():
                                      " will be used to create a piggyback host for the cluster related services."
                                     ),
                                )),
-                              ("prepend_namespaces",
-                               DropdownChoice(
-                                   title=_("Prepend namespace prefix for hosts"),
-                                   help=
-                                   _("If a cluster uses multiple namespaces you need to activate this option. "
-                                     "Hosts for namespaced Kubernetes objects will then be prefixed with the "
-                                     "name of their namespace. This makes Kubernetes resources in different "
-                                     "namespaces that have the same name distinguishable, but results in "
-                                     "longer hostnames."),
-                                   choices=[
-                                       ("use_namespace", _("Use a namespace prefix")),
-                                       ("omit_namespace", _("Don't use a namespace prefix")),
-                                   ],
-                               )),
+                              namespace_element,
                               ("entities",
                                ListChoice(
                                    choices=[
@@ -740,7 +741,7 @@ def _valuespec_generic_metrics_prometheus():
                                             optional_keys=[],
                                         )),
                                        ("pod", _("Pod - Display the information for pod level"),
-                                        Dictionary(elements=[])),
+                                        Dictionary(elements=[namespace_element])),
                                        ("both",
                                         _("Both - Display the information for both, pod and container, levels"
                                          ),
@@ -765,7 +766,7 @@ def _valuespec_generic_metrics_prometheus():
                                                       ("name",
                                                        _("Name - Use the containers' name")),
                                                   ],
-                                              ))],
+                                              )), namespace_element],
                                             optional_keys=[],
                                         )),
                                    ],

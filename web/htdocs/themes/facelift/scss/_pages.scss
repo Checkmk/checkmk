@@ -716,9 +716,14 @@ tr.groupheader {
 
 img.iconbutton,
 img.icon {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   padding: 0 2px;
+
+  &.png {
+    width: 20px;
+    height: 20px;
+  }
 
   &:hover {
     opacity: 0.5;

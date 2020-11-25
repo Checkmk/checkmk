@@ -32,8 +32,15 @@
   padding: 0;
   margin: 0;
 
-  img:hover {
-    opacity: 1;
+  img {
+    &.icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      opacity: 1;
+    }
   }
 
   #mk_side_search_monitoring,

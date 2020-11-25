@@ -2534,6 +2534,8 @@ class html(ABCHTMLGenerator):
 
         icon_name = icon["icon"] if isinstance(icon, dict) else icon
         src = icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon")
+        if src.endswith(".png"):
+            classes.append("png")
         if src.endswith("/icon_missing.svg") and title:
             title += " (%s)" % _("icon not found")
 

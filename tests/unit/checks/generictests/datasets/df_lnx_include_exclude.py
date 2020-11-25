@@ -6,9 +6,11 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.df_section import parse_df
+
 checkname = 'df'
 
-info = [
+parsed = parse_df([
     ['tmpfs', 'tmpfs', '1620324', '2320', '1618004', '1%', '/run'],
     ['/dev/mapper/ubuntu--vg-root', 'ext4', '242791844', '59957024', '170431928', '27%', '/'],
     ['tmpfs', 'tmpfs', '8101604', '226244', '7875360', '3%', '/dev/shm'],
@@ -43,7 +45,7 @@ info = [
     ['tmpfs', 'tmpfs', '2025401', '1541', '2023860', '1%', '/opt/omd/sites/site5/tmp'],
     ['tmpfs', 'tmpfs', '2025401', '1536', '2023865', '1%', '/opt/omd/sites/site10/tmp'],
     ['[df_inodes_end]'],
-]
+])
 
 mock_host_conf = {
     '':

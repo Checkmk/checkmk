@@ -6,13 +6,15 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.df_section import parse_df
+
 checkname = 'df'
 
-info = [
+parsed = parse_df([
     ['C:\\\\', 'NTFS', '62553084', '16898384', '45654700', '28%', 'C:\\\\'],
     ['SQL_Database_[GROUPME]', 'NTFS', '10450940', '2932348', '7518592', '29%', 'D:\\\\'],
     ['Scratch_Volume_[GROUPME]', 'NTFS', '5208060', '791864', '4416196', '16%', 'E:\\\\'],
-]
+])
 
 discovery = {
     '': [

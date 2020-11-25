@@ -13,6 +13,7 @@ from checktestlib import (
     assertCheckResultsEqual,
     MockHostExtraConf,
 )
+from cmk.base.plugins.agent_based.df_section import parse_df
 
 pytestmark = pytest.mark.checks
 
@@ -392,7 +393,7 @@ def test_df_discovery_with_parse(info, expected_result, inventory_df_rules):
         raise AssertionError("Unknown/unhandled ruleset used in mock of host_extra_conf")
 
     with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
-        raw_discovery_result = check.run_discovery(check.run_parse(info))
+        raw_discovery_result = check.run_discovery(parse_df(info))
         discovery_result = DiscoveryResult(raw_discovery_result)
 
     expected_result = DiscoveryResult(expected_result)
@@ -536,6 +537,6 @@ df_params = {
 def test_df_check_with_parse(item, params, info, expected_result):
     check = Check('df')
 
-    actual = CheckResult(check.run_check(item, params, check.run_parse(info)))
+    actual = CheckResult(check.run_check(item, params, parse_df(info)))
     expected = CheckResult(expected_result)
     assertCheckResultsEqual(actual, expected)

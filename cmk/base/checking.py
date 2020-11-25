@@ -1044,9 +1044,15 @@ def _output_check_result(
         p = ''
         infotext_fmt = "%s"
 
-    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", ensure_str(servicedesc),
-                    tty.bold, tty.states[state], ensure_str(infotext.split('\n')[0]), tty.normal,
-                    ensure_str(p))
+    console.vverbose(
+        "%-20s %s%s" + infotext_fmt + "%s%s\n",
+        servicedesc,
+        tty.bold,
+        tty.states[state],
+        infotext.split('\n', 1)[0],
+        tty.normal,
+        p,
+    )
 
 
 def _do_submit_to_core(

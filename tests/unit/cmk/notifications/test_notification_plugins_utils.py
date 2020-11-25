@@ -201,20 +201,30 @@ def test_api_endpoint_url(monkeypatch, value, result):
         # If not explicitly allowed as unescaped...
         (
             {
+                'CONTACTALIAS': 'd&d&+$@example.com',
+                'CONTACTNAME': 'd&d&+$@example.com',
+                'CONTACTEMAIL': 'd&d&+$@example.com',
                 'PARAMETER_HOST_SUBJECT': '$HOSTALIAS$ > $HOSTSTATE$ < $HOST_SERVERTYP$',
                 'PARAMETER_SERVICE_SUBJECT': '<>&',
                 'PARAMETER_BULK_SUBJECT': '<>&',
                 'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>',
                 'PARAMETER_FROM': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_FROM_ADDRESS': 'd&d&+$@example.com',
                 'PARAMETER_REPLY_TO': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_REPLY_TO_ADDRESS': 'd&d&+$@example.com',
             },
             {
+                'CONTACTALIAS': 'd&d&+$@example.com',
+                'CONTACTNAME': 'd&d&+$@example.com',
+                'CONTACTEMAIL': 'd&d&+$@example.com',
                 'PARAMETER_HOST_SUBJECT': '$HOSTALIAS$ > $HOSTSTATE$ < $HOST_SERVERTYP$',
                 'PARAMETER_SERVICE_SUBJECT': '<>&',
                 'PARAMETER_BULK_SUBJECT': '<>&',
                 'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>',
                 'PARAMETER_FROM': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_FROM_ADDRESS': 'd&d&+$@example.com',
                 'PARAMETER_REPLY_TO': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_REPLY_TO_ADDRESS': 'd&d&+$@example.com',
             },
         ),
         # ... all variables will be escaped

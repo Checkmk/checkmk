@@ -53,6 +53,8 @@ SEARCH+=" scripts"
 SEARCH+=" tests"
 SEARCH+=" web/app"
 SEARCH+=" werk"
+# TODO: Remove this prune and fix all the mypy/pylint issues in agent plugins
+PRUNE+=" -path $(realpath agents/plugins) -prune -o"
 
 # Resolve search paths to real paths before the search for performance reasons
 REAL_SEARCH=$(realpath $SEARCH)

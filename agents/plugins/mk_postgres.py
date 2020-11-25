@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -35,6 +35,7 @@ if IS_LINUX:
     import resource
 if IS_WINDOWS:
     import time
+
 
 # Borrowed from six
 def ensure_str(s):
@@ -366,8 +367,10 @@ class PostgresWin(PostgresBase):
             [r"(.*)bin\\postgres(.*)", r"(.*)bin\\postmaster(.*)", r"(.*)bin\\edb-postgres(.*)"]
         ]
 
-        taskslist = ensure_str(subprocess.check_output(
-            ["wmic", "process", "get", "processid,commandline", "/format:list"])).split("\r\r\n\r\r\n\r\r\n")
+        taskslist = ensure_str(
+            subprocess.check_output(
+                ["wmic", "process", "get", "processid,commandline",
+                 "/format:list"])).split("\r\r\n\r\r\n\r\r\n")
 
         out = ""
         for task in taskslist:
@@ -661,7 +664,8 @@ class PostgresLinux(PostgresBase):
             ["(.*)bin/postgres(.*)", "(.*)bin/postmaster(.*)", "(.*)bin/edb-postgres(.*)"]
         ]
 
-        procs_list = ensure_str(subprocess.check_output(["ps", "h", "-eo", "pid:1,command:1"])).split("\n")
+        procs_list = ensure_str(subprocess.check_output(["ps", "h", "-eo",
+                                                         "pid:1,command:1"])).split("\n")
         out = ""
         for proc in procs_list:
             proc_list = proc.split(" ")

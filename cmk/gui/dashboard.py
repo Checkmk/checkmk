@@ -654,7 +654,7 @@ def _render_dashlet_title(dashlet: Dashlet) -> Union[str, HTML]:
     if dashlet.show_title() and title and "plain" in title_format:
         title_elements.append((title, dashlet.title_url()))
 
-    if dashlet.type_name() == "pnpgraph":
+    if dashlet.type_name() == "pnpgraph" and dashlet._dashlet_spec.get("_graph_identification"):
         title_elements.extend(
             title_info_elements(dashlet._dashlet_spec["_graph_identification"][1], title_format))
 

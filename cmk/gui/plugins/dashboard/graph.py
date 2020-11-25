@@ -7,6 +7,7 @@
 import json
 import livestatus
 
+import cmk.gui.visuals as visuals
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
@@ -73,7 +74,8 @@ class GraphDashlet(Dashlet):
         return True
 
     def display_title(self) -> str:
-        return self._dashlet_spec.get("title", self._dashlet_spec["_graph_title"] or self.title())
+        return self._dashlet_spec.get("title",
+                                      self._dashlet_spec.get("_graph_title") or self.title())
 
     def __init__(self, dashboard_name: DashboardName, dashboard: DashboardConfig,
                  dashlet_id: DashletId, dashlet: DashletConfig) -> None:
@@ -82,14 +84,19 @@ class GraphDashlet(Dashlet):
                          dashlet_id=dashlet_id,
                          dashlet=dashlet)
 
+        context = visuals.get_merged_context(
+            visuals.get_context_from_uri_vars(["host", "service"], self.single_infos()),
+            self._dashlet_spec["context"])
+
         if any((
-                self.type_name() == 'pnpgraph' and not self._dashlet_spec["context"],
+                self.type_name() == 'pnpgraph' and
+            ("host" not in context or "service" not in context),
                 self.type_name() == 'custom_graph' and
                 self._dashlet_spec.get('custom_graph') is None,
         )):
             return  # The dashlet is not yet configured
 
-        self._dashlet_spec["_graph_identification"] = self.graph_identification()
+        self._dashlet_spec["_graph_identification"] = self.graph_identification(context)
 
         graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
         if not isinstance(graph_recipes, list):
@@ -117,12 +124,12 @@ class GraphDashlet(Dashlet):
             except livestatus.MKLivestatusNotFoundError:
                 raise MKUserError("host", _("The host could not be found on any active site."))
 
-    def graph_identification(self):
-        host = self._dashlet_spec['context'].get('host', html.request.var("host"))
+    def graph_identification(self, context):
+        host = context.get("host")
         if not host:
             raise MKUserError('host', _('Missing needed host parameter.'))
 
-        service = self._dashlet_spec['context'].setdefault('service')
+        service = context.get("service")
         if not service:
             service = "_HOST_"
 
@@ -224,6 +231,10 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return self._reload_js()
 
     def _reload_js(self):
+        if any(prop not in self._dashlet_spec
+               for prop in ["_graph_identification", "graph_render_options", "timerange"]):
+            return ""
+
         return "dashboard_render_graph(%d, %s, %s, '%s')" % (
             self._dashlet_id,
             json.dumps(self._dashlet_spec["_graph_identification"]),

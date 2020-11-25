@@ -538,7 +538,7 @@ class PageMenuRenderer:
             "entry",
         ] + self._get_entry_css_classes(entry)
 
-        html.open_div(class_=classes, id_="menu_entry_%s" % entry.name)
+        html.open_div(class_=classes, id_="menu_entry_%s" % entry.name if entry.name else None)
         DropdownEntryRenderer().show(entry)
         html.close_div()
 

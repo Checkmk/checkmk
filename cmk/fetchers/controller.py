@@ -126,7 +126,7 @@ def _confirm_command_processed() -> Iterator[None]:
         yield
     finally:
         logger.info("Command done")
-        write_bytes(bytes(protocol.make_end_of_reply_answer()))
+        write_bytes(bytes(protocol.CMCMessage.end_of_reply()))
 
 
 def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout: int) -> None:
@@ -167,7 +167,7 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:
     try:
         fetcher_params = entry["fetcher_params"]
     except KeyError as exc:
-        return protocol.make_error_message(fetcher_type, exc)
+        return protocol.FetcherMessage.error(fetcher_type, exc)
 
     try:
         with CPUTracker() as tracker, fetcher_type.from_json(fetcher_params) as fetcher:
@@ -214,7 +214,7 @@ def _run_fetchers_from_file(host_name: HostName, file_name: Path, mode: Mode, ti
         except MKTimeout as exc:
             # fill missing entries with timeout errors
             messages.extend([
-                protocol.make_fetcher_timeout_message(
+                protocol.FetcherMessage.timeout(
                     FetcherType[entry["fetcher_type"]],
                     exc,
                     Snapshot.null(),
@@ -222,7 +222,7 @@ def _run_fetchers_from_file(host_name: HostName, file_name: Path, mode: Mode, ti
             ])
 
     logger.debug("Produced %d messages", len(messages))
-    write_bytes(protocol.make_result_answer(*messages))
+    write_bytes(bytes(protocol.CMCMessage.result_answer(*messages)))
     for msg in filter(
             lambda msg: msg.header.payload_type is protocol.PayloadType.ERROR,
             messages,

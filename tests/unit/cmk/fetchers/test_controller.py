@@ -19,7 +19,7 @@ from cmk.fetchers.controller import (
     run_fetcher,
     write_bytes,
 )
-from cmk.fetchers.protocol import make_end_of_reply_answer, make_log_answer
+from cmk.fetchers.protocol import CMCMessage
 from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.fetchers.type_defs import Mode
 
@@ -35,13 +35,13 @@ class TestGlobalConfig:
 
 class TestControllerApi:
     def test_controller_log(self):
-        assert make_log_answer(
+        assert CMCMessage.log_answer(
             "payload",
             logging.WARNING,
         ) == b"fetch:LOG    :warning :7       :payload"
 
     def test_controller_end_of_reply(self):
-        assert make_end_of_reply_answer() == b"fetch:ENDREPL:        :0       :"
+        assert CMCMessage.end_of_reply() == b"fetch:ENDREPL:        :0       :"
 
     def test_local_config_path(self):
         assert make_local_config_path(

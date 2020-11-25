@@ -34,9 +34,6 @@ from cmk.fetchers.protocol import (
     ErrorResultMessage,
     FetcherHeader,
     FetcherMessage,
-    make_end_of_reply_answer,
-    make_log_answer,
-    make_result_answer,
     ResultStats,
     PayloadType,
     SNMPResultMessage,
@@ -158,32 +155,32 @@ class TestCMCMessage:
         assert CMCMessage.from_bytes(bytes(message)) == message
 
     @pytest.mark.parametrize("count", list(range(10)))
-    def test_make_result_answer(self, fetcher_message, count):
+    def test_result_answer(self, fetcher_message, count):
         fetcher_messages = list(repeat(fetcher_message, count))
-        message = make_result_answer(*fetcher_messages)
-        cmc_msg = CMCMessage.from_bytes(message)
+        message = CMCMessage.result_answer(*fetcher_messages)
+        assert CMCMessage.from_bytes(bytes(message)) == message
         assert len(fetcher_messages) == count
-        assert cmc_msg.header.name == "fetch"
-        assert cmc_msg.header.state == CMCHeader.State.RESULT
-        assert cmc_msg.header.log_level.strip() == ""
-        assert cmc_msg.header.payload_length == len(message) - len(cmc_msg.header)
-        assert cmc_msg.header.payload_length == count * len(fetcher_message)
-        assert not set(cmc_msg.payload) ^ set(fetcher_messages)
+        assert message.header.name == "fetch"
+        assert message.header.state == CMCHeader.State.RESULT
+        assert message.header.log_level.strip() == ""
+        assert message.header.payload_length == len(message) - len(message.header)
+        assert message.header.payload_length == count * len(fetcher_message)
+        assert not set(message.payload) ^ set(fetcher_messages)
 
-    def test_make_log_answer(self):
+    def test_log_answer(self):
         log_message = "the log message"
         level = logging.WARN
 
-        message = make_log_answer(log_message, level)
-        cmc_msg = CMCMessage.from_bytes(message)
-        assert cmc_msg.header.name == "fetch"
-        assert cmc_msg.header.state == CMCHeader.State.LOG
-        assert cmc_msg.header.log_level.strip() == "warning"
-        assert cmc_msg.header.payload_length == len(message) - len(cmc_msg.header)
-        assert cmc_msg.header.payload_length == len(log_message)
+        message = CMCMessage.log_answer(log_message, level)
+        assert CMCMessage.from_bytes(bytes(message)) == message
+        assert message.header.name == "fetch"
+        assert message.header.state == CMCHeader.State.LOG
+        assert message.header.log_level.strip() == "warning"
+        assert message.header.payload_length == len(message) - len(message.header)
+        assert message.header.payload_length == len(log_message)
 
-    def test_make_end_of_reply_answer(self):
-        assert make_end_of_reply_answer() is CMCMessage.end_of_reply()
+    def test_end_of_reply(self):
+        assert CMCMessage.end_of_reply() is CMCMessage.end_of_reply()
 
 
 class TestEndOfReply:

@@ -30,10 +30,6 @@ __all__ = [
     "FetcherMessage",
     "CMCHeader",
     "CMCMessage",
-    "make_result_answer",
-    "make_log_answer",
-    "make_end_of_reply_answer",
-    "make_fetcher_timeout_message",
 ]
 """Defines a layered protocol.
 
@@ -416,6 +412,43 @@ class FetcherMessage(Protocol):
             stats,
         )
 
+    @classmethod
+    def error(cls, fetcher_type: FetcherType, exc: Exception) -> "FetcherMessage":
+        stats = ResultStats(Snapshot.null())
+        payload = ErrorResultMessage(exc)
+        return cls(
+            FetcherHeader(
+                fetcher_type,
+                PayloadType.ERROR,
+                status=logging.CRITICAL,
+                payload_length=len(payload),
+                stats_length=len(stats),
+            ),
+            payload,
+            stats,
+        )
+
+    @classmethod
+    def timeout(
+        cls,
+        fetcher_type: FetcherType,
+        exc: MKTimeout,
+        duration: Snapshot,
+    ) -> "FetcherMessage":
+        stats = ResultStats(duration)
+        payload = ErrorResultMessage(exc)
+        return cls(
+            FetcherHeader(
+                fetcher_type,
+                PayloadType.ERROR,
+                status=logging.ERROR,
+                payload_length=len(payload),
+                stats_length=len(stats),
+            ),
+            payload,
+            stats,
+        )
+
     @property
     def fetcher_type(self) -> FetcherType:
         return self.header.fetcher_type
@@ -525,7 +558,11 @@ class CMCMessage(Protocol):
     def __iter__(self) -> Iterator[bytes]:
         yield from self.header
         for msg in self.payload:
-            yield from msg
+            if isinstance(msg, FetcherMessage):
+                yield from msg
+            else:
+                assert isinstance(msg, str)
+                yield msg.encode("utf-8")
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "CMCMessage":
@@ -551,6 +588,33 @@ class CMCMessage(Protocol):
         return messages
 
     @classmethod
+    def result_answer(cls, *messages: FetcherMessage) -> "CMCMessage":
+        return cls(
+            CMCHeader(
+                name=CMCHeader.default_protocol_name(),
+                state=CMCHeader.State.RESULT,
+                log_level=" ",
+                payload_length=sum(len(msg) for msg in messages),
+            ), *messages)
+
+    @classmethod
+    def log_answer(cls, message: str, level: int) -> "CMCMessage":
+        """Logs data using logging facility of the microcore.
+
+        Args:
+            message: The log message.
+            level: The numeric level of the logging event (one of DEBUG, INFO, etc.)
+
+        """
+        return cls(
+            CMCHeader(
+                name=CMCHeader.default_protocol_name(),
+                state=CMCHeader.State.LOG,
+                log_level=CMCLogLevel.from_level(level),
+                payload_length=len(message),
+            ), message)
+
+    @classmethod
     def end_of_reply(cls) -> "CMCMessage":
         return _END_OF_REPLY
 
@@ -562,71 +626,3 @@ _END_OF_REPLY = CMCMessage(  # Singleton
         log_level=" ",
         payload_length=0,
     ), *())
-
-
-def make_result_answer(*messages: FetcherMessage) -> bytes:
-    """ Provides valid binary payload to be send from fetcher to checker"""
-    return bytes(
-        CMCMessage(
-            CMCHeader(
-                name=CMCHeader.default_protocol_name(),
-                state=CMCHeader.State.RESULT,
-                log_level=" ",
-                payload_length=sum(len(msg) for msg in messages),
-            ), *messages))
-
-
-def make_log_answer(message: str, level: int) -> bytes:
-    """Logs data using logging facility of the microcore.
-
-    Args:
-        message: The log message.
-        level: The numeric level of the logging event (one of DEBUG, INFO, etc.)
-
-    """
-    return CMCHeader(
-        name=CMCHeader.default_protocol_name(),
-        state=CMCHeader.State.LOG,
-        log_level=CMCLogLevel.from_level(level),
-        payload_length=len(message),
-    ) + message.encode("utf-8")
-
-
-def make_end_of_reply_answer() -> CMCMessage:
-    return CMCMessage.end_of_reply()
-
-
-def make_error_message(fetcher_type: FetcherType, exc: Exception) -> FetcherMessage:
-    stats = ResultStats(Snapshot.null())
-    payload = ErrorResultMessage(exc)
-    return FetcherMessage(
-        FetcherHeader(
-            fetcher_type,
-            PayloadType.ERROR,
-            status=logging.CRITICAL,
-            payload_length=len(payload),
-            stats_length=len(stats),
-        ),
-        payload,
-        stats,
-    )
-
-
-def make_fetcher_timeout_message(
-    fetcher_type: FetcherType,
-    exc: MKTimeout,
-    duration: Snapshot,
-) -> FetcherMessage:
-    stats = ResultStats(duration)
-    payload = ErrorResultMessage(exc)
-    return FetcherMessage(
-        FetcherHeader(
-            fetcher_type,
-            PayloadType.ERROR,
-            status=logging.ERROR,
-            payload_length=len(payload),
-            stats_length=len(stats),
-        ),
-        payload,
-        stats,
-    )

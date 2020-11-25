@@ -2563,13 +2563,19 @@ def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
 
     yield PageMenuEntry(
         title=_("Host configuration"),
-        icon_name="folder",
+        icon_name={
+            "icon": "folder",
+            "emblem": "settings",
+        },
         item=make_simple_link(_link_to_host_by_name(host_name)),
     )
 
     yield PageMenuEntry(
         title=_("Service configuration"),
-        icon_name="services",
+        icon_name={
+            "icon": "services",
+            "emblem": "settings",
+        },
         item=make_simple_link(
             makeuri_contextless(
                 global_request,

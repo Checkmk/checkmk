@@ -23,7 +23,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import MethodInline
-from cmk.gui.type_defs import CSSSpec
+from cmk.gui.type_defs import CSSSpec, Icon
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
 from cmk.gui.config import user
 import cmk.gui.escaping as escaping
@@ -131,7 +131,7 @@ class PageMenuSearch(ABCPageMenuItem):
 class PageMenuEntry:
     """Representing an entry in the menu, holding the ABCPageMenuItem to be displayed"""
     title: str
-    icon_name: str
+    icon_name: Icon
     item: ABCPageMenuItem
     name: Optional[str] = None
     description: Optional[str] = None
@@ -623,7 +623,7 @@ class ShortcutRenderer:
         else:
             raise NotImplementedError("Shortcut rendering not implemented for %s" % entry.item)
 
-    def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink):
+    def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
         self._show_link(entry=entry,
                         url=item.link.url,
                         onclick=item.link.onclick,
@@ -661,7 +661,7 @@ class DropdownEntryRenderer:
         else:
             raise NotImplementedError("Rendering not implemented for %s" % entry.item)
 
-    def _show_link_item(self, title: str, icon_name: str, item: PageMenuLink):
+    def _show_link_item(self, title: str, icon: Icon, item: PageMenuLink) -> None:
         if item.link.url is not None:
             url = item.link.url
             onclick = None
@@ -669,24 +669,20 @@ class DropdownEntryRenderer:
             url = "javascript:void(0)"
             onclick = item.link.onclick
 
-        self._show_link(url=url,
-                        onclick=onclick,
-                        target=item.link.target,
-                        icon_name=icon_name,
-                        title=title)
+        self._show_link(url=url, onclick=onclick, target=item.link.target, icon=icon, title=title)
 
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
         self._show_link(url="javascript:void(0)",
                         onclick="cmk.page_menu.toggle_popup(%s)" %
                         json.dumps("popup_%s" % entry.name),
                         target=None,
-                        icon_name=entry.icon_name,
+                        icon=entry.icon_name,
                         title=entry.title)
 
-    def _show_link(self, url: str, onclick: Optional[str], target: Optional[str],
-                   icon_name: Optional[str], title: str) -> None:
+    def _show_link(self, url: str, onclick: Optional[str], target: Optional[str], icon: Icon,
+                   title: str) -> None:
         html.open_a(href=url, onclick=onclick, target=target)
-        html.icon(icon_name or "trans")
+        html.icon(icon or "trans")
         html.span(title)
         html.close_a()
 

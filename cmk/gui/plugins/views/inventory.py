@@ -1568,7 +1568,10 @@ multisite_builtin_views["inv_host_history"] = {
     'topic': 'inventory',
     'title': _('Inventory history of host'),
     'description': _('The history for changes in hardware- and software inventory of a host'),
-    'icon': 'inventory',
+    'icon': {
+        'icon': 'inventory',
+        'emblem': 'time',
+    },
     'hidebutton': False,
     'public': True,
     'hidden': True,

@@ -258,6 +258,13 @@ div#top_heading {
           width: 14px;
           height: 14px;
           margin-right: 5px;
+
+          &.emblem {
+            right: 0;
+            bottom: -2px;
+            width: 10px;
+            height: 10px;
+          }
         }
 
         div.topic {
@@ -275,7 +282,7 @@ div#top_heading {
           }
 
           div.entry {
-            padding-left: $spacing;
+            padding: 4px 0 0 $spacing;
 
             a {
               display: flex;
@@ -467,6 +474,12 @@ div#top_heading {
 
             &:hover {
               opacity: 1;
+            }
+
+            &.emblem {
+              right: -2px;
+              width: 10px;
+              height: 10px;
             }
           }
 

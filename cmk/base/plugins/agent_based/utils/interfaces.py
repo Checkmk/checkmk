@@ -1122,12 +1122,15 @@ def check_single_interface(
         bandwidth_renderer = render.iobandwidth
 
     # loop over incoming and outgoing traffic
+    io_direction_to_dsname = {}
+
     bandwidth_content = [
         ("in", rates[0], speed_b_in),
         ("out", rates[7], speed_b_out),
     ]
     if monitor_total_traffic:
         bandwidth_content.append(("total", rates[14], speed_b_total))
+
     for what, traffic, speed in bandwidth_content:
         predictive = (what, 'predictive') in traffic_levels
         if predictive:
@@ -1161,6 +1164,8 @@ def check_single_interface(
         else:
             dsname = what
             title = what.title()
+
+        io_direction_to_dsname[what] = dsname
 
         # Check bandwidth thresholds incl. prediction
         if predictive:
@@ -1207,7 +1212,7 @@ def check_single_interface(
         disc_warn,
         disc_crit,
         average_bmcast,
-        dsname,
+        io_direction_to_dsname,
         item=item,
         rates=rates,
         value_store=value_store,
@@ -1364,7 +1369,7 @@ def _io_rates(
     disc_warn,
     disc_crit,
     average_bmcast,
-    dsname,
+    io_direction_to_dsname: Mapping[str, str],
     *,
     item: str,
     rates: List,  # FIXME
@@ -1375,6 +1380,8 @@ def _io_rates(
         ("in", rates[1], rates[2], rates[3], rates[4], rates[5], rates[6]),
         ("out", rates[8], rates[9], rates[10], rates[11], rates[12], rates[13])
     ]:
+        dsname = io_direction_to_dsname[what]
+
         # check error, broadcast, multicast and non-unicast packets and discards
         pacrate = urate + nurate + errorrate
         if pacrate > 0.0:  # any packets transmitted?

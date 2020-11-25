@@ -1020,7 +1020,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
 
         if row:
             field_value: str = row[self._get_real_fieldname(livestatus_table)]
-            hostname = row.get("host_name", row["name"])
+            hostname = row.get("host_name", row.get("name"))
             url_info = [(filter_name, hostname)]
         else:
             field_value = self._create_textfilter_regex(used_filters)

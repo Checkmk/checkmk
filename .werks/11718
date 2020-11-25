@@ -1,0 +1,30 @@
+Title: ups_battery_state: New check for UPS Eaton battery state
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1606831828
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b2
+
+This werk introduces a new service "Battery state", that monitors the following
+battery conditions for Eaton UPS devices:
+<ul>
+<li>"Battery fault"</li>
+<li>"Battery to be replaced"</li>
+<li>"Low battery"</li>
+<li>"Battery is not charging"</li>
+<li>"Battery is at low condition"</li>
+<li>"UPS is on battery"</li>
+<li>"UPS is on bypass"</li>
+<li>"UPS is on battery backup time"</li>
+<li>"Overload"</li>
+</ul>
+
+It will yield a Critical state if one of the conditions changes to active.
+
+This service is also discoverable on other UPS devices that support the generic
+UPS MIB, but it will only monitor the "UPS is on battery" state.
+

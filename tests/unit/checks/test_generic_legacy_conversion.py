@@ -2736,7 +2736,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'unitrends_backup',
         'unitrends_replication',
         'ups_bat_temp',
-        'ups_capacity',
         'ups_cps_battery.temp',
         'ups_cps_battery',
         'ups_cps_inphase',

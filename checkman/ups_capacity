@@ -5,14 +5,16 @@ license: GPL
 distribution: check_mk
 description:
  This checks monitors a UPS that supports the generic UPS-MIB,
- such as General Electric (GE) SitePro UPS, and many more.
+ such as General Electric (GE) SitePro UPS, and also tries
+ some vendor-specific MIBs.
  The check monitors
  the time the UPS is on battery (in seconds),
  the battery capacity (in percent),
- and the remaining runtime (in minutes).
- Warning and critical levels can
- be given for the remaining run time for the capacity.
+ and the remaining runtime (in seconds).
+ Warning and critical levels can be given for the remaining
+ run time and for the battery capacity. The time-remaining-metric,
+ as well as the levels for both metrics, will only be
+ shown/applied if the device is on battery.
 
 inventory:
  One service is created for each UPS.
-

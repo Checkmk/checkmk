@@ -225,6 +225,12 @@ metric_info["battery_temp"] = {
     "color": "#ffb030",
 }
 
+metric_info["battery_seconds_remaining"] = {
+    "title": _("Battery time remaining"),
+    "unit": "s",
+    "color": "11/c",
+}
+
 metric_info["o2_percentage"] = {
     "title": _("Current O2 percentage"),
     "unit": "%",

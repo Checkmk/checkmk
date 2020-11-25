@@ -11,7 +11,7 @@ import json
 import logging
 import pickle
 import struct
-from typing import Final, Iterator, Type, Union
+from typing import Final, Iterator, Sequence, Type, Union
 
 import cmk.utils.log as log
 from cmk.utils.cpu_tracking import Snapshot
@@ -511,7 +511,7 @@ class CMCMessage(Protocol):
     def __init__(
         self,
         header: CMCHeader,
-        *payload: FetcherMessage,
+        *payload: Union[FetcherMessage, str],
     ) -> None:
         self.header: Final = header
         self.payload: Final = payload
@@ -530,13 +530,25 @@ class CMCMessage(Protocol):
     @classmethod
     def from_bytes(cls, data: bytes) -> "CMCMessage":
         header = CMCHeader.from_bytes(data)
+        if header.state is CMCHeader.State.RESULT:
+            return CMCMessage(header, *cls._parse_result(header, data))
+        if header.state is CMCHeader.State.LOG:
+            return CMCMessage(
+                header,
+                *(data[len(header):len(header) + header.payload_length].decode("utf-8")),
+            )
+        assert header.state is CMCHeader.State.END_OF_REPLY
+        return CMCMessage(header, *())
+
+    @staticmethod
+    def _parse_result(header, data) -> Sequence[FetcherMessage]:
         index = len(header)
         messages = []
         while index < len(header) + header.payload_length:
             message = FetcherMessage.from_bytes(data[index:])
             index += len(message)
             messages.append(message)
-        return CMCMessage(header, *messages)
+        return messages
 
     @classmethod
     def end_of_reply(cls) -> "CMCMessage":
@@ -580,8 +592,8 @@ def make_log_answer(message: str, level: int) -> bytes:
     ) + message.encode("utf-8")
 
 
-def make_end_of_reply_answer() -> bytes:
-    return bytes(CMCMessage.end_of_reply())
+def make_end_of_reply_answer() -> CMCMessage:
+    return CMCMessage.end_of_reply()
 
 
 def make_error_message(fetcher_type: FetcherType, exc: Exception) -> FetcherMessage:

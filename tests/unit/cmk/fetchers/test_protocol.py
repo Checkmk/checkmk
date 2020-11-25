@@ -6,6 +6,7 @@
 
 import logging
 import socket
+from itertools import repeat
 
 import pyghmi.exceptions  # type: ignore[import]
 import pytest  # type: ignore[import]
@@ -33,6 +34,9 @@ from cmk.fetchers.protocol import (
     ErrorResultMessage,
     FetcherHeader,
     FetcherMessage,
+    make_end_of_reply_answer,
+    make_log_answer,
+    make_result_answer,
     ResultStats,
     PayloadType,
     SNMPResultMessage,
@@ -124,36 +128,62 @@ class TestCMCMessage:
         return AgentResultMessage(AgentRawData(69 * b"\0"))
 
     @pytest.fixture
-    def fetcher_messages(self, fetcher_payload, fetcher_stats):
-        return [
-            FetcherMessage(
-                FetcherHeader(
-                    FetcherType.TCP,
-                    PayloadType.AGENT,
-                    status=42,
-                    payload_length=len(fetcher_payload),
-                    stats_length=len(fetcher_stats),
-                ),
-                fetcher_payload,
-                fetcher_stats,
+    def fetcher_message(self, fetcher_payload, fetcher_stats):
+        return FetcherMessage(
+            FetcherHeader(
+                FetcherType.TCP,
+                PayloadType.AGENT,
+                status=42,
+                payload_length=len(fetcher_payload),
+                stats_length=len(fetcher_stats),
             ),
-        ]
+            fetcher_payload,
+            fetcher_stats,
+        )
 
     @pytest.fixture
-    def header(self, fetcher_messages):
+    def header(self, fetcher_message):
         return CMCHeader(
             "name",
             CMCHeader.State.RESULT,
             "",
-            sum(len(msg) for msg in fetcher_messages),
+            sum(len(msg) for msg in [fetcher_message]),
         )
 
     @pytest.fixture
-    def message(self, header, fetcher_messages):
-        return CMCMessage(header, *fetcher_messages)
+    def message(self, header, fetcher_message):
+        return CMCMessage(header, fetcher_message)
 
     def test_from_bytes(self, message):
         assert CMCMessage.from_bytes(bytes(message)) == message
+
+    @pytest.mark.parametrize("count", list(range(10)))
+    def test_make_result_answer(self, fetcher_message, count):
+        fetcher_messages = list(repeat(fetcher_message, count))
+        message = make_result_answer(*fetcher_messages)
+        cmc_msg = CMCMessage.from_bytes(message)
+        assert len(fetcher_messages) == count
+        assert cmc_msg.header.name == "fetch"
+        assert cmc_msg.header.state == CMCHeader.State.RESULT
+        assert cmc_msg.header.log_level.strip() == ""
+        assert cmc_msg.header.payload_length == len(message) - len(cmc_msg.header)
+        assert cmc_msg.header.payload_length == count * len(fetcher_message)
+        assert not set(cmc_msg.payload) ^ set(fetcher_messages)
+
+    def test_make_log_answer(self):
+        log_message = "the log message"
+        level = logging.WARN
+
+        message = make_log_answer(log_message, level)
+        cmc_msg = CMCMessage.from_bytes(message)
+        assert cmc_msg.header.name == "fetch"
+        assert cmc_msg.header.state == CMCHeader.State.LOG
+        assert cmc_msg.header.log_level.strip() == "warning"
+        assert cmc_msg.header.payload_length == len(message) - len(cmc_msg.header)
+        assert cmc_msg.header.payload_length == len(log_message)
+
+    def test_make_end_of_reply_answer(self):
+        assert make_end_of_reply_answer() is CMCMessage.end_of_reply()
 
 
 class TestEndOfReply:

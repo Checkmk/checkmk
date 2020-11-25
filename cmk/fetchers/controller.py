@@ -126,7 +126,7 @@ def _confirm_command_processed() -> Iterator[None]:
         yield
     finally:
         logger.info("Command done")
-        write_bytes(protocol.make_end_of_reply_answer())
+        write_bytes(bytes(protocol.make_end_of_reply_answer()))
 
 
 def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout: int) -> None:

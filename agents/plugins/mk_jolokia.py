@@ -24,7 +24,7 @@ if sys.version_info[0] >= 3:
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
     from typing import List, Dict, Tuple, Any, Optional, Union, Callable
-except:
+except ImportError:
     pass
 
 if sys.version_info[0] >= 3:
@@ -182,7 +182,7 @@ class SkipMBean(RuntimeError):
 
 
 def get_default_config_dict():
-    return dict([(elem[0], elem[1]) for elem in DEFAULT_CONFIG_TUPLES])
+    return {elem[0]: elem[1] for elem in DEFAULT_CONFIG_TUPLES}
 
 
 def write_section(name, iterable):
@@ -204,7 +204,7 @@ def cached(function):
     return cached_function
 
 
-class JolokiaInstance(object):
+class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
     # use this to filter headers whien recording via vcr trace
     FILTER_SENSITIVE = {'filter_headers': [('authorization', '****')]}
 

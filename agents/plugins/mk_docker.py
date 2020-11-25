@@ -17,10 +17,12 @@ plugin ("pip install docker").
 This plugin it will be called by the agent without any arguments.
 """
 
+from __future__ import with_statement
+
+__version__ = "2.1.0i1"
+
 # N O T E:
 # docker is available for python versions from 2.6 / 3.3
-
-from __future__ import with_statement
 
 import configparser
 import os
@@ -33,6 +35,10 @@ import functools
 import multiprocessing
 import logging
 
+try:
+    from typing import Dict, Union, Tuple
+except ImportError:
+    pass
 
 __version__ = "2.0.0b4"
 
@@ -123,10 +129,11 @@ def get_config(cfg_file):
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %r", files_read)
     section_name = "DOCKER" if config.sections() else "DEFAULT"
-    conf_dict = dict(config.items(section_name))
-
-    skip_list = conf_dict.get("skip_sections", "").split(',')
-    conf_dict["skip_sections"] = tuple(n.strip() for n in skip_list)
+    conf_dict = dict(config.items(section_name))  # type: Dict[str, Union[str, Tuple]]
+    skip_sections = conf_dict.get("skip_sections", "")
+    if isinstance(skip_sections, str):
+        skip_list = skip_sections.split(',')
+        conf_dict["skip_sections"] = tuple(n.strip() for n in skip_list)
 
     return conf_dict
 
@@ -178,11 +185,11 @@ class MKDockerClient(docker.DockerClient):
         super(MKDockerClient, self).__init__(config['base_url'], version=MKDockerClient.API_VERSION)
         all_containers = self.containers.list(all=True)
         if config['container_id'] == "name":
-            self.all_containers = dict([(c.attrs["Name"].lstrip('/'), c) for c in all_containers])
+            self.all_containers = {c.attrs["Name"].lstrip('/'): c for c in all_containers}
         elif config['container_id'] == "long":
-            self.all_containers = dict([(c.attrs["Id"], c) for c in all_containers])
+            self.all_containers = {c.attrs["Id"]: c for c in all_containers}
         else:
-            self.all_containers = dict([(c.attrs["Id"][:12], c) for c in all_containers])
+            self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
         self._env = {"REMOTE": os.getenv("REMOTE", "")}
         self._container_stats = {}
         self._device_map = None

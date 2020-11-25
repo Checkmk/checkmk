@@ -13,7 +13,7 @@ __version__ = "2.0.0b4"
 
 import sys
 try:
-    import MySQLdb
+    import MySQLdb  # type: ignore[import] # pylint: disable=import-error
 except ImportError as e:
     sys.stdout.write(
         "<<<plesk_domains>>>\n%s. Please install missing module via pip install <module>." % e)

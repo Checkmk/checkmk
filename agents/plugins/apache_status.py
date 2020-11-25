@@ -32,8 +32,8 @@ if sys.version_info < (2, 6):
     sys.exit(1)
 
 if sys.version_info[0] == 2:
-    from urllib2 import Request, urlopen
-    from urllib2 import URLError, HTTPError
+    from urllib2 import Request, urlopen  # pylint: disable=import-error
+    from urllib2 import URLError, HTTPError  # pylint: disable=import-error
 else:
     from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
     from urllib.error import URLError, HTTPError  # pylint: disable=import-error,no-name-in-module
@@ -105,8 +105,8 @@ def try_detect_servers(ssl_ports):
         if proc not in procs:
             continue
 
-        server_address, server_port = parts[3].rsplit(':', 1)
-        server_port = int(server_port)
+        server_address, _server_port = parts[3].rsplit(':', 1)
+        server_port = int(_server_port)
 
         # Use localhost when listening globally
         if server_address == '0.0.0.0':
@@ -162,7 +162,7 @@ def get_response(proto, cafile, address, portspec, page):
     try:
         if proto == "https" and cafile:
             return urlopen(request, cafile=cafile, timeout=5)
-        elif proto == "https" and is_local:
+        if proto == "https" and is_local:
             return urlopen(request, context=get_ssl_no_verify_context(), timeout=5)
         return urlopen(request, timeout=5)
     except URLError as exc:

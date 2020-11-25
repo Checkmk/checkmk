@@ -18,7 +18,7 @@ sys.path.append("/usr/lib/mailman")
 # Set to True to filter out all "hidden" mailinglists
 only_advertised = True
 
-from Mailman import Utils, MailList  # pylint: disable=import-error
+from Mailman import Utils, MailList  # type: ignore[import] # pylint: disable=import-error
 
 # 1. list memberships
 sys.stdout.write('<<<mailman_lists>>>\n')

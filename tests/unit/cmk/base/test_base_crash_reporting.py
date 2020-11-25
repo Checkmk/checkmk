@@ -100,7 +100,7 @@ def test_check_crash_report_from_exception(monkeypatch):
             "check_type": (str, "uptime"),
             "item": (type(None), None),
             "params": (type(None), None),
-            "inline_snmp": (bool, False),
+            "inline_snmp": (bool, True),
             "manual_check": (bool, False),
     }.items():
         assert key in crash.crash_info["details"]

@@ -59,10 +59,6 @@ predefined_conditions: _Dict = {}
 http_proxies: _Dict = {}
 
 # SNMP communities and encoding
-# TODO: Rename use_inline_snmp and non_inline_snmp_hosts (different purpose now)
-# the names of the rules are kept because of backwards compatibility.
-# Old value is True or False and new value is a string for the respective backend.
-# From version 2.0.0i1 upwards old values are no longer configurable.
 
 # Global config for SNMP Backend
 snmp_backend_default: str = "inline"

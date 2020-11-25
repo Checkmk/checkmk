@@ -2414,22 +2414,24 @@ class ConfigVariableUseDNSCache(ConfigVariable):
 
 
 def transform_snmp_backend_default_forth(backend):
-    if backend in [True, "inline"]:
+    # During 2.0.0i1 you could configure pysnmp as backend thats why
+    # we need to accept this as value aswell.
+    if backend in [True, "inline", "pysnmp"]:
         return SNMPBackend.inline
+    if backend == "inline_legacy":
+        return SNMPBackend.inline_legacy
     if backend in [False, "classic"]:
         return SNMPBackend.classic
-    if backend == "pysnmp":
-        return SNMPBackend.pysnmp
     raise MKConfigError("SNMPBackend %r not implemented" % backend)
 
 
 def transform_snmp_backend_back(backend):
-    if backend == SNMPBackend.inline:
-        return "inline"
+    if backend == SNMPBackend.inline_legacy:
+        return "inline_legacy"
     if backend == SNMPBackend.classic:
         return "classic"
-    if backend == SNMPBackend.pysnmp:
-        return "pysnmp"
+    if backend == SNMPBackend.inline:
+        return "inline"
     raise MKConfigError("SNMPBackend %r not implemented" % backend)
 
 
@@ -2450,13 +2452,13 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
                 title=_("Choose SNMP Backend"),
                 choices=[
                     (SNMPBackend.classic, _("Use Classic SNMP Backend")),
-                    (SNMPBackend.inline, _("Use Inline SNMP Backend")),
-                    (SNMPBackend.pysnmp, _("Use PySNMP Backend")),
+                    (SNMPBackend.inline, _("Use Inline SNMP (PySNMP) Backend")),
+                    (SNMPBackend.inline_legacy, _("Use Inline SNMP (legacy) Backend")),
                 ],
                 help=
                 _("By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
                   "snmpwalk to gather SNMP information. For each request a new command line "
-                  "program is being executed. It is now possible to use the Inline SNMP or PySNMP implementation "
+                  "program is being executed. It is now possible to use the Inline SNMP implementation "
                   "which calls the respective libraries directly via its python bindings. This "
                   "should increase the performance of SNMP checks in a significant way. Both "
                   "SNMP modes are featurse which improve the performance for large installations and are "
@@ -4409,20 +4411,23 @@ rulespec_registry.register(
 
 def _help_snmp_backend():
     return _(
-        "Checkmk has an efficient SNMP implementations called Inline SNMP and PySNMP which reduce "
+        "Checkmk has an efficient SNMP implementation called Inline SNMP which reduces "
         "the load produced by SNMP monitoring on the monitoring host significantly. Inline SNMP "
         "is enabled by default for all SNMP hosts and it is a good idea to keep this default setting. "
         "However, there are SNMP devices which have problems with some SNMP implementations. "
-        "You can use this rule to select the SNMP Backend for these hosts.")
+        "You can use this rule to select the SNMP Backend for these hosts."
+        "Inline SNMP uses PySNMP bindings to make SNMP calls.")
 
 
 def transform_snmp_backend_hosts_forth(backend):
-    if backend in [False, "inline"]:
+    # During 2.0.0i1 you could configure pysnmp as backend thats why
+    # we need to accept this as value aswell.
+    if backend in [False, "inline", "pysnmp"]:
         return SNMPBackend.inline
+    if backend == "inline_legacy":
+        return SNMPBackend.inline_legacy
     if backend in [True, "classic"]:
         return SNMPBackend.classic
-    if backend == "pysnmp":
-        return SNMPBackend.pysnmp
     raise MKConfigError("SNMPBackend %r not implemented" % backend)
 
 
@@ -4431,8 +4436,8 @@ def _valuespec_snmp_backend():
         DropdownChoice(
             title=_("Choose SNMP Backend"),
             choices=[
-                (SNMPBackend.inline, _("Use Inline SNMP Backend")),
-                (SNMPBackend.pysnmp, _("Use PySNMP Backend")),
+                (SNMPBackend.inline, _("Use Inline SNMP (PySNMP) Backend")),
+                (SNMPBackend.inline_legacy, _("Use Inline SNMP (legacy) Backend")),
                 (SNMPBackend.classic, _("Use Classic Backend")),
             ],
         ),

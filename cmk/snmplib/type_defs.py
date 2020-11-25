@@ -107,7 +107,7 @@ def read_as_enum(data):
 
 class SNMPBackend(enum.Enum):
     inline = "Inline"
-    pysnmp = "PySNMP"
+    inline_legacy = "Inline (legacy)"
     classic = "Classic"
 
 

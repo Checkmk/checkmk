@@ -9,3 +9,4 @@ Level: 1
 Version: 2.0.0i2
 
 Some check plugins crashed due to missing external information (such as host name) when trying to render the service preview during discovery.
+Amongst the error messages shown in the service output are "Service description has not been set" and "Host name has not been set".

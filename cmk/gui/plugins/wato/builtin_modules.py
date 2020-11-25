@@ -252,7 +252,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
 
     @property
     def title(self):
-        return _("Monitoring rules")
+        return _("Host monitoring rules")
 
     @property
     def icon(self):
@@ -264,7 +264,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
 
     @property
     def description(self):
-        return _("Check parameters and other configuration variables on hosts and services")
+        return _("Check parameters and other configuration variables for hosts")
 
     @property
     def sort_index(self):
@@ -429,7 +429,7 @@ class MainModuleHostGroups(ABCMainModule):
 
     @property
     def title(self):
-        return _("Groups")
+        return _("Host groups")
 
     @property
     def icon(self):
@@ -464,7 +464,7 @@ class MainModuleHostCustomAttributes(ABCMainModule):
 
     @property
     def title(self):
-        return _("Custom attributes")
+        return _("Custom host attributes")
 
     @property
     def icon(self):
@@ -499,7 +499,7 @@ class MainModuleServiceGroups(ABCMainModule):
 
     @property
     def title(self):
-        return _("Groups")
+        return _("Service groups")
 
     @property
     def icon(self):
@@ -639,7 +639,7 @@ class MainModuleUserCustomAttributes(ABCMainModule):
 
     @property
     def title(self):
-        return _("Custom attributes")
+        return _("Custom user attributes")
 
     @property
     def icon(self):
@@ -674,7 +674,7 @@ class MainModuleContactGroups(ABCMainModule):
 
     @property
     def title(self):
-        return _("Groups")
+        return _("Contact groups")
 
     @property
     def icon(self):
@@ -1063,7 +1063,7 @@ class MainModuleMonitoringRules(ABCMainModule):
 
     @property
     def title(self):
-        return _("Monitoring rules")
+        return _("Service monitoring rules")
 
     @property
     def icon(self):
@@ -1075,7 +1075,7 @@ class MainModuleMonitoringRules(ABCMainModule):
 
     @property
     def description(self):
-        return _("Monitoring rules")
+        return _("Service monitoring rules")
 
     @property
     def sort_index(self):

@@ -118,3 +118,13 @@ def test_get_wato_menu_items():
             items.append(item.name)
 
     assert expected_items() == items_by_topic
+
+
+@pytest.mark.usefixtures("load_plugins", "with_admin_login")
+def test_unique_wato_menu_item_titels():
+    titles = [
+        entry.title
+        for topic_menu_topic in get_wato_menu_items()
+        for entry in topic_menu_topic.items
+    ]
+    assert len(titles) == len(set(titles))

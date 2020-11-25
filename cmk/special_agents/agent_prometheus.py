@@ -311,17 +311,16 @@ class CAdvisorExporter:
     def update_pod_containers(self):
         result: Dict[str, List[str]] = {}
         container_ids = {}
-        temp_result = self.api_client.perform_multi_result_promql(
-            'container_last_seen{container!="", pod!=""}').promql_metrics
-        for container_details_dict in temp_result:
-            labels = container_details_dict["labels"]
-            result.setdefault(labels["pod"], []).append(labels["name"])
+        temp_result = self.api_client.query_promql('container_last_seen{container!="", pod!=""}')
+        for container_info in temp_result:
+            container_name = container_info.label_value("name")
+            result.setdefault(container_info.label_value("pod"), []).append(container_name)
 
-            id_long = labels["id"].split("/")[-1]
-            container_ids[labels["name"]] = {
+            id_long = container_info.label_value("id").split("/")[-1]
+            container_ids[container_name] = {
                 "short": id_long[0:12],
                 "long": id_long,
-                "name": labels["name"]
+                "name": container_name
             }
         self.pod_containers.update(result)
         self.container_ids.update(container_ids)
@@ -402,19 +401,22 @@ class CAdvisorExporter:
         return result
 
     def _retrieve_pods_memory_summary(
-            self,
-            memory_info: List[Tuple[str, str]]) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, str]]:
+        self,
+        memory_info: List[Tuple[str, str]],
+    ) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, str]]:
 
         result: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {}
         associations = {}
         for memory_stat, promql_query in memory_info:
-            for pod_memory_info in self.api_client.perform_multi_result_promql(
-                    promql_query).promql_metrics:
-                pod_name = pod_memory_info['labels']['pod']
+            for pod_memory_info in self.api_client.query_promql(promql_query):
+                pod_name = pod_memory_info.label_value("pod")
                 pod = result.setdefault(pod_name, {})
-                pod[memory_stat] = pod_memory_info
+                pod[memory_stat] = {
+                    "value": pod_memory_info.value(),
+                    "labels": pod_memory_info.labels,
+                }
                 if pod_name not in associations:
-                    associations[pod_name] = pod_memory_info['labels']['instance']
+                    associations[pod_name] = pod_memory_info.label_value("instance")
         return result, associations
 
     def _filter_out_incomplete(
@@ -453,12 +455,14 @@ class CAdvisorExporter:
         return pods
 
     def _retrieve_machines_memory(self) -> Dict[str, Dict[str, Any]]:
-        machine_memory_info = self.api_client.perform_multi_result_promql(
-            'machine_memory_bytes').promql_metrics
+        machine_memory_info = self.api_client.query_promql('machine_memory_bytes')
         machine = {}
         for machine_info in machine_memory_info:
-            machine_instance = machine_info["labels"]["instance"]
-            machine[machine_instance] = machine_info
+            machine_instance = machine_info.label_value("instance")
+            machine[machine_instance] = {
+                "value": machine_info.value(),
+                "labels": machine_info.labels
+            }
         return machine
 
     def memory_container_summary(self, _group_element: str) -> List[Dict[str, Dict[str, Any]]]:
@@ -470,17 +474,20 @@ class CAdvisorExporter:
             "memory_cache": 'container_memory_cache{container!=""}',
         }
         result_temp = self._retrieve_cadvisor_info(memory_info, group_element="name")
-        pods_memory_result = self.api_client.perform_multi_result_promql(
-            'sum by (pod)(container_memory_usage_bytes{pod!="", container=""})').promql_metrics
 
         extra_result = {}
-        for pod_memory_dict in pods_memory_result:
-            pod_name = pod_memory_dict["labels"]["pod"]
+        for pod_memory_info in self.api_client.query_promql(
+                'sum by (pod)(container_memory_usage_bytes{pod!="", container=""})'):
+            pod_name = pod_memory_info.label_value("pod")
             for container_name in self.pod_containers[pod_name]:
-                extra_result[container_name] = {"memory_usage_pod": [pod_memory_dict]}
+                extra_result[container_name] = {
+                    "memory_usage_pod": [{
+                        "value": pod_memory_info.value(as_string=True),
+                        "labels": pod_memory_info.labels
+                    }]
+                }
         extra_result = self._apply_container_name_option(extra_result)
         result_temp.append(extra_result)
-
         return result_temp
 
     def _retrieve_formatted_cadvisor_info(self, entity_info: Dict[str, str],
@@ -501,9 +508,11 @@ class CAdvisorExporter:
 
             promql_query = self._prepare_query(entity_promql, group_element)
 
-            promql_result = self.api_client.perform_multi_result_promql(
-                promql_query).get_piggybacked_services(metric_description=entity_name,
-                                                       promql_label_for_piggyback=group_element)
+            promql_result = parse_piggybacked_services(
+                self.api_client.query_promql(promql_query),
+                metric_description=entity_name,
+                label_as_piggyback_host=group_element,
+            )
 
             if group_element in ("name", "container") and self.container_name_option in ("short",
                                                                                          "long"):
@@ -1016,6 +1025,47 @@ def parse_piggybacked_values(
             metric_value = promql_result.value()
 
         result.setdefault(piggyback_host, {})[metric_description] = metric_value
+    return result
+
+
+def parse_piggybacked_services(
+    promql_results: List[PromQLResult],
+    metric_description: str,
+    label_as_piggyback_host: Optional[str] = None,
+    piggyback_parser: Optional[Callable] = None,
+) -> Dict[str, Dict[str, List[Dict[str, float]]]]:
+    """Prepare the PromQLResults to a dict format for Piggyback parsing
+
+    Args:
+        promql_results:
+            List of PromQLResult objects
+
+        metric_description:
+            metric name for the va
+
+        label_as_piggyback_host:
+            label key which is used to determine the piggyback host from the PromQLResult labels
+
+        piggyback_parser:
+            function which parses the piggyback host name using the labels
+
+    Returns:
+        dict which represents piggybacked services (host -> service -> metric)
+
+    """
+    result: Dict[str, Dict[str, List[Dict[str, float]]]] = {}
+    for promql_result in promql_results:
+        if piggyback_parser:
+            piggyback_host = piggyback_parser(promql_result.labels)
+        elif label_as_piggyback_host:
+            piggyback_host = promql_result.label_value(label_as_piggyback_host)
+        else:
+            return result
+
+        result.setdefault(piggyback_host, {}).setdefault(metric_description, []).append({
+            "value": promql_result.value(),
+            "labels": promql_result.labels
+        })
     return result
 
 

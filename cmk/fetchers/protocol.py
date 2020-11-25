@@ -180,7 +180,7 @@ class SNMPResultMessage(ResultMessage):
         return "%s(%r)" % (type(self).__name__, self._value)
 
     def __len__(self) -> int:
-        return ResultMessage.length + len(self._value)
+        return ResultMessage.length + len(self.payload)
 
     def __iter__(self) -> Iterator[bytes]:
         payload = self.payload

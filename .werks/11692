@@ -1,0 +1,14 @@
+Title: agent_aws: fix check_mk discovery UNKN status when configuring the AWS agent
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606387132
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+The check_mk discovery service returned an UNKN status when the AWS agent was
+configured for monitoring. Example error message:
+ERROR: invalid literal for int() with base 10: '68578.020624'
+This has been fixed.

@@ -55,5 +55,4 @@ class TestAWSSections:
         }
         generic_section._write_section_results(cached_data)
         section_stdout = capsys.readouterr().out
-        assert section_stdout.split(
-            '\n')[0] == '<<<aws_costs_and_usage:cached(1606382471,38642.763184)>>>'
+        assert section_stdout.split('\n')[0] == '<<<aws_costs_and_usage:cached(1606382471,38642)>>>'

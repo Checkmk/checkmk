@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 
 def _get_tag_options(tag_values, prefix):
     options = []
@@ -60,12 +62,11 @@ def _get_proxy_args(details):
 
 
 def agent_aws_arguments(params, hostname, ipaddress):
-    args = [
-        "--access-key-id",
-        params["access_key_id"],
-        "--secret-access-key",
-        passwordstore_get_cmdline("%s", params["secret_access_key"]),
-    ]
+    secrets = {
+        "access_key_id": params["access_key_id"],
+        "secret_access_key": passwordstore_get_cmdline("%s", params["secret_access_key"]),
+    }
+    args = []
 
     if "proxy_details" in params:
         args += _get_proxy_args(params["proxy_details"])
@@ -124,7 +125,9 @@ def agent_aws_arguments(params, hostname, ipaddress):
         "--hostname",
         hostname,
     ]
-    return args
+    # TODO: Cleanup this separation violation. This should be accessed through the check API
+    import cmk.base.checkers.programs
+    return cmk.base.checkers.programs.SpecialAgentConfiguration(args, json.dumps(secrets))
 
 
 special_agent_info['aws'] = agent_aws_arguments

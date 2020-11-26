@@ -4304,12 +4304,8 @@ def parse_arguments(argv):
         action="store_true",
         help="Execute all sections, do not rely on cached data. Cached data will not be overwritten."
     )
-    parser.add_argument("--access-key-id",
-                        required=True,
-                        help="The access key ID for your AWS account.")
-    parser.add_argument("--secret-access-key",
-                        required=True,
-                        help="The secret access key for your AWS account.")
+    parser.add_argument("--access-key-id", help="The access key ID for your AWS account")
+    parser.add_argument("--secret-access-key", help="The secret access key for your AWS account.")
     parser.add_argument("--proxy-host", help="The address of the proxy server")
     parser.add_argument("--proxy-port", help="The port of the proxy server")
     parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
@@ -4559,6 +4555,26 @@ def main(sys_argv=None):
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    access_key_id = stdin_args.get('access_key_id') or args.access_key_id
+    secret_access_key = stdin_args.get('secret_access_key') or args.secret_access_key
+
+    has_exceptions = False
+
+    if not access_key_id:
+        has_exceptions = True
+        logging.error('access key id is not set')
+
+    if not secret_access_key:
+        has_exceptions = True
+        logging.error('secret access key is not set')
+
+    if has_exceptions:
+        return 1
+
     setup_logging(args.debug, args.verbose)
     hostname = args.hostname
     proxy_config = None
@@ -4613,10 +4629,10 @@ def main(sys_argv=None):
         for region in aws_regions:
             try:
                 if args.assume_role:
-                    session = sts_assume_role(args.access_key_id, args.secret_access_key,
-                                              args.role_arn, args.external_id, region)
+                    session = sts_assume_role(access_key_id, secret_access_key, args.role_arn,
+                                              args.external_id, region)
                 else:
-                    session = create_session(args.access_key_id, args.secret_access_key, region)
+                    session = create_session(access_key_id, secret_access_key, region)
 
                 sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
                 sections.init_sections(aws_services,

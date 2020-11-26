@@ -117,7 +117,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         file_cache: SNMPFileCache,
         *,
         disabled_sections: Set[SectionName],
-        selected_sections: Set[SectionName],
+        checking_sections: Set[SectionName],
         inventory_sections: Set[SectionName],
         on_error: str,
         missing_sys_description: bool,
@@ -126,7 +126,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.helper.snmp"))
         self.disabled_sections: Final = disabled_sections
-        self.selected_sections: Final = selected_sections
+        self.checking_sections: Final = checking_sections
         self.inventory_sections: Final = inventory_sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
@@ -147,7 +147,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         return cls(
             file_cache=SNMPFileCache.from_json(serialized.pop("file_cache")),
             disabled_sections={SectionName(name) for name in serialized["disabled_sections"]},
-            selected_sections={SectionName(name) for name in serialized["selected_sections"]},
+            checking_sections={SectionName(name) for name in serialized["checking_sections"]},
             inventory_sections={SectionName(name) for name in serialized["inventory_sections"]},
             on_error=serialized["on_error"],
             missing_sys_description=serialized["missing_sys_description"],
@@ -159,7 +159,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         return {
             "file_cache": self.file_cache.to_json(),
             "disabled_sections": [str(s) for s in self.disabled_sections],
-            "selected_sections": [str(s) for s in self.selected_sections],
+            "checking_sections": [str(s) for s in self.checking_sections],
             "inventory_sections": [str(s) for s in self.inventory_sections],
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
@@ -215,10 +215,10 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def _get_selection(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
-            return self.selected_sections - self.disabled_sections
+            return self.checking_sections - self.disabled_sections
 
         if mode is Mode.FORCE_SECTIONS:
-            return self.selected_sections
+            return self.checking_sections
 
         return set()
 

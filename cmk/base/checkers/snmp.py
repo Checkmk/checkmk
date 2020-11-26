@@ -144,7 +144,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return SNMPFetcher(
             self._make_file_cache(),
             disabled_sections=self._make_disabled_sections(),
-            selected_sections=self._make_selected_sections(),
+            checking_sections=self._make_checking_sections(),
             inventory_sections=self._make_inventory_sections(),
             on_error=self.on_snmp_scan_error,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
@@ -172,10 +172,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
     def _make_disabled_sections(self) -> Set[SectionName]:
         return self.host_config.disabled_snmp_sections()
 
-    def _make_selected_sections(self) -> Set[SectionName]:
-        selection = self.selected_sections
-        if selection is NO_SELECTION:
-            selection = set(
+    def _make_checking_sections(self) -> Set[SectionName]:
+        if self.selected_sections is not NO_SELECTION:
+            checking_sections = self.selected_sections
+        else:
+            checking_sections = set(
                 agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_table.get_needed_check_names(
                         self.hostname,
@@ -183,7 +184,8 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                         skip_ignored=True,
                     ),
                     inventory_plugin_names=()))
-        return selection.intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
+        return checking_sections.intersection(
+            s.name for s in agent_based_register.iter_all_snmp_sections())
 
     def _make_inventory_sections(self) -> Set[SectionName]:
         return set(

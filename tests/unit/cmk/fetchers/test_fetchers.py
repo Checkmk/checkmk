@@ -368,7 +368,7 @@ class ABCTestSNMPFetcher(ABC):
         return SNMPFetcher(
             file_cache,
             disabled_sections=set(),
-            selected_sections=set(),
+            checking_sections=set(),
             inventory_sections=set(),
             on_error="raise",
             missing_sys_description=False,
@@ -407,7 +407,7 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, SNMPFetcher)
         assert other.plugin_store == fetcher.plugin_store
-        assert other.selected_sections == fetcher.selected_sections
+        assert other.checking_sections == fetcher.checking_sections
         assert other.on_error == fetcher.on_error
         assert other.missing_sys_description == fetcher.missing_sys_description
         assert other.snmp_config == fetcher.snmp_config
@@ -438,7 +438,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             lambda *_, **__: table,
         )
         section_name = SectionName('pim')
-        fetcher.selected_sections = {section_name}
+        fetcher.checking_sections = {section_name}
         assert fetcher.fetch(Mode.INVENTORY) == result.OK({})  # 'pim' is not an inventory section
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table]})
 
@@ -451,7 +451,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             lambda _, oid_info, **__: table
             if oid_info.base == fetcher.plugin_store[section_name].trees[0].base else [],
         )
-        fetcher.selected_sections = {section_name}
+        fetcher.checking_sections = {section_name}
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table, []]})
 
     def test_fetch_from_io_empty(self, monkeypatch, fetcher):

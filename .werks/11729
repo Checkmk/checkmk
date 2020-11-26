@@ -1,0 +1,12 @@
+Title: 3par special agent: add configuration option for TCP port number
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1606468069
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+This werk adds the option to configure the TCP port used by the 3par
+special agent.

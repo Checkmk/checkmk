@@ -2097,8 +2097,9 @@ rulespec_registry.register(
     ))
 
 
-def _special_agents_3par_transform_3par_add_verify_cert(v):
+def _special_agents_3par_transform(v):
     v.setdefault("verify_cert", False)
+    v.setdefault("port", 8080)
     return v
 
 
@@ -2115,6 +2116,14 @@ def _valuespec_special_agents_3par():
                     title=_("Password"),
                     allow_empty=False,
                 )),
+                ("port",
+                 Integer(
+                     title=_('TCP port number'),
+                     help=_('Port number that 3par is listening on. The default is 8080.'),
+                     default_value=8080,
+                     minvalue=1,
+                     maxvalue=65535,
+                 )),
                 ("verify_cert",
                  DropdownChoice(
                      title=_("SSL certificate verification"),
@@ -2135,7 +2144,7 @@ def _valuespec_special_agents_3par():
             ],
             optional_keys=["values"],
         ),
-        forth=_special_agents_3par_transform_3par_add_verify_cert,
+        forth=_special_agents_3par_transform,
     )
 
 

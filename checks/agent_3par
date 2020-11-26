@@ -11,6 +11,8 @@ def agent_3par_arguments(params, hostname, ipaddress):
         params["user"],
         "--password",
         passwordstore_get_cmdline("%s", params["password"]),
+        "--port",
+        params['port'],
     ]
     if not params.get("verify_cert", False):
         args.append("--no-cert-check")

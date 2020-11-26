@@ -21,10 +21,10 @@ namespace install {
 InstallMode G_InstallMode = InstallMode::normal;
 InstallMode GetInstallMode() { return G_InstallMode; }
 
-std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name) {
+std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view file_name) {
     namespace fs = std::filesystem;
     // Find Temporary Folder
-    fs::path temp_folder = cma::tools::win::GetTempFolder();
+    fs::path temp_folder{cma::tools::win::GetTempFolder()};
     std::error_code ec;
     if (!fs::exists(temp_folder, ec)) {
         XLOG::l("Updating is NOT possible, temporary folder not found [{}]",
@@ -32,7 +32,7 @@ std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name) {
         return {};
     }
 
-    return temp_folder / Name;
+    return temp_folder / file_name;
 }
 
 // makes in temp own folder with name check_mk_agent_<pid>_<number>
@@ -42,7 +42,7 @@ std::filesystem::path GenerateTempFileNameInTempPath(
     std::wstring_view msi_name) {
     namespace fs = std::filesystem;
     // Find Temporary Folder
-    fs::path temp_folder = cma::tools::win::GetTempFolder();
+    fs::path temp_folder{cma::tools::win::GetTempFolder()};
     std::error_code ec;
     if (!fs::exists(temp_folder, ec)) {
         XLOG::l("Updating is NOT possible, temporary folder not found [{}]",
@@ -56,7 +56,7 @@ std::filesystem::path GenerateTempFileNameInTempPath(
 
     fs::path ret_path;
     int attempt = 0;
-    while (1) {
+    while (true) {
         auto folder_name = fmt::format("check_mk_agent_{}_{}", pid, counter);
         ret_path = temp_folder / folder_name;
         if (!fs::exists(ret_path, ec) && fs::create_directory(ret_path, ec))
@@ -74,9 +74,9 @@ std::filesystem::path GenerateTempFileNameInTempPath(
     return ret_path / msi_name;
 }
 
-static void LogPermissions(const std::string& file) {
+static void LogPermissions(const std::string& file_name) {
     try {
-        wtools::ACLInfo acl(file.c_str());
+        wtools::ACLInfo acl(file_name.c_str());
         auto ret = acl.query();
         if (ret == S_OK)
             XLOG::l("Permissions:\n{}", acl.output());
@@ -87,130 +87,134 @@ static void LogPermissions(const std::string& file) {
     }
 }
 
-static bool RmFileWithRename(const std::filesystem::path& File,
+static bool RmFileWithRename(const std::filesystem::path& file_name,
                              std::error_code ec) {
     namespace fs = std::filesystem;
     XLOG::l(
         "Updating is NOT possible, can't delete file '{}', error [{}]. Trying rename.",
-        File.u8string(), ec.value());
+        file_name.u8string(), ec.value());
 
-    LogPermissions(File.u8string());
-    LogPermissions(File.parent_path().u8string());
+    LogPermissions(file_name.u8string());
+    LogPermissions(file_name.parent_path().u8string());
 
-    auto file = File;
-    fs::rename(File, file.replace_extension(".old"), ec);
+    auto file = file_name;
+    fs::rename(file_name, file.replace_extension(".old"), ec);
     std::error_code ecx;
-    if (!fs::exists(File, ecx)) {
-        XLOG::l.i("Renamed '{}' to '{}'", File.u8string(), file.u8string());
+    if (!fs::exists(file_name, ecx)) {
+        XLOG::l.i("Renamed '{}' to '{}'", file_name.u8string(),
+                  file.u8string());
         return true;  // success
     }
 
     XLOG::l(
         "Updating is STILL NOT possible, can't RENAME file '{}' to '{}', error [{}]",
-        File.u8string(), file.u8string(), ec.value());
+        file_name.u8string(), file.u8string(), ec.value());
     return false;
 }
 
 // remove file with diagnostic
 // for internal use by cma::install
-bool RmFile(const std::filesystem::path& File) noexcept {
+bool RmFile(const std::filesystem::path& file_name) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
-    if (!fs::exists(File, ec)) {
-        XLOG::l.t("File '{}' is absent, no need to delete", File.u8string());
+    if (!fs::exists(file_name, ec)) {
+        XLOG::l.t("File '{}' is absent, no need to delete",
+                  file_name.u8string());
         return true;
     }
 
-    auto ret = fs::remove(File, ec);
+    auto ret = fs::remove(file_name, ec);
     if (ret || ec.value() == 0) {  // either deleted or disappeared
-        XLOG::l.i("File '{}'was removed", File.u8string());
+        XLOG::l.i("File '{}'was removed", file_name.u8string());
         return true;
     }
 
-    return RmFileWithRename(File, ec);
+    return RmFileWithRename(file_name, ec);
 }
 
 // MOVE(rename) file with diagnostic
 // for internal use by cma::install
-bool MvFile(const std::filesystem::path& Old,
-            const std::filesystem::path& New) noexcept {
+bool MvFile(const std::filesystem::path& source_file,
+            const std::filesystem::path& destination_file) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
-    fs::rename(Old, New, ec);
-    if (ec.value()) {
+    fs::rename(source_file, destination_file, ec);
+    if (ec.value() != 0) {
         XLOG::l(
             "Updating is NOT possible, can't move file '{}' to '{}', error [{}]",
-            Old.u8string(), New.u8string(), ec.value());
+            source_file.u8string(), destination_file.u8string(), ec.value());
         return false;
     }
 
-    XLOG::l.i("File '{}' was moved successfully to '{}'", Old.u8string(),
-              New.u8string());
+    XLOG::l.i("File '{}' was moved successfully to '{}'",
+              source_file.u8string(), destination_file.u8string());
     return true;
 }
 
 // store file in the folder
 // used to save last installed MSI
 // no return because we will install new MSI always
-void BackupFile(const std::filesystem::path& File,
-                const std::filesystem::path& Dir) noexcept {
+void BackupFile(const std::filesystem::path& file_name,
+                const std::filesystem::path& backup_dir) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
 
-    if (Dir.empty() || !fs::exists(Dir, ec) || !fs::is_directory(Dir, ec)) {
-        XLOG::l("Backup Path '{}' can't be used", Dir.u8string());
+    if (backup_dir.empty() || !fs::exists(backup_dir, ec) ||
+        !fs::is_directory(backup_dir, ec)) {
+        XLOG::l("Backup Path '{}' can't be used", backup_dir.u8string());
         return;
     }
 
-    if (File.empty() || !cma::tools::IsValidRegularFile(File)) {
-        XLOG::l("Backup of the '{}' impossible", File.u8string());
+    if (file_name.empty() || !cma::tools::IsValidRegularFile(file_name)) {
+        XLOG::l("Backup of the '{}' impossible", file_name.u8string());
         return;
     }
 
-    auto fname = File.filename();
-    fs::copy_file(File, Dir / fname, fs::copy_options::overwrite_existing, ec);
+    auto fname = file_name.filename();
+    fs::copy_file(file_name, backup_dir / fname,
+                  fs::copy_options::overwrite_existing, ec);
     if (ec.value() != 0) {
         XLOG::l("Backup of the '{}' in '{}' failed with error [{}]",
-                File.u8string(), Dir.u8string(), ec.value());
+                file_name.u8string(), backup_dir.u8string(), ec.value());
     }
 
-    XLOG::l.i("Backup of the '{}' in '{}' succeeded", File.u8string(),
-              Dir.u8string());
+    XLOG::l.i("Backup of the '{}' in '{}' succeeded", file_name.u8string(),
+              backup_dir.u8string());
 }
 
 // logic was copy pasted from the cma::cfg::cap::NeedReinstall
 // return true when BackupDir is absent, BackupDir/IncomingFile.filename absent
 // or when IncomingFile is newer than BackupDir/IncomingFile.filename
 // Diagnostic for the "install" case
-bool NeedInstall(const std::filesystem::path& IncomingFile,
-                 const std::filesystem::path& BackupDir) noexcept {
+bool NeedInstall(const std::filesystem::path& incoming_file,
+                 const std::filesystem::path& backup_dir) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
 
-    if (!fs::exists(IncomingFile, ec)) {
+    if (!fs::exists(incoming_file, ec)) {
         XLOG::d.w(
             "Source File '{}' is absent, installation not required and this is strange",
-            IncomingFile.u8string());
+            incoming_file.u8string());
         return false;
     }
 
-    if (!fs::exists(BackupDir, ec)) {
+    if (!fs::exists(backup_dir, ec)) {
         XLOG::l.crit(
             "Target folder '{}' absent, Agent Installation is broken. We try to continue.",
-            BackupDir.u8string());
+            backup_dir.u8string());
         return true;
     }
 
     // now both file are present
-    auto fname = IncomingFile.filename();
-    auto saved_file = BackupDir / fname;
+    auto fname = incoming_file.filename();
+    auto saved_file = backup_dir / fname;
     if (!fs::exists(saved_file, ec)) {
-        XLOG::l.i("First Update", BackupDir.u8string());
+        XLOG::l.i("First Update", backup_dir.u8string());
         return true;
     }
 
     auto target_time = fs::last_write_time(saved_file, ec);
-    auto src_time = fs::last_write_time(IncomingFile, ec);
+    auto src_time = fs::last_write_time(incoming_file, ec);
     return src_time > target_time;
 }
 
@@ -250,7 +254,7 @@ std::pair<std::wstring, std::wstring> MakeCommandLine(
     return {command, log_file_name.wstring()};
 }
 
-static void BackupLogFile(std::filesystem::path log_file_name) {
+static void BackupLogFile(const std::filesystem::path& log_file_name) {
     namespace fs = std::filesystem;
 
     std::error_code ec;
@@ -262,6 +266,7 @@ static void BackupLogFile(std::filesystem::path log_file_name) {
 
     auto log_bak_file_name = log_file_name;
     log_bak_file_name.replace_extension(".log.bak");
+
     auto success = MvFile(log_file_name, log_bak_file_name);
 
     if (!success) XLOG::d("Backing up of msi log failed");
@@ -269,9 +274,10 @@ static void BackupLogFile(std::filesystem::path log_file_name) {
 
 // check that update exists and exec it
 // returns true when update found and ready to exec
-bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
-                        UpdateType Update, UpdateProcess StartUpdateProcess,
-                        std::wstring_view BackupPath) {
+bool CheckForUpdateFile(std::wstring_view msi_name, std::wstring_view msi_dir,
+                        UpdateType update_type,
+                        UpdateProcess start_update_process,
+                        std::wstring_view backup_dir) {
     namespace fs = std::filesystem;
 
     // find path to msiexec, in Windows it is in System32 folder
@@ -279,48 +285,48 @@ bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
     if (exe.empty()) return false;
 
     // check file existence
-    fs::path msi_base = DirWithMsi;
-    msi_base /= Name;
+    fs::path msi_base{msi_dir};
+    msi_base /= msi_name;
     std::error_code ec;
     if (!fs::exists(msi_base, ec)) return false;  // this is ok
 
-    switch (Update) {
+    switch (update_type) {
         case UpdateType::exec_normal:
         case UpdateType::exec_quiet:
             break;
         default:  // safety, MSVC give us no warning
-            XLOG::l("Invalid Option '{}'", static_cast<int>(Update));
+            XLOG::l("Invalid Option '{}'", static_cast<int>(update_type));
             return false;
     }
 
-    if (!NeedInstall(msi_base, BackupPath)) return false;
+    if (!NeedInstall(msi_base, backup_dir)) return false;
 
     // Move file to temporary folder
-    auto msi_to_install = MakeTempFileNameInTempPath(Name);
+    auto msi_to_install = MakeTempFileNameInTempPath(msi_name);
     if (msi_to_install.empty()) return false;
 
     // remove target file
     if (RmFile(msi_to_install)) {
         // actual move
         if (!MvFile(msi_base, msi_to_install)) return false;
-        BackupFile(msi_to_install, BackupPath);
+        BackupFile(msi_to_install, backup_dir);
 
     } else {
         // THIS BRANCH TESTED MANUALLY
         XLOG::l.i("Fallback to use random name");
-        auto temp_name = GenerateTempFileNameInTempPath(Name);
+        auto temp_name = GenerateTempFileNameInTempPath(msi_name);
         if (temp_name.empty()) return false;
         if (!MvFile(msi_base, temp_name)) return false;
 
         msi_to_install = temp_name;
-        BackupFile(msi_to_install, BackupPath);
+        BackupFile(msi_to_install, backup_dir);
         XLOG::l.i("Installing '{}'", msi_to_install.u8string());
     }
 
     // Prepare Command
 
     auto [command_tail, log_file_name] =
-        MakeCommandLine(msi_to_install, Update);
+        MakeCommandLine(msi_to_install, update_type);
 
     std::wstring command = exe;
     command += L" ";
@@ -331,7 +337,7 @@ bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
     XLOG::l.i("File '{}' exists\n\tCommand is '{}'", msi_to_install.u8string(),
               wtools::ConvertToUTF8(command));
 
-    if (StartUpdateProcess == UpdateProcess::skip) {
+    if (start_update_process == UpdateProcess::skip) {
         XLOG::l.i("Actual Updating is disabled");
         return true;
     }

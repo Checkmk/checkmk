@@ -24,7 +24,7 @@ checks = {
         (
             'DB19.CDB$ROOT.ORACLE_OCM.MGMT_STATS_CONFIG_JOB', {
                 'disabled': True,
-                'missingjob': 3,
+                'status_missing_jobs': 2,
                 'missinglog': 1
             }, [
                 (
@@ -33,6 +33,44 @@ checks = {
                     [('duration', 0, None, None, None, None)]
                 )
             ]
-        )
+        ),
+        (
+            'DB19.CDB$ROOT.ORACLE_OCM.MISSING',
+            {
+                'status_missing_jobs': 2,
+            },
+            [
+                (
+                    2,
+                    'Job is missing',
+                )
+            ]
+        ),
+        # test if old autochecks files still work
+        (
+            'DB19.CDB$ROOT.ORACLE_OCM.MISSING',
+            {
+                'missingjob': 2,
+            },
+            [
+                (
+                    2,
+                    'Job is missing',
+                )
+            ]
+        ),
+        (
+            'DB19.CDB$ROOT.ORACLE_OCM.MISSING',
+            {
+                'status_missing_jobs': 2,
+                'missingjob': 3,
+            },
+            [
+                (
+                    2,
+                    'Job is missing',
+                )
+            ]
+        ),
     ]
 }

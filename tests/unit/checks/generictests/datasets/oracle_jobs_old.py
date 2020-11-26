@@ -24,7 +24,7 @@ checks = {
         (
             'DB1.SYS.BSLN_MAINTAIN_STATS_JOB', {
                 'disabled': True,
-                'missingjob': 3,
+                'status_missing_job': 3,
                 'missinglog': 1
             }, [
                 (

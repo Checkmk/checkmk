@@ -666,7 +666,7 @@ class ModeNotifications(ABCNotificationsMode):
 
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"),
-                                 "replay")
+                                 "reload_cmk")
 
                 if (html.request.var("analyse") and
                         nr == html.request.get_integer_input_mandatory("analyse")):

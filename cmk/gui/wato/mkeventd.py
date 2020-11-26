@@ -2517,7 +2517,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add one or multiple MIBs"),
-                                    icon_name="upload",
+                                    icon_name="new",
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request,

@@ -862,7 +862,7 @@ class GUIViewRenderer(ABCViewRenderer):
         is_filter_set = html.request.var("filled_in") == "filter"
 
         yield PageMenuEntry(
-            title=_("Filter view"),
+            title=_("Filter"),
             icon_name="filters_set" if is_filter_set else "filter",
             item=PageMenuSidePopup(self._render_filter_form(show_filters)),
             name="filters",

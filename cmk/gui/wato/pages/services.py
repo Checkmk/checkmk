@@ -349,10 +349,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             options = options._replace(action=DiscoveryAction.NONE)
 
         if options.action != DiscoveryAction.REFRESH and not \
-            (config.user.may("wato.service_discovery_to_undecided")
-            and config.user.may("wato.service_discovery_to_monitored")
-            and config.user.may("wato.service_discovery_to_ignored")
-             and config.user.may("wato.service_discovery_to_removed")):
+            (config.user.may("wato.service_discovery_to_undecided") and
+             config.user.may("wato.service_discovery_to_monitored") and
+             config.user.may("wato.service_discovery_to_ignored") and
+             config.user.may("wato.service_discovery_to_removed")):
             options = options._replace(action=DiscoveryAction.NONE)
 
         return options
@@ -1186,7 +1186,10 @@ def _page_menu_settings_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry
 
     yield PageMenuEntry(
         title=_("Disabled services"),
-        icon_name="disabled_service",
+        icon_name={
+            "icon": "services",
+            "emblem": "disable",
+        },
         item=make_simple_link(
             watolib.folder_preserving_link([("mode", "edit_ruleset"),
                                             ("varname", "ignored_services")])),
@@ -1194,7 +1197,10 @@ def _page_menu_settings_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry
 
     yield PageMenuEntry(
         title=_("Disabled checks"),
-        icon_name="check_parameters",
+        icon_name={
+            "icon": "check_plugins",
+            "emblem": "disable",
+        },
         item=make_simple_link(
             watolib.folder_preserving_link([("mode", "edit_ruleset"),
                                             ("varname", "ignored_checks")])),

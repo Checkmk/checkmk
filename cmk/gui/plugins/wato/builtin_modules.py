@@ -994,7 +994,7 @@ class MainModuleReleaseNotes(ABCMainModule):
 
     @property
     def icon(self):
-        return "release_notes"
+        return "tribe29"
 
     @property
     def permission(self):

@@ -308,6 +308,7 @@ def _define_fileinfo_group_check(files_matching, date_inclusion):
 def check_fileinfo_groups(_item, params, parsed):
 
     outof_range_txt = fileinfo_check_timeranges(params)
+    date_inclusion = None
     files_stat_failed = set()
     files_matching = {
         'count_all': 0,
@@ -332,7 +333,7 @@ def check_fileinfo_groups(_item, params, parsed):
         return
 
     # Start counting values on all files
-    for file_stat in parsed['files'].values():
+    for file_stat in parsed.get('files', {}).values():
         if file_stat.missing:
             continue
 

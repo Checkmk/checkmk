@@ -2516,7 +2516,10 @@ class AWSSections(object):
 
             cached_suffix = ""
             if section_interval > 60:
-                cached_suffix = ":cached(%s,%s)" % (int(cache_timestamp), section_interval + 60)
+                cached_suffix = ":cached(%s,%s)" % (
+                    int(cache_timestamp),
+                    int(section_interval + 60),
+                )
 
             if any([r.content for r in result]):
                 self._write_section_result(section_name, cached_suffix, result)

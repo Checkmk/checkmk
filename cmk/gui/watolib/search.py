@@ -26,7 +26,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.gui.config import UserContext, user
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import RequestContext
+from cmk.gui.globals import AppContext, RequestContext, current_app
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request
@@ -199,11 +199,12 @@ class URLChecker:
         file_name, query_vars = file_name_and_query_vars_from_url(url)
         self._set_query_vars(query_vars)
         try:
-            with RequestContext(html_obj=html(self._request), req=self._request):
-                with UserContext(self._user_id):
-                    page_handler = get_page_handler(file_name)
-                    if page_handler:
-                        page_handler()
+            with AppContext(current_app), \
+                 RequestContext(html_obj=html(self._request), req=self._request), \
+                 UserContext(self._user_id):
+                page_handler = get_page_handler(file_name)
+                if page_handler:
+                    page_handler()
             return True
         except MKAuthException:
             return False

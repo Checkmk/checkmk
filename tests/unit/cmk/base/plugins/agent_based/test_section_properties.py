@@ -8,6 +8,71 @@ import pytest  # type: ignore[import]
 
 import cmk.base.api.agent_based.register as agent_based_register
 
+SYS_DESCR_OID = ".1.3.6.1.2.1.1.1"
+
+SYS_OBJID_OID = ".1.3.6.1.2.1.1.2"
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_section_detection_uses_sysdescr_or_sysobjid():
+    """Make sure the first OID is always either the system description
+    or the system object ID. This increases performance massively.
+    """
+
+    known_exceptions = {
+        # you should really have an exceptionally good reason to add something here.
+        'dell_compellent_controller',
+        'dell_compellent_disks',
+        'dell_compellent_enclosure',
+        'dell_compellent_folder',
+        'dell_hw_info',
+        'emerson_stat',
+        'emerson_temp',
+        'etherbox',
+        'fast_lta_headunit',
+        'fast_lta_silent_cubes',
+        'fast_lta_volumes',
+        'hp_proliant_cpu',
+        'hp_proliant_da_cntlr',
+        'hp_proliant_da_phydrv',
+        'hp_proliant_fans',
+        'hp_proliant_mem',
+        'hp_proliant_power',
+        'hp_proliant_psu',
+        'hp_proliant_raid',
+        'hp_proliant_systeminfo',
+        'hp_proliant_temp',
+        'hp_sts_drvbox',
+        'hr_cpu',
+        'hr_fs',
+        'hr_ps',
+        'if',
+        'if64',
+        'if64adm',
+        'infoblox_osinfo',
+        'inv_if',
+        'openbsd_sensors',
+        'printer_alerts',
+        'printer_input',
+        'printer_output',
+        'printer_pages',
+        'printer_supply',
+        'pse_poe',
+        'qnap_fans',
+        'qnap_hdd_temp',
+        'quantum_storage_status',
+        'snmp_extended_info',
+        'snmp_quantum_storage_info',
+    }
+
+    for section in agent_based_register.iter_all_snmp_sections():
+        for (first_checked_oid, *_rest1), *_rest2 in (  #
+                criterion for criterion in section.detect_spec if criterion  #
+        ):
+            assert (  #
+                first_checked_oid.rstrip('.0') in (SYS_DESCR_OID, SYS_OBJID_OID)  #
+            ) is (str(section.name) not in known_exceptions)
+
 
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_section_parse_function_does_something():

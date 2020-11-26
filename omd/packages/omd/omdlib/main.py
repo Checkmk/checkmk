@@ -1632,6 +1632,8 @@ def main_help(version_info: VersionInfo,
         args = []
     if options is None:
         options = {}
+    sys.stdout.write("Manage multiple monitoring sites comfortably with OMD. "
+                     "The Open Monitoring Distribution.\n")
 
     if is_root():
         sys.stdout.write("Usage (called as root):\n\n")
@@ -3977,11 +3979,11 @@ def main() -> None:
         set_environment(site)
 
     if (global_opts.interactive or command.confirm) and not global_opts.force:
-        sys.stdout.write("%s (yes/NO): " % command.confirm_text)
-        sys.stdout.flush()
-        a = sys.stdin.readline().strip()
-        if a.lower() != "yes":
-            sys.exit(0)
+        answer = None
+        while answer not in ["", "yes", "no"]:
+            answer = input(f"{command.confirm_text} [yes/NO]: ").strip().lower()
+        if answer in ["", "no"]:
+            bail_out(tty.normal + "Aborted.")
 
     try:
         command.handler(version_info, site, global_opts, args, command_options)

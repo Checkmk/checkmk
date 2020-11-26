@@ -10,6 +10,7 @@ import pytest  # type: ignore[import]
 import pytz
 
 import cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes as downtimes
+from cmk.gui import sites
 
 
 @pytest.fixture(name='dates')
@@ -18,16 +19,16 @@ def _dates():
             dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC")))
 
 
-def test_host_downtime(mock_livestatus, dates):
+def test_host_downtime(mock_livestatus, register_builtin_html, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=False) as live:
+    with mock_livestatus(expect_status_query=True) as live:
         live.expect_query(
             'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;13;0;120;;Going down',
             match_type='ellipsis',
         )
         downtimes.schedule_host_downtime(
-            live,
+            sites.live(),
             'example.com',
             start_time,
             end_time,
@@ -37,10 +38,10 @@ def test_host_downtime(mock_livestatus, dates):
         )
 
 
-def test_host_downtime_with_services(mock_livestatus, dates):
+def test_host_downtime_with_services(mock_livestatus, register_builtin_html, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=False) as live:
+    with mock_livestatus(expect_status_query=True) as live:
         live.expect_query(
             'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;13;0;120;;Going down',
             match_type='ellipsis',
@@ -56,7 +57,7 @@ def test_host_downtime_with_services(mock_livestatus, dates):
             match_type='ellipsis',
         )
         downtimes.schedule_host_downtime(
-            live,
+            sites.live(),
             'example.com',
             start_time,
             end_time,
@@ -67,10 +68,10 @@ def test_host_downtime_with_services(mock_livestatus, dates):
         )
 
 
-def test_hostgroup_host_downtime(mock_livestatus, dates):
+def test_hostgroup_host_downtime(mock_livestatus, register_builtin_html, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=False) as live:
+    with mock_livestatus(expect_status_query=True) as live:
         live.expect_query([
             "GET hostgroups",
             "Columns: members",
@@ -86,7 +87,7 @@ def test_hostgroup_host_downtime(mock_livestatus, dates):
         )
 
         downtimes.schedule_hostgroup_host_downtime(
-            live,
+            sites.live(),
             'example',
             start_time,
             end_time,
@@ -96,10 +97,10 @@ def test_hostgroup_host_downtime(mock_livestatus, dates):
         )
 
 
-def test_hostgroup_host_downtime_with_services(mock_livestatus, dates):
+def test_hostgroup_host_downtime_with_services(mock_livestatus, register_builtin_html, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=False) as live:
+    with mock_livestatus(expect_status_query=True) as live:
         live.expect_query([
             "GET hostgroups",
             "Columns: members",
@@ -133,7 +134,7 @@ def test_hostgroup_host_downtime_with_services(mock_livestatus, dates):
             match_type='ellipsis',
         )
         downtimes.schedule_hostgroup_host_downtime(
-            live,
+            sites.live(),
             'example',
             start_time,
             end_time,
@@ -144,10 +145,10 @@ def test_hostgroup_host_downtime_with_services(mock_livestatus, dates):
         )
 
 
-def test_servicegroup_service_downtime(mock_livestatus, dates):
+def test_servicegroup_service_downtime(mock_livestatus, register_builtin_html, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=False) as live:
+    with mock_livestatus(expect_status_query=True) as live:
         live.expect_query([
             "GET servicegroups",
             "Columns: members",
@@ -166,7 +167,7 @@ def test_servicegroup_service_downtime(mock_livestatus, dates):
             match_type='ellipsis',
         )
         downtimes.schedule_servicegroup_service_downtime(
-            live,
+            sites.live(),
             'example',
             start_time,
             end_time,
@@ -176,10 +177,10 @@ def test_servicegroup_service_downtime(mock_livestatus, dates):
         )
 
 
-def test_servicegroup_service_downtime_and_hosts(mock_livestatus, dates):
+def test_servicegroup_service_downtime_and_hosts(mock_livestatus, register_builtin_html, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=False) as live:
+    with mock_livestatus(expect_status_query=True) as live:
         live.expect_query([
             "GET servicegroups",
             "Columns: members",
@@ -206,7 +207,7 @@ def test_servicegroup_service_downtime_and_hosts(mock_livestatus, dates):
             match_type='ellipsis',
         )
         downtimes.schedule_servicegroup_service_downtime(
-            live,
+            sites.live(),
             'example',
             start_time,
             end_time,

@@ -30,7 +30,7 @@ def force_schedule_host_check(connection, host_name: str, check_time: dt.datetim
 
         >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
         >>> cmd = "COMMAND [...] SCHEDULE_FORCED_HOST_CHECK;example.com;0"
-        >>> with simple_expect(cmd) as live:
+        >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     force_schedule_host_check(live, 'example.com', _check_time)
 
     """
@@ -61,7 +61,7 @@ def force_schedule_service_check(connection, host_name: str, service_description
 
         >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
         >>> cmd = "COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;example.com;CPU Load;0"
-        >>> with simple_expect(cmd) as live:
+        >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     force_schedule_service_check(live,'example.com', 'CPU Load', _check_time)
     """
 

@@ -56,7 +56,7 @@ def acknowledge_service_problem(
 
         >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;drain;1;0;0;;"
-        >>> with simple_expect(cmd) as live:
+        >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     acknowledge_service_problem(live, 'example.com', 'drain')
 
     """
@@ -175,7 +175,7 @@ def acknowledge_host_problem(
 
         >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;;"
-        >>> with simple_expect(cmd) as live:
+        >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     acknowledge_host_problem(live, 'example.com')
 
     """

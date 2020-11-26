@@ -1,0 +1,17 @@
+Title: oracle_jobs: correct usage of user-defined parameters for missing jobs
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: comp
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1606721994
+
+The check plugin <tt>oracle_jobs</tt> now responds as expected to user-defined
+settings for missing jobs (ruleset "Oracle Scheduler Job", option "Status of
+service in case of missing job"). Previously, this settings was not used.
+Furthermore, the default service state for missing jobs is now CRIT (which
+matches the default setting in the ruleset), before, it was UNKN. Note that
+for this new default setting to have an effect, a re-discovery is necessary.

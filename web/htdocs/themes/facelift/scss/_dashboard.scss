@@ -726,6 +726,17 @@ div.dashlet g {
   }
 }
 
+svg.renderer {
+  g.grid path {
+    stroke-width: 0;
+  }
+  g.grid line {
+    stroke: #8097b1;
+    stroke-opacity: 0.61;
+    stroke-width: 0.5px;
+  }
+}
+
 div.dashlet.single_metric {
   /* When no dashlet title (div.title) is rendered, div.dashlet_inner is the
      first child of div.dashlet */
@@ -785,15 +796,6 @@ div.dashlet.single_metric {
         }
       }
     }
-  }
-
-  g.grid path {
-    stroke-width: 0;
-  }
-  g.grid line {
-    stroke: #8097b1;
-    stroke-opacity: 0.61;
-    stroke-width: 0.5px;
   }
 
   div.dashlet_inner div.metric {

@@ -279,6 +279,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         });
 
         this.render_axis();
+        this.render_grid();
         this.render_legend();
     }
 
@@ -386,6 +387,26 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
                 return d3.format(",")(d);
             })
         );
+    }
+
+    render_grid() {
+        // Grid
+        let height = this.plot_size.height;
+        this.g
+            .selectAll("g.grid.vertical")
+            .data([null])
+            .join("g")
+            .classed("grid vertical", true)
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(this.scale_x).ticks(5).tickSize(-height).tickFormat(""));
+
+        let width = this.plot_size.width;
+        this.g
+            .selectAll("g.grid.horizontal")
+            .data([null])
+            .join("g")
+            .classed("grid horizontal", true)
+            .call(d3.axisLeft(this.scale_y).ticks(5).tickSize(-width).tickFormat(""));
     }
 
     transition(selection) {
@@ -625,6 +646,10 @@ class SingleMetricFigure extends TimeseriesFigure {
     }
 
     render_legend() {}
+    render_grid() {
+        if (this._data.plot_definitions.filter(d => d.plot_type == "area").length == 1)
+            super.render_grid();
+    }
 
     render_axis() {}
 }
@@ -874,8 +899,6 @@ class AreaPlot extends SubPlot {
                 else return base;
             });
 
-        this._render_grid();
-
         let color = this.get_color();
         let opacity = this.get_opacity();
         let stroke_width = this.get_stroke_width();
@@ -896,26 +919,6 @@ class AreaPlot extends SubPlot {
             .style("stroke", color)
             .style("stroke-width", stroke_width)
             .style("fill-opacity", opacity);
-    }
-
-    _render_grid() {
-        // Grid
-        let height = this._renderer.plot_size.height;
-        this.svg
-            .selectAll("g.grid.vertical")
-            .data([null])
-            .join("g")
-            .classed("grid vertical", true)
-            .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(this._renderer.scale_x).ticks(5).tickSize(-height).tickFormat(""));
-
-        let width = this._renderer.plot_size.width;
-        this.svg
-            .selectAll("g.grid.horizontal")
-            .data([null])
-            .join("g")
-            .classed("grid horizontal", true)
-            .call(d3.axisLeft(this._renderer.scale_y).ticks(5).tickSize(-width).tickFormat(""));
     }
 
     get_color() {
@@ -981,6 +984,7 @@ class ScatterPlot extends SubPlot {
             point.scaled_x = scale_x(point.date);
             point.scaled_y = scale_y(point.value);
         });
+
         this.quadtree = d3
             .quadtree()
             .x(d => d.scaled_x)

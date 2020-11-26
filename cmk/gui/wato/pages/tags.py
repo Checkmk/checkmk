@@ -140,7 +140,10 @@ class ModeTags(ABCTagMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Add aux tag"),
-                                    icon_name="ical",
+                                    icon_name={
+                                        "icon": "tag",
+                                        "emblem": "add"
+                                    },
                                     item=make_simple_link(
                                         watolib.folder_preserving_link([("mode", "edit_auxtag")])),
                                     is_shortcut=True,
@@ -153,7 +156,10 @@ class ModeTags(ABCTagMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Tag usage"),
-                                    icon_name="tag",
+                                    icon_name={
+                                        "icon": "tag",
+                                        "emblem": "search",
+                                    },
                                     item=make_simple_link(
                                         watolib.folder_preserving_link([("mode", "tag_usage")])),
                                 ),
@@ -842,7 +848,7 @@ def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
             change_host_tags_in_folders(operation, mode, watolib.Folder.root_folder())
 
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \
-               (len(affected_folders), len(affected_hosts), len(affected_rulesets))
+            (len(affected_folders), len(affected_hosts), len(affected_rulesets))
 
     message = HTML()
     affected_folders, affected_hosts, affected_rulesets = \

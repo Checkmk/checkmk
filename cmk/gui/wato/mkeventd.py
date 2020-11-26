@@ -1246,7 +1246,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             entries=[
                 PageMenuEntry(
                     title=_("Reset counters"),
-                    icon_name="resetcounters",
+                    icon_name="reload_cmk",
                     item=make_simple_link(
                         make_confirm_link(
                             url=make_action_link([("mode", "mkeventd_rule_packs"),
@@ -2889,7 +2889,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
     if mode_name != "mkeventd_rule_packs":
         yield PageMenuEntry(
             title=_("Rule packs"),
-            icon_name="event",
+            icon_name="event_console",
             item=make_simple_link(makeuri_contextless(
                 request,
                 [("mode", "mkeventd_rule_packs")],

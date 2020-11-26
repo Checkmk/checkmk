@@ -561,7 +561,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Hosts"),
-            icon_name="host",
+            icon_name="folder",
             item=make_simple_link(
                 makeuri_contextless(
                     request,

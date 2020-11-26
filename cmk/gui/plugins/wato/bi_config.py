@@ -574,9 +574,11 @@ class ModeBIRules(ABCBIMode):
 
         if self._view_type == "list":
             unused_rules_title = _("Show only unused rules")
+            unused_rules_emblem: _Optional[str] = "warning"
             unused_rules_url = self.url_to_pack([("mode", "bi_rules")], self.bi_pack)
         else:
             unused_rules_title = _("Show all rules")
+            unused_rules_emblem = None
             unused_rules_url = self.url_to_pack([("mode", "bi_rules"), ("view", "unused")],
                                                 self.bi_pack)
 
@@ -647,7 +649,10 @@ class ModeBIRules(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=unused_rules_title,
-                                    icon_name="unusedbirules",
+                                    icon_name={
+                                        "icon": "bi_rules",
+                                        "emblem": unused_rules_emblem
+                                    },
                                     item=make_simple_link(unused_rules_url),
                                 ),
                             ],
@@ -832,7 +837,7 @@ class ModeBIRules(ABCBIMode):
                             ],
                         )
                         html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"),
-                                         "bitree")
+                                         "aggr")
 
                     if refs == 0:
                         delete_url = make_confirm_link(

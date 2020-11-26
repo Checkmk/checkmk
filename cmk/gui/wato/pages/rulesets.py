@@ -361,7 +361,10 @@ def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[Pag
 
     yield PageMenuEntry(
         title=_("Used rulesets"),
-        icon_name="usedrulesets",
+        icon_name={
+            "icon": "rulesets",
+            "emblem": "enable",
+        },
         item=make_simple_link(
             watolib.folder_preserving_link([
                 ("mode", "rule_search"),
@@ -375,7 +378,10 @@ def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[Pag
 
     yield PageMenuEntry(
         title=_("Ineffective rules"),
-        icon_name="rulesets_ineffective",
+        icon_name={
+            "icon": "rulesets",
+            "emblem": "disable",
+        },
         item=make_simple_link(
             watolib.folder_preserving_link([
                 ("mode", "rule_search"),
@@ -389,7 +395,10 @@ def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[Pag
 
     yield PageMenuEntry(
         title=_("Deprecated rulesets"),
-        icon_name="rulesets_deprecated",
+        icon_name={
+            "icon": "rulesets",
+            "emblem": "warning",
+        },
         item=make_simple_link(
             watolib.folder_preserving_link([
                 ("mode", "rule_search"),
@@ -498,7 +507,7 @@ class ModeRulesetGroup(ABCRulesetMode):
                 host_name = html.request.get_ascii_input_mandatory("host")
                 yield PageMenuEntry(
                     title=_("Host properties of: %s") % host_name,
-                    icon_name="host",
+                    icon_name="folder",
                     item=make_simple_link(
                         watolib.folder_preserving_link([("mode", "edit_host"),
                                                         ("host", host_name)])),
@@ -526,7 +535,7 @@ class ModeRulesetGroup(ABCRulesetMode):
 def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Predefined conditions"),
-        icon_name="condition",
+        icon_name="predefined_conditions",
         item=make_simple_link(watolib.folder_preserving_link([
             ("mode", "predefined_conditions"),
         ])),
@@ -584,12 +593,12 @@ def _is_deprecated_rulesets_page(search_options):
 
 def _is_ineffective_rules_page(search_options):
     return search_options.get("ruleset_deprecated") is False \
-           and search_options.get("rule_ineffective") is True
+        and search_options.get("rule_ineffective") is True
 
 
 def _is_used_rulesets_page(search_options):
     return search_options.get("ruleset_deprecated") is False \
-            and search_options.get("ruleset_used") is True
+        and search_options.get("ruleset_used") is True
 
 
 @mode_registry.register
@@ -831,7 +840,7 @@ class ModeEditRuleset(WatoMode):
     def page(self):
         if not config.wato_hide_varnames:
             display_varname = '%s["%s"]' % tuple(self._name.split(":")) \
-                    if ':' in self._name else self._name
+                if ':' in self._name else self._name
             html.div(display_varname, class_="varname")
 
         rulesets = watolib.SingleRulesetRecursively(self._name)
@@ -1030,8 +1039,8 @@ class ModeEditRuleset(WatoMode):
                 reason = "%s" % e
 
             value_html = html.render_icon("alert") \
-                       + _("The value of this rule is not valid. ") \
-                       + reason
+                + _("The value of this rule is not valid. ") \
+                + reason
         html.write_html(value_html)
 
         # Comment
@@ -1562,7 +1571,7 @@ class ABCEditRuleMode(WatoMode):
 
     def _success_message(self):
         return _("Edited rule in ruleset \"%s\" in folder \"%s\"") % \
-                 (self._ruleset.title(), self._folder.alias_path())
+            (self._ruleset.title(), self._folder.alias_path())
 
     def _get_explicit_rule_conditions(self):
         vs = self._vs_explicit_conditions()
@@ -2294,5 +2303,5 @@ class ModeNewRule(ABCEditRuleMode):
 
     def _success_message(self):
         return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \
-                 (self._ruleset.title(),
-                  self._folder.alias_path())
+            (self._ruleset.title(),
+             self._folder.alias_path())

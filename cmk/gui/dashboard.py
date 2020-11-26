@@ -867,7 +867,7 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                       entries=[
                           PageMenuEntry(
                               title=_("Filter"),
-                              icon_name="filters",
+                              icon_name="filter",
                               item=PageMenuSidePopup(
                                   visuals.render_filter_form(info_list, mandatory_filters,
                                                              board_context, board["name"],

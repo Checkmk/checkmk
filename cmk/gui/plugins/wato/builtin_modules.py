@@ -1171,7 +1171,7 @@ class MainModuleAgentsWindows(ABCMainModule):
 
     @property
     def icon(self):
-        return "download_agents_windows"
+        return "download_agents"
 
     @property
     def permission(self):
@@ -1205,7 +1205,7 @@ class MainModuleAgentsLinux(ABCMainModule):
 
     @property
     def icon(self):
-        return "download_agents_linux"
+        return "download_agents"
 
     @property
     def permission(self):

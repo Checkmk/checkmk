@@ -11,7 +11,7 @@ import pprint
 import re
 import json
 from enum import Enum, auto
-from typing import Dict, Generator, List, Optional, Union, Any, Iterable, Type, overload
+from typing import Dict, Generator, List, Optional, Union, Any, Iterable, Type, overload, Tuple as _Tuple
 
 from six import ensure_str
 
@@ -356,61 +356,39 @@ class ModeRuleSearch(ABCRulesetMode):
 
 
 def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[PageMenuEntry]:
-    if group is None:
-        return
+    for search_title, search_emblem, search_term in [
+        ("Used rulsets", "enable", "ruleset_used"),
+        ("Ineffective rules", "disable", "rule_ineffective"),
+        ("Deprecated rules", "warning", "ruleset_deprecated"),
+    ]:
 
-    yield PageMenuEntry(
-        title=_("Used rulesets"),
-        icon_name={
-            "icon": "rulesets",
-            "emblem": "enable",
-        },
-        item=make_simple_link(
-            watolib.folder_preserving_link([
-                ("mode", "rule_search"),
-                ("group", group),
-                ("search_p_ruleset_group", DropdownChoice.option_id(group)),
-                ("search_p_ruleset_group_USE", "on"),
-                ("search_p_ruleset_used", DropdownChoice.option_id(True)),
-                ("search_p_ruleset_used_USE", "on"),
-            ])),
-    )
+        uri_params: List[_Tuple[str, Union[None, int, str]]] = [
+            ("mode", "rule_search"),
+            ("search_p_%s" % search_term, DropdownChoice.option_id(True)),
+            ("search_p_%s_USE" % search_term, "on"),
+        ]
 
-    yield PageMenuEntry(
-        title=_("Ineffective rules"),
-        icon_name={
-            "icon": "rulesets",
-            "emblem": "disable",
-        },
-        item=make_simple_link(
-            watolib.folder_preserving_link([
-                ("mode", "rule_search"),
-                ("group", group),
-                ("search_p_ruleset_group", DropdownChoice.option_id(group)),
-                ("search_p_ruleset_group_USE", "on"),
-                ("search_p_rule_ineffective", DropdownChoice.option_id(True)),
-                ("search_p_rule_ineffective_USE", "on"),
-            ])),
-    )
-
-    yield PageMenuEntry(
-        title=_("Deprecated rulesets"),
-        icon_name={
-            "icon": "rulesets",
-            "emblem": "warning",
-        },
-        item=make_simple_link(
-            watolib.folder_preserving_link([
-                ("mode", "rule_search"),
-                ("group", group),
-                ("search_p_ruleset_group", DropdownChoice.option_id(group)),
-                ("search_p_ruleset_group_USE", "on"),
-                ("search_p_ruleset_deprecated", DropdownChoice.option_id(True)),
-                ("search_p_ruleset_deprecated_USE", "on"),
+        if search_term == "ruleset_deprecated":
+            uri_params += [
                 ("search", ""),
                 ("filled_in", "search"),
-            ])),
-    )
+            ]
+
+        if group is not None:
+            uri_params += [
+                ("group", group),
+                ("search_p_ruleset_group", DropdownChoice.option_id(group)),
+                ("search_p_ruleset_group_USE", "on"),
+            ]
+
+        yield PageMenuEntry(
+            title=search_title,
+            icon_name={
+                "icon": "rulesets",
+                "emblem": search_emblem,
+            },
+            item=make_simple_link(watolib.folder_preserving_link(uri_params)),
+        )
 
 
 @mode_registry.register
@@ -528,7 +506,6 @@ class ModeRulesetGroup(ABCRulesetMode):
             self._page_type,
         )
 
-        assert self._group_name is not None
         yield from _page_menu_entries_predefined_searches(self._group_name)
 
 

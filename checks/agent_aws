@@ -52,13 +52,18 @@ def _get_services_config(services):
     return service_args
 
 
-def _get_proxy_args(details):
+def _get_proxy_args_and_secrets(details):
     proxy_args = ["--proxy-host", details["proxy_host"]]
 
-    for entry in ("proxy_port", "proxy_user", "proxy_password"):
-        if entry in details:
-            proxy_args += [f"--{entry.replace('_', '-')}", str(details[entry])]
-    return proxy_args
+    proxy_port = details.get("proxy_port")
+    if proxy_port:
+        proxy_args += ["--proxy-port", str(proxy_port)]
+
+    proxy_secrets = {}
+    for secret in ("proxy_user", "proxy_password"):
+        if secret in details:
+            proxy_secrets[secret] = str(details[secret])
+    return proxy_args, proxy_secrets
 
 
 def agent_aws_arguments(params, hostname, ipaddress):
@@ -69,7 +74,9 @@ def agent_aws_arguments(params, hostname, ipaddress):
     args = []
 
     if "proxy_details" in params:
-        args += _get_proxy_args(params["proxy_details"])
+        proxy_args, proxy_secrets = _get_proxy_args_and_secrets(params["proxy_details"])
+        args += proxy_args
+        secrets.update(proxy_secrets)
 
     if params.get("assume_role"):
         args += ["--assume-role"]

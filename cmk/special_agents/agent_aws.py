@@ -4555,10 +4555,10 @@ def main(sys_argv=None):
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)
-    stdin_args = json.loads(sys.stdin.read() or '{}')
     # secrets can be passed in as a command line argument for testing,
     # BUT the standard method is to pass them via stdin so that they
     # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
     access_key_id = stdin_args.get('access_key_id') or args.access_key_id
     secret_access_key = stdin_args.get('secret_access_key') or args.secret_access_key
 
@@ -4579,15 +4579,16 @@ def main(sys_argv=None):
     hostname = args.hostname
     proxy_config = None
     if args.proxy_host:
-        proxy_config = botocore.config.Config(
-            proxies={
-                'https': _proxy_address(
-                    args.proxy_host,
-                    args.proxy_port,
-                    args.proxy_user,
-                    args.proxy_password,
-                )
-            })
+        proxy_user = stdin_args.get('proxy_user') or args.proxy_user
+        proxy_password = stdin_args.get('proxy_password') or args.proxy_password
+        proxy_config = botocore.config.Config(proxies={
+            'https': _proxy_address(
+                args.proxy_host,
+                args.proxy_port,
+                proxy_user,
+                proxy_password,
+            )
+        })
 
     aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [

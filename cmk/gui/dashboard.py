@@ -1371,10 +1371,10 @@ def page_edit_dashlet():
             ('title',
              TextUnicode(
                  title=_('Custom Title') + '<sup>*</sup>',
-                 help=_(
-                     'Most dashlets have a hard coded default title. For example the view snapin '
-                     'has even a dynamic title which defaults to the real title of the view. If you '
-                     'like to use another title, set it here.'),
+                 help=_('Most dashlets have a hard coded static title and some are aware of '
+                        'its content and set the title dynamically, like the view snapin, which '
+                        'displays the title of the view. If you like to use any other title, '
+                        'set it here.'),
                  size=50,
              )),
             ('title_url',

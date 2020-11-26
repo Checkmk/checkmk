@@ -60,7 +60,8 @@ class NetworkTopologyDashlet(IFrameDashlet):
         return True
 
     def display_title(self):
-        return _("Network topology of site %s") % self._site_id()
+        title = _("Network topology of site %s") % self._site_id()
+        return self._dashlet_spec.get("title", title)
 
     def update(self):
         pass  # Not called at all. This dashlet always opens configured pages (see below)

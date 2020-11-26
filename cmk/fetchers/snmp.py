@@ -101,12 +101,21 @@ class SectionMeta:
     checking: bool
     inventory: bool
     disabled: bool
+    fetch_interval: Optional[int]
 
-    def __init__(self, *, checking: bool, inventory: bool, disabled: bool) -> None:
+    def __init__(
+        self,
+        *,
+        checking: bool,
+        inventory: bool,
+        disabled: bool,
+        fetch_interval: Optional[int],
+    ) -> None:
         # There does not seem to be a way to have kwonly dataclasses.
         self.checking = checking
         self.inventory = inventory
         self.disabled = disabled
+        self.fetch_interval = fetch_interval
 
     def serialize(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)

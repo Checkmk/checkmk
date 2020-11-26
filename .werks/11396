@@ -1,0 +1,15 @@
+Title: All dashlets can have a custom title
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1606397924
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Custom title is part of the general settings for all dashlets, yet this
+title was not used in all dashlets. This werk fixes that.
+
+Checkmk 1.6: Sidebar snapins and network topology
+Checkmk 2.0: Sidebar snapins and linked views

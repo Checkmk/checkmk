@@ -161,7 +161,8 @@ class LinkedViewDashlet(ABCViewDashlet):
         return view_spec
 
     def display_title(self):
-        return visuals.visual_title("view", self._get_view_spec())
+        title = visuals.visual_title("view", self._get_view_spec())
+        return self._dashlet_spec.get("title", title)
 
     def title_url(self):
         view_name = self._dashlet_spec["name"]

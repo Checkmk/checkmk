@@ -181,8 +181,7 @@ SERVICE_STATE = {0: "OK", 1: "WARN", 2: "CRIT"}
 def serialize_service_discovery(host, discovered_services, discovery_state):
     members = {}
     for (table_source, check_type, _checkgroup, item, _discovered_params, _check_params, descr,
-         _service_state, _output, _perfdata, _service_labels,
-         _found_on_nodes) in discovered_services:
+         _service_state, _output, _perfdata, _service_labels) in discovered_services:
 
         if table_source == SERVICE_DISCOVERY_STATES[discovery_state]:
             service_hash = checkbox_id(check_type, item)

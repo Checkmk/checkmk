@@ -135,18 +135,12 @@ class Discovery:
         remove_disabled_rule, add_disabled_rule, saved_services = set(), set(), set()
         apply_changes = False
 
-        use_legacy_set_autochecks_protocol = False
         for (table_source, check_type, _checkgroup, item, discovered_params, _check_params, descr,
-             _state, _output, _perfdata, service_labels,
-             found_on_nodes) in discovery_result.check_table:
-            # Versions >2.0 always provide a found on nodes information
-            # If this information is missing (fallback value is None), the remote system runs on an older version
-            if found_on_nodes is None:
-                use_legacy_set_autochecks_protocol = True
+             _state, _output, _perfdata, service_labels) in discovery_result.check_table:
 
             table_target = self._get_table_target(table_source, check_type, item)
             key = check_type, item
-            value = descr, discovered_params, service_labels, found_on_nodes
+            value = descr, discovered_params, service_labels
 
             if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
                 old_autochecks[key] = value
@@ -235,11 +229,10 @@ class Discovery:
                 self._save_host_service_enable_disable_rules(remove_disabled_rule,
                                                              add_disabled_rule)
                 need_sync = True
-            self._save_services(old_autochecks, autochecks_to_save, need_sync,
-                                use_legacy_set_autochecks_protocol)
+            self._save_services(old_autochecks, autochecks_to_save, need_sync)
 
     def _save_services(self, old_autochecks: SetAutochecksTable, checks: SetAutochecksTable,
-                       need_sync: bool, use_legacy_set_autochecks_protocol) -> None:
+                       need_sync: bool) -> None:
         message = _("Saved check configuration of host '%s' with %d services") % (self._host.name(),
                                                                                   len(checks))
         watolib.add_service_change(
@@ -250,11 +243,7 @@ class Discovery:
             diff_text=watolib.make_diff_text(_make_host_audit_log_object(old_autochecks),
                                              _make_host_audit_log_object(checks)),
         )
-        modified_checks: Any = checks
-        if use_legacy_set_autochecks_protocol:
-            modified_checks = {x: y[1:3] for x, y in checks.items()}
-        check_mk_automation(self._host.site_id(), "set-autochecks", [self._host.name()],
-                            modified_checks)
+        check_mk_automation(self._host.site_id(), "set-autochecks", [self._host.name()], checks)
 
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
         self._save_service_enable_disable_rules(to_enable, value=False)
@@ -443,7 +432,7 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
         return execute_discovery_job(discovery_request)
 
     discovery_result = _get_check_table_from_remote(discovery_request)
-    discovery_result = _add_missing_discovery_result_fields(discovery_result)
+    discovery_result = _add_missing_service_labels(discovery_result)
     return discovery_result
 
 
@@ -465,15 +454,11 @@ def execute_discovery_job(request: StartDiscoveryRequest) -> DiscoveryResult:
     return r
 
 
-def _add_missing_discovery_result_fields(discovery_result: DiscoveryResult) -> DiscoveryResult:
-    # 1.6.0b4 introduced the service labels column which might be missing when
-    # fetching information from remote sites.
+# 1.6.0b4 introduced the service labels column which might be missing when
+# fetching information from remote sites.
+def _add_missing_service_labels(discovery_result: DiscoveryResult) -> DiscoveryResult:
     d = discovery_result._asdict()
     d["check_table"] = [(e + ({},) if len(e) < 11 else e) for e in d["check_table"]]
-
-    # 2.0.0 introduced the found_on_nodes info
-    d["check_table"] = [(e + (None,) if len(e) < 12 else e) for e in d["check_table"]]
-
     return DiscoveryResult(**d)
 
 

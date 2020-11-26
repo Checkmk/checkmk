@@ -226,20 +226,10 @@ def test_automation_try_discovery_host(test_cfg, site):
 
 def test_automation_set_autochecks(test_cfg, site):
     new_items: SetAutochecksTable = {
-        ("df", "xxx"): (
-            "Filesystem xxx",
-            {},
-            {
-                u"xyz": u"123"
-            },
-            [],
-        ),
-        ("uptime", None): (
-            "Uptime",
-            None,
-            {},
-            [],
-        ),
+        ("df", "xxx"): ("Filesystem xxx", {}, {
+            u"xyz": u"123"
+        }),
+        ("uptime", None): ("Uptime", None, {}),
     }
 
     try:
@@ -256,18 +246,10 @@ def test_automation_set_autochecks(test_cfg, site):
         services = [((str(s.check_plugin_name), s.item), s.parameters, s.service_labels.to_dict())
                     for s in data]
         assert sorted(services) == [
-            (
-                ('df', u'xxx'),
-                {},
-                {
-                    u"xyz": u"123"
-                },
-            ),
-            (
-                ('uptime', None),
-                None,
-                {},
-            ),
+            (('df', u'xxx'), {}, {
+                u"xyz": u"123"
+            }),
+            (('uptime', None), None, {}),
         ]
 
         assert site.file_exists("var/check_mk/autochecks/blablahost.mk")

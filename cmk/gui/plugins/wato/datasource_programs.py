@@ -872,7 +872,7 @@ def _valuespec_generic_metrics_prometheus():
              )),
         ],
         title=_("Prometheus"),
-        optional_keys=[],
+        optional_keys=["auth_basic"],
     )
 
 

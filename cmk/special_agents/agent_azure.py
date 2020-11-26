@@ -97,7 +97,7 @@ def parse_arguments(argv):
     # REQUIRED
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
-    parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    parser.add_argument("--secret", help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument("--require-tag",
                         default=[],
@@ -849,10 +849,10 @@ def get_mapper(debug, sequential, timeout):
     return async_mapper
 
 
-def main_graph_client(args):
+def main_graph_client(args, secret):
     graph_client = GraphApiClient()
     try:
-        graph_client.login(args.tenant, args.client, args.secret)
+        graph_client.login(args.tenant, args.client, secret)
         write_section_ad(graph_client)
     except Exception as exc:
         if args.debug:
@@ -860,10 +860,11 @@ def main_graph_client(args):
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
-def main_subscription(args, selector, subscription):
+def main_subscription(args, secret, selector, subscription):
     mgmt_client = MgmtApiClient(subscription)
+
     try:
-        mgmt_client.login(args.tenant, args.client, args.secret)
+        mgmt_client.login(args.tenant, args.client, secret)
 
         all_resources = (AzureResource(r) for r in mgmt_client.resources())
 
@@ -897,10 +898,19 @@ def main(argv=None):
         return
     LOGGER.debug("%s", selector)
 
-    main_graph_client(args)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    secret = stdin_args.get('secret') or args.secret
+
+    if not secret:
+        raise RuntimeError('secret is not set')
+
+    main_graph_client(args, secret)
 
     for subscription in args.subscriptions:
-        main_subscription(args, selector, subscription)
+        main_subscription(args, secret, selector, subscription)
 
 
 if __name__ == "__main__":

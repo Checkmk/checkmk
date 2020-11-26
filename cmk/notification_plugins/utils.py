@@ -105,12 +105,19 @@ def format_plugin_output(output):
 
 def html_escape_context(context):
     unescaped_variables = {
+        'CONTACTALIAS',
+        'CONTACTNAME',
+        'CONTACTEMAIL',
         'PARAMETER_INSERT_HTML_SECTION',
         'PARAMETER_BULK_SUBJECT',
         'PARAMETER_HOST_SUBJECT',
         'PARAMETER_SERVICE_SUBJECT',
         'PARAMETER_FROM',
+        'PARAMETER_FROM_ADDRESS',
+        'PARAMETER_FROM_DISPLAY_NAME',
         'PARAMETER_REPLY_TO',
+        'PARAMETER_REPLY_TO_ADDRESS',
+        'PARAMETER_REPLY_TO_DISPLAY_NAME',
     }
     if context.get("SERVICE_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"SERVICEOUTPUT", "LONGSERVICEOUTPUT"}

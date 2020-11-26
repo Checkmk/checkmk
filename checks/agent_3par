@@ -18,6 +18,9 @@ def agent_3par_arguments(params, hostname, ipaddress):
     if "values" in params:
         args += ["--values", ",".join(params["values"])]
 
+    if "port" in params:
+        args += ['-P', '%d' % params['port']]
+
     args.append(ipaddress)
 
     return args

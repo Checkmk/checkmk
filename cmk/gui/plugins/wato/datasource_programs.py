@@ -2115,6 +2115,13 @@ def _valuespec_special_agents_3par():
                     title=_("Password"),
                     allow_empty=False,
                 )),
+                ("port", Integer(
+                    title=_('TCP port number'),
+                    help=_('Port number that 3par is listening on. The default is 8080.'),
+                    default_value=8080,
+                    minvalue=1,
+                    maxvalue=65535,
+                )),
                 ("verify_cert",
                  DropdownChoice(
                      title=_("SSL certificate verification"),

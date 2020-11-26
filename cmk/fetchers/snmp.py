@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import dataclasses
 import logging
 from functools import partial
 from typing import (
@@ -26,11 +27,11 @@ from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
 from cmk.snmplib.type_defs import (
+    BackendSNMPTree,
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
     SNMPSectionContent,
-    BackendSNMPTree,
 )
 
 from . import factory
@@ -94,6 +95,27 @@ class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
         return {"plugin_store": {str(k): v.serialize() for k, v in self.items()}}
 
 
+@dataclasses.dataclass(init=False)
+class SectionMeta:
+    """Metadata for the section names."""
+    checking: bool
+    inventory: bool
+    disabled: bool
+
+    def __init__(self, *, checking: bool, inventory: bool, disabled: bool) -> None:
+        # There does not seem to be a way to have kwonly dataclasses.
+        self.checking = checking
+        self.inventory = inventory
+        self.disabled = disabled
+
+    def serialize(self) -> Dict[str, Any]:
+        return dataclasses.asdict(self)
+
+    @classmethod
+    def deserialize(cls, serialized: Dict[str, Any]) -> "SectionMeta":
+        return cls(**serialized)
+
+
 class SNMPFileCache(ABCFileCache[SNMPRawData]):
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> SNMPRawData:
@@ -116,23 +138,31 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self,
         file_cache: SNMPFileCache,
         *,
-        disabled_sections: Set[SectionName],
-        checking_sections: Set[SectionName],
-        inventory_sections: Set[SectionName],
+        sections: Dict[SectionName, SectionMeta],
         on_error: str,
         missing_sys_description: bool,
         do_status_data_inventory: bool,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.helper.snmp"))
-        self.disabled_sections: Final = disabled_sections
-        self.checking_sections: Final = checking_sections
-        self.inventory_sections: Final = inventory_sections
+        self.sections: Final = sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.snmp_config: Final = snmp_config
         self._backend = factory.backend(self.snmp_config, self._logger)
+
+    @property
+    def disabled_sections(self) -> Set[SectionName]:
+        return {name for name, meta in self.sections.items() if meta.disabled}
+
+    @property
+    def checking_sections(self) -> Set[SectionName]:
+        return {name for name, meta in self.sections.items() if meta.checking}
+
+    @property
+    def inventory_sections(self) -> Set[SectionName]:
+        return {name for name, meta in self.sections.items() if meta.inventory}
 
     @classmethod
     def _from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
@@ -146,9 +176,10 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
         return cls(
             file_cache=SNMPFileCache.from_json(serialized.pop("file_cache")),
-            disabled_sections={SectionName(name) for name in serialized["disabled_sections"]},
-            checking_sections={SectionName(name) for name in serialized["checking_sections"]},
-            inventory_sections={SectionName(name) for name in serialized["inventory_sections"]},
+            sections={
+                SectionName(s): SectionMeta.deserialize(m)
+                for s, m in serialized["sections"].items()
+            },
             on_error=serialized["on_error"],
             missing_sys_description=serialized["missing_sys_description"],
             do_status_data_inventory=serialized["do_status_data_inventory"],
@@ -158,9 +189,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
-            "disabled_sections": [str(s) for s in self.disabled_sections],
-            "checking_sections": [str(s) for s in self.checking_sections],
-            "inventory_sections": [str(s) for s in self.inventory_sections],
+            "sections": {str(s): m.serialize() for s, m in self.sections.items()},
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
             "do_status_data_inventory": self.do_status_data_inventory,

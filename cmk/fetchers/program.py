@@ -137,5 +137,5 @@ class ProgramFetcher(AgentFetcher):
             raise MKFetcherError("Program '%s' not found (exit code 127)" % ensure_str(exepath))
         if self._process.returncode:
             raise MKFetcherError("Agent exited with code %d: %s" %
-                                 (self._process.returncode, ensure_str(stderr)))
+                                 (self._process.returncode, ensure_str(stderr).strip()))
         return stdout

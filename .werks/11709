@@ -1,0 +1,20 @@
+Title: New Inline SNMP Backend
+Class: feature
+Compatible: compat
+Component: inline-snmp
+Date: 1606398155
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i2
+
+We introduce a new SNMP Backend now called Inline SNMP Backend.
+If you are using the Enterprise Edition it is active by default.
+
+This new Backend supersedes the old Inline SNMP Backend which used the
+NetSNMP Python Bindings, now we use the PySNMP library.
+
+Note: The old Inline SNMP Backend is still available and can be selected
+via "Inline (legacy)" but please inform us if you have issues with the new
+Backend so we can resolve them. The Legacy Inline SNMP Backend will be
+removed sooner or later.

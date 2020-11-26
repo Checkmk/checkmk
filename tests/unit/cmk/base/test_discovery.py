@@ -211,6 +211,7 @@ def service_table() -> discovery.ServicesTable:
                 "Test Description New Item 1",
                 {},
             ),
+            [],
         ),
         (CheckPluginName("check_plugin_name"), "New Item 2"): (
             "new",
@@ -220,6 +221,7 @@ def service_table() -> discovery.ServicesTable:
                 "Test Description New Item 2",
                 {},
             ),
+            [],
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
             "vanished",
@@ -229,6 +231,7 @@ def service_table() -> discovery.ServicesTable:
                 "Test Description Vanished Item 1",
                 {},
             ),
+            [],
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
             "vanished",
@@ -238,6 +241,7 @@ def service_table() -> discovery.ServicesTable:
                 "Test Description Vanished Item 2",
                 {},
             ),
+            [],
         ),
     }
 
@@ -246,31 +250,43 @@ def service_table() -> discovery.ServicesTable:
 def grouped_services() -> discovery.ServicesByTransition:
     return {
         "new": [
-            discovery.Service(
-                CheckPluginName("check_plugin_name"),
-                "New Item 1",
-                "Test Description New Item 1",
-                {},
+            autochecks.ServiceWithNodesInfo(
+                discovery.Service(
+                    CheckPluginName("check_plugin_name"),
+                    "New Item 1",
+                    "Test Description New Item 1",
+                    {},
+                ),
+                [],
             ),
-            discovery.Service(
-                CheckPluginName("check_plugin_name"),
-                "New Item 2",
-                "Test Description New Item 2",
-                {},
+            autochecks.ServiceWithNodesInfo(
+                discovery.Service(
+                    CheckPluginName("check_plugin_name"),
+                    "New Item 2",
+                    "Test Description New Item 2",
+                    {},
+                ),
+                [],
             ),
         ],
         "vanished": [
-            discovery.Service(
-                CheckPluginName("check_plugin_name"),
-                "Vanished Item 1",
-                "Test Description Vanished Item 1",
-                {},
+            autochecks.ServiceWithNodesInfo(
+                discovery.Service(
+                    CheckPluginName("check_plugin_name"),
+                    "Vanished Item 1",
+                    "Test Description Vanished Item 1",
+                    {},
+                ),
+                [],
             ),
-            discovery.Service(
-                CheckPluginName("check_plugin_name"),
-                "Vanished Item 2",
-                "Test Description Vanished Item 2",
-                {},
+            autochecks.ServiceWithNodesInfo(
+                discovery.Service(
+                    CheckPluginName("check_plugin_name"),
+                    "Vanished Item 2",
+                    "Test Description Vanished Item 2",
+                    {},
+                ),
+                [],
             ),
         ],
     }
@@ -391,7 +407,7 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
     service_filters = discovery.get_service_filter_funcs(params)
 
     new_item_names = [
-        entry.item or "" for entry in discovery._get_post_discovery_services(
+        entry.service.item or "" for entry in discovery._get_post_discovery_services(
             "hostname",
             grouped_services,
             service_filters,

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Caring about persistance of the discovered services (aka autochecks)"""
 
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union, NamedTuple
 import sys
 from pathlib import Path
 
@@ -39,6 +39,9 @@ ComputeCheckParameters = Callable[
 GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
+
+ServiceWithNodesInfo = NamedTuple("ServiceWithNodesInfo", [("service", Service),
+                                                           ("found_on_nodes", List[HostName])])
 
 
 class AutochecksManager:
@@ -325,17 +328,21 @@ def _parse_discovered_service_label_from_dict(dict_service_labels: Dict) -> Disc
     return labels
 
 
-def set_autochecks_of_real_hosts(hostname: HostName, new_services: Sequence[Service],
+def set_autochecks_of_real_hosts(hostname: HostName,
+                                 new_services_with_nodes: Sequence[ServiceWithNodesInfo],
                                  service_description: GetServiceDescription) -> None:
     new_autochecks: List[Service] = []
 
     # write new autochecks file, but take parameters from existing ones
     # for those checks which are kept
+    new_services = [x[0].id() for x in new_services_with_nodes]
     for existing_service in parse_autochecks_file(hostname, service_description):
-        if existing_service in new_services:
+        if existing_service.id() in new_services:
             new_autochecks.append(existing_service)
 
-    for discovered_service in new_services:
+    for discovered_service, found_on_nodes in new_services_with_nodes:
+        if hostname not in found_on_nodes:
+            continue
         if discovered_service not in new_autochecks:
             new_autochecks.append(discovered_service)
 
@@ -347,7 +354,7 @@ def set_autochecks_of_real_hosts(hostname: HostName, new_services: Sequence[Serv
 
 
 def set_autochecks_of_cluster(nodes: List[HostName], hostname: HostName,
-                              new_services: Sequence[Service],
+                              new_services_with_nodes: Sequence[ServiceWithNodesInfo],
                               host_of_clustered_service: HostOfClusteredService,
                               service_description: GetServiceDescription) -> None:
     """A Cluster does not have an autochecks file. All of its services are located
@@ -359,7 +366,9 @@ def set_autochecks_of_cluster(nodes: List[HostName], hostname: HostName,
             if hostname != host_of_clustered_service(node, existing_service.description):
                 new_autochecks.append(existing_service)
 
-        for discovered_service in new_services:
+        for discovered_service, found_on_nodes in new_services_with_nodes:
+            if node not in found_on_nodes:
+                continue
             new_autochecks.append(discovered_service)
 
         new_autochecks = _remove_duplicate_autochecks(new_autochecks)

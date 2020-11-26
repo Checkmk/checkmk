@@ -86,16 +86,17 @@ from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
     ServiceLabel,
 )
+from cmk.base.autochecks import ServiceWithNodesInfo
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
 
-ServicesTable = Dict[ServiceID, Tuple[str, Service]]
-ServicesByTransition = Dict[str, List[Service]]
+ServicesTable = Dict[ServiceID, Tuple[str, Service, List[HostName]]]
+ServicesByTransition = Dict[str, List[ServiceWithNodesInfo]]
 
 CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
-                          List[MetricTuple], Dict[str, str]]
+                          List[MetricTuple], Dict[str, str], List[HostName]]
 CheckPreviewTable = List[CheckPreviewEntry]
 ServiceFilter = Callable[[HostName, Service], bool]
 ServiceFilters = NamedTuple("ServiceFilters", [
@@ -580,8 +581,9 @@ def discover_on_host(
                                                     mode)
         host_config.set_autochecks(new_services)
 
-        result.diff_text = make_object_diff(_make_services_audit_log_object(old_services),
-                                            _make_services_audit_log_object(new_services))
+        result.diff_text = make_object_diff(
+            _make_services_audit_log_object([x.service for x in old_services]),
+            _make_services_audit_log_object([x.service for x in new_services]))
 
     except MKTimeout:
         raise  # let general timeout through
@@ -610,7 +612,7 @@ def _get_post_discovery_services(
     service_filters: ServiceFilters,
     result: DiscoveryResult,
     mode: str,
-) -> List[Service]:
+) -> List[ServiceWithNodesInfo]:
     """
     The output contains a selction of services in the states "new", "old", "ignored", "vanished"
     (depending on the value of `mode`) and "clusterd_".
@@ -622,8 +624,8 @@ def _get_post_discovery_services(
         Discovered checks that are shadowed by manual checks will vanish that way.
 
     """
-    post_discovery_services: List[Service] = []
-    for check_source, discovered_services in services.items():
+    post_discovery_services: List[ServiceWithNodesInfo] = []
+    for check_source, discovered_services_with_nodes in services.items():
         if check_source in ("custom", "legacy", "active", "manual"):
             # This is not an autocheck or ignored and currently not
             # checked. Note: Discovered checks that are shadowed by manual
@@ -632,32 +634,37 @@ def _get_post_discovery_services(
 
         if check_source == "new":
             if mode in ("new", "fixall", "refresh"):
-                new = [s for s in discovered_services if service_filters.new(hostname, s)]
+                new = [
+                    s for s in discovered_services_with_nodes
+                    if service_filters.new(hostname, s.service)
+                ]
                 result.self_new += len(new)
                 post_discovery_services.extend(new)
             continue
 
         if check_source in ("old", "ignored"):
             # keep currently existing valid services in any case
-            post_discovery_services.extend(discovered_services)
-            result.self_kept += len(discovered_services)
+            post_discovery_services.extend(discovered_services_with_nodes)
+            result.self_kept += len(discovered_services_with_nodes)
             continue
 
         if check_source == "vanished":
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
-            for service in discovered_services:
-                if mode in ("fixall", "remove") and service_filters.vanished(hostname, service):
+            for entry in discovered_services_with_nodes:
+                if mode in ("fixall", "remove") and service_filters.vanished(
+                        hostname, entry.service):
                     result.self_removed += 1
                 else:
-                    post_discovery_services.append(service)
+                    post_discovery_services.append(entry)
                     result.self_kept += 1
             continue
 
         if check_source.startswith("clustered_"):
             # Silently keep clustered services
-            post_discovery_services.extend(discovered_services)
-            setattr(result, check_source, getattr(result, check_source) + len(discovered_services))
+            post_discovery_services.extend(discovered_services_with_nodes)
+            setattr(result, check_source,
+                    getattr(result, check_source) + len(discovered_services_with_nodes))
             continue
 
         raise MKGeneralException("Unknown check source '%s'" % check_source)
@@ -825,7 +832,7 @@ def _check_service_lists(
         affected_check_plugin_names: Counter[CheckPluginName] = Counter()
         unfiltered = False
 
-        for discovered_service in services_by_transition.get(transition, []):
+        for (discovered_service, _found_on_nodes) in services_by_transition.get(transition, []):
             affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
             if not unfiltered and service_filter(hostname, discovered_service):
@@ -857,7 +864,7 @@ def _check_service_lists(
         else:
             infotexts.append(u"no %s services found" % title)
 
-    for discovered_service in services_by_transition.get("ignored", []):
+    for (discovered_service, _found_on_nodes) in services_by_transition.get("ignored", []):
         long_infotexts.append(
             u"ignored: %s: %s" %
             (discovered_service.check_plugin_name, discovered_service.description))
@@ -1578,12 +1585,12 @@ def _get_node_services(
 
     config_cache = config.get_config_cache()
     # Identify clustered services
-    for check_source, service in services.values():
+    for check_source, service, found_on_nodes in services.values():
         clustername = config_cache.host_of_clustered_service(hostname, service.description)
         if hostname != clustername:
             if config.service_ignored(clustername, service.check_plugin_name, service.description):
                 check_source = "ignored"
-            services[service.id()] = ("clustered_" + check_source, service)
+            services[service.id()] = ("clustered_" + check_source, service, found_on_nodes)
 
     return services, host_label_discovery_result
 
@@ -1608,12 +1615,12 @@ def _get_discovered_services(
     # Create a dict from check_plugin_name/item to check_source/paramstring
     services: ServicesTable = {}
     for discovered_service in discovered_services:
-        services.setdefault(discovered_service.id(), ("new", discovered_service))
+        services.setdefault(discovered_service.id(), ("new", discovered_service, [hostname]))
 
     # Match with existing items -> "old" and "vanished"
     for existing_service in autochecks.parse_autochecks_file(hostname, config.service_description):
         check_source = "vanished" if existing_service.id() not in services else "old"
-        services[existing_service.id()] = check_source, existing_service
+        services[existing_service.id()] = check_source, existing_service, [hostname]
 
     return services, host_label_discovery_result
 
@@ -1630,7 +1637,7 @@ def _merge_manual_services(
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = check_table.get_check_table(hostname, skip_autochecks=True)
     for service in manual_items.values():
-        services[service.id()] = ('manual', service)
+        services[service.id()] = ('manual', service, [hostname])
 
     # Add custom checks -> "custom"
     for entry in host_config.custom_checks:
@@ -1642,6 +1649,7 @@ def _merge_manual_services(
                 description=entry['service_description'],
                 parameters=None,
             ),
+            [hostname],
         )
 
     # Similar for 'active_checks', but here we have parameters
@@ -1656,10 +1664,11 @@ def _merge_manual_services(
                     description=descr,
                     parameters=params,
                 ),
+                [hostname],
             )
 
     # Handle disabled services -> "ignored"
-    for check_source, discovered_service in services.values():
+    for check_source, discovered_service, _found_on_nodes in services.values():
         if check_source in ["legacy", "active", "custom"]:
             # These are ignored later in get_check_preview
             # TODO: This needs to be cleaned up. The problem here is that service_description() can not
@@ -1669,16 +1678,17 @@ def _merge_manual_services(
 
         if config.service_ignored(hostname, discovered_service.check_plugin_name,
                                   discovered_service.description):
-            services[discovered_service.id()] = ("ignored", discovered_service)
+            services[discovered_service.id()] = ("ignored", discovered_service, [hostname])
 
     return _group_by_transition(services.values())
 
 
 def _group_by_transition(
-        transition_services: Iterable[Tuple[str, Service]]) -> ServicesByTransition:
+        transition_services: Iterable[Tuple[str, Service, List[HostName]]]) -> ServicesByTransition:
     services_by_transition: ServicesByTransition = {}
-    for transition, service in transition_services:
-        services_by_transition.setdefault(transition, []).append(service)
+    for transition, service, found_on_nodes in transition_services:
+        services_by_transition.setdefault(transition,
+                                          []).append(ServiceWithNodesInfo(service, found_on_nodes))
     return services_by_transition
 
 
@@ -1709,29 +1719,37 @@ def _get_cluster_services(
             discovery_parameters,
         )
         cluster_host_labels.update(host_label_discovery_result.labels)
-        for check_source, discovered_service in services.values():
+        for check_source, discovered_service, found_on_nodes in services.values():
             if host_config.hostname != config_cache.host_of_clustered_service(
                     node, discovered_service.description):
                 continue  # not part of this host
 
             if discovered_service.id() not in cluster_items:
-                cluster_items[discovered_service.id()] = (check_source, discovered_service)
+                cluster_items[discovered_service.id()] = (check_source, discovered_service,
+                                                          found_on_nodes)
                 continue
 
-            first_check_source, first_discovered_service = cluster_items[discovered_service.id()]
+            first_check_source, first_discovered_service, nodes_with_service = cluster_items[
+                discovered_service.id()]
+            if node not in nodes_with_service:
+                nodes_with_service.append(node)
+
             if first_check_source == "old":
                 continue
 
             if check_source == "old":
-                cluster_items[discovered_service.id()] = (check_source, discovered_service)
+                cluster_items[discovered_service.id()] = (check_source, discovered_service,
+                                                          nodes_with_service)
                 continue
 
             if first_check_source == "vanished" and check_source == "new":
-                cluster_items[discovered_service.id()] = ("old", first_discovered_service)
+                cluster_items[discovered_service.id()] = ("old", first_discovered_service,
+                                                          nodes_with_service)
                 continue
 
             if check_source == "vanished" and first_check_source == "new":
-                cluster_items[discovered_service.id()] = ("old", discovered_service)
+                cluster_items[discovered_service.id()] = ("old", discovered_service,
+                                                          nodes_with_service)
                 continue
 
             # In all other cases either both must be "new" or "vanished" -> let it be
@@ -1808,8 +1826,8 @@ def get_check_preview(
     )
 
     table: CheckPreviewTable = []
-    for check_source, services in grouped_services.items():
-        for service in services:
+    for check_source, services_with_nodes in grouped_services.items():
+        for service, found_on_nodes in services_with_nodes:
             plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
             params = _preview_params(host_name, service, plugin, check_source)
 
@@ -1847,6 +1865,7 @@ def get_check_preview(
                 output,
                 perfdata,
                 service.service_labels.to_dict(),
+                found_on_nodes,
             ))
 
     return table, host_label_discovery_result.labels

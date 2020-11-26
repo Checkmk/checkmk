@@ -619,7 +619,7 @@ class DiscoveryPageRenderer:
 
     def _show_check_row(self, table, discovery_result, request, check, show_bulk_actions):
         (table_source, check_type, checkgroup, item, _discovered_params, check_params, descr, state,
-         output, _perfdata, service_labels) = check
+         output, _perfdata, service_labels, _found_on_nodes) = check
 
         statename = short_service_state_name(state, "")
         if statename == "":
@@ -758,7 +758,7 @@ class DiscoveryPageRenderer:
             button_classes.append("disabled")
 
         (table_source, check_type, checkgroup, item, _discovered_params, _check_params, descr,
-         _state, _output, _perfdata, _service_labels) = check
+         _state, _output, _perfdata, _service_labels, _found_on_nodes) = check
         checkbox_name = checkbox_id(check_type, item)
 
         num_buttons = 0

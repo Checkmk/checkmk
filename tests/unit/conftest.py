@@ -3,7 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import copy
 import socket
 import shutil
@@ -23,6 +22,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.default_permissions
 
 # No stub file
+from cmk.gui.plugins.openapi.livestatus_helpers.testing import mock_livestatus
 from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
 # No stub file
 from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
@@ -199,7 +199,7 @@ def prevent_livestatus_connect(monkeypatch):
 
 
 @pytest.fixture(name="mock_livestatus")
-def _mock_livestatus(mocker, monkeypatch):
+def _mock_livestatus():
     """Mock LiveStatus by patching MultiSiteConnection
 
     Use it like this:
@@ -217,21 +217,5 @@ def _mock_livestatus(mocker, monkeypatch):
 
 
     """
-    # Local import to have faster pytest initialization
-    from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection  # pylint: disable=bad-option-value,import-outside-toplevel
-    live = MockLiveStatusConnection()
-
-    def enabled_and_disabled_sites(user):
-        return {'NO_SITE': {'socket': 'unix:'}}, {}
-
-    mocker.patch("cmk.gui.sites._get_enabled_and_disabled_sites", new=enabled_and_disabled_sites)
-    mocker.patch("livestatus.MultiSiteConnection.set_prepend_site", new=live.set_prepend_site)
-    mocker.patch("livestatus.MultiSiteConnection.query_non_parallel", new=live.query_non_parallel)
-    mocker.patch("livestatus.MultiSiteConnection.query_parallel", new=live.query_parallel)
-    mocker.patch("livestatus.SingleSiteConnection._create_socket")
-    mocker.patch("livestatus.SingleSiteConnection.do_query", new=live.do_query)
-    mocker.patch("livestatus.SingleSiteConnection.do_command", new=live.do_command)
-
-    monkeypatch.setenv('OMD_ROOT', '/')
-
-    return live
+    with mock_livestatus(with_context=False) as live:
+        yield live

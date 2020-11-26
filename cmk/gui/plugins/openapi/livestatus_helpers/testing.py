@@ -15,15 +15,32 @@ import operator
 import os
 import re
 import time
-from typing import Any, Callable, Dict, Generator, List, Literal, Optional, Tuple, Union
-
+from typing import (
+    Any,
+    Callable,
+    ContextManager,
+    Dict,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+)
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package
 # TODO: Multi-site support. Need to have multiple lists of queries, one per site.
 from unittest import mock
 
+from werkzeug.test import EnvironBuilder
+
+from livestatus import MultiSiteConnection
+
+from cmk.gui import http, sites
+from cmk.gui.globals import AppContext, RequestContext
+
 FilterFunc = Callable[[Dict[str, Any]], bool]
-MatchType = Literal["strict", "ellipsis"]
+MatchType = Literal["strict", "ellipsis", "loose"]
 OperatorFunc = Callable[[Any, Any], bool]
 Response = List[List[Any]]
 
@@ -59,22 +76,20 @@ class MockLiveStatusConnection:
             ...         .expect_query("GET hosts\\nColumns: name")
             ...         .expect_query("GET services\\nColumns: description"))
             >>> with live(expect_status_query=False):
-            ...     live.query_non_parallel("GET hosts\\nColumns: name", '')
-            ...     live.query_non_parallel("GET services\\nColumns: description",
-            ...                             'ColumnHeaders: on')
-            [['heute'], ['example.com']]
+            ...     live.send_command("GET hosts\\nColumns: name")  # returns nothing!
+            ...     live.recv_response("GET services\\nColumns: description\\nColumnHeaders: on")
             [['description'], ['Memory'], ['CPU load'], ['CPU load']]
+
 
         This test will pass as well (useful in real GUI or REST-API calls):
 
             >>> live = MockLiveStatusConnection()
             >>> with live:
-            ...     response = live.query_non_parallel(
-            ...         ('GET status\\n'
-            ...          'Cache: reload\\n'
-            ...          'Columns: livestatus_version program_version program_start '
-            ...          'num_hosts num_services'),
-            ...         ''
+            ...     response = live.recv_response(
+            ...         'GET status\\n'
+            ...         'Cache: reload\\n'
+            ...         'Columns: livestatus_version program_version program_start '
+            ...         'num_hosts num_services'
             ...     )
             ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 36]]
             ...     assert len(response) == 1
@@ -95,10 +110,10 @@ program_start num_hosts num_services'
 
             >>> live = MockLiveStatusConnection().expect_query("Hello\\nworld!")
             >>> with live(expect_status_query=False):
-            ...     live.query_non_parallel("Foo\\nbar!", '')
+            ...     live.recv_response("Foo\\nbar!")
             Traceback (most recent call last):
             ...
-            RuntimeError: Expected query:
+            RuntimeError: Expected query (loose):
              * 'Hello\\nworld!'
             Got query:
              * 'Foo\\nbar!'
@@ -107,7 +122,7 @@ program_start num_hosts num_services'
 
             >>> live = MockLiveStatusConnection()
             >>> with live(expect_status_query=False):
-            ...     live.query_non_parallel("Spanish inquisition!", '')
+            ...     live.recv_response("Spanish inquisition!")
             Traceback (most recent call last):
             ...
             RuntimeError: Got unexpected query:
@@ -274,7 +289,7 @@ program_start num_hosts num_services'
     def expect_query(
         self,
         query: Union[str, List[str]],
-        match_type: MatchType = 'strict',
+        match_type: MatchType = 'loose',
         force_pos: Optional[int] = None,
     ) -> 'MockLiveStatusConnection':
         """Add a LiveStatus query to be expected by this class.
@@ -304,11 +319,13 @@ program_start num_hosts num_services'
             ValueError: when an unknown `match_type` is given.
 
         """
-        if match_type not in ('strict', 'ellipsis'):
+        if match_type not in ('strict', 'ellipsis', 'loose'):
             raise ValueError(f"match_type {match_type!r} not supported.")
 
         if isinstance(query, list):
             query = '\n'.join(query)
+
+        query = query.rstrip("\n")
 
         table = _table_of_query(query)
         # If the columns are explicitly asked for, we get the columns here.
@@ -342,21 +359,13 @@ program_start num_hosts num_services'
 
         return self
 
-    def _lookup_next_query(self, query, headers: str) -> Response:
+    def _lookup_next_query(self, query: str) -> Response:
         if self._expect_status_query is None:
             raise RuntimeError("Please use MockLiveStatusConnection as a context manager.")
 
-        # We don't want to str() cmk.gui.plugins.openapi.livestatus_helpers.queries.Query because
-        # livestatus.py doesn't support it yet. We want it to crash if we ever get one here.
-        if hasattr(query, 'default_suppressed_exceptions'):
-            query = str(query)
-
-        # TODO: This should be refactored to not be dependent on livestatus.py internal structure
-        header_dict = _unpack_headers(headers)
+        header_dict = _unpack_headers(query)
+        # NOTE: Cache, Localtime, OutputFormat, KeepAlive, ResponseHeader not yet honored
         show_columns = header_dict.pop('ColumnHeaders', 'off')
-        if header_dict:
-            raise RuntimeError("The following headers are not yet supported: "
-                               f"{', '.join(header_dict)}")
 
         if not self._expected_queries:
             raise RuntimeError(f"Got unexpected query:\n" f" * {repr(query)}")
@@ -364,7 +373,7 @@ program_start num_hosts num_services'
         expected_query, columns, response, match_type = self._expected_queries[0]
 
         if not _compare(expected_query, query, match_type):
-            raise RuntimeError(f"Expected query:\n"
+            raise RuntimeError(f"Expected query ({match_type}):\n"
                                f" * {repr(expected_query)}\n"
                                f"Got query:\n"
                                f" * {repr(query)}")
@@ -387,27 +396,14 @@ program_start num_hosts num_services'
     def get_connection(self, site_id: str) -> 'MockLiveStatusConnection':
         return self
 
-    def command(self, command: str, sitename: Optional[str] = 'local') -> None:
-        self.do_command(command)
+    def send_command(self, command: str) -> None:
+        self._lookup_next_query(command)
 
-    def do_command(self, command: str) -> None:
-        self._lookup_next_query(f"COMMAND {command}", '')
+    def recv_response(self, query) -> Response:
+        return self._lookup_next_query(query)
 
     def set_prepend_site(self, prepend_site: bool) -> None:
         self._prepend_site = prepend_site
-
-    def query(self, query, headers='') -> Response:
-        return self._lookup_next_query(query, headers)
-
-    def query_parallel(self, query, headers) -> Response:
-        return self._lookup_next_query(query, headers)
-
-    def query_non_parallel(self, query, headers) -> Response:
-        return self._lookup_next_query(query, headers)
-
-    # SingleSiteConnection
-    def do_query(self, query, add_headers: str = '') -> Response:
-        return self._lookup_next_query(query, add_headers)
 
 
 def _compare(pattern: str, string: str, match_type: MatchType) -> bool:
@@ -432,6 +428,16 @@ def _compare(pattern: str, string: str, match_type: MatchType) -> bool:
         >>> _compare("COMMAND [...] DEL_FOO;", "COMMAND [123] DEL_FOO;", "ellipsis")
         True
 
+        >>> _compare("GET hosts\\nColumns: name",
+        ...          "GET hosts\\nCache: reload\\nColumns: name\\nLocaltime: 12345",
+        ...          'loose')
+        True
+
+        >>> _compare("GET hosts\\nColumns: name",
+        ...          "GET hosts\\nCache: reload\\nColumns: alias name\\nLocaltime: 12345",
+        ...          'loose')
+        False
+
     Args:
         pattern:
             The expected string.
@@ -447,23 +453,71 @@ def _compare(pattern: str, string: str, match_type: MatchType) -> bool:
         A boolean, indicating the match.
 
     """
-    if match_type == 'strict':
+    if match_type == 'loose':
+        # FIXME: Too loose, needs to be more strict.
+        #   "GET hosts" also matches "GET hosts\nColumns: ..." which should not be possible.
+        string_lines = string.splitlines()
+        for line in pattern.splitlines():
+            if line.startswith("Cache: "):
+                continue
+            if line not in string_lines:
+                result = False
+                break
+        else:
+            result = True
+    elif match_type == 'strict':
         result = pattern == string
     elif match_type == 'ellipsis':
         final_pattern = pattern.replace("[", "\\[").replace("...", ".*?")  # non-greedy match
         result = bool(re.match(f"^{final_pattern}$", string))
     else:
-        raise RuntimeError(f"Unsupported match behaviour: {match_type}")
+        raise LookupError(f"Unsupported match behaviour: {match_type}")
 
     return result
 
 
 @contextlib.contextmanager
+def mock_livestatus(with_context=False):
+    def enabled_and_disabled_sites(_user):
+        return {'NO_SITE': {'socket': 'unix:'}}, {}
+
+    live = MockLiveStatusConnection()
+
+    env = EnvironBuilder().get_environ()
+    req = http.Request(env)
+
+    app_context: ContextManager
+    req_context: ContextManager
+    if with_context:
+        app_context = AppContext(None)
+        req_context = RequestContext(req=req)
+    else:
+        app_context = contextlib.nullcontext()
+        req_context = contextlib.nullcontext()
+
+    with app_context, req_context, \
+         mock.patch("cmk.gui.sites._get_enabled_and_disabled_sites",
+                    new=enabled_and_disabled_sites), \
+         mock.patch("livestatus.MultiSiteConnection.set_prepend_site",
+                    new=live.set_prepend_site), \
+         mock.patch("livestatus.MultiSiteConnection.expect_query",
+                    new=live.expect_query, create=True), \
+         mock.patch("livestatus.SingleSiteConnection.recv_response", new=live.recv_response), \
+         mock.patch("livestatus.SingleSiteConnection.send_command", new=live.send_command), \
+         mock.patch("livestatus.SingleSiteConnection.connect"), \
+         mock.patch("livestatus.SingleSiteConnection.disconnect"), \
+         mock.patch("livestatus.SingleSiteConnection.send_query"), \
+         mock.patch.dict(os.environ, {'OMD_ROOT': '/', 'OMD_SITE': 'NO_SITE'}):
+
+        yield live
+
+
+@contextlib.contextmanager
 def simple_expect(
     query='',
-    match_type: MatchType = "ellipsis",
-    expect_status_query=False,
-) -> Generator[MockLiveStatusConnection, None, None]:
+    match_type: MatchType = "loose",
+    expect_status_query=True,
+) -> Generator[MultiSiteConnection, None, None]:
     """A simplified testing context manager.
 
     Args:
@@ -483,15 +537,14 @@ def simple_expect(
     Examples:
 
         >>> with simple_expect("GET hosts") as _live:
-        ...    _ = _live.do_query("GET hosts")
+        ...    _ = _live.query("GET hosts")
 
     """
-    with mock.patch.dict(os.environ, {'OMD_SITE': 'NO_SITE'}):
-        live = MockLiveStatusConnection()
+    with mock_livestatus(with_context=True) as mock_live:
         if query:
-            live.expect_query(query, match_type=match_type)
-        with live(expect_status_query=expect_status_query):
-            yield live
+            mock_live.expect_query(query, match_type=match_type)
+        with mock_live(expect_status_query=expect_status_query):
+            yield sites.live()
 
 
 def evaluate_filter(query: str, result: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -537,7 +590,7 @@ def evaluate_filter(query: str, result: List[Dict[str, Any]]) -> List[Dict[str, 
 
     """
     filters = []
-    for line in query.split("\n"):
+    for line in query.splitlines():
         if line.startswith("Filter:"):
             filters.append(make_filter_func(line))
         elif line.startswith(("And:", "Or:")):
@@ -739,7 +792,7 @@ def _column_of_query(query: str) -> Optional[List[str]]:
         >>> _column_of_query('GET hosts\\nFilter: name = foo')
 
     """
-    for line in query.split("\n"):
+    for line in query.splitlines():
         if line.startswith('Columns:'):
             return line[8:].split()  # len("Columns:") == 8
 
@@ -767,36 +820,43 @@ def _table_of_query(query: str) -> Optional[str]:
         >>> _table_of_query("GET\\n")
 
     """
-    lines = query.split("\n")
+    lines = query.splitlines()
     if lines and lines[0].startswith("GET "):
         return lines[0].split(None, 1)[1]
 
     return None
 
 
-def _unpack_headers(headers: str) -> Dict[str, str]:
+def _unpack_headers(query: str) -> Dict[str, str]:
     r"""Unpack and normalize headers from a string.
 
     Examples:
 
-        >>> _unpack_headers("ColumnHeaders: off")
+        >>> _unpack_headers("GET hosts\nColumnHeaders: off")
         {'ColumnHeaders': 'off'}
 
         >>> _unpack_headers("ColumnHeaders: off\nResponseFormat: fixed16")
         {'ColumnHeaders': 'off', 'ResponseFormat': 'fixed16'}
 
+        >>> _unpack_headers("Foobar!")
+        {}
+
     Args:
-        headers:
-            Headers as a string.
+        query:
+            Query as a string.
 
     Returns:
-        Headers as a dict.
+        Headers of query as a dict.
 
     """
     unpacked = {}
-    for header in headers.split("\n"):
+    for header in query.splitlines():
+        if header.startswith('GET '):
+            continue
+        if ":" not in header:
+            continue
         if not header:
             continue
-        key, value = header.split(":", 1)
+        key, value = header.split(": ", 1)
         unpacked[key] = value.lstrip(" ")
     return unpacked

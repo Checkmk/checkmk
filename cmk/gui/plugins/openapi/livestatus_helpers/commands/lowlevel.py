@@ -33,13 +33,16 @@ def send_command(
     Examples:
 
         >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
-        >>> with simple_expect("COMMAND [...] ADD_HOST_COMMENT") as live:
+        >>> with simple_expect(
+        ...         "COMMAND [...] ADD_HOST_COMMENT", match_type="ellipsis") as live:
         ...      send_command(live, "ADD_HOST_COMMENT", [])
 
-        >>> with simple_expect("COMMAND [...] ADD_HOST_COMMENT;1;2;3") as live:
+        >>> with simple_expect(
+        ...          "COMMAND [...] ADD_HOST_COMMENT;1;2;3", match_type="ellipsis") as live:
         ...      send_command(live, "ADD_HOST_COMMENT", [1, 2, 3])
 
-        >>> with simple_expect("COMMAND [...] ADD_HOST_COMMENT;1;2;3") as live:
+        >>> with simple_expect(
+        ...         "COMMAND [...] ADD_HOST_COMMENT;1;2;3", match_type="ellipsis") as live:
         ...      send_command(live, "ADD_HOST_COMMENT", [object()])
         Traceback (most recent call last):
         ...

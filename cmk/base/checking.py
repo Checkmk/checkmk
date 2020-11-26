@@ -1044,7 +1044,7 @@ def _output_check_result(
         p = ''
         infotext_fmt = "%s"
 
-    console.vverbose(
+    console.verbose(
         "%-20s %s%s" + infotext_fmt + "%s%s\n",
         servicedesc,
         tty.bold,

@@ -6,7 +6,7 @@
 #include "opids.h"
 
 #include <algorithm>
-#include <functional>  // IWYU pragma: keep
+#include <functional>  // IWYU pragma: keep  // CI does not want it
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>

@@ -9,7 +9,7 @@
 #include <regex>
 #include <system_error>
 #include <utility>
-#include <vector>  // IWYU pragma: keep
+#include <vector>
 
 #include "Logger.h"
 

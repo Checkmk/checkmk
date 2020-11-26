@@ -15,7 +15,7 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <sstream>  // IWYU pragma: keep
+#include <sstream>
 #include <string>
 #include <vector>
 

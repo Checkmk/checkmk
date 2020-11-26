@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import pytest  # type: ignore[import]
+
+from cmk_base.data_sources.programs import SpecialAgentConfiguration
 
 pytestmark = pytest.mark.checks
 
@@ -33,22 +36,24 @@ pytestmark = pytest.mark.checks
                     'cloudfront': None,
                 },
             },
-            [
-                "--access-key-id",
-                "strawberry",
-                "--secret-access-key",
-                "strawberry098",
-                "--global-services",
-                "ce",
-                "--services",
-                "cloudfront",
-                "ebs",
-                "ec2",
-                "--ec2-limits",
-                "--ebs-limits",
-                "--hostname",
-                "testhost",
-            ],
+            SpecialAgentConfiguration(
+                [
+                    "--global-services",
+                    "ce",
+                    "--services",
+                    "cloudfront",
+                    "ebs",
+                    "ec2",
+                    "--ec2-limits",
+                    "--ebs-limits",
+                    "--hostname",
+                    "testhost",
+                ],
+                json.dumps({
+                    'access_key_id': 'strawberry',
+                    'secret_access_key': 'strawberry098',
+                },),
+            ),
         ),
     ],
 )

@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import json
+
 
 def _get_tag_options(tag_values, prefix):
     options = []
@@ -68,12 +70,11 @@ def _get_services_config(services):
 
 
 def agent_aws_arguments(params, hostname, ipaddress):
-    args = [
-        "--access-key-id",
-        params["access_key_id"],
-        "--secret-access-key",
-        passwordstore_get_cmdline("%s", params["secret_access_key"]),
-    ]
+    secrets = {
+        "access_key_id": params["access_key_id"],
+        "secret_access_key": passwordstore_get_cmdline("%s", params["secret_access_key"]),
+    }
+    args = []
     regions = params.get("regions")
     if regions:
         args.append("--regions")
@@ -110,7 +111,8 @@ def agent_aws_arguments(params, hostname, ipaddress):
         "--hostname",
         hostname,
     ]
-    return args
+    import cmk_base.data_sources.programs
+    return cmk_base.data_sources.programs.SpecialAgentConfiguration(args, json.dumps(secrets))
 
 
 special_agent_info['aws'] = agent_aws_arguments

@@ -221,3 +221,105 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
             {'group_patterns': [('/banana/*', '')]},
             parsed,
         ))
+
+
+@pytest.mark.parametrize(
+    'info, group_pattern, expected_result',
+    [
+        (
+            [
+                [u"1563288717"],
+                [u'/var/log/syslog', '384', '1465079135'],
+                [u'/var/log/syslog1', '384', '1465079135'],
+            ],
+            {
+                # current format
+                'group_patterns': [('/var/log/sys*', '')]
+            },
+            [
+                (0, 'Count: 2', [('count', 2, None, None)]),
+                (0, 'Size: 768 B', [('size', 768, None, None)]),
+                (0, 'Largest size: 384 B', [('size_largest', 384, None, None)]),
+                (0, 'Smallest size: 384 B', [('size_smallest', 384, None, None)]),
+                (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
+                (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
+                (0, '\nInclude patterns: /var/log/sys*' \
+                    '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B' \
+                    '\n[/var/log/syslog1] Age: 3.1 y, Size: 384 B'),
+            ],
+        ),
+        (
+            [
+                [u"1563288717"],
+                [u'/var/log/syslog', '384', '1465079135'],
+                [u'/var/log/syslog1', '384', '1465079135'],
+            ],
+            {
+                # legacy format
+                'group_patterns': ['/var/log/sys*']
+            },
+            [(0, 'Count: 2', [('count', 2, None, None)]),
+             (0, 'Size: 768 B', [('size', 768, None, None)]),
+             (0, 'Largest size: 384 B', [('size_largest', 384, None, None)]),
+             (0, 'Smallest size: 384 B', [('size_smallest', 384, None, None)]),
+             (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
+             (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
+             (0, '\nInclude patterns: /var/log/sys*' \
+                 '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B' \
+                 '\n[/var/log/syslog1] Age: 3.1 y, Size: 384 B'),
+             ],
+        ),
+        (
+            [
+                [u"1563288717"],
+                [u'/var/log/syslog', '384', '1465079135'],
+                [u'/var/log/syslog1', '384', '1465079135'],
+            ],
+            {},
+            [
+              (3, 'No group pattern found in autocheck. Please rediscover the services ' \
+                  'of this host to get this fixed automatically'),
+            ],
+        ),
+        (
+            [
+                [u"1563288717"],
+            ],
+            {},
+            [
+              (3, 'No group pattern found in autocheck. Please rediscover the services ' \
+                  'of this host to get this fixed automatically'),
+            ],
+        ),
+        (
+            [
+                [u"1563288717"],
+                [u'/var/log/syslog', '384', '1465079135'],
+                [u'/var/log/syslog1', '384', '1465079135'],
+            ],
+            {
+                # current format
+                'group_patterns': [('/var/log/sys*', '/var/log/syslog1')]
+            },
+            [
+                (0, 'Count: 1', [('count', 1, None, None)]),
+                (0, 'Size: 384 B', [('size', 384, None, None)]),
+                (0, 'Largest size: 384 B', [('size_largest', 384, None, None)]),
+                (0, 'Smallest size: 384 B', [('size_smallest', 384, None, None)]),
+                (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
+                (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
+                (0, '\nInclude patterns: /var/log/sys*' \
+                    '\nExclude patterns: /var/log/syslog1' \
+                    '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B'),
+            ],
+        ),
+    ])
+def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
+    fileinfo_groups_check = Check('fileinfo.groups')
+    fileinfo_single_check = Check('fileinfo')
+    assert expected_result == list(
+        fileinfo_groups_check.run_check(
+            'banana',
+            group_pattern,
+            fileinfo_single_check.run_parse(info),
+        ))

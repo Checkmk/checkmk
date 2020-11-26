@@ -1,0 +1,11 @@
+Title: agent_aws: security improvements
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606389324
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i2
+
+Security improvements to the AWS special agent handling of access keys.

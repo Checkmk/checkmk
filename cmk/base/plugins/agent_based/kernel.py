@@ -82,6 +82,7 @@ def parse_kernel(string_table: StringTable) -> Section:
 register.agent_section(
     name="kernel",
     parse_function=parse_kernel,
+    supersedes=['hr_cpu'],
 )
 
 

@@ -7,7 +7,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import cast, Dict, Final, List, Optional, Tuple
+from typing import cast, Dict, Final, List, NamedTuple, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -302,6 +302,11 @@ class AgentSummarizerDefault(AgentSummarizer):
                 (agent_version, expected_version, e))
 
 
+class AgentParserSectionHeader(NamedTuple):
+    name: SectionName
+    options: Dict[str, Optional[str]]
+
+
 class AgentParser(Parser[AgentRawData, AgentHostSections]):
     """A parser for agent data."""
     def __init__(
@@ -359,7 +364,6 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         # handle sections with option persist(...)
         persisted_sections = PersistedSections[AgentSectionContent]({})
         section_content: Optional[AgentSectionContent] = None
-        section_options: Dict[str, Optional[str]] = {}
         separator: Optional[str] = None
         encoding = None
         for line in raw_data.split(b"\n"):
@@ -388,45 +392,44 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     section_content = None
                     continue
 
-                section_name, section_options = AgentParser._parse_section_header(
-                    stripped_line[3:-3])
-
-                if section_name is None:
+                try:
+                    section_header = AgentParser._parse_section_header(stripped_line[3:-3])
+                except ValueError:
                     self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
                     section_content = None
                     continue
-                section_content = host_sections.sections.setdefault(section_name, [])
+                section_content = host_sections.sections.setdefault(section_header.name, [])
 
-                raw_separator = section_options.get("sep")
+                raw_separator = section_header.options.get("sep")
                 if raw_separator is None:
                     separator = None
                 else:
                     separator = chr(int(raw_separator))
 
                 # Split of persisted section for server-side caching
-                raw_persist = section_options.get("persist")
+                raw_persist = section_header.options.get("persist")
                 if raw_persist is not None:
                     until = int(raw_persist)
                     cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = int(until - cached_at)
-                    host_sections.cache_info[section_name] = (cached_at, cache_interval)
+                    host_sections.cache_info[section_header.name] = (cached_at, cache_interval)
                     # pylint does not seem to understand `NewType`... leave the checking up to mypy.
-                    persisted_sections[section_name] = (  # false positive: pylint: disable=E1137
+                    persisted_sections[section_header.name] = (  # false positive: pylint: disable=E1137
                         (cached_at, until, section_content))
 
-                raw_cached = section_options.get("cached")
+                raw_cached = section_header.options.get("cached")
                 if raw_cached is not None:
                     cache_times = list(map(int, raw_cached.split(",")))
-                    host_sections.cache_info[section_name] = cache_times[0], cache_times[1]
+                    host_sections.cache_info[section_header.name] = cache_times[0], cache_times[1]
 
                 # The section data might have a different encoding
-                encoding = section_options.get("encoding")
+                encoding = section_header.options.get("encoding")
 
             elif stripped_line != b'':
                 if section_content is None:
                     continue
 
-                raw_nostrip = section_options.get("nostrip")
+                raw_nostrip = section_header.options.get("nostrip")
                 if raw_nostrip is None:
                     line = stripped_line
 
@@ -438,22 +441,16 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         return host_sections, persisted_sections
 
     @staticmethod
-    def _parse_section_header(
-        headerline: bytes,) -> Tuple[Optional[SectionName], Dict[str, Optional[str]]]:
+    def _parse_section_header(headerline: bytes) -> AgentParserSectionHeader:
         headerparts = ensure_str(headerline).split(":")
-        try:
-            section_name = SectionName(headerparts[0])
-        except ValueError:
-            return None, {}
-
-        section_options: Dict[str, Optional[str]] = {}
+        section_header = AgentParserSectionHeader(SectionName(headerparts[0]), {})
         for option in headerparts[1:]:
             if "(" not in option:
-                section_options[option] = None
+                section_header.options[option] = None
             else:
                 opt_name, opt_part = option.split("(", 1)
-                section_options[opt_name] = opt_part[:-1]
-        return section_name, section_options
+                section_header.options[opt_name] = opt_part[:-1]
+        return section_header
 
     @staticmethod
     def _get_sanitized_and_translated_piggybacked_hostname(

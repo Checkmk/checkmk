@@ -185,9 +185,10 @@ class TestParser:
         ],
     )  # yapf: disable
     def test_section_header_options(self, headerline, section_name, section_options):
-        parsed_name, parsed_options = AgentParser._parse_section_header(headerline)
-        assert parsed_name == section_name
-        assert parsed_options == section_options
+        try:
+            AgentParser._parse_section_header(headerline) == (section_name, section_options)
+        except ValueError:
+            assert section_name is None
 
 
 class StubSummarizer(AgentSummarizer):

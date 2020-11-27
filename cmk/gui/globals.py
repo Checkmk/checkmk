@@ -130,18 +130,20 @@ class RequestContext:
         from cmk.gui.config import LoggedInNobody
         self.user = LoggedInNobody()
 
+        self._prepend_url_filter = _PrependURLFilter()
+        self._web_log_handler: Optional[logging.Handler] = None
+
     def __enter__(self):
         _request_ctx_stack.push(self)
         # TODO: Move this plus the corresponding cleanup code to hooks.
-        self._web_log_handler = logging.getLogger().handlers[0]
-        self._prepend_url_filter = _PrependURLFilter()
         if self._prefix_logs_with_url:
+            self._web_log_handler = logging.getLogger().handlers[0]
             self._web_log_handler.addFilter(self._prepend_url_filter)
 
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        if self._prefix_logs_with_url:
+        if self._web_log_handler is not None:
             self._web_log_handler.removeFilter(self._prepend_url_filter)
 
         # html.finalize needs to be called before popping the stack, because it does

@@ -280,7 +280,7 @@ class ModeRuleSearch(ABCRulesetMode):
     def _rulesets(self):
         if self._group_name == "static":
             return watolib.StaticChecksRulesets()
-        return watolib.NonStaticChecksRulesets()
+        return watolib.AllRulesets()
 
     def _set_title_and_help(self):
         if self._page_type is PageType.DeprecatedRulesets:
@@ -443,7 +443,7 @@ class ModeRulesetGroup(ABCRulesetMode):
     def _rulesets(self):
         if self._group_name == "static":
             return watolib.StaticChecksRulesets()
-        return watolib.NonStaticChecksRulesets()
+        return watolib.AllRulesets()
 
     def _set_title_and_help(self):
         if self._group_name == "static":

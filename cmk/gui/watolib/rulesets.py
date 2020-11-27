@@ -406,17 +406,6 @@ class StaticChecksRulesets(FilteredRulesetCollection):
                 del self._rulesets[name]
 
 
-class NonStaticChecksRulesets(FilteredRulesetCollection):
-    def load(self):
-        super(NonStaticChecksRulesets, self).load()
-        self._remove_static_checks_rulesets()
-
-    def _remove_static_checks_rulesets(self):
-        for name, ruleset in list(self._rulesets.items()):
-            if ruleset.rulespec.main_group_name == "static":
-                del self._rulesets[name]
-
-
 class SearchedRulesets(FilteredRulesetCollection):
     def __init__(self, origin_rulesets, search_options):
         super(SearchedRulesets, self).__init__()

@@ -187,7 +187,6 @@ from cmk.gui.watolib.rulesets import (
     FolderRulesets,
     FilteredRulesetCollection,
     StaticChecksRulesets,
-    NonStaticChecksRulesets,
     SearchedRulesets,
     Ruleset,
     Rule,

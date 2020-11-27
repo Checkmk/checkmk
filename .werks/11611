@@ -1,0 +1,16 @@
+Title: Views columns can now link to dashboards
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1606481949
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i2
+
+View columns can now point their links to context sensitive dashboards.
+This is especially useful when linking from overview dashboards to
+dashboards that visualize information of specific objects.
+
+The Checkmk overview dashboard is the first one using this feature. It
+is now linking to the Checkmk server dashboards.

@@ -140,6 +140,10 @@ class VisualType(metaclass=abc.ABCMeta):
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
 
+    @property
+    def choices(self) -> Choices:
+        return [(k, v["title"]) for k, v in self.permitted_visuals.items()]
+
     def link_from(self, linking_view, linking_view_rows, visual, context_vars):
         """Dynamically show/hide links to other visuals (e.g. reports, dashboards, views) from views
 

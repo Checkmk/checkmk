@@ -1377,10 +1377,10 @@ def view_editor_column_spec(ident, title, ds_name):
                                   "ds_name": ds_name,
                                   "painter_type": painter_type,
                               }),
-            DropdownChoice(
+            CascadingDropdown(
                 title=_('Link'),
-                choices=view_choices,
-                sorted=True,
+                choices=_column_link_choices(),
+                orientation="horizontal",
             ),
             DropdownChoice(
                 title=_('Tooltip'),
@@ -1442,6 +1442,21 @@ def view_editor_column_spec(ident, title, ds_name):
                      )),
                 ],
             ))
+
+
+def _column_link_choices() -> List[CascadingDropdownChoice]:
+    return [
+        (None, _("Do not add a link")),
+        ("views", _("Link to view") + ":", DropdownChoice(
+            choices=view_choices,
+            sorted=True,
+        )),
+        ("dashboards", _("Link to dashboard") + ":",
+         DropdownChoice(
+             choices=visual_type_registry["dashboards"]().choices,
+             sorted=True,
+         )),
+    ]
 
 
 def view_editor_sorter_specs(view):

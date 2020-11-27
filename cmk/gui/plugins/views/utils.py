@@ -1723,8 +1723,7 @@ class Cell:
             self._painter_params = painter_spec[0][1]
             self._custom_title = self._painter_params.get('column_title', None)
 
-        if painter_spec.link_view is not None:
-            self._link_spec = VisualLinkSpec("views", painter_spec.link_view)
+        self._link_spec = painter_spec.link_spec
 
         tooltip_painter_name = painter_spec.tooltip
         if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:

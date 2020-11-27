@@ -61,7 +61,7 @@ PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 class PainterSpec(
         NamedTuple('PainterSpec', [
             ('painter_name', PainterNameSpec),
-            ('link_view', Optional[ViewName]),
+            ('link_spec', Optional[VisualLinkSpec]),
             ('tooltip', Optional[ColumnName]),
             ('join_index', Optional[ColumnName]),
             ('column_title', Optional[str]),
@@ -70,10 +70,20 @@ class PainterSpec(
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
         # in their definitions. Consolidate this case to None.
         value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))
+
+        # With Checkmk 2.0 we introduced the option to link to dashboards. Now the link_view is not
+        # only a string (view_name) anymore, but a tuple of two elemets: ('<visual_type_name>',
+        # '<visual_name>'). Transform the old value to the new format.
+        if isinstance(value[1], str):
+            value = (value[0], VisualLinkSpec("views", value[1])) + value[2:]
+        elif isinstance(value[1], tuple):
+            value = (value[0], VisualLinkSpec(*value[1])) + value[2:]
+
         return super(PainterSpec, cls).__new__(cls, *value)
 
     def __repr__(self):
-        return str(tuple(self))
+        return str((self.painter_name, tuple(self.link_spec) if self.link_spec else None) +
+                   tuple(self)[2:])
 
 
 ViewSpec = Dict[str, Any]

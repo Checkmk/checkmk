@@ -4506,7 +4506,7 @@ multisite_builtin_views['cmk_servers'] = {
                 'colorize_up', 'colorize_down', 'colorize_unreachable', 'colorize_pending',
                 'colorize_downtime'
             ]
-        }), 'host', 'host_addresses'),
+        }), ('dashboards', 'cmk_host'), 'host_addresses'),
         (('inv_software_os_name', {
             'use_short': True
         }), None, None),

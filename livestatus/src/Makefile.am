@@ -269,9 +269,19 @@ compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_
 	@$(MAKE) -nwk $$(echo " $^" | sed 's/ / -W /g') | $(top_srcdir)/scripts/run-pipenv run compiledb
 
 tidy: compile_commands.json
+	@echo clang-tidy-$(CLANG_VERSION) information start ===========================================
+	@which clang-tidy-$(CLANG_VERSION)
+	@clang-tidy-$(CLANG_VERSION) --version
+	@clang-tidy-$(CLANG_VERSION) --extra-arg=-v dummy.cc 1> /dev/null || true
+	@echo clang-tidy-$(CLANG_VERSION) information end =============================================
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)
 
 iwyu: compile_commands.json
+	@echo include-what-you-use information start ====================================
+	@which include-what-you-use
+	@include-what-you-use --version
+	@include-what-you-use -v || true
+	@echo include-what-you-use information end ======================================
 	$(IWYU_TOOL) --output-format=clang -p . $(FILES_TO_CHECK) -- -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 
 # NOTE: cppcheck seems to ignore files on the command line when --project=... is given.  :-P

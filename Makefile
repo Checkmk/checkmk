@@ -510,22 +510,12 @@ compile-neb-cmc-docker:
 	scripts/run-in-docker.sh make compile-neb-cmc
 
 tidy: config.h
-	@echo clang-tidy-$(CLANG_VERSION) information start ===========================================
-	@which clang-tidy-$(CLANG_VERSION)
-	@clang-tidy-$(CLANG_VERSION) --version
-	@clang-tidy-$(CLANG_VERSION) --extra-arg=-v dummy.cc 1> /dev/null || true
-	@echo clang-tidy-$(CLANG_VERSION) information end =============================================
 	$(MAKE) -C livestatus/src tidy
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
 iwyu: config.status
-	@echo include-what-you-use information start ====================================
-	@which include-what-you-use
-	@include-what-you-use --version
-	@include-what-you-use -v || true
-	@echo include-what-you-use information end ======================================
 	$(MAKE) -C livestatus/src iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu

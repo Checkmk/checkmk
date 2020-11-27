@@ -61,4 +61,4 @@ def test_aws_argument_parsing(check_manager, params, expected_args):
     """Tests if all required arguments are present."""
     agent = check_manager.get_special_agent("agent_aws")
     arguments = agent.argument_func(params, "testhost", "address")
-    assert arguments == expected_args
+    assert sorted(arguments) == sorted(expected_args)

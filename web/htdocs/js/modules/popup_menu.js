@@ -420,7 +420,7 @@ function resize_all_mega_menu_popups() {
     }
 }
 
-function resize_mega_menu_popup(menu_popup) {
+export function resize_mega_menu_popup(menu_popup) {
     /* Resize a mega menu to the size of its content. Two cases are considered here:
      *   1) The overview of all topics is opened.
      *   2) The extended menu that shows all items of a topic is opened.
@@ -430,10 +430,12 @@ function resize_mega_menu_popup(menu_popup) {
         return;
     }
 
+    const search_results = menu_popup.getElementsByClassName("hidden").length;
+
     const extended_topic = Array.prototype.slice
         .call(topics)
         .find(e => utils.has_class(e, "extended"));
-    if (!extended_topic) {
+    if (!extended_topic || search_results) {
         const visible_topics = Array.prototype.slice.call(topics).filter(e => utils.is_visible(e));
         if (visible_topics.length === 0) {
             return;
@@ -443,6 +445,18 @@ function resize_mega_menu_popup(menu_popup) {
         // HACK: When the number of columns changes between show more and show less a wrong menu_width is
         // calculated. We reduce the width here so that it is divisibly by the width the topics.
         menu_width -= menu_width % topic.offsetWidth;
+
+        // If we have only a single column, we need a bigger menu width, as the search field and
+        // the more button needs to have enough space
+        if (menu_width / topic.offsetWidth <= 1) {
+            topics.forEach(topic => utils.add_class(topic, "single_column"));
+            utils.add_class(menu_popup, "single_column");
+            menu_popup.style.width = "";
+            return;
+        } else {
+            topics.forEach(topic => utils.remove_class(topic, "single_column"));
+            utils.remove_class(menu_popup, "single_column");
+        }
         menu_popup.style.width = menu_width + "px";
     } else {
         const items = extended_topic.getElementsByTagName("ul")[0];

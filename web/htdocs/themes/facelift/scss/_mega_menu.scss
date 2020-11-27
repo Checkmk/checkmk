@@ -166,6 +166,10 @@
       border-right: $popup-border;
       visibility: hidden;
 
+      &.single_column {
+        width: $single-column-mega-menu;
+      }
+
       a {
         text-decoration: none;
         cursor: pointer;
@@ -222,6 +226,10 @@
           padding: (2 * $spacing) (2 * $spacing) 0;
           border-right: 1px solid $headline-color;
           box-sizing: border-box;
+
+          &.single_column {
+            width: $single-column-mega-menu;
+          }
 
           input[type="button"] {
             cursor: pointer;

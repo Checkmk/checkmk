@@ -92,7 +92,8 @@ class MainMenuRenderer:
     def _get_mega_menu_content(self, menu_item: MainMenuItem) -> str:
         with html.plugged():
             menu = mega_menu_registry[menu_item.name]
-            html.open_div(class_=["popup_menu", "main_menu_popup"])
+            html.open_div(id_="popup_menu_%s" % menu_item.name,
+                          class_=["popup_menu", "main_menu_popup"])
             MegaMenuRenderer().show(menu)
             html.close_div()
             return html.drain()

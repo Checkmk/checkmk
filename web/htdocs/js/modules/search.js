@@ -4,7 +4,7 @@
 
 import {call_ajax} from "ajax";
 import {add_class, remove_class} from "utils";
-import {toggle_popup} from "popup_menu";
+import {toggle_popup, resize_mega_menu_popup} from "popup_menu";
 var g_call_ajax_obj = null;
 
 class Search {
@@ -29,7 +29,10 @@ class Search {
                 "ajax_search_" + this.id + ".py?q=" + encodeURIComponent(this.get_current_input()),
                 {
                     response_handler: Search.handle_search_response,
-                    handler_data: {obj: obj},
+                    handler_data: {
+                        obj: obj,
+                        menu_popup: document.getElementById("popup_menu_" + this.id),
+                    },
                 }
             );
         } else {
@@ -78,6 +81,7 @@ class Search {
             handler_data.obj.innerHTML = "Ajax Call returned non-zero result code.";
         } else {
             handler_data.obj.innerHTML = response.result;
+            resize_mega_menu_popup(handler_data.menu_popup);
         }
         return;
     }
@@ -140,6 +144,7 @@ export function on_click_reset(id) {
         current_search.display_menu_items();
         remove_class(document.getElementById(current_search.clear_id), "clearable");
     }
+    resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
 }
 export function on_key_down(id) {
     let current_search = get_current_search(id);

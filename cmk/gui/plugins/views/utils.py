@@ -1662,16 +1662,14 @@ class Cell:
 
         columns = set(self.painter().columns)
 
-        if self._link_view_name:
-            if self._has_link():
-                link_view = self._link_view()
-                if link_view:
-                    # TODO: Clean this up here
-                    for filt in [
-                            visuals.get_filter(fn)
-                            for fn in visuals.get_single_info_keys(link_view["single_infos"])
-                    ]:
-                        columns.update(filt.link_columns)
+        link_view = self._link_view()
+        if link_view:
+            # TODO: Clean this up here
+            for filt in [
+                    visuals.get_filter(fn)
+                    for fn in visuals.get_single_info_keys(link_view["single_infos"])
+            ]:
+                columns.update(filt.link_columns)
 
         if self.has_tooltip():
             columns.update(self.tooltip_painter().columns)
@@ -1683,9 +1681,6 @@ class Cell:
 
     def join_service(self) -> Optional[ServiceName]:
         return None
-
-    def _has_link(self) -> bool:
-        return self._link_view_name is not None
 
     def _link_view(self) -> Optional[ViewSpec]:
         if self._link_view_name is None:
@@ -1857,7 +1852,7 @@ class Cell:
             return "", ""
 
         # Add the optional link to another view
-        if content and self._has_link() and self._link_view_name is not None:
+        if content and self._link_view_name is not None:
             content = link_to_view(content, row, self._link_view_name)
 
         # Add the optional mouseover tooltip

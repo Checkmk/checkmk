@@ -377,19 +377,19 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
             return self._parsed_sections[cache_key]
 
         try:
-            host_data = self[host_key]
+            host_sections = self[host_key]
         except KeyError:
             return self._parsed_sections.setdefault(cache_key, (None, None))
 
         for section in agent_based_register.get_ranked_sections(
-                host_data.sections,
+                host_sections.sections,
             {parsed_section_name},
         ):
             parsed = self._get_parsing_result(host_key, section)
             if parsed is None:
                 continue
 
-            cache_info = host_data.cache_info.get(section.name)
+            cache_info = host_sections.cache_info.get(section.name)
             return self._parsed_sections.setdefault(cache_key, (parsed, cache_info))
 
         return self._parsed_sections.setdefault(cache_key, (None, None))
@@ -406,12 +406,12 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         superseded raw sections (by setting their parsing result to None).
         """
         applicable_sections: List[SectionPlugin] = []
-        for host_key, host_data in self.items():
+        for host_key, host_sections in self.items():
             if host_key.source_type != source_type:
                 continue
 
             for section in agent_based_register.get_ranked_sections(
-                    host_data.sections,
+                    host_sections.sections,
                     parse_sections,
             ):
                 parsed = self._get_parsing_result(host_key, section)
@@ -421,7 +421,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
                 applicable_sections.append(section)
                 self._parsed_sections[host_key + (section.parsed_section_name,)] = (
                     parsed,
-                    host_data.cache_info.get(section.name),
+                    host_sections.cache_info.get(section.name),
                 )
                 # set result of superseded ones to None:
                 for superseded in section.supersedes:

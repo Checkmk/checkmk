@@ -34,7 +34,6 @@ import psutil  # type: ignore[import]
 import werkzeug.urls
 from six import ensure_binary, ensure_str
 
-import cmk.gui.watolib.utils as utils
 from livestatus import (
     SiteId,
     SiteConfiguration,
@@ -748,7 +747,7 @@ class ActivateChangesManager(ActivateChanges):
             work_dir = cmk.utils.paths.site_config_dir / site_id
 
             site_status = self._get_site_status(site_id, site_config)[0]
-            is_pre_17_site = utils.is_pre_17_remote_site(site_status)
+            is_pre_17_site = cmk.gui.watolib.utils.is_pre_17_remote_site(site_status)
 
             snapshot_components = _get_replication_components(str(work_dir), site_config,
                                                               is_pre_17_site)

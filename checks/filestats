@@ -87,7 +87,7 @@ def check_filestats_count(count, params):
                         human_readable_func=lambda i: "%d" % i)
 
 
-def check_filestats_extremes(files, params, show_all_files=False):
+def check_filestats_extremes(files, params, show_files=False):
     '''common check result - used by main and extremes_only check'''
     if not files:
         return
@@ -109,7 +109,7 @@ def check_filestats_extremes(files, params, show_all_files=False):
                 human_readable_func=hr_function,
             )
 
-        if not show_all_files:
+        if not show_files:
             continue
 
         min_label_levels = (params.get("max%s_%s" % (key, minlabel),
@@ -180,7 +180,8 @@ def check_filestats(_item, params, data):
     if not files:
         return
 
-    show_all_files = bool(params.get('show_all_files', False))
+    # only WARN/CRIT files are shown
+    show_files = bool(params.get('show_all_files', False))
 
     additional_rules = params.get('additional_rules', {})
 
@@ -189,7 +190,13 @@ def check_filestats(_item, params, data):
     for efile in files:
         for file_expression, rules in additional_rules:
             if re.match(file_expression, efile['path']):
-                matching_files.setdefault(file_expression, (rules, []))[1].append(efile)
+                matching_files.setdefault(
+                    file_expression,
+                    {
+                        'rules': rules,
+                        'file_list': [],
+                    },
+                )['file_list'].append(efile)
                 break
         else:
             remaining_files.append(efile)
@@ -197,16 +204,16 @@ def check_filestats(_item, params, data):
     remaining_files_output = yield from check_filestats_extremes(
         remaining_files,
         params,
-        show_all_files,
+        show_files,
     )
 
     additional_rules_output = []
-    for file_expression, (rules, files) in matching_files.items():
-        yield 0, 'Files matching %r: %d' % (file_expression, len(files))
+    for file_expression, file_details in matching_files.items():
+        yield 0, 'Files matching %r: %d' % (file_expression, len(file_details['file_list']))
         output = yield from check_filestats_extremes(
-            files,
-            rules,
-            show_all_files,
+            file_details['file_list'],
+            file_details['rules'],
+            show_files,
         )
         additional_rules_output.append('Files matching %r:' % file_expression)
         additional_rules_output.append('\n'.join(output))

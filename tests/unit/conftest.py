@@ -21,7 +21,6 @@ import cmk.utils.version as cmk_version
 # to have the default permissions loaded before that to fix some implicit dependencies.
 # TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
 import cmk.gui.default_permissions
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 # No stub file
 from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
@@ -223,8 +222,7 @@ def _mock_livestatus(mocker, monkeypatch):
     live = MockLiveStatusConnection()
 
     def enabled_and_disabled_sites(user):
-        config = {'socket': 'unix:'}
-        return {'local': config, 'NO_SITE': config}, {}
+        return {'NO_SITE': {'socket': 'unix:'}}, {}
 
     mocker.patch("cmk.gui.sites._get_enabled_and_disabled_sites", new=enabled_and_disabled_sites)
     mocker.patch("livestatus.MultiSiteConnection.set_prepend_site", new=live.set_prepend_site)

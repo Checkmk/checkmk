@@ -12,6 +12,7 @@ have any friction during testing with these helpers themselves.
 import contextlib
 import datetime as dt
 import operator
+import os
 import re
 import time
 from typing import Any, Callable, Dict, Generator, List, Literal, Optional, Tuple, Union
@@ -19,6 +20,7 @@ from typing import Any, Callable, Dict, Generator, List, Literal, Optional, Tupl
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package
 # TODO: Multi-site support. Need to have multiple lists of queries, one per site.
+from unittest import mock
 
 FilterFunc = Callable[[Dict[str, Any]], bool]
 MatchType = Literal["strict", "ellipsis"]
@@ -385,7 +387,7 @@ program_start num_hosts num_services'
     def get_connection(self, site_id: str) -> 'MockLiveStatusConnection':
         return self
 
-    def command(self, command: str, site: Optional[str] = 'local') -> None:
+    def command(self, command: str, sitename: Optional[str] = 'local') -> None:
         self.do_command(command)
 
     def do_command(self, command: str) -> None:
@@ -484,11 +486,12 @@ def simple_expect(
         ...    _ = _live.do_query("GET hosts")
 
     """
-    live = MockLiveStatusConnection()
-    if query:
-        live.expect_query(query, match_type=match_type)
-    with live(expect_status_query=expect_status_query):
-        yield live
+    with mock.patch.dict(os.environ, {'OMD_SITE': 'NO_SITE'}):
+        live = MockLiveStatusConnection()
+        if query:
+            live.expect_query(query, match_type=match_type)
+        with live(expect_status_query=expect_status_query):
+            yield live
 
 
 def evaluate_filter(query: str, result: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

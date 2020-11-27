@@ -1,0 +1,14 @@
+Title: REST-API: fixed endpoints issuing LiveStatus commands
+Class: fix
+Compatible: compat
+Component: core
+Date: 1606481583
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.0.0i2
+
+The endpoints didn't use the correct site before, so they
+resorted to a default site named "local", which most probably
+doesn't exist. The endpoints now take the correct site to
+send the commands to. No further action is required.

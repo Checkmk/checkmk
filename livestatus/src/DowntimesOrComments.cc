@@ -5,6 +5,7 @@
 
 #include "DowntimesOrComments.h"
 
+#include "DowntimeOrComment.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 

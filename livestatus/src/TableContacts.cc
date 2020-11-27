@@ -24,7 +24,7 @@
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "StringLambdaColumn.h"
-#include "TimeperiodsCache.h"  // IWYU pragma: keep
+#include "TimeperiodsCache.h"
 #include "nagios.h"
 
 extern contact *contact_list;

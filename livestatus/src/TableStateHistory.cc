@@ -32,8 +32,6 @@
 #include "TimeLambdaColumn.h"
 
 #ifdef CMC
-// This seems to be an IWYU bug: If we remove the includes as suggested, we
-// would do a member access on an incomplete type.
 #include "Host.h"     // IWYU pragma: keep
 #include "Service.h"  // IWYU pragma: keep
 #include "Timeperiod.h"

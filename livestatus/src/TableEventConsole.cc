@@ -19,13 +19,17 @@
 #include <utility>
 
 #include "Column.h"
+#include "DoubleLambdaColumn.h"
 #include "EventConsoleConnection.h"
 #include "ListColumn.h"
+#include "ListLambdaColumn.h"
 #include "Logger.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"
+#include "StringLambdaColumn.h"
 #include "StringUtils.h"
+#include "TimeLambdaColumn.h"
 #include "auth.h"
 
 using namespace std::chrono_literals;

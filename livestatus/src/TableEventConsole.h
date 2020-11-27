@@ -14,15 +14,19 @@
 #include <string>
 #include <vector>
 
-#include "DoubleLambdaColumn.h"  // IWYU pragma: keep
-#include "IntLambdaColumn.h"     // IWYU pragma: keep
-#include "ListLambdaColumn.h"    // IWYU pragma: keep
+#include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
-#include "StringLambdaColumn.h"  // IWYU pragma: keep
 #include "Table.h"
-#include "TimeLambdaColumn.h"  // IWYU pragma: keep
 #include "nagios.h"
 class ColumnOffsets;
+template <class T>
+class DoubleLambdaColumn;
+template <class T>
+class ListLambdaColumn;
+template <class T>
+class StringLambdaColumn;
+template <class T>
+class TimeLambdaColumn;
 class Query;
 class Row;
 

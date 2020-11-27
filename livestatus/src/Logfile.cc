@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "LogCache.h"
+#include "LogEntry.h"
 #include "Logger.h"
 
 namespace {

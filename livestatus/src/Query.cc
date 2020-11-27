@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "Aggregator.h"
 #include "AndingFilter.h"
 #include "ChronoUtils.h"
 #include "Column.h"

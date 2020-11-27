@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "FileColumn.h"  // IWYU pragma: keep
+#include "FileColumn.h"
 #include "FileSystemHelper.h"
 
 template <class T>

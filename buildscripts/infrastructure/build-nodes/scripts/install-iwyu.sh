@@ -63,6 +63,8 @@ case $CLANG_VERSION in
 8) TAG_NAME="8.0" LIB_VERSION="8" ;;
 9) TAG_NAME="9.0" LIB_VERSION="9" ;;
 10) TAG_NAME="10" LIB_VERSION="10" ;;
+11) TAG_NAME="11" LIB_VERSION="11" ;;
+12) TAG_NAME="12" LIB_VERSION="12" ;;
 *) failure "Unknown Clang version '${CLANG_VERSION}'" ;;
 esac
 

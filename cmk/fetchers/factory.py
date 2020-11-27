@@ -50,4 +50,7 @@ def backend(snmp_config: SNMPHostConfig,
     if snmp_config.snmp_backend == SNMPBackend.inline:
         return pysnmp_backend.PySNMPBackend(snmp_config, logger)
 
-    return ClassicSNMPBackend(snmp_config, logger)
+    if snmp_config.snmp_backend == SNMPBackend.classic:
+        return ClassicSNMPBackend(snmp_config, logger)
+
+    raise NotImplementedError(f"Unknown SNMP backend: {snmp_config.snmp_backend}")

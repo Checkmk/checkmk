@@ -331,8 +331,8 @@ class ABCTestSNMPFetcher(ABC):
     def file_cache(self):
         raise NotImplementedError()
 
-    @pytest.fixture(name="fetcher")
-    def fetcher_fixture(self, file_cache):
+    @pytest.fixture(autouse=True)
+    def snmp_plugin_fixture(self):
         SNMPFetcher.plugin_store = SNMPPluginStore({
             SectionName("pim"): SNMPPluginStoreItem(
                 trees=[
@@ -365,6 +365,9 @@ class ABCTestSNMPFetcher(ABC):
                 detect_spec=SNMPDetectSpec([[]]),
             ),
         })
+
+    @pytest.fixture(name="fetcher")
+    def fetcher_fixture(self, file_cache):
         return SNMPFetcher(
             file_cache,
             sections={},
@@ -389,6 +392,58 @@ class ABCTestSNMPFetcher(ABC):
             ),
         )
 
+    @pytest.fixture(name="fetcher_inline")
+    def fetcher_inline_fixture(self, file_cache):
+        return SNMPFetcher(
+            file_cache,
+            sections={},
+            on_error="raise",
+            missing_sys_description=False,
+            do_status_data_inventory=False,
+            snmp_config=SNMPHostConfig(
+                is_ipv6_primary=False,
+                hostname="bob",
+                ipaddress="1.2.3.4",
+                credentials="public",
+                port=42,
+                is_bulkwalk_host=False,
+                is_snmpv2or3_without_bulkwalk_host=False,
+                bulk_walk_size_of=0,
+                timing={},
+                oid_range_limits=[],
+                snmpv3_contexts=[],
+                character_encoding=None,
+                is_usewalk_host=False,
+                snmp_backend=SNMPBackend.inline,
+            ),
+        )
+
+    @pytest.fixture(name="fetcher_inline_legacy")
+    def fetcher_inline_legacy_fixture(self, file_cache):
+        return SNMPFetcher(
+            file_cache,
+            sections={},
+            on_error="raise",
+            missing_sys_description=False,
+            do_status_data_inventory=False,
+            snmp_config=SNMPHostConfig(
+                is_ipv6_primary=False,
+                hostname="bob",
+                ipaddress="1.2.3.4",
+                credentials="public",
+                port=42,
+                is_bulkwalk_host=False,
+                is_snmpv2or3_without_bulkwalk_host=False,
+                bulk_walk_size_of=0,
+                timing={},
+                oid_range_limits=[],
+                snmpv3_contexts=[],
+                character_encoding=None,
+                is_usewalk_host=False,
+                snmp_backend=SNMPBackend.inline_legacy,
+            ),
+        )
+
 
 class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
     @pytest.fixture
@@ -401,6 +456,15 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
             simulation=True,
         )
 
+    def test_fetcher_inline_backend_deserialization(self, fetcher_inline):
+        other = type(fetcher_inline).from_json(json_identity(fetcher_inline.to_json()))
+        assert other.snmp_config.snmp_backend == SNMPBackend.inline
+
+    def test_fetcher_inline_legacy_backend_deserialization(self, fetcher_inline_legacy):
+        other = type(fetcher_inline_legacy).from_json(json_identity(
+            fetcher_inline_legacy.to_json()))
+        assert other.snmp_config.snmp_backend == SNMPBackend.inline_legacy
+
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, SNMPFetcher)
@@ -409,6 +473,7 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
         assert other.on_error == fetcher.on_error
         assert other.missing_sys_description == fetcher.missing_sys_description
         assert other.snmp_config == fetcher.snmp_config
+        assert other.snmp_config.snmp_backend == SNMPBackend.classic
 
     def test_fetcher_deserialization_snmpv3_credentials(self, fetcher):
         fetcher.snmp_config = fetcher.snmp_config._replace(credentials=("authNoPriv", "md5", "md5",

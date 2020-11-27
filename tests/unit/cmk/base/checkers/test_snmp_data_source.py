@@ -20,6 +20,7 @@ from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.snmp import SNMPSource
 from cmk.base.checkers.type_defs import NO_SELECTION
+import cmk.utils.version as cmk_version
 
 
 @pytest.fixture(name="mode", params=Mode)
@@ -70,7 +71,8 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
 
 
 def test_description_with_ipaddress(source, monkeypatch):
-    default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Inline)"
+    default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: %s)" % (
+        "Classic" if cmk_version.is_raw_edition() else "Inline")
     assert source.description == default
 
 
@@ -83,7 +85,8 @@ class TestSNMPSource_SNMP:
 
         source = SNMPSource.snmp(hostname, ipaddress, mode=mode, selected_sections=NO_SELECTION)
         assert source.description == (
-            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Inline)")
+            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: %s)" %
+            ("Classic" if cmk_version.is_raw_edition() else "Inline"))
 
 
 class TestSNMPSource_MGMT:
@@ -112,7 +115,8 @@ class TestSNMPSource_MGMT:
         )
         assert source.description == (
             "Management board - SNMP "
-            "(Community: 'public', Bulk walk: no, Port: 161, Backend: Inline)")
+            "(Community: 'public', Bulk walk: no, Port: 161, Backend: %s)" %
+            ("Classic" if cmk_version.is_raw_edition() else "Inline"))
 
 
 class TestSNMPSummaryResult:

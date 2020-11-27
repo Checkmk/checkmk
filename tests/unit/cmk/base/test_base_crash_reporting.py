@@ -10,6 +10,7 @@ import cmk.utils.crash_reporting
 import cmk.base.crash_reporting as crash_reporting
 import cmk.base.check_api as check_api
 import cmk.base.config as config
+import cmk.utils.version as cmk_version
 
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
@@ -87,7 +88,6 @@ def test_check_crash_report_from_exception(monkeypatch):
         )
 
     _check_generic_crash_info(crash)
-
     assert crash.type() == "check"
     assert crash.crash_info["exc_type"] == "Exception"
     assert crash.crash_info["exc_value"] == "DING"
@@ -100,7 +100,7 @@ def test_check_crash_report_from_exception(monkeypatch):
             "check_type": (str, "uptime"),
             "item": (type(None), None),
             "params": (type(None), None),
-            "inline_snmp": (bool, True),
+            "inline_snmp": (bool, not cmk_version.is_raw_edition()),
             "manual_check": (bool, False),
     }.items():
         assert key in crash.crash_info["details"]

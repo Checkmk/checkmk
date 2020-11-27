@@ -70,6 +70,7 @@ from cmk.gui.type_defs import (
     PermittedViewSpecs,
     VisualContext,
     PainterParameters,
+    VisualLinkSpec,
 )
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -1056,22 +1057,24 @@ def format_plugin_output(output: CellContent, row: Row) -> str:
                                                    shall_escape=config.escape_plugin_output)
 
 
-def link_to_view(content: CellContent, row: Row, view_name: ViewName) -> CellContent:
+def render_link_to_view(content: CellContent, row: Row, view_name: ViewName) -> CellContent:
     assert not isinstance(content, dict)
     if display_options.disabled(display_options.I):
         return content
 
-    url = url_to_view(row, view_name)
+    url = url_to_visual(row, VisualLinkSpec("views", view_name))
     if url:
         return html.render_a(content, href=url)
     return content
 
 
 # TODO: There is duplicated logic with visuals.collect_context_links_of()
-def url_to_view(row: Row, view_name: ViewName) -> Optional[str]:
+def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
     if display_options.disabled(display_options.I):
         return None
 
+    # TODO: Will be generalized in one of the next commits
+    view_name = link_spec[1]
     view = get_permitted_views().get(view_name)
     if not view:
         return None
@@ -1853,7 +1856,7 @@ class Cell:
 
         # Add the optional link to another view
         if content and self._link_view_name is not None:
-            content = link_to_view(content, row, self._link_view_name)
+            content = render_link_to_view(content, row, self._link_view_name)
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():

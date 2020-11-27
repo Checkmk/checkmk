@@ -8,7 +8,8 @@ import cmk.gui.config as config
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
-from cmk.gui.plugins.views import url_to_view
+from cmk.gui.plugins.views import url_to_visual
+from cmk.gui.type_defs import VisualLinkSpec
 
 
 @icon_and_action_registry.register
@@ -31,5 +32,5 @@ class InventoryIcon(Icon):
             if not config.user.may("view.inv_host"):
                 return
 
-            return 'inventory', _("Show Hardware/Software Inventory of this host"), url_to_view(
-                row, 'inv_host')
+            return 'inventory', _("Show Hardware/Software Inventory of this host"), url_to_visual(
+                row, VisualLinkSpec('views', 'inv_host'))

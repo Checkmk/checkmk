@@ -50,7 +50,7 @@ from cmk.gui.plugins.views import (
     paint_stalified,
     paint_host_list,
     format_plugin_output,
-    link_to_view,
+    render_link_to_view,
     get_perfdata_nth_value,
     paint_age,
     paint_nagiosflag,
@@ -3842,7 +3842,7 @@ class PainterCommentEntryType(Painter):
             return "", ""
         code: CellContent = html.render_icon(icon, help_txt)
         if linkview:
-            code = link_to_view(code, row, linkview)
+            code = render_link_to_view(code, row, linkview)
         return "icons", code
 
 

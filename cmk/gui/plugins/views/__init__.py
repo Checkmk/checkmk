@@ -25,14 +25,14 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     cmp_num_split, cmp_service_name_equiv, cmp_simple_number, cmp_simple_string, cmp_string_list,
     declare_1to1_sorter, declare_simple_sorter, display_options, EmptyCell, format_plugin_output,
     get_graph_timerange_from_painter_options, get_perfdata_nth_value, group_value,
-    inventory_displayhints, is_stale, join_row, link_to_view, painter_option_registry,
+    inventory_displayhints, is_stale, join_row, render_link_to_view, painter_option_registry,
     PainterOption, layout_registry, Layout, command_group_registry, CommandGroup, command_registry,
     Command, data_source_registry, ABCDataSource, DataSourceLivestatus, RowTable,
     RowTableLivestatus, painter_registry, Painter, register_painter, sorter_registry,
     DerivedColumnsSorter, Sorter, register_sorter, multisite_builtin_views, output_csv_headers,
     paint_age, PainterOptions, paint_host_list, paint_nagiosflag, paint_stalified,
-    render_cache_info, replace_action_url_macros, row_id, transform_action_url, url_to_view,
-    view_is_enabled, view_title, query_livestatus, exporter_registry, Exporter,
+    render_cache_info, replace_action_url_macros, row_id, transform_action_url, url_to_visual,
+    view_is_enabled, view_title, query_livestatus, exporter_registry, Exporter, VisualLinkSpec,
 )
 
 #.

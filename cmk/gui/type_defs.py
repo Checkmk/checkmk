@@ -33,6 +33,20 @@ ChoiceGroup = NamedTuple("ChoiceGroup", [
 ])
 GroupedChoices = List[ChoiceGroup]
 
+# Visual specific
+FilterName = str
+FilterHTTPVariables = Dict[str, str]
+Visual = Dict[str, Any]
+VisualName = str
+VisualTypeName = str
+VisualContext = Dict[FilterName, Union[str, FilterHTTPVariables]]
+InfoName = str
+SingleInfos = List[InfoName]
+VisualLinkSpec = NamedTuple("VisualLinkSpec", [
+    ("type_name", VisualTypeName),
+    ("name", VisualName),
+])
+
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type
 Rows = List[Row]
@@ -67,15 +81,6 @@ AllViewSpecs = Dict[Tuple[UserId, ViewName], ViewSpec]
 PermittedViewSpecs = Dict[ViewName, ViewSpec]
 SorterFunction = Callable[[ColumnName, Row, Row], int]
 FilterHeaders = str
-
-# Visual specific
-FilterName = str
-FilterHTTPVariables = Dict[str, str]
-Visual = Dict[str, Any]
-VisualTypeName = str
-VisualContext = Dict[FilterName, Union[str, FilterHTTPVariables]]
-InfoName = str
-SingleInfos = List[InfoName]
 
 # Configuration related
 ConfigDomainName = str

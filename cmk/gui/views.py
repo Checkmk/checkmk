@@ -121,13 +121,12 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
     view_title, multisite_builtin_views, view_hooks, inventory_displayhints, register_command_group,
-    transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output,
-    link_to_view, url_to_view, row_id, group_value, view_is_enabled, paint_age, declare_1to1_sorter,
-    declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
-    cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
-    get_custom_var, get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros,
-    Cell, JoinCell, register_legacy_command, register_painter, register_sorter, ABCDataSource,
-    Layout,
+    transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output, row_id,
+    group_value, view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter,
+    cmp_simple_number, cmp_simple_string, cmp_insensitive_string, cmp_num_split,
+    cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var,
+    get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell,
+    register_legacy_command, register_painter, register_sorter, ABCDataSource, Layout,
 )
 
 # Needed for legacy (pre 1.6) plugins

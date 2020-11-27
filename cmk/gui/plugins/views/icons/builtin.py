@@ -51,8 +51,9 @@ from cmk.gui.plugins.views import (
     is_stale,
     paint_age,
     render_cache_info,
-    url_to_view,
+    url_to_visual,
 )
+from cmk.gui.type_defs import VisualLinkSpec
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.utils.popups import MethodAjax
@@ -644,13 +645,14 @@ class DowntimesIcon(Icon):
             title = _("Currently in downtime")
             title += detail_txt(row[what + "_downtimes_with_extra_info"])
 
-            return icon, title, url_to_view(row, 'downtimes_of_' + what)
+            return icon, title, url_to_visual(row, VisualLinkSpec('views', 'downtimes_of_' + what))
 
         if what == "service" and row["host_scheduled_downtime_depth"] > 0:
             title = _("The host is currently in downtime")
             title += detail_txt(row["host_downtimes_with_extra_info"])
 
-            return 'derived_downtime', title, url_to_view(row, 'downtimes_of_host')
+            return 'derived_downtime', title, url_to_visual(
+                row, VisualLinkSpec('views', 'downtimes_of_host'))
 
 
 #.
@@ -691,7 +693,8 @@ class CommentsIcon(Icon):
                 comment = comment.replace("\n", "<br>")
                 text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0,
                                                         'abs')[1], author, comment)
-            return 'comment', text, url_to_view(row, 'comments_of_' + what)
+            return 'comment', text, url_to_visual(row, VisualLinkSpec('views',
+                                                                      'comments_of_' + what))
 
 
 #.

@@ -115,6 +115,8 @@ from cmk.gui.plugins.views.utils import (
     SorterSpec,
     Sorter,
     DerivedColumnsSorter,
+    make_linked_visual_url,
+    get_linked_visual_request_vars,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -2377,56 +2379,22 @@ def _collect_linked_visuals_of_type(type_name: str, view: View, rows: Rows,
         # This has been implemented for HW/SW inventory views which are often useless when a host
         # has no such information available. For example the "Oracle Tablespaces" inventory view
         # is useless on hosts that don't host Oracle databases.
-        vars_values = _get_linked_visual_request_vars(visual, singlecontext_request_vars)
+        vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
         if not visual_type.link_from(view, rows, visual, vars_values):
             continue
 
         yield visual_type, visual
 
 
-def _get_linked_visual_request_vars(visual: Visual,
-                                    singlecontext_request_vars: Dict[str, str]) -> HTTPVariables:
-    vars_values: HTTPVariables = []
-    for var in visuals.get_single_info_keys(visual["single_infos"]):
-        vars_values.append((var, singlecontext_request_vars[var]))
-
-    add_site_hint = visuals.may_add_site_hint(visual["name"],
-                                              info_keys=list(visual_info_registry.keys()),
-                                              single_info_keys=visual["single_infos"],
-                                              filter_names=list(dict(vars_values).keys()))
-
-    if add_site_hint and html.request.var('site'):
-        vars_values.append(('site', html.request.get_ascii_input_mandatory('site')))
-    return vars_values
-
-
 def _make_page_menu_entry_for_visual(visual_type: VisualType, visual: Visual,
                                      singlecontext_request_vars: Dict[str, str],
                                      mobile: bool) -> PageMenuEntry:
-    name = visual["name"]
-    vars_values = _get_linked_visual_request_vars(visual, singlecontext_request_vars)
-
-    filename = visual_type.show_url
-    if mobile and visual_type.show_url == 'view.py':
-        filename = 'mobile_' + visual_type.show_url
-
-    # add context link to this visual. For reports we put in
-    # the *complete* context, even the non-single one.
-    if visual_type.multicontext_links:
-        uri = makeuri(global_request, [(visual_type.ident_attr, name)], filename=filename)
-
-    else:
-        # For views and dashboards currently the current filter settings
-        uri = makeuri_contextless(
-            global_request,
-            vars_values + [(visual_type.ident_attr, name)],
-            filename=filename,
-        )
-
     return PageMenuEntry(title=visual["title"],
                          icon_name=visual.get("icon") or "trans",
-                         item=make_simple_link(uri),
-                         name="cb_" + name)
+                         item=make_simple_link(
+                             make_linked_visual_url(visual_type, visual, singlecontext_request_vars,
+                                                    mobile)),
+                         name="cb_" + visual["name"])
 
 
 def _get_availability_entry(view: View, info: VisualInfo,

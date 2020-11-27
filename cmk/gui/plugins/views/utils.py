@@ -54,6 +54,10 @@ from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
 from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.plugins.visuals.utils import (
+    visual_info_registry,
+    VisualType,
+)
 
 from cmk.gui.type_defs import (
     ColumnName,
@@ -70,6 +74,7 @@ from cmk.gui.type_defs import (
     PermittedViewSpecs,
     VisualContext,
     PainterParameters,
+    Visual,
     VisualLinkSpec,
 )
 
@@ -1120,6 +1125,45 @@ def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
     filename = "mobile_view.py" if html.mobile else "view.py"
     url_vars.insert(0, ("view_name", view_name))
     return filename + "?" + html.urlencode_vars(url_vars)
+
+
+def make_linked_visual_url(visual_type: VisualType, visual: Visual,
+                           singlecontext_request_vars: Dict[str, str], mobile: bool) -> str:
+    """Compute URLs to link from a view to other dashboards and views"""
+    name = visual["name"]
+    vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
+
+    filename = visual_type.show_url
+    if mobile and visual_type.show_url == 'view.py':
+        filename = 'mobile_' + visual_type.show_url
+
+    # add context link to this visual. For reports we put in
+    # the *complete* context, even the non-single one.
+    if visual_type.multicontext_links:
+        return makeuri(request, [(visual_type.ident_attr, name)], filename=filename)
+
+    # For views and dashboards currently the current filter settings
+    return makeuri_contextless(
+        request,
+        vars_values + [(visual_type.ident_attr, name)],
+        filename=filename,
+    )
+
+
+def get_linked_visual_request_vars(visual: Visual,
+                                   singlecontext_request_vars: Dict[str, str]) -> HTTPVariables:
+    vars_values: HTTPVariables = []
+    for var in visuals.get_single_info_keys(visual["single_infos"]):
+        vars_values.append((var, singlecontext_request_vars[var]))
+
+    add_site_hint = visuals.may_add_site_hint(visual["name"],
+                                              info_keys=list(visual_info_registry.keys()),
+                                              single_info_keys=visual["single_infos"],
+                                              filter_names=list(dict(vars_values).keys()))
+
+    if add_site_hint and html.request.var('site'):
+        vars_values.append(('site', html.request.get_ascii_input_mandatory('site')))
+    return vars_values
 
 
 def get_tag_groups(row: Row, what: str) -> TagGroups:

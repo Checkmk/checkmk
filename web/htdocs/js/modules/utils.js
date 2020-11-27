@@ -181,6 +181,42 @@ export function page_width() {
     return null;
 }
 
+export function content_wrapper_size() {
+    const container = get_content_wrapper_object();
+
+    if (!container) {
+        // Default to the inner window size
+        return {height: page_height(), width: page_width()};
+    }
+
+    const vert_paddings =
+        parseInt(get_computed_style(container, "padding-top").replace("px", "")) +
+        parseInt(get_computed_style(container, "padding-bottom").replace("px", ""));
+    const hor_paddings =
+        parseInt(get_computed_style(container, "padding-right").replace("px", "")) +
+        parseInt(get_computed_style(container, "padding-left").replace("px", ""));
+
+    return {
+        height: container.clientHeight - vert_paddings,
+        width: container.clientWidth - hor_paddings,
+    };
+}
+
+export function get_content_wrapper_object() {
+    const content_wrapper_ids = [
+        "main_page_content", // General content wrapper div
+        "dashlet_content_wrapper", // Container div in view dashlets
+    ];
+
+    for (const id of content_wrapper_ids) {
+        let container = document.getElementById(id);
+        if (container) {
+            return container;
+        }
+    }
+    return null;
+}
+
 // Whether or not an element is partially in the the visible viewport
 export function is_in_viewport(element) {
     var rect = element.getBoundingClientRect(),
@@ -677,4 +713,8 @@ export function update_pending_changes(changes_info) {
     if (changes_info && container) {
         container.innerHTML = changes_info;
     }
+}
+
+function get_computed_style(object, property) {
+    return object ? window.getComputedStyle(object).getPropertyValue(property) : null;
 }

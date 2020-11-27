@@ -245,14 +245,14 @@ class Discovery:
             diff_text=watolib.make_diff_text(_make_host_audit_log_object(old_autochecks),
                                              _make_host_audit_log_object(checks)),
         )
-        modified_checks: Any = {}
 
         site_id = self._host.site_id()
         site_status = states().get(site_id, SiteStatus({}))
         if is_pre_17_remote_site(site_status):
-            modified_checks = {x: y[1:3] for x, y in checks.items()}
-
-        check_mk_automation(site_id, "set-autochecks", [self._host.name()], modified_checks)
+            check_mk_automation(site_id, "set-autochecks", [self._host.name()],
+                                {x: y[1:3] for x, y in checks.items()})
+        else:
+            check_mk_automation(site_id, "set-autochecks", [self._host.name()], checks)
 
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
         self._save_service_enable_disable_rules(to_enable, value=False)

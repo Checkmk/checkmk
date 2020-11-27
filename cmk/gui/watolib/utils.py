@@ -13,10 +13,11 @@ from typing import Any, Union, List
 
 from six import ensure_binary, ensure_str
 
+from livestatus import SiteId
+
 from cmk.gui.sites import SiteStatus
 from cmk.utils.werks import parse_check_mk_version
 
-from livestatus import SiteId
 from cmk.utils.type_defs import HostName
 import cmk.utils.version as cmk_version
 import cmk.utils.paths

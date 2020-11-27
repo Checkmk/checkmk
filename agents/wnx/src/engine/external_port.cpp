@@ -26,21 +26,21 @@ void AsioSession::do_read() {
         asio::buffer(data_, kMaxLength),  // data will be ignored
         [this, self](std::error_code ec, [[maybe_unused]] size_t length) {
             if (!ec) {
-                auto internal_data = "Answer!\n";
+                constexpr auto *internal_data = "Answer!\n";
                 do_write(internal_data, strlen(internal_data) + 1, nullptr);
             }
         });
 }
 
-size_t AsioSession::allocCryptBuffer(const cma::encrypt::Commander *Crypt) {
-    if (nullptr == Crypt) return 0;
+size_t AsioSession::allocCryptBuffer(const cma::encrypt::Commander *commander) {
+    if (nullptr == commander) return 0;
 
-    if (!Crypt->blockSize().has_value()) {
+    if (!commander->blockSize().has_value()) {
         XLOG::l("Impossible situation, crypt engine is absent");
         return 0;
     }
 
-    if (0 == Crypt->blockSize().value()) {
+    if (0 == commander->blockSize().value()) {
         XLOG::l("Impossible situation, block is too short");
         return 0;
     }
@@ -48,7 +48,7 @@ size_t AsioSession::allocCryptBuffer(const cma::encrypt::Commander *Crypt) {
     size_t crypt_segment_size = 0;
     try {
         // calculating length and allocating persistent memory
-        auto block_size = Crypt->blockSize().value();
+        auto block_size = commander->blockSize().value();
         crypt_segment_size = (segment_size_ / block_size + 1) * block_size;
         crypt_buf_.resize(crypt_segment_size);
         XLOG::d.i("Encrypted output block {} bytes, crypt buffer {} bytes...",
@@ -93,44 +93,45 @@ static size_t WriteStringToSocket(asio::ip::tcp::socket &sock,
 }
 
 // To send data
-void AsioSession::do_write(const void *Data, std::size_t Length,
-                           cma::encrypt::Commander *Crypt) {
+void AsioSession::do_write(const void *data_block, std::size_t data_length,
+                           cma::encrypt::Commander *crypto_commander) {
     auto self(shared_from_this());
 
-    auto data = static_cast<const char *>(Data);
-    auto crypt_buf_len = allocCryptBuffer(Crypt);
+    const auto *data = static_cast<const char *>(data_block);
+    auto crypt_buf_len = allocCryptBuffer(crypto_commander);
 
-    while (0 != Length) {
+    while (0 != data_length) {
         // we will send data in relatively small chunks
         // asio is stupid enough and cannot send big data blocks
-        auto to_send = std::min(Length, segment_size_);
+        auto to_send = std::min(data_length, segment_size_);
 
-        const bool async = false;
-        if (async) {
+        constexpr bool async = false;
+        if constexpr (async) {
             // code below is written in theory correct, but performance is
-            // terrible and absolutely unpredictable
+            // terrible and absolutely unpredictable. Left as a non working
+            // reference
             asio::async_write(
                 socket_, asio::buffer(data, to_send),
-                [self, to_send, Length](std::error_code ec,
-                                        std::size_t length) {
+                [self, to_send, data_length](std::error_code ec,
+                                             std::size_t length) {
                     XLOG::t.i(
                         "Send [{}] from [{}] data with code [{}] left to send [{}]",
-                        length, to_send, ec.value(), Length);
+                        length, to_send, ec.value(), data_length);
                 });
         } else {
             // correct code is here
             size_t written_bytes = 0;
-            if (nullptr != Crypt) {
+            if (nullptr != crypto_commander) {
                 if (0 == crypt_buf_len) {
                     XLOG::l("Encrypt is requested, but encryption is failed");
                     return;
                 }
 
                 // encryption
-                auto buf = crypt_buf_.data();
+                auto *buf = crypt_buf_.data();
                 memcpy(buf, data, to_send);
-                auto [success, len] = Crypt->encode(buf, to_send, crypt_buf_len,
-                                                    Length == to_send);
+                auto [success, len] = crypto_commander->encode(
+                    buf, to_send, crypt_buf_len, data_length == to_send);
                 // checking
                 if (!success) {
                     XLOG::l.crit(XLOG_FUNC + "CANNOT ENCRYPT {}.", len);
@@ -140,7 +141,7 @@ void AsioSession::do_write(const void *Data, std::size_t Length,
                 // sending
                 // suboptimal method, but one additional packet pro 1 minute
                 // means for TCP nothing. Still candidate to optimize
-                if (static_cast<const void *>(data) == Data)
+                if (static_cast<const void *>(data) == data_block)
                     WriteStringToSocket(socket_, cma::rt::kPlainHeader);
 
                 written_bytes = WriteDataToSocket(socket_, buf, len);
@@ -149,11 +150,11 @@ void AsioSession::do_write(const void *Data, std::size_t Length,
                 written_bytes = WriteDataToSocket(socket_, data, to_send);
 
             XLOG::t.i("Send [{}] from [{}] data to send [{}]", written_bytes,
-                      to_send, Length);
+                      to_send, data_length);
         }
 
         // send;
-        Length -= to_send;
+        data_length -= to_send;
         data += to_send;
     }
 }
@@ -177,9 +178,9 @@ void ExternalPort::putOnQueue(AsioSession::s_ptr asio_session) {
 
     if (loaded) {
         wakeThread();
-        XLOG::d.i("Put on queue, size is [{}]", size);
+        XLOG::t.i("Put on queue, size is [{}]", size);
     } else {
-        XLOG::d("queue is overflown");
+        XLOG::l("queue is overflown");
     }
 }
 
@@ -195,7 +196,7 @@ AsioSession::s_ptr ExternalPort::getSession() {
     auto sz = session_queue_.size();
     lk.unlock();
 
-    XLOG::d.i("Found connection on queue, in queue left[{}]", sz);
+    XLOG::t.i("Found connection on queue, in queue left[{}]", sz);
     return as;
 }
 
@@ -344,13 +345,13 @@ void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
 
 // runs thread
 // can fail when thread is already running
-bool ExternalPort::startIo(ReplyFunc Reply) {
+bool ExternalPort::startIo(const ReplyFunc &reply_func) {
     std::lock_guard lk(io_thread_lock_);
     if (io_thread_.joinable()) return false;  // thread is in exec state
 
     shutdown_thread_ = false;  // reset potentially dropped flag
 
-    io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, Reply);
+    io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, reply_func);
     io_started_ = true;
     return true;
 }

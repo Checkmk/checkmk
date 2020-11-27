@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 #if !defined(external_port_h__)
@@ -100,9 +101,9 @@ private:
         return {};
     }
     void do_read();
-    size_t allocCryptBuffer(const cma::encrypt::Commander* Crypt);
-    void do_write(const void* Data, std::size_t Length,
-                  cma::encrypt::Commander* Crypt);
+    size_t allocCryptBuffer(const cma::encrypt::Commander* commander);
+    void do_write(const void* data_block, std::size_t data_length,
+                  cma::encrypt::Commander* crypto_commander);
 
     asio::ip::tcp::socket socket_;
     enum { kMaxLength = 1024 };
@@ -165,7 +166,7 @@ public:
     ExternalPort& operator=(ExternalPort&&) = delete;
 
     // Main API
-    bool startIo(cma::world::ReplyFunc Reply);
+    bool startIo(const cma::world::ReplyFunc& Reply);
     void shutdownIo();
     int xmain(int PORT);
 

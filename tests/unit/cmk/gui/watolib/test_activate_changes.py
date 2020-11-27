@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest  # type: ignore[import]
 
+import cmk.gui.watolib.utils
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.gui.watolib.activate_changes as activate_changes
@@ -206,7 +207,7 @@ def test_add_replication_paths():
     }),
 ])
 def test_is_pre_17_remote_site(site_status, expected):
-    assert activate_changes._is_pre_17_remote_site(site_status) == expected
+    assert cmk.gui.watolib.utils.is_pre_17_remote_site(site_status) == expected
 
 
 def test_automation_get_config_sync_state():

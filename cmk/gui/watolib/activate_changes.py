@@ -34,6 +34,7 @@ import psutil  # type: ignore[import]
 import werkzeug.urls
 from six import ensure_binary, ensure_str
 
+from cmk.gui.watolib.utils import is_pre_17_remote_site
 from livestatus import (
     SiteId,
     SiteConfiguration,
@@ -45,7 +46,6 @@ import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
-from cmk.utils.werks import parse_check_mk_version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -748,10 +748,10 @@ class ActivateChangesManager(ActivateChanges):
             work_dir = cmk.utils.paths.site_config_dir / site_id
 
             site_status = self._get_site_status(site_id, site_config)[0]
-            is_pre_17_remote_site = _is_pre_17_remote_site(site_status)
+            is_pre_17_site = is_pre_17_remote_site(site_status)
 
             snapshot_components = _get_replication_components(str(work_dir), site_config,
-                                                              is_pre_17_remote_site)
+                                                              is_pre_17_site)
 
             # Generate a quick reference_by_name for each component
             component_names = {c[1] for c in snapshot_components}
@@ -762,7 +762,7 @@ class ActivateChangesManager(ActivateChanges):
                 snapshot_components=snapshot_components,
                 component_names=component_names,
                 site_config=site_config,
-                create_pre_17_snapshot=is_pre_17_remote_site,
+                create_pre_17_snapshot=is_pre_17_site,
             )
 
         return snapshot_settings
@@ -1879,22 +1879,8 @@ def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> Dict:
     return site_globals
 
 
-def _is_pre_17_remote_site(site_status: SiteStatus) -> bool:
-    """Decide which snapshot format is pushed to the given site
-
-    The sync snapshot format was changed between 1.6 and 1.7. To support migrations with a
-    new central site and an old remote site, we detect that case here and create the 1.6
-    snapshots for the old sites.
-    """
-    version = site_status.get("livestatus_version")
-    if not version:
-        return False
-
-    return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
-
-
 def _get_replication_components(work_dir: str, site_config: SiteConfiguration,
-                                is_pre_17_remote_site: bool) -> List[ReplicationPath]:
+                                is_pre_17_site: bool) -> List[ReplicationPath]:
     """Gives a list of ReplicationPath instances.
 
     These represent the folders which need to be sent to remote sites. Whether a specific subset
@@ -1913,7 +1899,7 @@ def _get_replication_components(work_dir: str, site_config: SiteConfiguration,
                  - `replicate_ec`:
                  - `replicate_mkps`
 
-        is_pre_17_remote_site:
+        is_pre_17_site:
             This is true if the site in question (as supplied in `site_config`) is of a version
             1.6.x or less.
 
@@ -1934,7 +1920,7 @@ def _get_replication_components(work_dir: str, site_config: SiteConfiguration,
         paths = [e for e in paths if e.ident not in ["local", "mkps"]]
 
     # Add site-specific global settings
-    if is_pre_17_remote_site:
+    if is_pre_17_site:
         # When synchronizing with pre 1.7 sites, the sitespecific.mk from the config domain
         # directories must not be used. Instead of this, they are transfered using the
         # site_globals/sitespecific.mk (see below) and written on the remote site.
@@ -1949,7 +1935,7 @@ def _get_replication_components(work_dir: str, site_config: SiteConfiguration,
             ))
 
     # Add distributed_wato.mk
-    if not is_pre_17_remote_site:
+    if not is_pre_17_site:
         paths.append(
             ReplicationPath(
                 ty="file",

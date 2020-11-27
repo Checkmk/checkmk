@@ -13,6 +13,9 @@ from typing import Any, Union, List
 
 from six import ensure_binary, ensure_str
 
+from cmk.gui.sites import SiteStatus
+from cmk.utils.werks import parse_check_mk_version
+
 from livestatus import SiteId
 from cmk.utils.type_defs import HostName
 import cmk.utils.version as cmk_version
@@ -160,3 +163,17 @@ def may_edit_ruleset(varname: str) -> bool:
         return config.user.may("wato.rulesets") and config.user.may(
             "wato.agent_deploy_custom_files")
     return config.user.may("wato.rulesets")
+
+
+def is_pre_17_remote_site(site_status: SiteStatus) -> bool:
+    """Decide which snapshot format is pushed to the given site
+
+    The sync snapshot format was changed between 1.6 and 1.7. To support migrations with a
+    new central site and an old remote site, we detect that case here and create the 1.6
+    snapshots for the old sites.
+    """
+    version = site_status.get("livestatus_version")
+    if not version:
+        return False
+
+    return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")

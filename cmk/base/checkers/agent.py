@@ -7,7 +7,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import cast, Dict, Final, List, NamedTuple, Optional, Tuple
+from typing import cast, Dict, Final, Iterable, List, NamedTuple, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -303,8 +303,56 @@ class AgentSummarizerDefault(AgentSummarizer):
 
 
 class AgentParserSectionHeader(NamedTuple):
+    # Note: The `type: ignore` and `cast` are all because of
+    #       false positives on mypy side! -- There are tests
+    #       to prove it.
     name: SectionName
-    options: Dict[str, Optional[str]]
+    options: Dict[str, str]
+
+    @classmethod
+    def from_headerline(cls, headerline: bytes) -> "AgentParserSectionHeader":
+        def parse_options(elems: Iterable[str]) -> Iterable[Tuple[str, str]]:
+            for option in elems:
+                if "(" not in option:
+                    continue
+                name, value = option.split("(", 1)
+                assert value[-1] == ")", value
+                yield name, value[:-1]
+
+        headerparts = ensure_str(headerline).split(":")
+        return AgentParserSectionHeader(
+            SectionName(headerparts[0]),
+            dict(parse_options(headerparts[1:])),
+        )
+
+    @property
+    def cached(self) -> Tuple[int, ...]:
+        try:
+            return tuple(map(int, self.options["cached"].split(",")))  # type: ignore[union-attr]
+        except KeyError:
+            return ()
+
+    @property
+    def encoding(self) -> str:
+        return cast(str, self.options.get("encoding", "utf-8"))
+
+    @property
+    def nostrip(self) -> bool:
+        return self.options.get("nostrip") is not None
+
+    @property
+    def persist(self) -> Optional[int]:
+        try:
+            return int(self.options["persist"])  # type: ignore[arg-type]
+        except KeyError:
+            return None
+
+    @property
+    def separator(self) -> Optional[str]:
+        try:
+            return chr(int(self.options["sep"]))  # type: ignore [arg-type]
+        except KeyError:
+            return None
 
 
 class AgentParser(Parser[AgentRawData, AgentHostSections]):
@@ -364,8 +412,6 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         # handle sections with option persist(...)
         persisted_sections = PersistedSections[AgentSectionContent]({})
         section_content: Optional[AgentSectionContent] = None
-        separator: Optional[str] = None
-        encoding = None
         for line in raw_data.split(b"\n"):
             line = line.rstrip(b"\r")
             stripped_line = line.strip()
@@ -393,64 +439,42 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     continue
 
                 try:
-                    section_header = AgentParser._parse_section_header(stripped_line[3:-3])
+                    section_header = AgentParserSectionHeader.from_headerline(stripped_line[3:-3])
                 except ValueError:
                     self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
                     section_content = None
                     continue
                 section_content = host_sections.sections.setdefault(section_header.name, [])
 
-                raw_separator = section_header.options.get("sep")
-                if raw_separator is None:
-                    separator = None
-                else:
-                    separator = chr(int(raw_separator))
-
                 # Split of persisted section for server-side caching
-                raw_persist = section_header.options.get("persist")
-                if raw_persist is not None:
-                    until = int(raw_persist)
+                if section_header.persist is not None:
                     cached_at = int(time.time())  # Estimate age of the data
-                    cache_interval = int(until - cached_at)
+                    cache_interval = section_header.persist - cached_at
                     host_sections.cache_info[section_header.name] = (cached_at, cache_interval)
                     # pylint does not seem to understand `NewType`... leave the checking up to mypy.
                     persisted_sections[section_header.name] = (  # false positive: pylint: disable=E1137
-                        (cached_at, until, section_content))
+                        (cached_at, section_header.persist, section_content))
 
-                raw_cached = section_header.options.get("cached")
-                if raw_cached is not None:
-                    cache_times = list(map(int, raw_cached.split(",")))
+                if section_header.cached:
+                    cache_times = section_header.cached
                     host_sections.cache_info[section_header.name] = cache_times[0], cache_times[1]
-
-                # The section data might have a different encoding
-                encoding = section_header.options.get("encoding")
 
             elif stripped_line != b'':
                 if section_content is None:
                     continue
 
-                raw_nostrip = section_header.options.get("nostrip")
-                if raw_nostrip is None:
+                if not section_header.nostrip:
                     line = stripped_line
 
                 decoded_line = ensure_str_with_fallback(
-                    line, encoding=("utf-8" if encoding is None else encoding), fallback="latin-1")
+                    line,
+                    encoding=section_header.encoding,
+                    fallback="latin-1",
+                )
 
-                section_content.append(decoded_line.split(separator))
+                section_content.append(decoded_line.split(section_header.separator))
 
         return host_sections, persisted_sections
-
-    @staticmethod
-    def _parse_section_header(headerline: bytes) -> AgentParserSectionHeader:
-        headerparts = ensure_str(headerline).split(":")
-        section_header = AgentParserSectionHeader(SectionName(headerparts[0]), {})
-        for option in headerparts[1:]:
-            if "(" not in option:
-                section_header.options[option] = None
-            else:
-                opt_name, opt_part = option.split("(", 1)
-                section_header.options[opt_name] = opt_part[:-1]
-        return section_header
 
     @staticmethod
     def _get_sanitized_and_translated_piggybacked_hostname(

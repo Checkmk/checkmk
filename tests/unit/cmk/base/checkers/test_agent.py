@@ -23,7 +23,7 @@ from cmk.fetchers.agent import NoCache
 
 import cmk.base.config as config
 from cmk.base.checkers import Mode
-from cmk.base.checkers.agent import AgentParser, AgentSectionContent, AgentSource, AgentSummarizer
+from cmk.base.checkers.agent import AgentParser, AgentSectionContent, AgentSource, AgentSummarizer, AgentParserSectionHeader
 from cmk.base.checkers.host_sections import HostSections, SectionStore
 from cmk.base.checkers.type_defs import NO_SELECTION
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
@@ -186,9 +186,34 @@ class TestParser:
     )  # yapf: disable
     def test_section_header_options(self, headerline, section_name, section_options):
         try:
-            AgentParser._parse_section_header(headerline) == (section_name, section_options)
+            AgentParserSectionHeader.from_headerline(headerline) == (section_name, section_options)
         except ValueError:
             assert section_name is None
+
+    def test_section_header_options_decode_values(self):
+        section_header = AgentParserSectionHeader.from_headerline(b":".join((
+            b"name",
+            b"cached(1,2)",
+            b"encoding(ascii)",
+            b"nostrip()",
+            b"persist(42)",
+            b"sep(124)",
+        )))
+        assert section_header.name == SectionName("name")
+        assert section_header.cached == (1, 2)
+        assert section_header.encoding == "ascii"
+        assert section_header.nostrip is True
+        assert section_header.persist == 42
+        assert section_header.separator == "|"
+
+    def test_section_header_options_decode_nothing(self):
+        section_header = AgentParserSectionHeader.from_headerline(b"name")
+        assert section_header.name == SectionName("name")
+        assert section_header.cached == ()
+        assert section_header.encoding == "utf-8"
+        assert section_header.nostrip is False
+        assert section_header.persist is None
+        assert section_header.separator is None
 
 
 class StubSummarizer(AgentSummarizer):

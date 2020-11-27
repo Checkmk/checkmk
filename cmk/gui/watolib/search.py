@@ -190,24 +190,39 @@ class URLChecker:
     def __init__(self):
         self._user_id = user.ident
         self._request = Request(create_environ())
+        from cmk.gui.wato.pages.hosts import ModeEditHost
+        self._mode_edit_host = ModeEditHost
 
     def _set_query_vars(self, query_vars: QueryVars) -> None:
         for name, vals in query_vars.items():
             self._request.set_var(name, vals[0])
 
     def is_permitted(self, url: str) -> bool:
+        is_host_url = "mode=edit_host" in url
         file_name, query_vars = file_name_and_query_vars_from_url(url)
         self._set_query_vars(query_vars)
         try:
             with AppContext(current_app), \
                  RequestContext(html_obj=html(self._request), req=self._request), \
                  UserContext(self._user_id):
-                page_handler = get_page_handler(file_name)
-                if page_handler:
-                    page_handler()
+                if is_host_url:
+                    self._try_host()
+                else:
+                    self._try_page(file_name)
             return True
         except MKAuthException:
             return False
+
+    @staticmethod
+    def _try_page(file_name: str) -> None:
+        page_handler = get_page_handler(file_name)
+        if page_handler:
+            page_handler()
+
+    # TODO: Find a better solution here. We treat hosts separately because calling the page takes
+    #  very long in this case and is not necessary (the initializer already throws an exception).
+    def _try_host(self) -> None:
+        self._mode_edit_host()
 
 
 class PermissionsHandler:

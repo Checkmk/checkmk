@@ -372,11 +372,11 @@ function unfold_sidebar() {
 //
 
 // The refresh snapins do reload after a defined amount of time
-var refresh_snapins = null;
+var refresh_snapins = [];
 // The restart snapins are notified about the restart of the nagios instance(s)
-var restart_snapins = null;
+var restart_snapins = [];
 // Snapins that only have to be reloaded on demand
-var static_snapins = null;
+var static_snapins = [];
 // Contains a timestamp which holds the time of the last nagios restart handling
 var sidebar_restart_time = null;
 // Configures the number of seconds to reload all snapins which request it

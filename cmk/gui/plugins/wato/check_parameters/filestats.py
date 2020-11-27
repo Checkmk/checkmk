@@ -119,8 +119,18 @@ def _parameter_valuespec_filestats():
                      Integer(title=_("Critical if above")),
                  ],
              )),
-            ("show_all_files",
-             Checkbox(title=_("Show all files in long output"), label=("Show files"))),
+            (
+                "show_all_files",
+                Checkbox(
+                    title=_("Show files in service details"),
+                    label=("Show files"),
+                    help=_(
+                        "Display all files that have reached a WARN or a CRIT status in the "
+                        "service details. Note: displaying the files leads to a performance loss "
+                        "for large numbers of files within the file group. Please enable this feature "
+                        "only if it is needed."),
+                ),
+            ),
             (
                 "additional_rules",
                 ListOf(

@@ -15,6 +15,7 @@ from pathlib import Path
 import traceback
 from typing import (Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional,
                     Union, Dict, Type, cast)
+from contextlib import suppress
 
 from six import ensure_str
 
@@ -56,6 +57,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
+    visual_type_registry,
     VisualType,
 )
 
@@ -1074,36 +1076,45 @@ def render_link_to_view(content: CellContent, row: Row, link_spec: VisualLinkSpe
     return content
 
 
-# TODO: There is duplicated logic with visuals.collect_context_links_of()
 def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
     if display_options.disabled(display_options.I):
         return None
 
-    # TODO: Will be generalized in one of the next commits
-    view_name = link_spec[1]
-    view = get_permitted_views().get(view_name)
-    if not view:
+    visual = _get_visual_by_link_spec(link_spec)
+    if not visual:
         return None
 
-    datasource = data_source_registry[view['datasource']]()
+    visual_type = visual_type_registry[link_spec.type_name]()
 
-    url_vars = _get_singlecontext_html_vars_from_row(row, datasource.infos, view["single_infos"],
-                                                     datasource.link_filters)
+    if visual_type.ident == "views":
+        datasource = data_source_registry[visual['datasource']]()
+        infos = datasource.infos
+        link_filters = datasource.link_filters
+    elif visual_type.ident == "dashboards":
+        # TODO: Is this "infos" correct?
+        infos = []
+        link_filters = {}
+    else:
+        raise NotImplementedError(f"Unsupported visual type: {visual_type}")
 
-    add_site_hint = visuals.may_add_site_hint(view_name,
-                                              info_keys=datasource.infos,
-                                              single_info_keys=view["single_infos"],
-                                              filter_names=[v for v, _ in url_vars])
-    if add_site_hint and row.get('site'):
-        url_vars.append(('site', row['site']))
+    singlecontext_request_vars = _get_singlecontext_html_vars_from_row(
+        row, infos, visual["single_infos"], link_filters)
 
-    do = html.request.var("display_options")
-    if do:
-        url_vars.append(("display_options", do))
+    return make_linked_visual_url(visual_type, visual, singlecontext_request_vars, html.mobile)
 
-    filename = "mobile_view.py" if html.mobile else "view.py"
-    url_vars.insert(0, ("view_name", view_name))
-    return filename + "?" + html.urlencode_vars(url_vars)
+
+def _get_visual_by_link_spec(link_spec: Optional[VisualLinkSpec]) -> Optional[Visual]:
+    if link_spec is None:
+        return None
+
+    visual_type = visual_type_registry[link_spec.type_name]()
+    visual_type.load_handler()
+    available_visuals = visual_type.permitted_visuals
+
+    with suppress(KeyError):
+        return available_visuals[link_spec.name]
+
+    return None
 
 
 def _get_singlecontext_html_vars_from_row(
@@ -1111,28 +1122,27 @@ def _get_singlecontext_html_vars_from_row(
     infos: List[str],
     single_infos: SingleInfos,
     link_filters: Dict[str, str],
-) -> HTTPVariables:
-    # Get the context type of the view to link to, then get the parameters of this
-    # context type and try to construct the context from the data of the row
-    url_vars: HTTPVariables = []
+) -> Dict[str, str]:
+    # Get the context type of the view to link to, then get the parameters of this context type
+    # and try to construct the context from the data of the row
+    url_vars: Dict[str, str] = {}
     for info_key in single_infos:
-        # Determine which filters (their names) need to be set
-        # for specifying in order to select correct context for the
-        # target view.
+        # Determine which filters (their names) need to be set for specifying in order to select
+        # correct context for the target view.
         for filter_name in visuals.info_params(info_key):
             filter_object = visuals.get_filter(filter_name)
             # Get the list of URI vars to be set for that filter
-            url_vars += filter_object.request_vars_from_row(row).items()
+            url_vars.update(filter_object.request_vars_from_row(row))
 
     # See get_link_filter_names() comment for details
     for src_key, dst_key in visuals.get_link_filter_names(single_infos, infos, link_filters):
         try:
-            url_vars += visuals.get_filter(src_key).request_vars_from_row(row).items()
+            url_vars.update(visuals.get_filter(src_key).request_vars_from_row(row))
         except KeyError:
             pass
 
         try:
-            url_vars += visuals.get_filter(dst_key).request_vars_from_row(row).items()
+            url_vars.update(visuals.get_filter(dst_key).request_vars_from_row(row).items())
         except KeyError:
             pass
 
@@ -1144,6 +1154,9 @@ def make_linked_visual_url(visual_type: VisualType, visual: Visual,
     """Compute URLs to link from a view to other dashboards and views"""
     name = visual["name"]
     vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
+
+    if visual_type.ident == "views" and display_options.title_options:
+        vars_values.append(("display_options", display_options.title_options))
 
     filename = visual_type.show_url
     if mobile and visual_type.show_url == 'view.py':

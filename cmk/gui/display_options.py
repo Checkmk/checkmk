@@ -80,11 +80,10 @@ class DisplayOptions:
         if html.request.has_var('_display_options'):
             self.options = self._merge_with_defaults(html.request.var("_display_options", ""))
 
-        # But there is one special case: The sorter links! These links need to know
-        # about the provided display_option parameter. The links could use
-        # "display_options.options" but this contains the implicit options which should
-        # not be added to the URLs. So the real parameters need to be preserved for
-        # this case.
+        # But there is one special case: Links to other views (sorter header links, painter column
+        # links). These links need to know about the provided display_option parameter. The links
+        # could use "display_options.options" but this contains the implicit options which should
+        # not be added to the URLs. So the real parameters need to be preserved for this case.
         self.title_options = html.request.var("display_options")
 
         # If display option 'M' is set, then all links are targetet to the 'main'

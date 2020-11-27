@@ -20,6 +20,7 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.config as config
 import cmk.gui.wato.mkeventd
+import cmk.gui.watolib.utils as utils
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 
@@ -272,7 +273,7 @@ def test_generate_snapshot(edition_short, monkeypatch, tmp_path, with_user_login
     activation_manager = _get_activation_manager(monkeypatch)
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
 
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: False)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: False)
 
     snapshot_settings = _create_sync_snapshot(activation_manager,
                                               snapshot_data_collector_class,
@@ -294,7 +295,7 @@ def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, wit
 
     is_pre_17_site = True
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
     snapshot_settings = _create_sync_snapshot(activation_manager, snapshot_data_collector_class,
@@ -403,7 +404,7 @@ def test_apply_pre_17_sync_snapshot(edition_short, monkeypatch, tmp_path, with_u
 
     is_pre_17_site = True
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
     snapshot_settings = _create_sync_snapshot(activation_manager,
@@ -558,7 +559,7 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
 
     is_pre_17_site = False
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
     snapshot_settings = _create_sync_snapshot(activation_manager,
@@ -588,7 +589,7 @@ def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
 
     is_pre_17_site = True
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
     snapshot_settings = _create_sync_snapshot(activation_manager,

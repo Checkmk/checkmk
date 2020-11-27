@@ -164,7 +164,7 @@ def parse_arguments(argv):
     parser.add_argument("--subscription", required=True, help="Azure subscription ID")
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
-    parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    parser.add_argument("--secret", help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument("--require-tag",
                         default=[],
@@ -694,9 +694,9 @@ def write_exception_to_agent_info_section(exception, component):
     section.write()
 
 
-def main_subscription(args, selector, subscription):
+def main_subscription(args, secret, selector, subscription):
     try:
-        rest_client.login(args.tenant, args.client, args.secret, subscription)
+        rest_client.login(args.tenant, args.client, secret, subscription)
 
         resources = [
             r for r in map(AzureResource, rest_client.resources()) if selector.do_monitor(r)
@@ -731,7 +731,16 @@ def main(argv=None):
         return 0
     LOG.debug("%s", selector)
 
-    main_subscription(args, selector, args.subscription)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    secret = stdin_args.get('secret') or args.secret
+
+    if not secret:
+        raise RuntimeError('secret is not set')
+
+    main_subscription(args, secret, selector, args.subscription)
     return 0
 
 

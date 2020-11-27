@@ -1,0 +1,12 @@
+Title: agent_azure: security improvements
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1606402012
+
+Security improvements to the Azure special agent handling of access keys.

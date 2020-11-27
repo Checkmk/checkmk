@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import pytest  # type: ignore[import]
+
+from cmk_base.data_sources.programs import SpecialAgentConfiguration
 
 pytestmark = pytest.mark.checks
 
@@ -20,16 +23,19 @@ pytestmark = pytest.mark.checks
                 'secret': 'vurystrong',
                 'config': {},
             },
-            [
-                '--subscription',
-                'banana',
-                '--tenant',
-                'strawberry',
-                '--client',
-                'blueberry',
-                '--secret',
-                'vurystrong',
-            ],
+            SpecialAgentConfiguration(
+                [
+                    '--subscription',
+                    'banana',
+                    '--tenant',
+                    'strawberry',
+                    '--client',
+                    'blueberry',
+                ],
+                json.dumps({
+                    'secret': 'vurystrong',
+                }),
+            ),
         ),
     ],
 )

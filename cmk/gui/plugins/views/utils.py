@@ -76,6 +76,7 @@ from cmk.gui.type_defs import (
     PainterParameters,
     Visual,
     VisualLinkSpec,
+    SingleInfos,
 )
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -1084,32 +1085,10 @@ def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
     if not view:
         return None
 
-    # Get the context type of the view to link to, then get the parameters of this
-    # context type and try to construct the context from the data of the row
-    url_vars: HTTPVariables = []
     datasource = data_source_registry[view['datasource']]()
-    for info_key in datasource.infos:
-        if info_key in view['single_infos']:
-            # Determine which filters (their names) need to be set
-            # for specifying in order to select correct context for the
-            # target view.
-            for filter_name in visuals.info_params(info_key):
-                filter_object = visuals.get_filter(filter_name)
-                # Get the list of URI vars to be set for that filter
-                url_vars += filter_object.request_vars_from_row(row).items()
 
-    # See get_link_filter_names() comment for details
-    for src_key, dst_key in visuals.get_link_filter_names(view["single_infos"], datasource.infos,
-                                                          datasource.link_filters):
-        try:
-            url_vars += visuals.get_filter(src_key).request_vars_from_row(row).items()
-        except KeyError:
-            pass
-
-        try:
-            url_vars += visuals.get_filter(dst_key).request_vars_from_row(row).items()
-        except KeyError:
-            pass
+    url_vars = _get_singlecontext_html_vars_from_row(row, datasource.infos, view["single_infos"],
+                                                     datasource.link_filters)
 
     add_site_hint = visuals.may_add_site_hint(view_name,
                                               info_keys=datasource.infos,
@@ -1125,6 +1104,39 @@ def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
     filename = "mobile_view.py" if html.mobile else "view.py"
     url_vars.insert(0, ("view_name", view_name))
     return filename + "?" + html.urlencode_vars(url_vars)
+
+
+def _get_singlecontext_html_vars_from_row(
+    row: Row,
+    infos: List[str],
+    single_infos: SingleInfos,
+    link_filters: Dict[str, str],
+) -> HTTPVariables:
+    # Get the context type of the view to link to, then get the parameters of this
+    # context type and try to construct the context from the data of the row
+    url_vars: HTTPVariables = []
+    for info_key in single_infos:
+        # Determine which filters (their names) need to be set
+        # for specifying in order to select correct context for the
+        # target view.
+        for filter_name in visuals.info_params(info_key):
+            filter_object = visuals.get_filter(filter_name)
+            # Get the list of URI vars to be set for that filter
+            url_vars += filter_object.request_vars_from_row(row).items()
+
+    # See get_link_filter_names() comment for details
+    for src_key, dst_key in visuals.get_link_filter_names(single_infos, infos, link_filters):
+        try:
+            url_vars += visuals.get_filter(src_key).request_vars_from_row(row).items()
+        except KeyError:
+            pass
+
+        try:
+            url_vars += visuals.get_filter(dst_key).request_vars_from_row(row).items()
+        except KeyError:
+            pass
+
+    return url_vars
 
 
 def make_linked_visual_url(visual_type: VisualType, visual: Visual,

@@ -7,7 +7,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import cast, Dict, Final, List, MutableMapping, Optional, Tuple
+from typing import cast, Dict, Final, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -38,7 +38,7 @@ from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import FileCacheFactory, Mode, Parser, SectionNameCollection, Source, Summarizer
 from .host_sections import HostSections, PersistedSections, SectionStore
-from .type_defs import AgentSectionContent, PiggybackRawData, SectionCacheInfo
+from .type_defs import AgentSectionContent
 
 __all__ = ["AgentSource", "AgentHostSections"]
 
@@ -349,11 +349,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         Returns a HostSections() object.
         """
-        hostname = self.hostname
-        sections: MutableMapping[SectionName, AgentSectionContent] = {}
-        # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
-        # The value is a list of lines which were received for this host.
-        piggybacked_raw_data: PiggybackRawData = {}
+        host_sections = AgentHostSections()
+
         piggybacked_hostname = None
         piggybacked_cached_at = int(time.time())
         # Transform to seconds and give the piggybacked host a little bit more time
@@ -363,21 +360,24 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         persisted_sections = PersistedSections[AgentSectionContent]({})
         section_content: Optional[AgentSectionContent] = None
         section_options: Dict[str, Optional[str]] = {}
-        agent_cache_info: SectionCacheInfo = {}
         separator: Optional[str] = None
         encoding = None
         for line in raw_data.split(b"\n"):
             line = line.rstrip(b"\r")
             stripped_line = line.strip()
             if stripped_line[:4] == b'<<<<' and stripped_line[-4:] == b'>>>>':
-                piggybacked_hostname =\
-                    AgentParser._get_sanitized_and_translated_piggybacked_hostname(stripped_line, hostname)
+                piggybacked_hostname = (
+                    AgentParser._get_sanitized_and_translated_piggybacked_hostname(
+                        stripped_line, self.hostname))
 
             elif piggybacked_hostname:  # processing data for an other host
                 if stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
                     line = AgentParser._add_cached_info_to_piggybacked_section_header(
-                        stripped_line, piggybacked_cached_at, piggybacked_cache_age)
-                piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
+                        stripped_line,
+                        piggybacked_cached_at,
+                        piggybacked_cache_age,
+                    )
+                host_sections.piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             # Found normal section header
             # section header format: <<<name:opt1(args):opt2:opt3(args)>>>
@@ -395,7 +395,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
                     section_content = None
                     continue
-                section_content = sections.setdefault(section_name, [])
+                section_content = host_sections.sections.setdefault(section_name, [])
 
                 raw_separator = section_options.get("sep")
                 if raw_separator is None:
@@ -409,7 +409,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     until = int(raw_persist)
                     cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = int(until - cached_at)
-                    agent_cache_info[section_name] = (cached_at, cache_interval)
+                    host_sections.cache_info[section_name] = (cached_at, cache_interval)
                     # pylint does not seem to understand `NewType`... leave the checking up to mypy.
                     persisted_sections[section_name] = (  # false positive: pylint: disable=E1137
                         (cached_at, until, section_content))
@@ -417,7 +417,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                 raw_cached = section_options.get("cached")
                 if raw_cached is not None:
                     cache_times = list(map(int, raw_cached.split(",")))
-                    agent_cache_info[section_name] = cache_times[0], cache_times[1]
+                    host_sections.cache_info[section_name] = cache_times[0], cache_times[1]
 
                 # The section data might have a different encoding
                 encoding = section_options.get("encoding")
@@ -435,11 +435,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
                 section_content.append(decoded_line.split(separator))
 
-        return AgentHostSections(
-            sections,
-            cache_info=agent_cache_info,
-            piggybacked_raw_data=piggybacked_raw_data,
-        ), persisted_sections
+        return host_sections, persisted_sections
 
     @staticmethod
     def _parse_section_header(

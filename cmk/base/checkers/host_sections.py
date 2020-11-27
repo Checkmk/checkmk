@@ -181,6 +181,8 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
         *,
         cache_info: Optional[SectionCacheInfo] = None,
         piggybacked_raw_data: Optional[PiggybackRawData] = None,
+        # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
+        # The value is a list of lines which were received for this host.
     ) -> None:
         super().__init__()
         self.sections = sections if sections else {}

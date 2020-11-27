@@ -18,7 +18,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, Row
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -107,8 +107,9 @@ class FilterText(Filter):
             )
         return ""
 
-    def variable_settings(self, row):
-        return [(self.htmlvars[0], row[self.column])]
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        assert isinstance(self.column, str)
+        return {self.htmlvars[0]: row[self.column]}
 
     def heading_info(self):
         if self._show_heading:
@@ -289,8 +290,8 @@ class FilterIPAddress(Filter):
         varname = "ADDRESS_4" if self._what == "ipv4" else "ADDRESS_6"
         return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
 
-    def variable_settings(self, row):
-        return [(self.htmlvars[0], row["host_address"])]
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {self.htmlvars[0]: row["host_address"]}
 
     def heading_info(self):
         return html.request.var(self.htmlvars[0])
@@ -540,17 +541,17 @@ class FilterGroupCombo(Filter):
             negate = ""
         return "Filter: %s %s>= %s\n" % (col, negate, livestatus.lqencode(current_value))
 
-    def variable_settings(self, row):
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         varname = self.htmlvars[0]
         value = row.get(self.what + "group_name")
         if value:
-            s = [(varname, value)]
+            s = {varname: value}
             if not self.enforce:
                 negvar = self.htmlvars[1]
                 if html.request.var(negvar):
-                    s.append((negvar, html.request.var(negvar)))
+                    s[negvar] = html.request.var(negvar)
             return s
-        return []
+        return {}
 
     def heading_info(self):
         current_value = self.current_value()
@@ -685,9 +686,9 @@ class FilterGroupSelection(Filter):
             return "Filter: %s_name = %s\n" % (self.what, livestatus.lqencode(current_value))
         return ""
 
-    def variable_settings(self, row):
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         group_name = row[self.what + "_name"]
-        return [(self.htmlvars[0], group_name)]
+        return {self.htmlvars[0]: group_name}
 
 
 filter_registry.register(
@@ -1347,8 +1348,8 @@ class SiteFilter(Filter):
             return filter_cme_heading_info()
         return filter_cre_heading_info()
 
-    def variable_settings(self, row):
-        return [("site", row["site"])]
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {"site": row["site"]}
 
 
 filter_registry.register(
@@ -2061,8 +2062,8 @@ class LabelFilter(Filter):
     def heading_info(self):
         return " ".join(":".join(e) for e in sorted(self._current_value().items()))
 
-    def variable_settings(self, row):
-        return [(self.htmlvars[0], row[self._column])]
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {self.htmlvars[0]: row[self._column]}
 
     def _valuespec(self):
         return Labels(world=Labels.World.CORE)
@@ -2382,8 +2383,8 @@ class FilterAggrGroup(Filter):
                          htmlvars=[self.column],
                          link_columns=[self.column])
 
-    def variable_settings(self, row):
-        return [(self.htmlvars[0], row[self.column])]
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {self.htmlvars[0]: row[self.column]}
 
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
@@ -2415,8 +2416,8 @@ class FilterAggrGroupTree(Filter):
                          htmlvars=[self.column],
                          link_columns=[self.column])
 
-    def variable_settings(self, row):
-        return [(self.htmlvars[0], row[self.column])]
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {self.htmlvars[0]: row[self.column]}
 
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
@@ -2484,8 +2485,8 @@ class BITextFilter(Filter):
                          htmlvars=[self.column + suffix],
                          link_columns=[self.column])
 
-    def variable_settings(self, row):
-        return [(self.htmlvars[0], row[self.column])]
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {self.htmlvars[0]: row[self.column]}
 
     def display(self) -> None:
         html.text_input(self.htmlvars[0])
@@ -2562,9 +2563,11 @@ class FilterAggrHosts(Filter):
                 return True
         return False
 
-    # Used for linking
-    def variable_settings(self, row):
-        return [("aggr_host_host", row["host_name"]), ("aggr_host_site", row["site"])]
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {
+            "aggr_host_host": row["host_name"],
+            "aggr_host_site": row["site"],
+        }
 
     def filter_table(self, rows):
         val = html.request.var(self.htmlvars[1])
@@ -2606,10 +2609,12 @@ class FilterAggrService(Filter):
                     html.request.get_unicode_input(self.htmlvars[1]),
                     html.request.get_unicode_input(self.htmlvars[2]))
 
-    # Used for linking
-    def variable_settings(self, row):
-        return [("site", row["site"]), ("host", row["host_name"]),
-                ("service", row["service_description"])]
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {
+            "site": row["site"],
+            "host": row["host_name"],
+            "service": row["service_description"],
+        }
 
 
 class BIStatusFilter(Filter):
@@ -3078,5 +3083,5 @@ class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
                "Or: 2\n" % (negate, livestatus.lqencode(current_value),
                             negate, livestatus.lqencode(current_value))
 
-    def variable_settings(self, row):
-        return []
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        return {}

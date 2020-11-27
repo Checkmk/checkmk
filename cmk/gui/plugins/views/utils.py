@@ -1088,19 +1088,18 @@ def url_to_view(row: Row, view_name: ViewName) -> Optional[str]:
             for filter_name in visuals.info_params(info_key):
                 filter_object = visuals.get_filter(filter_name)
                 # Get the list of URI vars to be set for that filter
-                new_vars = filter_object.variable_settings(row)
-                url_vars += new_vars
+                url_vars += filter_object.request_vars_from_row(row).items()
 
     # See get_link_filter_names() comment for details
     for src_key, dst_key in visuals.get_link_filter_names(view, datasource.infos,
                                                           datasource.link_filters):
         try:
-            url_vars += visuals.get_filter(src_key).variable_settings(row)
+            url_vars += visuals.get_filter(src_key).request_vars_from_row(row).items()
         except KeyError:
             pass
 
         try:
-            url_vars += visuals.get_filter(dst_key).variable_settings(row)
+            url_vars += visuals.get_filter(dst_key).request_vars_from_row(row).items()
         except KeyError:
             pass
 

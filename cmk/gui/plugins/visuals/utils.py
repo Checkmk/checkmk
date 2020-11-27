@@ -21,7 +21,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
-from cmk.gui.type_defs import ColumnName, HTTPVariables
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.htmllib import Choices
 from cmk.gui.page_menu import PageMenuEntry
 
@@ -267,9 +267,9 @@ class Filter(metaclass=abc.ABCMeta):
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 
-    def variable_settings(self, row: dict) -> HTTPVariables:
-        """return pairs of htmlvar and name according to dataset in row"""
-        return []
+    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+        """return filter request variables built from the given row"""
+        return {}
 
     def infoprefix(self, infoname: str) -> str:
         if self.info == infoname:

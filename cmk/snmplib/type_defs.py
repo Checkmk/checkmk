@@ -6,7 +6,6 @@
 
 import abc
 import enum
-import json
 import logging
 from typing import (
     Any,
@@ -91,24 +90,17 @@ SNMPDeviceTypes = [
 ]
 
 
-class SNMPEnumEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, SNMPBackend):
-            return {"__snmpenum__": str(o)}
-        return json.JSONEncoder.default(self, o)
-
-
-def read_as_enum(data):
-    if "__snmpenum__" in data:
-        _type_enum, name = data["__snmpenum__"].split(".")
-        return getattr(SNMPBackend, name)
-    return data
-
-
 class SNMPBackend(enum.Enum):
     inline = "Inline"
     inline_legacy = "Inline (legacy)"
     classic = "Classic"
+
+    def serialize(self) -> str:
+        return self.name
+
+    @classmethod
+    def deserialize(cls, name: str) -> "SNMPBackend":
+        return cls[name]
 
 
 class SNMPDetectSpec(_SNMPDetectBaseType):
@@ -159,6 +151,7 @@ class SNMPHostConfig(
                 return rules
         return [None]
 
+    # TODO: Why not directly use SNMPHostConfig._replace(...)?
     def update(self, **kwargs: Dict[str, Any]) -> "SNMPHostConfig":
         """Return a new SNMPHostConfig with updated attributes."""
         cfg = self._asdict()
@@ -172,6 +165,16 @@ class SNMPHostConfig(
             return ensure_str(value, "utf-8")
         except UnicodeDecodeError:
             return ensure_str(value, "latin1")
+
+    def serialize(self):
+        serialized = self._asdict()
+        serialized["snmp_backend"] = serialized["snmp_backend"].serialize()
+        return serialized
+
+    @classmethod
+    def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPHostConfig":
+        serialized["snmp_backend"] = SNMPBackend.deserialize(serialized["snmp_backend"])
+        return cls(**serialized)
 
 
 class ABCSNMPBackend(metaclass=abc.ABCMeta):

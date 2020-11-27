@@ -192,7 +192,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             on_error=serialized["on_error"],
             missing_sys_description=serialized["missing_sys_description"],
             do_status_data_inventory=serialized["do_status_data_inventory"],
-            snmp_config=SNMPHostConfig(**serialized["snmp_config"]),
+            snmp_config=SNMPHostConfig.deserialize(serialized["snmp_config"]),
         )
 
     def to_json(self) -> Dict[str, Any]:
@@ -202,7 +202,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
             "do_status_data_inventory": self.do_status_data_inventory,
-            "snmp_config": self.snmp_config._asdict(),
+            "snmp_config": self.snmp_config.serialize(),
         }
 
     def open(self) -> None:

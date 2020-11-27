@@ -27,8 +27,6 @@ from cmk.snmplib.type_defs import (
     SNMPRawData,
     SNMPTable,
     SNMPBackend,
-    SNMPEnumEncoder,
-    read_as_enum,
 )
 
 from cmk.fetchers import FetcherType, MKFetcherError, snmp
@@ -46,7 +44,7 @@ SensorReading = namedtuple(
 
 
 def json_identity(data):
-    return json.loads(json.dumps(data, cls=SNMPEnumEncoder), object_hook=read_as_enum)
+    return json.loads(json.dumps(data))
 
 
 def clone_file_cache(file_cache):

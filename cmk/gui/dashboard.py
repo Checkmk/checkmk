@@ -1254,7 +1254,29 @@ def _add_context_to_dashboard(board: DashboardConfig) -> DashboardConfig:
 
 @cmk.gui.pages.register("edit_dashboards")
 def page_edit_dashboards() -> None:
-    visuals.page_list('dashboards', _("Edit Dashboards"), get_all_dashboards())
+    visuals.page_list(what='dashboards',
+                      title=_("Edit Dashboards"),
+                      visuals=get_all_dashboards(),
+                      render_custom_buttons=_render_dashboard_buttons)
+
+
+def _render_dashboard_buttons(dashboard_name: DashboardName, dashboard: DashboardConfig) -> None:
+    if dashboard["owner"] == config.user.id:
+        html.icon_button(
+            makeuri_contextless(
+                request,
+                [
+                    ('name', dashboard_name),
+                    ('edit', '1'),
+                ],
+                'dashboard.py',
+            ),
+            title=_("Edit dashboard"),
+            icon={
+                "icon": "dashboard",
+                "emblem": "edit"
+            },
+        )
 
 
 #.

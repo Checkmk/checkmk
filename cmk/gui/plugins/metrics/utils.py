@@ -313,15 +313,16 @@ def get_metric_info(metric_name, color_index):
 
     if metric_name not in metric_info:
         color_index += 1
-        palette_color = get_palette_color_by_index(color_index)
         mi = {
             "title": metric_name.title(),
             "unit": "",
-            "color": parse_color_into_hexrgb(palette_color),
+            "color": get_palette_color_by_index(color_index),
         }
     else:
         mi = metric_info[metric_name].copy()
-        mi["color"] = parse_color_into_hexrgb(mi["color"])
+
+    mi["unit"] = unit_info[mi["unit"]]
+    mi["color"] = parse_color_into_hexrgb(mi["color"])
 
     return mi, color_index
 
@@ -342,8 +343,6 @@ def translate_metrics(perf_data: List[Tuple], check_command: str) -> TranslatedM
 
         mi, color_index = get_metric_info(metric_name, color_index)
         new_entry.update(mi)
-
-        new_entry["unit"] = unit_info[new_entry["unit"]]
 
         if metric_name in translated_metrics:
             translated_metrics[metric_name]["orig_name"].extend(new_entry["orig_name"])

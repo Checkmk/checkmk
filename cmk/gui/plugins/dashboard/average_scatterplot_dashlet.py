@@ -13,6 +13,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     Dictionary,
+    GraphColor,
     Timerange,
 )
 from cmk.gui.pages import page_registry, AjaxPage
@@ -21,7 +22,7 @@ from cmk.gui.plugins.dashboard.utils import site_query
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns, merge_multicol
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
-import cmk.gui.metrics as metrics
+from cmk.gui.plugins.metrics.utils import get_metric_info
 
 
 class AverageScatterplotDataGenerator(ABCDataGenerator):
@@ -49,11 +50,6 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         return " / ".join(txt for txt in title)
 
     @classmethod
-    def _get_metric_name(cls, properties, context):
-        metric = metrics.metric_info.get(properties["metric"])
-        return metric["title"] if metric else properties["metric"]
-
-    @classmethod
     def vs_parameters(cls):
         return Dictionary(title=_("Properties"),
                           render="form",
@@ -64,6 +60,15 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
                                   title=_("Time range"),
                                   default_value='d0',
                               )),
+                              ("metric_color",
+                               GraphColor(title=_("Color for the main metric scattered dots"),
+                                          default_value="default")),
+                              ("avg_color",
+                               GraphColor(title=_("Color for the average line"),
+                                          default_value="default")),
+                              ("median_color",
+                               GraphColor(title=_("Color for the median line"),
+                                          default_value="default")),
                           ])
 
     @classmethod
@@ -91,25 +96,34 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
 
     @classmethod
     def _create_scatterplot_config(cls, elements, properties, context, settings):
-        metric_name = cls._get_metric_name(properties, context)
+        metric = get_metric_info(properties["metric"], 0)[0]
+        metric_name = metric["title"]
+
+        metric_color = metric['color'] if properties.get(
+            "metric_color", "default") == "default" else properties['metric_color']
+        avg_color = "#0F62AF" if properties.get("avg_color",
+                                                "default") == "default" else properties['avg_color']
+        median_color = "#3CC2FF" if properties.get(
+            "median_color", "default") == "default" else properties['median_color']
+
         return {
             "title": cls.figure_title(properties, context, settings),
             "plot_definitions": [{
                 "plot_type": "scatterplot",
-                "css_classes": ["scatterdot"],
                 "id": "id_scatter",
+                "color": metric_color,
                 "label": _("%s by host") % metric_name,
                 "use_tags": ["scatter"]
             }, {
                 "plot_type": "line",
-                "css_classes": ["mean_line"],
                 "id": "id_mean",
+                "color": avg_color,
                 "label": _("Mean %s") % metric_name,
                 "use_tags": ["line_mean"]
             }, {
                 "plot_type": "line",
-                "css_classes": ["median_line"],
                 "id": "id_median",
+                "color": median_color,
                 "label": _("Median %s") % metric_name,
                 "use_tags": ["line_median"]
             }],
@@ -142,7 +156,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         columns, data_rows = cls._get_data(properties, context)  # type: ignore[call-arg]
         elements = []
 
-        metric_name = cls._get_metric_name(properties, context)
+        metric_name = get_metric_info(properties["metric"], 0)[0]["title"]
         for row in data_rows:
             d_row = dict(zip(columns, row))
             series = merge_multicol(d_row, columns, properties)

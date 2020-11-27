@@ -597,7 +597,6 @@ class TextAscii(ValueSpec):
             autocomplete="off" if not self._autocomplete else None,
             onkeyup=self._onkeyup if self._onkeyup else None,
             placeholder=self._placeholder,
-            required=not self._allow_empty,
         )
 
     # NOTE: Class hierarchy is broken, we can get Unicode here!
@@ -1539,9 +1538,6 @@ class TextAreaUnicode(TextUnicode):
 
         if self._monospaced:
             attrs["class"] = "tt"
-
-        if not self._allow_empty:
-            attrs["required"] = ""
 
         html.text_area(varprefix,
                        value,
@@ -5254,7 +5250,6 @@ class Password(TextAscii):
             str(value),
             size=self._size,
             autocomplete="new-password" if self._autocomplete is False else None,
-            required=not self._allow_empty,
         )
 
     def password_plaintext_warning(self) -> None:

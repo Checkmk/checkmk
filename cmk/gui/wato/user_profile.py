@@ -402,14 +402,14 @@ class UserChangePasswordPage(ABCUserProfilePage):
         html.open_div(class_="wato")
         forms.header(self._page_title())
 
-        forms.section(_("Current password"), is_required=True)
-        html.password_input('cur_password', autocomplete="new-password", required=True)
+        forms.section(_("Current Password"))
+        html.password_input('cur_password', autocomplete="new-password")
 
-        forms.section(_("New password"), is_required=True)
-        html.password_input('password', autocomplete="new-password", required=True)
+        forms.section(_("New Password"))
+        html.password_input('password', autocomplete="new-password")
 
-        forms.section(_("New password confirmation"), is_required=True)
-        html.password_input('password2', autocomplete="new-password", required=True)
+        forms.section(_("New Password Confirmation"))
+        html.password_input('password2', autocomplete="new-password")
 
         forms.end()
         html.close_div()

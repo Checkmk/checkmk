@@ -2166,8 +2166,7 @@ class html(ABCHTMLGenerator):
                        submit: Optional[str] = None,
                        try_max_width: bool = False,
                        read_only: bool = False,
-                       autocomplete: Optional[str] = None,
-                       required: bool = False) -> None:
+                       autocomplete: Optional[str] = None) -> None:
         self.text_input(varname,
                         default_value,
                         cssclass=cssclass,
@@ -2178,8 +2177,7 @@ class html(ABCHTMLGenerator):
                         type_="password",
                         try_max_width=try_max_width,
                         read_only=read_only,
-                        autocomplete=autocomplete,
-                        required=required)
+                        autocomplete=autocomplete)
 
     def text_area(self,
                   varname: str,

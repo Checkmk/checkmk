@@ -172,6 +172,7 @@ public:
     virtual void emitContext(std::ostream &os) const = 0;
 
     virtual void log(const LogRecord &record) = 0;
+    virtual void callHandler(const LogRecord &record) = 0;
 };
 
 class ConcreteLogger : public Logger {
@@ -197,6 +198,7 @@ public:
     void log(const LogRecord &record) override;
 
 private:
+    void callHandler(const LogRecord &record) override;
     const std::string _name;
     Logger *const _parent;
     std::atomic<LogLevel> _level;
@@ -228,6 +230,9 @@ public:
 
 protected:
     Logger *const _logger;
+
+private:
+    void callHandler(const LogRecord &record) override;
 };
 
 class ContextLogger : public LoggerDecorator {

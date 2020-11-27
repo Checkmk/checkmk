@@ -1,0 +1,15 @@
+Title: agent_azure: fixed Section Name error when configuring Azure special agent
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1606409656
+
+Running the Azure special agent caused some errors in relation to the section
+names. Example error message:
+ValueError: invalid character for SectionName 'Default-ActivityLogAlerts': '-'
+This has been fixed.

@@ -389,6 +389,27 @@ int RunService(std::wstring_view app_name) {
 }
 }  // namespace srv
 
+namespace {
+void WaitForPostInstall() {
+    using namespace std::chrono_literals;
+    if (!cma::install::IsPostInstallRequired()) return;
+
+    std::cout << "Finalizing installation, please wait";
+    int count = 0;
+
+    do {
+        std::this_thread::sleep_for(1s);
+        std::cout << ".";
+        ++count;
+        if (count > 240) {
+            std::cout << "Service is failed or nor running";
+            ::exit(73);
+        }
+    } while (cma::install::IsPostInstallRequired());
+}
+
+}  // namespace
+
 // #TODO Function is over complicated
 // we want to test main function too.
 // so we have main, but callable
@@ -404,17 +425,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::RunService(Argv[0]);
     }
 
-    int count = 0;
-    while (cma::install::IsPostInstallRequired()) {
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(1s);
-        std::cout << ".";
-        ++count;
-        if (count > 240) {
-            std::cout << "Service is failed or nor running";
-            ::exit(73);
-        }
-    }
+    WaitForPostInstall();
 
     std::wstring param(Argv[1]);
     if (param == cma::exe::cmdline::kRunOnceParam) {

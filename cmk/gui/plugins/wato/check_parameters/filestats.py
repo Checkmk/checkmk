@@ -121,18 +121,24 @@ def _parameter_valuespec_filestats():
              )),
             ("show_all_files",
              Checkbox(title=_("Show all files in long output"), label=("Show files"))),
-            ("additional_rules",
-             ListOf(Tuple(elements=[
-                 RegExpUnicode(title=_("Filename/- expression"), mode="case_sensitive"),
-                 Dictionary(elements=file_size_age_elements),
-             ],),
-                    title=_("Additional rules for files"),
-                    help=_("You can specify a filename or a regular expresion, and additional "
-                           "rules that are applied to the matching files. This means that the "
-                           "rules set for the whole file group are overwritten for those files. "
-                           "Note that the order in which you specify the rules matters: "
-                           "in case of multiple matching rules, the first matching rule is "
-                           "applied."))),
+            (
+                "additional_rules",
+                ListOf(
+                    Tuple(elements=[
+                        RegExpUnicode(title=_("Filename/- expression"), mode="case_sensitive"),
+                        Dictionary(elements=file_size_age_elements),
+                    ],),
+                    title=_("Additional rules for outliers"),
+                    help=_("This feature is to apply different rules to files that are "
+                           "inconsistent with the files expected in this file group. "
+                           "This means that the rules set for the file group are overwritten. "
+                           "You can specify a filename or a regular expresion, and additional "
+                           "rules that are applied to the matching files. In case of multiple "
+                           "matching rules, the first matching rule is applied. "
+                           "Note: this feature is intended for outliers, and is therefore not "
+                           "suitable to configure subgroups. "),
+                ),
+            ),
         ],
         help=_("Here you can impose various levels on the results reported by the"
                " mk_filstats plugin. Note that some levels only apply to a matching"

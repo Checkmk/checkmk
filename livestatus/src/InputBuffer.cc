@@ -3,11 +3,11 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+// IWYU pragma: no_include <type_traits>  // CI wants it
 #include "InputBuffer.h"
 
 #include <unistd.h>
 
-// IWYU pragma: no_include <type_traits>
 #include <cctype>
 #include <cerrno>
 #include <cstring>

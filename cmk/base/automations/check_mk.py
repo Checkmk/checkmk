@@ -65,6 +65,7 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 
 from cmk.base.automations import Automation, automations, MKAutomationError
+from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, ServiceLabel
@@ -229,15 +230,18 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 
-        new_services: List[Service] = []
-        for (raw_check_plugin_name, item), (descr, params, raw_service_labels) in new_items.items():
+        new_services: List[ServiceWithNodes] = []
+        for (raw_check_plugin_name, item), (descr, params, raw_service_labels,
+                                            found_on_nodes) in new_items.items():
             check_plugin_name = CheckPluginName(raw_check_plugin_name)
 
             service_labels = DiscoveredServiceLabels()
             for label_id, label_value in raw_service_labels.items():
                 service_labels.add_label(ServiceLabel(label_id, label_value))
 
-            new_services.append(Service(check_plugin_name, item, descr, params, service_labels))
+            new_services.append(
+                ServiceWithNodes(Service(check_plugin_name, item, descr, params, service_labels),
+                                 found_on_nodes))
 
         host_config.set_autochecks(new_services)
         self._trigger_discovery_check(config_cache, host_config)

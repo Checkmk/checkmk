@@ -225,37 +225,43 @@ def test_automation_try_discovery_host(test_cfg, site):
 
 
 def test_automation_set_autochecks(test_cfg, site):
+    hostname = "blablahost"
     new_items: SetAutochecksTable = {
         ("df", "xxx"): ("Filesystem xxx", {}, {
             u"xyz": u"123"
-        }),
-        ("uptime", None): ("Uptime", None, {}),
+        }, [hostname]),
+        ("uptime", None): ("Uptime", None, {}, [hostname]),
     }
 
     try:
-        data = _execute_automation(site,
-                                   "set-autochecks",
-                                   args=["blablahost"],
-                                   stdin=repr(new_items))
+        data = _execute_automation(site, "set-autochecks", args=[hostname], stdin=repr(new_items))
         assert data is None
 
-        autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, "blablahost")
+        autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
         assert os.path.exists(autochecks_file)
 
-        data = autochecks.parse_autochecks_file("blablahost", config.service_description)
+        data = autochecks.parse_autochecks_file(hostname, config.service_description)
         services = [((str(s.check_plugin_name), s.item), s.parameters, s.service_labels.to_dict())
                     for s in data]
         assert sorted(services) == [
-            (('df', u'xxx'), {}, {
-                u"xyz": u"123"
-            }),
-            (('uptime', None), None, {}),
+            (
+                ('df', u'xxx'),
+                {},
+                {
+                    u"xyz": u"123"
+                },
+            ),
+            (
+                ('uptime', None),
+                None,
+                {},
+            ),
         ]
 
-        assert site.file_exists("var/check_mk/autochecks/blablahost.mk")
+        assert site.file_exists("var/check_mk/autochecks/%s.mk" % hostname)
     finally:
-        if site.file_exists("var/check_mk/autochecks/blablahost.mk"):
-            site.delete_file("var/check_mk/autochecks/blablahost.mk")
+        if site.file_exists("var/check_mk/autochecks/%s.mk" % hostname):
+            site.delete_file("var/check_mk/autochecks/%s.mk" % hostname)
 
 
 def test_automation_update_dns_cache(test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name

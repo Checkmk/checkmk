@@ -13,7 +13,8 @@ import re
 import hashlib
 from pathlib import Path
 import traceback
-from typing import Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Dict, Type, cast
+from typing import (Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional,
+                    Union, Dict, Type, cast)
 
 from six import ensure_str
 
@@ -56,7 +57,6 @@ from cmk.gui.pagetypes import PagetypeTopics
 
 from cmk.gui.type_defs import (
     ColumnName,
-    ViewName,
     LivestatusQuery,
     SorterName,
     HTTPVariables,
@@ -1057,12 +1057,12 @@ def format_plugin_output(output: CellContent, row: Row) -> str:
                                                    shall_escape=config.escape_plugin_output)
 
 
-def render_link_to_view(content: CellContent, row: Row, view_name: ViewName) -> CellContent:
+def render_link_to_view(content: CellContent, row: Row, link_spec: VisualLinkSpec) -> CellContent:
     assert not isinstance(content, dict)
     if display_options.disabled(display_options.I):
         return content
 
-    url = url_to_visual(row, VisualLinkSpec("views", view_name))
+    url = url_to_visual(row, link_spec)
     if url:
         return html.render_a(content, href=url)
     return content
@@ -1641,7 +1641,7 @@ class Cell:
         self._view = view
         self._painter_name: Optional[PainterName] = None
         self._painter_params: Optional[PainterParameters] = None
-        self._link_view_name: Optional[ViewName] = None
+        self._link_spec: Optional[VisualLinkSpec] = None
         self._tooltip_painter_name: Optional[PainterName] = None
         self._custom_title: Optional[str] = None
 
@@ -1654,7 +1654,8 @@ class Cell:
             self._painter_params = painter_spec[0][1]
             self._custom_title = self._painter_params.get('column_title', None)
 
-        self._link_view_name = painter_spec.link_view
+        if painter_spec.link_view is not None:
+            self._link_spec = VisualLinkSpec("views", painter_spec.link_view)
 
         tooltip_painter_name = painter_spec.tooltip
         if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
@@ -1686,11 +1687,11 @@ class Cell:
         return None
 
     def _link_view(self) -> Optional[ViewSpec]:
-        if self._link_view_name is None:
+        if self._link_spec is None:
             return None
 
         try:
-            return get_permitted_views()[self._link_view_name]
+            return get_permitted_views()[self._link_spec.name]
         except KeyError:
             return None
 
@@ -1855,8 +1856,8 @@ class Cell:
             return "", ""
 
         # Add the optional link to another view
-        if content and self._link_view_name is not None:
-            content = render_link_to_view(content, row, self._link_view_name)
+        if content and self._link_spec is not None:
+            content = render_link_to_view(content, row, self._link_spec)
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():

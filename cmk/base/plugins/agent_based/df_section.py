@@ -184,4 +184,5 @@ def parse_df(string_table: StringTable) -> Section:
 register.agent_section(
     name="df",
     parse_function=parse_df,
+    supersedes=['hr_fs'],
 )

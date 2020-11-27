@@ -245,12 +245,16 @@ def make_global_config_path(serial: ConfigSerial) -> Path:
     return paths.make_fetchers_config_path(serial) / "global_config.json"
 
 
-# Idea is based on the cmk method:
-# We are writing to non-blocking socket, because simple sys.stdout.write requires flushing
-# and flushing is not always appropriate. fd is fixed by design: stdout is always 1 and microcore
-# receives data from stdout
 def write_bytes(data: bytes) -> None:
+    """Idea is based on the cmk method.
+    Data will be received  by Microcore from a non-blocking socket, thus simple sys.stdout.write
+    makes flushing mandatory, which is not always appropriate.
+
+    1 is a file descriptor, which  is fixed by design: stdout is always 1 and microcore will
+    receive data from stdout.
+
+    The socket, we are writing in, is blocking, thus loop will not overload CPU in any case.
+    """
     while data:
         bytes_written = os.write(1, data)
         data = data[bytes_written:]
-        # TODO (ml): We need improve performance - 100% CPU load if Microcore is busy

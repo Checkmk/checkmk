@@ -1091,7 +1091,7 @@ def url_to_view(row: Row, view_name: ViewName) -> Optional[str]:
                 url_vars += filter_object.request_vars_from_row(row).items()
 
     # See get_link_filter_names() comment for details
-    for src_key, dst_key in visuals.get_link_filter_names(view, datasource.infos,
+    for src_key, dst_key in visuals.get_link_filter_names(view["single_infos"], datasource.infos,
                                                           datasource.link_filters):
         try:
             url_vars += visuals.get_filter(src_key).request_vars_from_row(row).items()

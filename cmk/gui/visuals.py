@@ -1133,10 +1133,12 @@ def filters_allowed_for_infos(info_list: List[str]) -> Dict[str, Filter]:
 # is some kind of filter translation between a filter of the "hostgroup" info
 # and the "hosts" info.
 def get_link_filter_names(
-        visual: Visual, info_keys: List[InfoName],
-        link_filters: Dict[FilterName, FilterName]) -> List[Tuple[FilterName, FilterName]]:
+    single_infos: SingleInfos,
+    info_keys: List[InfoName],
+    link_filters: Dict[FilterName, FilterName],
+) -> List[Tuple[FilterName, FilterName]]:
     names: List[Tuple[FilterName, FilterName]] = []
-    for info_key in visual['single_infos']:
+    for info_key in single_infos:
         if info_key not in info_keys:
             for key in info_params(info_key):
                 if key in link_filters:
@@ -1167,7 +1169,7 @@ def filters_of_visual(visual: Visual,
                     pass  # Silently ignore not existing filters
 
     # See get_link_filter_names() comment for details
-    for key, dst_key in get_link_filter_names(visual, info_keys, link_filters):
+    for key, dst_key in get_link_filter_names(visual["single_infos"], info_keys, link_filters):
         filters[dst_key] = get_filter(dst_key)
 
     # add ubiquitary_filters that are possible for these infos

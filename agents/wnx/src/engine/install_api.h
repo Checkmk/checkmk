@@ -57,9 +57,10 @@ inline const std::wstring GetMsiRegistryPath() {
 // set StartUpdateProcess to 'skip' to test functionality
 // BackupPath may be empty, normally points out on the install folder
 // DirWithMsi is update dir in ProgramData
-bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
-                        UpdateType Update, UpdateProcess StartUpdateProcess,
-                        std::wstring_view BackupPath = L"");
+bool CheckForUpdateFile(std::wstring_view msi_name, std::wstring_view msi_dir,
+                        UpdateType update_type,
+                        UpdateProcess start_update_process,
+                        std::wstring_view backup_dir = L"");
 
 std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
 std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
@@ -70,19 +71,19 @@ std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
 // Diagnostic is cma::install!
 
 // noexcept remove file
-bool RmFile(const std::filesystem::path& File) noexcept;
+bool RmFile(const std::filesystem::path& file_name) noexcept;
 
 // noexcept move file
-bool MvFile(const std::filesystem::path& Old,
-            const std::filesystem::path& New) noexcept;
+bool MvFile(const std::filesystem::path& source_file,
+            const std::filesystem::path& destination_file) noexcept;
 
 // noexcept backup file(if possible)
-void BackupFile(const std::filesystem::path& File,
-                const std::filesystem::path& Dir) noexcept;
+void BackupFile(const std::filesystem::path& file_name,
+                const std::filesystem::path& backup_dir) noexcept;
 
 // noexcept check whether incoming file is newer
-bool NeedInstall(const std::filesystem::path& IncomingFile,
-                 const std::filesystem::path& BackupDir) noexcept;
+bool NeedInstall(const std::filesystem::path& incoming_file,
+                 const std::filesystem::path& backup_dir) noexcept;
 // ****************************************
 
 bool IsPostInstallRequired();

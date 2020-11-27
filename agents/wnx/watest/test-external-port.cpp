@@ -113,7 +113,8 @@ TEST(ExternalPortTest, Read) {
 
         asio::ip::tcp::socket sock(ios);
 
-        sock.connect(endpoint);
+        std::error_code ec;
+        sock.connect(endpoint, ec);
         auto [ip, ipv6] = GetSocketInfo(sock);
         EXPECT_TRUE(ip == "127.0.0.1");
         EXPECT_FALSE(ipv6);

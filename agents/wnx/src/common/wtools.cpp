@@ -2260,21 +2260,21 @@ uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
 #define EXECUTE_PERMISSIONS (FILE_READ_DATA | FILE_EXECUTE)
 
 // Constructor
-ACLInfo::ACLInfo(_bstr_t bstrPath) {
+ACLInfo::ACLInfo(_bstr_t bstrPath) noexcept {
     ace_list_ = nullptr;
     path_ = bstrPath;
 }
 
 // Destructor
-ACLInfo::~ACLInfo(void) {
+ACLInfo::~ACLInfo() {
     // Free ace_list structure
     clearAceList();
 }
 
 // Free the nodes of ace_list
-void ACLInfo::clearAceList() {
+void ACLInfo::clearAceList() noexcept {
     AceList* pList = ace_list_;
-    AceList* pNext;
+    AceList* pNext = nullptr;
     while (nullptr != pList) {
         pNext = pList->next;
         free(pList);
@@ -2284,7 +2284,7 @@ void ACLInfo::clearAceList() {
     ace_list_ = nullptr;
 }
 
-HRESULT ACLInfo::query() {
+HRESULT ACLInfo::query() noexcept {
     BOOL success = TRUE;
     BYTE* security_descriptor_buffer = nullptr;
     DWORD size_needed = 0;
@@ -2294,8 +2294,8 @@ HRESULT ACLInfo::query() {
 
     // Find out size of needed buffer for security descriptor with DACL
     // DACL = Discretionary Access Control List
-    success = GetFileSecurityW((BSTR)path_, DACL_SECURITY_INFORMATION, nullptr,
-                               0, &size_needed);
+    success = ::GetFileSecurityW((BSTR)path_, DACL_SECURITY_INFORMATION,
+                                 nullptr, 0, &size_needed);
 
     if (0 == size_needed) {
         return E_FAIL;
@@ -2303,14 +2303,14 @@ HRESULT ACLInfo::query() {
     security_descriptor_buffer = new BYTE[size_needed];
 
     // Retrieve security descriptor with DACL information
-    success =
-        GetFileSecurityW((BSTR)path_, DACL_SECURITY_INFORMATION,
-                         security_descriptor_buffer, size_needed, &size_needed);
+    success = ::GetFileSecurityW((BSTR)path_, DACL_SECURITY_INFORMATION,
+                                 security_descriptor_buffer, size_needed,
+                                 &size_needed);
 
     // Check if we successfully retrieved security descriptor with DACL
     // information
     if (!success) {
-        DWORD error = GetLastError();
+        auto error = ::GetLastError();
         XLOG::l("Failed to get file security information {}", error);
         return E_FAIL;
     }
@@ -2319,13 +2319,13 @@ HRESULT ACLInfo::query() {
     PACL acl = nullptr;
     BOOL bDaclPresent = FALSE;
     BOOL bDaclDefaulted = FALSE;
-    success = GetSecurityDescriptorDacl(
+    success = ::GetSecurityDescriptorDacl(
         (SECURITY_DESCRIPTOR*)security_descriptor_buffer, &bDaclPresent, &acl,
         &bDaclDefaulted);
 
     // Check if we successfully retrieved DACL
     if (!success) {
-        auto error = GetLastError();
+        auto error = ::GetLastError();
         XLOG::l("Failed to retrieve DACL from security descriptor {}", error);
         return E_FAIL;
     }
@@ -2343,7 +2343,7 @@ HRESULT ACLInfo::query() {
         void* ace = nullptr;
         success = GetAce(acl, i, &ace);
         if (!success) {
-            DWORD error = GetLastError();
+            auto error = ::GetLastError();
             XLOG::l("Failed to get ace {}, {}", i, error);
             continue;
         }
@@ -2356,8 +2356,9 @@ HRESULT ACLInfo::query() {
     return S_OK;
 }
 
-HRESULT ACLInfo::addAceToList(ACE_HEADER* Ace) {
-    AceList* new_ace = (AceList*)malloc(sizeof(AceList));  // SK: from example
+HRESULT ACLInfo::addAceToList(ACE_HEADER* Ace) noexcept {
+    auto new_ace =
+        static_cast<AceList*>(malloc(sizeof(AceList)));  // SK: from example
     if (nullptr == new_ace) {
         return E_OUTOFMEMORY;
     }
@@ -2485,7 +2486,7 @@ std::string ACLInfo::output() {
 
         // Get account name for SID
         auto ret =
-            LookupAccountSidA(nullptr, ace_sid, name_buffer, &name_len,
+            ::LookupAccountSidA(nullptr, ace_sid, name_buffer, &name_len,
                               domain_buffer, &domain_name_len, &sid_name_use);
         if (!ret) {
             XLOG::l("Failed to get account for SID");

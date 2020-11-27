@@ -10,7 +10,7 @@
 #include <cstdint>
 namespace wtools {
 
-constexpr HANDLE InvalidHandle() {
+inline HANDLE InvalidHandle() {
     // conversion to satisfy Win32 API and C++:
     return reinterpret_cast<HANDLE>(
         static_cast<size_t>(static_cast<LONG_PTR>(-1)));

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // simple logging
 // see logger.cpp to understand how it works
@@ -494,35 +495,36 @@ public:
 #pragma warning(disable : 26444)
     // [Trace]
     template <typename... T>
-    [[maybe_unused]] auto t(const std::string& Format, T... args) {
+    [[maybe_unused]] auto t(const std::string& Format, T... args) noexcept {
         return exec(XLOG::kTrace, Format, args...);
     }
 
     // no prefix, just informational
     template <typename... T>
-    [[maybe_unused]] auto i(const std::string& Format, T... args) {
+    [[maybe_unused]] auto i(const std::string& Format, T... args) noexcept {
         return exec(XLOG::kInfo, Format, args...);
     }
 
     template <typename... T>
-    [[maybe_unused]] auto i(int Mods, const std::string& Format, T... args) {
+    [[maybe_unused]] auto i(int Mods, const std::string& Format,
+                            T... args) noexcept {
         return exec(XLOG::kInfo | Mods, Format, args...);
     }
 
     // [Err  ]
     template <typename... T>
-    [[maybe_unused]] auto e(const std::string& Format, T... args) {
+    [[maybe_unused]] auto e(const std::string& Format, T... args) noexcept {
         return exec(XLOG::kError, Format, args...);
     }
 
     // [Warn ]
     template <typename... T>
-    [[maybe_unused]] auto w(const std::string& Format, T... args) {
+    [[maybe_unused]] auto w(const std::string& Format, T... args) noexcept {
         return exec(XLOG::kWarning, Format, args...);
     }
 
     template <typename... T>
-    [[maybe_unused]] auto crit(const std::string& Format, T... args) {
+    [[maybe_unused]] auto crit(const std::string& Format, T... args) noexcept {
         return exec(XLOG::kCritError, Format, args...);
     }
     // [ERROR:CRITICAL] +  breakpoint
@@ -532,38 +534,38 @@ public:
     }
 
     // this if for stream operations
-    [[maybe_unused]] XLOG::Emitter operator()(int Flags = kCopy) {
+    [[maybe_unused]] XLOG::Emitter operator()(int Flags = kCopy) noexcept {
         auto e = *this;
         e.mods_ = Flags;
 
         return e;
     }
 
-    [[maybe_unused]] Emitter t() {
+    [[maybe_unused]] Emitter t() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kTrace;
         return e;
     }
 
-    [[maybe_unused]] Emitter w() {
+    [[maybe_unused]] Emitter w() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kWarning;
         return e;
     }
 
-    [[maybe_unused]] Emitter i() {
+    [[maybe_unused]] Emitter i() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kInfo;
         return e;
     }
 
-    [[maybe_unused]] Emitter e() {
+    [[maybe_unused]] Emitter e() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kError;
         return e;
     }
 
-    [[maybe_unused]] Emitter crit() {
+    [[maybe_unused]] Emitter crit() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kCritError;
         return e;

@@ -1039,11 +1039,11 @@ public:
 
     // constructs a new CACLInfo object
     // bstrPath - path for which ACL info should be queried
-    ACLInfo(_bstr_t path);
+    ACLInfo(_bstr_t path) noexcept;
     virtual ~ACLInfo();
 
     // Queries NTFS for ACL Info of the file/directory
-    HRESULT query();
+    HRESULT query() noexcept;
 
     // Outputs ACL info in Human-readable format
     // to supplied output stream
@@ -1051,8 +1051,8 @@ public:
 
 private:
     // Private methods
-    void clearAceList();
-    HRESULT addAceToList(ACE_HEADER* pAce);
+    void clearAceList() noexcept;
+    HRESULT addAceToList(ACE_HEADER* pAce) noexcept;
 
 private:
     // Member variables

@@ -260,6 +260,7 @@ cd $(ProjectDir)</Command>
     <ClInclude Include="..\..\include\tools\_process.h" />
     <ClInclude Include="..\..\include\tools\_raii.h" />
     <ClInclude Include="..\..\include\tools\_tgt.h" />
+    <ClInclude Include="..\..\include\tools\_win.h" />
     <ClInclude Include="..\..\include\tools\_xdbg.h" />
     <ClInclude Include="..\..\include\tools\_xlog.h" />
     <ClInclude Include="..\common\cfg_info.h" />

@@ -14,9 +14,7 @@
 #include "logger.h"
 #include "tools/_process.h"  // start process
 
-namespace cma {
-
-namespace install {
+namespace cma::install {
 
 InstallMode G_InstallMode = InstallMode::normal;
 InstallMode GetInstallMode() { return G_InstallMode; }
@@ -56,6 +54,7 @@ std::filesystem::path GenerateTempFileNameInTempPath(
 
     fs::path ret_path;
     int attempt = 0;
+    constexpr int max_attempts{5};
     while (true) {
         auto folder_name = fmt::format("check_mk_agent_{}_{}", pid, counter);
         ret_path = temp_folder / folder_name;
@@ -64,7 +63,7 @@ std::filesystem::path GenerateTempFileNameInTempPath(
 
         XLOG::l("Proposed folder exists '{}'", ret_path.u8string());
         attempt++;
-        if (attempt >= 5) {
+        if (attempt >= max_attempts) {
             XLOG::l("Can't find free name for folder");
 
             return {};
@@ -74,7 +73,7 @@ std::filesystem::path GenerateTempFileNameInTempPath(
     return ret_path / msi_name;
 }
 
-static void LogPermissions(const std::string& file_name) {
+static void LogPermissions(const std::string& file_name) noexcept {
     try {
         wtools::ACLInfo acl(file_name.c_str());
         auto ret = acl.query();
@@ -88,7 +87,7 @@ static void LogPermissions(const std::string& file_name) {
 }
 
 static bool RmFileWithRename(const std::filesystem::path& file_name,
-                             std::error_code ec) {
+                             std::error_code ec) noexcept {
     namespace fs = std::filesystem;
     XLOG::l(
         "Updating is NOT possible, can't delete file '{}', error [{}]. Trying rename.",
@@ -364,5 +363,4 @@ void ClearPostInstallFlag() {
                              registry::kMsiPostInstallDefault);
 }
 
-}  // namespace install
-};  // namespace cma
+};  // namespace cma::install

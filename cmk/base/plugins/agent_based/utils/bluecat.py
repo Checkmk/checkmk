@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-from typing import List, Mapping
+from typing import Dict, List, Mapping, Tuple
 from ..agent_based_api.v1 import (
     equals,
     Metric,
@@ -13,7 +13,7 @@ from ..agent_based_api.v1 import (
     State as state,
     type_defs,
 )
-from ..agent_based_api.v1.clusterize import aggregate_node_details
+from ..agent_based_api.v1.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]
 ClusterSection = Mapping[str, Section]
@@ -102,19 +102,17 @@ def cluster_check_bluecat_operational_state(
     section: ClusterSection,
 ) -> type_defs.CheckResult:
 
-    results = {}
+    results: Dict[str, Tuple] = {}
     ok_node_results = None
     overall_state = state.OK
 
     for node_name, node_section in section.items():
-        node_results = tuple(check_bluecat_operational_state(
-            params,
-            node_section,
-        ))
-        results[node_name] = aggregate_node_details(
-            node_name,
-            node_results,
-        )
+        node_results = results.setdefault(
+            node_name, tuple(check_bluecat_operational_state(
+                params,
+                node_section,
+            )))
+
         monitoring_state_result = node_results[0]
         assert isinstance(monitoring_state_result, Result)
         if monitoring_state_result.state is state.OK:
@@ -127,11 +125,11 @@ def cluster_check_bluecat_operational_state(
             monitoring_state_result.state,
         )
 
-    for node_name, (node_state, node_text) in results.items():
-        assert node_text
-        yield Result(
-            state=state.OK if ok_node_results else node_state,
-            notice=node_text,
+    for node_name, original_results in results.items():
+        yield from make_node_notice_results(
+            node_name,
+            original_results,
+            force_ok=bool(ok_node_results),
         )
 
     if ok_node_results:

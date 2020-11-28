@@ -271,14 +271,6 @@ RESULTS_SHREK: List[Union[Metric, Result]] = [
 ]
 
 
-def _aggr_shrek_result(node: str) -> Result:
-    return Result(**dict(
-        zip(  # type: ignore
-            ("state", "notice"),
-            clusterize.aggregate_node_details(node, RESULTS_SHREK),
-        )))
-
-
 @pytest.mark.parametrize(
     "job_data, age_levels, exit_code_to_state_map, expected_results",
     [
@@ -469,8 +461,7 @@ def test_check_job(item, params, section, expected_results):
             {
                 'node1': SECTION_1
             },
-            [
-                _aggr_shrek_result('node1'),
+            list(clusterize.make_node_notice_results('node1', RESULTS_SHREK)) + [
                 Result(
                     state=state.OK,
                     summary=
@@ -485,9 +476,8 @@ def test_check_job(item, params, section, expected_results):
                 'node1': SECTION_1,
                 'node2': SECTION_1,
             },
-            [
-                _aggr_shrek_result('node1'),
-                _aggr_shrek_result('node2'),
+            list(clusterize.make_node_notice_results('node1', RESULTS_SHREK)) +
+            list(clusterize.make_node_notice_results('node2', RESULTS_SHREK)) + [
                 Result(
                     state=state.OK,
                     summary=
@@ -511,37 +501,77 @@ def test_check_job(item, params, section, expected_results):
                 },
             },
             [
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Latest exit code: 0',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Real time: 2 minutes 0 seconds',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Latest job started at Jan 12 2019 14:53:21',
+                ),
+                Result(
+                    state=state.OK,
+                    notice=('[node1]: Job age: 1 year 178 days (warn/crit at 1 hour '
+                            '0 minutes/2 hours 0 minutes)(!!)'),
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Avg. memory: 1000 B',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Invol. context switches: 12',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Max. memory: 1.18 MiB',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Filesystem reads: 0',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: System time: 0 seconds',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: User time: 1 second',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Vol. context switches: 23',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Filesystem writes: 0',
+                ),
+                Result(state=state.OK, notice='[node2]: Latest exit code: 0'),
+                Result(state=state.OK, notice='[node2]: Real time: 2 minutes 0 seconds'),
+                Result(
+                    state=state.OK,
+                    notice='[node2]: Latest job started at Jul 09 2020 13:17:10',
+                ),
                 Result(state=state.OK,
-                       notice=('[node1]: Latest exit code: 0\n'
-                               '[node1]: Real time: 2 minutes 0 seconds\n'
-                               '[node1]: Latest job started at Jan 12 2019 14:53:21\n'
-                               '[node1]: Job age: 1 year 178 days (warn/crit at 1 hour'
-                               ' 0 minutes/2 hours 0 minutes)(!!)\n'
-                               '[node1]: Avg. memory: 1000 B\n'
-                               '[node1]: Invol. context switches: 12\n'
-                               '[node1]: Max. memory: 1.18 MiB\n'
-                               '[node1]: Filesystem reads: 0\n'
-                               '[node1]: System time: 0 seconds\n'
-                               '[node1]: User time: 1 second\n'
-                               '[node1]: Vol. context switches: 23\n'
-                               '[node1]: Filesystem writes: 0')),
-                Result(state=state.OK,
-                       notice=('[node2]: Latest exit code: 0\n'
-                               '[node2]: Real time: 2 minutes 0 seconds\n'
-                               '[node2]: Latest job started at Jul 09 2020 13:17:10\n'
-                               '[node2]: Job age: 1 hour 59 minutes (warn/crit at 1 hour'
-                               ' 0 minutes/2 hours 0 minutes)(!)\n'
-                               '[node2]: Avg. memory: 1000 B\n'
-                               '[node2]: Invol. context switches: 12\n'
-                               '[node2]: Max. memory: 1.18 MiB\n'
-                               '[node2]: Filesystem reads: 0\n'
-                               '[node2]: System time: 0 seconds\n'
-                               '[node2]: User time: 1 second\n'
-                               '[node2]: Vol. context switches: 23\n'
-                               '[node2]: Filesystem writes: 0')),
-                Result(state=state.WARN,
-                       summary=('0 nodes in state OK, 1 node in state WARN,'
-                                ' 1 node in state CRIT, 0 nodes in state UNKNOWN')),
+                       notice=('[node2]: Job age: 1 hour 59 minutes (warn/crit at 1 hour'
+                               ' 0 minutes/2 hours 0 minutes)(!)')),
+                Result(state=state.OK, notice='[node2]: Avg. memory: 1000 B'),
+                Result(state=state.OK, notice='[node2]: Invol. context switches: 12'),
+                Result(state=state.OK, notice='[node2]: Max. memory: 1.18 MiB'),
+                Result(state=state.OK, notice='[node2]: Filesystem reads: 0'),
+                Result(state=state.OK, notice='[node2]: System time: 0 seconds'),
+                Result(state=state.OK, notice='[node2]: User time: 1 second'),
+                Result(state=state.OK, notice='[node2]: Vol. context switches: 23'),
+                Result(state=state.OK, notice='[node2]: Filesystem writes: 0'),
+                Result(
+                    state=state.WARN,
+                    summary=('0 nodes in state OK, 1 node in state WARN,'
+                             ' 1 node in state CRIT, 0 nodes in state UNKNOWN'),
+                ),
             ],
         ),
         (
@@ -551,12 +581,7 @@ def test_check_job(item, params, section, expected_results):
                 'node1': SECTION_1,
                 'node2': SECTION_2,
             },
-            [
-                Result(
-                    state=state.UNKNOWN,
-                    summary='Received no data for this job from any of the nodes',
-                ),
-            ],
+            [],
         ),
     ],
 )

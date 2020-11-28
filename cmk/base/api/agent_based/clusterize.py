@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Tuple
+from typing import Iterable
 from cmk.base.api.agent_based.checking_classes import (
     CheckResult,
     IgnoreResultsError,
@@ -17,59 +17,65 @@ from cmk.base.api.agent_based.checking_classes import (
 from cmk.base.check_api_utils import state_markers  # pylint: disable=cmk-module-layer-violation
 
 
-def aggregate_node_details(
+def make_node_notice_results(
     node_name: str,
-    node_check_returns: CheckResult,
-) -> Tuple[State, Optional[str]]:
-    """Aggregate the results of a node check
+    node_check_results: CheckResult,
+    *,
+    force_ok: bool = False,
+) -> Iterable[Result]:
+    """Prepare results of a node for output in a cluster check function
 
-    The results of the check on the node are aggregated.
-    The state is the worst of all individual states (as checkmk would
-    compute it for the service on the node).
+    This function consumes everything from a check function (that is, a :class:`Result`,
+    a :class:`Metric` or an :class:`IgnoreResults`) and returns an iterable of :class:`Result`s.
 
-    If no results for the nodes are available, an OK state and None is returned.
+    The text is prepended with `'[node]: '`, and the text type is changed from `summary` to `notice`
+    (see :class:`Result` for more details).
 
-    Example:
-        To yield the summary results of every node of a cluster from within a
-        cluster_check_function use
+    Usage example:
+        >>> def cluster_check_myplugin(item, section):
+        ...     '''A cluster check function that just passes along all nodes' results'''
+        ...     for node_name, node_section in sections.values():
+        ...         yield from make_node_notice_results(
+        ...             node_name,
+        ...             check_myplugin(item, node_section),
+        ...         )
 
-            for node_name, node_section in sections.values():
-                node_state, node_text = aggregate_node_details(
-                    node_name,
-                    check_my_plugin(item, node_section),
-                )
-                if node_text is not None:
-                    yield Result(state=node_state, notice=node_text)
-
-        Note that this example will send text to the services summary only if the
-        state is not OK, otherwise to the details page.
+        This will write text from every node to the services summary if the state is not OK,
+        otherwise to the details text.
 
     Args:
-        node_name: The name of the node
-        node_check_returns: The return values or generator of the nodes check_function call
+        node_name:          The name of the node
+        node_check_results: The return values or generator of the nodes check_function call
+        force_ok:           If specified, the state of all results is chacnged to OK. In this case
+                            the state marker corresponding to the original state is appended to
+                            the text.
 
     Returns:
-        Aggregated node result. None if the node check returned nothing.
+        The node results, with the text type `notice`.
 
     """
 
-    # drop Metrics, we may be evaluating a generator
+    # consume potential generator and drop Metrics
     try:
-        returns_wo_metrics = [r for r in node_check_returns if not isinstance(r, Metric)]
+        returns_wo_metrics = [r for r in node_check_results if not isinstance(r, Metric)]
     except IgnoreResultsError:
-        return State.OK, None
+        return
 
+    # check for encountered IgnoreResults (also tells mypy that it's all Results)
     results = [r for r in returns_wo_metrics if isinstance(r, Result)]
-    if not results or len(results) != len(returns_wo_metrics):  # latter: encountered IgnoreResults
-        return State.OK, None
+    if len(results) != len(returns_wo_metrics):
+        return
 
-    details_with_markers = [
-        "%s%s" % (r.details.strip(), state_markers[int(r.state)]) for r in results
-    ]
+    def _nodify(text: str, state: State) -> str:
+        """Prepend node name and, if state is forced to OK, append state marker"""
+        node_text = '\n'.join("[%s]: %s" % (node_name, line) for line in text.split('\n'))
+        if not force_ok:
+            return node_text
+        return "%s%s" % (node_text.rstrip(), state_markers[int(state)])
 
-    return (
-        State.worst(*(r.state for r in results)),
-        '\n'.join("[%s]: %s" % (node_name, line)
-                  for detail in details_with_markers
-                  for line in detail.split('\n')),
-    )
+    for result in results:
+        yield Result(
+            state=State.OK if force_ok else result.state,
+            notice=_nodify(result.summary, result.state),
+            details=_nodify(result.details, result.state),
+        )

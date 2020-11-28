@@ -21,10 +21,10 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
-    State as state,
+    State,
     type_defs,
 )
-from .agent_based_api.v1.clusterize import aggregate_node_details
+from .agent_based_api.v1.clusterize import make_node_notice_results
 
 # <<<job>>>
 # ==> asd ASD <==
@@ -198,11 +198,11 @@ def _check_job_levels(job: Job, metric: str, notice_only: bool = True):
 def _process_job_stats(
     job: Job,
     age_levels: Optional[Tuple[int, int]],
-    exit_code_to_state_map: Dict[int, state],
+    exit_code_to_state_map: Dict[int, State],
 ) -> type_defs.CheckResult:
 
     yield Result(
-        state=exit_code_to_state_map.get(job['exit_code'], state.CRIT),
+        state=exit_code_to_state_map.get(job['exit_code'], State.CRIT),
         summary=f"Latest exit code: {job['exit_code']}",
     )
 
@@ -218,7 +218,7 @@ def _process_job_stats(
         start_times = job['running_start_time']
         count = len(start_times)
         yield Result(
-            state=state.OK,
+            state=State.OK,
             notice="%d job%s currently running, started at %s" % (
                 count,
                 " is" if count == 1 else "s are",
@@ -227,7 +227,7 @@ def _process_job_stats(
         )
     else:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             notice="Latest job started at %s" % render.datetime(job['start_time']),
         )
         yield Metric('start_time', job['start_time'])
@@ -262,7 +262,7 @@ def check_job(
 
     if job.get("exit_code") is None:
         yield Result(
-            state=state.UNKNOWN,
+            state=State.UNKNOWN,
             summary='Got incomplete information for this job',
         )
         return
@@ -271,17 +271,17 @@ def check_job(
         job,
         params.get('age'),
         {
-            0: state.OK,
-            **{k: state(v) for k, v in params.get('exit_code_to_state_map', [])}
+            0: State.OK,
+            **{k: State(v) for k, v in params.get('exit_code_to_state_map', [])}
         },
     )
 
 
 _STATE_TO_STR = {
-    state.OK: 'OK',
-    state.WARN: 'WARN',
-    state.CRIT: 'CRIT',
-    state.UNKNOWN: 'UNKNOWN',
+    State.OK: 'OK',
+    State.WARN: 'WARN',
+    State.CRIT: 'CRIT',
+    State.UNKNOWN: 'UNKNOWN',
 }
 
 
@@ -296,36 +296,29 @@ def cluster_check_job(
     found.
     """
 
-    states: List[state] = []
+    states = []
     best_outcome = params.get("outcome_on_cluster") == "best"
 
     for node, node_section in section.items():
-        node_state, node_text = aggregate_node_details(
-            node,
-            check_job(item, params, node_section),
-        )
-        if not node_text:
-            continue
+        node_result = list(check_job(item, params, node_section))
+        node_states = [r.state for r in node_result if isinstance(r, Result)]
+        if node_states:
+            states.append(State.worst(*node_states))
+        yield from make_node_notice_results(node, node_result, force_ok=best_outcome)
 
-        states.append(node_state)
-        yield Result(state=state.OK if best_outcome else node_state, notice=node_text)
+    if not states:
+        return
 
-    if states:
-        summary = []
-        for stat, stat_str in _STATE_TO_STR.items():
-            n_in_state = states.count(stat)
-            pluralize = '' if n_in_state == 1 else 's'
-            summary.append('%d node%s in state %s' % (n_in_state, pluralize, stat_str))
+    summary = []
+    for stat, state_name in _STATE_TO_STR.items():
+        count = states.count(stat)
+        nodes = 'node' if count == 1 else 'nodes'
+        summary.append(f'{count} {nodes} in state {state_name}')
 
-        if best_outcome:
-            yield Result(state=state.best(*states), summary=', '.join(summary))
-        else:
-            yield Result(state=state.worst(*states), summary=', '.join(summary))
+    if best_outcome:
+        yield Result(state=State.best(*states), summary=', '.join(summary))
     else:
-        yield Result(
-            state=state.UNKNOWN,
-            summary='Received no data for this job from any of the nodes',
-        )
+        yield Result(state=State.worst(*states), summary=', '.join(summary))
 
 
 register.check_plugin(

@@ -458,8 +458,11 @@ def test_cluster_check_veritas_vcs_group():
             ),
             Result(
                 state=state.CRIT,
-                summary='[node2]: frozen(!!), online',
-                details='[node2]: frozen(!!)\n[node2]: online',
+                notice='[node2]: frozen',
+            ),
+            Result(
+                state=state.OK,
+                notice='[node2]: online',
             ),
             Result(
                 state=state.OK,
@@ -488,7 +491,7 @@ def test_cluster_check_veritas_vcs_resource():
         )) == [
             Result(
                 state=state.WARN,
-                summary='[node1]: offline(!)',
+                summary='[node1]: offline',
             ),
             Result(
                 state=state.OK,
@@ -496,7 +499,7 @@ def test_cluster_check_veritas_vcs_resource():
             ),
             Result(
                 state=state.WARN,
-                summary='[node3]: offline(!)',
+                summary='[node3]: offline',
             ),
             Result(
                 state=state.OK,

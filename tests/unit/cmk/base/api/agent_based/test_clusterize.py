@@ -12,7 +12,7 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     State,
 )
-from cmk.base.api.agent_based.clusterize import aggregate_node_details
+from cmk.base.api.agent_based.clusterize import make_node_notice_results
 
 _OK_RESULT = Result(state=State.OK, summary="I am fine")
 
@@ -25,8 +25,8 @@ def _check_function_node(test_results):
 
 
 def test_node_returns_nothing():
-    assert aggregate_node_details("test_node", _check_function_node(())) == (State.OK, None)
-    assert aggregate_node_details("test_node", ()) == (State.OK, None)
+    assert list(make_node_notice_results("test_node", _check_function_node(()))) == []
+    assert list(make_node_notice_results("test_node", ())) == []
 
 
 def test_node_raises():
@@ -34,42 +34,45 @@ def test_node_raises():
         raise IgnoreResultsError()
         yield  # pylint: disable=unreachable
 
-    assert aggregate_node_details("test_node", _check_node_raises()) == (State.OK, None)
+    assert list(make_node_notice_results("test_node", _check_node_raises())) == []
 
 
 def test_node_ignore_results():
     node_results = _check_function_node((_OK_RESULT, IgnoreResults()))
-    assert aggregate_node_details("test_node", node_results) == (State.OK, None)
+    assert list(make_node_notice_results("test_node", node_results)) == []
 
 
 def test_node_returns_metric():
     node_results = _check_function_node((_OK_RESULT, Metric("panic", 42)))
-    state, text = aggregate_node_details("test_node", node_results)
-    assert state is State.OK
-    assert text == "[test_node]: I am fine"
+    assert list(make_node_notice_results("test_node", node_results)) == [
+        Result(state=State.OK, notice="[test_node]: I am fine"),
+    ]
 
 
 def test_node_returns_details_only():
     node_results = _check_function_node((Result(state=State.OK, notice="This is detailed"),))
-    state, text = aggregate_node_details("test_node", node_results)
-    assert state is State.OK
-    assert text == "[test_node]: This is detailed"
+    assert list(make_node_notice_results("test_node", node_results)) == [
+        Result(state=State.OK, notice="[test_node]: This is detailed"),
+    ]
 
 
 def test_node_returns_ok_and_warn():
     node_results = _check_function_node((_OK_RESULT, _WARN_RESULT))
-    state, text = aggregate_node_details("test_node", node_results)
-    assert state is State.WARN
-    assert text == (
-        "[test_node]: I am fine\n"  #
-        "[test_node]: Watch out(!)")
+    assert list(make_node_notice_results("test_node", node_results)) == [
+        Result(state=State.OK, notice="[test_node]: I am fine"),
+        Result(state=State.WARN, notice="[test_node]: Watch out"),
+    ]
 
 
 def test_node_mutliline():
     node_results = (Result(state=State.WARN, notice="These\nare\nfour\nlines"),)
-    state, text = aggregate_node_details("test_node", _check_function_node(node_results))
-    assert state is State.WARN
-    assert text == ("[test_node]: These\n"
-                    "[test_node]: are\n"
-                    "[test_node]: four\n"
-                    "[test_node]: lines(!)")
+    assert list(make_node_notice_results("test_node", _check_function_node(node_results))) == [
+        Result(
+            state=State.WARN,
+            summary="[test_node]: These, are, four, lines",
+            details=("[test_node]: These\n"
+                     "[test_node]: are\n"
+                     "[test_node]: four\n"
+                     "[test_node]: lines"),
+        ),
+    ]

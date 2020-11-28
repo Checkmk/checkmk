@@ -29,7 +29,7 @@ from .agent_based_api.v1 import (
     Service,
     State,
 )
-from .agent_based_api.v1.clusterize import aggregate_node_details
+from .agent_based_api.v1.clusterize import make_node_notice_results
 from .agent_based_api.v1.type_defs import Parameters
 
 Perfdata = NamedTuple("Perfdata", [
@@ -271,32 +271,32 @@ def cluster_check_local(
     # collect the result instances and yield the rest
     results_by_node: Dict[str, List[Union[Result, Metric]]] = {}
     for node, node_section in section.items():
-        results_by_node[node] = list(check_local(item, {}, node_section))
-
-    aggregated_results = {
-        node: aggregate_node_details(node, results) for node, results in results_by_node.items()
-    }
+        node_results = list(check_local(item, {}, node_section))
+        if node_results:
+            results_by_node[node] = node_results
+    if not results_by_node:
+        return
 
     if params is None or params.get("outcome_on_cluster", "worst") == "worst":
-        yield from _aggregate_worst(results_by_node, aggregated_results)
+        yield from _aggregate_worst(results_by_node)
     else:
-        yield from _aggregate_best(results_by_node, aggregated_results)
+        yield from _aggregate_best(results_by_node)
 
 
 def _aggregate_worst(
-    results_by_node: Dict[str, List[Union[Result, Metric]]],
-    aggregated_results: Dict[str, Tuple[State, Optional[str]]],
+    node_results: Dict[str, List[Union[Result, Metric]]],
 ) -> Generator[Union[Result, Metric], None, None]:
+    node_states: Dict[State, str] = {}
+    for node_name, results in node_results.items():
+        node_states.setdefault(
+            State.worst(*(r.state for r in results if isinstance(r, Result))),
+            node_name,
+        )
 
-    states = [state for state, text in aggregated_results.values() if text is not None]
-    if not states:
-        return
+    global_worst_state = State.worst(*node_states)
+    worst_node = node_states[global_worst_state]
 
-    global_worst_state = State.worst(*states)
-    worst_node = sorted(node for node, (state, text) in aggregated_results.items()
-                        if text is not None and state == global_worst_state)[0]
-
-    for node_result in results_by_node[worst_node]:
+    for node_result in node_results[worst_node]:
         if isinstance(node_result, Result):
             yield Result(
                 state=node_result.state,
@@ -306,25 +306,25 @@ def _aggregate_worst(
         else:  # Metric
             yield node_result
 
-    for node, (state, text) in aggregated_results.items():
-        if node != worst_node and text is not None:
-            yield Result(state=state, notice=text)
+    for node, results in node_results.items():
+        if node != worst_node:
+            yield from make_node_notice_results(node, results)
 
 
 def _aggregate_best(
-    results_by_node: Dict[str, List[Union[Result, Metric]]],
-    aggregated_results: Dict[str, Tuple[State, Optional[str]]],
+    node_results: Dict[str, List[Union[Result, Metric]]],
 ) -> Generator[Union[Result, Metric], None, None]:
+    node_states: Dict[State, str] = {}
+    for node_name, results in node_results.items():
+        node_states.setdefault(
+            State.worst(*(r.state for r in results if isinstance(r, Result))),
+            node_name,
+        )
 
-    states = [state for (state, text) in aggregated_results.values() if text is not None]
-    if not states:
-        return
+    global_best_state = State.best(*node_states)
+    best_node = node_states[global_best_state]
 
-    global_best_state = State.best(*states)
-    best_node = sorted(node for node, (state, text) in aggregated_results.items()
-                       if text is not None and state == global_best_state)[0]
-
-    for node_result in results_by_node[best_node]:
+    for node_result in node_results[best_node]:
         if isinstance(node_result, Result):
             yield Result(
                 state=node_result.state,
@@ -334,12 +334,9 @@ def _aggregate_best(
         else:  # Metric
             yield node_result
 
-    for node, (_state, text) in aggregated_results.items():
-        if node != best_node and text is not None:
-            yield Result(
-                state=State.OK,
-                notice=text,
-            )
+    for node, results in node_results.items():
+        if node != best_node:
+            yield from make_node_notice_results(node, results, force_ok=True)
 
 
 register.check_plugin(

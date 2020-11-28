@@ -19,7 +19,6 @@ import sys
 import logging
 import argparse
 from collections import namedtuple
-import six
 try:
     from typing import Dict, List, Optional, Tuple
 except ImportError:

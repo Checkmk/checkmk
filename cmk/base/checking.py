@@ -467,12 +467,6 @@ def execute_check(
 
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
 
-    # Make a bit of context information globally available, so that functions
-    # called by checks know this context. set_service is needed for predictive levels!
-    # TODO: This should be a context manager, similar to value_store (f.k.a. item_state)
-    # This is used for both legacy and agent_based API.
-    check_api_utils.set_service(str(service.check_plugin_name), service.description)
-
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):

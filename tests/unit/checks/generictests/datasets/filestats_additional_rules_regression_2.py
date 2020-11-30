@@ -35,10 +35,10 @@ checks = {
             'foo', {
                 'maxsize_largest': (4, 5),
                 'additional_rules':
-                [('/var/log/sys*', {
+                [('Sys-related files', '/var/log/sys*', {
                     'maxsize_largest': (1, 2)
                 }),
-                ('/var/log/app*', {
+                ('', '/var/log/app*', {
                     'maxsize_largest': (100, 200)
                 })],
                 'show_all_files': True,
@@ -53,13 +53,17 @@ checks = {
                 (0, 'Newest: 356 m', []),
                 (0, 'Oldest: 356 m', []),
                 (0, 'Additional rules enabled', []),
-                (0, "\nFiles matching '/var/log/sys*': 3", []),
+                (0, '\nSys-related files', []),
+                (0, "Pattern: '/var/log/sys*'", []),
+                (0, 'Files in total: 3', []),
                 (0, 'Smallest: 5.07 MB', []),
                 (2, 'Largest: 21.10 MB (warn/crit at 1.00 B/2.00 B)', []),
                 (0, 'Newest: 0.00 s', []),
                 (0, 'Oldest: 47 d', []),
                 (0, '[/var/log/syslog] Age: 0.00 s, Size: 13.23 MB(!!)\n[/var/log/syslog.1] Age: 19 d, Size: 21.10 MB(!!)\n[/var/log/syslog.3.gz] Age: 47 d, Size: 5.07 MB(!!)', []),
-                (0, "\nFiles matching '/var/log/app*': 1", []),
+                (0, '\n', []),
+                (0, "Pattern: '/var/log/app*'", []),
+                (0, 'Files in total: 1', []),
                 (0, 'Smallest: 479.00 B', []),
                 (2, 'Largest: 479.00 B (warn/crit at 100.00 B/200.00 B)', []),
                 (0, 'Newest: 53 d', []),

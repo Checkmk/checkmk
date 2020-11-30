@@ -188,11 +188,12 @@ def check_filestats(_item, params, data):
     matching_files = {}
     remaining_files = []
     for efile in files:
-        for file_expression, rules in additional_rules:
+        for display_name, file_expression, rules in additional_rules:
             if re.match(file_expression, efile['path']):
                 matching_files.setdefault(
                     file_expression,
                     {
+                        'display_name': display_name,
                         'rules': rules,
                         'file_list': [],
                     },
@@ -211,7 +212,9 @@ def check_filestats(_item, params, data):
         yield 0, 'Additional rules enabled'
 
     for file_expression, file_details in matching_files.items():
-        yield 0, '\nFiles matching %r: %d' % (file_expression, len(file_details['file_list']))
+        yield 0, '\n%s' % file_details['display_name']
+        yield 0, 'Pattern: %r' % file_expression
+        yield 0, 'Files in total: %d' % len(file_details['file_list'])
         output = yield from check_filestats_extremes(
             file_details['file_list'],
             file_details['rules'],

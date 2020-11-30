@@ -15,6 +15,7 @@ from cmk.gui.valuespec import (
     ListOf,
     RegExpUnicode,
     TextAscii,
+    TextUnicode,
     Tuple,
     ValueSpec,
 )
@@ -135,7 +136,17 @@ def _parameter_valuespec_filestats():
                 "additional_rules",
                 ListOf(
                     Tuple(elements=[
-                        RegExpUnicode(title=_("Filename/- expression"), mode="case_sensitive"),
+                        TextUnicode(
+                            title=_("Display name"),
+                            help=_(
+                                "Specify a user-friendly name that will be displayed in the service "
+                                "details, along with the pattern to match."),
+                        ),
+                        RegExpUnicode(
+                            title=_("Filename/- expression"),
+                            mode="case_sensitive",
+                            size=70,
+                        ),
                         Dictionary(elements=file_size_age_elements),
                     ],),
                     title=_("Additional rules for outliers"),

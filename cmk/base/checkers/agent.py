@@ -367,6 +367,51 @@ class PiggybackSectionParser:
 
 
 class HostSectionParser:
+    def __init__(
+        self,
+        section_header: AgentParserSectionHeader,
+        host_sections: AgentHostSections,
+        persisted_sections: PersistedSections[AgentSectionContent],
+    ) -> None:
+        host_sections.sections.setdefault(section_header.name, [])
+        # Split of persisted section for server-side caching
+        if section_header.persist is not None:
+            cached_at = int(time.time())  # Estimate age of the data
+            cache_interval = section_header.persist - cached_at
+            host_sections.cache_info[section_header.name] = (cached_at, cache_interval)
+            persisted_sections[section_header.name] = (
+                cached_at,
+                section_header.persist,
+                host_sections.sections[section_header.name],
+            )
+
+        if section_header.cached:
+            cache_times = section_header.cached
+            host_sections.cache_info[section_header.name] = cache_times[0], cache_times[1]
+
+        self.section_header: Final = section_header
+        self.host_sections: Final = host_sections
+        self.persisted_sections: Final = persisted_sections
+
+    def parse(self, line: bytes) -> None:
+        assert not HostSectionParser.is_header(line)
+
+        if HostSectionParser.is_footer(line):
+            raise StopIteration()
+
+        if not line.strip():
+            return
+
+        if not self.section_header.nostrip:
+            line = line.strip()
+
+        self.host_sections.sections[self.section_header.name].append(
+            ensure_str_with_fallback(
+                line,
+                encoding=self.section_header.encoding,
+                fallback="latin-1",
+            ).split(self.section_header.separator))
+
     @staticmethod
     def is_header(line: bytes) -> bool:
         line = line.strip()
@@ -436,7 +481,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         # handle sections with option persist(...)
         persisted_sections = PersistedSections[AgentSectionContent]({})
-        section_header: Optional[AgentParserSectionHeader] = None
+        parser: Optional[HostSectionParser] = None
         for line in raw_data.split(b"\n"):
             line = line.rstrip(b"\r")
             stripped_line = line.strip()
@@ -457,48 +502,23 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     )
                 host_sections.piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
-            elif HostSectionParser.is_footer(line):
-                section_header = None
-
             elif HostSectionParser.is_header(line):
                 try:
-                    section_header = AgentParserSectionHeader.from_headerline(stripped_line[3:-3])
+                    parser = HostSectionParser(
+                        AgentParserSectionHeader.from_headerline(stripped_line[3:-3]),
+                        host_sections,
+                        persisted_sections,
+                    )
                 except ValueError:
                     self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
-                    section_header = None
-                    continue
-                host_sections.sections.setdefault(section_header.name, [])
-
-                # Split of persisted section for server-side caching
-                if section_header.persist is not None:
-                    cached_at = int(time.time())  # Estimate age of the data
-                    cache_interval = section_header.persist - cached_at
-                    host_sections.cache_info[section_header.name] = (cached_at, cache_interval)
-                    persisted_sections[section_header.name] = (
-                        cached_at,
-                        section_header.persist,
-                        host_sections.sections[section_header.name],
-                    )
-
-                if section_header.cached:
-                    cache_times = section_header.cached
-                    host_sections.cache_info[section_header.name] = cache_times[0], cache_times[1]
-
-            elif stripped_line != b'':
-                if section_header is None:
+                    parser = None
                     continue
 
-                if not section_header.nostrip:
-                    line = stripped_line
-
-                decoded_line = ensure_str_with_fallback(
-                    line,
-                    encoding=section_header.encoding,
-                    fallback="latin-1",
-                )
-
-                host_sections.sections[section_header.name].append(
-                    decoded_line.split(section_header.separator))
+            elif parser is not None:
+                try:
+                    parser.parse(line)
+                except StopIteration:
+                    parser = None
 
         return host_sections, persisted_sections
 

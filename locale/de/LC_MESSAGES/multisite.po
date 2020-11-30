@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2020-11-20 16:52+0000\n"
+"PO-Revision-Date: 2020-11-30 17:30+0000\n"
 "Last-Translator: Weblate Admin <marketing@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.3.2\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -222,9 +223,9 @@ msgstr "% Flash"
 msgid "% of RAM"
 msgstr "% RAM"
 
-#, fuzzy, python-format
+#, python-format
 msgid "% of maximum active connections"
-msgstr "% der maximalen Verbindungen"
+msgstr "% der maximal aktiven Verbindungen"
 
 #, python-format
 msgid "% of maximum connections"
@@ -426,9 +427,9 @@ msgstr "%s Erstellung der Report Vorschau beendet"
 msgid "%s Properties"
 msgstr "%s Eigenschaften"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s Requests"
-msgstr "GET-Anfragen"
+msgstr "%s-Anfragen"
 
 #, python-format
 msgid "%s Retrieve created dump file"
@@ -38014,9 +38015,8 @@ msgstr "Anzahl der Neustarts"
 msgid "Restore"
 msgstr "Wiederherstellen"
 
-#, fuzzy
 msgid "Restore from backup"
-msgstr "Von diesem Sicherungsziel wiederherstellen"
+msgstr "Vom Sicherungsziel wiederherstellen"
 
 #, python-format
 msgid "Restore from target: %s"

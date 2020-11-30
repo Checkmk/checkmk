@@ -355,6 +355,31 @@ class AgentParserSectionHeader(NamedTuple):
             return None
 
 
+class PiggybackSectionParser:
+    @staticmethod
+    def is_header(line: bytes) -> bool:
+        return (line.startswith(b'<<<<') and line.endswith(b'>>>>') and
+                not PiggybackSectionParser.is_footer(line))
+
+    @staticmethod
+    def is_footer(line: bytes) -> bool:
+        return line.strip() == b'<<<<>>>>'
+
+
+class HostSectionParser:
+    @staticmethod
+    def is_header(line: bytes) -> bool:
+        line = line.strip()
+        return (line.startswith(b'<<<') and line.endswith(b'>>>') and
+                not HostSectionParser.is_footer(line) and
+                not PiggybackSectionParser.is_header(line) and
+                not PiggybackSectionParser.is_footer(line))
+
+    @staticmethod
+    def is_footer(line: bytes) -> bool:
+        return line.strip() == b'<<<>>>'
+
+
 class AgentParser(Parser[AgentRawData, AgentHostSections]):
     """A parser for agent data."""
     def __init__(
@@ -415,13 +440,16 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         for line in raw_data.split(b"\n"):
             line = line.rstrip(b"\r")
             stripped_line = line.strip()
-            if stripped_line[:4] == b'<<<<' and stripped_line[-4:] == b'>>>>':
+            if PiggybackSectionParser.is_header(line):
                 piggybacked_hostname = (
                     AgentParser._get_sanitized_and_translated_piggybacked_hostname(
                         stripped_line, self.hostname))
 
+            elif PiggybackSectionParser.is_footer(line):
+                piggybacked_hostname = None
+
             elif piggybacked_hostname:  # processing data for an other host
-                if stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
+                if HostSectionParser.is_header(line):
                     line = AgentParser._add_cached_info_to_piggybacked_section_header(
                         stripped_line,
                         piggybacked_cached_at,
@@ -429,15 +457,10 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     )
                 host_sections.piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
-            # Found normal section header
-            # section header format: <<<name:opt1(args):opt2:opt3(args)>>>
-            # *) empty sections <<<>>> are allowed and will be skipped
-            elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
-                if stripped_line == b'<<<>>>':
-                    # Special case b'<<<>>>' is accepted: no data to process, skip it
-                    section_content = None
-                    continue
+            elif HostSectionParser.is_footer(line):
+                section_content = None
 
+            elif HostSectionParser.is_header(line):
                 try:
                     section_header = AgentParserSectionHeader.from_headerline(stripped_line[3:-3])
                 except ValueError:
@@ -482,8 +505,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         hostname: HostName,
     ) -> Optional[HostName]:
         piggybacked_hostname = ensure_str(orig_piggyback_header[4:-4])
-        if not piggybacked_hostname:
-            return None
+        assert piggybacked_hostname
 
         piggybacked_hostname = config.translate_piggyback_host(hostname, piggybacked_hostname)
         if piggybacked_hostname == hostname or not piggybacked_hostname:

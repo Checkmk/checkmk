@@ -20,6 +20,7 @@ def _get_from_context(name, context={}):  # pylint: disable=dangerous-default-va
 @pytest.mark.parametrize("info, expected_parsed", [
     ([], []),
     ([["25", "0"]], [(25, 0, "deferred")]),
+    ([["25", "0", "deferred"], ["25", "0", "failed"]], [(25, 0, "deferred"), (25, 0, "failed")]),
 ])
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_parse_function(info, expected_parsed):
@@ -32,24 +33,46 @@ def test_parse_function(info, expected_parsed):
     "raw_queue, levels_length, expected_result",
     [
         ((25, 0, "deferred"), (10, 20), [
-            (0, 'Deferred: Length: 0', [('length', 0, 10, 20)]),
+            (0, 'Deferred: 0 mails', [('length', 0, 10, 20)]),
             (0, 'Size: 25.00 B', [('size', 25)]),
         ]),
         ((25, 12, "deferred"), (10, 20), [
-            (1, 'Deferred: Length: 12 (warn/crit at 10/20)', [('length', 12, 10, 20)]),
+            (1, 'Deferred: 12 mails (warn/crit at 10 mails/20 mails)', [('length', 12, 10, 20)]),
             (0, 'Size: 25.00 B', [('size', 25)]),
         ]),
         # Other queues have no metrics:
         ((1024, 123, "Other queue"), (10, 20), [
-            (2, 'Other queue: Length: 123 (warn/crit at 10/20)'),
+            (2, 'Other queue: 123 mails (warn/crit at 10 mails/20 mails)'),
             (0, 'Size: 1.00 kB'),
         ]),
     ])
 @pytest.mark.usefixtures("config_load_all_checks")
-def test__check_single_queue(raw_queue, levels_length, expected_result):
+def test_check_single_queue(raw_queue, levels_length, expected_result):
     check_single_queue = _get_from_context("_check_single_queue")
     queue = _get_from_context("Queue")
     assertCheckResultsEqual(
         CheckResult(check_single_queue(queue(*raw_queue), levels_length)),
+        CheckResult(expected_result),
+    )
+
+
+@pytest.mark.parametrize("raw_queues, expected_result", [
+    ([(25, 0, "deferred"), (25, 0, "failed")], [
+        (0, 'Deferred: 0 mails', [('length', 0, 10, 20)]),
+        (0, 'Size: 25.00 B', [('size', 25)]),
+        (0, 'Failed: 0 mails', []),
+        (0, 'Size: 25.00 B', []),
+    ]),
+])
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_nullmailer_mailq(raw_queues, expected_result):
+    dummy_item = ""
+    params = _get_from_context("nullmailer_mailq_default_levels")
+    check_nullmailer_mailq = _get_from_context("check_nullmailer_mailq")
+    queue = _get_from_context("Queue")
+    assertCheckResultsEqual(
+        CheckResult(
+            check_nullmailer_mailq(dummy_item, params,
+                                   [queue(*raw_queue) for raw_queue in raw_queues])),
         CheckResult(expected_result),
     )

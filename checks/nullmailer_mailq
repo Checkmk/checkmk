@@ -4,14 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Example agent output:
-# <<<nullmailer_mailq>>>
-# 8 1
 import typing
 
-factory_settings['nullmailer_mailq_default_levels'] = {
+# Example agent output:
+# old format
+# <<<nullmailer_mailq>>>
+# 8 1
+
+# new format
+# <<<nullmailer_mailq>>>
+# 8 1 deferred
+# 8 1 failed
+
+nullmailer_mailq_default_levels = {
     "deferred": (10, 20),
+    "failed": (1, 1),
 }
+
+factory_settings['nullmailer_mailq_default_levels'] = nullmailer_mailq_default_levels
 
 
 class Queue(typing.NamedTuple):
@@ -21,7 +31,10 @@ class Queue(typing.NamedTuple):
 
 
 def parse_nullmailer_mailq(info):
-    return [Queue(size=int(line[0]), length=int(line[1]), name="deferred") for line in info]
+    def name(line):
+        return line[2] if len(line) == 3 else "deferred"
+
+    return [Queue(size=int(line[0]), length=int(line[1]), name=name(line)) for line in info]
 
 
 def inventory_nullmailer_mailq(parsed):
@@ -30,7 +43,6 @@ def inventory_nullmailer_mailq(parsed):
 
 
 def _check_single_queue(queue: Queue, levels_length: typing.Tuple[int, int]):
-
     make_metric = queue.name == "deferred"
 
     yield check_levels(
@@ -38,7 +50,8 @@ def _check_single_queue(queue: Queue, levels_length: typing.Tuple[int, int]):
         "length" if make_metric else None,
         levels_length,
         human_readable_func=lambda x: "%d" % x,
-        infoname=f"{queue.name.capitalize()}: Length",
+        infoname=queue.name.capitalize(),
+        unit="mails",
     )
 
     yield check_levels(

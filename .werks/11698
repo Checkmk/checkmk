@@ -1,0 +1,12 @@
+Title: Nullmailer check monitors failed queue
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1606739693
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b2
+
+The failed queue /var/spool/nullmailer/failed will additionally be monitored.

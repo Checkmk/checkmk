@@ -42,27 +42,25 @@ checks = {
         },
         [
             (0, 'Files in total: 3', [('file_count', 3, None, None, None, None)]),
-            (0, 'Files matching \'.*?/premium-world-check-day\': 1', []),
+            (0, 'Additional rules enabled', []),
+            (0, '\nFiles matching \'.*?/premium-world-check-day\': 1', []),
             (0, 'Smallest: 8.82 MB', []),
             (0, 'Largest: 8.82 MB', []),
             (0, 'Newest: 21 h', []),
             (2, 'Oldest: 21 h (warn/crit at 1.00 s/2.00 s)', []),
-            (0, 'Files matching \'.*?/premium-world-check-month\': 1', []),
+            (0, '[/opt/filetransfer/data/akb/paag01/cofi#ak/incoming/premium-world-check-day.xml] Age: 21 h, Size: 8.82 MB(!!)', []),
+            (0, '\nFiles matching \'.*?/premium-world-check-month\': 1', []),
             (0, 'Smallest: 258.84 MB', []),
             (0, 'Largest: 258.84 MB', []),
             (0, 'Newest: 23 d', []),
             (2, 'Oldest: 23 d (warn/crit at 5.00 s/6.00 s)', []),
-            (0, 'Files matching \'.*?/premium-world-check-week\': 1', []),
+            (0, "[/opt/filetransfer/data/akb/paag01/cofi#ak/incoming/premium-world-check-month.xml] Age: 23 d, Size: 258.84 MB(!!)", []),
+            (0, '\nFiles matching \'.*?/premium-world-check-week\': 1', []),
             (0, 'Smallest: 77.34 MB', []),
             (0, 'Largest: 77.34 MB', []),
             (0, 'Newest: 6 d', []),
             (2, 'Oldest: 6 d (warn/crit at 3.00 s/4.00 s)', []),
-            (0, "\nFiles matching '.*?/premium-world-check-day':"
-                "\n[/opt/filetransfer/data/akb/paag01/cofi#ak/incoming/premium-world-check-day.xml] Age: 21 h, Size: 8.82 MB(!!)"
-                "\nFiles matching '.*?/premium-world-check-month':"
-                "\n[/opt/filetransfer/data/akb/paag01/cofi#ak/incoming/premium-world-check-month.xml] Age: 23 d, Size: 258.84 MB(!!)"
-                "\nFiles matching '.*?/premium-world-check-week':"
-                "\n[/opt/filetransfer/data/akb/paag01/cofi#ak/incoming/premium-world-check-week.xml] Age: 6 d, Size: 77.34 MB(!!)", []),
+            (0,  "[/opt/filetransfer/data/akb/paag01/cofi#ak/incoming/premium-world-check-week.xml] Age: 6 d, Size: 77.34 MB(!!)", []),
         ],
     )]
 }

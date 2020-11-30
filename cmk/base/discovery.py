@@ -78,7 +78,7 @@ from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
-from cmk.base.checkers.host_sections import HostKey, MultiHostSections
+from cmk.base.checkers.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import (
     DiscoveredHostLabels,
@@ -356,9 +356,9 @@ def do_discovery(
             )
             max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
 
-            multi_host_sections = MultiHostSections()
+            parsed_sections_broker = ParsedSectionsBroker()
             checkers.update_host_sections(
-                multi_host_sections,
+                parsed_sections_broker,
                 nodes,
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
@@ -373,7 +373,7 @@ def do_discovery(
             _do_discovery_for(
                 hostname,
                 ipaddress,
-                multi_host_sections,
+                parsed_sections_broker,
                 run_only_plugin_names,
                 arg_only_new,
                 discovery_parameters,
@@ -421,7 +421,7 @@ def _preprocess_hostnames(
 def _do_discovery_for(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     run_only_plugin_names: Optional[Set[CheckPluginName]],
     only_new: bool,
     discovery_parameters: DiscoveryParameters,
@@ -430,7 +430,7 @@ def _do_discovery_for(
     discovered_services, host_label_discovery_result = _discover_host_labels_and_services(
         hostname,
         ipaddress,
-        multi_host_sections,
+        parsed_sections_broker,
         discovery_parameters,
         run_only_plugin_names=run_only_plugin_names,
     )
@@ -547,9 +547,9 @@ def discover_on_host(
         )
 
         max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
-        multi_host_sections = MultiHostSections()
+        parsed_sections_broker = ParsedSectionsBroker()
         checkers.update_host_sections(
-            multi_host_sections,
+            parsed_sections_broker,
             nodes,
             max_cachefile_age=max_cachefile_age,
             host_config=host_config,
@@ -566,7 +566,7 @@ def discover_on_host(
         services, host_label_discovery_result = _get_host_services(
             host_config,
             ipaddress,
-            multi_host_sections,
+            parsed_sections_broker,
             discovery_parameters,
         )
 
@@ -743,9 +743,9 @@ def check_discovery(
                 host_config=host_config,
             ))
 
-    multi_host_sections = MultiHostSections()
+    parsed_sections_broker = ParsedSectionsBroker()
     result = checkers.update_host_sections(
-        multi_host_sections,
+        parsed_sections_broker,
         nodes,
         max_cachefile_age=max_cachefile_age,
         host_config=host_config,
@@ -756,7 +756,7 @@ def check_discovery(
     services, host_label_discovery_result = _get_host_services(
         host_config,
         ipaddress,
-        multi_host_sections,
+        parsed_sections_broker,
         discovery_parameters,
     )
 
@@ -1162,7 +1162,7 @@ def _perform_host_label_discovery(
 def _discover_host_labels(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> DiscoveredHostLabels:
 
@@ -1170,12 +1170,12 @@ def _discover_host_labels(
 
     discovered_host_labels = _discover_host_labels_for_source_type(
         HostKey(hostname, ipaddress, SourceType.HOST),
-        multi_host_sections,
+        parsed_sections_broker,
         discovery_parameters,
     )
     discovered_host_labels += _discover_host_labels_for_source_type(
         HostKey(hostname, ipaddress, SourceType.MANAGEMENT),
-        multi_host_sections,
+        parsed_sections_broker,
         discovery_parameters,
     )
 
@@ -1184,12 +1184,12 @@ def _discover_host_labels(
 
 def _discover_host_labels_for_source_type(
     host_key: checkers.host_sections.HostKey,
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> DiscoveredHostLabels:
 
     try:
-        host_data = multi_host_sections[host_key]
+        host_data = parsed_sections_broker[host_key]
     except KeyError:
         return DiscoveredHostLabels()
 
@@ -1201,7 +1201,7 @@ def _discover_host_labels_for_source_type(
             agent_based_register.get_section_plugin(rs).parsed_section_name
             for rs in host_data.sections
         }
-        applicable_sections = multi_host_sections.determine_applicable_sections(
+        applicable_sections = parsed_sections_broker.determine_applicable_sections(
             parse_sections,
             host_key.source_type,
         )
@@ -1211,7 +1211,7 @@ def _discover_host_labels_for_source_type(
         for section_plugin in _sort_sections_by_label_priority(applicable_sections):
 
             kwargs = {
-                'section': multi_host_sections.get_parsed_section(
+                'section': parsed_sections_broker.get_parsed_section(
                     host_key, section_plugin.parsed_section_name),
             }
 
@@ -1261,7 +1261,7 @@ def _sort_sections_by_label_priority(sections):
 
 
 def _find_candidates(
-    mhs: MultiHostSections,
+    broker: ParsedSectionsBroker,
     run_only_plugin_names: Optional[Set[CheckPluginName]],
 ) -> Set[CheckPluginName]:
     """Return names of check plugins that this multi_host_section may
@@ -1292,18 +1292,18 @@ def _find_candidates(
         for parsed_section_name in plugin.sections
     }
 
-    return (_find_host_candidates(mhs, preliminary_candidates, parsed_sections_of_interest) |
-            _find_mgmt_candidates(mhs, preliminary_candidates, parsed_sections_of_interest))
+    return (_find_host_candidates(broker, preliminary_candidates, parsed_sections_of_interest) |
+            _find_mgmt_candidates(broker, preliminary_candidates, parsed_sections_of_interest))
 
 
 def _find_host_candidates(
-    mhs: MultiHostSections,
+    broker: ParsedSectionsBroker,
     preliminary_candidates: List[checking_classes.CheckPlugin],
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
     available_parsed_sections = {
-        s.parsed_section_name for s in mhs.determine_applicable_sections(
+        s.parsed_section_name for s in broker.determine_applicable_sections(
             parsed_sections_of_interest,
             SourceType.HOST,
         )
@@ -1319,13 +1319,13 @@ def _find_host_candidates(
 
 
 def _find_mgmt_candidates(
-    mhs: MultiHostSections,
+    broker: ParsedSectionsBroker,
     preliminary_candidates: List[checking_classes.CheckPlugin],
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
     available_parsed_sections = {
-        s.parsed_section_name for s in mhs.determine_applicable_sections(
+        s.parsed_section_name for s in broker.determine_applicable_sections(
             parsed_sections_of_interest,
             SourceType.MANAGEMENT,
         )
@@ -1342,7 +1342,7 @@ def _find_mgmt_candidates(
 def _discover_host_labels_and_services(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
     *,
     run_only_plugin_names: Optional[Set[CheckPluginName]],
@@ -1352,7 +1352,7 @@ def _discover_host_labels_and_services(
     discovered_host_labels = _discover_host_labels(
         hostname,
         ipaddress,
-        multi_host_sections,
+        parsed_sections_broker,
         discovery_parameters,
     )
 
@@ -1365,7 +1365,7 @@ def _discover_host_labels_and_services(
     discovered_services = [] if discovery_parameters.only_host_labels else _discover_services(
         hostname,
         ipaddress,
-        multi_host_sections,
+        parsed_sections_broker,
         discovery_parameters,
         run_only_plugin_names=run_only_plugin_names,
     )
@@ -1397,13 +1397,13 @@ def _discover_host_labels_and_services(
 def _discover_services(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
     *,
     run_only_plugin_names: Optional[Set[CheckPluginName]],
 ) -> List[Service]:
     # find out which plugins we need to discover
-    plugin_candidates = _find_candidates(multi_host_sections, run_only_plugin_names)
+    plugin_candidates = _find_candidates(parsed_sections_broker, run_only_plugin_names)
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
     # The hostname must be set for the host_name() calls commonly used to determine the
@@ -1416,7 +1416,7 @@ def _discover_services(
             try:
                 service_table.update({
                     service.id(): service
-                    for service in _execute_discovery(multi_host_sections, hostname, ipaddress,
+                    for service in _execute_discovery(parsed_sections_broker, hostname, ipaddress,
                                                       discovery_parameters, check_plugin_name)
                 })
             except (KeyboardInterrupt, MKTimeout):
@@ -1434,7 +1434,7 @@ def _discover_services(
 
 
 def _execute_discovery(
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     discovery_parameters: DiscoveryParameters,
@@ -1457,7 +1457,7 @@ def _execute_discovery(
     )
 
     try:
-        kwargs = multi_host_sections.get_section_kwargs(host_key, check_plugin.sections)
+        kwargs = parsed_sections_broker.get_section_kwargs(host_key, check_plugin.sections)
     except Exception as exc:
         if cmk.utils.debug.enabled() or discovery_parameters.on_error == "raise":
             raise
@@ -1523,7 +1523,7 @@ def _enriched_discovered_services(
 def _get_host_services(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[ServicesByTransition, HostLabelDiscoveryResult]:
 
@@ -1531,14 +1531,14 @@ def _get_host_services(
         services, host_label_discovery_result = _get_cluster_services(
             host_config,
             ipaddress,
-            multi_host_sections,
+            parsed_sections_broker,
             discovery_parameters,
         )
     else:
         services, host_label_discovery_result = _get_node_services(
             host_config,
             ipaddress,
-            multi_host_sections,
+            parsed_sections_broker,
             discovery_parameters,
         )
 
@@ -1551,7 +1551,7 @@ def _get_host_services(
 def _get_node_services(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
 
@@ -1559,7 +1559,7 @@ def _get_node_services(
     services, host_label_discovery_result = _get_discovered_services(
         hostname,
         ipaddress,
-        multi_host_sections,
+        parsed_sections_broker,
         discovery_parameters,
     )
 
@@ -1579,7 +1579,7 @@ def _get_node_services(
 def _get_discovered_services(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
 
@@ -1587,7 +1587,7 @@ def _get_discovered_services(
     discovered_services, host_label_discovery_result = _discover_host_labels_and_services(
         hostname,
         ipaddress,
-        multi_host_sections,
+        parsed_sections_broker,
         discovery_parameters,
         run_only_plugin_names=None,
     )
@@ -1675,7 +1675,7 @@ def _group_by_transition(
 def _get_cluster_services(
     host_config: config.HostConfig,
     ipaddress: Optional[str],
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
     if not host_config.nodes:
@@ -1695,7 +1695,7 @@ def _get_cluster_services(
         services, host_label_discovery_result = _get_discovered_services(
             node,
             ip_lookup.lookup_ip_address(node_config),
-            multi_host_sections,
+            parsed_sections_broker,
             discovery_parameters,
         )
         cluster_host_labels.update(host_label_discovery_result.labels)
@@ -1776,9 +1776,9 @@ def get_check_preview(
         ))
     max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
 
-    multi_host_sections = MultiHostSections()
+    parsed_sections_broker = ParsedSectionsBroker()
     checkers.update_host_sections(
-        multi_host_sections,
+        parsed_sections_broker,
         nodes,
         max_cachefile_age=max_cachefile_age,
         host_config=host_config,
@@ -1794,7 +1794,7 @@ def get_check_preview(
     grouped_services, host_label_discovery_result = _get_host_services(
         host_config,
         ip_address,
-        multi_host_sections,
+        parsed_sections_broker,
         discovery_parameters,
     )
 
@@ -1818,7 +1818,7 @@ def get_check_preview(
                     wrap_parameters(params)))
 
                 _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
-                    multi_host_sections,
+                    parsed_sections_broker,
                     host_config,
                     ip_address,
                     service,

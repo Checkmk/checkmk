@@ -47,7 +47,7 @@ from cmk.base.api.agent_based.inventory_classes import (
     TableRow,
 )
 from cmk.base.checkers import Source
-from cmk.base.checkers.host_sections import HostKey, HostSections, MultiHostSections
+from cmk.base.checkers.host_sections import HostKey, HostSections, ParsedSectionsBroker
 
 
 class InventoryTrees(NamedTuple):
@@ -207,7 +207,7 @@ def _do_active_inventory_for(
     ipaddress = ip_lookup.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
-    multi_host_sections, source_results = _fetch_multi_host_sections_for_inv(
+    parsed_sections_broker, source_results = _fetch_parsed_sections_broker_for_inv(
         config_cache,
         host_config,
         ipaddress,
@@ -218,7 +218,7 @@ def _do_active_inventory_for(
         trees=_do_inv_for_realhost(
             host_config,
             ipaddress,
-            multi_host_sections=multi_host_sections,
+            parsed_sections_broker=parsed_sections_broker,
             run_only_plugin_names=run_only_plugin_names,
         ),
         source_results=source_results,
@@ -227,14 +227,14 @@ def _do_active_inventory_for(
     )
 
 
-def _fetch_multi_host_sections_for_inv(
+def _fetch_parsed_sections_broker_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     selected_sections: checkers.SectionNameCollection,
-) -> Tuple[MultiHostSections, Sequence[Tuple[Source, result.Result[HostSections, Exception]]]]:
+) -> Tuple[ParsedSectionsBroker, Sequence[Tuple[Source, result.Result[HostSections, Exception]]]]:
     if host_config.is_cluster:
-        return MultiHostSections(), []
+        return ParsedSectionsBroker(), []
 
     mode = (checkers.Mode.INVENTORY
             if selected_sections is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS)
@@ -251,9 +251,9 @@ def _fetch_multi_host_sections_for_inv(
             selected_sections=selected_sections,
         ),
     )
-    multi_host_sections = MultiHostSections()
+    parsed_sections_broker = ParsedSectionsBroker()
     results = checkers.update_host_sections(
-        multi_host_sections,
+        parsed_sections_broker,
         nodes,
         max_cachefile_age=host_config.max_cachefile_age,
         host_config=host_config,
@@ -266,7 +266,7 @@ def _fetch_multi_host_sections_for_inv(
         selected_sections=selected_sections,
     )
 
-    return multi_host_sections, results
+    return parsed_sections_broker, results
 
 
 def _safe_to_write_tree(
@@ -286,7 +286,7 @@ def do_inventory_actions_during_checking_for(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
 
     if not host_config.do_status_data_inventory:
@@ -297,7 +297,7 @@ def do_inventory_actions_during_checking_for(
     trees = _do_inv_for_realhost(
         host_config,
         ipaddress,
-        multi_host_sections=multi_host_sections,
+        parsed_sections_broker=parsed_sections_broker,
         run_only_plugin_names=None,
     )
     _save_status_data_tree(host_config.hostname, trees.status_data)
@@ -333,7 +333,7 @@ def _do_inv_for_realhost(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     run_only_plugin_names: Optional[Set[InventoryPluginName]],
 ) -> InventoryTrees:
     tree_aggregator = _TreeAggregator()
@@ -344,7 +344,7 @@ def _do_inv_for_realhost(
         if run_only_plugin_names and inventory_plugin.name not in run_only_plugin_names:
             continue
 
-        kwargs = multi_host_sections.get_section_kwargs(
+        kwargs = parsed_sections_broker.get_section_kwargs(
             HostKey(host_config.hostname, ipaddress, SourceType.HOST),
             inventory_plugin.sections,
         )

@@ -13,9 +13,7 @@ from typing import (
     cast,
     Dict,
     Generic,
-    ItemsView,
     Iterator,
-    KeysView,
     List,
     MutableMapping,
     Optional,
@@ -23,7 +21,6 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
-    ValuesView,
 )
 
 import cmk.utils.debug
@@ -165,22 +162,23 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
             self.sections[section_name] = entry[-1]
 
 
-class MultiHostSections(MutableMapping[HostKey, HostSections]):
-    """Container object for wrapping the host sections of a host being processed
-    or multiple hosts when a cluster is processed. Also holds the functionality for
-    merging these information together for a check"""
-    def __init__(self, data: Optional[Dict[HostKey, HostSections]] = None) -> None:
+class ParsedSectionsBroker(MutableMapping[HostKey, HostSections]):
+    """Object for aggregating, parsing and disributing the sections
+
+    An instance of this class allocates all raw sections of a given host or cluster and
+    hands over the parsed sections and caching information after considering features like
+    'parsed_section_name' and 'supersedes' to all plugin functions that require this kind
+    of data (inventory, discovery, checking, host_labels).
+    """
+    def __init__(self) -> None:
         super().__init__()
-        self._data: Dict[HostKey, HostSections] = {} if data is None else data
-        self._section_content_cache = caching.DictCache()
-        # The following are not quite the same as section_content_cache.
-        # They are introduced for the changed data handling with the migration
-        # to 'agent_based' plugins.
-        # This holds the result of the parsing of individual raw sections
-        self._parsing_results = caching.DictCache()
+        self._data: Dict[HostKey, HostSections] = {}
+
+        # This holds the result of the parsing of individual raw sections (by raw section name)
+        self._memoized_parsing_results = caching.DictCache()
         # This holds the result of the superseding section along with the
-        # cache info of the raw section that was used.
-        self._parsed_sections = caching.DictCache()
+        # cache info of the raw section that was used (by parsed section name!)
+        self._memoized_parsed_sections = caching.DictCache()
 
     def __len__(self) -> int:
         return len(self._data)
@@ -200,15 +198,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
     def __repr__(self) -> str:
         return "%s(data=%r)" % (type(self).__name__, self._data)
 
-    def keys(self) -> KeysView[HostKey]:
-        return self._data.keys()  # pylint: disable=dict-keys-not-iterating
-
-    def values(self) -> ValuesView[HostSections]:
-        return self._data.values()  # pylint: disable=dict-values-not-iterating
-
-    def items(self) -> ItemsView[HostKey, HostSections]:
-        return self._data.items()  # pylint: disable=dict-items-not-iterating
-
+    # TODO (mo): consider making this a function
     def get_section_kwargs(
         self,
         host_key: HostKey,
@@ -232,6 +222,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
 
         return kwargs
 
+    # TODO (mo): consider making this a function
     def get_section_cluster_kwargs(
         self,
         node_keys: List[HostKey],
@@ -261,7 +252,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         """
         cached_ats: List[int] = []
         intervals: List[int] = []
-        for host_key in self:
+        for host_key in self._data:
             for parsed_section_name in parsed_section_names:
                 # Fear not, the parsing itself is cached. But in case we have not already
                 # parsed, we must do so in order to see which raw sections cache info we
@@ -287,13 +278,13 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         parsed_section_name: ParsedSectionName,
     ) -> Tuple[Optional[ParsedSectionContent], Optional[Tuple[int, int]]]:
         cache_key = host_key + (parsed_section_name,)
-        if cache_key in self._parsed_sections:
-            return self._parsed_sections[cache_key]
+        if cache_key in self._memoized_parsed_sections:
+            return self._memoized_parsed_sections[cache_key]
 
         try:
-            host_sections = self[host_key]
+            host_sections = self._data[host_key]
         except KeyError:
-            return self._parsed_sections.setdefault(cache_key, (None, None))
+            return self._memoized_parsed_sections.setdefault(cache_key, (None, None))
 
         for section in agent_based_register.get_ranked_sections(
                 host_sections.sections,
@@ -304,9 +295,9 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
                 continue
 
             cache_info = host_sections.cache_info.get(section.name)
-            return self._parsed_sections.setdefault(cache_key, (parsed, cache_info))
+            return self._memoized_parsed_sections.setdefault(cache_key, (parsed, cache_info))
 
-        return self._parsed_sections.setdefault(cache_key, (None, None))
+        return self._memoized_parsed_sections.setdefault(cache_key, (None, None))
 
     def determine_applicable_sections(
         self,
@@ -320,7 +311,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         superseded raw sections (by setting their parsing result to None).
         """
         applicable_sections: List[SectionPlugin] = []
-        for host_key, host_sections in self.items():
+        for host_key, host_sections in self._data.items():
             if host_key.source_type != source_type:
                 continue
 
@@ -333,13 +324,13 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
                     continue
 
                 applicable_sections.append(section)
-                self._parsed_sections[host_key + (section.parsed_section_name,)] = (
+                self._memoized_parsed_sections[host_key + (section.parsed_section_name,)] = (
                     parsed,
                     host_sections.cache_info.get(section.name),
                 )
                 # set result of superseded ones to None:
                 for superseded in section.supersedes:
-                    self._parsing_results[host_key + (superseded,)] = None
+                    self._memoized_parsing_results[host_key + (superseded,)] = None
 
         return applicable_sections
 
@@ -352,18 +343,29 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         # during resolving of the supersedings (or set to None b/c the section
         # *is* superseeded)
         cache_key = host_key + (section.name,)
-        if cache_key in self._parsing_results:
-            return self._parsing_results[cache_key]
+        if cache_key in self._memoized_parsing_results:
+            return self._memoized_parsing_results[cache_key]
 
         try:
-            data = self[host_key].sections[section.name]
+            data = self._data[host_key].sections[section.name]
         except KeyError:
-            return self._parsing_results.setdefault(cache_key, None)
+            return self._memoized_parsing_results.setdefault(cache_key, None)
 
-        return self._parsing_results.setdefault(cache_key, section.parse_function(data))
+        return self._memoized_parsing_results.setdefault(cache_key, section.parse_function(data))
 
-    # DEPRECATED
-    # This function is only kept for the legacy cluster mode from hell
+
+# DEPRECATED
+# This encapsulates the methods that are only required by legacy branches of "checking.py".
+# Hopefully we can remove this class entirely someday.
+class MultiHostSections:
+    """Container object for wrapping the host sections of a host being processed
+    or multiple hosts when a cluster is processed. Also holds the functionality for
+    merging these information together for a check"""
+    def __init__(self, parsed_sections_broker: ParsedSectionsBroker) -> None:
+        super().__init__()
+        self._parsed_sections_broker = parsed_sections_broker
+        self._section_content_cache = caching.DictCache()
+
     def get_section_content(
         self,
         host_key: HostKey,
@@ -428,8 +430,6 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         self._section_content_cache[cache_key] = section_content
         return section_content
 
-    # DEPRECATED
-    # This function is only kept for the legacy cluster mode from hell
     def _get_section_content(
         self,
         host_key: HostKey,
@@ -446,7 +446,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         for node_key in cluster_node_keys or [host_key]:
 
             try:
-                host_section_content = self[node_key].sections[section_name]
+                host_section_content = self._parsed_sections_broker[node_key].sections[section_name]
             except KeyError:
                 continue
 
@@ -466,8 +466,6 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
             check_legacy_info,
         )
 
-    # DEPRECATED
-    # This function is only kept for the legacy cluster mode from hell
     @staticmethod
     def _update_with_parse_function(
         section_content: ABCRawDataSection,
@@ -517,8 +515,6 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         finally:
             item_state.set_item_state_prefix(*orig_item_state_prefix)
 
-    # DEPRECATED
-    # This function is only kept for the legacy cluster mode from hell
     def legacy_determine_cache_info(self, section_name: SectionName) -> Optional[Tuple[int, int]]:
         """Aggregate information about the age of the data in the agent sections
 
@@ -527,7 +523,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         """
         cache_infos = [
             host_sections.cache_info[section_name]
-            for host_sections in self._data.values()
+            for host_sections in self._parsed_sections_broker.values()
             if section_name in host_sections.cache_info
         ]
 

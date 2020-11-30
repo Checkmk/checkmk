@@ -75,7 +75,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_paramete
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
-from cmk.base.checkers.host_sections import HostKey, MultiHostSections
+from cmk.base.checkers.host_sections import HostKey, MultiHostSections, ParsedSectionsBroker
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -200,9 +200,9 @@ def do_check(
                 ))
 
         with CPUTracker() as tracker:
-            mhs = MultiHostSections()
+            broker = ParsedSectionsBroker()
             result = checkers.update_host_sections(
-                mhs,
+                broker,
                 nodes,
                 max_cachefile_age=host_config.max_cachefile_age,
                 host_config=host_config,
@@ -214,7 +214,7 @@ def do_check(
                 config_cache,
                 host_config,
                 ipaddress,
-                multi_host_sections=mhs,
+                parsed_sections_broker=broker,
                 services=services_to_check,
                 submit_to_core=submit_to_core,
                 show_perfdata=show_perfdata,
@@ -225,7 +225,7 @@ def do_check(
                     config_cache,
                     host_config,
                     ipaddress,
-                    multi_host_sections=mhs,
+                    parsed_sections_broker=broker,
                 )
 
             for source, host_sections in result:
@@ -325,7 +325,7 @@ def _do_all_checks_on_host(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     *,
     services: List[Service],
     submit_to_core: bool,
@@ -337,7 +337,7 @@ def _do_all_checks_on_host(
     with host_context(host_config.hostname, write_state=submit_to_core):
         for service in services:
             success = execute_check(
-                multi_host_sections,
+                parsed_sections_broker,
                 host_config,
                 ipaddress,
                 service,
@@ -455,7 +455,7 @@ def _service_context(service: Service):
 
 
 def execute_check(
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     service: Service,
@@ -471,7 +471,7 @@ def execute_check(
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
         with _service_context(service):
             return _execute_check_legacy_mode(
-                multi_host_sections,
+                MultiHostSections(parsed_sections_broker),
                 host_config.hostname,
                 ipaddress,
                 service,
@@ -480,7 +480,7 @@ def execute_check(
             )
 
     submit, data_received, result = get_aggregated_result(
-        multi_host_sections,
+        parsed_sections_broker,
         host_config,
         ipaddress,
         service,
@@ -493,7 +493,7 @@ def execute_check(
             host_config.hostname,
             service.description,
             result,
-            multi_host_sections.get_cache_info(plugin.sections) if plugin else None,
+            parsed_sections_broker.get_cache_info(plugin.sections) if plugin else None,
             submit_to_core=submit_to_core,
             show_perfdata=show_perfdata,
         )
@@ -504,7 +504,7 @@ def execute_check(
 
 
 def get_aggregated_result(
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     service: Service,
@@ -534,7 +534,7 @@ def get_aggregated_result(
 
     kwargs = {}
     try:
-        kwargs = multi_host_sections.get_section_cluster_kwargs(
+        kwargs = parsed_sections_broker.get_section_cluster_kwargs(
             config_cache.get_clustered_service_node_keys(
                 host_config.hostname,
                 source_type,
@@ -542,7 +542,7 @@ def get_aggregated_result(
                 ip_lookup.lookup_ip_address,
             ) or [],
             plugin.sections,
-        ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
+        ) if host_config.is_cluster else parsed_sections_broker.get_section_kwargs(
             HostKey(host_config.hostname, ipaddress, source_type),
             plugin.sections,
         )
@@ -551,7 +551,7 @@ def get_aggregated_result(
             # in 1.6 some plugins where discovered for management boards, but with
             # the regular host plugins name. In this case retry with the source type
             # forced to MANAGEMENT:
-            kwargs = multi_host_sections.get_section_cluster_kwargs(
+            kwargs = parsed_sections_broker.get_section_cluster_kwargs(
                 config_cache.get_clustered_service_node_keys(
                     host_config.hostname,
                     SourceType.MANAGEMENT,
@@ -559,7 +559,7 @@ def get_aggregated_result(
                     ip_lookup.lookup_ip_address,
                 ) or [],
                 plugin.sections,
-            ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
+            ) if host_config.is_cluster else parsed_sections_broker.get_section_kwargs(
                 HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
                 plugin.sections,
             )
@@ -650,7 +650,6 @@ def _execute_check_legacy_mode(
             check_legacy_info=config.check_info,
         )
 
-        # TODO: Move this to a helper function
         if section_content is None:  # No data for this check type
             return False
 

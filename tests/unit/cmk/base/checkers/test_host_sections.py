@@ -40,7 +40,13 @@ from cmk.base.checkers import (
     update_host_sections,
 )
 from cmk.base.checkers.agent import AgentHostSections
-from cmk.base.checkers.host_sections import HostKey, HostSections, MultiHostSections
+from cmk.base.checkers.host_sections import (
+    HostKey,
+    HostSections,
+    MultiHostSections,
+    PersistedSections,
+    ParsedSectionsBroker,
+)
 from cmk.base.checkers.piggyback import PiggybackSource
 from cmk.base.checkers.programs import ProgramSource
 from cmk.base.checkers.snmp import SNMPSource
@@ -164,13 +170,13 @@ def test_abstract_hostsections_filter():
 ])
 def test_get_parsed_section(patch_register, node_section_content, expected_result):
 
-    multi_host_sections = MultiHostSections()
-    multi_host_sections.setdefault(
+    parsed_sections_broker = ParsedSectionsBroker()
+    parsed_sections_broker.setdefault(
         HostKey("node1", "127.0.0.1", SourceType.HOST),
         AgentHostSections(sections=node_section_content),
     )
 
-    content = multi_host_sections.get_parsed_section(
+    content = parsed_sections_broker.get_parsed_section(
         HostKey("node1", "127.0.0.1", SourceType.HOST),
         ParsedSectionName("parsed"),
     )
@@ -215,13 +221,13 @@ def test_get_section_kwargs(patch_register, required_sections, expected_result):
 
     host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
 
-    multi_host_sections = MultiHostSections()
-    multi_host_sections.setdefault(
+    parsed_sections_broker = ParsedSectionsBroker()
+    parsed_sections_broker.setdefault(
         host_key,
         AgentHostSections(sections=node_section_content),
     )
 
-    kwargs = multi_host_sections.get_section_kwargs(
+    kwargs = parsed_sections_broker.get_section_kwargs(
         host_key,
         [ParsedSectionName(n) for n in required_sections],
     )
@@ -296,17 +302,17 @@ def test_get_section_cluster_kwargs(patch_register, required_sections, expected_
         SectionName("three"): NODE_2,
     }
 
-    multi_host_sections = MultiHostSections()
-    multi_host_sections.setdefault(
+    parsed_sections_broker = ParsedSectionsBroker()
+    parsed_sections_broker.setdefault(
         HostKey("node1", "127.0.0.1", SourceType.HOST),
         AgentHostSections(sections=node1_section_content),
     )
-    multi_host_sections.setdefault(
+    parsed_sections_broker.setdefault(
         HostKey("node2", "127.0.0.1", SourceType.HOST),
         AgentHostSections(sections=node2_section_content),
     )
 
-    kwargs = multi_host_sections.get_section_cluster_kwargs(
+    kwargs = parsed_sections_broker.get_section_cluster_kwargs(
         [
             HostKey("node1", "127.0.0.1", SourceType.HOST),
             HostKey("node2", "127.0.0.1", SourceType.HOST),
@@ -326,17 +332,17 @@ def _get_host_section_for_parse_sections_test():
 
     host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
 
-    mhs = MultiHostSections()
-    mhs.setdefault(
+    broker = ParsedSectionsBroker()
+    broker.setdefault(
         host_key,
         AgentHostSections(sections=node_section_content),
     )
-    return host_key, mhs
+    return host_key, broker
 
 
 def test_parse_sections_unsuperseded(monkeypatch):
 
-    host_key, mhs = _get_host_section_for_parse_sections_test()
+    host_key, broker = _get_host_section_for_parse_sections_test()
 
     monkeypatch.setattr(
         agent_based_register._config,
@@ -344,18 +350,18 @@ def test_parse_sections_unsuperseded(monkeypatch):
         MOCK_SECTIONS.get,
     )
 
-    assert mhs.determine_applicable_sections(
+    assert broker.determine_applicable_sections(
         {ParsedSectionName("parsed")},
         host_key.source_type,
     ) == [
         SECTION_ONE,
     ]
-    assert mhs.get_parsed_section(host_key, ParsedSectionName("parsed")) is not None
+    assert broker.get_parsed_section(host_key, ParsedSectionName("parsed")) is not None
 
 
 def test_parse_sections_superseded(monkeypatch):
 
-    host_key, mhs = _get_host_section_for_parse_sections_test()
+    host_key, broker = _get_host_section_for_parse_sections_test()
 
     monkeypatch.setattr(
         agent_based_register._config,
@@ -363,13 +369,13 @@ def test_parse_sections_superseded(monkeypatch):
         MOCK_SECTIONS.get,
     )
 
-    assert mhs.determine_applicable_sections(
+    assert broker.determine_applicable_sections(
         {ParsedSectionName("parsed"), ParsedSectionName("parsed_four")},
         host_key.source_type,
     ) == [
         SECTION_FOUR,
     ]
-    assert mhs.get_parsed_section(host_key, ParsedSectionName("parsed")) is None
+    assert broker.get_parsed_section(host_key, ParsedSectionName("parsed")) is None
 
 
 @pytest.mark.parametrize(
@@ -399,14 +405,16 @@ def test_parse_sections_superseded(monkeypatch):
     ])
 def test_get_section_content(hostname, host_entries, cluster_node_keys, expected_result):
 
-    multi_host_sections = MultiHostSections()
+    parsed_sections_broker = ParsedSectionsBroker()
     for nodename, node_section_content in host_entries:
-        multi_host_sections.setdefault(
+        parsed_sections_broker.setdefault(
             HostKey(nodename, "127.0.0.1", SourceType.HOST),
             AgentHostSections(sections={SectionName("section_plugin_name"): node_section_content}),
         )
 
-    section_content = multi_host_sections.get_section_content(
+    mhs = MultiHostSections(parsed_sections_broker)
+
+    section_content = mhs.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.HOST),
         check_api_utils.HOST_ONLY,
         "section_plugin_name",
@@ -416,7 +424,7 @@ def test_get_section_content(hostname, host_entries, cluster_node_keys, expected
     )
     assert expected_result == section_content
 
-    section_content = multi_host_sections.get_section_content(
+    section_content = mhs.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.HOST),
         check_api_utils.HOST_PRECEDENCE,
         "section_plugin_name",
@@ -426,7 +434,7 @@ def test_get_section_content(hostname, host_entries, cluster_node_keys, expected
     )
     assert expected_result == section_content
 
-    section_content = multi_host_sections.get_section_content(
+    section_content = mhs.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.MANAGEMENT),
         check_api_utils.MGMT_ONLY,
         "section_plugin_name",
@@ -503,9 +511,9 @@ class TestMakeHostSectionsHosts:
         return ts.apply(monkeypatch)
 
     def test_no_sources(self, hostname, ipaddress, mode, config_cache, host_config):
-        mhs = MultiHostSections()
+        broker = ParsedSectionsBroker()
         update_host_sections(
-            mhs,
+            broker,
             make_nodes(
                 config_cache,
                 host_config,
@@ -520,12 +528,12 @@ class TestMakeHostSectionsHosts:
         )
         # The length is not zero because the function always sets,
         # at least, a piggy back section.
-        assert len(mhs) == 1
+        assert len(broker) == 1
 
         key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in mhs
+        assert key in broker
 
-        section = mhs[key]
+        section = broker[key]
 
         # Public attributes from HostSections:
         assert not section.sections
@@ -533,9 +541,9 @@ class TestMakeHostSectionsHosts:
         assert not section.piggybacked_raw_data
 
     def test_one_snmp_source(self, hostname, ipaddress, mode, config_cache, host_config):
-        mhs = MultiHostSections()
+        broker = ParsedSectionsBroker()
         update_host_sections(
-            mhs,
+            broker,
             make_nodes(
                 config_cache,
                 host_config,
@@ -562,12 +570,12 @@ class TestMakeHostSectionsHosts:
             ],
             selected_sections=NO_SELECTION,
         )
-        assert len(mhs) == 1
+        assert len(broker) == 1
 
         key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in mhs
+        assert key in broker
 
-        section = mhs[key]
+        section = broker[key]
 
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
@@ -597,9 +605,9 @@ class TestMakeHostSectionsHosts:
         source = source(hostname, ipaddress, mode=mode)
         assert source.source_type is SourceType.HOST
 
-        mhs = MultiHostSections()
+        broker = ParsedSectionsBroker()
         update_host_sections(
-            mhs,
+            broker,
             make_nodes(
                 config_cache,
                 host_config,
@@ -618,12 +626,12 @@ class TestMakeHostSectionsHosts:
             ],
             selected_sections=NO_SELECTION,
         )
-        assert len(mhs) == 1
+        assert len(broker) == 1
 
         key = HostKey(hostname, ipaddress, source.source_type)
-        assert key in mhs
+        assert key in broker
 
-        section = mhs[key]
+        section = broker[key]
 
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
@@ -650,9 +658,9 @@ class TestMakeHostSectionsHosts:
             ),
         ]
 
-        mhs = MultiHostSections()
+        broker = ParsedSectionsBroker()
         update_host_sections(
-            mhs,
+            broker,
             make_nodes(
                 config_cache,
                 host_config,
@@ -671,12 +679,12 @@ class TestMakeHostSectionsHosts:
             ],
             selected_sections=NO_SELECTION,
         )
-        assert len(mhs) == 1
+        assert len(broker) == 1
 
         key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in mhs
+        assert key in broker
 
-        section = mhs[key]
+        section = broker[key]
 
         assert len(section.sections) == 1
         # yapf: disable
@@ -699,9 +707,9 @@ class TestMakeHostSectionsHosts:
             sources=sources,
         )
 
-        mhs = MultiHostSections()
+        broker = ParsedSectionsBroker()
         update_host_sections(
-            mhs,
+            broker,
             nodes,
             max_cachefile_age=0,
             host_config=host_config,
@@ -715,12 +723,12 @@ class TestMakeHostSectionsHosts:
             ],
             selected_sections=NO_SELECTION,
         )
-        assert len(mhs) == 1
+        assert len(broker) == 1
 
         key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in mhs
+        assert key in broker
 
-        section = mhs[key]
+        section = broker[key]
 
         assert len(section.sections) == len(sources)
         for source in sources:
@@ -800,9 +808,9 @@ class TestMakeHostSectionsClusters:
             sources=(),
         )
 
-        mhs = MultiHostSections()
+        broker = ParsedSectionsBroker()
         update_host_sections(
-            mhs,
+            broker,
             made_nodes,
             max_cachefile_age=0,
             host_config=host_config,
@@ -816,16 +824,16 @@ class TestMakeHostSectionsClusters:
             ],
             selected_sections=NO_SELECTION,
         )
-        assert len(mhs) == len(nodes)
+        assert len(broker) == len(nodes)
 
         key_clu = HostKey(cluster, None, SourceType.HOST)
-        assert key_clu not in mhs
+        assert key_clu not in broker
 
         for hostname, addr in nodes.items():
             key = HostKey(hostname, addr, SourceType.HOST)
-            assert key in mhs
+            assert key in broker
 
-            section = mhs[key]
+            section = broker[key]
             # yapf: disable
             assert (section.sections[SectionName("section_name_%s" % hostname)]
                     == [["section_content_%s" % hostname]])
@@ -884,9 +892,9 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         sources=make_sources(host_config, address, mode=mode)
     )
 
-    mhs = MultiHostSections()
+    broker = ParsedSectionsBroker()
     update_host_sections(
-        mhs,
+        broker,
         nodes,
         max_cachefile_age=host_config.max_cachefile_age,
         host_config=host_config,
@@ -900,7 +908,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
             ],
         selected_sections=NO_SELECTION,
     )
-    assert len(mhs) == len(hosts) == 3
+    assert len(broker) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]
     assert cmk.utils.piggyback.remove_source_status_file.call_count == 3  # type: ignore[attr-defined]
 
@@ -908,8 +916,8 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         remove_source_status_file = cmk.utils.piggyback.remove_source_status_file
         remove_source_status_file.assert_any_call(host)  # type: ignore[attr-defined]
         key = HostKey(host, addr, SourceType.HOST)
-        assert key in mhs
-        section = mhs[key]
+        assert key in broker
+        section = broker[key]
         assert len(section.sections) == 1
         assert next(iter(section.sections)) == section_name
         assert not section.cache_info

@@ -20,7 +20,7 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers import NO_SELECTION
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.snmp import SNMPHostSections
-from cmk.base.checkers.host_sections import HostKey, MultiHostSections
+from cmk.base.checkers.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.discovered_labels import (
     ServiceLabel,
     DiscoveredServiceLabels,
@@ -805,9 +805,9 @@ def test__get_service_filters_lists(parameters, new_whitelist, new_blacklist, va
 
 @pytest.mark.usefixtures("config_load_all_checks")
 def test__find_candidates():
-    mhs = MultiHostSections()
+    broker = ParsedSectionsBroker()
 
-    mhs._data = {
+    broker._data = {
         # we just care about the keys here, content set to arbitrary values that can be parsed.
         # section names have been are chosen arbitrarily.
         HostKey("test_node", "1.2.3.4", SourceType.HOST): AgentHostSections({
@@ -831,7 +831,7 @@ def test__find_candidates():
     }
 
     assert discovery._find_host_candidates(
-        mhs,
+        broker,
         preliminary_candidates,
         parsed_sections_of_interest,
     ) == {
@@ -843,7 +843,7 @@ def test__find_candidates():
     }
 
     assert discovery._find_mgmt_candidates(
-        mhs,
+        broker,
         preliminary_candidates,
         parsed_sections_of_interest,
     ) == {
@@ -853,7 +853,7 @@ def test__find_candidates():
     }
 
     assert discovery._find_candidates(
-        mhs,
+        broker,
         run_only_plugin_names=None,
     ) == {
         CheckPluginName('docker_container_status_uptime'),
@@ -966,7 +966,7 @@ def test_do_discovery(monkeypatch):
 RealHostScenario = NamedTuple("RealHostScenario", [
     ("hostname", str),
     ("ipaddress", str),
-    ("multi_host_sections", MultiHostSections),
+    ("parsed_sections_broker", ParsedSectionsBroker),
 ])
 
 
@@ -1004,46 +1004,44 @@ def _realhost_scenario(monkeypatch):
         }
     })
 
-    return RealHostScenario(
-        hostname,
-        ipaddress,
-        MultiHostSections(
-            data={
-                HostKey(hostname=hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
-                    AgentHostSections(
-                        sections={
-                            SectionName("labels"): [[
-                                '{"cmk/check_mk_server":"yes"}',
-                            ],],
-                            SectionName("df"): [
-                                [
-                                    '/dev/sda1',
-                                    'vfat',
-                                    '523248',
-                                    '3668',
-                                    '519580',
-                                    '1%',
-                                    '/boot/test-efi',
-                                ],
-                                [
-                                    'tmpfs',
-                                    'tmpfs',
-                                    '8152916',
-                                    '244',
-                                    '8152672',
-                                    '1%',
-                                    '/opt/omd/sites/test-heute/tmp',
-                                ],
-                            ],
-                        })
-            }),
-    )
+    broker = ParsedSectionsBroker()
+    broker.update({
+        HostKey(hostname=hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
+            AgentHostSections(
+                sections={
+                    SectionName("labels"): [[
+                        '{"cmk/check_mk_server":"yes"}',
+                    ],],
+                    SectionName("df"): [
+                        [
+                            '/dev/sda1',
+                            'vfat',
+                            '523248',
+                            '3668',
+                            '519580',
+                            '1%',
+                            '/boot/test-efi',
+                        ],
+                        [
+                            'tmpfs',
+                            'tmpfs',
+                            '8152916',
+                            '244',
+                            '8152672',
+                            '1%',
+                            '/opt/omd/sites/test-heute/tmp',
+                        ],
+                    ],
+                })
+    })
+
+    return RealHostScenario(hostname, ipaddress, broker)
 
 
 ClusterScenario = NamedTuple("ClusterScenario", [
     ("host_config", config.HostConfig),
     ("ipaddress", str),
-    ("multi_host_sections", MultiHostSections),
+    ("parsed_sections_broker", ParsedSectionsBroker),
     ("node1_hostname", str),
     ("node2_hostname", str),
 ])
@@ -1096,66 +1094,68 @@ def _cluster_scenario(monkeypatch):
         }
     })
 
+    broker = ParsedSectionsBroker()
+    broker.update({
+        HostKey(hostname=node1_hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
+            AgentHostSections(
+                sections={
+                    SectionName("labels"): [[
+                        '{"cmk/check_mk_server":"yes"}',
+                    ],],
+                    SectionName("df"): [
+                        [
+                            '/dev/sda1',
+                            'vfat',
+                            '523248',
+                            '3668',
+                            '519580',
+                            '1%',
+                            '/boot/test-efi',
+                        ],
+                        [
+                            'tmpfs',
+                            'tmpfs',
+                            '8152916',
+                            '244',
+                            '8152672',
+                            '1%',
+                            '/opt/omd/sites/test-heute/tmp',
+                        ],
+                    ],
+                }),
+        HostKey(hostname=node2_hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
+            AgentHostSections(
+                sections={
+                    SectionName("labels"): [[
+                        '{"node2_live_label":"true"}',
+                    ],],
+                    SectionName("df"): [
+                        [
+                            '/dev/sda1',
+                            'vfat',
+                            '523248',
+                            '3668',
+                            '519580',
+                            '1%',
+                            '/boot/test-efi',
+                        ],
+                        [
+                            'tmpfs',
+                            'tmpfs',
+                            '8152916',
+                            '244',
+                            '8152672',
+                            '1%',
+                            '/opt/omd/sites/test-heute2/tmp',
+                        ],
+                    ],
+                }),
+    })
+
     return ClusterScenario(
         host_config,
         ipaddress,
-        MultiHostSections(
-            data={
-                HostKey(hostname=node1_hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
-                    AgentHostSections(
-                        sections={
-                            SectionName("labels"): [[
-                                '{"cmk/check_mk_server":"yes"}',
-                            ],],
-                            SectionName("df"): [
-                                [
-                                    '/dev/sda1',
-                                    'vfat',
-                                    '523248',
-                                    '3668',
-                                    '519580',
-                                    '1%',
-                                    '/boot/test-efi',
-                                ],
-                                [
-                                    'tmpfs',
-                                    'tmpfs',
-                                    '8152916',
-                                    '244',
-                                    '8152672',
-                                    '1%',
-                                    '/opt/omd/sites/test-heute/tmp',
-                                ],
-                            ],
-                        }),
-                HostKey(hostname=node2_hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
-                    AgentHostSections(
-                        sections={
-                            SectionName("labels"): [[
-                                '{"node2_live_label":"true"}',
-                            ],],
-                            SectionName("df"): [
-                                [
-                                    '/dev/sda1',
-                                    'vfat',
-                                    '523248',
-                                    '3668',
-                                    '519580',
-                                    '1%',
-                                    '/boot/test-efi',
-                                ],
-                                [
-                                    'tmpfs',
-                                    'tmpfs',
-                                    '8152916',
-                                    '244',
-                                    '8152672',
-                                    '1%',
-                                    '/opt/omd/sites/test-heute2/tmp',
-                                ],
-                            ],
-                        }),
-            }),
+        broker,
         node1_hostname,
         node2_hostname,
     )
@@ -1500,7 +1500,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
         discovered_services, _host_label_discovery_result = discovery._discover_host_labels_and_services(
             scenario.hostname,
             scenario.ipaddress,
-            scenario.multi_host_sections,
+            scenario.parsed_sections_broker,
             discovery_parameters,
             run_only_plugin_names=None,
         )
@@ -1521,7 +1521,7 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
         _discovered_services, host_label_discovery_result = discovery._discover_host_labels_and_services(
             scenario.hostname,
             scenario.ipaddress,
-            scenario.multi_host_sections,
+            scenario.parsed_sections_broker,
             discovery_parameters,
             run_only_plugin_names={CheckPluginName('df')},
         )
@@ -1545,7 +1545,7 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discove
         discovered_services, _host_label_discovery_result = discovery._get_cluster_services(
             scenario.host_config,
             scenario.ipaddress,
-            scenario.multi_host_sections,
+            scenario.parsed_sections_broker,
             discovery_parameters,
         )
 
@@ -1565,7 +1565,7 @@ def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_te
         _discovered_services, host_label_discovery_result = discovery._get_cluster_services(
             scenario.host_config,
             scenario.ipaddress,
-            scenario.multi_host_sections,
+            scenario.parsed_sections_broker,
             discovery_parameters,
         )
 

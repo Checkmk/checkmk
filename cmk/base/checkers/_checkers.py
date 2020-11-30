@@ -26,7 +26,7 @@ from cmk.base.config import HostConfig
 
 from ._abstract import Mode, Source
 from .agent import AgentHostSections
-from .host_sections import HostKey, HostSections, MultiHostSections
+from .host_sections import HostKey, HostSections, ParsedSectionsBroker
 from .ipmi import IPMISource
 from .piggyback import PiggybackSource
 from .programs import DSProgramSource, SpecialAgentSource
@@ -240,7 +240,7 @@ def fetch_all(
 
 
 def update_host_sections(
-    multi_host_sections: MultiHostSections,
+    parsed_sections_broker: ParsedSectionsBroker,
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     *,
     max_cachefile_age: int,
@@ -274,7 +274,7 @@ def update_host_sections(
 
         source.file_cache_max_age = max_cachefile_age
 
-        host_sections = multi_host_sections.setdefault(
+        host_sections = parsed_sections_broker.setdefault(
             HostKey(hostname, ipaddress, source.source_type),
             source.default_host_sections,
         )
@@ -291,7 +291,7 @@ def update_host_sections(
     for hostname, ipaddress, _sources in nodes:
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
-        host_sections = multi_host_sections.setdefault(
+        host_sections = parsed_sections_broker.setdefault(
             HostKey(hostname, ipaddress, SourceType.HOST),
             AgentHostSections(),
         )

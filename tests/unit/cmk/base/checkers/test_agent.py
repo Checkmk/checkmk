@@ -73,6 +73,47 @@ class TestParser:
         return AgentParser(hostname, store, logger)
 
     @pytest.mark.usefixtures("scenario")
+    def test_missing_host_header(self, parser):
+        raw_data = AgentRawData(b"\n".join((
+            b"hey!",
+            b"a header",
+            b"is missing",
+        )))
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {}
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {}
+
+    @pytest.mark.usefixtures("scenario")
+    def test_piggy_name_as_hostname_is_not_piggybacked(self, parser, hostname):
+        raw_data = AgentRawData(b"\n".join((
+            f"<<<<{hostname}>>>>".encode("ascii"),
+            b"line0",
+            b"line1",
+            b"line2",
+        )))
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {}
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {}
+
+    @pytest.mark.usefixtures("scenario")
+    def test_no_host_header_after_piggyback(self, parser):
+        raw_data = AgentRawData(b"\n".join((
+            b"<<<<piggy>>>>",
+            b"line0",
+            b"line1",
+            b"line2",
+        )))
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {}
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {'piggy': [b"line0", b"line1", b"line2"]}
+
+    @pytest.mark.usefixtures("scenario")
     def test_raw_section_populates_sections(self, parser):
         raw_data = AgentRawData(b"\n".join((
             b"<<<a_section>>>",

@@ -1272,10 +1272,7 @@ def _render_dashboard_buttons(dashboard_name: DashboardName, dashboard: Dashboar
                 'dashboard.py',
             ),
             title=_("Edit dashboard"),
-            icon={
-                "icon": "dashboard",
-                "emblem": "edit"
-            },
+            icon="dashboard",
         )
 
 

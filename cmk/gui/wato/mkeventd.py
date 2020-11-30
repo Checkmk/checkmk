@@ -11,8 +11,18 @@ import re
 import io
 import time
 import zipfile
-from typing import (Callable, Dict, List, Optional as _Optional, TypeVar, Union, Type, Iterator,
-                    overload)
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional as _Optional,
+    TypeVar,
+    Union,
+    Type,
+    Iterator,
+    overload,
+)
 from pathlib import Path
 
 from pysmi.compiler import MibCompiler  # type: ignore[import]
@@ -142,6 +152,13 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
 from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
 
 
 def _compiled_mibs_dir():
@@ -1792,14 +1809,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 )
                 drag_url = make_action_link([("mode", "mkeventd_rules"),
                                              ("rule_pack", self._rule_pack_id), ("_move", nr)])
-                edit_url = makeuri_contextless(
-                    request,
-                    [
-                        ("mode", "mkeventd_edit_rule"),
-                        ("rule_pack", self._rule_pack_id),
-                        ("edit", nr),
-                    ],
-                )
+                edit_url = _rule_edit_url(self._rule_pack_id, nr)
                 clone_url = makeuri_contextless(
                     request,
                     [
@@ -2941,6 +2951,18 @@ def _page_menu_entry_snmp_mibs():
         title=_("SNMP MIBs"),
         icon_name="snmpmib",
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_mibs")])),
+    )
+
+
+def _rule_edit_url(rule_pack_id: str, rule_nr: int) -> str:
+    return makeuri_contextless(
+        request,
+        [
+            ("mode", "mkeventd_edit_rule"),
+            ("rule_pack", rule_pack_id),
+            ("edit", rule_nr),
+        ],
+        filename="wato.py",
     )
 
 
@@ -4312,3 +4334,72 @@ define command {
 
 
 hooks.register_builtin("pre-activate-changes", mkeventd_update_notifiation_configuration)
+
+#   .--Setup search--------------------------------------------------------.
+#   |     ____       _                                         _           |
+#   |    / ___|  ___| |_ _   _ _ __    ___  ___  __ _ _ __ ___| |__        |
+#   |    \___ \ / _ \ __| | | | '_ \  / __|/ _ \/ _` | '__/ __| '_ \       |
+#   |     ___) |  __/ |_| |_| | |_) | \__ \  __/ (_| | | | (__| | | |      |
+#   |    |____/ \___|\__|\__,_| .__/  |___/\___|\__,_|_|  \___|_| |_|      |
+#   |                         |_|                                          |
+#   +----------------------------------------------------------------------+
+#   | Searching of rule packs in setup search                              |
+#   '----------------------------------------------------------------------'
+#.
+
+
+class MatchItemGeneratorEventConsole(ABCMatchItemGenerator):
+    def generate_match_items(self) -> MatchItems:
+        for rule_pack in self._iter_rulepacks():
+            rule_pack_title = rule_pack["title"]
+            rule_pack_id = rule_pack["id"]
+            yield MatchItem(
+                title=rule_pack_title,
+                topic=self._topic,
+                url=ModeEventConsoleRules.mode_url(rule_pack=rule_pack["id"]),
+                match_texts=[rule_pack_title, rule_pack_id],
+            )
+            yield from (MatchItem(
+                title=f"{rule_pack_title} > {id_}",
+                topic=self._topic,
+                url=_rule_edit_url(rule_pack_id, nr),
+                match_texts=[id_, rule["description"], rule["comment"]],
+            ) for nr, rule in enumerate(rule_pack["rules"]) for id_ in [rule["id"]])
+
+    def _iter_rulepacks(self) -> Iterable[ec.ECRulePackSpec]:
+        yield from (opt_rule_pack
+                    for opt_rule_pack in (self._rule_pack_from_rule_pack_or_mkp(rule_pack_or_mkp)
+                                          for rule_pack_or_mkp in ec.load_rule_packs())
+                    if opt_rule_pack)
+
+    def _rule_pack_from_rule_pack_or_mkp(
+        self,
+        rule_pack_or_mkp: ec.ECRulePack,
+    ) -> _Optional[ec.ECRulePackSpec]:
+        if isinstance(rule_pack_or_mkp, ec.MkpRulePackProxy):
+            return self._unpack_mkp_rule_pack(rule_pack_or_mkp.rule_pack)
+        return rule_pack_or_mkp
+
+    def _unpack_mkp_rule_pack(
+        self,
+        mkp_rule_pack: _Optional[ec.ECRulePack],
+    ) -> _Optional[ec.ECRulePackSpec]:
+        if isinstance(mkp_rule_pack, ec.MkpRulePackProxy):
+            return self._unpack_mkp_rule_pack(mkp_rule_pack.rule_pack)
+        return mkp_rule_pack
+
+    @property
+    def _topic(self):
+        return "Event Console"
+
+    def is_affected_by_change(self, change_action_name: str) -> bool:
+        # rule packs: new-rule-pack, edit-rule-pack, ...
+        # rules within rule packs: new-rule, edit-rule, ...
+        return "rule" in change_action_name
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return False
+
+
+match_item_generator_registry.register(MatchItemGeneratorEventConsole("event_console"))

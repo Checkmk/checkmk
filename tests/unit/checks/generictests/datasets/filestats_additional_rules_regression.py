@@ -35,7 +35,7 @@ checks = {
             'foo', {
                 'maxsize_largest': (4, 5),
                 'additional_rules':
-                [('/var/log/sys*', {
+                [('Sys-related files', '/var/log/sys*', {
                     'maxsize_largest': (1, 2)
                 })],
                 'show_all_files': True,
@@ -50,7 +50,9 @@ checks = {
                 (0, 'Newest: 356 m', []),
                 (0, 'Oldest: 53 d', []),
                 (0, 'Additional rules enabled', []),
-                (0, "\nFiles matching '/var/log/sys*': 3", []),
+                (0, '\nSys-related files', []),
+                (0, 'Pattern: \'/var/log/sys*\'', []),
+                (0, 'Files in total: 3', []),
                 (0, 'Smallest: 5.07 MB', []),
                 (2, 'Largest: 21.10 MB (warn/crit at 1.00 B/2.00 B)', []),
                 (0, 'Newest: 0.00 s', []),

@@ -29,13 +29,13 @@ checks = {
         {
             'show_all_files': True,
             'additional_rules': [
-                ('.*?/premium-world-check-day', {
+                ('DAY', '.*?/premium-world-check-day', {
                     'maxage_oldest': (1, 2)
                 }),
-                ('.*?/premium-world-check-week', {
+                ('WEEK', '.*?/premium-world-check-week', {
                     'maxage_oldest': (3, 4)
                 }),
-                ('.*?/premium-world-check-month', {
+                ('MONTH', '.*?/premium-world-check-month', {
                     'maxage_oldest': (5, 6)
                 }),
             ]
@@ -43,19 +43,25 @@ checks = {
         [
             (0, 'Files in total: 3', [('file_count', 3, None, None, None, None)]),
             (0, 'Additional rules enabled', []),
-            (0, '\nFiles matching \'.*?/premium-world-check-day\': 1', []),
+            (0, '\nDAY', []),
+            (0, 'Pattern: \'.*?/premium-world-check-day\'', []),
+            (0, 'Files in total: 1', []),
             (0, 'Smallest: 8.82 MB', []),
             (0, 'Largest: 8.82 MB', []),
             (0, 'Newest: 21 h', []),
             (2, 'Oldest: 21 h (warn/crit at 1.00 s/2.00 s)', []),
             (0, '[/opt/filetransfer/data/akb/paag01/cofi#ak/incoming/premium-world-check-day.xml] Age: 21 h, Size: 8.82 MB(!!)', []),
-            (0, '\nFiles matching \'.*?/premium-world-check-month\': 1', []),
+            (0, '\nMONTH', []),
+            (0, 'Pattern: \'.*?/premium-world-check-month\'', []),
+            (0, 'Files in total: 1', []),
             (0, 'Smallest: 258.84 MB', []),
             (0, 'Largest: 258.84 MB', []),
             (0, 'Newest: 23 d', []),
             (2, 'Oldest: 23 d (warn/crit at 5.00 s/6.00 s)', []),
             (0, "[/opt/filetransfer/data/akb/paag01/cofi#ak/incoming/premium-world-check-month.xml] Age: 23 d, Size: 258.84 MB(!!)", []),
-            (0, '\nFiles matching \'.*?/premium-world-check-week\': 1', []),
+            (0, '\nWEEK', []),
+            (0, 'Pattern: \'.*?/premium-world-check-week\'', []),
+            (0, 'Files in total: 1', []),
             (0, 'Smallest: 77.34 MB', []),
             (0, 'Largest: 77.34 MB', []),
             (0, 'Newest: 6 d', []),

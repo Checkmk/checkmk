@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
 import logging
 import time
 from pathlib import Path
@@ -355,6 +356,11 @@ class AgentParserSectionHeader(NamedTuple):
             return None
 
 
+class ParserState(abc.ABC):
+    def parse(self, line: bytes) -> "ParserState":
+        raise NotImplementedError()
+
+
 class PiggybackSectionParser:
     @staticmethod
     def is_header(line: bytes) -> bool:
@@ -366,7 +372,12 @@ class PiggybackSectionParser:
         return line.strip() == b'<<<<>>>>'
 
 
-class HostSectionParser:
+class NOOPParser(ParserState):
+    def parse(self, line: bytes) -> ParserState:
+        return self
+
+
+class HostSectionParser(ParserState):
     def __init__(
         self,
         section_header: AgentParserSectionHeader,
@@ -393,14 +404,14 @@ class HostSectionParser:
         self.host_sections: Final = host_sections
         self.persisted_sections: Final = persisted_sections
 
-    def parse(self, line: bytes) -> None:
+    def parse(self, line: bytes) -> ParserState:
         assert not HostSectionParser.is_header(line)
 
         if HostSectionParser.is_footer(line):
-            raise StopIteration()
+            return NOOPParser()
 
         if not line.strip():
-            return
+            return self
 
         if not self.section_header.nostrip:
             line = line.strip()
@@ -411,6 +422,7 @@ class HostSectionParser:
                 encoding=self.section_header.encoding,
                 fallback="latin-1",
             ).split(self.section_header.separator))
+        return self
 
     @staticmethod
     def is_header(line: bytes) -> bool:
@@ -481,7 +493,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         # handle sections with option persist(...)
         persisted_sections = PersistedSections[AgentSectionContent]({})
-        parser: Optional[HostSectionParser] = None
+        parser: ParserState = NOOPParser()
         for line in raw_data.split(b"\n"):
             line = line.rstrip(b"\r")
             stripped_line = line.strip()
@@ -511,15 +523,10 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     )
                 except ValueError:
                     self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
-                    parser = None
-                    continue
+                    parser = NOOPParser()
 
-            elif parser is not None:
-                try:
-                    parser.parse(line)
-                except StopIteration:
-                    parser = None
-
+            else:
+                parser = parser.parse(line)
         return host_sections, persisted_sections
 
     @staticmethod

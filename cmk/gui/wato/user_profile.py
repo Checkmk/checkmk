@@ -60,8 +60,8 @@ def _get_sidebar_position() -> str:
 
 def _get_sidebar_position_title(value: str) -> str:
     return {
-        "left": _("left"),
-        "right": _("right"),
+        "left": _("Left"),
+        "right": _("Right"),
     }[value]
 
 

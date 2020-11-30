@@ -2534,15 +2534,17 @@ def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:
     if not config.user.may("wato.hosts") and not config.user.may("wato.seeall"):
         return []
 
-    return [PageMenuTopic(
-        title=_("Setup"),
-        entries=list(_page_menu_entries_host_setup()),
-    )]
-
-
-def _page_menu_entries_host_setup() -> Iterator[PageMenuEntry]:
     host_name = html.request.get_ascii_input_mandatory("host")
 
+    return [
+        PageMenuTopic(
+            title=_("Setup"),
+            entries=list(page_menu_entries_host_setup(host_name)),
+        )
+    ]
+
+
+def page_menu_entries_host_setup(host_name) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Host configuration"),
         icon_name={

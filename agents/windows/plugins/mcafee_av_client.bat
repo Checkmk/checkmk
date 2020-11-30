@@ -1,4 +1,4 @@
-set VERSION="2.0.0i2"
+set VERSION="2.1.0i1"
 @echo off
 rem #  -----------------------------------------------------------------------------
 rem #  Checkmk windows agent plugin to gather information about signature date

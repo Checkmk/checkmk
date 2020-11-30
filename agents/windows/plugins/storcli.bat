@@ -1,4 +1,4 @@
-set VERSION="2.0.0i2"
+set VERSION="2.1.0i1"
 @ECHO off & setlocal EnableDelayedExpansion
 REM ***
 REM * plugin to to monitor RAID status via StorCLI utility

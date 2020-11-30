@@ -17,7 +17,7 @@ plugin ("pip install docker").
 This plugin it will be called by the agent without any arguments.
 """
 
-__version__ = "2.0.0i2"
+__version__ = "2.1.0i1"
 
 # N O T E:
 # docker is available for python versions from 2.6 / 3.3

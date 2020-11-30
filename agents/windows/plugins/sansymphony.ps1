@@ -1,4 +1,4 @@
-$VERSION = "2.0.0i2"
+$VERSION = "2.0.0b1"
 # check_datacore.ps1
 # Version 0.2
 # Author : Andre Eckstein, Andre.Eckstein@Bechtle.com

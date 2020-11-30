@@ -1,4 +1,4 @@
-set VERSION="2.0.0i2"
+set VERSION="2.0.0b1"
 @ECHO off & setlocal EnableDelayedExpansion
 REM **********************************************************************
 REM * Script: megaraid.bat

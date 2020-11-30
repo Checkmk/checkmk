@@ -1,4 +1,4 @@
-﻿$VERSION = "2.0.0i2"
+﻿$VERSION = "2.0.0b1"
 ####
 ## Monitor Windows Tasks
 ##

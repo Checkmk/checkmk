@@ -1501,22 +1501,20 @@ def _choose_view_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 
 @page_registry.register_page("edit_dashlet")
 class EditDashletPage(Page):
-    def page(self) -> PageResult:
+    def __init__(self) -> None:
         if not config.user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-        board = html.request.var('name')
-        if not board:
-            raise MKUserError("name", _('The name of the dashboard is missing.'))
-
-        ident = html.request.get_integer_input("id")
+        self._board = html.request.get_str_input_mandatory('name')
+        self._ident = html.request.get_integer_input("id")
 
         try:
-            dashboard = get_permitted_dashboards()[board]
+            self._dashboard = get_permitted_dashboards()[self._board]
         except KeyError:
             raise MKUserError("name", _('The requested dashboard does not exist.'))
 
-        if ident is None:
+    def page(self) -> PageResult:
+        if self._ident is None:
             type_name = html.request.get_str_input_mandatory('type')
             mode = 'add'
             title = _('Add Dashlet')
@@ -1538,7 +1536,7 @@ class EditDashletPage(Page):
             if dashlet_type.has_context():
                 dashlet_spec["context"] = {}
 
-            ident = len(dashboard['dashlets'])
+            self._ident = len(self._dashboard['dashlets'])
 
             single_infos_raw = html.request.var('single_infos')
             single_infos: List[InfoName] = []
@@ -1557,7 +1555,7 @@ class EditDashletPage(Page):
             title = _('Edit Dashlet')
 
             try:
-                dashlet_spec = dashboard['dashlets'][ident]
+                dashlet_spec = self._dashboard['dashlets'][self._ident]
             except IndexError:
                 raise MKUserError("id", _('The dashlet does not exist.'))
 
@@ -1565,16 +1563,15 @@ class EditDashletPage(Page):
             dashlet_type = cast(Dashlet, dashlet_registry[type_name])
             single_infos = cast(List[str], dashlet_spec['single_infos'])
 
-        breadcrumb = _dashlet_editor_breadcrumb(board, dashboard, title)
+        breadcrumb = _dashlet_editor_breadcrumb(self._board, self._dashboard, title)
         html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
 
         vs_general = dashlet_vs_general_settings(dashlet_type, single_infos)
 
         def dashlet_info_handler(dashlet_spec: DashletConfig) -> List[str]:
-            assert board is not None
-            assert isinstance(ident, int)
+            assert isinstance(self._ident, int)
             dashlet_type = dashlet_registry[dashlet_spec['type']]
-            dashlet = dashlet_type(board, dashboard, ident, dashlet_spec)
+            dashlet = dashlet_type(self._board, self._dashboard, self._ident, dashlet_spec)
             return dashlet.infos()
 
         context_specs = visuals.get_context_specs(dashlet_spec, info_handler=dashlet_info_handler)
@@ -1629,13 +1626,13 @@ class EditDashletPage(Page):
                 elif handle_input_func:
                     # The returned dashlet must be equal to the parameter! It is not replaced/re-added
                     # to the dashboard object. FIXME TODO: Clean this up!
-                    dashlet_spec = handle_input_func(ident, dashlet_spec)
+                    dashlet_spec = handle_input_func(self._ident, dashlet_spec)
 
                 if context_specs:
                     dashlet_spec['context'] = visuals.process_context_specs(context_specs)
 
                 if mode == "add":
-                    dashboard['dashlets'].append(dashlet_spec)
+                    self._dashboard['dashlets'].append(dashlet_spec)
 
                 save_all_dashboards()
 

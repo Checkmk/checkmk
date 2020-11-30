@@ -436,7 +436,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         # handle sections with option persist(...)
         persisted_sections = PersistedSections[AgentSectionContent]({})
-        section_content: Optional[AgentSectionContent] = None
+        section_header: Optional[AgentParserSectionHeader] = None
         for line in raw_data.split(b"\n"):
             line = line.rstrip(b"\r")
             stripped_line = line.strip()
@@ -458,16 +458,16 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                 host_sections.piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             elif HostSectionParser.is_footer(line):
-                section_content = None
+                section_header = None
 
             elif HostSectionParser.is_header(line):
                 try:
                     section_header = AgentParserSectionHeader.from_headerline(stripped_line[3:-3])
                 except ValueError:
                     self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
-                    section_content = None
+                    section_header = None
                     continue
-                section_content = host_sections.sections.setdefault(section_header.name, [])
+                host_sections.sections.setdefault(section_header.name, [])
 
                 # Split of persisted section for server-side caching
                 if section_header.persist is not None:
@@ -477,7 +477,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     persisted_sections[section_header.name] = (
                         cached_at,
                         section_header.persist,
-                        section_content,
+                        host_sections.sections[section_header.name],
                     )
 
                 if section_header.cached:
@@ -485,7 +485,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     host_sections.cache_info[section_header.name] = cache_times[0], cache_times[1]
 
             elif stripped_line != b'':
-                if section_content is None:
+                if section_header is None:
                     continue
 
                 if not section_header.nostrip:
@@ -497,7 +497,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     fallback="latin-1",
                 )
 
-                section_content.append(decoded_line.split(section_header.separator))
+                host_sections.sections[section_header.name].append(
+                    decoded_line.split(section_header.separator))
 
         return host_sections, persisted_sections
 

@@ -55,6 +55,8 @@ bool AsyncAnswer::waitAnswer(std::chrono::milliseconds to_wait) {
 // Caller MUST Fix section size!
 static bool AddVectorGracefully(std::vector<uint8_t>& Out,
                                 const std::vector<uint8_t>& In) {
+    if (In.empty()) return true;
+
     auto old_size = Out.size();
     // we have theoretical possibility of exception here
 
@@ -78,38 +80,32 @@ static bool AddVectorGracefully(std::vector<uint8_t>& Out,
 // kills data in any case
 // return gathered data back
 AsyncAnswer::DataBlock AsyncAnswer::getDataAndClear() {
-    std::lock_guard lk(lock_);
-    try {
-        if (order_ == Order::plugins_last) {
-            if (!plugins_.empty()) AddVectorGracefully(data_, plugins_);
-            if (!local_.empty()) AddVectorGracefully(data_, local_);
-            plugins_.clear();
-            local_.clear();
-        }
+    DataBlock v;
 
-        auto v = std::move(data_);
-        dropDataNoLock();
-        return v;
-    } catch (const std::exception& e) {
-        XLOG::l(XLOG_FLINE + " - no-no-no '{}'", e.what());
-        dropDataNoLock();
-        return {};
+    std::lock_guard lk(lock_);
+    if (order_ == Order::plugins_last) {
+        AddVectorGracefully(data_, plugins_);
+        AddVectorGracefully(data_, local_);
     }
+
+    v = std::move(data_);
+    dropDataNoLock();
+
+    return v;
 }
 
 bool AsyncAnswer::prepareAnswer(std::string_view Ip) {
     std::lock_guard lk(lock_);
 
     if (!external_ip_.empty() || awaited_segments_ != 0 ||
-        received_segments_ != 0)
+        received_segments_ != 0) {
+        XLOG::l("Answer is in use.");
         return false;
+    }
 
     dropDataNoLock();
+    tp_id_ = GenerateAnswerId();
     external_ip_ = Ip;
-    awaited_segments_ = 0;
-    received_segments_ = 0;
-    plugins_.clear();
-    local_.clear();
     sw_.start();
     return true;
 }
@@ -184,11 +180,12 @@ bool AsyncAnswer::tryBreakWait() {
 
 // resets data, internal use only
 void AsyncAnswer::dropDataNoLock() {
-    tp_id_ = GenerateAnswerId();
     awaited_segments_ = 0;
     received_segments_ = 0;
-    data_.resize(0);
-    segments_.resize(0);
-    external_ip_ = "";
+    data_.clear();
+    segments_.clear();
+    external_ip_.clear();
+    plugins_.clear();
+    local_.clear();
 }
 }  // namespace cma::srv

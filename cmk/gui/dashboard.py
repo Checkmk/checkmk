@@ -38,7 +38,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.views import ABCAjaxInitialFilters
-from cmk.gui.pages import page_registry
+from cmk.gui.pages import page_registry, Page, PageResult
 from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
     Breadcrumb,
@@ -1499,174 +1499,175 @@ def _choose_view_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
                                       save_title=_("Continue"))
 
 
-@cmk.gui.pages.register("edit_dashlet")
-def page_edit_dashlet() -> None:
-    if not config.user.may("general.edit_dashboards"):
-        raise MKAuthException(_("You are not allowed to edit dashboards."))
+@page_registry.register_page("edit_dashlet")
+class EditDashletPage(Page):
+    def page(self) -> PageResult:
+        if not config.user.may("general.edit_dashboards"):
+            raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = html.request.var('name')
-    if not board:
-        raise MKUserError("name", _('The name of the dashboard is missing.'))
+        board = html.request.var('name')
+        if not board:
+            raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ident = html.request.get_integer_input("id")
-
-    try:
-        dashboard = get_permitted_dashboards()[board]
-    except KeyError:
-        raise MKUserError("name", _('The requested dashboard does not exist.'))
-
-    if ident is None:
-        type_name = html.request.get_str_input_mandatory('type')
-        mode = 'add'
-        title = _('Add Dashlet')
+        ident = html.request.get_integer_input("id")
 
         try:
-            dashlet_type = cast(Dashlet, dashlet_registry[type_name])
+            dashboard = get_permitted_dashboards()[board]
         except KeyError:
-            raise MKUserError("type", _('The requested dashlet type does not exist.'))
+            raise MKUserError("name", _('The requested dashboard does not exist.'))
 
-        # Initial configuration
-        dashlet_spec = {
-            'position': dashlet_type.initial_position(),
-            'size': dashlet_type.initial_size(),
-            'single_infos': dashlet_type.single_infos(),
-            'type': type_name,
-        }
-        dashlet_spec.update(dashlet_type.default_settings())
+        if ident is None:
+            type_name = html.request.get_str_input_mandatory('type')
+            mode = 'add'
+            title = _('Add Dashlet')
 
-        if dashlet_type.has_context():
-            dashlet_spec["context"] = {}
+            try:
+                dashlet_type = cast(Dashlet, dashlet_registry[type_name])
+            except KeyError:
+                raise MKUserError("type", _('The requested dashlet type does not exist.'))
 
-        ident = len(dashboard['dashlets'])
+            # Initial configuration
+            dashlet_spec = {
+                'position': dashlet_type.initial_position(),
+                'size': dashlet_type.initial_size(),
+                'single_infos': dashlet_type.single_infos(),
+                'type': type_name,
+            }
+            dashlet_spec.update(dashlet_type.default_settings())
 
-        single_infos_raw = html.request.var('single_infos')
-        single_infos: List[InfoName] = []
-        if single_infos_raw:
-            single_infos = single_infos_raw.split(',')
-            for key in single_infos:
-                if key not in visual_info_registry:
-                    raise MKUserError('single_infos', _('The info %s does not exist.') % key)
+            if dashlet_type.has_context():
+                dashlet_spec["context"] = {}
 
-        if not single_infos:
-            single_infos = dashlet_type.single_infos()
+            ident = len(dashboard['dashlets'])
 
-        dashlet_spec['single_infos'] = single_infos
-    else:
-        mode = 'edit'
-        title = _('Edit Dashlet')
+            single_infos_raw = html.request.var('single_infos')
+            single_infos: List[InfoName] = []
+            if single_infos_raw:
+                single_infos = single_infos_raw.split(',')
+                for key in single_infos:
+                    if key not in visual_info_registry:
+                        raise MKUserError('single_infos', _('The info %s does not exist.') % key)
 
-        try:
-            dashlet_spec = dashboard['dashlets'][ident]
-        except IndexError:
-            raise MKUserError("id", _('The dashlet does not exist.'))
+            if not single_infos:
+                single_infos = dashlet_type.single_infos()
 
-        type_name = cast(str, dashlet_spec['type'])
-        dashlet_type = cast(Dashlet, dashlet_registry[type_name])
-        single_infos = cast(List[str], dashlet_spec['single_infos'])
+            dashlet_spec['single_infos'] = single_infos
+        else:
+            mode = 'edit'
+            title = _('Edit Dashlet')
 
-    breadcrumb = _dashlet_editor_breadcrumb(board, dashboard, title)
-    html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
+            try:
+                dashlet_spec = dashboard['dashlets'][ident]
+            except IndexError:
+                raise MKUserError("id", _('The dashlet does not exist.'))
 
-    vs_general = dashlet_vs_general_settings(dashlet_type, single_infos)
+            type_name = cast(str, dashlet_spec['type'])
+            dashlet_type = cast(Dashlet, dashlet_registry[type_name])
+            single_infos = cast(List[str], dashlet_spec['single_infos'])
 
-    def dashlet_info_handler(dashlet_spec: DashletConfig) -> List[str]:
-        assert board is not None
-        assert isinstance(ident, int)
-        dashlet_type = dashlet_registry[dashlet_spec['type']]
-        dashlet = dashlet_type(board, dashboard, ident, dashlet_spec)
-        return dashlet.infos()
+        breadcrumb = _dashlet_editor_breadcrumb(board, dashboard, title)
+        html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
 
-    context_specs = visuals.get_context_specs(dashlet_spec, info_handler=dashlet_info_handler)
+        vs_general = dashlet_vs_general_settings(dashlet_type, single_infos)
 
-    vs_type: Optional[ValueSpec] = None
-    params = dashlet_type.vs_parameters()
-    render_input_func = None
-    handle_input_func = None
-    if isinstance(params, list):
-        # TODO: Refactor all params to be a Dictionary() and remove this special case
-        vs_type = Dictionary(
-            title=_('Properties'),
-            render='form',
-            optional_keys=dashlet_type.opt_parameters(),
-            validate=dashlet_type.validate_parameters_func(),
-            elements=params,
-        )
+        def dashlet_info_handler(dashlet_spec: DashletConfig) -> List[str]:
+            assert board is not None
+            assert isinstance(ident, int)
+            dashlet_type = dashlet_registry[dashlet_spec['type']]
+            dashlet = dashlet_type(board, dashboard, ident, dashlet_spec)
+            return dashlet.infos()
 
-    elif isinstance(params, (Dictionary, Transform)):
-        vs_type = params
+        context_specs = visuals.get_context_specs(dashlet_spec, info_handler=dashlet_info_handler)
 
-    elif isinstance(params, tuple):
-        # It's a tuple of functions which should be used to render and parse the params
-        render_input_func, handle_input_func = params
+        vs_type: Optional[ValueSpec] = None
+        params = dashlet_type.vs_parameters()
+        render_input_func = None
+        handle_input_func = None
+        if isinstance(params, list):
+            # TODO: Refactor all params to be a Dictionary() and remove this special case
+            vs_type = Dictionary(
+                title=_('Properties'),
+                render='form',
+                optional_keys=dashlet_type.opt_parameters(),
+                validate=dashlet_type.validate_parameters_func(),
+                elements=params,
+            )
 
-    # Check disjoint option on known valuespecs
-    if isinstance(vs_type, Dictionary):
-        settings_elements = set(el[0] for el in vs_general._elements)
-        pe = vs_type._elements() if callable(vs_type._elements) else vs_type._elements
-        properties_elements = set(el[0] for el in pe)
-        assert settings_elements.isdisjoint(
-            properties_elements), "Dashlet settings and properties have a shared option name"
+        elif isinstance(params, (Dictionary, Transform)):
+            vs_type = params
 
-    if html.request.var('save') and html.transaction_valid():
-        try:
-            general_properties = vs_general.from_html_vars('general')
-            vs_general.validate_value(general_properties, 'general')
-            dashlet_spec.update(general_properties)
+        elif isinstance(params, tuple):
+            # It's a tuple of functions which should be used to render and parse the params
+            render_input_func, handle_input_func = params
 
-            # Remove unset optional attributes
-            optional_properties = set(e[0] for e in vs_general._get_elements()) - set(
-                vs_general._required_keys)
-            for option in optional_properties:
-                if option not in general_properties and option in dashlet_spec:
-                    del dashlet_spec[option]
+        # Check disjoint option on known valuespecs
+        if isinstance(vs_type, Dictionary):
+            settings_elements = set(el[0] for el in vs_general._elements)
+            pe = vs_type._elements() if callable(vs_type._elements) else vs_type._elements
+            properties_elements = set(el[0] for el in pe)
+            assert settings_elements.isdisjoint(
+                properties_elements), "Dashlet settings and properties have a shared option name"
 
-            if vs_type:
-                type_properties = vs_type.from_html_vars('type')
-                vs_type.validate_value(type_properties, 'type')
-                dashlet_spec.update(type_properties)
+        if html.request.var('save') and html.transaction_valid():
+            try:
+                general_properties = vs_general.from_html_vars('general')
+                vs_general.validate_value(general_properties, 'general')
+                dashlet_spec.update(general_properties)
 
-            elif handle_input_func:
-                # The returned dashlet must be equal to the parameter! It is not replaced/re-added
-                # to the dashboard object. FIXME TODO: Clean this up!
-                dashlet_spec = handle_input_func(ident, dashlet_spec)
+                # Remove unset optional attributes
+                optional_properties = set(e[0] for e in vs_general._get_elements()) - set(
+                    vs_general._required_keys)
+                for option in optional_properties:
+                    if option not in general_properties and option in dashlet_spec:
+                        del dashlet_spec[option]
 
-            if context_specs:
-                dashlet_spec['context'] = visuals.process_context_specs(context_specs)
+                if vs_type:
+                    type_properties = vs_type.from_html_vars('type')
+                    vs_type.validate_value(type_properties, 'type')
+                    dashlet_spec.update(type_properties)
 
-            if mode == "add":
-                dashboard['dashlets'].append(dashlet_spec)
+                elif handle_input_func:
+                    # The returned dashlet must be equal to the parameter! It is not replaced/re-added
+                    # to the dashboard object. FIXME TODO: Clean this up!
+                    dashlet_spec = handle_input_func(ident, dashlet_spec)
 
-            save_all_dashboards()
+                if context_specs:
+                    dashlet_spec['context'] = visuals.process_context_specs(context_specs)
 
-            next_url = html.get_url_input('next', html.get_url_input('back'))
-            html.immediate_browser_redirect(1, next_url)
-            if mode == 'edit':
-                html.show_message(_('The dashlet has been saved.'))
-            else:
-                html.show_message(_('The dashlet has been added to the dashboard.'))
-            html.reload_sidebar()
-            html.footer()
-            return
+                if mode == "add":
+                    dashboard['dashlets'].append(dashlet_spec)
 
-        except MKUserError as e:
-            html.user_error(e)
+                save_all_dashboards()
 
-    html.begin_form("dashlet", method="POST")
-    vs_general.render_input("general", dashlet_spec)
-    visuals.render_context_specs(dashlet_spec, context_specs)
+                next_url = html.get_url_input('next', html.get_url_input('back'))
+                html.immediate_browser_redirect(1, next_url)
+                if mode == 'edit':
+                    html.show_message(_('The dashlet has been saved.'))
+                else:
+                    html.show_message(_('The dashlet has been added to the dashboard.'))
+                html.reload_sidebar()
+                html.footer()
+                return
 
-    if vs_type:
-        vs_type.render_input("type", dashlet_spec)
-    elif render_input_func:
-        render_input_func(dashlet_spec)
+            except MKUserError as e:
+                html.user_error(e)
 
-    forms.end()
-    html.show_localization_hint()
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
+        html.begin_form("dashlet", method="POST")
+        vs_general.render_input("general", dashlet_spec)
+        visuals.render_context_specs(dashlet_spec, context_specs)
 
-    html.footer()
+        if vs_type:
+            vs_type.render_input("type", dashlet_spec)
+        elif render_input_func:
+            render_input_func(dashlet_spec)
+
+        forms.end()
+        html.show_localization_hint()
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
+
+        html.footer()
 
 
 def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:

@@ -596,8 +596,8 @@ div#dashboard.grid {
   margin: auto;
   background-color: #13d389;
   border: 1px solid #13d389;
-  border-top: 0;
-  border-bottom: 0;
+  border-top: none;
+  border-bottom: none;
 
   &.resize0_0 {
     left: -1px;
@@ -637,8 +637,8 @@ div#dashboard.grid {
   margin: auto;
   background-color: #13d389;
   border: 1px solid #13d389;
-  border-right: 0;
-  border-left: 0;
+  border-right: none;
+  border-left: none;
 
   &.resize1_0 {
     top: -1px;

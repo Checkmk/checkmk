@@ -35,7 +35,6 @@ from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
     HostKey,
-    HostName,
     ParsedSectionName,
     SectionName,
     SourceType,
@@ -549,27 +548,6 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
 
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell
-    # TODO: Add correct type hint for node wrapped SectionContent. We would have to create some kind
-    # of AbstractSectionContentWithNodeInfo.
-    @staticmethod
-    def _add_node_column(
-        section_content: AbstractSectionContent,
-        nodename: Optional[HostName],
-    ) -> AbstractSectionContent:
-        new_section_content = []
-        node_text = str(nodename) if isinstance(nodename, str) else nodename
-        for line in section_content:
-            if len(line) > 0 and isinstance(line[0], list):
-                new_entry = []
-                for entry in line:
-                    new_entry.append([node_text] + entry)  # type: ignore[operator]
-                new_section_content.append(new_entry)
-            else:
-                new_section_content.append([node_text] + line)  # type: ignore[arg-type,operator]
-        return new_section_content  # type: ignore[return-value]
-
-    # DEPRECATED
-    # This function is only kept for the legacy cluster mode from hell
     @staticmethod
     def _update_with_parse_function(
         section_content: AbstractSectionContent,
@@ -618,3 +596,20 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
 
         finally:
             item_state.set_item_state_prefix(*orig_item_state_prefix)
+
+    # DEPRECATED
+    # This function is only kept for the legacy cluster mode from hell
+    def legacy_determine_cache_info(self, section_name: SectionName) -> Optional[Tuple[int, int]]:
+        """Aggregate information about the age of the data in the agent sections
+
+        This is in checkers.g_agent_cache_info. For clusters we use the oldest
+        of the timestamps, of course.
+        """
+        cache_infos = [
+            host_sections.cache_info[section_name]
+            for host_sections in self._data.values()
+            if section_name in host_sections.cache_info
+        ]
+
+        return (min(at for at, _ in cache_infos),
+                max(interval for _, interval in cache_infos)) if cache_infos else None

@@ -693,30 +693,11 @@ def _execute_check_legacy_mode(
         hostname,
         service.description,
         result,
-        _legacy_determine_cache_info(multi_host_sections, SectionName(section_name)),
+        multi_host_sections.legacy_determine_cache_info(SectionName(section_name)),
         submit_to_core=submit_to_core,
         show_perfdata=show_perfdata,
     )
     return True
-
-
-def _legacy_determine_cache_info(multi_host_sections: MultiHostSections,
-                                 section_name: SectionName) -> Optional[Tuple[int, int]]:
-    """Aggregate information about the age of the data in the agent sections
-
-    This is in checkers.g_agent_cache_info. For clusters we use the oldest
-    of the timestamps, of course.
-    """
-    cached_ats: List[int] = []
-    intervals: List[int] = []
-    for host_sections in multi_host_sections.values():
-        section_entries = host_sections.cache_info
-        if section_name in section_entries:
-            cached_at, cache_interval = section_entries[section_name]
-            cached_ats.append(cached_at)
-            intervals.append(cache_interval)
-
-    return (min(cached_ats), max(intervals)) if cached_ats else None
 
 
 def determine_check_params(entries: LegacyCheckParameters) -> Parameters:

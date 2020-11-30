@@ -366,7 +366,7 @@ div.dashlet.edit {
     right: 0;
     bottom: 0;
     left: 0;
-    width: 3 * $dashlet-editor-icon-size;
+    width: 3 * ($dashlet-editor-icon-size + 8px);
     height: $dashlet-editor-icon-size;
     margin: auto;
     text-align: center;
@@ -375,6 +375,7 @@ div.dashlet.edit {
       display: inline-block;
       width: $dashlet-editor-icon-size;
       height: $dashlet-editor-icon-size;
+      margin: 0 4px;
       cursor: pointer;
       background-repeat: no-repeat;
       background-size: $dashlet-editor-icon-size;

@@ -90,7 +90,7 @@ def check_filestats_count(count, params):
 def check_filestats_extremes(files, params, show_files=False):
     '''common check result - used by main and extremes_only check'''
     if not files:
-        return
+        return []
     long_output = {}
     for key, hr_function, minlabel, maxlabel in (
         ('size', get_bytes_human_readable, 'smallest', 'largest'),
@@ -207,22 +207,20 @@ def check_filestats(_item, params, data):
         show_files,
     )
 
-    additional_rules_output = []
+    if additional_rules:
+        yield 0, 'Additional rules enabled'
+
     for file_expression, file_details in matching_files.items():
-        yield 0, 'Files matching %r: %d' % (file_expression, len(file_details['file_list']))
+        yield 0, '\nFiles matching %r: %d' % (file_expression, len(file_details['file_list']))
         output = yield from check_filestats_extremes(
             file_details['file_list'],
             file_details['rules'],
             show_files,
         )
-        additional_rules_output.append('Files matching %r:' % file_expression)
-        additional_rules_output.append('\n'.join(output))
-
-    if additional_rules_output:
-        yield 0, '\n' + '\n'.join(additional_rules_output)
+        yield 0, '\n'.join(output)
 
     if remaining_files_output:
-        yield 0, '\n(Remaining) files in file group:\n' + '\n'.join(remaining_files_output)
+        yield 0, '\nFiles in file group:\n' + '\n'.join(remaining_files_output)
 
 
 @get_parsed_item_data

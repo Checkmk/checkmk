@@ -1112,3 +1112,22 @@ export function register_event_handlers() {
         return false;
     });
 }
+
+export function chart_pie(pie_id, x_scale, radius, color, right_side, pie_diameter) {
+    var context = document.getElementById(pie_id + "_stats").getContext("2d");
+    if (!context) return;
+    var pie_x = pie_diameter / 2;
+    var pie_y = pie_diameter / 2;
+    var pie_d = pie_diameter;
+    context.fillStyle = color;
+    context.save();
+    context.translate(pie_x, pie_y);
+    context.scale(x_scale, 1);
+    context.beginPath();
+    if (right_side) context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false);
+    else context.arc(0, 0, (pie_d / 2) * radius, 0.5 * Math.PI, 1.5 * Math.PI, false);
+    context.closePath();
+    context.fill();
+    context.restore();
+    context = null;
+}

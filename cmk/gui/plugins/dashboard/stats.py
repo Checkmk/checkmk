@@ -147,10 +147,10 @@ class DashletStats(Dashlet, metaclass=abc.ABCMeta):
                     # sphere always gets a radius of 1.0, of course.
                     radius = remaining_separatorspace + remaining_radius * (remaining_part**
                                                                             (1 / 3.0))
-                    pie_parts.append('chart_pie("%s", %f, %f, %r, true);' %
-                                     (pie_id, pie_right_aspect, radius, color))
-                    pie_parts.append('chart_pie("%s", %f, %f, %r, false);' %
-                                     (pie_id, pie_left_aspect, radius, color))
+                    pie_parts.append('cmk.dashboard.chart_pie("%s", %f, %f, %r, true, %s);' %
+                                     (pie_id, pie_right_aspect, radius, color, pie_diameter))
+                    pie_parts.append('cmk.dashboard.chart_pie("%s", %f, %f, %r, false, %s);' %
+                                     (pie_id, pie_left_aspect, radius, color, pie_diameter))
 
                     # compute relative part of this class
                     part = float(value) / total  # ranges from 0 to 1
@@ -159,40 +159,11 @@ class DashletStats(Dashlet, metaclass=abc.ABCMeta):
 
         html.close_div()
 
-        html.javascript(
-            """
-function chart_pie(pie_id, x_scale, radius, color, right_side) {
-    var context = document.getElementById(pie_id + "_stats").getContext('2d');
-    if (!context)
-        return;
-    var pie_x = %(x)f;
-    var pie_y = %(y)f;
-    var pie_d = %(d)f;
-    context.fillStyle = color;
-    context.save();
-    context.translate(pie_x, pie_y);
-    context.scale(x_scale, 1);
-    context.beginPath();
-    if(right_side)
-        context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false);
-    else
-        context.arc(0, 0, (pie_d / 2) * radius, 0.5 * Math.PI, 1.5 * Math.PI, false);
-    context.closePath();
-    context.fill();
-    context.restore();
-    context = null;
-}
-
-
+        html.javascript("""
 if (cmk.dashboard.has_canvas_support()) {
-    %(p)s
+    %s
 }
-""" % {
-                "x": int(pie_diameter / 2.0),
-                "y": int(pie_diameter / 2.0),
-                "d": pie_diameter,
-                'p': '\n'.join(pie_parts)
-            })
+""" % '\n'.join(pie_parts))
 
 
 @dashlet_registry.register

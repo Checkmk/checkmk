@@ -474,9 +474,11 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = section_header.persist - cached_at
                     host_sections.cache_info[section_header.name] = (cached_at, cache_interval)
-                    # pylint does not seem to understand `NewType`... leave the checking up to mypy.
-                    persisted_sections[section_header.name] = (  # false positive: pylint: disable=E1137
-                        (cached_at, section_header.persist, section_content))
+                    persisted_sections[section_header.name] = (
+                        cached_at,
+                        section_header.persist,
+                        section_content,
+                    )
 
                 if section_header.cached:
                     cache_times = section_header.cached

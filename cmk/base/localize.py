@@ -198,7 +198,7 @@ def _localize_sniff() -> None:
 # conditions defined in the file COPYING, which is part of this source code package.
 msgid ""
 msgstr ""
-"Project-Id-Version: Check_MK Multisite translation 0.1\n"
+"Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: checkmk-en@lists.mathias-kettner.de\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"

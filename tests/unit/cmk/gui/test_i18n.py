@@ -18,18 +18,23 @@ import cmk.utils.paths
 import cmk.gui.i18n as i18n
 
 
+@pytest.fixture(scope="session")
+def locale_base_dir():
+    return Path("%s/locale" % cmk_path())
+
+
 @pytest.fixture(autouse=True)
-def locale_paths(tmp_path, monkeypatch):
-    monkeypatch.setattr(cmk.utils.paths, "locale_dir", Path("%s/locale" % cmk_path()))
+def locale_paths(tmp_path, monkeypatch, locale_base_dir):
+    monkeypatch.setattr(cmk.utils.paths, "locale_dir", locale_base_dir)
     monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", tmp_path / "locale")
 
 
-@pytest.fixture(autouse=True)
-def compile_builtin_po_files(locale_paths):
-    builtin_dir = cmk.utils.paths.locale_dir / "de" / "LC_MESSAGES"
+@pytest.fixture(autouse=True, scope="session")
+def compile_builtin_po_files(locale_base_dir):
+    builtin_dir = locale_base_dir / "de" / "LC_MESSAGES"
     po_file = builtin_dir / "multisite.po"
     mo_file = builtin_dir / "multisite.mo"
-    if po_file.exists() and not mo_file.exists():
+    if po_file.exists():
         subprocess.call(['msgfmt', str(po_file), '-o', str(mo_file)])
 
 
@@ -108,7 +113,7 @@ def test_init_language_only_builtin():
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
-    assert trans.info()["project-id-version"] == "Check_MK Multisite translation 0.1"
+    assert trans.info()["project-id-version"] == "Checkmk user interface translation 0.1"
 
     translated = trans.gettext("bla")
     assert isinstance(translated, str)

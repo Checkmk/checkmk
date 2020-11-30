@@ -1,5 +1,8 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
-// provides basic api to start and stop service
 #include "stdafx.h"
 
 #include "providers/mem.h"
@@ -13,11 +16,6 @@
 namespace cma::provider {
 
 std::string Mem::makeBody() {
-    // the log output disabled because it
-    // may be quite annoying during realtime monitoring
-    // XLOG::t(XLOG_FUNC + " entering");
-
-    // windows
     MEMORYSTATUSEX stat;
     stat.dwLength = sizeof(stat);
     ::GlobalMemoryStatusEx(&stat);

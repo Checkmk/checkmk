@@ -360,11 +360,162 @@ class AgentParserSectionHeader(NamedTuple):
 
 
 class ParserState(abc.ABC):
-    def parse(self, line: bytes) -> "ParserState":
+    """Base class for the state machine.
+
+    .. uml::
+
+        state "NOOPState" as noop
+        state "PiggybackSectionParser" as piggy
+        state "HostSectionParser" as host
+        state c <<choice>>
+
+        [*] --> noop
+        noop --> c
+
+        c --> host: ""<<~<STR>>>""
+        host -up-> host: ""<<~<STR>>>""
+        host -> piggy: ""<<<~<STR>>>>""
+        host -up-> noop: ""<<~<>>>""\nOR error
+
+        c --> piggy : ""<<<~<STR>>>>""
+        piggy --> piggy : ""<<<~<STR>>>>""
+        piggy -up-> noop: ""<<<~<>>>>""\nOR error
+
+    See Also:
+        Gamma, Helm, Johnson, Vlissides (1995) Design Patterns "State pattern"
+
+    """
+    def __init__(
+        self,
+        hostname: HostName,
+        host_sections: AgentHostSections,
+        persisted_sections: PersistedSections[AgentSectionContent],
+        *,
+        cached_at: int,
+        cache_age: int,
+        logger: logging.Logger,
+    ) -> None:
+        self.hostname: Final = hostname
+        self.host_sections = host_sections
+        self.persisted_sections = persisted_sections
+        self.cached_at: Final = cached_at
+        self.cache_age: Final = cache_age
+        self._logger: Final = logger
+
+    def to_noop_parser(self) -> "NOOPParser":
+        return NOOPParser(
+            self.hostname,
+            self.host_sections,
+            self.persisted_sections,
+            cached_at=self.cached_at,
+            cache_age=self.cache_age,
+            logger=self._logger,
+        )
+
+    def to_host_section_parser(
+        self,
+        section_header: AgentParserSectionHeader,
+    ) -> "HostSectionParser":
+        return HostSectionParser(
+            self.hostname,
+            self.host_sections,
+            self.persisted_sections,
+            section_header,
+            cached_at=self.cached_at,
+            cache_age=self.cache_age,
+            logger=self._logger,
+        )
+
+    def to_piggyback_section_parser(
+        self,
+        piggybacked_hostname: HostName,
+    ) -> "PiggybackSectionParser":
+        return PiggybackSectionParser(
+            self.hostname,
+            self.host_sections,
+            self.persisted_sections,
+            piggybacked_hostname,
+            cached_at=self.cached_at,
+            cache_age=self.cache_age,
+            logger=self._logger,
+        )
+
+    def __call__(self, line: bytes) -> "ParserState":
         raise NotImplementedError()
 
 
-class PiggybackSectionParser:
+class NOOPParser(ParserState):
+    def __call__(self, line: bytes) -> ParserState:
+        if not line.strip():
+            return self
+
+        try:
+            if PiggybackSectionParser.is_header(line):
+                piggybacked_hostname = PiggybackSectionParser.parse_header(line, self.hostname)
+                if piggybacked_hostname == self.hostname:
+                    # Unpiggybacked "normal" host
+                    return self
+                return self.to_piggyback_section_parser(piggybacked_hostname)
+            if HostSectionParser.is_header(line):
+                return self.to_host_section_parser(HostSectionParser.parse_header(line))
+        except Exception:
+            self._logger.warning("Ignoring invalid raw section: %r" % line, exc_info=True)
+            return self.to_noop_parser()
+        return self
+
+
+class PiggybackSectionParser(ParserState):
+    def __init__(
+        self,
+        hostname: HostName,
+        host_sections: AgentHostSections,
+        persisted_sections: PersistedSections[AgentSectionContent],
+        piggybacked_hostname: HostName,
+        *,
+        cached_at: int,
+        cache_age: int,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__(
+            hostname,
+            host_sections,
+            persisted_sections,
+            cached_at=cached_at,
+            cache_age=cache_age,
+            logger=logger,
+        )
+        self.piggybacked_hostname: Final = piggybacked_hostname
+
+    def __call__(self, line: bytes) -> ParserState:
+        if not line.strip():
+            return self
+
+        try:
+            if PiggybackSectionParser.is_footer(line):
+                return self.to_noop_parser()
+            if PiggybackSectionParser.is_header(line):
+                # Footer is optional.
+                piggybacked_hostname = PiggybackSectionParser.parse_header(line, self.hostname)
+                if piggybacked_hostname == self.hostname:
+                    # Unpiggybacked "normal" host
+                    return self.to_noop_parser()
+                return self.to_piggyback_section_parser(piggybacked_hostname)
+            if HostSectionParser.is_header(line):
+                line = PiggybackSectionParser._add_cached_info(
+                    line.strip(),
+                    self.cached_at,
+                    self.cache_age,
+                )
+            self.host_sections.piggybacked_raw_data.setdefault(
+                self.piggybacked_hostname,
+                [],
+            ).append(line)
+        except Exception:
+            self._logger.warning("Ignoring invalid raw section: %r" % line, exc_info=True)
+            return self.to_noop_parser()
+
+        return self
+
     @staticmethod
     def is_header(line: bytes) -> bool:
         return (line.startswith(b'<<<<') and line.endswith(b'>>>>') and
@@ -374,18 +525,42 @@ class PiggybackSectionParser:
     def is_footer(line: bytes) -> bool:
         return line.strip() == b'<<<<>>>>'
 
+    @staticmethod
+    def parse_header(line: bytes, hostname: HostName) -> HostName:
+        piggybacked_hostname = ensure_str(line.strip()[4:-4])
+        assert piggybacked_hostname
+        piggybacked_hostname = config.translate_piggyback_host(hostname, piggybacked_hostname)
+        # Protect Checkmk against unallowed host names. Normally source scripts
+        # like agent plugins should care about cleaning their provided host names
+        # up, but we need to be sure here to prevent bugs in Checkmk code.
+        return regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", piggybacked_hostname)
 
-class NOOPParser(ParserState):
-    def parse(self, line: bytes) -> ParserState:
-        return self
+    @staticmethod
+    def _add_cached_info(
+        orig_section_header: bytes,
+        cached_at: int,
+        cache_age: int,
+    ) -> bytes:
+        if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
+            return orig_section_header
+        return b'<<<%s:cached(%s,%s)>>>' % (
+            orig_section_header[3:-3],
+            ensure_binary("%d" % cached_at),
+            ensure_binary("%d" % cache_age),
+        )
 
 
 class HostSectionParser(ParserState):
     def __init__(
         self,
-        section_header: AgentParserSectionHeader,
+        hostname: HostName,
         host_sections: AgentHostSections,
         persisted_sections: PersistedSections[AgentSectionContent],
+        section_header: AgentParserSectionHeader,
+        *,
+        cached_at: int,
+        cache_age: int,
+        logger: logging.Logger,
     ) -> None:
         host_sections.sections.setdefault(section_header.name, [])
         # Split of persisted section for server-side caching
@@ -403,28 +578,45 @@ class HostSectionParser(ParserState):
             cache_times = section_header.cached
             host_sections.cache_info[section_header.name] = cache_times[0], cache_times[1]
 
-        self.section_header: Final = section_header
-        self.host_sections: Final = host_sections
-        self.persisted_sections: Final = persisted_sections
+        super().__init__(
+            hostname,
+            host_sections,
+            persisted_sections,
+            cached_at=cached_at,
+            cache_age=cache_age,
+            logger=logger,
+        )
+        self.section_header = section_header
 
-    def parse(self, line: bytes) -> ParserState:
-        assert not HostSectionParser.is_header(line)
-
-        if HostSectionParser.is_footer(line):
-            return NOOPParser()
-
+    def __call__(self, line: bytes) -> ParserState:
         if not line.strip():
             return self
 
-        if not self.section_header.nostrip:
-            line = line.strip()
+        try:
+            if PiggybackSectionParser.is_header(line):
+                piggybacked_hostname = PiggybackSectionParser.parse_header(line, self.hostname)
+                if piggybacked_hostname == self.hostname:
+                    # Unpiggybacked "normal" host
+                    return self
+                return self.to_piggyback_section_parser(piggybacked_hostname)
+            if HostSectionParser.is_footer(line):
+                return self.to_noop_parser()
+            if HostSectionParser.is_header(line):
+                # Footer is optional.
+                return self.to_host_section_parser(HostSectionParser.parse_header(line))
 
-        self.host_sections.sections[self.section_header.name].append(
-            ensure_str_with_fallback(
-                line,
-                encoding=self.section_header.encoding,
-                fallback="latin-1",
-            ).split(self.section_header.separator))
+            if not self.section_header.nostrip:
+                line = line.strip()
+
+            self.host_sections.sections[self.section_header.name].append(
+                ensure_str_with_fallback(
+                    line,
+                    encoding=self.section_header.encoding,
+                    fallback="latin-1",
+                ).split(self.section_header.separator))
+        except Exception:
+            self._logger.warning("Ignoring invalid raw section: %r" % line, exc_info=True)
+            return self.to_noop_parser()
         return self
 
     @staticmethod
@@ -438,6 +630,10 @@ class HostSectionParser(ParserState):
     @staticmethod
     def is_footer(line: bytes) -> bool:
         return line.strip() == b'<<<>>>'
+
+    @staticmethod
+    def parse_header(line: bytes) -> AgentParserSectionHeader:
+        return AgentParserSectionHeader.from_headerline(line)
 
 
 class AgentParser(Parser[AgentRawData, AgentHostSections]):
@@ -454,12 +650,6 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         self.section_store: Final = section_store
         self._logger = logger
 
-    # TODO(ml): Refactor, we should structure the code so that we have one
-    #   function per attribute in AgentHostSections (AgentHostSections.sections,
-    #   AgentHostSections.cache_info, AgentHostSections.piggybacked_raw_data,
-    #   and AgentHostSections.persisted_sections) and a few simple helper functions.
-    #   Moreover, the main loop of the parser (at `for line in raw_data.split(b"\n")`)
-    #   is an FSM and shoule be written as such.  (See CMK-5004)
     def parse(
         self,
         raw_data: AgentRawData,
@@ -487,78 +677,17 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         Returns a HostSections() object.
         """
-        host_sections = AgentHostSections()
-
-        piggybacked_hostname = None
-        piggybacked_cached_at = int(time.time())
-        # Transform to seconds and give the piggybacked host a little bit more time
-        piggybacked_cache_age = int(1.5 * 60 * check_interval)
-
         # handle sections with option persist(...)
         persisted_sections = PersistedSections[AgentSectionContent]({})
-        parser: ParserState = NOOPParser()
-        for line in raw_data.split(b"\n"):
-            line = line.rstrip(b"\r")
-            stripped_line = line.strip()
-            if PiggybackSectionParser.is_header(line):
-                piggybacked_hostname = (
-                    AgentParser._get_sanitized_and_translated_piggybacked_hostname(
-                        stripped_line, self.hostname))
-
-            elif PiggybackSectionParser.is_footer(line):
-                piggybacked_hostname = None
-
-            elif piggybacked_hostname:  # processing data for an other host
-                if HostSectionParser.is_header(line):
-                    line = AgentParser._add_cached_info_to_piggybacked_section_header(
-                        stripped_line,
-                        piggybacked_cached_at,
-                        piggybacked_cache_age,
-                    )
-                host_sections.piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
-
-            elif HostSectionParser.is_header(line):
-                try:
-                    parser = HostSectionParser(
-                        AgentParserSectionHeader.from_headerline(stripped_line),
-                        host_sections,
-                        persisted_sections,
-                    )
-                except ValueError:
-                    self._logger.warning("Ignoring invalid raw section: %r" % stripped_line)
-                    parser = NOOPParser()
-
-            else:
-                parser = parser.parse(line)
-        return host_sections, persisted_sections
-
-    @staticmethod
-    def _get_sanitized_and_translated_piggybacked_hostname(
-        orig_piggyback_header: bytes,
-        hostname: HostName,
-    ) -> Optional[HostName]:
-        piggybacked_hostname = ensure_str(orig_piggyback_header[4:-4])
-        assert piggybacked_hostname
-
-        piggybacked_hostname = config.translate_piggyback_host(hostname, piggybacked_hostname)
-        if piggybacked_hostname == hostname or not piggybacked_hostname:
-            return None  # unpiggybacked "normal" host
-
-        # Protect Checkmk against unallowed host names. Normally source scripts
-        # like agent plugins should care about cleaning their provided host names
-        # up, but we need to be sure here to prevent bugs in Checkmk code.
-        return regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", piggybacked_hostname)
-
-    @staticmethod
-    def _add_cached_info_to_piggybacked_section_header(
-        orig_section_header: bytes,
-        cached_at: int,
-        cache_age: int,
-    ) -> bytes:
-        if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
-            return orig_section_header
-        return b'<<<%s:cached(%s,%s)>>>' % (
-            orig_section_header[3:-3],
-            ensure_binary("%d" % cached_at),
-            ensure_binary("%d" % cache_age),
+        parser: ParserState = NOOPParser(
+            self.hostname,
+            AgentHostSections(),
+            persisted_sections,
+            cached_at=int(time.time()),
+            # Transform to seconds and give the piggybacked host a little bit more time
+            cache_age=int(1.5 * 60 * check_interval),
+            logger=self._logger,
         )
+        for line in raw_data.split(b"\n"):
+            parser = parser(line.rstrip(b"\n"))
+        return parser.host_sections, persisted_sections

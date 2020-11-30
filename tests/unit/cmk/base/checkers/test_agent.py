@@ -119,11 +119,11 @@ class TestParser:
             b"<<<a_section>>>",
             b"first line",
             b"second line",
-            b"<<<>>>",  # to be skipped
+            b"<<<>>>",
             b"<<<another_section>>>",
             b"first line",
             b"second line",
-            b"<<<>>>",  # to be skipped
+            b"<<<>>>",
         )))
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)

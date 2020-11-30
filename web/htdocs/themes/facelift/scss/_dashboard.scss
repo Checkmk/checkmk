@@ -116,8 +116,6 @@ div.dashlet {
     border: 1px solid $color-table-border;
     border-bottom: none;
     border-radius: $dashlet-title-border-radius;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#4c000000', endColorstr='#4c000000');
 
     &.highlighted {
       background: $headline-color;
@@ -352,8 +350,6 @@ div.dashlet.edit {
     cursor: auto;
     background-color: rgba(50, 80, 90, 0.9);
     border: 1px dashed #4e5d69;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#fffffff', endColorstr='#7fffffff');
 
     &:hover {
       cursor: move;
@@ -380,8 +376,6 @@ div.dashlet.edit {
       background-repeat: no-repeat;
       background-size: $dashlet-editor-icon-size;
       border-radius: 5px;
-      /* IE < 9 */
-      filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
       &:hover {
         opacity: 0.7;
@@ -405,8 +399,6 @@ div.dashlet.edit {
   .anchor {
     position: absolute;
     cursor: pointer;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
     // Edit with this tricks
     // https://css-tricks.com/the-shapes-of-css/#triangle-top-left-shape

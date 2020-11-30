@@ -1,4 +1,4 @@
-$VERSION = "2.0.0b1"
+$VERSION = "2.0.0b2"
 ## MS Exchange Database counters
 
 ## localize counter name

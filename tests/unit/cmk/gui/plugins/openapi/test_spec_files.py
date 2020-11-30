@@ -11,7 +11,7 @@ from openapi_spec_validator import validate_spec  # type: ignore[import]
 
 def test_yaml_file(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/openapi.yaml", status=200)
-    data = yaml.load(resp.body)
+    data = yaml.safe_load(resp.body)
     validate_spec(data)
 
 

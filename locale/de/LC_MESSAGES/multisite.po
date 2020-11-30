@@ -2212,6 +2212,13 @@ msgstr ""
 msgid "API key"
 msgstr "API-Schlüssel"
 
+msgid "API key for iLert alert server"
+msgstr ""
+
+#, fuzzy
+msgid "API key from password store"
+msgstr "Schlüssel aus dem Passwortspeicher"
+
 #, fuzzy
 msgid "API key/token"
 msgstr "API-Schlüssel"
@@ -4097,9 +4104,6 @@ msgstr "Aggregation"
 msgid "Aggregation Function"
 msgstr "Aggregationsfunktion"
 
-msgid "Aggregation Groups"
-msgstr "BI Aggregationsgruppen"
-
 msgid "Aggregation ID"
 msgstr "Aggregations ID"
 
@@ -4125,6 +4129,10 @@ msgstr "Aggregationsgruppe"
 
 msgid "Aggregation group tree"
 msgstr "Aggregationsgruppenbaum"
+
+#, fuzzy
+msgid "Aggregation groups"
+msgstr "Aggregationsgruppe"
 
 msgid "Aggregation name"
 msgstr "Aggregationsname"
@@ -4330,6 +4338,11 @@ msgstr "Alle Services einer bestimmten Instanz."
 #, fuzzy
 msgid "All WARN services of a given site."
 msgstr "Alle Services einer bestimmten Instanz."
+
+msgid ""
+"All absolute data shown on this page refer to the timeframe since this host "
+"was booted-up."
+msgstr ""
 
 msgid "All aggregations affected by a certain service"
 msgstr "Alle Aggregate, die einen bestimmten Service betreffen"
@@ -7192,9 +7205,9 @@ msgstr ""
 msgid ""
 "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
 "snmpwalk to gather SNMP information. For each request a new command line "
-"program is being executed. It is now possible to use the Inline SNMP or "
-"PySNMP implementation which calls the respective libraries directly via its "
-"python bindings. This should increase the performance of SNMP checks in a "
+"program is being executed. It is now possible to use the Inline SNMP "
+"implementation which calls the respective libraries directly via its python "
+"bindings. This should increase the performance of SNMP checks in a "
 "significant way. Both SNMP modes are featurse which improve the performance "
 "for large installations and are only available via our subscription."
 msgstr ""
@@ -8590,8 +8603,8 @@ msgstr "Ursprung des Services / Parameter"
 msgid "Check parameters"
 msgstr "Check-Parameter"
 
-msgid ""
-"Check parameters and other configuration variables on hosts and services"
+#, fuzzy
+msgid "Check parameters and other configuration variables for hosts"
 msgstr "Checkparameter und andere Konfigurationsvariablen"
 
 #, fuzzy
@@ -8895,12 +8908,13 @@ msgstr "Belegung Check-Hilfsprozesse"
 
 #, fuzzy
 msgid ""
-"Checkmk has an efficient SNMP implementations called Inline SNMP and PySNMP "
-"which reduce the load produced by SNMP monitoring on the monitoring host "
+"Checkmk has an efficient SNMP implementation called Inline SNMP which "
+"reduces the load produced by SNMP monitoring on the monitoring host "
 "significantly. Inline SNMP is enabled by default for all SNMP hosts and it "
 "is a good idea to keep this default setting. However, there are SNMP devices "
 "which have problems with some SNMP implementations. You can use this rule to "
-"select the SNMP Backend for these hosts."
+"select the SNMP Backend for these hosts.Inline SNMP uses PySNMP bindings to "
+"make SNMP calls."
 msgstr ""
 "Check_MK has an efficient SNMP implementation called Inline SNMP which "
 "reduces the load produced by SNMP monitoring on the monitoring host "
@@ -9652,6 +9666,17 @@ msgstr "Farbe A3"
 
 msgid "Color A4"
 msgstr "Farbe A4"
+
+#, fuzzy
+msgid "Color for the average line"
+msgstr "Schwellwerte für die Tablespace-Grösse"
+
+msgid "Color for the main metric scattered dots"
+msgstr ""
+
+#, fuzzy
+msgid "Color for the median line"
+msgstr "Kommentar für die Wartungszeit"
 
 msgid "Color gradient"
 msgstr "Farbverlauf"
@@ -11835,6 +11860,14 @@ msgid "Custom icons or actions for services in status GUI"
 msgstr "Benutzersymbole/Aktionen für Services in der Status-GUI"
 
 #, fuzzy
+msgid "Custom incident summary for host alerts"
+msgstr "Nachricht für Hostvorfälle"
+
+#, fuzzy
+msgid "Custom incident summary for service alerts"
+msgstr "Nachricht für Servicevorfälle"
+
+#, fuzzy
 msgid "Custom integrations"
 msgstr "manueller Alarm"
 
@@ -13499,9 +13532,6 @@ msgstr ""
 "Veraltetes WATO-Modul: Als Funktion implementiert. Dieses muss als "
 "Kindklasse von WatoMode neu implementiert werden."
 
-msgid "Deprecated rulesets"
-msgstr "Veraltete Regelsätze"
-
 msgid "Deprecations"
 msgstr "Überholte Einstellungen"
 
@@ -14253,6 +14283,10 @@ msgid "Display options"
 msgstr "Anzeigeoptionen"
 
 #, fuzzy
+msgid "Display range"
+msgstr "Durchschnitt anzeigen"
+
+#, fuzzy
 msgid "Display sidecar details on"
 msgstr "Zeigt ein Seitenleistenelement an"
 
@@ -14420,6 +14454,10 @@ msgstr "Platzhalter-VMs nicht überwachen"
 
 msgid "Do not activate changes"
 msgstr "Änderungen nicht aktivieren"
+
+#, fuzzy
+msgid "Do not add a link"
+msgstr "Nicht auffüllen"
 
 msgid "Do not add a link to this page in sidebar"
 msgstr "Keinen Link in der Seitenleiste hinzufügen"
@@ -15721,6 +15759,10 @@ msgstr "Kontaktgruppe Bearbeiten"
 #, fuzzy, python-format
 msgid "Edit customer %s"
 msgstr "Kunde bearbeiten"
+
+#, fuzzy
+msgid "Edit dashboard"
+msgstr "Übersicht bearbeiten"
 
 # Das muss im Code anders gelöst werden
 #, python-format
@@ -18357,6 +18399,10 @@ msgstr "Seitenel."
 msgid "Fixed page elements"
 msgstr "Seitenelemente"
 
+#, fuzzy
+msgid "Fixed range"
+msgstr "Feste Rate"
+
 msgid "Fixed rate"
 msgstr "Feste Rate"
 
@@ -20780,15 +20826,15 @@ msgid ""
 "i.e., rules further below in the list are overwritten by rules further up."
 msgstr ""
 
-#, fuzzy
+#, python-format
 msgid ""
 "Here, you can specify how Checkmk will translate the exit code of a task "
 "into a monitoring state. This will overwrite the default mapping used by the "
-"check plugin."
+"check plugin. You can also decide to only partially overwrite the default "
+"mapping by only specifying the new monitoring state. The default text will "
+"be kept as the summary, then.<br><br>The following exit codes/monitoring "
+"states/summaries are specified as default:<br>%s"
 msgstr ""
-"Legen Sie eine direkte Zuordnung der möglichen der Status der VM zu den "
-"Monitoringstatus, sprich dem Ergebnis des Checks, fest. Damit überschreiben "
-"Sie die ursprünglich vom Check verwendete Zuordnung."
 
 msgid "Hidden"
 msgstr "Versteckt"
@@ -20883,6 +20929,9 @@ msgstr "Hierarchisches Layout"
 
 msgid "High"
 msgstr "Hoch"
+
+msgid "High (with escalation)"
+msgstr ""
 
 msgid "High alerts"
 msgstr "Hohe Warnmeldungen"
@@ -21044,9 +21093,6 @@ msgstr "Unerreichbar"
 
 msgid "Host Events"
 msgstr "Hostereignisse"
-
-msgid "Host Graphs"
-msgstr "Hostgraphen"
 
 msgid "Host Graphs with Timerange Previews"
 msgstr "Hostgraphen mit Zeitbereichsvorschau"
@@ -21247,6 +21293,10 @@ msgid "Host goes up again"
 msgstr "Host startet wieder "
 
 msgid "Host graph"
+msgstr "Hostgraph"
+
+#, fuzzy
+msgid "Host graphs"
 msgstr "Hostgraph"
 
 msgid "Host groups"
@@ -24230,11 +24280,12 @@ msgstr "Eigenes Thema"
 msgid "Ineffective"
 msgstr "Unwirksame Regeln"
 
-msgid "Ineffective rules"
-msgstr "Unwirksame Regeln"
-
 msgid "Infections"
 msgstr "Infizierungen"
+
+#, fuzzy
+msgid "Infer range from available data and check output"
+msgstr "Infotext in der Ausgabe des Checks ändern"
 
 msgid "Info"
 msgstr "Info"
@@ -26757,6 +26808,14 @@ msgstr "Link-Resets eingehend"
 msgid "Link resets out"
 msgstr "Link-Resets ausgehend"
 
+#, fuzzy
+msgid "Link to dashboard"
+msgstr "Links zu allen Übersichten"
+
+#, fuzzy
+msgid "Link to view"
+msgstr "Zurück zu Ansicht"
+
 msgid "Link view showing all hosts of one site"
 msgstr "Ansicht, die alle Hosts einer Instanz zeigt"
 
@@ -27549,6 +27608,10 @@ msgstr "Lotus Domino Task Erkennung"
 
 msgid "Low"
 msgstr "Niedrig"
+
+#, fuzzy
+msgid "Low (without escalation"
+msgstr "Phasen ohne Synchronisation"
 
 msgid "Low watermark"
 msgstr ""
@@ -28607,6 +28670,9 @@ msgstr "Max.&nbsp;Vers.:"
 msgid "Max.&nbsp;Version:"
 msgstr "Max.&nbsp;Version:"
 
+msgid "Maximal age"
+msgstr "Maximales Alter"
+
 #, fuzzy
 msgid "Maximal age of a file"
 msgstr "Maximales Alter der jüngsten Datei"
@@ -29352,6 +29418,9 @@ msgstr "Min.&nbsp;Version:"
 msgid "Min.&nbsp;Version: "
 msgstr "Min.&nbsp;Version:"
 
+msgid "Minimal age"
+msgstr "Minimales Alter"
+
 #, fuzzy
 msgid "Minimal age of a file"
 msgstr "Minimales Alter der neuesten Datei"
@@ -29860,10 +29929,6 @@ msgstr "Monitoring von Containern und Container-Orchestrationssoftware"
 msgid "Monitoring of forwarded logfiles"
 msgstr "Liste der weitergeleiteten Logdateien überwachen"
 
-#, fuzzy
-msgid "Monitoring rules"
-msgstr "Kern"
-
 msgid "Monitoring state"
 msgstr "Monitoring-Zustand"
 
@@ -29948,10 +30013,11 @@ msgstr ""
 "fehlerhaft reagieren. Wenn Sie v2c ohne Bulk Walk benutzen möchten, dann "
 "verwenden Sie <tt>snmpv2c_hosts</tt>."
 
+#, fuzzy
 msgid ""
-"Most dashlets have a hard coded default title. For example the view snapin "
-"has even a dynamic title which defaults to the real title of the view. If "
-"you like to use another title, set it here."
+"Most dashlets have a hard coded static title and some are aware of its "
+"content and set the title dynamically, like the view snapin, which displays "
+"the title of the view. If you like to use any other title, set it here."
 msgstr ""
 "Die meisten Elemente in einer Übersicht haben einen hartkodierten "
 "Standardtitel. So hat z.B. das Element für Monitoring-Ansichten einen Titel "
@@ -31701,6 +31767,11 @@ msgstr "Alarmierungs-Plugins"
 
 msgid "Notification postponement reason"
 msgstr "Grund für Verzögerung"
+
+msgid ""
+"Notification priority (This will override the priority configured in the "
+"alert source)"
+msgstr ""
 
 msgid "Notification rule"
 msgstr "Alarmierungsregel"
@@ -34969,7 +35040,8 @@ msgstr ""
 "angezeigtem Namen verwechseln. Der angezeigte Name dient nur als "
 "Zusatzinformation."
 
-msgid "Please add at least one child node. Empty rules are useless."
+#, fuzzy
+msgid "Please add at least one child node."
 msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
 
 msgid "Please add at least one column to your view."
@@ -35577,6 +35649,10 @@ msgstr "Portnummer für HTTPS-Verbindung zu vSphere"
 
 msgid "Port number for communicating with the PLC"
 msgstr "Portnummer für die Kommunikation mit dem PLC"
+
+#, fuzzy
+msgid "Port number that 3par is listening on. The default is 8080."
+msgstr "Portnummer, auf der AppDynamics hört. Default ist 8090."
 
 msgid "Port number that AppDynamics is listening on. The default is 8090."
 msgstr "Portnummer, auf der AppDynamics hört. Default ist 8090."
@@ -44287,6 +44363,10 @@ msgstr ""
 msgid "Tasks"
 msgstr ""
 
+#, fuzzy
+msgid "Team Secret"
+msgstr "Secret"
+
 msgid ""
 "Team names which will be responsible for the alert. If the API Key belongs "
 "to a team integration, this field will be overwritten with the owner team."
@@ -44695,7 +44775,7 @@ msgid ""
 "The Checkmk Enterprise Free Edition is expired and you can create a "
 "distributed setup with only two sites: one central and one remote site. In "
 "case you want to test more complex distributed setups, please <a href="
-"\"mailto:info@checkmk.com\">contact us</a>."
+"\"https://checkmk.com/contact.php?\" target=\"_blank\">contact us</a>."
 msgstr ""
 "Ein Verteiltes Setup ist in der Checkmk Demo nicht verfügbar. Wenn Sie ein "
 "Verteiltes Setup testen wollen, <a href=\"mailto:info@checkmk.com"
@@ -45811,6 +45891,12 @@ msgstr ""
 
 #, python-format
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
+msgstr ""
+
+msgid ""
+"The corresponding username in ntopng of the current checkmk user. It is "
+"used, in case the user mapping to ntopng is configured to use this custom "
+"attribute"
 msgstr ""
 
 msgid ""
@@ -48016,6 +48102,11 @@ msgstr "Das Ziel wurde gelöscht."
 #, fuzzy
 msgid "The target rule is no longer available"
 msgstr "Es sind keine Sicherungen vorhanden."
+
+msgid ""
+"The team secret of your SIGNL4 team. That is the last part of your webhook "
+"URL: https://connect.signl4.com/webhook/<team_secret>"
+msgstr ""
 
 msgid "The temporary filesystem is mounted"
 msgstr "Das tempräre Dateisystem ist eingehängt"
@@ -54870,11 +54961,15 @@ msgid "Use IPMItool"
 msgstr "IPMItool verwenden"
 
 #, fuzzy
+msgid "Use Inline SNMP (PySNMP) Backend"
+msgstr "Eingebautes SNMP verwenden"
+
+#, fuzzy
 msgid "Use Inline SNMP (deprecated)"
 msgstr "Eingebautes SNMP verwenden"
 
 #, fuzzy
-msgid "Use Inline SNMP Backend"
+msgid "Use Inline SNMP (legacy) Backend"
 msgstr "Eingebautes SNMP verwenden"
 
 msgid ""
@@ -54892,9 +54987,6 @@ msgstr "Livestatus-Proxy-Daemon verwenden"
 
 msgid "Use Piggyback"
 msgstr "Huckepack-Modus verwenden"
-
-msgid "Use PySNMP Backend"
-msgstr ""
 
 msgid "Use SSL"
 msgstr "SSL verwenden"
@@ -54950,6 +55042,12 @@ msgstr ""
 
 msgid "Use a custom check plugin..."
 msgstr "Benutzerplugin verwenden..."
+
+msgid ""
+"Use a fixed range for the Data displayed. This value has no scaling. If your "
+"metric is in the range of MB, you'll need to place 9 zeros for display to "
+"make sense."
+msgstr ""
 
 msgid "Use a namespace prefix"
 msgstr ""
@@ -55611,9 +55709,6 @@ msgstr "Genutzte Metadaten"
 msgid "Used quota: Absolute or relative upper levels"
 msgstr "Verwendete Quota: Absolute oder relative Obergrenzen"
 
-msgid "Used rulesets"
-msgstr "Verwendete Regelsätze"
-
 msgid "Used size"
 msgstr "Benutzte Größe"
 
@@ -55955,6 +56050,10 @@ msgstr "VM Verteilung"
 
 msgid "VM name"
 msgstr "VM-Name"
+
+#, fuzzy
+msgid "VM snapshot summary"
+msgstr "Manuelle Schnappschüsse"
 
 #, fuzzy
 msgid "VM, Cloud, Container"
@@ -61034,6 +61133,9 @@ msgstr "htpasswd"
 msgid "iCalendar File"
 msgstr "iCalendar-Datei"
 
+msgid "iLert alert source API key"
+msgstr ""
+
 msgid "iSCSI"
 msgstr "iSCSI"
 
@@ -61417,6 +61519,10 @@ msgstr "Alarme innerhalb der letzten"
 #, fuzzy
 msgid "ntop GUI extensions"
 msgstr "Defekte GUI-Erweiterungen"
+
+#, fuzzy
+msgid "ntopng Username"
+msgstr "Automatisierung Benutzername"
 
 msgid "objects"
 msgstr "Objekte"
@@ -62113,8 +62219,45 @@ msgstr "gestern"
 msgid "z/OS"
 msgstr "z/OS"
 
-msgid " 2020 tribe29 GmbH. All Rights Reserved."
+msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "Aggregation Groups"
+#~ msgstr "BI Aggregationsgruppen"
+
+#~ msgid "Deprecated rulesets"
+#~ msgstr "Veraltete Regelsätze"
+
+#, fuzzy
+#~| msgid ""
+#~| "Define a direct translation of the possible states of the VM to "
+#~| "monitoring states, i.e. to the result of the check. This overwrites the "
+#~| "default mapping used by the check."
+#~ msgid ""
+#~ "Here, you can specify how Checkmk will translate the exit code of a task "
+#~ "into a monitoring state. This will overwrite the default mapping used by "
+#~ "the check plugin."
+#~ msgstr ""
+#~ "Legen Sie eine direkte Zuordnung der möglichen der Status der VM zu den "
+#~ "Monitoringstatus, sprich dem Ergebnis des Checks, fest. Damit "
+#~ "überschreiben Sie die ursprünglich vom Check verwendete Zuordnung."
+
+#~ msgid "Host Graphs"
+#~ msgstr "Hostgraphen"
+
+#~ msgid "Ineffective rules"
+#~ msgstr "Unwirksame Regeln"
+
+#, fuzzy
+#~| msgid "Monitoring Core"
+#~ msgid "Monitoring rules"
+#~ msgstr "Kern"
+
+#~ msgid "Please add at least one child node. Empty rules are useless."
+#~ msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
+
+#~ msgid "Used rulesets"
+#~ msgstr "Verwendete Regelsätze"
 
 #, fuzzy
 #~| msgid "Replication completed successfully."
@@ -63407,9 +63550,6 @@ msgstr ""
 #~ msgid "Dynamic config"
 #~ msgstr "Dynamische Konfiguration"
 
-#~ msgid "Edit Dashboard"
-#~ msgstr "Übersicht bearbeiten"
-
 #~ msgid "Edit Logfile Rules"
 #~ msgstr "Logdatei-Regeln Bearbeiten"
 
@@ -64055,9 +64195,6 @@ msgstr ""
 #~ msgid "Match interface description (regex)"
 #~ msgstr "Interfacebeschreibung matchen (regex)"
 
-#~ msgid "Maximal age"
-#~ msgstr "Maximales Alter"
-
 #~ msgid "Maximum number of matched tasks for OK state"
 #~ msgstr "Maximale Anzahl von passenden Tasks für OK"
 
@@ -64073,9 +64210,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Metric Name: "
 #~ msgstr "Metrikname"
-
-#~ msgid "Minimal age"
-#~ msgstr "Minimales Alter"
 
 #~ msgid "Minimum number of matched tasks for OK state"
 #~ msgstr "Minimale Anzahl passender Tasks für OK"
@@ -66875,9 +67009,6 @@ msgstr ""
 
 #~ msgid "Replication method"
 #~ msgstr "Replikations Methode"
-
-#~ msgid "Secret"
-#~ msgstr "Secret"
 
 #~ msgid "Service performance data - value number  1"
 #~ msgstr "Service: Leistungsdaten - Wert Nr.  1"

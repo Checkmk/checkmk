@@ -1855,6 +1855,12 @@ msgstr ""
 msgid "API key"
 msgstr ""
 
+msgid "API key for iLert alert server"
+msgstr ""
+
+msgid "API key from password store"
+msgstr ""
+
 msgid "API key/token"
 msgstr ""
 
@@ -3771,9 +3777,6 @@ msgstr ""
 msgid "Aggregation Function"
 msgstr ""
 
-msgid "Aggregation Groups"
-msgstr ""
-
 #, fuzzy
 msgid "Aggregation ID"
 msgstr "Agregare noua"
@@ -3801,6 +3804,10 @@ msgstr ""
 
 msgid "Aggregation group tree"
 msgstr ""
+
+#, fuzzy
+msgid "Aggregation groups"
+msgstr "Agregare noua"
 
 msgid "Aggregation name"
 msgstr ""
@@ -3997,6 +4004,11 @@ msgid "All UNKNOWN services of a given site."
 msgstr ""
 
 msgid "All WARN services of a given site."
+msgstr ""
+
+msgid ""
+"All absolute data shown on this page refer to the timeframe since this host "
+"was booted-up."
 msgstr ""
 
 msgid "All aggregations affected by a certain service"
@@ -6618,9 +6630,9 @@ msgstr ""
 msgid ""
 "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
 "snmpwalk to gather SNMP information. For each request a new command line "
-"program is being executed. It is now possible to use the Inline SNMP or "
-"PySNMP implementation which calls the respective libraries directly via its "
-"python bindings. This should increase the performance of SNMP checks in a "
+"program is being executed. It is now possible to use the Inline SNMP "
+"implementation which calls the respective libraries directly via its python "
+"bindings. This should increase the performance of SNMP checks in a "
 "significant way. Both SNMP modes are featurse which improve the performance "
 "for large installations and are only available via our subscription."
 msgstr ""
@@ -7867,8 +7879,7 @@ msgstr ""
 msgid "Check parameters"
 msgstr "(fără parametri)"
 
-msgid ""
-"Check parameters and other configuration variables on hosts and services"
+msgid "Check parameters and other configuration variables for hosts"
 msgstr ""
 
 #, fuzzy
@@ -8110,12 +8121,13 @@ msgid "Checkmk fetcher usage"
 msgstr ""
 
 msgid ""
-"Checkmk has an efficient SNMP implementations called Inline SNMP and PySNMP "
-"which reduce the load produced by SNMP monitoring on the monitoring host "
+"Checkmk has an efficient SNMP implementation called Inline SNMP which "
+"reduces the load produced by SNMP monitoring on the monitoring host "
 "significantly. Inline SNMP is enabled by default for all SNMP hosts and it "
 "is a good idea to keep this default setting. However, there are SNMP devices "
 "which have problems with some SNMP implementations. You can use this rule to "
-"select the SNMP Backend for these hosts."
+"select the SNMP Backend for these hosts.Inline SNMP uses PySNMP bindings to "
+"make SNMP calls."
 msgstr ""
 
 msgid "Checkmk helper usage"
@@ -8776,6 +8788,15 @@ msgid "Color A3"
 msgstr ""
 
 msgid "Color A4"
+msgstr ""
+
+msgid "Color for the average line"
+msgstr ""
+
+msgid "Color for the main metric scattered dots"
+msgstr ""
+
+msgid "Color for the median line"
 msgstr ""
 
 msgid "Color gradient"
@@ -10857,6 +10878,14 @@ msgid "Custom icons or actions for services in status GUI"
 msgstr ""
 
 #, fuzzy
+msgid "Custom incident summary for host alerts"
+msgstr " pentru elementul %s"
+
+#, fuzzy
+msgid "Custom incident summary for service alerts"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
 msgid "Custom integrations"
 msgstr "Atribute personalizate"
 
@@ -12470,10 +12499,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Deprecated rulesets"
-msgstr "Reguli neaplicate"
-
-#, fuzzy
 msgid "Deprecations"
 msgstr "Acțiune"
 
@@ -13201,6 +13226,10 @@ msgstr ""
 msgid "Display options"
 msgstr "Optiuni tabel"
 
+#, fuzzy
+msgid "Display range"
+msgstr "% / gamă"
+
 msgid "Display sidecar details on"
 msgstr ""
 
@@ -13355,6 +13384,9 @@ msgstr ""
 #, fuzzy
 msgid "Do not activate changes"
 msgstr "Activare schimbări"
+
+msgid "Do not add a link"
+msgstr ""
 
 #, fuzzy
 msgid "Do not add a link to this page in sidebar"
@@ -14564,6 +14596,9 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Edit customer %s"
 msgstr "Editeaza regulile de loguri"
+
+msgid "Edit dashboard"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Edit foreign %s"
@@ -17111,6 +17146,10 @@ msgstr ""
 msgid "Fixed page elements"
 msgstr ""
 
+#, fuzzy
+msgid "Fixed range"
+msgstr "% / gamă"
+
 msgid "Fixed rate"
 msgstr ""
 
@@ -19176,10 +19215,14 @@ msgid ""
 "i.e., rules further below in the list are overwritten by rules further up."
 msgstr ""
 
+#, python-format
 msgid ""
 "Here, you can specify how Checkmk will translate the exit code of a task "
 "into a monitoring state. This will overwrite the default mapping used by the "
-"check plugin."
+"check plugin. You can also decide to only partially overwrite the default "
+"mapping by only specifying the new monitoring state. The default text will "
+"be kept as the summary, then.<br><br>The following exit codes/monitoring "
+"states/summaries are specified as default:<br>%s"
 msgstr ""
 
 msgid "Hidden"
@@ -19279,6 +19322,9 @@ msgid "Hierarchical layout"
 msgstr "Matrice"
 
 msgid "High"
+msgstr ""
+
+msgid "High (with escalation)"
 msgstr ""
 
 msgid "High alerts"
@@ -19439,10 +19485,6 @@ msgstr ""
 
 msgid "Host Events"
 msgstr ""
-
-#, fuzzy
-msgid "Host Graphs"
-msgstr "Grup nou"
 
 msgid "Host Graphs with Timerange Previews"
 msgstr ""
@@ -19651,6 +19693,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Host graph"
+msgstr "Grup nou"
+
+#, fuzzy
+msgid "Host graphs"
 msgstr "Grup nou"
 
 #, fuzzy
@@ -22028,12 +22074,12 @@ msgstr ""
 msgid "Ineffective"
 msgstr "Reguli neaplicate"
 
-msgid "Ineffective rules"
-msgstr "Reguli neaplicate"
-
 #, fuzzy
 msgid "Infections"
 msgstr "Conexiuni Active"
+
+msgid "Infer range from available data and check output"
+msgstr ""
 
 msgid "Info"
 msgstr ""
@@ -24485,6 +24531,12 @@ msgstr ""
 msgid "Link resets out"
 msgstr ""
 
+msgid "Link to dashboard"
+msgstr ""
+
+msgid "Link to view"
+msgstr ""
+
 msgid "Link view showing all hosts of one site"
 msgstr ""
 
@@ -25238,6 +25290,9 @@ msgstr ""
 #, fuzzy
 msgid "Low"
 msgstr "rand"
+
+msgid "Low (without escalation"
+msgstr ""
 
 msgid "Low watermark"
 msgstr ""
@@ -26283,6 +26338,9 @@ msgstr "Nr. Max. Versiuni"
 msgid "Max.&nbsp;Version:"
 msgstr ""
 
+msgid "Maximal age"
+msgstr "Vechimea maxima"
+
 #, fuzzy
 msgid "Maximal age of a file"
 msgstr "Vechimea maxima pentru cel mai nou fisier"
@@ -27031,6 +27089,10 @@ msgid "Min.&nbsp;Version: "
 msgstr "Nr. Max. Versiuni"
 
 #, fuzzy
+msgid "Minimal age"
+msgstr "Vechimea maxima"
+
+#, fuzzy
 msgid "Minimal age of a file"
 msgstr "Vechimea maxima pentru cel mai nou fisier"
 
@@ -27545,10 +27607,6 @@ msgid "Monitoring of forwarded logfiles"
 msgstr ""
 
 #, fuzzy
-msgid "Monitoring rules"
-msgstr " pe siteul de monitorizare: "
-
-#, fuzzy
 msgid "Monitoring state"
 msgstr " pe siteul de monitorizare: "
 
@@ -27626,9 +27684,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Most dashlets have a hard coded default title. For example the view snapin "
-"has even a dynamic title which defaults to the real title of the view. If "
-"you like to use another title, set it here."
+"Most dashlets have a hard coded static title and some are aware of its "
+"content and set the title dynamically, like the view snapin, which displays "
+"the title of the view. If you like to use any other title, set it here."
 msgstr ""
 
 msgid "Most recent events"
@@ -29315,6 +29373,11 @@ msgstr "Notificari"
 #, fuzzy
 msgid "Notification postponement reason"
 msgstr "Activare Configurare"
+
+msgid ""
+"Notification priority (This will override the priority configured in the "
+"alert source)"
+msgstr ""
 
 #, fuzzy
 msgid "Notification rule"
@@ -32425,8 +32488,9 @@ msgid ""
 "The latter one is just being displayed as a further information."
 msgstr ""
 
-msgid "Please add at least one child node. Empty rules are useless."
-msgstr ""
+#, fuzzy
+msgid "Please add at least one child node."
+msgstr "%s nu este un număr întreg valid."
 
 msgid "Please add at least one column to your view."
 msgstr ""
@@ -32929,6 +32993,9 @@ msgid "Port number for HTTPS connection to vSphere"
 msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
 msgid "Port number for communicating with the PLC"
+msgstr ""
+
+msgid "Port number that 3par is listening on. The default is 8080."
 msgstr ""
 
 msgid "Port number that AppDynamics is listening on. The default is 8090."
@@ -41266,6 +41333,9 @@ msgstr ""
 msgid "Tasks"
 msgstr ""
 
+msgid "Team Secret"
+msgstr ""
+
 msgid ""
 "Team names which will be responsible for the alert. If the API Key belongs "
 "to a team integration, this field will be overwritten with the owner team."
@@ -41591,7 +41661,7 @@ msgid ""
 "The Checkmk Enterprise Free Edition is expired and you can create a "
 "distributed setup with only two sites: one central and one remote site. In "
 "case you want to test more complex distributed setups, please <a href="
-"\"mailto:info@checkmk.com\">contact us</a>."
+"\"https://checkmk.com/contact.php?\" target=\"_blank\">contact us</a>."
 msgstr ""
 
 msgid "The Checkmk Micro Core"
@@ -42395,6 +42465,12 @@ msgstr ""
 
 #, python-format
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
+msgstr ""
+
+msgid ""
+"The corresponding username in ntopng of the current checkmk user. It is "
+"used, in case the user mapping to ntopng is configured to use this custom "
+"attribute"
 msgstr ""
 
 msgid ""
@@ -44172,6 +44248,11 @@ msgid "The target has been deleted."
 msgstr ""
 
 msgid "The target rule is no longer available"
+msgstr ""
+
+msgid ""
+"The team secret of your SIGNL4 team. That is the last part of your webhook "
+"URL: https://connect.signl4.com/webhook/<team_secret>"
 msgstr ""
 
 msgid "The temporary filesystem is mounted"
@@ -49737,10 +49818,13 @@ msgstr ""
 msgid "Use IPMItool"
 msgstr ""
 
+msgid "Use Inline SNMP (PySNMP) Backend"
+msgstr ""
+
 msgid "Use Inline SNMP (deprecated)"
 msgstr ""
 
-msgid "Use Inline SNMP Backend"
+msgid "Use Inline SNMP (legacy) Backend"
 msgstr ""
 
 msgid ""
@@ -49757,9 +49841,6 @@ msgid "Use Livestatus Proxy Daemon"
 msgstr ""
 
 msgid "Use Piggyback"
-msgstr ""
-
-msgid "Use PySNMP Backend"
 msgstr ""
 
 msgid "Use SSL"
@@ -49814,6 +49895,12 @@ msgid ""
 msgstr ""
 
 msgid "Use a custom check plugin..."
+msgstr ""
+
+msgid ""
+"Use a fixed range for the Data displayed. This value has no scaling. If your "
+"metric is in the range of MB, you'll need to place 9 zeros for display to "
+"make sense."
 msgstr ""
 
 msgid "Use a namespace prefix"
@@ -50380,10 +50467,6 @@ msgid "Used quota: Absolute or relative upper levels"
 msgstr ""
 
 #, fuzzy
-msgid "Used rulesets"
-msgstr "Reguli"
-
-#, fuzzy
 msgid "Used size"
 msgstr "licente nefolosite"
 
@@ -50679,6 +50762,10 @@ msgstr "foloseste descrierea"
 #, fuzzy
 msgid "VM name"
 msgstr "Nume AP"
+
+#, fuzzy
+msgid "VM snapshot summary"
+msgstr "urca snapshot-uri nesigure"
 
 msgid "VM, Cloud, Container"
 msgstr ""
@@ -54862,6 +54949,9 @@ msgstr ""
 msgid "iCalendar File"
 msgstr "Curata fisierul de loguri"
 
+msgid "iLert alert source API key"
+msgstr ""
+
 msgid "iSCSI"
 msgstr ""
 
@@ -55254,6 +55344,10 @@ msgstr ""
 
 msgid "ntop GUI extensions"
 msgstr ""
+
+#, fuzzy
+msgid "ntopng Username"
+msgstr "Adaugă instanță NGINX"
 
 msgid "objects"
 msgstr ""
@@ -55954,8 +56048,29 @@ msgstr "ieri"
 msgid "z/OS"
 msgstr ""
 
-msgid " 2020 tribe29 GmbH. All Rights Reserved."
+msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Ineffective rules"
+#~ msgid "Deprecated rulesets"
+#~ msgstr "Reguli neaplicate"
+
+#, fuzzy
+#~ msgid "Host Graphs"
+#~ msgstr "Grup nou"
+
+#~ msgid "Ineffective rules"
+#~ msgstr "Reguli neaplicate"
+
+#, fuzzy
+#~ msgid "Monitoring rules"
+#~ msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+#~| msgid "Rulesets"
+#~ msgid "Used rulesets"
+#~ msgstr "Reguli"
 
 #, fuzzy
 #~| msgid "Additional header lines"
@@ -56175,9 +56290,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Log: contact name (exact match)"
 #~ msgstr " (potrivire exactă)"
-
-#~ msgid "Maximal age"
-#~ msgstr "Vechimea maxima"
 
 #~ msgid "Maximum number of matched tasks for OK state"
 #~ msgstr "Numarul maxim de task-uri cu statusul OK"

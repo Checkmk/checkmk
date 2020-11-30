@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Some filters like e.g. "Network interface: VLAN type" did not
 display a text input field. This is fixed.

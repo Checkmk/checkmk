@@ -6,7 +6,7 @@ Date: 1606387132
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The check_mk discovery service returned an UNKN status when the AWS agent was
 configured for monitoring. Example error message:

@@ -6,7 +6,7 @@ Date: 1603982576
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The links for dashboard views, e.g. "Main Overview" in topic "Overview", were broken.
 Such dashboards can now be called correctly from the snapin.

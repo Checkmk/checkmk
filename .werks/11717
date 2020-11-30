@@ -6,7 +6,7 @@ Date: 1605885715
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 This change addresses the error "Apply lag has NULL value in v$dataguard_stats"
 that can occur when checking the DataGuard configuration status and that results

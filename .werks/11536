@@ -6,7 +6,7 @@ Date: 1604494668
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 This is a new check to monitor humidity levels reported by humidity sensors on
 Vutlan EMS devices.

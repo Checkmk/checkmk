@@ -6,7 +6,7 @@ Date: 1604925489
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The header information on setup pages (in the top right corner of the page) was simplified.
 It now shows only the number of pending changes and links to the "Activate pending changes" page.

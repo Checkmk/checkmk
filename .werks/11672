@@ -6,7 +6,7 @@ Date: 1605597600
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 In the first innovation release of checkmk 2.0 the output of the smart check plugin
 has been reduced, and some of the information was only shown in the servce details.

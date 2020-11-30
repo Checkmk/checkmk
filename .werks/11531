@@ -6,7 +6,7 @@ Date: 1603704720
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The filestats check did not show all results when the feature "Additional Rules
 for Files" was activated and multiple subgroups were defined within the file

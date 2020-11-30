@@ -6,7 +6,7 @@ Date: 1605780838
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The LDAP sync terminated when trying to delete users in
 Checkmk that do not exist in LDAP anymore.

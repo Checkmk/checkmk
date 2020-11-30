@@ -6,7 +6,7 @@ Date: 1605772293
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Instead of providing the regular output, the plugin produced an error message
 "a bytes-like object is required, not 'str'" for each found instance.

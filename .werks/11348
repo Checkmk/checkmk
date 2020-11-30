@@ -6,7 +6,7 @@ Date: 1606301576
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 In case multiple search terms were entered in the monitoring search (e.g. "h: linux s:cpu"), both the old quicksearch and the new sidebar monitoring search crashed.
 This is now fixed.

@@ -6,7 +6,7 @@ Date: 1605538661
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 This werk describes the current integration stage of <b>ntopng</b>.
 Currently, a single <b>ntopng</b> instance is integrated into <b>Checkmk</b> via its REST API.

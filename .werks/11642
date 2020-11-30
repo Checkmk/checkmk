@@ -6,7 +6,7 @@ Date: 1604906321
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The HW/SW-Inventory data from old versions can include Python 2 Longints.
 This caused exceptions when reading the data.

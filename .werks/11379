@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Some sql requests have not been updated to escaped single quotes. Additionally
 the error that has been thrown was not useful. Both have been fixed with

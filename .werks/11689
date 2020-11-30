@@ -6,7 +6,7 @@ Date: 1605565884
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Memory statistics from an SNMP data source were monitored by the mem_linux
 check, which caused it to crash as it is not suitable to evaluate SNMP data

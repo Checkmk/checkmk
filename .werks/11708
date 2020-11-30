@@ -6,7 +6,7 @@ Date: 1606137632
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The logwatch.cfg created by the agent bakery should not include bytestrings.
 This happened because the regular expression was encoded.

@@ -6,7 +6,7 @@ Date: 1606481949
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 View columns can now point their links to context sensitive dashboards.
 This is especially useful when linking from overview dashboards to

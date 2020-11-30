@@ -6,6 +6,6 @@ Date: 1605175357
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 added native ensure_str implementation

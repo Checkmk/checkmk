@@ -6,7 +6,7 @@ Date: 1604568937
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The delete buttons in global settings are now visible due to a higher contrast.
 The quicksearch snapin's dropdown styling was fixed. Its background is not transparent anymore.

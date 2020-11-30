@@ -6,7 +6,7 @@ Date: 1605544535
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 This werk changes the order of the parameters of the rule "Virtual Machine Snapshot".
 The ones that are most likely to be used are more prominently at the top.

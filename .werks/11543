@@ -6,7 +6,7 @@ Date: 1605092033
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Discovery and check functions for *_bonding would are provided with "None" instead of
 None values but don't handle them correctly. This fix doesn't turn "None" into None

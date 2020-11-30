@@ -6,7 +6,7 @@ Date: 1605014604
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 PySNMP had some huge Performance issues.
 These issues are resolved by

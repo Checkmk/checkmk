@@ -6,7 +6,7 @@ Date: 1604991813
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 When cloning some builtin views, like for example "All aggregations", the view
 editor showed up an error message 'Element "" does not exist anymore'. This was

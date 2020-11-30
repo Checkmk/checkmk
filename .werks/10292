@@ -6,7 +6,7 @@ Date: 1606481583
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The endpoints didn't use the correct site before, so they
 resorted to a default site named "local", which most probably

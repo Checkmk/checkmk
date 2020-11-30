@@ -6,7 +6,7 @@ Date: 1604927863
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The section for the check plugin esx_vsphere_counters_diskio was lost in
 migration, which prevented the corresponding service from being discovered.

@@ -6,7 +6,7 @@ Date: 1604328880
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 An error "URL not found" occurred when trying to sort a view in the GUI.  This
 was fixed for regular views.

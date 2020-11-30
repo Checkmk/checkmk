@@ -6,7 +6,7 @@ Date: 1605794461
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The WATO ruleset for timesyncd did write "last_synchronized" and
 the default settings were called "last_synchronise" the Check also used these.

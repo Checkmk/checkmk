@@ -6,7 +6,7 @@ Date: 1604919974
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 In version 2.0.0i1 the smart_stats plugin reported "Missing monitoring data" even though
 the "smart" section was present in the agent output.

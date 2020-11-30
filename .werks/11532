@@ -6,7 +6,7 @@ Date: 1603713321
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The filestats check has a new feature "Additional Rules for Files". The check
 crashed when this feature was enabled and all files within the file group

@@ -6,7 +6,7 @@ Date: 1604651544
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The job check monitors processes on Linux. Killed jobs were falsely flagged as
 running jobs, wich could potentially lead to a crash with an obscure error

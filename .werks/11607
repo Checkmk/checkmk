@@ -6,7 +6,7 @@ Date: 1605771497
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 All web pages served by Checkmk will now have the HTTP header <tt>Header always
 set X-Content-Type-Options: "nosniff"</tt> set.  It prevents a client from

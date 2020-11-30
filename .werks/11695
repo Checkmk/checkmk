@@ -6,7 +6,7 @@ Date: 1606409656
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Running the Azure special agent caused some errors in relation to the section
 names. Example error message:

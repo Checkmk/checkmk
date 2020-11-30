@@ -6,7 +6,7 @@ Date: 1605110022
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 When levels on non-unicast packets or discards are configured and
 exceeded, the interface checks are supposed to produce additional

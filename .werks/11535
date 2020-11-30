@@ -6,7 +6,7 @@ Date: 1604493583
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 This is a new check to monitor temperature levels received from temperature
 sensors of Vutlan EMS devices.

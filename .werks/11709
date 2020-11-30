@@ -6,7 +6,7 @@ Date: 1606398155
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 We introduce a new SNMP Backend now called Inline SNMP Backend.
 If you are using the Enterprise Edition it is active by default.

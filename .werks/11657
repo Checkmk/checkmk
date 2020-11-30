@@ -6,7 +6,7 @@ Date: 1605106156
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 If you opened a new rule for "Icon image for hosts in status GUI" the error "Unable to read current options of this rule..." was shown. The same behaviour occured in the ruleset "Icon image for services in status GUI".
 

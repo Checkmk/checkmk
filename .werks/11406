@@ -6,7 +6,7 @@ Date: 1603708244
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Windows product versions are an expression of 4 numbers,
 with the scheme <tt>major.minor.build.revision</tt>.

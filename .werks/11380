@@ -6,7 +6,7 @@ Date: 1605801600
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 In the help text is the assignment of <i>SQLS_SIDS="\$SIDS"</i> an example
 to assign a custom sql to all found instances. This has not been working,

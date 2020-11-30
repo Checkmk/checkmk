@@ -6,7 +6,7 @@ Date: 1605683363
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The check plugins monitoring Juniper Trapeze devices will now be
 discovered for additional devices. This includes the following

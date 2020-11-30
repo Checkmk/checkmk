@@ -6,7 +6,7 @@ Date: 1606141308
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 In case a check provides metrics for deduplication rate ({{dedup_rate}}) and filesystem
 usage ({{fs_size}} and {{fs_usage}}) the Perf-O-Meter would display the (less important)

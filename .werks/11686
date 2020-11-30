@@ -6,7 +6,7 @@ Date: 1605020287
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 This werk adds an inventory plugin that inventorizes virtual machines of an ESX host (or all managed hosts if the queried system is a vCenter).
 To make use of this feature you need to have set up the monitoring via the rule "VMWAre ESX via vSphere", and check the box "Virtual Machines" in the section "Retrieve information about ...".

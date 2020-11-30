@@ -6,7 +6,7 @@ Date: 1606147611
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 ntop alert tabs did not show any incoming data due to internal restructurings.
 This was fixed with this werk.

@@ -6,7 +6,7 @@ Date: 1606201555
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The 'local' plugin crashed when configured on a cluster and no nodes sent data for a service.
 This has been fixed, and the service now shows the generic "Item not found in monitoring data" message in that case.

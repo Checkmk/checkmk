@@ -6,7 +6,7 @@ Date: 1605002014
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 This werk fixes a bug in the section <tt>splunk_jobs</tt> of the
 Splunk special agent. This bug caused the agent to crash while

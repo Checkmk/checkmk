@@ -6,7 +6,7 @@ Date: 1605252130
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 This werk adds support for Ceph 14.2.4 to the check plugin
 <tt>ceph_df</tt>. This is necessary because a new column

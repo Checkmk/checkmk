@@ -41,7 +41,12 @@ _PERCENT_MAX_DIGITS = 12  # arbitrarily chosen, and borderline ridiculous.
 def date(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date
 
-    In case None is given it returns "never".
+    Example:
+        >>> date(1606721022)
+        'Nov 30 2020'
+        >>> date(None)
+        'never'
+
     """
     if epoch is None:
         return "never"
@@ -51,7 +56,15 @@ def date(epoch: Optional[float]) -> str:
 def datetime(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date and time
 
-    In case None is given it returns "never".
+    Example:
+        >>> import time
+        >>> # fix test environment timing issues:
+        >>> offset = (time.localtime().tm_hour - time.gmtime().tm_hour) * 3600
+        >>> datetime(1606721022 - offset)
+        'Nov 30 2020 07:23:42'
+        >>> datetime(None)
+        'never'
+
     """
     if epoch is None:
         return "never"
@@ -78,6 +91,13 @@ def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
 
 def timespan(seconds: float) -> str:
     """Render a time span in seconds
+
+    Example:
+        >>> timespan(1606721)
+        '18 days 14 hours'
+        >>> timespan(0.0001)
+        '100 microseconds'
+
     """
     ts = " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))
     if ts == "0 %s" % _TIME_UNITS[-1][0]:
@@ -88,6 +108,7 @@ def timespan(seconds: float) -> str:
 def _digits_left(value: float) -> int:
     """Return the number of didgits left of the decimal point
 
+    Example:
         >>> _digits_left(42.23)
         2
 
@@ -121,7 +142,12 @@ def _auto_scale(value: float, use_si_units: bool, add_bytes_prefix: bool = True)
 
 
 def frequency(hertz: float) -> str:
-    """Render a frequency in hertz using an appropriate SI prefix"""
+    """Render a frequency in hertz using an appropriate SI prefix
+
+    Example:
+        >>> frequency(1e10 / 3.)
+        '3.33 GHz'
+    """
     return "%s %sHz" % _auto_scale(float(hertz), use_si_units=True, add_bytes_prefix=False)
 
 
@@ -167,7 +193,13 @@ def networkbandwidth(octets_per_sec: float) -> str:
 
 
 def nicspeed(octets_per_sec: float) -> str:
-    """Render NIC speed using an appropriate SI prefix"""
+    """Render NIC speed using an appropriate SI prefix
+
+    Example:
+        >>> nicspeed(1050)
+        '8.4 kBit/s'
+
+    """
     value_str, unit = _auto_scale(float(octets_per_sec) * 8, use_si_units=True)
     if '.' in value_str:
         value_str = value_str.rstrip("0").rstrip(".")
@@ -175,13 +207,20 @@ def nicspeed(octets_per_sec: float) -> str:
 
 
 def iobandwidth(bytes_: float) -> str:
-    """Render IO-bandwith using an appropriate SI prefix"""
+    """Render IO-bandwith using an appropriate SI prefix
+
+    Example:
+        >>> iobandwidth(128)
+        '128 B/s'
+
+    """
     return "%s %s/s" % _auto_scale(float(bytes_), use_si_units=True)
 
 
 def _show_right(value: float):
     """Digits to the right of the decimal point, that we want to show
 
+    Example:
         >>> _show_right(0.0023)
         4
 
@@ -192,7 +231,13 @@ def _show_right(value: float):
 
 
 def percent(percentage: float) -> str:
-    """Render percentage"""
+    """Render percentage
+
+    Example:
+        >>> percent(23.4203245)
+        '23.4%'
+
+    """
     # There is another render.percent in cmk.utils. However, that deals extensively with
     # the rendering of small percentages (as is required for graphing applications)
     value = float(percentage)  # be nice

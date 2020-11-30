@@ -130,7 +130,7 @@ def do_check(
 
     exit_spec = host_config.exit_code_spec()
 
-    mode = checkers.Mode.CHECKING if selected_sections is None else checkers.Mode.FORCE_SECTIONS
+    mode = checkers.Mode.CHECKING if selected_sections is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS
 
     status: ServiceState = 0
     infotexts: List[ServiceDetails] = []

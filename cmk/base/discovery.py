@@ -332,7 +332,7 @@ def do_discovery(
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
-    mode = checkers.Mode.DISCOVERY if selected_sections is None else checkers.Mode.FORCE_SECTIONS
+    mode = checkers.Mode.DISCOVERY if selected_sections is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS
 
     # Now loop through all hosts
     for hostname in sorted(host_names):

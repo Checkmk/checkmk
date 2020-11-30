@@ -244,6 +244,7 @@ class PermissionsHandler:
             "folders": user.may("wato.hosts"),
             "hosts": user.may("wato.hosts"),
             "setup": user.may("wato.use"),
+            "event_console": user.may("mkeventd.edit"),
         }
 
     def permissions_for_items(self) -> Mapping[str, Callable[[str], bool]]:
@@ -322,7 +323,7 @@ class IndexSearcher:
         # this would mess up the localization
         return (
             # _("Business Intelligence"),
-            # _("Events"),
+            _("Event Console"),
             # _("Users"),
             _("Services") + " > " + _("Enforced services"),
             _("Global settings"),

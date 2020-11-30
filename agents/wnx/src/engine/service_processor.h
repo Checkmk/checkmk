@@ -334,10 +334,8 @@ private:
 
         // answer may be reused
         answer_.dropAnswer();
-        answer_.prepareAnswer(ip_addr);  // is temporary
-        auto tp = answer_.getId();
-
-        return tp;
+        answer_.prepareAnswer(ip_addr);
+        return answer_.getId();
     }
 
     //

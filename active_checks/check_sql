@@ -235,9 +235,9 @@ def mysql_execute(cursor, cmd, inpt, procedure):
     return _default_execute(cursor, cmd, inpt, procedure)
 
 
-# def mssql_connect(host, port, db_name, user, pwd):
-#    import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
-#    return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
+def mssql_connect(host, port, db_name, user, pwd):
+    import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
 
 def mssql_execute(cursor, cmd, _inpt, procedure):
@@ -334,7 +334,7 @@ def connect(dbms, host, port, db_name, user, pwd):
     return {
         'postgres': postgres_connect,
         'mysql': mysql_connect,
-        # 'mssql': mssql_connect,
+        'mssql': mssql_connect,
         'oracle': oracle_connect,
         'db2': db2_connect,
     }[dbms](host, port, db_name, user, pwd)

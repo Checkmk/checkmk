@@ -106,6 +106,7 @@ PYTHON3_MODULES_LIST += s3transfer-0.3.2.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += boto3-1.11.11.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += python-snap7-0.10.tar.gz # needed by Siemens PLC special agent
 
+PYTHON3_MODULES_LIST += pymssql-2.1.5.tar.gz # needed by check_sql active check
 PYTHON3_MODULES_LIST += PyMySQL-0.9.3.tar.gz # needed by check_sql active check
 PYTHON3_MODULES_LIST += psycopg2-binary-2.8.4.tar.gz # needed by check_sql active check
 

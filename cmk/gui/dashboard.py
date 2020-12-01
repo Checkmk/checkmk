@@ -1638,7 +1638,7 @@ class EditDashletPage(Page):
                 save_all_dashboards()
 
                 next_url = html.get_url_input('next', html.get_url_input('back'))
-                html.reload_whole_page("index.py?start_url=%s" % next_url)
+                html.reload_whole_page("index.py?start_url=%s" % html.urlencode(next_url))
                 html.footer()
                 raise FinalizeRequest(code=200)
 

@@ -1,0 +1,13 @@
+Title: Web API: bulk_discovery_start: Prevent error when parsing bulk_size parameter
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1606808531
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+An API call to the endpoint bulk_discovery_start could fail in case the bulk_size
+parameter was given as string (via URL or request body). A TypeError was raised
+in this case. The API now converts the type as expected.

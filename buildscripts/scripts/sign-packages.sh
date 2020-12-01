@@ -113,12 +113,3 @@ for TRY in $(seq 5); do
 
     sleep 1
 done
-
-# TODO
-## Hashes der kopierten Dateien ablegen (werden später auf der Webseite angezeigt)
-#echo "+ Create HASHES file..."
-#sha256sum -- $TARGET/*.cma >>$TARGET/HASHES || true
-#sha256sum -- $TARGET/*.tar.gz >>$TARGET/HASHES || true
-#sha256sum -- $TARGET/*.rpm >>$TARGET/HASHES || true
-#sha256sum -- $TARGET/*.deb >>$TARGET/HASHES || true
-#sha256sum -- $TARGET/*.cmk >>$TARGET/HASHES || true

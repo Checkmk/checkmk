@@ -865,14 +865,15 @@ def test_check_single_interface_admin_status(value_store, item, params, result):
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
-def test_check_single_interface_legacy_parameters_1(value_store, item, params, result):
+def test_check_single_interface_states(value_store, item, params, result):
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_single_interface(
                 item,
                 type_defs.Parameters({
                     **params,
-                    'state': ['9'],
+                    'state': ['4'],
+                    'admin_state': ['2'],
                 }),
                 _create_interfaces(0, admin_status='1')[int(item) - 1],
                 timestamp=0,
@@ -882,24 +883,27 @@ def test_check_single_interface_legacy_parameters_1(value_store, item, params, r
             item,
             type_defs.Parameters({
                 **params,
-                'state': ['9'],
+                'state': ['4'],
+                'admin_state': ['2'],
             }),
             _create_interfaces(4000000, admin_status='1')[int(item) - 1],
             timestamp=5,
-        )) == result[:2] + [
+        )) == result[:1] + [
+            Result(state=state.CRIT, summary='(up)', details='Operational state: up'),
             Result(state=state.CRIT, summary='Admin state: up'),
         ] + result[2:]
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
-def test_check_single_interface_legacy_parameters_2(value_store, item, params, result):
+def test_check_single_interface_map_states(value_store, item, params, result):
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_single_interface(
                 item,
                 type_defs.Parameters({
                     **params,
-                    'map_operstates': [(['5', '9'], 3)],
+                    'map_operstates': [(['1'], 3)],
+                    'map_admin_states': [(['2'], 3)],
                 }),
                 _create_interfaces(0, admin_status='2')[int(item) - 1],
                 timestamp=0,
@@ -909,11 +913,13 @@ def test_check_single_interface_legacy_parameters_2(value_store, item, params, r
             item,
             type_defs.Parameters({
                 **params,
-                'map_operstates': [(['5', '9'], 3)],
+                'map_operstates': [(['1'], 3)],
+                'map_admin_states': [(['2'], 3)],
             }),
             _create_interfaces(4000000, admin_status='2')[int(item) - 1],
             timestamp=5,
-        )) == result[:2] + [
+        )) == result[:1] + [
+            Result(state=state.UNKNOWN, summary='(up)', details='Operational state: up'),
             Result(state=state.UNKNOWN, summary='Admin state: down'),
         ] + result[2:]
 

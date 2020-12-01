@@ -631,7 +631,7 @@ def _transform_if_check_parameters(v):
             oper_states.remove('9')
     if map_operstates:
         v['map_operstates'] = [
-            mapping_oper_states for mapping_oper_states in map_operstates if mapping_oper_states
+            mapping_oper_states for mapping_oper_states in map_operstates if mapping_oper_states[0]
         ]
         if not v['map_operstates']:
             del v['map_operstates']

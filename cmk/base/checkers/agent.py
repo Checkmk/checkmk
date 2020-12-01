@@ -565,7 +565,6 @@ class HostSectionParser(ParserState):
         host_sections.sections.setdefault(section_header.name, [])
         # Split of persisted section for server-side caching
         if section_header.persist is not None:
-            cached_at = int(time.time())  # Estimate age of the data
             cache_interval = section_header.persist - cached_at
             host_sections.cache_info[section_header.name] = (cached_at, cache_interval)
             persisted_sections[section_header.name] = (

@@ -15,6 +15,7 @@ import subprocess
 import re
 import os
 import abc
+import platform
 import sys
 import logging
 import argparse
@@ -25,15 +26,17 @@ except ImportError:
     # We need typing only for testing
     pass
 
-OS = sys.platform
-IS_LINUX = OS == "linux"
-IS_WINDOWS = OS == "win32"
+OS = platform.system()
+IS_LINUX = OS == "Linux"
+IS_WINDOWS = OS == "Windows"
 LOGGER = logging.getLogger(__name__)
 
 if IS_LINUX:
     import resource
-if IS_WINDOWS:
+elif IS_WINDOWS:
     import time
+else:
+    raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
 
 
 # Borrowed from six
@@ -895,8 +898,7 @@ def postgres_factory(db_user, pg_instance=None):
         return PostgresLinux(db_user, pg_instance)
     if IS_WINDOWS:
         return PostgresWin(db_user, pg_instance)
-
-    raise NotImplementedError("The OS type (%s) is not yet implemented." % os.name)
+    raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
 
 
 #   .--PostgresConfig------------------------------------------------------.

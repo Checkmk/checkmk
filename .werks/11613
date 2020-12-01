@@ -1,0 +1,13 @@
+Title: Fix resetting if GUI related global settings
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1606811662
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+When trying to reset global settings that apply to the GUI, the setting
+was not immediately reset to it's default value. The GUI was still using
+the previously set value until the sites apache was restarted.

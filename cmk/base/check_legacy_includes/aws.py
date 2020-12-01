@@ -224,10 +224,6 @@ def check_aws_metrics(
         raise MKCounterWrapped("Currently no data from AWS")
 
 
-def aws_rds_service_item(instance_id, region):
-    return '%s [%s]' % (instance_id, region)
-
-
 def aws_get_parsed_item_data(check_function: Callable) -> Callable:
     """
     Modified version of get_parsed_item_data which lets services go stale instead of UNKN if the

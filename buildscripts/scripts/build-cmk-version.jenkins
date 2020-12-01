@@ -197,6 +197,11 @@ try{
         stage("Remove Stashed package") {
             delete_stashed_package(DOCKER_REGISTRY_NO_HTTP, WS_ARCHIVE)
         }
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
+                create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST_OLD, UPLOAD_DEST, CMK_VERS)
+            }
+        }
         if (!shall_publish_package(scm, JOB_BASE_NAME)) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(BUILD_IMAGE_NAME).inside(DOCKER_BASE_ARGS + " -v /tmp:/tmp") {
@@ -489,5 +494,13 @@ def delete_stashed_package(DOCKER_REG, FILE_NAME) {
     def REPO = URL_ELEMENTS[URL_ELEMENTS.length -1]
     withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
         sh("docker run -t -a stdout -a stderr ${DOCKER_REG}/${CONTAINER} nexus3-del-artifacts.py $NEXUS_URL $NEXUS_USERNAME $NEXUS_PASSWORD --repo $REPO --pattern ${FILE_NAME}")
+    }
+}
+
+def create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST_OLD, UPLOAD_DEST, CMK_VERS) {
+    stage("Create and upload file hashes") {
+        def HASHES_PATH = ARCHIVE_DIR + "/HASHES"
+        sh("cd ${ARCHIVE_DIR} ; sha256sum -- *.{tar.gz,rpm,deb,cma,cmk} | sort -k 2 > ${HASHES_PATH}")
+        upload_package(HASHES_PATH, "HASHES", "hashes", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST_OLD, UPLOAD_DEST, CMK_VERS)
     }
 }

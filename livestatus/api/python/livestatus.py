@@ -573,23 +573,19 @@ class SingleSiteConnection(Helpers):
 
     # TODO: Cleanup all call sites to hand over str types
     def command(self, command: AnyStr, site: Optional[SiteId] = None) -> None:
-        command_str = _ensure_unicode(command)
+        command_str = _ensure_unicode(command).rstrip("\n")
         if not command_str.startswith("["):
             command_str = f"[{int(time.time())}] {command_str}"
         self.send_command(f"COMMAND {command_str}")
 
-    def send_command(self, command_str: str) -> None:
-        if not command_str.endswith("\n"):
-            command_str += "\n"
-        command_str += "\n"
-        command = command_str.encode('utf-8')
+    def send_command(self, command: str) -> None:
         if self.socket is None:
             self.connect()
 
         assert self.socket is not None  # TODO: refactor to avoid assert
 
         try:
-            self.socket.send(command)
+            self.socket.send(command.encode('utf-8') + b"\n\n")
         except IOError as e:
             self.socket = None
             if self.persist:

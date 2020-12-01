@@ -11,6 +11,7 @@ have any friction during testing with these helpers themselves.
 """
 import contextlib
 import datetime as dt
+import io
 import operator
 import os
 import re
@@ -45,6 +46,48 @@ OperatorFunc = Callable[[Any, Any], bool]
 Response = List[List[Any]]
 
 
+class FakeSocket:
+    def __init__(self, mock_live: 'MockLiveStatusConnection'):
+        self.mock_live = mock_live
+
+    def settimeout(self, timeout: Optional[int]):
+        pass
+
+    def connect(self, address: str):
+        pass
+
+    def recv(self, length: int) -> bytes:
+        return self.mock_live.socket_recv(length)
+
+    def send(self, data: bytes):
+        return self.mock_live.socket_send(data)
+
+
+def _make_livestatus_response(response):
+    """Build a (somewhat) convincing LiveStatus response
+
+    Special response headers are not honored yet.
+
+    >>> _make_livestatus_response([['foo'], [1, {}]])
+    "200          18\\n[['foo'], [1, {}]]"
+
+    >>> _make_livestatus_response([['foo'], [1, {}]])[:16]
+    '200          18\\n'
+
+    Args:
+        response:
+            Some python struct.
+
+    Returns:
+        The fake LiveStatus response as a string.
+
+    """
+    data = repr(response)
+    code = 200
+    length = len(data)
+    return f"{code:<3} {length:>11}\n{data}"
+
+
 class MockLiveStatusConnection:
     """Mock a LiveStatus connection.
 
@@ -76,8 +119,10 @@ class MockLiveStatusConnection:
             ...         .expect_query("GET hosts\\nColumns: name")
             ...         .expect_query("GET services\\nColumns: description"))
             >>> with live(expect_status_query=False):
-            ...     live.send_command("GET hosts\\nColumns: name")  # returns nothing!
-            ...     live.recv_response("GET services\\nColumns: description\\nColumnHeaders: on")
+            ...     live._lookup_next_query("GET hosts\\nColumns: name")  # returns nothing!
+            ...     live._lookup_next_query(
+            ...         "GET services\\nColumns: description\\nColumnHeaders: on")
+            [['heute'], ['example.com']]
             [['description'], ['Memory'], ['CPU load'], ['CPU load']]
 
 
@@ -85,7 +130,7 @@ class MockLiveStatusConnection:
 
             >>> live = MockLiveStatusConnection()
             >>> with live:
-            ...     response = live.recv_response(
+            ...     response = live._lookup_next_query(
             ...         'GET status\\n'
             ...         'Cache: reload\\n'
             ...         'Columns: livestatus_version program_version program_start '
@@ -110,7 +155,7 @@ program_start num_hosts num_services'
 
             >>> live = MockLiveStatusConnection().expect_query("Hello\\nworld!")
             >>> with live(expect_status_query=False):
-            ...     live.recv_response("Foo\\nbar!")
+            ...     live._lookup_next_query("Foo\\nbar!")
             Traceback (most recent call last):
             ...
             RuntimeError: Expected query (loose):
@@ -122,7 +167,7 @@ program_start num_hosts num_services'
 
             >>> live = MockLiveStatusConnection()
             >>> with live(expect_status_query=False):
-            ...     live.recv_response("Spanish inquisition!")
+            ...     live._lookup_next_query("Spanish inquisition!")
             Traceback (most recent call last):
             ...
             RuntimeError: Got unexpected query:
@@ -136,6 +181,9 @@ program_start num_hosts num_services'
         self._query_index = 0
         self._report_multiple = report_multiple
         self._expect_status_query: Optional[bool] = None
+
+        self.socket = FakeSocket(self)
+        self._last_response: Optional[io.StringIO] = None
 
         # We store some default values for some tables. May be expanded in the future.
 
@@ -390,17 +438,22 @@ program_start num_hosts num_services'
             else:
                 yield from response
 
-        return list(_generate_output())
+        response = list(_generate_output())
+        self._last_response = io.StringIO(_make_livestatus_response(response))
+        return response
 
-    # Mocked livestatus api below
-    def get_connection(self, site_id: str) -> 'MockLiveStatusConnection':
-        return self
+    def socket_recv(self, length):
+        if self._last_response is None:
+            raise RuntimeError("Nothing sent yet. Can't receive!")
+        return self._last_response.read(length).encode('utf-8')
 
-    def send_command(self, command: str) -> None:
-        self._lookup_next_query(command)
+    def socket_send(self, data: bytes):
+        if data[-2:] == b"\n\n":
+            data = data[:-2]
+        self._lookup_next_query(data.decode('utf-8'))
 
-    def recv_response(self, query) -> Response:
-        return self._lookup_next_query(query)
+    def create_socket(self, family):
+        return self.socket
 
     def set_prepend_site(self, prepend_site: bool) -> None:
         self._prepend_site = prepend_site
@@ -502,11 +555,7 @@ def mock_livestatus(with_context=False):
                     new=live.set_prepend_site), \
          mock.patch("livestatus.MultiSiteConnection.expect_query",
                     new=live.expect_query, create=True), \
-         mock.patch("livestatus.SingleSiteConnection.recv_response", new=live.recv_response), \
-         mock.patch("livestatus.SingleSiteConnection.send_command", new=live.send_command), \
-         mock.patch("livestatus.SingleSiteConnection.connect"), \
-         mock.patch("livestatus.SingleSiteConnection.disconnect"), \
-         mock.patch("livestatus.SingleSiteConnection.send_query"), \
+         mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket), \
          mock.patch.dict(os.environ, {'OMD_ROOT': '/', 'OMD_SITE': 'NO_SITE'}):
 
         yield live

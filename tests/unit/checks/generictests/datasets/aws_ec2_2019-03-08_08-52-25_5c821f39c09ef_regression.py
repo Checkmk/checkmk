@@ -11,17 +11,15 @@
 checkname = 'aws_ec2'
 
 parsed = {
-    'Summary': {
-        'CPUUtilization': 0.1,
-        'NetworkIn': 3540.4,
-        'StatusCheckFailed_Instance': 0.0,
-        'NetworkOut': 27942.1,
-        'StatusCheckFailed_System': 0.0,
-        'DiskReadOps': 1000,
-        'DiskWriteOps': 2000,
-        'DiskReadBytes': 3000,
-        'DiskWriteBytes': 4000,
-    }
+    'CPUUtilization': 0.1,
+    'NetworkIn': 3540.4,
+    'StatusCheckFailed_Instance': 0.0,
+    'NetworkOut': 27942.1,
+    'StatusCheckFailed_System': 0.0,
+    'DiskReadOps': 1000,
+    'DiskWriteOps': 2000,
+    'DiskReadBytes': 3000,
+    'DiskWriteBytes': 4000,
 }
 
 discovery = {

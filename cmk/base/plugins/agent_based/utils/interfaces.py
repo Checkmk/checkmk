@@ -904,41 +904,6 @@ def _check_status(
     return mon_state
 
 
-def _transform_check_params(params: type_defs.Parameters) -> type_defs.Parameters:
-    # See cmk.gui.plugins.wato.check_parameters.if.transform_if for more information
-
-    params_mutable = dict(params)
-
-    # remove '9' from params['state']
-    states = params_mutable.get('state', [])
-    try:
-        states.remove('9')
-        removed_port_state_9 = True
-    except (ValueError, AttributeError):
-        removed_port_state_9 = False
-    if removed_port_state_9 and params_mutable.get('state') == []:
-        del params_mutable['state']
-        params_mutable['admin_state'] = ['2']
-
-    # remove '9' from params['map_operstates']
-    map_operstates = params_mutable.get('map_operstates', [])
-    mon_state_9 = None
-    for oper_states, mon_state in map_operstates:
-        if '9' in oper_states:
-            mon_state_9 = mon_state
-            oper_states.remove('9')
-    if map_operstates:
-        params_mutable['map_operstates'] = [
-            mapping_oper_states for mapping_oper_states in map_operstates if mapping_oper_states
-        ]
-        if not params_mutable['map_operstates']:
-            del params_mutable['map_operstates']
-    if mon_state_9:
-        params_mutable['map_admin_states'] = [(['2'], mon_state_9)]
-
-    return type_defs.Parameters(params_mutable)
-
-
 def _check_speed(interface: Interface, targetspeed: Optional[int]) -> Result:
     """Check speed settings of interface
 
@@ -974,8 +939,6 @@ def check_single_interface(
     input_is_rate: bool = False,
     use_discovered_state_and_speed: bool = True,
 ) -> type_defs.CheckResult:
-
-    params = _transform_check_params(params)
 
     if timestamp is None:
         timestamp = time.time()

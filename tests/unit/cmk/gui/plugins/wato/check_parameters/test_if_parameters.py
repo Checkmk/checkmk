@@ -5,7 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from cmk.gui.plugins.wato.check_parameters.interfaces import _transform_discovery_if_rules
+from cmk.gui.plugins.wato.check_parameters.interfaces import (
+    _transform_discovery_if_rules,
+    _transform_if_check_parameters,
+)
 
 
 @pytest.mark.parametrize('params, result', [
@@ -259,3 +262,76 @@ from cmk.gui.plugins.wato.check_parameters.interfaces import _transform_discover
 ])
 def test_transform_discovery_if_rules(params, result):
     assert _transform_discovery_if_rules(params) == result
+
+
+@pytest.mark.parametrize('params, result', [
+    (
+        {
+            'speed': 100000000,
+            'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
+            'state': ['1'],
+            'nucasts': (1, 2),
+            'discards': (1, 2),
+        },
+        {
+            'speed': 100000000,
+            'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
+            'state': ['1'],
+            'nucasts': (1, 2),
+            'discards': (1, 2),
+        },
+    ),
+    (
+        {
+            'errors': (0.01, 0.1),
+        },
+        {
+            'errors_in': (0.01, 0.1),
+            'errors_out': (0.01, 0.1),
+        },
+    ),
+    (
+        {
+            'state': ['1', '2', '9'],
+        },
+        {
+            'state': ['1', '2'],
+        },
+    ),
+    (
+        {
+            'state': ['9'],
+        },
+        {
+            'admin_state': ['2'],
+        },
+    ),
+    (
+        {
+            'map_operstates': [(['1', '3', '9'], 1)],
+        },
+        {
+            'map_operstates': [(['1', '3'], 1)],
+            'map_admin_states': [(['2'], 1)],
+        },
+    ),
+    (
+        {
+            'map_operstates': [(['9'], 1), (['5', '6'], 2)],
+        },
+        {
+            'map_operstates': [(['5', '6'], 2)],
+            'map_admin_states': [(['2'], 1)],
+        },
+    ),
+    (
+        {
+            'map_operstates': [(['9'], 1)],
+        },
+        {
+            'map_admin_states': [(['2'], 1)],
+        },
+    ),
+])
+def test_transform_check_if_rules(params, result):
+    assert _transform_if_check_parameters(params) == result

@@ -518,7 +518,7 @@ class PiggybackSectionParser(ParserState):
 
     @staticmethod
     def is_header(line: bytes) -> bool:
-        return (line.startswith(b'<<<<') and line.endswith(b'>>>>') and
+        return (line.strip().startswith(b'<<<<') and line.strip().endswith(b'>>>>') and
                 not PiggybackSectionParser.is_footer(line))
 
     @staticmethod

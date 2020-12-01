@@ -20,7 +20,7 @@ from ..agent_based_api.v1.type_defs import (
 from ..agent_based_api.v1 import Service
 
 GenericAWSSection = Sequence[Mapping[str, Any]]
-AWSSectionMetrics = Mapping[str, Mapping[str, float]]
+AWSSectionMetrics = Mapping[str, Mapping[str, Any]]
 
 
 def parse_aws(string_table: StringTable) -> GenericAWSSection:
@@ -37,10 +37,10 @@ def extract_aws_metrics_by_labels(
     expected_metric_names: Iterable[str],
     section: GenericAWSSection,
     extra_keys: Optional[Iterable[str]] = None,
-) -> AWSSectionMetrics:
+) -> Mapping[str, Dict[str, Any]]:
     if extra_keys is None:
         extra_keys = []
-    values_by_labels: Dict[str, Dict[str, float]] = {}
+    values_by_labels: Dict[str, Dict[str, Any]] = {}
     for row in section:
         row_id = row['Id'].lower()
         row_label = row['Label']
@@ -87,3 +87,7 @@ def discover_aws_generic(
     for instance_name, instance in section.items():
         if all(required_metric in instance for required_metric in required_metrics):
             yield Service(item=instance_name)
+
+
+def aws_rds_service_item(instance_id: str, region: str) -> str:
+    return f'{instance_id} [{region}]'

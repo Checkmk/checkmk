@@ -25,58 +25,7 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.if_include import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-from cmk.base.plugins.agent_based.utils.aws import (
-    extract_aws_metrics_by_labels,
-    parse_aws,
-)
-
 factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
-
-
-def parse_aws_rds(info):
-    parsed = {}
-    for metrics in extract_aws_metrics_by_labels(
-        [
-            "CPUUtilization",
-            "CPUCreditUsage",
-            "CPUCreditBalance",
-            "DatabaseConnections",
-            "FailedSQLServerAgentJobsCount",
-            "BinLogDiskUsage",
-            "OldestReplicationSlotLag",
-            "ReplicaLag",
-            "ReplicationSlotDiskUsage",
-            "TransactionLogsDiskUsage",
-            "TransactionLogsGeneration",
-            "NetworkReceiveThroughput",
-            "NetworkTransmitThroughput",
-            "DiskQueueDepth",
-            "WriteIOPS",
-            "WriteLatency",
-            "WriteThroughput",
-            "ReadIOPS",
-            "ReadLatency",
-            "ReadThroughput",
-            "BurstBalance",
-            #"FreeableMemory",
-            #"SwapUsage",
-            #"FreeStorageSpace",
-            #"MaximumUsedTransactionIDs",
-        ],
-            parse_aws(info),
-            extra_keys=['DBInstanceIdentifier', 'AllocatedStorage', 'Region']).values():
-
-        try:
-            metrics['AllocatedStorage'] *= 1.074e+9
-        except KeyError:
-            pass
-
-        parsed.setdefault(
-            aws_rds_service_item(metrics['DBInstanceIdentifier'], metrics['Region']),
-            metrics,
-        )
-    return parsed
-
 
 #   .--CPU utilization-----------------------------------------------------.
 #   |    ____ ____  _   _         _   _ _ _          _   _                 |
@@ -98,7 +47,6 @@ def check_aws_rds(item, params, metrics):
 
 
 check_info['aws_rds'] = {
-    'parse_function': parse_aws_rds,
     'inventory_function': lambda p: inventory_aws_generic(p, ['CPUUtilization']),
     'check_function': check_aws_rds,
     'service_description': 'AWS/RDS %s CPU Utilization',

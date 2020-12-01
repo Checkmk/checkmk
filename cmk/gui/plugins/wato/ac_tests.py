@@ -442,6 +442,46 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
                 yield ACResultWARN(_("There job \"%s\" is not encrypted") % job.title())
 
 
+@ac_test_registry.register
+class ACTestEscapeHTMLDisabled(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.security
+
+    def title(self) -> str:
+        return _("Escape HTML globally enabled")
+
+    def help(self) -> str:
+        return _(
+            "By default, for security reasons, the GUI does not interpret any HTML "
+            "code received from external sources, like service output or log messages. "
+            "But there are specific reasons to deactivate this security feature. E.g. when "
+            "you want to display the HTML output produced by a specific check plugin."
+            "Disabling the escaping also allows the plugin to execute not only HTML, but "
+            "also Javascript code in the context of your browser. This makes it possible to "
+            "execute arbritary Javascript, even for injection attacks.<br>"
+            "For this reason, you should only disable this for a small, very specific number of "
+            "services, to be sure that not every random check plugin can make produce code "
+            "which your browser interprets.")
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACResult]:
+        if not self._get_effective_global_setting("escape_plugin_output"):
+            yield ACResultCRIT(
+                _("Please consider configuring the host or service rulesets "
+                  "<a href=\"%s\">Escape HTML in service output</a> or "
+                  "<a href=\"%s\">Escape HTML in host output</a> instead "
+                  "of <a href=\"%s\">disabling escaping globally</a>") %
+                ("wato.py?mode=edit_ruleset&varname=extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
+                 "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
+                 "wato.py?mode=edit_configvar&varname=escape_plugin_output"))
+        else:
+            yield ACResultOK(
+                _("Escaping is <a href=\"%s\">enabled globally</a>") %
+                "wato.py?mode=edit_configvar&varname=escape_plugin_output")
+
+
 class ABCACApacheTest(ACTest, metaclass=abc.ABCMeta):
     """Abstract base class for apache related tests"""
     def _get_number_of_idle_processes(self):

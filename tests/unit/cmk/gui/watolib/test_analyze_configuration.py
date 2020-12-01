@@ -24,6 +24,7 @@ def test_registered_ac_tests():
         'ACTestCheckMKCheckerUsage',
         'ACTestConnectivity',
         'ACTestESXDatasources',
+        'ACTestEscapeHTMLDisabled',
         'ACTestGenericCheckHelperUsage',
         'ACTestHTTPSecured',
         'ACTestLDAPSecured',

@@ -74,7 +74,7 @@ config_dir = cmk.utils.paths.var_dir + "/web"
 # Stores the initial configuration values
 default_config: Dict[str, Any] = {}
 # Needed as helper to determine the builtin variables
-_vars_before_plugins: Set[str] = set()
+_legacy_plugin_vars: Dict[str, Any] = {}
 
 # TODO: Clean this up
 permission_declaration_functions = []
@@ -227,15 +227,16 @@ def register_post_config_load_hook(func: Callable[[], None]) -> None:
 
 
 def _initialize_with_default_config() -> None:
-    # Since plugin loading changes the global namespace and these changes are kept
-    # for the whole module lifetime, the "vars before plugins" can only be determined
-    # once before the first plugin loading
-    if not _vars_before_plugins:
-        _vars_before_plugins.update(all_nonfunction_vars(globals()))
-
+    vars_before_plugins = all_nonfunction_vars(globals())
     load_plugins(True)
     vars_after_plugins = all_nonfunction_vars(globals())
-    _load_default_config(_vars_before_plugins, vars_after_plugins)
+    new_vars = vars_after_plugins.difference(vars_before_plugins)
+
+    # Keep the known plugin vars during whole module lifetime.
+    # Extend the known plugin vars with each config loading.
+    _legacy_plugin_vars.update({k: globals()[k] for k in new_vars})
+
+    _load_default_config(_legacy_plugin_vars)
 
     _apply_default_config()
 
@@ -247,10 +248,10 @@ def _apply_default_config() -> None:
         globals()[k] = v
 
 
-def _load_default_config(vars_before_plugins: Set[str], vars_after_plugins: Set[str]) -> None:
+def _load_default_config(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
     default_config.clear()
     _load_default_config_from_module_plugins()
-    _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins)
+    _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults)
 
 
 def _load_default_config_from_module_plugins() -> None:
@@ -270,10 +271,8 @@ def _load_default_config_from_module_plugins() -> None:
         default_config[k] = v
 
 
-def _load_default_config_from_legacy_plugins(vars_before_plugins: Set[str],
-                                             vars_after_plugins: Set[str]) -> None:
-    new_vars = vars_after_plugins.difference(vars_before_plugins)
-    default_config.update({k: copy.deepcopy(globals()[k]) for k in new_vars})
+def _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
+    default_config.update(legacy_plugin_var_defaults)
 
 
 def _config_plugin_modules() -> List[ModuleType]:

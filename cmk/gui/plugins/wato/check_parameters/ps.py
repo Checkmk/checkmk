@@ -204,7 +204,7 @@ def process_level_elements():
                  "matching processes and their details (i.e. PID, CPU usage, memory usage). "
                  "Please note that HTML output will only work if rules in the rulesets "
                  "\"Escape HTML codes in host output\" or \"Escape HTML codes in service output\" "
-                 "are created or the global setting \"Escape HTML codes in plugin output\" "
+                 "are created or the global setting \"Escape HTML codes in service output\" "
                  "is disabled. This might expose you to "
                  "Cross-Site-Scripting attacks (everyone with write-access to checks could get "
                  "scripts executed on the monitoring site in the context of the user of the "

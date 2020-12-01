@@ -1155,9 +1155,6 @@ def make_linked_visual_url(visual_type: VisualType, visual: Visual,
     name = visual["name"]
     vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
 
-    if visual_type.ident == "views" and display_options.title_options:
-        vars_values.append(("display_options", display_options.title_options))
-
     filename = visual_type.show_url
     if mobile and visual_type.show_url == 'view.py':
         filename = 'mobile_' + visual_type.show_url

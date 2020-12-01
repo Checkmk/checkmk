@@ -1,0 +1,13 @@
+Title: Bulk import: Fix error when trying to import host aliases with special characters
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1606815474
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+When trying to import hosts with host aliases containing non ASCII characters
+an error was raised "AttributeError ('str' object has no attribute 'decode')"
+preventing the import.

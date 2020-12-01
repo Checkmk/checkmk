@@ -1,0 +1,12 @@
+Title: mk_postgres support for python2.6 linux platform
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606839488
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b2
+
+The API call "platform.system()" provides better support for python2/3 compatibility than "sys.platform".

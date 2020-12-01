@@ -4,7 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.aws_rds import parse_aws_rds
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
+from cmk.base.plugins.agent_based.aws_rds import (
+    check_aws_rds_network_io,
+    parse_aws_rds,
+)
 
 SECTION = {
     'database-1 [eu-central-1]': {
@@ -747,3 +756,32 @@ def test_parse_aws_rds():
         '"DeletionProtection":', 'false,', '"AssociatedRoles":', '[],', '"MaxAllocatedStorage":',
         '1000,', '"Region":', '"eu-central-1"}]'
     ]]) == SECTION
+
+
+def test_check_aws_rds_network_io():
+    assert list(check_aws_rds_network_io(
+        "database-1 [eu-central-1]",
+        Parameters({}),
+        SECTION,
+    )) == [
+        Result(state=State.OK, summary='[database-1]'),
+        Result(state=State.OK, summary='(up)', details='Operational state: up'),
+        Result(state=State.OK, summary='Speed: unknown'),
+        Metric('in', 417.41570964272285, boundaries=(0.0, None)),
+        Metric('inmcast', 0.0),
+        Metric('inbcast', 0.0),
+        Metric('inucast', 0.0),
+        Metric('innucast', 0.0),
+        Metric('indisc', 0.0),
+        Metric('inerr', 0.0),
+        Metric('out', 2671.1907577121706, boundaries=(0.0, None)),
+        Metric('outmcast', 0.0),
+        Metric('outbcast', 0.0),
+        Metric('outucast', 0.0),
+        Metric('outnucast', 0.0),
+        Metric('outdisc', 0.0),
+        Metric('outerr', 0.0),
+        Metric('outqlen', 0.0),
+        Result(state=State.OK, summary='In: 417 B/s'),
+        Result(state=State.OK, summary='Out: 2.67 kB/s'),
+    ]

@@ -11,6 +11,11 @@
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import re
 
+from cmk.base.plugins.agent_based.utils.aws import (
+    extract_aws_metrics_by_labels,
+    parse_aws,
+)
+
 
 def parse_aws_wafv2_web_acl(info):
     metrics = extract_aws_metrics_by_labels(['AllowedRequests', 'BlockedRequests'], parse_aws(info))

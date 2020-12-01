@@ -19,15 +19,8 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.if_include import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
-
-EC2DefaultItemName = "Summary"
+from cmk.base.plugins.agent_based.aws_ec2 import EC2DefaultItemName
 
 #   .--status check--------------------------------------------------------.
 #   |           _        _                    _               _            |
@@ -198,57 +191,5 @@ check_info['aws_ec2.disk_io'] = {
     'check_function': check_aws_ec2_disk_io,
     'service_description': 'AWS/EC2 Disk IO %s',
     'group': 'diskstat',
-    'has_perfdata': True,
-}
-
-#.
-#   .--network IO----------------------------------------------------------.
-#   |                     _                      _      ___ ___            |
-#   |          _ __   ___| |___      _____  _ __| | __ |_ _/ _ \           |
-#   |         | '_ \ / _ \ __\ \ /\ / / _ \| '__| |/ /  | | | | |          |
-#   |         | | | |  __/ |_ \ V  V / (_) | |  |   <   | | |_| |          |
-#   |         |_| |_|\___|\__| \_/\_/ \___/|_|  |_|\_\ |___\___/           |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def check_aws_ec2_network_io(item, params, metrics):
-    try:
-        interfaces = [[
-            "0",
-            item,
-            "1",
-            "",
-            "1",
-            metrics['NetworkIn'] / 60,
-            "",
-            "",
-            "",
-            "",
-            "",
-            metrics['NetworkOut'] / 60,
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            item,
-            "",
-        ]]
-    except KeyError:
-        raise MKCounterWrapped("Currently no data from AWS")
-    return check_if_common_single(item, params, interfaces, input_is_rate=True)
-
-
-check_info['aws_ec2.network_io'] = {
-    'inventory_function': lambda p: inventory_aws_generic(
-        {EC2DefaultItemName: p},
-        ['NetworkIn', 'NetworkOut'],
-    ),
-    'check_function': check_aws_ec2_network_io,
-    'service_description': 'AWS/EC2 Network IO %s',
-    'default_levels_variable': "if_default_levels",
-    'group': 'if',
     'has_perfdata': True,
 }

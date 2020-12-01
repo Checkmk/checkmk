@@ -1187,7 +1187,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'aws_ec2.cpu_credits',
         'aws_ec2.cpu_util',
         'aws_ec2.disk_io',
-        'aws_ec2.network_io',
         'aws_ec2_limits',
         'aws_ec2_security_groups',
         'aws_ec2_summary',

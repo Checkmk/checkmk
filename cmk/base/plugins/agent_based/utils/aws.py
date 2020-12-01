@@ -13,9 +13,14 @@ from typing import (
     Optional,
     Sequence,
 )
-from ..agent_based_api.v1.type_defs import StringTable
+from ..agent_based_api.v1.type_defs import (
+    DiscoveryResult,
+    StringTable,
+)
+from ..agent_based_api.v1 import Service
 
 GenericAWSSection = Sequence[Mapping[str, Any]]
+AWSSectionMetrics = Mapping[str, Mapping[str, float]]
 
 
 def parse_aws(string_table: StringTable) -> GenericAWSSection:
@@ -32,7 +37,7 @@ def extract_aws_metrics_by_labels(
     expected_metric_names: Iterable[str],
     section: GenericAWSSection,
     extra_keys: Optional[Iterable[str]] = None,
-) -> Mapping[str, Mapping[str, float]]:
+) -> AWSSectionMetrics:
     if extra_keys is None:
         extra_keys = []
     values_by_labels: Dict[str, Dict[str, float]] = {}
@@ -66,3 +71,19 @@ def extract_aws_metrics_by_labels(
                 continue
             values_by_labels.setdefault(row_label, {}).setdefault(extra_key, extra_value)
     return values_by_labels
+
+
+def discover_aws_generic(
+    section: AWSSectionMetrics,
+    required_metrics: Iterable[str],
+) -> DiscoveryResult:
+    """
+    >>> list(discover_aws_generic(
+    ... {'x': {'CPUCreditUsage': 0.002455, 'CPUCreditBalance': 43.274031, 'CPUUtilization': 0.033333333}},
+    ... ['CPUCreditUsage', 'CPUCreditBalance'],
+    ... ))
+    [Service(item='x')]
+    """
+    for instance_name, instance in section.items():
+        if all(required_metric in instance for required_metric in required_metrics):
+            yield Service(item=instance_name)

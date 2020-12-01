@@ -296,11 +296,9 @@ class ModeBulkImport(WatoMode):
                 # HTTP request vars) which from_html_vars can not work with.
 
                 if attribute == "alias":
-                    attributes[attribute] = value.decode("utf-8")
+                    attributes[attribute] = value
                 else:
-                    try:
-                        str(value)
-                    except UnicodeDecodeError:
+                    if not value.isascii():
                         raise MKUserError(
                             None,
                             _("Non-ASCII characters are not allowed in the "

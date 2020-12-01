@@ -42,76 +42,6 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
-def transform_if(v):
-
-    # TODO: This is a workaround which makes sure input arguments are not getting altered.
-    #       A nice implementation would return a new dict based on the input
-    v = copy.deepcopy(v)
-
-    new_traffic: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]] = []
-
-    if 'traffic' in v and not isinstance(v['traffic'], list):
-        warn, crit = v['traffic']
-        if isinstance(warn, int):
-            new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
-        elif isinstance(warn, float):
-            new_traffic.append(('both', ('upper', ('perc', (warn, crit)))))
-
-    if 'traffic_minimum' in v:
-        warn, crit = v['traffic_minimum']
-        if isinstance(warn, int):
-            new_traffic.append(('both', ('lower', ('abs', (warn, crit)))))
-        elif isinstance(warn, float):
-            new_traffic.append(('both', ('lower', ('perc', (warn, crit)))))
-        del v['traffic_minimum']
-
-    if new_traffic:
-        v['traffic'] = new_traffic
-
-    if "errors" in v:
-        error_levels = v.pop("errors")
-        v["errors_in"] = error_levels
-        v["errors_out"] = error_levels
-
-    # Up to and including v1.6, port state '9' was used to represent an ifAdminStatus of 2. From
-    # v1.7 onwards, ifAdminStatus is handled completely separately from the port state. Note that
-    # a unique transform is unfortunately not possible here. For example, translating
-    # {'state': [1, 2, 9]}
-    # into
-    # {'state': [1, 2], 'admin_state': [2]}
-    # might be too restrictive, since now, only ports with ifAdminStatus=2 are OK, whereas before,
-    # also ports with ifAdminStatus=1 could have been OK.
-    states = v.get('state', [])
-    try:
-        states.remove('9')
-        removed_port_state_9 = True
-    # AttributeError --> states = None --> means 'ignore the interface status'
-    except (ValueError, AttributeError):
-        removed_port_state_9 = False
-    # if only port state 9 was selected, a unique transform is possible
-    if removed_port_state_9 and v.get('state') == []:
-        del v['state']
-        v['admin_state'] = ['2']
-
-    # map_operstates can be transformed uniquely
-    map_operstates = v.get('map_operstates', [])
-    mon_state_9 = None
-    for oper_states, mon_state in map_operstates:
-        if '9' in oper_states:
-            mon_state_9 = mon_state
-            oper_states.remove('9')
-    if map_operstates:
-        v['map_operstates'] = [
-            mapping_oper_states for mapping_oper_states in map_operstates if mapping_oper_states
-        ]
-        if not v['map_operstates']:
-            del v['map_operstates']
-    if mon_state_9:
-        v['map_admin_states'] = [(['2'], mon_state_9)]
-
-    return v
-
-
 def transform_if_groups_forth(params):
     for param in params:
         if param.get("name"):
@@ -641,6 +571,76 @@ def _item_spec_if():
     return TextAscii(title=_("port specification"), allow_empty=False)
 
 
+def _transform_if_check_parameters(v):
+
+    # TODO: This is a workaround which makes sure input arguments are not getting altered.
+    #       A nice implementation would return a new dict based on the input
+    v = copy.deepcopy(v)
+
+    new_traffic: List[_Tuple[str, _Tuple[str, _Tuple[str, _Tuple[Union[int, float], Any]]]]] = []
+
+    if 'traffic' in v and not isinstance(v['traffic'], list):
+        warn, crit = v['traffic']
+        if isinstance(warn, int):
+            new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
+        elif isinstance(warn, float):
+            new_traffic.append(('both', ('upper', ('perc', (warn, crit)))))
+
+    if 'traffic_minimum' in v:
+        warn, crit = v['traffic_minimum']
+        if isinstance(warn, int):
+            new_traffic.append(('both', ('lower', ('abs', (warn, crit)))))
+        elif isinstance(warn, float):
+            new_traffic.append(('both', ('lower', ('perc', (warn, crit)))))
+        del v['traffic_minimum']
+
+    if new_traffic:
+        v['traffic'] = new_traffic
+
+    if "errors" in v:
+        error_levels = v.pop("errors")
+        v["errors_in"] = error_levels
+        v["errors_out"] = error_levels
+
+    # Up to and including v1.6, port state '9' was used to represent an ifAdminStatus of 2. From
+    # v1.7 onwards, ifAdminStatus is handled completely separately from the port state. Note that
+    # a unique transform is unfortunately not possible here. For example, translating
+    # {'state': [1, 2, 9]}
+    # into
+    # {'state': [1, 2], 'admin_state': [2]}
+    # might be too restrictive, since now, only ports with ifAdminStatus=2 are OK, whereas before,
+    # also ports with ifAdminStatus=1 could have been OK.
+    states = v.get('state', [])
+    try:
+        states.remove('9')
+        removed_port_state_9 = True
+    # AttributeError --> states = None --> means 'ignore the interface status'
+    except (ValueError, AttributeError):
+        removed_port_state_9 = False
+    # if only port state 9 was selected, a unique transform is possible
+    if removed_port_state_9 and v.get('state') == []:
+        del v['state']
+        v['admin_state'] = ['2']
+
+    # map_operstates can be transformed uniquely
+    map_operstates = v.get('map_operstates', [])
+    mon_state_9 = None
+    for oper_states, mon_state in map_operstates:
+        if '9' in oper_states:
+            mon_state_9 = mon_state
+            oper_states.remove('9')
+    if map_operstates:
+        v['map_operstates'] = [
+            mapping_oper_states for mapping_oper_states in map_operstates if mapping_oper_states
+        ]
+        if not v['map_operstates']:
+            del v['map_operstates']
+    if mon_state_9:
+        v['map_admin_states'] = [(['2'], mon_state_9)]
+
+    return v
+
+
 def _parameter_valuespec_if():
     # Transform old traffic related levels which used "traffic" and "traffic_minimum"
     # keys where each was configured with an Alternative valuespec
@@ -949,7 +949,7 @@ def _parameter_valuespec_if():
                                 ])),
             ],
         ),
-        forth=transform_if,
+        forth=_transform_if_check_parameters,
     )
 
 

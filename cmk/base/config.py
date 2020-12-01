@@ -200,7 +200,7 @@ def register(name: str, default_value: Any) -> None:
 
 def _add_check_variables_to_default_config() -> None:
     """Add configuration variables registered by checks to config module"""
-    default_config.__dict__.update(_get_check_variable_defaults())
+    default_config.__dict__.update(_check_variable_defaults)
 
 
 def _clear_check_variables_from_default_config(variable_names: List[str]) -> None:
@@ -723,10 +723,8 @@ class PackedConfigGenerator:
         # Add modified check specific Checkmk base settings
         #
 
-        check_variable_defaults = _get_check_variable_defaults()
-
         for varname, val in get_check_variables().items():
-            if val == check_variable_defaults[varname]:
+            if val == _check_variable_defaults[varname]:
                 continue
 
             if not self._packable(varname, val):
@@ -1818,12 +1816,6 @@ def check_variable_names() -> List[str]:
     return list(_check_variables)
 
 
-def _get_check_variable_defaults() -> CheckVariables:
-    """Returns the check variable default settings. These are the settings right
-    after loading the checks."""
-    return _check_variable_defaults
-
-
 def _set_check_variable_defaults(
     variables: Dict[str, Any],
     context_idents: List[str],
@@ -1842,7 +1834,7 @@ def _set_check_variable_defaults(
         if callable(value) or inspect.ismodule(value):
             continue
 
-        _check_variable_defaults[varname] = value
+        _check_variable_defaults[varname] = copy.copy(value)
 
         # Keep track of which variable needs to be set to which context
         _check_variables.setdefault(varname, []).extend(context_idents)

@@ -214,32 +214,35 @@ class TestParser:
     @pytest.mark.parametrize(
         "headerline, section_name, section_options",
         [
-            (b"norris", SectionName("norris"), {}),
-            (b"norris:chuck", SectionName("norris"), {"chuck": None}),
+            ("norris", SectionName("norris"), {}),
+            ("norris:chuck", SectionName("norris"), {"chuck": None}),
             (
-                b"my_section:sep(0):cached(23,42)",
+                "my_section:sep(0):cached(23,42)",
                 SectionName("my_section"),
                 {"sep": "0", "cached": "23,42"},
             ),
-            (b"my.section:sep(0):cached(23,42)", None, {}),  # invalid section name
-            (b"", None, {}),  # invalid section name
+            ("my.section:sep(0):cached(23,42)", None, {}),  # invalid section name
+            ("", None, {}),  # invalid section name
         ],
     )  # yapf: disable
     def test_section_header_options(self, headerline, section_name, section_options):
         try:
-            AgentParserSectionHeader.from_headerline(headerline) == (section_name, section_options)
+            AgentParserSectionHeader.from_headerline(f"<<<{headerline}>>>".encode("ascii")) == (
+                section_name,
+                section_options,
+            )
         except ValueError:
             assert section_name is None
 
     def test_section_header_options_decode_values(self):
-        section_header = AgentParserSectionHeader.from_headerline(b":".join((
+        section_header = AgentParserSectionHeader.from_headerline(b"<<<" + b":".join((
             b"name",
             b"cached(1,2)",
             b"encoding(ascii)",
             b"nostrip()",
             b"persist(42)",
             b"sep(124)",
-        )))
+        )) + b">>>")
         assert section_header.name == SectionName("name")
         assert section_header.cached == (1, 2)
         assert section_header.encoding == "ascii"
@@ -248,7 +251,7 @@ class TestParser:
         assert section_header.separator == "|"
 
     def test_section_header_options_decode_nothing(self):
-        section_header = AgentParserSectionHeader.from_headerline(b"name")
+        section_header = AgentParserSectionHeader.from_headerline(b"<<<name>>>")
         assert section_header.name == SectionName("name")
         assert section_header.cached == ()
         assert section_header.encoding == "utf-8"

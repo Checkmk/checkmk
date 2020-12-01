@@ -320,7 +320,10 @@ class AgentParserSectionHeader(NamedTuple):
                 assert value[-1] == ")", value
                 yield name, value[:-1]
 
-        headerparts = ensure_str(headerline).split(":")
+        if not HostSectionParser.is_header(headerline):
+            raise ValueError(headerline)
+
+        headerparts = ensure_str(headerline[3:-3]).split(":")
         return AgentParserSectionHeader(
             SectionName(headerparts[0]),
             dict(parse_options(headerparts[1:])),
@@ -517,7 +520,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             elif HostSectionParser.is_header(line):
                 try:
                     parser = HostSectionParser(
-                        AgentParserSectionHeader.from_headerline(stripped_line[3:-3]),
+                        AgentParserSectionHeader.from_headerline(stripped_line),
                         host_sections,
                         persisted_sections,
                     )

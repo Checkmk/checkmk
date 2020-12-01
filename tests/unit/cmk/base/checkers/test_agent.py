@@ -227,10 +227,11 @@ class TestParser:
     )  # yapf: disable
     def test_section_header_options(self, headerline, section_name, section_options):
         try:
-            AgentParserSectionHeader.from_headerline(f"<<<{headerline}>>>".encode("ascii")) == (
-                section_name,
-                section_options,
-            )
+            AgentParserSectionHeader.from_headerline(
+                f"<<<{headerline}>>>".encode("ascii")) == (  # type: ignore[comparison-overlap]
+                    section_name,
+                    section_options,
+                )
         except ValueError:
             assert section_name is None
 
@@ -253,7 +254,7 @@ class TestParser:
     def test_section_header_options_decode_nothing(self):
         section_header = AgentParserSectionHeader.from_headerline(b"<<<name>>>")
         assert section_header.name == SectionName("name")
-        assert section_header.cached == ()
+        assert section_header.cached is None
         assert section_header.encoding == "utf-8"
         assert section_header.nostrip is False
         assert section_header.persist is None

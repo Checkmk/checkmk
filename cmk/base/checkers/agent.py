@@ -304,11 +304,12 @@ class AgentSummarizerDefault(AgentSummarizer):
 
 
 class AgentParserSectionHeader(NamedTuple):
-    # Note: The `type: ignore` and `cast` are all because of
-    #       false positives on mypy side! -- There are tests
-    #       to prove it.
     name: SectionName
-    options: Dict[str, str]
+    cached: Optional[Tuple[int, int]]
+    encoding: str
+    nostrip: bool
+    persist: Optional[int]
+    separator: Optional[str]
 
     @classmethod
     def from_headerline(cls, headerline: bytes) -> "AgentParserSectionHeader":
@@ -324,39 +325,37 @@ class AgentParserSectionHeader(NamedTuple):
             raise ValueError(headerline)
 
         headerparts = ensure_str(headerline[3:-3]).split(":")
+        options = dict(parse_options(headerparts[1:]))
+        cached: Optional[Tuple[int, int]]
+        try:
+            cached_ = tuple(map(int, options["cached"].split(",")))
+            cached = cached_[0], cached_[1]
+        except KeyError:
+            cached = None
+
+        encoding = options.get("encoding", "utf-8")
+        nostrip = options.get("nostrip") is not None
+
+        persist: Optional[int]
+        try:
+            persist = int(options["persist"])
+        except KeyError:
+            persist = None
+
+        separator: Optional[str]
+        try:
+            separator = chr(int(options["sep"]))
+        except KeyError:
+            separator = None
+
         return AgentParserSectionHeader(
-            SectionName(headerparts[0]),
-            dict(parse_options(headerparts[1:])),
+            name=SectionName(headerparts[0]),
+            cached=cached,
+            encoding=encoding,
+            nostrip=nostrip,
+            persist=persist,
+            separator=separator,
         )
-
-    @property
-    def cached(self) -> Tuple[int, ...]:
-        try:
-            return tuple(map(int, self.options["cached"].split(",")))  # type: ignore[union-attr]
-        except KeyError:
-            return ()
-
-    @property
-    def encoding(self) -> str:
-        return cast(str, self.options.get("encoding", "utf-8"))
-
-    @property
-    def nostrip(self) -> bool:
-        return self.options.get("nostrip") is not None
-
-    @property
-    def persist(self) -> Optional[int]:
-        try:
-            return int(self.options["persist"])  # type: ignore[arg-type]
-        except KeyError:
-            return None
-
-    @property
-    def separator(self) -> Optional[str]:
-        try:
-            return chr(int(self.options["sep"]))  # type: ignore [arg-type]
-        except KeyError:
-            return None
 
 
 class ParserState(abc.ABC):

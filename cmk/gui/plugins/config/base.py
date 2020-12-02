@@ -44,7 +44,10 @@ log_levels = {
     "cmk.web.bi.compilation": 30,
     "cmk.web.automations": 30,
     "cmk.web.background-job": 30,
+    "cmk.web.slow-views": 30,
 }
+
+slow_views_duration_threshold = 60
 
 multisite_users: _Dict = {}
 multisite_hostgroups: _Dict = {}

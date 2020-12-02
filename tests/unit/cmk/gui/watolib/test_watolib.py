@@ -156,6 +156,7 @@ def test_registered_configvars():
         'site_livestatus_tcp',
         'site_mkeventd',
         'site_nsca',
+        'slow_views_duration_threshold',
         'snmp_credentials',
         'socket_queue_len',
         'soft_query_limit',

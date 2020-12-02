@@ -13,6 +13,7 @@ import json
 import functools
 from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple as _Tuple, Union,
                     Iterator, Type)
+from dataclasses import dataclass
 
 import livestatus
 from livestatus import SiteId
@@ -21,6 +22,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.prediction import livestatus_lql
+from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -33,6 +35,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
+import cmk.gui.log as log
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
@@ -164,6 +167,16 @@ multisite_commands: List[Dict[str, Any]] = []
 multisite_datasources: Dict[str, Any] = {}
 multisite_painters: Dict[str, Dict[str, Any]] = {}
 multisite_sorters: Dict[str, Any] = {}
+
+
+@dataclass
+class ViewProcessTracking:
+    amount_unfiltered_rows: int = 0
+    amount_filtered_rows: int = 0
+    amount_rows_after_limit: int = 0
+    duration_fetch_rows: Snapshot = Snapshot.null()
+    duration_filter_rows: Snapshot = Snapshot.null()
+    duration_view_render: Snapshot = Snapshot.null()
 
 
 @visual_type_registry.register
@@ -325,6 +338,7 @@ class View:
         self._only_sites: Optional[List[SiteId]] = None
         self._user_sorters: Optional[List[SorterSpec]] = None
         self._want_checkboxes: bool = False
+        self.process_tracking = ViewProcessTracking()
 
     @property
     def datasource(self) -> ABCDataSource:
@@ -659,6 +673,8 @@ class GUIViewRenderer(ABCViewRenderer):
                                                          self.view.row_limit):
                     cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit, config.user)
                     del rows[self.view.row_limit:]
+                    self.view.process_tracking.amount_rows_after_limit = len(rows)
+
             layout.render(rows, view_spec, group_cells, cells, num_columns, show_checkboxes and
                           not html.do_actions())
             row_info = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
@@ -1707,32 +1723,69 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
 @cmk.gui.pages.register("view")
 def page_view():
     """Central entry point for the initial HTML page rendering of a view"""
-    view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
+    with CPUTracker() as page_view_tracker:
+        view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
+        _patch_view_context(view_spec)
 
-    _patch_view_context(view_spec)
+        datasource = data_source_registry[view_spec["datasource"]]()
+        context = visuals.get_merged_context(
+            visuals.get_context_from_uri_vars(datasource.infos,
+                                              single_infos=view_spec["single_infos"]),
+            view_spec["context"],
+        )
 
-    datasource = data_source_registry[view_spec["datasource"]]()
-    context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(datasource.infos, single_infos=view_spec["single_infos"]),
-        view_spec["context"],
+        view = View(view_name, view_spec, context)
+        view.row_limit = get_limit()
+
+        view.only_sites = visuals.get_only_sites_from_context(context)
+
+        view.user_sorters = get_user_sorters()
+        view.want_checkboxes = get_want_checkboxes()
+
+        # Gather the page context which is needed for the "add to visual" popup menu
+        # to add e.g. views to dashboards or reports
+        html.set_page_context(context)
+
+        painter_options = PainterOptions.get_instance()
+        painter_options.load(view.name)
+        painter_options.update_from_url(view)
+        view_renderer = GUIViewRenderer(view, show_buttons=True)
+        process_view(view, view_renderer)
+
+    _may_create_slow_view_log_entry(page_view_tracker, view)
+
+
+def _may_create_slow_view_log_entry(page_view_tracker: CPUTracker, view: View) -> None:
+    duration_threshold = config.slow_views_duration_threshold
+    if page_view_tracker.duration.process.elapsed < duration_threshold:
+        return
+
+    logger = log.logger.getChild("slow-views")
+    logger.debug(
+        ("View name: %s, User: %s, Row limit: %s, Limit type: %s, URL variables: %s"
+         ", View context: %s, Unfiltered rows: %s, Filtered rows: %s, Rows after limit: %s"
+         ", Duration fetching rows: %s, Duration filtering rows: %s, Duration rendering view: %s"
+         ", Rendering page exceeds %ss: %s"),
+        view.name,
+        config.user.id,
+        view.row_limit,
+        # as in get_limit()
+        html.request.var("limit", "soft"),
+        ["%s=%s" % (k, v) for k, v in html.request.itervars() if k != 'selection' and v != ''],
+        view.context,
+        view.process_tracking.amount_unfiltered_rows,
+        view.process_tracking.amount_filtered_rows,
+        view.process_tracking.amount_rows_after_limit,
+        _format_snapshot_duration(view.process_tracking.duration_fetch_rows),
+        _format_snapshot_duration(view.process_tracking.duration_filter_rows),
+        _format_snapshot_duration(view.process_tracking.duration_view_render),
+        duration_threshold,
+        _format_snapshot_duration(page_view_tracker.duration),
     )
 
-    view = View(view_name, view_spec, context)
-    view.row_limit = get_limit()
-    view.only_sites = visuals.get_only_sites_from_context(context)
 
-    view.user_sorters = get_user_sorters()
-    view.want_checkboxes = get_want_checkboxes()
-
-    # Gather the page context which is needed for the "add to visual" popup menu
-    # to add e.g. views to dashboards or reports
-    html.set_page_context(context)
-
-    painter_options = PainterOptions.get_instance()
-    painter_options.load(view.name)
-    painter_options.update_from_url(view)
-    view_renderer = GUIViewRenderer(view, show_buttons=True)
-    process_view(view, view_renderer)
+def _format_snapshot_duration(snapshot: Snapshot) -> str:
+    return "%.2fs" % snapshot.process.elapsed
 
 
 def _patch_view_context(view_spec: ViewSpec) -> None:
@@ -1776,7 +1829,6 @@ def process_view(view: View, view_renderer: ABCViewRenderer) -> None:
 def _process_regular_view(view: View, view_renderer: ABCViewRenderer) -> None:
     all_active_filters = _get_view_filters(view)
     unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=False)
-
     if html.output_format != "html":
         _export_view(view, rows)
     else:
@@ -1793,11 +1845,19 @@ def _process_availability_view(view: View) -> None:
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see
     # later)
     if "aggr" not in view.datasource.infos or html.request.var("timeline_aggr"):
-        cmk.gui.plugins.views.availability.show_availability_page(view, filterheaders)
-        return
+        # all 'amount_*', 'duration_fetch_rows' and 'duration_filter_rows' will be set in:
+        show_view_func = lambda: cmk.gui.plugins.views.availability.show_availability_page(
+            view, filterheaders)
+    else:
+        _unfiltered_amount_of_rows, rows = _get_view_rows(view,
+                                                          all_active_filters,
+                                                          only_count=False)
+        # 'amount_rows_after_limit' will be set in:
+        show_view_func = lambda: cmk.gui.plugins.views.availability.show_bi_availability(view, rows)
 
-    _unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=False)
-    cmk.gui.plugins.views.availability.show_bi_availability(view, rows)
+    with CPUTracker() as view_render_tracker:
+        show_view_func()
+    view.process_tracking.duration_view_render = view_render_tracker.duration
 
 
 # TODO: Use livestatus Stats: instead of fetching rows?
@@ -1831,16 +1891,23 @@ def _get_view_filters(view: View) -> List[Filter]:
 def _get_view_rows(view: View,
                    all_active_filters: List[Filter],
                    only_count: bool = False) -> _Tuple[int, Rows]:
-    rows = _fetch_view_rows(view, all_active_filters, only_count)
+    with CPUTracker() as fetch_rows_tracker:
+        rows = _fetch_view_rows(view, all_active_filters, only_count)
 
     # Sorting - use view sorters and URL supplied sorters
     _sort_data(view, rows, view.sorters)
 
     unfiltered_amount_of_rows = len(rows)
 
-    # Apply non-Livestatus filters
-    for filter_ in all_active_filters:
-        rows = filter_.filter_table(rows)
+    with CPUTracker() as filter_rows_tracker:
+        # Apply non-Livestatus filters
+        for filter_ in all_active_filters:
+            rows = filter_.filter_table(rows)
+
+    view.process_tracking.amount_unfiltered_rows = unfiltered_amount_of_rows
+    view.process_tracking.amount_filtered_rows = len(rows)
+    view.process_tracking.duration_fetch_rows = fetch_rows_tracker.duration
+    view.process_tracking.duration_filter_rows = filter_rows_tracker.duration
 
     return unfiltered_amount_of_rows, rows
 
@@ -1913,8 +1980,10 @@ def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_
 
     # Until now no single byte of HTML code has been output.
     # Now let's render the view
-    view_renderer.render(rows, view.group_cells, view.row_cells, show_checkboxes, num_columns,
-                         show_filters, unfiltered_amount_of_rows)
+    with CPUTracker() as view_render_tracker:
+        view_renderer.render(rows, view.group_cells, view.row_cells, show_checkboxes, num_columns,
+                             show_filters, unfiltered_amount_of_rows)
+    view.process_tracking.duration_view_render = view_render_tracker.duration
 
 
 def _get_all_active_filters(view: View) -> 'List[Filter]':

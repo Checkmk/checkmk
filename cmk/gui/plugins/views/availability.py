@@ -287,7 +287,8 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
             av_object=av_object,
             include_output=av_mode == "timeline",
             include_long_output=include_long_output,
-            avoptions=avoptions)
+            avoptions=avoptions,
+            view_process_tracking=view.process_tracking)
         av_data = availability.compute_availability(what, av_rawdata, avoptions)
 
     # Do CSV ouput
@@ -824,6 +825,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
 
         timeline_containers, av_rawdata, has_reached_logrow_limit = _get_bi_availability(
             avoptions, aggr_rows, timewarp)
+        view.process_tracking.amount_rows_after_limit = len(av_rawdata)
 
         for timeline_container in timeline_containers:
             tree = timeline_container.aggr_tree

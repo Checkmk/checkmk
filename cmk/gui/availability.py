@@ -18,6 +18,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostName, ServiceName
 from cmk.utils.prediction import lq_logic
+from cmk.utils.cpu_tracking import CPUTracker
 
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
@@ -674,8 +675,18 @@ def get_outage_statistic_options(avoptions):
 # of spans. Each span is a dictionary that describes one span of time where
 # a specific host or service has one specific state.
 # what is either "host" or "service" or "bi".
-def get_availability_rawdata(what, context, filterheaders, only_sites, av_object, include_output,
-                             include_long_output, avoptions):
+def get_availability_rawdata(what,
+                             context,
+                             filterheaders,
+                             only_sites,
+                             av_object,
+                             include_output,
+                             include_long_output,
+                             avoptions,
+                             view_process_tracking=None):
+    # 'view_process_tracking=None': this function is also called from the grafana module
+    # which has not the task to track the processed rows/cpu time but the views module does
+    # track these steps.
     if what == "bi":
         return get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output,
                                            avoptions)
@@ -729,14 +740,18 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
     query += filterheaders
     logrow_limit = avoptions["logrow_limit"]
 
-    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(logrow_limit):
+    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(
+            logrow_limit), CPUTracker() as fetch_rows_tracker:
         data = sites.live().query(query)
+
     columns = ["site"] + columns
     spans: List[AVSpan] = [dict(zip(columns, span)) for span in data]
+    amount_filtered_rows = len(spans)
 
     # When a group filter is set, only care about these groups in the group fields
-    if avoptions["grouping"] not in [None, "host"]:
-        filter_groups_of_entries(context, avoptions, spans)
+    with CPUTracker() as filter_rows_tracker:
+        if avoptions["grouping"] not in [None, "host"]:
+            filter_groups_of_entries(context, avoptions, spans)
 
     # Now we find out if the log row limit was exceeded or
     # if the log's length is the limit by accident.
@@ -746,6 +761,13 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
     if logrow_limit and len(data) > logrow_limit:
         exceeded_log_row_limit = True
         spans = spans[:-1]
+
+    if view_process_tracking:
+        view_process_tracking.amount_unfiltered_rows = len(data)
+        view_process_tracking.amount_filtered_rows = amount_filtered_rows
+        view_process_tracking.rows_after_limit = len(spans)
+        view_process_tracking.duration_fetch_rows = fetch_rows_tracker.duration
+        view_process_tracking.duration_filter_rows = filter_rows_tracker.duration
 
     return spans_by_object(spans), exceeded_log_row_limit
 

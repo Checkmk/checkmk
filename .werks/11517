@@ -1,0 +1,35 @@
+Title: Detect slow views and log view details in web.log
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1606903447
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+Some builtin or own views may take longer time than expected. In order to
+detect slow views you have to set
+<ul>
+<li>the log level to <b>DEBUG</b> at <b>Setup > General > Global settings > User Interface > Log levels > Slow views</b>,</li>
+<li>a threshold (in seconds) at <b>Setup > General > Global settings > User Interface > Threshold for slow views</b>.</li>
+</ul>
+The logging is disable by default. The default threshold is set to 60 seconds.
+If enabled one log entry per view rendering that exceeeds the configured
+threshold is logged to <b>var/log/web.log</b> and contains the following
+information:
+<ul>
+<li>View name</li>
+<li>User which called this view</li>
+<li>Row limit</li>
+<li>Limit Type (none, soft or hard)</li>
+<li>URL variables</li>
+<li>View context (eg. filters)</li>
+<li>#Unfiltered rows</li>
+<li>#Filtered rows</li>
+<li>#Rows after above limit</li>
+<li>Duration of fetching rows via livestatus</li>
+<li>Duration of filtering rows</li>
+<li>Duration of rendering the view</li>
+<li>Duration of rendering/processing the whole page</li>
+</ul>

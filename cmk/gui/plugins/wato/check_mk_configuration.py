@@ -152,6 +152,21 @@ class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
         return vs_bulk_discovery()
 
 
+def _slow_view_logging_help():
+    return _(
+        "Some builtin or own views may take longer time than expected. In order to"
+        " detect slow views you have to set"
+        "<ul>"
+        "<li>the log level to <b>DEBUG</b> at"
+        " <b>Setup > General > Global settings > User Interface > Log levels > Slow views</b>,</li>"
+        "<li>a threshold (in seconds) at"
+        " <b>Setup > General > Global settings > User Interface > Threshold for slow views</b>.</li>"
+        "</ul>"
+        "The logging is disable by default. The default threshold is set to 60 seconds."
+        " If enabled one log entry per view rendering that exceeeds the configured threshold"
+        " is logged to <b>var/log/web.log</b>.")
+
+
 @config_variable_registry.register
 class ConfigVariableLogLevels(ConfigVariable):
     def group(self):
@@ -193,6 +208,7 @@ class ConfigVariableLogLevels(ConfigVariable):
              _("Some long running tasks are executed as executed in so called background jobs. You "
                "can use this log level to individually enable more detailed logging for the "
                "background jobs.")),
+            ("cmk.web.slow-views", _("Slow views"), _slow_view_logging_help()),
         ]:
             elements.append((level_id,
                              LogLevelChoice(
@@ -202,6 +218,28 @@ class ConfigVariableLogLevels(ConfigVariable):
                              )))
 
         return elements
+
+
+@config_variable_registry.register
+class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "slow_views_duration_threshold"
+
+    def valuespec(self):
+        return Integer(
+            title=_("Threshold for slow views"),
+            #title=_("Create a log entry for all view calls taking longer than"),
+            default_value=60,
+            unit=_("Seconds"),
+            size=3,
+            help=_slow_view_logging_help(),
+        )
 
 
 @config_variable_registry.register

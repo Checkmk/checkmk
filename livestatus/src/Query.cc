@@ -541,10 +541,10 @@ void Query::parseWaitTriggerLine(char *line) {
 }
 
 void Query::parseWaitObjectLine(char *line) {
-    auto objectspec = mk::lstrip(line);
-    _wait_object = _table.findObject(objectspec);
+    auto primary_key = mk::lstrip(line);
+    _wait_object = _table.get(primary_key);
     if (_wait_object.isNull()) {
-        throw std::runtime_error("object '" + objectspec +
+        throw std::runtime_error("primary key '" + primary_key +
                                  "' not found or not supported by this table");
     }
 }

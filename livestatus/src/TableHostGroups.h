@@ -24,7 +24,7 @@ public:
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    [[nodiscard]] Row findObject(const std::string &objectspec) const override;
+    [[nodiscard]] Row get(const std::string &primary_key) const override;
     bool isAuthorized(Row row, const contact *ctc) const override;
 
     static void addColumns(Table *table, const std::string &prefix,

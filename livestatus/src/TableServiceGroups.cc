@@ -130,8 +130,9 @@ void TableServiceGroups::answerQuery(Query *query) {
     }
 }
 
-Row TableServiceGroups::findObject(const std::string &objectspec) const {
-    return Row(find_servicegroup(const_cast<char *>(objectspec.c_str())));
+Row TableServiceGroups::get(const std::string &primary_key) const {
+    // "name" is the primary key
+    return Row(find_servicegroup(const_cast<char *>(primary_key.c_str())));
 }
 
 bool TableServiceGroups::isAuthorized(Row row, const contact *ctc) const {

@@ -645,16 +645,17 @@ bool TableServices::isAuthorized(Row row, const contact *ctc) const {
     return is_authorized_for(core(), ctc, svc->host_ptr, svc);
 }
 
-Row TableServices::findObject(const std::string &objectspec) const {
+Row TableServices::get(const std::string &primary_key) const {
+    // "host_name;description" is the primary key
     // The protocol proposes spaces as a separator between the host name and the
     // service description. That introduces the problem that host name
     // containing spaces will not work. For that reason we alternatively allow a
     // semicolon as a separator.
-    auto semicolon = objectspec.find(';');
+    auto semicolon = primary_key.find(';');
     auto host_and_desc =
         semicolon == std::string::npos
-            ? mk::nextField(objectspec)
-            : make_pair(mk::rstrip(objectspec.substr(0, semicolon)),
-                        mk::rstrip(objectspec.substr(semicolon + 1)));
+            ? mk::nextField(primary_key)
+            : make_pair(mk::rstrip(primary_key.substr(0, semicolon)),
+                        mk::rstrip(primary_key.substr(semicolon + 1)));
     return Row(core()->find_service(host_and_desc.first, host_and_desc.second));
 }

@@ -86,8 +86,6 @@ bool Table::isAuthorized(Row /*unused*/, const contact * /*unused*/) const {
     return true;
 }
 
-Row Table::findObject(const std::string & /*unused*/) const {
-    return Row(nullptr);
-}
+Row Table::get(const std::string & /*unused*/) const { return Row(nullptr); }
 
 Logger *Table::logger() const { return _mc->loggerLivestatus(); }

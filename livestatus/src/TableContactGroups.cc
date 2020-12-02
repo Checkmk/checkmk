@@ -52,8 +52,7 @@ void TableContactGroups::answerQuery(Query *query) {
     }
 }
 
-Row TableContactGroups::findObject(const std::string &objectspec) const {
-    // TODO(sp): Remove ugly cast.
-    return Row(reinterpret_cast<contactgroup *>(
-        core()->find_contactgroup(objectspec)));
+Row TableContactGroups::get(const std::string &primary_key) const {
+    // "name" is the primary key
+    return Row(core()->find_contactgroup(primary_key));
 }

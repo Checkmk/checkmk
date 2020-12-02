@@ -771,6 +771,7 @@ bool TableHosts::isAuthorized(Row row, const contact *ctc) const {
     return is_authorized_for(core(), ctc, rowData<host>(row), nullptr);
 }
 
-Row TableHosts::findObject(const std::string &objectspec) const {
-    return Row(core()->find_host(objectspec));
+Row TableHosts::get(const std::string &primary_key) const {
+    // "name" is the primary key
+    return Row(core()->find_host(primary_key));
 }

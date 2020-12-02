@@ -353,3 +353,5 @@ void TableStatus::answerQuery(Query *query) {
     const TableStatus *r = this;
     query->processDataset(Row(r));
 }
+
+Row TableStatus::getDefault() const { return Row{this}; }

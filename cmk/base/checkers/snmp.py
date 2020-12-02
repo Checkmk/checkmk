@@ -7,7 +7,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import Dict, Final, Mapping, Optional, Set
+from typing import Dict, Final, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -268,7 +268,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
                 return fetch_interval
             return cached_at + fetch_interval * 60
 
-        persisted_sections = SNMPParser._make_persisted_sections(
+        persisted_sections = PersistedSections[SNMPRawDataSection].from_sections(
             raw_data,
             {section_name: fetch_interval(section_name) for section_name in raw_data},
             cached_at=cached_at,
@@ -280,22 +280,6 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             logger=self._logger,
         )
         return host_sections
-
-    @staticmethod
-    def _make_persisted_sections(
-        sections: Mapping[SectionName, SNMPRawDataSection],
-        interval_lookup: Mapping[SectionName, Optional[int]],
-        *,
-        cached_at: int,
-    ) -> PersistedSections[SNMPRawDataSection]:
-        persisted_sections = PersistedSections[SNMPRawDataSection]({})
-        for section_name, section_content in sections.items():
-            fetch_interval = interval_lookup[section_name]
-            if fetch_interval is None:
-                continue
-            persisted_sections[section_name] = (cached_at, fetch_interval, section_content)
-
-        return persisted_sections
 
 
 class SNMPSummarizer(Summarizer[SNMPHostSections]):

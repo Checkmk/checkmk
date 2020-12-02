@@ -8,7 +8,7 @@ import abc
 import logging
 import time
 from pathlib import Path
-from typing import cast, Dict, Final, Iterable, List, Mapping, MutableSet, NamedTuple, Optional, Tuple
+from typing import cast, Dict, Final, Iterable, List, MutableSet, NamedTuple, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -620,7 +620,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             cached_at=cached_at,
             cache_age=cache_age,
         )
-        persisted_sections = self._make_persisted_sections(
+        persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
             parser.host_sections.sections,
             {section_header.name: section_header.persist for section_header in parser.section_info},
             cached_at=cached_at,
@@ -644,22 +644,6 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             parser = parser(line.rstrip(b"\n"))
 
         return parser
-
-    @staticmethod
-    def _make_persisted_sections(
-        sections: Mapping[SectionName, AgentRawDataSection],
-        interval_lookup: Mapping[SectionName, Optional[int]],
-        *,
-        cached_at: int,
-    ) -> PersistedSections[AgentRawDataSection]:
-        persisted_sections = PersistedSections[AgentRawDataSection]({})
-        for section_name, section_content in sections.items():
-            fetch_interval = interval_lookup[section_name]
-            if fetch_interval is None:
-                continue
-            persisted_sections[section_name] = (cached_at, fetch_interval, section_content)
-
-        return persisted_sections
 
     @staticmethod
     def _update_cache_info(

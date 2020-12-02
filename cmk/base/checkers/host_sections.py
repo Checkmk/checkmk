@@ -20,6 +20,7 @@ from typing import (
     Iterator,
     KeysView,
     List,
+    Mapping,
     MutableMapping,
     Optional,
     Set,
@@ -88,6 +89,23 @@ class PersistedSections(
 
     def __len__(self) -> int:
         return self._store.__len__()
+
+    @classmethod
+    def from_sections(
+        cls,
+        sections: Mapping[SectionName, TRawDataSection],
+        interval_lookup: Mapping[SectionName, Optional[int]],
+        *,
+        cached_at: int,
+    ) -> "PersistedSections[TRawDataSection]":
+        self = cls({})
+        for section_name, section_content in sections.items():
+            fetch_interval = interval_lookup[section_name]
+            if fetch_interval is None:
+                continue
+            self[section_name] = (cached_at, fetch_interval, section_content)
+
+        return self
 
 
 class SectionStore(Generic[TRawDataSection]):

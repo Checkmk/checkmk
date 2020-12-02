@@ -105,29 +105,6 @@ namespace cma::cfg {
 
 std::string packaged_ini(kIniFromInstallMarker);
 
-std::string wato_ini =
-    "# Created by Check_MK Agent Bakery.\n"
-    "# This file is managed via WATO, do not edit manually or you \n"
-    "# lose your changes next time when you update the agent.\n"
-    "\n"
-    "[global]\n"
-    "    # TCP port the agent is listening on\n"
-    "    port = 6556\n"
-    "\n";
-
-[[nodiscard]] static bool CreateFileTest(std::filesystem::path Path,
-                                         std::string Content) {
-    std::error_code ec;
-    std::filesystem::remove(Path, ec);
-    if (ec.value() != 0 && ec.value() != 2) return false;
-
-    std::ofstream ofs(Path);
-    ofs << Content;
-    return true;
-}
-
-extern void SetTestInstallationType(InstallationType);
-
 namespace details {
 TEST(CmaCfg, InitEnvironment) {
     auto msi = FindMsiExec();
@@ -313,37 +290,16 @@ TEST(CmaCfg, InstallationTypeCheck) {
     namespace fs = std::filesystem;
     //
     cma::OnStartTest();
-    ASSERT_TRUE(cma::IsTest());
-    ON_OUT_OF_SCOPE(SetTestInstallationType(InstallationType::packaged));
-    ON_OUT_OF_SCOPE(cma::details::G_Test = true;);
+    tst::TempCfgFs temp_fs;
 
-    EXPECT_EQ(DetermineInstallationType(), InstallationType::packaged);
+    fs::path install_yml{fs::path(dirs::kFileInstallDir) /
+                         files::kInstallYmlFileW};
 
-    auto to_test = InstallationType::wato;
-    cma::cfg::SetTestInstallationType(to_test);
-    EXPECT_EQ(cma::cfg::DetermineInstallationType(), to_test);
-
-    cma::details::G_Test = false;
-
-    fs::path install_ini = cma::cfg::GetRootInstallDir();
-    std::error_code ec;
-    fs::create_directories(install_ini, ec);
-    install_ini /= files::kIniFile;
-
-    auto backup_file = install_ini;
-    backup_file.replace_extension("in_");
-    fs::remove(backup_file, ec);
-    fs::copy_file(install_ini, backup_file, ec);
-    ON_OUT_OF_SCOPE(fs::rename(backup_file, install_ini, ec);)
-
-    ASSERT_TRUE(CreateFileTest(install_ini, wato_ini));
+    ASSERT_TRUE(temp_fs.createRootFile(install_yml, "# Doesn't matter"));
 
     EXPECT_EQ(DetermineInstallationType(), InstallationType::wato);
-
-    ASSERT_TRUE(CreateFileTest(install_ini, packaged_ini));
-
+    temp_fs.removeRootFile(install_yml);
     EXPECT_EQ(DetermineInstallationType(), InstallationType::packaged);
-    // fs::remove(install_ini, ec);
 }
 
 namespace details {

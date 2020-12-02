@@ -11,6 +11,16 @@ from cmk.utils.type_defs import SectionName
 
 __all__ = ["SectionCacheInfo", "SectionNameCollection", "NO_SELECTION"]
 
+# Note that the inner List[str] to AgentRawDataSection
+# is only **artificially** different from AgentRawData and
+# obtained approximatively with `raw_data.decode("utf-8").split()`!
+#
+# Moreover, the type is not useful.
+#
+# What would be useful is a Mapping[SectionName, AgentRawData],
+# analogous to SNMPRawData = Mapping[SectionName, SNMPRawDataSection],
+# that would generalize to `Mapping[SectionName, TRawDataContent]` or
+# `Mapping[SectionName, TRawData]` depending on which name we keep.
 AgentRawDataSection = List[List[str]]
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 

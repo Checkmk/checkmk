@@ -772,32 +772,7 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
             PageMenuDropdown(
                 name="add_dashlets",
                 title=_("Add"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Views"),
-                        entries=list(_dashboard_add_views_dashlet_entries(name, board, mode)),
-                    ),
-                    PageMenuTopic(
-                        title=_("Graphs"),
-                        entries=list(_dashboard_add_graphs_dashlet_entries(name, board, mode)),
-                    ),
-                    PageMenuTopic(
-                        title=_("Metrics"),
-                        entries=list(_dashboard_add_metrics_dashlet_entries(name, board, mode)),
-                    ),
-                    PageMenuTopic(
-                        title=_("Checkmk"),
-                        entries=list(_dashboard_add_checkmk_dashlet_entries(name, board, mode)),
-                    ),
-                    PageMenuTopic(
-                        title=_("Ntop"),
-                        entries=list(_dashboard_add_ntop_dashlet_entries(name, board, mode)),
-                    ),
-                    PageMenuTopic(
-                        title=_("Other"),
-                        entries=list(_dashboard_add_other_dashlet_entries(name, board, mode)),
-                    ),
-                ],
+                topics=list(_page_menu_topics(name, board, mode)),
                 is_enabled=True,
             ),
         ],
@@ -808,6 +783,40 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
     _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
 
     return menu
+
+
+def _page_menu_topics(name: DashboardName, board: DashboardConfig,
+                      mode: str) -> Iterator[PageMenuTopic]:
+    yield PageMenuTopic(
+        title=_("Views"),
+        entries=list(_dashboard_add_views_dashlet_entries(name, board, mode)),
+    )
+
+    yield PageMenuTopic(
+        title=_("Graphs"),
+        entries=list(_dashboard_add_graphs_dashlet_entries(name, board, mode)),
+    )
+
+    yield PageMenuTopic(
+        title=_("Metrics"),
+        entries=list(_dashboard_add_metrics_dashlet_entries(name, board, mode)),
+    )
+
+    yield PageMenuTopic(
+        title=_("Checkmk"),
+        entries=list(_dashboard_add_checkmk_dashlet_entries(name, board, mode)),
+    )
+
+    if config.ntop_connection:  # type: ignore[attr-defined]
+        yield PageMenuTopic(
+            title=_("Ntop"),
+            entries=list(_dashboard_add_ntop_dashlet_entries(name, board, mode)),
+        )
+
+    yield PageMenuTopic(
+        title=_("Other"),
+        entries=list(_dashboard_add_other_dashlet_entries(name, board, mode)),
+    )
 
 
 def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,

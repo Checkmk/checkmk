@@ -212,8 +212,8 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>>(
         "cached_log_messages",
         "The current number of log messages MK Livestatus keeps in memory",
-        offsets, [](const TableStatus &ts) {
-            return static_cast<int32_t>(ts.core()->numCachedLogMessages());
+        offsets, [mc](const TableStatus & /*r*/) {
+            return static_cast<int32_t>(mc->numCachedLogMessages());
         }));
     addColumn(std::make_unique<StringLambdaColumn<TableStatus>>(
         "livestatus_version", "The version of the MK Livestatus module",
@@ -221,7 +221,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>>(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus", offsets,
-        [&](const TableStatus & /*ts*/) {
+        [&](const TableStatus & /*r*/) {
             return g_livestatus_active_connections.load();
         }));
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>::Reference>(
@@ -297,21 +297,21 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
-        offsets, [](const TableStatus &ts) {
+        offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(
-                mk_inventory_last(ts.core()->mkInventoryPath() / ".last"));
+                mk_inventory_last(mc->mkInventoryPath() / ".last"));
         }));
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>>(
         "num_queued_notifications",
         "The number of queued notifications which have not yet been delivered to the notification helper",
-        offsets, [](const TableStatus &ts) {
-            return static_cast<int32_t>(ts.core()->numQueuedNotifications());
+        offsets, [mc](const TableStatus & /*r*/) {
+            return static_cast<int32_t>(mc->numQueuedNotifications());
         }));
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>>(
         "num_queued_alerts",
         "The number of queued alerts which have not yet been delivered to the alert helper",
-        offsets, [](const TableStatus &ts) {
-            return static_cast<int32_t>(ts.core()->numQueuedAlerts());
+        offsets, [mc](const TableStatus & /*r*/) {
+            return static_cast<int32_t>(mc->numQueuedAlerts());
         }));
     addColumn(std::make_unique<FileColumn<TableStatus>>(
         "license_usage_history", "Historic license usage information", offsets,
@@ -320,14 +320,14 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "average_runnable_jobs_fetcher",
         "The average count of scheduled fetcher jobs which have not yet been processed",
-        offsets, [](const TableStatus & /*ts*/) { return 0.0; }));
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
     addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
         "average_runnable_jobs_checker",
         "The average count of queued replies which have not yet been delivered to the checker helpers",
-        offsets, [](const TableStatus & /*ts*/) { return 0.0; }));
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
     addColumn(std::make_unique<TimeLambdaColumn<TableStatus>>(
         "state_file_created", "The time when state file had been created",
-        offsets, [](const TableStatus & /*ts*/) {
+        offsets, [](const TableStatus & /*r*/) {
             return std::chrono::system_clock::from_time_t(0);
         }));
 }

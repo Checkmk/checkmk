@@ -35,6 +35,7 @@ from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
     HostKey,
+    HostName,
     ParsedSectionName,
     SectionName,
     SourceType,

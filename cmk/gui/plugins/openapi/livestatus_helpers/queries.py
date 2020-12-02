@@ -156,7 +156,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         self.filter_expr = filter_expr
         _tables = {column.table for column in columns}
         assert len(_tables) == 1
-        self.table: Table = _tables.pop()
+        self.table: Type[Table] = _tables.pop()
 
     def filter(self, filter_expr: QueryExpression) -> 'Query':
         """Apply additional filters to an existing query.
@@ -366,7 +366,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         ])
 
     def dict_repr(self):
-        return expr_to_tree(self.table.__class__, self.filter_expr)
+        return expr_to_tree(self.table, self.filter_expr)
 
     @classmethod
     def from_string(
@@ -386,6 +386,9 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...                       'Filter: name = heute\\n'
             ...                       'Filter: alias = heute\\n'
             ...                       'Or: 2')
+
+            >>> q.table.__name__
+            'Hosts'
 
             >>> q.columns
             [Column(hosts.name: string)]
@@ -470,6 +473,10 @@ def _parse_line(
         >>> _parse_line(Hosts, "Filter: name !>= value")
         Filter(name !>= value)
 
+        >>> _parse_line(Hosts, "Filter: foo !>= value")
+        Traceback (most recent call last):
+        ...
+        ValueError: type object 'Hosts' has no attribute 'foo'
 
     Returns:
         A BinaryExpression
@@ -477,5 +484,8 @@ def _parse_line(
     if not filter_string.startswith("Filter:"):
         raise ValueError(f"Illegal filter string: {filter_string!r}")
     _, column_name, op, value = filter_string.split(None, 3)
-    column: Column = getattr(table, column_name)
+    try:
+        column: Column = getattr(table, column_name)
+    except AttributeError as exc:
+        raise ValueError(str(exc))
     return column.op(op, value)

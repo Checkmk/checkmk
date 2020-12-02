@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 from typing import Literal, Optional, Dict, Any
+from urllib.parse import quote_plus
 
 from marshmallow import Schema
 
@@ -12,6 +13,8 @@ import docstring_parser  # type: ignore[import]
 from werkzeug.exceptions import HTTPException
 
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+from livestatus import SiteId
 
 
 def problem(
@@ -140,3 +143,28 @@ def param_description(
     if errors == 'raise':
         raise ValueError(f"Parameter {param_name!r} not found in docstring.")
     return None
+
+
+def create_url(site: SiteId, query: Query) -> str:
+    """Create a REST-API query URL.
+
+    Examples:
+
+        >>> create_url('heute',
+        ...            Query.from_string("GET hosts\\nColumns: name\\nFilter: name = heute"))
+        '/heute/check_mk/api/v0/host?query=%7B%22op%22%3A+%22%3D%22%2C+%22left%22%3A+%22hosts.name%22%2C+%22right%22%3A+%22heute%22%7D'
+
+    Args:
+        site:
+            A valid site-name.
+
+        query:
+            The Query() instance which the endpoint shall create again.
+
+    Returns:
+        The URL.
+
+    """
+    query_dict = query.dict_repr()
+    query_string_value = quote_plus(json.dumps(query_dict))
+    return f"/{site}/check_mk/api/v0/host?query={query_string_value}"

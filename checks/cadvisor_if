@@ -46,6 +46,6 @@ check_info["cadvisor_if"] = {
     'parse_function': parse_cadvisor_if,
     'inventory_function': discover(),
     'check_function': check_cadvisor_if,
-    'service_description': 'Interface',
+    'service_description': 'Interface %s',
     'has_perfdata': True,
 }

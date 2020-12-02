@@ -1,0 +1,24 @@
+Title: Activate changes: Improve error handling when trying to activate changes of offline sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1606916539
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+When triggering the activate changes API calls in "dirty" mode (activate all
+changes on all dirty sites), the offline sites were automatically excluded. In
+this situation the activation was performed with an empty list of sites. Resulting
+in an empty result set.
+
+Leaving the user with the question why his changes were not activated. To be more
+consistent, the situation is now detected and an error is raised, explaining the
+situation to the user:
+
+<pre>There are changes to activate, but no site can be activated (The sites A,
+B, C have changes, but may be offline or not logged in).</pre>
+
+The caller needs wait and retry the operation at a later time once the sites in
+question are reachable again.

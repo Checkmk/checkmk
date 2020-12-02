@@ -1,0 +1,15 @@
+Title: if-checks: update default check parameters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606919787
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+This werk updates the default check parameters of the interface checks.
+This has no impact on the produced check results, but it fixes a bug in the
+parameters view of the corresponding services ("Parameters for this
+service"). Due to the default parameters being in an outdated format, this
+view sometimes showed incorrect check parameters.

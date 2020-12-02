@@ -257,9 +257,9 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         # The following are not quite the same as section_content_cache.
         # They are introduced for the changed data handling with the migration
         # to 'agent_based' plugins.
-        # This hodls the result of the parsing of individual raw sections
+        # This holds the result of the parsing of individual raw sections
         self._parsing_results = caching.DictCache()
-        # This hodls the result of the superseding section along with the
+        # This holds the result of the superseding section along with the
         # cache info of the raw section that was used.
         self._parsed_sections = caching.DictCache()
 

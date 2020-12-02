@@ -704,8 +704,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         cached_at: int,
     ) -> None:
         for section_header in section_info:
-            # If bother `persist` and `cached` are present, `cached` overwrites
-            # the settings from `persist`.  I do not know whether this is correct.
+            # If both `persist` and `cached` are present, `cached` overwrites the
+            # settings from `persist`.  I do not know whether this is correct.
             if section_header.persist is not None:
                 host_sections.cache_info[section_header.name] = (
                     cached_at,

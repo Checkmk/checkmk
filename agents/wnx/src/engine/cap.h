@@ -47,9 +47,6 @@ using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
 bool ReinstallCaps(const std::filesystem::path &target_cap,
                    const std::filesystem::path &source_cap);
 
-bool ReinstallIni(const std::filesystem::path &target_ini,
-                  const std::filesystem::path &source_ini);
-
 bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
                    const std::filesystem::path &target_yaml,
                    const std::filesystem::path &source_yaml);

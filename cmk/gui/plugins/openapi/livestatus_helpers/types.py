@@ -23,9 +23,10 @@ class Table(abc.ABC):
 
     This class doesn't do much, it just acts as a container for `Column` instances.
     """
+    @classmethod
     @property
     @abc.abstractmethod
-    def __tablename__(self) -> str:
+    def __tablename__(cls) -> str:
         raise NotImplementedError("Please set __tablename__ to the name of the livestatus table")
 
     @classmethod
@@ -44,16 +45,14 @@ class NoTable(Table):
     Can be used in place of an actual table, in order to not have to use `Optional` types when
     something is initialized only later.
     """
+    @classmethod
     @property
-    def __tablename__(self) -> str:
+    def __tablename__(cls) -> str:
         raise AttributeError("This table has no name.")
 
     @classmethod
     def __columns__(cls) -> List[str]:
         raise NotImplementedError("NoTable instances have no columns.")
-
-    def __bool__(self) -> bool:
-        return False
 
 
 class Column:
@@ -113,7 +112,7 @@ class Column:
         self.label_name: Optional[str] = None
         self.type: LivestatusType = col_type
         self.expr = (ListExpression(name) if col_type == 'list' else ScalarExpression(name))
-        self.table: Table = NoTable()
+        self.table: Type[Table] = NoTable
 
         self.__doc__ = description
 
@@ -158,7 +157,7 @@ class Column:
     def __get__(self, obj, obj_type) -> 'Column':
         # As we don't know on which Table this Column is located, we use
         # the descriptor protocol during attribute access to find out.
-        if not self.table:
+        if self.table is NoTable:
             self.table = obj_type
 
         return self

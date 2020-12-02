@@ -202,7 +202,6 @@ def test_all_check_variables_present(config_check_variables):
         'F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS',
         'FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS',
         'FILER_DISKS_CHECK_DEFAULT_PARAMETERS',
-        'IF_CHECK_DEFAULT_PARAMETERS',
         'K8S_OK_CONDITIONS',
         'KEY_PULSE_SECURE_CPU',
         'MAILQUEUES_LABEL',

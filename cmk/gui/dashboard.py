@@ -58,7 +58,6 @@ from cmk.gui.page_menu import (
 )
 
 from cmk.gui.exceptions import (
-    FinalizeRequest,
     HTTPRedirect,
     MKGeneralException,
     MKAuthException,
@@ -1636,11 +1635,8 @@ class EditDashletPage(Page):
                     self._dashboard['dashlets'].append(dashlet_spec)
 
                 save_all_dashboards()
-
-                next_url = html.get_url_input('next', html.get_url_input('back'))
-                html.reload_whole_page("index.py?start_url=%s" % html.urlencode(next_url))
                 html.footer()
-                raise FinalizeRequest(code=200)
+                raise HTTPRedirect(html.get_url_input('next', html.get_url_input('back')))
 
             except MKUserError as e:
                 html.user_error(e)

@@ -456,44 +456,6 @@ static void ConvertIniToBakery(const std::filesystem::path &bakery_yml,
     XLOG::l.i("Creating Bakery file SUCCESS");
 }
 
-// Replaces target with source
-// Removes target if source absent
-// For non-packaged agents convert ini to bakery.yml
-bool ReinstallIni(const std::filesystem::path &target_ini,
-                  const std::filesystem::path &source_ini) {
-    namespace fs = std::filesystem;
-    std::error_code ec;
-
-    auto packaged_agent = IsIniFileFromInstaller(source_ini);
-    if (packaged_agent)
-        XLOG::l.i(
-            "This is PACKAGED AGENT,"
-            "upgrading ini file to the bakery.yml will be skipped");
-
-    // remove old files
-    auto bakery_yml = cma::cfg::GetBakeryFile();
-    if (!packaged_agent) {
-        XLOG::l.i("Removing '{}'", bakery_yml.u8string());
-        fs::remove(bakery_yml, ec);
-    }
-
-    XLOG::l.i("Removing '{}'", target_ini.u8string());
-    fs::remove(target_ini, ec);
-
-    // if file doesn't exists we will leave
-    if (!fs::exists(source_ini, ec)) {
-        XLOG::l.i("No source ini, leaving");
-        return true;
-    }
-
-    if (!packaged_agent) ConvertIniToBakery(bakery_yml, source_ini);
-
-    XLOG::l.i("Copy init");
-    fs::copy_file(source_ini, target_ini, ec);
-
-    return true;
-}
-
 namespace details {
 void UninstallYaml(const std::filesystem::path &bakery_yaml,
                    const std::filesystem::path &target_yaml) {

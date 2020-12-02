@@ -1,0 +1,25 @@
+Title: Fix accidental publishing of cloned user elements (e.g. bookmark lists)
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1606834376
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b2
+
+When a user clones e.g. a public shared bookmark list of another user, the
+"public" flag was inherited during that clone operation and the cloned bookmark
+list was shared to other users despite the fact that the user was not permitted
+to share things to other users.
+
+This change adds an information about the visibility to other users to the edit
+page of these elements: "The view is only visible to you. You can not share it,
+because you don't have the permission to share it."
+
+The permission of the owner to share elements is now explicitly checked when
+trying accessing the elements as another user.
+
+Besides the bookmark list other elements like custom snapins, custom graphs,
+forecast graphs, SLAs, graph collections and graph tunings were also affected.

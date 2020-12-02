@@ -44,6 +44,7 @@ from cmk.gui.valuespec import (
     IconSelector,
     Integer,
     DropdownChoice,
+    FixedValue,
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _l, _u, _
@@ -487,26 +488,30 @@ class Overridable(Base):
         parameters = super(Overridable, cls).parameters(mode)
 
         if cls.has_overriding_permission("publish"):
+            vs_visibility = Optional(
+                title=_("Visibility"),
+                label=_('Make this %s available for other users') % cls.phrase("title"),
+                none_label=_("Don't publish to other users"),
+                none_value=False,
+                valuespec=PublishTo(
+                    title="",
+                    type_title=cls.phrase("title"),
+                    with_foreign_groups=cls.has_overriding_permission("publish_to_foreign_groups"),
+                ),
+            )
+        else:
+            vs_visibility = FixedValue(
+                False,
+                title=_("Visibility"),
+                totext=_("The view is only visible to you. You can not share it, "
+                         "because you don't have the permission to share it."),
+            )
 
-            parameters += [
-                (_("General Properties"), [
-                    (2.2, 'public',
-                     Optional(
-                         title=_("Visibility"),
-                         label=_('Make this %s available for other users') % cls.phrase("title"),
-                         none_label=_("Don't publish to other users"),
-                         none_value=False,
-                         valuespec=PublishTo(
-                             title="",
-                             type_title=cls.phrase("title"),
-                             with_foreign_groups=cls.has_overriding_permission(
-                                 "publish_to_foreign_groups"),
-                         ),
-                     )),
-                ]),
-            ]
-
-        return parameters
+        return parameters + [
+            (_("General Properties"), [
+                (2.2, 'public', vs_visibility),
+            ]),
+        ]
 
     @classmethod
     def page_handlers(cls):
@@ -531,6 +536,10 @@ class Overridable(Base):
         if self._["public"] is False:
             return False
 
+        return self.publish_is_allowed()
+
+    def publish_is_allowed(self):
+        """Whether or not not publishing an element to other users is allowed by the owner"""
         return not self.owner() or config.user_may(self.owner(),
                                                    "general.publish_" + self.type_name())
 
@@ -542,11 +551,11 @@ class Overridable(Base):
     def is_published_to_me(self):
         """Whether or not the page is published to the currently active user"""
         if self._["public"] is True:
-            return True
+            return self.publish_is_allowed()
 
         if isinstance(self._["public"], tuple) and self._["public"][0] == "contact_groups":
             if set(config.user.contact_groups).intersection(self._["public"][1]):
-                return True
+                return self.publish_is_allowed()
 
         return False
 

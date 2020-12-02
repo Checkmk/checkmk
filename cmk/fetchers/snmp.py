@@ -31,7 +31,7 @@ from cmk.snmplib.type_defs import (
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
-    SNMPSectionContent,
+    SNMPRawDataSection,
 )
 
 from . import factory
@@ -302,7 +302,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             walk_cache_msg = "SNMP walk cache is disabled"
             get_snmp = partial(snmp_table.get_snmp_table, backend=self._backend)
 
-        fetched_data: MutableMapping[SectionName, SNMPSectionContent] = {}
+        fetched_data: MutableMapping[SectionName, SNMPRawDataSection] = {}
         for section_name in self._sort_section_names(section_names):
             self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
 

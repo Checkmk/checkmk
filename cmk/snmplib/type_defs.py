@@ -42,8 +42,8 @@ SNMPDecodedValues = Union[SNMPDecodedString, SNMPDecodedBinary]
 SNMPValueEncoding = Literal["string", "binary"]
 SNMPTable = List[List[SNMPDecodedValues]]
 SNMPContext = Optional[str]
-SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
-SNMPRawData = NewType("SNMPRawData", Mapping[_SectionName, SNMPSectionContent])
+SNMPRawDataSection = Union[SNMPTable, List[SNMPTable]]
+SNMPRawData = NewType("SNMPRawData", Mapping[_SectionName, SNMPRawDataSection])
 OID = str
 OIDFunction = Callable[[OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]],
                        Optional[SNMPDecodedString]]

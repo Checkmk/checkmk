@@ -41,7 +41,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.snmplib.type_defs import SNMPSectionContent
+from cmk.snmplib.type_defs import SNMPRawDataSection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.caching as caching
@@ -51,35 +51,33 @@ from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.exceptions import MKParseFunctionError
 
-from .type_defs import AgentSectionContent, NO_SELECTION, SectionCacheInfo, SectionNameCollection
+from .type_defs import AgentRawDataSection, NO_SELECTION, SectionCacheInfo, SectionNameCollection
 
-# AbstractSectionContent is wrong from a typing point of view.
-# AgentSectionContent and SNMPSectionContent are not correct either,
-# at best, they should be List[<element>] because this is what they
-# have in common and, more importantly, what is used here.
-AbstractSectionContent = Union[AgentSectionContent, SNMPSectionContent]
+# ABCRawDataSection is wrong from a typing point of view.
+# AgentRawDataSection and SNMPRawDataSection are not correct either.
+ABCRawDataSection = Union[AgentRawDataSection, SNMPRawDataSection]
 
 ParsedSectionContent = Any
-TSectionContent = TypeVar("TSectionContent", bound=AbstractSectionContent)
+TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
 THostSections = TypeVar("THostSections", bound="HostSections")
 
 
 class PersistedSections(
-        Generic[TSectionContent],
-        MutableMapping[SectionName, Tuple[int, int, TSectionContent]],
+        Generic[TRawDataSection],
+        MutableMapping[SectionName, Tuple[int, int, TRawDataSection]],
 ):
     __slots__ = ("_store",)
 
-    def __init__(self, store: MutableMapping[SectionName, Tuple[int, int, TSectionContent]]):
+    def __init__(self, store: MutableMapping[SectionName, Tuple[int, int, TRawDataSection]]):
         self._store = store
 
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._store)
 
-    def __getitem__(self, key: SectionName) -> Tuple[int, int, TSectionContent]:
+    def __getitem__(self, key: SectionName) -> Tuple[int, int, TRawDataSection]:
         return self._store.__getitem__(key)
 
-    def __setitem__(self, key: SectionName, value: Tuple[int, int, TSectionContent]) -> None:
+    def __setitem__(self, key: SectionName, value: Tuple[int, int, TRawDataSection]) -> None:
         return self._store.__setitem__(key, value)
 
     def __delitem__(self, key: SectionName) -> None:
@@ -92,7 +90,7 @@ class PersistedSections(
         return self._store.__len__()
 
 
-class SectionStore(Generic[TSectionContent]):
+class SectionStore(Generic[TRawDataSection]):
     def __init__(
         self,
         path: Union[str, Path],
@@ -107,14 +105,14 @@ class SectionStore(Generic[TSectionContent]):
 
     def update(
         self,
-        persisted_sections: PersistedSections[TSectionContent],
+        persisted_sections: PersistedSections[TRawDataSection],
     ) -> None:
         stored = self.load()
         if persisted_sections != stored:
             persisted_sections.update(stored)
             self.store(persisted_sections)
 
-    def store(self, sections: PersistedSections[TSectionContent]) -> None:
+    def store(self, sections: PersistedSections[TRawDataSection]) -> None:
         if not sections:
             return
 
@@ -126,9 +124,9 @@ class SectionStore(Generic[TSectionContent]):
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
     # reading and unlock after writing
-    def load(self) -> PersistedSections[TSectionContent]:
+    def load(self) -> PersistedSections[TRawDataSection]:
         raw_sections_data = _store.load_object_from_file(self.path, default={})
-        sections: PersistedSections[TSectionContent] = {  # type: ignore[assignment]
+        sections: PersistedSections[TRawDataSection] = {  # type: ignore[assignment]
             SectionName(k): v for k, v in raw_sections_data.items()
         }
         if not self.keep_outdated:
@@ -142,8 +140,8 @@ class SectionStore(Generic[TSectionContent]):
 
     def _filter(
         self,
-        sections: PersistedSections[TSectionContent],
-    ) -> PersistedSections[TSectionContent]:
+        sections: PersistedSections[TRawDataSection],
+    ) -> PersistedSections[TRawDataSection]:
         now = time.time()
         for section_name, entry in list(sections.items()):
             if len(entry) == 2:
@@ -158,7 +156,7 @@ class SectionStore(Generic[TSectionContent]):
         return sections
 
 
-class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
+class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
     """A wrapper class for the host information read by the data sources
 
     It contains the following information:
@@ -171,7 +169,7 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
     """
     def __init__(
         self,
-        sections: Optional[MutableMapping[SectionName, TSectionContent]] = None,
+        sections: Optional[MutableMapping[SectionName, TRawDataSection]] = None,
         *,
         cache_info: Optional[SectionCacheInfo] = None,
         # For `piggybacked_raw_data`, List[bytes] is equivalent to AgentRawData.
@@ -190,7 +188,7 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
             self.piggybacked_raw_data,
         )
 
-    def filter(self, selection: SectionNameCollection) -> "HostSections[TSectionContent]":
+    def filter(self, selection: SectionNameCollection) -> "HostSections[TRawDataSection]":
         """Filter for preselected sections"""
         # This could be optimized by telling the parser object about the
         # preselected sections and dismissing raw data at an earlier stage.
@@ -215,7 +213,7 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
         for section_name, section_content in host_sections.sections.items():
             self.sections.setdefault(
                 section_name,
-                cast(TSectionContent, []),
+                cast(TRawDataSection, []),
             ).extend(section_content)
 
         for hostname, raw_lines in host_sections.piggybacked_raw_data.items():
@@ -226,7 +224,7 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
 
     def add_persisted_sections(
         self,
-        persisted_sections: PersistedSections[TSectionContent],
+        persisted_sections: PersistedSections[TRawDataSection],
         *,
         logger: logging.Logger,
     ) -> None:
@@ -523,7 +521,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
     ) -> Union[None, ParsedSectionContent, List[ParsedSectionContent]]:
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
-        section_content: Optional[AbstractSectionContent] = None
+        section_content: Optional[ABCRawDataSection] = None
         for node_key in cluster_node_keys or [host_key]:
 
             try:
@@ -551,7 +549,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
     # This function is only kept for the legacy cluster mode from hell
     @staticmethod
     def _update_with_parse_function(
-        section_content: AbstractSectionContent,
+        section_content: ABCRawDataSection,
         section_name: SectionName,
         check_legacy_info: Dict[str, Dict[str, Any]],
     ) -> ParsedSectionContent:
@@ -574,7 +572,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
             parse_function = check_legacy_info.get(str(section_name), {}).get("parse_function")
         else:
             section_plugin = agent_based_register.get_section_plugin(section_name)
-            parse_function = cast(Callable[[AbstractSectionContent], ParsedSectionContent],
+            parse_function = cast(Callable[[ABCRawDataSection], ParsedSectionContent],
                                   section_plugin.parse_function)
 
         if parse_function is None:

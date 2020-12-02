@@ -11,7 +11,7 @@ from typing import Dict, Final, Mapping, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
-from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPSectionContent
+from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
 
 from cmk.fetchers import FetcherType, SNMPFetcher
 from cmk.fetchers.snmp import SectionMeta, SNMPFileCache, SNMPPluginStore, SNMPPluginStoreItem
@@ -33,7 +33,7 @@ def make_plugin_store() -> SNMPPluginStore:
     })
 
 
-SNMPHostSections = HostSections[SNMPSectionContent]
+SNMPHostSections = HostSections[SNMPRawDataSection]
 
 
 class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
@@ -173,7 +173,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
     def _make_parser(self) -> "SNMPParser":
         return SNMPParser(
             self.hostname,
-            SectionStore[SNMPSectionContent](
+            SectionStore[SNMPRawDataSection](
                 self.persisted_sections_file_path,
                 keep_outdated=self.use_outdated_persisted_sections,
                 logger=self._logger,
@@ -245,7 +245,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
     def __init__(
         self,
         hostname: HostName,
-        section_store: SectionStore[SNMPSectionContent],
+        section_store: SectionStore[SNMPRawDataSection],
         logger: logging.Logger,
     ) -> None:
         super().__init__()
@@ -283,12 +283,12 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
 
     @staticmethod
     def _make_persisted_sections(
-        sections: Mapping[SectionName, SNMPSectionContent],
+        sections: Mapping[SectionName, SNMPRawDataSection],
         interval_lookup: Mapping[SectionName, Optional[int]],
         *,
         cached_at: int,
-    ) -> PersistedSections[SNMPSectionContent]:
-        persisted_sections = PersistedSections[SNMPSectionContent]({})
+    ) -> PersistedSections[SNMPRawDataSection]:
+        persisted_sections = PersistedSections[SNMPRawDataSection]({})
         for section_name, section_content in sections.items():
             fetch_interval = interval_lookup[section_name]
             if fetch_interval is None:

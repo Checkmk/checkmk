@@ -11,7 +11,7 @@ from cmk.utils.type_defs import SectionName
 
 __all__ = ["SectionCacheInfo", "SectionNameCollection", "NO_SELECTION"]
 
-AgentSectionContent = List[List[str]]
+AgentRawDataSection = List[List[str]]
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 
 

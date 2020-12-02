@@ -39,11 +39,11 @@ from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import FileCacheFactory, Mode, Parser, SectionNameCollection, Source, Summarizer
 from .host_sections import HostSections, PersistedSections, SectionStore
-from .type_defs import AgentSectionContent
+from .type_defs import AgentRawDataSection
 
 __all__ = ["AgentSource", "AgentHostSections"]
 
-AgentHostSections = HostSections[AgentSectionContent]
+AgentHostSections = HostSections[AgentRawDataSection]
 
 
 class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
@@ -111,7 +111,7 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
     def _make_parser(self) -> "AgentParser":
         return AgentParser(
             self.hostname,
-            SectionStore[AgentSectionContent](
+            SectionStore[AgentRawDataSection](
                 self.persisted_sections_file_path,
                 keep_outdated=self.use_outdated_persisted_sections,
                 logger=self._logger,
@@ -146,7 +146,7 @@ class AgentSummarizerDefault(AgentSummarizer):
 
     def _summarize_impl(
         self,
-        cmk_section: Optional[AgentSectionContent],
+        cmk_section: Optional[AgentRawDataSection],
         for_checking: bool,
     ) -> ServiceCheckResult:
         agent_info = self._get_agent_info(cmk_section)
@@ -175,7 +175,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         return status, ", ".join(output), perfdata
 
     @staticmethod
-    def _get_agent_info(cmk_section: Optional[AgentSectionContent],) -> Dict[str, Optional[str]]:
+    def _get_agent_info(cmk_section: Optional[AgentRawDataSection],) -> Dict[str, Optional[str]]:
         agent_info: Dict[str, Optional[str]] = {
             "version": u"unknown",
             "agentos": u"unknown",
@@ -587,7 +587,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
     def __init__(
         self,
         hostname: HostName,
-        section_store: SectionStore[AgentSectionContent],
+        section_store: SectionStore[AgentRawDataSection],
         logger: logging.Logger,
     ) -> None:
         super().__init__()
@@ -647,12 +647,12 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
     @staticmethod
     def _make_persisted_sections(
-        sections: Mapping[SectionName, AgentSectionContent],
+        sections: Mapping[SectionName, AgentRawDataSection],
         interval_lookup: Mapping[SectionName, Optional[int]],
         *,
         cached_at: int,
-    ) -> PersistedSections[AgentSectionContent]:
-        persisted_sections = PersistedSections[AgentSectionContent]({})
+    ) -> PersistedSections[AgentRawDataSection]:
+        persisted_sections = PersistedSections[AgentRawDataSection]({})
         for section_name, section_content in sections.items():
             fetch_interval = interval_lookup[section_name]
             if fetch_interval is None:

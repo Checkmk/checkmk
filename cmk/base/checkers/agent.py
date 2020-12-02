@@ -390,15 +390,11 @@ class ParserState(abc.ABC):
         host_sections: AgentHostSections,
         *,
         section_info: MutableSet[AgentParserSectionHeader],
-        cached_at: int,
-        cache_age: int,
         logger: logging.Logger,
     ) -> None:
         self.hostname: Final = hostname
         self.host_sections = host_sections
         self.section_info = section_info
-        self.cached_at: Final = cached_at
-        self.cache_age: Final = cache_age
         self._logger: Final = logger
 
     def to_noop_parser(self) -> "NOOPParser":
@@ -406,8 +402,6 @@ class ParserState(abc.ABC):
             self.hostname,
             self.host_sections,
             section_info=self.section_info,
-            cached_at=self.cached_at,
-            cache_age=self.cache_age,
             logger=self._logger,
         )
 
@@ -420,8 +414,6 @@ class ParserState(abc.ABC):
             self.host_sections,
             section_header,
             section_info=self.section_info,
-            cached_at=self.cached_at,
-            cache_age=self.cache_age,
             logger=self._logger,
         )
 
@@ -434,8 +426,6 @@ class ParserState(abc.ABC):
             self.host_sections,
             piggybacked_hostname,
             section_info=self.section_info,
-            cached_at=self.cached_at,
-            cache_age=self.cache_age,
             logger=self._logger,
         )
 
@@ -471,16 +461,12 @@ class PiggybackSectionParser(ParserState):
         piggybacked_hostname: HostName,
         *,
         section_info: MutableSet[AgentParserSectionHeader],
-        cached_at: int,
-        cache_age: int,
         logger: logging.Logger,
     ) -> None:
         super().__init__(
             hostname,
             host_sections,
             section_info=section_info,
-            cached_at=cached_at,
-            cache_age=cache_age,
             logger=logger,
         )
         self.piggybacked_hostname: Final = piggybacked_hostname
@@ -499,12 +485,6 @@ class PiggybackSectionParser(ParserState):
                     # Unpiggybacked "normal" host
                     return self.to_noop_parser()
                 return self.to_piggyback_section_parser(piggybacked_hostname)
-            if HostSectionParser.is_header(line):
-                line = PiggybackSectionParser._add_cached_info(
-                    line.strip(),
-                    self.cached_at,
-                    self.cache_age,
-                )
             self.host_sections.piggybacked_raw_data.setdefault(
                 self.piggybacked_hostname,
                 [],
@@ -534,20 +514,6 @@ class PiggybackSectionParser(ParserState):
         # up, but we need to be sure here to prevent bugs in Checkmk code.
         return regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", piggybacked_hostname)
 
-    @staticmethod
-    def _add_cached_info(
-        orig_section_header: bytes,
-        cached_at: int,
-        cache_age: int,
-    ) -> bytes:
-        if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
-            return orig_section_header
-        return b'<<<%s:cached(%s,%s)>>>' % (
-            orig_section_header[3:-3],
-            ensure_binary("%d" % cached_at),
-            ensure_binary("%d" % cache_age),
-        )
-
 
 class HostSectionParser(ParserState):
     def __init__(
@@ -557,8 +523,6 @@ class HostSectionParser(ParserState):
         section_header: AgentParserSectionHeader,
         *,
         section_info: MutableSet[AgentParserSectionHeader],
-        cached_at: int,
-        cache_age: int,
         logger: logging.Logger,
     ) -> None:
         host_sections.sections.setdefault(section_header.name, [])
@@ -567,8 +531,6 @@ class HostSectionParser(ParserState):
             hostname,
             host_sections,
             section_info=section_info,
-            cached_at=cached_at,
-            cache_age=cache_age,
             logger=logger,
         )
         self.section_header = section_header
@@ -644,16 +606,25 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
-        parser = self._parse_host_section(raw_data, self.host_config.check_mk_check_interval)
+        parser = self._parse_host_section(raw_data)
+
+        cached_at = int(time.time())
+        # Transform to seconds and give the piggybacked host a little bit more time
+        cache_age = int(1.5 * 60 * self.host_config.check_mk_check_interval)
         self._update_cache_info(
             parser.host_sections,
             parser.section_info,
-            cached_at=parser.cached_at,
+            cached_at=cached_at,
+        )
+        parser.host_sections.piggybacked_raw_data = self._make_updated_piggyback_section_header(
+            parser.host_sections.piggybacked_raw_data,
+            cached_at=cached_at,
+            cache_age=cache_age,
         )
         persisted_sections = self._make_persisted_sections(
             parser.host_sections,
             parser.section_info,
-            cached_at=parser.cached_at,
+            cached_at=cached_at,
         )
         self.section_store.update(persisted_sections)
         parser.host_sections.add_persisted_sections(
@@ -662,19 +633,12 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         )
         return parser.host_sections.filter(selection)
 
-    def _parse_host_section(
-        self,
-        raw_data: AgentRawData,
-        check_interval: int,
-    ) -> ParserState:
+    def _parse_host_section(self, raw_data: AgentRawData) -> ParserState:
         """Split agent output in chunks, splits lines by whitespaces."""
         parser: ParserState = NOOPParser(
             self.hostname,
             AgentHostSections(),
             section_info=set(),
-            cached_at=int(time.time()),
-            # Transform to seconds and give the piggybacked host a little bit more time
-            cache_age=int(1.5 * 60 * check_interval),
             logger=self._logger,
         )
         for line in raw_data.split(b"\n"):
@@ -713,3 +677,35 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                 )
             if section_header.cached:
                 host_sections.cache_info[section_header.name] = section_header.cached
+
+    @staticmethod
+    def _make_updated_piggyback_section_header(
+        piggybacked_raw_data: Dict[HostName, List[bytes]],
+        *,
+        cached_at: int,
+        cache_age: int,
+    ) -> Dict[HostName, List[bytes]]:
+        def update_section_header(line: bytes) -> bytes:
+            """Append cache information to section headers.
+
+            If the `line` is a section header without caching
+            information, these are added to the header.
+            Return any other line without modification.
+
+            """
+            if not HostSectionParser.is_header(line):
+                return line
+            if b':cached(' in line or b':persist(' in line:
+                return line
+            return b'<<<%s:cached(%s,%s)>>>' % (
+                line[3:-3],
+                ensure_binary("%d" % cached_at),
+                ensure_binary("%d" % cache_age),
+            )
+
+        updated_piggybacked_raw_data: Dict[HostName, List[bytes]] = {}
+        for hostname, raw_data in piggybacked_raw_data.items():
+            updated_piggybacked_raw_data[hostname] = [
+                update_section_header(line) for line in raw_data
+            ]
+        return updated_piggybacked_raw_data

@@ -1036,6 +1036,10 @@ class BarPlot extends SubPlot {
         let bars = this.svg.selectAll("rect.bar").data(this.transformed_data);
         bars.exit().remove();
 
+        const classes = this.definition.css_classes || [];
+        const bar_spacing = classes.includes("barbar_chart") ? 2 : 4;
+        const css_classes = classes.concat("bar").join(" ");
+
         this._bars = bars
             .enter()
             .append("a")
@@ -1049,18 +1053,18 @@ class BarPlot extends SubPlot {
             // Update new and existing bars
             .style("opacity", this.get_opacity())
             .attr("x", d => this._renderer.scale_x(d.date))
+            .attr("rx", 2)
             .attr(
                 "width",
                 d =>
                     this._renderer.scale_x(new Date(d.ending_timestamp * 1000)) -
-                    this._renderer.scale_x(d.date)
+                    this._renderer.scale_x(d.date) -
+                    bar_spacing
             )
             .each((d, idx, nodes) => {
                 // Update classes
                 let rect = d3.select(nodes[idx]);
-                let classes = ["bar"];
-                classes = classes.concat(this.definition.css_classes || []);
-                rect.classed(classes.join(" "), true);
+                rect.classed(css_classes, true);
             })
             .attr("y", d => this._renderer.scale_y(d.value))
             .attr("height", d => {

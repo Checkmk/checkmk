@@ -986,14 +986,23 @@ void RecoverOldStateFileWithPreemtiveHashPatch() {
 
 // The only API entry DIRECTLY used in production
 bool UpgradeLegacy(Force force_upgrade) {
+    bool force = Force::yes == force_upgrade;
+
+    if (force) {
+        XLOG::d.i("Forced installation, Migration flag check is ignored");
+    } else {
+        if (!cma::install::IsMigrationRequired()) {
+            XLOG::l.i("Migration is disabled in registry by installer");
+            return false;
+        }
+    }
+
     XLOG::l.i("Starting upgrade(migration) process...");
     if (!cma::tools::win::IsElevated()) {
         XLOG::l(
             "You have to be in elevated to use this function.\nPlease, run as Administrator");
         return false;
     }
-
-    bool force = Force::yes == force_upgrade;
 
     InfoOnStdio(force);
 
@@ -1117,6 +1126,8 @@ bool ConvertUserIniFile(
         XLOG::l.i("User ini File {} is absent", user_ini_file.u8string());
         return false;
     }
+
+    XLOG::l.i("User ini File {} to be processed", user_ini_file.u8string());
 
     // check_mk.user.yml or check_mk.bakery.yml
     const auto name = wtools::ConvertToUTF8(files::kDefaultMainConfigName);

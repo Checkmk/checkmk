@@ -363,4 +363,14 @@ void ClearPostInstallFlag() {
                              registry::kMsiPostInstallDefault);
 }
 
+/// \brief - checks that migration flag is set by MSI
+///
+/// Normally called only by service during upgrade config
+bool IsMigrationRequired() {
+    return std::wstring(registry::kMsiMigrationRequest) ==
+           wtools::GetRegistryValue(registry::GetMsiRegistryPath(),
+                                    registry::kMsiMigrationRequired,
+                                    registry::kMsiMigrationDefault);
+}
+
 };  // namespace cma::install

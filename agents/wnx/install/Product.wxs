@@ -610,7 +610,7 @@ just to signal that real build script was not called -->
                          Value="[WIXUI_CLEANINSTALL]"/>
 
           <RegistryValue Type="string"
-                         Name="Migration"
+                         Name="Migration_Required"
                          Value="[WIXUI_MIGRATELEGACY]"/>
 
           <RegistryValue Type="string"

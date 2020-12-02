@@ -4,13 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """MK Livestatus Python API"""
-import socket
-import time
-import re
-import os
 import ast
+import contextlib
+import os
+import re
+import socket
 import ssl
-from typing import NewType, AnyStr, Any, Type, List, Tuple, Union, Dict, Pattern, Optional, Set
+import threading
+import time
+from typing import Any, AnyStr, Dict, List, NewType, Optional, Pattern, Set, Tuple, Type, Union
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
 # (https://github.com/PyCQA/pylint/issues/2296)
@@ -139,6 +141,16 @@ def create_client_socket(family: socket.AddressFamily, tls: bool, verify: bool,
 #   |  Helper class implementing some generic shortcut functions, e.g.     |
 #   |  for fetching just one row or one single value.                      |
 #   '----------------------------------------------------------------------'
+
+
+@contextlib.contextmanager
+def intercept_queries():
+    SingleSiteConnection.collect_queries.active = True
+    SingleSiteConnection.collect_queries.queries = []
+    try:
+        yield SingleSiteConnection.collect_queries.queries
+    finally:
+        SingleSiteConnection.collect_queries.active = False
 
 
 class Helpers:
@@ -278,6 +290,12 @@ DeadSite = Dict[str, Union[str, int, Exception, SiteConfiguration]]
 
 
 class SingleSiteConnection(Helpers):
+
+    # So we only collect in a specific thread, and not in all of them. We also use
+    # a class-variable for this case, so we activate this across all sites at once.
+    collect_queries = threading.local()
+    collect_queries.active = False
+
     def __init__(self,
                  socketurl: str,
                  persist: bool = False,
@@ -460,6 +478,8 @@ class SingleSiteConnection(Helpers):
             # TODO: Use socket.sendall()
             # socket.send() only works with byte strings
             self.socket.send(query.encode("utf-8") + b"\n\n")
+            if SingleSiteConnection.collect_queries.active:
+                SingleSiteConnection.collect_queries.queries.append(query)
         except IOError as e:
             if self.persist:
                 del persistent_connections[self.socketurl]
@@ -895,6 +915,8 @@ class MultiSiteConnection(Helpers):
             try:
                 str_query = connection.build_query(query, add_headers + limit_header)
                 connection.send_query(str_query)
+            except RuntimeError:
+                raise
             except Exception as e:
                 self.deadsites[sitename] = {
                     "exception": e,

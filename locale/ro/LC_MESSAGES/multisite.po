@@ -1578,6 +1578,9 @@ msgstr "O listă cu utilizatori specifici"
 msgid "A matrix showing a colored square for each host"
 msgstr "O matrice care arată un pătrat colorat pentru fiecare element"
 
+msgid "A ntopng user which belongs to the group 'Administrator' in ntopng."
+msgstr ""
+
 msgid ""
 "A package must only consist of letters, digits, dash and it must start with "
 "a letter."
@@ -6748,7 +6751,20 @@ msgstr ""
 
 msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
-"received from external sources, like plugin output or log messages. If you "
+"received from external sources, like service output or log messages. But "
+"there are specific reasons to deactivate this security feature. E.g. when "
+"you want to display the HTML output produced by a specific check plugin."
+"Disabling the escaping also allows the plugin to execute not only HTML, but "
+"also Javascript code in the context of your browser. This makes it possible "
+"to execute arbritary Javascript, even for injection attacks.<br>For this "
+"reason, you should only disable this for a small, very specific number of "
+"services, to be sure that not every random check plugin can make produce "
+"code which your browser interprets."
+msgstr ""
+
+msgid ""
+"By default, for security reasons, the GUI does not interpret any HTML code "
+"received from external sources, like service output or log messages. If you "
 "are really sure what you are doing and need to have HTML code, like links "
 "rendered, disable this option. Be aware, you might open the way for several "
 "injection attacks. "
@@ -6756,7 +6772,7 @@ msgstr ""
 
 msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
-"received from external sources, like plugin output or log messages. If you "
+"received from external sources, like service output or log messages. If you "
 "are really sure what you are doing and need to have HTML codes, like links "
 "rendered, disable this option. Be aware, you might open the way for several "
 "injection attacks. "
@@ -14037,7 +14053,7 @@ msgstr ""
 msgid "Don't change state"
 msgstr ""
 
-msgid "Don't escape HTML codes (insecure)"
+msgid "Don't escape HTML (Dangerous - please read context help)"
 msgstr ""
 
 #, fuzzy
@@ -15520,16 +15536,20 @@ msgstr ""
 msgid "Escalate downtimes based on aggregated WARN state"
 msgstr ""
 
-msgid "Escape HTML codes"
+msgid "Escape HTML"
 msgstr ""
 
-msgid "Escape HTML codes in host output"
+msgid "Escape HTML globally enabled"
 msgstr ""
 
-msgid "Escape HTML codes in plugin output"
+msgid "Escape HTML in host output(Dangerous to deactivate - read help)"
 msgstr ""
 
-msgid "Escape HTML codes in service output"
+msgid "Escape HTML in service output (Dangerous to deactivate - read help)"
+msgstr ""
+
+#, python-format
+msgid "Escaping is <a href=\"%s\">enabled globally</a>"
 msgstr ""
 
 #, fuzzy
@@ -19468,6 +19488,10 @@ msgid "Host & service problems"
 msgstr ""
 
 #, fuzzy
+msgid "Host Address"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Host Alert"
 msgstr "Numele Elementului"
 
@@ -20715,7 +20739,7 @@ msgid ""
 "matching processes and their details (i.e. PID, CPU usage, memory usage). "
 "Please note that HTML output will only work if rules in the rulesets "
 "\"Escape HTML codes in host output\" or \"Escape HTML codes in service output"
-"\" are created or the global setting \"Escape HTML codes in plugin output\" "
+"\" are created or the global setting \"Escape HTML codes in service output\" "
 "is disabled. This might expose you to Cross-Site-Scripting attacks (everyone "
 "with write-access to checks could get scripts executed on the monitoring "
 "site in the context of the user of the monitoring site) so please do this if "
@@ -22338,9 +22362,9 @@ msgstr ""
 msgid ""
 "Instead of disabling this option globally it is highly recommended to "
 "disable the escaping selectively for individual hosts and services with the "
-"rulesets \"Escape HTML codes in host output\" and \"Escape HTML codes in "
-"service output\". The rulesets have the additional advantage that the "
-"configured value is accessible in the notification context."
+"rulesets \"Escape HTML in host output\" and \"Escape HTML in service output"
+"\". The rulesets have the additional advantage that the configured value is "
+"accessible in the notification context."
 msgstr ""
 
 msgid ""
@@ -32543,6 +32567,13 @@ msgstr ""
 msgid "Please confirm the deletion of \"%s\"."
 msgstr ""
 
+#, python-format
+msgid ""
+"Please consider configuring the host or service rulesets <a href=\"%s"
+"\">Escape HTML in service output</a> or <a href=\"%s\">Escape HTML in host "
+"output</a> instead of <a href=\"%s\">disabling escaping globally</a>"
+msgstr ""
+
 msgid "Please define at least one aggregation group"
 msgstr ""
 
@@ -33220,7 +33251,7 @@ msgstr ""
 msgid "Prevent host deletion right after initialization"
 msgstr ""
 
-msgid "Prevent loading HTML from plugin output or log messages"
+msgid "Prevent loading HTML from service output or log messages"
 msgstr ""
 
 msgid "Preview"
@@ -40277,6 +40308,10 @@ msgstr "(Nu primi notificări)"
 msgid "Status of a single service, to be used for linking"
 msgstr ""
 
+#, fuzzy
+msgid "Status of host"
+msgstr " pentru elementul %s"
+
 #, python-format
 msgid "Status of last synchronization: <b>%s</b>"
 msgstr ""
@@ -42020,9 +42055,6 @@ msgid ""
 "<i>Set execution mode for plugins and local checks</i>."
 msgstr ""
 
-msgid "The [url]:[port] of the ntop ng server, e.g. https://10.10.20.10:3000"
-msgstr ""
-
 msgid "The access key ID for your AWS account"
 msgstr ""
 
@@ -42535,12 +42567,6 @@ msgstr ""
 msgid "The dashlet does not exist."
 msgstr ""
 
-msgid "The dashlet has been added to the dashboard."
-msgstr ""
-
-msgid "The dashlet has been saved."
-msgstr ""
-
 msgid ""
 "The data for the background checks is recomputed at most in this interval."
 msgstr ""
@@ -42967,6 +42993,10 @@ msgstr ""
 
 msgid "The host/service must have one of the selected contacts."
 msgstr ""
+
+#, fuzzy
+msgid "The hostaddress of the ntopng instance."
+msgstr "Numele elementului pentru eveniment"
 
 msgid "The hostname is missing."
 msgstr ""
@@ -43766,6 +43796,9 @@ msgid ""
 msgstr ""
 
 msgid "The plugins in this list are also executed as real time checks."
+msgstr ""
+
+msgid "The port on which the ntopng instance is reachable."
 msgstr ""
 
 msgid "The port that is used for the api call."
@@ -49754,9 +49787,6 @@ msgstr ""
 msgid "Urgency"
 msgstr ""
 
-msgid "Url"
-msgstr ""
-
 msgid "Usability"
 msgstr ""
 
@@ -54072,6 +54102,10 @@ msgstr ""
 
 #, python-format
 msgid "Your %s element has been saved."
+msgstr ""
+
+#, python-format
+msgid "Your %s has been deleted."
 msgstr ""
 
 #, python-format

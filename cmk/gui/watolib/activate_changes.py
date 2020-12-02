@@ -363,15 +363,23 @@ class ActivateChanges:
 
     def dirty_and_active_activation_sites(self) -> List[SiteId]:
         """Returns the list of sites that should be used when activating all affected sites"""
+        return self.filter_not_activatable_sites(self.dirty_sites())
+
+    def filter_not_activatable_sites(self, sites: List[Tuple[SiteId,
+                                                             SiteConfiguration]]) -> List[SiteId]:
         dirty = []
-        for site_id, site in activation_sites().items():
+        for site_id, site in sites:
             status = self._get_site_status(site_id, site)[1]
             is_online = self._site_is_online(status)
             is_logged_in = self._site_is_logged_in(site_id, site)
 
-            if is_online and is_logged_in and self._changes_of_site(site_id):
+            if is_online and is_logged_in:
                 dirty.append(site_id)
         return dirty
+
+    def dirty_sites(self) -> List[Tuple[SiteId, SiteConfiguration]]:
+        """Returns the list of sites that have changes (including offline sites)"""
+        return [s for s in activation_sites().items() if self._changes_of_site(s[0])]
 
     def _site_is_logged_in(self, site_id, site):
         return config.site_is_local(site_id) or "secret" in site
@@ -2270,7 +2278,18 @@ def activate_changes_start(
         raise MKUserError(None, _("Currently there are no changes to activate."))
 
     if not sites:
-        sites = manager.dirty_and_active_activation_sites()
+        dirty_sites = manager.dirty_sites()
+        if not dirty_sites:
+            raise MKUserError(None, _("Currently there are no changes to activate."))
+
+        sites = manager.filter_not_activatable_sites(dirty_sites)
+        if not sites:
+            raise MKUserError(
+                None,
+                _("There are changes to activate, but no site can be "
+                  "activated (The sites %s have changes, but may be "
+                  "offline or not logged in).") %
+                ", ".join([site_id for site_id, _site in dirty_sites]))
 
     return manager.start(sites, comment=comment, activate_foreign=force_foreign_changes)
 

@@ -266,6 +266,26 @@ class TestParser:
         assert section_header.persist is None
         assert section_header.separator is None
 
+    def test_make_persisted_sections(self):
+        section_a = SectionName("section_a")
+        content_a = [["first", "line"], ["second", "line"]]
+        section_b = SectionName("section_b")
+        content_b = [["third", "line"], ["forth", "line"]]
+        sections = {section_a: content_a, section_b: content_b}
+        cached_at = 69
+        fetch_interval = 42
+        interval_lookup = {section_a: fetch_interval, section_b: None}
+
+        persisted_sections = AgentParser._make_persisted_sections(
+            sections,
+            interval_lookup,
+            cached_at=cached_at,
+        )
+
+        assert persisted_sections == {  # type: ignore[comparison-overlap]
+            section_a: (cached_at, fetch_interval, content_a)
+        }
+
 
 class StubSummarizer(AgentSummarizer):
     def summarize_success(self, host_sections):

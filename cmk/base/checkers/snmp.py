@@ -7,7 +7,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import Dict, Final, Optional, Set
+from typing import Dict, Final, Mapping, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -260,9 +260,18 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         *,
         selection: SectionNameCollection,
     ) -> SNMPHostSections:
-        persisted_sections = SNMPParser._extract_persisted_sections(
+        cached_at = int(time.time())
+
+        def fetch_interval(section_name: SectionName) -> Optional[int]:
+            fetch_interval = self.host_config.snmp_fetch_interval(section_name)
+            if fetch_interval is None:
+                return fetch_interval
+            return cached_at + fetch_interval * 60
+
+        persisted_sections = SNMPParser._make_persisted_sections(
             raw_data,
-            self.host_config,
+            {section_name: fetch_interval(section_name) for section_name in raw_data},
+            cached_at=cached_at,
         )
         self.section_store.update(persisted_sections)
         host_sections = SNMPHostSections(dict(raw_data))
@@ -273,28 +282,18 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         return host_sections
 
     @staticmethod
-    def _extract_persisted_sections(
-        raw_data: SNMPRawData,
-        host_config: config.HostConfig,
+    def _make_persisted_sections(
+        sections: Mapping[SectionName, SNMPSectionContent],
+        interval_lookup: Mapping[SectionName, Optional[int]],
+        *,
+        cached_at: int,
     ) -> PersistedSections[SNMPSectionContent]:
-        """Extract the sections to be persisted from the raw_data and return it
-
-        Gather the check types to be persisted, extract the related data from
-        the raw data, calculate the times and store the persisted info for
-        later use.
-        """
         persisted_sections = PersistedSections[SNMPSectionContent]({})
-
-        for section_name, section_content in raw_data.items():
-            fetch_interval = host_config.snmp_fetch_interval(section_name)
+        for section_name, section_content in sections.items():
+            fetch_interval = interval_lookup[section_name]
             if fetch_interval is None:
                 continue
-
-            cached_at = int(time.time())
-            until = cached_at + (fetch_interval * 60)
-            # pylint does not seem to understand `NewType`... leave the checking up to mypy.
-            persisted_sections[section_name] = (  # false positive: pylint: disable=E1137
-                (cached_at, until, section_content))
+            persisted_sections[section_name] = (cached_at, fetch_interval, section_content)
 
         return persisted_sections
 

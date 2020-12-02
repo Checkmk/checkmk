@@ -8,7 +8,7 @@ import abc
 import logging
 import time
 from pathlib import Path
-from typing import cast, Dict, Final, Iterable, List, MutableSet, NamedTuple, Optional, Tuple
+from typing import cast, Dict, Final, Iterable, List, Mapping, MutableSet, NamedTuple, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
@@ -621,8 +621,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             cache_age=cache_age,
         )
         persisted_sections = self._make_persisted_sections(
-            parser.host_sections,
-            parser.section_info,
+            parser.host_sections.sections,
+            {section_header.name: section_header.persist for section_header in parser.section_info},
             cached_at=cached_at,
         )
         self.section_store.update(persisted_sections)
@@ -647,17 +647,19 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
     @staticmethod
     def _make_persisted_sections(
-        host_sections: AgentHostSections,
-        section_info: Iterable[HostSectionParser.Header],
+        sections: Mapping[SectionName, AgentSectionContent],
+        interval_lookup: Mapping[SectionName, Optional[int]],
         *,
         cached_at: int,
     ) -> PersistedSections[AgentSectionContent]:
-        return PersistedSections[AgentSectionContent]({
-            section_header.name:
-            (cached_at, section_header.persist, host_sections.sections[section_header.name])
-            for section_header in section_info
-            if section_header.persist is not None
-        })
+        persisted_sections = PersistedSections[AgentSectionContent]({})
+        for section_name, section_content in sections.items():
+            fetch_interval = interval_lookup[section_name]
+            if fetch_interval is None:
+                continue
+            persisted_sections[section_name] = (cached_at, fetch_interval, section_content)
+
+        return persisted_sections
 
     @staticmethod
     def _update_cache_info(

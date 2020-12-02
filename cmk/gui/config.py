@@ -308,6 +308,15 @@ def get_language() -> Optional[str]:
     return default_language
 
 
+def is_ntop_available() -> bool:
+    try:
+        # ntop is currently part of CEE and will *only* be defined if we are a CEE
+        ntop_connection  # type: ignore[name-defined]
+    except NameError:
+        return False
+    return True
+
+
 #.
 #   .--Permissions---------------------------------------------------------.
 #   |        ____                     _         _                          |

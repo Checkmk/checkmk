@@ -702,9 +702,10 @@ class ModeEditUser(WatoMode):
             del user_attrs["authorized_sites"]
 
         # ntopng
-        ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
-        if ntop_connection.get("use_custom_attribute_as_ntop_username"):
-            user_attrs["ntop_alias"] = html.request.get_unicode_input_mandatory("ntop_alias")
+        if config.is_ntop_available():
+            ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+            if ntop_connection.get("use_custom_attribute_as_ntop_username"):
+                user_attrs["ntop_alias"] = html.request.get_unicode_input_mandatory("ntop_alias")
 
         # Roles
         user_attrs["roles"] = [
@@ -824,14 +825,15 @@ class ModeEditUser(WatoMode):
         self._show_custom_user_attributes(custom_user_attr_topics.get('ident', []))
 
         # ntopng
-        ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
-        if ntop_connection.get("use_custom_attribute_as_ntop_username"):
-            forms.section(_("ntopng Username"))
-            lockable_input('ntop_alias', '')
-            html.help(
-                _("The corresponding username in ntopng of the current checkmk user. "
-                  "It is used, in case the user mapping to ntopng is configured to use this "
-                  "custom attribute"))
+        if config.is_ntop_available():
+            ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+            if ntop_connection.get("use_custom_attribute_as_ntop_username"):
+                forms.section(_("ntopng Username"))
+                lockable_input('ntop_alias', '')
+                html.help(
+                    _("The corresponding username in ntopng of the current checkmk user. "
+                      "It is used, in case the user mapping to ntopng is configured to use this "
+                      "custom attribute"))
 
         forms.header(_("Security"))
         forms.section(_("Authentication"))

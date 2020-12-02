@@ -1039,7 +1039,7 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
 
         if (success)
             XLOG::l.i(
-                "Firewall rule '[]' had been added successfully for ports [{}]",
+                "Firewall rule '{}' had been added successfully for ports [{}]",
                 wtools::ConvertToUTF8(kSrvFirewallRuleName), port);
         return;
     }
@@ -1051,10 +1051,10 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
         while (cma::fw::RemoveRule(kSrvFirewallRuleName, app_name)) ++count;
         if (count)
             XLOG::l.i(
-                "Firewall rule '{}' had been added successfully [{}] times",
+                "Firewall rule '{}' had been removed successfully [{}] times",
                 wtools::ConvertToUTF8(kSrvFirewallRuleName), count);
         else
-            XLOG::l.i("Firewall rule '{}' is absent",
+            XLOG::d.i("Firewall rule '{}' is absent, nothing to remove",
                       wtools::ConvertToUTF8(kSrvFirewallRuleName));
         return;
     }

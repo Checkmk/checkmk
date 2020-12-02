@@ -1181,4 +1181,10 @@ def select_language(user):
 
     forms.section(_("Language"))
     html.dropdown("language", languages, deflt=current_language)
-    html.help(_('Configure the language to be used by the user in the user interface here.'))
+    html.help(
+        _('Configure the language of the user interface. Feel free to contribute to the '
+          'translations on %s.') % html.render_a(
+              "Weblate",
+              "https://translate.checkmk.com",
+              target="_blank",
+          ))

@@ -7,7 +7,7 @@
 # CHECKMK_LOCALE_DIR -- name of the clone of the Checkmk localization git repository, e.g. checkmk-locale
 # PO_COMMIT_MSG -- commit message used commit changes in po files in Checkmk repository
 
-LANGUAGES := de ro
+LANGUAGES := de ro nl fr it ja pt_PT es
 SHELL 	  := /bin/bash -e -o pipefail
 MULTISITE_POT = multisite.pot
 

@@ -171,16 +171,28 @@ def test_get_language_local_alias(local_translation):
 
 def test_get_languages():
     assert i18n.get_languages() == [
+        ("nl", "Dutch (machine-supported translation)"),
         ("", "English"),
+        ("fr", "French (machine-supported translation)"),
         ("de", "German"),
+        ("it", "Italian (machine-supported translation)"),
+        ("ja", "Japanese"),
+        ("pt_PT", "Portuguese (Portugal) (machine-supported translation)"),
         ("ro", "Romanian"),
+        ("es", "Spanish (machine-supported translation)"),
     ]
 
 
 def test_get_languages_new_local_language(local_translation):
     assert i18n.get_languages() == [
+        ("nl", "Dutch (machine-supported translation)"),
         ("", "English"),
+        ("fr", "French (machine-supported translation)"),
+        ("it", "Italian (machine-supported translation)"),
+        ("ja", "Japanese"),
+        ("pt_PT", "Portuguese (Portugal) (machine-supported translation)"),
         ("ro", "Romanian"),
+        ("es", "Spanish (machine-supported translation)"),
         ("xz", "Xz"),
-        ('de', u'\xc4xtended German'),
+        ("de", "Äxtended German"),
     ]

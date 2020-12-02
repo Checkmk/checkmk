@@ -85,10 +85,7 @@ def _job_parse_key_values(line: List[str]) -> Tuple[str, float]:
     return key, int(val)
 
 
-def _get_jobname_and_running_state(
-    jobname: str,
-    string_table: type_defs.StringTable,
-) -> Tuple[str, str]:
+def _get_jobname_and_running_state(string_table: type_defs.StringTable,) -> Tuple[str, str]:
     '''determine whether the job is running. some jobs are flagged as
     running jobs, but are in fact not (i.e. they are pseudo running), for
     example killed jobs.
@@ -98,19 +95,20 @@ def _get_jobname_and_running_state(
         - 'not_running'
         - 'pseudo_running'
     '''
+    jobname = " ".join(string_table[0][1:-1])
 
     if not jobname.endswith("running"):
         return jobname, 'not_running'
 
     jobname = jobname.rsplit(".", 1)[0]
-    try:
-        # real running jobs only have the start time defined, then the
-        # next section begins
-        is_running = string_table[2][0] == '==>'
-    except IndexError:
-        return jobname, 'running'
 
-    if not is_running:
+    # real running jobs ...
+    # ... have the start time defined ...
+    if len(string_table) < 2 or string_table[1][0] != 'start_time':
+        return jobname, 'pseudo_running'
+
+    # ... and then the subsection ends
+    if len(string_table) > 2 and string_table[2][0] != '==>':
         return jobname, 'pseudo_running'
 
     return jobname, 'running'
@@ -123,10 +121,7 @@ def parse_job(string_table: type_defs.StringTable) -> Section:
     job: Job = {}
     for idx, line in enumerate(string_table):
         if line[0] == "==>" and line[-1] == "<==":
-            jobname, running_state = _get_jobname_and_running_state(
-                " ".join(line[1:-1]),
-                string_table[idx:],
-            )
+            jobname, running_state = _get_jobname_and_running_state(string_table[idx:])
             running = running_state == 'running'
 
             metrics: Metrics = {}
@@ -153,7 +148,8 @@ def parse_job(string_table: type_defs.StringTable) -> Section:
                 metrics[key] = val
 
     for jobname, job_stats in pseudo_running_jobs.items():
-        if job_stats['start_time'] > parsed.get(jobname, {}).get('start_time', 0):
+        # I am not sure how that happened, but we have seen files w/o 'start_time'
+        if job_stats.get('start_time', -1) > parsed.get(jobname, {}).get('start_time', 0):
             parsed[jobname] = job_stats
 
     return parsed

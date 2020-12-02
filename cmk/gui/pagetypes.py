@@ -1846,7 +1846,9 @@ def _no_bi_aggregate_active() -> bool:
 
 
 def _is_ntop_configured() -> bool:
-    return config.ntop_connection != {}  # type: ignore[attr-defined]
+    if config.is_ntop_available() and config.ntop_connection != {}:  # type: ignore[attr-defined]
+        return True
+    return False
 
 
 #   .--Main menu-----------------------------------------------------------.

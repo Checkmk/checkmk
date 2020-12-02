@@ -807,7 +807,7 @@ def _page_menu_topics(name: DashboardName, board: DashboardConfig,
         entries=list(_dashboard_add_checkmk_dashlet_entries(name, board, mode)),
     )
 
-    if config.ntop_connection:  # type: ignore[attr-defined]
+    if config.is_ntop_available() and config.ntop_connection:  # type: ignore[attr-defined]
         yield PageMenuTopic(
             title=_("Ntop"),
             entries=list(_dashboard_add_ntop_dashlet_entries(name, board, mode)),

@@ -1328,7 +1328,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'cadvisor_cpu',
         'cadvisor_df',
         'cadvisor_diskstat',
-        'cadvisor_if',
         'cadvisor_memory',
         'carel_sensors',
         'carel_uniflair_cooling',

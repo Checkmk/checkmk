@@ -60,18 +60,13 @@ bool IsTest() { return details::G_Test; }
 
 namespace cma::cfg {
 
-InstallationType G_TestInstallationType = InstallationType::packaged;
-void SetTestInstallationType(InstallationType installation_type) {
-    G_TestInstallationType = installation_type;
-}
-
 InstallationType DetermineInstallationType() noexcept {
-    if (cma::IsTest()) return G_TestInstallationType;
-
-    std::filesystem::path source_ini = cma::cfg::GetRootInstallDir();
-    source_ini /= files::kIniFile;
-    return IsIniFileFromInstaller(source_ini) ? InstallationType::packaged
-                                              : InstallationType::wato;
+    std::filesystem::path source_install_yml{cma::cfg::GetRootInstallDir()};
+    source_install_yml /= files::kInstallYmlFileW;
+    std::error_code ec;
+    return std::filesystem::exists(source_install_yml, ec)
+               ? InstallationType::wato
+               : InstallationType::packaged;
 }
 
 std::wstring WinPerf::buildCmdLine() const {
@@ -81,21 +76,21 @@ std::wstring WinPerf::buildCmdLine() const {
 
     std::wstring cmd_line;
     for (const auto& counter : counters) {
-        if (counter.id().length() && counter.name().length()) {
-            // check for allowed
-            std::string name_to_check = vars::kWinPerfPrefixDefault;
-            name_to_check += '_';
-            name_to_check += counter.name();
-            if (groups::global.isSectionDisabled(name_to_check)) continue;
+        if (counter.id().empty() || counter.name().empty()) continue;
 
-            // adding to command line
-            std::wstring name = wtools::ConvertToUTF16(counter.id());
-            std::replace(name.begin(), name.end(), L' ', L'*');
-            cmd_line += name;
-            cmd_line += L":";
-            cmd_line += wtools::ConvertToUTF16(counter.name());
-            cmd_line += L" ";
-        }
+        // check for allowed
+        std::string name_to_check = vars::kWinPerfPrefixDefault;
+        name_to_check += '_';
+        name_to_check += counter.name();
+        if (groups::global.isSectionDisabled(name_to_check)) continue;
+
+        // adding to command line
+        std::wstring name = wtools::ConvertToUTF16(counter.id());
+        std::replace(name.begin(), name.end(), L' ', L'*');
+        cmd_line += name;
+        cmd_line += L":";
+        cmd_line += wtools::ConvertToUTF16(counter.name());
+        cmd_line += L" ";
     }
     if (!cmd_line.empty() && cmd_line.back() == L' ') cmd_line.pop_back();
     return cmd_line;
@@ -1909,16 +1904,6 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
 }  // namespace cma::cfg::details
 
 namespace cma::cfg {
-bool IsIniFileFromInstaller(const std::filesystem::path& filename) {
-    auto data = cma::tools::ReadFileInVector(filename);
-    if (!data.has_value()) return false;
-
-    constexpr std::string_view base = kIniFromInstallMarker;
-    if (data->size() < base.length()) return false;
-
-    auto content = data->data();
-    return 0 == memcmp(content, base.data(), base.length());
-}
 
 // generates standard agent time string
 std::string ConstructTimeString() {

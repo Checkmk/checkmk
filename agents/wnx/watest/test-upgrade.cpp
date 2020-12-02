@@ -614,7 +614,8 @@ TEST(UpgradeTest, UserIniPackagedAgent) {
     }
 }
 
-void SimulateWatoInstall(std::filesystem::path pd_dir) {
+void SimulateWatoInstall(const std::filesystem::path& lwa,
+                         const std::filesystem::path& pd_dir) {
     namespace fs = std::filesystem;
     auto bakery_yaml = ConstructBakeryYmlPath(pd_dir);
     auto user_yaml = ConstructUserYmlPath(pd_dir);
@@ -628,14 +629,16 @@ void SimulateWatoInstall(std::filesystem::path pd_dir) {
 TEST(UpgradeTest, UserIniWatoAgent) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    auto [lwa_dir, pd_dir] = CreateInOut();
-    ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
+    // make temporary filesystem
+    tst::TempCfgFs temp_fs;
+    // simulate WATO installation
+    fs::path install_yml{fs::path(dirs::kFileInstallDir) /
+                         files::kInstallYmlFileW};
+    ASSERT_TRUE(temp_fs.createRootFile(install_yml, "# Doesn't matter"));
 
-    cma::cfg::SetTestInstallationType(InstallationType::wato);
-    ON_OUT_OF_SCOPE(
-        cma::cfg::SetTestInstallationType(InstallationType::packaged));
+    auto [lwa_dir, pd_dir] = CreateInOut();
+
+    ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
 
     std::error_code ec;
 
@@ -645,7 +648,8 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // bakery file and no local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
+        ASSERT_EQ(DetermineInstallationType(), InstallationType::wato);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto name = "check_mk";
@@ -661,7 +665,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // bakery file and local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto u_name = "check_mk";
@@ -680,7 +684,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // private file and no local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto name = "check_mk";
@@ -697,7 +701,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // private file and local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto u_name = "check_mk";
@@ -715,7 +719,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // no private file and local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto u_name = "check_mk";

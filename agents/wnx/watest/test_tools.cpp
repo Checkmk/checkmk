@@ -5,6 +5,8 @@
 
 #include "test_tools.h"
 
+#include <random>
+
 #include "algorithm"  // for remove_if
 #include "cfg.h"
 #include "corecrt_terminate.h"  // for terminate
@@ -113,4 +115,95 @@ std::vector<std::string> ReadFileAsTable(const std::string& Name) {
     return cma::tools::SplitString(content, "\n");
 }
 
+std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name) {
+    namespace fs = std::filesystem;
+    // Find Temporary Folder
+    fs::path temp_folder{cma::tools::win::GetTempFolder()};
+    std::error_code ec;
+    if (!fs::exists(temp_folder, ec)) {
+        XLOG::l("Updating is NOT possible, temporary folder not found [{}]",
+                ec.value());
+        return {};
+    }
+
+    return temp_folder / folder_name;
+}
+
+std::wstring GenerateRandomFileName() noexcept {
+    std::wstring possible_characters(
+        L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+
+    std::random_device rd;
+    std::mt19937 generator(rd());
+
+    std::uniform_int_distribution<> dist(
+        0, static_cast<int>(possible_characters.size()) - 1);
+    std::wstring ret;
+    constexpr size_t kMaxLen{12};
+    for (size_t i = 0; i < kMaxLen; i++) {
+        int random_index = dist(generator);  // get index between 0 and
+                                             // possible_characters.size()-1
+        ret += possible_characters[random_index];
+    }
+
+    return ret;
+}
+
+TempCfgFs::TempCfgFs() {
+    namespace fs = std::filesystem;
+    base_ = MakeTempFolderInTempPath(std::wstring(L"test_") +
+                                     GenerateRandomFileName());
+    root_ = base_ / "r";
+    fs::create_directories(root_);
+    data_ = base_ / "d";
+    fs::create_directories(base_);
+    cma::cfg::GetCfg().pushFolders(root_, base_);
+}
+
+TempCfgFs ::~TempCfgFs() {
+    cma::cfg::GetCfg().popFolders();
+    std::filesystem::remove_all(base_);
+}
+
+[[nodiscard]] bool TempCfgFs::createFile(
+    const std::filesystem::path& filepath,
+    const std::filesystem::path& filepath_base, const std::string& content) {
+    std::error_code ec;
+    auto p = filepath_base / filepath;
+    std::filesystem::remove(p, ec);
+    if (ec.value() != 0 && ec.value() != 2) return false;
+    std::filesystem::create_directories(p.parent_path());
+
+    std::ofstream ofs(p);
+    ofs << content;
+    return true;
+}
+
+[[nodiscard]] bool TempCfgFs::createRootFile(
+    const std::filesystem::path& filepath, const std::string& content) const {
+    return TempCfgFs::createFile(filepath, root_, content);
+}
+
+[[nodiscard]] bool TempCfgFs::createDataFile(
+    const std::filesystem::path& filepath, const std::string& content) const {
+    return TempCfgFs::createFile(filepath, data_, content);
+}
+
+[[nodiscard]] void TempCfgFs::removeFile(
+    const std::filesystem::path& filepath,
+    const std::filesystem::path& filepath_base) {
+    std::error_code ec;
+    auto p = filepath_base / filepath;
+    std::filesystem::remove(p, ec);
+}
+
+[[nodiscard]] void TempCfgFs::removeRootFile(
+    const std::filesystem::path& filepath) const {
+    TempCfgFs::removeFile(filepath, root_);
+}
+
+[[nodiscard]] void TempCfgFs::removeDataFile(
+    const std::filesystem::path& filepath) const {
+    TempCfgFs::removeFile(filepath, data_);
+}
 }  // namespace tst

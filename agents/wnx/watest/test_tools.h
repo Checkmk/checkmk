@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef test_tools_h__
 #define test_tools_h__
@@ -136,6 +137,43 @@ inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
 }
 
 constexpr std::string_view zip_to_test = "unzip_test.zip";
+
+std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name);
+std::wstring GenerateRandomFileName() noexcept;
+
+/// \brief RAII class to change folder structure in the config
+class TempCfgFs {
+public:
+    TempCfgFs();
+
+    TempCfgFs(const TempCfgFs&) = delete;
+    TempCfgFs(TempCfgFs&&) = delete;
+    TempCfgFs& operator=(const TempCfgFs&) = delete;
+    TempCfgFs& operator=(TempCfgFs&&) = delete;
+
+    ~TempCfgFs();
+
+    [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
+                                      const std::string& content) const;
+    [[nodiscard]] bool createDataFile(const std::filesystem::path& relative_p,
+                                      const std::string& content) const;
+
+    void removeRootFile(const std::filesystem::path& relative_p) const;
+    void removeDataFile(const std::filesystem::path& relative_p) const;
+
+    const std::filesystem::path root() const { return root_; }
+    const std::filesystem::path data() const { return data_; }
+
+private:
+    [[nodiscard]] static bool createFile(
+        const std::filesystem::path& filepath,
+        const std::filesystem::path& filepath_base, const std::string& content);
+    static void removeFile(const std::filesystem::path& filepath,
+                           const std::filesystem::path& filepath_base);
+    std::filesystem::path root_;
+    std::filesystem::path data_;
+    std::filesystem::path base_;
+};
 
 }  // namespace tst
 #endif  // test_tools_h__

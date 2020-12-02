@@ -1136,8 +1136,6 @@ namespace cma::cfg {
 constexpr std::string_view kIniFromInstallMarker =
     "# Created by Check_MK Agent Installer";
 
-bool IsIniFileFromInstaller(const std::filesystem::path& filename);
-
 enum class InstallationType { packaged, wato, unknown };
 InstallationType DetermineInstallationType() noexcept;
 void SetTestInstallationType(cma::cfg::InstallationType installation_type);

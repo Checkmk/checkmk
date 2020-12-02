@@ -768,9 +768,10 @@ class CMKWebSession:
             old_t[site.id] = site.live.query_value("GET status\nColumns: program_start\n")
 
         logger.debug("Read replication changes of sites")
-        for site in relevant_sites:
-            logger.debug("Replication changes of site: %r", site.id)
-            site_changes_path = site.path("var/check_mk/wato/replication_changes_%s.mk" % site.id)
+        import glob
+        base_dir = self.site.path("var/check_mk/wato")
+        for site_changes_path in glob.glob(base_dir + "/replication_*"):
+            logger.debug("Replication changes of site: %r", site_changes_path)
             if os.path.exists(site_changes_path):
                 with open(site_changes_path) as f:
                     logger.debug(f.read())

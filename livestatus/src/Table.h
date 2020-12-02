@@ -80,7 +80,7 @@ public:
     // be a real correctness problem! This has to be fixed...
     virtual void answerQuery(Query *query) = 0;
     virtual bool isAuthorized(Row row, const contact *ctc) const;
-    [[nodiscard]] virtual Row findObject(const std::string &objectspec) const;
+    [[nodiscard]] virtual Row get(const std::string &primary_key) const;
 
     template <typename T>
     [[nodiscard]] const T *rowData(Row row) const {

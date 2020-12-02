@@ -223,6 +223,7 @@ void TableContacts::answerQuery(Query *query) {
     }
 }
 
-Row TableContacts::findObject(const std::string &objectspec) const {
-    return Row(core()->find_contact(objectspec));
+Row TableContacts::get(const std::string &primary_key) const {
+    // "name" is the primary key
+    return Row(core()->find_contact(primary_key));
 }

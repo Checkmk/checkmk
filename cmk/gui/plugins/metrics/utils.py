@@ -622,7 +622,7 @@ def get_graph_template(template_id):
         return generic_graph_template(template_id[7:])
     if template_id in graph_info:
         return graph_info[template_id]
-    raise MKGeneralException(_("There is no graph template with the id '%d'") % template_id)
+    raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
 def generic_graph_template(metric_name):

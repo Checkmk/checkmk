@@ -45,6 +45,7 @@ from cmk.gui.valuespec import (
     Integer,
     DropdownChoice,
     FixedValue,
+    ValueSpec,
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _l, _u, _
@@ -488,7 +489,7 @@ class Overridable(Base):
         parameters = super(Overridable, cls).parameters(mode)
 
         if cls.has_overriding_permission("publish"):
-            vs_visibility = Optional(
+            vs_visibility: ValueSpec = Optional(
                 title=_("Visibility"),
                 label=_('Make this %s available for other users') % cls.phrase("title"),
                 none_label=_("Don't publish to other users"),

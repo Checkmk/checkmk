@@ -111,17 +111,18 @@ div.cmk_figure {
     top: 5px;
     right: 6px;
     padding: 5px;
-    background-color: $timeseries-legend-bg-color;
-    border: $tooltip-border;
+    background-color: rgba($bg-color-secondary, 0.87);
     border-radius: 5px;
 
     div.legend_item {
       display: flex;
 
       div.color_code {
-        width: 12px;
-        height: 12px;
+        width: 6px;
+        height: 6px;
         margin-right: 4px;
+        margin-top: 6px;
+        border-radius: 2px;
       }
     }
   }

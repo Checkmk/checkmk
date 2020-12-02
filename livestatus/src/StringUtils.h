@@ -13,6 +13,7 @@
 #include <ostream>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -29,6 +30,12 @@ std::string unsafe_toupper(const std::string &str);
 bool starts_with(const std::string &input, const std::string &test);
 
 std::vector<std::string> split(const std::string &str, char delimiter);
+
+std::tuple<std::string, std::string> splitCompositeKey2(
+    const std::string &composite_key);
+
+std::tuple<std::string, std::string, std::string> splitCompositeKey3(
+    const std::string &composite_key);
 
 std::string join(const std::vector<std::string> &values,
                  const std::string &separator);

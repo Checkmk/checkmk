@@ -692,7 +692,8 @@ ITEM_PARAMS_RESULTS = (
     (
         '5',
         type_defs.Parameters({
-            'errors': (0.01, 0.1),
+            'errors_in': (0.01, 0.1),
+            'errors_out': (0.01, 0.1),
             'speed': 10_000_000,
             'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
             'state': ['1'],
@@ -724,7 +725,8 @@ ITEM_PARAMS_RESULTS = (
     (
         '6',
         type_defs.Parameters({
-            'errors': (0.01, 0.1),
+            'errors_in': (0.01, 0.1),
+            'errors_out': (0.01, 0.1),
             'speed': 100_000_000,
             'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
             'total_traffic': {},
@@ -765,7 +767,8 @@ ITEM_PARAMS_RESULTS = (
     (
         '6',
         type_defs.Parameters({
-            'errors': (0.01, 0.1),
+            'errors_in': (0.01, 0.1),
+            'errors_out': (0.01, 0.1),
             'speed': 100000000,
             'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
             'state': ['1'],
@@ -1221,7 +1224,8 @@ def test_check_multiple_interfaces_duplicate_alias(value_store, item, params, re
 
 def test_check_multiple_interfaces_group_simple(value_store):
     params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
+        'errors_in': (0.01, 0.1),
+        'errors_out': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
         'total_traffic': {
             'levels': [('upper', ('perc', (10.0, 30.0))),]
@@ -1283,7 +1287,8 @@ def test_check_multiple_interfaces_group_simple(value_store):
 
 def test_check_multiple_interfaces_group_exclude(value_store):
     params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
+        'errors_in': (0.01, 0.1),
+        'errors_out': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
         'total_traffic': {
             'levels': [('upper', ('perc', (10.0, 30.0))),]
@@ -1344,7 +1349,8 @@ def test_check_multiple_interfaces_group_exclude(value_store):
 
 def test_check_multiple_interfaces_group_by_agent(value_store):
     params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
+        'errors_in': (0.01, 0.1),
+        'errors_out': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
         'total_traffic': {
             'levels': [('upper', ('perc', (10.0, 30.0))),]
@@ -1446,7 +1452,8 @@ def test_check_multiple_interfaces_same_item_twice_cluster(value_store, item, pa
 
 def test_check_multiple_interfaces_group_multiple_nodes(value_store):
     params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
+        'errors_in': (0.01, 0.1),
+        'errors_out': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
         'total_traffic': {
             'levels': [('upper', ('perc', (10.0, 30.0))),]
@@ -1521,7 +1528,8 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
 
 def test_cluster_check(monkeypatch, value_store):
     params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
+        'errors_in': (0.01, 0.1),
+        'errors_out': (0.01, 0.1),
         'speed': 10000000,
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
         'total_traffic': {

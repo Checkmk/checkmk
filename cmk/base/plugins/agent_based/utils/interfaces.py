@@ -89,7 +89,8 @@ DISCOVERY_DEFAULT_PARAMETERS: DiscoveryDefaultParams = {
 }
 
 CHECK_DEFAULT_PARAMETERS = {
-    "errors": (0.01, 0.1),
+    "errors_in": (0.01, 0.1),
+    "errors_out": (0.01, 0.1),
 }
 
 
@@ -957,9 +958,8 @@ def check_single_interface(
     average_bmcast = params.get("average_bm")
 
     # error checking might be turned off
-    err_warn, err_crit = params.get("errors", (None, None))
-    err_in_warn, err_in_crit = params.get("errors_in", (err_warn, err_crit))
-    err_out_warn, err_out_crit = params.get("errors_out", (err_warn, err_crit))
+    err_in_warn, err_in_crit = params.get("errors_in", (None, None))
+    err_out_warn, err_out_crit = params.get("errors_out", (None, None))
 
     # broadcast storm detection is turned off by default
     nucast_warn, nucast_crit = params.get("nucasts", (None, None))
@@ -1164,8 +1164,9 @@ def check_single_interface(
             yield result
 
     yield from _io_rates(
-        err_warn,
-        err_crit,
+        # This is only temporary and will be handled with CMK-6472
+        0.01,
+        0.1,
         mcast_warn,
         mcast_crit,
         bcast_warn,

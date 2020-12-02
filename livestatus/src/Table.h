@@ -80,7 +80,11 @@ public:
     // be a real correctness problem! This has to be fixed...
     virtual void answerQuery(Query *query) = 0;
     virtual bool isAuthorized(Row row, const contact *ctc) const;
+
     [[nodiscard]] virtual Row get(const std::string &primary_key) const;
+
+    // We have funny single-row tables without a primary key!
+    [[nodiscard]] virtual Row getDefault() const;
 
     template <typename T>
     [[nodiscard]] const T *rowData(Row row) const {

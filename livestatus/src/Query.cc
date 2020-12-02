@@ -788,6 +788,19 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
+    if (_wait_condition->is_contradiction() && _wait_timeout == 0ms) {
+        _output.setError(OutputBuffer::ResponseCode::invalid_request,
+                         "waiting for WaitCondition would hang forever");
+        return;
+    }
+    if (!_wait_condition->is_tautology() && _wait_object.isNull()) {
+        _wait_object = _table.getDefault();
+        if (_wait_object.isNull()) {
+            _output.setError(OutputBuffer::ResponseCode::invalid_request,
+                             "missing WaitObject");
+            return;
+        }
+    }
     _table.core()->triggers().wait_for(_wait_trigger, _wait_timeout, [this] {
         return _wait_condition->accepts(_wait_object, _auth_user,
                                         timezoneOffset());

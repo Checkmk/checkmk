@@ -128,3 +128,5 @@ std::string TableEventConsoleStatus::name() const {
 std::string TableEventConsoleStatus::namePrefix() const {
     return "eventconsolestatus_";
 }
+
+Row TableEventConsoleStatus::getDefault() const { return Row{this}; }

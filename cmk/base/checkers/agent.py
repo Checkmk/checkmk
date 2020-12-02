@@ -303,61 +303,6 @@ class AgentSummarizerDefault(AgentSummarizer):
                 (agent_version, expected_version, e))
 
 
-class AgentParserSectionHeader(NamedTuple):
-    name: SectionName
-    cached: Optional[Tuple[int, int]]
-    encoding: str
-    nostrip: bool
-    persist: Optional[int]
-    separator: Optional[str]
-
-    @classmethod
-    def from_headerline(cls, headerline: bytes) -> "AgentParserSectionHeader":
-        def parse_options(elems: Iterable[str]) -> Iterable[Tuple[str, str]]:
-            for option in elems:
-                if "(" not in option:
-                    continue
-                name, value = option.split("(", 1)
-                assert value[-1] == ")", value
-                yield name, value[:-1]
-
-        if not HostSectionParser.is_header(headerline):
-            raise ValueError(headerline)
-
-        headerparts = ensure_str(headerline[3:-3]).split(":")
-        options = dict(parse_options(headerparts[1:]))
-        cached: Optional[Tuple[int, int]]
-        try:
-            cached_ = tuple(map(int, options["cached"].split(",")))
-            cached = cached_[0], cached_[1]
-        except KeyError:
-            cached = None
-
-        encoding = options.get("encoding", "utf-8")
-        nostrip = options.get("nostrip") is not None
-
-        persist: Optional[int]
-        try:
-            persist = int(options["persist"])
-        except KeyError:
-            persist = None
-
-        separator: Optional[str]
-        try:
-            separator = chr(int(options["sep"]))
-        except KeyError:
-            separator = None
-
-        return AgentParserSectionHeader(
-            name=SectionName(headerparts[0]),
-            cached=cached,
-            encoding=encoding,
-            nostrip=nostrip,
-            persist=persist,
-            separator=separator,
-        )
-
-
 class ParserState(abc.ABC):
     """Base class for the state machine.
 
@@ -389,7 +334,7 @@ class ParserState(abc.ABC):
         hostname: HostName,
         host_sections: AgentHostSections,
         *,
-        section_info: MutableSet[AgentParserSectionHeader],
+        section_info: MutableSet["HostSectionParser.Header"],
         logger: logging.Logger,
     ) -> None:
         self.hostname: Final = hostname
@@ -407,7 +352,7 @@ class ParserState(abc.ABC):
 
     def to_host_section_parser(
         self,
-        section_header: AgentParserSectionHeader,
+        section_header: "HostSectionParser.Header",
     ) -> "HostSectionParser":
         return HostSectionParser(
             self.hostname,
@@ -460,7 +405,7 @@ class PiggybackSectionParser(ParserState):
         host_sections: AgentHostSections,
         piggybacked_hostname: HostName,
         *,
-        section_info: MutableSet[AgentParserSectionHeader],
+        section_info: MutableSet["HostSectionParser.Header"],
         logger: logging.Logger,
     ) -> None:
         super().__init__(
@@ -516,13 +461,67 @@ class PiggybackSectionParser(ParserState):
 
 
 class HostSectionParser(ParserState):
+    class Header(NamedTuple):
+        name: SectionName
+        cached: Optional[Tuple[int, int]]
+        encoding: str
+        nostrip: bool
+        persist: Optional[int]
+        separator: Optional[str]
+
+        @classmethod
+        def from_headerline(cls, headerline: bytes) -> "HostSectionParser.Header":
+            def parse_options(elems: Iterable[str]) -> Iterable[Tuple[str, str]]:
+                for option in elems:
+                    if "(" not in option:
+                        continue
+                    name, value = option.split("(", 1)
+                    assert value[-1] == ")", value
+                    yield name, value[:-1]
+
+            if not HostSectionParser.is_header(headerline):
+                raise ValueError(headerline)
+
+            headerparts = ensure_str(headerline[3:-3]).split(":")
+            options = dict(parse_options(headerparts[1:]))
+            cached: Optional[Tuple[int, int]]
+            try:
+                cached_ = tuple(map(int, options["cached"].split(",")))
+                cached = cached_[0], cached_[1]
+            except KeyError:
+                cached = None
+
+            encoding = options.get("encoding", "utf-8")
+            nostrip = options.get("nostrip") is not None
+
+            persist: Optional[int]
+            try:
+                persist = int(options["persist"])
+            except KeyError:
+                persist = None
+
+            separator: Optional[str]
+            try:
+                separator = chr(int(options["sep"]))
+            except KeyError:
+                separator = None
+
+            return HostSectionParser.Header(
+                name=SectionName(headerparts[0]),
+                cached=cached,
+                encoding=encoding,
+                nostrip=nostrip,
+                persist=persist,
+                separator=separator,
+            )
+
     def __init__(
         self,
         hostname: HostName,
         host_sections: AgentHostSections,
-        section_header: AgentParserSectionHeader,
+        section_header: Header,
         *,
-        section_info: MutableSet[AgentParserSectionHeader],
+        section_info: MutableSet[Header],
         logger: logging.Logger,
     ) -> None:
         host_sections.sections.setdefault(section_header.name, [])
@@ -579,8 +578,8 @@ class HostSectionParser(ParserState):
         return line.strip() == b'<<<>>>'
 
     @staticmethod
-    def parse_header(line: bytes) -> AgentParserSectionHeader:
-        return AgentParserSectionHeader.from_headerline(line)
+    def parse_header(line: bytes) -> Header:
+        return HostSectionParser.Header.from_headerline(line)
 
 
 class AgentParser(Parser[AgentRawData, AgentHostSections]):
@@ -649,7 +648,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
     @staticmethod
     def _make_persisted_sections(
         host_sections: AgentHostSections,
-        section_info: Iterable[AgentParserSectionHeader],
+        section_info: Iterable[HostSectionParser.Header],
         *,
         cached_at: int,
     ) -> PersistedSections[AgentSectionContent]:
@@ -663,7 +662,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
     @staticmethod
     def _update_cache_info(
         host_sections: AgentHostSections,
-        section_info: Iterable[AgentParserSectionHeader],
+        section_info: Iterable[HostSectionParser.Header],
         *,
         cached_at: int,
     ) -> None:

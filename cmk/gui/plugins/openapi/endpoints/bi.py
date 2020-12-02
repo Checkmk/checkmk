@@ -89,12 +89,14 @@ def put_bi_rule(params):
     """Save BI Rule"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
+    rule_config = params["body"]
     try:
-        target_pack = bi_packs.get_pack_mandatory(params["body"]["pack_id"])
+        target_pack = bi_packs.get_pack_mandatory(rule_config["pack_id"])
     except KeyError:
-        _bailout_with_message("Unknown bi_pack: %s" % params["body"]["pack_id"])
+        _bailout_with_message("Unknown bi_pack: %s" % rule_config["pack_id"])
 
-    bi_rule = BIRule(params["body"])
+    rule_config["id"] = params["rule_id"]
+    bi_rule = BIRule(rule_config)
     target_pack.add_rule(bi_rule)
     bi_packs.save_config()
 
@@ -165,13 +167,16 @@ def put_bi_aggregation(params):
     """Save BI Aggregation"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
-    bi_aggregation = BIAggregation(params["body"])
+
+    aggregation_config = params["body"]
 
     try:
-        target_pack = bi_packs.get_pack_mandatory(params["body"]["pack_id"])
+        target_pack = bi_packs.get_pack_mandatory(aggregation_config["pack_id"])
     except KeyError:
-        _bailout_with_message("Unknown bi_pack: %s" % params["body"]["pack_id"])
+        _bailout_with_message("Unknown bi_pack: %s" % aggregation_config["pack_id"])
 
+    aggregation_config["id"] = params["aggregation_id"]
+    bi_aggregation = BIAggregation(aggregation_config)
     target_pack.add_aggregation(bi_aggregation)
     bi_packs.save_config()
 

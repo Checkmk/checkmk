@@ -132,10 +132,9 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     aggr = json.loads(response.text)
 
     clone_id = "cloned_aggregation"
-    aggr["id"] = clone_id
 
     # Modify and send back
-    response = wsgi_app.put(base + '/objects/bi_aggregation/%s' % aggr_id,
+    response = wsgi_app.put(base + '/objects/bi_aggregation/%s' % clone_id,
                             content_type='application/json',
                             params=json.dumps(aggr),
                             status=200)
@@ -161,10 +160,9 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     rule = json.loads(response.text)
 
     clone_id = "appliations_clone"
-    rule["id"] = clone_id
 
     # Modify and send back
-    response = wsgi_app.put(base + '/objects/bi_rule/%s' % rule_id,
+    response = wsgi_app.put(base + '/objects/bi_rule/%s' % clone_id,
                             content_type='application/json',
                             params=json.dumps(rule),
                             status=200)

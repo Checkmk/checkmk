@@ -51,13 +51,7 @@ from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.exceptions import MKParseFunctionError
 
-from .type_defs import (
-    AgentSectionContent,
-    NO_SELECTION,
-    PiggybackRawData,
-    SectionCacheInfo,
-    SectionNameCollection,
-)
+from .type_defs import AgentSectionContent, NO_SELECTION, SectionCacheInfo, SectionNameCollection
 
 # AbstractSectionContent is wrong from a typing point of view.
 # AgentSectionContent and SNMPSectionContent are not correct either,
@@ -180,9 +174,8 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
         sections: Optional[MutableMapping[SectionName, TSectionContent]] = None,
         *,
         cache_info: Optional[SectionCacheInfo] = None,
-        piggybacked_raw_data: Optional[PiggybackRawData] = None,
-        # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
-        # The value is a list of lines which were received for this host.
+        # For `piggybacked_raw_data`, List[bytes] is equivalent to AgentRawData.
+        piggybacked_raw_data: Optional[Dict[HostName, List[bytes]]] = None,
     ) -> None:
         super().__init__()
         self.sections = sections if sections else {}

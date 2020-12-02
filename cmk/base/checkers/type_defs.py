@@ -7,13 +7,12 @@
 import enum
 from typing import Dict, Final, List, Set, Tuple, Union
 
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import SectionName
 
 __all__ = ["SectionCacheInfo", "SectionNameCollection", "NO_SELECTION"]
 
 AgentSectionContent = List[List[str]]
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
-PiggybackRawData = Dict[HostName, List[bytes]]
 
 
 class SelectionType(enum.Enum):

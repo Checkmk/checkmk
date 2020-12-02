@@ -1,0 +1,19 @@
+Title: Fix AttributeError on update with nagios core
+Class: fix
+Compatible: comp
+Component: core
+Date: 1606934588
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+Updating from 1.6.0pxx to 2.0.0b1 could result in an AttributeError
+"module 'cmk.base' has no attribute 'cee'" in section "Migrating fs_used name".
+
+The cause was a wrong check for the used core of the site the update was applied
+to.
+
+If you update to 2.0.0b2 the section will be processed correctly.
+
+

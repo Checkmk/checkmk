@@ -149,6 +149,7 @@ def update_pnp_info_files(perfvar, newvar, filepath):
 def update_service_info(config_cache, hostnames):
     pnp_files_present = False
     check_variables = config.get_check_variables()
+    used_core = config.monitoring_core
 
     for hostname in hostnames:
         for service in cmk.base.autochecks.parse_autochecks_file(
@@ -157,7 +158,7 @@ def update_service_info(config_cache, hostnames):
                 check_variables,
         ):
             if service.check_plugin_name in CHECKS_USING_DF_INCLUDE:
-                update_files(hostname, service.description, service.item, 'cmc')
+                update_files(hostname, service.description, service.item, used_core)
                 pnp_files_present |= update_files(hostname, service.description, service.item,
                                                   'pnp4nagios')
 

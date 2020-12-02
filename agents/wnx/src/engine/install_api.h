@@ -44,9 +44,15 @@ const std::wstring kMsiRemoveLegacyDefault = L"";
 const std::wstring kMsiRemoveLegacyRequest = L"1";
 const std::wstring kMsiRemoveLegacyAlready = L"0";
 
+// to control post installation phase. While set disallow any command line calls
+// to service
 constexpr std::wstring_view kMsiPostInstallRequired = L"PostInstall_Required";
 constexpr std::wstring_view kMsiPostInstallDefault = L"no";
 constexpr std::wstring_view kMsiPostInstallRequest = L"yes";
+
+constexpr std::wstring_view kMsiMigrationRequired = L"Migration_Required";
+constexpr std::wstring_view kMsiMigrationDefault = L"";
+constexpr std::wstring_view kMsiMigrationRequest = L"1";
 
 inline const std::wstring GetMsiRegistryPath() {
     return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;
@@ -88,6 +94,8 @@ bool NeedInstall(const std::filesystem::path& incoming_file,
 
 bool IsPostInstallRequired();
 void ClearPostInstallFlag();
+
+bool IsMigrationRequired();
 
 }  // namespace install
 }  // namespace cma

@@ -767,6 +767,14 @@ class CMKWebSession:
         for site in relevant_sites:
             old_t[site.id] = site.live.query_value("GET status\nColumns: program_start\n")
 
+        logger.debug("Read replication changes of sites")
+        for site in relevant_sites:
+            logger.debug("Replication changes of site: %r", site.id)
+            site_changes_path = site.path("var/check_mk/wato/replication_changes_%s.mk" % site.id)
+            if os.path.exists(site_changes_path):
+                with open(site_changes_path) as f:
+                    logger.debug(f.read())
+
         logger.debug("Start activate changes: %r", request)
         time_started = time.time()
         result = self._api_request("webapi.py?action=activate_changes", {

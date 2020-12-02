@@ -22,10 +22,14 @@ __version__ = "2.1.0i1"
 import os
 import re
 import sys
-import urllib2
+import urllib.request
+import urllib.error
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 # tell urllib2 not to honour "http(s)_proxy" env variables
-urllib2.getproxies = lambda: {}
+urllib.getproxies = lambda: {}
 
 config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
 config_file = config_dir + "/nginx_status.cfg"
@@ -110,14 +114,14 @@ for server in servers:
         url = '%s://%s:%s/%s' % (proto, address, port, page)
         # Try to fetch the status page for each server
         try:
-            request = urllib2.Request(url, headers={"Accept": "text/plain"})
-            fd = urllib2.urlopen(request)
-        except urllib2.URLError as e:
+            request = urllib.request.Request(url, headers={"Accept": "text/plain"})
+            fd = urllib.request.urlopen(request)
+        except urllib.error.URLError as e:
             if 'SSL23_GET_SERVER_HELLO:unknown protocol' in str(e):
                 # HACK: workaround misconfigurations where port 443 is used for
                 # serving non ssl secured http
                 url = 'http://%s:%s/%s' % (address, port, page)
-                fd = urllib2.urlopen(url)
+                fd = urllib.request.urlopen(url)
             else:
                 raise
 
@@ -128,7 +132,7 @@ for server in servers:
                 # seems to be html output. Skip this server.
                 break
             sys.stdout.write("%s %s %s\n" % (address, port, line))
-    except urllib2.HTTPError as e:
+    except urllib.error.HTTPError as e:
         sys.stderr.write('HTTP-Error (%s:%d): %s %s\n' % (address, port, e.code, e))
 
     except Exception as e:

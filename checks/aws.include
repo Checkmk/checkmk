@@ -107,8 +107,8 @@ def check_aws_elb_summary_generic(item, params, load_balancers):
 
             balancers_by_avail_zone.setdefault(avail_zone_readable, []).append(balancer_name)
             avail_zones_txt.append(avail_zone_readable)
-        long_output.append("Balancer: %s, Availability zones: %s"\
-                           % (balancer_name, ", ".join(avail_zones_txt)))
+        long_output.append("Balancer: %s, Availability zones: %s" %
+                           (balancer_name, ", ".join(avail_zones_txt)))
 
     for avail_zone, balancers in sorted(balancers_by_avail_zone.iteritems()):
         yield 0, "%s: %s" % (avail_zone, len(balancers))
@@ -188,3 +188,83 @@ def check_aws_limits(aws_service, params, parsed):
 
     if long_output:
         yield 0, "\n%s" % "\n".join(sorted(long_output))
+
+
+def aws_get_float_human_readable(f, unit=""):
+    return get_number_with_precision(f, unit=unit, precision=3)
+
+
+def aws_get_counts_rate_human_readable(rate):
+    return aws_get_float_human_readable(rate)[:-1] + "/s"
+
+
+def aws_get_bytes_rate_human_readable(rate):
+    return get_bytes_human_readable(rate) + "/s"
+
+
+def check_aws_request_rate(request_rate):
+    return 0, 'Requests: %s' % aws_get_counts_rate_human_readable(request_rate), [
+        ('requests_per_second', request_rate)
+    ]
+
+
+def check_aws_error_rate(error_rate, request_rate, metric_name_rate, metric_name_perc, levels,
+                         display_text):
+
+    yield (0, '%s: %s' % (display_text, aws_get_counts_rate_human_readable(error_rate)),
+           [(metric_name_rate, error_rate)])
+
+    try:
+        errors_perc = 100.0 * error_rate / request_rate
+    except ZeroDivisionError:
+        errors_perc = 0
+
+    yield check_levels(errors_perc,
+                       metric_name_perc,
+                       levels,
+                       human_readable_func=get_percent_human_readable,
+                       infoname="%s of total requests" % display_text)
+
+
+def check_aws_http_elb(params, parsed, http_err_codes, cloudwatch_metrics_format):
+
+    request_rate = parsed.get('RequestCount')
+    if request_rate is None:
+        raise MKCounterWrapped("Currently no data from AWS")
+
+    yield check_aws_request_rate(request_rate)
+
+    for http_err_code in http_err_codes:
+        # CloudWatch only reports HTTPCode_... if the value is nonzero
+        for result in check_aws_error_rate(
+                parsed.get(cloudwatch_metrics_format % http_err_code.upper(), 0), request_rate,
+                'aws_http_%s_rate' % http_err_code, 'aws_http_%s_perc' % http_err_code,
+                params.get('levels_http_%s_perc' % http_err_code),
+                "%s-Errors" % http_err_code.upper()):
+            yield result
+
+
+def check_aws_elb_metrics(metric_infos):
+    # type: (List[Dict[str, Union[float, str, Optional[Tuple], Optional[Callable]]]]) -> Iterable[ServiceCheckResult]
+
+    go_stale = True
+
+    for metric_info in metric_infos:
+
+        metric_val = metric_info['metric_val']
+        if metric_val is None:
+            continue
+        go_stale = False
+
+        yield check_levels(metric_val,
+                           metric_info['metric_name'],
+                           metric_info.get('levels'),
+                           human_readable_func=metric_info.get('human_readable_func'),
+                           infoname=metric_info.get('info_name'))
+
+    if go_stale:
+        raise MKCounterWrapped("Currently no data from AWS")
+
+
+def aws_rds_service_item(instance_id, region):
+    return '%s [%s]' % (instance_id, region)

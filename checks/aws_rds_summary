@@ -27,7 +27,10 @@
 
 def parse_aws_rds_summary(info):
     try:
-        return {instance['DBInstanceIdentifier']: instance for instance in parse_aws(info)}
+        return {
+            aws_rds_service_item(instance['DBInstanceIdentifier'], instance['Region']): instance
+            for instance in parse_aws(info)
+        }
     except IndexError:
         return {}
 

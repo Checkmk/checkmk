@@ -127,6 +127,11 @@ div.cmk_figure {
     }
   }
 
+  g.axis {
+    // axis edges invisible because designer made them so
+    color: $bg-color-secondary;
+  }
+
   &.average_scatterplot {
     div.tooltip {
       max-width: 300px;

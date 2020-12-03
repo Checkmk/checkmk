@@ -1402,8 +1402,14 @@ def collect_filter_headers(info_keys, table):
 
 def FilterChoices(infos: List[InfoName], title: str, help: str):  # pylint: disable=redefined-builtin
     """Select names of filters for the given infos"""
+    def _info_filter_choices(infos):
+        for info in infos:
+            info_title = visual_info_registry[info]().title
+            for key, filter_ in VisualFilterList.get_choices(info, ignore=set()):
+                yield (key, f"{info_title}: {filter_.title()}")
+
     return DualListChoice(
-        choices=[(x[0], x[1].title()) for x in VisualFilterList.get_choices(infos, ignore=set())],
+        choices=list(_info_filter_choices(infos)),
         title=title,
         help=help,
     )

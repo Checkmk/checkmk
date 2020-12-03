@@ -1,0 +1,12 @@
+Title: Dashboards: Fix selecting "Required context filters" in dashboard properties
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1607012140
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+The feature that was introduced with 2.0.0i1 was not usable in the current version
+because the selection of filters was always empty.

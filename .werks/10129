@@ -1,0 +1,16 @@
+Title: Fixed WaitObject regression in Livestatus queries
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1606982576
+Edition: cre
+Knowledge: doc
+Level: 3
+State: unknown
+Version: 2.0.0b2
+
+There are 2 Livestatus tables consisting only of a single row:
+"status" and "eventconsolestatus".  You can't specify a WaitObject
+for them (they have no primary key), so you leave this header out
+when using WaitCondition/WaitTimeout/...  on these single-row tables.
+This special case was broken in early 2.0 versions and has been fixed.

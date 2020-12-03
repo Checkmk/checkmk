@@ -22,6 +22,31 @@ class MonitoringCore;
 class Query;
 
 /// A table-like view for some underlying data, exposed via LQL.
+///
+/// table               | primary key
+/// ------------------- | ---------------------------------------
+/// columns             | table;name
+/// commands            | name
+/// comments            | id
+/// contactgroups       | name
+/// contacts            | name
+/// crashreports        | id
+/// downtimes           | id
+/// eventconsoleevents  | event_id
+/// eventconsolehistory | _none, problem: history_line unusable_
+/// eventconsolerules   | rule_id
+/// eventconsolestatus  | _none, but just a single-row table_
+/// hostgroups          | name
+/// hosts               | name
+/// hostsbygroup        | hostgroup_name;name
+/// log                 | time;lineno
+/// servicegroups       | name
+/// services            | host_name;description
+/// servicesbygroup     | servicegroup_name;host_name;description
+/// servicesbyhostgroup | hostgroup_name;host_name;description
+/// statehist           | _none, totally unclear_
+/// status              | _none, but just a single-row table_
+/// timeperiods         | name
 class Table {
 public:
     explicit Table(MonitoringCore *mc);

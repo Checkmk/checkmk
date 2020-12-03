@@ -15,7 +15,7 @@ Migrate RRDs metadata which are based on mountpoint names to static name 'fs_use
 
 WARN: DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
 """
-
+import importlib
 import os
 import logging
 import xml.etree.ElementTree as ET
@@ -149,7 +149,7 @@ def update_pnp_info_files(perfvar, newvar, filepath):
 def update_service_info(config_cache, hostnames):
     pnp_files_present = False
     check_variables = config.get_check_variables()
-    used_core = config.monitoring_core
+    cmc_capable = importlib.util.find_spec('cmk.base.cee')
 
     for hostname in hostnames:
         for service in cmk.base.autochecks.parse_autochecks_file(
@@ -158,7 +158,8 @@ def update_service_info(config_cache, hostnames):
                 check_variables,
         ):
             if service.check_plugin_name in CHECKS_USING_DF_INCLUDE:
-                update_files(hostname, service.description, service.item, used_core)
+                if cmc_capable:
+                    update_files(hostname, service.description, service.item, 'cmc')
                 pnp_files_present |= update_files(hostname, service.description, service.item,
                                                   'pnp4nagios')
 

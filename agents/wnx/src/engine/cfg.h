@@ -1137,7 +1137,13 @@ constexpr std::string_view kIniFromInstallMarker =
     "# Created by Check_MK Agent Installer";
 
 enum class InstallationType { packaged, wato, unknown };
+
+/// \brief returns the type of installation
+///
+/// possible values wato or packaged, where packaged returned only if the
+/// check_mk.install.yml exists and ["global"]["install"] == "no"
 InstallationType DetermineInstallationType() noexcept;
+
 void SetTestInstallationType(cma::cfg::InstallationType installation_type);
 std::filesystem::path ConstructInstallFileName(
     const std::filesystem::path& dir);

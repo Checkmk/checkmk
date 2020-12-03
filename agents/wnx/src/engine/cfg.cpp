@@ -61,12 +61,25 @@ bool IsTest() { return details::G_Test; }
 namespace cma::cfg {
 
 InstallationType DetermineInstallationType() noexcept {
-    std::filesystem::path source_install_yml{cma::cfg::GetRootInstallDir()};
+    using namespace std::string_literals;
+    namespace fs = std::filesystem;
+
+    fs::path source_install_yml{cma::cfg::GetRootInstallDir()};
     source_install_yml /= files::kInstallYmlFileW;
-    std::error_code ec;
-    return std::filesystem::exists(source_install_yml, ec)
-               ? InstallationType::wato
-               : InstallationType::packaged;
+
+    try {
+        auto file = YAML::LoadFile(source_install_yml.u8string());
+
+        if (file[groups::kGlobal][vars::kInstall].as<std::string>() == "no"s)
+            return InstallationType::packaged;
+
+    } catch (const std::exception& e) {
+        XLOG::l.i(
+            "Exception '{}' when checking installation type '{}' - assumed wato installation",
+            e.what(), source_install_yml.u8string());
+    }
+
+    return InstallationType::wato;
 }
 
 std::wstring WinPerf::buildCmdLine() const {

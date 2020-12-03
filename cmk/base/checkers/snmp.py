@@ -25,11 +25,23 @@ from .host_sections import HostSections, PersistedSections, SectionStore
 from .type_defs import NO_SELECTION, SectionNameCollection
 
 
+def make_inventory_sections() -> Set[SectionName]:
+    return set(
+        agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=(),
+            inventory_plugin_names=(
+                p.name for p in agent_based_register.iter_all_inventory_plugins()),
+        )).intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
+
+
 def make_plugin_store() -> SNMPPluginStore:
+    inventory_sections = make_inventory_sections()
     return SNMPPluginStore({
         s.name: SNMPPluginStoreItem(
             [BackendSNMPTree.from_frontend(base=t.base, oids=t.oids) for t in s.trees],
-            SNMPDetectSpec(s.detect_spec)) for s in agent_based_register.iter_all_snmp_sections()
+            SNMPDetectSpec(s.detect_spec),
+            s.name in inventory_sections,
+        ) for s in agent_based_register.iter_all_snmp_sections()
     })
 
 
@@ -159,15 +171,13 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
 
     def _make_sections(self) -> Dict[SectionName, SectionMeta]:
         checking_sections = self._make_checking_sections()
-        inventory_sections = self._make_inventory_sections()
         disabled_sections = self._make_disabled_sections()
         return {
             name: SectionMeta(
                 checking=name in checking_sections,
-                inventory=name in inventory_sections,
                 disabled=name in disabled_sections,
                 fetch_interval=self.host_config.snmp_fetch_interval(name),
-            ) for name in checking_sections | inventory_sections
+            ) for name in checking_sections
         }
 
     def _make_parser(self) -> "SNMPParser":
@@ -201,14 +211,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                     inventory_plugin_names=()))
         return checking_sections.intersection(
             s.name for s in agent_based_register.iter_all_snmp_sections())
-
-    def _make_inventory_sections(self) -> Set[SectionName]:
-        return set(
-            agent_based_register.get_relevant_raw_sections(
-                check_plugin_names=(),
-                inventory_plugin_names=(
-                    p.name for p in agent_based_register.iter_all_inventory_plugins()),
-            )).intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
 
     @staticmethod
     def _make_description(

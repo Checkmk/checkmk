@@ -44,6 +44,7 @@ __all__ = ["SNMPFetcher", "SNMPFileCache", "SNMPPluginStore", "SNMPPluginStoreIt
 class SNMPPluginStoreItem(NamedTuple):
     trees: Sequence[BackendSNMPTree]
     detect_spec: SNMPDetectSpec
+    inventory: bool
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPPluginStoreItem":
@@ -51,6 +52,7 @@ class SNMPPluginStoreItem(NamedTuple):
             return cls(
                 [BackendSNMPTree.from_json(tree) for tree in serialized["trees"]],
                 SNMPDetectSpec.from_json(serialized["detect_spec"]),
+                serialized["inventory"],
             )
         except (LookupError, TypeError, ValueError) as exc:
             raise ValueError(serialized) from exc
@@ -59,6 +61,7 @@ class SNMPPluginStoreItem(NamedTuple):
         return {
             "trees": [tree.to_json() for tree in self.trees],
             "detect_spec": self.detect_spec.to_json(),
+            "inventory": self.inventory,
         }
 
 
@@ -99,7 +102,6 @@ class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
 class SectionMeta:
     """Metadata for the section names."""
     checking: bool
-    inventory: bool
     disabled: bool
     fetch_interval: Optional[int]
 
@@ -107,13 +109,11 @@ class SectionMeta:
         self,
         *,
         checking: bool,
-        inventory: bool,
         disabled: bool,
         fetch_interval: Optional[int],
     ) -> None:
         # There does not seem to be a way to have kwonly dataclasses.
         self.checking = checking
-        self.inventory = inventory
         self.disabled = disabled
         self.fetch_interval = fetch_interval
 
@@ -171,7 +171,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
     @property
     def inventory_sections(self) -> Set[SectionName]:
-        return {name for name, meta in self.sections.items() if meta.inventory}
+        return {name for name, data in self.plugin_store.items() if data.inventory}
 
     @classmethod
     def _from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':

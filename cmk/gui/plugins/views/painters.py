@@ -459,7 +459,7 @@ class PainterSvcPluginOutput(Painter):
 
     @property
     def columns(self):
-        return ['service_plugin_output', 'service_custom_variables']
+        return ['service_plugin_output', 'service_custom_variables', 'service_check_command']
 
     @property
     def sorter(self):

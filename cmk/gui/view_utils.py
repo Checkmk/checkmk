@@ -68,7 +68,9 @@ def format_plugin_output(output: CellContent,
         h = get_host_list_links(row["site"], hosts)
         output = output[:a] + "running on " + ", ".join(h) + output[e + 1:]
 
-    if shall_escape:
+    prevent_url_icons = (row.get("service_check_command", "") == "check_mk-check_mk_agent_update"
+                         if row is not None else False)
+    if shall_escape and not prevent_url_icons:
         http_url = r"(http[s]?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+)"
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.

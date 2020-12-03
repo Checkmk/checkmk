@@ -13,6 +13,7 @@ BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 MYPY := $(SCRIPTS)/run-mypy
 ADDITIONAL_MYPY_ARGS :=
+GCC_TOOLCHAIN := /opt/gcc-10.1.0
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.6 and 2.7, we need to convert them, just like it is done for the agent
@@ -273,10 +274,10 @@ test-unit-sh-docker:
 	../scripts/run-in-docker.sh make test-unit-sh
 
 %-livestatus-docker:
-	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) $*-livestatus
+	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-livestatus
 
 %-core-docker:
-	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) $*-core
+	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-core
 
 test-cppcheck-livestatus:
 	cd ../livestatus/src && make CPPCHECK_NEB_RESULT=$(RESULTS)/cppcheck-neb.xml $(CPPCHECK)
@@ -303,7 +304,7 @@ test-iwyu-core:
 	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-iwyu.txt
 
 test-iwyu-docker:
-	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=/opt/gcc-10.1.0"
+	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
 test-unit-livestatus:
 	cd ../livestatus/src && ./.f12 $(REDIRECT) $(RESULTS)/livestatus-neb-cmc.txt

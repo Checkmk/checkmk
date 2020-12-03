@@ -23,6 +23,7 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.config as config
 from cmk.gui.globals import g, request
 from cmk.gui.config import LoggedInUser
+from cmk.gui.log import logger
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |
@@ -57,6 +58,7 @@ def states(user: Optional[LoggedInUser] = None,
 
 def disconnect() -> None:
     """Actively closes all Livestatus connections."""
+    logger.debug("Disconnecing site connections")
     g.pop('live', None)
     g.pop('site_status', None)
 
@@ -97,8 +99,8 @@ def all_groups(what: str) -> List[Tuple[str, str]]:
 # "program_version"    --> Version of Nagios if "online"
 
 
-# Build up a connection to livestatus to either a single site or multiple sites.
 def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[UserId]) -> None:
+    """Build up a connection to livestatus to either a single site or multiple sites."""
     if 'live' in g:
         return
 
@@ -109,9 +111,14 @@ def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[Use
         request_force_authuser = request.get_unicode_input("force_authuser")
         force_authuser = UserId(request_force_authuser) if request_force_authuser else None
 
+    logger.debug("Initializing livestatus connections as user %s (forced auth user: %s)", user.id,
+                 force_authuser)
+
     g.site_status = {}
     _connect_multiple_sites(user)
     _set_livestatus_auth(user, force_authuser)
+
+    logger.debug("Site states: %r", g.site_status)
 
 
 def _connect_multiple_sites(user: LoggedInUser) -> None:

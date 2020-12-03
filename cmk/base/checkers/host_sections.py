@@ -107,6 +107,15 @@ class PersistedSections(
 
         return self
 
+    def update_and_store(
+        self,
+        section_store: "SectionStore[TRawDataSection]",
+    ) -> None:
+        stored = section_store.load()
+        if self != stored:
+            self.update(stored)
+            section_store.store(self)
+
 
 class SectionStore(Generic[TRawDataSection]):
     def __init__(
@@ -120,15 +129,6 @@ class SectionStore(Generic[TRawDataSection]):
         self.path: Final = Path(path)
         self.keep_outdated: Final = keep_outdated
         self._logger: Final = logger
-
-    def update(
-        self,
-        persisted_sections: PersistedSections[TRawDataSection],
-    ) -> None:
-        stored = self.load()
-        if persisted_sections != stored:
-            persisted_sections.update(stored)
-            self.store(persisted_sections)
 
     def store(self, sections: PersistedSections[TRawDataSection]) -> None:
         if not sections:

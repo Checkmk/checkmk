@@ -634,7 +634,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             {section_header.name: section_header.persist for section_header in parser.section_info},
             cached_at=cached_at,
         )
-        self.section_store.update(persisted_sections)
+        persisted_sections.update_and_store(self.section_store)
         parser.host_sections.add_persisted_sections(
             persisted_sections,
             logger=self._logger,

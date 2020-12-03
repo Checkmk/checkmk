@@ -275,7 +275,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             {section_name: fetch_interval(section_name) for section_name in raw_data},
             cached_at=cached_at,
         )
-        self.section_store.update(persisted_sections)
+        persisted_sections.update_and_store(self.section_store)
         host_sections = SNMPHostSections(dict(raw_data))
         host_sections.add_persisted_sections(
             persisted_sections,

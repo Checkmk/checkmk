@@ -303,7 +303,7 @@ test-iwyu-core:
 	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-iwyu.txt
 
 test-iwyu-docker:
-	../scripts/run-in-docker.sh make -C .. iwyu
+	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=/opt/gcc-10.1.0"
 
 test-unit-livestatus:
 	cd ../livestatus/src && ./.f12 $(REDIRECT) $(RESULTS)/livestatus-neb-cmc.txt

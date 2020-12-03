@@ -1495,7 +1495,7 @@ class EBSSummary(AWSSectionGeneric):
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
         if col_volumes:
             tags = self._prepare_tags_for_api_response(self._tags)
-            return [v for v in col_volumes for tag in v['Tags'] if tag in tags]
+            return [v for v in col_volumes for tag in v.get('Tags', []) if tag in tags]
 
         volumes = []
         for chunk in _chunks(self._tags, length=200):

@@ -295,11 +295,19 @@ TEST(CmaCfg, InstallationTypeCheck) {
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
                          files::kInstallYmlFileW};
 
-    ASSERT_TRUE(temp_fs.createRootFile(install_yml, "# Doesn't matter"));
+    // without
+    ASSERT_TRUE(temp_fs.createRootFile(install_yml,
+                                       "# Wato\nglobal:\n  enabled: yes\n"));
 
     EXPECT_EQ(DetermineInstallationType(), InstallationType::wato);
-    temp_fs.removeRootFile(install_yml);
+    ASSERT_TRUE(temp_fs.createRootFile(
+        install_yml, "# packaged\nglobal:\n  install: no\n  enabled: yes\n"));
+
     EXPECT_EQ(DetermineInstallationType(), InstallationType::packaged);
+
+    // Absent:
+    temp_fs.removeRootFile(install_yml);
+    EXPECT_EQ(DetermineInstallationType(), InstallationType::wato);
 }
 
 namespace details {

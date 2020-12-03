@@ -394,6 +394,7 @@ class Site:
             self._set_number_of_helpers()
             self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
+            self._enable_cmc_core_dumps()
             self._enable_cmc_debug_logging()
             self._enable_gui_debug_logging()
 
@@ -481,6 +482,10 @@ class Site:
                 'cmk.mkeventd.StatusServer': 10,
                 'cmk.mkeventd.lock': 20
             })
+
+    def _enable_cmc_core_dumps(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file("etc/check_mk/conf.d/cmc-core-dumps.mk", "cmc_dump_core = True\n")
 
     def _enable_cmc_debug_logging(self):
         self.makedirs("etc/check_mk/conf.d")
@@ -780,9 +785,16 @@ class Site:
 
         shutil.copytree(self.path("var/log"), "%s/logs" % self.result_dir())
 
-        crash_dir = self.path("var/check_mk/crashes")
-        if os.path.exists(crash_dir):
-            shutil.copytree(crash_dir, "%s/crashes" % self.result_dir())
+        for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
+            shutil.copytree(nagios_log_path, "%s/logs" % self.result_dir())
+
+        cmc_core_dump = self.path("var/check_mk/core/core")
+        if os.path.exists(cmc_core_dump):
+            shutil.copytree(cmc_core_dump, "%s/cmc_core_dump" % self.result_dir())
+
+        cmc_core_dump = self.path("var/check_mk/crashes")
+        if os.path.exists(cmc_core_dump):
+            shutil.copytree(cmc_core_dump, "%s/crashes" % self.result_dir())
 
     def result_dir(self):
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)

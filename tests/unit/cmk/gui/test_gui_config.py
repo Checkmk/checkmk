@@ -118,8 +118,6 @@ def test_registered_permissions():
         'bi.see_all',
         'dashboard.main',
         'dashboard.simple_problems',
-        'dashboard.ntop_alerts',
-        'dashboard.ntop_flows',
         'general.acknowledge_werks',
         'general.act',
         'general.change_password',
@@ -428,7 +426,6 @@ def test_registered_permissions():
         'view.mobile_svcnotifications',
         'view.mobile_svcproblems',
         'view.mobile_svcproblems_unack',
-        'view.ntop_interfaces',
         'view.nagstamon_hosts',
         'view.nagstamon_svc',
         'view.notifications',
@@ -528,6 +525,8 @@ def test_registered_permissions():
 
     if not cmk_version.is_raw_edition():
         expected_permissions += [
+            'dashboard.ntop_alerts',
+            'dashboard.ntop_flows',
             'general.edit_reports',
             'icons_and_actions.agent_deployment',
             'icons_and_actions.status_shadow',
@@ -543,6 +542,7 @@ def test_registered_permissions():
             'sidesnap.cmc_stats',
             'sidesnap.reports',
             'view.allhosts_deploy',
+            'view.ntop_interfaces',
             'wato.agent_deploy_custom_files',
             'wato.agent_deployment',
             'wato.agents',

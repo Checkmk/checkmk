@@ -45,7 +45,7 @@ import shlex
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
 # If you want to use the old behaviour just use old_stdout.
-if sys.version_info > (3, 0):
+if sys.version_info[0] >= 3:
     new_stdout = io.TextIOWrapper(sys.stdout.buffer,
                                   newline='\n',
                                   encoding=sys.stdout.encoding,

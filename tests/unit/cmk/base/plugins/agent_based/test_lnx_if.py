@@ -64,7 +64,9 @@ INTERFACE = interfaces.Interface('1', 'wlp3s0', 'wlp3s0', '6', 0, '1', 130923553
                                  0, 0, 23586281, 142684, 0, 0, 0, 0, 0, '\xaa\xaa\xaa\xaa\xaa\xaa')
 
 PARAMS = {
-    'errors': (0.01, 0.1),
+    'errors': {
+        'both': ('abs', (10, 20))
+    },
     'speed': 10000000,
     'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
     'state': ['1'],
@@ -189,7 +191,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
@@ -203,7 +207,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '4',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
@@ -290,7 +296,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
@@ -304,7 +312,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '4',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
@@ -391,7 +401,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
@@ -405,7 +417,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '4',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
@@ -455,7 +469,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 1000000000,
                     'state': ['1']
                 },
@@ -469,7 +485,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
@@ -482,7 +500,9 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '3',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Tuple as _Tuple, Union
+from typing import Any, List, Tuple as _Tuple, Union, Optional as _Optional
 import copy
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -539,32 +539,34 @@ rulespec_registry.register(
     ))
 
 
-def _vs_if_errors(title):
-    return Alternative(
-        title=_("Levels for %s error rates" % title),
-        help=_(
-            "These levels make the check go warning or critical whenever the "
-            "<b>percentual {0} error rate</b> or the <b>absolute {0} error rate</b> of the monitored interface reaches "
-            "the given bounds. The percentual {0} error rate is computed by dividing number of "
-            "errors by the total number of packets (successful plus errors).".format(title)),
-        elements=[
-            Tuple(title=_("Percentual levels for %s error rates" % title),
-                  elements=[
-                      Percentage(title=_("Warning at"),
-                                 unit=_("percent errors"),
-                                 default_value=0.01,
-                                 display_format='%.3f'),
-                      Percentage(title=_("Critical at"),
-                                 unit=_("percent errors"),
-                                 default_value=0.1,
-                                 display_format='%.3f')
-                  ]),
-            Tuple(title=_("Absolute levels for %s error rates" % title),
-                  elements=[
-                      Integer(title=_("Warning at"), unit=_("errors")),
-                      Integer(title=_("Critical at"), unit=_("errors"))
-                  ])
-        ])
+def _vs_packet_levels(
+    title: _Optional[str] = None,
+    percent_levels: _Tuple[float, float] = (0., 0.),
+    percent_detail: str = "",
+    abs_detail: str = "",
+) -> CascadingDropdown:
+    return CascadingDropdown(orientation="horizontal",
+                             title=title,
+                             choices=[
+                                 ("perc", _(f"Percentual levels{percent_detail}"),
+                                  Tuple(orientation="float",
+                                        show_titles=False,
+                                        elements=[
+                                            Percentage(label=_("Warning at"),
+                                                       default_value=percent_levels[0],
+                                                       display_format='%.3f'),
+                                            Percentage(label=_("Critical at"),
+                                                       default_value=percent_levels[1],
+                                                       display_format='%.3f')
+                                        ])),
+                                 ("abs", _(f"Absolute levels{abs_detail}"),
+                                  Tuple(orientation="float",
+                                        show_titles=False,
+                                        elements=[
+                                            Integer(label=_("Warning at")),
+                                            Integer(label=_("Critical at")),
+                                        ])),
+                             ])
 
 
 def _item_spec_if():
@@ -597,10 +599,15 @@ def _transform_if_check_parameters(v):
     if new_traffic:
         v['traffic'] = new_traffic
 
-    if "errors" in v:
-        error_levels = v.pop("errors")
-        v["errors_in"] = error_levels
-        v["errors_out"] = error_levels
+    _transform_packet_levels(v, "errors", "errors", "both")
+
+    # The following 4 calls transform rule entries that have been introduced in
+    # Checkmk 2.0.0i1. and handle an update from 2.0.0i1/b1 to 2.0.0b3 or newer.
+    # It should be safe to remove these transformations after 2.1.0
+    _transform_packet_levels(v, "errors_in", "errors", "in")
+    _transform_packet_levels(v, "errors_out", "errors", "out")
+    _transform_packet_levels(v, "multicast", "multicast", "both")
+    _transform_packet_levels(v, "broadcast", "broadcast", "both")
 
     # Up to and including v1.6, port state '9' was used to represent an ifAdminStatus of 2. From
     # v1.7 onwards, ifAdminStatus is handled completely separately from the port state. Note that
@@ -641,6 +648,76 @@ def _transform_if_check_parameters(v):
     return v
 
 
+def _transform_packet_levels(
+    vs: dict,
+    old_name: str,
+    new_name: str,
+    direction: str,
+):
+    if old_name in vs and not isinstance(vs[old_name], dict):
+        (warn, crit) = vs[old_name]
+        new_value = ('abs', (warn, crit)) if isinstance(warn, int) else ('perc', (warn, crit))
+        if new_name in vs and isinstance(vs[new_name], dict):
+            vs[new_name][direction] = new_value
+        else:
+            vs[new_name] = {direction: new_value}
+
+        if old_name != new_name:
+            del vs[old_name]
+
+
+PERC_ERROR_LEVELS = (0.01, 0.001)
+PERC_PKG_LEVELS = (10.0, 20.0)
+
+
+def _vs_alternative_levels(  # pylint: disable=redefined-builtin
+    title: str,
+    help: str,
+    percent_levels: _Tuple[float, float] = (0., 0.),
+    percent_detail: str = "",
+    abs_detail: str = "",
+) -> Alternative:
+    return Alternative(title=title,
+                       help=help,
+                       elements=[
+                           Dictionary(
+                               title="Provide one set of levels for in and out",
+                               elements=[("both",
+                                          _vs_packet_levels(
+                                              title="Levels",
+                                              percent_levels=percent_levels,
+                                              percent_detail=percent_detail,
+                                              abs_detail=abs_detail,
+                                          ))],
+                               optional_keys=False,
+                           ),
+                           Dictionary(
+                               title="Provide seperate levels for in and out",
+                               elements=[
+                                   (
+                                       "in",
+                                       _vs_packet_levels(
+                                           title="In levels",
+                                           percent_levels=percent_levels,
+                                           percent_detail=percent_detail,
+                                           abs_detail=abs_detail,
+                                       ),
+                                   ),
+                                   (
+                                       "out",
+                                       _vs_packet_levels(
+                                           title="Out levels",
+                                           percent_levels=percent_levels,
+                                           percent_detail=percent_detail,
+                                           abs_detail=abs_detail,
+                                       ),
+                                   ),
+                               ],
+                               optional_keys=False,
+                           ),
+                       ])
+
+
 def _parameter_valuespec_if():
     # Transform old traffic related levels which used "traffic" and "traffic_minimum"
     # keys where each was configured with an Alternative valuespec
@@ -653,8 +730,20 @@ def _parameter_valuespec_if():
                 "discovered_speed",
             ],  # Created by discovery
             elements=[
-                ("errors_in", _vs_if_errors("IN")),
-                ("errors_out", _vs_if_errors("OUT")),
+                (
+                    "errors",
+                    _vs_alternative_levels(
+                        title=_("Levels for error rates"),
+                        help=_(
+                            "These levels make the check go warning or critical whenever the "
+                            "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
+                            "the given bounds. The percentual error rate is computed by "
+                            "the formula <b>(errors / (unicast + non-unicast + errors))*100</b> "),
+                        percent_levels=PERC_ERROR_LEVELS,
+                        percent_detail=" (in relation to all packets (successful + error))",
+                        abs_detail=" (in errors per second)",
+                    ),
+                ),
                 ("speed",
                  OptionalDropdownChoice(
                      title=_("Operating speed"),
@@ -851,60 +940,32 @@ def _parameter_valuespec_if():
                             Integer(title=_("Critical at"), unit=_("pkts / sec")),
                         ]),
                 ),
-                ("multicast",
-                 Alternative(title=_("Multicast packet rates"),
-                             help=_(
-                                 "These levels make the check go warning or critical whenever the "
-                                 "<b>percentual packet rate</b> or the <b>absolute packet "
-                                 "rate</b> of the monitored interface reaches the given "
-                                 "bounds. The percentual packet rate is computed by "
-                                 "dividing the number of multicast packets by the number "
-                                 "of unicast packets."),
-                             elements=[
-                                 Tuple(title=_("Percentual levels for multicast packets"),
-                                       elements=[
-                                           Percentage(title=_("Warning at"),
-                                                      unit=_("percent packets"),
-                                                      default_value=10.0,
-                                                      display_format='%.3f'),
-                                           Percentage(title=_("Critical at"),
-                                                      unit=_("percent packets"),
-                                                      default_value=20.0,
-                                                      display_format='%.3f')
-                                       ]),
-                                 Tuple(title=_("Absolute levels for multicast packets"),
-                                       elements=[
-                                           Integer(title=_("Warning at"), unit=_("pkts / sec")),
-                                           Integer(title=_("Critical at"), unit=_("pkts / sec"))
-                                       ])
-                             ])),
-                ("broadcast",
-                 Alternative(title=_("Broadcast packet rates"),
-                             help=_(
-                                 "These levels make the check go warning or critical whenever the "
-                                 "<b>percentual packet rate</b> or the <b>absolute packet "
-                                 "rate</b> of the monitored interface reaches the given "
-                                 "bounds. The percentual packet rate is computed by "
-                                 "dividing the number of broadcast packets by the number "
-                                 "of unicast packets."),
-                             elements=[
-                                 Tuple(title=_("Percentual levels for broadcast packets"),
-                                       elements=[
-                                           Percentage(title=_("Warning at"),
-                                                      unit=_("percent packets"),
-                                                      default_value=10.0,
-                                                      display_format='%.3f'),
-                                           Percentage(title=_("Critical at"),
-                                                      unit=_("percent packets"),
-                                                      default_value=20.0,
-                                                      display_format='%.3f')
-                                       ]),
-                                 Tuple(title=_("Absolute levels for broadcast packets"),
-                                       elements=[
-                                           Integer(title=_("Warning at"), unit=_("pkts / sec")),
-                                           Integer(title=_("Critical at"), unit=_("pkts / sec"))
-                                       ])
-                             ])),
+                (
+                    "multicast",
+                    _vs_alternative_levels(
+                        title=_("Multicast packet rates"),
+                        help=_("These levels make the check go warning or critical whenever the "
+                               "<b>percentual packet rate</b> or the <b>absolute packet "
+                               "rate</b> of the monitored interface reaches the given "
+                               "bounds. The percentual packet rate is computed by "
+                               "the formula <b>(multicast / (unicast + non-unicast))*100</b>"),
+                        percent_levels=PERC_PKG_LEVELS,
+                        percent_detail=" (in relation to all successful packets)",
+                        abs_detail=" (in packets per second)"),
+                ),
+                (
+                    "broadcast",
+                    _vs_alternative_levels(
+                        title=_("Broadcast packet rates"),
+                        help=_("These levels make the check go warning or critical whenever the "
+                               "<b>percentual packet rate</b> or the <b>absolute packet "
+                               "rate</b> of the monitored interface reaches the given "
+                               "bounds. The percentual packet rate is computed by "
+                               "the formula <b>(broadcast / (unicast + non-unicast))*100</b>"),
+                        percent_levels=PERC_PKG_LEVELS,
+                        percent_detail=" (in relation to all successful packets)",
+                        abs_detail=" (in packets per second)"),
+                ),
                 ("average_bm",
                  Integer(
                      title=_("Average values for broad- and multicast packet rates"),

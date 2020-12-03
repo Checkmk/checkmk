@@ -68,7 +68,9 @@ from cmk.base.plugins.agent_based.utils import interfaces
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 1000000000,
                     'discovered_oper_status': ['1']
                 },
@@ -82,7 +84,9 @@ from cmk.base.plugins.agent_based.utils import interfaces
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 1000000000,
                     'discovered_oper_status': ['1']
                 },
@@ -145,7 +149,9 @@ from cmk.base.plugins.agent_based.utils import interfaces
             (
                 '5',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 1000000000,
                     'discovered_oper_status': ['1']
                 },
@@ -190,7 +196,9 @@ from cmk.base.plugins.agent_based.utils import interfaces
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 0,
                     'discovered_oper_status': ['1']
                 },

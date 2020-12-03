@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from functools import partial
 from collections import defaultdict
 from dataclasses import (asdict, dataclass)
 import time
@@ -89,8 +90,9 @@ DISCOVERY_DEFAULT_PARAMETERS: DiscoveryDefaultParams = {
 }
 
 CHECK_DEFAULT_PARAMETERS = {
-    "errors_in": (0.01, 0.1),
-    "errors_out": (0.01, 0.1),
+    "errors": {
+        "both": ("perc", (0.01, 0.1)),
+    },
 }
 
 
@@ -138,6 +140,25 @@ class Interface:
         self.alias = cleanup_if_strings(self.alias)
 
         self.total_octets = self.in_octets + self.out_octets
+
+
+@dataclass
+class Rates:
+    intraffic: float
+    inmcast: float
+    inbcast: float
+    inucast: float
+    innucast: float
+    indisc: float
+    inerr: float
+    outtraffic: float
+    outmcast: float
+    outbcast: float
+    outucast: float
+    outnucast: float
+    outdisc: float
+    outerr: float
+    total: Optional[float] = None
 
 
 Section = Sequence[Interface]
@@ -240,31 +261,8 @@ GeneralTrafficLevels = Dict[Tuple[str, str], LevelSpec]
 
 
 def get_traffic_levels(params: Mapping[str, Any]) -> GeneralTrafficLevels:
-    # Transform old style traffic parameters to new CascadingDropdown based data format
-    new_traffic: List[Tuple[str, Tuple[str, LevelSpec]]] = []
-    if 'traffic' in params and not isinstance(params['traffic'], list):
-        warn, crit = params['traffic']
-        if warn is None:
-            new_traffic.append(('both', ('upper', (None, (None, None)))))
-        elif isinstance(warn, int):
-            new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
-        elif isinstance(warn, float):
-            new_traffic.append(('both', ('upper', ('perc', (warn, crit)))))
-
-    if 'traffic_minimum' in params:
-        warn, crit = params['traffic_minimum']
-        if isinstance(warn, int):
-            new_traffic.append(('both', ('lower', ('abs', (warn, crit)))))
-        elif isinstance(warn, float):
-            new_traffic.append(('both', ('lower', ('perc', (warn, crit)))))
-
-    if new_traffic:
-        traffic_levels = new_traffic
-    else:
-        traffic_levels = params.get('traffic', [])
-        traffic_levels += [
-            ('total', vs) for vs in params.get('total_traffic', {}).get("levels", [])
-        ]
+    traffic_levels = params.get('traffic', [])
+    traffic_levels += [('total', vs) for vs in params.get('total_traffic', {}).get("levels", [])]
 
     # Now bring the levels in a structure which is easily usable for the check
     # and also convert direction="both" to single in/out entries
@@ -289,6 +287,33 @@ def get_traffic_levels(params: Mapping[str, Any]) -> GeneralTrafficLevels:
             levels[(traffic_dir, up_or_low)] = (level_type, level_value)
 
     return levels
+
+
+GeneralPacketLevels = Dict[str, Dict[str, Optional[Tuple[float, float]]]]
+
+
+def _get_packet_levels(
+        params: Mapping[str, Any]) -> Tuple[GeneralPacketLevels, GeneralPacketLevels]:
+    def none_levels() -> Dict[str, Dict[str, Optional[Any]]]:
+        return {
+            name: {direction: None for direction in ("in", "out")
+                  } for name in ("errors", "multicast", "broadcast")
+        }
+
+    levels_per_type = {
+        "perc": none_levels(),
+        "abs": none_levels(),
+    }
+
+    # Second iteration: seperate by perc and abs for easier further processing
+    for name in ("errors", "multicast", "broadcast"):
+        for direction in ("in", "out"):
+            levels = params.get(name, {})
+            level = levels.get(direction) or levels.get("both")
+            if level is not None:
+                levels_per_type[level[0]][name][direction] = level[1]
+
+    return levels_per_type["abs"], levels_per_type["perc"]
 
 
 SpecificTrafficLevels = Dict[Union[Tuple[str, str], Tuple[str, str, str]], Any]
@@ -957,18 +982,13 @@ def check_single_interface(
     unit = "Bit" if params.get("unit") in ["Bit", "bit"] else "B"
     average_bmcast = params.get("average_bm")
 
-    # error checking might be turned off
-    err_in_warn, err_in_crit = params.get("errors_in", (None, None))
-    err_out_warn, err_out_crit = params.get("errors_out", (None, None))
-
     # broadcast storm detection is turned off by default
-    nucast_warn, nucast_crit = params.get("nucasts", (None, None))
-    disc_warn, disc_crit = params.get("discards", (None, None))
-    mcast_warn, mcast_crit = params.get("multicast", (None, None))
-    bcast_warn, bcast_crit = params.get("broadcast", (None, None))
+    nucast_levels = params.get("nucasts")
+    disc_levels = params.get("discards")
 
     # Convert the traffic related levels to a common format
     general_traffic_levels = get_traffic_levels(params)
+    abs_packet_levels, perc_packet_levels = _get_packet_levels(params)
 
     monitor_total_traffic = "total_traffic" in params
 
@@ -1020,33 +1040,27 @@ def check_single_interface(
     if str(interface.oper_status) == "2":
         return
 
-    # Performance counters
-    rates = []
+    rates_dict: Dict[str, float] = {}
     caught_ignore_results_error = False
-    metrics = []
-    metric_content = [("in", interface.in_octets, traffic_levels[('in', 'upper', 'warn')],
-                       traffic_levels[('in', 'upper', 'crit')], 0, speed_b_in),
-                      ("inmcast", interface.in_mcast, mcast_warn, mcast_crit, None, None),
-                      ("inbcast", interface.in_bcast, bcast_warn, bcast_crit, None, None),
-                      ("inucast", interface.in_ucast, None, None, None, None),
-                      ("innucast", saveint(interface.in_mcast) + saveint(interface.in_bcast),
-                       nucast_warn, nucast_crit, None, None),
-                      ("indisc", interface.in_discards, disc_warn, disc_crit, None, None),
-                      ("inerr", interface.in_errors, err_in_warn, err_in_crit, None, None),
-                      ("out", interface.out_octets, traffic_levels[('out', 'upper', 'warn')],
-                       traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
-                      ("outmcast", interface.out_mcast, mcast_warn, mcast_crit, None, None),
-                      ("outbcast", interface.out_bcast, bcast_warn, bcast_crit, None, None),
-                      ("outucast", interface.out_ucast, None, None, None, None),
-                      ("outnucast", saveint(interface.out_mcast) + saveint(interface.out_bcast),
-                       nucast_warn, nucast_crit, None, None),
-                      ("outdisc", interface.out_discards, disc_warn, disc_crit, None, None),
-                      ("outerr", interface.out_errors, err_out_warn, err_out_crit, None, None)]
+    rate_content = [
+        ("intraffic", interface.in_octets),
+        ("inmcast", interface.in_mcast),
+        ("inbcast", interface.in_bcast),
+        ("inucast", interface.in_ucast),
+        ("innucast", saveint(interface.in_mcast) + saveint(interface.in_bcast)),
+        ("indisc", interface.in_discards),
+        ("inerr", interface.in_errors),
+        ("outtraffic", interface.out_octets),
+        ("outmcast", interface.out_mcast),
+        ("outbcast", interface.out_bcast),
+        ("outucast", interface.out_ucast),
+        ("outnucast", saveint(interface.out_mcast) + saveint(interface.out_bcast)),
+        ("outdisc", interface.out_discards),
+        ("outerr", interface.out_errors),
+    ]
     if monitor_total_traffic:
-        metric_content.append(
-            ("total", interface.total_octets, traffic_levels[('total', 'upper', 'warn')],
-             traffic_levels[('total', 'upper', 'crit')], 0, speed_b_total))
-    for name, counter, warn, crit, mmin, mmax in metric_content:
+        rate_content.append(("total", interface.total_octets))
+    for name, counter in rate_content:
         try:
             rate = _get_rate(
                 value_store,
@@ -1055,13 +1069,7 @@ def check_single_interface(
                 counter,
                 input_is_rate,
             )
-            rates.append(rate)
-            metrics.append(Metric(
-                name,
-                rate,
-                levels=(warn, crit),
-                boundaries=(mmin, mmax),
-            ))
+            rates_dict[name] = rate
         except IgnoreResultsError:
             caught_ignore_results_error = True
             # continue, other counters might wrap as well
@@ -1074,109 +1082,35 @@ def check_single_interface(
             raise IgnoreResultsError("Initializing counters")
         return
 
-    yield from metrics
+    rates: Rates = Rates(**rates_dict)
+
     yield Metric(
         'outqlen',
         interface.out_qlen,
     )
-    if unit == 'Bit':
-        bandwidth_renderer: Callable[[float], str] = render.nicspeed
-    else:
-        bandwidth_renderer = render.iobandwidth
 
-    # loop over incoming and outgoing traffic
-    io_direction_to_dsname = {}
+    yield from _output_bandwidth_rates(
+        rates,
+        speed_b_in,
+        speed_b_out,
+        speed_b_total,
+        average,
+        unit,
+        traffic_levels,
+        value_store,
+        timestamp,
+        item,
+        assumed_speed_in,
+        assumed_speed_out,
+    )
 
-    bandwidth_content = [
-        ("in", rates[0], speed_b_in),
-        ("out", rates[7], speed_b_out),
-    ]
-    if monitor_total_traffic:
-        bandwidth_content.append(("total", rates[14], speed_b_total))
-
-    for what, traffic, speed in bandwidth_content:
-        predictive = (what, 'predictive') in traffic_levels
-        if predictive:
-            levels_predictive = traffic_levels[(what, 'predictive')]
-            bw_warn, bw_crit = None, None
-        else:
-            bw_warn = traffic_levels[(what, 'upper', 'warn')]
-            bw_crit = traffic_levels[(what, 'upper', 'crit')]
-            bw_warn_min = traffic_levels[(what, 'lower', 'warn')]
-            bw_crit_min = traffic_levels[(what, 'lower', 'crit')]
-            levels_uppper = bw_warn, bw_crit
-            levels_lower = bw_warn_min, bw_crit_min
-
-        # handle computation of average
-        if average:
-            traffic = get_average(
-                value_store,
-                "%s.%s.avg" % (what, item),
-                timestamp,
-                traffic,
-                average,
-            )  # apply levels to average traffic
-            dsname = "%s_avg_%d" % (what, average)
-            title = "%s average %dmin" % (what.title(), average)
-            yield Metric(
-                dsname,
-                traffic,
-                levels=(bw_warn, bw_crit),
-                boundaries=(0, speed),
-            )
-        else:
-            dsname = what
-            title = what.title()
-
-        io_direction_to_dsname[what] = dsname
-
-        # Check bandwidth thresholds incl. prediction
-        if predictive:
-            result, _metric, *ref_curve = check_levels_predictive(
-                traffic,
-                levels=levels_predictive,
-                metric_name=dsname,
-                render_func=bandwidth_renderer,
-                label=title,
-            )
-            assert isinstance(result, Result)
-            if ref_curve:
-                yield from ref_curve  # reference curve for predictive levels
-        else:
-            result, = check_levels(
-                traffic,
-                levels_upper=levels_uppper,
-                levels_lower=levels_lower,
-                render_func=bandwidth_renderer,
-                label=title,
-            )
-
-        if speed:
-            perc_info = render.percent(100.0 * traffic / speed)
-            if assumed_speed_in or assumed_speed_out:
-                perc_info += "/" + bandwidth_renderer(speed)
-
-            yield Result(
-                state=result.state,
-                summary="%s (%s)" % (result.summary, perc_info),
-            )
-        else:
-            yield result
-
-    yield from _io_rates(
+    yield from _output_packet_rates(
         # This is only temporary and will be handled with CMK-6472
-        0.01,
-        0.1,
-        mcast_warn,
-        mcast_crit,
-        bcast_warn,
-        bcast_crit,
-        nucast_warn,
-        nucast_crit,
-        disc_warn,
-        disc_crit,
+        abs_packet_levels,
+        perc_packet_levels,
+        nucast_levels,
+        disc_levels,
         average_bmcast,
-        io_direction_to_dsname,
         item=item,
         rates=rates,
         value_store=value_store,
@@ -1321,94 +1255,273 @@ def _group_members(
     )
 
 
-def _io_rates(
-    err_warn,
-    err_crit,
-    mcast_warn,
-    mcast_crit,
-    bcast_warn,
-    bcast_crit,
-    nucast_warn,
-    nucast_crit,
-    disc_warn,
-    disc_crit,
-    average_bmcast,
-    io_direction_to_dsname: Mapping[str, str],
+def _output_bandwidth_rates(
+    rates: Rates,
+    speed_b_in: float,
+    speed_b_out: float,
+    speed_b_total: float,
+    average: Optional[int],
+    unit: str,
+    traffic_levels: SpecificTrafficLevels,
+    value_store: MutableMapping[str, Any],
+    timestamp: float,
+    item: str,
+    assumed_speed_in: Optional[int],
+    assumed_speed_out: Optional[int],
+):
+    if unit == 'Bit':
+        bandwidth_renderer: Callable[[float], str] = render.nicspeed
+    else:
+        bandwidth_renderer = render.iobandwidth
+
+    for what, traffic, speed in [
+        ("in", rates.intraffic, speed_b_in),
+        ("out", rates.outtraffic, speed_b_out),
+        ("total", rates.total, speed_b_total),
+    ]:
+        if traffic is None:
+            # rates.total is None if total traffic is not monitored
+            continue
+
+        use_predictive_levels = (what, 'predictive') in traffic_levels
+
+        # We have to specify metric like this, because we want to postpone the output,
+        # and this a possibility to make mypy happy when collecting from different places.
+        metric: Optional[Metric] = None
+
+        # The "normal" upper/lower levels can be valid for the raw value or the average value.
+        # We display them in the raw signal's graph for both cases.
+        # However, predictive levels are different in it's nature and will be handled seperately
+        if use_predictive_levels:
+            levels_upper = None
+            levels_lower = None
+        else:
+            levels_upper = (traffic_levels[(what, 'upper', 'warn')], traffic_levels[(what, 'upper',
+                                                                                     'crit')])
+            levels_lower = (traffic_levels[(what, 'lower', 'warn')], traffic_levels[(what, 'lower',
+                                                                                     'crit')])
+        if average or not use_predictive_levels:
+            # For these cases, we have to yield the raw traffic metric explicitly.
+            # Otherwise (= use_predictive_levels and not average), it will be
+            # yielded from check_levels_predictive
+            metric = Metric(
+                what,
+                traffic,
+                levels=levels_upper,
+                boundaries=(0, speed),
+            )
+
+        if average:
+            filtered_traffic = get_average(
+                value_store,
+                "%s.%s.avg" % (what, item),
+                timestamp,
+                traffic,
+                average,
+            )  # apply levels to average traffic
+            title = "%s average %dmin" % (what.title(), average)
+        else:
+            filtered_traffic = traffic
+            title = what.title()
+
+        if use_predictive_levels:
+            if average:
+                dsname = "%s_avg_%d" % (what, average)
+            else:
+                dsname = what
+
+            levels_predictive = traffic_levels[(what, 'predictive')]
+            result, tmp_metric, *ref_curve = check_levels_predictive(
+                filtered_traffic,
+                levels=levels_predictive,
+                metric_name=dsname,
+                render_func=bandwidth_renderer,
+                label=title,
+            )
+            assert isinstance(result, Result)
+            assert isinstance(tmp_metric, Metric)
+            metric = tmp_metric
+            # This metric may be the raw metric or the average metric.
+            # The avg is not needed for displaying a graph, but it's historic
+            # value will be needed for the future calculation of the ref_curve,
+            # so we can't dump it.
+            yield metric
+            if ref_curve:
+                yield from ref_curve  # reference curve for predictive levels
+        else:
+            # The metric already got yielded, so it's only the result that is
+            # needed here.
+            result, = check_levels(
+                filtered_traffic,
+                levels_upper=levels_upper,
+                levels_lower=levels_lower,
+                render_func=bandwidth_renderer,
+                label=title,
+            )
+
+        # We have a valid result now. Just enhance it by the percentage info,
+        # if available
+        if speed:
+            perc_info = render.percent(100.0 * filtered_traffic / speed)
+            if assumed_speed_in or assumed_speed_out:
+                perc_info += "/" + bandwidth_renderer(speed)
+
+            yield Result(
+                state=result.state,
+                summary="%s (%s)" % (result.summary, perc_info),
+            )
+        else:
+            yield result
+
+        # output metric after result. this makes it easier to analyze the check output,
+        # as this is the "normal" order when yielding from check_levels.
+        assert metric is not None
+        yield metric
+
+
+def _render_floating_point(value: float, precision: int, unit: str) -> str:
+    """Render a floating point value to the given precision,
+    removing trailing zeros and a trailing decimal point,
+    appending the given unit.
+
+    Examples:
+    >>> _render_floating_point(3.141593, 3, " rad")
+    '3.142 rad'
+    >>> _render_floating_point(-0.0001, 3, "%")
+    '>-0.001%'
+    >>> _render_floating_point(100.0, 3, "%")
+    '100%'
+    """
+    value = float(value)  # be nice
+
+    if round(value) == value:
+        return f"{value:.0f}{unit}"
+
+    if abs(value) < float(tol := f"0.{'0'*(precision-1)}1"):
+        return f"{'<' if value > 0 else '>-'}{tol}{unit}"
+
+    return f"{value:.{precision}f}".rstrip("0.") + unit
+
+
+def _output_packet_rates(
+    abs_packet_levels: GeneralPacketLevels,
+    perc_packet_levels: GeneralPacketLevels,
+    nucast_levels: Optional[Tuple[float, float]],
+    disc_levels: Optional[Tuple[float, float]],
+    average_bmcast: Optional[int],
     *,
     item: str,
-    rates: List,  # FIXME
+    rates: Rates,
     value_store: MutableMapping[str, Any],
     timestamp: float,
 ) -> type_defs.CheckResult:
-    for what, mrate, brate, urate, nurate, discrate, errorrate in [
-        ("in", rates[1], rates[2], rates[3], rates[4], rates[5], rates[6]),
-        ("out", rates[8], rates[9], rates[10], rates[11], rates[12], rates[13])
+    for direction, mrate, brate, urate, nurate, discrate, errorrate in [
+        ("in", rates.inmcast, rates.inbcast, rates.inucast, rates.innucast, rates.indisc,
+         rates.inerr),
+        ("out", rates.outmcast, rates.outbcast, rates.outucast, rates.outnucast, rates.outdisc,
+         rates.outerr),
     ]:
-        dsname = io_direction_to_dsname[what]
 
-        # check error, broadcast, multicast and non-unicast packets and discards
-        pacrate = urate + nurate + errorrate
-        if pacrate > 0.0:  # any packets transmitted?
-            for value, params_warn, params_crit, text in [
-                (errorrate, err_warn, err_crit, "errors"),
-                (mrate, mcast_warn, mcast_crit, "multicast"),
-                (brate, bcast_warn, bcast_crit, "broadcast"),
-            ]:
-
-                calc_avg = False
-
-                infotxt = "%s-%s" % (what, text)
-                if average_bmcast is not None and text != "errors":
-                    calc_avg = True
-                    value = get_average(
-                        value_store,
-                        "%s.%s.%s.avg" % (what, text, item),
-                        timestamp,
-                        value,
-                        average_bmcast,
-                    )
-
-                perc_value = 100.0 * value / pacrate
-                if perc_value > 0:
-                    if isinstance(params_crit, float):  # percentual levels
-                        if calc_avg:
-                            assert average_bmcast is not None
-                            infotxt += " average %dmin" % average_bmcast
-                        yield from check_levels(
-                            perc_value,
-                            levels_upper=(params_warn, params_crit),
-                            metric_name=dsname if text == "errors" else text,
-                            render_func=render.percent,
-                            label=infotxt,
-                            notice_only=True,
-                        )
-                    elif isinstance(params_crit, int):  # absolute levels
-                        infotxt += " packets"
-                        if calc_avg:
-                            assert average_bmcast is not None
-                            infotxt += " average %dmin" % average_bmcast
-                        yield from check_levels(
-                            perc_value,
-                            levels_upper=(params_warn, params_crit),
-                            metric_name=dsname,
-                            render_func=lambda x: "%d" % x,
-                            label=infotxt,
-                            notice_only=True,
-                        )
-
-        for name, rate, warn, crit in [
-            ("Non-unicast packets", nurate, nucast_warn, nucast_crit),
-            ("Discards", discrate, disc_warn, disc_crit),
+        all_pacrate = urate + nurate + errorrate
+        success_pacrate = urate + nurate
+        for value, abs_levels, perc_levels, display_name, metric_name, pacrate in [
+            (
+                errorrate,
+                abs_packet_levels["errors"][direction],
+                perc_packet_levels["errors"][direction],
+                "errors",
+                "err",
+                all_pacrate,
+            ),
+            (
+                mrate,
+                abs_packet_levels["multicast"][direction],
+                perc_packet_levels["multicast"][direction],
+                "multicast",
+                "mcast",
+                success_pacrate,
+            ),
+            (
+                brate,
+                abs_packet_levels["broadcast"][direction],
+                perc_packet_levels["broadcast"][direction],
+                "broadcast",
+                "bcast",
+                success_pacrate,
+            ),
         ]:
 
-            if crit is not None and warn is not None:
-                yield from check_levels(
-                    rate,
-                    levels_upper=(warn, crit),
-                    render_func=lambda x: "%.2f/s" % x,
-                    label=f"{name} {what}",
+            # Calculate the metric with actual levels, no matter if they
+            # come from perc_- or abs_levels
+            if perc_levels is not None:
+                if pacrate > 0:
+                    merged_levels: Optional[Tuple[float, float]] = (
+                        perc_levels[0] / 100. * pacrate,
+                        perc_levels[1] / 100. * pacrate,
+                    )
+                else:
+                    merged_levels = None
+            else:
+                merged_levels = abs_levels
+
+            metric = Metric(
+                f"{direction}{metric_name}",
+                value,
+                levels=merged_levels,
+            )
+
+            # Further calculation now precedes with average value,
+            # if requested.
+            infotxt = f"{display_name.title()} {direction}"
+            if average_bmcast is not None and display_name != "errors":
+                value = get_average(
+                    value_store,
+                    "%s.%s.%s.avg" % (direction, display_name, item),
+                    timestamp,
+                    value,
+                    average_bmcast,
+                )
+                infotxt += f" average {average_bmcast}min"
+
+            if perc_levels is not None:
+                # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
+                # but it yields the best information for the "no packets" case in the check output.
+                perc_value = 0 if pacrate == 0 else value * 100 / pacrate
+                result, = check_levels(
+                    perc_value,
+                    levels_upper=perc_levels,
+                    render_func=partial(_render_floating_point, precision=3, unit="%"),
+                    label=infotxt,
                     notice_only=True,
                 )
+                yield result
+            else:
+                result, = check_levels(
+                    value,
+                    levels_upper=abs_levels,
+                    render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),
+                    label=infotxt,
+                    notice_only=True,
+                )
+                yield result
+
+            # output metric after result. this makes it easier to analyze the check output,
+            # as this is the "normal" order when yielding from check_levels.
+            yield metric
+
+        for display_name, metric_name, rate, levels in [
+            ("Unicast", "ucast", urate, None),
+            ("Non-unicast", "nucast", nurate, nucast_levels),
+            ("Discards", "disc", discrate, disc_levels),
+        ]:
+            yield from check_levels(
+                rate,
+                levels_upper=levels,
+                metric_name=f"{direction}{metric_name}",
+                render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),
+                label=f"{display_name} {direction}",
+                notice_only=True,
+            )
 
 
 def cluster_check(

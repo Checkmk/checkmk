@@ -24,6 +24,10 @@ from .utils.interfaces import (
 
 Section = Mapping[str, float]
 
+_RESULTS_TO_ABANDON = {
+    "Multicast in", "Broadcast in", "Unicast in", "Non-unicast in", "Multicast out",
+    "Broadcast out", "Unicast out", "Non-unicast out"
+}
 _METRICS_TO_KEEP = {"in", "indisc", "inerr", "out", "outdisc", "outerr"}
 
 
@@ -73,7 +77,9 @@ def check_cadvisor_if(item: str, section: Section) -> CheckResult:
                 out_errors=section["if_out_errors"],
             ),
     ):
-        if ((isinstance(output, Result) and "Speed: unknown" in output.summary) or
+        if ((isinstance(output, Result) and
+             ("Speed: unknown" in output.summary or any(name in output.details
+                                                        for name in _RESULTS_TO_ABANDON))) or
             (isinstance(output, Metric) and output.name not in _METRICS_TO_KEEP)):
             continue
         yield output

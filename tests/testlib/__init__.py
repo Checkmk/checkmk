@@ -185,6 +185,23 @@ def wait_until(condition, timeout=1, interval=0.1):
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
+def wait_until_liveproxyd_ready(site, site_ids):
+    # First wait for the site sockets to appear
+    def _all_sockets_opened():
+        return all([site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids])
+
+    wait_until(_all_sockets_opened, timeout=60, interval=0.5)
+
+    # Then wait for the sites to be ready
+    def _all_sites_ready():
+        content = site.read_file("var/log/liveproxyd.state")
+        num_ready = content.count("State:                   ready")
+        print("%d sites are ready. Waiting for %d sites to be ready." % (num_ready, len(site_ids)))
+        return len(site_ids) == num_ready
+
+    wait_until(_all_sites_ready, timeout=60, interval=0.5)
+
+
 class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
     def __init__(self, site, log_path, default_timeout=5):

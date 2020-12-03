@@ -25,6 +25,7 @@ from six import ensure_str
 
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
@@ -1910,7 +1911,7 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
         else:
             monitoring_items.append(item)
 
-    return [
+    topics = [
         TopicMenuTopic(
             name="general",
             title=_("General"),
@@ -1929,13 +1930,18 @@ def _customize_menu_topics() -> List[TopicMenuTopic]:
             icon="topic_graphs",
             items=graph_items,
         ),
-        TopicMenuTopic(
-            name="business_reporting",
-            title=_("Business reporting"),
-            icon="topic_reporting",
-            items=business_reporting_items,
-        )
     ]
+
+    if not cmk_version.is_raw_edition():
+        topics.append(
+            TopicMenuTopic(
+                name="business_reporting",
+                title=_("Business reporting"),
+                icon="topic_reporting",
+                items=business_reporting_items,
+            ))
+
+    return topics
 
 
 mega_menu_registry.register(

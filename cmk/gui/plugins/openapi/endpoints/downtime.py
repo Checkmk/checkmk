@@ -22,7 +22,7 @@ from cmk.gui import config, sites
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands import downtimes as downtime_commands
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -31,14 +31,19 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, SERVICE_DESCRIPTION
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, SERVICE_DESCRIPTION, QUERY
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib.downtime import (
     execute_livestatus_command,
     remove_downtime_command,
 )
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
 DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup']
+
+
+class DowntimeParameter(BaseSchema):
+    query = QUERY
 
 
 @Endpoint(constructors.collection_href('downtime'),
@@ -114,11 +119,15 @@ def create_downtime(params):
           query_params=[
               HOST_NAME,
               SERVICE_DESCRIPTION,
+              DowntimeParameter,
           ],
           response_schema=response_schemas.DomainObjectCollection)
-def list_service_downtimes(param):
+def show_downtimes(param):
     """Show all scheduled downtimes"""
     live = sites.live()
+    sites_to_query = param.get('sites')
+    if sites_to_query:
+        live.only_sites = sites_to_query
 
     q = Query([
         Downtimes.id,
@@ -132,11 +141,16 @@ def list_service_downtimes(param):
         Downtimes.comment,
     ])
 
+    filter_tree = param.get('query')
     host_name = param.get('host_name')
+    service_description = param.get('service_description')
+    if filter_tree is not None:
+        expr = tree_to_expr(filter_tree)
+        q = q.filter(expr)
+
     if host_name is not None:
         q = q.filter(Downtimes.host_name.contains(host_name))
 
-    service_description = param.get('service_description')
     if service_description is not None:
         q = q.filter(Downtimes.service_description.contains(service_description))
 

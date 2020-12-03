@@ -1178,7 +1178,8 @@ class EBSSummary(AWSSectionGeneric):
         if col_volumes:
             tags = self._prepare_tags_for_api_response(self._tags)
             return {
-                vol['VolumeId']: vol for vol in col_volumes for tag in vol['Tags'] if tag in tags
+                vol['VolumeId']: vol
+                for vol in col_volumes for tag in vol.get('Tags', []) if tag in tags
             }
 
         volumes = []
@@ -1530,7 +1531,7 @@ class S3Requests(AWSSectionCloudwatch):
                             }]
                         },
                         'Period': self.period,
-                        'Stat': 'Sum',  #reports per period
+                        'Stat': 'Sum',  # reports per period
                         'Unit': unit,
                     },
                 })
@@ -2532,7 +2533,7 @@ class AWSSections(object):
 
         for row in result:
             write_piggyback_header = row.piggyback_hostname\
-                                     and row.piggyback_hostname != self._hostname
+                and row.piggyback_hostname != self._hostname
             if write_piggyback_header:
                 sys.stdout.write("<<<<%s>>>>\n" % row.piggyback_hostname)
             sys.stdout.write(section_header)

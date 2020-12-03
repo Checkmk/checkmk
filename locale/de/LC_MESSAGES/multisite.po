@@ -6573,6 +6573,10 @@ msgstr "Batteriestrom"
 msgid "Battery temperature"
 msgstr "Batterietemperatur"
 
+#, fuzzy
+msgid "Battery time remaining"
+msgstr "Verbleibende Lebenszeit"
+
 msgid "Beamer lamp operation time"
 msgstr "Betriebszeit der Beamerlampe"
 
@@ -24633,6 +24637,10 @@ msgid "Interface id"
 msgstr "Schnittstellenbezeichner"
 
 #, fuzzy
+msgid "Interface known in Ntop"
+msgstr "Schnittstellenbezeichner"
+
+#, fuzzy
 msgid "Interface settings"
 msgstr "Einstellungen von Instanzen"
 
@@ -30778,6 +30786,10 @@ msgstr "Netzwerk-Scan"
 
 msgid "Network specification"
 msgstr "Angabe des Netzwerkes"
+
+#, fuzzy
+msgid "Network statistics"
+msgstr "Knoten Statistiken"
 
 #, python-format
 msgid "Network topology of site %s"
@@ -48467,6 +48479,11 @@ msgid "The view is intended for NagStaMon as web service."
 msgstr "Diese Ansicht ist gedacht für die Nutzung durch NagStaMon."
 
 msgid ""
+"The view is only visible to you. You can not share it, because you don't "
+"have the permission to share it."
+msgstr ""
+
+msgid ""
 "The volume levels will never fall below these values, when using the magic "
 "factor and the volume is very small."
 msgstr ""
@@ -48483,6 +48500,12 @@ msgid ""
 msgstr ""
 "Es sind Änderungen von anderen Benutzern vorhanden und dieser API-Aufruf "
 "erlaubt das Aktivieren von fremden Änderungen nicht."
+
+#, python-format
+msgid ""
+"There are changes to activate, but no site can be activated (The sites %s "
+"have changes, but may be offline or not logged in)."
+msgstr ""
 
 #, fuzzy
 msgid "There are no configured rules in this aggregation pack"
@@ -48584,8 +48607,8 @@ msgstr "Es gibt keine WATO-Sicherung, die wiederhergestellt werden könnte."
 msgid "There is no backup job configured"
 msgstr "Es ist kein Sicherungs-Job konfiguriert"
 
-#, python-format
-msgid "There is no graph template with the id '%d'"
+#, fuzzy, python-format
+msgid "There is no graph template with the id '%s'"
 msgstr "Es gibt keine Graphschablone mit der ID '%d'"
 
 msgid "There is no manpage for this check."

@@ -279,8 +279,8 @@ tidy: compile_commands.json
 iwyu: compile_commands.json
 	@echo include-what-you-use information start ====================================
 	@which include-what-you-use
-	@include-what-you-use --version
-	@include-what-you-use -v 2>&1 | grep -v "error: unable to handle compilation" || true
+	@include-what-you-use $(IWYU_EXTRA_ARGS) --version
+	@include-what-you-use $(IWYU_EXTRA_ARGS) -v 2>&1 | grep -v "error: unable to handle compilation" || true
 	@echo include-what-you-use information end ======================================
 	$(IWYU_TOOL) -j4 --output-format=clang -p . $(FILES_TO_CHECK) -- $(IWYU_EXTRA_ARGS) -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 

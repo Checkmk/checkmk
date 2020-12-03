@@ -415,13 +415,18 @@ export function add_snapin(name) {
 
             const sidebar_content = g_scrollbar.getContentElement();
             if (sidebar_content) {
-                var tmp = document.createElement("div");
-                tmp.innerHTML = result.content;
-                utils.execute_javascript_by_object(tmp);
+                const tmp_container = document.createElement("div");
+                tmp_container.innerHTML = result.content;
 
                 const add_button = sidebar_content.lastChild;
-                while (tmp.childNodes.length) {
-                    add_button.insertAdjacentElement("beforebegin", tmp.childNodes[0]);
+                while (tmp_container.childNodes.length) {
+                    const tmp = tmp_container.childNodes[0];
+                    add_button.insertAdjacentElement("beforebegin", tmp);
+
+                    // The object specific JS must be called after the object was inserted.
+                    // Otherwise JS code that works on DOM objects (e.g. the quicksearch snapin
+                    // registry) cannot find these objects.
+                    utils.execute_javascript_by_object(tmp);
                 }
             }
 

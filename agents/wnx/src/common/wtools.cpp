@@ -609,8 +609,6 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
         // Tell SCM that the service is started.
         setServiceStatus(SERVICE_RUNNING);
 
-        cma::cfg::rm_lwa::Execute();
-
     } catch (DWORD dwError) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
@@ -2487,7 +2485,7 @@ std::string ACLInfo::output() {
         // Get account name for SID
         auto ret =
             ::LookupAccountSidA(nullptr, ace_sid, name_buffer, &name_len,
-                              domain_buffer, &domain_name_len, &sid_name_use);
+                                domain_buffer, &domain_name_len, &sid_name_use);
         if (!ret) {
             XLOG::l("Failed to get account for SID");
             continue;

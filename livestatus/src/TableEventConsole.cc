@@ -5,12 +5,12 @@
 
 #include "TableEventConsole.h"
 
-#include <algorithm>  // IWYU pragma: keep  // CI does not want it
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
-#include <functional>  // IWYU pragma: keep  // CI does not want it
+#include <functional>
 #include <iosfwd>
 #include <iostream>
 #include <optional>

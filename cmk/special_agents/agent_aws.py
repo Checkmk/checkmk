@@ -3023,12 +3023,12 @@ def main(sys_argv=None):
                 sections.run(use_cache=use_cache)
             except AssertionError:
                 if args.debug:
-                    return 1
+                    raise
             except Exception as e:
                 logging.info(e)
                 has_exceptions = True
                 if args.debug:
-                    return 1
+                    raise
     if has_exceptions:
         return 1
     return 0

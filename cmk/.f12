@@ -52,7 +52,7 @@ PYTHON3_PATHS=(
     special_agents/agent_netapp.py
     special_agents/agent_prism.py
     special_agents/agent_prometheus.py
-    special_agents/agent_proxmox.py
+    special_agents/agent_proxmox_ve.py
     special_agents/agent_rabbitmq.py
     special_agents/agent_random.py
     special_agents/agent_ruckus_spot.py

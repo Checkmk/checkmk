@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_vm_backup_requirements():
+def _parameter_valuespec_proxmox_ve_vm_backup_requirements():
     # use Dictionary as Optional returning an empty dict if empty
     return Dictionary(elements=[(
         "age_levels_upper",
@@ -50,9 +50,9 @@ def _parameter_valuespec_vm_backup_requirements():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        title=lambda: _("Proxmox VM Backup"),
-        check_group_name="proxmox_vm_backup_status",
+        title=lambda: _("Proxmox VE VM Backup"),
+        check_group_name="proxmox_ve_vm_backup_status",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_vm_backup_requirements,
+        parameter_valuespec=_parameter_valuespec_proxmox_ve_vm_backup_requirements,
     ))

@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_proxmox_vm_info():
+def _parameter_valuespec_proxmox_ve_vm_info():
     # use Dictionary as Optional returning an empty dict if empty
     return Dictionary(
         title=_("Check Parameter"),
@@ -39,9 +39,9 @@ def _parameter_valuespec_proxmox_vm_info():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        title=lambda: _("Proxmox VM Info"),
-        check_group_name="proxmox_vm_info",
+        title=lambda: _("Proxmox VE VM Info"),
+        check_group_name="proxmox_ve_vm_info",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_proxmox_vm_info,
+        parameter_valuespec=_parameter_valuespec_proxmox_ve_vm_info,
     ))

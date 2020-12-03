@@ -4,27 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-Checkmk Proxmox special agent
+Checkmk Proxmox VE special agent
 
 Domain    | Element                       | Check
 ----------+-------------------------------+---------------------------------------------------------
 Proxmox   |                               |
           | Proxmox Version               | --- checked for each node
-          | Configured, Backup            | --- checked for each vm proxmox_cluster_backup_status
+          | Configured, Backup            | --- checked for each vm proxmox_ve_cluster_backup_status
           | log-cutoff-weeks              |
           |                               |
 ----------+-------------------------------+---------------------------------------------------------
 Nodes []  |                               |
-          | Proxmox Version               | proxmox_node_info
-          | Subscription                  | proxmox_node_info
-          | Status: "active"/"inactive"   | proxmox_node_info
-          | lxc: []                       | proxmox_node_info
-          | qemu: []                      | proxmox_node_info
+          | Proxmox Version               | proxmox_ve_node_info
+          | Subscription                  | proxmox_ve_node_info
+          | Status: "active"/"inactive"   | proxmox_ve_node_info
+          | lxc: []                       | proxmox_ve_node_info
+          | qemu: []                      | proxmox_ve_node_info
           |                               |
           | Uptime                        | uptime (existing)
           |                               |
-          | disk usage   (%/max)          | proxmox_disk_usage
-          | mem usage    (%/max)          | proxmox_mem_usage
+          | disk usage   (%/max)          | proxmox_ve_disk_usage
+          | mem usage    (%/max)          | proxmox_ve_mem_usage
           |                               |
           | # backup                      | todo: summary status for VMs configured on this node
           | # snapshots                   | todo: summary status for VMs configured on this node
@@ -32,15 +32,15 @@ Nodes []  |                               |
           |                               |
 ----------+-------------------------------+---------------------------------------------------------
 VMs []    |                               |
-          | vmid: int                     | proxmox_vm_info
-          | type: lxc/qemu                | proxmox_vm_info
-          | node: host                    | proxmox_vm_info (vllt. konfigurierbare überprüfung?)
-          | status: running/not running   | proxmox_vm_info
+          | vmid: int                     | proxmox_ve_vm_info
+          | type: lxc/qemu                | proxmox_ve_vm_info
+          | node: host                    | proxmox_ve_vm_info (vllt. konfigurierbare überprüfung?)
+          | status: running/not running   | proxmox_ve_vm_info
           |                               |
-          | disk usage                    | [x] proxmox_disk_usage / only lxc
-          | mem usage                     | [x] proxmox_mem_usage
+          | disk usage                    | [x] proxmox_ve_disk_usage / only lxc
+          | mem usage                     | [x] proxmox_ve_mem_usage
 
-          | Backed up                     | [x] proxmox_vm_backup_status
+          | Backed up                     | [x] proxmox_ve_vm_backup_status
           |     When / crit / warn        | [x]
           |     Failure as warning        | [x]
           |     Bandwidth                 | [?]
@@ -78,7 +78,7 @@ from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.utils import vcrtrace
 
-LOGGER = logging.getLogger("agent_proxmox")
+LOGGER = logging.getLogger("agent_proxmox_ve")
 
 ListOrDict = Union[List[Dict[str, Any]], Dict[str, Any]]
 Args = argparse.Namespace
@@ -86,7 +86,7 @@ TaskInfo = Dict[str, Any]
 BackupInfo = Dict[str, Any]
 LogData = Sequence[Dict[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 
-LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox"
+LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox_ve"
 
 
 def parse_arguments(argv: Sequence[str]) -> Args:
@@ -108,7 +108,7 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     )
     parser.add_argument("--no-cert-check", action="store_true")
     parser.add_argument("--debug", action="store_true", help="Keep some exceptions unhandled")
-    parser.add_argument("hostname", help="Name of the Proxmox instance to query.")
+    parser.add_argument("hostname", help="Name of the Proxmox VE instance to query.")
     return parser.parse_args(argv)
 
 
@@ -340,11 +340,11 @@ def JsonCachedData(filename: str) -> Generator[Dict[str, Any], None, None]:
             json.dump(cache, cwfile)
 
 
-def fetch_backup_data(args: Args, session: "ProxmoxAPI",
+def fetch_backup_data(args: Args, session: "ProxmoxVeAPI",
                       nodes: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     """Since the Proxmox API does not provide us with information about past backups we read the
     information we need from log entries created for each backup process"""
-    # Fetching log files is by far the most time consuming process issued by the Proxmox agent.
+    # Fetching log files is by far the most time consuming process issued by the ProxmoxVE agent.
     # Since logs have a unique UPID we can safely cache them
     with JsonCachedData("upid.log.cache.json") as cache:
         cutoff_date = int((datetime.now() - timedelta(weeks=args.log_cutoff_weeks)).timestamp())
@@ -438,7 +438,7 @@ def write_agent_output(args: argparse.Namespace) -> None:
         for section in sections:
             write_section(**section)
 
-    with ProxmoxAPI(
+    with ProxmoxVeAPI(
             host=args.hostname,
             port=args.port,
             credentials={k: getattr(args, k) for k in {"username", "password"} if getattr(args, k)},
@@ -496,12 +496,12 @@ def write_agent_output(args: argparse.Namespace) -> None:
             host=node["node"],
             sections=[
                 {
-                    "name": "proxmox_node_info",
+                    "name": "proxmox_ve_node_info",
                     "data": {
                         "status": node["status"],
                         "lxc": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
                         "qemu": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
-                        "proxmox_version": node["version"],
+                        "proxmox_ve_version": node["version"],
                         "subscription": {
                             key: value for key, value in node["subscription"].items() if key in {
                                 "status",
@@ -516,14 +516,14 @@ def write_agent_output(args: argparse.Namespace) -> None:
                     },
                 },
                 {
-                    "name": "proxmox_disk_usage",
+                    "name": "proxmox_ve_disk_usage",
                     "data": {
                         "disk": node["disk"],
                         "max_disk": node["maxdisk"],
                     },
                 },
                 {
-                    "name": "proxmox_mem_usage",
+                    "name": "proxmox_ve_mem_usage",
                     "data": {
                         "mem": node["mem"],
                         "max_mem": node["maxmem"],
@@ -536,10 +536,10 @@ def write_agent_output(args: argparse.Namespace) -> None:
                     "jsonify": False,
                 },
                 # {  # Todo
-                #     "name": "proxmox_backup_summary",
+                #     "name": "proxmox_ve_backup_summary",
                 # },
                 # {  # Todo
-                #     "name": "proxmox_snapshot_summary",
+                #     "name": "proxmox_ve_snapshot_summary",
                 # },
             ],
         )
@@ -549,7 +549,7 @@ def write_agent_output(args: argparse.Namespace) -> None:
             host=vm["name"],
             sections=[
                 {
-                    "name": "proxmox_vm_info",
+                    "name": "proxmox_ve_vm_info",
                     "data": {
                         "vmid": vmid,
                         "node": vm["node"],
@@ -559,7 +559,7 @@ def write_agent_output(args: argparse.Namespace) -> None:
                     },
                 },
                 {
-                    "name": "proxmox_disk_usage",
+                    "name": "proxmox_ve_disk_usage",
                     "data": {
                         "disk": vm["disk"],
                         "max_disk": vm["maxdisk"],
@@ -567,30 +567,30 @@ def write_agent_output(args: argparse.Namespace) -> None:
                     "skip": vm["type"] == "qemu",
                 },
                 {
-                    "name": "proxmox_mem_usage",
+                    "name": "proxmox_ve_mem_usage",
                     "data": {
                         "mem": vm["mem"],
                         "max_mem": vm["maxmem"],
                     },
                 },
                 {
-                    "name": "proxmox_vm_backup_status",
+                    "name": "proxmox_ve_vm_backup_status",
                     "data": {
                         # todo: info about erroneous backups
                         "last_backup": logged_backup_data.get(vmid),
                     },
                 },
                 # {  # Todo
-                #     "name": "proxmox_vm_replication_status",
+                #     "name": "proxmox_ve_vm_replication_status",
                 # },
                 # {  # Todo
-                #     "name": "proxmox_vm_snapshot_status",
+                #     "name": "proxmox_ve_vm_snapshot_status",
                 # },
             ],
         )
 
 
-class ProxmoxSession:
+class ProxmoxVeSession:
     """Session"""
     class HTTPAuth(requests.auth.AuthBase):
         """Auth"""
@@ -601,7 +601,7 @@ class ProxmoxSession:
             timeout: int,
             verify_ssl: bool,
         ) -> None:
-            super(ProxmoxSession.HTTPAuth, self).__init__()
+            super(ProxmoxVeSession.HTTPAuth, self).__init__()
             ticket_url = base_url + "api2/json/access/ticket"
             response = (requests.post(url=ticket_url,
                                       verify=verify_ssl,
@@ -652,7 +652,7 @@ class ProxmoxSession:
         self.close()
 
     def close(self) -> None:
-        """close connection to ProxMox endpoint"""
+        """close connection to Proxmox VE endpoint"""
         if self._session:
             self._session.close()
 
@@ -675,13 +675,13 @@ class ProxmoxSession:
         return response_json.get("data")
 
 
-class ProxmoxAPI:
-    """Wrapper for ProxmoxSession which provides high level API calls"""
+class ProxmoxVeAPI:
+    """Wrapper for ProxmoxVeSession which provides high level API calls"""
     def __init__(self, host: str, port: int, credentials: Any, timeout: int,
                  verify_ssl: bool) -> None:
         try:
-            LOGGER.info("Establish connection to Proxmox host %r", host)
-            self._session = ProxmoxSession(
+            LOGGER.info("Establish connection to Proxmox VE host %r", host)
+            self._session = ProxmoxVeSession(
                 endpoint=(host, port),
                 credentials=credentials,
                 timeout=timeout,

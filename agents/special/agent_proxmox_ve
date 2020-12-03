@@ -4,11 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-import json
+import sys
+from cmk.special_agents.agent_proxmox_ve import main
 
-
-def parse_proxmox(raw_info):
-    from_json = json.loads(raw_info[0][0])
-    assert isinstance(from_json, dict)
-    return from_json if raw_info else {}
+if __name__ == "__main__":
+    sys.exit(main())

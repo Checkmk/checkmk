@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_disk_percentage_levels():
+def _parameter_valuespec_proxmox_ve_disk_percentage_levels():
     return Dictionary(
         elements=[
             ("levels",
@@ -42,9 +42,9 @@ def _parameter_valuespec_disk_percentage_levels():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="proxmox_disk_percentage_used",
+        check_group_name="proxmox_ve_disk_percentage_used",
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_disk_percentage_levels,
-        title=lambda: _("Proxmox disk percentage used"),
+        parameter_valuespec=_parameter_valuespec_proxmox_ve_disk_percentage_levels,
+        title=lambda: _("Proxmox VE disk percentage used"),
     ))

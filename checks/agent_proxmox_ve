@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=undefined-variable
+# type: ignore[name-defined]
 
-def agent_proxmox_arguments(params, hostname, ipaddress):
+
+def agent_proxmox_ve_arguments(params, hostname, ipaddress):
     return [
-        str(elem)  # non-str get ignored silently - so turn all elements into `str`
-        for chunk in (
+        elem for chunk in (
             ("-u", params["username"])  #
             if "username" in params else (),
             ("-p", passwordstore_get_cmdline("%s", params["password"]))  #
@@ -22,9 +24,8 @@ def agent_proxmox_arguments(params, hostname, ipaddress):
             ("--log-cutoff-weeks", params["log-cutoff-weeks"])  #
             if "log-cutoff-weeks" in params else (),
             (hostname,),
-        )
-        for elem in chunk
+        ) for elem in chunk
     ]
 
 
-special_agent_info['proxmox'] = agent_proxmox_arguments
+special_agent_info['proxmox_ve'] = agent_proxmox_ve_arguments

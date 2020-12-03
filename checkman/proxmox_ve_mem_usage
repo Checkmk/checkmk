@@ -1,5 +1,5 @@
-title: Proxmox: Memory usage
-agents: proxmox
+title: Proxmox VE: Memory usage
+agents: proxmox_ve
 catalog: os/misc
 license: GPL
 distribution: check_mk

@@ -515,6 +515,15 @@ class HostSectionParser(ParserState):
                 separator=separator,
             )
 
+        def cache_info(self, cached_at: int) -> Optional[Tuple[int, int]]:
+            # If both `persist` and `cached` are present, `cached` has priority
+            # over `persist`.  I do not know whether this is correct.
+            if self.cached:
+                return self.cached
+            if self.persist is not None:
+                return cached_at, self.persist - cached_at
+            return None
+
     def __init__(
         self,
         hostname: HostName,
@@ -610,11 +619,11 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         cached_at = int(time.time())
         # Transform to seconds and give the piggybacked host a little bit more time
         cache_age = int(1.5 * 60 * self.host_config.check_mk_check_interval)
-        self._update_cache_info(
-            parser.host_sections,
-            parser.section_info,
-            cached_at=cached_at,
-        )
+        parser.host_sections.cache_info.update({
+            header.name: cast(Tuple[int, int], header.cache_info(cached_at))
+            for header in parser.section_info
+            if header.cache_info(cached_at) is not None
+        })
         parser.host_sections.piggybacked_raw_data = self._make_updated_piggyback_section_header(
             parser.host_sections.piggybacked_raw_data,
             cached_at=cached_at,
@@ -644,24 +653,6 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             parser = parser(line.rstrip(b"\n"))
 
         return parser
-
-    @staticmethod
-    def _update_cache_info(
-        host_sections: AgentHostSections,
-        section_info: Iterable[HostSectionParser.Header],
-        *,
-        cached_at: int,
-    ) -> None:
-        for section_header in section_info:
-            # If both `persist` and `cached` are present, `cached` overwrites the
-            # settings from `persist`.  I do not know whether this is correct.
-            if section_header.persist is not None:
-                host_sections.cache_info[section_header.name] = (
-                    cached_at,
-                    section_header.persist - cached_at,
-                )
-            if section_header.cached:
-                host_sections.cache_info[section_header.name] = section_header.cached
 
     @staticmethod
     def _make_updated_piggyback_section_header(

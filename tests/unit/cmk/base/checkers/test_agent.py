@@ -24,7 +24,7 @@ from cmk.fetchers.agent import NoCache
 import cmk.base.config as config
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentParser, AgentRawDataSection, AgentSource, AgentSummarizer, HostSectionParser
-from cmk.base.checkers.host_sections import HostSections, SectionStore
+from cmk.base.checkers.host_sections import PersistedSections, SectionStore
 from cmk.base.checkers.type_defs import NO_SELECTION
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
@@ -49,15 +49,7 @@ class TestParser:
         ts.apply(monkeypatch)
 
     @pytest.fixture
-    def patch_io(self, monkeypatch):
-        monkeypatch.setattr(
-            HostSections,
-            "add_persisted_sections",
-            lambda *args, **kwargs: None,
-        )
-
-    @pytest.fixture
-    def store_path(self, tmp_path, patch_io):
+    def store_path(self, tmp_path):
         return tmp_path / "store"
 
     @pytest.fixture
@@ -192,15 +184,10 @@ class TestParser:
         }
 
     @pytest.mark.usefixtures("scenario")
-    def test_persist_option_populates_cache_info_and_persisted_sections(
-            self, parser, mocker, monkeypatch):
+    def test_persist_option_populates_cache_info(self, parser, mocker, monkeypatch):
         time_time = 1000
         time_delta = 50
         monkeypatch.setattr(time, "time", lambda: time_time)
-        add_persisted_sections = mocker.patch.object(
-            HostSections,
-            "add_persisted_sections",
-        )
 
         raw_data = AgentRawData(b"\n".join((
             b"<<<section:persist(%i)>>>" % (time_time + time_delta),
@@ -213,9 +200,39 @@ class TestParser:
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (time_time, time_delta)}
         assert ahs.piggybacked_raw_data == {}
-        assert add_persisted_sections.call_args.args[0] == {
-            SectionName("section"): (1000, 1050, [["first", "line"], ["second", "line"]]),
+
+    @pytest.mark.usefixtures("scenario")
+    def test_persist_option_and_persisted_sections(self, parser, mocker, monkeypatch):
+        time_time = 1000
+        time_delta = 50
+        monkeypatch.setattr(time, "time", lambda: time_time)
+        monkeypatch.setattr(
+            SectionStore,
+            "load",
+            lambda self: PersistedSections({
+                SectionName("persisted"): (42, 69, [["content"]]),
+            }),
+        )
+        # Patch IO:
+        monkeypatch.setattr(SectionStore, "store", lambda self, sections: None)
+
+        raw_data = AgentRawData(b"\n".join((
+            b"<<<section:persist(%i)>>>" % (time_time + time_delta),
+            b"first line",
+            b"second line",
+        )))
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+
+        assert ahs.sections == {
+            SectionName("section"): [["first", "line"], ["second", "line"]],
+            SectionName("persisted"): [["content"]],
         }
+        assert ahs.cache_info == {
+            SectionName("section"): (time_time, time_delta),
+            SectionName("persisted"): (42, 27),
+        }
+        assert ahs.piggybacked_raw_data == {}
 
     @pytest.mark.parametrize(
         "headerline, section_name, section_options",

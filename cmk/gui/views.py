@@ -749,10 +749,18 @@ class GUIViewRenderer(ABCViewRenderer):
             ),
         ]
 
+        page_menu_dropdowns = self._page_menu_dropdown_commands() + \
+                              self._page_menu_dropdowns_context(rows) + \
+                              self._page_menu_dropdown_add_to() + \
+                              export_dropdown
+
+        if config.is_ntop_available(
+        ) and config.ntop_connection != {}:  # type: ignore[attr-defined]
+            host_address = rows[0]["host_address"]
+            page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
+
         menu = PageMenu(
-            dropdowns=self._page_menu_dropdown_commands() +
-            self._page_menu_dropdowns_context(rows) + self._page_menu_dropdown_add_to() +
-            export_dropdown,
+            dropdowns=page_menu_dropdowns,
             breadcrumb=breadcrumb,
             has_pending_changes=bool(get_pending_changes_info()),
         )
@@ -800,6 +808,9 @@ class GUIViewRenderer(ABCViewRenderer):
 
     def _page_menu_dropdowns_context(self, rows: Rows) -> List[PageMenuDropdown]:
         return _get_context_page_menu_dropdowns(self.view, rows, mobile=False)
+
+    def _page_menu_dropdowns_ntop(self, host_address) -> PageMenuDropdown:
+        return _get_ntop_page_menu_dropdown(self.view, host_address)
 
     def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:
         if not config.user.may("general.csv_export"):
@@ -2273,6 +2284,112 @@ def _get_context_page_menu_dropdowns(view: View, rows: Rows,
             ))
 
     return dropdowns
+
+
+def _get_ntop_page_menu_dropdown(view, host_address):
+    return PageMenuDropdown(
+        name="ntop",
+        title="ntop",
+        topics=_get_ntop_page_menu_topics(view, host_address),
+    )
+
+
+def _get_ntop_page_menu_topics(view, host_address):
+    if "host" not in view.spec['single_infos']:
+        return []
+
+    host_name = html.request.get_ascii_input_mandatory("host")
+    # TODO insert icons when available
+    topics = [
+        PageMenuTopic(title="Network statistics",
+                      entries=[
+                          PageMenuEntry(
+                              name="overview",
+                              title="Host",
+                              icon_name="folder",
+                              item=_get_ntop_entry_item_link(host_name, host_address, "host_tab"),
+                          ),
+                          PageMenuEntry(
+                              name="overview",
+                              title="Traffic",
+                              icon_name="trans",
+                              item=_get_ntop_entry_item_link(host_name, host_address,
+                                                             "traffic_tab"),
+                          ),
+                          PageMenuEntry(
+                              name="overview",
+                              title="Packets",
+                              icon_name="trans",
+                              item=_get_ntop_entry_item_link(host_name, host_address,
+                                                             "packets_tab"),
+                          ),
+                          PageMenuEntry(
+                              name="overview",
+                              title="Ports",
+                              icon_name="trans",
+                              item=_get_ntop_entry_item_link(host_name, host_address, "ports_tab"),
+                          ),
+                          PageMenuEntry(
+                              name="overview",
+                              title="Peers",
+                              icon_name="trans",
+                              item=_get_ntop_entry_item_link(host_name, host_address, "peers_tab"),
+                          ),
+                          PageMenuEntry(
+                              name="overview",
+                              title="Apps",
+                              icon_name="trans",
+                              item=_get_ntop_entry_item_link(host_name, host_address,
+                                                             "applications_tab"),
+                          ),
+                          PageMenuEntry(
+                              name="overview",
+                              title="Flows",
+                              icon_name="trans",
+                              item=_get_ntop_entry_item_link(host_name, host_address, "flows_tab"),
+                          ),
+                      ]),
+        PageMenuTopic(title="Alerts",
+                      entries=[
+                          PageMenuEntry(
+                              name="overview",
+                              title="Engaged alerts",
+                              icon_name="trans",
+                              item=_get_ntop_entry_item_link(host_name, host_address,
+                                                             "engaged_alerts_tab"),
+                          ),
+                          PageMenuEntry(
+                              name="overview",
+                              title="Past alerts",
+                              icon_name="trans",
+                              item=_get_ntop_entry_item_link(host_name, host_address,
+                                                             "past_alerts_tab"),
+                          ),
+                          PageMenuEntry(
+                              name="overview",
+                              title="Flow alerts",
+                              icon_name="trans",
+                              item=_get_ntop_entry_item_link(host_name, host_address,
+                                                             "flow_alerts_tab"),
+                          ),
+                      ]),
+    ]
+
+    return topics
+
+
+def _get_ntop_entry_item_link(host_name: str, host_address: str, tab: str):
+    return make_simple_link(
+        makeuri(
+            global_request,
+            [
+                ("host", host_name),
+                ("host_address", host_name),
+                ("tab", tab),
+            ],
+            filename="ntop_host_details.py",
+            delvars=["view_name"],
+        ))
 
 
 def _get_context_page_menu_topics(view: View, info: VisualInfo, is_single_info: bool,

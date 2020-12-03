@@ -7,52 +7,61 @@
 # Example agent output:
 # <<<nullmailer_mailq>>>
 # 8 1
+import typing
 
 factory_settings['nullmailer_mailq_default_levels'] = {
     "deferred": (10, 20),
 }
 
 
-def inventory_nullmailer_mailq(info):
-    return [("", {})]
+class Queue(typing.NamedTuple):
+    size: int
+    length: int
+    name: str
 
 
-def check_nullmailer_mailq(_no_item, params, info):
+def parse_nullmailer_mailq(info):
+    return [Queue(size=int(line[0]), length=int(line[1]), name="deferred") for line in info]
+
+
+def inventory_nullmailer_mailq(parsed):
+    if parsed:
+        yield "", {}
+
+
+def _check_single_queue(queue: Queue, levels_length: typing.Tuple[int, int]):
+
+    make_metric = queue.name == "deferred"
+
+    yield check_levels(
+        queue.length,
+        "length" if make_metric else None,
+        levels_length,
+        human_readable_func=lambda x: "%d" % x,
+        infoname=f"{queue.name.capitalize()}: Length",
+    )
+
+    yield check_levels(
+        queue.size,
+        "size" if make_metric else None,
+        None,
+        human_readable_func=get_bytes_human_readable,
+        infoname="Size",
+    )
+
+
+def check_nullmailer_mailq(_no_item, params, parsed):
     if not isinstance(params, dict):
         params = {
             "deferred": params,
         }
 
-    if not info:
-        return
-
-    warn, crit = params["deferred"]
-    size_bytes, length = map(int, info[0])
-
-    state = 0
-    output = ""
-    perfdata = [("length", length), ("size", size_bytes)]
-
-    if length == 0:
-        output = "Mailqueue is empty"
-    else:
-        output = "Mailqueue length is %d" % length
-
-    if length >= crit:
-        state = 2
-    elif length >= warn:
-        state = 1
-    if state:
-        output += " (warn/crit at %d/%d)" % (warn, crit)
-
-    if length != 0:
-        output += " having a size of %s" % \
-                   (get_bytes_human_readable(size_bytes))
-
-    return state, output, perfdata
+    for queue in parsed:
+        yield from _check_single_queue(queue, params.get(queue.name))
 
 
 check_info["nullmailer_mailq"] = {
+    'parse_function': parse_nullmailer_mailq,
     'check_function': check_nullmailer_mailq,
     'inventory_function': inventory_nullmailer_mailq,
     'service_description': 'Nullmailer Queue %s',

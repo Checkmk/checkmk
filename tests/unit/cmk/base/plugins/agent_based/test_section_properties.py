@@ -166,7 +166,6 @@ def test_section_parse_function_does_something():
         'netapp_api_status',
         'netapp_api_vf_status',
         'nfsexports',
-        'nullmailer_mailq',
         'openvpn_clients',
         'oracle_crs_version',
         'oracle_crs_voting',

@@ -11,7 +11,7 @@ from typing import Dict, List
 from importlib import import_module
 
 import pytest  # type: ignore[import]
-from testlib import cmk_path
+from testlib import cmk_path  # type: ignore[import]
 
 # TODO: Actually fix this stuff.
 NOT_TESTED_YET = {
@@ -75,7 +75,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     ],
     'agent_splunk': ['HOSTNAME'],
     'agent_vsphere': ['HOSTNAME'],
-    'agent_proxmox': ['HOSTNAME'],
+    'agent_proxmox_ve': ['HOSTNAME'],
     'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
     'agent_cisco_prime': ['--hostname', 'HOSTNAME'],
 }

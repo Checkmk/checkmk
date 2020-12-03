@@ -366,7 +366,7 @@ rulespec_registry.register(
     ))
 
 
-def _valuespec_special_agents_proxmox():
+def _valuespec_special_agents_proxmox_ve():
     return Dictionary(
         elements=[
             ("username", TextAscii(title=_("Username"), allow_empty=False)),
@@ -394,15 +394,15 @@ def _valuespec_special_agents_proxmox():
                  unit=_("weeks"),
              )),
         ],
-        title=_("Proxmox"),
+        title=_("Proxmox VE"),
     )
 
 
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:proxmox",
-        valuespec=_valuespec_special_agents_proxmox,
+        name="special_agents:proxmox_ve",
+        valuespec=_valuespec_special_agents_proxmox_ve,
     ))
 
 

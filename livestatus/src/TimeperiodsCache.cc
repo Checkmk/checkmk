@@ -3,7 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// IWYU pragma: no_include <type_traits>  // CI wants it
 #include "TimeperiodsCache.h"
 
 #include <utility>

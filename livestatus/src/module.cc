@@ -7,7 +7,6 @@
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define _XOPEN_SOURCE 500
 
-// IWYU pragma: no_include <type_traits>  // CI wants it
 // https://github.com/include-what-you-use/include-what-you-use/issues/166
 // IWYU pragma: no_include <ext/alloc_traits.h>
 #include "config.h"

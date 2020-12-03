@@ -138,11 +138,14 @@ class Discovery:
         apply_changes = False
 
         for (table_source, check_type, _checkgroup, item, discovered_params, _check_params, descr,
-             _state, _output, _perfdata, service_labels) in discovery_result.check_table:
+             _state, _output, _perfdata, service_labels,
+             found_on_nodes) in discovery_result.check_table:
+            # Versions >2.0b2 always provide a found on nodes information
+            # If this information is missing (fallback value is None), the remote system runs on an older version
 
             table_target = self._get_table_target(table_source, check_type, item)
             key = check_type, item
-            value = descr, discovered_params, service_labels
+            value = descr, discovered_params, service_labels, found_on_nodes
 
             if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
                 old_autochecks[key] = value
@@ -231,7 +234,11 @@ class Discovery:
                 self._save_host_service_enable_disable_rules(remove_disabled_rule,
                                                              add_disabled_rule)
                 need_sync = True
-            self._save_services(old_autochecks, autochecks_to_save, need_sync)
+            self._save_services(
+                old_autochecks,
+                autochecks_to_save,
+                need_sync,
+            )
 
     def _save_services(self, old_autochecks: SetAutochecksTable, checks: SetAutochecksTable,
                        need_sync: bool) -> None:
@@ -441,7 +448,7 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
         return execute_discovery_job(discovery_request)
 
     discovery_result = _get_check_table_from_remote(discovery_request)
-    discovery_result = _add_missing_service_labels(discovery_result)
+    discovery_result = _add_missing_discovery_result_fields(discovery_result)
     return discovery_result
 
 
@@ -463,11 +470,15 @@ def execute_discovery_job(request: StartDiscoveryRequest) -> DiscoveryResult:
     return r
 
 
-# 1.6.0b4 introduced the service labels column which might be missing when
-# fetching information from remote sites.
-def _add_missing_service_labels(discovery_result: DiscoveryResult) -> DiscoveryResult:
+def _add_missing_discovery_result_fields(discovery_result: DiscoveryResult) -> DiscoveryResult:
+    # 1.6.0b4 introduced the service labels column which might be missing when
+    # fetching information from remote sites.
     d = discovery_result._asdict()
     d["check_table"] = [(e + ({},) if len(e) < 11 else e) for e in d["check_table"]]
+
+    # 2.0.0b2 introduced the found_on_nodes info
+    d["check_table"] = [(e + (None,) if len(e) < 12 else e) for e in d["check_table"]]
+
     return DiscoveryResult(**d)
 
 

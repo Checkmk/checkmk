@@ -113,8 +113,9 @@ from cmk.base.api.agent_based.type_defs import (
 )
 from cmk.base.caching import config_cache as _config_cache
 from cmk.base.caching import runtime_cache as _runtime_cache
-from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.autochecks import ServiceWithNodes
 
 # TODO: Prefix helper functions with "_".
 
@@ -3089,7 +3090,7 @@ class HostConfig:
 
     def set_autochecks(
         self,
-        new_services: Sequence[Service],
+        new_services: Sequence[ServiceWithNodes],
     ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
         if self.is_cluster:

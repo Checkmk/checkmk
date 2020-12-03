@@ -240,6 +240,16 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
         if host_sections.cache_info:
             self.cache_info.update(host_sections.cache_info)
 
+    def add_cache_info(
+        self,
+        persisted_sections: PersistedSections[TRawDataSection],
+    ) -> None:
+        self.cache_info.update({
+            section_name: (entry[0], entry[1] - entry[0])
+            for section_name, entry in persisted_sections.items()
+            if section_name not in self.sections
+        })
+
     def add_persisted_sections(
         self,
         persisted_sections: PersistedSections[TRawDataSection],
@@ -257,9 +267,7 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
                 continue
 
             logger.debug("Using persisted section %r", section_name)
-            persisted_from, persisted_until, section = entry
-            self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
-            self.sections[section_name] = section
+            self.sections[section_name] = entry[-1]
 
 
 class MultiHostSections(MutableMapping[HostKey, HostSections]):

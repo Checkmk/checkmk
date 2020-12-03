@@ -615,31 +615,33 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             raw_data = agent_simulator.process(raw_data)
 
         parser = self._parse_host_section(raw_data)
+        host_sections = parser.host_sections
 
         cached_at = int(time.time())
         # Transform to seconds and give the piggybacked host a little bit more time
         cache_age = int(1.5 * 60 * self.host_config.check_mk_check_interval)
-        parser.host_sections.cache_info.update({
+        host_sections.cache_info.update({
             header.name: cast(Tuple[int, int], header.cache_info(cached_at))
             for header in parser.section_info
             if header.cache_info(cached_at) is not None
         })
-        parser.host_sections.piggybacked_raw_data = self._make_updated_piggyback_section_header(
-            parser.host_sections.piggybacked_raw_data,
+        host_sections.piggybacked_raw_data = self._make_updated_piggyback_section_header(
+            host_sections.piggybacked_raw_data,
             cached_at=cached_at,
             cache_age=cache_age,
         )
         persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
-            parser.host_sections.sections,
+            host_sections.sections,
             {section_header.name: section_header.persist for section_header in parser.section_info},
             cached_at=cached_at,
         )
         persisted_sections.update_and_store(self.section_store)
-        parser.host_sections.add_persisted_sections(
+        host_sections.add_cache_info(persisted_sections)
+        host_sections.add_persisted_sections(
             persisted_sections,
             logger=self._logger,
         )
-        return parser.host_sections.filter(selection)
+        return host_sections.filter(selection)
 
     def _parse_host_section(self, raw_data: AgentRawData) -> ParserState:
         """Split agent output in chunks, splits lines by whitespaces."""

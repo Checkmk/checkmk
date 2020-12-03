@@ -27,6 +27,7 @@
 #include "tools/_process.h"  // GetSomeFolder...
 #include "tools/_raii.h"     // on out
 #include "tools/_tgt.h"      // we need IsDebug
+#include "upgrade.h"
 #include "windows_service_api.h"
 
 namespace cma::cfg {
@@ -711,23 +712,29 @@ static void RemoveCapGeneratedFile() {
     XLOG::l.i("Removed [{}] files from the cap file.", files_on_disk.size());
 }
 
-static void RemoveOwnGeneratedFile() {
+static void RemoveOwnGeneratedFiles() {
     namespace fs = std::filesystem;
 
     auto [target_yml_example, ignore_it_again] = cap::GetExampleYmlNames();
-    std::error_code ec;
-
-    if (!fs::exists(target_yml_example, ec)) return;  // nothing to do
 
     XLOG::l.i("Removing yml files.");
-    fs::path user_yml = GetUserDir();
+
+    fs::path user_yml{GetUserDir()};
     user_yml /= files::kUserYmlFile;
+    std::vector<std::filesystem::path> files;
     if (cma::tools::AreFilesSame(target_yml_example, user_yml)) {
-        XLOG::l.i("Removing user yml files.");
-        fs::remove(user_yml, ec);
+        files.emplace_back(user_yml);
     }
-    XLOG::l.i("Removing example yml files.");
-    fs::remove(target_yml_example, ec);
+
+    files.emplace_back(target_yml_example);
+
+    files.emplace_back(
+        upgrade::ConstructProtocolFileName(GetUpgradeProtocolDir()));
+    for (const auto& f : files) {
+        std::error_code ec;
+        XLOG::l.i("Removing user file '{}'", f.u8string());
+        fs::remove(f, ec);
+    }
 }
 
 static void RemoveDirs(std::filesystem::path path) {
@@ -764,7 +771,7 @@ bool CleanDataFolder(CleanMode mode) {
             XLOG::details::LogWindowsEventInfo(
                 99, "Removing SMART from the Program Data Folder");
             RemoveCapGeneratedFile();
-            RemoveOwnGeneratedFile();
+            RemoveOwnGeneratedFiles();
             RemoveDirs(path);
         } break;
 

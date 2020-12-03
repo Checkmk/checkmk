@@ -3,6 +3,8 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
+
 from cmk.gui.plugins.openapi import fields
 
 HOST_NAME_REGEXP = '[-0-9a-zA-Z_.]+'
@@ -67,3 +69,26 @@ SERVICE_DESCRIPTION = {
         example="Memory",
     )
 }
+
+QUERY = fields.Nested(
+    fields.ExprSchema,
+    description=("An query expression in nested dictionary form. If you want to "
+                 "use multiple expressions, nest them with the AND/OR operators. "
+                 "The query parameter always has priority if applicable"),
+    many=False,
+    example=json.dumps({
+        'op': 'not',
+        'expr': {
+            'op': '=',
+            'left': 'hosts.name',
+            'right': 'example.com'
+        }
+    }),
+    required=False,
+)
+
+SITES = fields.List(
+    fields.String(),
+    description="Restrict the query to this particular site.",
+    missing=[],
+)

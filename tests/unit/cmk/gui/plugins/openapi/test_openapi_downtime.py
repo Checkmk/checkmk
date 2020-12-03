@@ -159,3 +159,50 @@ def test_openapi_schedule_service_downtime(
             }),
             status=204,
         )
+
+
+def test_openapi_show_downtimes(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    live.add_table('downtimes', [{
+        'id': 123,
+        'host_name': 'heute',
+        'service_description': 'CPU load',
+        'is_service': 1,
+        'author': 'random',
+        'start_time': 1606913913,
+        'end_time': 1606913913,
+        'recurring': 0,
+        'comment': 'literally nothing'
+    }, {
+        'id': 124,
+        'host_name': 'example.com',
+        'service_description': 'null',
+        'is_service': 0,
+        'author': 'random',
+        'start_time': 1606913913,
+        'end_time': 1606913913,
+        'recurring': 0,
+        'comment': 'some host downtime'
+    }])
+
+    live.expect_query([
+        'GET downtimes',
+        'Columns: id host_name service_description is_service author start_time end_time recurring comment',
+        'Filter: host_name ~ heute'
+    ])
+    with live:
+        resp = wsgi_app.call_method(
+            'get',
+            base +
+            '/domain-types/downtime/collections/all?query={"op": "~", "left": "downtimes.host_name", "right": "heute"}',
+            status=200)
+        assert len(resp.json['value']) == 1

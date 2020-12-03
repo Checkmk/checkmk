@@ -2029,7 +2029,8 @@ components:
     MoveHost:
       properties:
         target_folder:
-          description: Where the host has to be moved to.
+          description: The path of the target folder where the host is supposed to
+            be moved to.
           example: '%2Fmy%2Ffine%2Ffolder'
           pattern: /|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}
           type: string
@@ -4602,8 +4603,19 @@ paths:
   /domain-types/downtime/collections/all:
     get:
       description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.downtime.list_service_downtimes
+      operationId: cmk.gui.plugins.openapi.endpoints.downtime.show_downtimes
       parameters:
+      - description: An query expression in nested dictionary form. If you want to
+          use multiple expressions, nest them with the AND/OR operators. The query
+          parameter always has priority if applicable
+        in: query
+        name: query
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
       - description: A hostname.
         in: query
         name: host_name
@@ -4646,7 +4658,10 @@ paths:
           \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/downtime/collections/all\"\
           ,\n    params={  # goes into query string\n        \"host_name\": \"example.com\"\
           ,  # A hostname.\n        \"service_description\": \"Memory\",  # The service\
-          \ description.\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \ description.\n        \"query\": \"{\"op\": \"not\", \"expr\": {\"op\"\
+          : \"=\", \"left\": \"hosts.name\", \"right\": \"example.com\"}}\",  # An\
+          \ query expression in nested dictionary form.\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.parse\nimport\
@@ -4654,8 +4669,10 @@ paths:
           \ = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\n\nUSERNAME = \"\
           automation\"\nPASSWORD = \"test123\"\n\nquery_string = urllib.parse.urlencode({\n\
           \    \"host_name\": \"example.com\",  # A hostname.\n    \"service_description\"\
-          : \"Memory\",  # The service description.\n})\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/downtime/collections/all?{query_string}\"\
+          : \"Memory\",  # The service description.\n    \"query\": \"{\"op\": \"\
+          not\", \"expr\": {\"op\": \"=\", \"left\": \"hosts.name\", \"right\": \"\
+          example.com\"}}\",  # An query expression in nested dictionary form.\n})\n\
+          \nrequest = urllib.request.Request(\n    f\"{API_URL}/domain-types/downtime/collections/all?{query_string}\"\
           ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
           \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
           \    },\n)\nresponse = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
@@ -4666,7 +4683,9 @@ paths:
           \nPASSWORD=\"test123\"\n\ncurl \\\n    -X GET \\\n    --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
           \ \\\n    -G  \\\n    --data-urlencode \"host_name=example.com\" \\\n  \
-          \  --data-urlencode \"service_description=Memory\"\n    \"$API_URL/domain-types/downtime/collections/all\""
+          \  --data-urlencode \"service_description=Memory\" \\\n    --data-urlencode\
+          \ \"query={\"op\": \"not\", \"expr\": {\"op\": \"=\", \"left\": \"hosts.name\"\
+          , \"right\": \"example.com\"}}\"\n    \"$API_URL/domain-types/downtime/collections/all\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
@@ -4674,7 +4693,8 @@ paths:
           \nPASSWORD=\"test123\"\n\nhttp GET \"$API_URL/domain-types/downtime/collections/all\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    host_name==\"example.com\" \\\n    service_description==\"\
-          Memory\" \\\n    --json"
+          Memory\" \\\n    query==\"{\"op\": \"not\", \"expr\": {\"op\": \"=\", \"\
+          left\": \"hosts.name\", \"right\": \"example.com\"}}\" \\\n    --json"
     post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.create_downtime
@@ -6347,7 +6367,7 @@ paths:
               schema:
                 pattern: '[0-9a-fA-F]{32}'
                 type: string
-      summary: Move a host
+      summary: Move a host to another folder
       tags:
       - cmk.gui.plugins.openapi.endpoints.host_config
       x-codeSamples:

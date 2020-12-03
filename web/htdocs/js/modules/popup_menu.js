@@ -152,7 +152,7 @@ export function toggle_popup(event, trigger_obj, ident, method, data, onclose, o
     } else if (method.type === "ajax") {
         const content = generate_menu(trigger_obj.parentNode, resizable);
         content.innerHTML =
-            '<img src="themes/facelift/images/icon_reload.png" class="icon reloading">';
+            '<img src="themes/facelift/images/icon_reload.svg" class="icon reloading">';
         const url_vars = !method.url_vars ? "" : "?" + method.url_vars;
         ajax.get_url(
             "ajax_popup_" + method.endpoint + ".py" + url_vars,

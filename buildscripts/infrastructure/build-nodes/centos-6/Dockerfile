@@ -2,19 +2,6 @@ FROM centos:6
 
 SHELL ["/bin/bash", "-c"]
 
-# We need to set a fixed mirror, since Centos does not provide a mirror anymore:
-RUN rm -f /etc/yum.repos.d/* \
-    && echo '[base]' > /etc/yum.repos.d/base.repo \
-    && echo 'name=Centos 6 mirror' >> /etc/yum.repos.d/base.repo \
-    && echo 'baseurl=http://linuxsoft.cern.ch/centos-vault/6.10/os/x86_64/' >> /etc/yum.repos.d/base.repo \
-    && echo 'gpgcheck=0' >> /etc/yum.repos.d/base.repo \
-    && echo 'priority=1' >> /etc/yum.repos.d/base.repo \
-    && echo ''  >> /etc/yum.repos.d/base.repo \
-    && echo '[sclo-rh]' >> /etc/yum.repos.d/base.repo \
-    && echo 'name=Centos 6 mirror' >> /etc/yum.repos.d/base.repo \
-    && echo 'baseurl=https://repo.cloudlinux.com/cloudlinux/6.10/sclo/devtoolset-7/x86_64/' >> /etc/yum.repos.d/base.repo \
-    && echo 'gpgcheck=0' >> /etc/yum.repos.d/base.repo
-
 RUN yum -y makecache \
     && yum -y install \
     bind-utils \

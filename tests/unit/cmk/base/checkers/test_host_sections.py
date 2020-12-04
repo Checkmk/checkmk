@@ -42,17 +42,11 @@ from cmk.base.checkers import (
     update_host_sections,
 )
 from cmk.base.checkers.agent import AgentHostSections
-from cmk.base.checkers.host_sections import (
-    HostKey,
-    HostSections,
-    MultiHostSections,
-    PersistedSections,
-)
+from cmk.base.checkers.host_sections import HostKey, HostSections, MultiHostSections
 from cmk.base.checkers.piggyback import PiggybackSource
 from cmk.base.checkers.programs import ProgramSource
 from cmk.base.checkers.snmp import SNMPSource
 from cmk.base.checkers.tcp import TCPSource
-from cmk.base.checkers.type_defs import AgentRawDataSection
 
 _TestSection = collections.namedtuple(
     "TestSection",
@@ -922,25 +916,3 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         assert next(iter(section.sections)) == section_name
         assert not section.cache_info
         assert not section.piggybacked_raw_data
-
-
-class TestPersistedSections:
-    def test_from_sections(self):
-        section_a = SectionName("section_a")
-        content_a = [["first", "line"], ["second", "line"]]
-        section_b = SectionName("section_b")
-        content_b = [["third", "line"], ["forth", "line"]]
-        sections = {section_a: content_a, section_b: content_b}
-        cached_at = 69
-        fetch_interval = 42
-        interval_lookup = {section_a: fetch_interval, section_b: None}
-
-        persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
-            sections,
-            interval_lookup,
-            cached_at=cached_at,
-        )
-
-        assert persisted_sections == {  # type: ignore[comparison-overlap]
-            section_a: (cached_at, fetch_interval, content_a)
-        }

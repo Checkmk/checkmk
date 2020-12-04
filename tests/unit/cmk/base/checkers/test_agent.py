@@ -16,15 +16,15 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.type_defs import AgentRawData, result, SectionName, SourceType
+from cmk.utils.type_defs import AgentRawData, AgentRawDataSection, result, SectionName, SourceType
 
 from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
+from cmk.fetchers.cache import PersistedSections, SectionStore
 
 import cmk.base.config as config
 from cmk.base.checkers import Mode
-from cmk.base.checkers.agent import AgentParser, AgentRawDataSection, AgentSource, AgentSummarizer, HostSectionParser
-from cmk.base.checkers.host_sections import PersistedSections, SectionStore
+from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer, HostSectionParser
 from cmk.base.checkers.type_defs import NO_SELECTION
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 

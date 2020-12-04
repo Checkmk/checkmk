@@ -18,6 +18,7 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.type_defs import (
     AgentRawData,
+    AgentRawDataSection,
     HostAddress,
     HostName,
     MetricTuple,
@@ -30,6 +31,7 @@ from cmk.utils.type_defs import (
 from cmk.utils.werks import parse_check_mk_version
 
 from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
+from cmk.fetchers.cache import PersistedSections, SectionStore
 from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
@@ -38,8 +40,7 @@ from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import FileCacheFactory, Mode, Parser, SectionNameCollection, Source, Summarizer
-from .host_sections import HostSections, PersistedSections, SectionStore
-from .type_defs import AgentRawDataSection
+from .host_sections import HostSections
 
 __all__ = ["AgentSource", "AgentHostSections"]
 

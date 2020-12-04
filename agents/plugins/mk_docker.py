@@ -17,12 +17,12 @@ plugin ("pip install docker").
 This plugin it will be called by the agent without any arguments.
 """
 
+from __future__ import with_statement
+
 __version__ = "2.1.0i1"
 
 # N O T E:
 # docker is available for python versions from 2.6 / 3.3
-
-from __future__ import with_statement
 
 import configparser
 import os

@@ -87,9 +87,13 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
 
     def filter(self, selection: SectionNameCollection) -> "HostSections[TRawDataSection]":
         """Filter for preselected sections"""
-        # This could be optimized by telling the parser object about the
-        # preselected sections and dismissing raw data at an earlier stage.
-        # For now we don't need that, so we keep it simple.
+        # This method is on the wrong class.
+        #
+        # The parser should do the filtering (it already does by calling
+        # this method, which is confusing) -- instead, the parser could
+        # either completely ignore (aka not parse) the deselected sections
+        # or filter them in a second step.  This way, we could instantiate
+        # HostSections with the final data.
         if selection is NO_SELECTION:
             return self
         return HostSections(
@@ -123,6 +127,12 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
         self,
         persisted_sections: PersistedSections[TRawDataSection],
     ) -> None:
+        # This method is on the wrong class.
+        #
+        # The HostSections should get the cache_info (provided
+        # it is any useful: it is presently redundant with
+        # the persisted_sections) in `__init__()` and not
+        # modify it just after instantiation.
         self.cache_info.update({
             section_name: (entry[0], entry[1] - entry[0])
             for section_name, entry in persisted_sections.items()
@@ -135,6 +145,12 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
         *,
         logger: logging.Logger,
     ) -> None:
+        # This method is on the wrong class.
+        #
+        # A more logical structure would be to update the
+        # `Mapping[SectionName, TRawDataSection]` *before* passing it to
+        # HostSections.  This way, we could make `sections` here unmutable
+        # and final.
         """Add information from previous persisted infos."""
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:

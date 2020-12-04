@@ -755,8 +755,8 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
         // process was either stopped or failed(timeout)
         auto failed = minibox_.failed();
         unregisterProcess();
-        XLOG::d("Sync Plugin stopped '{}' Stopped: {} Failed: {}",
-                path().u8string(), !failed, failed);
+        XLOG::d("Sync Plugin stopped '{}' Stopped: {} Failed: {}", path(),
+                !failed, failed);
         if (failed) failures_++;
     }
 
@@ -768,7 +768,7 @@ void PluginEntry::setCmdLine(std::wstring_view name) { cmd_line_ = name; }
 
 // stop with asyncing
 void PluginEntry::breakAsync() {
-    XLOG::t("breakAsync {}", path().u8string());
+    XLOG::t("breakAsync {}", path());
     joinAndReleaseMainThread();
 }
 
@@ -783,9 +783,9 @@ void PluginEntry::joinAndReleaseMainThread() {
         t->join();
         minibox_.clean();  // critical to reset all after thread left
     } catch (const std::exception& e) {
-        XLOG::l.bp("Join disaster {} out {}", path().u8string(), e.what());
+        XLOG::l.bp("Join disaster '{}' out {}", path(), e.what());
     } catch (...) {
-        XLOG::l.bp("JOIN{} out", path().u8string());
+        XLOG::l.bp("JOIN '{}' out", path());
     }
 }
 
@@ -1102,12 +1102,12 @@ void PluginEntry::threadCore(const std::wstring& Id) {
         // process was either stopped or failed(timeout)
         auto failed = minibox_.failed();
         unregisterProcess();
-        XLOG::d("Async Plugin stopped '{}' Stopped: {} Failed: {}",
-                path().u8string(), !failed, failed);
+        XLOG::d("Async Plugin stopped '{}' Stopped: {} Failed: {}", path(),
+                !failed, failed);
         if (failed) failures_++;
     }
 
-    XLOG::d.t("Thread OFF: '{}'", path().u8string());
+    XLOG::d.t("Thread OFF: '{}'", path());
 }
 
 wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user) {
@@ -1126,7 +1126,7 @@ void PluginEntry::fillInternalUser() {
     // group is coming first
     if (!group_.empty()) {
         iu_ = ObtainInternalUser(wtools::ConvertToUTF16(group_));
-        XLOG::t("Entry '{}' uses user '{}' as group config", path().string(),
+        XLOG::t("Entry '{}' uses user '{}' as group config", path(),
                 wtools::ConvertToUTF8(iu_.first));
         return;
     }
@@ -1135,7 +1135,7 @@ void PluginEntry::fillInternalUser() {
 
     // user
     iu_ = PluginsExecutionUser2Iu(user_);
-    XLOG::t("Entry '{}' uses user '{}' as direct config", path().string(),
+    XLOG::t("Entry '{}' uses user '{}' as direct config", path(),
             wtools::ConvertToUTF8(iu_.first));
 }
 
@@ -1152,7 +1152,7 @@ void PluginEntry::restartAsyncThreadIfFinished(const std::wstring& Id) {
         // when thread is still running
         XLOG::d.i(
             "Thread for plugin '{}' is still running, restart is not required",
-            path().u8string());
+            path());
         return;
     }
 
@@ -1163,7 +1163,7 @@ void PluginEntry::restartAsyncThreadIfFinished(const std::wstring& Id) {
     lk.lock();
     main_thread_ = std::move(t);
     lk.unlock();
-    XLOG::d.i("restarted thread for plugin '{}'", path().u8string());
+    XLOG::d.i("restarted thread for plugin '{}'", path());
 }
 
 std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
@@ -1173,7 +1173,7 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
     // check is valid parameters
     if (cacheAge() < cma::cfg::kMinimumCacheAge && cacheAge() != 0) {
         XLOG::l("Plugin '{}' requested to be async, but has no valid cache age",
-                path().u8string());
+                path());
         return {};
     }
     // check data are ready and new enough
@@ -1198,16 +1198,16 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
         }
     }
     if (!data_ok)
-        XLOG::d("Data '{}' is too old, age is '{}' seconds", path().u8string(),
+        XLOG::d("Data '{}' is too old, age is '{}' seconds", path(),
                 duration_cast<seconds>(data_age).count());
 
     // execution phase
     if (going_to_be_old) {
         if (StartProcessNow) {
-            XLOG::d.i("restarting async plugin '{}'", path().u8string());
+            XLOG::d.i("restarting async plugin '{}'", path());
             restartAsyncThreadIfFinished(path().wstring());
         } else {
-            XLOG::d.i("plugin '{}' is marked for restart", path().u8string());
+            XLOG::d.i("plugin '{}' is marked for restart", path());
             markAsForRestart();
         }
     }
@@ -1223,7 +1223,7 @@ void PluginEntry::restartIfRequired() {
     if (cacheAge() < cma::cfg::kMinimumCacheAge) {
         XLOG::l(
             "Plugin '{}' requested to be async restarted, but has no valid cache age",
-            path().u8string());
+            path());
         return;
     }
     // check data are ready and new enough
@@ -1272,8 +1272,7 @@ void PluginEntry::unregisterProcess() {
 // MUST BE CALLED INSIDE LOCK_GUARD!
 void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     if (Id != process_id_ || Id == 0) {
-        XLOG::d("Invalid process {}, can't store data {} ", Id,
-                path().u8string());
+        XLOG::d("Invalid process {}, can't store data {} ", Id, path());
         return;
     }
 
@@ -1284,11 +1283,11 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
         std::chrono::duration_cast<std::chrono::seconds>(now - start_time_)
             .count();
     if (diff > static_cast<int64_t>(timeout())) {
-        XLOG::d("Process '{}' timeout in {} when set {}", path().u8string(),
-                diff, timeout());
+        XLOG::d("Process '{}' timeout in {} when set {}", path(), diff,
+                timeout());
     } else if (Data.empty()) {
         // plugin failed
-        XLOG::d("Process '{}' has no data", path().u8string());
+        XLOG::d("Process '{}' has no data", path());
     }
 
     if (failed()) {
@@ -1360,7 +1359,7 @@ void ApplyExeUnitToPluginMap(
             if (unit.run())
                 out.second.applyConfigUnit(unit, Local);
             else {
-                XLOG::d.t("Run is 'NO' for the '{}'", p.u8string());
+                XLOG::d.t("Run is 'NO' for the '{}'", p);
                 out.second.removeFromExecution();
             }
             break;
@@ -1438,7 +1437,7 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
         auto run_async = cma::provider::config::IsRunAsync(entry);
         if (run_async) continue;
 
-        XLOG::t("Executing '{}'", entry.path().u8string());
+        XLOG::t("Executing '{}'", entry.path());
 
         // C++ async black magic
         results.emplace_back(std::async(

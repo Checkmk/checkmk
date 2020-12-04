@@ -621,7 +621,7 @@ protected:
     void restartAsyncThreadIfFinished(const std::wstring& Id);
 
     void markAsForRestart() {
-        XLOG::l.i("markAsForRestart {}", path().u8string());
+        XLOG::l.i("markAsForRestart {}", path());
         std::lock_guard lk(lock_);
         data_is_going_old_ = true;
     }

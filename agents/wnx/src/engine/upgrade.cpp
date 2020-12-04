@@ -39,7 +39,7 @@ enum class ServiceStartType {
     // check created or already exists
     if (ret || ec.value() == 0) return true;
 
-    XLOG::l("Can't create '{}' error = [{}]", tgt.u8string(), ec.value());
+    XLOG::l("Can't create '{}' error = [{}]", tgt, ec.value());
     return false;
 }
 
@@ -77,7 +77,7 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
     namespace fs = std::filesystem;
     if (!IsPathProgramData(program_data)) {
         XLOG::d(XLOG_FUNC + " '{}' is bad folder, copy is not possible",
-                program_data.u8string());
+                program_data);
         return 0;
     }
 
@@ -93,7 +93,7 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
               copy_mode](std::wstring_view sub_folder) {
                  auto src = legacy_root / sub_folder;
                  auto tgt = program_data / sub_folder;
-                 XLOG::l.t("Processing '{}', mode [{}]:", src.u8string(),
+                 XLOG::l.t("Processing '{}', mode [{}]:", src,
                            static_cast<int>(copy_mode));  //
                  if (copy_mode == CopyFolderMode::remove_old)
                      fs::remove_all(tgt);
@@ -101,14 +101,13 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
                  if (!folder_exists) return;
 
                  if (IsFileNonCompatible(src)) {
-                     XLOG::l.i("File '{}' is skipped as not compatible",
-                               src.string());
+                     XLOG::l.i("File '{}' is skipped as not compatible", src);
                      return;
                  }
 
                  auto c = CopyFolderRecursive(
-                     src, tgt, fs::copy_options::skip_existing, [](fs::path P) {
-                         XLOG::l.i("\tCopy '{}'", P.u8string());
+                     src, tgt, fs::copy_options::skip_existing, [](fs::path p) {
+                         XLOG::l.i("\tCopy '{}'", p);
                          return true;
                      });
                  count += c;
@@ -168,8 +167,8 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
         if (fs::is_directory(p, ec)) continue;
 
         if (details::IsIgnoredFile(p)) {
-            XLOG::l.i("File '{}' in root folder '{}' is ignored", p.u8string(),
-                      LegacyRoot.u8string());
+            XLOG::l.i("File '{}' in root folder '{}' is ignored", p,
+                      LegacyRoot);
             continue;
         }
 
@@ -181,7 +180,7 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
             continue;
         }
 
-        XLOG::l("during copy from '{}' to '{}' error {}", p.u8string(),
+        XLOG::l("during copy from '{}' to '{}' error {}", p,
                 wtools::ConvertToUTF8(cma::cfg::GetUserDir()), ec.value());
     }
 
@@ -196,7 +195,7 @@ int CopyFolderRecursive(
     const std::function<bool(std::filesystem::path)>& predicate) noexcept {
     namespace fs = std::filesystem;
     int count = 0;
-    XLOG::l.t("Copy from '{}' to '{}'", source.u8string(), target.u8string());
+    XLOG::l.t("Copy from '{}' to '{}'", source, target);
 
     try {
         std::error_code ec;
@@ -211,7 +210,7 @@ int CopyFolderRecursive(
                     fs::create_directories(target_parent_path, ec);
                     if (ec.value() != 0) {
                         XLOG::l("Failed create folder '{} error {}",
-                                target_parent_path.u8string(), ec.value());
+                                target_parent_path, ec.value());
                         continue;
                     }
                 } else {
@@ -222,9 +221,8 @@ int CopyFolderRecursive(
                         if (ret) count++;
                         continue;
                     }
-                    XLOG::l("during copy from '{}' to '{}' error {}",
-                            p.u8string(), target_parent_path.u8string(),
-                            ec.value());
+                    XLOG::l("during copy from '{}' to '{}' error {}", p,
+                            target_parent_path, ec.value());
                 }
             }
         }
@@ -840,7 +838,7 @@ std::filesystem::path FindOwnDatFile() {
     auto dat = ConstructDatFileName();
     std::error_code ec;
     if (fs::exists(dat, ec)) return dat;
-    XLOG::l("dat files should be located at '{}'", dat.u8string());
+    XLOG::l("dat files should be located at '{}'", dat);
     return {};
 }
 
@@ -854,25 +852,25 @@ static std::filesystem::path GetHashedIniName() {
     auto old_ini_hash = GetOldHashFromIni(ini);
     if (old_ini_hash.empty()) {
         XLOG::l.t("Hash in INI file '{}' not found, patching is not required",
-                  ini.u8string());
+                  ini);
         return {};
     }
 
-    XLOG::l.t("Patching of the ini '{}' initiated, old hash is '{}' ",
-              ini.u8string(), old_ini_hash);
+    XLOG::l.t("Patching of the ini '{}' initiated, old hash is '{}' ", ini,
+              old_ini_hash);
     return ini;
 }
 
 static std::string GetNewHash() {
     auto dat = FindOwnDatFile();
     if (dat.empty()) {
-        XLOG::l("DAT file '{}' absent, this is bad", dat.u8string());
+        XLOG::l("DAT file '{}' absent, this is bad", dat);
         return {};
     }
 
     auto new_hash = GetNewHash(dat);
     if (new_hash.empty()) {
-        XLOG::l("Hash in DAT file '{} absent, this is bad too", dat.u8string());
+        XLOG::l("Hash in DAT file '{} absent, this is bad too", dat);
         return {};
     }
 
@@ -889,12 +887,12 @@ static std::filesystem::path GetHashedStateName() {
     auto old_state_hash = GetOldHashFromState(state);
     if (old_state_hash.empty()) {
         XLOG::l.t("Hash in State file '{}' not found, patching is not required",
-                  state.u8string());
+                  state);
         return {};
     }
 
-    XLOG::l.t("Patching of the state '{}' initiated, old hash is '{}' ",
-              state.u8string(), old_state_hash);
+    XLOG::l.t("Patching of the state '{}' initiated, old hash is '{}' ", state,
+              old_state_hash);
     return state;
 }
 
@@ -917,24 +915,22 @@ bool PatchOldFilesWithDatHash() {
     {
         auto ret = PatchIniHash(ini, new_hash);
         if (!ret) {
-            XLOG::l("Failed to patch hash '{}' in INI '{}'", new_hash,
-                    ini.u8string());
+            XLOG::l("Failed to patch hash '{}' in INI '{}'", new_hash, ini);
             return false;
         }
 
         auto ini_hash = GetOldHashFromIni(ini);
-        XLOG::d.t("Now hash in '{}'is '{}'", ini.u8string(), ini_hash);
+        XLOG::d.t("Now hash in '{}'is '{}'", ini, ini_hash);
     }
     {
         auto ret = PatchStateHash(state, new_hash);
         if (!ret) {
-            XLOG::l("Failed to patch hash '{}' in state '{}'", new_hash,
-                    state.u8string());
+            XLOG::l("Failed to patch hash '{}' in state '{}'", new_hash, state);
             return false;
         }
 
         auto state_hash = GetOldHashFromState(state);
-        XLOG::d.t("Now hash in '{}'is '{}'", state.u8string(), state_hash);
+        XLOG::d.t("Now hash in '{}'is '{}'", state, state_hash);
     }
     return true;
 }
@@ -958,15 +954,15 @@ void RecoverOldStateFileWithPreemtiveHashPatch() {
     std::error_code ec;
     if (!fs::is_regular_file(old_state, ec)) {
         XLOG::l.i("Error [{}] accessing'{}', no need to recover, quitting",
-                  ec.value(), old_state.u8string());
+                  ec.value(), old_state);
         return;
     }
 
     fs::path new_path = cma::cfg::GetAuStateDir();
     auto new_state = new_path / files::kAuStateFile;
     if (fs::exists(new_path, ec) && fs::exists(new_state, ec)) {
-        XLOG::l.i("'{}' and '{}' exist: no need to recover",
-                  new_path.u8string(), new_state.u8string());
+        XLOG::l.i("'{}' and '{}' exist: no need to recover", new_path,
+                  new_state);
         return;
     }
 
@@ -978,10 +974,10 @@ void RecoverOldStateFileWithPreemtiveHashPatch() {
 
     if (ec.value()) {
         XLOG::l.i("Error [{}] during copy from '{}' to '{}'", ec.value(),
-                  old_state.u8string(), new_state.u8string());
+                  old_state, new_state);
         return;
     }
-    XLOG::l.i("Recovered '{}'", new_state.u8string());
+    XLOG::l.i("Recovered '{}'", new_state);
 }
 
 // The only API entry DIRECTLY used in production
@@ -1060,20 +1056,18 @@ std::optional<YAML::Node> LoadIni(std::filesystem::path File) {
     std::error_code ec;
 
     if (!fs::exists(File, ec)) {
-        XLOG::l.i("File not found '{}', this may be ok", File.u8string());
+        XLOG::l.i("File not found '{}', this may be ok", File);
         return {};
     }
     if (!fs::is_regular_file(File, ec)) {
-        XLOG::l.w("File '{}' is not a regular file, this is wrong",
-                  File.u8string());
+        XLOG::l.w("File '{}' is not a regular file, this is wrong", File);
         return {};
     }
 
     cma::cfg::cvt::Parser p;
     p.prepare();
     if (!p.readIni(File, false)) {
-        XLOG::l.e("File '{}' is not a valid INI file, this is wrong",
-                  File.u8string());
+        XLOG::l.e("File '{}' is not a valid INI file, this is wrong", File);
         return {};
     }
 
@@ -1087,7 +1081,7 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
     auto local_ini_file = LegacyRoot / local_ini;
     std::error_code ec;
     if (fs::exists(local_ini_file, ec)) {
-        XLOG::l.i("Converting local ini file '{}'", local_ini_file.u8string());
+        XLOG::l.i("Converting local ini file '{}'", local_ini_file);
         auto user_yaml_file =
             wtools::ConvertToUTF8(files::kDefaultMainConfigName);
 
@@ -1095,14 +1089,14 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
             CreateUserYamlFromIni(local_ini_file, ProgramData, user_yaml_file);
         if (!out_file.empty() && fs::exists(out_file, ec)) {
             XLOG::l.i("Local File '{}' was converted as user YML file '{}'",
-                      local_ini_file.u8string(), out_file.u8string());
+                      local_ini_file, out_file);
             return true;
         }
     }
 
     XLOG::l.t(
         "Local INI File was not converted, absent, has no data or other reason",
-        local_ini_file.u8string());
+        local_ini_file);
 
     return false;
 }
@@ -1123,11 +1117,11 @@ bool ConvertUserIniFile(
 
     std::error_code ec;
     if (!fs::exists(user_ini_file, ec)) {
-        XLOG::l.i("User ini File {} is absent", user_ini_file.u8string());
+        XLOG::l.i("User ini File {} is absent", user_ini_file);
         return false;
     }
 
-    XLOG::l.i("User ini File {} to be processed", user_ini_file.u8string());
+    XLOG::l.i("User ini File {} to be processed", user_ini_file);
 
     // check_mk.user.yml or check_mk.bakery.yml
     const auto name = wtools::ConvertToUTF8(files::kDefaultMainConfigName);
@@ -1148,11 +1142,11 @@ bool ConvertUserIniFile(
     // check
     if (!yaml_file.empty() && fs::exists(yaml_file, ec)) {
         XLOG::l.t("User ini File {} was converted to YML file {}",
-                  user_ini_file.u8string(), yaml_file.u8string());
+                  user_ini_file, yaml_file);
         return true;
     }
 
-    XLOG::l.w("User ini File {} has no useful data", user_ini_file.u8string());
+    XLOG::l.w("User ini File {} has no useful data", user_ini_file);
     return false;
 }
 
@@ -1252,7 +1246,7 @@ std::filesystem::path CreateUserYamlFromIni(
     // conversion
     auto yaml = LoadIni(ini_file);
     if (!yaml.has_value() || !yaml.value().IsMap()) {
-        XLOG::l.w("File '{}' is empty, no yaml created", ini_file.u8string());
+        XLOG::l.w("File '{}' is empty, no yaml created", ini_file);
         return {};
     }
 
@@ -1269,7 +1263,7 @@ std::filesystem::path CreateUserYamlFromIni(
     yaml_file.replace_extension(files::kDefaultUserExt);
 
     StoreYaml(yaml_file, yaml.value(), comments);
-    XLOG::l.i("File '{}' is successfully converted", ini_file.u8string());
+    XLOG::l.i("File '{}' is successfully converted", ini_file);
 
     return yaml_file;
 }
@@ -1284,7 +1278,7 @@ std::filesystem::path CreateBakeryYamlFromIni(
     // conversion
     auto yaml = LoadIni(ini_file);
     if (!yaml.has_value() || !yaml.value().IsMap()) {
-        XLOG::l.w("File '{}' is empty, no yaml created", ini_file.u8string());
+        XLOG::l.w("File '{}' is empty, no yaml created", ini_file);
         return {};
     }
 
@@ -1312,7 +1306,7 @@ std::filesystem::path CreateBakeryYamlFromIni(
     yaml_file.replace_extension(files::kDefaultBakeryExt);
 
     StoreYaml(yaml_file, yaml.value(), comments);
-    XLOG::l.i("File '{}' is successfully converted", ini_file.u8string());
+    XLOG::l.i("File '{}' is successfully converted", ini_file);
 
     return yaml_file;
 }

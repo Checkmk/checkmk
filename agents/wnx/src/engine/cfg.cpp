@@ -384,13 +384,13 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
     std::error_code ec;
     if (!fs::exists(Filename, ec)) {
         XLOG::d("Attempting to save into cache not existing file '{}' [{}]",
-                Filename.u8string(), ec.value());
+                Filename, ec.value());
         return {};
     }
 
     auto cache_path = GetCfg().getCacheDir();
     if (cache_path.empty()) {
-        XLOG::l(XLOG_FLINE + "Can't create folder {}", cache_path.u8string());
+        XLOG::l(XLOG_FLINE + "Can't create folder {}", cache_path);
         return {};
     }
 
@@ -408,7 +408,7 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
         if (ec.value() == 0) return cache_file.wstring();
         XLOG::l(
             "Attempt to copy config file to cache '{}' failed with error [{}], '{}'",
-            fs::path(Filename).u8string(), cache_file.u8string(), ec.value(),
+            fs::path(Filename), cache_file, ec.value(),
             ec.message());
 
     } catch (std::exception& e) {
@@ -425,7 +425,7 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
 std::wstring GetYamlFromCache() noexcept {
     auto cache_path = GetCfg().getCacheDir();
     if (cache_path.empty()) {
-        XLOG::l(XLOG_FLINE + "Can\'t create folder %s", cache_path.u8string());
+        XLOG::l(XLOG_FLINE + "Can\'t create folder %s", cache_path);
         return {};
     }
     auto cache_file = cache_path / kDefaultConfigCacheFileName;
@@ -549,7 +549,7 @@ std::filesystem::path ExtractPathFromServiceName(
         return p.lexically_normal();
     } else {
         XLOG::l("'{}' doesn't exist, error_code: [{}] '{}'",
-                service_path.u8string(), ec.value(), ec.message());
+                service_path, ec.value(), ec.message());
     }
     return {};
 }
@@ -570,7 +570,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
     if (!service_path_new.empty()) {
         // location of the services
         root_ = service_path_new.lexically_normal();
-        XLOG::l.i("Set root '{}' from registry '{}'", root_.u8string(),
+        XLOG::l.i("Set root '{}' from registry '{}'", root_,
                   wtools::ConvertToUTF8(service_name));
         return true;
     }
@@ -580,7 +580,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
     fs::path work_dir = preset_root;
     if (!work_dir.empty() && fs::exists(work_dir, ec)) {
         root_ = work_dir.lexically_normal();
-        XLOG::l.i("Set root '{}' direct from folder", root_.u8string());
+        XLOG::l.i("Set root '{}' direct from folder", root_);
         return true;
     }
 
@@ -588,7 +588,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
     auto ret = FindRootByExePath(wtools::GetArgv(0));
     if (!ret.empty()) {
         root_ = ret.lexically_normal();
-        XLOG::l.i("Set root '{}' from executable", root_.u8string());
+        XLOG::l.i("Set root '{}' from executable", root_);
         return true;
     }
 
@@ -596,7 +596,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
     auto cur_dir = fs::current_path(ec);
     if (ec.value() == 0 && fs::exists(cur_dir, ec)) {
         root_ = cur_dir.lexically_normal();
-        XLOG::l.i("Set root '{}' from current path", root_.u8string());
+        XLOG::l.i("Set root '{}' from current path", root_);
         return true;
     }
 
@@ -732,7 +732,7 @@ static void RemoveOwnGeneratedFiles() {
         upgrade::ConstructProtocolFileName(GetUpgradeProtocolDir()));
     for (const auto& f : files) {
         std::error_code ec;
-        XLOG::l.i("Removing user file '{}'", f.u8string());
+        XLOG::l.i("Removing user file '{}'", f);
         fs::remove(f, ec);
     }
 }
@@ -757,7 +757,7 @@ bool CleanDataFolder(CleanMode mode) {
         !fs::exists(path / dirs::kUserPlugins, ec)) {
         XLOG::l.w(
             "Data Folder '{}' looks as invalid/damaged, processing is stopped",
-            path.u8string());
+            path);
         return false;
     }
 
@@ -916,7 +916,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
             // file is loaded, write info in config file
             fs::path root_yaml = GetRootDir();
             XLOG::l("Loaded {} file, ONLY FOR debug/test mode",
-                    root_yaml.u8string());
+                    root_yaml);
 
             // exit because full path
             return true;
@@ -925,7 +925,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
         // this is standard method
         fs::path root_yaml = GetRootDir();
         root_yaml /= name;
-        XLOG::l.i("Found root config on path {}", root_yaml.u8string());
+        XLOG::l.i("Found root config on path {}", root_yaml);
         usable_name = name;
         break;
     }
@@ -936,7 +936,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
 
     XLOG::l.e("Failed usable_name: '{}' at root: '{}' code is '{}'",
               wtools::ConvertToUTF8(usable_name),
-              GetCfg().getRootDir().u8string(), code);
+              GetCfg().getRootDir(), code);
 
     return false;
 }
@@ -985,13 +985,13 @@ std::vector<std::filesystem::path> GetExePaths() {
 const std::wstring FindConfigFile(const std::filesystem::path& Dir,
                                   const std::wstring& File) {
     namespace fs = std::filesystem;
-    XLOG::d.t("trying path {}", Dir.u8string());
+    XLOG::d.t("trying path {}", Dir);
     auto file_path = Dir / File;
     std::error_code ec;
     if (fs::exists(file_path, ec)) {
         return file_path.lexically_normal().wstring();
     }
-    XLOG::l("Config file '{}' not found, status [{}]: {}", file_path.u8string(),
+    XLOG::l("Config file '{}' not found, status [{}]: {}", file_path,
             ec.value(), ec.message());
     return {};
 }
@@ -1273,7 +1273,7 @@ namespace cma::cfg::details {
 
 std::tuple<bool, std::filesystem::path> IsInstallProtocolExists(
     const std::filesystem::path& root) {
-    XLOG::l.i("Current root for install protocol '{}'", root.u8string());
+    XLOG::l.i("Current root for install protocol '{}'", root);
     auto install_file = ConstructInstallFileName(root);
     std::error_code ec;
     if (install_file.empty()) return {false, {}};
@@ -1295,7 +1295,7 @@ std::tuple<bool, std::filesystem::path> IsInstallProtocolExists(
     }
 
     XLOG::l.i("Creating '{}' to indicate that installation is finished",
-              install_file.u8string());
+              install_file);
     std::ofstream ofs(install_file, std::ios::binary);
 
     if (ofs) {
@@ -1420,13 +1420,13 @@ std::wstring FindMsiExec() noexcept {
 
     std::error_code ec;
     if (std::filesystem::exists(p, ec)) {
-        XLOG::t.i("Found msiexec {}", p.u8string());
+        XLOG::t.i("Found msiexec {}", p);
         return p.wstring();
     }
 
     XLOG::l.crit(
         "Cannot find msiexec {} error [{}] '{}', automatic update is not possible",
-        p.u8string(), ec.value(), ec.message());
+        p, ec.value(), ec.message());
     return {};
 }
 
@@ -1633,7 +1633,7 @@ std::vector<ConfigInfo::YamlData> ConfigInfo::buildYamlData(
     yamls[2].path_.replace_extension(files::kDefaultUserExt);
 
     for (auto& yd : yamls) {
-        XLOG::d.t("Loading {}", yd.path_.u8string());
+        XLOG::d.t("Loading {}", yd.path_);
         yd.loadFile();
     }
 
@@ -1757,7 +1757,7 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
             bakery_ok = true;
         }
     } catch (...) {
-        XLOG::l.bp("Bakery {} is bad", Yd[1].path_.u8string());
+        XLOG::l.bp("Bakery {} is bad", Yd[1].path_);
     }
 
     try {
@@ -1770,7 +1770,7 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
             user_ok = true;
         }
     } catch (...) {
-        XLOG::l.bp("User {} is bad", Yd[2].path_.u8string());
+        XLOG::l.bp("User {} is bad", Yd[2].path_);
     }
 
     std::lock_guard lk(lock_);
@@ -1828,7 +1828,7 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& config_filename,
     // check root
     auto& root = yamls[0];
     if (!root.exists() || root.data().empty() || root.bad()) {
-        XLOG::d("Cannot find/read root cfg '{}'. ", root.path_.u8string());
+        XLOG::d("Cannot find/read root cfg '{}'. ", root.path_);
         return LoadCfgStatus::kAllFailed;
     }
 
@@ -1886,7 +1886,7 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
     const fs::path& fpath = file;
     std::error_code ec;
     if (!fs::exists(fpath, ec)) {
-        XLOG::l("File {} not found, code = [{}] '{}'", fpath.u8string(),
+        XLOG::l("File {} not found, code = [{}] '{}'", fpath,
                 ec.value(), ec.message());
         return false;
     }
@@ -1907,7 +1907,7 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
     root_yaml_time_ = ftime;
     yaml_ = new_yaml;
     root_yaml_path_ = file;
-    XLOG::d.t("Loaded Config from  {}", file.u8string());
+    XLOG::d.t("Loaded Config from  {}", file);
 
     // setting up paths  to the other files
     user_yaml_path_ = file;
@@ -2071,11 +2071,11 @@ std::filesystem::path CreateWmicUninstallFile(
         ofs << CreateWmicCommand(product_name);
         ofs.close();
         if (std::filesystem::exists(file)) return file;
-        XLOG::l("Attempt to create '{}' file is failed", file.u8string());
+        XLOG::l("Attempt to create '{}' file is failed", file);
         return {};
     } catch (const std::exception& e) {
         XLOG::l("Attempt to create '{}' file is failed with exception {}",
-                file.u8string(), e.what());
+                file, e.what());
     }
 
     return {};
@@ -2088,7 +2088,7 @@ bool UninstallProduct(std::string_view name) {
         if (fname.empty()) return false;
         auto pid = cma::tools::RunStdCommand(fname.wstring(), true);
         if (pid == 0) {
-            XLOG::l("Failed to start '{}'", fname.u8string());
+            XLOG::l("Failed to start '{}'", fname);
         }
         return true;
     }

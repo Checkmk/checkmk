@@ -274,7 +274,7 @@ tidy: compile_commands.json
 	@clang-tidy-$(CLANG_VERSION) $(CLANG_TIDY_EXTRA_ARGS) --version
 	@clang-tidy-$(CLANG_VERSION) $(CLANG_TIDY_EXTRA_ARGS) --extra-arg=-v dummy.cc 1> /dev/null || true
 	@echo clang-tidy-$(CLANG_VERSION) information end =============================================
-	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)
+	$(RUN_CLANG_TIDY) $(CLANG_TIDY_EXTRA_ARGS) -quiet -j6 $(FILES_TO_CHECK)
 
 iwyu: compile_commands.json
 	@echo include-what-you-use information start ====================================

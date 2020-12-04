@@ -83,7 +83,8 @@ class PersistedSections(
     ) -> None:
         stored = section_store.load()
         if self != stored:
-            self.update(stored)
+            for name, content in stored.items():
+                self.setdefault(name, content)
             section_store.store(self)
 
 

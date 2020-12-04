@@ -467,12 +467,14 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
 
     def test_fetcher_inline_backend_deserialization(self, fetcher_inline):
         other = type(fetcher_inline).from_json(json_identity(fetcher_inline.to_json()))
-        assert other.snmp_config.snmp_backend == SNMPBackend.inline
+        assert other.snmp_config.snmp_backend == (
+            SNMPBackend.inline if not cmk_version.is_raw_edition() else SNMPBackend.classic)
 
     def test_fetcher_inline_legacy_backend_deserialization(self, fetcher_inline_legacy):
         other = type(fetcher_inline_legacy).from_json(json_identity(
             fetcher_inline_legacy.to_json()))
-        assert other.snmp_config.snmp_backend == SNMPBackend.inline_legacy
+        assert other.snmp_config.snmp_backend == (
+            SNMPBackend.inline_legacy if not cmk_version.is_raw_edition() else SNMPBackend.classic)
 
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))

@@ -30,7 +30,7 @@ static std::filesystem::path CreateYamlnInTemp(const std::string& Name,
     std::ofstream ofs(path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
     }
 
@@ -47,7 +47,7 @@ static std::filesystem::path CreateTestFile(const std::filesystem::path& Name,
     std::ofstream ofs(path.u8string(), std::ios::binary);
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
     }
 

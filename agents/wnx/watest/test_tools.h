@@ -62,7 +62,7 @@ inline std::filesystem::path CreateWorkFile(const std::filesystem::path& Name,
     std::ofstream ofs(path.u8string(), std::ios::binary);
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", path.u8string(), GetLastError());
+        XLOG::l("Can't open file '{}' error {}", path, GetLastError());
         return {};
     }
 

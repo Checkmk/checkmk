@@ -37,8 +37,8 @@ std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
     std::error_code ec;
     if (!std::filesystem::exists(data_dir, ec) &&
         !fs::create_directories(data_dir, ec)) {
-        XLOG::l.crit("Cannot create test folder {} error:{}",
-                     data_dir.u8string(), ec.value());
+        XLOG::l.crit("Cannot create test folder {} error:{}", data_dir,
+                     ec.value());
         return {};
     }
 
@@ -50,8 +50,7 @@ namespace cfg {
 void LogFolders() {
     auto root_dir = GetCfg().getRootDir();
     auto data_dir = GetCfg().getDataDir();
-    XLOG::l.t("Using root = '{}' and data = '{}' folders ", root_dir.u8string(),
-              data_dir.u8string());
+    XLOG::l.t("Using root = '{}' and data = '{}' folders ", root_dir, data_dir);
 }
 
 bool FindAndPrepareWorkingFolders(AppType Type) {

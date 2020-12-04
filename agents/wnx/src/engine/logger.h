@@ -16,6 +16,7 @@
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"
+#include "common/fmt_ext.h"
 #include "fmt/color.h"
 #include "tools/_xlog.h"
 

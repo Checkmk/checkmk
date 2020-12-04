@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -83,7 +84,7 @@ inline auto SplitFileInfoPathSmart(const std::filesystem::path &FilePath) {
         if (root_name.u8string().empty() ||      // must be present
             root_dir.u8string().empty() ||       // must be present
             relative_path.u8string().empty()) {  // must be present
-            XLOG::d("Path {} is not suitable", FilePath.u8string());
+            XLOG::d("Path {} is not suitable", FilePath);
         } else
             return std::make_tuple(root_name / root_dir, relative_path);
     } catch (...) {

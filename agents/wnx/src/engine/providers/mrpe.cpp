@@ -160,7 +160,7 @@ void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
                          std::vector<MrpeEntry> &entries) {
     std::ifstream ifs(path);
     if (!ifs) {
-        XLOG::d("mrpe: File is bad '{}'", path.u8string());
+        XLOG::d("mrpe: File is bad '{}'", path);
         return;
     }
 
@@ -173,8 +173,7 @@ void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
         // split up line at = sign
         auto tokens = cma::tools::SplitString(line, "=", 2);
         if (tokens.size() != 2) {
-            XLOG::d("mrpe: Invalid line '{}' in '{}:{}'", line, path.u8string(),
-                    lineno);
+            XLOG::d("mrpe: Invalid line '{}' in '{}:{}'", line, path, lineno);
             continue;
         }
 
@@ -187,8 +186,7 @@ void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
             cma::tools::AllTrim(value);
             entries.emplace_back(user, value);
         } else {
-            XLOG::d("mrpe: Strange entry '{}' in '{}:{}'", line,
-                    path.u8string(), lineno);
+            XLOG::d("mrpe: Strange entry '{}' in '{}:{}'", line, path, lineno);
         }
     }
 }

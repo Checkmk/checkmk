@@ -34,14 +34,14 @@ bool IsDirectoryValid(const std::filesystem::path &Dir) {
     std::error_code ec;
     if (!fs::exists(Dir, ec)) {
         XLOG::l.crit(
-            "Installation is bad. Spool directory '{}' is absent ec:{}",
-            Dir.u8string(), ec.value());
+            "Installation is bad. Spool directory '{}' is absent ec:{}", Dir,
+            ec.value());
         return false;
     }
 
     if (!fs::is_directory(Dir, ec)) {
-        XLOG::l.crit("Installation is bad. '{}' isn't directory {}",
-                     Dir.u8string(), ec.value());
+        XLOG::l.crit("Installation is bad. '{}' isn't directory {}", Dir,
+                     ec.value());
         return false;
     }
 
@@ -56,12 +56,12 @@ bool IsSpoolFileValid(const std::filesystem::path &Path) {
     // Checking the file is good
     std::error_code ec;
     if (!fs::exists(Path, ec)) {
-        XLOG::d("File is absent. '{}' ec:{}", Path.u8string(), ec.value());
+        XLOG::d("File is absent. '{}' ec:{}", Path, ec.value());
         return false;
     }
 
     if (!fs::is_regular_file(Path, ec)) {
-        XLOG::d("File is bad. '{}' ec:{}", Path.u8string(), ec.value());
+        XLOG::d("File is bad. '{}' ec:{}", Path, ec.value());
         return false;
     }
 
@@ -74,7 +74,7 @@ bool IsSpoolFileValid(const std::filesystem::path &Path) {
         // only in C++ 20
         auto ftime = fs::last_write_time(Path, ec);
         if (ec.value() != 0) {
-            XLOG::l("Crazy file{} gives ec : {}", Path.u8string(), ec.value());
+            XLOG::l("Crazy file{} gives ec : {}", Path, ec.value());
             return false;
         }
         const auto age = duration_cast<seconds>(
@@ -114,7 +114,7 @@ std::string SpoolProvider::makeBody() {
     for (const auto &entry : fs::directory_iterator(dir)) {
         const auto &path = entry.path();
         if (!IsSpoolFileValid(path)) {
-            XLOG::d("Strange, but this is not a file {}", path.u8string());
+            XLOG::d("Strange, but this is not a file {}", path);
             continue;
         }
 

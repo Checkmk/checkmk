@@ -36,14 +36,14 @@ void ProtectFiles(const std::filesystem::path& root) {
 
          }) {
         if (!wtools::ProtectPathFromUserAccess(p)) {
-            XLOG::l.e("Protection of the '{}' failed!", p.u8string());
+            XLOG::l.e("Protection of the '{}' failed!", p);
         }
     }
 }
 
 void ProtectAll(const std::filesystem::path& root) {
     if (!wtools::ProtectPathFromUserWrite(root)) {
-        XLOG::l.crit("Protection of the folder '{}' failed!", root.u8string());
+        XLOG::l.crit("Protection of the folder '{}' failed!", root);
         return;
     }
 
@@ -67,7 +67,7 @@ static bool WindowsDeleteFile(const std::filesystem::path& Target,
     // this is virtually impossible
     XLOG::d(
         "File '{}' can't be removed Also with Windows RemoveFile, this is not normal",
-        Target.u8string());
+        Target);
 
     if (err == 2 || err == 0)
         Ec.clear();  // this is to simulate behavior of the fs::remove
@@ -301,7 +301,7 @@ TheMiniBox::StartMode GetStartMode(const std::filesystem::path& filepath) {
     cma::tools::StringLower(filename);
     if (filename ==
         wtools::ConvertToUTF8(cma::cfg::files::kAgentUpdaterPython)) {
-        XLOG::d.i("Plugin '{}' has updater start mode", filepath.u8string());
+        XLOG::d.i("Plugin '{}' has updater start mode", filepath);
         return TheMiniBox::StartMode::updater;
     }
 
@@ -489,7 +489,7 @@ void ApplyEverythingToPluginMap(
             }
 
             if (exe) {
-                XLOG::t("To plugin '{}' to be applied rule '{}'", f.u8string(),
+                XLOG::t("To plugin '{}' to be applied rule '{}'", f,
                         it->sourceText());
                 exe->apply(f.u8string(), it->source());
             }

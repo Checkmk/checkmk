@@ -32,7 +32,7 @@ static void CreateFileInSpool(const std::filesystem::path& Path,
     std::ofstream ofs(Path.u8string(), std::ios::binary);
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 

@@ -449,14 +449,13 @@ int ExecCvtIniYaml(std::filesystem::path ini_file_name,
     fs::path file = ini_file_name;
     std::error_code ec;
     if (!fs::exists(file, ec)) {
-        XLOG::l(flag)("File not found '{}'", ini_file_name.u8string());
+        XLOG::l(flag)("File not found '{}'", ini_file_name);
         return 3;
     }
     cma::cfg::cvt::Parser parser_converter;
     parser_converter.prepare();
     if (!parser_converter.readIni(file, false)) {
-        XLOG::l(flag)("Failed Load '{}'",
-                      fs::absolute(ini_file_name).u8string());
+        XLOG::l(flag)("Failed Load '{}'", fs::absolute(ini_file_name));
         return 2;
     }
     auto yaml = parser_converter.emitYaml();
@@ -470,8 +469,8 @@ int ExecCvtIniYaml(std::filesystem::path ini_file_name,
             ofs << yaml;
             ofs.close();
             XLOG::l.i(flag, "Successfully Converted {} -> {}",
-                      fs::absolute(ini_file_name).u8string(),
-                      fs::absolute(yaml_file_name).u8string());
+                      fs::absolute(ini_file_name),
+                      fs::absolute(yaml_file_name));
         }
     } catch (const std::exception& e) {
         XLOG::l(flag) << "Exception: '" << e.what() << "' in ExecCvtIniYaml"
@@ -590,12 +589,12 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
     // find agent updater
     fs::path dir{cma::cfg::GetUserPluginsDir()};
     if (!fs::exists(dir)) {
-        XLOG::l.e("Plugins directory '{}' not found", dir.u8string());
+        XLOG::l.e("Plugins directory '{}' not found", dir);
         return 1;
     }
     auto f = dir / cma::cfg::files::kAgentUpdaterPython;
     if (!fs::exists(f)) {
-        XLOG::l.w("Agent Updater File '{}' not found", f.u8string());
+        XLOG::l.w("Agent Updater File '{}' not found", f);
         XLOG::SendStringToStdio(
             fmt::format(
                 "\n\tYou must install Agent Updater Python plugin to use the command '{}'.\n"
@@ -611,8 +610,8 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
     mc.LoadDefault();
     auto to_run = mc.buildCommandLine(f.u8string());
     if (to_run.empty()) {
-        XLOG::l.e("Python Module to execute '{}' is not installed",
-                  f.u8string());
+        XLOG::l.e("Python Module to execute '{}' is not installed", f);
+
         XLOG::SendStringToStdio(
             fmt::format(
                 "\n\tYou must install Python Module to use the command '{}'.\n"

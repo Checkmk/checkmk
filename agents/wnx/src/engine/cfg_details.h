@@ -168,7 +168,7 @@ class ConfigInfo {
             data_.clear();
             bad_ = false;
             if (!exists()) {
-                XLOG::d.t("{} is absent, return", path_.u8string());
+                XLOG::d.t("{} is absent, return", path_);
                 return;
             }
 
@@ -206,12 +206,12 @@ class ConfigInfo {
             try {
                 auto yaml = YAML::Load(data_);
                 if (!yaml.IsDefined()) {
-                    XLOG::l("Cannot load cfg '{}'", path_.u8string());
+                    XLOG::l("Cannot load cfg '{}'", path_);
                     data_.clear();
                 }
             } catch (const std::exception& e) {
                 XLOG::l.crit("Can't load yaml file '{}', exception: '{}'",
-                             path_.u8string(), e.what());
+                             path_, e.what());
                 bad_ = true;
             } catch (...) {
                 XLOG::l(XLOG::kBp)(XLOG_FLINE + " exception bad");

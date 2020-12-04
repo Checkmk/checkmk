@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 
@@ -38,9 +39,9 @@ void DisplayReadFileError(const T* file_name) {
     auto cur_dir = std::filesystem::current_path(ec);
     if constexpr (sizeof(T) == 2)
         XLOG::l("File '{}' not found in {}", wtools::ConvertToUTF8(file_name),
-                cur_dir.u8string());
+                cur_dir);
     else
-        XLOG::l("File '{}' not found in {}", file_name, cur_dir.u8string());
+        XLOG::l("File '{}' not found in {}", file_name, cur_dir);
 }
 
 inline uint32_t GetFileStreamSize(std::ifstream& f) {

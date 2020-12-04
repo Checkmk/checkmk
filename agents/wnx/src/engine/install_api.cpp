@@ -61,7 +61,7 @@ std::filesystem::path GenerateTempFileNameInTempPath(
         if (!fs::exists(ret_path, ec) && fs::create_directory(ret_path, ec))
             break;
 
-        XLOG::l("Proposed folder exists '{}'", ret_path.u8string());
+        XLOG::l("Proposed folder exists '{}'", ret_path);
         attempt++;
         if (attempt >= max_attempts) {
             XLOG::l("Can't find free name for folder");
@@ -100,14 +100,13 @@ static bool RmFileWithRename(const std::filesystem::path& file_name,
     fs::rename(file_name, file.replace_extension(".old"), ec);
     std::error_code ecx;
     if (!fs::exists(file_name, ecx)) {
-        XLOG::l.i("Renamed '{}' to '{}'", file_name.u8string(),
-                  file.u8string());
+        XLOG::l.i("Renamed '{}' to '{}'", file_name, file);
         return true;  // success
     }
 
     XLOG::l(
         "Updating is STILL NOT possible, can't RENAME file '{}' to '{}', error [{}]",
-        file_name.u8string(), file.u8string(), ec.value());
+        file_name, file, ec.value());
     return false;
 }
 
@@ -117,14 +116,13 @@ bool RmFile(const std::filesystem::path& file_name) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
     if (!fs::exists(file_name, ec)) {
-        XLOG::l.t("File '{}' is absent, no need to delete",
-                  file_name.u8string());
+        XLOG::l.t("File '{}' is absent, no need to delete", file_name);
         return true;
     }
 
     auto ret = fs::remove(file_name, ec);
     if (ret || ec.value() == 0) {  // either deleted or disappeared
-        XLOG::l.i("File '{}'was removed", file_name.u8string());
+        XLOG::l.i("File '{}'was removed", file_name);
         return true;
     }
 
@@ -141,12 +139,12 @@ bool MvFile(const std::filesystem::path& source_file,
     if (ec.value() != 0) {
         XLOG::l(
             "Updating is NOT possible, can't move file '{}' to '{}', error [{}]",
-            source_file.u8string(), destination_file.u8string(), ec.value());
+            source_file, destination_file, ec.value());
         return false;
     }
 
-    XLOG::l.i("File '{}' was moved successfully to '{}'",
-              source_file.u8string(), destination_file.u8string());
+    XLOG::l.i("File '{}' was moved successfully to '{}'", source_file,
+              destination_file);
     return true;
 }
 
@@ -160,12 +158,12 @@ void BackupFile(const std::filesystem::path& file_name,
 
     if (backup_dir.empty() || !fs::exists(backup_dir, ec) ||
         !fs::is_directory(backup_dir, ec)) {
-        XLOG::l("Backup Path '{}' can't be used", backup_dir.u8string());
+        XLOG::l("Backup Path '{}' can't be used", backup_dir);
         return;
     }
 
     if (file_name.empty() || !cma::tools::IsValidRegularFile(file_name)) {
-        XLOG::l("Backup of the '{}' impossible", file_name.u8string());
+        XLOG::l("Backup of the '{}' impossible", file_name);
         return;
     }
 
@@ -173,12 +171,11 @@ void BackupFile(const std::filesystem::path& file_name,
     fs::copy_file(file_name, backup_dir / fname,
                   fs::copy_options::overwrite_existing, ec);
     if (ec.value() != 0) {
-        XLOG::l("Backup of the '{}' in '{}' failed with error [{}]",
-                file_name.u8string(), backup_dir.u8string(), ec.value());
+        XLOG::l("Backup of the '{}' in '{}' failed with error [{}]", file_name,
+                backup_dir, ec.value());
     }
 
-    XLOG::l.i("Backup of the '{}' in '{}' succeeded", file_name.u8string(),
-              backup_dir.u8string());
+    XLOG::l.i("Backup of the '{}' in '{}' succeeded", file_name, backup_dir);
 }
 
 // logic was copy pasted from the cma::cfg::cap::NeedReinstall
@@ -193,14 +190,14 @@ bool NeedInstall(const std::filesystem::path& incoming_file,
     if (!fs::exists(incoming_file, ec)) {
         XLOG::d.w(
             "Source File '{}' is absent, installation not required and this is strange",
-            incoming_file.u8string());
+            incoming_file);
         return false;
     }
 
     if (!fs::exists(backup_dir, ec)) {
         XLOG::l.crit(
             "Target folder '{}' absent, Agent Installation is broken. We try to continue.",
-            backup_dir.u8string());
+            backup_dir);
         return true;
     }
 
@@ -208,7 +205,7 @@ bool NeedInstall(const std::filesystem::path& incoming_file,
     auto fname = incoming_file.filename();
     auto saved_file = backup_dir / fname;
     if (!fs::exists(saved_file, ec)) {
-        XLOG::l.i("First Update", backup_dir.u8string());
+        XLOG::l.i("First Update in dir {}", backup_dir);
         return true;
     }
 
@@ -229,7 +226,7 @@ std::pair<std::wstring, std::wstring> MakeCommandLine(
     std::error_code ec;
     if (!fs::exists(log_file_name, ec)) {
         XLOG::d("Log file path doesn't '{}' exist. Fallback to install.",
-                log_file_name.u8string());
+                log_file_name);
         log_file_name = cma::cfg::GetUserInstallDir();
     }
 
@@ -319,7 +316,7 @@ bool CheckForUpdateFile(std::wstring_view msi_name, std::wstring_view msi_dir,
 
         msi_to_install = temp_name;
         BackupFile(msi_to_install, backup_dir);
-        XLOG::l.i("Installing '{}'", msi_to_install.u8string());
+        XLOG::l.i("Installing '{}'", msi_to_install);
     }
 
     // Prepare Command
@@ -333,7 +330,7 @@ bool CheckForUpdateFile(std::wstring_view msi_name, std::wstring_view msi_dir,
 
     BackupLogFile(log_file_name);
 
-    XLOG::l.i("File '{}' exists\n\tCommand is '{}'", msi_to_install.u8string(),
+    XLOG::l.i("File '{}' exists\n\tCommand is '{}'", msi_to_install,
               wtools::ConvertToUTF8(command));
 
     if (start_update_process == UpdateProcess::skip) {

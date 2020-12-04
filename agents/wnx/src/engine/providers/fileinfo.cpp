@@ -216,8 +216,7 @@ static void ProcessDirsAndFilesTables(PathVector &Dirs, PathVector &Files,
         if (ec) {  // not found, reporting only when error is serious
             if (ec.value() != 2) {  // 2 means NOT FOUND, this is ok
                 // low probability. Something really bad
-                XLOG::t("Cant access file '{}' status [{}]", entry.u8string(),
-                        ec.value());
+                XLOG::t("Cant access file '{}' status [{}]", entry, ec.value());
             }
             continue;
         }
@@ -240,8 +239,7 @@ static void ProcessDirsAndFilesTables(PathVector &Dirs, PathVector &Files,
             if (ec.value() != 2) {
                 // we write warning only for bad access writes and so on
                 // not found in this case acceptable
-                XLOG::d("Suspicious dir {} status {}", Path.u8string(),
-                        ec.value());
+                XLOG::d("Suspicious dir {} status {}", Path, ec.value());
             }
             return true;  // remove trash with error too
         });

@@ -1,0 +1,17 @@
+Title: mk_jolokia: Fix plugin execution on Windows
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1607067840
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b2
+
+If the mk_jolokia agent plugin was used the HW-/SW Inventory would
+fail. Therefore the agent plugin could not be used for Windows.
+
+The reason for that was that in Python 3 sys.stdout returns "\r\n"
+as linebreak for Windows. Checkmk can't handle this therefore we
+removed it by replacing the default sys.stdout.

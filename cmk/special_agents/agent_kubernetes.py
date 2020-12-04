@@ -203,10 +203,11 @@ class Node(Metadata):
         self._status = node.status
         # kubelet replies statistics for the last 2 minutes with 10s
         # intervals. We only need the latest state.
-        self.stats = eval(stats)['stats'][-1]
+        self.stats = eval(stats)['stats'][-1] if stats else {}
         # The timestamps are returned in RFC3339Nano format which cannot be parsed
         # by Pythons time module. Therefore we use dateutils parse function here.
-        self.stats['timestamp'] = time.mktime(parse_time(self.stats['timestamp']).utctimetuple())
+        self.stats['timestamp'] = (time.mktime(parse_time(self.stats['timestamp']).utctimetuple())
+                                   if self.stats.get('timestamp') else time.time())
 
     @property
     def conditions(self) -> Optional[Dict[str, str]]:
@@ -869,6 +870,7 @@ class NodeList(K8sList[Node]):  # pylint: disable=too-many-ancestors
         result = functools.reduce(merge, stats.values())
         # During the merging process the sum of all timestamps is calculated.
         # To obtain the average time of all nodes devide by the number of nodes.
+        #
         result['timestamp'] = round(result['timestamp'] / len(stats), 1)  # fixed: true-division
         return result
 
@@ -1165,10 +1167,17 @@ class ApiData:
         nodes = core_api.list_node()
         # Try to make it a post, when client api support sending post data
         # include {"num_stats": 1} to get the latest only and use less bandwidth
-        nodes_stats = [
-            core_api.connect_get_node_proxy_with_path(node.metadata.name, "stats")
-            for node in nodes.items
-        ]
+        try:
+            nodes_stats = [
+                core_api.connect_get_node_proxy_with_path(node.metadata.name, "stats")
+                for node in nodes.items
+            ]
+        except Exception:
+            # The /stats endpoint was removed in new versions in favour of the /stats/summary
+            # endpoint. Since it has a new format we skip the output here for now. For
+            # compatibility we leave the stats endpoint in place. When the oldest supported
+            # version is 1.18 we can remove this code.
+            nodes_stats = [None for _node in nodes.items]
         pvs = core_api.list_persistent_volume()
         pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
         pods = core_api.list_pod_for_all_namespaces()

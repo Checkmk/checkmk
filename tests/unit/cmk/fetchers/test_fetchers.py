@@ -17,6 +17,7 @@ import pytest  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 from cmk.utils.type_defs import AgentRawData, result, SectionName
+import cmk.utils.version as cmk_version
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
@@ -417,7 +418,8 @@ class ABCTestSNMPFetcher(ABC):
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
-                snmp_backend=SNMPBackend.inline,
+                snmp_backend=SNMPBackend.inline
+                if not cmk_version.is_raw_edition() else SNMPBackend.classic,
             ),
         )
 
@@ -443,7 +445,8 @@ class ABCTestSNMPFetcher(ABC):
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
-                snmp_backend=SNMPBackend.inline_legacy,
+                snmp_backend=SNMPBackend.inline_legacy
+                if not cmk_version.is_raw_edition() else SNMPBackend.classic,
             ),
         )
 

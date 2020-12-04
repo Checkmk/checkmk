@@ -67,3 +67,8 @@ def test_factory_snmp_backend_unknown_backend(snmp_config):
         if inline:
             assert isinstance(factory.backend(snmp_config, logging.getLogger()),
                               inline.InlineSNMPBackend)
+        else:
+            assert isinstance(
+                factory.backend(snmp_config, logging.getLogger()),
+                ClassicSNMPBackend,
+            )

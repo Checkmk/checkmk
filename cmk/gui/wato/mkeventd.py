@@ -4363,8 +4363,15 @@ class MatchItemGeneratorEventConsole(ABCMatchItemGenerator):
                 title=f"{rule_pack_title} > {id_}",
                 topic=self._topic,
                 url=_rule_edit_url(rule_pack_id, nr),
-                match_texts=[id_, rule["description"], rule["comment"]],
-            ) for nr, rule in enumerate(rule_pack["rules"]) for id_ in [rule["id"]])
+                match_texts=[id_] + [
+                    field_value
+                    for field in ["description", "comment"]
+                    for field_value in [rule.get(field)]
+                    if field_value
+                ],
+            )
+                        for nr, rule in enumerate(rule_pack["rules"])
+                        for id_ in [rule["id"]])
 
     def _iter_rulepacks(self) -> Iterable[ec.ECRulePackSpec]:
         yield from (opt_rule_pack

@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-# NOTE: This is version182212a plus a few minor tweaks for prettier output.
+# NOTE: This is our YAPF'd version of upstream's version f12c9730ef0.
 #
 #===- run-clang-tidy.py - Parallel clang-tidy runner ---------*- python -*--===#
 #
@@ -144,9 +140,10 @@ def check_clang_apply_replacements_binary(args):
     try:
         subprocess.check_call([args.clang_apply_replacements_binary, '--version'])
     except:
-        print('Unable to run clang-apply-replacements. Is clang-apply-replacements '
-              'binary correctly specified?',
-              file=sys.stderr)
+        print(
+            'Unable to run clang-apply-replacements. Is clang-apply-replacements '
+            'binary correctly specified?',
+            file=sys.stderr)
         traceback.print_exc()
         sys.exit(1)
 

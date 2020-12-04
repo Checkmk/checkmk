@@ -6,13 +6,16 @@ distribution: check_mk
 description:
 
  This check monitors the number of deferred mails in the outgoing mail
- queue, as sent by the linux agent of Checkmk.
+ queue, as sent by the linux agent of Checkmk. Depending on the version
+ of the Checkmk agent the number of mails in the failed queue is monitored
+ as well.
 
  This check creates one service per host which represents the state
  of the outgoing mailqueue.
 
- The check will result in WARNING/CRITICAL states when the number of items
- in the queues have reached the defined thresholds.
+ The check will result in {WARNING} or {CRITICAL} if the number of mails
+ in the deferred queue have reached the defined thresholds.
+ By default the check will result in {CRITICAL} if there is at least one failed mail.
 
 item:
  Empty string

@@ -524,7 +524,7 @@ endif
 # Not really perfect rules, but better than nothing
 analyze: config.h
 	$(MAKE) -C livestatus clean
-	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++2a"
+	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
 
 # GCC-like output on stderr intended for human consumption.
 cppcheck: config.h

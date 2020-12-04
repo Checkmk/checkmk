@@ -28,6 +28,7 @@ std::string unsafe_toupper(const std::string &str);
 #endif
 
 bool starts_with(const std::string &input, const std::string &test);
+bool ends_with(const std::string &input, const std::string &test);
 
 std::vector<std::string> split(const std::string &str, char delimiter);
 

@@ -32,7 +32,13 @@ std::string unsafe_toupper(const std::string &str) {
 
 bool starts_with(const std::string &input, const std::string &test) {
     return input.size() >= test.size() &&
-           std::equal(test.begin(), test.end(), input.begin());
+           input.compare(0, test.size(), test) == 0;
+}
+
+bool ends_with(const std::string &input, const std::string &test) {
+    return input.size() >= test.size() &&
+           input.compare(input.size() - test.size(), std::string::npos, test) ==
+               0;
 }
 
 std::vector<std::string> split(const std::string &str, char delimiter) {

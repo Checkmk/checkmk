@@ -182,12 +182,12 @@ inline std::wstring ConstructCommandToExec(const std::filesystem::path& Path) {
     } else if (extension == L".ps1") {
         wrapper = MakePowershellWrapper();
     } else {
-        XLOG::l("Not supported extension file {}", Path.u8string());
+        XLOG::l("Not supported extension file {}", Path);
         return {};
     }
 
     if (wrapper.empty()) {
-        XLOG::l("impossible to find exe for file {}", Path.u8string());
+        XLOG::l("impossible to find exe for file {}", Path);
         return {};
     }
 
@@ -195,8 +195,8 @@ inline std::wstring ConstructCommandToExec(const std::filesystem::path& Path) {
     try {
         return fmt::format(wrapper, Path.wstring());
     } catch (std::exception& e) {
-        XLOG::l("impossible to format Data for file '{}' exception: '{}'",
-                Path.u8string(), e.what());
+        XLOG::l("impossible to format Data for file '{}' exception: '{}'", Path,
+                e.what());
     }
     return {};
 }

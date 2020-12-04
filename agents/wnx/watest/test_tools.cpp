@@ -74,8 +74,7 @@ void SafeCleanTempDir(std::string_view sub_dir) {
     std::error_code ec;
     fs::remove_all(t_d / sub_dir, ec);
     if (ec)
-        XLOG::l("error removing '{}' with {} ", (t_d / sub_dir).u8string(),
-                ec.message());
+        XLOG::l("error removing '{}' with {} ", t_d / sub_dir, ec.message());
     fs::create_directory(t_d / sub_dir);
 }
 

@@ -2647,7 +2647,7 @@ bool ProtectPathFromUserWrite(const std::filesystem::path& path) {
             return false;
         }
     }
-    XLOG::l.i("User Write Protected '{}'", path.u8string());
+    XLOG::l.i("User Write Protected '{}'", path);
 
     return true;
 }
@@ -2670,7 +2670,7 @@ bool ProtectFileFromUserWrite(const std::filesystem::path& path) {
             return false;
         }
     }
-    XLOG::l.i("User Write Protected '{}'", path.u8string());
+    XLOG::l.i("User Write Protected '{}'", path);
 
     return true;
 }
@@ -2691,7 +2691,7 @@ bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
             return false;
         }
     }
-    XLOG::l.i("User Access Protected '{}'", entry.u8string());
+    XLOG::l.i("User Access Protected '{}'", entry);
 
     return true;
 }

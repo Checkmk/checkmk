@@ -266,6 +266,7 @@ cd $(ProjectDir)</Command>
     <ClInclude Include="..\common\cfg_info.h" />
     <ClInclude Include="..\common\cfg_yaml.h" />
     <ClInclude Include="..\common\cma_yml.h" />
+    <ClInclude Include="..\common\fmt_ext.h" />
     <ClInclude Include="..\common\mailslot_transport.h" />
     <ClInclude Include="..\common\object_repo.h" />
     <ClInclude Include="..\common\stop_watch.h" />

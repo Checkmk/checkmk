@@ -170,7 +170,7 @@ static void CreateFileInTemp(const std::filesystem::path& Path) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -184,7 +184,7 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 

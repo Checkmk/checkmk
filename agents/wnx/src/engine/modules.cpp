@@ -368,7 +368,7 @@ bool ModuleCommander::RemoveContentByTargetDir(
         fs::path d{*dir};
 
         auto count = wtools::KillProcessesByDir(d);
-        XLOG::l.i("Killed [{}] processes from dir '{}'", count, d.u8string());
+        XLOG::l.i("Killed [{}] processes from dir '{}'", count, d);
         for (auto line : content) {
             fs::remove_all(d / line, ec);
         }
@@ -386,14 +386,12 @@ bool ModuleCommander::CreateFileForTargetDir(
 
     try {
         if (target_dir.u8string().size() < kResonableDirLengthMin) {
-            XLOG::l("suspicious dir '{}' to create link",
-                    target_dir.u8string());
+            XLOG::l("suspicious dir '{}' to create link", target_dir);
             return false;
         }
 
         if (module_dir.u8string().size() < kResonableDirLengthMin) {
-            XLOG::l("suspicious dir '{}' to create link",
-                    module_dir.u8string());
+            XLOG::l("suspicious dir '{}' to create link", module_dir);
             return false;
         }
 
@@ -403,8 +401,8 @@ bool ModuleCommander::CreateFileForTargetDir(
         std::ofstream ofs(module_dir / kTargetDir);
 
         if (!ofs) {
-            XLOG::l("Can't open file {} error {}",
-                    (module_dir / kTargetDir).u8string(), GetLastError());
+            XLOG::l("Can't open file {} error {}", module_dir / kTargetDir,
+                    GetLastError());
             return false;
         }
 
@@ -412,7 +410,7 @@ bool ModuleCommander::CreateFileForTargetDir(
         return true;
     } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + " Exception '{}' when creating '{}'", e.what(),
-                (module_dir / kTargetDir).u8string());
+                module_dir / kTargetDir);
         return false;
     }
 }
@@ -422,7 +420,7 @@ bool ModuleCommander::UninstallModuleZip(
     namespace fs = std::filesystem;
     std::error_code ec;
     if (!fs::exists(file, ec)) {
-        XLOG::d.i("'{}' is absent, no need to uninstall", file.u8string());
+        XLOG::d.i("'{}' is absent, no need to uninstall", file);
         return false;
     }
 

@@ -29,7 +29,7 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -45,7 +45,7 @@ static void CreateVbsPluginInTemp(const std::filesystem::path& Path,
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -63,7 +63,7 @@ static void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -84,7 +84,7 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -474,7 +474,7 @@ static void CreateFileInTemp(const std::filesystem::path& Path) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -509,7 +509,7 @@ static void MakeFolderStructure(cma::PathVector Paths) {
         std::error_code ec;
         fs::create_directory(dir, ec);
         if (ec.value() != 0) {
-            XLOG::l(XLOG::kStdio)("Can't create a folder {}", dir.u8string());
+            XLOG::l(XLOG::kStdio)("Can't create a folder {}", dir);
             continue;
         }
 

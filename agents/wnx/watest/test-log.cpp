@@ -412,10 +412,8 @@ TEST(LogTest, EventTest) {
     }
 }
 
-TEST(LogTest, Yaml) {
+TEST(LogTest, Functional) {
     namespace fs = std::filesystem;
-    using namespace xlog;
-    using namespace XLOG;
     std::string log_file_name = "test_file.log";
     fs::path logf = log_file_name;
     fs::remove(logf);
@@ -433,6 +431,7 @@ TEST(LogTest, Yaml) {
     XLOG::l.i() << " info";
 
     XLOG::l.crit("<GTEST> This is critical ptr is {} code is {}", nullptr, 5);
+    XLOG::l("filesystem test {}", fs::path("c:\\a\\a"));
     std::error_code ec;
     EXPECT_TRUE(fs::exists(logf, ec));  // check that file is exists
 
@@ -443,7 +442,7 @@ TEST(LogTest, Yaml) {
         auto contents = sstr.str();
         auto n = std::count(contents.begin(), contents.end(), '\n');
         auto result = cma::tools::SplitString(contents, "\n");
-        ASSERT_EQ(result.size(), 8);
+        ASSERT_EQ(result.size(), 9);
         const int start_position = 24;
         EXPECT_NE(std::string::npos, result[0].find("simple test"));
         EXPECT_NE(std::string::npos, result[1].find("<GTEST> std test"));
@@ -458,6 +457,8 @@ TEST(LogTest, Yaml) {
             start_position,
             result[7].find(
                 "[ERROR:CRITICAL] <GTEST> This is critical ptr is 0x0 code is 5"));
+        EXPECT_EQ(start_position,
+                  result[8].find("[Err  ] filesystem test c:\\a\\a"));
     }
     fs::remove(logf);
 }

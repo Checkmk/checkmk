@@ -83,12 +83,12 @@ static bool CheckTheParameters(std::wstring_view file_src,
     fs::path file = file_src;
     fs::path dir = dir_dest;
     if (!fs::exists(file) || !fs::is_regular_file(file)) {
-        XLOG::l("File '{}' is absent or not suitable", file.u8string());
+        XLOG::l("File '{}' is absent or not suitable", file);
         return false;
     }
 
     if (!fs::exists(dir) || !fs::is_directory(dir)) {
-        XLOG::l("Dir '{}' is absent or not suitable to unzip", dir.u8string());
+        XLOG::l("Dir '{}' is absent or not suitable to unzip", dir);
         return false;
     }
 
@@ -131,7 +131,7 @@ std::vector<std::wstring> List(std::wstring_view file_src) {
     namespace fs = std::filesystem;
     fs::path file = file_src;
     if (!fs::exists(file) || !fs::is_regular_file(file)) {
-        XLOG::l("File '{}' is absent or not suitable", file.u8string());
+        XLOG::l("File '{}' is absent or not suitable", file);
         return {};
     }
 

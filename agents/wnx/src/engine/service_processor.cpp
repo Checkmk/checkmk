@@ -319,7 +319,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
 
     auto ohm_exe = cma::provider::GetOhmCliPath();
     if (!IsValidRegularFile(ohm_exe)) {
-        XLOG::d("OHM file '{}' is not found", ohm_exe.u8string());
+        XLOG::d("OHM file '{}' is not found", ohm_exe);
         stopRunningOhmProcess();
         return false;
     }

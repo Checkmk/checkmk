@@ -466,8 +466,16 @@ std::filesystem::path ConstructUserYmlPath(std::filesystem::path pd_dir) {
 TEST(UpgradeTest, LoggingSupport) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    cma::OnStartTest();
+    tst::TempCfgFs temp_fs;
+
+    fs::path install_yml{fs::path(dirs::kFileInstallDir) /
+                         files::kInstallYmlFileW};
+
+    // without
+    ASSERT_TRUE(temp_fs.createRootFile(
+        install_yml, "# Packaged\nglobal:\n  enabled: yes\n  install: no"));
+
     auto [lwa_dir, pd_dir] = CreateInOut();
     ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
 
@@ -958,7 +966,7 @@ TEST(UpgradeTest, CopyFiles) {
     auto count = CopyFolderRecursive(
         path, cma::cfg::GetTempDir(), fs::copy_options::overwrite_existing,
         [path](fs::path P) {
-            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, path).u8string(),
+            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, path),
                       wtools::ConvertToUTF8(cma::cfg::GetTempDir()));
             return true;
         });
@@ -967,7 +975,7 @@ TEST(UpgradeTest, CopyFiles) {
     count = CopyFolderRecursive(
         path, cma::cfg::GetTempDir(), fs::copy_options::skip_existing,
         [path](fs::path P) {
-            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, path).u8string(),
+            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, path),
                       wtools::ConvertToUTF8(cma::cfg::GetTempDir()));
             return true;
         });

@@ -167,6 +167,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                 config.snmp_without_sys_descr,
             ),
             do_status_data_inventory=self.host_config.do_status_data_inventory,
+            section_store_path=self.persisted_sections_file_path,
             snmp_config=self.snmp_config,
         )
 

@@ -381,6 +381,7 @@ class ABCTestSNMPFetcher(ABC):
             on_error="raise",
             missing_sys_description=False,
             do_status_data_inventory=False,
+            section_store_path="/tmp/db",
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname="bob",
@@ -407,6 +408,7 @@ class ABCTestSNMPFetcher(ABC):
             on_error="raise",
             missing_sys_description=False,
             do_status_data_inventory=False,
+            section_store_path="/tmp/db",
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname="bob",
@@ -434,6 +436,7 @@ class ABCTestSNMPFetcher(ABC):
             on_error="raise",
             missing_sys_description=False,
             do_status_data_inventory=False,
+            section_store_path="/tmp/db",
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname="bob",

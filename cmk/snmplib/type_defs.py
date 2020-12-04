@@ -18,7 +18,6 @@ from typing import (
     Literal,
     Mapping,
     NamedTuple,
-    NewType,
     Optional,
     Sequence,
     Tuple,
@@ -44,7 +43,11 @@ SNMPTable = List[List[SNMPDecodedValues]]
 SNMPContext = Optional[str]
 SNMPRawDataSection = Union[SNMPTable, List[SNMPTable]]
 # The SNMPRawData type is not useful.  See comments to `AgentRawDataSection`.
-SNMPRawData = NewType("SNMPRawData", Mapping[_SectionName, SNMPRawDataSection])
+#
+#     **WE DO NOT WANT `NewType` HERE** because this prevents us to
+#     type some classes correctly.  The type should be *REMOVED* instead!
+#
+SNMPRawData = Mapping[_SectionName, SNMPRawDataSection]
 OID = str
 OIDFunction = Callable[[OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]],
                        Optional[SNMPDecodedString]]

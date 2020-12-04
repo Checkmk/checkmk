@@ -82,7 +82,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
             description=SNMPSource._make_description(hostname, ipaddress, title=title),
-            default_raw_data=SNMPRawData({}),
+            default_raw_data={},
             default_host_sections=SNMPHostSections(),
             id_=id_,
             cache_dir=cache_dir,

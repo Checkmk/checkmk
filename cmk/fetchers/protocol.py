@@ -208,8 +208,7 @@ class SNMPResultMessage(ResultMessage):
     @staticmethod
     def _deserialize(data: bytes) -> SNMPRawData:
         try:
-            return SNMPRawData(
-                {SectionName(k): v for k, v in json.loads(data.decode("utf8")).items()})
+            return {SectionName(k): v for k, v in json.loads(data.decode("utf8")).items()}
         except json.JSONDecodeError:
             raise ValueError(repr(data))
 

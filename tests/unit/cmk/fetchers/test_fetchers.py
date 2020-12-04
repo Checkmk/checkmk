@@ -4,16 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from abc import ABC, abstractmethod
 import json
 import os
 import socket
+from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
 from typing import Optional
 
 import pytest  # type: ignore[import]
-
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 from cmk.utils.type_defs import AgentRawData, result, SectionName
@@ -23,11 +22,10 @@ from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
     BackendOIDSpec,
     BackendSNMPTree,
+    SNMPBackend,
     SNMPDetectSpec,
     SNMPHostConfig,
-    SNMPRawData,
     SNMPTable,
-    SNMPBackend,
 )
 
 from cmk.fetchers import FetcherType, MKFetcherError, snmp
@@ -35,7 +33,13 @@ from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
 from cmk.fetchers.ipmi import IPMIFetcher
 from cmk.fetchers.piggyback import PiggybackFetcher
 from cmk.fetchers.program import ProgramFetcher
-from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache, SNMPPluginStoreItem, SNMPPluginStore, SectionMeta
+from cmk.fetchers.snmp import (
+    SectionMeta,
+    SNMPFetcher,
+    SNMPFileCache,
+    SNMPPluginStore,
+    SNMPPluginStoreItem,
+)
 from cmk.fetchers.tcp import TCPFetcher
 from cmk.fetchers.type_defs import Mode
 
@@ -133,8 +137,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
             return AgentRawData(b"<<<check_mk>>>\nagent raw data")
         assert isinstance(file_cache, SNMPFileCache)
         table: SNMPTable = []
-        raw_data = SNMPRawData({SectionName("X"): table})
-        return raw_data
+        return {SectionName("X"): table}
 
     def test_write_and_read(self, file_cache, raw_data):
         assert not file_cache.disabled

@@ -128,8 +128,7 @@ class SectionMeta:
 class SNMPFileCache(ABCFileCache[SNMPRawData]):
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> SNMPRawData:
-        return SNMPRawData(
-            {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()})
+        return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
 
     @staticmethod
     def _to_cache_file(raw_data: SNMPRawData) -> bytes:
@@ -313,7 +312,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             if any(fetched_section_data):
                 fetched_data[section_name] = fetched_section_data
 
-        return SNMPRawData(fetched_data)
+        return fetched_data
 
     @classmethod
     def _sort_section_names(

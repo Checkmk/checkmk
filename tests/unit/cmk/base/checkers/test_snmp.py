@@ -43,7 +43,7 @@ class TestSNMPParser:
         )
 
     def test_empty_raw_data(self, parser):
-        raw_data = SNMPRawData({})
+        raw_data: SNMPRawData = {}
 
         host_sections = parser.parse(raw_data, selection=NO_SELECTION)
         assert host_sections.sections == {}
@@ -60,7 +60,7 @@ class TestSNMPParser:
         return {section_a: content_a, section_b: content_b}
 
     def test_no_cache(self, parser, sections):
-        host_sections = parser.parse(SNMPRawData(sections), selection=NO_SELECTION)
+        host_sections = parser.parse(sections, selection=NO_SELECTION)
         assert host_sections.sections == sections
         assert host_sections.cache_info == {}
         assert not host_sections.piggybacked_raw_data
@@ -79,7 +79,7 @@ class TestSNMPParser:
         # Patch IO:
         monkeypatch.setattr(SectionStore, "store", lambda self, sections: None)
 
-        raw_data = SNMPRawData(sections)
+        raw_data = sections
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
         all_sections = sections.copy()

@@ -5,7 +5,6 @@
 
 #include "TableEventConsole.h"
 
-#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>

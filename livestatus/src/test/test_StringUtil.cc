@@ -12,6 +12,35 @@
 #include "StringUtils.h"
 #include "gtest/gtest.h"
 
+TEST(StringUtilTest, StartsWith) {
+    EXPECT_TRUE(mk::starts_with("", ""));
+
+    EXPECT_TRUE(mk::starts_with("foo", ""));
+    EXPECT_FALSE(mk::starts_with("", "foo"));
+
+    EXPECT_TRUE(mk::starts_with("foo", "foo"));
+    EXPECT_FALSE(mk::starts_with("foo", "fox"));
+    EXPECT_FALSE(mk::starts_with("foo", "too"));
+
+    EXPECT_TRUE(mk::starts_with("foobar", "foo"));
+    EXPECT_FALSE(mk::starts_with("foo", "foobar"));
+}
+
+TEST(StringUtilTest, EndsWith) {
+    EXPECT_TRUE(mk::ends_with("", ""));
+
+    EXPECT_TRUE(mk::ends_with("foo", ""));
+    EXPECT_FALSE(mk::ends_with("", "foo"));
+
+    EXPECT_TRUE(mk::ends_with("foo", "foo"));
+    EXPECT_FALSE(mk::ends_with("foo", "fox"));
+    EXPECT_FALSE(mk::ends_with("foo", "too"));
+
+    EXPECT_FALSE(mk::ends_with("foobar", "foo"));
+    EXPECT_TRUE(mk::ends_with("foobar", "bar"));
+    EXPECT_FALSE(mk::ends_with("foo", "foobar"));
+}
+
 TEST(StringUtilTest, JoinTest) {
     using v = std::vector<std::string>;
     EXPECT_EQ("", mk::join(v{}, ", "));

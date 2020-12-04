@@ -24,7 +24,7 @@ if test "x$ac_cv_prog_cc_c99" = xno; then
 fi
 AC_PROG_CXX([g++-10 clang++-11 clang++-10 g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++])
 AC_DEFINE_UNQUOTED([BUILD_CXX], ["`$CXX --version | head -n1`"], [C++ compiler])
-AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
+AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 AC_PROG_RANLIB
 # automake 1.12 seems to require this, but automake 1.11 doesn't recognize it. :-P
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])

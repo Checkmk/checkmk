@@ -254,11 +254,6 @@ crash_report_url = "https://crash.checkmk.com"
 # Target email address for "Crashed Check" page
 crash_report_target = "feedback@checkmk.com"
 
-support_credentials = {
-    "username": "",
-    "password": ("password", ""),
-}
-
 # GUI Tests (see cmk-guitest)
 guitests_enabled = False
 

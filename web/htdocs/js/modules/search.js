@@ -186,6 +186,7 @@ function follow_current_search_query(current_search) {
                     null,
                     false
                 );
+                on_click_reset(current_search.id);
                 break;
             default:
                 // TODO: Implement ajax call for setup
@@ -199,6 +200,7 @@ function follow_current_search_query(current_search) {
         .getElementsByTagName("li")
         [current_search.current_search_position].getElementsByClassName("active")[0]
         .click();
+    on_click_reset(current_search.id);
 }
 
 function move_current_search_position(step, current_search) {

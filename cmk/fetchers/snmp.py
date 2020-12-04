@@ -7,6 +7,7 @@
 import ast
 import dataclasses
 import logging
+import time
 from functools import partial
 from pathlib import Path
 from typing import (
@@ -38,7 +39,7 @@ from cmk.snmplib.type_defs import (
 
 from . import factory
 from ._base import ABCFetcher, ABCFileCache, verify_ipaddress
-from .cache import SectionStore
+from .cache import PersistedSections, SectionStore
 from .type_defs import Mode
 
 __all__ = ["SNMPFetcher", "SNMPFileCache", "SNMPPluginStore", "SNMPPluginStoreItem"]
@@ -284,6 +285,10 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
         """Select the sections we need to fetch and do that
 
+        Note:
+            There still may be some fetching from cache involved
+            if the fetch interval was overridden by the user.
+
         Detection:
 
          * Mode.DISCOVERY / CACHED_DISCOVERY:
@@ -303,6 +308,9 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
            which are fetched for checking anyway.
 
         """
+        now = int(time.time())
+        persisted_sections = (self._section_store.load() if mode is Mode.CHECKING else
+                              PersistedSections[SNMPSectionContent]({}))
         section_names = self._get_selection(mode)
         section_names |= self._detect(select_from=self._get_detected_sections(mode) - section_names)
 
@@ -315,14 +323,18 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
         fetched_data: MutableMapping[SectionName, SNMPSectionContent] = {}
         for section_name in self._sort_section_names(section_names):
-            self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
+            try:
+                _from, until, _section = persisted_sections[section_name]
+                if now > until:
+                    raise LookupError(section_name)
+            except LookupError:
+                self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
+                section = [
+                    get_snmp(section_name, entry) for entry in self.plugin_store[section_name].trees
+                ]
 
-            fetched_section_data = [
-                get_snmp(section_name, entry) for entry in self.plugin_store[section_name].trees
-            ]
-
-            if any(fetched_section_data):
-                fetched_data[section_name] = fetched_section_data
+                if any(section):
+                    fetched_data[section_name] = section
 
         return SNMPRawData(fetched_data)
 

@@ -132,6 +132,9 @@ def _render_exception(e: Exception, title: str = "") -> Response:
 
 class CheckmkApp:
     """The Check_MK GUI WSGI entry point"""
+    def __init__(self, debug=False):
+        self.debug = debug
+
     def __call__(self, environ, start_response):
         req = http.Request(environ)
         with AppContext(self), RequestContext(req=req, html_obj=htmllib.html(req)):
@@ -142,10 +145,10 @@ class CheckmkApp:
     def wsgi_app(self, environ, start_response):
         """Is called by the WSGI server to serve the current page"""
         with cmk.utils.store.cleanup_locks():
-            return _process_request(environ, start_response)
+            return _process_request(environ, start_response, debug=self.debug)
 
 
-def _process_request(environ, start_response) -> Response:  # pylint: disable=too-many-branches
+def _process_request(environ, start_response, debug=False) -> Response:  # pylint: disable=too-many-branches
     try:
         html.init_modes()
 
@@ -202,5 +205,7 @@ def _process_request(environ, start_response) -> Response:  # pylint: disable=to
 
     except Exception:
         response = handle_unhandled_exception()
+        if debug:
+            raise
 
     return response(environ, start_response)

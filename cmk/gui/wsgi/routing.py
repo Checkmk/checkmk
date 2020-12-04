@@ -19,7 +19,7 @@ def create_url_map(debug=False):
         Rule("/form.py", endpoint=test_formdata),
     ]
 
-    cmk_app = CheckmkApp()
+    cmk_app = CheckmkApp(debug=debug)
     api_app = CheckmkRESTAPI(debug=debug).wsgi_app
     setup_search_app = CheckmkSetupSearchApp()
 

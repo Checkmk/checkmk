@@ -1,0 +1,12 @@
+Title: Node visualization: Throttle updates to a maximum of 5times/sec
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1607082951
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b2
+
+

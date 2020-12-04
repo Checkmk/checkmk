@@ -17,6 +17,7 @@ import pytest  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 from cmk.utils.type_defs import AgentRawData, result, SectionName
+import cmk.utils.version as cmk_version
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
@@ -417,7 +418,8 @@ class ABCTestSNMPFetcher(ABC):
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
-                snmp_backend=SNMPBackend.inline,
+                snmp_backend=SNMPBackend.inline
+                if not cmk_version.is_raw_edition() else SNMPBackend.classic,
             ),
         )
 
@@ -443,7 +445,8 @@ class ABCTestSNMPFetcher(ABC):
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
-                snmp_backend=SNMPBackend.inline_legacy,
+                snmp_backend=SNMPBackend.inline_legacy
+                if not cmk_version.is_raw_edition() else SNMPBackend.classic,
             ),
         )
 
@@ -461,12 +464,14 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
 
     def test_fetcher_inline_backend_deserialization(self, fetcher_inline):
         other = type(fetcher_inline).from_json(json_identity(fetcher_inline.to_json()))
-        assert other.snmp_config.snmp_backend == SNMPBackend.inline
+        assert other.snmp_config.snmp_backend == (
+            SNMPBackend.inline if not cmk_version.is_raw_edition() else SNMPBackend.classic)
 
     def test_fetcher_inline_legacy_backend_deserialization(self, fetcher_inline_legacy):
         other = type(fetcher_inline_legacy).from_json(json_identity(
             fetcher_inline_legacy.to_json()))
-        assert other.snmp_config.snmp_backend == SNMPBackend.inline_legacy
+        assert other.snmp_config.snmp_backend == (
+            SNMPBackend.inline_legacy if not cmk_version.is_raw_edition() else SNMPBackend.classic)
 
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))

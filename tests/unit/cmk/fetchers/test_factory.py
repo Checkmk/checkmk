@@ -49,17 +49,26 @@ def test_factory_snmp_backend_classic(snmp_config):
 
 def test_factory_snmp_backend_inline(snmp_config):
     snmp_config = snmp_config._replace(snmp_backend=SNMPBackend.inline)
-    assert isinstance(factory.backend(snmp_config, logging.getLogger()),
-                      pysnmp_backend.PySNMPBackend)
+    if pysnmp_backend:
+        assert isinstance(factory.backend(snmp_config, logging.getLogger()),
+                          pysnmp_backend.PySNMPBackend)
 
 
 def test_factory_snmp_backend_inline_legacy(snmp_config):
     snmp_config = snmp_config._replace(snmp_backend=SNMPBackend.inline_legacy)
-    assert isinstance(factory.backend(snmp_config, logging.getLogger()), inline.InlineSNMPBackend)
+    if inline:
+        assert isinstance(factory.backend(snmp_config, logging.getLogger()),
+                          inline.InlineSNMPBackend)
 
 
 def test_factory_snmp_backend_unknown_backend(snmp_config):
     with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
         snmp_config = snmp_config._replace(snmp_backend="bla")
-        assert isinstance(factory.backend(snmp_config, logging.getLogger()),
-                          inline.InlineSNMPBackend)
+        if inline:
+            assert isinstance(factory.backend(snmp_config, logging.getLogger()),
+                              inline.InlineSNMPBackend)
+        else:
+            assert isinstance(
+                factory.backend(snmp_config, logging.getLogger()),
+                ClassicSNMPBackend,
+            )

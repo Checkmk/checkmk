@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import urllib.parse
+import json
 
 import cmk.gui.valuespec as valuespec
 
@@ -81,6 +82,22 @@ class Hostname(fields.String):
         except MKUserError as e:
             self.fail("invalid_name", host_name=value, invalid_reason=str(e))
 
+
+QUERY = fields.Nested(
+    fields.ExprSchema,
+    description=("An query expression in nested dictionary form. If you want to "
+                 "use multiple expressions, nest them with the AND/OR operators."),
+    many=False,
+    example=json.dumps({
+        'op': 'not',
+        'expr': {
+            'op': '=',
+            'left': 'hosts.name',
+            'right': 'example.com'
+        }
+    }),
+    required=False,
+)
 
 EXISTING_HOST_NAME = Hostname(
     description="The hostname or IP address itself.",
@@ -550,7 +567,7 @@ class CreateDowntimeBase(BaseSchema):
     downtime_type = fields.String(
         required=True,
         description="The type of downtime to create.",
-        enum=['host', 'service', 'hostgroup', 'servicegroup'],
+        enum=['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query', 'service_by_query'],
         example="host",
     )
     start_time = fields.DateTime(
@@ -781,6 +798,13 @@ HOST_DURATION = fields.Integer(
     missing=0,
 )
 
+SERVICE_DURATION = fields.Integer(
+    required=False,
+    description=param_description(schedule_service_downtime.__doc__, 'duration'),
+    example=3600,
+    missing=0,
+)
+
 
 class CreateHostDowntime(CreateDowntimeBase):
     host_name = MONITORED_HOST
@@ -818,14 +842,33 @@ class CreateHostGroupDowntime(CreateDowntimeBase):
     duration = HOST_DURATION
 
 
-class CreateDowntime(OneOfSchema):
+class CreateHostQueryDowntime(CreateDowntimeBase):
+    query = QUERY
+    duration = HOST_DURATION
+
+
+class CreateServiceQueryDowntime(CreateDowntimeBase):
+    query = QUERY
+    duration = SERVICE_DURATION
+
+
+class CreateHostRelatedDowntime(OneOfSchema):
     type_field = 'downtime_type'
     type_field_remove = False
     type_schemas = {
         'host': CreateHostDowntime,
         'hostgroup': CreateHostGroupDowntime,
+        'host_by_query': CreateHostQueryDowntime,
+    }
+
+
+class CreateServiceRelatedDowntime(OneOfSchema):
+    type_field = 'downtime_type'
+    type_field_remove = False
+    type_schemas = {
         'service': CreateServiceDowntime,
         'servicegroup': CreateServiceGroupDowntime,
+        'service_by_query': CreateServiceQueryDowntime,
     }
 
 

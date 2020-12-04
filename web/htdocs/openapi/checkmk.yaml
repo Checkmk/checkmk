@@ -1263,21 +1263,6 @@ components:
       - host_name
       - nodes
       type: object
-    CreateDowntime:
-      discriminator:
-        mapping:
-          host: '#/components/schemas/CreateHostDowntime'
-          hostgroup: '#/components/schemas/CreateHostGroupDowntime'
-          service: '#/components/schemas/CreateServiceDowntime'
-          servicegroup: '#/components/schemas/CreateServiceGroupDowntime'
-        propertyName: downtime_type
-      oneOf:
-      - $ref: '#/components/schemas/CreateHostDowntime'
-      - $ref: '#/components/schemas/CreateHostGroupDowntime'
-      - $ref: '#/components/schemas/CreateServiceDowntime'
-      - $ref: '#/components/schemas/CreateServiceGroupDowntime'
-      properties: {}
-      type: object
     CreateFolder:
       properties:
         name:
@@ -1337,6 +1322,8 @@ components:
           - service
           - hostgroup
           - servicegroup
+          - host_by_query
+          - service_by_query
           example: host
           type: string
         start_time:
@@ -1450,6 +1437,75 @@ components:
       - end_time
       - hostgroup_name
       - start_time
+      type: object
+    CreateHostQueryDowntime:
+      properties:
+        downtime_type:
+          description: The type of downtime to create.
+          enum: *id003
+          example: host
+          type: string
+        start_time:
+          description: The start datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        end_time:
+          description: The end datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        recur:
+          default: fixed
+          description: "The recurring mode of the new downtime. Available modes are:\n\
+            \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
+            \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
+            \nThis only works when using the Enterprise Editions. Defaults to 'fixed'."
+          enum: *id004
+          example: hour
+          type: string
+        duration:
+          default: 0
+          description: 'Duration in seconds. When set, the downtime does not begin
+            automatically at a nominated
+
+            time, but when a real problem status appears for the host. Consequencely,
+            the
+
+            start_time/end_time is only the time window in which the scheduled downtime
+            can begin.'
+          example: 3600
+          format: int32
+          type: integer
+        comment:
+          example: Security updates
+          type: string
+        query:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          description: An query expression in nested dictionary form. If you want
+            to use multiple expressions, nest them with the AND/OR operators.
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
+      required:
+      - downtime_type
+      - end_time
+      - start_time
+      type: object
+    CreateHostRelatedDowntime:
+      discriminator:
+        mapping:
+          host: '#/components/schemas/CreateHostDowntime'
+          host_by_query: '#/components/schemas/CreateHostQueryDowntime'
+          hostgroup: '#/components/schemas/CreateHostGroupDowntime'
+        propertyName: downtime_type
+      oneOf:
+      - $ref: '#/components/schemas/CreateHostDowntime'
+      - $ref: '#/components/schemas/CreateHostGroupDowntime'
+      - $ref: '#/components/schemas/CreateHostQueryDowntime'
+      properties: {}
       type: object
     CreateServiceDowntime:
       properties:
@@ -1573,6 +1629,75 @@ components:
       - end_time
       - servicegroup_name
       - start_time
+      type: object
+    CreateServiceQueryDowntime:
+      properties:
+        downtime_type:
+          description: The type of downtime to create.
+          enum: *id003
+          example: host
+          type: string
+        start_time:
+          description: The start datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        end_time:
+          description: The end datetime of the new downtime. The format has to conform
+            to the ISO 8601 profile
+          example: '2017-07-21T17:32:28Z'
+          format: date-time
+          type: string
+        recur:
+          default: fixed
+          description: "The recurring mode of the new downtime. Available modes are:\n\
+            \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
+            \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
+            \nThis only works when using the Enterprise Editions. Defaults to 'fixed'."
+          enum: *id004
+          example: hour
+          type: string
+        duration:
+          default: 0
+          description: 'Duration in seconds. When set, the downtime does not begin
+            automatically at a nominated
+
+            time, but when a real problem status appears for the service. Consequencely,
+            the
+
+            start_time/end_time is only the time window in which the scheduled downtime
+            can begin.'
+          example: 3600
+          format: int32
+          type: integer
+        comment:
+          example: Security updates
+          type: string
+        query:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          description: An query expression in nested dictionary form. If you want
+            to use multiple expressions, nest them with the AND/OR operators.
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
+      required:
+      - downtime_type
+      - end_time
+      - start_time
+      type: object
+    CreateServiceRelatedDowntime:
+      discriminator:
+        mapping:
+          service: '#/components/schemas/CreateServiceDowntime'
+          service_by_query: '#/components/schemas/CreateServiceQueryDowntime'
+          servicegroup: '#/components/schemas/CreateServiceGroupDowntime'
+        propertyName: downtime_type
+      oneOf:
+      - $ref: '#/components/schemas/CreateServiceDowntime'
+      - $ref: '#/components/schemas/CreateServiceGroupDowntime'
+      - $ref: '#/components/schemas/CreateServiceQueryDowntime'
+      properties: {}
       type: object
     DeleteHostTagGroup:
       properties:
@@ -4600,6 +4725,161 @@ paths:
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
           \ application/json\" \\\n    entries='[{'name': 'OnCall', 'attributes':\
           \ {'name': 'OnCall updated', 'alias': 'Not on Sundays'}}]' \\\n    --json"
+  /domain-types/downtime/collections/host:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.downtime.create_host_related_downtime
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHostRelatedDowntime'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Create a host related scheduled downtime
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.downtime
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/downtime/collections/host\"\
+          ,\n    # This schema has multiple variations. Please refer to\n    # the\
+          \ 'Payload' section for details.\n    json={\n        'downtime_type': 'host',\n\
+          \        'start_time': '2017-07-21T17:32:28Z',\n        'end_time': '2017-07-21T17:32:28Z',\n\
+          \        'recur': 'hour',\n        'duration': 3600,\n        'comment':\
+          \ 'Security updates',\n        'host_name': 'example.com'\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/downtime/collections/host\",\n    method=\"\
+          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
+          \ # This schema has multiple variations. Please refer to\n    # the 'Payload'\
+          \ section for details.\n    data=json.dumps({\n        'downtime_type':\
+          \ 'host',\n        'start_time': '2017-07-21T17:32:28Z',\n        'end_time':\
+          \ '2017-07-21T17:32:28Z',\n        'recur': 'hour',\n        'duration':\
+          \ 3600,\n        'comment': 'Security updates',\n        'host_name': 'example.com'\n\
+          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
+          \ refer to the\n# 'Payload' section for details.\ncurl \\\n    -X POST \\\
+          \n    --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header\
+          \ \"Accept: application/json\" \\ \\\n    --data '{\n          \"comment\"\
+          : \"Security updates\",\n          \"downtime_type\": \"host\",\n      \
+          \    \"duration\": 3600,\n          \"end_time\": \"2017-07-21T17:32:28Z\"\
+          ,\n          \"host_name\": \"example.com\",\n          \"recur\": \"hour\"\
+          ,\n          \"start_time\": \"2017-07-21T17:32:28Z\"\n        }' \\\n \
+          \   \"$API_URL/domain-types/downtime/collections/host\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
+          \ refer to the\n# 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/downtime/collections/host\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    downtime_type='host' \\\n    start_time='2017-07-21T17:32:28Z'\
+          \ \\\n    end_time='2017-07-21T17:32:28Z' \\\n    recur='hour' \\\n    duration='3600'\
+          \ \\\n    comment='Security updates' \\\n    host_name='example.com' \\\n\
+          \    --json"
+  /domain-types/downtime/collections/service:
+    post:
+      description: ''
+      operationId: cmk.gui.plugins.openapi.endpoints.downtime.create_service_related_downtime
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceRelatedDowntime'
+        required: true
+      responses:
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+          description: Any unsuccessful or unexpected result.
+        '204':
+          description: Operation done successfully. No further output.
+          headers: {}
+      summary: Create a service related scheduled downtime
+      tags:
+      - cmk.gui.plugins.openapi.endpoints.downtime
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
+          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/downtime/collections/service\"\
+          ,\n    # This schema has multiple variations. Please refer to\n    # the\
+          \ 'Payload' section for details.\n    json={\n        'downtime_type': 'host',\n\
+          \        'start_time': '2017-07-21T17:32:28Z',\n        'end_time': '2017-07-21T17:32:28Z',\n\
+          \        'recur': 'hour',\n        'duration': 3600,\n        'comment':\
+          \ 'Security updates',\n        'host_name': 'example.com',\n        'service_descriptions':\
+          \ [\n            'CPU utilization', 'Memory'\n        ]\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
+          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/downtime/collections/service\",\n    method=\"\
+          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
+          \ # This schema has multiple variations. Please refer to\n    # the 'Payload'\
+          \ section for details.\n    data=json.dumps({\n        'downtime_type':\
+          \ 'host',\n        'start_time': '2017-07-21T17:32:28Z',\n        'end_time':\
+          \ '2017-07-21T17:32:28Z',\n        'recur': 'hour',\n        'duration':\
+          \ 3600,\n        'comment': 'Security updates',\n        'host_name': 'example.com',\n\
+          \        'service_descriptions': [\n            'CPU utilization', 'Memory'\n\
+          \        ]\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          data = json.loads(response.read())"
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
+          \ refer to the\n# 'Payload' section for details.\ncurl \\\n    -X POST \\\
+          \n    --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header\
+          \ \"Accept: application/json\" \\ \\\n    --data '{\n          \"comment\"\
+          : \"Security updates\",\n          \"downtime_type\": \"host\",\n      \
+          \    \"duration\": 3600,\n          \"end_time\": \"2017-07-21T17:32:28Z\"\
+          ,\n          \"host_name\": \"example.com\",\n          \"recur\": \"hour\"\
+          ,\n          \"service_descriptions\": [\n            \"CPU utilization\"\
+          ,\n            \"Memory\"\n          ],\n          \"start_time\": \"2017-07-21T17:32:28Z\"\
+          \n        }' \\\n    \"$API_URL/domain-types/downtime/collections/service\""
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
+          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
+          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
+          \ refer to the\n# 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/downtime/collections/service\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" \\\n    downtime_type='host' \\\n    start_time='2017-07-21T17:32:28Z'\
+          \ \\\n    end_time='2017-07-21T17:32:28Z' \\\n    recur='hour' \\\n    duration='3600'\
+          \ \\\n    comment='Security updates' \\\n    host_name='example.com' \\\n\
+          \    service_descriptions='['CPU utilization', 'Memory']' \\\n    --json"
   /domain-types/downtime/collections/all:
     get:
       description: ''
@@ -4695,81 +4975,6 @@ paths:
           \ application/json\" \\\n    host_name==\"example.com\" \\\n    service_description==\"\
           Memory\" \\\n    query==\"{\"op\": \"not\", \"expr\": {\"op\": \"=\", \"\
           left\": \"hosts.name\", \"right\": \"example.com\"}}\" \\\n    --json"
-    post:
-      description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.downtime.create_downtime
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateDowntime'
-        required: true
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '204':
-          description: Operation done successfully. No further output.
-          headers: {}
-      summary: Create a scheduled downtime
-      tags:
-      - cmk.gui.plugins.openapi.endpoints.downtime
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/downtime/collections/all\"\
-          ,\n    # This schema has multiple variations. Please refer to\n    # the\
-          \ 'Payload' section for details.\n    json={\n        'downtime_type': 'host',\n\
-          \        'start_time': '2017-07-21T17:32:28Z',\n        'end_time': '2017-07-21T17:32:28Z',\n\
-          \        'recur': 'hour',\n        'duration': 3600,\n        'comment':\
-          \ 'Security updates',\n        'host_name': 'example.com'\n    },\n)\nresp.raise_for_status()\n\
-          data = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/downtime/collections/all\",\n    method=\"\
-          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
-          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
-          \ # This schema has multiple variations. Please refer to\n    # the 'Payload'\
-          \ section for details.\n    data=json.dumps({\n        'downtime_type':\
-          \ 'host',\n        'start_time': '2017-07-21T17:32:28Z',\n        'end_time':\
-          \ '2017-07-21T17:32:28Z',\n        'recur': 'hour',\n        'duration':\
-          \ 3600,\n        'comment': 'Security updates',\n        'host_name': 'example.com'\n\
-          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
-          \ refer to the\n# 'Payload' section for details.\ncurl \\\n    -X POST \\\
-          \n    --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header\
-          \ \"Accept: application/json\" \\ \\\n    --data '{\n          \"comment\"\
-          : \"Security updates\",\n          \"downtime_type\": \"host\",\n      \
-          \    \"duration\": 3600,\n          \"end_time\": \"2017-07-21T17:32:28Z\"\
-          ,\n          \"host_name\": \"example.com\",\n          \"recur\": \"hour\"\
-          ,\n          \"start_time\": \"2017-07-21T17:32:28Z\"\n        }' \\\n \
-          \   \"$API_URL/domain-types/downtime/collections/all\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
-          \ refer to the\n# 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/downtime/collections/all\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    downtime_type='host' \\\n    start_time='2017-07-21T17:32:28Z'\
-          \ \\\n    end_time='2017-07-21T17:32:28Z' \\\n    recur='hour' \\\n    duration='3600'\
-          \ \\\n    comment='Security updates' \\\n    host_name='example.com' \\\n\
-          \    --json"
   /objects/host/{host_name}/objects/downtime/{downtime_id}:
     delete:
       description: ''

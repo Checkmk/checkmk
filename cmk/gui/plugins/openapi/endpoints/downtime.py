@@ -39,26 +39,30 @@ from cmk.gui.watolib.downtime import (
 )
 from cmk.gui.plugins.openapi.utils import BaseSchema
 
-DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup']
+DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query',
+                       'service_by_query']
 
 
 class DowntimeParameter(BaseSchema):
     query = QUERY
 
 
-@Endpoint(constructors.collection_href('downtime'),
-          'cmk/create',
+@Endpoint(constructors.collection_href('downtime', 'host'),
+          'cmk/create_host',
           method='post',
           tag_group='Monitoring',
-          request_schema=request_schemas.CreateDowntime,
+          request_schema=request_schemas.CreateHostRelatedDowntime,
           output_empty=True)
-def create_downtime(params):
-    """Create a scheduled downtime"""
+def create_host_related_downtime(params):
+    """Create a host related scheduled downtime"""
     body = params['body']
+    live = sites.live()
+
     downtime_type: DowntimeType = body['downtime_type']
+
     if downtime_type == 'host':
         downtime_commands.schedule_host_downtime(
-            sites.live(),
+            live,
             host_name=body['host_name'],
             start_time=body['start_time'],
             end_time=body['end_time'],
@@ -69,7 +73,7 @@ def create_downtime(params):
         )
     elif downtime_type == 'hostgroup':
         downtime_commands.schedule_hostgroup_host_downtime(
-            sites.live(),
+            live,
             hostgroup_name=body['hostgroup_name'],
             start_time=body['start_time'],
             end_time=body['end_time'],
@@ -78,9 +82,42 @@ def create_downtime(params):
             user_id=config.user.ident,
             comment=body.get('comment', f"Downtime for hostgroup {body['hostgroup_name']!r}"),
         )
-    elif downtime_type == 'service':
+
+    elif downtime_type == 'host_by_query':
+        downtime_commands.schedule_hosts_downtimes_with_query(
+            live,
+            body['query'],
+            start_time=body['start_time'],
+            end_time=body['end_time'],
+            recur=body['recur'],
+            duration=body['duration'],
+            user_id=config.user.ident,
+            comment=body.get('comment', ''),
+        )
+    else:
+        return problem(status=400,
+                       title="Unhandled downtime-type.",
+                       detail=f"The downtime-type {downtime_type!r} is not supported.")
+
+    return Response(status=204)
+
+
+@Endpoint(constructors.collection_href('downtime', 'service'),
+          'cmk/create_service',
+          method='post',
+          tag_group='Monitoring',
+          request_schema=request_schemas.CreateServiceRelatedDowntime,
+          output_empty=True)
+def create_service_related_downtime(params):
+    """Create a service related scheduled downtime"""
+    body = params['body']
+    live = sites.live()
+
+    downtime_type: DowntimeType = body['downtime_type']
+
+    if downtime_type == 'service':
         downtime_commands.schedule_service_downtime(
-            sites.live(),
+            live,
             host_name=body['host_name'],
             service_description=body['service_descriptions'],
             start_time=body['start_time'],
@@ -95,7 +132,7 @@ def create_downtime(params):
         )
     elif downtime_type == 'servicegroup':
         downtime_commands.schedule_servicegroup_service_downtime(
-            sites.live(),
+            live,
             servicegroup_name=body['servicegroup_name'],
             start_time=body['start_time'],
             end_time=body['end_time'],
@@ -103,6 +140,17 @@ def create_downtime(params):
             duration=body['duration'],
             user_id=config.user.ident,
             comment=body.get('comment', f"Downtime for servicegroup {body['servicegroup_name']!r}"),
+        )
+    elif downtime_type == 'service_by_query':
+        downtime_commands.schedule_services_downtimes_with_query(
+            live,
+            query=body['query'],
+            start_time=body['start_time'],
+            end_time=body['end_time'],
+            recur=body['recur'],
+            duration=body['duration'],
+            user_id=config.user.ident,
+            comment=body.get('comment', ''),
         )
     else:
         return problem(status=400,

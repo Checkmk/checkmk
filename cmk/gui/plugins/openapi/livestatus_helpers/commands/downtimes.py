@@ -16,6 +16,10 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.utils import to_timesta
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import Or
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
+from cmk.gui.plugins.openapi.livestatus_helpers.tables.hosts import Hosts
+from cmk.gui.plugins.openapi.livestatus_helpers.tables.services import Services
+
 RecurMode = Literal[
     "fixed",  # TODO: Rename to "non_recurring"
     "hour",
@@ -67,6 +71,40 @@ def del_service_downtime(connection, downtime_id: int):
 
     """
     return send_command(connection, "DEL_SVC_DOWNTIME", [downtime_id])
+
+
+def schedule_services_downtimes_with_query(
+    connection,
+    query,
+    start_time: dt.datetime,
+    end_time: dt.datetime,
+    recur: RecurMode = 'fixed',
+    duration: int = 0,
+    user_id: str = '',
+    comment: str = '',
+):
+    """Schedule downtimes for services based upon a query"""
+
+    q = Query([Services.description, Services.host_name]).filter(tree_to_expr(query))
+    for host_name, service_description in [
+        (row['host_name'], row['description']) for row in q.iterate(connection)
+    ]:
+        if not comment:
+            downtime_comment = f"Downtime for service {service_description}@{host_name}"
+        else:
+            downtime_comment = comment
+
+        schedule_service_downtime(
+            connection,
+            host_name=host_name,
+            service_description=service_description,
+            start_time=start_time,
+            end_time=end_time,
+            recur=recur,
+            duration=duration,
+            user_id=user_id,
+            comment=downtime_comment,
+        )
 
 
 def schedule_service_downtime(
@@ -341,6 +379,35 @@ def schedule_hostgroup_host_downtime(
         include_all_services=include_all_services,
         recur=recur,
         trigger_id=trigger_id,
+        duration=duration,
+        user_id=user_id,
+        comment=comment,
+    )
+
+
+def schedule_hosts_downtimes_with_query(
+    connection,
+    query: str,
+    start_time: dt.datetime,
+    end_time: dt.datetime,
+    recur: RecurMode = 'fixed',
+    duration: int = 0,
+    user_id: str = '',
+    comment: str = '',
+):
+    """Schedule a downtimes for hosts based upon a query"""
+
+    q = Query([Hosts.name]).filter(tree_to_expr(query))
+    hosts = [row['name'] for row in q.iterate(connection)]
+    if not comment:
+        comment = f"Downtime for hosts {', '.join(hosts)}"
+
+    schedule_host_downtime(
+        connection,
+        host_name=hosts,
+        start_time=start_time,
+        end_time=end_time,
+        recur=recur,
         duration=duration,
         user_id=user_id,
         comment=comment,

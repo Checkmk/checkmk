@@ -11,6 +11,16 @@ import os
 import socket
 import sys
 
+# For Python 3 sys.stdout creates \r\n as newline for Windows.
+# Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
+# If you want to use the old behaviour just use old_stdout.
+if sys.version_info[0] >= 3:
+    new_stdout = io.TextIOWrapper(sys.stdout.buffer,
+                                  newline='\n',
+                                  encoding=sys.stdout.encoding,
+                                  errors=sys.stdout.errors)
+    old_stdout, sys.stdout = sys.stdout, new_stdout
+
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
     from typing import List, Dict, Tuple, Any, Optional, Union, Callable
@@ -44,16 +54,6 @@ except ImportError:
                      "Error: mk_jolokia requires the requests library."
                      " Please install it on the monitored system.\n")
     sys.exit(1)
-
-# For Python 3 sys.stdout creates \r\n as newline for Windows.
-# Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
-# If you want to use the old behaviour just use old_stdout.
-if sys.version_info > (3, 0):
-    new_stdout = io.TextIOWrapper(sys.stdout.buffer,
-                                  newline='\n',
-                                  encoding=sys.stdout.encoding,
-                                  errors=sys.stdout.errors)
-    old_stdout, sys.stdout = sys.stdout, new_stdout
 
 VERBOSE = sys.argv.count('--verbose') + sys.argv.count('-v') + 2 * sys.argv.count('-vv')
 DEBUG = sys.argv.count('--debug')

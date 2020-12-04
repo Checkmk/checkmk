@@ -8,6 +8,7 @@ import ast
 import dataclasses
 import logging
 from functools import partial
+from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -20,6 +21,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Union,
 )
 
 from cmk.utils.type_defs import SectionName
@@ -36,6 +38,7 @@ from cmk.snmplib.type_defs import (
 
 from . import factory
 from ._base import ABCFetcher, ABCFileCache, verify_ipaddress
+from .cache import SectionStore
 from .type_defs import Mode
 
 __all__ = ["SNMPFetcher", "SNMPFileCache", "SNMPPluginStore", "SNMPPluginStoreItem"]
@@ -151,6 +154,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         on_error: str,
         missing_sys_description: bool,
         do_status_data_inventory: bool,
+        section_store_path: Union[Path, str],
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.helper.snmp"))
@@ -159,6 +163,11 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.snmp_config: Final = snmp_config
+        self._section_store = SectionStore[SNMPSectionContent](
+            section_store_path,
+            keep_outdated=False,  # irrelevant to SNMP
+            logger=self._logger,
+        )
         self._backend = factory.backend(self.snmp_config, self._logger)
 
     @property
@@ -192,6 +201,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             on_error=serialized["on_error"],
             missing_sys_description=serialized["missing_sys_description"],
             do_status_data_inventory=serialized["do_status_data_inventory"],
+            section_store_path=serialized["section_store_path"],
             snmp_config=SNMPHostConfig.deserialize(serialized["snmp_config"]),
         )
 
@@ -202,6 +212,7 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
             "do_status_data_inventory": self.do_status_data_inventory,
+            "section_store_path": str(self._section_store.path),
             "snmp_config": self.snmp_config.serialize(),
         }
 

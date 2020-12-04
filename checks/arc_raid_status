@@ -27,6 +27,9 @@ def check_arc_raid_status(item, params, info):
             elif raid_state == "Rebuilding":
                 state = 1
                 label = "(!)"
+            elif raid_state == "Checking":
+                state = 0
+                label = ""
             elif raid_state != "Normal":
                 state = 2
                 label = "(!!)"

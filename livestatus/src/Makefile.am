@@ -271,8 +271,8 @@ compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_
 tidy: compile_commands.json
 	@echo clang-tidy-$(CLANG_VERSION) information start ===========================================
 	@which clang-tidy-$(CLANG_VERSION)
-	@clang-tidy-$(CLANG_VERSION) --version
-	@clang-tidy-$(CLANG_VERSION) --extra-arg=-v dummy.cc 1> /dev/null || true
+	@clang-tidy-$(CLANG_VERSION) $(CLANG_TIDY_EXTRA_ARGS) --version
+	@clang-tidy-$(CLANG_VERSION) $(CLANG_TIDY_EXTRA_ARGS) --extra-arg=-v dummy.cc 1> /dev/null || true
 	@echo clang-tidy-$(CLANG_VERSION) information end =============================================
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)
 

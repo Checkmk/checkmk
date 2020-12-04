@@ -1,0 +1,12 @@
+Title: Fix sidebar position quick toggle
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1607077899
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+The sidebar position could be changed to left, but not back to right.
+This has been fixed.

@@ -55,14 +55,15 @@ def _get_sidebar_position() -> str:
     sidebar_position = userdb.load_custom_attr(config.user.id, 'ui_sidebar_position', lambda x: None
                                                if x == "None" else "left")
 
-    return _get_sidebar_position_title(sidebar_position or "right")
+    return sidebar_position or "right"
 
 
-def _get_sidebar_position_title(value: str) -> str:
-    return {
-        "left": _("Left"),
-        "right": _("Right"),
-    }[value]
+def _sidebar_position_title(stored_value: str) -> str:
+    return _("Left") if stored_value == "left" else "right"
+
+
+def _sidebar_position_id(stored_value: str) -> str:
+    return "left" if stored_value == "left" else "right"
 
 
 def _user_menu_topics() -> List[TopicMenuTopic]:
@@ -83,7 +84,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             target="",
             sort_index=20,
             icon="sidebar_position",
-            button_title=_get_sidebar_position(),
+            button_title=_sidebar_position_title(_get_sidebar_position()),
         ),
     ]
 
@@ -171,8 +172,9 @@ class ModeAjaxCycleThemes(AjaxPage):
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
     def page(self):
-        _set_user_attribute("ui_sidebar_position",
-                            None if _get_sidebar_position() == "left" else "left")
+        _set_user_attribute(
+            "ui_sidebar_position",
+            None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left")
 
 
 def _set_user_attribute(key: str, value: Optional[str]):

@@ -42,7 +42,13 @@ from cmk.base.checkers import (
     update_host_sections,
 )
 from cmk.base.checkers.agent import AgentHostSections
-from cmk.base.checkers.host_sections import HostKey, HostSections, MultiHostSections
+from cmk.base.checkers.host_sections import (
+    HostKey,
+    HostSections,
+    MultiHostSections,
+    PersistedSections,
+    SectionStore,
+)
 from cmk.base.checkers.piggyback import PiggybackSource
 from cmk.base.checkers.programs import ProgramSource
 from cmk.base.checkers.snmp import SNMPSource
@@ -120,6 +126,30 @@ def mode_fixture(request):
 def _fixture_patch_register(monkeypatch):
     monkeypatch.setattr(agent_based_register._config, "get_section_plugin",
                         MOCK_SECTIONS.__getitem__)
+
+
+def test_section_store_keeps_new(monkeypatch):
+    def new_sections():
+        return {SectionName("foo"): (1, 2, [])}
+
+    def mock_store(_self, sections):
+        assert sections == new_sections()
+
+    def mock_load(_self):
+        return {SectionName("foo"): (0, 1, [])}
+
+    monkeypatch.setattr(SectionStore, "store", mock_store)
+    monkeypatch.setattr(SectionStore, "load", mock_load)
+
+    store: SectionStore = SectionStore(
+        "path-not-used",
+        keep_outdated=True,
+        logger=None,  # type: ignore[arg-type]
+    )
+    persisted_sections = PersistedSections(new_sections())
+
+    store.update(persisted_sections)
+    assert persisted_sections == new_sections()
 
 
 def test_abstract_hostsections_filter():

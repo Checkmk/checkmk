@@ -1,0 +1,12 @@
+Title: Missing inventory data
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1607090943
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.0.0b2
+
+In Checkmk versions 2.0.0i1 and 2.0.0b1 the HW/SW-Inventory was missing virtually all
+data in certain timing conditions.

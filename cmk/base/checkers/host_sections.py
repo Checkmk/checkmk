@@ -115,9 +115,15 @@ class SectionStore(Generic[TSectionContent]):
         self,
         persisted_sections: PersistedSections[TSectionContent],
     ) -> None:
+        """Fuse stored sections with the provided ones
+
+        Fill up the persisted sections with the stored ones,
+        if they are not already present. Save the result to disk.
+        """
         stored = self.load()
         if persisted_sections != stored:
-            persisted_sections.update(stored)
+            for name, content in stored.items():
+                persisted_sections.setdefault(name, content)
             self.store(persisted_sections)
 
     def store(self, sections: PersistedSections[TSectionContent]) -> None:

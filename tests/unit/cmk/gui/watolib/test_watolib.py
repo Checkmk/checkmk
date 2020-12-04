@@ -163,7 +163,6 @@ def test_registered_configvars():
         'staleness_threshold',
         'start_url',
         'statistics_interval',
-        'support_credentials',
         'table_row_limit',
         'tcp_connect_timeout',
         'translate_snmptraps',

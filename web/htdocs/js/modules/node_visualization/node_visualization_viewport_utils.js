@@ -262,7 +262,7 @@ export class AbstractGUINode {
         elements.push({
             text: "Details of Host",
             href: "view.py?host=" + encodeURIComponent(this.node.data.hostname) + "&view_name=host",
-            img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.png",
+            img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.svg",
         });
         if (this.node.data.service && this.node.data.service != "") {
             elements.push({
@@ -273,7 +273,7 @@ export class AbstractGUINode {
                     "&service=" +
                     encodeURIComponent(this.node.data.service) +
                     "&view_name=service",
-                img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.png",
+                img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.svg",
             });
         }
 

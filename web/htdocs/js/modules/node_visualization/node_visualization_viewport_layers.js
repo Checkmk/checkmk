@@ -580,7 +580,7 @@ class TopologySiteNode extends node_visualization_viewport_utils.TopologyNode {
             .append("svg:image")
             .attr(
                 "xlink:href",
-                this.viewport.main_instance.get_theme_prefix() + "/images/icon_sites.png"
+                this.viewport.main_instance.get_theme_prefix() + "/images/icon_sites.svg"
             )
             .attr("x", -15)
             .attr("y", -15)

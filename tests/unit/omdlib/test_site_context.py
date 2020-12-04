@@ -14,6 +14,7 @@ def test_root_context():
     site = omdlib.main.RootContext()
     assert site.name is None
     assert site.dir == "/"
+    assert site.real_dir == "/"
     assert not site.is_site_context()
 
 
@@ -21,6 +22,7 @@ def test_site_context(monkeypatch):
     site = omdlib.main.SiteContext("dingeling")
     assert site.name == "dingeling"
     assert site.dir == "/omd/sites/dingeling"
+    assert site.real_dir == "/opt/omd/sites/dingeling"
     assert site.tmp_dir == "/omd/sites/dingeling/tmp"
     assert site.version_meta_dir == "/omd/sites/dingeling/.version_meta"
     assert site.is_site_context()

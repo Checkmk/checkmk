@@ -1,0 +1,13 @@
+Title: cmk-update-config: <tt>KeyError: 'comment'</tt>
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1607093410
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+This werk fixes a bug which led to
+<tt>KeyError: 'comment'</tt>
+during <tt>cmk-update-config</tt>.

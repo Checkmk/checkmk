@@ -222,14 +222,14 @@ def _clear_check_variables_from_default_config(variable_names: List[str]) -> Non
 # And also remove it from the default config (in case it was present)
 def set_check_variables_for_checks() -> None:
     global_dict = globals()
-    cvn = check_variable_names()
+    check_variable_names = list(_check_variables)
 
     check_variables = {}
-    for varname in cvn:
+    for varname in check_variable_names:
         check_variables[varname] = global_dict.pop(varname)
 
     set_check_variables(check_variables)
-    _clear_check_variables_from_default_config(cvn)
+    _clear_check_variables_from_default_config(check_variable_names)
 
 
 #.
@@ -1811,10 +1811,6 @@ def _precompiled_plugin_path(path: str) -> str:
     is_local = path.startswith(str(cmk.utils.paths.local_checks_dir))
     return os.path.join(cmk.utils.paths.precompiled_checks_dir, "local" if is_local else "builtin",
                         os.path.basename(path))
-
-
-def check_variable_names() -> List[str]:
-    return list(_check_variables)
 
 
 def _set_check_variable_defaults(

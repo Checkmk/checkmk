@@ -15,7 +15,7 @@ import os
 import py_compile
 import struct
 import sys
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
 from typing import (
@@ -828,9 +828,7 @@ def strip_tags(tagged_hostlist: List[str]) -> List[str]:
     try:
         return cache[cache_id]
     except KeyError:
-        result = [h.split('|', 1)[0] for h in tagged_hostlist]
-        cache[cache_id] = result
-        return result
+        return cache.setdefault(cache_id, [h.split('|', 1)[0] for h in tagged_hostlist])
 
 
 def _get_shadow_hosts() -> ShadowHosts:
@@ -839,14 +837,6 @@ def _get_shadow_hosts() -> ShadowHosts:
         return shadow_hosts
     except NameError:
         return {}
-
-
-# This function should only be used during duplicate host check! It has to work like
-# all_active_hosts() but with the difference that duplicates are not removed.
-def _all_active_hosts_with_duplicates() -> List[str]:
-    return _filter_active_hosts(get_config_cache(),
-                                (strip_tags(list(all_hosts)) + strip_tags(list(clusters)) +
-                                 strip_tags(list(_get_shadow_hosts()))))
 
 
 def _filter_active_hosts(config_cache: 'ConfigCache',
@@ -884,16 +874,16 @@ def _host_is_member_of_site(config_cache: 'ConfigCache', hostname: str, site: st
 
 
 def duplicate_hosts() -> List[str]:
-    seen_hostnames: Set[str] = set()
-    duplicates: Set[str] = set()
-
-    for hostname in _all_active_hosts_with_duplicates():
-        if hostname in seen_hostnames:
-            duplicates.add(hostname)
-        else:
-            seen_hostnames.add(hostname)
-
-    return sorted(duplicates)
+    return sorted(
+        hostname  #
+        for hostname, count in Counter(
+            # This function should only be used during duplicate host check! It has to work like
+            # all_active_hosts() but with the difference that duplicates are not removed.
+            _filter_active_hosts(
+                get_config_cache(),
+                strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts())),
+            )).items()  #
+        if count > 1)
 
 
 # Returns a list of all hosts which are associated with this site,

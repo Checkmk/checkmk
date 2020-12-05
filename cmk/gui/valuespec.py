@@ -242,6 +242,10 @@ class ValueSpec:
         """Transform the given value with the valuespecs transform logic and give it back"""
         return value
 
+    def has_show_more(self) -> bool:
+        """If valuespec contains any show more elements"""
+        return False
+
 
 class FixedValue(ValueSpec):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
@@ -1781,6 +1785,9 @@ class ListOfStrings(ValueSpec):
             for nr, s in enumerate(value):
                 self._valuespec.validate_value(s, varprefix + "_%d" % nr)
 
+    def has_show_more(self) -> bool:
+        return self._valuespec.has_show_more()
+
 
 # TODO: Spread use of this valuespec
 def NetworkPort(title: _Optional[str], default_value: Union[object, int] = DEF_VALUE) -> Integer:
@@ -2058,6 +2065,9 @@ class ListOf(ValueSpec):
             raise MKUserError(varprefix, self._empty_text)
         for n, v in enumerate(value):
             self._valuespec.validate_value(v, varprefix + "_%d" % (n + 1))
+
+    def has_show_more(self) -> bool:
+        return self._valuespec.has_show_more()
 
 
 ListOfMultipleChoices = List[_Tuple[str, ValueSpec]]
@@ -3000,6 +3010,9 @@ class CascadingDropdown(ValueSpec):
         assert isinstance(value, tuple) and vs is not None
 
         return (value[0], vs.transform_value(value[1]))
+
+    def has_show_more(self):
+        return any(vs.has_show_more() for _name, _title, vs in self.choices() if vs is not None)
 
 
 ListChoiceChoiceValue = Union[str, int]
@@ -4321,6 +4334,9 @@ class Optional(ValueSpec):
     def transform_value(self, value):
         return self._valuespec.transform_value(value)
 
+    def has_show_more(self) -> bool:
+        return self._valuespec.has_show_more()
+
 
 class Alternative(ValueSpec):
     """Handle case when there are several possible allowed formats
@@ -4704,7 +4720,7 @@ class Dictionary(ValueSpec):
             if param in self._hidden_keys:
                 continue
             if not oneline:
-                html.open_tr()
+                html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
                 html.open_td(class_="dictleft")
 
             div_id = varprefix + "_d_" + param
@@ -4795,12 +4811,25 @@ class Dictionary(ValueSpec):
             raise ValueError("invalid header tuple length")
         raise ValueError("invalid header type")
 
+    def _section_has_show_more(self, section_elements: List[str]) -> bool:
+        '''Valuespec Dictionary has option "show_more_keys" but can be buried under
+        multiple different valuespecs'''
+        # visuals deliver no section_elements
+        if not section_elements:
+            return self.has_show_more()
+
+        return any(param in self._show_more_keys or vs.has_show_more()
+                   for param, vs in self._get_elements()
+                   if param in section_elements)
+
     def render_input_form_header(self, varprefix, value, title, section_elements, as_part, css):
         if not as_part:
-            forms.header(title,
-                         isopen=self._form_isopen,
-                         narrow=self._form_narrow,
-                         show_more_toggle=bool(self._show_more_keys))
+            forms.header(
+                title,
+                isopen=self._form_isopen,
+                narrow=self._form_narrow,
+                show_more_toggle=self._section_has_show_more(section_elements),
+            )
 
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
@@ -4969,6 +4998,10 @@ class Dictionary(ValueSpec):
             }
         }
 
+    def has_show_more(self) -> bool:
+        return bool(self._show_more_keys) or any(
+            vs.has_show_more() for _param, vs in self._get_elements())
+
 
 # TODO: Cleanup this and all call sites. Replace it with some kind of DropdownChoice
 # based valuespec
@@ -5122,6 +5155,9 @@ class Foldable(ValueSpec):
     def transform_value(self, value):
         return self._valuespec.transform_value(value)
 
+    def has_show_more(self) -> bool:
+        return self._valuespec.has_show_more()
+
 
 class Transform(ValueSpec):
     """Transforms the value from one representation to another while being
@@ -5201,6 +5237,9 @@ class Transform(ValueSpec):
 
     def transform_value(self, value: Any) -> Any:
         return self.back(self._valuespec.transform_value(self.forth(value)))
+
+    def has_show_more(self) -> bool:
+        return self._valuespec.has_show_more()
 
 
 # TODO: Change to factory, cleanup kwargs

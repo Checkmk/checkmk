@@ -249,21 +249,25 @@ class ParsedSectionsBroker(MutableMapping[HostKey, HostSections]):
         parsed_section_names: List[ParsedSectionName],
     ) -> Optional[Tuple[int, int]]:
         """Aggregate information about the age of the data in the agent sections
-        """
-        cached_ats: List[int] = []
-        intervals: List[int] = []
-        for host_key in self._data:
-            for parsed_section_name in parsed_section_names:
-                # Fear not, the parsing itself is cached. But in case we have not already
-                # parsed, we must do so in order to see which raw sections cache info we
-                # must use.
-                _parsed, cache_info = self._get_parsed_section_with_cache_info(
-                    host_key, parsed_section_name)
-                if cache_info:
-                    cached_ats.append(cache_info[0])
-                    intervals.append(cache_info[1])
 
-        return (min(cached_ats), max(intervals)) if cached_ats else None
+        In order to determine the caching info for a parsed section we must in fact
+        parse it, because otherwise we cannot know from which raw section to take
+        the caching info.
+        But fear not, the parsing itself is cached.
+        """
+        cache_infos = [
+            cache_info  #
+            for _parsed, cache_info in (  #
+                self._get_parsed_section_with_cache_info(host_key, parsed_section_name)
+                for host_key in self._data
+                for parsed_section_name in parsed_section_names  #
+            )  #
+            if cache_info
+        ]
+        return (
+            min(ats for ats, _intervals in cache_infos),
+            max(intervals for _ats, intervals in cache_infos),
+        ) if cache_infos else None
 
     def get_parsed_section(
         self,

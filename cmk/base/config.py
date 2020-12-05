@@ -834,8 +834,11 @@ def strip_tags(tagged_hostlist: List[str]) -> List[str]:
 
 
 def _get_shadow_hosts() -> ShadowHosts:
-    # Only available with CEE
-    return shadow_hosts if "shadow_hosts" in globals() else {}  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    try:
+        # Only available with CEE
+        return shadow_hosts
+    except NameError:
+        return {}
 
 
 # This function should only be used during duplicate host check! It has to work like

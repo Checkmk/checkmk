@@ -403,9 +403,9 @@ std::string return_current_time_and_date() {
 }
 
 TEST(LogTest, EventTest) {
-    if (0) {
+    if (false) {
         // #TODO place in docu
-        // how to use windows event log
+        // #REFERENCE how to use windows event log
         XLOG::details::LogWindowsEventCritical(1, "Test is on {}", "error!");
         XLOG::l(XLOG::kCritError) << "Streamed test output kCritError";
         XLOG::l(XLOG::kEvent) << "Streamed test output kEvent";

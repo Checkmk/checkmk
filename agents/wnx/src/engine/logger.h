@@ -15,8 +15,8 @@
 #include <strstream>
 
 #include "common/cfg_info.h"
-#include "common/wtools.h"
 #include "common/fmt_ext.h"
+#include "common/wtools.h"
 #include "fmt/color.h"
 #include "tools/_xlog.h"
 
@@ -168,7 +168,7 @@ inline std::string formatString(int Fl, const char* Prefix,
 namespace internal {
 enum class Colors { dflt, red, green, yellow, pink, cyan, pink_light, white };
 
-static uint16_t GetColorAttribute(Colors color) {
+constexpr uint16_t GetColorAttribute(Colors color) {
     switch (color) {
         case Colors::red:
             return FOREGROUND_RED;
@@ -190,7 +190,7 @@ static uint16_t GetColorAttribute(Colors color) {
     }
 }
 
-static int GetBitOffset(uint16_t color_mask) {
+constexpr int GetBitOffset(uint16_t color_mask) {
     if (color_mask == 0) return 0;
 
     int bit_offset = 0;
@@ -201,20 +201,18 @@ static int GetBitOffset(uint16_t color_mask) {
     return bit_offset;
 }
 
-static uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
+constexpr uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
     // Let's reuse the BG
-    static const uint16_t background_mask = BACKGROUND_BLUE | BACKGROUND_GREEN |
-                                            BACKGROUND_RED |
-                                            BACKGROUND_INTENSITY;
-    static const uint16_t foreground_mask = FOREGROUND_BLUE | FOREGROUND_GREEN |
-                                            FOREGROUND_RED |
-                                            FOREGROUND_INTENSITY;
-    const uint16_t existing_bg = OldColorAttributes & background_mask;
+    constexpr uint16_t background_mask = BACKGROUND_BLUE | BACKGROUND_GREEN |
+                                         BACKGROUND_RED | BACKGROUND_INTENSITY;
+    constexpr uint16_t foreground_mask = FOREGROUND_BLUE | FOREGROUND_GREEN |
+                                         FOREGROUND_RED | FOREGROUND_INTENSITY;
+    uint16_t existing_bg = OldColorAttributes & background_mask;
 
     uint16_t new_color =
         GetColorAttribute(color) | existing_bg | FOREGROUND_INTENSITY;
-    static const int bg_bit_offset = GetBitOffset(background_mask);
-    static const int fg_bit_offset = GetBitOffset(foreground_mask);
+    constexpr const int bg_bit_offset = GetBitOffset(background_mask);
+    constexpr const int fg_bit_offset = GetBitOffset(foreground_mask);
 
     if (((new_color & background_mask) >> bg_bit_offset) ==
         ((new_color & foreground_mask) >> fg_bit_offset)) {

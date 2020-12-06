@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // //////////////////////////////////////////////////////////////////////////
 // xlog by Sergey Kipnis
@@ -590,16 +591,11 @@ using WorkString = std::basic_string<T>;
         std::fprintf(file_ptr, "%s ", sss.str().c_str());
     }
 
-    if (sizeof(T) == 2)
-        std::fprintf(
-            file_ptr, "%ls",
-            (wchar_t *)Text);  // not very elegant, we have to avoid warning
-                               // when instantiating template with T = char
+    if constexpr (sizeof(T) == 2)
+        std::fprintf(file_ptr, "%ls", Text);
     else
-        std::fprintf(
-            file_ptr, "%s",
-            (char *)Text);  // not very elegant, we have to avoid warning
-                            // when instantiating template with T = char
+        std::fprintf(file_ptr, "%s", Text);
+
     std::fclose(file_ptr);
 #endif  // end of Ring3
     }
@@ -862,21 +858,21 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
         AdvancedLog() {}
         LogParam log_param_;
         template <typename T, typename... Args>
-        inline void d(const T *Format, Args &&... args) {
+        inline void d(const T *Format, Args &&...args) {
 #if defined(XLOG_DEBUG)
             internal_dout(log_param_, Format, std::forward<Args>(args)...);
 #endif
         }
 
         template <typename T, typename... Args>
-        inline void v(const T *Format, Args &&... args) {
+        inline void v(const T *Format, Args &&...args) {
 #if defined(XLOG_VERBOSE)
             internal_dout(log_param_, Format, std::forward<Args>(args)...);
 #endif
         }
 
         template <typename T, typename... Args>
-        inline void l(const T *Format, Args &&... args) {
+        inline void l(const T *Format, Args &&...args) {
 #if !defined(NO_LOG)
             auto &log_param = log_param_;
             log_param.type_ = Type::kLogOut;
@@ -960,7 +956,7 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
 #pragma warning(disable : 26444)
     template <typename T, typename... Args>
     [[maybe_unused]] inline TextInfo<T> internal_dout(
-        const LogParam &Param, const T *Format, Args &&... args) {
+        const LogParam &Param, const T *Format, Args &&...args) {
         T buf[kInternalMaxOut];
 
         internal_Print2Buffer(
@@ -992,7 +988,7 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
 
     // Common API
     template <typename T, typename... Args>
-    inline void d(const T *Format, Args &&... args) {
+    inline void d(const T *Format, Args &&...args) {
 #if defined(XLOG_LIMITED_BUILD)
         static_assert(sizeof(T) == 1,
                       "Wide Char output for the target is not possible");
@@ -1006,7 +1002,7 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
     }
 
     template <typename T, typename... Args>
-    inline void d(bool Enable, const T *Format, Args &&... args) {
+    inline void d(bool Enable, const T *Format, Args &&...args) {
 #if defined(XLOG_LIMITED_BUILD)
         static_assert(sizeof(T) == 1,
                       "Wide Char output for the target is not possible");
@@ -1022,7 +1018,7 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
 #endif
     }
     template <typename T, typename... Args>
-    inline void v(const T *Format, Args &&... args) {
+    inline void v(const T *Format, Args &&...args) {
 #if defined(XLOG_LIMITED_BUILD)
         static_assert(sizeof(T) == 1,
                       "Wide Char output for the target is not possible");
@@ -1037,7 +1033,7 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
 #pragma warning(push)
 #pragma warning(disable : 26444)
     template <typename T, typename... Args>
-    [[maybe_unused]] inline TextInfo<T> l(const T *Format, Args &&... args) {
+    [[maybe_unused]] inline TextInfo<T> l(const T *Format, Args &&...args) {
 #if defined(XLOG_LIMITED_BUILD)
         static_assert(sizeof(T) == 1,
                       "Wide Char output for the target is not possible");
@@ -1054,7 +1050,7 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
 
     template <typename T, typename... Args>
     [[maybe_unused]] inline TextInfo<T> l(bool Enable, const T *Format,
-                                          Args &&... args) {
+                                          Args &&...args) {
 #if defined(XLOG_LIMITED_BUILD)
         static_assert(sizeof(T) == 1,
                       "Wide Char output for the target is not possible");

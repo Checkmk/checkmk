@@ -29,7 +29,7 @@ class ShowParentChildTopology(Icon):
     def render(self, what, row, tags, custom_vars):
         url = makeuri_contextless(
             request,
-            [("host_regex", "^%s$" % row["host_name"])],
+            [("host_name", row["host_name"])],
             filename="parent_child_topology.py",
         )
         return "aggr", _("Host Parent/Child topology"), url

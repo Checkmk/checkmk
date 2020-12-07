@@ -1579,8 +1579,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                or search_expression in rule_pack["title"].lower():
                 found_packs.setdefault(rule_pack["id"], [])
             for rule in rule_pack.get("rules", []):
-                if search_expression in rule["id"].lower() \
-                   or search_expression in rule.get("description", "").lower():
+                if any(search_expression in searchable_rule_item.lower()
+                       for searchable_rule_item in (
+                           rule["id"],
+                           rule.get("description", ""),
+                           rule.get("match", ""),
+                       )):
                     found_rules = found_packs.setdefault(rule_pack["id"], [])
                     found_rules.append(rule)
         return found_packs

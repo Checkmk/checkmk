@@ -36,6 +36,7 @@ load_default_config () {
     ASYNC_ASM_SECTIONS="asm_diskgroup"
     CACHE_MAXAGE=600
     OLRLOC=/etc/oracle/olr.loc
+    MAX_TASKS=1
 }
 
 #.
@@ -123,6 +124,9 @@ CONFIGURATION:
                         can use SKIP_SIDS="+ASM1 ..." instead.
                         This variable has priority 3.
                         Default is empty.
+
+  MAX_TASKS=<Number>    Specify how many SIDs to check in parallel
+                        Default is "$MAX_TASKS"
 
 CONFIGURATION REMOTE INSTANCES:
   REMOTE_INSTANCE_<id>="<user>:<password>:<role>:<host>:<port>:<piggybackhost>:<sid>:<version>:<tnsalias>"
@@ -487,7 +491,7 @@ mk_ora_mtime () {
 
 logging () {
     if $MK_ORA_LOGGING; then
-        local log_file="$MK_VARDIR/log/mk_oracle.log"
+        local log_file=${MK_VARDIR}/log/mk_oracle_task_${TASK_NR:-0}.log
         local criticality=
         local args=
         local header=
@@ -1673,9 +1677,9 @@ sql_ts_quotas () {
 sql_version () {
     echo 'PROMPT <<<oracle_version>>>'
     echo "select upper(i.INSTANCE_NAME)
-	  || ' ' || banner
-	  from v\$version, v\$instance i
-	  where banner like 'Oracle%';"
+         || ' ' || banner
+         from v\$version, v\$instance i
+         where banner like 'Oracle%';"
 }
 
 sql_systemparameter () {
@@ -1683,11 +1687,11 @@ sql_systemparameter () {
 # implement a "persist:$UNTIL" to reduce amount of data transmission
     echo "PROMPT <<<oracle_systemparameter:sep(124)>>>"
     echo "select upper(i.instance_name)
-	  || '|' || NAME
-	  || '|' || DISPLAY_VALUE
-	  || '|' || ISDEFAULT
-	  from v\$system_parameter, v\$instance i
-	  where name not like '!_%' ESCAPE '!';"
+         || '|' || NAME
+         || '|' || DISPLAY_VALUE
+         || '|' || ISDEFAULT
+         from v\$system_parameter, v\$instance i
+         where name not like '!_%' ESCAPE '!';"
 }
 
 
@@ -2894,7 +2898,9 @@ export -f do_async_custom_sqls
 export -f handle_custom_sql_errors
 
 if $MK_ORA_LOGGING; then
-    echo "Start logging to file: $MK_VARDIR/log/mk_oracle.log" >&2
+    # cleanup old leftovers
+    rm -f "${MK_VARDIR}"/log/mk_oracle_task_*.log
+    echo "Logging to file: ${MK_VARDIR}/log/mk_oracle.log" >&2
 fi
 
 logging "--------------------------------------------------------------------"
@@ -2961,18 +2967,14 @@ do_dummy_sections
 
 #   ---local----------------------------------------------------------------
 
-for sid in $SIDS; do
-    skip=$(skip_sid "$sid")
-    if [ "$skip" == "yes" ]; then
-        logging "[${sid}] [local]" "Skipping this SID"
-        continue
-    fi
-
+function execute_queries_for_sid () {
+    local sid="$1"
     set_ora_env "$sid"
     if [ $? -eq 2 ] ; then
         # we have to skip this SID due to missing/unknown ORACLE_HOME
-        continue
+        return
     fi
+
     set_ora_version "$("${ORACLE_HOME}"/bin/sqlplus -V | "${GREP}" ^SQL | cut -d" " -f3 | cut -d"." -f-2)"
     logging "[${sid}] [local]"\
             "ORACLE_SID      : ${ORACLE_SID}"\
@@ -2990,7 +2992,30 @@ for sid in $SIDS; do
 
     # MK_DB_CONNECT could be changed by do_custom_sqls!
     do_custom_sqls
+}
+
+ORA_TMPDIR="${MK_VARDIR}/tmp/mk_oracle"
+mkdir -p "${ORA_TMPDIR}"
+
+TASK_NR=0
+for sid in $SIDS; do
+    skip=$(skip_sid "$sid")
+    if [ "$skip" == "yes" ]; then
+        logging "[${sid}] [local]" "Skipping this SID"
+        continue
+    fi
+    ((TASK_NR++))
+    logging "[${sid}] [local] starting background task '${TASK_NR}'"
+    (execute_queries_for_sid "$sid" > "$ORA_TMPDIR/$sid") &
+    if [[ $(jobs -r -p | wc -l) -ge ${MAX_TASKS} ]]; then
+        logging "[${sid}] [local] max parallel task running, waiting for new slot"
+        wait -n
+    fi
 done
+
+wait
+cat "$ORA_TMPDIR"/*
+rm -f "$ORA_TMPDIR"/*
 
 #   ---remote---------------------------------------------------------------
 
@@ -3015,3 +3040,8 @@ for remote_instance in $REMOTE_INSTANCES; do
     do_checks
     do_custom_sqls
 done
+
+if ${MK_ORA_LOGGING}; then
+    cat "${MK_VARDIR}"/log/mk_oracle_task_*.log >> "${MK_VARDIR}"/log/mk_oracle.log
+    rm -f "${MK_VARDIR}"/log/mk_oracle_task_*.log
+fi

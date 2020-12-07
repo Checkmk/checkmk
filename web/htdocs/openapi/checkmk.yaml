@@ -902,27 +902,6 @@ components:
       required:
       - entries
       type: object
-    BulkDeleteDowntime:
-      properties:
-        host_name:
-          description: The hostname or IP address itself.
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-        entries:
-          example:
-          - 1120
-          - 1121
-          items:
-            description: The id for either a host downtime or service downtime
-            example: 1120
-            format: int32
-            type: integer
-          type: array
-      required:
-      - entries
-      - host_name
-      type: object
     BulkDeleteHost:
       properties:
         entries:
@@ -1699,6 +1678,17 @@ components:
       - $ref: '#/components/schemas/CreateServiceQueryDowntime'
       properties: {}
       type: object
+    DeleteDowntime:
+      discriminator:
+        mapping:
+          params: '#/components/schemas/DeleteParamDowntime'
+          query: '#/components/schemas/DeleteQueryDowntime'
+        propertyName: delete_type
+      oneOf:
+      - $ref: '#/components/schemas/DeleteParamDowntime'
+      - $ref: '#/components/schemas/DeleteQueryDowntime'
+      properties: {}
+      type: object
     DeleteHostTagGroup:
       properties:
         repair:
@@ -1707,6 +1697,40 @@ components:
             gives permission to automatically remove the tag from the affected hosts.
           example: false
           type: boolean
+      type: object
+    DeleteParamDowntime:
+      properties:
+        delete_type:
+          description: The option how to delete a downtime.
+          enum: &id005
+          - params
+          - query
+          example: params
+          type: string
+        downtime_id:
+          description: The id of the downtime
+          example: '54'
+          type: string
+      required:
+      - delete_type
+      - downtime_id
+      type: object
+    DeleteQueryDowntime:
+      properties:
+        delete_type:
+          description: The option how to delete a downtime.
+          enum: *id005
+          example: params
+          type: string
+        query:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          description: An query expression in nested dictionary form. If you want
+            to use multiple expressions, nest them with the AND/OR operators.
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
+      required:
+      - delete_type
       type: object
     DomainObject:
       properties:
@@ -1834,16 +1858,16 @@ components:
           example: servers/groupA
           type: string
         host_labels:
-          example: &id005
+          example: &id006
             db: mssql
           type: object
         host_tags:
-          example: &id006 {}
+          example: &id007 {}
           type: object
         host_choice:
           allOf:
           - $ref: '#/components/schemas/BIHostChoice'
-          example: &id007
+          example: &id008
             type: all_hosts
       required:
       - host_choice
@@ -2341,15 +2365,15 @@ components:
           example: servers/groupA
           type: string
         host_labels:
-          example: *id005
+          example: *id006
           type: object
         host_tags:
-          example: *id006
+          example: *id007
           type: object
         host_choice:
           allOf:
           - $ref: '#/components/schemas/BIHostChoice'
-          example: *id007
+          example: *id008
         service_regex:
           example: Filesystem.*
           type: string
@@ -2489,19 +2513,19 @@ components:
           description: Replace all currently set attributes on the host, with these
             attributes. Any previously set attributes which are not given here will
             be removed.
-          example: &id008
+          example: &id009
             ipaddress: 192.168.0.123
           type: object
         update_attributes:
           description: Just update the hosts attributes with these attributes. The
             previously set attributes will not be touched.
-          example: &id009
+          example: &id010
             ipaddress: 192.168.0.123
           type: object
         remove_attributes:
           default: []
           description: A list of attributes which should be removed.
-          example: &id010
+          example: &id011
           - tag_foobar
           items:
             type: string
@@ -2513,17 +2537,17 @@ components:
           description: Replace all currently set attributes on the host, with these
             attributes. Any previously set attributes which are not given here will
             be removed.
-          example: *id008
+          example: *id009
           type: object
         update_attributes:
           description: Just update the hosts attributes with these attributes. The
             previously set attributes will not be touched.
-          example: *id009
+          example: *id010
           type: object
         remove_attributes:
           default: []
           description: A list of attributes which should be removed.
-          example: *id010
+          example: *id011
           items:
             type: string
           type: array
@@ -4975,26 +4999,16 @@ paths:
           \ application/json\" \\\n    host_name==\"example.com\" \\\n    service_description==\"\
           Memory\" \\\n    query==\"{\"op\": \"not\", \"expr\": {\"op\": \"=\", \"\
           left\": \"hosts.name\", \"right\": \"example.com\"}}\" \\\n    --json"
-  /objects/host/{host_name}/objects/downtime/{downtime_id}:
-    delete:
+  /domain-types/downtime/actions/delete/invoke:
+    post:
       description: ''
       operationId: cmk.gui.plugins.openapi.endpoints.downtime.delete_downtime
-      parameters:
-      - description: A hostname.
-        in: path
-        name: host_name
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteDowntime'
         required: true
-        schema:
-          example: example.com
-          pattern: '[-0-9a-zA-Z_.]+'
-          type: string
-      - description: The id of the downtime
-        in: path
-        name: downtime_id
-        required: true
-        schema:
-          example: '54'
-          type: string
       responses:
         default:
           content:
@@ -5015,92 +5029,41 @@ paths:
           \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/objects/host/example.com/objects/downtime/54\"\
-          ,\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/downtime/actions/delete/invoke\"\
+          ,\n    # This schema has multiple variations. Please refer to\n    # the\
+          \ 'Payload' section for details.\n    json={'delete_type': 'params', 'downtime_id':\
+          \ '54'},\n)\nresp.raise_for_status()\ndata = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
           \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/objects/host/example.com/objects/downtime/54\",\n    method=\"\
-          DELETE\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
-          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n)\n\
-          response = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\\n    \"$API_URL/objects/host/example.com/objects/downtime/54\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/objects/host/example.com/objects/downtime/54\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    --json"
-  /domain-types/downtime/actions/bulk-delete/invoke:
-    delete:
-      description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.downtime.bulk_delete_downtimes
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BulkDeleteDowntime'
-        required: true
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '204':
-          description: Operation done successfully. No further output.
-          headers: {}
-      summary: Bulk delete downtimes
-      tags:
-      - cmk.gui.plugins.openapi.endpoints.downtime
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.delete(\n    f\"{API_URL}/domain-types/downtime/actions/bulk-delete/invoke\"\
-          ,\n    json={\n        'host_name': 'example.com',\n        'entries': [1120,\
-          \ 1121]\n    },\n)\nresp.raise_for_status()\ndata = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/downtime/actions/bulk-delete/invoke\",\n\
-          \    method=\"DELETE\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        'host_name': 'example.com',\n  \
-          \      'entries': [1120, 1121]\n    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
+          \    f\"{API_URL}/domain-types/downtime/actions/delete/invoke\",\n    method=\"\
+          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
+          \ # This schema has multiple variations. Please refer to\n    # the 'Payload'\
+          \ section for details.\n    data=json.dumps({'delete_type': 'params', 'downtime_id':\
+          \ '54'}).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
           data = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X DELETE \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"entries\": [\n            1120,\n  \
-          \          1121\n          ],\n          \"host_name\": \"example.com\"\n\
-          \        }' \\\n    \"$API_URL/domain-types/downtime/actions/bulk-delete/invoke\""
+          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
+          \ refer to the\n# 'Payload' section for details.\ncurl \\\n    -X POST \\\
+          \n    --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header\
+          \ \"Accept: application/json\" \\ \\\n    --data '{\n          \"delete_type\"\
+          : \"params\",\n          \"downtime_id\": \"54\"\n        }' \\\n    \"\
+          $API_URL/domain-types/downtime/actions/delete/invoke\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp DELETE \"$API_URL/domain-types/downtime/actions/bulk-delete/invoke\"\
+          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
+          \ refer to the\n# 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/downtime/actions/delete/invoke\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    host_name='example.com' \\\n    entries='[1120,\
-          \ 1121]' \\\n    --json"
+          \ application/json\" \\\n    delete_type='params' \\\n    downtime_id='54'\
+          \ \\\n    --json"
   /domain-types/folder_config/collections/all:
     get:
       description: ''

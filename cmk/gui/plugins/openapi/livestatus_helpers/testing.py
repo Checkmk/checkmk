@@ -12,9 +12,11 @@ have any friction during testing with these helpers themselves.
 import contextlib
 import datetime as dt
 import io
+import itertools
 import operator
 import os
 import re
+import statistics
 import time
 from typing import (
     Any,
@@ -40,10 +42,14 @@ from livestatus import MultiSiteConnection
 from cmk.gui import http, sites
 from cmk.gui.globals import AppContext, RequestContext
 
-FilterFunc = Callable[[Dict[str, Any]], bool]
 MatchType = Literal["strict", "ellipsis", "loose"]
+Operator = str
 OperatorFunc = Callable[[Any, Any], bool]
 Response = List[List[Any]]
+ResultEntry = Dict[str, Any]
+ResultList = List[ResultEntry]
+FilterKeyFunc = Callable[[ResultEntry], bool]
+ReduceFunc = Callable[[List[Any]], Any]
 
 
 class FakeSocket:
@@ -125,20 +131,30 @@ class MockLiveStatusConnection:
             [['heute'], ['example.com']]
             [['description'], ['Memory'], ['CPU load'], ['CPU load']]
 
-
         This test will pass as well (useful in real GUI or REST-API calls):
 
             >>> live = MockLiveStatusConnection()
             >>> with live:
             ...     response = live._lookup_next_query(
             ...         'GET status\\n'
-            ...         'Cache: reload\\n'
             ...         'Columns: livestatus_version program_version program_start '
             ...         'num_hosts num_services'
             ...     )
             ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 36]]
             ...     assert len(response) == 1
             ...     assert len(response[0]) == 5
+
+        Some Stats calls are supported as well:
+            >>> live = MockLiveStatusConnection()
+            >>> _ = live.expect_query("GET hosts\\nColumns: filename\\nStats: state > 0")
+            >>> with live(expect_status_query=False):
+            ...     live._lookup_next_query(
+            ...         'GET hosts\\n'
+            ...         'Cache: reload\\n'
+            ...         'Columns: filename\\n'
+            ...         'Stats: state > 0'
+            ...     )
+            [['/wato/hosts.mk', 1]]
 
         This example will fail due to missing queries:
 
@@ -190,7 +206,7 @@ program_start num_hosts num_services'
         # Just that parse_check_mk_version is happy we replace the dashes with dots.
         _today = str(dt.datetime.utcnow().date()).replace("-", ".")
         _program_start_timestamp = int(time.time())
-        self._tables: Dict[str, List[Dict[str, Any]]] = {
+        self._tables: Dict[str, ResultList] = {
             'status': [{
                 'livestatus_version': _today,
                 'program_version': f'Check_MK {_today}',
@@ -220,10 +236,14 @@ program_start num_hosts num_services'
                 {
                     'name': 'heute',
                     'parents': ['example.com'],
+                    'filename': '/wato/hosts.mk',
+                    'state': 1,
                 },
                 {
                     'name': 'example.com',
                     'parents': [],
+                    'filename': '/wato/hosts.mk',
+                    'state': 0,
                 },
             ],
             'services': [
@@ -306,7 +326,7 @@ program_start num_hosts num_services'
                 remaining_queries += f"\n * {repr(query[0])}"
             raise RuntimeError(f"Expected queries were not queried:{remaining_queries}")
 
-    def add_table(self, name: str, data: List[Dict[str, Any]]) -> 'MockLiveStatusConnection':
+    def add_table(self, name: str, data: ResultList) -> 'MockLiveStatusConnection':
         """Add the data of a table.
 
         This is desirable in tests, to isolate the individual tests from one another. It is not
@@ -377,12 +397,16 @@ program_start num_hosts num_services'
 
         table = _table_of_query(query)
         # If the columns are explicitly asked for, we get the columns here.
-        columns = _column_of_query(query) or []
+        query_columns = _column_of_query(query) or []
 
-        if table and not columns:
+        columns: List[str] = query_columns
+        if table and not query_columns:
             # Otherwise, we figure out the columns from the table store.
             for entry in self._tables.get(table, []):
                 columns = sorted(entry.keys())
+                break
+        else:
+            columns = query_columns
 
         # If neither table nor columns can't be deduced, we default to an empty response.
         result = []
@@ -390,14 +414,23 @@ program_start num_hosts num_services'
             # We check the store for data and filter for the actual data that is requested.
             if table not in self._tables:
                 raise KeyError(f"Table {table!r} not stored. Call .add_table(...)")
-            result_dicts = evaluate_filter(query, self._tables[table])
+
+            # Filtering and Aggregating
+            filtered_dicts = evaluate_filter(query, self._tables[table])
+            result_dicts = evaluate_stats(query, query_columns, filtered_dicts)
+
+            # Flatten the result for serialization.
             for entry in result_dicts:
                 row = []
                 for col in columns:
                     if col not in entry:
-                        raise KeyError(f"Column '{table}.{col}' not known. "
+                        raise KeyError(f"Column '{col}' not in result. "
                                        "Add to test-data or fix query.")
                     row.append(entry[col])
+
+                for col in sorted(entry.keys()):
+                    if col.startswith("stat_"):
+                        row.append(entry[col])
                 result.append(row)
 
         if force_pos is not None:
@@ -543,7 +576,7 @@ def mock_livestatus(with_context=False):
     req_context: ContextManager
     if with_context:
         app_context = AppContext(None)
-        req_context = RequestContext(req=req)
+        req_context = RequestContext(req=req, prefix_logs_with_url=False)
     else:
         app_context = contextlib.nullcontext()
         req_context = contextlib.nullcontext()
@@ -596,7 +629,154 @@ def simple_expect(
             yield sites.live()
 
 
-def evaluate_filter(query: str, result: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def evaluate_stats(query: str, columns: List[str], result: ResultList) -> ResultList:
+    """Aggregate the result set, as told by the Stats directives
+
+    This function not only does counting and aggregating. It also groups the result by the
+    individual distinct values.
+
+    Examples:
+
+        When no Stats directives are present, we pass through the result
+
+            >>> evaluate_stats("", [], [{'state': 1}, {'state': 2}])
+            [{'state': 1}, {'state': 2}]
+
+        Whenever Stats directives are present, we evaluate and reduce the result
+
+            >>> evaluate_stats("Stats: sum state", [], [{'state': 1}, {'state': 2}])
+            [{'stat_1': 3}]
+
+            >>> evaluate_stats("Stats: avg state", [], [{'state': 0}, {'state': 10}])
+            [{'stat_1': 5}]
+
+            >>> evaluate_stats("Stats: min state", [], [{'state': 0}, {'state': 10}])
+            [{'stat_1': 0}]
+
+            >>> evaluate_stats("Stats: max state", [], [{'state': 0}, {'state': 10}])
+            [{'stat_1': 10}]
+
+        Counting directives are also honored
+
+            >>> evaluate_stats("Stats: state > 0", [], [{'state': 1}, {'state': 2}, {'state': 1}])
+            [{'stat_1': 3}]
+
+        Multiple counting directives are evaluated independently
+
+            >>> evaluate_stats("Stats: state > 0\\nStats: state >= 2", [],
+            ...                [{'state': 1}, {'state': 2}, {'state': 1}])
+            [{'stat_1': 3}, {'stat_2': 1}]
+
+        Combinations of counting directives are not yet implemented
+
+            >>> evaluate_stats("Stats: state > 0\\nStats: state != 2\\nStatsAnd: 2", [],
+            ...                [{'state': 1}, {'state': 2}, {'state': 1}])
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: Stats combinators are not yet implemented!
+
+        Non-contiguous results don't throw the grouper off-track.
+
+            >>> evaluate_stats("Stats: state = 0", ['site'], [
+            ...     {'site': 'a', 'state': 0},  # <- !
+            ...     {'site': 'b', 'state': 0},
+            ...     {'site': 'a', 'state': 1},  # <- !
+            ...     {'site': 'b', 'state': 0},
+            ...     {'site': 'b', 'state': 1},
+            ... ])
+            [{'site': 'a', 'stat_1': 1}, {'site': 'b', 'stat_1': 2}]
+
+    Args:
+        query:
+            A livestatus query, with or without stats attached.
+
+        columns:
+            A list of columns as strings.
+
+        result:
+            A result set.
+
+    Returns:
+        A grouped result set.
+
+    """
+    reducers = []
+    for line in query.splitlines():
+        if line.startswith("Stats: "):
+            reducers.append(make_reducer_func(line))
+        elif line.startswith(("StatsAnd: ", "StatsOr: ", "StatsNegate: ")):
+            raise NotImplementedError("Stats combinators are not yet implemented!")
+
+    if not reducers:
+        return result
+
+    def key_func(entry):
+        return tuple((field, entry[field]) for field in columns)
+
+    aggregated = []
+    if columns:
+        # We group by all distinct field values explicitly referenced in Columns:
+        for key, group in itertools.groupby(sorted(result, key=key_func), key=key_func):
+            for count, reducer in enumerate(reducers, start=1):
+                aggregated.append({**dict(key), f'stat_{count}': reducer(list(group))})
+    else:
+        for count, reducer in enumerate(reducers, start=1):
+            aggregated.append({f'stat_{count}': reducer(result)})
+    return aggregated
+
+
+def make_reducer_func(line: str) -> ReduceFunc:
+    """
+
+    >>> make_reducer_func("Stats: avg field")([{'field': 1}, {'field': 6}])
+    3.5
+
+    >>> make_reducer_func("Stats: field = 1")([{'field': 1}, {'field': 1}])
+    2
+
+    >>> make_reducer_func("Stats: field >= 1")([{'field': 2}, {'field': 1}])
+    2
+
+    Args:
+        line:
+
+    Returns:
+
+    """
+    # As described in https://checkmk.de/cms_livestatus_references.html#stats
+    aggregators: Dict[str, ReduceFunc] = {
+        'avg': statistics.mean,
+        'sum': sum,
+        'min': min,
+        'max': max,
+        'std': statistics.stdev,
+        'suminv': lambda x: 1 / sum(x),
+        'avginv': lambda x: 1 / statistics.mean(x),
+    }
+
+    def _reducer(_func: ReduceFunc, make_value: Callable[[ResultEntry], Any]) -> ReduceFunc:
+        def _reduce(result: List[Any]) -> Any:
+            return _func([make_value(entry) for entry in result])
+
+        return _reduce
+
+    expr = line.split("Stats: ", 1)[1]
+    parts = expr.split(None, 3)
+    if len(parts) == 2:
+        # Build a statistics function
+        func_name, field_name = parts
+        func = _reducer(aggregators[func_name], operator.itemgetter(field_name))
+    elif len(parts) == 3:
+        # Build a counting function
+        field_name, op, value = parts
+        func = _reducer(sum, _comparison_function(field_name, op, [value]))
+    else:
+        raise ValueError(f"Unknown Stats line: {line}")
+
+    return func
+
+
+def evaluate_filter(query: str, result: ResultList) -> ResultList:
     """Filter a list of dictionaries according to the filters of a LiveStatus query.
 
     The filters will be extracted from the query. And: and Or: directives are also supported.
@@ -658,7 +838,7 @@ def evaluate_filter(query: str, result: List[Dict[str, Any]]) -> List[Dict[str, 
     return [entry for entry in result if filters[0](entry)]
 
 
-def and_(filters: List[FilterFunc]) -> FilterFunc:
+def and_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
     """Combines multiple filters via a logical AND.
 
     Args:
@@ -683,7 +863,7 @@ def and_(filters: List[FilterFunc]) -> FilterFunc:
     return _and_impl
 
 
-def or_(filters: List[FilterFunc]) -> FilterFunc:
+def or_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
     """Combine multiple filters via a logical OR.
 
     Args:
@@ -708,7 +888,7 @@ def or_(filters: List[FilterFunc]) -> FilterFunc:
     return _or_impl
 
 
-COMBINATORS: Dict[str, Callable[[List[FilterFunc]], FilterFunc]] = {
+COMBINATORS: Dict[str, Callable[[List[FilterKeyFunc]], FilterKeyFunc]] = {
     'And:': and_,
     'Or:': or_,
 }
@@ -760,14 +940,14 @@ OPERATORS: Dict[str, OperatorFunc] = {
     '=': cast_down(operator.eq),
     '>': cast_down(operator.gt),
     '<': cast_down(operator.lt),
-    '>=': cast_down(operator.le),
-    '<=': cast_down(operator.ge),
+    '>=': cast_down(operator.ge),
+    '<=': cast_down(operator.le),
     '~': match_regexp,
 }
 """A dict of all implemented comparison operators."""
 
 
-def make_filter_func(line: str) -> FilterFunc:
+def make_filter_func(line: str) -> FilterKeyFunc:
     """Make a filter-function from a LiveStatus-query filter row.
 
     Args:
@@ -809,7 +989,7 @@ def make_filter_func(line: str) -> FilterFunc:
 
 
     """
-    field, op, *value = line[7:].split(None, 2)  # strip Filter: as len("Filter:") == 7
+    field_name, op, *value = line[7:].split(None, 2)  # strip Filter: as len("Filter:") == 7
     if op not in OPERATORS:
         raise ValueError(f"Operator {op!r} not implemented. Please check docs or implement.")
 
@@ -817,8 +997,41 @@ def make_filter_func(line: str) -> FilterFunc:
     if not value:
         value = ['']
 
-    def _apply_op(entry: Dict[str, Any]) -> bool:
-        return OPERATORS[op](entry[field], *value)
+    return _comparison_function(field_name, op, value)
+
+
+def _comparison_function(field_name: str, op: Operator, value: List[Any]) -> FilterKeyFunc:
+    """Create a comparison function
+
+    Examples:
+
+        >>> _comparison_function("foo", "=", ["1"])({'foo': 1})
+        True
+
+        >>> _comparison_function("foo", ">", ["1"])({'foo': 1})
+        False
+
+        >>> _comparison_function("foo", ">", ["1"])({})
+        Traceback (most recent call last):
+        ...
+        KeyError: 'foo'
+
+    Args:
+        field_name:
+            The field, to which the value shall be compared
+
+        op:
+            The operator with which to compare
+
+        value:
+            The value to compare against
+
+    Returns:
+        A function which take a dictionary and returns a boolean.
+
+    """
+    def _apply_op(entry: ResultEntry) -> bool:
+        return OPERATORS[op](entry[field_name], *value)
 
     return _apply_op
 
@@ -831,7 +1044,8 @@ def _column_of_query(query: str) -> Optional[List[str]]:
             A LiveStatus query as a string.
 
     Returns:
-        A list of column names referenced by the query.
+        A list of column names referenced by the query. This may also include generated columns
+        by Stats headers.
 
     Examples:
 

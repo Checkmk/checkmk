@@ -16,6 +16,8 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
 )
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, expr_to_tree, Table
 
+# TODO: Support Stats headers in Query() class
+
 
 class ResultRow(dict):
     """This one collects heterogenous data.

@@ -31,12 +31,13 @@ import cmk.utils.version as cmk_version
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request as global_request
 from cmk.gui.exceptions import (
-    HTTPRedirect,)
+    HTTPRedirect,
+    MKUserError,
+)
 import cmk.gui.config as config
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
-    Filename,
     FixedValue,
     ValueSpec,
     DualListChoice,
@@ -389,7 +390,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
             tarfile_path = result['tarfile_path']
             download_url = makeuri_contextless(
                 global_request,
-                [("site", site), ("tarfile_name", str(Path(tarfile_path)))],
+                [("site", site), ("tarfile_name", str(Path(tarfile_path).name))],
                 filename="download_diagnostics_dump.py",
             )
             button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
@@ -406,7 +407,6 @@ class PageDownloadDiagnosticsDump(Page):
     def page(self) -> None:
         site = html.request.get_ascii_input_mandatory("site")
         tarfile_name = html.request.get_ascii_input_mandatory("tarfile_name")
-        Filename().validate_value(tarfile_name, "tarfile_name")
         file_content = self._get_diagnostics_dump_file(site, tarfile_name)
 
         html.set_output_format("x-tgz")
@@ -431,11 +431,18 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand):
         return _get_diagnostics_dump_file(request)
 
     def get_request(self) -> str:
-        tarfile_name = html.request.get_ascii_input_mandatory("tarfile_name")
-        Filename().validate_value(tarfile_name, "tarfile_name")
-        return tarfile_name
+        return html.request.get_ascii_input_mandatory("tarfile_name")
 
 
 def _get_diagnostics_dump_file(tarfile_name: str) -> bytes:
-    with cmk.utils.paths.diagnostics_dir.joinpath(tarfile_name).open("rb") as f:
+    tarfile_path = cmk.utils.paths.diagnostics_dir.joinpath(tarfile_name)
+    _validate_diagnostics_dump_filepath(tarfile_path)
+    with tarfile_path.open("rb") as f:
         return f.read()
+
+
+def _validate_diagnostics_dump_filepath(tarfile_path: Path) -> None:
+    try:
+        tarfile_path.relative_to(cmk.utils.paths.diagnostics_dir)
+    except ValueError:
+        raise MKUserError("_diagnostics_dump_file", _("Invalid file name for tarfile_name given."))

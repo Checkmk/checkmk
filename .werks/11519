@@ -1,0 +1,12 @@
+Title: Support Diagnostics: Fix validation of diagnostics tar file name if downloading from remote site
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1607360936
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b2
+
+

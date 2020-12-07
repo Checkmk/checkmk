@@ -380,8 +380,9 @@ def _set_cluster_property(
     inventory_tree: StructuredDataTree,
     host_config: config.HostConfig,
 ) -> None:
-    inventory_tree.get_dict(
-        "software.applications.check_mk.cluster.")["is_cluster"] = host_config.is_cluster
+    if host_config.is_cluster:
+        inventory_tree.get_dict(
+            "software.applications.check_mk.cluster.")["is_cluster"] = host_config.is_cluster
 
 
 class _TreeAggregator:

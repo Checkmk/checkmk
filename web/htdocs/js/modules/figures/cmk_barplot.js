@@ -25,6 +25,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
     initialize() {
         this.svg = this._div_selection.append("svg").classed("renderer", true);
         this.plot = this.svg.append("g");
+        this.bars = this.plot.append("g").classed("bars", true);
 
         // X axis
         this.scale_x = d3.scaleLinear();
@@ -77,6 +78,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
         let data = this._data;
         this.render_title(data.title);
         this._update_plot_definitions(data.plot_definitions || []);
+        if (data.plot_definitions.length == 0) return;
         this._crossfilter.remove(() => true);
         this._time_dimension.filterAll();
         this._crossfilter.add(data.data);
@@ -92,7 +94,8 @@ class BarplotFigure extends cmk_figures.FigureBase {
             .selectAll("g.y_axis")
             .classed("axis", true)
             .call(d3.axisRight(this.scale_y))
-            .selectAll("text");
+            .selectAll("text")
+            .attr("transform", `translate(0,${-this.scale_y.bandwidth() / 2})`);
 
         let used_tags = this._plot_definitions.map(d => d.use_tags[0]);
         let points = this._tag_dimension.filter(d => used_tags.includes(d)).top(Infinity);
@@ -110,44 +113,35 @@ class BarplotFigure extends cmk_figures.FigureBase {
             );
 
         this.render_grid();
-
-        this._render_bar_containers();
         this._render_values(domain);
+
         let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
         if (!plot) return;
         cmk_figures.state_component(this, plot.svc_state);
     }
 
-    _render_bar_containers() {
-        this.plot
-            .selectAll("g.bar")
-            .data(this._plot_definitions, d => d.id)
-            .join(enter => enter.append("g").classed("bar", true))
-            .attr("transform", d => "translate(0, " + (this.scale_y(d.label) + 24) + ")");
-    }
-
     _render_values(domain) {
-        this.plot
-            .selectAll("g.bar")
-            .selectAll("rect.value")
-            .data(d => {
-                let point = this._tag_dimension.filter(tag => tag == d.use_tags[0]).top(1)[0];
-                if (point === undefined) point = {value: 0};
+        const points = this._plot_definitions.map(d => {
+            let point = this._tag_dimension.filter(tag => tag == d.use_tags[0]).top(1)[0];
+            if (point === undefined) point = {value: 0};
 
-                const levels = cmk_figures.make_levels(domain, d.metrics);
-                point.level_color = levels.length
-                    ? levels.find(element => point.value < element.to).color
-                    : "#3CC2FF";
-                return [point];
-            })
-            .join(enter =>
-                enter
-                    .append("rect")
-                    .classed("value", true)
-                    .attr("height", 4)
-                    .attr("width", d => this.scale_x(d.value))
-            )
-            .transition()
+            const levels = cmk_figures.make_levels(domain, d.metrics);
+            point.level_color = levels.length
+                ? levels.find(element => point.value < element.to).color
+                : "#3CC2FF";
+            return {...d, ...point};
+        });
+        this.bars
+            .selectAll("a")
+            .data(points, d => d.id)
+            .join("a")
+            .attr("xlink:href", d => d.url)
+            .selectAll("rect.value")
+            .data(d => [d])
+            .join("rect")
+            .classed("value", true)
+            .attr("y", d => this.scale_y(d.label) + 6) // 6 is half the default font size. Thus bar stays bellow text
+            .attr("height", 4)
             .attr("width", d => this.scale_x(d.value))
             .attr("fill", d => d.level_color);
 

@@ -408,7 +408,7 @@ div.dashlet.edit {
       padding: 2px 6px;
       color: #172127;
       text-align: center;
-      background-color: $dashlet-editor-active;
+      background-color: $success;
       border-radius: 12px;
 
       &.drag_image {
@@ -427,7 +427,7 @@ div.dashlet.edit {
       border-right: $dashlet-anchor-size solid transparent;
 
       &.on {
-        border-top: $dashlet-anchor-on-size solid $dashlet-editor-active;
+        border-top: $dashlet-anchor-on-size solid $success;
         border-right: $dashlet-anchor-on-size solid transparent;
 
         & div {
@@ -449,7 +449,7 @@ div.dashlet.edit {
       border-left: $dashlet-anchor-size solid transparent;
 
       &.on {
-        border-top: $dashlet-anchor-on-size solid $dashlet-editor-active;
+        border-top: $dashlet-anchor-on-size solid $success;
         border-left: $dashlet-anchor-on-size solid transparent;
 
         & div {
@@ -471,7 +471,7 @@ div.dashlet.edit {
       border-left: $dashlet-anchor-size solid transparent;
 
       &.on {
-        border-bottom: $dashlet-anchor-on-size solid $dashlet-editor-active;
+        border-bottom: $dashlet-anchor-on-size solid $success;
         border-left: $dashlet-anchor-on-size solid transparent;
 
         & div {
@@ -493,7 +493,7 @@ div.dashlet.edit {
 
       &.on {
         border-right: $dashlet-anchor-on-size solid transparent;
-        border-bottom: $dashlet-anchor-on-size solid $dashlet-editor-active;
+        border-bottom: $dashlet-anchor-on-size solid $success;
 
         & div {
           left: $dashlet-anchor-size;

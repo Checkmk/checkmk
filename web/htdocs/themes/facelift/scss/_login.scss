@@ -120,7 +120,7 @@ body.login {
     padding: 8px 16px;
     margin: 0;
     font-weight: $font-weight-bold;
-    border-color: rgb(19, 211, 137);
+    border-color: $success;
   }
 
   #login_error {

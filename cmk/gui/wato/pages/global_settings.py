@@ -264,9 +264,11 @@ class ABCEditGlobalSettingMode(WatoMode):
                            domains=[self._config_variable.domain()],
                            need_restart=self._config_variable.need_restart())
 
-        page_menu = self.parent_mode()
-        assert page_menu is not None
-        return redirect(mode_url(page_menu.name()))
+        return redirect(self._back_url())
+
+    @abc.abstractmethod
+    def _back_url(self) -> str:
+        raise NotImplementedError()
 
     def _save(self):
         watolib.save_global_settings(self._current_settings)
@@ -457,6 +459,9 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
     def _affected_sites(self):
         return None  # All sites
+
+    def _back_url(self) -> str:
+        return ModeEditGlobals.mode_url()
 
 
 def is_a_checkbox(vs):

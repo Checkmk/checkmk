@@ -2492,6 +2492,9 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     def _affected_sites(self):
         return _get_event_console_sync_sites()
 
+    def _back_url(self) -> str:
+        return ModeEventConsoleSettings.mode_url()
+
 
 def _get_event_console_sync_sites():
     """Returns a list of site ids which gets the Event Console configuration replicated"""

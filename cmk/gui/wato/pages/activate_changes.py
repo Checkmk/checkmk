@@ -385,7 +385,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
                 if config.user.may("wato.sites"):
                     edit_url = watolib.folder_preserving_link([("mode", "edit_site"),
-                                                               ("edit", site_id)])
+                                                               ("site", site_id)])
                     html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
 
                 # State

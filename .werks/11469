@@ -1,0 +1,14 @@
+Title: Windows agent removes legacy agent on install if this is requested by WATO
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607329437
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.0.0b2
+
+Previously, Windows agent tried to remove the legacy agent too early, i.e. before full config file from WATO
+had been deployed in the target system, thus ignoring the rule "Remove legacy agent".
+
+With this release the error has been fixed.

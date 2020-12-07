@@ -1,12 +1,13 @@
 Title: ec: Make filter for rule packs able to match "text to match"
-Class: feature
-Compatible: compat
-Component: ec
-Date: 1607349199
-Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Component: ec
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1607349199
 
 Until now it was only possible to search for the field "text to match"
 inside of a rule pack. This is now possible in rule packs, too.

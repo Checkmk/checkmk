@@ -1,0 +1,15 @@
+Title: Remove quicksearch as default sidebar snapin
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1607341277
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b2
+
+The sidebar snapin "Quicksearch" was removed as default sidebar snapin for new
+installations.
+
+If you update to 2.0 from an older checkmk version and never edited the sidebar
+you have to add the snapin manually if needed.

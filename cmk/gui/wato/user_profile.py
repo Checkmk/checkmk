@@ -24,7 +24,8 @@ from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
-from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.exceptions import (HTTPRedirect, MKUserError, MKGeneralException, MKAuthException,
+                                FinalizeRequest)
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html
 from cmk.gui.pages import page_registry, AjaxPage, Page
@@ -479,7 +480,9 @@ class UserProfile(ABCUserProfilePage):
         if profile_changed:
             flash(_("Successfully updated user profile."))
             # Ensure theme changes are applied without additional user interaction
-            html.reload_whole_page()
+            html.reload_whole_page("index.py?start_url=user_profile.py")
+            html.footer()
+            raise FinalizeRequest(code=200)
 
         if html.has_user_errors():
             html.show_user_errors()

@@ -1,0 +1,12 @@
+Title: Fix popup after editing user profile
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1607328316
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+Instead of showing the edit user profile dialog again after editing, the
+browser showed up a popup dialog asking for resubmitting the form.

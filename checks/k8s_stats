@@ -85,6 +85,8 @@ def k8s_network_err_pac(device, params, now):
 
 def check_k8s_stats_network(item, params, parsed):
     metrics, _ = parsed
+    if not metrics.get('network'):
+        return
 
     device = sum([
         collections.Counter(device)
@@ -119,6 +121,8 @@ def check_k8s_stats_network(item, params, parsed):
 
 def check_k8s_stats_fs(item, params, parsed):
     metrics, _ = parsed
+    if not metrics.get('filesystem'):
+        return
 
     disk = sum([
         collections.Counter(device)

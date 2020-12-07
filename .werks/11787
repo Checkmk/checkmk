@@ -1,0 +1,15 @@
+Title: Kubernetes: add support for newer versions
+Knowledge: doc
+Level: 2
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1607330396
+
+This werk adds support for new versions of Kubernetes.
+Filesystem and interface check plugins are not available
+at the moment and will result in vanished services. We
+are working on an alternative solution to fix this issue.

@@ -20,20 +20,6 @@
 #include "fmt/color.h"
 #include "tools/_xlog.h"
 
-// User defined converter required to logging correctly data from wstring
-template <>
-struct fmt::formatter<std::wstring> {
-    template <typename ParseContext>
-    constexpr auto parse(ParseContext& ctx) {
-        return ctx.begin();
-    }
-
-    template <typename FormatContext>
-    auto format(const std::wstring& Ws, FormatContext& ctx) {
-        return format_to(ctx.out(), "{}", wtools::ConvertToUTF8(Ws));
-    }
-};
-
 // #TODO put it into internal/details
 // support for windows event log
 // implementation according to MSDN

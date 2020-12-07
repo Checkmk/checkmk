@@ -19,6 +19,7 @@
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
 #include "firewall.h"
+#include "fmt/color.h"
 #include "install_api.h"  // install
 #include "modules.h"
 #include "realtime.h"
@@ -575,71 +576,98 @@ int ExecVersion() {
     return 0;
 }
 
+namespace {
+// business Logic settings. Requested by Tickets:
 constexpr bool g_use_colored_output_for_agent_updater = false;
+constexpr bool g_duplicate_updater_output_on_stdio = false;
+
+//
+// NOTE: again, business logic... Probably we have to test this in Unit(easy,
+// but public)/Integration(difficult but private) Tests.
+//
+void ModifyStdio(bool yes) {
+    if (g_use_colored_output_for_agent_updater)
+        XLOG::setup::ColoredOutputOnStdio(yes);
+    if (g_duplicate_updater_output_on_stdio) XLOG::setup::DuplicateOnStdio(yes);
+}
+
+void ReportNoPluginDir(const std::filesystem::path& dir) {
+    XLOG::l.e("Plugins directory '{}' not found", dir);
+    XLOG::SendStringToStdio(
+        fmt::format("\n\tPlugins directory '{}' not found.\n"
+                    "\tWindows agent's installation may be absent or damaged\n",
+                    dir),
+        XLOG::Colors::white);
+}
+
+void ReportNoUpdaterFile(const std::filesystem::path& f,
+                         std::wstring_view param) {
+    XLOG::l.w("Agent Updater File '{}' not found", f);
+    XLOG::SendStringToStdio(
+        fmt::format(
+            "\n\tYou must install Agent Updater Python plugin to use the command '{}'.\n"
+            "\tTo install the plugin you may use the Bakery.\n"
+            "\tAnother possibility is copy Agent Updater file manually into the plugins directory\n",
+            wtools::ConvertToUTF8(param)),
+        XLOG::Colors::white);
+}
+
+void ReportNoPythonModule(std::wstring_view param) {
+    XLOG::l.e("Python Module is not installed");
+
+    XLOG::SendStringToStdio(
+        fmt::format(
+            "\n\tYou must install Python Module to use the command '{}'.\n"
+            "\tTo install Python Module you should use Bakery.\n",
+            wtools::ConvertToUTF8(param)),
+        XLOG::Colors::white);
+}
+
+}  // namespace
 
 // params is a list of valid cmk-agent-updater commands
 // update -v for example
 int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
     namespace fs = std::filesystem;
 
-    if (g_use_colored_output_for_agent_updater)
-        XLOG::setup::ColoredOutputOnStdio(true);
-    XLOG::setup::DuplicateOnStdio(true);
+    ModifyStdio(true);
 
-    // find agent updater
-    fs::path dir{cma::cfg::GetUserPluginsDir()};
-    if (!fs::exists(dir)) {
-        XLOG::l.e("Plugins directory '{}' not found", dir);
-        return 1;
-    }
-    auto f = dir / cma::cfg::files::kAgentUpdaterPython;
-    if (!fs::exists(f)) {
-        XLOG::l.w("Agent Updater File '{}' not found", f);
-        XLOG::SendStringToStdio(
-            fmt::format(
-                "\n\tYou must install Agent Updater Python plugin to use the command '{}'.\n"
-                "\tTo install the plugin you may use the Bakery.\n"
-                "\tAnother possibility is copy Agent Updater file manually into the plugins directory\n",
-                wtools::ConvertToUTF8(params[0])),
-            XLOG::Colors::white);
+    fs::path plugins_dir{cma::cfg::GetUserPluginsDir()};
+    if (!fs::exists(plugins_dir)) {
+        ReportNoPluginDir(plugins_dir);
         return 1;
     }
 
-    // find module
+    auto updater_file = plugins_dir / cma::cfg::files::kAgentUpdaterPython;
+    if (!fs::exists(updater_file)) {
+        ReportNoUpdaterFile(updater_file, params[0]);
+        return 1;
+    }
+
     cma::cfg::modules::ModuleCommander mc;
     mc.LoadDefault();
-    auto to_run = mc.buildCommandLine(f.u8string());
-    if (to_run.empty()) {
-        XLOG::l.e("Python Module to execute '{}' is not installed", f);
-
-        XLOG::SendStringToStdio(
-            fmt::format(
-                "\n\tYou must install Python Module to use the command '{}'.\n"
-                "\tTo install Python Module you should use Bakery.\n",
-                wtools::ConvertToUTF8(params[0])),
-            XLOG::Colors::white);
+    auto command_to_run = mc.buildCommandLine(updater_file.u8string());
+    if (command_to_run.empty()) {
+        ReportNoPythonModule(params[0]);
         return 1;
     }
 
-    // run cmk-agent-updater
-    for (auto& p : params) to_run += L" " + p;
+    for (auto& p : params) command_to_run += L" " + p;
 
     cma::cfg::SetupPluginEnvironment();
 
-    if (g_use_colored_output_for_agent_updater)
-        XLOG::setup::ColoredOutputOnStdio(false);
-    XLOG::setup::DuplicateOnStdio(false);
-    auto proc_id = cma::tools::RunStdCommand(to_run, true);
-    if (g_use_colored_output_for_agent_updater)
-        XLOG::setup::ColoredOutputOnStdio(true);
-    XLOG::setup::DuplicateOnStdio(true);
+    ModifyStdio(false);
+    auto proc_id = cma::tools::RunStdCommand(command_to_run, true);
+    ModifyStdio(true);
+
     if (proc_id > 0) {
         XLOG::l.i("Agent Updater process [{}] started\n", proc_id);
         return 0;
     }
 
-    XLOG::l("Agent Updater process failed to start\n", proc_id);
-    return 0;
+    XLOG::l("Agent Updater process '{}' failed to start\n",
+            wtools::ConvertToUTF8(command_to_run));
+    return 1;
 }
 
 // on -cap

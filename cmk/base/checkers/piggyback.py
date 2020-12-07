@@ -59,10 +59,11 @@ class PiggybackSource(AgentSource):
     def _make_summarizer(self) -> "PiggybackSummarizer":
         return PiggybackSummarizer(
             self.exit_spec,
-            self.hostname,
-            self.ipaddress,
-            self.time_settings,
-            self.host_config,
+            hostname=self.hostname,
+            ipaddress=self.ipaddress,
+            time_settings=self.time_settings,
+            # Tag: 'Always use and expect piggback data'
+            always='piggyback' in self.host_config.tags,
         )
 
     @staticmethod
@@ -74,16 +75,17 @@ class PiggybackSummarizer(AgentSummarizer):
     def __init__(
         self,
         exit_spec: config.ExitSpec,
+        *,
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
-        host_config: config.HostConfig,
+        always: bool,
     ) -> None:
         super().__init__(exit_spec)
         self.hostname = hostname
         self.ipaddress = ipaddress
         self.time_settings = time_settings
-        self._host_config = host_config
+        self.always = always
 
     def summarize_success(
         self,
@@ -101,8 +103,7 @@ class PiggybackSummarizer(AgentSummarizer):
             return 0, '', []
 
         summary = self._summarize_impl()
-        if 'piggyback' in self._host_config.tags and not summary:
-            # Tag: 'Always use and expect piggback data'
+        if self.always and not summary:
             return 1, 'Missing data', []
 
         if not host_sections:

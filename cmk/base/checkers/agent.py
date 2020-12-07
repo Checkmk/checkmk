@@ -8,7 +8,7 @@ import abc
 import logging
 import time
 from pathlib import Path
-from typing import cast, Dict, Final, Iterable, List, MutableSet, NamedTuple, Optional, Tuple
+from typing import cast, Dict, Final, Iterable, List, MutableSet, NamedTuple, Optional, Tuple, Union
 
 from six import ensure_binary, ensure_str
 
@@ -132,10 +132,15 @@ class AgentSummarizerDefault(AgentSummarizer):
     def __init__(
         self,
         exit_spec: config.ExitSpec,
-        host_config: config.HostConfig,
+        *,
+        is_cluster: bool,
+        agent_target_version: config.AgentTargetVersion,
+        only_from: Union[None, List[str], str],
     ) -> None:
         super().__init__(exit_spec)
-        self._host_config = host_config
+        self._is_cluster = is_cluster
+        self._agent_target_version = agent_target_version
+        self._only_from = only_from
 
     def summarize_success(
         self,
@@ -160,10 +165,10 @@ class AgentSummarizerDefault(AgentSummarizer):
         status: ServiceState = 0
         output: List[ServiceDetails] = []
         perfdata: List[MetricTuple] = []
-        if not self._host_config.is_cluster and agent_version is not None:
+        if not self._is_cluster and agent_version is not None:
             output.append("Version: %s" % agent_version)
 
-        if not self._host_config.is_cluster and agent_info["agentos"] is not None:
+        if not self._is_cluster and agent_info["agentos"] is not None:
             output.append("OS: %s" % agent_info["agentos"])
 
         if mode is Mode.CHECKING and cmk_section:
@@ -198,7 +203,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         agent_info: Dict[str, Optional[str]],
     ) -> Optional[ServiceCheckResult]:
         agent_version = str(agent_info["version"])
-        expected_version = self._host_config.agent_target_version
+        expected_version = self._agent_target_version
 
         if expected_version and agent_version \
              and not AgentSummarizerDefault._is_expected_agent_version(agent_version, expected_version):
@@ -238,7 +243,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         if agent_only_from is None:
             return None
 
-        config_only_from = self._host_config.only_from
+        config_only_from = self._only_from
         if config_only_from is None:
             return None
 

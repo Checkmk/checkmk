@@ -214,7 +214,13 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
 
 class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
-    """Class to summarize parsed data into a ServiceCheckResult."""
+    """Class to summarize parsed data into a ServiceCheckResult.
+
+    Note:
+        It is forbidden to add base dependencies to classes
+        that derive this class.
+
+    """
     def __init__(self, exit_spec: config.ExitSpec) -> None:
         super().__init__()
         self.exit_spec: Final[config.ExitSpec] = exit_spec

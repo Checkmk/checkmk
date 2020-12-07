@@ -22,7 +22,6 @@ from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
 from cmk.fetchers.cache import PersistedSections, SectionStore
 
-import cmk.base.config as config
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer, HostSectionParser
 from cmk.base.checkers.type_defs import NO_SELECTION
@@ -62,7 +61,7 @@ class TestParser:
 
     @pytest.fixture
     def parser(self, hostname, store, logger):
-        return AgentParser(hostname, store, logger)
+        return AgentParser(hostname, store, 0, logger)
 
     @pytest.mark.usefixtures("scenario")
     def test_missing_host_header(self, parser):
@@ -131,7 +130,7 @@ class TestParser:
     def test_piggyback_populates_piggyback_raw_data(self, parser, monkeypatch):
         time_time = 1000
         monkeypatch.setattr(time, "time", lambda: time_time)
-        monkeypatch.setattr(config.HostConfig, "check_mk_check_interval", 10)
+        monkeypatch.setattr(parser, "check_interval", 10)
 
         raw_data = AgentRawData(b"\n".join((
             b"<<<<piggyback header>>>>",  # <- space is OK

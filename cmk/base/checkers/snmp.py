@@ -7,7 +7,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import Dict, Final, Optional, Set
+from typing import Dict, Final, Mapping, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -182,6 +182,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         }
 
     def _make_parser(self) -> "SNMPParser":
+        host_config = config.HostConfig.make_host_config(self.hostname)
         return SNMPParser(
             self.hostname,
             SectionStore[SNMPRawDataSection](
@@ -189,7 +190,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                 keep_outdated=self.use_outdated_persisted_sections,
                 logger=self._logger,
             ),
-            self._logger,
+            check_intervals={
+                section_name: host_config.snmp_fetch_interval(section_name)
+                for section_name in self._make_checking_sections()
+            },
+            logger=self._logger,
         )
 
     def _make_summarizer(self) -> "SNMPSummarizer":
@@ -248,16 +253,22 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
 
 
 class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
-    """A parser for SNMP data."""
+    """A parser for SNMP data.
+
+    Note:
+        It is forbidden to add base dependencies to this class.
+
+    """
     def __init__(
         self,
         hostname: HostName,
         section_store: SectionStore[SNMPRawDataSection],
+        check_intervals: Mapping[SectionName, Optional[int]],
         logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
-        self.host_config: Final = config.HostConfig.make_host_config(self.hostname)
+        self.check_intervals: Final = check_intervals
         self.section_store: Final = section_store
         self._logger = logger
 
@@ -270,7 +281,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         cached_at = int(time.time())
 
         def fetch_interval(section_name: SectionName) -> Optional[int]:
-            fetch_interval = self.host_config.snmp_fetch_interval(section_name)
+            fetch_interval = self.check_intervals.get(section_name)
             if fetch_interval is None:
                 return fetch_interval
             return cached_at + fetch_interval * 60

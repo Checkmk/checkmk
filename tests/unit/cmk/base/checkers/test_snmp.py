@@ -6,6 +6,7 @@
 
 import logging
 import time
+from collections import defaultdict
 
 import pytest  # type: ignore[import]
 
@@ -39,6 +40,7 @@ class TestSNMPParser:
                 keep_outdated=True,
                 logger=logging.Logger("test"),
             ),
+            {},
             logging.Logger("test"),
         )
 
@@ -67,11 +69,7 @@ class TestSNMPParser:
 
     def test_with_persisted_sections(self, parser, sections, monkeypatch):
         monkeypatch.setattr(time, "time", lambda: 1000)
-        monkeypatch.setattr(
-            parser.host_config,
-            "snmp_fetch_interval",
-            lambda section_name: 33,
-        )
+        monkeypatch.setattr(parser, "check_intervals", defaultdict(lambda: 33))
         monkeypatch.setattr(
             SectionStore, "load", lambda self: PersistedSections({
                 SectionName("persisted"): (42, 69, [["content"]]),

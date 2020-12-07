@@ -110,6 +110,7 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
         self.main_data_source: Final[bool] = main_data_source
 
     def _make_parser(self) -> "AgentParser":
+        check_interval = config.HostConfig.make_host_config(self.hostname).check_mk_check_interval
         return AgentParser(
             self.hostname,
             SectionStore[AgentRawDataSection](
@@ -117,7 +118,8 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
                 keep_outdated=self.use_outdated_persisted_sections,
                 logger=self._logger,
             ),
-            self._logger,
+            check_interval=check_interval,
+            logger=self._logger,
         )
 
 
@@ -593,16 +595,22 @@ class HostSectionParser(ParserState):
 
 
 class AgentParser(Parser[AgentRawData, AgentHostSections]):
-    """A parser for agent data."""
+    """A parser for agent data.
+
+    Note:
+        It is forbidden to add base dependencies to this class.
+
+    """
     def __init__(
         self,
         hostname: HostName,
         section_store: SectionStore[AgentRawDataSection],
+        check_interval: int,
         logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
-        self.host_config: Final = config.HostConfig.make_host_config(self.hostname)
+        self.check_interval: Final = check_interval
         self.section_store: Final = section_store
         self._logger = logger
 
@@ -620,7 +628,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         cached_at = int(time.time())
         # Transform to seconds and give the piggybacked host a little bit more time
-        cache_age = int(1.5 * 60 * self.host_config.check_mk_check_interval)
+        cache_age = int(1.5 * 60 * self.check_interval)
         host_sections.cache_info.update({
             header.name: cast(Tuple[int, int], header.cache_info(cached_at))
             for header in parser.section_info

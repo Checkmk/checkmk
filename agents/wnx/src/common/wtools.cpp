@@ -460,8 +460,6 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
         // Tell SCM that the service is started.
         setServiceStatus(SERVICE_RUNNING);
 
-        cma::cfg::rm_lwa::Execute();
-
     } catch (DWORD dwError) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,

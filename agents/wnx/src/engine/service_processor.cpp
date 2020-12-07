@@ -30,6 +30,11 @@ void ServiceProcessor::startService() {
         return;
     }
 
+    // service must reload config, because service may reconfigure itself
+    cma::ReloadConfig();
+
+    cma::cfg::rm_lwa::Execute();
+
     thread_ = std::thread(&ServiceProcessor::mainThread, this, &external_port_);
 
     XLOG::l.t("Successful start of thread");
@@ -231,20 +236,6 @@ void ServiceProcessor::preLoadConfig() {
                                            cma::cfg::vars::kPluginsExecution);
     std::vector<Plugins::ExeUnit> exe_units;
     cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-}
-
-static void ReloadConfigInServiceMode() {
-    // service may install cap, install ini or upgrade installation and
-    // continue to work, config must be reloaded
-    auto app_type = AppDefaultType();
-    if (app_type == AppType::srv) {
-        XLOG::l.i("Reloading config for SERVICE is required");
-        cma::ReloadConfig();  // service on start
-        return;
-    }
-
-    XLOG::l.i("Reloading config for application type [{}] is NOT required",
-              static_cast<int>(app_type));
 }
 
 void ServiceProcessor::preStartBinaries() {
@@ -570,7 +561,6 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
         // preparation if any
-        ReloadConfigInServiceMode();
         preStartBinaries();
         // *******************
 

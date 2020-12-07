@@ -493,7 +493,7 @@ logging () {
         local header=
         local to_stderr=false
 
-        let i=0
+        i=0
         while test -n "$1"; do
             case "$1" in
                 -o)
@@ -2531,7 +2531,7 @@ mk_ora_db_connect () {
     DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4+offset)))
     DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5+offset)))
 
-    if [ -f $OLRLOC ] && [ ! -z "$crs_home" ] ; then
+    if [ -f $OLRLOC ] && [ -n "$crs_home" ] ; then
         if [ -d "$crs_home" ] ; then
             # we found GI/Restart
             # => Use hostname instead of localhost
@@ -2546,7 +2546,7 @@ mk_ora_db_connect () {
         logging "[${sid}] [mk_ora_db_connect]" "Single Instance"
     fi
 
-    if [ ! -z "$CFGTNSALIAS" ] ; then
+    if [ -n "$CFGTNSALIAS" ] ; then
         logging "[${sid}] [mk_ora_db_connect]" "TNS CFGTNSALIAS: $CFGTNSALIAS"
     fi
 

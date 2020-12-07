@@ -366,7 +366,7 @@ export function time() {
 
 export function reload_whole_page(url) {
     if (url) {
-        window.top.location = url;
+        window.top.location = "index.py?start_url=" + encodeURIComponent(url);
     } else {
         window.top.location.reload();
     }

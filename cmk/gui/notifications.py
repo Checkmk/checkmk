@@ -183,7 +183,7 @@ def page_clear():
         if config.user.authorized_login_sites():
             # This local import is needed for the moment
             import cmk.gui.wato.user_profile  # pylint: disable=redefined-outer-name
-            cmk.gui.wato.user_profile.user_profile_async_replication_page()
+            cmk.gui.wato.user_profile.user_profile_async_replication_page(back_url=prev_url)
             return
 
     failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())

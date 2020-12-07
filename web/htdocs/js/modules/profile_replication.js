@@ -6,10 +6,12 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 
 var g_num_replsites = 0;
+var g_back_url = "";
 var profile_replication_progress = {};
 
-export function prepare(num) {
+export function prepare(num, back_url) {
     g_num_replsites = num;
+    g_back_url = back_url;
 }
 
 export function start(siteid, est, progress_text) {
@@ -87,5 +89,5 @@ function set_result(site_id, success, msg) {
 
 function finish() {
     // check if we have a sidebar-main frame setup
-    if (this.parent && parent && parent.frames[0] == this) utils.reload_whole_page();
+    if (this.parent && parent && parent.frames[0] == this) utils.reload_whole_page(g_back_url);
 }

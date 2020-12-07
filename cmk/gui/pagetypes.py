@@ -1302,7 +1302,7 @@ class Overridable(Base):
                 # or not to reload the sidebar.
                 if (not page_dict.get("hidden") or
                         new_page_dict.get("hidden") != page_dict.get("hidden")):
-                    html.reload_whole_page("index.py?start_url=%s" % redirect_url)
+                    html.reload_whole_page(redirect_url)
 
         else:
             html.show_localization_hint()

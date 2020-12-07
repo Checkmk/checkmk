@@ -1030,7 +1030,7 @@ def page_edit_visual(what,
                     save(what, all_visuals, owner_user_id)
 
                 flash(_('Your %s has been saved.') % visual_type.title)
-                html.reload_whole_page("index.py?start_url=%s" % back_url)
+                html.reload_whole_page(back_url)
                 html.footer()
                 return
 

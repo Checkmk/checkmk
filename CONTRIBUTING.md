@@ -280,32 +280,41 @@ content changes.
 [Zen of Python](https://www.python.org/dev/peps/pep-0020/).
 
 Checkmk is mostly written in Python. At the moment the most of the code base is
-using Python 3.7.
+using Python 3.8.
 
 Only rely on non-standard modules that are mentioned in the `Pipfile`.
 <!--- TODO: How to add new modules? -->
 
 ### Agent plugins: Supported Python versions
 
-The agent plugins are however available Python 2 compatible. These Python 2
-variants (.py2 ending in agents/plugins) will (in the future) be generated
-automatically from the Python 3 scripts, so no Python 2 script needs to be
-programmed.
+The agent plugins are also written for Python 3, but have to be compatible with
+Python 3.4 or newer. Since they are executed in various Python environments on
+the monitored hosts, they should have as small dependencies as possible. Best is
+to only rely on vanilla Python without 3rd party modules.
 
-The Python 2 compatible plugins are compatible with Python 2.5 up to 2.7.
+Use `#!/usr/bin/env python3` as shebang.
 
-Python plugins that are incompatible to 2.5, for example because some 3rd party
-library is not available with 2.5, need to be syntax compatible with 2.5 for the
-moment, but are allowed to terminate with a helpful error message about this
-incompatibility.
+Besides the Python 3 variant, the agent plugins are also available for Python 2.
+These Python 2 variants (`_2.py` ending in `agents/plugins`) are generated
+automatically from the Python 3 scripts while packaging Checkmk. So no Python 2
+script needs to be programmed. The Python 2 files are named `[plugin]_2.py`.
+Have a look at `agents/plugins/Makefile` to see how we generate them.
 
-Use `#!/usr/bin/env python` as shebang.
+The agent is automatically dealing with Python 2 and 3 plugins and environments
+if possible.  If a `.py` file is found and a `python3` greater than or equal to
+Python 3.4 is in the `PATH`, then this plugin is used.  If `_2.py` file is found
+and there is a `python2` or `python` in the `PATH`, then this is used. It is
+ensured that no plugin is executed in two versions.
 
-Completely new plugins should be written to be compatible with Python 2.7 and
-Python 3.
+Agent plugins are executed on monitored systems. Here we can not rely on the
+presence of certain modules. The agent plugin + Check-Plugin must transport a
+clean message to the user in the GUI, if a dependency is missing (see e.g.
+Docker plugin).
 
-In case you want to explicitly create a Python 3 agent plugin, use
-`#!/usr/bin/env python3` as shebang.
+For new plugins it is okay to use special dependencies, e.g. API bindings.  But
+we have to take older Python versions and incompatibilities into account and
+produce error agent sections + error messages that tell the user about this
+issue.
 
 ### Imports
 

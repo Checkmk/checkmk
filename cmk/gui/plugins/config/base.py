@@ -60,7 +60,6 @@ multisite_contactgroups: _Dict = {}
 
 sidebar = [
     ('tactical_overview', 'open'),
-    ('search', 'open'),
     ('bookmarks', 'open'),
     ('master_control', 'closed'),
 ]

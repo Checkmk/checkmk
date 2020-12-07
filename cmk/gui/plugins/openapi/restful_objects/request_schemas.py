@@ -872,6 +872,36 @@ class CreateServiceRelatedDowntime(OneOfSchema):
     }
 
 
+class DeleteDowntimeBase(BaseSchema):
+    delete_type = fields.String(
+        required=True,
+        description="The option how to delete a downtime.",
+        enum=['params', 'query'],
+        example="params",
+    )
+
+
+class DeleteParamDowntime(DeleteDowntimeBase):
+    downtime_id = fields.String(
+        description='The id of the downtime',
+        example='54',
+        required=True,
+    )
+
+
+class DeleteQueryDowntime(DeleteDowntimeBase):
+    query = QUERY
+
+
+class DeleteDowntime(OneOfSchema):
+    type_field = 'delete_type'
+    type_field_remove = False
+    type_schemas = {
+        'params': DeleteParamDowntime,
+        'query': DeleteQueryDowntime,
+    }
+
+
 class PasswordIdent(fields.String):
     """A field representing a password identifier"""
 

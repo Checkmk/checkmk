@@ -14,15 +14,13 @@ You can find an introduction to downtimes in the
 """
 
 import json
-import http.client
 import datetime as dt
-from typing import Dict, Literal
+from typing import Literal
 
 from cmk.gui import config, sites
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands import downtimes as downtime_commands
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, tree_to_expr
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -32,11 +30,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, SERVICE_DESCRIPTION, QUERY
-from cmk.gui.plugins.openapi.utils import problem, ProblemException
-from cmk.gui.watolib.downtime import (
-    execute_livestatus_command,
-    remove_downtime_command,
-)
+from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.utils import BaseSchema
 
 DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query',
@@ -206,62 +200,25 @@ def show_downtimes(param):
     return _serve_downtimes(gen_downtimes)
 
 
-@Endpoint('/objects/host/{host_name}/objects/downtime/{downtime_id}',
+@Endpoint(constructors.domain_type_action_href('downtime', 'delete'),
           '.../delete',
-          method='delete',
+          method='post',
           tag_group='Monitoring',
-          path_params=[
-              HOST_NAME,
-              {
-                  'downtime_id': fields.String(
-                      description='The id of the downtime',
-                      example='54',
-                      required=True,
-                  ),
-              },
-          ],
+          request_schema=request_schemas.DeleteDowntime,
           output_empty=True)
 def delete_downtime(params):
     """Delete a scheduled downtime"""
-    is_service = Query(
-        [Downtimes.is_service],
-        Downtimes.id.contains(params['downtime_id']),
-    ).value(sites.live())
-    downtime_type = "SVC" if is_service else "HOST"
-    command_delete = remove_downtime_command(downtime_type, params['downtime_id'])
-    execute_livestatus_command(command_delete, params['host_name'])
-    return Response(status=204)
-
-
-@Endpoint(constructors.domain_type_action_href('downtime', 'bulk-delete'),
-          '.../delete',
-          method='delete',
-          request_schema=request_schemas.BulkDeleteDowntime,
-          output_empty=True)
-def bulk_delete_downtimes(params):
-    """Bulk delete downtimes"""
+    body = params['body']
     live = sites.live()
-    entries = params['entries']
-    not_found = []
-
-    downtimes: Dict[int, int] = Query(
-        [Downtimes.id, Downtimes.is_service],
-        And(*[Downtimes.id.equals(downtime_id) for downtime_id in entries]),
-    ).to_dict(live)
-
-    for downtime_id in entries:
-        if downtime_id not in downtimes:
-            not_found.append(downtime_id)
-
-    if not_found:
-        raise ProblemException(404, http.client.responses[400],
-                               f"Downtimes {', '.join(not_found)} not found")
-
-    for downtime_id, is_service in downtimes.items():
-        if is_service:
-            downtime_commands.del_service_downtime(live, downtime_id)
-        else:
-            downtime_commands.del_host_downtime(live, downtime_id)
+    delete_type = body['delete_type']
+    if delete_type == "query":
+        downtime_commands.delete_downtime_with_query(live, body['query'])
+    elif delete_type == "params":
+        downtime_commands.delete_downtime(live, body['downtime_id'])
+    else:
+        return problem(status=400,
+                       title="Unhandled delete_type.",
+                       detail=f"The downtime-type {delete_type!r} is not supported.")
     return Response(status=204)
 
 

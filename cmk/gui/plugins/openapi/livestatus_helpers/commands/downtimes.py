@@ -19,6 +19,8 @@ from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.hosts import Hosts
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.services import Services
+from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
+
 
 RecurMode = Literal[
     "fixed",  # TODO: Rename to "non_recurring"
@@ -71,6 +73,29 @@ def del_service_downtime(connection, downtime_id: int):
 
     """
     return send_command(connection, "DEL_SVC_DOWNTIME", [downtime_id])
+
+
+def delete_downtime_with_query(connection, query):
+    """Delete scheduled downtimes based upon a query"""
+    q = Query([Downtimes.id, Downtimes.is_service]).filter(tree_to_expr(query))
+    for downtime_id, is_service in [(row['id'], row['is_service']) for row in q.iterate(connection)
+                                   ]:
+        if is_service:
+            del_service_downtime(connection, downtime_id)
+        else:
+            del_host_downtime(connection, downtime_id)
+
+
+def delete_downtime(connection, downtime_id):
+    """Delete a scheduled downtime based upon the downtime id"""
+    is_service = Query(
+        [Downtimes.is_service],
+        Downtimes.id.contains(downtime_id),
+    ).value(connection)
+    if is_service:
+        del_service_downtime(connection, downtime_id)
+    else:
+        del_host_downtime(connection, downtime_id)
 
 
 def schedule_services_downtimes_with_query(

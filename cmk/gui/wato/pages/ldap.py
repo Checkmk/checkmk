@@ -287,9 +287,8 @@ class ModeEditLDAPConnection(LDAPMode):
         config.user_connections = self._connections  # make directly available on current page
         if html.request.var("_save"):
             return redirect(mode_url("ldap_config"))
-        # Fix the case where a user hit "Save & Test" during creation
-        html.request.set_var('id', self._connection_id)
-        return None
+        # Handle the case where a user hit "Save & Test" during creation
+        return redirect(self.mode_url(_test="1", id=self._connection_id))
 
     def page(self):
         html.open_div(id_="ldap")

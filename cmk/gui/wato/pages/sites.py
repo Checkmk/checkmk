@@ -602,7 +602,7 @@ class ModeDistributedMonitoring(WatoMode):
                     site["alias"])
                 watolib.log_audit("edit-site", message)
                 flash(message)
-                return None
+                return redirect(mode_url("sites"))
 
             except watolib.MKAutomationException as e:
                 error = _("Cannot connect to remote site: %s") % e

@@ -279,7 +279,7 @@ void TableStateHistory::answerQuery(Query *query) {
     auto object_filter = createPartialFilter(*query);
     std::lock_guard<std::mutex> lg(_log_cache->_lock);
     _log_cache->update();
-    if (_log_cache->begin() == _log_cache->end()) {
+    if (_log_cache->empty()) {
         return;
     }
 

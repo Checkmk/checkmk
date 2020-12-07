@@ -515,26 +515,22 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             lambda *_, **__: table,
         )
         section_name = SectionName('pim')
-        monkeypatch.setattr(fetcher, "sections", {
-            section_name: SectionMeta(
-                checking=True,
-                disabled=False,
-                fetch_interval=None,
-            ),
-        })
+        monkeypatch.setattr(
+            fetcher,
+            "sections",
+            {section_name: SectionMeta(checking=True, disabled=False)},
+        )
 
         assert fetcher.fetch(Mode.INVENTORY) == result.OK({})  # 'pim' is not an inventory section
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table]})
 
     def test_fetch_from_io_partially_empty(self, monkeypatch, fetcher):
         section_name = SectionName('pum')
-        monkeypatch.setattr(fetcher, "sections", {
-            section_name: SectionMeta(
-                checking=True,
-                disabled=False,
-                fetch_interval=None,
-            ),
-        })
+        monkeypatch.setattr(
+            fetcher,
+            "sections",
+            {section_name: SectionMeta(checking=True, disabled=False)},
+        )
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
@@ -589,8 +585,8 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
 
 class TestSNMPSectionMeta:
     @pytest.mark.parametrize("meta", [
-        SectionMeta(checking=False, disabled=False, fetch_interval=None),
-        SectionMeta(checking=True, disabled=False, fetch_interval=None),
+        SectionMeta(checking=False, disabled=False),
+        SectionMeta(checking=True, disabled=False),
     ])
     def test_serialize(self, meta):
         assert SectionMeta.deserialize(meta.serialize()) == meta

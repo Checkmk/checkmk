@@ -107,19 +107,11 @@ class SectionMeta:
     """Metadata for the section names."""
     checking: bool
     disabled: bool
-    fetch_interval: Optional[int]
 
-    def __init__(
-        self,
-        *,
-        checking: bool,
-        disabled: bool,
-        fetch_interval: Optional[int],
-    ) -> None:
+    def __init__(self, *, checking: bool, disabled: bool) -> None:
         # There does not seem to be a way to have kwonly dataclasses.
         self.checking = checking
         self.disabled = disabled
-        self.fetch_interval = fetch_interval
 
     def serialize(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)

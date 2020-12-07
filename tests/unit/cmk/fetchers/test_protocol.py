@@ -232,8 +232,26 @@ class TestErrorResultMessage:
         # Third-party exceptions
         pyghmi.exceptions.IpmiException,
     ])
-    def error(self, request):
-        return ErrorResultMessage(request.param("a very helpful message"))
+    def exception(self, request):
+        try:
+            raise request.param("some helpful message")
+        except Exception as exc:
+            return exc
+
+    @pytest.fixture
+    def error(self, exception):
+        return ErrorResultMessage(exception)
+
+    def test_exception_serialization(self, exception, error):
+        assert exception.__traceback__
+        assert error.result().error is exception
+
+        other = ErrorResultMessage.from_bytes(bytes(error))
+        other_exc = other.result().error
+
+        assert type(other_exc) is type(exception)
+        assert other_exc.args == exception.args
+        assert not other_exc.__traceback__
 
     def test_from_bytes_success(self, error):
         other = ErrorResultMessage.from_bytes(bytes(error))

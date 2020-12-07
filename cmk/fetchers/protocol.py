@@ -247,12 +247,13 @@ class ErrorResultMessage(ResultMessage):
 
     @staticmethod
     def _serialize(error: Exception) -> bytes:
-        return pickle.dumps(error)
+        return pickle.dumps({"exc_type": type(error), "exc_args": error.args})
 
     @staticmethod
     def _deserialize(data: bytes) -> Exception:
         try:
-            return pickle.loads(data)
+            ser = pickle.loads(data)
+            return ser["exc_type"](*ser["exc_args"])
         except pickle.UnpicklingError as exc:
             raise ValueError(data) from exc
 

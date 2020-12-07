@@ -197,8 +197,15 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
 
 
 def push_user_profiles_to_site(site, user_profiles):
+    def _serialize(user_profiles):
+        """Do not synchronize user session information"""
+        return {
+            user_id: {k: v for k, v in profile.items() if k != "session_info"
+                     } for user_id, profile in user_profiles.items()
+        }
+
     return do_remote_automation(site,
-                                "push-profiles", [("profiles", repr(user_profiles))],
+                                "push-profiles", [("profiles", repr(_serialize(user_profiles)))],
                                 timeout=60)
 
 

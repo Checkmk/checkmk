@@ -281,8 +281,8 @@ class LDAPUserConnector(UserConnector):
 
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError) as e:
             self.clear_nearest_dc_cache()
-            if isinstance(e[0], dict):
-                msg = e[0].get('info', e[0].get('desc', ''))
+            if hasattr(e, 'message') and 'desc' in e.message:
+                msg = e.message['desc']
             else:
                 msg = "%s" % e
 

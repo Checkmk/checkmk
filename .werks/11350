@@ -1,0 +1,11 @@
+Title: Clear search query after following result
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1607344771
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The user's input query into the monitoring and setup search field is now getting cleared in case the result is followed by either clicking on the result or selecting it via "enter".

@@ -1,0 +1,13 @@
+Title: Fix popup after logging in a remote site
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1607328717
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+After initializing the connection from a central site with a remote site, the
+user is redirected back to the list of sites. After some seconds a browser popup
+appeared asking for resubmission of the form data.

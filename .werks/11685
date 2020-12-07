@@ -1,0 +1,14 @@
+Title: check_mk_agent.linux: moving sections exclude rule option to linux agent section
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1607352012
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+In the previous version, the "Exclude specific agent sections" rule was listed in the Checkmk
+Agent section under the Monitoring Agents WATO page. This led to confusion as the option is only
+available for users who have access to the Agent Bakery functionality. This werk moves the option
+to the Linux Agent section to resolve this.

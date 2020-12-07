@@ -98,10 +98,6 @@ export class BIVisualization extends NodeVisualization {
 export class TopologyVisualization extends NodeVisualization {
     constructor(div_id, mode) {
         super(div_id);
-        this._mode = mode;
-        this._mesh_depth = 0; // Number of hops from growth root
-        this._max_nodes = 200; // Maximum allowed nodes
-        this._growth_auto_max_nodes = null; // Automatically stop growth when this limit is reached (handled on server side)
         this.custom_topology_fetch_parameters = {}; // Custom parameter, added to each fetch request
 
         // Parameters used for throttling the GUI update
@@ -109,27 +105,21 @@ export class TopologyVisualization extends NodeVisualization {
         this._update_request_timer_active = false;
     }
 
-    show_topology(list_of_hosts) {
+    show_topology(topology_settings) {
+        this._topology_settings = topology_settings;
+
         let topo_ds = this.datasource_manager.get_datasource(
             node_visualization_datasources.TopologyDatasource.id()
         );
         topo_ds.enable();
         topo_ds.set_update_interval(30);
-        //this.viewport.current_viewport.always_update_layout = true
 
-        topo_ds.subscribe_new_data(d => this._show_topology(list_of_hosts));
+        topo_ds.subscribe_new_data(d => this._show_topology());
 
         this.add_depth_slider();
         this.add_max_nodes_slider();
-
         this.update_sliders();
-        topo_ds.fetch_hosts({
-            growth_root_nodes: list_of_hosts,
-            growth_auto_max_nodes: this._growth_auto_max_nodes,
-            mesh_depth: this._mesh_depth,
-            max_nodes: this._max_nodes,
-            mode: this._mode,
-        });
+        topo_ds.fetch_hosts(topology_settings);
     }
 
     set_growth_auto_max_nodes(value) {
@@ -144,7 +134,9 @@ export class TopologyVisualization extends NodeVisualization {
         this._mesh_depth = value;
     }
 
-    _show_topology(list_of_hosts) {
+    _show_topology() {
+        this.update_sliders();
+
         let topo_ds = this.datasource_manager.get_datasource(
             node_visualization_datasources.TopologyDatasource.id()
         );
@@ -188,7 +180,9 @@ export class TopologyVisualization extends NodeVisualization {
             .attr("min", d => 0)
             .attr("max", d => 20)
             .on("input", () => {
-                this._mesh_depth = d3.select("input.mesh_depth_slider").property("value");
+                this._topology_settings.mesh_depth = parseInt(
+                    d3.select("input.mesh_depth_slider").property("value")
+                );
                 this.update_sliders();
                 this.update_data();
             })
@@ -221,14 +215,15 @@ export class TopologyVisualization extends NodeVisualization {
             .style("pointer-events", "all")
             .attr("type", "range")
             .attr("step", 10)
-            .attr("min", d => 20)
-            .attr("max", d => 2000)
+            .attr("min", 20)
+            .attr("max", 2000)
             .on("input", () => {
-                this._max_nodes = d3.select("input.max_nodes_slider").property("value");
+                this._topology_settings.max_nodes = parseInt(
+                    d3.select("input.max_nodes_slider").property("value")
+                );
                 this.update_sliders();
                 this.update_data();
-            })
-            .property("value", this._max_nodes);
+            });
         slider_enter.append("label").attr("id", "max_nodes_text").text(this._max_nodes);
         slider_enter
             .append("label")
@@ -242,56 +237,56 @@ export class TopologyVisualization extends NodeVisualization {
         d3.select("form#form_filter")
             .append("input")
             .attr("name", "topology_max_nodes")
-            .attr("type", "hidden")
-            .property("value", this._max_nodes);
+            .attr("type", "hidden");
     }
 
     update_sliders() {
-        d3.select("#max_nodes_slider").property("value", this._max_nodes);
-        d3.select("#max_nodes_text").text(this._max_nodes);
+        d3.select("input.max_nodes_slider").property("value", this._topology_settings.max_nodes);
+        d3.select("#max_nodes_text").text(this._topology_settings.max_nodes);
         d3.select("form#form_filter input[name=topology_max_nodes]").property(
             "value",
-            this._max_nodes
+            this._topology_settings.max_nodes
         );
 
-        d3.select("#mesh_depth_slider").property("value", this._mesh_depth);
-        d3.select("#mesh_depth_text").text(this._mesh_depth);
+        d3.select("input.mesh_depth_slider").property("value", this._topology_settings.mesh_depth);
+        d3.select("#mesh_depth_text").text(this._topology_settings.mesh_depth);
         d3.select("form#form_filter input[name=topology_mesh_depth]").property(
             "value",
-            this._mesh_depth
+            this._topology_settings.mesh_depth
         );
     }
 
     update_data() {
         if (this._throttle_update()) return;
 
-        let growth_root_nodes = [];
-        let growth_forbidden_nodes = [];
-        let growth_continue_nodes = [];
+        this._topology_settings.growth_root_nodes = [];
+        this._topology_settings.growth_forbidden_nodes = [];
+        this._topology_settings.growth_continue_nodes = [];
 
         this.viewport.current_viewport.get_all_nodes().forEach(node => {
-            if (node.data.growth_root) growth_root_nodes.push(node.data.hostname);
-            if (node.data.growth_forbidden) growth_forbidden_nodes.push(node.data.hostname);
-            if (node.data.growth_continue) growth_continue_nodes.push(node.data.hostname);
+            if (node.data.growth_root)
+                this._topology_settings.growth_root_nodes.push(node.data.hostname);
+            if (node.data.growth_forbidden)
+                this._topology_settings.growth_forbidden_nodes.push(node.data.hostname);
+            if (node.data.growth_continue)
+                this._topology_settings.growth_continue_nodes.push(node.data.hostname);
         });
 
         let ds = this.datasource_manager.get_datasource(
             node_visualization_datasources.TopologyDatasource.id()
         );
 
-        let config = {
-            growth_root_nodes: growth_root_nodes,
-            mesh_depth: this._mesh_depth,
-            max_nodes: this._max_nodes,
-            growth_forbidden_nodes: growth_forbidden_nodes,
-            growth_continue_nodes: growth_continue_nodes,
-            mode: this._mode,
-        };
-
         for (let key in this.custom_topology_fetch_parameters) {
-            config[key] = this.custom_topology_fetch_parameters[key];
+            this._topology_settings[key] = this.custom_topology_fetch_parameters[key];
         }
-        ds.fetch_hosts(config);
+        this._update_bookmark_config(this._topology_settings);
+        ds.fetch_hosts(this._topology_settings);
+    }
+
+    _update_bookmark_config(topology_settings) {
+        let current_url = new URL(window.location);
+        current_url.searchParams.set("topology_settings", JSON.stringify(topology_settings));
+        window.history.replaceState({}, "", current_url.toString());
     }
 
     _throttle_update() {

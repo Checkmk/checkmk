@@ -1023,7 +1023,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
         if action == "_reset":
             flash(msg)
-        return redirect(mode_url("edit_site_globals"))
+        return redirect(mode_url("edit_site_globals", site=self._site_id))
 
     def _edit_mode(self):
         return "edit_site_configvar"
@@ -1066,7 +1066,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def _from_vars(self):
         super()._from_vars()
-        self._site_id = html.request.var("site")
+        self._site_id = html.request.get_ascii_input_mandatory("site")
         if self._site_id:
             self._configured_sites = watolib.SiteManagementFactory().factory().load_sites()
             try:
@@ -1091,6 +1091,9 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def _show_global_setting(self):
         forms.section(_("Global setting"))
         html.write_html(HTML(self._valuespec.value_to_text(self._global_settings[self._varname])))
+
+    def _back_url(self) -> str:
+        return ModeEditSiteGlobals.mode_url(site=self._site_id)
 
 
 ChainVerifyResult = NamedTuple("ChainVerifyResult", [

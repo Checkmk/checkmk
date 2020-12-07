@@ -93,6 +93,8 @@ management_protocol: _Dict = {}
 management_snmp_credentials: _Dict = {}
 # Mapping from hostname to IPMI credentials
 management_ipmi_credentials: _Dict = {}
+# Ruleset to specify whether or not to use bulkwalk
+management_bulkwalk_hosts: _List = []
 
 # RRD creation (only with CMC)
 cmc_log_rrdcreation = None  # also: "terse", "full"

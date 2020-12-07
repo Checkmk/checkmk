@@ -1233,6 +1233,7 @@ def test_grouped_rulespecs():
             'snmp_character_encodings',
             'snmp_check_interval',
             'bulkwalk_hosts',
+            'management_bulkwalk_hosts',
             'snmp_bulk_size',
             'snmp_without_sys_descr',
             'snmpv2c_hosts',

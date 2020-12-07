@@ -2996,7 +2996,8 @@ class HostConfig:
             ipaddress=address,
             credentials=cast(SNMPCredentials, self.management_credentials),
             port=self._snmp_port(),
-            is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts),
+            is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname,
+                                                                   management_bulkwalk_hosts),
             is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
                 self.hostname, snmpv2c_hosts),
             bulk_walk_size_of=self._bulk_walk_size(),

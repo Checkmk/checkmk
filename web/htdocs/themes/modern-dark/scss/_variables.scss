@@ -418,7 +418,6 @@ $node-vis-menu-bg-color: $bg-color;
 $node-vis-history-bg-color: $grey-1;
 $node-vis-history-border-color: $grey-1;
 $node-vis-history-filter: invert(70%);
-$node-vis-growth-img-filter: invert(100%);
 $node-vis-growth-root-color: $node-vis-darkgrey; // blue
 $topology-filter-bg-color: $bg-color;
 $topology-filter-border-color: $grey-7;
@@ -515,3 +514,4 @@ $dashlet-anchor-size: 26px;
 $dashlet-anchor-on-size: 40px;
 $dashlet-editor-free: rgb(78, 93, 105);
 $dashlet-editor-icon-size: 22px;
+$dark-image-invert: invert(100%);

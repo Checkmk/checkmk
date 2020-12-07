@@ -407,7 +407,7 @@ div.node_vis {
   }
 
   image.growth_possible {
-    filter: $node-vis-growth-img-filter;
+    filter: $dark-image-invert;
   }
 
   div#togglebuttons {

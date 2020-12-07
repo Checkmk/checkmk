@@ -54,6 +54,10 @@
       border-radius: 2px;
     }
 
+    form:focus-within {
+      border: 1px solid $success;
+    }
+
     input {
       border: none;
     }

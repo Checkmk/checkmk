@@ -81,7 +81,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             mode=mode,
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
-            description=SNMPSource._make_description(hostname, ipaddress, title=title),
+            description=SNMPSource._make_description(source_type, hostname, ipaddress, title=title),
             default_raw_data={},
             default_host_sections=SNMPHostSections(),
             id_=id_,
@@ -215,12 +215,16 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
 
     @staticmethod
     def _make_description(
+        source_type: SourceType,
         hostname: HostName,
         ipaddress: HostAddress,
         *,
         title: str,
     ) -> str:
-        snmp_config = config.HostConfig.make_snmp_config(hostname, ipaddress)
+        host_config = config.get_config_cache().get_host_config(hostname)
+        snmp_config = (host_config.snmp_config(ipaddress)
+                       if source_type is SourceType.HOST else host_config.management_snmp_config)
+
         if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
 

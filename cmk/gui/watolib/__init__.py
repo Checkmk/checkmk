@@ -414,6 +414,16 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 },
             },],
 
+            # All SNMP managment boards should use SNMP v2c if not specially tagged
+            'management_bulkwalk_hosts': [{
+                'id': '59d84cde-ee3a-4f8d-8bec-fce35a2b0d15',
+                'condition': {},
+                'value': True,
+                'options': {
+                    'description': u'All management boards use SNMP v2 (incl. bulk walks) by default'
+                },
+            },],
+
             # Put all hosts and the contact group 'all'
             'host_contactgroups': [{
                 'id': 'efd67dab-68f8-4d3c-a417-9f7e29ab48d5',

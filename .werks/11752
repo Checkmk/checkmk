@@ -1,0 +1,26 @@
+Title: Management board: SNMP bulk walk can now be configured
+Class: fix
+Compatible: comp
+Component: core
+Date: 1607334353
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+SNMP Management boards were previously contacted with different SNMP settings.
+SNMP management boards on non-SNMP hosts always used SNMPv1 (no bulk walk)
+while SNMP management boards of hosts that are also monitored with SNMP,
+inherited the bulk walk option from the host.
+
+With Checkmk 2.0 it is now possible to explicitly configure this setting using
+the ruleset "Management board SNMP using bulk walk (enforces SNMP v2c)".
+
+Sites created with Checkmk 2.0 or newer will automatically use SNMPv2 and bulk
+walks for all SNMP management boards. For compatibility reasons the behaviour
+of existing sites is kept as initially described. However, in case your devices
+support SNMPv2 and bulk walks, it is highly recommended to use it, for performance
+reasons. In case you want to change to SNMPv2, you can create a rule without
+condition in the ruleset "Management board SNMP using bulk walk (enforces SNMP
+v2c)" to switch the default to SNMPv2 and bulk walks.

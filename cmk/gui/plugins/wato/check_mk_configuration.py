@@ -4288,6 +4288,22 @@ rulespec_registry.register(
     ))
 
 
+def _help_management_bulkwalk_hosts():
+    return _("SNMP monitoring of management boards defaults to SNMPv2 for all hosts by default. "
+             "In case some of your management boards don't support SNMPv2 or bulk walks, you "
+             "can use this ruleset to enforce Checkmk to contact these management boards "
+             "using SNMPv1.")
+
+
+rulespec_registry.register(
+    BinaryHostRulespec(
+        group=RulespecGroupAgentSNMP,
+        help_func=_help_management_bulkwalk_hosts,
+        name="management_bulkwalk_hosts",
+        title=lambda: _("Management board SNMP using bulk walk (enforces SNMP v2c)"),
+    ))
+
+
 def _valuespec_snmp_bulk_size():
     return Integer(
         title=_("Bulk walk: Number of OIDs per bulk"),

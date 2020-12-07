@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from itertools import chain
 import pathlib
@@ -15,6 +16,7 @@ from typing import (
     Dict,
     Final,
     Iterable,
+    Iterator,
     Mapping,
     Tuple,
 )
@@ -26,7 +28,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.gui.config import UserContext, user
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import RequestContext, g
+from cmk.gui.globals import RequestContext, g, request
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request
@@ -188,14 +190,13 @@ class IndexStore:
 
 class URLChecker:
     def __init__(self):
-        self._user_id = user.ident
-        self._request = Request(create_environ())
         from cmk.gui.wato.pages.hosts import ModeEditHost
         self._mode_edit_host = ModeEditHost
 
-    def _set_query_vars(self, query_vars: QueryVars) -> None:
+    @staticmethod
+    def _set_query_vars(query_vars: QueryVars) -> None:
         for name, vals in query_vars.items():
-            self._request.set_var(name, vals[0])
+            request.set_var(name, vals[0])
 
     @staticmethod
     def _set_current_folder(folder_name: str) -> None:
@@ -214,12 +215,10 @@ class URLChecker:
             self._set_current_folder(query_vars.get("folder", [""])[0])  # "" means root dir
 
         try:
-            with RequestContext(html_obj=html(self._request), req=self._request), \
-                 UserContext(self._user_id):
-                if is_host_url:
-                    self._try_host()
-                else:
-                    self._try_page(file_name)
+            if is_host_url:
+                self._try_host()
+            else:
+                self._try_page(file_name)
             return True
         except MKAuthException:
             return False
@@ -266,6 +265,9 @@ class PermissionsHandler:
         }
 
 
+IntermediateSearchResult = Mapping[str, Iterable[SearchResult]]
+
+
 class IndexSearcher:
     def __init__(self, index_store: IndexStore) -> None:
         self._index_store = index_store
@@ -273,8 +275,21 @@ class IndexSearcher:
         self._may_see_topic = permissions_handler.permissions_for_topics()
         self._may_see_item_func = permissions_handler.permissions_for_items()
         self._current_language = get_current_language() or _NAME_DEFAULT_LANGUAGE
+        self._user_id = user.ident
+
+    @contextmanager
+    def _SearchContext(self) -> Iterator[None]:
+        _request = Request(create_environ())
+        with RequestContext(html_obj=html(_request), req=_request), \
+             UserContext(self._user_id):
+            yield
 
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
+        with self._SearchContext():
+            results = self._search(query)
+        yield from self._sort_search_results(results)
+
+    def _search(self, query: SearchQuery) -> IntermediateSearchResult:
         query_lowercase = query.lower()
         results = DefaultDict(list)
 
@@ -298,12 +313,11 @@ class IndexSearcher:
                         match_item.title,
                         match_item.url,
                     ))
-
-        yield from self._sort_search_results(results)
+        return results
 
     def _sort_search_results(
         self,
-        results: Mapping[str, Iterable[SearchResult]],
+        results: IntermediateSearchResult,
     ) -> SearchResultsByTopic:
         first_topics = self._first_topics()
         last_topics = self._last_topics()

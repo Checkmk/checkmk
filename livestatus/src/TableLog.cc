@@ -150,7 +150,7 @@ std::string TableLog::namePrefix() const { return "log_"; }
 void TableLog::answerQuery(Query *query) {
     std::lock_guard<std::mutex> lg(_log_cache->_lock);
     _log_cache->update();
-    if (_log_cache->begin() == _log_cache->end()) {
+    if (_log_cache->empty()) {
         return;
     }
 

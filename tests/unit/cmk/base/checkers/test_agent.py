@@ -284,7 +284,7 @@ class TestParser:
 
 
 class StubSummarizer(AgentSummarizer):
-    def summarize_success(self, host_sections):
+    def summarize_success(self, host_sections, *, mode):
         return 0, "", []
 
 

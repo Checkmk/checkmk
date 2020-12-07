@@ -189,8 +189,8 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     ) -> ServiceCheckResult:
         summarizer = self._make_summarizer()
         return host_sections.fold(
-            ok=summarizer.summarize_success,
-            error=summarizer.summarize_failure,
+            ok=partial(summarizer.summarize_success, mode=self.mode),
+            error=partial(summarizer.summarize_failure, mode=self.mode),
         )
 
     @abc.abstractmethod
@@ -220,10 +220,20 @@ class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
         self.exit_spec: Final[config.ExitSpec] = exit_spec
 
     @abc.abstractmethod
-    def summarize_success(self, host_sections: THostSections) -> ServiceCheckResult:
+    def summarize_success(
+        self,
+        host_sections: THostSections,
+        *,
+        mode: Mode,
+    ) -> ServiceCheckResult:
         raise NotImplementedError
 
-    def summarize_failure(self, exc: Exception) -> ServiceCheckResult:
+    def summarize_failure(
+        self,
+        exc: Exception,
+        *,
+        mode: Mode,
+    ) -> ServiceCheckResult:
         status = self._extract_status(exc)
         return status, str(exc) + check_api_utils.state_markers[status], []
 

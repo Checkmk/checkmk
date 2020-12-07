@@ -41,7 +41,7 @@ def test_tcpdatasource_only_from(mode, monkeypatch, res, reported, rule):
     source = TCPSource("hostname", "ipaddress", mode=mode)
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
-    summarizer = AgentSummarizerDefault(source.exit_spec, source)
+    summarizer = AgentSummarizerDefault(source.exit_spec, source.host_config)
     assert summarizer._sub_result_only_from({"onlyfrom": reported}) == res
 
 
@@ -88,7 +88,7 @@ def test_tcpdatasource_restricted_address_mismatch(
 
     ts.apply(monkeypatch)
     source = TCPSource(hostname, "ipaddress", mode=mode)
-    summarizer = AgentSummarizerDefault(source.exit_spec, source)
+    summarizer = AgentSummarizerDefault(source.exit_spec, source.host_config)
 
     assert summarizer._sub_result_only_from({"onlyfrom": only_from}) == res
 

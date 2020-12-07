@@ -132,25 +132,27 @@ class AgentSummarizerDefault(AgentSummarizer):
     def __init__(
         self,
         exit_spec: config.ExitSpec,
-        source: AgentSource,
+        host_config: config.HostConfig,
     ) -> None:
         super().__init__(exit_spec)
-        self.source = source
-        self._host_config = self.source.host_config
+        self._host_config = host_config
 
     def summarize_success(
         self,
         host_sections: AgentHostSections,
+        *,
+        mode: Mode,
     ) -> ServiceCheckResult:
         return self._summarize_impl(
             host_sections.sections.get(SectionName("check_mk")),
-            self.source.mode is Mode.CHECKING,
+            mode=mode,
         )
 
     def _summarize_impl(
         self,
         cmk_section: Optional[AgentRawDataSection],
-        for_checking: bool,
+        *,
+        mode: Mode,
     ) -> ServiceCheckResult:
         agent_info = self._get_agent_info(cmk_section)
         agent_version = agent_info["version"]
@@ -164,7 +166,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         if not self._host_config.is_cluster and agent_info["agentos"] is not None:
             output.append("OS: %s" % agent_info["agentos"])
 
-        if for_checking and cmk_section:
+        if mode is Mode.CHECKING and cmk_section:
             for sub_result in [
                     self._sub_result_version(agent_info),
                     self._sub_result_only_from(agent_info),

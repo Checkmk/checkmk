@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Final, Optional
+from typing import Final, Optional, Tuple, List
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
@@ -57,7 +57,13 @@ class PiggybackSource(AgentSource):
         )
 
     def _make_summarizer(self) -> "PiggybackSummarizer":
-        return PiggybackSummarizer(self.exit_spec, self)
+        return PiggybackSummarizer(
+            self.exit_spec,
+            self.hostname,
+            self.ipaddress,
+            self.time_settings,
+            self.host_config,
+        )
 
     @staticmethod
     def _make_description(hostname: HostName):
@@ -65,22 +71,37 @@ class PiggybackSource(AgentSource):
 
 
 class PiggybackSummarizer(AgentSummarizer):
-    def __init__(self, exit_spec: config.ExitSpec, source: PiggybackSource):
+    def __init__(
+        self,
+        exit_spec: config.ExitSpec,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        time_settings: List[Tuple[Optional[str], str, int]],
+        host_config: config.HostConfig,
+    ) -> None:
         super().__init__(exit_spec)
-        self.source = source
+        self.hostname = hostname
+        self.ipaddress = ipaddress
+        self.time_settings = time_settings
+        self._host_config = host_config
 
-    def summarize_success(self, host_sections: AgentHostSections) -> ServiceCheckResult:
+    def summarize_success(
+        self,
+        host_sections: AgentHostSections,
+        *,
+        mode: Mode,
+    ) -> ServiceCheckResult:
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""
 
-        if self.source.mode is not Mode.CHECKING:
+        if mode is not Mode.CHECKING:
             # Check_MK Discovery: Do not display information about piggyback files
             # and source status file
             return 0, '', []
 
         summary = self._summarize_impl()
-        if 'piggyback' in self.source.host_config.tags and not summary:
+        if 'piggyback' in self._host_config.tags and not summary:
             # Tag: 'Always use and expect piggback data'
             return 1, 'Missing data', []
 
@@ -92,10 +113,10 @@ class PiggybackSummarizer(AgentSummarizer):
     def _summarize_impl(self) -> ServiceCheckResult:
         states = [0]
         infotexts = set()
-        for origin in (self.source.hostname, self.source.ipaddress):
+        for origin in (self.hostname, self.ipaddress):
             for src in get_piggyback_raw_data(
                     origin if origin else "",
-                    self.source.time_settings,
+                    self.time_settings,
             ):
                 states.append(src.reason_status)
                 infotexts.add(src.reason)

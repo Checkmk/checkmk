@@ -302,5 +302,10 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
 
 
 class SNMPSummarizer(Summarizer[SNMPHostSections]):
-    def summarize_success(self, host_sections: SNMPHostSections) -> ServiceCheckResult:
+    def summarize_success(
+        self,
+        host_sections: SNMPHostSections,
+        *,
+        mode: Mode,
+    ) -> ServiceCheckResult:
         return 0, "Success", []

@@ -103,7 +103,7 @@ class ProgramSource(AgentSource):
         )
 
     def _make_summarizer(self) -> AgentSummarizerDefault:
-        return AgentSummarizerDefault(self.exit_spec, self)
+        return AgentSummarizerDefault(self.exit_spec, self.host_config)
 
     @staticmethod
     def _make_description(cmdline, stdin):

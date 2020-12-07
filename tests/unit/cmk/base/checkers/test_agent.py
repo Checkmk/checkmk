@@ -20,11 +20,18 @@ from cmk.utils.type_defs import AgentRawData, result, SectionName, SourceType
 
 from cmk.fetchers import FetcherType
 from cmk.fetchers.agent import NoCache
+from cmk.fetchers.cache import SectionStore
 
 import cmk.base.config as config
 from cmk.base.checkers import Mode
-from cmk.base.checkers.agent import AgentParser, AgentSectionContent, AgentSource, AgentSummarizer, AgentParserSectionHeader
-from cmk.base.checkers.host_sections import HostSections, SectionStore
+from cmk.base.checkers.agent import (
+    AgentParser,
+    AgentParserSectionHeader,
+    AgentSectionContent,
+    AgentSource,
+    AgentSummarizer,
+)
+from cmk.base.checkers.host_sections import HostSections
 from cmk.base.checkers.type_defs import NO_SELECTION
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 

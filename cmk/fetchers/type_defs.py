@@ -6,8 +6,11 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
+from typing import List
 
-__all__ = ["Mode"]
+__all__ = ["AgentSectionContent", "Mode"]
+
+AgentSectionContent = List[List[str]]
 
 
 class Mode(enum.Enum):

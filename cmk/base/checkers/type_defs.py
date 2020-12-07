@@ -11,7 +11,6 @@ from cmk.utils.type_defs import HostName, SectionName
 
 __all__ = ["SectionCacheInfo", "SectionNameCollection", "NO_SELECTION"]
 
-AgentSectionContent = List[List[str]]
 SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
 PiggybackRawData = Dict[HostName, List[bytes]]
 

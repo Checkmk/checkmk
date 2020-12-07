@@ -27,6 +27,7 @@ from cmk.fetchers import (
     SNMPFetcher,
     TCPFetcher,
 )
+from cmk.fetchers.cache import PersistedSections, SectionStore
 from cmk.fetchers.protocol import FetcherMessage
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -42,13 +43,7 @@ from cmk.base.checkers import (
     update_host_sections,
 )
 from cmk.base.checkers.agent import AgentHostSections
-from cmk.base.checkers.host_sections import (
-    HostKey,
-    HostSections,
-    MultiHostSections,
-    PersistedSections,
-    SectionStore,
-)
+from cmk.base.checkers.host_sections import HostKey, HostSections, MultiHostSections
 from cmk.base.checkers.piggyback import PiggybackSource
 from cmk.base.checkers.programs import ProgramSource
 from cmk.base.checkers.snmp import SNMPSource

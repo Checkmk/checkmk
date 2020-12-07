@@ -26,7 +26,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.gui.config import UserContext, user
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import AppContext, RequestContext, current_app
+from cmk.gui.globals import RequestContext, g
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request
@@ -197,13 +197,24 @@ class URLChecker:
         for name, vals in query_vars.items():
             self._request.set_var(name, vals[0])
 
+    @staticmethod
+    def _set_current_folder(folder_name: str) -> None:
+        # this attribute is set when calling cmk.gui.watolib.hosts_and_folders.Folder.all_folders
+        # if it is not set now, then it will be set for sure upon the next call
+        if not hasattr(g, "wato_folders"):
+            return
+        g.wato_current_folder = g.wato_folders[folder_name]
+
     def is_permitted(self, url: str) -> bool:
-        is_host_url = "mode=edit_host" in url
         file_name, query_vars = file_name_and_query_vars_from_url(url)
         self._set_query_vars(query_vars)
+
+        is_host_url = "mode=edit_host" in url
+        if is_host_url:
+            self._set_current_folder(query_vars.get("folder", [""])[0])  # "" means root dir
+
         try:
-            with AppContext(current_app), \
-                 RequestContext(html_obj=html(self._request), req=self._request), \
+            with RequestContext(html_obj=html(self._request), req=self._request), \
                  UserContext(self._user_id):
                 if is_host_url:
                     self._try_host()

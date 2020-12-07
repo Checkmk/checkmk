@@ -833,7 +833,8 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def page(self):
         if self._start_async_repl:
             cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites())
+                sites=_get_notification_sync_sites(),
+                back_url=ModePersonalUserNotifications.mode_url())
             html.h3(_('Notification Rules'))
 
         self._render_notification_rules(
@@ -1389,7 +1390,8 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def page(self):
         if self._start_async_repl:
             cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites())
+                sites=_get_notification_sync_sites(),
+                back_url=ModePersonalUserNotifications.mode_url())
             return
 
         html.begin_form("rule", method="POST")

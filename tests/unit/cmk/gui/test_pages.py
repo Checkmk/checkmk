@@ -124,6 +124,7 @@ def test_registered_pages():
         'tree_openclose',
         'user_change_pw',
         'user_profile',
+        'user_profile_replicate',
         'version',
         'view',
         'wato',

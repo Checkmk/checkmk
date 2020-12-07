@@ -302,7 +302,7 @@ $wato-a-border: null;
 
 $wato-subtitle-color: $darkgrey;
 
-$footnote-link-color: rgb(19, 211, 137);
+$footnote-link-color: $success;
 
 $table-data-single-padding: 8px 16px;
 $td-single-left-border-right: 1px solid $color-table-border;
@@ -501,7 +501,7 @@ $snapin-heading-border-color: rgba($font-color-sidebar, 0.2);
 $snapin-description-font-color: $font-color;
 $simplebar-scrollbar-color: rgb(38, 47, 56);
 $simplebar-scrollbar-width: 5px;
-$popup-border: 4px solid rgb(19, 211, 137);
+$popup-border: 4px solid $success;
 $popup-inner-border: 1px solid $navbar-color;
 $filter-add-button-hover-brightness: brightness(0);
 $floatfilter-legend-border: 1px solid rgba($black, 0.2);
@@ -514,5 +514,4 @@ $sidebar-input-field-bg-color: $sidebar-border-color;
 $dashlet-anchor-size: 26px;
 $dashlet-anchor-on-size: 40px;
 $dashlet-editor-free: rgb(78, 93, 105);
-$dashlet-editor-active: rgb(19, 211, 137);
 $dashlet-editor-icon-size: 22px;

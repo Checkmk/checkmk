@@ -60,6 +60,7 @@ def test_dashlet_registry_plugins():
             'custom_graph',
             'ntop_alerts',
             'ntop_flows',
+            'ntop_top_talkers',
         ]
 
     dashboard._transform_old_dict_based_dashlets()

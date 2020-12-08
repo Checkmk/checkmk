@@ -458,7 +458,10 @@ export class FigureBase {
             .classed("title", true);
 
         let config = new URLSearchParams(this._post_body);
-        let highlight_container = JSON.parse(config.get("settings")).show_title == true;
+        let settings = config.get("settings");
+        let highlight_container = false;
+        if (settings != undefined) highlight_container = JSON.parse(settings).show_title == true;
+
         title_component
             .selectAll("rect")
             .data(d => [d])

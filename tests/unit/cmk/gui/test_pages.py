@@ -189,6 +189,7 @@ def test_registered_pages():
             'sla_configurations',
             'sla_details',
             'ntop_host_details',
+            'ajax_ntop_top_talkers',
             'ajax_ntop_interface_quickstats',
             'ajax_ntop_host_details',
             'ajax_ntop_host_stats',

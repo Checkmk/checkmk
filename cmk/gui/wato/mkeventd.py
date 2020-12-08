@@ -2369,7 +2369,8 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         self._default_values = ConfigDomainEventConsole().default_globals()
         self._current_settings = watolib.load_configuration_settings()
 
-    def _groups(self, show_all=False):
+    @staticmethod
+    def _get_groups(_show_all: bool) -> Iterable[ConfigVariableGroup]:
         return [
             g for g in sorted([g_class() for g_class in config_variable_group_registry.values()],
                               key=lambda grp: grp.sort_index())
@@ -2433,12 +2434,13 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             flash(msg)
         return redirect(mode_url("mkeventd_config"))
 
-    def _edit_mode(self):
+    @property
+    def edit_mode_name(self) -> str:
         return "mkeventd_edit_configvar"
 
     def page(self):
         self._verify_ec_enabled()
-        self._show_configuration_variables(self._groups())
+        self._show_configuration_variables()
 
 
 class ConfigVariableGroupEventConsole(ConfigVariableGroup):

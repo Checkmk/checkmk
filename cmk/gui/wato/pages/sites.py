@@ -12,8 +12,18 @@ import socket
 import contextlib
 import binascii
 import queue
-from typing import (Dict, List, NamedTuple, Union, Tuple as _Tuple, Optional, Type, Iterator,
-                    overload)
+from typing import (
+    Dict,
+    List,
+    NamedTuple,
+    Union,
+    Tuple as _Tuple,
+    Optional,
+    Type,
+    Iterable,
+    Iterator,
+    overload,
+)
 
 from six import ensure_binary, ensure_str
 from OpenSSL import crypto  # type: ignore[import]
@@ -52,7 +62,7 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.watolib.utils import config_variable_registry
+from cmk.gui.plugins.watolib.utils import ConfigVariableGroup, config_variable_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.utils.flashed_messages import flash
@@ -1025,7 +1035,11 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             flash(msg)
         return redirect(mode_url("edit_site_globals", site=self._site_id))
 
-    def _edit_mode(self):
+    def _groups(self) -> Iterable[ConfigVariableGroup]:
+        return self._get_groups(show_all=True)
+
+    @property
+    def edit_mode_name(self) -> str:
         return "edit_site_configvar"
 
     def page(self):
@@ -1047,7 +1061,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                       "remote site. You cannot configure specific settings for it."))
                 return
 
-        self._show_configuration_variables(self._groups(show_all=True))
+        self._show_configuration_variables()
 
 
 @mode_registry.register

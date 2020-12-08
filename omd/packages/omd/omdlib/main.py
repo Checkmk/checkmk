@@ -1239,7 +1239,8 @@ def _config_set(site: SiteContext, hook_name: str) -> None:
 
     if output and output != value:
         site.conf[hook_name] = output
-        putenv("CONFIG_" + hook_name, output)
+
+    putenv("CONFIG_" + hook_name, site.conf[hook_name])
 
 
 def config_set_value(site: SiteContext,

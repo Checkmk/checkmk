@@ -1,0 +1,13 @@
+Title: omd config: Fix toggling of dependent options
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1607423895
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+Dependant options in "omd config" were not immediately toggled
+after changing the parent option. For example LIVESTATUS_TCP_PORT
+was not visible after enabling LIVESTATUS_TCP.

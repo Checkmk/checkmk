@@ -2453,7 +2453,7 @@ def _get_ntop_entry_item_link(host_name: str, host_address: str, tab: str):
             global_request,
             [
                 ("host", host_name),
-                ("host_address", host_name),
+                ("host_address", host_address),
                 ("tab", tab),
             ],
             filename="ntop_host_details.py",

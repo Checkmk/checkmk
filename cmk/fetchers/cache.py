@@ -82,10 +82,17 @@ class PersistedSections(
         section_store: "SectionStore[TRawDataSection]",
     ) -> None:
         stored = section_store.load()
-        if self != stored:
-            for name, content in stored.items():
-                self.setdefault(name, content)
-            section_store.store(self)
+        if self == stored:
+            return
+
+        # Update the DB.
+        stored.update(self)
+        # Add stored sections to self.
+        self.update(stored)
+        # Now, self and stored must be equal.
+        assert self == stored
+        # Save the updated DB.
+        section_store.store(stored)
 
 
 class SectionStore(Generic[TRawDataSection]):

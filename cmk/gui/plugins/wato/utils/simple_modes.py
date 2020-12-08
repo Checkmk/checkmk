@@ -25,14 +25,14 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, ActionResult, redirect, mode_url)
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
-    ID,
-    FixedValue,
-    SiteChoice,
-    Dictionary,
-    TextUnicode,
     Checkbox,
+    Dictionary,
     DocumentationURL,
+    FixedValue,
+    ID,
     RuleComment,
+    SiteChoice,
+    TextUnicode,
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -339,6 +339,7 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
         )
 
     def _vs_mandatory_elements(self):
+        ident_attr: List = []
         if self._new:
             ident_attr = [
                 ("ident",
@@ -346,8 +347,9 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
                      title=_("Unique ID"),
                      help=_("The ID must be a unique text. It will be used as an internal key "
                             "when objects refer to this object."),
+                     default_value=self._default_id,
                      allow_empty=False,
-                     size=12,
+                     size=80,
                  )),
             ]
         else:
@@ -392,6 +394,16 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
         ] + disable_attr + site_attr
 
         return elements
+
+    def _default_id(self) -> str:
+        template = self._mode_type.name_singular()
+        nr = 1
+        used_connection_names = list(self._store.load_for_reading().keys())
+        while True:
+            name = "%s_%d" % (template, nr)
+            if name not in used_connection_names:
+                return name
+            nr += 1
 
     def _vs_optional_keys(self):
         return []

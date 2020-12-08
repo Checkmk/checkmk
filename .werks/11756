@@ -1,0 +1,14 @@
+Title: Fix errors after form submissions when using web server authentication
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1607414393
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.0.0b2
+
+When using the web server level authentication (Basic, digest, kerberos, ...),
+several form submissions raised an error like this: "AttributeError ('NoneType'
+object has no attribute 'session_info')". This was caused by an incomplete session
+initialization when using this kind of authentication.

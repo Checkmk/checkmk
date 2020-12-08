@@ -15,7 +15,7 @@ import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
 import cmk.gui.http as http
 import cmk.gui.userdb as userdb
-from cmk.gui.globals import AppContext, RequestContext, user, request
+from cmk.gui.globals import AppContext, RequestContext, user, request, session
 from cmk.gui.exceptions import MKAuthException
 
 
@@ -112,3 +112,17 @@ def test_auth_cookie_is_valid_refuse_pre_20(pre_20_cookie):
 
 def test_auth_cookie_is_valid_allow_current(current_cookie):
     assert login._auth_cookie_is_valid(current_cookie) is True
+
+
+def test_web_server_auth_session(user_id):
+    environ = dict(create_environ(), REMOTE_USER=str(user_id))
+
+    with AppContext(DummyApplication(environ, None)), \
+            RequestContext(htmllib.html(http.Request(environ))):
+
+        assert user.id is None
+        with login.authenticate(request) as authenticated:
+            assert authenticated is True
+            assert user.id == user_id
+            assert session.user_id == user.id
+        assert user.id is None

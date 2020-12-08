@@ -298,6 +298,9 @@ def _check_auth(request: Request) -> Optional[UserId]:
         auth_logger.debug("User '%s' is not allowed to authenticate: Invalid customer" % user_id)
         return None
 
+    if user_id and auth_type in ("http_header", "web_server"):
+        _check_auth_cookie_for_web_server_auth(user_id)
+
     return user_id
 
 
@@ -330,8 +333,7 @@ def _check_auth_automation() -> UserId:
 
 
 def _check_auth_http_header() -> Optional[UserId]:
-    """When http header auth is enabled, try to read the user_id from the var
-    and when there is some available, set the auth cookie (for other addons) and proceed."""
+    """When http header auth is enabled, try to read the user_id from the var"""
     assert isinstance(config.auth_by_http_header, str)
     user_id = html.request.get_request_header(config.auth_by_http_header)
     if not user_id:
@@ -339,9 +341,6 @@ def _check_auth_http_header() -> Optional[UserId]:
 
     user_id = UserId(ensure_str(user_id))
     set_auth_type("http_header")
-
-    if auth_cookie_name() not in html.request.cookies:
-        userdb.on_succeeded_login(user_id)
 
     return user_id
 
@@ -373,6 +372,31 @@ def _check_auth_by_cookie() -> Optional[UserId]:
                 auth_logger.debug('Exception while checking cookie %s: %s' %
                                   (cookie_name, traceback.format_exc()))
     return None
+
+
+def _check_auth_cookie_for_web_server_auth(user_id: UserId):
+    """Session handling also has to be initialized when the authentication is done
+    by the web server.
+
+    The authentication is already done on web server level. We accept the provided
+    username as authenticated and create our cookie here.
+    """
+    if auth_cookie_name() not in html.request.cookies:
+        session_id = userdb.on_succeeded_login(user_id)
+        _create_auth_session(user_id, session_id)
+        return
+
+    # Refresh the existing auth cookie and update the session info
+    cookie_name = auth_cookie_name()
+    try:
+        _check_auth_cookie(cookie_name)
+    except MKAuthException:
+        # Suppress cookie validation errors from other sites cookies
+        auth_logger.debug('Exception while checking cookie %s: %s' %
+                          (cookie_name, traceback.format_exc()))
+    except Exception:
+        auth_logger.debug('Exception while checking cookie %s: %s' %
+                          (cookie_name, traceback.format_exc()))
 
 
 def set_auth_type(_auth_type: str) -> None:

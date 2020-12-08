@@ -57,12 +57,14 @@ from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
-hp_msa_controller_cpu_default_levels = (80.0, 90.0)
+factory_settings['hp_msa_controller'] = {
+    'levels': (80.0, 90.0),
+}
 
 
 def inventory_hp_msa_controller_cpu(parsed):
     for key in parsed:
-        yield key, "hp_msa_controller_cpu_default_levels"
+        yield key, {}
 
 
 def check_hp_msa_controller_cpu(item, params, parsed):

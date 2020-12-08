@@ -28263,6 +28263,10 @@ msgstr "Verwaltete Objekte"
 msgid "Management Board"
 msgstr "Management-Board"
 
+#, fuzzy
+msgid "Management board SNMP using bulk walk (enforces SNMP v2c)"
+msgstr "Bulkwalk: Hosts mit SNMP-Bulkwalk (erzwingt SNMP v2c)"
+
 msgid "Management board config"
 msgstr "Management-Board-Konfiguration"
 
@@ -37765,7 +37769,7 @@ msgid "Replicate extensions (MKPs and files in <tt>~/local/</tt>)"
 msgstr "Erweiterungen replizieren (MKPs und Dateien in <tt>~/local/</tt>)"
 
 #, fuzzy
-msgid "Replicate new user profile"
+msgid "Replicate user profile"
 msgstr "Neues Benutzerprofil replizieren"
 
 msgid "Replication Partner"
@@ -38840,6 +38844,13 @@ msgstr "SNMP Portüberwachung mit 32-Bit-Zählern (v1)"
 
 msgid "SNMP interface check with 64 bit counters (using v2c)"
 msgstr "SNMP Portüberwachung mit 64-Bit-Zählern (verwendet v2c)"
+
+msgid ""
+"SNMP monitoring of management boards defaults to SNMPv2 for all hosts by "
+"default. In case some of your management boards don't support SNMPv2 or bulk "
+"walks, you can use this ruleset to enforce Checkmk to contact these "
+"management boards using SNMPv1."
+msgstr ""
 
 #, fuzzy
 msgid "SNMP rules"
@@ -60372,9 +60383,6 @@ msgstr "Ihre Veränderungen betreffen mehrere Objekte"
 msgid "Your old password is wrong."
 msgstr "Ihr altes Passwort ist falsch."
 
-msgid "Your password has been changed."
-msgstr "Ihr Passwort wurde geändert."
-
 msgid "Your password is too old, you need to choose a new password."
 msgstr "Ihr Passwort ist zu alt. Bitte wählen Sie ein neues Passwort."
 
@@ -62282,6 +62290,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "Your password has been changed."
+#~ msgstr "Ihr Passwort wurde geändert."
 
 #~ msgid "Don't escape HTML codes (insecure)"
 #~ msgstr "HTML-Code nicht maskieren (unsicher)"

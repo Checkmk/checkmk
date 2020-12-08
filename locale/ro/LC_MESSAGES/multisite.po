@@ -26412,6 +26412,9 @@ msgstr ""
 msgid "Management Board"
 msgstr ""
 
+msgid "Management board SNMP using bulk walk (enforces SNMP v2c)"
+msgstr ""
+
 msgid "Management board config"
 msgstr ""
 
@@ -35755,7 +35758,7 @@ msgid "Replicate extensions (MKPs and files in <tt>~/local/</tt>)"
 msgstr ""
 
 #, fuzzy
-msgid "Replicate new user profile"
+msgid "Replicate user profile"
 msgstr "Acces la Consola de Evenimente"
 
 msgid "Replication Partner"
@@ -36840,6 +36843,13 @@ msgid "SNMP interface check with 32 bit counters (v1)"
 msgstr ""
 
 msgid "SNMP interface check with 64 bit counters (using v2c)"
+msgstr ""
+
+msgid ""
+"SNMP monitoring of management boards defaults to SNMPv2 for all hosts by "
+"default. In case some of your management boards don't support SNMPv2 or bulk "
+"walks, you can use this ruleset to enforce Checkmk to contact these "
+"management boards using SNMPv1."
 msgstr ""
 
 #, fuzzy
@@ -55138,9 +55148,6 @@ msgid "Your modifications affect some objects"
 msgstr ""
 
 msgid "Your old password is wrong."
-msgstr ""
-
-msgid "Your password has been changed."
 msgstr ""
 
 msgid "Your password is too old, you need to choose a new password."

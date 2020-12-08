@@ -237,6 +237,12 @@ class URLChecker:
 
 class PermissionsHandler:
     def __init__(self):
+        self._topic_permissions = {
+            "global_settings": user.may("wato.global") or user.may("wato.seeall"),
+            "folders": user.may("wato.hosts"),
+            "hosts": user.may("wato.hosts"),
+            "event_console": user.may("mkeventd.edit") or user.may("wato.seeall")
+        }
         self._url_checker = URLChecker()
 
     @staticmethod
@@ -247,15 +253,8 @@ class PermissionsHandler:
     def _permissions_url(self, url: str) -> bool:
         return self._url_checker.is_permitted(url)
 
-    @staticmethod
-    def permissions_for_topics() -> Mapping[str, bool]:
-        return {
-            "global_settings": user.may("wato.global"),
-            "folders": user.may("wato.hosts"),
-            "hosts": user.may("wato.hosts"),
-            "setup": user.may("wato.use"),
-            "event_console": user.may("mkeventd.edit"),
-        }
+    def may_see_topic(self, topic: str) -> bool:
+        return user.may("wato.use") and self._topic_permissions.get(topic, True)
 
     def permissions_for_items(self) -> Mapping[str, Callable[[str], bool]]:
         return {
@@ -272,7 +271,7 @@ class IndexSearcher:
     def __init__(self, index_store: IndexStore) -> None:
         self._index_store = index_store
         permissions_handler = PermissionsHandler()
-        self._may_see_topic = permissions_handler.permissions_for_topics()
+        self._may_see_topic = permissions_handler.may_see_topic
         self._may_see_item_func = permissions_handler.permissions_for_items()
         self._current_language = get_current_language() or _NAME_DEFAULT_LANGUAGE
         self._user_id = user.ident
@@ -302,7 +301,7 @@ class IndexSearcher:
                 index.localization_independent.items(),
                 index.localization_dependent[self._current_language].items(),
         ):
-            if not self._may_see_topic.get(topic, True):
+            if not self._may_see_topic(topic):
                 continue
             permissions_check = self._may_see_item_func.get(topic, lambda _: True)
 

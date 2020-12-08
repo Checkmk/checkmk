@@ -121,10 +121,12 @@ class SectionStore(Generic[TSectionContent]):
         if they are not already present. Save the result to disk.
         """
         stored = self.load()
-        if persisted_sections != stored:
-            for name, content in stored.items():
-                persisted_sections.setdefault(name, content)
-            self.store(persisted_sections)
+        if persisted_sections == stored:
+            return
+
+        stored.update(persisted_sections)
+        persisted_sections.update(stored)
+        self.store(stored)
 
     def store(self, sections: PersistedSections[TSectionContent]) -> None:
         if not sections:

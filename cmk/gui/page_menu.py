@@ -594,19 +594,23 @@ class SuggestedEntryRenderer:
             raise NotImplementedError("Suggestion rendering not implemented for %s" % entry.item)
 
     def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
-        self._show_link(entry, item, url=item.link.url, onclick=item.link.onclick)
+        self._show_link(entry,
+                        url=item.link.url,
+                        onclick=item.link.onclick,
+                        target=item.link.target)
 
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:
         self._show_link(entry,
-                        item,
                         url="javascript:void(0)",
                         onclick="cmk.page_menu.toggle_popup(%s)" %
-                        json.dumps("popup_%s" % entry.name))
+                        json.dumps("popup_%s" % entry.name),
+                        target=None)
 
-    def _show_link(self, entry: PageMenuEntry, item: ABCPageMenuItem, url: Optional[str],
-                   onclick: Optional[str]) -> None:
+    def _show_link(self, entry: PageMenuEntry, url: Optional[str], onclick: Optional[str],
+                   target: Optional[str]) -> None:
         html.open_a(href=url,
                     onclick=onclick,
+                    target=target,
                     id_=("menu_suggestion_%s" % entry.name if entry.name else None))
         html.icon(entry.icon_name or "trans")
         html.write_text(entry.shortcut_title or entry.title)

@@ -84,6 +84,13 @@ try {
     ntop_flows = null;
 }
 
+var ntop_top_talkers;
+try {
+    ntop_top_talkers = require("ntop_top_talkers");
+} catch (e) {
+    ntop_top_talkers = null;
+}
+
 $(() => {
     utils.update_header_timer();
     forms.enable_dynamic_form_elements();
@@ -142,6 +149,7 @@ export const cmk_export = {
             host_details: ntop_host_details,
             alerts: ntop_alerts,
             flows: ntop_flows,
+            top_talkers: ntop_top_talkers,
         },
     },
 };

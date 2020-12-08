@@ -1054,10 +1054,18 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName, board: DashboardCon
     )
 
     yield PageMenuEntry(
-        title='Ntop: Flows',
+        title='Flows',
         icon_name='dashlet_ntop_flows',
         item=make_simple_link(
             'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_flows' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title='Top talkers',
+        icon_name='dashlet_ntop_top_talkers',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_top_talkers' %
             (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
     )
 

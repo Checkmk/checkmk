@@ -35,40 +35,54 @@ export class TableFigure extends cmk_figures.FigureBase {
         if (!data.rows) return;
         if (data.classes) this._table.classed(data.classes.join(" "), true);
 
-        let rows = this._table.selectAll("tr").data(data.rows);
+        let rows = this._table
+            .selectAll("tr")
+            .data(data.rows)
+            .join("tr")
+            .attr("class", d => (d.classed && d.classes.join(" ")) || null);
 
-        rows.exit().transition().duration(1000).style("opacity", 0).remove();
+        let cells = rows
+            .selectAll(".cell")
+            .data(d => d.cells)
+            .join(enter =>
+                enter.append(d => {
+                    return document.createElement(d.cell_type || "td");
+                })
+            )
+            .attr("class", d => ["cell"].concat(d.classes || []).join(" "))
+            .attr("id", d => d.id || null)
+            .attr("colspan", d => d.colspan || null)
+            .attr("rowspan", d => d.rowspan || null)
+            .each(function (d) {
+                let cell = d3.select(this);
+                if (d.text != null) cell.text(d.text);
+                if (d.html != null) cell.html(d.html);
+            });
 
-        rows = rows.enter().append("tr").merge(rows);
-        rows.each((d, idx, nodes) => {
-            if (!d.classes) return;
-            d3.select(nodes[idx]).classed(d.classes.join(" "), true);
-        });
-
-        let cells = rows.selectAll(".cell").data(d => d.cells);
-        let new_cells = cells.enter().each((d, idx, nodes) => {
-            let parent_node = d3.select(nodes[idx]);
-            let cell = parent_node.append(d.cell_type ? d.cell_type : "td");
-            cell.classed("cell", true);
-
-            if (d.colspan) cell.attr("colspan", d.colspan);
-            if (d.rowspan) cell.attr("rowspan", d.rowspan);
-        });
-        new_cells = rows.selectAll(".cell");
-
-        new_cells.style("opacity", 0).transition().style("opacity", 1);
-
-        new_cells.merge(cells).each(function (d) {
-            // Update classes
-            let cell = d3.select(this);
-            if (d.classes) cell.classed(d.classes.join(" "), true);
-            if (d.id) cell.attr("id", d.id);
-            if (d.text != null) cell.text(d.text);
-            if (d.html != null) cell.html(d.html);
-        });
-
+        // New td inline figures
+        _update_figures_in_selection(this._div_selection);
+        // Legacy inline figures
         _update_dc_graphs_in_selection(this._div_selection);
     }
+}
+
+function _update_figures_in_selection(selection) {
+    selection.selectAll(".figure_cell").each((d, idx, nodes) => {
+        let figure_config = d["figure_config"];
+        if (nodes[idx].__figure_instance__ == undefined) {
+            let figure_class = cmk_figures.figure_registry.get_figure(figure_config["figure_type"]);
+            if (figure_class == undefined)
+                // unknown figure type
+                return;
+
+            let new_figure = new figure_class(figure_config["selector"], figure_config["size"]);
+            new_figure.initialize();
+            nodes[idx].__figure_instance__ = new_figure;
+        }
+
+        nodes[idx].__figure_instance__.update_data(figure_config);
+        nodes[idx].__figure_instance__.update_gui();
+    });
 }
 
 cmk_figures.figure_registry.register(TableFigure);
@@ -76,6 +90,10 @@ cmk_figures.figure_registry.register(TableFigure);
 function _update_dc_graphs_in_selection(selection, graph_group) {
     selection.selectAll(".figure_cell").each((d, idx, nodes) => {
         // TODO: implement better intialization solution, works for now
+        if (d.figure_config != undefined || d.figure_size != undefined)
+            // new format, not to be handled by this legacy block
+            return;
+
         let node = d3.select(nodes[idx]);
         let svg = node.select("svg");
         if (svg.empty()) {

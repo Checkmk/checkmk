@@ -23,7 +23,7 @@ import * as help from "help";
 import * as availability from "availability";
 import * as sla from "sla";
 import * as bi from "bi";
-import * as crash_reporting from "crash_reporting";
+import * as transfer from "transfer";
 import * as backup from "backup";
 import * as hover from "hover";
 import * as service_discovery from "service_discovery";
@@ -111,7 +111,7 @@ export const cmk_export = {
         availability: availability,
         sla: sla,
         bi: bi,
-        crash_reporting: crash_reporting,
+        transfer: transfer,
         backup: backup,
         hover: hover,
         service_discovery: service_discovery,

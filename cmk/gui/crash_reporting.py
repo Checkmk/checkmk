@@ -319,7 +319,7 @@ class PageCrash(ABCCrashReportPage):
                 _("Failed to send the crash report. Please download it manually and send it "
                   "to <a href=\"%s\">%s</a>") % (report_url, self._get_crash_report_target()))
             html.close_div()
-            html.javascript("cmk.crash_reporting.submit(%s, %s);" %
+            html.javascript("cmk.transfer.submit_crash_report(%s, %s);" %
                             (json.dumps(config.crash_report_url), json.dumps(url_encoded_params)))
         except MKUserError as e:
             action_message = "%s" % e

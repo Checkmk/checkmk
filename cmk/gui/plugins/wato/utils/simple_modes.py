@@ -331,6 +331,7 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
             title=self._mode_type.name_singular().title(),
             elements=general_elements + individual_elements,
             optional_keys=self._vs_optional_keys(),
+            show_more_keys=["docu_url"],
             headers=[
                 (_("General Properties"), general_keys),
                 (_("%s Properties") % self._mode_type.name_singular().title(), individual_keys),

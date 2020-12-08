@@ -1,0 +1,17 @@
+Title: check_traceroute: Fix different issues
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607418686
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+Fix various issues with the traceroute check configuration
+
+<ul>
+<li>Fix HTML tags in title of rule edit page</li>
+<li>Fix editing of rules created with older Checkmk versions</li>
+<li>Fix checking of hosts with DNS names as host address</li>
+</ul>

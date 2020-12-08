@@ -15,8 +15,9 @@ from typing import Optional
 import pytest  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
-from cmk.utils.type_defs import AgentRawData, result, SectionName
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.type_defs import AgentRawData, result, SectionName
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
@@ -28,7 +29,7 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.fetchers import FetcherType, MKFetcherError, snmp
+from cmk.fetchers import FetcherType, snmp
 from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
 from cmk.fetchers.ipmi import IPMIFetcher
 from cmk.fetchers.piggyback import PiggybackFetcher

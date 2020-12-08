@@ -15,20 +15,26 @@ import cmk.utils.debug
 import cmk.utils.log  # TODO: Remove this!
 import cmk.utils.misc
 import cmk.utils.paths
-from cmk.utils.exceptions import MKIPAddressLookupError, MKSNMPError, MKTimeout
+from cmk.utils.exceptions import (
+    MKAgentError,
+    MKEmptyAgentData,
+    MKFetcherError,
+    MKIPAddressLookupError,
+    MKSNMPError,
+    MKTimeout,
+)
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, HostName, result, ServiceCheckResult, SourceType
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import ABCFetcher, ABCFileCache, MKFetcherError
+from cmk.fetchers import ABCFetcher, ABCFileCache
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.type_defs import Mode
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 from cmk.base.config import HostConfig
-from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 from .host_sections import THostSections
 from .type_defs import SectionNameCollection

@@ -8,13 +8,25 @@ import abc
 import logging
 import time
 from pathlib import Path
-from typing import cast, Dict, Final, Iterable, List, MutableSet, NamedTuple, Optional, Tuple, Union
+from typing import (
+    cast,
+    Dict,
+    Final,
+    Iterable,
+    List,
+    MutableSet,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from six import ensure_binary, ensure_str
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.misc
 from cmk.utils.encoding import ensure_str_with_fallback
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.type_defs import (
     AgentRawData,
@@ -36,7 +48,6 @@ from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
 from cmk.base.check_api_utils import state_markers
-from cmk.base.exceptions import MKGeneralException
 from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import FileCacheFactory, Mode, Parser, SectionNameCollection, Source, Summarizer

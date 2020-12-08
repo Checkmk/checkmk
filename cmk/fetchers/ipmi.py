@@ -9,14 +9,14 @@ from typing import Any, Dict, Final, List, Optional
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
-import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import]
+import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 from six import ensure_binary
 
+from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
-from . import MKFetcherError
 from .agent import AgentFetcher, DefaultAgentFileCache
 from .type_defs import Mode
 

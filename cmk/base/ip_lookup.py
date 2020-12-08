@@ -14,13 +14,12 @@ from six import ensure_str
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKTerminate, MKTimeout, MKIPAddressLookupError
+from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.base.config as config
 from cmk.base.caching import config_cache as _config_cache
-from cmk.base.exceptions import MKGeneralException
 
 IPLookupCacheId = Tuple[HostName, int]
 NewIPLookupCache = Dict[IPLookupCacheId, str]

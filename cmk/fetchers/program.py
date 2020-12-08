@@ -13,9 +13,9 @@ from typing import Any, Dict, Final, Optional, Union
 
 from six import ensure_binary, ensure_str
 
+from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
 
-from . import MKFetcherError
 from .agent import AgentFetcher, DefaultAgentFileCache
 from .type_defs import Mode
 

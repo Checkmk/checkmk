@@ -6,6 +6,7 @@
 
 from typing import cast, Final, Optional
 
+from cmk.utils.exceptions import MKAgentError
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
@@ -15,15 +16,14 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers import IPMIFetcher, FetcherType
+from cmk.fetchers import FetcherType, IPMIFetcher
 from cmk.fetchers.agent import DefaultAgentFileCache
 
 import cmk.base.config as config
 from cmk.base.config import HostConfig, IPMICredentials
-from cmk.base.exceptions import MKAgentError
 
 from ._abstract import Mode
-from .agent import AgentSource, AgentHostSections, AgentSummarizer, DefaultAgentFileCacheFactory
+from .agent import AgentHostSections, AgentSource, AgentSummarizer, DefaultAgentFileCacheFactory
 
 
 class IPMISource(AgentSource):

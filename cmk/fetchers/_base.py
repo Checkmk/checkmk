@@ -13,7 +13,7 @@ from typing import Any, Dict, final, Final, Generic, Literal, Optional, Type, Ty
 
 import cmk.utils
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKException, MKGeneralException, MKIPAddressLookupError
+from cmk.utils.exceptions import MKFetcherError, MKGeneralException, MKIPAddressLookupError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, result
 
@@ -21,12 +21,7 @@ from cmk.snmplib.type_defs import TRawData
 
 from .type_defs import Mode
 
-__all__ = ["ABCFetcher", "ABCFileCache", "MKFetcherError", "verify_ipaddress"]
-
-
-class MKFetcherError(MKException):
-    """An exception common to the fetchers."""
-
+__all__ = ["ABCFetcher", "ABCFileCache", "verify_ipaddress"]
 
 TFileCache = TypeVar("TFileCache", bound="ABCFileCache")
 

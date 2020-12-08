@@ -25,6 +25,7 @@ from typing import (
 
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
+from cmk.utils.exceptions import MKParseFunctionError
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
     HostKey,
@@ -42,7 +43,6 @@ import cmk.base.item_state as item_state
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
-from cmk.base.exceptions import MKParseFunctionError
 
 from .type_defs import NO_SELECTION, SectionCacheInfo, SectionNameCollection
 

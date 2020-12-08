@@ -12,9 +12,9 @@ from typing import Any, Dict, Final, List, Mapping, Optional, Tuple
 from Cryptodome.Cipher import AES
 
 import cmk.utils.debug
+from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
-from . import MKFetcherError
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
 from .type_defs import Mode

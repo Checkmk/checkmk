@@ -15,7 +15,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
-from cmk.utils.exceptions import MKTimeout
+from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
 from cmk.utils.type_defs import AgentRawData, AgentRawDataSection, result, SectionName, SourceType
 
 from cmk.fetchers import FetcherType
@@ -25,7 +25,6 @@ from cmk.fetchers.cache import PersistedSections, SectionStore
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer, HostSectionParser
 from cmk.base.checkers.type_defs import NO_SELECTION
-from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
 
 
 class TestSummarizer:

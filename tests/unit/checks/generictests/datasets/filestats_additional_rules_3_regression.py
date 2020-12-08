@@ -67,6 +67,8 @@ checks = {
             (0, 'Newest: 6 d', []),
             (2, 'Oldest: 6 d (warn/crit at 3.00 s/4.00 s)', []),
             (0,  "[/opt/filetransfer/data/akb/paag01/cofi#ak/incoming/premium-world-check-week.xml] Age: 6 d, Size: 77.34 MB(!!)", []),
+            (0, '\nRemaining files: 0', []),
+            (0, '\n', []),
         ],
     )]
 }

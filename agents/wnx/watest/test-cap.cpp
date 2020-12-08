@@ -664,12 +664,12 @@ TEST(CapTest, ReInstallRestore) {
         EXPECT_TRUE(user_dat == root_dat);
 
         // bakery check
-        auto y = YAML::Load(*bakery);
         if (mode == Mode::wato) {
+            auto y = YAML::Load(*bakery);
             EXPECT_NO_THROW(y["global"]["wato"].as<bool>());
             EXPECT_TRUE(y["global"]["wato"].as<bool>());
         } else {
-            EXPECT_TRUE(y.IsNull());
+            ASSERT_FALSE(bakery);
         }
 
         // now damage files
@@ -698,12 +698,12 @@ TEST(CapTest, ReInstallRestore) {
         EXPECT_TRUE(user_dat == root_dat);
 
         // bakery check
-        y = YAML::Load(*bakery);
         if (mode == Mode::wato) {
+            auto y = YAML::Load(*bakery);
             EXPECT_NO_THROW(y["global"]["wato"].as<bool>());
             EXPECT_TRUE(y["global"]["wato"].as<bool>());
         } else {
-            EXPECT_TRUE(y.IsNull());
+            ASSERT_FALSE(bakery);
         }
     }
 }

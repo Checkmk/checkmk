@@ -133,7 +133,7 @@ def get_package_parts() -> List[PackagePart]:
         PackagePart("notifications", _("Notification scripts"),
                     str(cmk.utils.paths.local_notifications_dir)),
         PackagePart("web", _("GUI extensions"), str(cmk.utils.paths.local_web_dir)),
-        PackagePart("pnp-templates", _("PNP4Nagios templates"),
+        PackagePart("pnp-templates", _("PNP4Nagios templates (deprecated)"),
                     str(cmk.utils.paths.local_pnp_templates_dir)),
         PackagePart("doc", _("Documentation files"), str(cmk.utils.paths.local_doc_dir)),
         PackagePart("locales", _("Localizations"), str(cmk.utils.paths.local_locale_dir)),

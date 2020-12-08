@@ -144,7 +144,13 @@ def check_traceroute(lines, routes):
 
 def validate_ip_version(address_arg, ip_version_arg):
     # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
-    ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
+    try:
+        ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
+    except ValueError:
+        # May be a host or DNS name, don't execute the validation in this case.
+        # check_traceroute will perform the name resolution for us.
+        return
+
     if not ip_address_version == ip_version_arg:
         raise ProtocolVersionError(
             'IP protocol version "%s" not the same as the IP address version "%s".' %

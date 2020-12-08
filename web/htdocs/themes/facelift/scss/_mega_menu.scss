@@ -170,6 +170,10 @@
       border-right: $popup-border;
       visibility: hidden;
 
+      &.min {
+        left: 48px;
+      }
+
       &.single_column {
         width: $single-column-mega-menu;
       }

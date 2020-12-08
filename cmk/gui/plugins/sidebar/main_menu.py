@@ -64,8 +64,7 @@ class MainMenuRenderer:
 
             html.open_li()
             html.popup_trigger(
-                (html.render_icon(menu_item.icon) + html.render_icon(active_icon, class_="active") +
-                 html.render_div(menu_item.title)),
+                (self._get_popup_trigger_content(active_icon, menu_item)),
                 ident="mega_menu_" + menu_item.name,
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
                 cssclass=menu_item.name,
@@ -75,6 +74,15 @@ class MainMenuRenderer:
             )
             html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")
             html.close_li()
+
+    def _get_popup_trigger_content(self, active_icon: Icon, menu_item: MainMenuItem) -> HTML:
+        content = html.render_icon(menu_item.icon) + \
+                html.render_icon(active_icon, class_="active")
+
+        if not config.user.get_attribute("nav_hide_icons_title"):
+            content += html.render_div(menu_item.title)
+
+        return content
 
     def _get_main_menu_items(self) -> List[MainMenuItem]:
         # TODO: Add permissions? For example WATO is not allowed for all users
@@ -93,7 +101,11 @@ class MainMenuRenderer:
         with html.plugged():
             menu = mega_menu_registry[menu_item.name]
             html.open_div(id_="popup_menu_%s" % menu_item.name,
-                          class_=["popup_menu", "main_menu_popup"])
+                          class_=[
+                              "popup_menu",
+                              "main_menu_popup",
+                              "min" if config.user.get_attribute("nav_hide_icons_title") else None,
+                          ])
             MegaMenuRenderer().show(menu)
             html.close_div()
             return html.drain()

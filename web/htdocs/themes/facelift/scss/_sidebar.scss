@@ -48,6 +48,10 @@ body.side {
   float: left;
   width: 64px;
   height: 100%;
+
+  &.min {
+    width: 48px;
+  }
 }
 
 #check_mk_sidebar {
@@ -138,6 +142,10 @@ body.side {
     background-repeat: no-repeat;
     background-size: auto 44px;
     outline: none;
+
+    &.min {
+      background-image: url("images/tribe29_icon_min.svg");
+    }
   }
 }
 

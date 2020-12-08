@@ -1,0 +1,13 @@
+Title: Add option to define if navigation bar icons should show a title
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1607446426
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b2
+
+With the new option "Navigation icons" in user settings you can now define, if
+icons of the navigation bar should show a title like, e.g. "Monitor". This
+gives you the option to save some space in the UI.

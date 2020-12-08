@@ -355,7 +355,8 @@ class SidebarRenderer:
 
         user_config = UserSidebarConfig(config.user, config.sidebar)
 
-        html.open_div(id_="check_mk_navigation")
+        html.open_div(id_="check_mk_navigation",
+                      class_="min" if config.user.get_attribute("nav_hide_icons_title") else None)
         self._show_sidebar_head()
         html.close_div()
 
@@ -541,9 +542,12 @@ class SidebarRenderer:
 
     def _show_sidebar_head(self):
         html.open_div(id_="side_header")
-        html.open_a(href=config.user.get_attribute("start_url") or config.start_url,
-                    target="main",
-                    title=_("Go to main overview"))
+        html.open_a(
+            href=config.user.get_attribute("start_url") or config.start_url,
+            target="main",
+            title=_("Go to main overview"),
+            class_="min" if config.user.get_attribute("nav_hide_icons_title") else None,
+        )
         html.div("", id_="side_bg")
         html.close_a()
         html.close_div()
@@ -555,7 +559,8 @@ class SidebarRenderer:
                       onclick="cmk.sidebar.toggle_sidebar()")
         html.icon("sidebar_folded", class_="folded")
         html.icon("sidebar")
-        html.div(_("Sidebar"))
+        if not config.user.get_attribute("nav_hide_icons_title"):
+            html.div(_("Sidebar"))
         html.close_div()
 
     # TODO: Re-add with new UX?

@@ -5,10 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    TextUnicode,
-    Integer,
-)
+from cmk.gui.valuespec import (TextUnicode, Integer, MonitoredHostname, MonitoredServiceDescription)
 
 from cmk.gui.plugins.visuals import (
     VisualInfo,
@@ -32,7 +29,7 @@ class VisualInfoHost(VisualInfo):
 
     @property
     def single_spec(self):
-        return [('host', TextUnicode(title=_('Hostname'),))]
+        return [('host', MonitoredHostname(title=_('Hostname'),))]
 
     @property
     def multiple_site_filters(self):
@@ -59,7 +56,7 @@ class VisualInfoService(VisualInfo):
 
     @property
     def single_spec(self):
-        return [('service', TextUnicode(title=_('Service Description'),))]
+        return [('service', MonitoredServiceDescription(title=_('Service Description')))]
 
     @property
     def multiple_site_filters(self):

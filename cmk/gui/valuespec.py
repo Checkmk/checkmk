@@ -1135,12 +1135,33 @@ class MonitoredHostname(TextAsciiAutocomplete):
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
         query = ("GET hosts\n"
+                 "Cache: reload\n"
                  "Columns: host_name\n"
                  "Filter: host_name ~~ %s" % livestatus.lqencode(value))
 
-        hosts = sorted(sites.live().query_column_unique(query))
+        return [(h, h) for h in sorted(sites.live().query_column_unique(query))]
 
-        return [(h, h) for h in hosts]
+
+class MonitoredServiceDescription(TextAsciiAutocomplete):
+    """Unfiltered Service Descriptions for input with dropdown completion
+
+    Renders an input field for entering a service description while providing an auto completion dropdown field.
+    Fetching the choices from the current live config via livestatus"""
+    ident = "monitored_service_description"
+
+    def __init__(self, **kwargs):
+        super().__init__(completion_ident=self.ident, completion_params={}, **kwargs)
+
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        """Return the matching list of dropdown choices
+        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+        query = ("GET services\n"
+                 "Cache: reload\n"
+                 "Columns: service_description\n"
+                 "Filter: service_description ~~ %s" % livestatus.lqencode(value))
+
+        return [(h, h) for h in sorted(sites.live().query_column_unique(query))]
 
 
 @page_registry.register_page("ajax_vs_autocomplete")

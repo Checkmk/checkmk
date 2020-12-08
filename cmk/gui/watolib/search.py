@@ -35,9 +35,7 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.pages import get_page_handler
 from cmk.gui.plugins.watolib.utils import (
-    ConfigVariableRegistry,
     SampleConfigGenerator,
-    config_variable_registry,
     sample_config_generator_registry,
 )
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
@@ -447,39 +445,4 @@ class SampleConfigGeneratorSearchIndex(SampleConfigGenerator):
         build_and_store_index()
 
 
-class MatchItemGeneratorGlobalSettings(ABCMatchItemGenerator):
-    def __init__(
-        self,
-        name: str,
-        conf_var_registry: ConfigVariableRegistry,
-    ) -> None:
-        super().__init__(name)
-        self._config_variable_registry = conf_var_registry
-
-    def generate_match_items(self) -> MatchItems:
-        yield from (MatchItem(
-            title=title,
-            topic=_("Global settings"),
-            url="wato.py?mode=edit_configvar&varname=%s" % ident,
-            match_texts=[title, config_var.ident()],
-        ) for ident, config_var_type in self._config_variable_registry.items()
-                    for config_var in [config_var_type()]
-                    for title in [config_var.valuespec().title()]
-                    if config_var.in_global_settings() and title)
-
-    @staticmethod
-    def is_affected_by_change(_change_action_name: str) -> bool:
-        return False
-
-    @property
-    def is_localization_dependent(self) -> bool:
-        return True
-
-
 match_item_generator_registry = MatchItemGeneratorRegistry()
-
-match_item_generator_registry.register(
-    MatchItemGeneratorGlobalSettings(
-        'global_settings',
-        config_variable_registry,
-    ))

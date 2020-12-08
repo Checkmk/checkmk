@@ -8,6 +8,7 @@ settings"""
 
 import abc
 from typing import (
+    Final,
     Iterable,
     Iterator,
     Optional,
@@ -34,7 +35,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
@@ -52,6 +53,14 @@ from cmk.gui.page_menu import (
 )
 
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.urls import makeuri_contextless
+
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -496,3 +505,59 @@ def is_a_checkbox(vs):
     if isinstance(vs, Transform):
         return is_a_checkbox(vs._valuespec)
     return False
+
+
+class MatchItemGeneratorSettings(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        topic: str,
+        # we cannot pass an instance here because we would get
+        # RuntimeError("Working outside of request context.")
+        # when registering below due to
+        # ABCGlobalSettingsMode.__init__ --> _from_vars --> get_search_expression)
+        mode_class: Type[ABCGlobalSettingsMode],
+    ) -> None:
+        super().__init__(name)
+        self._topic: Final[str] = topic
+        self._mode_class: Final[Type[ABCGlobalSettingsMode]] = mode_class
+
+    def _config_variable_to_match_item(
+        self,
+        config_variable: ConfigVariable,
+        edit_mode_name: str,
+    ) -> MatchItem:
+        title = config_variable.valuespec().title() or _("Untitled setting")
+        ident = config_variable.ident()
+        return MatchItem(
+            title=title,
+            topic=self._topic,
+            url=makeuri_contextless(
+                request,
+                [("mode", edit_mode_name), ("varname", ident)],
+                filename="wato.py",
+            ),
+            match_texts=[title, ident],
+        )
+
+    def generate_match_items(self) -> MatchItems:
+        mode = self._mode_class()
+        yield from (self._config_variable_to_match_item(config_variable, mode.edit_mode_name)
+                    for _group, config_variables in mode.iter_all_configuration_variables()
+                    for config_variable in config_variables)
+
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
+
+
+match_item_generator_registry.register(
+    MatchItemGeneratorSettings(
+        "global_settings",
+        _("Global settings"),
+        ModeEditGlobals,
+    ))

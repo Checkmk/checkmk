@@ -8,15 +8,15 @@ import * as ajax from "ajax";
 //# | Posting crash report to official Checkmk crash reporting API      |
 //# '--------------------------------------------------------------------'
 
-export function submit(url, post_data) {
+export function submit_crash_report(url, post_data) {
     document.getElementById("pending_msg").style.display = "block";
 
     if (has_cross_domain_ajax_support()) {
         ajax.call_ajax(url, {
             method: "POST",
             post_data: post_data,
-            response_handler: handle_crash_report_response,
-            error_handler: handle_crash_report_error,
+            response_handler: handle_report_response,
+            error_handler: handle_report_error,
             add_ajax_id: false,
             handler_data: {
                 base_url: url,
@@ -27,11 +27,33 @@ export function submit(url, post_data) {
         // workaround this issue by doing some iframe / form magic
         submit_with_ie(url, post_data);
     } else {
-        handle_crash_report_error(
-            null,
-            null,
-            "Your browser does not support direct crash reporting."
-        );
+        handle_report_error(null, null, "Your browser does not support direct reporting.");
+    }
+}
+
+export function submit_license_usage_report(url, username, password, post_data) {
+    document.getElementById("pending_msg").style.display = "block";
+
+    if (has_cross_domain_ajax_support()) {
+        ajax.call_ajax(url, {
+            method: "POST",
+            username: username,
+            password: password,
+            post_data: post_data,
+            response_handler: handle_report_response,
+            error_handler: handle_report_error,
+            add_ajax_id: false,
+            handler_data: {
+                base_url: url,
+            },
+        });
+    } else if (typeof XDomainRequest !== "undefined") {
+        // IE < 9 does not support cross domain ajax requests in the standard way.
+        // workaround this issue by doing some iframe / form magic
+        var the_url = username + ":" + password + "@" + url;
+        submit_with_ie(the_url, post_data);
+    } else {
+        handle_report_error(null, null, "Your browser does not support direct reporting.");
     }
 }
 
@@ -45,18 +67,18 @@ function submit_with_ie(url, post_data) {
     };
     var xdr = new window.XDomainRequest();
     xdr.onload = function () {
-        handle_crash_report_response(handler_data, xdr.responseText);
+        handle_report_response(handler_data, xdr.responseText);
     };
     xdr.onerror = function () {
-        handle_crash_report_error(handler_data, null, xdr.responseText);
+        handle_report_error(handler_data, null, xdr.responseText);
     };
     xdr.onprogress = function () {};
     xdr.open("post", url);
     xdr.send(post_data);
 }
 
-function handle_crash_report_response(handler_data, response_body) {
-    hide_crash_report_processing_msg();
+function handle_report_response(handler_data, response_body) {
+    hide_report_processing_msg();
 
     if (response_body.substr(0, 2) == "OK") {
         var id = response_body.split(" ")[1];
@@ -70,8 +92,8 @@ function handle_crash_report_response(handler_data, response_body) {
     }
 }
 
-function handle_crash_report_error(handler_data, status_code, error_msg) {
-    hide_crash_report_processing_msg();
+function handle_report_error(handler_data, status_code, error_msg) {
+    hide_report_processing_msg();
 
     var fail_container = document.getElementById("fail_msg");
     fail_container.style.display = "block";
@@ -87,10 +109,12 @@ function handle_crash_report_error(handler_data, status_code, error_msg) {
     }
 }
 
-function hide_crash_report_processing_msg() {
+function hide_report_processing_msg() {
     var msg = document.getElementById("pending_msg");
     msg.parentNode.removeChild(msg);
 }
+
+// Download function only for crash reports
 
 export function download(data_url) {
     var link = document.createElement("a");

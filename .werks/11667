@@ -1,0 +1,13 @@
+Title: Set default unique connection ID on dynamic host connection creation
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1607436565
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b2
+
+You had to set up a unique ID on connection creation. In order to clear up
+ambiguity about what actually needs to be entered, we will set a standard in
+the future.

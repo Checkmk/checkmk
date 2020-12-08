@@ -84,7 +84,21 @@ class FilterText(Filter):
 
     def display(self) -> None:
         current_value = self._current_value()
-        html.text_input(self.htmlvars[0], current_value, self.negateable and 'neg' or '')
+
+        onkeyup: Optional[str] = None
+        if self.link_columns == ["host_name"]:
+            onkeyup = "cmk.valuespecs.autocomplete(this, \"monitored_hostname\", {}, \"\")"
+        if self.link_columns == ["service_description"]:
+            onkeyup = "cmk.valuespecs.autocomplete(this, \"monitored_service_description\", {}, \"\")"
+
+        autocomplete = "off" if onkeyup else None
+
+        html.text_input(self.htmlvars[0],
+                        current_value,
+                        self.negateable and 'neg' or '',
+                        autocomplete=autocomplete,
+                        onkeyup=onkeyup)
+
         if self.negateable:
             html.open_nobr()
             html.checkbox(self.htmlvars[1], False, label=_("negate"))

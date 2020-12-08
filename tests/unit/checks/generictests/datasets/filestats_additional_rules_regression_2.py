@@ -69,7 +69,8 @@ checks = {
                 (0, 'Newest: 53 d', []),
                 (0, 'Oldest: 53 d', []),
                 (0, '[/var/log/apport.log.2.gz] Age: 53 d, Size: 479.00 B(!!)', []),
-                (0, '\nFiles in file group:\n[/var/log/boot.log] Age: 356 m, Size: 138.57 kB(!!)', []),
+                (0, '\nRemaining files: 1', []),
+                (0, '\n[/var/log/boot.log] Age: 356 m, Size: 138.57 kB(!!)', []),
             ]
         ),
     ]

@@ -28,7 +28,7 @@ from cmk.utils.type_defs import HostAddress, HostName, result, ServiceCheckResul
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import ABCFetcher, ABCFileCache
+from cmk.fetchers import Fetcher, ABCFileCache
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.host_sections import THostSections
 from cmk.fetchers.type_defs import Mode
@@ -204,7 +204,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _make_fetcher(self) -> ABCFetcher:
+    def _make_fetcher(self) -> Fetcher:
         """Create a fetcher with this configuration."""
         raise NotImplementedError
 

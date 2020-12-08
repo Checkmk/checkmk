@@ -21,7 +21,7 @@ from cmk.snmplib.type_defs import TRawData
 
 from .type_defs import Mode
 
-__all__ = ["ABCFetcher", "ABCFileCache", "verify_ipaddress"]
+__all__ = ["Fetcher", "ABCFileCache", "verify_ipaddress"]
 
 TFileCache = TypeVar("TFileCache", bound="ABCFileCache")
 
@@ -148,10 +148,10 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
             raise MKGeneralException("Cannot write cache file %s: %s" % (self.path, e))
 
 
-TFetcher = TypeVar("TFetcher", bound="ABCFetcher")
+TFetcher = TypeVar("TFetcher", bound="Fetcher")
 
 
-class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
+class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
     def __init__(self, file_cache: ABCFileCache, logger: logging.Logger) -> None:
         super().__init__()
@@ -178,7 +178,7 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @final
-    def __enter__(self) -> 'ABCFetcher':
+    def __enter__(self) -> 'Fetcher':
         """Prepare the data source."""
         try:
             self.open()

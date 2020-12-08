@@ -718,13 +718,13 @@ class TestFetcherCaching:
         assert fetcher.fetch(Mode.CHECKING) == result.OK(b"fetched_section")
         assert fetcher.file_cache.cache == b"fetched_section"
 
-    # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
+    # We are in fact testing a generic feature of the Fetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
         assert fetcher.fetch(Mode.DISCOVERY) == result.OK(b"cached_section")
         assert fetcher.file_cache.cache == b"cached_section"
 
-    # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
+    # We are in fact testing a generic feature of the Fetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_inventory_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
         assert fetcher.fetch(Mode.INVENTORY) == result.OK(b"cached_section")

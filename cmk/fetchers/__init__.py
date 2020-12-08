@@ -9,7 +9,7 @@ import enum
 from typing import Any, Dict, Literal, Optional, Type
 
 from . import cache
-from ._base import ABCFetcher, ABCFileCache, verify_ipaddress
+from ._base import Fetcher, ABCFileCache, verify_ipaddress
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
@@ -18,7 +18,7 @@ from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
 
 __all__ = [
-    "ABCFetcher",
+    "Fetcher",
     "ABCFileCache",
     "IPMIFetcher",
     "PiggybackFetcher",
@@ -42,7 +42,7 @@ class FetcherType(enum.Enum):
     SNMP = enum.auto()
     TCP = enum.auto()
 
-    def make(self) -> Type[ABCFetcher]:
+    def make(self) -> Type[Fetcher]:
         """The fetcher factory."""
         # This typing error is a false positive.  There are tests to demonstrate that.
         return {  # type: ignore[return-value]
@@ -53,6 +53,6 @@ class FetcherType(enum.Enum):
             FetcherType.TCP: TCPFetcher,
         }[self]
 
-    def from_json(self, serialized: Dict[str, Any]) -> ABCFetcher:
+    def from_json(self, serialized: Dict[str, Any]) -> Fetcher:
         """Instantiate the fetcher from serialized data."""
         return self.make().from_json(serialized)

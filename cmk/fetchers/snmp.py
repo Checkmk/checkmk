@@ -38,7 +38,7 @@ from cmk.snmplib.type_defs import (
 )
 
 from . import factory
-from ._base import ABCFetcher, ABCFileCache, verify_ipaddress
+from ._base import Fetcher, ABCFileCache, verify_ipaddress
 from .cache import PersistedSections, SectionStore
 from .type_defs import Mode
 
@@ -131,7 +131,7 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
 
-class SNMPFetcher(ABCFetcher[SNMPRawData]):
+class SNMPFetcher(Fetcher[SNMPRawData]):
     CPU_SECTIONS_WITHOUT_CPU_IN_NAME = {
         SectionName("brocade_sys"),
         SectionName("bvip_util"),

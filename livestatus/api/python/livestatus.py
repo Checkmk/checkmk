@@ -189,15 +189,12 @@ class Helpers:
 
         return [l[0] for l in self.query(normalized_query, "ColumnHeaders: off\n")]
 
-    def query_column_unique(self, query: 'QueryTypes') -> List[LivestatusColumn]:
+    def query_column_unique(self, query: 'QueryTypes') -> Set[LivestatusColumn]:
         """Issues a query that returns exactly one column and returns the values
            of all lines with duplicates removed. The "natural order" of the rows is
            not preserved."""
         normalized_query = Query(query) if not isinstance(query, Query) else query
-        result: Set[LivestatusColumn] = set()
-        for line in self.query(normalized_query, "ColumnHeaders: off\n"):
-            result.add(line[0])
-        return list(result)
+        return {line[0] for line in self.query(normalized_query, "ColumnHeaders: off\n")}
 
     def query_table(self, query: 'QueryTypes') -> LivestatusResponse:
         """Issues a query that may return multiple lines and columns and returns

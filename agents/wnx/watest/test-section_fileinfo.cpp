@@ -2,7 +2,8 @@
 
 //
 #include "pch.h"
-
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#include <experimental/filesystem>
 #include <filesystem>
 
 #include "cfg.h"
@@ -523,7 +524,7 @@ TEST(FileInfoTest, Reality) {
         auto p = BuildTestUNC();
         std::error_code ec;
         if (fs::exists(p, ec)) {
-            fs::path path = fs::u8path(test_u8_name);
+            fs::path path{test_u8_name};
             std::string path_string = path.u8string();
             auto w_string = path.wstring();
 
@@ -567,12 +568,29 @@ TEST(FileInfoTest, MakeFileInfoMissing) {
     }
 }
 
+namespace {
+/// \brief - returns Unix time of the file
+///
+/// function which was valid in 1.6 and still valid
+/// because experimental is deprecated we can't it use anymore, but we can test
+int64_t SecondsSinceEpoch(const std::string& name) {
+    namespace fs = std::experimental::filesystem::v1;
+    fs::path fp{name};
+
+    auto write_time = fs::last_write_time(fp);
+    auto time_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(
+        write_time.time_since_epoch());
+    return time_since_epoch.count();
+}
+}  // namespace
+
 TEST(FileInfoTest, MakeFileInfoPresented) {
     // EXPECTED strings
     // "fname|ok|500|153334455\n"
     // "fname|500|153334455\n"
 
-    const std::string fname = "c:\\Windows\\noTepad.exE";
+    const std::string fname{"c:\\Windows\\noTepad.exE"};
+    auto age_since_epoch = SecondsSinceEpoch(fname);
     FileInfo::Mode modes[] = {FileInfo::Mode::legacy, FileInfo::Mode::modern};
 
     for (auto mode : modes) {
@@ -583,6 +601,11 @@ TEST(FileInfoTest, MakeFileInfoPresented) {
 
         auto table = cma::tools::SplitString(x, "|");
         CheckTablePresent(table, name, mode);
+        auto tt = std::atoll(table[table.size() - 1].c_str());
+        const auto now = std::chrono::system_clock::now();
+        auto obtained_time = std::chrono::system_clock::to_time_t(now);
+        EXPECT_GT(obtained_time, tt);
+        EXPECT_EQ(age_since_epoch, tt);
     }
 }
 

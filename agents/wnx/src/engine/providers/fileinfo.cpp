@@ -23,6 +23,12 @@
 
 namespace cma::provider::details {
 
+auto GetFileTimeSinceEpoch(const std::filesystem::path &file) noexcept {
+    std::error_code ec;
+    auto file_last_touch_full = std::filesystem::last_write_time(file, ec);
+    return file_last_touch_full.time_since_epoch();
+}
+
 // read chunk from the file name preserving case
 // on error - nothing
 std::filesystem::path ReadBaseNameWithCase(
@@ -367,6 +373,23 @@ std::string MakeFileInfoEntryLegacy(const std::filesystem::path &file_name,
                        FileInfo::kSep, file_size, seconds);
 }
 
+namespace {
+void correctSeconds(int64_t &seconds) {
+    // NOTE: This is a windows hack. Temporary till C++ 20 will be fully
+    // implemented.
+    // WHY: Windows filetime type std::filesystem has an epoch dated
+    // to 1.01.1601. We need Unix epoch dated to 01.01.1970. Distance is
+    // introduced as a constexpr value.
+    // For the case if Microsoft will change *again* opinion about
+    // epoch(experimental::filesystem are using Unix epoch), we check the
+    // returned value.
+    // To remove hack we need *to_time_t* functionality
+
+    constexpr int64_t epoch_distance = 11'644'473'600LL;
+    if (seconds > epoch_distance) seconds -= epoch_distance;
+}
+}  // namespace
+
 std::tuple<uint64_t, int64_t, bool> GetFileStats(
     const std::filesystem::path &file_path) {
     namespace fs = std::filesystem;
@@ -374,8 +397,8 @@ std::tuple<uint64_t, int64_t, bool> GetFileStats(
     auto file_size = fs::file_size(file_path, ec);
     bool stat_failed = false;
     if (ec) {
-        XLOG::l.e("Cant get size of file '{}'  status [{}]",
-                  file_path.u8string(), ec.value());
+        XLOG::l.e("Can't get size of file '{}'  status [{}]", file_path,
+                  ec.value());
         file_size = 0;
         stat_failed = true;
     }
@@ -384,14 +407,15 @@ std::tuple<uint64_t, int64_t, bool> GetFileStats(
 
     auto file_last_touch = GetFileTimeSinceEpoch(file_path);
     if (ec) {
-        XLOG::l.e("Cant get last touch of file '{}' status [{}]",
-                  file_path.u8string(), ec.value());
+        XLOG::l.e("Can't get last touch of file '{}' status [{}]", file_path,
+                  ec.value());
         seconds = cma::tools::SecondsSinceEpoch();
         stat_failed = true;
     } else {
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(file_last_touch);
         seconds = duration.count();
+        correctSeconds(seconds);
     }
 
     return {file_size, seconds, stat_failed};

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -51,25 +52,6 @@ protected:
     FRIEND_TEST(FileInfoTest, CheckDriveLetter);
 #endif
 };
-
-// function is used to avoid error in MS VC 2017 with non-experimental
-// filesystem, because last_write_time generates absurdly big numbers
-// #TODO CHECK in 2019
-// returns chrono::duration::* probably dependent from the experimental/not
-// experimental this function is temporary by nature, so we do not care much
-// about C++ Guide
-inline auto GetFileTimeSinceEpoch(const std::filesystem::path& file) noexcept {
-    std::error_code ec;
-#if defined(USE_EXPERIMENTAL_FILESYSTEM)
-    std::experimental::filesystem::v1::path fp = file.c_str();
-    auto file_last_touch_full =
-        std::experimental::filesystem::v1::last_write_time(fp, ec);
-    return file_last_touch_full.time_since_epoch();
-#else
-    auto file_last_touch_full = std::filesystem::last_write_time(file, ec);
-    return file_last_touch_full.time_since_epoch();
-#endif
-}
 
 }  // namespace provider
 

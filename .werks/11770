@@ -1,0 +1,12 @@
+Title: mk_docker.py: The plugin crashed with a SyntaxError
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607432494
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+The "SyntaxError: from __future__ imports must occur at the beginning of the file" crash is fixed.
+

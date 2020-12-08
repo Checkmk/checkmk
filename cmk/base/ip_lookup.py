@@ -14,12 +14,12 @@ from six import ensure_str
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.base.config as config
-from cmk.base.caching import config_cache as _config_cache
 
 IPLookupCacheId = Tuple[HostName, int]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
@@ -161,7 +161,7 @@ def cached_dns_lookup(hostname: HostName, family: int, is_no_ip_host: bool) -> O
                                      (family, hostname, e))
 
 
-class IPLookupCache(cmk.base.caching.DictCache):
+class IPLookupCache(cmk.utils.caching.DictCache):
     def __init__(self) -> None:
         super(IPLookupCache, self).__init__()
         self.persist_on_update = True

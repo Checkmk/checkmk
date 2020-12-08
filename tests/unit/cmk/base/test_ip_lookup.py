@@ -12,15 +12,18 @@ import pytest  # type: ignore[import]
 
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
-import cmk.base.ip_lookup as ip_lookup
+
 import cmk.base.config as config
+import cmk.base.ip_lookup as ip_lookup
 
 
 # TODO: Can be removed when this is not executed through a symlink anymore.
 # tests/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches_ip_lookup(monkeypatch):
-    from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache  # pylint: disable=import-outside-toplevel
+    from cmk.utils.caching import (  # pylint: disable=import-outside-toplevel
+        config_cache as _config_cache,)
+    from cmk.utils.caching import runtime_cache as _runtime_cache
     _config_cache.reset()
     _runtime_cache.reset()
 

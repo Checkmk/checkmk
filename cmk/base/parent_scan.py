@@ -15,10 +15,10 @@ from typing import Union, Tuple, Optional, Set, Dict, List
 import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.debug
+from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 
-from cmk.base.caching import config_cache as _config_cache
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

@@ -23,6 +23,7 @@ from typing import (
     Union,
 )
 
+import cmk.utils.caching as caching
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKParseFunctionError
@@ -38,7 +39,6 @@ from cmk.utils.type_defs import (
 from cmk.fetchers.cache import ABCRawDataSection, PersistedSections, TRawDataSection
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.caching as caching
 import cmk.base.item_state as item_state
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE

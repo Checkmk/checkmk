@@ -27,12 +27,12 @@ if not os.environ.get("OMD_SITE"):
     sys.exit(1)
 
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKBailOut
+import cmk.utils.caching
 import cmk.utils.debug
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils.log import console
 
-import cmk.base.caching  # pylint: disable=cmk-module-layer-violation
 import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
 import cmk.base.profiling as profiling  # pylint: disable=cmk-module-layer-violation
 from cmk.base.modes import modes  # pylint: disable=cmk-module-layer-violation

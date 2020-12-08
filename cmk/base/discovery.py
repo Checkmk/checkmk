@@ -37,15 +37,17 @@ import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.object_diff import make_object_diff
+from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
 from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
+from cmk.utils.object_diff import make_object_diff
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
+    DiscoveryResult,
     HostAddress,
     HostName,
     HostState,
@@ -55,7 +57,6 @@ from cmk.utils.type_defs import (
     RulesetName,
     SectionName,
     SourceType,
-    DiscoveryResult,
 )
 
 from cmk.fetchers.protocol import FetcherMessage
@@ -76,7 +77,7 @@ import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.caching import config_cache as _config_cache
+from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.checkers.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.core_config import MonitoringCore
@@ -86,7 +87,6 @@ from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
     ServiceLabel,
 )
-from cmk.base.autochecks import ServiceWithNodes
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120

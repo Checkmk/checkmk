@@ -12,20 +12,20 @@ from six import ensure_str
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
+import cmk.utils.version as cmk_version
+from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     CheckPluginName,
+    ConfigSerial,
     HostKey,
+    LATEST_SERIAL,
     SectionName,
     SourceType,
-    ConfigSerial,
-    LATEST_SERIAL,
 )
 
-from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel

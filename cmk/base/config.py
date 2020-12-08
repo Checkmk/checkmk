@@ -54,6 +54,8 @@ import cmk.utils.store as store
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
+from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.caching import runtime_cache as _runtime_cache
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
@@ -111,8 +113,6 @@ from cmk.base.api.agent_based.type_defs import (
     SectionPlugin,
     SNMPSectionPlugin,
 )
-from cmk.base.caching import config_cache as _config_cache
-from cmk.base.caching import runtime_cache as _runtime_cache
 from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.autochecks import ServiceWithNodes

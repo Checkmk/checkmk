@@ -1407,20 +1407,21 @@ def discovery_max_cachefile_age(use_caches: bool) -> int:
 #   '----------------------------------------------------------------------'
 
 
-def load_all_agent_based_plugins(get_check_api_context: GetCheckApiContext,) -> None:
+def load_all_agent_based_plugins(get_check_api_context: GetCheckApiContext,) -> List[str]:
     """Load all checks and includes"""
     global _all_checks_loaded
 
     _initialize_data_structures()
 
-    agent_based_register.load_all_plugins()
+    errors = agent_based_register.load_all_plugins()
 
     # LEGACY CHECK PLUGINS
     filelist = get_plugin_paths(
         str(cmk.utils.paths.local_checks_dir),
         cmk.utils.paths.checks_dir,
     )
-    load_checks(get_check_api_context, filelist)
+
+    errors.extend(load_checks(get_check_api_context, filelist))
 
     # LEGACY INVENTORY PLUGINS
     # unfortunately, inventory_plugins will import cmk.base.config,
@@ -1428,12 +1429,15 @@ def load_all_agent_based_plugins(get_check_api_context: GetCheckApiContext,) -> 
     # We could do further refactoring to resolve this, but the time would probably
     # be spent better migrating the legacy inventory plugins to the new API...
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-    inventory_plugins.load_legacy_inventory_plugins(
-        get_check_api_context,
-        agent_based_register.inventory_plugins_legacy.get_inventory_context,
-    )
+    errors.extend(
+        inventory_plugins.load_legacy_inventory_plugins(
+            get_check_api_context,
+            agent_based_register.inventory_plugins_legacy.get_inventory_context,
+        ))
 
     _all_checks_loaded = True
+
+    return errors
 
 
 def _initialize_data_structures() -> None:
@@ -1473,7 +1477,7 @@ def get_plugin_paths(*dirs: str) -> List[str]:
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
-def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) -> None:
+def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) -> List[str]:
     cmk_global_vars = set(get_variable_names())
 
     loaded_files: Set[str] = set()
@@ -1564,9 +1568,12 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
     # Now convert check_info to new format.
     convert_check_info()
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
-    _extract_agent_and_snmp_sections(validate_creation_kwargs=did_compile)
-    _extract_check_plugins(validate_creation_kwargs=did_compile)
+
+    errors = (_extract_agent_and_snmp_sections(validate_creation_kwargs=did_compile) +
+              _extract_check_plugins(validate_creation_kwargs=did_compile))
     initialize_check_type_caches()
+
+    return errors
 
 
 def all_checks_loaded() -> bool:
@@ -1966,12 +1973,13 @@ AUTO_MIGRATION_ERR_MSG = ("Failed to auto-migrate legacy plugin to %s: %s\n"
 def _extract_agent_and_snmp_sections(
     *,
     validate_creation_kwargs: bool,
-) -> None:
+) -> List[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
     in check_info, snmp_scan_functions and snmp_info to create API compliant section plugins.
     """
+    errors = []
     # start with the "main"-checks, the ones without '.' in their names:
     for check_plugin_name in sorted(check_info, key=lambda name: ('.' in name, name)):
         section_name = section_name_of(check_plugin_name)
@@ -1998,20 +2006,26 @@ def _extract_agent_and_snmp_sections(
                         validate_creation_kwargs=validate_creation_kwargs,
                     ))
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
+            # NOTE: missing section pugins may lead to missing data for a check plugin
+            #       *or* to more obscure errors, when a check/inventory plugin will be
+            #       passed un-parsed data unexpectedly.
             if cmk.utils.debug.enabled():
-                raise MKGeneralException(exc)
-            console.error(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+                raise MKGeneralException(exc) from exc
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+
+    return errors
 
 
 def _extract_check_plugins(
     *,
     validate_creation_kwargs: bool,
-) -> None:
+) -> List[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
     in check_info to create API compliant check plugins.
     """
+    errors = []
     for check_plugin_name, check_info_dict in sorted(check_info.items()):
         # skip pure section declarations:
         if check_info_dict.get("service_description") is None:
@@ -2027,9 +2041,13 @@ def _extract_check_plugins(
                     validate_creation_kwargs=validate_creation_kwargs,
                 ))
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
+            # NOTE: as a result of a missing check plugin, the corresponding services
+            #       will be silently droppend on most (all?) occasions.
             if cmk.utils.debug.enabled():
-                raise MKGeneralException(exc)
-            console.error(AUTO_MIGRATION_ERR_MSG % ("check plugin", check_plugin_name))
+                raise MKGeneralException(exc) from exc
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plugin", check_plugin_name))
+
+    return errors
 
 
 # These caches both only hold the base names of the checks

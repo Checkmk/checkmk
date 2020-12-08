@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List
+
 import cmk.utils.debug
 import cmk.utils.paths
-
-from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 from cmk.base.api.agent_based.register._config import (
@@ -38,11 +38,13 @@ from cmk.base.api.agent_based.register._config import (
 )
 
 
-def load_all_plugins():
+def load_all_plugins() -> List[str]:
+    errors = []
     for plugin, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
-        console.error("Error in agent based plugin %s: %s\n", plugin, exception)
+        errors.append(f"Error in agent based plugin {plugin}: {exception}\n")
         if cmk.utils.debug.enabled():
             raise exception
+    return errors
 
 
 __all__ = [

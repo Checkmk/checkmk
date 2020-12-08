@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Any, Callable, Dict, Set
+from typing import Any, Callable, Dict, List, Set
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -53,7 +53,8 @@ _plugin_file_lookup: Dict[str, str] = {}
 def load_legacy_inventory_plugins(
     get_check_api_context: config.GetCheckApiContext,
     get_inventory_context: GetInventoryApiContext,
-) -> None:
+) -> List[str]:
+    errors = []
     loaded_files: Set[str] = set()
     filelist = config.get_plugin_paths(str(cmk.utils.paths.local_inventory_dir),
                                        cmk.utils.paths.inventory_dir)
@@ -73,8 +74,8 @@ def load_legacy_inventory_plugins(
 
             exec(open(f).read(), plugin_context)  # yapf: disable
             loaded_files.add(file_name)
-        except Exception as e:
-            console.error("Error in inventory plugin file %s: %s\n", f, e)
+        except Exception as exc:
+            errors.append(f"Error in inventory plugin file {f}: {exc}\n")
             if cmk.utils.debug.enabled():
                 raise
             continue
@@ -84,14 +85,17 @@ def load_legacy_inventory_plugins(
             _plugin_contexts.setdefault(check_plugin_name, plugin_context)
             _plugin_file_lookup.setdefault(check_plugin_name, f)
 
-    _extract_snmp_sections(inv_info, _plugin_file_lookup)
-    _extract_inventory_plugins(inv_info)
+    errors.extend(_extract_snmp_sections(inv_info, _plugin_file_lookup))
+    errors.extend(_extract_inventory_plugins(inv_info))
+
+    return errors
 
 
 def _extract_snmp_sections(
     inf_info: Dict[InventoryPluginNameStr, InventoryInfo],
     plugin_file_lookup: Dict[str, str],
-) -> None:
+) -> List[str]:
+    errors = []
     for plugin_name, plugin_info in sorted(inv_info.items()):
         if 'snmp_info' not in plugin_info:
             continue
@@ -119,10 +123,13 @@ def _extract_snmp_sections(
             msg = config.AUTO_MIGRATION_ERR_MSG % ('section', plugin_name)
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
-            console.warning(msg)
+            errors.append(msg)
+
+    return errors
 
 
-def _extract_inventory_plugins(inf_info: Dict[InventoryPluginNameStr, InventoryInfo],) -> None:
+def _extract_inventory_plugins(inf_info: Dict[InventoryPluginNameStr, InventoryInfo],) -> List[str]:
+    errors = []
     for plugin_name, plugin_info in sorted(inv_info.items()):
         try:
             agent_based_register.add_inventory_plugin(
@@ -136,7 +143,9 @@ def _extract_inventory_plugins(inf_info: Dict[InventoryPluginNameStr, InventoryI
             msg = config.AUTO_MIGRATION_ERR_MSG % ('inventory', plugin_name)
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
-            console.warning(msg)
+            errors.append(msg)
+
+    return errors
 
 
 def _new_inv_context(get_check_api_context: config.GetCheckApiContext,

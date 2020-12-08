@@ -133,12 +133,13 @@
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>26444</DisableSpecificWarnings>
+      <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -165,12 +166,13 @@ cd $(ProjectDir)</Command>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>26444</DisableSpecificWarnings>
+      <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -199,11 +201,12 @@ cd $(ProjectDir)</Command>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>26444</DisableSpecificWarnings>
+      <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -233,11 +236,12 @@ cd $(ProjectDir)</Command>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>26444</DisableSpecificWarnings>
+      <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

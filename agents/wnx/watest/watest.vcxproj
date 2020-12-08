@@ -125,12 +125,14 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/asio/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -162,12 +164,14 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/asio/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -200,10 +204,12 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/asio/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -239,10 +245,12 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/asio/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

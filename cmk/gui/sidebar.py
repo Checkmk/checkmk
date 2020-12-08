@@ -339,14 +339,15 @@ class SidebarRenderer:
         body_classes = ['side', "screenshotmode" if config.screenshotmode else None]
 
         if not config.user.may("general.see_sidebar"):
-            html.open_body(class_=body_classes)
+            html.open_body(class_=body_classes, data_theme=html.get_theme())
             return
 
         interval = config.sidebar_notify_interval if config.sidebar_notify_interval is not None else "null"
         html.open_body(
             class_=body_classes,
             onload='cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages(%s);' %
-            interval)
+            interval,
+            data_theme=html.get_theme())
 
     def _show_sidebar(self) -> None:
         if not config.user.may("general.see_sidebar"):

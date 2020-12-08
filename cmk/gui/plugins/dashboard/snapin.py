@@ -74,7 +74,7 @@ class SnapinDashlet(IFrameDashlet):
 
         html.set_browser_reload(self.refresh_interval())
         html.html_head(_('Snapin Dashlet'))
-        html.open_body(class_="side")
+        html.open_body(class_="side", data_theme=html.get_theme())
         html.open_div(id_="check_mk_sidebar")
         html.open_div(id_="side_content")
         html.open_div(id_="snapin_container_%s" % dashlet['snapin'], class_="snapin")

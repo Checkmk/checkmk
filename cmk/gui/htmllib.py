@@ -240,6 +240,9 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
 
             key = escaping.escape_attribute(key_unescaped.rstrip('_'))
 
+            if key.startswith('data_'):
+                key = key.replace('_', '-', 1)  # HTML data attribute: 'data-name'
+
             if v == '':
                 options.append(key)
                 continue
@@ -1653,7 +1656,7 @@ class html(ABCHTMLGenerator):
                    javascripts: Optional[List[str]] = None,
                    force: bool = False) -> None:
         self.html_head(title, javascripts, force)
-        self.open_body(class_=self._get_body_css_classes())
+        self.open_body(class_=self._get_body_css_classes(), data_theme=self.get_theme())
 
     def _get_body_css_classes(self) -> List[str]:
         classes = self._body_classes[:]

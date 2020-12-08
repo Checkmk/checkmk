@@ -19,6 +19,7 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 
 from cmk.fetchers.protocol import FetcherMessage
+from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -32,7 +33,6 @@ from .piggyback import PiggybackSource
 from .programs import DSProgramSource, SpecialAgentSource
 from .snmp import SNMPSource
 from .tcp import TCPSource
-from .type_defs import NO_SELECTION, SectionNameCollection
 
 __all__ = ["fetch_all", "update_host_sections", "make_sources", "make_nodes"]
 

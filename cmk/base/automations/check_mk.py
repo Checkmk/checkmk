@@ -45,6 +45,7 @@ import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, BackendSNMPTree, BackendOIDSpec
 
 from cmk.fetchers import factory
+from cmk.fetchers.type_defs import NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
@@ -1450,7 +1451,7 @@ class AutomationGetAgentOutput(Automation):
                         continue
 
                     raw_data = source.fetch()
-                    host_sections = source.parse(raw_data, selection=checkers.NO_SELECTION)
+                    host_sections = source.parse(raw_data, selection=NO_SELECTION)
                     source_state, source_output, _source_perfdata = source.summarize(host_sections)
                     if source_state != 0:
                         # Optionally show errors of problematic data sources

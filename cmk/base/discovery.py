@@ -60,6 +60,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.fetchers.protocol import FetcherMessage
+from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -315,7 +316,7 @@ def _get_rediscovery_mode(params: Dict) -> str:
 def do_discovery(
     arg_hostnames: Set[HostName],
     *,
-    selected_sections: checkers.SectionNameCollection,
+    selected_sections: SectionNameCollection,
     run_only_plugin_names: Optional[Set[CheckPluginName]],
     arg_only_new: bool,
     only_host_labels: bool = False,
@@ -333,7 +334,7 @@ def do_discovery(
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
-    mode = checkers.Mode.DISCOVERY if selected_sections is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS
+    mode = checkers.Mode.DISCOVERY if selected_sections is NO_SELECTION else checkers.Mode.FORCE_SECTIONS
 
     # Now loop through all hosts
     for hostname in sorted(host_names):
@@ -559,7 +560,7 @@ def discover_on_host(
                     max_cachefile_age=max_cachefile_age,
                     host_config=host_config,
                 )),
-            selected_sections=checkers.NO_SELECTION,
+            selected_sections=NO_SELECTION,
         )
 
         # Compute current state of new and existing checks
@@ -750,7 +751,7 @@ def check_discovery(
         max_cachefile_age=max_cachefile_age,
         host_config=host_config,
         fetcher_messages=fetcher_messages,
-        selected_sections=checkers.NO_SELECTION,
+        selected_sections=NO_SELECTION,
     )
 
     services, host_label_discovery_result = _get_host_services(
@@ -1788,7 +1789,7 @@ def get_check_preview(
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
             )),
-        selected_sections=checkers.NO_SELECTION,
+        selected_sections=NO_SELECTION,
     )
 
     grouped_services, host_label_discovery_result = _get_host_services(

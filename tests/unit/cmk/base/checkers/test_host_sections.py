@@ -26,25 +26,18 @@ from cmk.fetchers import (
     TCPFetcher,
 )
 from cmk.fetchers.protocol import FetcherMessage
+from cmk.fetchers.type_defs import NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.checkers import (
-    make_nodes,
-    make_sources,
-    Mode,
-    NO_SELECTION,
-    Source,
-    update_host_sections,
-)
+from cmk.base.checkers import make_nodes, make_sources, Mode, Source, update_host_sections
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.host_sections import (
     HostKey,
     HostSections,
     MultiHostSections,
-    PersistedSections,
     ParsedSectionsBroker,
 )
 from cmk.base.checkers.piggyback import PiggybackSource

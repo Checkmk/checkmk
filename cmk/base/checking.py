@@ -56,6 +56,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.fetchers.protocol import FetcherMessage, FetcherType
+from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
@@ -119,7 +120,7 @@ def do_check(
     #   See Also: `cmk.base.discovery.check_discovery()`
     fetcher_messages: Sequence[FetcherMessage] = (),
     run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
-    selected_sections: checkers.SectionNameCollection = checkers.NO_SELECTION,
+    selected_sections: SectionNameCollection = NO_SELECTION,
     submit_to_core: bool = True,
     show_perfdata: bool = False,
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
@@ -130,7 +131,7 @@ def do_check(
 
     exit_spec = host_config.exit_code_spec()
 
-    mode = checkers.Mode.CHECKING if selected_sections is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS
+    mode = checkers.Mode.CHECKING if selected_sections is NO_SELECTION else checkers.Mode.FORCE_SECTIONS
 
     status: ServiceState = 0
     infotexts: List[ServiceDetails] = []

@@ -30,14 +30,14 @@ from cmk.snmplib.type_defs import TRawData
 
 from cmk.fetchers import ABCFetcher, ABCFileCache
 from cmk.fetchers.controller import FetcherType
+from cmk.fetchers.host_sections import THostSections
 from cmk.fetchers.type_defs import Mode
 
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 from cmk.base.config import HostConfig
 
-from .host_sections import THostSections
-from .type_defs import SectionNameCollection
+from cmk.fetchers.type_defs import SectionNameCollection
 
 __all__ = ["Source", "FileCacheFactory", "Mode", "set_cache_opts"]
 

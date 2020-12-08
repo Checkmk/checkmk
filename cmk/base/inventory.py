@@ -33,6 +33,9 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.fetchers.host_sections import HostSections
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.checkers as checkers
@@ -47,7 +50,7 @@ from cmk.base.api.agent_based.inventory_classes import (
     TableRow,
 )
 from cmk.base.checkers import Source
-from cmk.base.checkers.host_sections import HostKey, HostSections, ParsedSectionsBroker
+from cmk.base.checkers.host_sections import HostKey, ParsedSectionsBroker
 
 
 class InventoryTrees(NamedTuple):
@@ -77,7 +80,7 @@ class ActiveInventoryResult(NamedTuple):
 def do_inv(
     hostnames: List[HostName],
     *,
-    selected_sections: checkers.SectionNameCollection,
+    selected_sections: SectionNameCollection,
     run_only_plugin_names: Optional[Set[InventoryPluginName]] = None,
 ) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
@@ -128,7 +131,7 @@ def do_inv_check(
 
     inv_result = _do_active_inventory_for(
         host_config=host_config,
-        selected_sections=checkers.NO_SELECTION,
+        selected_sections=NO_SELECTION,
         run_only_plugin_names=None,
     )
     trees = inv_result.trees
@@ -195,7 +198,7 @@ def _do_active_inventory_for(
     *,
     host_config: config.HostConfig,
     run_only_plugin_names: Optional[Set[InventoryPluginName]],
-    selected_sections: checkers.SectionNameCollection,
+    selected_sections: SectionNameCollection,
 ) -> ActiveInventoryResult:
     if host_config.is_cluster:
         return ActiveInventoryResult(
@@ -222,8 +225,7 @@ def _do_active_inventory_for(
             run_only_plugin_names=run_only_plugin_names,
         ),
         source_results=source_results,
-        safe_to_write=_safe_to_write_tree(source_results) and
-        selected_sections is checkers.NO_SELECTION,
+        safe_to_write=_safe_to_write_tree(source_results) and selected_sections is NO_SELECTION,
     )
 
 
@@ -231,13 +233,13 @@ def _fetch_parsed_sections_broker_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    selected_sections: checkers.SectionNameCollection,
+    selected_sections: SectionNameCollection,
 ) -> Tuple[ParsedSectionsBroker, Sequence[Tuple[Source, result.Result[HostSections, Exception]]]]:
     if host_config.is_cluster:
         return ParsedSectionsBroker(), []
 
     mode = (checkers.Mode.INVENTORY
-            if selected_sections is checkers.NO_SELECTION else checkers.Mode.FORCE_SECTIONS)
+            if selected_sections is NO_SELECTION else checkers.Mode.FORCE_SECTIONS)
 
     nodes = checkers.make_nodes(
         config_cache,

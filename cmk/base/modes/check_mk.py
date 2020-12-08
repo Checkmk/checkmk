@@ -43,6 +43,7 @@ from cmk.utils.type_defs import (
 import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
+from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.backup
@@ -406,7 +407,7 @@ def mode_dump_agent(hostname: HostName) -> None:
                 continue
 
             raw_data = source.fetch()
-            host_sections = source.parse(raw_data, selection=checkers.NO_SELECTION)
+            host_sections = source.parse(raw_data, selection=NO_SELECTION)
             source_state, source_output, _source_perfdata = source.summarize(host_sections)
             if source_state != 0:
                 console.error(
@@ -1443,10 +1444,10 @@ _option_detect_plugins = Option(
 def _extract_plugin_selection(
     options: Union["_CheckingOptions", "_DiscoveryOptions", "_InventoryOptions"],
     type_: Type[_TName],
-) -> Tuple[checkers.SectionNameCollection, _OptionalNameSet]:
+) -> Tuple[SectionNameCollection, _OptionalNameSet]:
     detect_plugins = options.get("detect-plugins")
     if detect_plugins is None:
-        selected_sections = options.get("detect-sections", checkers.NO_SELECTION)
+        selected_sections = options.get("detect-sections", NO_SELECTION)
         assert selected_sections is not None  # for mypy false positive
         return selected_sections, options.get("plugins")
 
@@ -1459,7 +1460,7 @@ def _extract_plugin_selection(
         # this is the same as ommitting the option entirely.
         # (mo) ... which is weird, because specifiying *all* plugins would do
         # something different. Keeping this for compatibility with old --checks
-        return checkers.NO_SELECTION, None
+        return NO_SELECTION, None
 
     if type_ is CheckPluginName:
         check_plugin_names = {CheckPluginName(p) for p in detect_plugins}

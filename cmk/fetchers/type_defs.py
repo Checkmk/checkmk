@@ -6,8 +6,11 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
+from typing import Dict, Final, List, Set, Tuple, Union
 
-__all__ = ["Mode"]
+from cmk.utils.type_defs import SectionName
+
+__all__ = ["Mode", "NO_SELECTION", "SectionCacheInfo", "SectionNameCollection"]
 
 
 class Mode(enum.Enum):
@@ -24,3 +27,29 @@ class Mode(enum.Enum):
     # advance all sections we want. Should disable caching, and in the SNMP case also detection.
     # Disabled sections must *not* be discarded in this mode.
     FORCE_SECTIONS = enum.auto()
+
+
+# Note that the inner List[str] to AgentRawDataSection
+# is only **artificially** different from AgentRawData and
+# obtained approximatively with `raw_data.decode("utf-8").split()`!
+#
+# Moreover, the type is not useful.
+#
+# What would be useful is a Mapping[SectionName, AgentRawData],
+# analogous to SNMPRawData = Mapping[SectionName, SNMPRawDataSection],
+# that would generalize to `Mapping[SectionName, TRawDataContent]` or
+# `Mapping[SectionName, TRawData]` depending on which name we keep.
+AgentRawDataSection = List[List[str]]
+SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
+
+
+class SelectionType(enum.Enum):
+    NONE = enum.auto()
+
+
+SectionNameCollection = Union[SelectionType, Set[SectionName]]
+# If preselected sections are given, we assume that we are interested in these
+# and only these sections, so we may omit others and in the SNMP case (TODO (mo))
+# must try to fetch them (regardles of detection).
+
+NO_SELECTION: Final = SelectionType.NONE

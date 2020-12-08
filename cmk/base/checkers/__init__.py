@@ -17,4 +17,3 @@
 from . import agent, fetcher_configuration, host_sections, ipmi, piggyback, programs, snmp, tcp
 from ._abstract import *
 from ._checkers import *
-from .type_defs import *

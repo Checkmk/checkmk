@@ -8,11 +8,12 @@ settings"""
 
 import abc
 from typing import (
-    Optional,
-    Union,
     Iterable,
     Iterator,
+    Optional,
+    Tuple,
     Type,
+    Union,
 )
 
 import cmk.utils.version as cmk_version
@@ -23,6 +24,7 @@ import cmk.gui.forms as forms
 from cmk.gui.valuespec import Checkbox, Transform
 
 from cmk.gui.plugins.watolib.utils import (
+    ConfigVariable,
     ConfigVariableGroup,
     config_variable_group_registry,
     config_variable_registry,
@@ -68,7 +70,8 @@ class ABCGlobalSettingsMode(WatoMode):
         self._show_only_modified = html.request.get_integer_input_mandatory(
             "_show_only_modified", 0) == 1
 
-    def _groups(self, show_all=False) -> Iterable[ConfigVariableGroup]:
+    @staticmethod
+    def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
         groups = []
 
         for group_class in config_variable_group_registry.values():
@@ -88,35 +91,50 @@ class ABCGlobalSettingsMode(WatoMode):
 
         return groups
 
-    def _edit_mode(self):
+    def _groups(self) -> Iterable[ConfigVariableGroup]:
+        return self._get_groups(show_all=False)
+
+    @property
+    def edit_mode_name(self) -> str:
         return "edit_configvar"
 
-    def _show_configuration_variables(self, groups: Iterable[ConfigVariableGroup]) -> None:
+    def _should_show_config_variable(self, config_variable: ConfigVariable) -> bool:
+        varname = config_variable.ident()
+
+        if not config_variable.domain().enabled():
+            return False
+
+        if config_variable.domain(
+        ) == watolib.ConfigDomainCore and varname not in self._default_values:
+            if config.debug:
+                raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
+                                         "your local Check_MK installation" % varname)
+            return False
+
+        if not config_variable.in_global_settings():
+            return False
+
+        return True
+
+    def iter_all_configuration_variables(
+            self) -> Iterable[Tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
+        yield from ((group, (config_variable
+                             for config_variable_class in group.config_variables()
+                             for config_variable in [config_variable_class()]
+                             if self._should_show_config_variable(config_variable)))
+                    for group in sorted(self._groups(), key=lambda g: g.sort_index()))
+
+    def _show_configuration_variables(self) -> None:
         search = self._search
 
         at_least_one_painted = False
         html.open_div(class_="globalvars")
-        for group in sorted(groups, key=lambda g: g.sort_index()):
+        for group, config_variables in self.iter_all_configuration_variables():
             header_is_painted = False  # needed for omitting empty groups
 
-            for config_variable_class in group.config_variables():
-                config_variable = config_variable_class()
+            for config_variable in config_variables:
                 varname = config_variable.ident()
                 valuespec = config_variable.valuespec()
-
-                if not config_variable.domain().enabled():
-                    continue
-
-                if config_variable.domain(
-                ) == watolib.ConfigDomainCore and varname not in self._default_values:
-                    if config.debug:
-                        raise MKGeneralException(
-                            "The configuration variable <tt>%s</tt> is unknown to "
-                            "your local Check_MK installation" % varname)
-                    continue
-
-                if not config_variable.in_global_settings():
-                    continue
 
                 if self._show_only_modified and varname not in self._current_settings:
                     continue
@@ -139,7 +157,7 @@ class ABCGlobalSettingsMode(WatoMode):
 
                 default_value = self._default_values[varname]
 
-                edit_url = watolib.folder_preserving_link([("mode", self._edit_mode()),
+                edit_url = watolib.folder_preserving_link([("mode", self.edit_mode_name),
                                                            ("varname", varname),
                                                            ("site", html.request.var("site", ""))])
                 title = html.render_a(
@@ -444,7 +462,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         return redirect(mode_url("globalvars"))
 
     def page(self):
-        self._show_configuration_variables(self._groups())
+        self._show_configuration_variables()
 
 
 @mode_registry.register

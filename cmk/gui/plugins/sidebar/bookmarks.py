@@ -221,8 +221,9 @@ class BookmarkList(pagetypes.Overridable):
 
     def bookmarks_by_topic(self):
         topics: Dict[str, List[Dict[str, Any]]] = {}
+        default_topic = self.default_bookmark_topic()
         for bookmark in self._["bookmarks"]:
-            topic = topics.setdefault(bookmark["topic"], [])
+            topic = topics.setdefault(bookmark["topic"] or default_topic, [])
             topic.append(bookmark)
         return sorted(topics.items())
 

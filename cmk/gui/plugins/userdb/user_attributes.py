@@ -186,6 +186,26 @@ class UISidebarPosition(UserAttribute):
 
 
 @user_attribute_registry.register
+class UIIconTitle(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "nav_hide_icons_title"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Navigation icons"),
+            help=_("With this option you can define if icons in the navigation "
+                   "bar should show a title or not. This gives you the possibility "
+                   "to save some space in the UI."),
+            choices=[(None, _("Show title")), ("hide", _("Do not show title"))],
+            no_preselect_value=False,
+        )
+
+
+@user_attribute_registry.register
 class UIIconPlacement(UserAttribute):
     @classmethod
     def name(cls):

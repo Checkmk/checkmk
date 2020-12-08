@@ -1,0 +1,11 @@
+Title: mk_docker.py: Exception in section_container_agent
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607432742
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+A bug during fetching the data from a Checkmk agent installed on a container has been fixed.

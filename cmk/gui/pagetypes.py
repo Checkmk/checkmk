@@ -1043,6 +1043,7 @@ class Overridable(Base):
                 html.user_error(e)
 
             flash(_('Your %s has been deleted.') % pagetype_title)
+            html.reload_whole_page(cls.list_url())
 
         elif html.request.var("_bulk_delete") and html.check_transaction():
             cls._bulk_delete_after_confirm()
@@ -1166,7 +1167,8 @@ class Overridable(Base):
         for owner in {e[0] for e in to_delete}:
             cls.save_user_instances(owner)
 
-        html.reload_whole_page()
+        flash(_('The selected %s have been deleted.') % cls.phrase("title_plural"))
+        html.reload_whole_page(cls.list_url())
 
     # Override this in order to display additional columns of an instance
     # in the table of all instances.

@@ -28,7 +28,7 @@ from cmk.utils.type_defs import HostAddress, HostName, result, ServiceCheckResul
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import Fetcher, ABCFileCache
+from cmk.fetchers import Fetcher, FileCache
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.host_sections import THostSections
 from cmk.fetchers.type_defs import Mode
@@ -98,7 +98,7 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
         cls.maybe = not cls.disabled
 
     @abc.abstractmethod
-    def make(self) -> ABCFileCache[TRawData]:
+    def make(self) -> FileCache[TRawData]:
         raise NotImplementedError
 
 
@@ -200,7 +200,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         )
 
     @abc.abstractmethod
-    def _make_file_cache(self) -> ABCFileCache[TRawData]:
+    def _make_file_cache(self) -> FileCache[TRawData]:
         raise NotImplementedError
 
     @abc.abstractmethod

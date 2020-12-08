@@ -21,12 +21,12 @@ from cmk.snmplib.type_defs import TRawData
 
 from .type_defs import Mode
 
-__all__ = ["Fetcher", "ABCFileCache", "verify_ipaddress"]
+__all__ = ["Fetcher", "FileCache", "verify_ipaddress"]
 
-TFileCache = TypeVar("TFileCache", bound="ABCFileCache")
+TFileCache = TypeVar("TFileCache", bound="FileCache")
 
 
-class ABCFileCache(Generic[TRawData], abc.ABC):
+class FileCache(Generic[TRawData], abc.ABC):
     def __init__(
         self,
         *,
@@ -153,9 +153,9 @@ TFetcher = TypeVar("TFetcher", bound="Fetcher")
 
 class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
-    def __init__(self, file_cache: ABCFileCache, logger: logging.Logger) -> None:
+    def __init__(self, file_cache: FileCache, logger: logging.Logger) -> None:
         super().__init__()
-        self.file_cache: Final[ABCFileCache[TRawData]] = file_cache
+        self.file_cache: Final[FileCache[TRawData]] = file_cache
         self._logger = logger
 
     @final

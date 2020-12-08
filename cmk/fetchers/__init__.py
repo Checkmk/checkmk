@@ -9,7 +9,7 @@ import enum
 from typing import Any, Dict, Literal, Optional, Type
 
 from . import cache
-from ._base import Fetcher, ABCFileCache, verify_ipaddress
+from ._base import Fetcher, FileCache, verify_ipaddress
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
@@ -19,7 +19,7 @@ from .tcp import TCPFetcher
 
 __all__ = [
     "Fetcher",
-    "ABCFileCache",
+    "FileCache",
     "IPMIFetcher",
     "PiggybackFetcher",
     "ProgramFetcher",

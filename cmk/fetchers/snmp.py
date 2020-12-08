@@ -38,7 +38,7 @@ from cmk.snmplib.type_defs import (
 )
 
 from . import factory
-from ._base import Fetcher, ABCFileCache, verify_ipaddress
+from ._base import Fetcher, FileCache, verify_ipaddress
 from .cache import PersistedSections, SectionStore
 from .type_defs import Mode
 
@@ -121,7 +121,7 @@ class SectionMeta:
         return cls(**serialized)
 
 
-class SNMPFileCache(ABCFileCache[SNMPRawData]):
+class SNMPFileCache(FileCache[SNMPRawData]):
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> SNMPRawData:
         return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}

@@ -29,6 +29,9 @@ memused_default_levels = (150.0, 200.0)
 # hp_proliant_power: see werk 10857
 hp_prolaint_power_default_levels = None  # yes, P R O L A I N T
 
+# hp_msa: see werk 11761
+hp_msa_controller_cpu_default_levels = (80.0, 90.0)
+
 # if.include
 # These HostRulespecs are deprecated as of v2.0. However, for compatibility reasons, we must not
 # delete these variable.

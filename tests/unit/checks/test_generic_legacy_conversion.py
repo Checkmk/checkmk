@@ -571,7 +571,6 @@ def test_all_check_variables_present(config_check_variables):
         'hp_eml_sum_map',
         'hp_hh3c_ext_mem_default_levels',
         'hp_mcs_sensors_fan_default_levels',
-        'hp_msa_controller_cpu_default_levels',
         'hp_msa_disk_temp_default_levels',
         'hp_msa_health_state_numeric_map',
         'hp_msa_psu_default_levels',

@@ -1,0 +1,19 @@
+Title: hp_msa_controller: Fix incompatibility between ruleset and check
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607443217
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The check was using a legacy format for the default parameters which
+confused the migration of autochecks during "omd update". In previous
+versions of Checkmk 2.0, this resulted in an error message like this:
+
+C+:
+ + Rewriting autochecks...
+Transform failed: host='a', plugin='hp_msa_controller', ruleset='cpu_utilization_multiitem', params=(80.0, 90.0), error=AssertionError('Dictionary.transform_value() got a non-dict: (80.0, 90.0)')
+C-:

@@ -101,11 +101,12 @@ def _lookup_req_object(name):
 
 
 class RequestContext:
-    def __init__(self, html_obj=None, req=None, resp=None):
+    def __init__(self, html_obj=None, req=None, resp=None, prefix_logs_with_url: bool = True):
         self.html = html_obj
         self.auth_type = None
         self.session: Optional["userdb.SessionInfo"] = None
         self.flashes: Optional[List[str]] = None
+        self._prefix_logs_with_url = prefix_logs_with_url
 
         if req is None and html_obj:
             req = html_obj.request
@@ -123,12 +124,15 @@ class RequestContext:
         # TODO: Move this plus the corresponding cleanup code to hooks.
         self._web_log_handler = logging.getLogger().handlers[0]
         self._prepend_url_filter = _PrependURLFilter()
-        self._web_log_handler.addFilter(self._prepend_url_filter)
+        if self._prefix_logs_with_url:
+            self._web_log_handler.addFilter(self._prepend_url_filter)
 
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        self._web_log_handler.removeFilter(self._prepend_url_filter)
+        if self._prefix_logs_with_url:
+            self._web_log_handler.removeFilter(self._prepend_url_filter)
+
         # html.finalize needs to be called before popping the stack, because it does
         # something with the user object. We make this optional, so we can use the RequestContext
         # without the html object (for APIs for example).

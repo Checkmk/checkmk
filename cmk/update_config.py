@@ -647,7 +647,7 @@ class UpdateConfig:
         filepaths: List[Path] = []
         for dirpath in dirpaths:
             if not dirpath.exists():
-                self._logger.log(VERBOSE, "Skipping path %r (empty)\n" % str(dirpath))
+                self._logger.log(VERBOSE, "Skipping path %r (empty)" % str(dirpath))
                 continue
 
             # Create a list of all files that need to be converted with 2to3

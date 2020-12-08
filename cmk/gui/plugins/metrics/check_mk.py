@@ -3246,6 +3246,12 @@ metric_info["checkpoint_age"] = {
     "color": "#006040",
 }
 
+metric_info["file_age"] = {
+    "title": _("File age"),
+    "unit": "s",
+    "color": "13/a",
+}
+
 metric_info["file_age_oldest"] = {
     "title": _("Oldest file"),
     "unit": "s",
@@ -7500,6 +7506,9 @@ check_metrics["check_mk-fileinfo"] = {
     "size": {
         "name": "file_size"
     },
+    "age": {
+        "name": "file_age"
+    },
 }
 
 check_metrics["check_mk-fileinfo.groups"] = {
@@ -9372,6 +9381,36 @@ perfometer_info.append({
     'metric': 'docker_size',
     'half_value': GB,
     'exponent': 2.0,
+})
+
+perfometer_info.append({
+    "type": "stacked",
+    "perfometers": [{
+        "type": "logarithmic",
+        "metric": "file_size",
+        "half_value": 1000000,
+        "exponent": 10,
+    }, {
+        "type": "logarithmic",
+        "metric": "file_age",
+        "half_value": 3600,
+        "exponent": 5,
+    }],
+})
+
+perfometer_info.append({
+    "type": "stacked",
+    "perfometers": [{
+        "type": "logarithmic",
+        "metric": "file_count",
+        "half_value": 10000,
+        "exponent": 10,
+    }, {
+        "type": "logarithmic",
+        "metric": "file_age_newest",
+        "half_value": 3600,
+        "exponent": 5,
+    }],
 })
 
 #.

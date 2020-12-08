@@ -2351,15 +2351,6 @@ class FilterDiscoveryState(Filter):
             html.checkbox(varname, True, label=title)
         html.end_checkbox_group()
 
-    def value(self):
-        val = {}
-        for varname in self.htmlvars:
-            value = html.get_checkbox(varname)
-            if value is None:
-                value = True  # Default setting for filter: all checked!
-            val[varname] = value
-        return val
-
     def filter(self, infoname):
         return ""
 

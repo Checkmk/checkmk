@@ -1659,6 +1659,18 @@ class VisualFilter(ValueSpec):
         for varname in self._filter.htmlvars:
             var_value = value.get(varname)
             if var_value is not None:
+                # Workaround a bug we had in Checkmk <2.0.0 in the "discovery_state" filter.
+                # It persisted the checkbox states as booleans instead of using the HTTP
+                # request variable values. See CMK-6606.
+                if varname in [
+                        "discovery_state_ignored", "discovery_state_vanished",
+                        "discovery_state_unmonitored"
+                ]:
+                    if var_value is True:
+                        var_value = "on"
+                    elif var_value is False:
+                        var_value = ""
+
                 html.request.set_var(varname, var_value)
 
 

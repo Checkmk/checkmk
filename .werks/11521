@@ -1,0 +1,10 @@
+Title: fileinfo.groups: Do not evaluate parameters if no files are found
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p20
+Date: 1607438186
+Class: fix
+
+

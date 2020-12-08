@@ -311,14 +311,16 @@ def _filename_matches(filename, reftime, inclusion, exclusion):
 
 
 def check_fileinfo_groups(_item, params, parsed):
-
     outof_range_txt = fileinfo_check_timeranges(params)
+
     count_all = 0
     age_oldest = None
-    age_newest = 0
+    age_newest = None
+
     size_all = 0
     size_smallest = None
-    size_largest = 0
+    size_largest = None
+
     date_inclusion = ""
     include_patterns = set()
     exclude_patterns = set()
@@ -349,8 +351,10 @@ def check_fileinfo_groups(_item, params, parsed):
                                                                  exclusion)
             if not filename_matches:
                 continue
+
             if file_stat.missing:
                 continue
+
             if file_stat.failed:
                 files_stat_failed.add(file_stat.name)
                 continue
@@ -360,15 +364,23 @@ def check_fileinfo_groups(_item, params, parsed):
                 size_smallest = file_stat.size
             else:
                 size_smallest = min(size_smallest, file_stat.size)
-            size_largest = max(size_largest, file_stat.size)
+
+            if size_largest is None:
+                size_largest = file_stat.size
+            else:
+                size_largest = max(size_largest, file_stat.size)
 
             age = reftime - file_stat.time
-            if age_oldest is None:  # very first match
+            if age_oldest is None:
                 age_oldest = age
-                age_newest = age
             else:
                 age_oldest = max(age_oldest, age)
+
+            if age_newest is None:
+                age_newest = age
+            else:
                 age_newest = min(age_newest, age)
+
             count_all += 1
 
             # Used for long ouput information
@@ -388,9 +400,6 @@ def check_fileinfo_groups(_item, params, parsed):
                         "age": age,
                         "states": [],
                     })["states"].append(state)
-
-    if age_oldest is None:
-        age_oldest = 0
 
     # Start Checking
     check_definition = [

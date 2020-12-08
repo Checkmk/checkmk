@@ -334,6 +334,10 @@ export function makeuri_contextless(vars, filename) {
     return filename + "?" + params.join("&");
 }
 
+export function get_theme() {
+    return document.body.dataset.theme;
+}
+
 // Changes a parameter in the current pages URL without reloading the page
 export function update_url_parameter(name, value) {
     // Only a solution for browsers with history.replaceState support. Sadly we have no

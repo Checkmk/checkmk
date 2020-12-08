@@ -1,0 +1,12 @@
+Title: Fix broken bookmark snapin
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1607415759
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+The error "TypeError: '<' not supported between instances of 'NoneType' and 'str'" could
+appear when using the bookmark snapin of the sidebar.

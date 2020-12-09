@@ -370,3 +370,85 @@ def test_openapi_acknowledge_hostgroup(
             }),
             status=204,
         )
+
+
+def test_openapi_acknowledge_host_with_query(
+    wsgi_app,
+    with_automation_user,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    live.add_table('hosts', [
+        {
+            'name': 'example.com',
+            'state': 1,
+        },
+        {
+            'name': 'heute',
+            'state': 0,
+        },
+    ])
+
+    live.expect_query('GET hosts\nColumns: name state\nFilter: state = 1')
+    live.expect_query(
+        'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123...;Acknowledged',
+        match_type='ellipsis',
+    )
+
+    with live:
+        wsgi_app.post(
+            base + '/domain-types/acknowledge/collections/host',
+            content_type='application/json',
+            params=json.dumps({
+                'acknowledge_type': 'host_by_query',
+                'query': '{"op": "=", "left": "hosts.state", "right": "1"}',
+                'sticky': False,
+                'notify': False,
+                'persistent': False,
+                'comment': 'Acknowledged',
+            }),
+            status=204,
+        )
+
+
+def test_openapi_acknowledge_host_with_non_matching_query(
+    wsgi_app,
+    with_automation_user,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    live.add_table('hosts', [
+        {
+            'name': 'example.com',
+            'state': 1,
+        },
+        {
+            'name': 'heute',
+            'state': 0,
+        },
+    ])
+
+    live.expect_query('GET hosts\nColumns: name state\nFilter: name = servo')
+
+    with live:
+        wsgi_app.post(
+            base + '/domain-types/acknowledge/collections/host',
+            content_type='application/json',
+            params=json.dumps({
+                'acknowledge_type': 'host_by_query',
+                'query': '{"op": "=", "left": "hosts.name", "right": "servo"}',
+                'sticky': False,
+                'notify': False,
+                'persistent': False,
+                'comment': 'Acknowledged',
+            }),
+            status=404,
+        )

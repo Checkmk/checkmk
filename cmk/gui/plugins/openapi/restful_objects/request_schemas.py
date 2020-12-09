@@ -1344,12 +1344,8 @@ class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):
     )
 
 
-class BulkAcknowledgeHostProblem(AcknowledgeHostProblem):
-    entries = fields.List(
-        MONITORED_HOST,
-        required=True,
-        example=["example.com", "sample.com"],
-    )
+class AcknowledgeHostQueryProblem(AcknowledgeHostProblemBase):
+    query = QUERY
 
 
 class AcknowledgeHostRelatedProblem(OneOfSchema):
@@ -1358,6 +1354,7 @@ class AcknowledgeHostRelatedProblem(OneOfSchema):
     type_schemas = {
         'host': AcknowledgeHostProblem,
         'hostgroup': AcknowledgeHostGroupProblem,
+        'host_by_query': AcknowledgeHostQueryProblem,
     }
 
 

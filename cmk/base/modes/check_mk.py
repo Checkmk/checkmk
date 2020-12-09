@@ -62,7 +62,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 
@@ -325,27 +325,36 @@ def mode_list_checks() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
     all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
 
-    registered_checks = [(p.name, p) for p in agent_based_register.iter_all_check_plugins()]
-    active_checks = [("check_%s" % name, entry) for name, entry in config.active_check_info.items()]
-    # TODO clean mixed typed list up:
-    all_checks = registered_checks + active_checks  # type: ignore[operator]
+    all_checks: List[Union[CheckPluginName, str]] = [  #
+        p.name for p in agent_based_register.iter_all_check_plugins()
+    ]
+    all_checks += ["check_%s" % name for name in config.active_check_info]
 
-    for plugin_name, check in sorted(all_checks, key=lambda x: str(x[0])):
-        if not isinstance(check, CheckPlugin):  # active check
-            what = 'active'
-            ty_color = tty.blue
-        else:
-            if plugin_name in config.legacy_check_plugin_names:
-                what = 'auto migrated'
-                ty_color = tty.magenta
-            else:
-                what = ''
-                ty_color = tty.yellow
-
+    for plugin_name in sorted(all_checks, key=str):
+        ds_protocol = _get_ds_protocol(plugin_name)
         title = _get_check_plugin_title(str(plugin_name), all_check_manuals)
 
-        out.output((tty.bold + "%-44s" + tty.normal + ty_color + " %-13s " + tty.normal + "%s\n") %
-                   (plugin_name, what, title))
+        out.output(f"{tty.bold}{plugin_name!s:44}{ds_protocol} {tty.normal}{title}\n")
+
+
+def _get_ds_protocol(check_name: Union[CheckPluginName, str]) -> str:
+    if isinstance(check_name, str):  # active check
+        return f"{tty.blue}{'active':10}"
+
+    raw_section_is_snmp = {
+        isinstance(s, SNMPSectionPlugin) for s in agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=(check_name,),
+            inventory_plugin_names=(),
+        ).values()
+    }
+
+    if not any(raw_section_is_snmp):
+        return f"{tty.yellow}{'agent':10}"
+
+    if all(raw_section_is_snmp):
+        return f"{tty.magenta}{'snmp':10}"
+
+    return f"{tty.yellow}agent{tty.white}/{tty.magenta}snmp"
 
 
 def _get_check_plugin_title(

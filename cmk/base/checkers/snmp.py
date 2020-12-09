@@ -178,6 +178,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             name: SectionMeta(
                 checking=name in checking_sections,
                 disabled=name in disabled_sections,
+                fetch_interval=self.host_config.snmp_fetch_interval(name),
             ) for name in checking_sections
         }
 

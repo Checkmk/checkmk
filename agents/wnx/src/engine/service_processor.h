@@ -251,8 +251,8 @@ private:
     // on this phase we are starting our async plugins
     void preContextCall() {}
 
-    void informDevice(cma::rt::Device& Device, std::string_view Ip) const
-        noexcept;
+    void informDevice(cma::rt::Device& Device,
+                      std::string_view Ip) const noexcept;
 
     // used to start OpenHardwareMonitor if conditions are ok
     bool stopRunningOhmProcess() noexcept;
@@ -261,6 +261,7 @@ private:
 
     // object data
     std::thread thread_;
+    std::thread rm_lwa_thread_;
     std::thread process_thread_;
     std::mutex lock_;  // data lock
     std::chrono::milliseconds delay_;

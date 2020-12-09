@@ -33,7 +33,7 @@ void ServiceProcessor::startService() {
     // service must reload config, because service may reconfigure itself
     cma::ReloadConfig();
 
-    cma::cfg::rm_lwa::Execute();
+    rm_lwa_thread_ = std::thread(&cma::cfg::rm_lwa::Execute);
 
     thread_ = std::thread(&ServiceProcessor::mainThread, this, &external_port_);
 
@@ -61,6 +61,7 @@ void ServiceProcessor::stopService() {
 
     if (thread_.joinable()) thread_.join();
     if (process_thread_.joinable()) thread_.join();
+    if (rm_lwa_thread_.joinable()) rm_lwa_thread_.join();
 }
 
 // #TODO - implement

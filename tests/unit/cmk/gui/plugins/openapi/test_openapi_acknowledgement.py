@@ -18,7 +18,7 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import url_safe
     ],
     argvalues=[
         ['CPU load', 204],  # service Failed, acked.
-        ['Memory', 400],  # service OK, not failed.
+        ['Memory', 204],  # service OK, not failed.
     ])
 def test_openapi_acknowledge_all_services(
     wsgi_app,
@@ -56,14 +56,10 @@ def test_openapi_acknowledge_all_services(
     ])
 
     live.expect_query('GET services\n'
-                      'Columns: host_name description\n'
-                      f'Filter: description = {service}\n'
-                      'Filter: state = 1\n'
-                      'Filter: state = 2\n'
-                      'Or: 2\n'
-                      'And: 2')
+                      'Columns: host_name description state\n'
+                      f'Filter: description = {service}\n')
 
-    if http_response_code == 204:
+    if service == "CPU load":
         live.expect_query(
             f'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;{service};2;1;1;test123-...;Hello world!',
             match_type='ellipsis',
@@ -75,8 +71,10 @@ def test_openapi_acknowledge_all_services(
 
     with live:
         wsgi_app.post(
-            base + f"/domain-types/service/{url_safe(service)}/actions/acknowledge/invoke",
+            base + f"/domain-types/acknowledge/collections/service",
             params=json.dumps({
+                'acknowledge_type': 'service',
+                'service_description': service,
                 'sticky': True,
                 'notify': True,
                 'persistent': True,
@@ -318,12 +316,15 @@ def test_openapi_acknowledge_servicegroup(
     )
     with live:
         wsgi_app.post(
-            base + '/objects/servicegroup/windows/actions/acknowledge/invoke',
+            base + '/domain-types/acknowledge/collections/service',
             content_type='application/json',
             params=json.dumps({
+                'acknowledge_type': 'servicegroup',
+                'servicegroup_name': 'windows',
                 'sticky': False,
                 'notify': False,
                 'persistent': False,
+                'comment': 'Acknowledged',
             }),
             status=204,
         )

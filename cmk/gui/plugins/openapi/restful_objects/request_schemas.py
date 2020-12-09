@@ -1358,6 +1358,68 @@ class AcknowledgeHostRelatedProblem(OneOfSchema):
     }
 
 
+class AcknowledgeServiceProblemBase(BaseSchema):
+    acknowledge_type = fields.String(
+        required=True,
+        description="The acknowledge service selection type.",
+        enum=['service', 'servicegroup'],
+        example="service",
+    )
+
+    sticky = fields.Boolean(
+        required=False,
+        missing=True,
+        example=False,
+        description=param_description(acknowledge_service_problem.__doc__, 'sticky'),
+    )
+
+    persistent = fields.Boolean(
+        required=False,
+        missing=False,
+        example=False,
+        description=param_description(acknowledge_service_problem.__doc__, 'persistent'),
+    )
+
+    notify = fields.Boolean(
+        required=False,
+        missing=True,
+        example=False,
+        description=param_description(acknowledge_service_problem.__doc__, 'notify'),
+    )
+
+    comment = fields.String(
+        required=True,
+        example='This was expected.',
+        description=param_description(acknowledge_service_problem.__doc__, 'comment'),
+    )
+
+
+class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
+    service_description = fields.String(
+        description=
+        "The acknowledgement process will be applied to all matching service descriptions",
+        example="CPU load",
+        required=True,
+    )
+
+
+class AcknowledgeServiceGroupProblem(AcknowledgeServiceProblemBase):
+    servicegroup_name = fields.String(
+        description='The name of the service group',
+        example='windows',
+        required=True,
+    )
+
+
+class AcknowledgeServiceRelatedProblem(OneOfSchema):
+    type_field = 'acknowledge_type'
+    type_field_remove = False
+    type_schemas = {
+        'service': AcknowledgeSpecificServiceProblem,
+        'servicegroup': AcknowledgeServiceGroupProblem,
+    }
+
+
 SERVICE_STICKY_FIELD = fields.Boolean(
     required=False,
     missing=False,

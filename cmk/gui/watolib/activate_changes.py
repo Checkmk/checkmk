@@ -86,7 +86,6 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.changes import (
     SiteChanges,
     log_audit,
-    activation_sites,
 )
 from cmk.gui.plugins.watolib import ABCConfigDomain
 
@@ -320,7 +319,7 @@ class ActivateChanges:
         self._changes_by_site = {}
         changes = {}
 
-        for site_id in activation_sites():
+        for site_id in config.activation_sites():
             site_changes = SiteChanges(SiteChanges.make_path(site_id)).read()
             self._changes_by_site[site_id] = site_changes
 
@@ -345,7 +344,7 @@ class ActivateChanges:
 
     def get_changes_estimate(self) -> Optional[str]:
         changes_counter = 0
-        for site_id in activation_sites():
+        for site_id in config.activation_sites():
             changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
             if changes_counter > 10:
                 return _("10+ changes")
@@ -379,7 +378,7 @@ class ActivateChanges:
 
     def dirty_sites(self) -> List[Tuple[SiteId, SiteConfiguration]]:
         """Returns the list of sites that have changes (including offline sites)"""
-        return [s for s in activation_sites().items() if self._changes_of_site(s[0])]
+        return [s for s in config.activation_sites().items() if self._changes_of_site(s[0])]
 
     def _site_is_logged_in(self, site_id, site):
         return config.site_is_local(site_id) or "secret" in site
@@ -434,7 +433,8 @@ class ActivateChanges:
         return change["user_id"] and change["user_id"] != config.user.id
 
     def _affects_all_sites(self, change):
-        return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
+        return not set(change["affected_sites"]).symmetric_difference(set(
+            config.activation_sites()))
 
     def update_activation_time(self, site_id, ty, duration):
         repl_status = _load_site_replication_status(site_id, lock=True)
@@ -661,7 +661,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _get_sites(self, sites: List[SiteId]) -> List[SiteId]:
         for site_id in sites:
-            if site_id not in activation_sites():
+            if site_id not in config.activation_sites():
                 raise MKUserError("sites", _("The site \"%s\" does not exist.") % site_id)
 
         return sites

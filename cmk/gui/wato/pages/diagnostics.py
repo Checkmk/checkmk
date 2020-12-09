@@ -157,10 +157,11 @@ class ModeDiagnostics(WatoMode):
             title=_("Collect diagnostic dump"),
             render="form",
             elements=[
-                ("site", DropdownChoice(
-                    title=_("Site"),
-                    choices=config.get_wato_site_choices(),
-                )),
+                ("site",
+                 DropdownChoice(
+                     title=_("Site"),
+                     choices=config.get_activation_site_choices(),
+                 )),
                 ("general",
                  FixedValue(True,
                             title=_("General information"),

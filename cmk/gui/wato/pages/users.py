@@ -1127,7 +1127,7 @@ class ModeEditUser(WatoMode):
                 ),
                 DualListChoice(
                     title=_("Specific sites"),
-                    choices=config.site_choices,
+                    choices=config.get_configured_site_choices,
                 ),
             ],
         )

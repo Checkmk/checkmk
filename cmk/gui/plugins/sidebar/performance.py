@@ -38,7 +38,7 @@ class Performance(SidebarSnapin):
         return True
 
     def show(self):
-        only_sites = snapin_site_choice("performance", config.site_choices())
+        only_sites = snapin_site_choice("performance", config.get_configured_site_choices())
 
         def write_line(left, right, show_more):
             html.open_tr(class_="show_more_mode" if show_more else "basic")

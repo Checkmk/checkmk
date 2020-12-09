@@ -1129,6 +1129,10 @@ def is_single_local_site() -> bool:
     return site_is_local(sitename)
 
 
+def get_configured_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices(user.authorized_sites(unfiltered_sites=configured_sites()))
+
+
 def site_attribute_default_value() -> Optional[SiteId]:
     def_site = default_site()
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
@@ -1138,18 +1142,13 @@ def site_attribute_default_value() -> Optional[SiteId]:
 
 
 def site_attribute_choices() -> List[Tuple[SiteId, str]]:
-    authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
-    return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
+    return site_choices(user.authorized_sites(unfiltered_sites=configured_sites()))
 
 
-def site_choices(
-    filter_func: Optional[Callable[[SiteId, SiteConfiguration], bool]] = None
-) -> List[Tuple[SiteId, str]]:
+def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
+    """Compute the choices to be used e.g. in dropdowns from a SiteConfigurations collection"""
     choices = []
-    for site_id, site_spec in sites.items():
-        if filter_func and not filter_func(site_id, site_spec):
-            continue
-
+    for site_id, site_spec in site_configs.items():
         title = site_id
         if site_spec.get("alias"):
             title += " - " + site_spec["alias"]
@@ -1160,16 +1159,18 @@ def site_choices(
 
 
 def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(
-        filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
+    return site_choices({
+        site_id: site
+        for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
+        if site_is_local(site_id) or site.get("replication_ec", False)
+    })
 
 
-def get_wato_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(filter_func=lambda site_id, site: site_is_local(site_id) or site.get(
-        "replication") is not None)
+def get_activation_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices(activation_sites())
 
 
-def activation_sites() -> Dict[SiteId, SiteConfiguration]:
+def activation_sites() -> SiteConfigurations:
     """Returns sites that are affected by WATO changes
 
     These sites are shown on activation page and get change entries

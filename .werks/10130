@@ -1,0 +1,15 @@
+Title: Fixed performance bug in monitoring history cache
+Class: fix
+Compatible: compat
+Component: core
+Date: 1607520355
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.1.0i1
+
+During startup, the CMC caches information from the monitoring history up to
+a given horizon in the past.  This caching had a performance bug (quadratic
+complexity), resulting in caching times of several days or even more,
+depending on the content of the monitoring history.  This has been fixed,
+caching time is now linear in the size of the monitoring history.

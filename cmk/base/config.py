@@ -2605,7 +2605,7 @@ class HostConfig:
         return self.hostname in self._config_cache.all_configured_clusters()
 
     def snmp_fetch_interval(self, section_name: SectionName) -> Optional[int]:
-        """Return the fetch interval of SNMP sections
+        """Return the fetch interval of SNMP sections in seconds
 
         This has been added to reduce the fetch interval of single SNMP sections
         to be executed less frequently than the "Check_MK" service is executed.
@@ -2622,7 +2622,7 @@ class HostConfig:
                 snmp_check_interval,
         ):
             if match is None or match.split(".")[0] == str(section_name):
-                return minutes  # use first match
+                return minutes * 60  # use first match
 
         return None
 

@@ -107,7 +107,7 @@ class SectionMeta:
     """Metadata for the section names."""
     checking: bool
     disabled: bool
-    fetch_interval: Optional[int]
+    fetch_interval: Optional[int]  # time / sec
 
     def __init__(
         self,

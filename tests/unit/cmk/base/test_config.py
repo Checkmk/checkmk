@@ -1144,7 +1144,7 @@ def test_host_config_snmp_check_interval(monkeypatch, hostname, section_name, re
     ])
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config(hostname).snmp_fetch_interval(
-        SectionName(section_name)) == result
+        SectionName(section_name)) == (60 * result if result else None)
 
 
 def test_http_proxies():

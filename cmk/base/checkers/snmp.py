@@ -285,7 +285,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             fetch_interval = self.check_intervals.get(section_name)
             if fetch_interval is None:
                 return fetch_interval
-            return cached_at + fetch_interval * 60
+            return cached_at + fetch_interval
 
         persisted_sections = PersistedSections[SNMPRawDataSection].from_sections(
             raw_data,

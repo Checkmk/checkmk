@@ -503,7 +503,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
         if changed:
             add_change("edit-ruleset",
                        _("Renamed host in %d rulesets of folder %s") %
-                       (len(changed_rulesets), folder.title),
+                       (len(changed_rulesets), folder.title()),
                        obj=folder,
                        sites=folder.all_site_ids())
             rulesets.save()

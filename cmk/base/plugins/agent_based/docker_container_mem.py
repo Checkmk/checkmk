@@ -55,6 +55,14 @@ def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
         ... ]))
         {'MemFree': 67155951616, 'MemTotal': 67236446208}
 
+    Some containers don't have any memory info:
+        >>> parse_docker_container_mem([
+        ...     ['@docker_version_info',
+        ...      '{"PluginVersion": "0.1", "DockerPyVersion": "4.0.2", "ApiVersion": "1.40"}'],
+        ...     ['{}'],
+        ... ])
+        {'MemTotal': 0}
+
     """
     version = docker.get_version(string_table)
 
@@ -67,7 +75,12 @@ def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
             else:
                 parsed[line[0]] = int(line[1])
     else:
-        parsed = _parse_docker_container_mem_plugin(string_table)
+        try:
+            parsed = _parse_docker_container_mem_plugin(string_table)
+        except KeyError:
+            # `docker stats <CONTAINER>` will show 0/0 so we are compliant.
+            # Handle this case in check plugin.
+            return {"MemTotal": 0}
 
     # Calculate used memory like docker does (https://github.com/moby/moby/issues/10824)
     usage = (parsed["usage_in_bytes"] - parsed["cache"])

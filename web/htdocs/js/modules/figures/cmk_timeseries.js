@@ -166,7 +166,6 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
                 this.appendChild(removed.node());
             });
         }
-        this.update_domains();
     }
 
     remove_plot(plot) {
@@ -176,29 +175,24 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             delete this._subplots_by_id[plot.definition.id];
         }
         plot.remove();
-        this.update_domains();
     }
 
     update_data(data) {
         data.data.forEach(d => {
             d.date = new Date(d.timestamp * 1000);
         });
-
         this._title = data.title;
         this._update_crossfilter(data.data);
         this._data = data;
+        this._update_subplots(data.plot_definitions);
+        this._compute_stack_values();
     }
 
     update_gui() {
-        let data = this._data;
-        this._update_subplots(data.plot_definitions);
-
         this.update_domains();
-
         // Create an empty legend before rendering, reserves y-space
         this.render_legend();
         this.resize();
-
         this.render();
     }
 
@@ -271,8 +265,6 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             subplot.prepare_render();
         });
 
-        this.compute_stack_values();
-
         // Render subplots
         this._subplots.forEach(subplot => {
             subplot.render();
@@ -328,7 +320,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         }
     }
 
-    compute_stack_values() {
+    _compute_stack_values() {
         // Identify stacks
         let required_stacks = {};
         this._subplots.forEach(subplot => {
@@ -791,7 +783,7 @@ class SubPlot {
             dashlet.style("z-index", 1000).transition().duration(2000).style("z-index", 0);
 
         other_renderer.remove_loading_image();
-        other_renderer.render();
+        other_renderer.update_gui();
     }
 
     get_coord_shifts() {
@@ -902,7 +894,6 @@ class AreaPlot extends SubPlot {
         let color = this.get_color();
         let opacity = this.get_opacity();
         let stroke_width = this.get_stroke_width();
-        if (this.definition.stack_on) gradient_color = color;
 
         let path = this.svg
             .selectAll("g.graph_data path")
@@ -1052,6 +1043,7 @@ class BarPlot extends SubPlot {
             .merge(bars)
             // Update new and existing bars
             .style("opacity", this.get_opacity())
+            .attr("fill", this.get_color())
             .attr("x", d => this._renderer.scale_x(d.date))
             .attr("rx", 2)
             .attr(
@@ -1061,13 +1053,15 @@ class BarPlot extends SubPlot {
                     this._renderer.scale_x(d.date) -
                     bar_spacing
             )
-            .each((d, idx, nodes) => {
-                // Update classes
-                let rect = d3.select(nodes[idx]);
-                rect.classed(css_classes, true);
-            })
+            .attr("class", css_classes)
             .attr("y", d => this._renderer.scale_y(d.value))
             .attr("height", d => {
+                if (this.definition.stack_on && this.stack_values) {
+                    return (
+                        plot_size.height -
+                        this._renderer.scale_y(d.value - this.stack_values[d.timestamp] || 0)
+                    );
+                }
                 return plot_size.height - this._renderer.scale_y(d.value);
             });
     }

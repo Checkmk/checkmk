@@ -11,8 +11,6 @@ withFolderProperties{
     TEST_CONTAINER = DOCKER_REGISTRY + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
 }
 
-def PYTHON_VERSIONS = [ "2.6", "2.7", "3.4", "3.5", "3.6", "3.7", "3.8" ]
-
 node (NODE) {
     def WORKSPACE = pwd()
     def RESULTS = WORKSPACE + "/results"

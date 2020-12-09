@@ -91,15 +91,58 @@ components:
       - comment
       - host_name
       type: object
+    AcknowledgeHostQueryProblem:
+      properties:
+        acknowledge_type:
+          description: The acknowledge host selection type.
+          enum: *id001
+          example: host
+          type: string
+        sticky:
+          default: true
+          description: 'If set, only a state-change of the host to an UP state will
+            discard the acknowledgement.
+
+            Otherwise it will be discarded on any state-change. Defaults to False.'
+          example: false
+          type: boolean
+        persistent:
+          default: false
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        notify:
+          default: true
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
+        comment:
+          description: If set, this comment will be stored alongside the acknowledgement.
+          example: This was expected.
+          type: string
+        query:
+          allOf:
+          - $ref: '#/components/schemas/Expr'
+          description: An query expression in nested dictionary form. If you want
+            to use multiple expressions, nest them with the AND/OR operators.
+          example: '{"op": "not", "expr": {"op": "=", "left": "hosts.name", "right":
+            "example.com"}}'
+      required:
+      - acknowledge_type
+      - comment
+      type: object
     AcknowledgeHostRelatedProblem:
       discriminator:
         mapping:
           host: '#/components/schemas/AcknowledgeHostProblem'
+          host_by_query: '#/components/schemas/AcknowledgeHostQueryProblem'
           hostgroup: '#/components/schemas/AcknowledgeHostGroupProblem'
         propertyName: acknowledge_type
       oneOf:
       - $ref: '#/components/schemas/AcknowledgeHostProblem'
       - $ref: '#/components/schemas/AcknowledgeHostGroupProblem'
+      - $ref: '#/components/schemas/AcknowledgeHostQueryProblem'
       properties: {}
       type: object
     AcknowledgeServiceProblem:

@@ -24,7 +24,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import 
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
 )
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or, tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Services
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -81,6 +81,16 @@ def set_acknowledgement_related_to_host(params):
             comment,
         )
 
+    if acknowledge_type == 'host_by_query':
+        return _set_acknowlegement_on_queried_hosts(
+            live,
+            body['query'],
+            sticky,
+            notify,
+            persistent,
+            comment,
+        )
+
     return problem(status=400,
                    title="Unhandled acknowledge-type.",
                    detail=f"The acknowledge-type {acknowledge_type!r} is not supported.")
@@ -117,6 +127,36 @@ def _set_acknowledgement_on_host(
         user=_user_id(),
         comment=comment,
     )
+    return http.Response(status=204)
+
+
+def _set_acknowlegement_on_queried_hosts(
+    connection,
+    query: str,
+    sticky: bool,
+    notify: bool,
+    persistent: bool,
+    comment: str,
+):
+    q = Query([Hosts.name, Hosts.state]).filter(tree_to_expr(query))
+    hosts = list(q.iterate(connection))
+
+    if not hosts:
+        return problem(status=404, title="The provided query returned no monitored hosts")
+
+    for host in hosts:
+        if host.state == 0:
+            continue
+        acknowledge_host_problem(
+            connection,
+            host.name,
+            sticky=sticky,
+            notify=notify,
+            persistent=persistent,
+            user=_user_id(),
+            comment=comment,
+        )
+
     return http.Response(status=204)
 
 

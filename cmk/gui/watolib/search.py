@@ -347,7 +347,8 @@ class IndexSearcher:
         # this would mess up the localization
         return (
             # _("Business Intelligence"),
-            _("Event Console"),
+            _("Event Console rule packages"),
+            _("Event Console rules"),
             _("Event Console settings"),
             # _("Users"),
             _("Services") + " > " + _("Enforced services"),

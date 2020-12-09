@@ -6,7 +6,6 @@
 
 from typing import Any, Dict, Iterable, List, Optional, Set
 from collections import defaultdict
-import itertools
 
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -45,6 +44,9 @@ stored_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
 # Lookup table for optimizing validate_check_ruleset_item_consistency()
 _check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]] = defaultdict(list)
 
+_sections_by_parsed_name: Dict[ParsedSectionName, Dict[SectionName,
+                                                       SectionPlugin]] = defaultdict(dict)
+
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
     validate_check_ruleset_item_consistency(check_plugin, _check_plugins_by_ruleset_name)
@@ -65,6 +67,8 @@ def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
 
 
 def add_section_plugin(section_plugin: SectionPlugin) -> None:
+    _sections_by_parsed_name[section_plugin.parsed_section_name][
+        section_plugin.name] = section_plugin
     if isinstance(section_plugin, AgentSectionPlugin):
         registered_agent_sections[section_plugin.name] = section_plugin
     else:
@@ -135,15 +139,9 @@ def get_relevant_raw_sections(
         if inventory_plugin:
             parsed_section_names.update(inventory_plugin.sections)
 
-    iter_all_sections: Iterable[SectionPlugin] = itertools.chain(
-        iter_all_agent_sections(),
-        iter_all_snmp_sections(),
-    )
-
     return {
-        section.name: section
-        for section in iter_all_sections
-        if section.parsed_section_name in parsed_section_names
+        section_name: section for parsed_name in parsed_section_names
+        for section_name, section in _sections_by_parsed_name[parsed_name].items()
     }
 
 

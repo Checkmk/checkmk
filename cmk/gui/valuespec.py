@@ -6165,7 +6165,12 @@ def ListOfCAs(**args):
 
 
 # TODO: Change to factory, Cleanup kwargs
-class SiteChoice(DropdownChoice):
+class SetupSiteChoice(DropdownChoice):
+    """Select configured sites in distributed setups
+
+    This valuespec explicitly only cares about sites known to Setup. Pure status sites are excluded
+    from this list.
+    """
     def __init__(self, **kwargs):
         kwargs.setdefault("title", _("Site"))
         kwargs.setdefault("default_value", self._site_default_value)
@@ -6191,6 +6196,14 @@ class SiteChoice(DropdownChoice):
 
     def _site_choices(self):
         return config.site_attribute_choices()
+
+
+def MonitoringSiteChoice():
+    """Select a single site that is known as status remote site"""
+    return DropdownChoice(
+        title=_("Site"),
+        choices=config.get_configured_site_choices(),
+    )
 
 
 # TODO: Cleanup kwargs

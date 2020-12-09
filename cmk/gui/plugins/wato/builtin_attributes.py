@@ -33,7 +33,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     AbsoluteDate,
     TextUnicode,
-    SiteChoice,
+    SetupSiteChoice,
     ID,
     Transform,
     Labels,
@@ -775,7 +775,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return True
 
     def valuespec(self):
-        return SiteChoice(
+        return SetupSiteChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
             invalid_choice_error=_("The configured site is not known to this site. In case you "
@@ -843,7 +843,7 @@ class LockedByValuespec(Tuple):
             orientation="horizontal",
             title_br=False,
             elements=[
-                SiteChoice(),
+                SetupSiteChoice(),
                 ID(title=_("Program"),),
                 ID(title=_("Connection ID"),),
             ],

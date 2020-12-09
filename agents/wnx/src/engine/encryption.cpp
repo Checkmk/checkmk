@@ -100,7 +100,7 @@ static bool IsAesAlgorithm(Algorithm algorithm) {
 HCRYPTPROV Commander::obtainContext() {
     HCRYPTPROV handle = 0;
 
-    auto provider =
+    const auto *provider =
         IsAesAlgorithm(algorithm_) ? MS_ENH_RSA_AES_PROV : MS_DEF_PROV;
 
     auto provider_type =
@@ -134,7 +134,7 @@ void Commander::checkAndConfigure() {
     }
 
     DWORD mode = CRYPT_MODE_CBC;
-    auto pmode = reinterpret_cast<BYTE *>(&mode);
+    auto *pmode = reinterpret_cast<BYTE *>(&mode);
     if (FALSE == ::CryptSetKeyParam(key_, KP_MODE, pmode, 0)) {
         XLOG::l.crit("Cannot set crypto mode error is [{}]", GetLastError());
         return;
@@ -179,7 +179,7 @@ HCRYPTKEY Commander::importKey(const BYTE *key, DWORD key_size) const {
     hdr.reserved = 0;
     hdr.aiKeyAlg = algorithm_;
 
-    auto insert_ptr = reinterpret_cast<BYTE *>(&hdr);
+    auto *insert_ptr = reinterpret_cast<BYTE *>(&hdr);
     key_blob.insert(key_blob.end(), insert_ptr,
                     insert_ptr + sizeof(BLOBHEADER));
 
@@ -204,12 +204,12 @@ HCRYPTKEY Commander::importKey(const BYTE *key, DWORD key_size) const {
 size_t Commander::keySize(ALG_ID algorithm) {
     switch (algorithm) {
         case CALG_AES_128:
-            return 128;
+            return 128;  // NOLINT
         case CALG_AES_192:
-            return 192;
+            return 192;  // NOLINT
         case CALG_AES_256:
         default:
-            return 256;
+            return 256;  // NOLINT
     }
 }
 
@@ -274,11 +274,14 @@ std::optional<uint32_t> Commander::blockSize() const {
 // Stupid function from the LWA
 HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
                                       Length key_length, int iterations) {
+    constexpr uint32_t kBlockALign = 8;
     if (crypt_provider_ == 0) return 0;
 
     auto [base_hash, hash_size] = GetHash(crypt_provider_);
 
-    ON_OUT_OF_SCOPE(if (base_hash)::CryptDestroyHash(base_hash););
+    auto to_kill_base_hash = base_hash;
+    ON_OUT_OF_SCOPE(
+        if (to_kill_base_hash)::CryptDestroyHash(to_kill_base_hash););
     if (hash_size == 0) return 0;
 
     cma::ByteVector buffer;
@@ -290,7 +293,7 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
     size_t iv_offset = 0;
 
     auto key_size = (key_length == Length::kDefault)
-                        ? keySize(algorithm_) / 8
+                        ? keySize(algorithm_) / kBlockALign
                         : static_cast<size_t>(key_length);
 
     std::vector<BYTE> key(key_size);
@@ -342,7 +345,7 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
                     ::CryptDestroyKey(hkey);
                     return 0;
                 }
-                iv.resize(*block_size / 8);
+                iv.resize(*block_size / kBlockALign);
             }
         }
 
@@ -418,8 +421,7 @@ std::unique_ptr<Commander> MakeCrypt() {
 }
 
 // calculate additional size of buffer in bytes to compress DataSize
-std::optional<size_t> Commander::CalcBufferOverhead(size_t data_size) const
-    noexcept {
+std::optional<size_t> Commander::CalcBufferOverhead(size_t data_size) const {
     if (!blockSize().has_value()) {
         XLOG::l("Impossible situation, crypt engine is absent");
         return {};

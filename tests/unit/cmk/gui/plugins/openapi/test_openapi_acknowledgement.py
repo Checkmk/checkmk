@@ -192,14 +192,16 @@ def test_openapi_acknowledge_host(
 
     if http_response_code == 204:
         live.expect_query(
-            'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123-...;Acknowledged',
+            'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;2;1;1;test123-...;Hello world!',
             match_type='ellipsis',
         )
 
     with live:
         wsgi_app.post(
-            base + f"/objects/host/{host_name}/actions/acknowledge/invoke",
+            base + "/domain-types/acknowledge/collections/host",
             params=json.dumps({
+                'acknowledge_type': 'host',
+                'host_name': host_name,
                 'sticky': True,
                 'notify': True,
                 'persistent': True,
@@ -356,12 +358,15 @@ def test_openapi_acknowledge_hostgroup(
 
     with live:
         wsgi_app.post(
-            base + '/objects/hostgroup/samples/actions/acknowledge/invoke',
+            base + '/domain-types/acknowledge/collections/host',
             content_type='application/json',
             params=json.dumps({
+                'acknowledge_type': 'hostgroup',
+                'hostgroup_name': 'samples',
                 'sticky': False,
                 'notify': False,
                 'persistent': False,
+                'comment': 'Acknowledged'
             }),
             status=204,
         )

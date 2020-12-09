@@ -23,6 +23,7 @@ from marshmallow import Schema, fields
 URL = str
 
 DomainType = Literal[
+    'acknowledge',
     'agent',
     'activation_run',
     'bi_rule',

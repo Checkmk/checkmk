@@ -1295,10 +1295,16 @@ class UpdateHostTagGroup(BaseSchema):
     )
 
 
-class AcknowledgeHostProblem(BaseSchema):
+class AcknowledgeHostProblemBase(BaseSchema):
+    acknowledge_type = fields.String(
+        required=True,
+        description="The acknowledge host selection type.",
+        enum=['host', 'hostgroup', 'host_by_query'],
+        example="host",
+    )
     sticky = fields.Boolean(
         required=False,
-        missing=False,
+        missing=True,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, 'sticky'),
     )
@@ -1312,16 +1318,29 @@ class AcknowledgeHostProblem(BaseSchema):
 
     notify = fields.Boolean(
         required=False,
-        missing=False,
+        missing=True,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, 'notify'),
     )
 
     comment = fields.String(
-        required=False,
-        missing="Acknowledged",
+        required=True,
         example='This was expected.',
         description=param_description(acknowledge_host_problem.__doc__, 'comment'),
+    )
+
+
+class AcknowledgeHostProblem(AcknowledgeHostProblemBase):
+    host_name = fields.String(description="The name of the host",
+                              example="example.com",
+                              required=True)
+
+
+class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):
+    hostgroup_name = fields.String(
+        required=True,
+        description="The name of the hostgroup",
+        example="Servers",
     )
 
 
@@ -1331,6 +1350,15 @@ class BulkAcknowledgeHostProblem(AcknowledgeHostProblem):
         required=True,
         example=["example.com", "sample.com"],
     )
+
+
+class AcknowledgeHostRelatedProblem(OneOfSchema):
+    type_field = 'acknowledge_type'
+    type_field_remove = False
+    type_schemas = {
+        'host': AcknowledgeHostProblem,
+        'hostgroup': AcknowledgeHostGroupProblem,
+    }
 
 
 SERVICE_STICKY_FIELD = fields.Boolean(

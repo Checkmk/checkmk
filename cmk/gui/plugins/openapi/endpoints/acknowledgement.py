@@ -15,7 +15,6 @@ You can find an introduction to the acknowledgement of problems in the
 # TODO: List acknowledgments
 # TODO: Acknowledge service problem
 from urllib.parse import unquote
-from typing import Dict
 
 from cmk.gui import config, sites, http
 from cmk.gui.plugins.openapi import fields
@@ -44,18 +43,59 @@ SERVICE_DESCRIPTION = {
 }
 
 
-@Endpoint(constructors.object_action_href('host', '{host_name}', 'acknowledge'),
+@Endpoint(constructors.collection_href('acknowledge', 'host'),
           'cmk/create',
           method='post',
           tag_group='Monitoring',
-          path_params=[HOST_NAME],
-          request_schema=request_schemas.AcknowledgeHostProblem,
+          request_schema=request_schemas.AcknowledgeHostRelatedProblem,
           output_empty=True)
-def set_acknowledgement_on_host(params):
-    """Acknowledge for a specific host"""
-    host_name = params['host_name']
+def set_acknowledgement_related_to_host(params):
+    """Set acknowledgement on related hosts"""
+    body = params['body']
+    live = sites.live()
 
-    host = Query([Hosts.name, Hosts.state], Hosts.name.equals(host_name)).first(sites.live())
+    sticky = body['sticky']
+    notify = body['notify']
+    persistent = body['persistent']
+    comment = body['comment']
+
+    acknowledge_type = body['acknowledge_type']
+
+    if acknowledge_type == 'host':
+        return _set_acknowledgement_on_host(
+            live,
+            body['host_name'],
+            sticky,
+            notify,
+            persistent,
+            comment,
+        )
+
+    if acknowledge_type == 'hostgroup':
+        return _set_acknowledgement_on_hostgroup(
+            live,
+            body['hostgroup_name'],
+            sticky,
+            notify,
+            persistent,
+            comment,
+        )
+
+    return problem(status=400,
+                   title="Unhandled acknowledge-type.",
+                   detail=f"The acknowledge-type {acknowledge_type!r} is not supported.")
+
+
+def _set_acknowledgement_on_host(
+    connection,
+    host_name: str,
+    sticky: bool,
+    notify: bool,
+    persistent: bool,
+    comment: str,
+):
+    """Acknowledge for a specific host"""
+    host = Query([Hosts.name, Hosts.state], Hosts.name.equals(host_name)).first(connection)
     if host is None:
         return problem(
             status=404,
@@ -71,88 +111,33 @@ def set_acknowledgement_on_host(params):
     acknowledge_host_problem(
         sites.live(),
         host_name,
-        sticky=bool(params.get('sticky')),
-        notify=bool(params.get('notify')),
-        persistent=bool(params.get('persistent')),
+        sticky=sticky,
+        notify=notify,
+        persistent=persistent,
         user=_user_id(),
-        comment=params.get('comment', 'Acknowledged'),
+        comment=comment,
     )
     return http.Response(status=204)
 
 
-@Endpoint(constructors.object_action_href('hostgroup', '{hostgroup_name}', 'acknowledge'),
-          'cmk/create',
-          method='post',
-          path_params=[{
-              'hostgroup_name': fields.String(description='The name of the host group',
-                                              example='samples',
-                                              required=True),
-          }],
-          request_schema=request_schemas.AcknowledgeHostProblem,
-          output_empty=True)
-def set_acknowledgement_on_hostgroup(params):
+def _set_acknowledgement_on_hostgroup(
+    connection,
+    hostgroup_name: str,
+    sticky: bool,
+    notify: bool,
+    persistent: bool,
+    comment: str,
+):
     """Acknowledge for hosts of a host group"""
-    body = params['body']
     acknowledge_hostgroup_problem(
-        sites.live(),
-        params['hostgroup_name'],
-        sticky=body['sticky'],
-        notify=body['notify'],
-        persistent=body['persistent'],
-        user=config.user.ident,
-        comment=body['comment'],
+        connection,
+        hostgroup_name,
+        sticky=sticky,
+        notify=notify,
+        persistent=persistent,
+        user=_user_id(),
+        comment=comment,
     )
-    return http.Response(status=204)
-
-
-@Endpoint(constructors.domain_type_action_href('host', 'bulk-acknowledge'),
-          'cmk/create',
-          method='post',
-          tag_group='Monitoring',
-          request_schema=request_schemas.BulkAcknowledgeHostProblem,
-          output_empty=True)
-def bulk_set_acknowledgement_on_hosts(params):
-    """Bulk acknowledge for hosts"""
-    live = sites.live()
-    entries = params['entries']
-
-    hosts: Dict[str, int] = {
-        host_name: host_state for host_name, host_state in Query(  # pylint: disable=unnecessary-comprehension
-            [Hosts.name, Hosts.state],
-            And(*[Hosts.name.equals(host_name) for host_name in entries]),
-        ).fetch_values(live)
-    }
-
-    not_found = []
-    for host_name in entries:
-        if host_name not in hosts:
-            not_found.append(host_name)
-
-    if not_found:
-        return problem(status=400,
-                       title=f"Hosts {', '.join(not_found)} not found",
-                       detail='Current not monitored')
-
-    up_hosts = []
-    for host_name in entries:
-        if hosts[host_name] == 0:
-            up_hosts.append(host_name)
-
-    if up_hosts:
-        return problem(status=400,
-                       title=f"Hosts {', '.join(up_hosts)} do not have a problem",
-                       detail="The states of these hosts are UP")
-
-    for host_name in entries:
-        acknowledge_host_problem(
-            sites.live(),
-            host_name,
-            sticky=params.get('sticky'),
-            notify=params.get('notify'),
-            persistent=params.get('persistent'),
-            user=_user_id(),
-            comment=params.get('comment', 'Acknowledged'),
-        )
     return http.Response(status=204)
 
 

@@ -4354,30 +4354,19 @@ hooks.register_builtin("pre-activate-changes", mkeventd_update_notifiation_confi
 #.
 
 
-class MatchItemGeneratorEventConsole(ABCMatchItemGenerator):
+class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
     def generate_match_items(self) -> MatchItems:
         for rule_pack in self._iter_rulepacks():
             rule_pack_title = rule_pack["title"]
             rule_pack_id = rule_pack["id"]
             yield MatchItem(
-                title=rule_pack_title,
-                topic=self._topic,
+                title=f"{rule_pack_id} ({rule_pack_title})",
+                topic=_("Event Console rule packages"),
                 url=ModeEventConsoleRules.mode_url(rule_pack=rule_pack["id"]),
                 match_texts=[rule_pack_title, rule_pack_id],
             )
-            yield from (MatchItem(
-                title=f"{rule_pack_title} > {id_}",
-                topic=self._topic,
-                url=_rule_edit_url(rule_pack_id, nr),
-                match_texts=[id_] + [
-                    field_value
-                    for field in ["description", "comment"]
-                    for field_value in [rule.get(field)]
-                    if field_value
-                ],
-            )
-                        for nr, rule in enumerate(rule_pack["rules"])
-                        for id_ in [rule["id"]])
+            yield from (self._rule_to_match_item(rule, _rule_edit_url(rule_pack_id, nr))
+                        for nr, rule in enumerate(rule_pack["rules"]))
 
     def _iter_rulepacks(self) -> Iterable[ec.ECRulePackSpec]:
         yield from (opt_rule_pack
@@ -4401,9 +4390,16 @@ class MatchItemGeneratorEventConsole(ABCMatchItemGenerator):
             return self._unpack_mkp_rule_pack(mkp_rule_pack.rule_pack)
         return mkp_rule_pack
 
-    @property
-    def _topic(self):
-        return _("Event Console")
+    @staticmethod
+    def _rule_to_match_item(rule: ec.ECRuleSpec, url: str) -> MatchItem:
+        id_ = rule["id"]
+        description = rule.get("description")
+        return MatchItem(
+            title=id_ + ((description and f" ({description})") or ""),
+            topic=_("Event Console rules"),
+            url=url,
+            match_texts=[id_] + [value for value in [description, rule.get("comment")] if value],
+        )
 
     @staticmethod
     def is_affected_by_change(change_action_name: str) -> bool:
@@ -4416,7 +4412,7 @@ class MatchItemGeneratorEventConsole(ABCMatchItemGenerator):
         return False
 
 
-match_item_generator_registry.register(MatchItemGeneratorEventConsole("event_console"))
+match_item_generator_registry.register(MatchItemGeneratorECRulePacksAndRules("event_console"))
 
 match_item_generator_registry.register(
     MatchItemGeneratorSettings(

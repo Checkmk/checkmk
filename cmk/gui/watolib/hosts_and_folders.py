@@ -3033,10 +3033,8 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
         super().__init__(name)
         self._host_collector = host_collector
 
-    def _get_additional_match_texts(
-        self,
-        host_attributes: HostAttributes,
-    ) -> Iterable[str]:
+    @staticmethod
+    def _get_additional_match_texts(host_attributes: HostAttributes) -> Iterable[str]:
         yield from (val for key in ['alias', 'ipaddress', 'ipv6address']
                     for val in [host_attributes[key]] if val)
         yield from (ip_address for key in ['additional_ipv4addresses', 'additional_ipv6addresses']
@@ -3045,7 +3043,7 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
             title=host_name,
-            topic='Hosts',
+            topic=_('Hosts'),
             url=host_attributes["edit_url"],
             match_texts=[
                 host_name,
@@ -3053,7 +3051,8 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
             ],
         ) for host_name, host_attributes in self._host_collector().items())
 
-    def is_affected_by_change(self, change_action_name: str) -> bool:
+    @staticmethod
+    def is_affected_by_change(change_action_name: str) -> bool:
         return 'host' in change_action_name
 
     @property

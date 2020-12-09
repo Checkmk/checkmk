@@ -121,7 +121,8 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                     for topic_menu_topic in mega_menu_registry["setup"].topics()
                     for topic_menu_item in topic_menu_topic.items)
 
-    def is_affected_by_change(self, _: str) -> bool:
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
         return False
 
     @property

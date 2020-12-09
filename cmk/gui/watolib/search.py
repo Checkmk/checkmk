@@ -91,8 +91,9 @@ class ABCMatchItemGenerator(ABC):
     def generate_match_items(self) -> MatchItems:
         ...
 
+    @staticmethod
     @abstractmethod
-    def is_affected_by_change(self, change_action_name: str) -> bool:
+    def is_affected_by_change(change_action_name: str) -> bool:
         ...
 
     @property
@@ -458,7 +459,7 @@ class MatchItemGeneratorGlobalSettings(ABCMatchItemGenerator):
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
             title=title,
-            topic="Global settings",
+            topic=_("Global settings"),
             url="wato.py?mode=edit_configvar&varname=%s" % ident,
             match_texts=[title, config_var.ident()],
         ) for ident, config_var_type in self._config_variable_registry.items()
@@ -466,7 +467,8 @@ class MatchItemGeneratorGlobalSettings(ABCMatchItemGenerator):
                     for title in [config_var.valuespec().title()]
                     if config_var.in_global_settings() and title)
 
-    def is_affected_by_change(self, *_, **__) -> bool:
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
         return False
 
     @property

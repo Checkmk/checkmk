@@ -41,6 +41,7 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.utils.urls import (
     makeuri,
+    makeuri_contextless,
     makeuri_contextless_ruleset_group,
 )
 
@@ -1264,14 +1265,19 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
         yield from (MatchItem(
             title=rulespec.title,
             topic=self._topic_from_group_name(group),
-            url="wato.py?mode=edit_ruleset&varname=%s" % rulespec.name,
+            url=makeuri_contextless(
+                request,
+                [("mode", "edit_ruleset"), ("varname", rulespec.name)],
+                filename="wato.py",
+            ),
             match_texts=[rulespec.title, rulespec.name],
         )
                     for group in self._rulespec_registry.get_all_groups()
                     for rulespec in self._rulespec_registry.get_by_group(group)
                     if rulespec.title)
 
-    def is_affected_by_change(self, *_, **__) -> bool:
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
         return False
 
     @property

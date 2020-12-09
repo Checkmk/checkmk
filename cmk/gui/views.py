@@ -755,7 +755,7 @@ class GUIViewRenderer(ABCViewRenderer):
                               export_dropdown
 
         if config.is_ntop_available(
-        ) and config.ntop_connection != {}:  # type: ignore[attr-defined]
+        ) and config.ntop_connection != {} and rows:  # type: ignore[attr-defined]
             host_address = rows[0]["host_address"]
             page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
 

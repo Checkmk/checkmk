@@ -110,6 +110,8 @@ class SectionStore(Generic[TRawDataSection]):
 
     def store(self, sections: PersistedSections[TRawDataSection]) -> None:
         if not sections:
+            self._logger.debug("No persisted sections")
+            self.path.unlink(missing_ok=True)
             return
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -117,9 +119,6 @@ class SectionStore(Generic[TRawDataSection]):
                                    pretty=False)
         self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
-    # TODO: This is not race condition free when modifying the data. Either remove
-    # the possible write here and simply ignore the outdated sections or lock when
-    # reading and unlock after writing
     def load(self) -> PersistedSections[TRawDataSection]:
         raw_sections_data = _store.load_object_from_file(self.path, default={})
         sections: PersistedSections[TRawDataSection] = {  # type: ignore[assignment]
@@ -127,10 +126,6 @@ class SectionStore(Generic[TRawDataSection]):
         }
         if not self.keep_outdated:
             sections = self._filter(sections)
-
-        if not sections:
-            self._logger.debug("No persisted sections loaded")
-            self.path.unlink(missing_ok=True)
 
         return sections
 

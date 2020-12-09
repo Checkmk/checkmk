@@ -278,6 +278,7 @@ private:
 
     // object data
     std::thread thread_;
+    std::thread rm_lwa_thread_;
     std::thread process_thread_;
     std::mutex lock_;  // data lock
     std::chrono::milliseconds delay_;

@@ -21,6 +21,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         this._subplots = [];
         this._subplots_by_id = {};
         this.margin = {top: 28, right: 10, bottom: 30, left: 50};
+        this._legend_dimension = this._crossfilter.dimension(d => d.tag);
     }
 
     get_id() {
@@ -293,13 +294,30 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         new_items.append("div").classed("color_code", true);
         new_items.style("pointer-events", "all");
         new_items.append("label").text(d => d.definition.label);
-        new_items.call(
-            d3
-                .drag()
-                .on("start", () => this.legend_generator._dragstart())
-                .on("drag", () => this.legend_generator._drag())
-                .on("end", () => this.legend_generator._dragend())
-        );
+
+        new_items.on("click", (legend_d, idx, nodes) => {
+            let item = d3.select(nodes[idx]);
+            item.classed("disabled", !item.classed("disabled"));
+            item.style("background", (item.classed("disabled") && "grey") || null);
+            let all_disabled = [];
+            this._div_selection.selectAll(".legend_item.disabled").each(d => {
+                all_disabled.push(d.definition.use_tags[0]);
+            });
+            this._legend_dimension.filter(d => {
+                return all_disabled.indexOf(d) == -1;
+            });
+            this._compute_stack_values();
+            this._subplots.forEach(subplot => subplot.update_transformed_data());
+            this.update_gui();
+        });
+
+        // Easter egg
+        //new_items.call(
+        //    d3.drag()
+        //        .on("start", () => this.legend_generator._dragstart())
+        //        .on("drag", () => this.legend_generator._drag())
+        //        .on("end", () => this.legend_generator._dragend())
+        //);
 
         new_items
             .merge(items)
@@ -320,13 +338,31 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         }
     }
 
+    _find_metric_to_stack(definition, all_disabled) {
+        if (!this._subplots_by_id[definition.stack_on]) return null;
+        if (all_disabled.indexOf(definition.stack_on) == -1) return definition.stack_on;
+        if (this._subplots_by_id[definition.stack_on].definition.stack_on)
+            return this._find_metric_to_stack(
+                this._subplots_by_id[definition.stack_on].definition,
+                all_disabled
+            );
+        return null;
+    }
+
     _compute_stack_values() {
+        // Disabled metrics
+        let all_disabled = [];
+        this._div_selection.selectAll(".legend_item.disabled").each(d => {
+            all_disabled.push(d.definition.id);
+        });
+
         // Identify stacks
         let required_stacks = {};
         this._subplots.forEach(subplot => {
-            subplot.stack_values = {};
-            if (subplot.definition.stack_on && this._subplots_by_id[subplot.definition.stack_on]) {
-                required_stacks[subplot.definition.id] = subplot.definition.stack_on;
+            subplot.stack_values = null;
+            if (subplot.definition.stack_on) {
+                let stack_on = this._find_metric_to_stack(subplot.definition, all_disabled);
+                if (stack_on != null) required_stacks[subplot.definition.id] = stack_on;
             }
         });
 
@@ -337,6 +373,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         let base_values = {};
         for (let target in required_stacks) {
             let source = this._subplots_by_id[required_stacks[target]];
+            source.update_transformed_data();
             let references = {};
             source.transformed_data.forEach(point => {
                 references[point.timestamp] = point.value;
@@ -354,7 +391,8 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             .join("g")
             .classed("x_axis", true)
             .classed("axis", true);
-        x.call(
+
+        this.transition(x).call(
             d3
                 .axisBottom(this.scale_x)
                 .tickFormat(d => {
@@ -373,7 +411,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             .join("g")
             .classed("y_axis", true)
             .classed("axis", true);
-        y.call(
+        this.transition(y).call(
             d3.axisLeft(this.scale_y).tickFormat(d => {
                 if (d > 999) return d3.format(".2s")(d);
                 return d3.format(",")(d);
@@ -658,7 +696,7 @@ class SubPlot {
         this._dimension = null; // The crossfilter dimension (x_axis)
         this.transformed_data = []; // data shifted/scaled by subplot definition
 
-        this.stack_values = {}; // timestamp/value pairs provided by the target plot
+        this.stack_values = null; // timestamp/value pairs provided by the target plot
 
         this.main_g = null; // toplevel g, contains svg/canvas elements
         this.svg = null; // svg content
@@ -821,7 +859,7 @@ class SubPlot {
                 point.value *= scale_y;
             });
 
-        if (this.definition.stack_on && this.stack_values)
+        if (this.stack_values != null)
             this.transformed_data.forEach(point => {
                 point.unstacked_value = point.value;
                 point.value += this.stack_values[point.timestamp] || 0;
@@ -886,7 +924,7 @@ class AreaPlot extends SubPlot {
             .x(d => this._renderer.scale_x(d.date))
             .y1(d => this._renderer.scale_y(d.value))
             .y0(d => {
-                if (this.definition.stack_on && this.stack_values)
+                if (this.stack_values != null)
                     return this._renderer.scale_y(this.stack_values[d.timestamp] || 0);
                 else return base;
             });
@@ -1042,10 +1080,7 @@ class BarPlot extends SubPlot {
             .attr("y", plot_size.height)
             .merge(bars)
             // Update new and existing bars
-            .style("opacity", this.get_opacity())
-            .attr("fill", this.get_color())
             .attr("x", d => this._renderer.scale_x(d.date))
-            .attr("rx", 2)
             .attr(
                 "width",
                 d =>
@@ -1053,16 +1088,18 @@ class BarPlot extends SubPlot {
                     this._renderer.scale_x(d.date) -
                     bar_spacing
             )
-            .attr("class", css_classes)
+            .attr("class", css_classes);
+
+        this._renderer
+            .transition(this._bars)
+            .style("opacity", this.get_opacity())
+            .attr("fill", this.get_color())
+            .attr("rx", 2)
             .attr("y", d => this._renderer.scale_y(d.value))
             .attr("height", d => {
-                if (this.definition.stack_on && this.stack_values) {
-                    return (
-                        plot_size.height -
-                        this._renderer.scale_y(d.value - this.stack_values[d.timestamp] || 0)
-                    );
-                }
-                return plot_size.height - this._renderer.scale_y(d.value);
+                let y_base = 0;
+                if (this.stack_values != null) y_base = this.stack_values[d.timestamp] || 0;
+                return plot_size.height - this._renderer.scale_y(d.value - y_base);
             });
     }
 

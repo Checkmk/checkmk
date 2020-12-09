@@ -2177,7 +2177,7 @@ def _site_rule_match_condition():
             title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of "
                    "the selected sites."),
-            choices=config.site_attribute_choices,
+            choices=config.get_activation_site_choices,
         ),
     )
 

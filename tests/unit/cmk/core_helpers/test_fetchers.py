@@ -241,8 +241,8 @@ class TestPiggybackFetcher:
             simulation=True,
         )
 
-    @pytest.fixture(name="fetcher")
-    def fetcher_fixture(self, file_cache):
+    @pytest.fixture
+    def fetcher(self, file_cache):
         return PiggybackFetcher(
             file_cache,
             hostname="host",
@@ -269,8 +269,8 @@ class TestProgramFetcher:
             simulation=True,
         )
 
-    @pytest.fixture(name="fetcher")
-    def fetcher_fixture(self, file_cache):
+    @pytest.fixture
+    def fetcher(self, file_cache):
         return ProgramFetcher(
             file_cache,
             cmdline="/bin/true",
@@ -374,8 +374,8 @@ class ABCTestSNMPFetcher(ABC):
             ),
         })
 
-    @pytest.fixture(name="fetcher")
-    def fetcher_fixture(self, file_cache):
+    @pytest.fixture
+    def fetcher(self, file_cache):
         return SNMPFetcher(
             file_cache,
             sections={},
@@ -401,8 +401,8 @@ class ABCTestSNMPFetcher(ABC):
             ),
         )
 
-    @pytest.fixture(name="fetcher_inline")
-    def fetcher_inline_fixture(self, file_cache):
+    @pytest.fixture
+    def fetcher_inline(self, file_cache):
         return SNMPFetcher(
             file_cache,
             sections={},
@@ -429,8 +429,8 @@ class ABCTestSNMPFetcher(ABC):
             ),
         )
 
-    @pytest.fixture(name="fetcher_inline_legacy")
-    def fetcher_inline_legacy_fixture(self, file_cache):
+    @pytest.fixture
+    def fetcher_inline_legacy(self, file_cache):
         return SNMPFetcher(
             file_cache,
             sections={},
@@ -608,8 +608,8 @@ class TestTCPFetcher:
             simulation=True,
         )
 
-    @pytest.fixture(name="fetcher")
-    def fetcher_fixture(self, file_cache):
+    @pytest.fixture
+    def fetcher(self, file_cache):
         return TCPFetcher(
             file_cache,
             family=socket.AF_INET,
@@ -696,8 +696,8 @@ class TestFetcherCaching:
             simulation=False,
         )
 
-    @pytest.fixture(name="fetcher")
-    def fetcher_fixture(self, monkeypatch, file_cache):
+    @pytest.fixture
+    def fetcher(self, monkeypatch, file_cache):
         # We use the TCPFetcher to test a general feature of the fetchers.
         return TCPFetcher(
             StubFileCache.from_json(file_cache.to_json()),

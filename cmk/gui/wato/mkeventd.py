@@ -109,6 +109,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
     ABCEditGlobalSettingMode,
+    MatchItemGeneratorSettings,
 )
 
 from cmk.gui.plugins.wato.utils import (
@@ -4348,7 +4349,7 @@ hooks.register_builtin("pre-activate-changes", mkeventd_update_notifiation_confi
 #   |    |____/ \___|\__|\__,_| .__/  |___/\___|\__,_|_|  \___|_| |_|      |
 #   |                         |_|                                          |
 #   +----------------------------------------------------------------------+
-#   | Searching of rule packs in setup search                              |
+#   | Searching of EC in setup search                                      |
 #   '----------------------------------------------------------------------'
 #.
 
@@ -4416,3 +4417,10 @@ class MatchItemGeneratorEventConsole(ABCMatchItemGenerator):
 
 
 match_item_generator_registry.register(MatchItemGeneratorEventConsole("event_console"))
+
+match_item_generator_registry.register(
+    MatchItemGeneratorSettings(
+        "event_console_settings",
+        _("Event Console settings"),
+        ModeEventConsoleSettings,
+    ))

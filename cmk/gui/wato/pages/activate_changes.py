@@ -195,7 +195,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         self._extract_snapshot(file_to_restore)
         cmk.gui.watolib.activate_changes.execute_activate_changes(
-            [d.ident for d in watolib.ABCConfigDomain.enabled_domains()])
+            [d.ident() for d in watolib.ABCConfigDomain.enabled_domains()])
 
         for site_id in config.activation_sites():
             self.confirm_site_changes(site_id)

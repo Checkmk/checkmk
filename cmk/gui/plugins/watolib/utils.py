@@ -25,15 +25,16 @@ def wato_fileheader() -> str:
     return "# Created by WATO\n# encoding: utf-8\n\n"
 
 
-class ABCConfigDomain(metaclass=abc.ABCMeta):
+class ABCConfigDomain(abc.ABC):
     needs_sync = True
     needs_activation = True
     always_activate = False
     in_global_settings = True
 
-    @abc.abstractproperty
-    def ident(self):
-        raise NotImplementedError()
+    @classmethod
+    @abc.abstractmethod
+    def ident(cls) -> ConfigDomainName:
+        ...
 
     @classmethod
     def enabled_domains(cls):
@@ -41,7 +42,7 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
 
     @classmethod
     def get_always_activate_domain_idents(cls) -> List[ConfigDomainName]:
-        return [d().ident for d in config_domain_registry.values() if d.always_activate]
+        return [d.ident() for d in config_domain_registry.values() if d.always_activate]
 
     @classmethod
     def get_class(cls, ident):
@@ -68,7 +69,7 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
         return os.path.join(self.config_dir(), "global.mk")
 
     def activate(self):
-        raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
+        raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident())
 
     def load_full_config(self, site_specific=False, custom_site_path=None):
         filename = Path(self.config_file(site_specific))
@@ -129,7 +130,7 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
 
 class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[Type[ABCConfigDomain]]):
     def plugin_name(self, instance):
-        return instance.ident
+        return instance.ident()
 
 
 config_domain_registry = ConfigDomainRegistry()

@@ -331,7 +331,7 @@ class ActivateChangesWriter:
             "text": "%s" % text,
             "object": object_ref,
             "user_id": config.user.id if add_user else None,
-            "domains": [d.ident for d in domains],
+            "domains": [d.ident() for d in domains],
             "time": time.time(),
             "need_sync": need_sync,
             "need_restart": need_restart,

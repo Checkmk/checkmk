@@ -7,7 +7,13 @@
 settings"""
 
 import abc
-from typing import Optional, Union, Iterator, Type
+from typing import (
+    Optional,
+    Union,
+    Iterable,
+    Iterator,
+    Type,
+)
 
 import cmk.utils.version as cmk_version
 import cmk.gui.config as config
@@ -17,6 +23,7 @@ import cmk.gui.forms as forms
 from cmk.gui.valuespec import Checkbox, Transform
 
 from cmk.gui.plugins.watolib.utils import (
+    ConfigVariableGroup,
     config_variable_group_registry,
     config_variable_registry,
     ABCConfigDomain,
@@ -61,7 +68,7 @@ class ABCGlobalSettingsMode(WatoMode):
         self._show_only_modified = html.request.get_integer_input_mandatory(
             "_show_only_modified", 0) == 1
 
-    def _groups(self, show_all=False):
+    def _groups(self, show_all=False) -> Iterable[ConfigVariableGroup]:
         groups = []
 
         for group_class in config_variable_group_registry.values():
@@ -84,7 +91,7 @@ class ABCGlobalSettingsMode(WatoMode):
     def _edit_mode(self):
         return "edit_configvar"
 
-    def _show_configuration_variables(self, groups):
+    def _show_configuration_variables(self, groups: Iterable[ConfigVariableGroup]) -> None:
         search = self._search
 
         at_least_one_painted = False
@@ -115,10 +122,10 @@ class ABCGlobalSettingsMode(WatoMode):
                     continue
 
                 help_text = valuespec.help() or ''
-                title_text = valuespec.title()
+                title_text = valuespec.title() or ''
 
                 if search and search not in group.title().lower() \
-                        and search not in config_variable.domain().ident.lower() \
+                        and search not in config_variable.domain().ident().lower() \
                           and search not in varname \
                           and search not in help_text.lower() \
                           and search not in title_text.lower():
@@ -149,7 +156,7 @@ class ABCGlobalSettingsMode(WatoMode):
                     value = default_value
 
                 try:
-                    to_text = valuespec.value_to_text(value)
+                    to_text: Union[str, HTML] = valuespec.value_to_text(value)
                 except Exception:
                     logger.exception("error converting %r to text", value)
                     to_text = html.render_error(_("Failed to render value: %r") % value)

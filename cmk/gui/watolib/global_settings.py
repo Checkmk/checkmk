@@ -38,20 +38,20 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
         varname = config_variable.ident()
         if varname not in vars_:
             continue
-        per_domain.setdefault(domain().ident, {})[varname] = vars_[varname]
+        per_domain.setdefault(domain().ident(), {})[varname] = vars_[varname]
 
     # The global setting wato_enabled is not registered in the configuration domains
     # since the user must not change it directly. It is set by D-WATO on slave sites.
     if "wato_enabled" in vars_:
-        per_domain.setdefault(ConfigDomainGUI.ident, {})["wato_enabled"] = vars_["wato_enabled"]
+        per_domain.setdefault(ConfigDomainGUI.ident(), {})["wato_enabled"] = vars_["wato_enabled"]
     if "userdb_automatic_sync" in vars_:
-        per_domain.setdefault(ConfigDomainGUI.ident,
+        per_domain.setdefault(ConfigDomainGUI.ident(),
                               {})["userdb_automatic_sync"] = vars_["userdb_automatic_sync"]
     if "user_login" in vars_:
-        per_domain.setdefault(ConfigDomainGUI.ident, {})["user_login"] = vars_["user_login"]
+        per_domain.setdefault(ConfigDomainGUI.ident(), {})["user_login"] = vars_["user_login"]
 
     for domain in ABCConfigDomain.enabled_domains():
-        domain_config = per_domain.get(domain().ident, {})
+        domain_config = per_domain.get(domain().ident(), {})
         if site_specific:
             domain().save_site_globals(domain_config, custom_site_path=custom_site_path)
         else:

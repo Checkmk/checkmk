@@ -39,13 +39,17 @@ from cmk.gui.plugins.watolib import (
     config_domain_registry,
     ABCConfigDomain,
 )
+from cmk.gui.type_defs import ConfigDomainName
 
 
 @config_domain_registry.register
 class ConfigDomainCore(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "check_mk"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "check_mk"
 
     def config_dir(self):
         return wato_root_dir()
@@ -66,7 +70,10 @@ class ConfigDomainCore(ABCConfigDomain):
 class ConfigDomainGUI(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    ident = "multisite"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "multisite"
 
     def config_dir(self):
         return multisite_dir()
@@ -86,8 +93,11 @@ class ConfigDomainGUI(ABCConfigDomain):
 class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False
-    ident = "liveproxyd"
     in_global_settings = True
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "liveproxyd"
 
     @classmethod
     def enabled(cls):
@@ -157,8 +167,11 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 class ConfigDomainEventConsole(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "ec"
     in_global_settings = False
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "ec"
 
     @classmethod
     def enabled(cls):
@@ -183,7 +196,6 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     always_activate = True  # Execute this on all sites on all activations
-    ident = "ca-certificates"
 
     trusted_cas_file = "%s/var/ssl/ca-certificates.crt" % cmk.utils.paths.omd_root
 
@@ -198,6 +210,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     _PEM_RE = re.compile(b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
                          b"", re.DOTALL)
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "ca-certificates"
 
     def config_dir(self):
         return multisite_dir()
@@ -316,12 +332,15 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "omd"
     omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
     def __init__(self):
         super(ConfigDomainOMD, self).__init__()
         self._logger = logger.getChild("config.omd")
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "omd"
 
     def config_dir(self):
         return self.omd_config_dir

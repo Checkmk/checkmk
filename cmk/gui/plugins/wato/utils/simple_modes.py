@@ -31,7 +31,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     ID,
     RuleComment,
-    SiteChoice,
+    SetupSiteChoice,
     TextUnicode,
 )
 from cmk.gui.breadcrumb import Breadcrumb
@@ -65,8 +65,8 @@ class SimpleModeType(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
-    def site_valuespec(self) -> SiteChoice:
-        return SiteChoice()
+    def site_valuespec(self) -> SetupSiteChoice:
+        return SetupSiteChoice()
 
     @abc.abstractmethod
     def can_be_disabled(self) -> bool:

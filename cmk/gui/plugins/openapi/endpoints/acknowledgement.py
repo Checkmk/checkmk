@@ -181,48 +181,85 @@ def _set_acknowledgement_on_hostgroup(
     return http.Response(status=204)
 
 
-@Endpoint("/domain-types/service/{service_description}/actions/acknowledge/invoke",
-          'cmk/create',
+@Endpoint(constructors.collection_href('acknowledge', 'service'),
+          'cmk/create_service',
           method='post',
           tag_group='Monitoring',
-          path_params=[SERVICE_DESCRIPTION],
-          request_schema=request_schemas.AcknowledgeServiceProblem,
+          request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
           output_empty=True)
-def set_acknowledgement_for_service(params):
-    """Acknowledge for a service globally"""
-    service_description = unquote(params['service_description'])
+def set_acknowledgement_on_service_related(params):
+    """Acknowledge for related service"""
     body = params['body']
-
     live = sites.live()
 
-    services = Query(
-        [Services.host_name, Services.description],
-        And(
-            Services.description.equals(service_description),
-            Or(
-                Services.state == 1,
-                Services.state == 2,
-            ),
-        ),
-    ).fetch_values(live)
+    sticky = body['sticky']
+    notify = body['notify']
+    persistent = body['persistent']
+    comment = body['comment']
+
+    acknowledge_type = body['acknowledge_type']
+
+    if acknowledge_type == 'service':
+        return _set_acknowledgement_for_service(
+            live,
+            unquote(body['service_description']),
+            sticky,
+            notify,
+            persistent,
+            comment,
+        )
+
+    if acknowledge_type == 'servicegroup':
+        acknowledge_servicegroup_problem(
+            live,
+            body['servicegroup_name'],
+            sticky=sticky,
+            notify=notify,
+            persistent=persistent,
+            user=_user_id(),
+            comment=comment,
+        )
+        return http.Response(status=204)
+
+    return problem(status=400,
+                   title="Unhandled acknowledge-type.",
+                   detail=f"The acknowledge-type {acknowledge_type!r} is not supported.")
+
+
+def _set_acknowledgement_for_service(
+    connection,
+    service_description: str,
+    sticky: bool,
+    notify: bool,
+    persistent: bool,
+    comment: str,
+):
+    q = Query([Services.host_name, Services.description, Services.state]).filter(
+        tree_to_expr({
+            'op': '=',
+            'left': 'services.description',
+            'right': service_description
+        }))
+    services = list(q.iterate(connection))
 
     if not len(services):
         return problem(
-            status=400,
-            title=f'No services {service_description!r} with problems found.',
-            detail='All services are OK.',
+            status=404,
+            title=f'No services with {service_description!r} were found.',
         )
 
-    for _host_name, _service_description in services:
+    for service in services:
+        if service.state == 0:
+            continue
         acknowledge_service_problem(
-            live,
-            _host_name,
-            _service_description,
-            sticky=body.get('sticky', False),
-            notify=body.get('notify', False),
-            persistent=body.get('persistent', False),
+            connection,
+            service.host_name,
+            service.description,
+            sticky=sticky,
+            notify=notify,
+            persistent=persistent,
             user=_user_id(),
-            comment=body.get('comment', 'Acknowledged'),
+            comment=comment,
         )
 
     return http.Response(status=204)
@@ -328,36 +365,6 @@ def bulk_set_acknowledgement_on_host_service(params):
             user=str(config.user.id),
             comment=body.get('comment', 'Acknowledged'),
         )
-    return http.Response(status=204)
-
-
-@Endpoint(
-    constructors.object_action_href('servicegroup', '{servicegroup_name}', 'acknowledge'),
-    'cmk/create',
-    method='post',
-    tag_group='Monitoring',
-    path_params=[{
-        'servicegroup_name': fields.String(
-            description='The name of the service group',
-            example='windows',
-            required=True,
-        )
-    }],
-    request_schema=request_schemas.AcknowledgeServiceProblem,
-    output_empty=True,
-)
-def set_acknowledgement_on_servicegroup(params):
-    """Acknowledge for services of a service group"""
-    body = params['body']
-    acknowledge_servicegroup_problem(
-        sites.live(),
-        params['servicegroup_name'],
-        sticky=body['sticky'],
-        notify=body['notify'],
-        persistent=body['persistent'],
-        user=config.user.ident,
-        comment=body['comment'],
-    )
     return http.Response(status=204)
 
 

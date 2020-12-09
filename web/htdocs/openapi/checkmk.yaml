@@ -145,6 +145,48 @@ components:
       - $ref: '#/components/schemas/AcknowledgeHostQueryProblem'
       properties: {}
       type: object
+    AcknowledgeServiceGroupProblem:
+      properties:
+        acknowledge_type:
+          description: The acknowledge service selection type.
+          enum: &id002
+          - service
+          - servicegroup
+          example: service
+          type: string
+        sticky:
+          default: true
+          description: 'If set, only a state-change of the service to an OK state
+            will discard the
+
+            acknowledgement. Otherwise it will be discarded on any state-change. Defaults
+            to False.'
+          example: false
+          type: boolean
+        persistent:
+          default: false
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        notify:
+          default: true
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
+        comment:
+          description: If set, this comment will be stored alongside the acknowledgement.
+          example: This was expected.
+          type: string
+        servicegroup_name:
+          description: The name of the service group
+          example: windows
+          type: string
+      required:
+      - acknowledge_type
+      - comment
+      - servicegroup_name
+      type: object
     AcknowledgeServiceProblem:
       properties:
         sticky:
@@ -173,6 +215,58 @@ components:
           example: This was expected.
           type: string
       type: object
+    AcknowledgeServiceRelatedProblem:
+      discriminator:
+        mapping:
+          service: '#/components/schemas/AcknowledgeSpecificServiceProblem'
+          servicegroup: '#/components/schemas/AcknowledgeServiceGroupProblem'
+        propertyName: acknowledge_type
+      oneOf:
+      - $ref: '#/components/schemas/AcknowledgeSpecificServiceProblem'
+      - $ref: '#/components/schemas/AcknowledgeServiceGroupProblem'
+      properties: {}
+      type: object
+    AcknowledgeSpecificServiceProblem:
+      properties:
+        acknowledge_type:
+          description: The acknowledge service selection type.
+          enum: *id002
+          example: service
+          type: string
+        sticky:
+          default: true
+          description: 'If set, only a state-change of the service to an OK state
+            will discard the
+
+            acknowledgement. Otherwise it will be discarded on any state-change. Defaults
+            to False.'
+          example: false
+          type: boolean
+        persistent:
+          default: false
+          description: If set, the comment will persist a restart. Defaults to False.
+          example: false
+          type: boolean
+        notify:
+          default: true
+          description: If set, notifications will be sent out to the configured contacts.
+            Defaults to False.
+          example: false
+          type: boolean
+        comment:
+          description: If set, this comment will be stored alongside the acknowledgement.
+          example: This was expected.
+          type: string
+        service_description:
+          description: The acknowledgement process will be applied to all matching
+            service descriptions
+          example: CPU load
+          type: string
+      required:
+      - acknowledge_type
+      - comment
+      - service_description
+      type: object
     ActionResultObject:
       properties:
         links:
@@ -183,7 +277,7 @@ components:
         resultType:
           default: object
         extensions:
-          example: &id002
+          example: &id003
             some: values
           type: object
         result:
@@ -215,7 +309,7 @@ components:
         resultType:
           default: scalar
         extensions:
-          example: *id002
+          example: *id003
           type: object
         result:
           $ref: '#/components/schemas/ActionResultScalarValue'
@@ -627,7 +721,7 @@ components:
         type:
           default: block
         style_config:
-          default: &id003 {}
+          default: &id004 {}
       required:
       - style_config
       - type
@@ -764,7 +858,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/BINodeVisLayoutStyle'
           example:
-            style_config: *id003
+            style_config: *id004
             type: block
         properties:
           allOf:
@@ -1365,7 +1459,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: &id004
+          enum: &id005
           - host
           - service
           - hostgroup
@@ -1392,7 +1486,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using the Enterprise Editions. Defaults to 'fixed'."
-          enum: &id005
+          enum: &id006
           - fixed
           - hour
           - day
@@ -1435,7 +1529,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: *id004
+          enum: *id005
           example: host
           type: string
         start_time:
@@ -1456,7 +1550,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using the Enterprise Editions. Defaults to 'fixed'."
-          enum: *id005
+          enum: *id006
           example: hour
           type: string
         duration:
@@ -1490,7 +1584,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: *id004
+          enum: *id005
           example: host
           type: string
         start_time:
@@ -1511,7 +1605,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using the Enterprise Editions. Defaults to 'fixed'."
-          enum: *id005
+          enum: *id006
           example: hour
           type: string
         duration:
@@ -1559,7 +1653,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: *id004
+          enum: *id005
           example: host
           type: string
         start_time:
@@ -1580,7 +1674,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using the Enterprise Editions. Defaults to 'fixed'."
-          enum: *id005
+          enum: *id006
           example: hour
           type: string
         duration:
@@ -1625,7 +1719,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: *id004
+          enum: *id005
           example: host
           type: string
         start_time:
@@ -1646,7 +1740,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using the Enterprise Editions. Defaults to 'fixed'."
-          enum: *id005
+          enum: *id006
           example: hour
           type: string
         duration:
@@ -1682,7 +1776,7 @@ components:
       properties:
         downtime_type:
           description: The type of downtime to create.
-          enum: *id004
+          enum: *id005
           example: host
           type: string
         start_time:
@@ -1703,7 +1797,7 @@ components:
             \    * fixed\n    * hour\n    * day\n    * week\n    * second_week\n \
             \   * fourth_week\n    * weekday_start\n    * weekday_end\n    * day_of_month\n\
             \nThis only works when using the Enterprise Editions. Defaults to 'fixed'."
-          enum: *id005
+          enum: *id006
           example: hour
           type: string
         duration:
@@ -1771,7 +1865,7 @@ components:
       properties:
         delete_type:
           description: The option how to delete a downtime.
-          enum: &id006
+          enum: &id007
           - params
           - query
           example: params
@@ -1788,7 +1882,7 @@ components:
       properties:
         delete_type:
           description: The option how to delete a downtime.
-          enum: *id006
+          enum: *id007
           example: params
           type: string
         query:
@@ -1927,16 +2021,16 @@ components:
           example: servers/groupA
           type: string
         host_labels:
-          example: &id007
+          example: &id008
             db: mssql
           type: object
         host_tags:
-          example: &id008 {}
+          example: &id009 {}
           type: object
         host_choice:
           allOf:
           - $ref: '#/components/schemas/BIHostChoice'
-          example: &id009
+          example: &id010
             type: all_hosts
       required:
       - host_choice
@@ -2434,15 +2528,15 @@ components:
           example: servers/groupA
           type: string
         host_labels:
-          example: *id007
+          example: *id008
           type: object
         host_tags:
-          example: *id008
+          example: *id009
           type: object
         host_choice:
           allOf:
           - $ref: '#/components/schemas/BIHostChoice'
-          example: *id009
+          example: *id010
         service_regex:
           example: Filesystem.*
           type: string
@@ -2582,19 +2676,19 @@ components:
           description: Replace all currently set attributes on the host, with these
             attributes. Any previously set attributes which are not given here will
             be removed.
-          example: &id010
+          example: &id011
             ipaddress: 192.168.0.123
           type: object
         update_attributes:
           description: Just update the hosts attributes with these attributes. The
             previously set attributes will not be touched.
-          example: &id011
+          example: &id012
             ipaddress: 192.168.0.123
           type: object
         remove_attributes:
           default: []
           description: A list of attributes which should be removed.
-          example: &id012
+          example: &id013
           - tag_foobar
           items:
             type: string
@@ -2606,17 +2700,17 @@ components:
           description: Replace all currently set attributes on the host, with these
             attributes. Any previously set attributes which are not given here will
             be removed.
-          example: *id010
+          example: *id011
           type: object
         update_attributes:
           description: Just update the hosts attributes with these attributes. The
             previously set attributes will not be touched.
-          example: *id011
+          example: *id012
           type: object
         remove_attributes:
           default: []
           description: A list of attributes which should be removed.
-          example: *id012
+          example: *id013
           items:
             type: string
           type: array
@@ -3045,23 +3139,15 @@ paths:
           \ application/json\" \\\n    acknowledge_type='host' \\\n    sticky='False'\
           \ \\\n    persistent='False' \\\n    notify='False' \\\n    comment='This\
           \ was expected.' \\\n    host_name='example.com' \\\n    --json"
-  /domain-types/service/{service_description}/actions/acknowledge/invoke:
+  /domain-types/acknowledge/collections/service:
     post:
       description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_for_service
-      parameters:
-      - description: The service description.
-        in: path
-        name: service_description
-        required: true
-        schema:
-          example: Memory
-          type: string
+      operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_service_related
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AcknowledgeServiceProblem'
+              $ref: '#/components/schemas/AcknowledgeServiceRelatedProblem'
         required: true
       responses:
         default:
@@ -3073,7 +3159,7 @@ paths:
         '204':
           description: Operation done successfully. No further output.
           headers: {}
-      summary: Acknowledge for a service globally
+      summary: Acknowledge for related service
       tags:
       - cmk.gui.plugins.openapi.endpoints.acknowledgement
       x-codeSamples:
@@ -3083,39 +3169,48 @@ paths:
           \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
           session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/service/Memory/actions/acknowledge/invoke\"\
-          ,\n    json={\n        'sticky': False,\n        'persistent': False,\n\
-          \        'notify': False,\n        'comment': 'This was expected.'\n   \
-          \ },\n)\nresp.raise_for_status()\ndata = resp.json()"
+          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/domain-types/acknowledge/collections/service\"\
+          ,\n    # This schema has multiple variations. Please refer to\n    # the\
+          \ 'Payload' section for details.\n    json={\n        'acknowledge_type':\
+          \ 'service',\n        'sticky': False,\n        'persistent': False,\n \
+          \       'notify': False,\n        'comment': 'This was expected.',\n   \
+          \     'service_description': 'CPU load'\n    },\n)\nresp.raise_for_status()\n\
+          data = resp.json()"
       - label: urllib
         lang: python
         source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
           \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
           \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/service/Memory/actions/acknowledge/invoke\"\
-          ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        'sticky': False,\n        'persistent':\
-          \ False,\n        'notify': False,\n        'comment': 'This was expected.'\n\
-          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
+          \    f\"{API_URL}/domain-types/acknowledge/collections/service\",\n    method=\"\
+          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n    },\n   \
+          \ # This schema has multiple variations. Please refer to\n    # the 'Payload'\
+          \ section for details.\n    data=json.dumps({\n        'acknowledge_type':\
+          \ 'service',\n        'sticky': False,\n        'persistent': False,\n \
+          \       'notify': False,\n        'comment': 'This was expected.',\n   \
+          \     'service_description': 'CPU load'\n    }).encode('utf-8'),\n)\nresponse\
+          \ = urllib.request.urlopen(request)\ndata = json.loads(response.read())"
       - label: curl
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
-          \          \"notify\": false,\n          \"persistent\": false,\n      \
-          \    \"sticky\": false\n        }' \\\n    \"$API_URL/domain-types/service/Memory/actions/acknowledge/invoke\""
+          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
+          \ refer to the\n# 'Payload' section for details.\ncurl \\\n    -X POST \\\
+          \n    --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    --header\
+          \ \"Accept: application/json\" \\ \\\n    --data '{\n          \"acknowledge_type\"\
+          : \"service\",\n          \"comment\": \"This was expected.\",\n       \
+          \   \"notify\": false,\n          \"persistent\": false,\n          \"service_description\"\
+          : \"CPU load\",\n          \"sticky\": false\n        }' \\\n    \"$API_URL/domain-types/acknowledge/collections/service\""
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
           http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/domain-types/service/Memory/actions/acknowledge/invoke\"\
+          \nPASSWORD=\"test123\"\n\n# This schema has multiple variations. Please\
+          \ refer to the\n# 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/acknowledge/collections/service\"\
           \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
-          \n    notify='False' \\\n    comment='This was expected.' \\\n    --json"
+          \ application/json\" \\\n    acknowledge_type='service' \\\n    sticky='False'\
+          \ \\\n    persistent='False' \\\n    notify='False' \\\n    comment='This\
+          \ was expected.' \\\n    service_description='CPU load' \\\n    --json"
   /objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge/invoke:
     post:
       description: ''
@@ -3263,77 +3358,6 @@ paths:
           \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
           \n    notify='False' \\\n    comment='This was expected.' \\\n    host_name='example.com'\
           \ \\\n    entries='['CPU utilization', 'Memory']' \\\n    --json"
-  /objects/servicegroup/{servicegroup_name}/actions/acknowledge/invoke:
-    post:
-      description: ''
-      operationId: cmk.gui.plugins.openapi.endpoints.acknowledgement.set_acknowledgement_on_servicegroup
-      parameters:
-      - description: The name of the service group
-        in: path
-        name: servicegroup_name
-        required: true
-        schema:
-          example: windows
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AcknowledgeServiceProblem'
-        required: true
-      responses:
-        default:
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-          description: Any unsuccessful or unexpected result.
-        '204':
-          description: Operation done successfully. No further output.
-          headers: {}
-      summary: Acknowledge for services of a service group
-      tags:
-      - cmk.gui.plugins.openapi.endpoints.acknowledgement
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport requests\n\nHOST_NAME = \"localhost\"\
-          \nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.post(\n    f\"{API_URL}/objects/servicegroup/windows/actions/acknowledge/invoke\"\
-          ,\n    json={\n        'sticky': False,\n        'persistent': False,\n\
-          \        'notify': False,\n        'comment': 'This was expected.'\n   \
-          \ },\n)\nresp.raise_for_status()\ndata = resp.json()"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport urllib.request\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"heute\"\nAPI_URL = f\"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0\"\
-          \n\nUSERNAME = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/objects/servicegroup/windows/actions/acknowledge/invoke\"\
-          ,\n    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \    },\n    data=json.dumps({\n        'sticky': False,\n        'persistent':\
-          \ False,\n        'notify': False,\n        'comment': 'This was expected.'\n\
-          \    }).encode('utf-8'),\n)\nresponse = urllib.request.urlopen(request)\n\
-          data = json.loads(response.read())"
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\ncurl \\\n    -X POST \\\n    --header \"Authorization:\
-          \ Bearer $USERNAME $PASSWORD\" \\\n    --header \"Accept: application/json\"\
-          \ \\ \\\n    --data '{\n          \"comment\": \"This was expected.\",\n\
-          \          \"notify\": false,\n          \"persistent\": false,\n      \
-          \    \"sticky\": false\n        }' \\\n    \"$API_URL/objects/servicegroup/windows/actions/acknowledge/invoke\""
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"heute\"\nAPI_URL=\"\
-          http://$HOST_NAME/$SITE_NAME/check_mk/api/v0\"\n\nUSERNAME=\"automation\"\
-          \nPASSWORD=\"test123\"\n\nhttp POST \"$API_URL/objects/servicegroup/windows/actions/acknowledge/invoke\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" \\\n    sticky='False' \\\n    persistent='False' \\\
-          \n    notify='False' \\\n    comment='This was expected.' \\\n    --json"
   /domain-types/activation_run/actions/activate-changes/invoke:
     post:
       description: ''

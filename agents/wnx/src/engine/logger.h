@@ -514,7 +514,7 @@ public:
     }
     // [ERROR:CRITICAL] +  breakpoint
     template <typename... T>
-    [[maybe_unused]] auto bp(const std::string& Format, T... args) {
+    [[maybe_unused]] auto bp(const std::string& Format, T... args) noexcept {
         return exec(XLOG::kCritError | XLOG::kBp, Format, args...);
     }
 

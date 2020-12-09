@@ -10,6 +10,7 @@
 #include <cstdint>
 namespace wtools {
 
+/// \brief Replacement for INVALID_HANDLE_VALUE
 inline HANDLE InvalidHandle() {
     // conversion to satisfy Win32 API and C++:
     return reinterpret_cast<HANDLE>(

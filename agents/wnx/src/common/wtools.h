@@ -246,7 +246,7 @@ private:
 // based on ToolHelp api family
 // normally require elevation
 // if op returns false, scan will be stopped(this is only optimization)
-bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op);
+bool ScanProcessList(const std::function<bool(const PROCESSENTRY32&)>& op);
 
 // standard process terminator
 bool KillProcess(uint32_t process_id, int exit_code = -1) noexcept;
@@ -959,7 +959,7 @@ public:
     bool impersonate() noexcept;
 
     // on error returns empty string and timeout status
-    std::tuple<std::wstring, WmiStatus> produceTable(
+    static std::tuple<std::wstring, WmiStatus> produceTable(
         IEnumWbemClassObject* enumerator,
         const std::vector<std::wstring>& names,
         std::wstring_view separator) noexcept;
@@ -1005,7 +1005,7 @@ bool DeleteRegistryValue(std::wstring_view path,
 
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
-                      std::wstring_view value);
+                      std::wstring_view value) noexcept;
 
 bool SetRegistryValueExpand(std::wstring_view path,
                             std::wstring_view value_name,
@@ -1039,7 +1039,7 @@ public:
 
     // constructs a new CACLInfo object
     // bstrPath - path for which ACL info should be queried
-    ACLInfo(_bstr_t path) noexcept;
+    ACLInfo(const _bstr_t& path) noexcept;
     virtual ~ACLInfo();
 
     // Queries NTFS for ACL Info of the file/directory

@@ -17,7 +17,7 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
-    State as state,
+    State,
 )
 
 from .utils import memory
@@ -71,6 +71,14 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckResult:
         params = {"levels": params}
 
     memtotal = MemBytes(meminfo['MemTotal'])
+    if memtotal.bytes == 0:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=("Reported total memory is 0 B, this may be "
+                     "caused by the lack of a memory cgroup in the kernel"),
+        )
+        return
+
     memused = MemBytes(memtotal.kb - meminfo['MemFree'])
 
     swaptotal: Optional[MemBytes] = None
@@ -148,11 +156,11 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckResult:
         ))
 
     # Check levels
-    my_state = memory.compute_state(comp_mb, warn_mb, crit_mb)
-    if my_state != state.OK and levels_text:
+    state = memory.compute_state(comp_mb, warn_mb, crit_mb)
+    if state != State.OK and levels_text:
         infotext = "%s (%s)" % (infotext, levels_text)
 
-    yield Result(state=my_state, summary=infotext)
+    yield Result(state=state, summary=infotext)
     yield from metrics
 
     if totalused_descr != "RAM":
@@ -171,7 +179,7 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckResult:
                 ("ignore", (None, None)),
             )
         if pagetables:
-            yield Result(state=state.OK, summary="Pagetables: %s" % pagetables.render())
+            yield Result(state=State.OK, summary="Pagetables: %s" % pagetables.render())
 
     # Add additional metrics, provided by Linux.
     if meminfo.get('Mapped'):
@@ -181,7 +189,7 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckResult:
             ('Shmem', 'Shared', 'mem_lnx_shmem'),
         ):
             value = MemBytes(meminfo.get(key, 0))
-            yield Result(state=state.OK, summary="%s: %s" % (label, value.render()))
+            yield Result(state=State.OK, summary="%s: %s" % (label, value.render()))
             yield Metric(metric, value.bytes)
 
 

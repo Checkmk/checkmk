@@ -7,15 +7,30 @@
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.utils import memory
-from cmk.base.plugins.agent_based.mem_used import check_mem_used
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Metric, State as state
+from cmk.base.plugins.agent_based.mem_used import check_mem_used, discover_mem_used
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Metric, Service, State
 from cmk.base.api.agent_based import value_store
 
 import pytest  # type: ignore[import]
 
+state = State  # TODO: cleanup
+
 KILO = 1024
 
 MEGA = KILO**2
+
+
+def test_check_discovery_total_zero():
+    """
+    Some containers do not provide memory info.
+    Make sure they are discovered, and a proper error message is displayed
+    """
+    section = {"MemTotal": 0}
+    assert list(discover_mem_used(section)) == [Service()]
+    result, = check_mem_used({}, section)
+    assert isinstance(result, Result)
+    assert result.state == State.UNKNOWN
+    assert result.summary.startswith("Reported total memory is 0 B")
 
 
 @pytest.mark.parametrize(

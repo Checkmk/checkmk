@@ -37,11 +37,11 @@ class TestSNMPParser:
             hostname,
             SectionStore(
                 "/tmp/store",
-                keep_outdated=True,
                 logger=logging.Logger("test"),
             ),
-            {},
-            logging.Logger("test"),
+            check_intervals={},
+            keep_outdated=True,
+            logger=logging.Logger("test"),
         )
 
     def test_empty_raw_data(self, parser):

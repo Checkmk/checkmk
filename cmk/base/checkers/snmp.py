@@ -188,13 +188,13 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             self.hostname,
             SectionStore[SNMPRawDataSection](
                 self.persisted_sections_file_path,
-                keep_outdated=self.use_outdated_persisted_sections,
                 logger=self._logger,
             ),
             check_intervals={
                 section_name: host_config.snmp_fetch_interval(section_name)
                 for section_name in self._make_checking_sections()
             },
+            keep_outdated=self.use_outdated_persisted_sections,
             logger=self._logger,
         )
 
@@ -264,13 +264,16 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         self,
         hostname: HostName,
         section_store: SectionStore[SNMPRawDataSection],
+        *,
         check_intervals: Mapping[SectionName, Optional[int]],
+        keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
         self.check_intervals: Final = check_intervals
         self.section_store: Final = section_store
+        self.keep_outdated: Final = keep_outdated
         self._logger = logger
 
     def parse(
@@ -279,6 +282,15 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         *,
         selection: SectionNameCollection,
     ) -> SNMPHostSections:
+        # TODO(ml): The logic here is _almost_ the same as for the Agent.
+        #           We should make it *exactly* the same by moving the
+        #           filtering logic into the parser and then factor the
+        #           remaining code into a single class such that:
+        #              check = fetch >> parse >> cache [the missing class] >> summarize
+        #
+        #           See Also:
+        #              comments in HostSections.
+        #
         cached_at = int(time.time())
 
         def fetch_interval(section_name: SectionName) -> Optional[int]:
@@ -292,7 +304,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             {section_name: fetch_interval(section_name) for section_name in raw_data},
             cached_at=cached_at,
         )
-        persisted_sections.update_and_store(self.section_store)
+        persisted_sections.update_and_store(self.section_store, keep_outdated=self.keep_outdated)
         host_sections = SNMPHostSections(dict(raw_data))
         host_sections.add_cache_info(persisted_sections)
         host_sections.add_persisted_sections(

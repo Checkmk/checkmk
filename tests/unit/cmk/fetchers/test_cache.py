@@ -55,7 +55,7 @@ class TestPersistedSections:
 
         assert persisted_sections != store.load()
 
-        persisted_sections.update_and_store(store)  # type: ignore[arg-type]
+        persisted_sections.update_and_store(store, keep_outdated=True)  # type: ignore[arg-type]
 
         assert persisted_sections == store.load()
         assert persisted_sections == PersistedSections[AgentRawDataSection](stored())
@@ -70,7 +70,7 @@ class TestPersistedSections:
 
         assert persisted_sections != store.load()
 
-        persisted_sections.update_and_store(store)  # type: ignore[arg-type]
+        persisted_sections.update_and_store(store, keep_outdated=True)  # type: ignore[arg-type]
 
         assert persisted_sections == store.load()
         assert persisted_sections == PersistedSections[AgentRawDataSection](persisted())
@@ -86,7 +86,7 @@ class TestPersistedSections:
 
         assert persisted_sections != store.load()
 
-        persisted_sections.update_and_store(store)  # type: ignore[arg-type]
+        persisted_sections.update_and_store(store, keep_outdated=True)  # type: ignore[arg-type]
 
         assert persisted_sections == store.load()
         assert persisted_sections == PersistedSections[AgentRawDataSection](persisted())
@@ -104,7 +104,7 @@ class TestPersistedSections:
 
         assert persisted_sections != store.load()
 
-        persisted_sections.update_and_store(store)  # type: ignore[arg-type]
+        persisted_sections.update_and_store(store, keep_outdated=True)  # type: ignore[arg-type]
 
         assert persisted_sections == store.load()
         assert persisted_sections == PersistedSections[AgentRawDataSection](acc)

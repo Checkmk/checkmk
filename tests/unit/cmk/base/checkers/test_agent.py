@@ -52,15 +52,11 @@ class TestParser:
 
     @pytest.fixture
     def store(self, store_path, logger):
-        return SectionStore[AgentRawDataSection](
-            store_path,
-            keep_outdated=False,
-            logger=logger,
-        )
+        return SectionStore[AgentRawDataSection](store_path, logger=logger)
 
     @pytest.fixture
     def parser(self, hostname, store, logger):
-        return AgentParser(hostname, store, 0, logger)
+        return AgentParser(hostname, store, check_interval=0, keep_outdated=True, logger=logger)
 
     @pytest.mark.usefixtures("scenario")
     def test_missing_host_header(self, parser):

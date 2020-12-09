@@ -77,10 +77,36 @@ class PersistedSections(
 
         return self
 
+    def filter(self, *, keep_outdated: bool) -> None:
+        """Remove older entries from the database.
+
+        Args:
+            keep_outdated: Do not remove anything if True.
+
+        """
+        if keep_outdated:
+            return
+
+        now = time.time()
+        for section_name, entry in list(self.items()):
+            if len(entry) == 2:
+                persisted_until = entry[0]
+            else:
+                persisted_until = entry[1]
+
+            if now > persisted_until:
+                # TODO(ml): Log deletions.
+                del self[section_name]
+
     def update_and_store(
         self,
         section_store: "SectionStore[TRawDataSection]",
+        *,
+        keep_outdated: bool,
     ) -> None:
+        # TODO: This is not race condition free when modifying the data. Either remove
+        # the possible write here and simply ignore the outdated sections or lock when
+        # reading and unlock after writing
         stored = section_store.load()
         if self == stored:
             return
@@ -91,8 +117,10 @@ class PersistedSections(
         self.update(stored)
         # Now, self and stored must be equal.
         assert self == stored
+        # Filter if requested
+        self.filter(keep_outdated=keep_outdated)
         # Save the updated DB.
-        section_store.store(stored)
+        section_store.store(self)
 
 
 class SectionStore(Generic[TRawDataSection]):
@@ -100,12 +128,10 @@ class SectionStore(Generic[TRawDataSection]):
         self,
         path: Union[str, Path],
         *,
-        keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.path: Final = Path(path)
-        self.keep_outdated: Final = keep_outdated
         self._logger: Final = logger
 
     def store(self, sections: PersistedSections[TRawDataSection]) -> None:
@@ -115,33 +141,14 @@ class SectionStore(Generic[TRawDataSection]):
             return
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        _store.save_object_to_file(self.path, {str(k): v for k, v in sections.items()},
-                                   pretty=False)
+        _store.save_object_to_file(
+            self.path,
+            {str(k): v for k, v in sections.items()},
+            pretty=False,
+        )
         self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
     def load(self) -> PersistedSections[TRawDataSection]:
         raw_sections_data = _store.load_object_from_file(self.path, default={})
-        sections: PersistedSections[TRawDataSection] = {  # type: ignore[assignment]
-            SectionName(k): v for k, v in raw_sections_data.items()
-        }
-        if not self.keep_outdated:
-            sections = self._filter(sections)
-
-        return sections
-
-    def _filter(
-        self,
-        sections: PersistedSections[TRawDataSection],
-    ) -> PersistedSections[TRawDataSection]:
-        now = time.time()
-        for section_name, entry in list(sections.items()):
-            if len(entry) == 2:
-                persisted_until = entry[0]
-            else:
-                persisted_until = entry[1]
-
-            if now > persisted_until:
-                self._logger.debug("Persisted section %s is outdated by %d seconds. Skipping it.",
-                                   section_name, now - persisted_until)
-                del sections[section_name]
-        return sections
+        return PersistedSections[TRawDataSection](
+            {SectionName(k): v for k, v in raw_sections_data.items()})

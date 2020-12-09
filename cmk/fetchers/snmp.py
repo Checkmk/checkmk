@@ -165,7 +165,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.snmp_config: Final = snmp_config
         self._section_store = SectionStore[SNMPRawDataSection](
             section_store_path,
-            keep_outdated=False,  # irrelevant to SNMP
             logger=self._logger,
         )
         self._backend = factory.backend(self.snmp_config, self._logger)

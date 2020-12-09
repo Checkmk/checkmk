@@ -22,7 +22,7 @@ import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
-from cmk.gui.watolib.changes import activation_sites, ObjectRef, ObjectRefType
+from cmk.gui.watolib.changes import ObjectRef, ObjectRefType
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
@@ -197,7 +197,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         cmk.gui.watolib.activate_changes.execute_activate_changes(
             [d.ident for d in watolib.ABCConfigDomain.enabled_domains()])
 
-        for site_id in cmk.gui.watolib.changes.activation_sites():
+        for site_id in config.activation_sites():
             self.confirm_site_changes(site_id)
 
         build_and_store_index_background()
@@ -264,7 +264,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.close_div()
 
     def _get_initial_message(self) -> str:
-        changes = sum(len(self._changes_of_site(site_id)) for site_id in activation_sites())
+        changes = sum(len(self._changes_of_site(site_id)) for site_id in config.activation_sites())
         if changes == 0:
             if html.request.has_var("_finished"):
                 return _("Activation has finished.")
@@ -357,7 +357,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         with table_element("site-status", searchable=False, sortable=False,
                            css="activation") as table:
 
-            for site_id, site in sort_sites(cmk.gui.watolib.changes.activation_sites()):
+            for site_id, site in sort_sites(config.activation_sites()):
                 table.row()
 
                 site_status, status = self._get_site_status(site_id, site)

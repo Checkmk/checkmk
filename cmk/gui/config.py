@@ -1169,6 +1169,18 @@ def get_wato_site_choices() -> List[Tuple[SiteId, str]]:
         "replication") is not None)
 
 
+def activation_sites() -> Dict[SiteId, SiteConfiguration]:
+    """Returns sites that are affected by WATO changes
+
+    These sites are shown on activation page and get change entries
+    added during WATO changes."""
+    return {
+        site_id: site
+        for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
+        if site_is_local(site_id) or site.get("replication")
+    }
+
+
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

@@ -25,7 +25,7 @@ import cmk.gui.utils
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.globals import request
 from cmk.gui import config, escaping
-from cmk.gui.config import SiteId, SiteConfiguration
+from cmk.gui.config import SiteId
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException
@@ -297,7 +297,7 @@ class ActivateChangesWriter:
 
         # All replication sites in case no specific site is given
         if sites is None:
-            sites = activation_sites().keys()
+            sites = config.activation_sites().keys()
 
         change_id = self._new_change_id()
 
@@ -376,18 +376,6 @@ def add_service_change(host: "CREHost",
                sites=[host.site_id()],
                diff_text=diff_text,
                need_sync=need_sync)
-
-
-def activation_sites() -> Dict[SiteId, SiteConfiguration]:
-    """Returns the list of sites that are affected by WATO changes
-    These sites are shown on activation page and get change entries
-    added during WATO changes."""
-    return {
-        site_id: site
-        for site_id, site in config.user.authorized_sites(
-            unfiltered_sites=config.configured_sites()).items()
-        if config.site_is_local(site_id) or site.get("replication")
-    }
 
 
 def make_object_audit_log_url(object_ref: ObjectRef) -> str:

@@ -787,6 +787,9 @@ msgstr ", date nu au fost primite în ultimele %.1f intervale de verificate"
 msgid ", the first match skips this rule pack"
 msgstr ""
 
+msgid "-"
+msgstr ""
+
 msgid "-.-- %"
 msgstr ""
 
@@ -835,6 +838,14 @@ msgstr "randuri"
 msgid "1.0 - 2.0 ms"
 msgstr ""
 
+#, fuzzy
+msgid "1.000.000 Services"
+msgstr "servicii"
+
+#, fuzzy
+msgid "1.500.000 Services"
+msgstr "servicii"
+
 msgid "1/s"
 msgstr ""
 
@@ -855,6 +866,10 @@ msgstr ""
 msgid "100.0 - 200.0 ms"
 msgstr ""
 
+#, fuzzy
+msgid "100.000 Services"
+msgstr "servicii"
+
 msgid "10x14"
 msgstr ""
 
@@ -864,8 +879,16 @@ msgstr ""
 msgid "12 Volt Output Upper Levels"
 msgstr ""
 
+#, fuzzy
+msgid "12.000 Services"
+msgstr "servicii"
+
 msgid "15 minutes"
 msgstr "15 minute"
+
+#, fuzzy
+msgid "18.000 Services"
+msgstr "servicii"
 
 #, fuzzy
 msgid "2 weeks back"
@@ -874,11 +897,23 @@ msgstr "%d zile în urmă"
 msgid "2.0 - 5.0 ms"
 msgstr ""
 
+#, fuzzy
+msgid "2.000.000 Services"
+msgstr "servicii"
+
+#, fuzzy
+msgid "2.000.000+ Services"
+msgstr "servicii"
+
 msgid "20.0 - 50.0 ms"
 msgstr ""
 
 msgid "200.0 - 500.0 ms"
 msgstr ""
+
+#, fuzzy
+msgid "200.000 Services"
+msgstr "servicii"
 
 msgid "25 Hours"
 msgstr "25 de ore"
@@ -886,6 +921,10 @@ msgstr "25 de ore"
 #, fuzzy
 msgid "3 months"
 msgstr "2 ore"
+
+#, fuzzy
+msgid "3.000 Services"
+msgstr "servicii"
 
 msgid "3.3 Volt Output Lower Levels"
 msgstr ""
@@ -896,6 +935,14 @@ msgstr ""
 #, fuzzy
 msgid "30 Minutes"
 msgstr "5 minute"
+
+#, fuzzy
+msgid "30.000 Services"
+msgstr "servicii"
+
+#, fuzzy
+msgid "300.000 Services"
+msgstr "servicii"
 
 msgid "32bit packaged binary"
 msgstr ""
@@ -947,8 +994,16 @@ msgid "500.0+ ms"
 msgstr ""
 
 #, fuzzy
+msgid "500.000 Services"
+msgstr "servicii"
+
+#, fuzzy
 msgid "6 months"
 msgstr "2 ore"
+
+#, fuzzy
+msgid "60.000 Services"
+msgstr "servicii"
 
 msgid "64bit packaged binary"
 msgstr ""
@@ -964,6 +1019,10 @@ msgstr ""
 
 msgid "7-segment display uid"
 msgstr ""
+
+#, fuzzy
+msgid "7.000 Services"
+msgstr "servicii"
 
 #, fuzzy
 msgid "8 days back"
@@ -3142,6 +3201,10 @@ msgstr "Adaugp o noua configurație de utilizator"
 #, fuzzy
 msgid "Add subfolder"
 msgstr "Adaugă filtre"
+
+#, fuzzy
+msgid "Add subscription details"
+msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Add tag"
@@ -7949,8 +8012,9 @@ msgstr ""
 msgid "Check containers memory usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
-msgid "Check current routing (uses <tt>traceroute</tt>)"
-msgstr ""
+#, fuzzy
+msgid "Check current routing"
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
 msgid "Check event state in Event Console"
 msgstr ""
@@ -11143,6 +11207,10 @@ msgstr "Numarul maxim de mesaje"
 msgid "Custom integrations"
 msgstr "Atribute personalizate"
 
+#, fuzzy
+msgid "Custom limit"
+msgstr "Atribute personalizate"
+
 msgid "Custom localizations"
 msgstr ""
 
@@ -11266,6 +11334,10 @@ msgstr ""
 
 msgid "Customer number of services in state WARN"
 msgstr ""
+
+#, fuzzy
+msgid "Customer portal credentials"
+msgstr "trei nivele"
 
 #, fuzzy
 msgid "Customer properties"
@@ -15026,6 +15098,10 @@ msgstr ""
 msgid "Edit stored report"
 msgstr ""
 
+#, fuzzy
+msgid "Edit subscription settings"
+msgstr "foloseste descrierea"
+
 msgid "Edit tag group"
 msgstr ""
 
@@ -16217,6 +16293,10 @@ msgstr "%d schimbări"
 
 msgid "Exclude"
 msgstr ""
+
+#, fuzzy
+msgid "Exclude \"Activate changes\" for time ranges"
+msgstr " Activează această opțiune"
 
 msgid "Exclude Pattern"
 msgstr ""
@@ -18660,7 +18740,7 @@ msgid "Group"
 msgstr ""
 
 #, fuzzy
-msgid "Group \"Activate changes\" for up to"
+msgid "Group \"Activate changes\""
 msgstr " Activează această opțiune"
 
 msgid "Group Base-DN"
@@ -21545,6 +21625,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"If you don't want to automatically create all hosts, you can restrict the "
+"creation with a regular expression. Important: This concerns the hosts to be "
+"created and not the hosts you have set up to monitor e.g. AWS."
+msgstr ""
+
+msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
 "one piece without waiting. This reduces the overhead."
 msgstr ""
@@ -23043,6 +23129,9 @@ msgstr " pe siteul de monitorizare: "
 
 #, python-format
 msgid "Invalid file name extension. Allowed are: %s"
+msgstr ""
+
+msgid "Invalid file name for tarfile_name given."
 msgstr ""
 
 msgid "Invalid filename"
@@ -29018,9 +29107,6 @@ msgstr "Adresă"
 msgid "Never analyzed/vacuumed tables"
 msgstr ""
 
-msgid "Never do \"Activate changes\" in the following time ranges"
-msgstr ""
-
 msgid "Never do discovery or activate changes in the following time ranges"
 msgstr ""
 
@@ -31113,9 +31199,6 @@ msgid ""
 "signed certificates for you server then enter that certificate here."
 msgstr ""
 
-msgid "Only add hosts from matching source hosts"
-msgstr ""
-
 #, fuzzy
 msgid "Only add matching hosts"
 msgstr " pe siteul de monitorizare: "
@@ -31133,10 +31216,6 @@ msgstr "(nu trimite notificări câtre Event Console)"
 msgid ""
 "Only care about hosts that receive piggyback data from hosts which name "
 "matches one of these regular expressions."
-msgstr ""
-
-msgid ""
-"Only care about hosts with names that match one of these regular expressions."
 msgstr ""
 
 msgid "Only check during the following times of the day"
@@ -31968,8 +32047,9 @@ msgid ""
 "first check after the restart."
 msgstr ""
 
-msgid "PNP4Nagios templates"
-msgstr ""
+#, fuzzy
+msgid "PNP4Nagios templates (deprecated)"
+msgstr " pe siteul de monitorizare: "
 
 msgid "POP3"
 msgstr ""
@@ -33917,7 +33997,7 @@ msgstr ""
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr ""
 
-msgid "Prevent host deletion right after initialization"
+msgid "Prevent host deletion after initialization"
 msgstr ""
 
 msgid "Prevent loading HTML from service output or log messages"
@@ -36104,6 +36184,10 @@ msgstr ""
 
 msgid "Restrict severity to at worst"
 msgstr ""
+
+#, fuzzy
+msgid "Restrict source hosts"
+msgstr "Tagul Aplicatiei in syslog"
 
 msgid "Restrict the length of the lines"
 msgstr ""
@@ -38336,10 +38420,10 @@ msgid "Set connection timeout"
 msgstr "Conexiune Noua"
 
 msgid ""
-"Set credentials for automatically submitting crash reports, license usage "
-"reports, et al. to Tribe29. The credentials are part of your subscription "
-"and can be found in your contract. These credentials are also used for "
-"downloading the Checkmk software versions from the Tribe29 website."
+"Set credentials for automatically submitting license usage reports to "
+"tribe29. The credentials are part of your subscription and can be found in "
+"your contract. These credentials are also used for downloading the Checkmk "
+"software versions from the tribe29 website."
 msgstr ""
 
 msgid "Set criticality host tag"
@@ -38413,6 +38497,9 @@ msgstr "TCP port pentru conexiunile la agentul Check_MK"
 msgid "Set period how long outdated piggyback data is treated as valid"
 msgstr ""
 
+msgid "Set period how long outdated piggyback data is treated as valid."
+msgstr ""
+
 #, fuzzy
 msgid "Set relative levels"
 msgstr "trei nivele"
@@ -38464,9 +38551,11 @@ msgstr ""
 msgid "Set states of IPMI sensor status texts"
 msgstr ""
 
-#, fuzzy
-msgid "Set support credentials"
-msgstr "trei nivele"
+msgid ""
+"Set subscription details for automatically submitting license usage reports "
+"to tribe29. The details including start date, end date and sizing are part "
+"of your subscription and can be found in your contract."
+msgstr ""
 
 msgid ""
 "Set the Checkmk configuration interface to read only mode for maintenance."
@@ -41447,6 +41536,26 @@ msgstr "foloseste descrierea"
 msgid "Subscription Status"
 msgstr "foloseste descrierea"
 
+#, fuzzy
+msgid "Subscription details"
+msgstr "foloseste descrierea"
+
+#, fuzzy
+msgid "Subscription end date"
+msgstr "foloseste descrierea"
+
+#, fuzzy
+msgid "Subscription settings"
+msgstr "foloseste descrierea"
+
+#, fuzzy
+msgid "Subscription sizing"
+msgstr "foloseste descrierea"
+
+#, fuzzy
+msgid "Subscription start date"
+msgstr "foloseste descrierea"
+
 msgid "Substitution"
 msgstr ""
 
@@ -41562,9 +41671,6 @@ msgstr ""
 #, fuzzy
 msgid "Support"
 msgstr "rapoarte"
-
-msgid "Support credentials"
-msgstr ""
 
 #, fuzzy
 msgid "Support diagnostics"
@@ -42783,6 +42889,10 @@ msgid ""
 "IOutilization of the rack units as components of a rack server as device)in "
 "the last check interval. The possible range is from 0% to 100%"
 msgstr ""
+
+#, fuzzy
+msgid "The Piggyback mechanism"
+msgstr "Agregare noua"
 
 #, fuzzy
 msgid "The Port Description"
@@ -44896,6 +45006,10 @@ msgstr ""
 msgid "The secure message format is used."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "The selected %s have been deleted."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 msgid ""
 "The selected automation user needs rights for agent registration and "
 "download. If no user is selected, the agent bakery tries to find an "
@@ -45827,7 +45941,7 @@ msgstr ""
 msgid ""
 "This active check uses <tt>traceroute</tt> in order to determine the current "
 "routing from the monitoring host to the target host. You can specify any "
-"number of missing or expected routes in that way detect e.g. an (unintended) "
+"number of missing or expected routes in order to detect e.g. an (unintended) "
 "failover to a secondary route."
 msgstr ""
 
@@ -48365,6 +48479,11 @@ msgstr ""
 msgid "Time range from report context"
 msgstr "Portul TCP pentru conexiune"
 
+msgid ""
+"Time range that hosts are to be retained while the piggyback source only "
+"sends piggyback data for other hosts."
+msgstr ""
+
 #, fuzzy
 msgid "Time range to consider"
 msgstr "Portul TCP pentru conexiune"
@@ -49452,7 +49571,7 @@ msgstr ""
 msgid "UDP"
 msgstr ""
 
-msgid "UDP (default behaviour of tcpdump)"
+msgid "UDP (default behaviour of traceroute)"
 msgstr ""
 
 msgid "UDP Authentication Failures"
@@ -51841,6 +51960,12 @@ msgstr ""
 msgid "Valid until Checkmk version"
 msgstr " Parametrul este: %r"
 
+msgid "Validity of missing data"
+msgstr ""
+
+msgid "Validity of outdated data"
+msgstr ""
+
 msgid "Value"
 msgstr ""
 
@@ -52173,8 +52298,9 @@ msgstr "Vizibilitatea Elementelor/Serviciilor"
 msgid "Visible"
 msgstr ""
 
-msgid "Visit checkmk exchange"
-msgstr ""
+#, fuzzy
+msgid "Visit Checkmk exchange"
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Vista API"
 msgstr ""

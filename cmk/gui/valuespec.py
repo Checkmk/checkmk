@@ -6178,7 +6178,7 @@ class SetupSiteChoice(DropdownChoice):
                           _("The configured site is not known to this site."))
 
         kwargs.update({
-            "choices": self._site_choices,
+            "choices": config.get_activation_site_choices,
             "invalid_choice": "complain",
             "invalid_choice_title": _("Unknown site (%s)"),
         })
@@ -6193,9 +6193,6 @@ class SetupSiteChoice(DropdownChoice):
         if default_value:
             return default_value
         return self.canonical_value()
-
-    def _site_choices(self):
-        return config.site_attribute_choices()
 
 
 def MonitoringSiteChoice():

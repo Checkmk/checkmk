@@ -4400,9 +4400,10 @@ class MatchItemGeneratorEventConsole(ABCMatchItemGenerator):
 
     @property
     def _topic(self):
-        return "Event Console"
+        return _("Event Console")
 
-    def is_affected_by_change(self, change_action_name: str) -> bool:
+    @staticmethod
+    def is_affected_by_change(change_action_name: str) -> bool:
         # rule packs: new-rule-pack, edit-rule-pack, ...
         # rules within rule packs: new-rule, edit-rule, ...
         return "rule" in change_action_name

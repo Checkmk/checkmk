@@ -2083,13 +2083,16 @@ std::filesystem::path CreateWmicUninstallFile(
 
 bool UninstallProduct(std::string_view name) {
     if constexpr (tgt::IsWindows()) {
-        std::filesystem::path temp = cma::cfg::GetTempDir();
+        std::filesystem::path temp{cma::cfg::GetTempDir()};
         auto fname = CreateWmicUninstallFile(temp, name);
         if (fname.empty()) return false;
+        XLOG::l("Starting '{}'", fname.u8string());
         auto pid = cma::tools::RunStdCommand(fname.wstring(), true);
         if (pid == 0) {
             XLOG::l("Failed to start '{}'", fname);
+            return false;
         }
+        XLOG::l("Started '{}' with pid [{}]", fname, pid);
         return true;
     }
 

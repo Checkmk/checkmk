@@ -316,6 +316,12 @@ we have to take older Python versions and incompatibilities into account and
 produce error agent sections + error messages that tell the user about this
 issue.
 
+---
+**Known issues regarding 3to2 conversion**
+- `f-strings`: Currently 3to2  cannot convert `f-strings` into `python2`
+  compatible syntax. So use `format()` instead.
+---
+
 ### Imports
 
 Don't use star import like `from module import *`. They make it hard to

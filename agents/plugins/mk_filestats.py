@@ -504,9 +504,13 @@ def iter_config_section_dicts(cfg_file=None):
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %r", files_read)
 
+    parsed_config = {}
     for section_name in config.sections():
         options = config.options(section_name)
-        yield section_name, {k: config.get(section_name, k) for k in options}
+        parsed_config[section_name] = {k: config.get(section_name, k) for k in options}
+
+    for section_name, parsed_option in parsed_config.items():
+        yield section_name, parsed_option
 
 
 def main():

@@ -6,7 +6,6 @@
 """Persisted sections type and store."""
 
 import logging
-import time
 from pathlib import Path
 from typing import (
     Final,
@@ -77,26 +76,11 @@ class PersistedSections(
 
         return self
 
-    def filter(self, *, keep_outdated: bool) -> None:
-        """Remove older entries from the database.
-
-        Args:
-            keep_outdated: Do not remove anything if True.
-
-        """
-        if keep_outdated:
-            return
-
-        now = time.time()
-        for section_name, entry in list(self.items()):
-            if len(entry) == 2:
-                persisted_until = entry[0]
-            else:
-                persisted_until = entry[1]
-
-            if now > persisted_until:
-                # TODO(ml): Log deletions.
-                del self[section_name]
+    def cached_at(self, section_name: SectionName) -> int:
+        entry = self[section_name]
+        if len(entry) == 2:
+            return 0
+        return entry[0]
 
 
 class SectionStore(Generic[TRawDataSection]):

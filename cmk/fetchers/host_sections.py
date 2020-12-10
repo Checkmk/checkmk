@@ -106,7 +106,14 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
             {section_name: fetch_interval(section_name) for section_name in sections},
             cached_at=now,
         ))
-        persisted_sections.filter(keep_outdated=keep_outdated)
+        if not keep_outdated:
+            for section_name in tuple(persisted_sections):
+                interval = fetch_interval(section_name)
+                if interval is None:
+                    continue
+                if persisted_sections.cached_at(section_name) < now - interval:
+                    del persisted_sections[section_name]
+
         section_store.store(persisted_sections)
 
         self._add_cache_info(persisted_sections)

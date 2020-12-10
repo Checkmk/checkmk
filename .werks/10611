@@ -7,4 +7,8 @@ Version: 2.1.0i1
 Date: 1607597712
 Class: fix
 
-Adapt styling to dark and light theme.
+<ul>
+<li>Adapt styling to dark and light theme.</li>
+<li>Prevent pie chart labels from overlapping.</li>
+<li>Improve layout of tables and navigation.</li>
+</ul>

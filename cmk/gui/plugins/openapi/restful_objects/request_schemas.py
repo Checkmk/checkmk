@@ -1362,7 +1362,7 @@ class AcknowledgeServiceProblemBase(BaseSchema):
     acknowledge_type = fields.String(
         required=True,
         description="The acknowledge service selection type.",
-        enum=['service', 'servicegroup'],
+        enum=['service', 'servicegroup', 'service_by_query'],
         example="service",
     )
 
@@ -1411,12 +1411,17 @@ class AcknowledgeServiceGroupProblem(AcknowledgeServiceProblemBase):
     )
 
 
+class AcknowledgeServiceQueryProblem(AcknowledgeServiceProblemBase):
+    query = QUERY
+
+
 class AcknowledgeServiceRelatedProblem(OneOfSchema):
     type_field = 'acknowledge_type'
     type_field_remove = False
     type_schemas = {
         'service': AcknowledgeSpecificServiceProblem,
         'servicegroup': AcknowledgeServiceGroupProblem,
+        'service_by_query': AcknowledgeServiceQueryProblem,
     }
 
 

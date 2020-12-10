@@ -16,6 +16,8 @@ You can find an introduction to the acknowledgement of problems in the
 # TODO: Acknowledge service problem
 from urllib.parse import unquote
 
+from typing import Tuple, List
+
 from cmk.gui import config, sites, http
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
@@ -24,7 +26,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import 
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
 )
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or, tree_to_expr
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Services
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -32,7 +34,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
     Endpoint,
     request_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 
 SERVICE_DESCRIPTION = {
@@ -188,7 +189,7 @@ def _set_acknowledgement_on_hostgroup(
           request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
           output_empty=True)
 def set_acknowledgement_on_service_related(params):
-    """Acknowledge for related service"""
+    """Set acknowledgement on related services"""
     body = params['body']
     live = sites.live()
 
@@ -220,6 +221,18 @@ def set_acknowledgement_on_service_related(params):
             comment=comment,
         )
         return http.Response(status=204)
+
+    if acknowledge_type == 'service_by_query':
+        q = Query([Services.host_name, Services.description,
+                   Services.state]).filter(tree_to_expr(body['query']))
+        return _set_acknowledgement_on_queried_services(
+            live,
+            [(row['host_name'], row['description']) for row in q.iterate(live) if row['state'] > 0],
+            sticky=sticky,
+            notify=notify,
+            persistent=persistent,
+            comment=comment,
+        )
 
     return problem(status=400,
                    title="Unhandled acknowledge-type.",
@@ -265,105 +278,31 @@ def _set_acknowledgement_for_service(
     return http.Response(status=204)
 
 
-@Endpoint(
-    "/objects/host/{host_name}/objects/service/{service_description}/actions/acknowledge/invoke",
-    'cmk/create',
-    method='post',
-    tag_group='Monitoring',
-    path_params=[
-        HOST_NAME,
-        SERVICE_DESCRIPTION,
-    ],
-    request_schema=request_schemas.AcknowledgeServiceProblem,
-    output_empty=True)
-def set_acknowledgement_on_host_service(params):
-    """Acknowledge for services on a host"""
-    host_name = params['host_name']
-    service_description = unquote(params['service_description'])
-    body = params['body']
-
-    service = Query([Services.description, Services.state],
-                    And(Services.description.equals(service_description),
-                        Services.host_name.equals(host_name))).first(sites.live())
-
-    if service is None:
+def _set_acknowledgement_on_queried_services(
+    connection,
+    services: List[Tuple[str, str]],
+    sticky: bool,
+    notify: bool,
+    persistent: bool,
+    comment: str,
+):
+    if not len(services):
         return problem(
-            status=404,
-            title=f'Service {service_description!r} on host {host_name!r} does not exist.',
-            detail='It is not currently monitored.',
+            status=400,
+            title='No services with problems found.',
+            detail='All queried services are OK.',
         )
 
-    if service.state == 0:
-        return problem(status=400,
-                       title=f"Service {service_description!r} does not have a problem.",
-                       detail="The state is OK.")
-
-    acknowledge_service_problem(
-        sites.live(),
-        host_name,
-        service_description,
-        sticky=body.get('sticky', False),
-        notify=body.get('notify', False),
-        persistent=body.get('persistent', False),
-        user=_user_id(),
-        comment=body.get('comment', 'Acknowledged'),
-    )
-    return http.Response(status=204)
-
-
-@Endpoint(constructors.domain_type_action_href("service", "bulk-acknowledge"),
-          'cmk/service.bulk-acknowledge',
-          method='post',
-          tag_group='Monitoring',
-          request_schema=request_schemas.BulkAcknowledgeServiceProblem,
-          output_empty=True)
-def bulk_set_acknowledgement_on_host_service(params):
-    """Bulk Acknowledge specific services on specific host"""
-    live = sites.live()
-    body = params['body']
-    host_name = body['host_name']
-    entries = body.get('entries', [])
-
-    query = Query(
-        [Services.description, Services.state],
-        And(
-            Services.host_name.equals(host_name),
-            Or(*[
-                Services.description.equals(service_description) for service_description in entries
-            ])))
-
-    services = query.to_dict(live)
-
-    not_found = []
-    for service_description in entries:
-        if service_description not in services:
-            not_found.append(service_description)
-
-    if not_found:
-        return problem(status=400,
-                       title=f"Services {', '.join(not_found)} not found on host {host_name}",
-                       detail='Currently not monitored')
-
-    up_services = []
-    for service_description in entries:
-        if services[service_description] == 0:
-            up_services.append(service_description)
-
-    if up_services:
-        return problem(status=400,
-                       title=f"Services {', '.join(up_services)} do not have a problem",
-                       detail="The states of these services are OK")
-
-    for service_description in entries:
+    for host_name, service_description in services:
         acknowledge_service_problem(
-            sites.live(),
+            connection,
             host_name,
             service_description,
-            sticky=body.get('sticky', False),
-            notify=body.get('notify', False),
-            persistent=body.get('persistent', False),
-            user=str(config.user.id),
-            comment=body.get('comment', 'Acknowledged'),
+            sticky=sticky,
+            notify=notify,
+            persistent=persistent,
+            user=_user_id(),
+            comment=comment,
         )
     return http.Response(status=204)
 

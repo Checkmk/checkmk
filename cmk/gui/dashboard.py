@@ -840,7 +840,10 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
 
     yield PageMenuEntry(
         title=edit_text if mode == "edit" else display_text,
-        icon_name="trans",
+        icon_name={
+            "icon": "dashboard_edit",
+            "emblem": "disable" if mode == "edit" else "trans",
+        },
         item=make_javascript_link('cmk.dashboard.toggle_dashboard_edit("%s", "%s")' %
                                   (edit_text, display_text)),
         is_shortcut=True,

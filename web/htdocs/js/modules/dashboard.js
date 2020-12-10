@@ -408,13 +408,15 @@ export function toggle_dashboard_edit(edit_text, display_text) {
     }
 
     if (g_editing) {
-        utils.add_class(toggle_suggestion, "edit");
-        utils.add_class(toggle_shortcut, "edit");
-        utils.add_class(toggle_entry, "edit");
+        const icon_disable = "themes/" + utils.get_theme() + "/images/emblem_disable.svg";
+        toggle_suggestion.querySelector("img.emblem").src = icon_disable;
+        toggle_shortcut.querySelector("img.emblem").src = icon_disable;
+        toggle_entry.querySelector("img.emblem").src = icon_disable;
     } else {
-        utils.remove_class(toggle_suggestion, "edit");
-        utils.remove_class(toggle_shortcut, "edit");
-        utils.remove_class(toggle_entry, "edit");
+        const icon_trans = "themes/facelift/images/emblem_trans.svg";
+        toggle_suggestion.querySelector("img.emblem").src = icon_trans;
+        toggle_shortcut.querySelector("img.emblem").src = icon_trans;
+        toggle_entry.querySelector("img.emblem").src = icon_trans;
     }
 
     var dashlet_divs = document.getElementsByClassName("dashlet");

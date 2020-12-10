@@ -176,7 +176,6 @@ class ParentChildTopologyPage(Page):
                             growth_auto_max_nodes)
         html.javascript("topology_instance.set_max_nodes(%d)" % max_nodes)
         html.javascript("topology_instance.set_mesh_depth(%d)" % mesh_depth)
-        html.javascript("topology_instance.set_theme(%s)" % json.dumps(html.get_theme()))
         overlay_config = self._get_overlay_config()
         if overlay_config:
             html.javascript("topology_instance.set_initial_overlays_config(%s)" %
@@ -245,7 +244,6 @@ def _bi_map() -> None:
     html.javascript("node_instance = new cmk.node_visualization.BIVisualization(%s);" %
                     json.dumps(div_id))
 
-    html.javascript("node_instance.set_theme(%s)" % json.dumps(html.get_theme()))
     html.javascript("node_instance.show_aggregations(%s, %s)" %
                     (json.dumps([aggr_name]), json.dumps(layout_id)))
 

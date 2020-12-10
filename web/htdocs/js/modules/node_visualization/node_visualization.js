@@ -23,8 +23,6 @@ class NodeVisualization {
     constructor(div_id) {
         this.div_id = div_id;
 
-        this.gui_theme = "facelift";
-
         this._div_selection = null;
         this.datasource_manager = null;
         this.viewport = null;
@@ -34,14 +32,6 @@ class NodeVisualization {
         this._initialize_components();
 
         this.datasource_manager.schedule();
-    }
-
-    get_theme_prefix(new_theme) {
-        return "themes/" + this.gui_theme;
-    }
-
-    set_theme(new_theme) {
-        this.gui_theme = new_theme;
     }
 
     set_initial_overlays_config(overlay_config) {

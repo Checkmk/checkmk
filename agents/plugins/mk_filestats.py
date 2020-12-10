@@ -130,7 +130,7 @@ def ensure_text(s):
 
 DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), "filestats.cfg")
 
-DEFAULT_CFG_SECTION = {"output": "file_stats"}
+DEFAULT_CFG_SECTION = {"output": "file_stats", "subgroups_delimiter": "@"}
 
 FILTER_SPEC_PATTERN = re.compile('(?P<operator>[<>=]+)(?P<value>.+)')
 
@@ -507,7 +507,9 @@ def iter_config_section_dicts(cfg_file=None):
     parsed_config = {}
     for section_name in config.sections():
         options = config.options(section_name)
-        parsed_config[section_name] = {k: config.get(section_name, k) for k in options}
+        subgroups_delimiter = config.get(section_name, 'subgroups_delimiter')
+        if subgroups_delimiter not in section_name:
+            parsed_config[section_name] = {k: config.get(section_name, k) for k in options}
 
     for section_name, parsed_option in parsed_config.items():
         yield section_name, parsed_option

@@ -201,11 +201,13 @@ class TestConfigParsing:
         assert sorted([r[0] for r in actual_results]) == ['banana', 'strawberry']
 
         for section, config_dict in [r for r in actual_results if r[0] == 'banana']:
-            assert len(config_dict.items()) == 2
+            assert len(config_dict.items()) == 3
             assert config_dict['input_patterns'] == '/home/banana/*'
             assert config_dict['output'] == 'file_stats'
+            assert config_dict['subgroups_delimiter'] == '@'
 
         for section, config_dict in [r for r in actual_results if r[0] == 'strawberry']:
-            assert len(config_dict.items()) == 2
+            assert len(config_dict.items()) == 3
             assert config_dict['input_patterns'] == '/var/log/*'
             assert config_dict['output'] == 'file_stats'
+            assert config_dict['subgroups_delimiter'] == '@'

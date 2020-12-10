@@ -49,6 +49,7 @@ PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += urllib3-1.25.10.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
+PYTHON3_MODULES_LIST += pbr-5.4.4.tar.gz # needed by jira, pyghmi
 PYTHON3_MODULES_LIST += pyghmi-1.5.13.tar.gz # needed by base for IPMI
 PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
@@ -76,10 +77,10 @@ PYTHON3_MODULES_LIST += passlib-1.7.2.tar.gz # needed for omdlib
 
 PYTHON3_MODULES_LIST += defusedxml-0.6.0.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += oauthlib-3.1.0.tar.gz # needed for requests-oauthlib and jira
-PYTHON3_MODULES_LIST += pbr-5.4.4.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += requests-oauthlib-1.3.0.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += requests-toolbelt-0.9.1.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += PyJWT-1.7.1.tar.gz # needed for jira
+PYTHON3_MODULES_LIST += docutils-0.15.2.tar.gz # needed by boto3, jira
 PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
@@ -99,7 +100,6 @@ PYTHON3_MODULES_LIST += rsa-4.6.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += websocket_client-0.57.0.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += kubernetes-10.0.1.tar.gz # needed by kubernetes
 
-PYTHON3_MODULES_LIST += docutils-0.15.2.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += jmespath-0.9.4.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += botocore-1.14.11.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += s3transfer-0.3.2.tar.gz # needed by boto3 (aws)

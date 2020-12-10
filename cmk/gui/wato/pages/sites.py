@@ -224,7 +224,7 @@ class ModeEditSite(WatoMode):
                            domains=watolib.ConfigDomain.enabled_domains())
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
-        if not site_spec["replication"]:
+        if not site_spec["replication"] and not config.site_is_local(self._site_id):
             clear_site_replication_status(self._site_id)
 
         if self._site_id != config.omd_site():

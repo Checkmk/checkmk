@@ -243,7 +243,7 @@ void TableEventConsole::answerQuery(Query *query) {
         try {
             ECTableConnection(core(), *this, query).run();
         } catch (const std::runtime_error &err) {
-            query->invalidRequest(err.what());
+            query->badGateway(err.what());
         }
     }
 }

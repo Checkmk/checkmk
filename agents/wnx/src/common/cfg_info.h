@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // Configuration Parameters for whole Agent
 // Engine independent parameters
@@ -127,29 +128,6 @@ const std::wstring FindConfigFile(const std::filesystem::path& Dir,
 
 // API for testing and logging
 std::vector<std::filesystem::path> GetExePaths();
-
-// below described the structure of the solution folder:
-// solution root <--- Use SOLUTION_DIR define
-//    \--- test_files
-//            \--- unit_tests <--- MakePathToUnitTestFiles(SolutionRoot)
-//            \--- config     <--- MakePathToConfigTestFiles(SolutionRoot)
-inline const std::wstring kSolutionTestFilesFolderName(L"test_files");
-inline const std::wstring kSolutionUnitTestsFolderName(L"unit_test");
-inline const std::wstring kSolutionConfigTestFilesFolderName(L"config");
-
-inline std::filesystem::path MakePathToUnitTestFiles(std::wstring Root) {
-    namespace fs = std::filesystem;
-    fs::path r = Root;
-    r = r / kSolutionTestFilesFolderName / kSolutionUnitTestsFolderName;
-    return r.lexically_normal();
-}
-
-inline std::filesystem::path MakePathToConfigTestFiles(std::wstring Root) {
-    namespace fs = std::filesystem;
-    fs::path r = Root;
-    r = r / kSolutionTestFilesFolderName / kSolutionConfigTestFilesFolderName;
-    return r.lexically_normal();
-}
 
 // Directories
 namespace dirs {

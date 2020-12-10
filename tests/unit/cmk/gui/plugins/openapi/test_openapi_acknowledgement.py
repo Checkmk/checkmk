@@ -126,11 +126,8 @@ def test_openapi_acknowledge_specific_service(
     ])
 
     live.expect_query([
-        'GET services',
-        'Columns: description state',
-        f'Filter: description = {service}',
-        'Filter: host_name = heute',
-        'And: 2',
+        'GET services', 'Columns: host_name description state', 'Filter: host_name ~ heute',
+        f'Filter: description ~ {service}', 'And: 2'
     ])
 
     if http_response_code == 204:
@@ -141,9 +138,21 @@ def test_openapi_acknowledge_specific_service(
 
     with live:
         wsgi_app.post(
-            base +
-            f"/objects/host/heute/objects/service/{url_safe(service)}/actions/acknowledge/invoke",
+            base + f"/domain-types/acknowledge/collections/service",
             params=json.dumps({
+                'acknowledge_type': 'service_by_query',
+                'query': {
+                    'op': 'and',
+                    'expr': [{
+                        'op': '~',
+                        'left': 'services.host_name',
+                        'right': 'heute'
+                    }, {
+                        'op': '~',
+                        'left': 'services.description',
+                        'right': service
+                    }]
+                },
                 'sticky': True,
                 'notify': True,
                 'persistent': True,
@@ -220,33 +229,49 @@ def test_openapi_bulk_acknowledge(
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
 
-    live.add_table('services', [
-        {
-            'host_name': 'heute',
-            'description': 'Memory',
-            'state': 1,
-        },
-    ])
+    live.add_table('services', [{
+        'host_name': 'heute',
+        'description': 'Memory',
+        'state': 1,
+    }, {
+        'host_name': 'example.com',
+        'description': 'CPU load',
+        'state': 1
+    }])
 
     live.expect_query([
         'GET services',
-        'Columns: description state',
-        'Filter: host_name = heute',
+        'Columns: host_name description state',
         'Filter: description = Memory',
-        'And: 2',
+        'Filter: description = CPU load',
+        'Or: 2',
     ])
 
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;Memory;2;1;1;test123-...;Hello world!',
         match_type='ellipsis',
     )
+    live.expect_query(
+        'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;CPU load;2;1;1;test123-...;Hello world!',
+        match_type='ellipsis')
 
     with live:
         wsgi_app.post(
-            base + "/domain-types/service/actions/bulk-acknowledge/invoke",
+            base + "/domain-types/acknowledge/collections/service",
             params=json.dumps({
-                'host_name': 'heute',
-                'entries': ['Memory'],
+                'acknowledge_type': 'service_by_query',
+                'query': {
+                    'op': 'or',
+                    'expr': [{
+                        'op': '=',
+                        'left': 'services.description',
+                        'right': 'Memory'
+                    }, {
+                        'op': '=',
+                        'left': 'services.description',
+                        'right': 'CPU load'
+                    }]
+                },
                 'sticky': True,
                 'notify': True,
                 'persistent': True,
@@ -254,37 +279,6 @@ def test_openapi_bulk_acknowledge(
             }),
             content_type='application/json',
             status=204,
-        )
-
-    live.add_table('services', [
-        {
-            'host_name': 'heute',
-            'description': 'CPU load',
-            'state': 0,
-        },
-    ])
-
-    live.expect_query([
-        'GET services',
-        'Columns: description state',
-        'Filter: host_name = heute',
-        'Filter: description = CPU load',
-        'And: 2',
-    ])
-
-    with live:
-        wsgi_app.post(
-            base + "/domain-types/service/actions/bulk-acknowledge/invoke",
-            params=json.dumps({
-                'host_name': 'heute',
-                'entries': ['CPU load'],
-                'sticky': True,
-                'notify': True,
-                'persistent': True,
-                'comment': 'Hello world!',
-            }),
-            content_type='application/json',
-            status=400,
         )
 
 

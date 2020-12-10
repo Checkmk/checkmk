@@ -4,22 +4,16 @@
 #include "wtools_runas.h"
 
 // windows
-#include <ProfInfo.h>
 #include <Sddl.h>
 #include <UserEnv.h>
 #include <WtsApi32.h>
 #include <psapi.h>
 #include <winsafer.h>
+
 // end
-
-#include <fmt/format.h>
-
-#include <cstring>
 
 #include "logger.h"
 #include "tools/_misc.h"
-#include "tools/_win.h"
-#include "wtools.h"
 
 #pragma comment(lib, "Wtsapi32.lib")
 #pragma comment(lib, "Userenv.lib")
@@ -31,87 +25,94 @@ namespace krnl {
 using Wow64DisableWow64FsRedirectionProc = BOOL(WINAPI*)(PVOID* OldValue);
 using Wow64RevertWow64FsRedirectionProc = BOOL(WINAPI*)(PVOID OldValue);
 
-static HMODULE g_kernel32_dll_handle = nullptr;
-static Wow64DisableWow64FsRedirectionProc g_disable_fs_redirection = nullptr;
-static Wow64RevertWow64FsRedirectionProc g_revert_fs_redirection = nullptr;
-void* g_old_wow64_redir_val = nullptr;
+namespace {
+HMODULE g_kernel32_dll_handle{nullptr};
+Wow64DisableWow64FsRedirectionProc g_disable_fs_redirection{nullptr};
+Wow64RevertWow64FsRedirectionProc g_revert_fs_redirection{nullptr};
 
-void DisableFileRedirection() {
-    if (nullptr == g_kernel32_dll_handle)
+void* g_old_wow64_redir_val{nullptr};
+
+void FindWindowsProcs() {
+    if (g_kernel32_dll_handle == nullptr)
         g_kernel32_dll_handle = LoadLibraryW(L"Kernel32.dll");
 
-    if ((nullptr != g_kernel32_dll_handle) &&
-        ((nullptr == g_disable_fs_redirection) ||
-         (nullptr == g_revert_fs_redirection))) {
+    if (g_kernel32_dll_handle == nullptr) {
+        XLOG::l.crit("Can't load Kernel32.dll");
+        return;
+    }
+
+    if (g_disable_fs_redirection == nullptr) {
         g_disable_fs_redirection =
             reinterpret_cast<Wow64DisableWow64FsRedirectionProc>(GetProcAddress(
                 g_kernel32_dll_handle, "Wow64DisableWow64FsRedirection"));
+    }
+
+    if (g_revert_fs_redirection == nullptr) {
         g_revert_fs_redirection =
             reinterpret_cast<Wow64RevertWow64FsRedirectionProc>(GetProcAddress(
                 g_kernel32_dll_handle, "Wow64RevertWow64FsRedirection"));
     }
+}
+}  // namespace
 
-    if (nullptr != g_disable_fs_redirection) {
-        auto b = g_disable_fs_redirection(&g_old_wow64_redir_val);
-        if (b == TRUE)
-            XLOG::l.i("Disabled WOW64 file system redirection");
-        else
-            XLOG::l("Failed to disable WOW64 file system redirection {}",
-                    ::GetLastError());
-    } else
+void DisableFileRedirection() {
+    FindWindowsProcs();
+
+    if (g_disable_fs_redirection == nullptr) {
         XLOG::l.i("Failed to find Wow64DisableWow64FsRedirection API");
+        return;
+    }
+
+    auto b = g_disable_fs_redirection(&g_old_wow64_redir_val);
+    if (b == TRUE)
+        XLOG::l.i("Disabled WOW64 file system redirection");
+    else
+        XLOG::l("Failed to disable WOW64 file system redirection [{}]",
+                ::GetLastError());
 }
 
 void RevertFileRedirection() {
-    if (nullptr == g_kernel32_dll_handle)
-        g_kernel32_dll_handle = LoadLibraryW(L"Kernel32.dll");
+    FindWindowsProcs();
 
-    if ((nullptr != g_kernel32_dll_handle) &&
-        ((nullptr == g_disable_fs_redirection) ||
-         (nullptr == g_revert_fs_redirection))) {
-        g_disable_fs_redirection =
-            reinterpret_cast<Wow64DisableWow64FsRedirectionProc>(GetProcAddress(
-                g_kernel32_dll_handle, "Wow64DisableWow64FsRedirection"));
-        g_revert_fs_redirection =
-            reinterpret_cast<Wow64RevertWow64FsRedirectionProc>(GetProcAddress(
-                g_kernel32_dll_handle, "Wow64RevertWow64FsRedirection"));
+    if (g_disable_fs_redirection == nullptr) {
+        XLOG::l.i("Failed to find Wow64DisableWow64FsRedirection API");
+        return;
     }
 
-    if (nullptr != g_revert_fs_redirection)
-        g_revert_fs_redirection(g_old_wow64_redir_val);
+    g_revert_fs_redirection(g_old_wow64_redir_val);
 }
 }  // namespace krnl
 
 struct AppSettings {
 public:
-    bool use_system_account = false;
-    bool dont_load_profile = true;  //  we do not load it speed up process
-    HANDLE hUser = nullptr;
-    HANDLE hStdErr = nullptr;
-    HANDLE hStdIn = nullptr;
-    HANDLE hStdOut = nullptr;
+    bool use_system_account{false};
+    bool dont_load_profile{true};  //  we do not load it speed up process
+    HANDLE hUser{nullptr};
+    HANDLE hStdErr{nullptr};
+    HANDLE hStdIn{nullptr};
+    HANDLE hStdOut{nullptr};
     std::wstring user;
     std::wstring password;
     std::wstring app;
     std::wstring app_args;
     std::wstring working_dir;
-    bool show_window = false;
+    bool show_window{false};
 
     // output
-    HANDLE hProcess = nullptr;
-    uint32_t pid = 0;
+    HANDLE hProcess{nullptr};
+    uint32_t pid{0};
 
     // interactive
-    bool interactive = false;
-    bool show_ui_on_logon = false;
-    uint32_t session_to_interact_with = 0xFFFFFFFF;
+    bool interactive{false};
+    bool show_ui_on_logon{false};
+    uint32_t session_to_interact_with{0xFFFFFFFF};
 
     // special
-    bool run_elevated = false;
-    bool run_limited = false;
-    bool disable_file_redirection = false;
+    bool run_elevated{false};
+    bool run_limited{false};
+    bool disable_file_redirection{false};
     std::vector<uint16_t> allowed_processors;
-    int priority = NORMAL_PRIORITY_CLASS;
+    int priority{NORMAL_PRIORITY_CLASS};
 };
 
 std::wstring MakePath(const AppSettings& settings) {
@@ -159,9 +160,9 @@ static void LogDupeError(std::string_view text) {
             ::GetLastError());
 }
 
-HANDLE OpenCurrentProcessToken(DWORD DesiredAccess) {
+HANDLE OpenCurrentProcessToken(DWORD desired_access) {
     HANDLE token = nullptr;
-    if (::OpenProcessToken(::GetCurrentProcess(), DesiredAccess, &token) ==
+    if (::OpenProcessToken(::GetCurrentProcess(), desired_access, &token) ==
         FALSE) {
         XLOG::l("Failed to open process to enable privilege  error is[{}]",
                 ::GetLastError());
@@ -182,7 +183,7 @@ std::optional<LUID> GetLookupPrivilegeValue(const wchar_t* privilegs) {
     return luid;
 }
 
-bool SetLookupPrivilege(HANDLE hToken, const LUID& luid) {
+bool SetLookupPrivilege(HANDLE token_handle, const LUID& luid) {
     TOKEN_PRIVILEGES tp;  // token privileges
     ZeroMemory(&tp, sizeof(tp));
     tp.PrivilegeCount = 1;
@@ -190,8 +191,9 @@ bool SetLookupPrivilege(HANDLE hToken, const LUID& luid) {
     tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
     // Adjust Token privileges
-    if (::AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES),
-                                nullptr, nullptr) == TRUE)
+    if (::AdjustTokenPrivileges(token_handle, FALSE, &tp,
+                                sizeof(TOKEN_PRIVILEGES), nullptr,
+                                nullptr) == TRUE)
         return true;
 
     XLOG::l.bp("Failed to adjust token for privilege [{}]", ::GetLastError());
@@ -230,6 +232,7 @@ DWORD GetInteractiveSessionID() {
     if (::WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &session_info,
                                &count) == TRUE) {
         ON_OUT_OF_SCOPE(::WTSFreeMemory(session_info))
+
         for (DWORD i = 0; i < count; i++) {
             if (session_info[i].State == WTSActive)  // Here is
                 return session_info[i].SessionId;
@@ -239,11 +242,12 @@ DWORD GetInteractiveSessionID() {
     static WTSGetActiveConsoleSessionIdProc
         s_wts_get_active_console_session_id = nullptr;
     if (nullptr == s_wts_get_active_console_session_id) {
-        auto* module = ::LoadLibrary(L"Kernel32.dll");  // GLOK
-        if (module != nullptr) {
+        auto* module_handle = ::LoadLibrary(L"Kernel32.dll");  // GLOK
+        if (module_handle != nullptr) {
             s_wts_get_active_console_session_id =
                 reinterpret_cast<WTSGetActiveConsoleSessionIdProc>(
-                    GetProcAddress(module, "WTSGetActiveConsoleSessionId"));
+                    GetProcAddress(module_handle,
+                                   "WTSGetActiveConsoleSessionId"));
         }
     }
 
@@ -263,15 +267,16 @@ struct CleanupInteractive {
     bool bPreped{false};
 };
 
-BOOL PrepForInteractiveProcess(AppSettings& settings, CleanupInteractive* pCI,
+BOOL PrepForInteractiveProcess(AppSettings& settings,
+                               CleanupInteractive* cleanup_interactive,
                                DWORD session_id) {
-    pCI->bPreped = true;
+    cleanup_interactive->bPreped = true;
     // settings.hUser is set as the -u user, Local System (from -s) or as the
     // account the user originally launched Exec with
 
     // figure out which session we need to go into
     if (!DupeHandle(settings.hUser)) LogDupeError(XLOG_FLINE + " !!!");
-    pCI->hUser = settings.hUser;
+    cleanup_interactive->hUser = settings.hUser;
 
     auto target_session_id = session_id;
 
@@ -288,8 +293,9 @@ BOOL PrepForInteractiveProcess(AppSettings& settings, CleanupInteractive* pCI,
     // Duplicate(settings.hUser, __FILE__, __LINE__);
 
     DWORD len = 0;
-    ::GetTokenInformation(settings.hUser, TokenSessionId, &pCI->origSessionID,
-                          sizeof(pCI->origSessionID), &len);
+    ::GetTokenInformation(settings.hUser, TokenSessionId,
+                          &cleanup_interactive->origSessionID,
+                          sizeof(cleanup_interactive->origSessionID), &len);
 
     EnablePrivilege(SE_TCB_NAME, settings.hUser);
 
@@ -341,7 +347,7 @@ void* MakeEnvironment(HANDLE h) {
     return environment;
 }
 
-std::wstring GetTokenUserSID(HANDLE hToken) {
+std::wstring GetTokenUserSID(HANDLE token_handle) {
     DWORD tmp = 0;
     std::wstring user_name;
     constexpr DWORD sid_name_size = 64;
@@ -358,8 +364,8 @@ std::wstring GetTokenUserSID(HANDLE hToken) {
 
     auto* user_token = reinterpret_cast<TOKEN_USER*>(&token_user_buf.front());
 
-    if (::GetTokenInformation(hToken, TokenUser, user_token, user_token_size,
-                              &tmp) == TRUE) {
+    if (::GetTokenInformation(token_handle, TokenUser, user_token,
+                              user_token_size, &tmp) == TRUE) {
         WCHAR* sid_string = nullptr;
         if (::ConvertSidToStringSidW(user_token->User.Sid, &sid_string) == TRUE)
             user_name = sid_string;
@@ -429,9 +435,11 @@ std::pair<std::wstring, std::wstring> GetDomainUser(
     return {tbl[0], tbl[1]};
 }
 
-void CleanUpInteractiveProcess(CleanupInteractive* pCI) noexcept {
-    SetTokenInformation(pCI->hUser, TokenSessionId, &pCI->origSessionID,
-                        sizeof(pCI->origSessionID));
+void CleanUpInteractiveProcess(
+    CleanupInteractive* cleanup_interactive) noexcept {
+    SetTokenInformation(cleanup_interactive->hUser, TokenSessionId,
+                        &cleanup_interactive->origSessionID,
+                        sizeof(cleanup_interactive->origSessionID));
 }
 
 // GTEST [-]
@@ -453,9 +461,9 @@ bool GetUserHandleSystemAccount(HANDLE& user_handle) {
     return true;  // ?????
 }
 
-bool GetUserHandleCurrentUser(HANDLE& user_handle, HANDLE hCmdPipe) {
-    if (nullptr != hCmdPipe) {
-        if (::ImpersonateNamedPipeClient(hCmdPipe) == TRUE)
+bool GetUserHandleCurrentUser(HANDLE& user_handle, HANDLE pipe_handle) {
+    if (pipe_handle != nullptr) {
+        if (::ImpersonateNamedPipeClient(pipe_handle) == TRUE)
             XLOG::l("Impersonated caller");
         else
             XLOG::l("Failed to impersonate client user [{}]", ::GetLastError());
@@ -679,7 +687,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
     // 2. Specified account (or limited account)
     // 3. As current process
 
-    BOOL profile_loaded = FALSE;
+    BOOL profile_loaded{FALSE};
     auto profile = MakeProfile(settings.user);
 
     if (!GetUserHandle(settings, profile_loaded, profile, command_pipe))
@@ -862,7 +870,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
     }
 
     if (launched == TRUE) {
-        if (g_in_service) XLOG::l.t("Successfully launched");
+        if (g_in_service) XLOG::d.i("Successfully launched");
 
         settings.hProcess = pi.hProcess;
         settings.pid = pi.dwProcessId;
@@ -870,12 +878,10 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
         SetAffinityMask(pi.hProcess, settings.allowed_processors);
 
         auto ret = ::SetPriorityClass(pi.hProcess, settings.priority);
-        if (ret == FALSE)
-            XLOG::l.bp(XLOG_FLINE + " error [{}]", ::GetLastError());
+        if (ret == FALSE) XLOG::l(XLOG_FLINE + " error [{}]", ::GetLastError());
         ResumeThread(pi.hThread);
         ret = ::CloseHandle(pi.hThread);
-        if (ret == FALSE)
-            XLOG::l.bp(XLOG_FLINE + " error [{}]", ::GetLastError());
+        if (ret == FALSE) XLOG::l(XLOG_FLINE + " error [{}]", ::GetLastError());
 
     } else {
         XLOG::l("Failed to start {} [{}]", wtools::ConvertToUTF8(path),

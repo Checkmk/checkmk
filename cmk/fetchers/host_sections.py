@@ -93,16 +93,22 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
         *,
         section_store: SectionStore[TRawDataSection],
         fetch_interval: Callable[[SectionName], Optional[int]],
-        cached_at: int,
+        now: int,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
-        persisted_sections = PersistedSections[TRawDataSection].from_sections(
+        # TODO: This is not race condition free when modifying the data. Either remove
+        # the possible write here and simply ignore the outdated sections or lock when
+        # reading and unlock after writing
+        persisted_sections = section_store.load()
+        persisted_sections.update(PersistedSections[TRawDataSection].from_sections(
             sections,
             {section_name: fetch_interval(section_name) for section_name in sections},
-            cached_at=cached_at,
-        )
-        persisted_sections.update_and_store(section_store, keep_outdated=keep_outdated)
+            cached_at=now,
+        ))
+        persisted_sections.filter(keep_outdated=keep_outdated)
+        section_store.store(persisted_sections)
+
         self._add_cache_info(persisted_sections)
         self._add_persisted_sections(persisted_sections, logger=logger)
 

@@ -98,30 +98,6 @@ class PersistedSections(
                 # TODO(ml): Log deletions.
                 del self[section_name]
 
-    def update_and_store(
-        self,
-        section_store: "SectionStore[TRawDataSection]",
-        *,
-        keep_outdated: bool,
-    ) -> None:
-        # TODO: This is not race condition free when modifying the data. Either remove
-        # the possible write here and simply ignore the outdated sections or lock when
-        # reading and unlock after writing
-        stored = section_store.load()
-        if self == stored:
-            return
-
-        # Update the DB.
-        stored.update(self)
-        # Add stored sections to self.
-        self.update(stored)
-        # Now, self and stored must be equal.
-        assert self == stored
-        # Filter if requested
-        self.filter(keep_outdated=keep_outdated)
-        # Save the updated DB.
-        section_store.store(self)
-
 
 class SectionStore(Generic[TRawDataSection]):
     def __init__(

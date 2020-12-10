@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import cast
 
 from cmk.utils.type_defs import AgentRawDataSection, SectionName
 
@@ -44,68 +43,3 @@ class TestPersistedSections:
         assert persisted_sections == {  # type: ignore[comparison-overlap]
             section_a: (cached_at, fetch_interval, content_a)
         }
-
-    def test_update_and_store_without_persisted(self):
-        # having functions here is a bit redundant with the copy.copy above,
-        # but better safe than sorry.
-        stored = lambda: {SectionName("foo"): (0, 1, cast(AgentRawDataSection, []))}
-
-        store = MockStore(stored())
-        persisted_sections = PersistedSections[AgentRawDataSection]({})
-
-        assert persisted_sections != store.load()
-
-        persisted_sections.update_and_store(store, keep_outdated=True)  # type: ignore[arg-type]
-
-        assert persisted_sections == store.load()
-        assert persisted_sections == PersistedSections[AgentRawDataSection](stored())
-
-    def test_update_and_store_without_store(self):
-        # having functions here is a bit redundant with the copy.copy above,
-        # but better safe than sorry.
-        persisted = lambda: {SectionName("foo"): (0, 1, cast(AgentRawDataSection, []))}
-
-        store = MockStore({})
-        persisted_sections = PersistedSections[AgentRawDataSection](persisted())
-
-        assert persisted_sections != store.load()
-
-        persisted_sections.update_and_store(store, keep_outdated=True)  # type: ignore[arg-type]
-
-        assert persisted_sections == store.load()
-        assert persisted_sections == PersistedSections[AgentRawDataSection](persisted())
-
-    def test_update_and_store_keeps_new(self):
-        # having functions here is a bit redundant with the copy.copy above,
-        # but better safe than sorry.
-        stored = lambda: {SectionName("foo"): (0, 1, cast(AgentRawDataSection, []))}
-        persisted = lambda: {SectionName("foo"): (1, 2, cast(AgentRawDataSection, []))}
-
-        store = MockStore(stored())
-        persisted_sections = PersistedSections[AgentRawDataSection](persisted())
-
-        assert persisted_sections != store.load()
-
-        persisted_sections.update_and_store(store, keep_outdated=True)  # type: ignore[arg-type]
-
-        assert persisted_sections == store.load()
-        assert persisted_sections == PersistedSections[AgentRawDataSection](persisted())
-
-    def test_update_and_store_accumulate(self):
-        # having functions here is a bit redundant with the copy.copy above,
-        # but better safe than sorry.
-        stored = lambda: {SectionName("foo"): (0, 1, cast(AgentRawDataSection, []))}
-        persisted = lambda: {SectionName("bar"): (1, 2, cast(AgentRawDataSection, []))}
-        acc = stored()
-        acc.update(persisted())
-
-        store = MockStore(stored())
-        persisted_sections = PersistedSections[AgentRawDataSection](persisted())
-
-        assert persisted_sections != store.load()
-
-        persisted_sections.update_and_store(store, keep_outdated=True)  # type: ignore[arg-type]
-
-        assert persisted_sections == store.load()
-        assert persisted_sections == PersistedSections[AgentRawDataSection](acc)
-        assert len(acc) == 2

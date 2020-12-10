@@ -284,19 +284,19 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
     ) -> SNMPHostSections:
         selection = NO_SELECTION  # Selection is done in the fetcher for SNMP.
         host_sections = SNMPHostSections(dict(raw_data))
-        cached_at = int(time.time())
+        now = int(time.time())
 
         def fetch_interval(section_name: SectionName) -> Optional[int]:
             fetch_interval = self.check_intervals.get(section_name)
             if fetch_interval is None:
                 return fetch_interval
-            return cached_at + fetch_interval
+            return now + fetch_interval
 
         host_sections.add_persisted_sections(
             raw_data,
             section_store=self.section_store,
             fetch_interval=fetch_interval,
-            cached_at=cached_at,
+            now=now,
             keep_outdated=self.keep_outdated,
             logger=self._logger,
         )

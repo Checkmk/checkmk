@@ -644,7 +644,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
-        cached_at = int(time.time())
+        now = int(time.time())
 
         parser = self._parse_host_section(raw_data)
 
@@ -652,20 +652,20 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         # Transform to seconds and give the piggybacked host a little bit more time
         cache_age = int(1.5 * 60 * self.check_interval)
         host_sections.cache_info.update({
-            header.name: cast(Tuple[int, int], header.cache_info(cached_at))
+            header.name: cast(Tuple[int, int], header.cache_info(now))
             for header in parser.section_info.values()
-            if header.cache_info(cached_at) is not None
+            if header.cache_info(now) is not None
         })
         host_sections.piggybacked_raw_data = self._make_updated_piggyback_section_header(
             host_sections.piggybacked_raw_data,
-            cached_at=cached_at,
+            cached_at=now,
             cache_age=cache_age,
         )
         host_sections.add_persisted_sections(
             host_sections.sections,
             section_store=self.section_store,
             fetch_interval=lambda section_name: parser.section_info[section_name].persist,
-            cached_at=cached_at,
+            now=now,
             keep_outdated=self.keep_outdated,
             logger=self._logger,
         )

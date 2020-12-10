@@ -220,6 +220,7 @@ class CMKWebSession:
                 "ua_ui_sidebar_position": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
                 "ua_icons_per_item": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
                 "ua_show_mode": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
+                "ua_nav_hide_icons_title": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
                 "language": lang,
                 "_save": "Save",
             },

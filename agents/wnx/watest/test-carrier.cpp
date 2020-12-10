@@ -156,7 +156,7 @@ TEST(CarrierTest, Mail) {
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
     auto summary_output = cma::tools::ReadFileInVector(
-        (G_TestPath / L"summary.output").wstring().c_str());
+        (tst::G_TestPath / L"summary.output").wstring().c_str());
     EXPECT_TRUE(summary_output);
     auto size = summary_output->size();
 

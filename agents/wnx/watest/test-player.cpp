@@ -243,6 +243,8 @@ static cma::PathVector GetFolderStructure() {
 TEST(PlayerTest, All) {
     using namespace std::chrono;
     using namespace std;
+    using tst::G_ProjectPath;
+    using tst::G_TestPath;
 
     vector<wstring> exe;
     auto unit_test_path = G_TestPath;

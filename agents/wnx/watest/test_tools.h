@@ -21,6 +21,9 @@ class Node;
 }
 
 namespace tst {
+std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root);
+std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root);
+
 class YamlLoader {
 public:
     YamlLoader() {

@@ -632,7 +632,7 @@ TEST(AgentConfig, LogFile) {
 
 TEST(AgentConfig, YamlRead) {
     namespace fs = std::filesystem;
-    auto file = MakePathToConfigTestFiles(G_SolutionPath) /
+    auto file = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
                 cma::cfg::files::kDefaultDevMinimum;
     auto ret = fs::exists(file);
     ASSERT_TRUE(ret);
@@ -945,7 +945,7 @@ TEST(AgentConfig, UTF16LE) {
 
     details::KillDefaultConfig();
 
-    auto file_utf16 = MakePathToConfigTestFiles(G_SolutionPath) /
+    auto file_utf16 = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
                       files::kDefaultDevConfigUTF16;
     bool success = loader(file_utf16.wstring());
     EXPECT_TRUE(success);
@@ -1000,7 +1000,7 @@ TEST(AgentConfig, FailScenario_Long) {
         EXPECT_TRUE(port == -1);
     }
 
-    auto test_config_path = MakePathToConfigTestFiles(G_SolutionPath);
+    auto test_config_path = tst::MakePathToConfigTestFiles(tst::G_SolutionPath);
 
     auto file_1 = (test_config_path / files::kDefaultMainConfig).wstring();
     auto file_2 = (test_config_path / files::kDefaultDevMinimum).wstring();

@@ -6,6 +6,8 @@
 #include "test_tools.h"
 
 #include <random>
+#include <string>
+#include <string_view>
 
 #include "algorithm"  // for remove_if
 #include "cfg.h"
@@ -18,6 +20,31 @@
 #include "yaml-cpp/node/node.h"  // for Node
 
 namespace tst {
+const std::filesystem::path G_ProjectPath = PROJECT_DIR;
+const std::filesystem::path G_SolutionPath = SOLUTION_DIR;
+const std::filesystem::path G_TestPath =
+    MakePathToUnitTestFiles(G_SolutionPath);
+
+// below described the structure of the solution folder:
+// solution root <--- Use SOLUTION_DIR define
+//    \--- test_files
+//            \--- unit_tests <--- MakePathToUnitTestFiles(SolutionRoot)
+//            \--- config     <--- MakePathToConfigTestFiles(SolutionRoot)
+constexpr std::wstring_view kSolutionTestFilesFolderName(L"test_files");
+constexpr std::wstring_view kSolutionUnitTestsFolderName(L"unit_test");
+constexpr std::wstring_view kSolutionConfigTestFilesFolderName(L"config");
+
+std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root) {
+    std::filesystem::path r{root};
+    r = r / kSolutionTestFilesFolderName / kSolutionUnitTestsFolderName;
+    return r.lexically_normal();
+}
+
+std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root) {
+    std::filesystem::path r{root};
+    r = r / kSolutionTestFilesFolderName / kSolutionConfigTestFilesFolderName;
+    return r.lexically_normal();
+}
 
 void PrintNode(YAML::Node node, std::string_view S) {
     if (tgt::IsDebug()) {

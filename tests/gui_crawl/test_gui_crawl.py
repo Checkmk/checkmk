@@ -176,6 +176,10 @@ class Worker(threading.Thread):
             "Missing context information",
             # Same for dashlets that are related to a specific context
             "There are no metrics meeting your context filters",
+            # Some of the errors are only visible to the user when trying to submit and
+            # some are visible for the reason that the GUI crawl sites do not have license
+            # information configured -> ignore the errors
+            "license usage report",
         ]
 
         for element in soup.select("div.error"):

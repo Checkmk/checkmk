@@ -506,7 +506,7 @@ def iter_config_section_dicts(cfg_file=None):
 
     for section_name in config.sections():
         options = config.options(section_name)
-        yield section_name, dict((k, config.get(section_name, k)) for k in options)
+        yield section_name, {k: config.get(section_name, k) for k in options}
 
 
 def main():

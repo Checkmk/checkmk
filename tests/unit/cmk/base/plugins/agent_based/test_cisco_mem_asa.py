@@ -86,7 +86,7 @@ def test_discovery_cisco_mem(string_table, expected_parsed_data):
             }
         },
         (
-            Result(state=state.OK, summary='Usage: 53.2% - 409 MiB of 770 MiB'),
+            Result(state=state.OK, summary='Usage: 53.17% - 409 MiB of 770 MiB'),
             Metric('mem_used_percent', 53.16899356888102, boundaries=(0.0, None)),
         ),
     ),

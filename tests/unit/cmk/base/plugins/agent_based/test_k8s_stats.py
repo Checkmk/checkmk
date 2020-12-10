@@ -260,7 +260,7 @@ def test_discover_k8s_stats_network(section, expected_items):
            boundaries=(0.0, 16492.3984375)),
     Metric('fs_size', 16492.3984375),
     Metric('fs_used_percent', 25.21459933956316),
-    Result(state=state.OK, summary='25.2% used (4.06 of 16.1 GiB)'),
+    Result(state=state.OK, summary='25.21% used (4.06 of 16.1 GiB)'),
 ])])
 def test__check_k8s_stats_fs(section, expected_results):
     vs: ValueStore = {}

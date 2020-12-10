@@ -112,11 +112,11 @@ def test_discovery():
             VALUE_STORE,
             {},
             [
-                Result(state=State.OK, summary='Total CPU: 99.99983%'),
+                Result(state=State.OK, summary='Total CPU: 100.00%'),
                 Metric('util', 99.99983122362869, boundaries=(0, 4)),  # boundaries: 4 as in 4 CPUs
-                Result(state=State.OK, notice='User: 0.00051%'),
+                Result(state=State.OK, notice='User: <0.01%'),
                 Metric('user', 0.0005063291139240507),
-                Result(state=State.OK, notice='Privileged: 0.000017%'),
+                Result(state=State.OK, notice='Privileged: <0.01%'),
                 Metric('privileged', 1.687763713080169e-05),
                 Result(state=State.OK, notice='Number of processors: 4'),
                 Metric('cpus', 4),
@@ -124,11 +124,11 @@ def test_discovery():
         (VALUE_STORE, {
             'levels': (90, 95)
         }, [
-            Result(state=State.CRIT, summary='Total CPU: 99.99983% (warn/crit at 90.0%/95.0%)'),
+            Result(state=State.CRIT, summary='Total CPU: 100.00% (warn/crit at 90.00%/95.00%)'),
             Metric('util', 99.99983122362869, levels=(90.0, 95.0), boundaries=(0, 4)),
-            Result(state=State.OK, notice='User: 0.00051%'),
+            Result(state=State.OK, notice='User: <0.01%'),
             Metric('user', 0.0005063291139240507),
-            Result(state=State.OK, notice='Privileged: 0.000017%'),
+            Result(state=State.OK, notice='Privileged: <0.01%'),
             Metric('privileged', 1.687763713080169e-05),
             Result(state=State.OK, notice='Number of processors: 4'),
             Metric('cpus', 4),

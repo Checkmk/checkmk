@@ -217,25 +217,12 @@ def iobandwidth(bytes_: float) -> str:
     return "%s %s/s" % _auto_scale(float(bytes_), use_si_units=True)
 
 
-def _show_right(value: float):
-    """Digits to the right of the decimal point, that we want to show
-
-    Example:
-        >>> _show_right(0.0023)
-        4
-
-    """
-    # zeros to the right of decimal point: - 1 - math.floor(math.log10(value))
-    non_zero_plus_2 = 1 - math.floor(math.log10(value))
-    return min(_PERCENT_MAX_DIGITS, non_zero_plus_2)
-
-
 def percent(percentage: float) -> str:
     """Render percentage
 
     Example:
         >>> percent(23.4203245)
-        '23.4%'
+        '23.42%'
 
     """
     # There is another render.percent in cmk.utils. However, that deals extensively with
@@ -247,13 +234,7 @@ def percent(percentage: float) -> str:
     if value == 0.0:
         return "0%"
 
-    if value < 1.0:
-        return ("%%.%df%%%%" % _show_right(value)) % value
+    if value < 0.01:
+        return "<0.01%"
 
-    if value < 99.0:
-        return f"{value:.1f}%"
-
-    if value < 100.0:
-        return ("%%.%df%%%%" % _show_right(100.0 - value)) % value
-
-    return f"{value:.0f}%"
+    return f"{value:.2f}%"

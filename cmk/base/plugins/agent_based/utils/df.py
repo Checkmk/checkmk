@@ -72,7 +72,7 @@ def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str
      'levels': (80.0, 90.0),
      'levels_low': (50.0, 60.0),
      'levels_mb': (1010892.8, 1137254.4),
-     'levels_text': '(warn/crit at 80.0%/90.0%)',
+     'levels_text': '(warn/crit at 80.00%/90.00%)',
      'magic_normsize': 20,
      'show_inodes': 'onlow',
      'show_levels': 'onmagic',
@@ -238,18 +238,18 @@ def _check_inodes(
     ... }
     >>> for r in _check_inodes(levels, 80, 60): print(r)
     Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
-    Result(state=<State.OK: 0>, notice='Inodes used: 20, Inodes available: 60 (75.0%)')
+    Result(state=<State.OK: 0>, notice='Inodes used: 20, Inodes available: 60 (75.00%)')
 
     >>> levels["show_inodes"] = "always"
     >>> for r in _check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
-    Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.0%)')
+    Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.00%)')
 
     >>> levels["show_inodes"]="onlow"
     >>> levels["inodes_levels"]= (40, 35)
     >>> for r in _check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))
-    Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.0%)')
+    Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.00%)')
     """
     inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
 

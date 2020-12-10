@@ -194,7 +194,7 @@ def test_cached():
             state=state.OK,
             summary=("Cache generated 6 minutes 1 second ago, "
                      "Cache interval: 2 minutes 0 seconds, "
-                     "Elapsed cache lifespan: 314%"),
+                     "Elapsed cache lifespan: 314.00%"),
         ),
     ]
 

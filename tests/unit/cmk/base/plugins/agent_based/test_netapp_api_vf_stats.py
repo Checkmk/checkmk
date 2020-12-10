@@ -66,8 +66,8 @@ SECTION_NETAPP_API_CPU: netapp_api_cpu.Section = {
             [
                 Metric('util', 0.0, levels=(0.0, 95.0), boundaries=(0.0, 100.0)),
                 Result(state=state.WARN,
-                       summary='Total CPU (5 min average): 0% (warn/crit at 0%/95.0%)',
-                       details='Total CPU (5 min average): 0% (warn/crit at 0%/95.0%)'),
+                       summary='Total CPU (5 min average): 0% (warn/crit at 0%/95.00%)',
+                       details='Total CPU (5 min average): 0% (warn/crit at 0%/95.00%)'),
                 Metric('util_average', 0.0, levels=(0.0, 95.0), boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Number of processors: 2'),
             ],

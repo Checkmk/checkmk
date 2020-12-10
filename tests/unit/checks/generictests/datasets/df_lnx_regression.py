@@ -242,7 +242,8 @@ checks = {
                 ),
                 (
                     1,
-                    'Inodes used: 18.1% (warn/crit at 10.0%/95.0%), Inodes available: 7,488,000 (81.9%)',
+                    ('Inodes used: 18.09% (warn/crit at 10.00%/95.00%), '
+                     'Inodes available: 7,488,000 (81.91%)'),
                     [
                         ('inodes_used', 1654272, 914227.2000000001, 8685158.4, 0.0, 9142272.0),
                     ],
@@ -268,7 +269,7 @@ checks = {
                 ),
                 (
                     2,
-                    'Inodes used: 1,654,272 (warn/crit at 600,000/1,000,000), Inodes available: 7,488,000 (81.9%)',
+                    'Inodes used: 1,654,272 (warn/crit at 600,000/1,000,000), Inodes available: 7,488,000 (81.91%)',
                     [
                         ('inodes_used', 1654272, 600000.0, 1000000.0, 0.0, 9142272.0),
                     ],

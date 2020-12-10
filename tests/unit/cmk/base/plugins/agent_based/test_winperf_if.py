@@ -555,7 +555,7 @@ def winperf_if_teaming_parsed(time, out_octets):
             Metric('outerr', 0.0),
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
-            Result(state=state.OK, summary='Out: 1.07 GB/s (85.9%)'),
+            Result(state=state.OK, summary='Out: 1.07 GB/s (85.90%)'),
         ],
     ),
     (
@@ -585,7 +585,7 @@ def winperf_if_teaming_parsed(time, out_octets):
             Metric('outerr', 0.0),
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
-            Result(state=state.OK, summary='Out: 1.07 GB/s (85.9%)'),
+            Result(state=state.OK, summary='Out: 1.07 GB/s (85.90%)'),
         ],
     ),
     (
@@ -618,7 +618,7 @@ def winperf_if_teaming_parsed(time, out_octets):
             Metric('outerr', 0.0),
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
-            Result(state=state.OK, summary='Out: 2.15 GB/s (85.9%)'),
+            Result(state=state.OK, summary='Out: 2.15 GB/s (85.90%)'),
         ],
     ),
 ])

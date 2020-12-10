@@ -246,7 +246,7 @@ def test_discover_smart_stats(section, discovered):
         Metric('Power_Cycles', 8),
         Result(state=State.OK, summary='Critical warning: 0'),
         Metric('Critical_Warning', 0),
-        Result(state=State.OK, summary='Available spare: 100%'),
+        Result(state=State.OK, summary='Available spare: 100.00%'),
         Metric('Available_Spare', 100),
         Result(state=State.OK, summary='Percentage used: 0%'),
         Metric('Percentage_Used', 0),

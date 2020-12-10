@@ -216,7 +216,7 @@ def _check_netscaler_vservers(
     ...     }]):
     ...     print(result)
     Result(state=<State.OK: 0>, summary='Status: up')
-    Result(state=<State.OK: 0>, summary='Health: 100%')
+    Result(state=<State.OK: 0>, summary='Health: 100.00%')
     Metric('health_perc', 100.0, boundaries=(0.0, 100.0))
     Result(state=<State.OK: 0>, summary='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0')
     Result(state=<State.OK: 0>, summary='Request rate: 0/s')

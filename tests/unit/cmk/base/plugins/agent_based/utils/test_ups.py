@@ -31,7 +31,7 @@ SECTION_SECONDS_ON_BATTERY_DEFAULT = Battery(seconds_on_bat=100,)
 RESULTS_ON_BATTERY_WITH_TIME: type_defs.CheckResult = [
     Result(state=State.OK, summary='10 minutes 0 seconds'),
     Metric('battery_seconds_remaining', 600.0),
-    Result(state=State.CRIT, summary='80.0% (warn/crit below 95.0%/90.0%)'),
+    Result(state=State.CRIT, summary='80.00% (warn/crit below 95.00%/90.00%)'),
     Metric('battery_capacity', 80.0),
     Result(state=State.OK, summary='Time running on battery: 1 minute 40 seconds'),
 ]
@@ -39,7 +39,7 @@ RESULTS_ON_BATTERY_WITH_TIME: type_defs.CheckResult = [
 RESULTS_ON_BATTERY_NO_TIME: type_defs.CheckResult = [
     Result(state=State.OK, summary='10 minutes 0 seconds'),
     Metric('battery_seconds_remaining', 600.0),
-    Result(state=State.CRIT, summary='80.0% (warn/crit below 95.0%/90.0%)'),
+    Result(state=State.CRIT, summary='80.00% (warn/crit below 95.00%/90.00%)'),
     Metric('battery_capacity', 80.0),
 ]
 
@@ -48,14 +48,14 @@ RESULTS_TIME_ON_BATTERY_NO_FLAG: type_defs.CheckResult = [
         state=State.WARN,
         summary='10 minutes 0 seconds (warn/crit below 12 minutes 0 seconds/5 minutes 0 seconds)'),
     Metric('battery_seconds_remaining', 600.0),
-    Result(state=State.OK, summary='80.0%'),
+    Result(state=State.OK, summary='80.00%'),
     Metric('battery_capacity', 80.0),
     Result(state=State.OK, summary='Time running on battery: 1 minute 40 seconds'),
 ]
 
 RESULTS_NOT_ON_BATTERY: type_defs.CheckResult = [
     Result(state=State.OK, summary='On mains'),
-    Result(state=State.OK, summary='80.0%'),
+    Result(state=State.OK, summary='80.00%'),
     Metric('battery_capacity', 80.0),
 ]
 

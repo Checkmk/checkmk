@@ -25,7 +25,7 @@ checks = {
             }, [
                 (
                     1,
-                    'Usage: 84.53% - 11.83 MB of 14.00 MB (warn/crit at 80.0%/90.0% used)',
+                    'Usage: 84.53% - 11.83 MB of 14.00 MB (warn/crit at 80.00%/90.00% used)',
                     [('mem_used_percent', 84.52995845249721, 80.00000000000001, 90.0, 0.0, None)]
                 )
             ]

@@ -134,7 +134,7 @@ checks = {
                 (0, 'A (RAID0)', []),
                 (
                     2,
-                    '91.37% used (1.83 of 2.00 TB, warn/crit at 80.0%/90.0%)',
+                    '91.37% used (1.83 of 2.00 TB, warn/crit at 80.00%/90.00%)',
                     [
                         ('fs_used', 1916852, 1678236.8, 1888016.4, 0, 2097796),
                         ('fs_size', 2097796, None, None, None, None),

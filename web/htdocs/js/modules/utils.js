@@ -708,10 +708,28 @@ function set_focus(focus_obj) {
 }
 
 export function update_pending_changes(changes_info) {
-    const container = document.getElementById("pending_changes");
-    if (changes_info && container) {
-        container.innerHTML = changes_info;
+    if (!changes_info) {
+        return;
     }
+
+    const text_container = document.getElementById("pending_changes");
+    if (text_container) {
+        text_container.innerHTML = changes_info;
+    }
+
+    const img_container = document.getElementById("page_state_icon");
+    if (img_container) {
+        return;
+    }
+
+    const img = document.createElement("img");
+    img.src = "themes/facelift/images/icon_pending_changes.svg";
+    img.setAttribute("id", "page_state_icon");
+    img.setAttribute("class", "icon");
+    const elem = document.createElement("div");
+    elem.setAttribute("class", "icon_container");
+    elem.appendChild(img);
+    text_container.parentElement.parentElement.appendChild(elem);
 }
 
 function get_computed_style(object, property) {

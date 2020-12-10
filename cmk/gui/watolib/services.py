@@ -601,34 +601,15 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
 
         return options
 
-    def get_result(self, request):
-        # tupe: (StartDiscoveryRequest) -> DiscoveryResult
+    def get_result(self, request: StartDiscoveryRequest) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
         job_status = self.get_status()
         job_status["is_active"] = self.is_active()
 
-        # TODO: Use the correct time. This is difficult because cmk.base does not have a single
-        # time for all data of a host. The data sources should be able to provide this information
-        # somehow.
-        check_table_created = int(time.time())
-        result = check_mk_automation(request.host.site_id(), "try-inventory",
-                                     ["@noscan", request.host.name()])
+        check_table_created, result = self._get_try_discovery(request)
 
         if not job_status['is_active'] and job_status['state'] == JobStatusStates.EXCEPTION:
-            # There might be an exception when calling above 'check_mk_automation'. For example
-            # this may happen if a hostname is not resolvable. Then if the error is fixed, ie.
-            # configuring an IP address of this host, and the discovery is started again, we put
-            # the cached/last job exception into the current job progress update instead of displaying
-            # the error in a CRIT message box again.
-            job_status['state'] = JobStatusStates.FINISHED
-            job_status['loginfo'] = {
-                'JobProgressUpdate': ['%s:' % _('Last progress update')] +
-                                     job_status['loginfo']['JobProgressUpdate'] +
-                                     ["%s:" % _('Last exception')] +
-                                     job_status['loginfo']['JobException'],
-                'JobException': [],
-                'JobResult': job_status['loginfo']['JobResult'],
-            }
+            job_status.update(self._cleaned_up_status(job_status))
 
         return DiscoveryResult(
             job_status=job_status,
@@ -636,6 +617,39 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             check_table=result["check_table"],
             host_labels=result.get("host_labels", {}),
         )
+
+    @staticmethod
+    def _get_try_discovery(request: StartDiscoveryRequest) -> Tuple[int, Dict]:
+        # TODO: Use the correct time. This is difficult because cmk.base does not have a single
+        # time for all data of a host. The data sources should be able to provide this information
+        # somehow.
+        return (
+            int(time.time()),
+            check_mk_automation(
+                request.host.site_id(),
+                "try-inventory",
+                ["@noscan", request.host.name()],
+            ),
+        )
+
+    @staticmethod
+    def _cleaned_up_status(job_status):
+        # There might be an exception when calling above 'check_mk_automation'. For example
+        # this may happen if a hostname is not resolvable. Then if the error is fixed, ie.
+        # configuring an IP address of this host, and the discovery is started again, we put
+        # the cached/last job exception into the current job progress update instead of displaying
+        # the error in a CRIT message box again.
+        return {
+            'state': JobStatusStates.FINISHED,
+            'loginfo': {
+                'JobProgressUpdate': ['%s:' % _('Last progress update')] +
+                                     job_status['loginfo']['JobProgressUpdate'] +
+                                     ["%s:" % _('Last exception')] +
+                                     job_status['loginfo']['JobException'],
+                'JobException': [],
+                'JobResult': job_status['loginfo']['JobResult'],
+            }
+        }
 
     def _check_table_file_path(self):
         return os.path.join(self.get_work_dir(), "check_table.mk")

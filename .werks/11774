@@ -1,0 +1,15 @@
+Title: Ignore time synchronization on containers
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607585396
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Time synchronization commands on containers lead to a execution time of the linux
+agent of over 30 seconds, as the corresponding commands timed out.
+Time synchronization is not required on containers, thus we now skip the timesyncd
+and ntp sections on both docker and LXC containers.

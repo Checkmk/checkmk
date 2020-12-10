@@ -282,6 +282,9 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         *,
         selection: SectionNameCollection,
     ) -> SNMPHostSections:
+        selection = NO_SELECTION  # Selection is done in the fetcher for SNMP.
+        host_sections = SNMPHostSections(dict(raw_data))
+
         # TODO(ml): The logic here is _almost_ the same as for the Agent.
         #           We should make it *exactly* the same by moving the
         #           filtering logic into the parser and then factor the
@@ -305,13 +308,12 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             cached_at=cached_at,
         )
         persisted_sections.update_and_store(self.section_store, keep_outdated=self.keep_outdated)
-        host_sections = SNMPHostSections(dict(raw_data))
         host_sections.add_cache_info(persisted_sections)
         host_sections.add_persisted_sections(
             persisted_sections,
             logger=self._logger,
         )
-        return host_sections
+        return host_sections.filter(selection)
 
 
 class SNMPSummarizer(Summarizer[SNMPHostSections]):

@@ -644,19 +644,11 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         if config.agent_simulator:
             raw_data = agent_simulator.process(raw_data)
 
-        parser = self._parse_host_section(raw_data)
-        host_sections = parser.host_sections
-
-        # TODO(ml): The logic here is _almost_ the same as for SNMP.
-        #           We should make it *exactly* the same by moving the
-        #           filtering logic into the parser and then factor the
-        #           remaining code into a single class such that:
-        #              check = fetch >> parse >> cache [the missing class] >> summarize
-        #
-        #           See Also:
-        #              comments in HostSections.
-        #
         cached_at = int(time.time())
+
+        parser = self._parse_host_section(raw_data)
+
+        host_sections = parser.host_sections
         # Transform to seconds and give the piggybacked host a little bit more time
         cache_age = int(1.5 * 60 * self.check_interval)
         host_sections.cache_info.update({
@@ -669,12 +661,23 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             cached_at=cached_at,
             cache_age=cache_age,
         )
+
+        # TODO(ml): The logic here is _almost_ the same as for the Agent.
+        #           We should make it *exactly* the same by moving the
+        #           filtering logic into the parser and then factor the
+        #           remaining code into a single class such that:
+        #              check = fetch >> parse >> cache [the missing class] >> summarize
+        #
+        #           See Also:
+        #              comments in HostSections.
+        #
+
+        def fetch_interval(section_name: SectionName) -> Optional[int]:
+            return parser.section_info[section_name].persist
+
         persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
             host_sections.sections,
-            {
-                section_name: section_header.persist
-                for section_name, section_header in parser.section_info.items()
-            },
+            {section_name: fetch_interval(section_name) for section_name in host_sections.sections},
             cached_at=cached_at,
         )
         persisted_sections.update_and_store(self.section_store, keep_outdated=self.keep_outdated)

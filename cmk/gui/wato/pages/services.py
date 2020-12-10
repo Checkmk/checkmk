@@ -233,6 +233,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
            and html.check_transaction():
             discovery_result = self._handle_action(discovery_result, request)
 
+        if not discovery_result.check_table_created and previous_discovery_result:
+            discovery_result = DiscoveryResult(
+                job_status=discovery_result.job_status,
+                check_table_created=previous_discovery_result.check_table_created,
+                check_table=previous_discovery_result.check_table,
+                host_labels=previous_discovery_result.host_labels,
+            )
+
         # Clean the requested action after performing it
         performed_action = self._options.action
         self._options = self._options._replace(action=DiscoveryAction.NONE)

@@ -553,11 +553,14 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             host_name=host_name,
             estimated_duration=last_job_status.get("duration"),
         )
+        self._pre_try_discovery: Tuple[int, Dict] = (0, {})
 
     def discover(self, request: StartDiscoveryRequest,
                  job_interface: BackgroundProcessInterface) -> None:
         """Target function of the background job"""
         print("Starting job...")
+        self._pre_try_discovery = self._get_try_discovery(request)
+
         if request.options.action == DiscoveryAction.SCAN:
             self._jobstatus.update_status({"title": _("Full scan")})
             self._perform_service_scan(request)
@@ -606,15 +609,17 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         job_status = self.get_status()
         job_status["is_active"] = self.is_active()
 
-        check_table_created, result = self._get_try_discovery(request)
-
-        if not job_status['is_active'] and job_status['state'] == JobStatusStates.EXCEPTION:
-            job_status.update(self._cleaned_up_status(job_status))
+        if job_status['is_active']:
+            check_table_created, result = self._pre_try_discovery
+        else:
+            check_table_created, result = self._get_try_discovery(request)
+            if job_status['state'] == JobStatusStates.EXCEPTION:
+                job_status.update(self._cleaned_up_status(job_status))
 
         return DiscoveryResult(
             job_status=job_status,
             check_table_created=check_table_created,
-            check_table=result["check_table"],
+            check_table=result.get("check_table", []),
             host_labels=result.get("host_labels", {}),
         )
 

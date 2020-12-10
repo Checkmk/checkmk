@@ -231,3 +231,96 @@ class TestConfigParsing:
             assert config_dict['input_patterns'] == '/var/log/*'
             assert config_dict['output'] == 'file_stats'
             assert config_dict['subgroups_delimiter'] == '@'
+
+
+class MockedFileStatFile:
+    def __init__(self, path):
+        self.path = path
+
+    def __eq__(self, other):
+        return self.path == other.path
+
+
+@pytest.mark.parametrize('section_name, files_iter, grouping_conditions, expected_result', [
+    (
+        'banana',
+        iter([
+            MockedFileStatFile('/var/log/syslog'),
+            MockedFileStatFile('/var/log/syslog1'),
+            MockedFileStatFile('/var/log/syslog2'),
+            MockedFileStatFile('/var/log/apport'),
+        ]),
+        [
+            (
+                'raccoon',
+                {
+                    'type': 'regex',
+                    'rule': '/var/log/syslog1',
+                },
+            ),
+            (
+                'colibri',
+                {
+                    'type': 'regex',
+                    'rule': '/var/log/sys*',
+                },
+            ),
+        ],
+        [
+            (
+                'banana raccoon',
+                [MockedFileStatFile('/var/log/syslog1')],
+            ),
+            (
+                'banana colibri',
+                [
+                    MockedFileStatFile('/var/log/syslog'),
+                    MockedFileStatFile('/var/log/syslog2'),
+                ],
+            ),
+            (
+                'banana',
+                [MockedFileStatFile('/var/log/apport')],
+            ),
+        ],
+    ),
+    (
+        'no_files',
+        iter([]),
+        OrderedDict([
+            (
+                'raccoon',
+                {
+                    'type': 'regex',
+                    'rule': '/var/log/syslog1',
+                },
+            ),
+            (
+                'colibri',
+                {
+                    'type': 'regex',
+                    'rule': '/var/log/sys*',
+                },
+            ),
+        ]),
+        [],
+    ),
+])
+def test_grouping_multiple_groups(
+    mk_filestats,
+    section_name,
+    files_iter,
+    grouping_conditions,
+    expected_result,
+):
+    results_list = sorted(
+        mk_filestats.grouping_multiple_groups(
+            section_name,
+            files_iter,
+            grouping_conditions,
+        ))
+    expected_results_list = sorted(expected_result)
+    for results_idx, (section_name, files) in enumerate(results_list):
+        assert section_name == expected_results_list[results_idx][0]
+        for files_idx, single_file in enumerate(files):
+            assert single_file == expected_results_list[results_idx][1][files_idx]

@@ -102,15 +102,21 @@ from stat import S_ISDIR, S_ISREG
 #       2.7.18 this is not supported. The documentation explicitly states
 #       that the module 'configparser' is supported from python 3.
 #       https://docs.python.org/2/library/configparser.html
+
+try:
+    from collections import OrderedDict
+except ImportError:  # Python2
+    from ordereddict import OrderedDict  # type: ignore
+
 try:
     import configparser
 except ImportError:  # Python2
     import ConfigParser as configparser  # type: ignore
 
 try:
-    from collections import OrderedDict
-except ImportError:  # Python2
-    from ordereddict import OrderedDict  # type: ignore
+    import typing
+except ImportError:
+    pass
 
 
 def ensure_str(s):
@@ -421,6 +427,57 @@ def parse_grouping_config(
             'rule': grouping_rule,
         },
     )
+
+
+def _grouping_construct_group_name(parent_group_name, child_group_name):
+    '''allow the user to format the service name using '%s'.
+
+    >>> _grouping_construct_group_name('aard %s vark', 'banana')
+    'aard banana vark'
+
+    >>> _grouping_construct_group_name('aard %s vark %s %s', 'banana')
+    'aard banana vark %s %s'
+
+    >>> _grouping_construct_group_name('aard %s vark')
+    'aard  vark'
+
+    >>> _grouping_construct_group_name('aard %s', '')
+    'aard'
+    '''
+
+    format_specifiers_count = parent_group_name.count('%s')
+    if not format_specifiers_count:
+        return ('%s %s' % (parent_group_name, child_group_name)).strip()
+    return (parent_group_name % ((child_group_name,) + ('%s',) *
+                                 (format_specifiers_count - 1))).strip()
+
+
+def _matches_regex(single_file, regex_pattern):
+    return bool(re.match(regex_pattern, single_file.path))
+
+
+def _get_matching_child_group(single_file, grouping_conditions):
+    for child_group_name, grouping_condition in grouping_conditions:
+        if _matches_regex(single_file, grouping_condition['rule']):
+            return child_group_name
+    return ''
+
+
+def grouping_multiple_groups(config_section_name, files_iter, grouping_conditions):
+    """create multiple groups per section if the agent is configured
+    for grouping. each group is shown as a seperate service. if a file
+    does not belong to a group, it is added to the section."""
+    grouped_files = {}  # type: typing.Dict[typing.Tuple[str, str], typing.List[FileStat]]
+    parent_group_name = config_section_name
+    for single_file in files_iter:
+        matching_child_group = _get_matching_child_group(single_file, grouping_conditions)
+        grouped_files.setdefault(
+            (parent_group_name, matching_child_group),
+            [],
+        ).append(single_file)
+
+    for (parent_group_name, child_group_name), files in grouped_files.items():
+        yield _grouping_construct_group_name(parent_group_name, child_group_name), files
 
 
 def grouping_single_group(config_section_name, files_iter):

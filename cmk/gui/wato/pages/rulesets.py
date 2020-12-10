@@ -2070,6 +2070,7 @@ class RuleConditionRenderer:
 
         condition.append(_("Host name"))
 
+        folder_lookup_cache = watolib.Folder.get_folder_lookup_cache()
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
             is_regex = regex_count > 0
@@ -2084,8 +2085,11 @@ class RuleConditionRenderer:
                     host_spec = host_spec["$regex"]
 
                 if not is_regex:
-                    host = watolib.Host.host(host_spec)
-                    if host:
+                    # Make sure that the host exists and the lookup will not fail
+                    # Otherwise the entire config would be read
+                    folder_hint = folder_lookup_cache.get(host_spec)
+                    if folder_hint is not None:
+                        host = watolib.Host.host(host_spec)
                         host_spec = html.render_a(host_spec, host.edit_url())
 
                 text_list.append(html.render_b(host_spec))
@@ -2098,8 +2102,11 @@ class RuleConditionRenderer:
                     host_spec = host_spec["$regex"]
 
                 if not is_regex:
-                    host = watolib.Host.host(host_spec)
-                    if host:
+                    # Make sure that the host exists and the lookup will not fail
+                    # Otherwise the entire config would be read
+                    folder_hint = folder_lookup_cache.get(host_spec)
+                    if folder_hint is not None:
+                        host = watolib.Host.host(host_spec)
                         host_spec = html.render_a(host_spec, host.edit_url())
 
                 if is_negate:

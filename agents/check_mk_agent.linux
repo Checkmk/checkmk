@@ -1291,6 +1291,9 @@ get_ntpq() {
 }
 
 section_timesyncd() {
+    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+        return 0
+    fi
     inpath systemctl || return 1
     inpath timedatectl || return 1
     timedatectl timesync-status >/dev/null 2>&1 || return 1
@@ -1301,6 +1304,9 @@ section_timesyncd() {
 }
 
 section_ntp() {
+    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+        return 0
+    fi
     # First we try to identify if we're beholden to systemd
     if inpath systemctl; then
         # shellcheck disable=SC2016

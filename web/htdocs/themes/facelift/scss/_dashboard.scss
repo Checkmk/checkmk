@@ -21,19 +21,6 @@ body.dashboard {
       background-size: 20px;
     }
   }
-
-  #menu_shortcut_toggle_edit,
-  #menu_entry_toggle_edit,
-  #menu_suggestion_toggle_edit {
-    img.icon {
-      background-image: url("images/icon_dashboard_edit.png");
-      background-repeat: no-repeat;
-    }
-
-    &.edit img.icon {
-      background-image: url("images/icon_dashboard_edit_set.png");
-    }
-  }
 }
 
 div#dashboard {

@@ -14,14 +14,17 @@ class Logger;
 
 class OutputBuffer {
 public:
-    // TODO(sp) Replace this plus its string message with std::error_code
+    // TODO(sp) Replace this plus its string message with std::error_code and
+    // make the usages more consistent.
     enum class ResponseCode {
         ok = 200,
-        invalid_header = 400,
+        bad_request = 400,
         not_found = 404,
-        limit_exceeded = 413,
+        payload_too_large = 413,
+        // NOTE: 451 = officially "unavailable for legal reasons" nowadays
         incomplete_request = 451,
-        invalid_request = 452,
+        invalid_request = 452,  // not an official code
+        bad_gateaway = 502,
     };
 
     enum class ResponseHeader { off, fixed16 };

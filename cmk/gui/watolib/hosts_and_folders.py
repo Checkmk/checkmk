@@ -6,6 +6,7 @@
 import abc
 from collections.abc import Mapping as ABCMapping
 import io
+import pickle
 import operator
 import os
 import errno
@@ -1404,12 +1405,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         If this does not work (cache miss), the regular search for the host is started.
         If the host was found by the regular search, the lookup cache is updated accordingly."""
 
-        cache_path = Folder.host_lookup_cache_path()
-        if not os.path.exists(cache_path) or os.stat(cache_path).st_size == 0:
-            Folder.build_host_lookup_cache(cache_path)
-
         try:
-            folder_lookup_cache = store.load_object_from_file(cache_path, {})
+            folder_lookup_cache = Folder.get_folder_lookup_cache()
             folder_hint = folder_lookup_cache.get(host_name)
             if folder_hint is not None and Folder.folder_exists(folder_hint):
                 folder_instance = Folder.folder(folder_hint)
@@ -1425,7 +1422,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
             # Save newly found host instance to cache
             folder_lookup_cache[host_name] = host_instance.folder().path()
-            store.save_object_to_file(cache_path, folder_lookup_cache, pretty=False)
+            Folder.save_host_lookup_cache(Folder.host_lookup_cache_path(), folder_lookup_cache)
             return host_instance
         except RequestTimeout:
             raise
@@ -1436,12 +1433,29 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             return Folder.root_folder().find_host_recursively(host_name)
 
     @staticmethod
+    def get_folder_lookup_cache() -> Dict[HostName, str]:
+        if "folder_lookup_cache" not in g:
+            cache_path = Folder.host_lookup_cache_path()
+            if not os.path.exists(cache_path) or os.stat(cache_path).st_size == 0:
+                Folder.build_host_lookup_cache(cache_path)
+            try:
+                g.folder_lookup_cache = pickle.loads(store.load_bytes_from_file(cache_path))
+            except (TypeError, pickle.UnpicklingError) as e:
+                logger.warning("Unable to read folder_lookup_cache from disk: %s", str(e))
+                g.folder_lookup_cache = {}
+        return g.folder_lookup_cache
+
+    @staticmethod
     def build_host_lookup_cache(cache_path):
         store.aquire_lock(cache_path)
         folder_lookup = {}
         for host_name, host in Folder.root_folder().all_hosts_recursively().items():
             folder_lookup[host_name] = host.folder().path()
-        store.save_object_to_file(cache_path, folder_lookup, pretty=False)
+        Folder.save_host_lookup_cache(cache_path, folder_lookup)
+
+    @staticmethod
+    def save_host_lookup_cache(cache_path, folder_lookup):
+        store.save_bytes_to_file(cache_path, pickle.dumps(folder_lookup))
 
     @staticmethod
     def delete_host_lookup_cache():
@@ -1455,21 +1469,21 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     @staticmethod
     def add_hosts_to_lookup_cache(host2path_list):
         cache_path = Folder.host_lookup_cache_path()
-        folder_lookup_cache = store.load_object_from_file(cache_path, {}, lock=True)
+        folder_lookup_cache = Folder.get_folder_lookup_cache()
         for (hostname, folder_path) in host2path_list:
             folder_lookup_cache[hostname] = folder_path
-        store.save_object_to_file(cache_path, folder_lookup_cache, pretty=False)
+        Folder.save_host_lookup_cache(cache_path, folder_lookup_cache)
 
     @staticmethod
     def delete_hosts_from_lookup_cache(hostnames):
         cache_path = Folder.host_lookup_cache_path()
-        folder_lookup_cache = store.load_object_from_file(cache_path, {}, lock=True)
+        folder_lookup_cache = Folder.get_folder_lookup_cache()
         for hostname in hostnames:
             try:
                 del folder_lookup_cache[hostname]
             except KeyError:
                 pass
-        store.save_object_to_file(cache_path, folder_lookup_cache, pretty=False)
+        Folder.save_host_lookup_cache(cache_path, folder_lookup_cache)
 
     def _user_needs_permission(self, how: str) -> None:
         if how == "write" and config.user.may("wato.all_folders"):

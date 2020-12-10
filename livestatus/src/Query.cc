@@ -185,6 +185,10 @@ void Query::invalidRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::invalid_request, message);
 }
 
+void Query::badGateway(const std::string &message) const {
+    _output.setError(OutputBuffer::ResponseCode::bad_gateaway, message);
+}
+
 void Query::parseAndOrLine(char *line, Filter::Kind kind,
                            const LogicalConnective &connective,
                            FilterStack &filters) {

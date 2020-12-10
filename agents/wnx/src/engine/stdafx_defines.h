@@ -24,3 +24,5 @@
 #define FMT_HEADER_ONLY
 
 #define NOMINMAX  // for Windows
+
+#define _SILENCE_CLANG_COROUTINE_MESSAGE  // clang coroutines

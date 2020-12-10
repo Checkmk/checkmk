@@ -27,15 +27,6 @@ public:
         }
     }
 
-    [[deprecated]] std::shared_ptr<T> addObject(const std::string& name,
-                                                T* object) {
-        if (object == nullptr) return {};
-
-        std::lock_guard lk(lock_);
-        map_[name].reset(object);
-        return map_[name];
-    }
-
     template <typename... Types>
     std::shared_ptr<T> createObject(const std::string& name, Types... args) {
         std::lock_guard lk(lock_);

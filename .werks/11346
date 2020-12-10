@@ -6,7 +6,8 @@ Date: 1605538661
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.0.0b1
+State: unknown
+Version: 2.1.0i1
 
 This werk describes the current integration stage of <b>ntopng</b>.
 Currently, a single <b>ntopng</b> instance is integrated into <b>Checkmk</b> via its REST API.
@@ -22,6 +23,6 @@ H3: Features
 
 H3: Remarks
 <ul>
-<li>Currently <b>Checkmk</b> will provide compatibility to the nightly builds of <b>ntopng</b>.</li>
-<li>The ntopng integration will be offered as an add-on (in mkp format) for the enterprise edition from the offical 2.0 release.</li>
+<li>Currently <b>Checkmk</b> will provide compatibility to <b>ntopng</b> v4.2-stable.</li>
+<li>The ntopng integration will be offered as a payable feature for the enterprise edition from the offical 2.0 release.</li>
 </ul>

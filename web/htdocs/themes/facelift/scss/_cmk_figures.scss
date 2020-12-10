@@ -27,8 +27,13 @@ div.cmk_tab {
       font-weight: bold;
       line-height: 2rem;
       text-align: center;
+      cursor: pointer;
       border-bottom: 2px solid transparent;
       transition: border-bottom 0.5s;
+
+      &:hover {
+        background-color: $table-highlight-color;
+      }
     }
 
     li.active {
@@ -344,4 +349,8 @@ div.dc_table .options {
       }
     }
   }
+}
+
+.dc-chart g.row text {
+  fill: $font-color;
 }

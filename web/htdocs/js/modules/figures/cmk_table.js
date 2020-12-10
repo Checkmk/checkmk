@@ -107,11 +107,9 @@ function _update_dc_graphs_in_selection(selection, graph_group) {
                 .dimension(label_dimension)
                 .radius(150)
                 .innerRadius(30)
-                //                .drawPaths(true)
-                .minAngleForLabel(0)
-                .externalLabels(15)
                 .externalRadiusPadding(40)
-                .title(d => d.value)
+                .minAngleForLabel(0.5)
+                .externalLabels(25)
                 .group(label_group)
                 .emptyTitle("No data available")
                 .on("postRender", chart => {

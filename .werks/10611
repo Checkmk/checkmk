@@ -8,4 +8,8 @@ State: unknown
 Version: 2.0.0b2
 Date: 1607597712
 
-Adapt styling to dark and light theme.
+<ul>
+<li>Adapt styling to dark and light theme.</li>
+<li>Prevent pie chart labels from overlapping.</li>
+<li>Improve layout of tables and navigation.</li>
+</ul>

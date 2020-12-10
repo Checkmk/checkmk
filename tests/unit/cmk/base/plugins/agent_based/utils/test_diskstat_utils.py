@@ -255,7 +255,7 @@ def test_scale_levels(levels, factor):
             type_defs.Parameters({}),
             DISK,
             [
-                Result(state=state.OK, notice='Utilization: 53.2%'),
+                Result(state=state.OK, notice='Utilization: 53.24%'),
                 Metric('disk_utilization', 0.53242),
                 Result(state=state.OK, summary='Read: 12.3 kB/s'),
                 Metric('disk_read_throughput', 12312.4324),
@@ -302,7 +302,7 @@ def test_scale_levels(levels, factor):
             }),
             DISK,
             [
-                Result(state=state.CRIT, notice='Utilization: 53.2% (warn/crit at 10.0%/20.0%)'),
+                Result(state=state.CRIT, notice='Utilization: 53.24% (warn/crit at 10.00%/20.00%)'),
                 Metric('disk_utilization', 0.53242, levels=(0.1, 0.2)),
                 Result(state=state.CRIT, summary='Read: 12.3 kB/s (warn/crit at 10.0 B/s/100 B/s)'),
                 Metric('disk_read_throughput', 12312.4324, levels=(10.0, 100.0)),

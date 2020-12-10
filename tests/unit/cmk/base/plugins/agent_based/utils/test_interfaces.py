@@ -758,10 +758,10 @@ ITEM_PARAMS_RESULTS = (
             Metric('total', 4_000_000.0, boundaries=(0.0, 25_000_000.0)),
             Metric('outqlen', 0.0),
             Result(state=state.WARN,
-                   summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.4%)'),
+                   summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)'),
             Result(state=state.CRIT,
-                   summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
-            Result(state=state.OK, summary='Total: 4.00 MB/s (16.0%)'),
+                   summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.60%)'),
+            Result(state=state.OK, summary='Total: 4.00 MB/s (16.00%)'),
         ],
     ),
     (
@@ -796,9 +796,9 @@ ITEM_PARAMS_RESULTS = (
             Metric('outerr', 0.0, levels=(0.01, 0.1)),
             Metric('outqlen', 0.0),
             Result(state=state.WARN,
-                   summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.4%)'),
+                   summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)'),
             Result(state=state.CRIT,
-                   summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
+                   summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.60%)'),
             Result(state=state.OK, notice='Non-unicast packets in: 0.00/s'),
             Result(state=state.OK, notice='Discards in: 0.00/s'),
             Result(state=state.OK, notice='Non-unicast packets out: 0.00/s'),
@@ -972,15 +972,16 @@ def test_check_single_interface_ignore_state(value_store, item, params, result):
                    levels=(625_000.0, 2_500_000.0),
                    boundaries=(0.0, 12_500_000.0)),
             Result(state=state.WARN,
-                   summary='In average 5min: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.4%)'),
+                   summary='In average 5min: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)'),
             Metric('out_avg_5',
                    3_200_000.0,
                    levels=(625_000.0, 2_500_000.0),
                    boundaries=(0.0, 12_500_000.0)),
-            Result(state=state.CRIT,
-                   summary='Out average 5min: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
+            Result(
+                state=state.CRIT,
+                summary='Out average 5min: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.60%)'),
             Metric('total_avg_5', 4_000_000.0, boundaries=(0.0, 25_000_000.0)),
-            Result(state=state.OK, summary='Total average 5min: 4.00 MB/s (16.0%)'),
+            Result(state=state.OK, summary='Total average 5min: 4.00 MB/s (16.00%)'),
         ],
     ),
 ])
@@ -1277,11 +1278,11 @@ def test_check_multiple_interfaces_group_simple(value_store):
             Metric('total', 4000000.0, levels=(250000.0, 750000.0), boundaries=(0.0, 2500000.0)),
             Metric('outqlen', 0.0),
             Result(state=state.CRIT,
-                   summary='In: 800 kB/s (warn/crit at 62.5 kB/s/250 kB/s) (64.0%)'),
+                   summary='In: 800 kB/s (warn/crit at 62.5 kB/s/250 kB/s) (64.00%)'),
             Result(state=state.CRIT,
-                   summary='Out: 3.20 MB/s (warn/crit at 62.5 kB/s/250 kB/s) (256%)'),
+                   summary='Out: 3.20 MB/s (warn/crit at 62.5 kB/s/250 kB/s) (256.00%)'),
             Result(state=state.CRIT,
-                   summary='Total: 4.00 MB/s (warn/crit at 250 kB/s/750 kB/s) (160%)'),
+                   summary='Total: 4.00 MB/s (warn/crit at 250 kB/s/750 kB/s) (160.00%)'),
         ]
 
 
@@ -1339,11 +1340,11 @@ def test_check_multiple_interfaces_group_exclude(value_store):
             Metric('total', 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
             Metric('outqlen', 0.0),
             Result(state=state.CRIT,
-                   summary='In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.0%)'),
+                   summary='In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.00%)'),
             Result(state=state.CRIT,
-                   summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128%)'),
+                   summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128.00%)'),
             Result(state=state.CRIT,
-                   summary='Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.0%)'),
+                   summary='Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.00%)'),
         ]
 
 
@@ -1401,10 +1402,11 @@ def test_check_multiple_interfaces_group_by_agent(value_store):
         Metric('outerr', 0.0, levels=(0.01, 0.1)),
         Metric('total', 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
         Metric('outqlen', 0.0),
-        Result(state=state.CRIT, summary='In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.0%)'),
-        Result(state=state.CRIT, summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128%)'),
+        Result(state=state.CRIT, summary='In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.00%)'),
         Result(state=state.CRIT,
-               summary='Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.0%)'),
+               summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128.00%)'),
+        Result(state=state.CRIT,
+               summary='Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.00%)'),
     ]
 
 
@@ -1519,10 +1521,11 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
         Metric('outerr', 0.0, levels=(0.01, 0.1)),
         Metric('total', 8000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
         Metric('outqlen', 0.0),
-        Result(state=state.CRIT, summary='In: 1.60 MB/s (warn/crit at 125 kB/s/500 kB/s) (64.0%)'),
-        Result(state=state.CRIT, summary='Out: 6.40 MB/s (warn/crit at 125 kB/s/500 kB/s) (256%)'),
+        Result(state=state.CRIT, summary='In: 1.60 MB/s (warn/crit at 125 kB/s/500 kB/s) (64.00%)'),
         Result(state=state.CRIT,
-               summary='Total: 8.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (160%)'),
+               summary='Out: 6.40 MB/s (warn/crit at 125 kB/s/500 kB/s) (256.00%)'),
+        Result(state=state.CRIT,
+               summary='Total: 8.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (160.00%)'),
     ]
 
 

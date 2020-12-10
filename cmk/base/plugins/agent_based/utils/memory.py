@@ -54,7 +54,7 @@ def normalize_levels(
     Normalize levels to absolute posive levels and return formatted levels text
 
         >>> normalize_levels("perc_used", 12, 42, 200)
-        (24.0, 84.0, 'warn/crit at 12.0%/42.0% used')
+        (24.0, 84.0, 'warn/crit at 12.00%/42.00% used')
 
     """
     # TODO: remove this weird case of different reference values.
@@ -123,7 +123,7 @@ def check_element(
         ...     create_percent_metric=True,
         ... )
         >>> print(result.summary)
-        Short term memory: 23.0% - 46 B of 200 B (warn/crit at 12.0%/42.0% used)
+        Short term memory: 23.00% - 46 B of 200 B (warn/crit at 12.00%/42.00% used)
         >>> print(result.state)
         State.WARN
         >>> print(metric)

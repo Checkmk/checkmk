@@ -303,9 +303,9 @@ def test_discovery():
         Result(
             state=state.OK,
             summary=
-            'ONLINE (TEMPORARY), Size: 707 MiB, 23.8% used (168 MiB of max. 707 MiB), Free: 539 MiB',
+            'ONLINE (TEMPORARY), Size: 707 MiB, 23.76% used (168 MiB of max. 707 MiB), Free: 539 MiB',
             details=
-            'ONLINE (TEMPORARY), Size: 707 MiB, 23.8% used (168 MiB of max. 707 MiB), Free: 539 MiB'
+            'ONLINE (TEMPORARY), Size: 707 MiB, 23.76% used (168 MiB of max. 707 MiB), Free: 539 MiB'
         ),
         Metric('size', 741343232.0, levels=(667208908.8, 704276070.4)),
         Metric('used', 176160768.0),
@@ -327,9 +327,9 @@ def test_discovery():
         Result(
             state=state.OK,
             summary=
-            'ONLINE (TEMPORARY), Size: 17.6 GiB, 53.1% used (10.4 GiB of max. 19.5 GiB), Free: 9.16 GiB',
+            'ONLINE (TEMPORARY), Size: 17.6 GiB, 53.12% used (10.4 GiB of max. 19.5 GiB), Free: 9.16 GiB',
             details=
-            'ONLINE (TEMPORARY), Size: 17.6 GiB, 53.1% used (10.4 GiB of max. 19.5 GiB), Free: 9.16 GiB'
+            'ONLINE (TEMPORARY), Size: 17.6 GiB, 53.12% used (10.4 GiB of max. 19.5 GiB), Free: 9.16 GiB'
         ),
         Result(state=state.OK, summary='10 increments (1.95 GiB)'),
         Metric('size', 18874368000.0, levels=(18874368000.0, 19922944000.0)),
@@ -343,9 +343,9 @@ def test_discovery():
         Result(
             state=state.OK,
             summary=
-            'ONLINE (TEMPORARY), Size: 35.2 GiB, 53.1% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB',
+            'ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB',
             details=
-            'ONLINE (TEMPORARY), Size: 35.2 GiB, 53.1% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB'
+            'ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB'
         ),
         Result(state=state.OK, summary='20 increments (3.91 GiB)'),
         Metric('size', 37748736000.0, levels=(37748736000.0, 39845888000.0)),
@@ -388,9 +388,9 @@ def test_check_cluster():
         Result(
             state=state.OK,
             summary=
-            'ONLINE (TEMPORARY), Size: 35.2 GiB, 53.1% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB',
+            'ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB',
             details=
-            'ONLINE (TEMPORARY), Size: 35.2 GiB, 53.1% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB'
+            'ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB'
         ),
         Result(state=state.OK,
                summary='20 increments (3.91 GiB)',

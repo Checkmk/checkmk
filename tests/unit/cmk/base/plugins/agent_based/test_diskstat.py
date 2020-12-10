@@ -944,7 +944,7 @@ def test_check_diskstat_single_item(value_store):
         {'item': DISK},
         None,
     )) == [
-        Result(state=state.OK, notice='Utilization: 0.00039%'),
+        Result(state=state.OK, notice='Utilization: <0.01%'),
         Metric('disk_utilization', 3.933167173747347e-06),
         Result(state=state.OK, summary='Read: 17.7 B/s'),
         Metric('disk_read_throughput', 17.650547892925093),
@@ -993,7 +993,7 @@ def test_check_diskstat_summary(value_store):
             None,
         ))
     assert results_summary == [
-        Result(state=state.OK, notice='Utilization: 0.00039%'),
+        Result(state=state.OK, notice='Utilization: <0.01%'),
         Metric('disk_utilization', 3.933167173747347e-06),
         Result(state=state.OK, summary='Read: 35.3 B/s'),
         Metric('disk_read_throughput', 35.30109578585019),

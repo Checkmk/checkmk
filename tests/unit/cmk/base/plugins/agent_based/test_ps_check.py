@@ -309,7 +309,7 @@ check_results = [
         Metric("rss", 303252, levels=(1073741824, 2147483648)),
         Result(
             state=state.WARN,
-            notice="Percentage of total RAM: 28.9% (warn/crit at 25.0%/50.0%)",
+            notice="Percentage of total RAM: 28.92% (warn/crit at 25.00%/50.00%)",
         ),
         Metric("pcpu", 0.0),
         Metric("pcpuavg", 0.0, boundaries=(0, 15)),
@@ -739,7 +739,7 @@ def test_cpu_util_single_process_levels(cpu_cores):
 
     cpu_util = 200.0 / cpu_cores
     cpu_util_s = ps_utils.render.percent(cpu_util)
-    single_msg = 'firefox with PID 25898 CPU: %s (warn/crit at 45.0%%/80.0%%)' % cpu_util_s
+    single_msg = 'firefox with PID 25898 CPU: %s (warn/crit at 45.00%%/80.00%%)' % cpu_util_s
     reference = [
         Result(state=state.OK, summary="Processes: 4"),
         Metric("count", 4, levels=(100000, 100000), boundaries=(0, None)),
@@ -752,7 +752,7 @@ def test_cpu_util_single_process_levels(cpu_cores):
         Result(state=state.OK, notice='firefox with PID 25576 CPU: 0%'),
         Result(state=state.OK, notice='firefox with PID 25664 CPU: 0%'),
         Result(state=state.OK, notice='firefox with PID 25758 CPU: 0%'),
-        Result(state=state.OK, notice='firefox with PID 25898 CPU: 40.0%'),
+        Result(state=state.OK, notice='firefox with PID 25898 CPU: 40.00%'),
         Result(state=state.OK, notice='Youngest running for: 6 minutes 57 seconds'),
         Result(state=state.OK, notice='Oldest running for: 26 minutes 58 seconds'),
         Result(state=state.OK, notice="\r\n".join([

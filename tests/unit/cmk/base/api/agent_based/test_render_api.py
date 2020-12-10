@@ -171,34 +171,17 @@ def test_iobandwidth(bytes_, output):
     [
         # 1. Die 0 selbst:
         (0.0, "0%"),
-        # 2. Bereich ]0,1[:
-        #     -> Ausgabe mit zwei Nachkommastellen.
-        (0.102, "0.10%"),
-        (0.128, "0.13%"),
-        (0.992, "0.99%"),
-        (0.00000000504, "0.0000000050%"),
-        (0.001, "0.0010%"),
-        (0.01, "0.010%"),
+        # 2. Bereich ]0, 0.01[:
+        (0.000102, "<0.01%"),
         # 3. Bereich [1 ... 99]:
-        # -> Ausgabe mit einer Nachkommastelle
-        (1.0, "1.0%"),
-        (1.234, "1.2%"),
-        (10.80, "10.8%"),
-        (98.94238, "98.9%"),
-        (99.0, "99.0%"),
-        # 4. Bereich ]99,100[
-        #     -> Ausgabe mit hinten zwei nicht-neuern
-        (99.9, "99.900%"),
-        (99.92, "99.920%"),
-        (99.9985120, "99.9985%"),
-        (99.99979, "99.99979%"),
+        # -> Ausgabe mit 2 Nachkommastellen
+        (1.0, "1.00%"),
+        (1.234, "1.23%"),
+        (10.80, "10.80%"),
+        (99.92, "99.92%"),
         # 5. Bereich [100,
-        #     Auf ganze Zahlen runden
-        (0., "0%"),
-        (10, "10.0%"),
-        (100, "100%"),
-        (100.01, "100%"),
-        (123.456, "123%"),
+        (100.01, "100.01%"),
+        (123.456, "123.46%"),
     ])
 def test_percent(percentage, output):
     assert output == render.percent(percentage)

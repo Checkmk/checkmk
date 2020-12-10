@@ -14,7 +14,7 @@ from typing import (
     Final,
     Iterable,
     List,
-    MutableSet,
+    MutableMapping,
     NamedTuple,
     Optional,
     Tuple,
@@ -355,7 +355,7 @@ class ParserState(abc.ABC):
         hostname: HostName,
         host_sections: AgentHostSections,
         *,
-        section_info: MutableSet["HostSectionParser.Header"],
+        section_info: MutableMapping[SectionName, "HostSectionParser.Header"],
         logger: logging.Logger,
     ) -> None:
         self.hostname: Final = hostname
@@ -426,7 +426,7 @@ class PiggybackSectionParser(ParserState):
         host_sections: AgentHostSections,
         piggybacked_hostname: HostName,
         *,
-        section_info: MutableSet["HostSectionParser.Header"],
+        section_info: MutableMapping[SectionName, "HostSectionParser.Header"],
         logger: logging.Logger,
     ) -> None:
         super().__init__(
@@ -551,11 +551,11 @@ class HostSectionParser(ParserState):
         host_sections: AgentHostSections,
         section_header: Header,
         *,
-        section_info: MutableSet[Header],
+        section_info: MutableMapping[SectionName, "HostSectionParser.Header"],
         logger: logging.Logger,
     ) -> None:
         host_sections.sections.setdefault(section_header.name, [])
-        section_info.add(section_header)
+        section_info[section_header.name] = section_header
         super().__init__(
             hostname,
             host_sections,
@@ -661,7 +661,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         cache_age = int(1.5 * 60 * self.check_interval)
         host_sections.cache_info.update({
             header.name: cast(Tuple[int, int], header.cache_info(cached_at))
-            for header in parser.section_info
+            for header in parser.section_info.values()
             if header.cache_info(cached_at) is not None
         })
         host_sections.piggybacked_raw_data = self._make_updated_piggyback_section_header(
@@ -671,7 +671,10 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         )
         persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
             host_sections.sections,
-            {section_header.name: section_header.persist for section_header in parser.section_info},
+            {
+                section_name: section_header.persist
+                for section_name, section_header in parser.section_info.items()
+            },
             cached_at=cached_at,
         )
         persisted_sections.update_and_store(self.section_store, keep_outdated=self.keep_outdated)
@@ -687,7 +690,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         parser: ParserState = NOOPParser(
             self.hostname,
             AgentHostSections(),
-            section_info=set(),
+            section_info={},
             logger=self._logger,
         )
         for line in raw_data.split(b"\n"):

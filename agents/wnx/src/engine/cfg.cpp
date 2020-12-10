@@ -408,8 +408,7 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
         if (ec.value() == 0) return cache_file.wstring();
         XLOG::l(
             "Attempt to copy config file to cache '{}' failed with error [{}], '{}'",
-            fs::path(Filename), cache_file, ec.value(),
-            ec.message());
+            fs::path(Filename), cache_file, ec.value(), ec.message());
 
     } catch (std::exception& e) {
         XLOG::l("Exception during YAML saving to cache {}", e.what());
@@ -437,7 +436,6 @@ std::wstring GetYamlFromCache() noexcept {
 }  // namespace cma::cfg
 
 namespace cma::cfg::details {
-std::filesystem::path G_SolutionPath = SOLUTION_DIR;
 
 void LoadGlobal() {
     groups::global.loadFromMainConfig();
@@ -548,8 +546,8 @@ std::filesystem::path ExtractPathFromServiceName(
         auto p = service_path.parent_path();
         return p.lexically_normal();
     } else {
-        XLOG::l("'{}' doesn't exist, error_code: [{}] '{}'",
-                service_path, ec.value(), ec.message());
+        XLOG::l("'{}' doesn't exist, error_code: [{}] '{}'", service_path,
+                ec.value(), ec.message());
     }
     return {};
 }
@@ -915,8 +913,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
 
             // file is loaded, write info in config file
             fs::path root_yaml = GetRootDir();
-            XLOG::l("Loaded {} file, ONLY FOR debug/test mode",
-                    root_yaml);
+            XLOG::l("Loaded {} file, ONLY FOR debug/test mode", root_yaml);
 
             // exit because full path
             return true;
@@ -935,8 +932,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
     if (code >= 0) return true;
 
     XLOG::l.e("Failed usable_name: '{}' at root: '{}' code is '{}'",
-              wtools::ConvertToUTF8(usable_name),
-              GetCfg().getRootDir(), code);
+              wtools::ConvertToUTF8(usable_name), GetCfg().getRootDir(), code);
 
     return false;
 }
@@ -1886,8 +1882,8 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
     const fs::path& fpath = file;
     std::error_code ec;
     if (!fs::exists(fpath, ec)) {
-        XLOG::l("File {} not found, code = [{}] '{}'", fpath,
-                ec.value(), ec.message());
+        XLOG::l("File {} not found, code = [{}] '{}'", fpath, ec.value(),
+                ec.message());
         return false;
     }
     auto ftime = fs::last_write_time(fpath, ec);
@@ -2074,8 +2070,8 @@ std::filesystem::path CreateWmicUninstallFile(
         XLOG::l("Attempt to create '{}' file is failed", file);
         return {};
     } catch (const std::exception& e) {
-        XLOG::l("Attempt to create '{}' file is failed with exception {}",
-                file, e.what());
+        XLOG::l("Attempt to create '{}' file is failed with exception {}", file,
+                e.what());
     }
 
     return {};

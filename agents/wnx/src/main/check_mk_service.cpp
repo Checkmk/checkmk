@@ -25,8 +25,6 @@
 #include "logger.h"
 #include "providers/perf_counters_cl.h"
 
-std::filesystem::path G_ProjectPath = PROJECT_DIR_CMK_SERVICE;
-
 namespace cma::cmdline {
 
 void PrintBlock(std::string_view title, xlog::internal::Colors title_color,
@@ -453,22 +451,6 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
 
         return cma::provider::RunPerf(prefix, id, port, ToInt(timeout, 20),
                                       counters);
-    }
-
-    if (0) {
-        // this code is enabled only during testing and debugging
-        auto path = G_ProjectPath;
-        for (;;) {
-            auto yml_test_file =
-                G_ProjectPath / "data" / "check_mk.example.yml";
-            try {
-                YAML::Node config = YAML::LoadFile(yml_test_file.u8string());
-            } catch (const std::exception &e) {
-                XLOG::l(XLOG_FLINE + " exception %s", e.what());
-            } catch (...) {
-                XLOG::l(XLOG::kBp)(XLOG_FLINE + " exception bad");
-            }
-        }
     }
 
     using namespace cma::cmdline;

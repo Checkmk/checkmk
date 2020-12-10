@@ -552,10 +552,7 @@ class TopologyCentralNode extends node_visualization_viewport_utils.TopologyNode
         this.selection.append("circle").attr("r", this.radius).classed("topology_center", true);
         this.selection
             .append("svg:image")
-            .attr(
-                "xlink:href",
-                this.viewport.main_instance.get_theme_prefix() + "/images/logo_cmk_small.png"
-            )
+            .attr("xlink:href", "themes/facelift/images/logo_cmk_small.png")
             .attr("x", -25)
             .attr("y", -25)
             .attr("width", 50)
@@ -578,10 +575,7 @@ class TopologySiteNode extends node_visualization_viewport_utils.TopologyNode {
         this.selection.append("circle").attr("r", this.radius).classed("topology_remote", true);
         this.selection
             .append("svg:image")
-            .attr(
-                "xlink:href",
-                this.viewport.main_instance.get_theme_prefix() + "/images/icon_sites.svg"
-            )
+            .attr("xlink:href", "themes/facelift/images/icon_sites.svg")
             .attr("x", -15)
             .attr("y", -15)
             .attr("width", 30)
@@ -693,7 +687,6 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
 
     get_context_menu_elements() {
         let elements = [];
-        let theme_prefix = this.viewport.main_instance.get_theme_prefix();
 
         // Local actions
         // TODO: provide aggregation ID (if available)
@@ -701,7 +694,7 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
         //        // This is the aggregation root node
         //            elements.push({text: "Edit aggregation (Missing: You need to configure an ID for this aggregation)", href: "wato.py?mode=bi_edit_rule&id=" + this.node.data.rule_id.rule +
         //               "&pack=" + this.node.data.rule_id.pack,
-        //               img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_edit.png"})
+        //               img: utils.get_theme() + "/images/icon_edit.png"})
 
         elements.push({
             text: "Edit rule",
@@ -710,7 +703,7 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
                 this.node.data.rule_id.rule +
                 "&pack=" +
                 this.node.data.rule_id.pack,
-            img: theme_prefix + "/images/icon_edit.png",
+            img: "themes/facelift/images/icon_edit.png",
         });
 
         if (this.node.children != this.node._children)
@@ -723,7 +716,7 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
                     this.viewport.update_layers();
                 },
                 href: "",
-                img: theme_prefix + "/images/icon_expand.png",
+                img: "themes/facelift/images/icon_expand.png",
             });
         else
             elements.push({
@@ -733,7 +726,7 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
                     this.collapse_node();
                 },
                 href: "",
-                img: theme_prefix + "/images/icon_collapse.png",
+                img: "themes/facelift/images/icon_collapse.png",
             });
 
         elements.push({
@@ -745,7 +738,7 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
                 this.viewport.update_layers();
             },
             href: "",
-            img: theme_prefix + "/images/icon_expand.png",
+            img: "themes/facelift/images/icon_expand.png",
         });
 
         elements.push({
@@ -756,7 +749,7 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
                 this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
                 this.viewport.update_layers();
             },
-            img: theme_prefix + "/images/icon_error.png",
+            img: "themes/facelift/images/icon_error.png",
         });
         return elements;
     }

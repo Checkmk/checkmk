@@ -354,7 +354,7 @@ export class LayoutStyleConfiguration {
         //        style_matcher.append("br")
         //        style_matcher.append("br")
         //
-        //        let theme_prefix = this.layout_manager.viewport.main_instance.get_theme_prefix()
+        //        let theme_prefix = utils.get_theme()
         //        let matcher_topics = [
         //            {id: "basic_matchers", text: "Basic matching", default_open: true},
         //            {id: "advanced_matchers", text: "Advanced matching", default_open: false},
@@ -598,11 +598,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         selection.style("cursor", "pointer");
         selection
             .append("img")
-            .attr(
-                "src",
-                this.layout_manager.viewport.main_instance.get_theme_prefix() +
-                    "/images/icon_aggr.svg"
-            )
+            .attr("src", "themes/facelift/images/icon_aggr.svg")
             .attr("title", "Layout Designer")
             .style("opacity", 1);
     }
@@ -847,13 +843,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             .classed("box", true)
             .attr("id", d => d.id)
             .attr("title", d => d.title)
-            .attr(
-                "src",
-                d =>
-                    this.layout_manager.viewport.main_instance.get_theme_prefix() +
-                    "/images/" +
-                    d.icon
-            )
+            .attr("src", d => "themes/facelift/images/" + d.icon)
             .on("click", d => d.handler())
             .merge(icon_selection);
 
@@ -1294,18 +1284,14 @@ class LayoutApplier {
                     text: "Convert to " + style.prototype.description(),
                     on: () => this._convert_node(node, style),
                     href: "",
-                    img:
-                        this.layout_manager.viewport.main_instance.get_theme_prefix() +
-                        "/images/icon_aggr.svg",
+                    img: "themes/facelift/images/icon_aggr.svg",
                 });
             } else {
                 elements.push({
                     text: "Convert all nodes to " + style.prototype.description(),
                     on: () => this._convert_all(style),
                     href: "",
-                    img:
-                        this.layout_manager.viewport.main_instance.get_theme_prefix() +
-                        "/images/icon_aggr.svg",
+                    img: "themes/facelift/images/icon_aggr.svg",
                 });
             }
         }
@@ -1314,9 +1300,7 @@ class LayoutApplier {
                 text: "Remove style",
                 on: () => this._convert_node(node, null),
                 href: "",
-                img:
-                    this.layout_manager.viewport.main_instance.get_theme_prefix() +
-                    "/images/icon_aggr.svg",
+                img: "themes/facelift/images/icon_aggr.svg",
             });
         }
 

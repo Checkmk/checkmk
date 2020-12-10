@@ -1083,19 +1083,18 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
     generate_overlay() {
         if (!this._layout_manager.edit_layout) return;
 
-        let theme_prefix = this._layout_manager.viewport.main_instance.get_theme_prefix();
         this.add_enclosing_hull(this.selection, this._vertices);
         let elements = [
             {
                 node: this.style_root_node,
                 type: "scale",
-                image: theme_prefix + "/images/icon_resize.png",
+                image: "themes/facelift/images/icon_resize.png",
                 call: this.get_drag_callback(() => this.resize_layer_drag()),
             },
             {
                 node: this.style_root_node,
                 type: "rotation",
-                image: theme_prefix + "/images/icon_rotate_left.png",
+                image: "themes/facelift/images/icon_rotate_left.png",
                 call: this.get_drag_callback(() => this.change_rotation()),
             },
         ];
@@ -1396,24 +1395,23 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this.add_optional_transition(path).attr("d", arc).style("opacity", null);
 
         // Icons
-        let theme_prefix = this._layout_manager.viewport.main_instance.get_theme_prefix();
         let elements = [
             {
                 node: this.style_root_node,
                 type: "radius",
-                image: theme_prefix + "/images/icon_resize.png",
+                image: "themes/facelift/images/icon_resize.png",
                 call: this.get_drag_callback(() => this.change_radius()),
             },
             {
                 node: this.style_root_node,
                 type: "rotation",
-                image: theme_prefix + "/images/icon_rotate_left.png",
+                image: "themes/facelift/images/icon_rotate_left.png",
                 call: this.get_drag_callback(() => this.change_rotation()),
             },
             {
                 node: this.style_root_node,
                 type: "degree",
-                image: theme_prefix + "/images/icon_pie_chart.png",
+                image: "themes/facelift/images/icon_pie_chart.png",
                 call: this.get_drag_callback(() => this.change_degree()),
             },
         ];

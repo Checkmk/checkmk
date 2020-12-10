@@ -157,10 +157,7 @@ export class AbstractGUINode {
             .enter()
             .append("svg:image")
             .classed("acknowledged", true)
-            .attr(
-                "xlink:href",
-                this.viewport.main_instance.get_theme_prefix() + "/images/icon_ack.png"
-            )
+            .attr("xlink:href", "themes/facelift/images/icon_ack.png")
             .attr("x", -24)
             .attr("y", this.radius - 8)
             .attr("width", 24)
@@ -174,10 +171,7 @@ export class AbstractGUINode {
             .enter()
             .append("svg:image")
             .classed("in_downtime", true)
-            .attr(
-                "xlink:href",
-                this.viewport.main_instance.get_theme_prefix() + "/images/icon_downtime.png"
-            )
+            .attr("xlink:href", "themes/facelift/images/icon_downtime.png")
             .attr("x", 0)
             .attr("y", this.radius - 8)
             .attr("width", 24)
@@ -262,7 +256,7 @@ export class AbstractGUINode {
         elements.push({
             text: "Details of Host",
             href: "view.py?host=" + encodeURIComponent(this.node.data.hostname) + "&view_name=host",
-            img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.svg",
+            img: "themes/facelift/images/icon_status.svg",
         });
         if (this.node.data.service && this.node.data.service != "") {
             elements.push({
@@ -273,7 +267,7 @@ export class AbstractGUINode {
                     "&service=" +
                     encodeURIComponent(this.node.data.service) +
                     "&view_name=service",
-                img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.svg",
+                img: "themes/facelift/images/icon_status.svg",
             });
         }
 
@@ -416,10 +410,7 @@ export class AbstractGUINode {
                 .append("img")
                 .classed("icon", true)
                 .classed("reloading", true)
-                .attr(
-                    "src",
-                    this.viewport.main_instance.get_theme_prefix() + "/images/load_graph.png"
-                );
+                .attr("src", "themes/facelift/images/load_graph.png");
         else this._quickinfo_selection.selectAll(".icon.reloading").remove();
 
         this.update_quickinfo_position();
@@ -592,10 +583,7 @@ export class TopologyNode extends AbstractGUINode {
                 .enter()
                 .append("svg:image")
                 .classed("growth_possible", true)
-                .attr(
-                    "xlink:href",
-                    this.viewport.main_instance.get_theme_prefix() + "/images/icon_hierarchy.svg"
-                )
+                .attr("xlink:href", "themes/facelift/images/icon_hierarchy.svg")
                 .attr("width", 16)
                 .attr("height", 16)
                 .attr("x", -8)
@@ -611,10 +599,7 @@ export class TopologyNode extends AbstractGUINode {
                 .enter()
                 .append("svg:image")
                 .classed("growth_forbidden", true)
-                .attr(
-                    "xlink:href",
-                    this.viewport.main_instance.get_theme_prefix() + "/images/icon_no_entry.svg"
-                )
+                .attr("xlink:href", "themes/facelift/images/icon_no_entry.svg")
                 .attr("width", 16)
                 .attr("height", 16)
                 .attr("x", -28)

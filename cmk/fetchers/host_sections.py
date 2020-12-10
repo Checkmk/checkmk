@@ -6,11 +6,11 @@
 
 import abc
 import logging
-from typing import cast, Dict, Generic, List, MutableMapping, Optional, TypeVar
+from typing import Callable, cast, Dict, Generic, List, Mapping, MutableMapping, Optional, TypeVar
 
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.fetchers.cache import PersistedSections, TRawDataSection
+from cmk.fetchers.cache import PersistedSections, SectionStore, TRawDataSection
 
 from .type_defs import NO_SELECTION, SectionCacheInfo, SectionNameCollection
 
@@ -87,7 +87,26 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
         if host_sections.cache_info:
             self.cache_info.update(host_sections.cache_info)
 
-    def add_cache_info(
+    def add_persisted_sections(
+        self,
+        sections: Mapping[SectionName, TRawDataSection],
+        *,
+        section_store: SectionStore[TRawDataSection],
+        fetch_interval: Callable[[SectionName], Optional[int]],
+        cached_at: int,
+        keep_outdated: bool,
+        logger: logging.Logger,
+    ) -> None:
+        persisted_sections = PersistedSections[TRawDataSection].from_sections(
+            sections,
+            {section_name: fetch_interval(section_name) for section_name in sections},
+            cached_at=cached_at,
+        )
+        persisted_sections.update_and_store(section_store, keep_outdated=keep_outdated)
+        self._add_cache_info(persisted_sections)
+        self._add_persisted_sections(persisted_sections, logger=logger)
+
+    def _add_cache_info(
         self,
         persisted_sections: PersistedSections[TRawDataSection],
     ) -> None:
@@ -103,7 +122,7 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
             if section_name not in self.sections
         })
 
-    def add_persisted_sections(
+    def _add_persisted_sections(
         self,
         persisted_sections: PersistedSections[TRawDataSection],
         *,

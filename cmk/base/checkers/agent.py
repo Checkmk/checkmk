@@ -43,7 +43,7 @@ from cmk.utils.type_defs import (
 from cmk.utils.werks import parse_check_mk_version
 
 from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
-from cmk.fetchers.cache import PersistedSections, SectionStore
+from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
@@ -661,29 +661,12 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             cached_at=cached_at,
             cache_age=cache_age,
         )
-
-        # TODO(ml): The logic here is _almost_ the same as for the Agent.
-        #           We should make it *exactly* the same by moving the
-        #           filtering logic into the parser and then factor the
-        #           remaining code into a single class such that:
-        #              check = fetch >> parse >> cache [the missing class] >> summarize
-        #
-        #           See Also:
-        #              comments in HostSections.
-        #
-
-        def fetch_interval(section_name: SectionName) -> Optional[int]:
-            return parser.section_info[section_name].persist
-
-        persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
-            host_sections.sections,
-            {section_name: fetch_interval(section_name) for section_name in host_sections.sections},
-            cached_at=cached_at,
-        )
-        persisted_sections.update_and_store(self.section_store, keep_outdated=self.keep_outdated)
-        host_sections.add_cache_info(persisted_sections)
         host_sections.add_persisted_sections(
-            persisted_sections,
+            host_sections.sections,
+            section_store=self.section_store,
+            fetch_interval=lambda section_name: parser.section_info[section_name].persist,
+            cached_at=cached_at,
+            keep_outdated=self.keep_outdated,
             logger=self._logger,
         )
         return host_sections.filter(selection)

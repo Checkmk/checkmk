@@ -14,7 +14,7 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheck
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
 
 from cmk.fetchers import FetcherType, SNMPFetcher
-from cmk.fetchers.cache import PersistedSections, SectionStore
+from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.snmp import SectionMeta, SNMPFileCache, SNMPPluginStore, SNMPPluginStoreItem
 from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
 
@@ -284,16 +284,6 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
     ) -> SNMPHostSections:
         selection = NO_SELECTION  # Selection is done in the fetcher for SNMP.
         host_sections = SNMPHostSections(dict(raw_data))
-
-        # TODO(ml): The logic here is _almost_ the same as for the Agent.
-        #           We should make it *exactly* the same by moving the
-        #           filtering logic into the parser and then factor the
-        #           remaining code into a single class such that:
-        #              check = fetch >> parse >> cache [the missing class] >> summarize
-        #
-        #           See Also:
-        #              comments in HostSections.
-        #
         cached_at = int(time.time())
 
         def fetch_interval(section_name: SectionName) -> Optional[int]:
@@ -302,15 +292,12 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
                 return fetch_interval
             return cached_at + fetch_interval
 
-        persisted_sections = PersistedSections[SNMPRawDataSection].from_sections(
-            raw_data,
-            {section_name: fetch_interval(section_name) for section_name in raw_data},
-            cached_at=cached_at,
-        )
-        persisted_sections.update_and_store(self.section_store, keep_outdated=self.keep_outdated)
-        host_sections.add_cache_info(persisted_sections)
         host_sections.add_persisted_sections(
-            persisted_sections,
+            raw_data,
+            section_store=self.section_store,
+            fetch_interval=fetch_interval,
+            cached_at=cached_at,
+            keep_outdated=self.keep_outdated,
             logger=self._logger,
         )
         return host_sections.filter(selection)

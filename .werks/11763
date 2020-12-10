@@ -1,0 +1,12 @@
+Title: Do not clear changes when editing central site configuration
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1607612957
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+Previously editing the central site settings in a distributed setup cleared all
+pending changes of this site.

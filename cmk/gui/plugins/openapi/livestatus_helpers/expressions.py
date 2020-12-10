@@ -376,12 +376,14 @@ def tree_to_expr(filter_dict) -> QueryExpression:
         Filter(name = example.com)
 
         >>> tree_to_expr({'op': 'and', \
-                          'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
-        And(Filter(name = example.com),)
+                          'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \
+                          {'op': '=', 'left': 'hosts.state', 'right': 0}]})
+        And(Filter(name = example.com), Filter(state = 0))
 
         >>> tree_to_expr({'op': 'or', \
-                          'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
-        Or(Filter(name = example.com),)
+                          'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \
+                          {'op': '=', 'left': 'hosts.name', 'right': 'heute'}]})
+        Or(Filter(name = example.com), Filter(name = heute))
 
         >>> tree_to_expr({'op': 'not', \
                           'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
@@ -417,10 +419,10 @@ def tree_to_expr(filter_dict) -> QueryExpression:
         )
 
     if op == 'and':
-        return And(tree_to_expr(filter_dict['expr']))
+        return And(*[tree_to_expr(expr) for expr in filter_dict['expr']])
 
     if op == 'or':
-        return Or(tree_to_expr(filter_dict['expr']))
+        return Or(*[tree_to_expr(expr) for expr in filter_dict['expr']])
 
     if op == 'not':
         return Not(tree_to_expr(filter_dict['expr']))

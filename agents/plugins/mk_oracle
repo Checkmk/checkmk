@@ -3009,7 +3009,11 @@ for sid in $SIDS; do
     (execute_queries_for_sid "$sid" > "$ORA_TMPDIR/$sid") &
     if [[ $(jobs -r -p | wc -l) -ge ${MAX_TASKS} ]]; then
         logging "[${sid}] [local] max parallel task running, waiting for new slot"
-        wait -n
+        if (( BASH_VERSINFO[0] > 4 || BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 3 )); then
+            wait -n
+        else
+            wait
+        fi
     fi
 done
 

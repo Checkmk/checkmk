@@ -12,6 +12,11 @@ import pytest  # type: ignore[import]
 import sys
 from utils import import_module
 
+try:
+    from collections import OrderedDict
+except ImportError:  # Python2
+    from ordereddict import OrderedDict  # type: ignore
+
 
 def configparser_library_name():
     python_version = sys.version_info
@@ -173,12 +178,14 @@ class TestConfigParsing:
     def config_options(self):
         return [
             ('banana', 'input_patterns', '/home/banana/*'),
+            ('penguin@banana', 'grouping_regex', '/home/banana/penguin*'),
+            ('camel@banana', 'grouping_regex', '/home/banana/camel'),
             ('strawberry', 'input_patterns', '/var/log/*'),
         ]
 
     @pytest.fixture
     def mocked_configparser(self, mk_filestats, config_options):
-        parser = MockConfigParser(mk_filestats.DEFAULT_CFG_SECTION)
+        parser = MockConfigParser(mk_filestats.DEFAULT_CFG_SECTION, dict_type=OrderedDict)
         for section, option, value in config_options:
             parser.add_section(section)
             parser.set(section, option, value)
@@ -201,10 +208,23 @@ class TestConfigParsing:
         assert sorted([r[0] for r in actual_results]) == ['banana', 'strawberry']
 
         for section, config_dict in [r for r in actual_results if r[0] == 'banana']:
-            assert len(config_dict.items()) == 3
+            assert len(config_dict.items()) == 4
             assert config_dict['input_patterns'] == '/home/banana/*'
             assert config_dict['output'] == 'file_stats'
             assert config_dict['subgroups_delimiter'] == '@'
+
+            # test that the order is preserved
+            assert config_dict['grouping'][0][0] == 'penguin'
+            assert config_dict['grouping'][1][0] == 'camel'
+
+            assert sorted(config_dict['grouping'][0][1].items()) == [
+                ('rule', '/home/banana/penguin*'),
+                ('type', 'regex'),
+            ]
+            assert sorted(config_dict['grouping'][1][1].items()) == [
+                ('rule', '/home/banana/camel'),
+                ('type', 'regex'),
+            ]
 
         for section, config_dict in [r for r in actual_results if r[0] == 'strawberry']:
             assert len(config_dict.items()) == 3

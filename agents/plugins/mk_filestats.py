@@ -107,6 +107,11 @@ try:
 except ImportError:  # Python2
     import ConfigParser as configparser  # type: ignore
 
+try:
+    from collections import OrderedDict
+except ImportError:  # Python2
+    from ordereddict import OrderedDict  # type: ignore
+
 
 def ensure_str(s):
     if sys.version_info[0] >= 3:
@@ -395,6 +400,29 @@ def iter_filtered_files(file_filters, iterator):
 #   '----------------------------------------------------------------------'
 
 
+def parse_grouping_config(
+    config,
+    section_name,
+    options,
+    subgroups_delimiter,
+):
+    group_name, parent_group_name = section_name.split(subgroups_delimiter, 1)
+
+    for option in options:
+        if option.startswith('grouping_'):
+            grouping_type = option.split('_', 1)[1]
+            grouping_rule = config.get(section_name, option)
+
+    LOGGER.info('found subgroup: %s', section_name)
+    return parent_group_name, (
+        group_name,
+        {
+            'type': grouping_type,
+            'rule': grouping_rule,
+        },
+    )
+
+
 def grouping_single_group(section_name, files_iter):
     """create one single group per section"""
     yield section_name, files_iter
@@ -499,7 +527,12 @@ def write_output(groups, output_aggregator):
 def iter_config_section_dicts(cfg_file=None):
     if cfg_file is None:
         cfg_file = DEFAULT_CFG_FILE
-    config = configparser.ConfigParser(DEFAULT_CFG_SECTION)
+    # use OrderedDict for Python 2.6 compatibility: default type is a normal dict,
+    # which is unfortunately not insertion-ordered in Python 2.6
+    config = configparser.ConfigParser(
+        DEFAULT_CFG_SECTION,
+        dict_type=OrderedDict,
+    )
     LOGGER.debug("trying to read %r", cfg_file)
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %r", files_read)
@@ -510,6 +543,20 @@ def iter_config_section_dicts(cfg_file=None):
         subgroups_delimiter = config.get(section_name, 'subgroups_delimiter')
         if subgroups_delimiter not in section_name:
             parsed_config[section_name] = {k: config.get(section_name, k) for k in options}
+            continue
+        parent_group_name, parsed_grouping_config = parse_grouping_config(
+            config,
+            section_name,
+            options,
+            subgroups_delimiter,
+        )
+        # TODO: The below suppressions are due to the fact that typing the parsed config properly
+        # requires a more sophisticated type (perhaps a class) and a bigger refactoring to validate
+        # the options and dispatch immediately after parsing is complete.
+        parsed_config[parent_group_name].setdefault(
+            'grouping',
+            [],  # type: ignore[arg-type]
+        ).append(parsed_grouping_config)  # type: ignore[attr-defined]
 
     for section_name, parsed_option in parsed_config.items():
         yield section_name, parsed_option

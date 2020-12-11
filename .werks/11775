@@ -1,0 +1,15 @@
+Title: Services disappearing during discvoery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607694021
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+Under certain timing conditions it could happen that services would
+vanish immediately after, or even during a full scan in the WATO
+services page.
+
+This was due to the datasource writing empty cache files.

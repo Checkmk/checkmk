@@ -8,3 +8,4 @@ from cmk.gui.plugins.openapi.livestatus_helpers.tables.hostgroups import Hostgro
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.services import Services
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.servicegroups import Servicegroups
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
+from cmk.gui.plugins.openapi.livestatus_helpers.tables.status import Status

@@ -1,0 +1,19 @@
+Title: Quicksearch: add host and service label capabilites
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1607696097
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b2
+
+This werk extends the quicksearch by the following two commands:
+<ul>
+<li><tt>hl</tt>: search for hosts using host labels.</li>
+<li><tt>sl</tt>: search for services using service labels.</li>
+</ul>
+In both cases, labels have to entered in the format <tt>[KEY]:[VALUE]</tt>,
+for example <tt>os:windows</tt>. These two new commands can also be
+combined with each other and with already existing commands.

@@ -10,7 +10,19 @@ In the future all inventory code should be moved to this module."""
 
 import os
 from contextlib import suppress
-from typing import Dict, Hashable, List, Literal, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    Dict,
+    Hashable,
+    Iterable,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -362,9 +374,7 @@ def _do_inv_for_realhost(
                 str(inventory_plugin.inventory_ruleset_name))  # TODO (mo): keep type!
 
         exception = tree_aggregator.aggregate_results(
-            inventory_plugin.inventory_function(**kwargs),
-            inventory_plugin.name,
-        )
+            inventory_plugin.inventory_function(**kwargs),)
         if exception:
             console.warning(" %s%s%s%s: failed: %s", tty.red, tty.bold, inventory_plugin.name,
                             tty.normal, exception)
@@ -393,29 +403,47 @@ class _TreeAggregator:
             status_data=StructuredDataTree(),
         )
         self._index_cache = {}
+        self._class_mutex = {}
 
     def aggregate_results(
         self,
         inventory_generator: InventoryResult,
-        plugin_name: InventoryPluginName,
     ) -> Optional[Exception]:
 
         try:
-            inventory_items = list(inventory_generator)
+            table_rows, attributes = self._dispatch(inventory_generator)
         except Exception as exc:
             if cmk.utils.debug.enabled():
                 raise
             return exc
 
-        for item in inventory_items:
-            if isinstance(item, Attributes):
-                self._integrate_attributes(item)
-            elif isinstance(item, TableRow):
-                self._integrate_table_row(item)
-            else:  # can't happen
-                raise NotImplementedError()
+        for tabr in table_rows:
+            self._integrate_table_row(tabr)
+        for attr in attributes:
+            self._integrate_attributes(attr)
 
         return None
+
+    def _dispatch(
+        self,
+        intentory_items: Iterable[Union[TableRow, Attributes]],
+    ) -> Tuple[Sequence[TableRow], Sequence[Attributes]]:
+        attributes = []
+        table_rows = []
+        for item in intentory_items:
+            expected_class_name = self._class_mutex.setdefault(tuple(item.path),
+                                                               item.__class__.__name__)
+            if item.__class__.__name__ != expected_class_name:
+                raise TypeError(f"Cannot create {item.__class__.__name__} at path {item.path}:"
+                                f" this is a {expected_class_name} node.")
+            if isinstance(item, Attributes):
+                attributes.append(item)
+            elif isinstance(item, TableRow):
+                table_rows.append(item)
+            else:
+                raise NotImplementedError()  # can't happen, inventory results are filtered
+
+        return table_rows, attributes
 
     def _integrate_attributes(
         self,

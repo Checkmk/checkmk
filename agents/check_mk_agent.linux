@@ -56,6 +56,28 @@ SPOOLDIR=$MK_VARDIR/spool
 # When the nodes agent is executed by a e.g. docker node in a container,
 # then don't close stdin, because the agent is piped through it in this
 # case.
+
+read_python3_version() {
+    if command -v python3 >/dev/null 2>&1; then
+        python3_minor_version="$(python3 -c 'import sys; print(sys.version_info[1])')"
+        if [ "$python3_minor_version" -ge 4 ]; then
+            echo "$python3_minor_version"
+        fi
+    fi
+}
+read_python2_version() {
+    if command -v python2 >/dev/null 2>&1; then
+        python2 -c 'import sys; print(sys.version_info[1])'
+        return
+    fi
+    if command -v python >/dev/null 2>&1; then
+        python -c 'import sys; print(sys.version_info[1])'
+        return
+    fi
+}
+PYTHON3=$(read_python3_version)
+PYTHON2=$(read_python2_version)
+
 if [ "$1" = -d ]; then
     set -xv
 elif [ -z "$MK_FROM_NODE" ]; then
@@ -1096,13 +1118,13 @@ run_plugins() {
     if cd "$PLUGINSDIR"; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
-                ./"$skript"
+                run_agent_plugin "$skript"
             fi
         done
         # Call some plugins only every Xth second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
-                run_cached "plugins_${skript//\//\\}" "${skript%/*}" "$skript"
+                run_cached "plugins_${skript//\//\\}" "${skript%/*}" run_agent_plugin "$skript"
             fi
         done
     fi
@@ -1123,6 +1145,38 @@ run_mrpe() {
 }
 
 export -f run_mrpe
+
+run_agent_plugin() {
+    if [ "${1:(0):(2)}" == "./" ]; then
+        agent_plugin="${1:2}"
+    else
+        agent_plugin="$1"
+    fi
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+
+    # Execute all non python plugins with ./foo
+    if [ "$extension" != "py" ]; then
+        ./"$agent_plugin"
+        return
+    fi
+
+    if [ "${filename:(-2):(2)}" != "_2" ]; then
+        if [ -n "$PYTHON3" ]; then
+            ./"$agent_plugin"
+            return
+        fi
+        return
+    fi
+
+    if [ -x "${filename::-2}.py" ] && [ -n "$PYTHON3" ]; then
+        return
+    fi
+
+    if [ -n "$PYTHON2" ]; then
+        ./"$agent_plugin"
+    fi
+}
 
 # Runs a command asynchronous by use of a cache file. Usage:
 # run_cached [-s] NAME MAXAGE
@@ -1277,9 +1331,9 @@ run_real_time_checks() {
                     date +%s | tr -d '\n'
                     if [ "$ENCRYPTED_RT" != "no" ]; then
                         export RTC_SECRET=$RTC_SECRET
-                        ./$PLUGIN | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                        run_agent_plugin "$PLUGIN" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
                     else
-                        ./"$PLUGIN"
+                        run_agent_plugin "$PLUGIN"
                     fi
                 } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
             done

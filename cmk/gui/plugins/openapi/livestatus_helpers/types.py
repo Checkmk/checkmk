@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from typing import List, Literal, Optional, Type
+from typing import List, Literal, Optional, Type, Any, Dict
 
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
     BinaryExpression,
@@ -13,9 +13,11 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
     Not,
     QueryExpression,
     ScalarExpression,
+    NothingExpression,
 )
 
 LivestatusType = Literal["string", "int", "float", "list", "dict", "time", "blob"]
+ExpressionDict = Dict[str, Any]
 
 
 class Table(abc.ABC):
@@ -199,7 +201,7 @@ class Column:
 def expr_to_tree(
     table: Type[Table],
     query_expr: QueryExpression,
-):
+) -> Optional[ExpressionDict]:
     """Transform the query-expression to a dict-tree.
 
     Examples:
@@ -234,5 +236,8 @@ def expr_to_tree(
 
     if isinstance(query_expr, Not):
         return {'op': 'not', 'expr': expr_to_tree(table, query_expr.other)}
+
+    if isinstance(query_expr, NothingExpression):
+        return None
 
     raise ValueError(f"Unsupported expression: {query_expr!r}")

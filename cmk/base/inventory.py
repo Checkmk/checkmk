@@ -371,7 +371,7 @@ def _do_inv_for_realhost(
         # These are configured via rule sets (much like check parameters).
         if inventory_plugin.inventory_ruleset_name is not None:
             kwargs["params"] = host_config.inventory_parameters(
-                str(inventory_plugin.inventory_ruleset_name))  # TODO (mo): keep type!
+                inventory_plugin.inventory_ruleset_name)
 
         exception = tree_aggregator.aggregate_results(
             inventory_plugin.inventory_function(**kwargs),)

@@ -2844,9 +2844,9 @@ class HostConfig:
 
         return True
 
-    def inventory_parameters(self, section_name: str) -> Dict:
+    def inventory_parameters(self, ruleset_name: RuleSetName) -> Dict:
         return self._config_cache.host_extra_conf_merged(self.hostname,
-                                                         inv_parameters.get(section_name, []))
+                                                         inv_parameters.get(str(ruleset_name), []))
 
     @property
     def inventory_export_hooks(self) -> List[Tuple[str, Dict]]:

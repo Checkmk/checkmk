@@ -49,7 +49,7 @@ class SelectionType(enum.Enum):
 
 SectionNameCollection = Union[SelectionType, Set[SectionName]]
 # If preselected sections are given, we assume that we are interested in these
-# and only these sections, so we may omit others and in the SNMP case (TODO (mo))
+# and only these sections, so we may omit others and in the SNMP case
 # must try to fetch them (regardles of detection).
 
 NO_SELECTION: Final = SelectionType.NONE

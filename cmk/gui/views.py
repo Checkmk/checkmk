@@ -13,11 +13,12 @@ import pprint
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Set
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Set, cast
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
 import livestatus
+from cmk.gui.plugins.openapi.utils import create_url
 from livestatus import SiteId
 
 import cmk.utils.paths
@@ -64,6 +65,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
 # Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
     get_icons, get_multisite_icons, iconpainter_columns, multisite_icons_and_actions,
 )
@@ -1826,12 +1828,37 @@ def process_view(view_renderer: ABCViewRenderer) -> None:
 
 def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
     all_active_filters = _get_view_filters(view_renderer.view)
-    unfiltered_amount_of_rows, rows = _get_view_rows(view_renderer.view,
-                                                     all_active_filters,
-                                                     only_count=False)
+    with livestatus.intercept_queries() as queries:
+        unfiltered_amount_of_rows, rows = _get_view_rows(
+            view_renderer.view,
+            all_active_filters,
+            only_count=False,
+        )
     if html.output_format != "html":
         _export_view(view_renderer.view, rows)
     else:
+        entries = []
+        for text_query in queries:
+            query = Query.from_string(text_query)
+            table = cast(str, query.table.__tablename__)
+            if table != "hosts":
+                continue
+            url = create_url(config.omd_site(), query)
+            entries.append(
+                PageMenuEntry(
+                    title=_("Query %s resource") % table,
+                    icon_name="filter",
+                    item=make_simple_link(url),
+                ))
+
+        view_renderer.append_menu_topic(
+            dropdown='export',
+            topic=PageMenuTopic(
+                title="REST-API",
+                entries=entries,
+            ),
+        )
+
         _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 

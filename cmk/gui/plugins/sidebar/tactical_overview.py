@@ -375,7 +375,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Stats: event_host_in_downtime != 1\n"
             "StatsAnd: 3\n" + ec_filters + context_filters)
 
-        return event_query
+        # Do not mark the site as dead in case the Event Console is not available.
+        return livestatus.Query(event_query,
+                                suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
+                                                     livestatus.MKLivestatusBadGatewayError))
 
     def _execute_stats_query(self, query, auth_domain="read", only_sites=None, deflt=None):
         try:

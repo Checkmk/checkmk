@@ -787,9 +787,6 @@ msgstr ", date nu au fost primite în ultimele %.1f intervale de verificate"
 msgid ", the first match skips this rule pack"
 msgstr ""
 
-msgid "-"
-msgstr ""
-
 msgid "-.-- %"
 msgstr ""
 
@@ -1197,6 +1194,12 @@ msgid ""
 "<br>Note: Some files may contain highly sensitive data like passwords. These "
 "files are marked with 'H'. Other files may include IP adresses, hostnames, "
 "usernames, mail adresses or phone numbers and are marked with 'M'."
+msgstr ""
+
+#, python-format
+msgid ""
+"<br>Please add customer portal credentials and subscription details in the "
+"<a href=\"%s\">subscription settings<a>."
 msgstr ""
 
 msgid ""
@@ -7504,6 +7507,9 @@ msgid ""
 "Cannot display this view in matrix layout. You need at least two columns!"
 msgstr ""
 
+msgid "Cannot download license usage report."
+msgstr ""
+
 #, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr ""
@@ -7629,6 +7635,10 @@ msgid "Cannot render image: %s"
 msgstr ""
 
 msgid "Cannot retrieve historic data with Nagios core"
+msgstr ""
+
+#, python-format
+msgid "Cannot submit license usage report to the Checkmk license server '%s'."
 msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
@@ -14109,6 +14119,10 @@ msgstr ""
 msgid "Do not show any service status border"
 msgstr ""
 
+#, fuzzy
+msgid "Do not show title"
+msgstr "Atribute personalizate"
+
 msgid "Do not status data inventory"
 msgstr ""
 
@@ -14546,7 +14560,7 @@ msgid "Download this report"
 msgstr ""
 
 #, fuzzy
-msgid "Download usage dump"
+msgid "Download usage report"
 msgstr "Descarca"
 
 #, fuzzy
@@ -17040,6 +17054,13 @@ msgstr ""
 
 #, python-format
 msgid "Failed to start the job: %s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Failed to submit the license usage report to the Checkmk license server '%s'."
+"<br>Please download it manually and upload it in the <a href=\"https://"
+"customer.checkmk.com\">Checkmk user portal<a> or send it to sales@tribe29.com"
 msgstr ""
 
 #, python-format
@@ -28917,6 +28938,10 @@ msgstr "Cautare"
 msgid "Navigation"
 msgstr "Agregare noua"
 
+#, fuzzy
+msgid "Navigation icons"
+msgstr "Agregare noua"
+
 #, python-format
 msgid "Need parent %s, but not allowed to create one"
 msgstr ""
@@ -38419,17 +38444,16 @@ msgstr "%d condiții"
 msgid "Set connection timeout"
 msgstr "Conexiune Noua"
 
-msgid ""
-"Set credentials for automatically submitting license usage reports to "
-"tribe29. The credentials are part of your subscription and can be found in "
-"your contract. These credentials are also used for downloading the Checkmk "
-"software versions from the tribe29 website."
-msgstr ""
-
 msgid "Set criticality host tag"
 msgstr ""
 
 msgid "Set custom theme"
+msgstr ""
+
+#, python-format
+msgid ""
+"Set customer portal credentials and subscription details for automatically "
+"submitting license usage reports to the Checkmk license server '%s'."
 msgstr ""
 
 msgid "Set default time range"
@@ -38549,12 +38573,6 @@ msgid "Set state to"
 msgstr ""
 
 msgid "Set states of IPMI sensor status texts"
-msgstr ""
-
-msgid ""
-"Set subscription details for automatically submitting license usage reports "
-"to tribe29. The details including start date, end date and sizing are part "
-"of your subscription and can be found in your contract."
 msgstr ""
 
 msgid ""
@@ -39139,6 +39157,10 @@ msgid ""
 "Show timestamp of a given file. You only need to specify the relative path "
 "of the remote file. Examples: 'myDirectory/testfile'  or 'testfile'"
 msgstr ""
+
+#, fuzzy
+msgid "Show title"
+msgstr "(fără titlu)"
 
 #, fuzzy
 msgid "Show title header"
@@ -41518,7 +41540,18 @@ msgstr ""
 msgid "Submit Report"
 msgstr ""
 
+#, fuzzy
+msgid "Submit license usage report"
+msgstr "% utilizare"
+
+#, fuzzy
+msgid "Submit usage report"
+msgstr "Adaugă element"
+
 msgid "Submitting crash report..."
+msgstr ""
+
+msgid "Submitting license usage report..."
 msgstr ""
 
 msgid "Subnet per DB subnet groups"
@@ -41595,6 +41628,10 @@ msgstr ""
 
 msgid "Successfully stored the report"
 msgstr ""
+
+#, fuzzy
+msgid "Successfully submitted the license usage report."
+msgstr "urca snapshot-uri nesigure"
 
 #, python-format
 msgid "Successfully updated IP addresses of %d hosts."
@@ -43457,6 +43494,12 @@ msgid ""
 "make sense for events that can be cancelled by a negative rule."
 msgstr ""
 
+msgid ""
+"The credentials are part of your subscription and can be found in your "
+"contract. These credentials are also used for downloading <a href=\"https://"
+"checkmk.de/download\">Checkmk<a>."
+msgstr ""
+
 msgid "The credentials for api calls with authentication."
 msgstr ""
 
@@ -43579,6 +43622,11 @@ msgid ""
 msgstr ""
 
 msgid "The description of the interface as provided by the device"
+msgstr ""
+
+msgid ""
+"The details including start date, end date and sizing are part of your "
+"subscription and can be found in your contract."
 msgstr ""
 
 #, python-format
@@ -53806,6 +53854,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"With this option you can define if icons in the navigation bar should show a "
+"title or not. This gives you the possibility to save some space in the UI."
+msgstr ""
+
+msgid ""
 "With this option you can implement rules that rule out certain message from "
 "the procession totally. Either you can totally abort further rule execution, "
 "or you can skip just the current rule pack and continue with the next one."
@@ -58096,10 +58149,6 @@ msgstr ""
 #~ msgstr " Parametrul este: %r"
 
 #, fuzzy
-#~ msgid "Just show graph title"
-#~ msgstr "Atribute personalizate"
-
-#, fuzzy
 #~ msgid "Last host check"
 #~ msgstr "<b>reprogramează o verificare imediată"
 
@@ -60420,10 +60469,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Successfully logged into remote site '%s'!"
 #~ msgstr "(Nu trimite site-ului de la distanță)"
-
-#, fuzzy
-#~ msgid "Successfully restored snapshot."
-#~ msgstr "urca snapshot-uri nesigure"
 
 #, fuzzy
 #~ msgid "Summary hosts"

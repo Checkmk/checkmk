@@ -804,9 +804,6 @@ msgstr ", innerhalb der letzten %.1f Checkperioden wurde keine Daten empfangen"
 msgid ", the first match skips this rule pack"
 msgstr ", der erste Treffer überspringt das Regelpaket"
 
-msgid "-"
-msgstr ""
-
 msgid "-.-- %"
 msgstr "-.-- %"
 
@@ -1226,6 +1223,12 @@ msgid ""
 "<br>Note: Some files may contain highly sensitive data like passwords. These "
 "files are marked with 'H'. Other files may include IP adresses, hostnames, "
 "usernames, mail adresses or phone numbers and are marked with 'M'."
+msgstr ""
+
+#, python-format
+msgid ""
+"<br>Please add customer portal credentials and subscription details in the "
+"<a href=\"%s\">subscription settings<a>."
 msgstr ""
 
 msgid ""
@@ -8085,6 +8088,9 @@ msgstr ""
 "Diese Ansicht ist nicht im Matrix-Layout anzeigbar. Sie brauchen mindestens "
 "zwei Spalten!"
 
+msgid "Cannot download license usage report."
+msgstr ""
+
 #, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr ""
@@ -8224,6 +8230,10 @@ msgstr "Kann Bild nicht darstellen: %s"
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Historische Daten vom Nagios Core können nicht abgerufen werden"
+
+#, python-format
+msgid "Cannot submit license usage report to the Checkmk license server '%s'."
+msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr ""
@@ -14911,6 +14921,10 @@ msgstr "Keine Zusammenfassung anzeigen"
 msgid "Do not show any service status border"
 msgstr "Reservierten Platz nicht anzeigen"
 
+#, fuzzy
+msgid "Do not show title"
+msgstr "Nicht den Graphtitel anzeigen"
+
 msgid "Do not status data inventory"
 msgstr "Führe keine Statusdaten-Inventur durch"
 
@@ -15362,8 +15376,8 @@ msgid "Download this report"
 msgstr "Diesen Bericht herunterladen"
 
 #, fuzzy
-msgid "Download usage dump"
-msgstr "Agentenausgabe herunterladen"
+msgid "Download usage report"
+msgstr "Diesen Bericht herunterladen"
 
 msgid "Downloaded Agent"
 msgstr "Heruntergeladener Agent"
@@ -17939,6 +17953,13 @@ msgstr "Eltern-Scan konnte nicht gestartet werden: %s"
 #, python-format
 msgid "Failed to start the job: %s"
 msgstr "Fehler beim Starten des Jobs: %s"
+
+#, python-format
+msgid ""
+"Failed to submit the license usage report to the Checkmk license server '%s'."
+"<br>Please download it manually and upload it in the <a href=\"https://"
+"customer.checkmk.com\">Checkmk user portal<a> or send it to sales@tribe29.com"
+msgstr ""
 
 #, python-format
 msgid "Failed to synchronize with site: %s"
@@ -30718,6 +30739,10 @@ msgstr "Serviceperiode für Hosts"
 msgid "Navigation"
 msgstr "Dauer i.D."
 
+#, fuzzy
+msgid "Navigation icons"
+msgstr "Dauer i.D."
+
 #, python-format
 msgid "Need parent %s, but not allowed to create one"
 msgstr "Benötige Eltern %s, darf aber keins erstellen."
@@ -40395,18 +40420,17 @@ msgstr "%d Bedingungen"
 msgid "Set connection timeout"
 msgstr "Verbindungstimeout"
 
-msgid ""
-"Set credentials for automatically submitting license usage reports to "
-"tribe29. The credentials are part of your subscription and can be found in "
-"your contract. These credentials are also used for downloading the Checkmk "
-"software versions from the tribe29 website."
-msgstr ""
-
 msgid "Set criticality host tag"
 msgstr "Hosttag criticality setzen"
 
 msgid "Set custom theme"
 msgstr "Wähle benutzerdefiniertes Aussehen"
+
+#, python-format
+msgid ""
+"Set customer portal credentials and subscription details for automatically "
+"submitting license usage reports to the Checkmk license server '%s'."
+msgstr ""
 
 msgid "Set default time range"
 msgstr "Standard-Zeitbereich setzen"
@@ -40547,12 +40571,6 @@ msgstr "Zustand setzen auf"
 
 msgid "Set states of IPMI sensor status texts"
 msgstr "Lege Checkstatus von IPMI-Sensorstates fest"
-
-msgid ""
-"Set subscription details for automatically submitting license usage reports "
-"to tribe29. The details including start date, end date and sizing are part "
-"of your subscription and can be found in your contract."
-msgstr ""
 
 msgid ""
 "Set the Checkmk configuration interface to read only mode for maintenance."
@@ -41162,6 +41180,10 @@ msgstr ""
 "Gibt den Zeitstempel der angegebenen Datei aus. Es wird nur der relative "
 "Pfad zu der entfernten Datei benötigt. Beispiel: 'meinUnterverzeichnis/"
 "Testdatei' oder 'Testdatei'"
+
+#, fuzzy
+msgid "Show title"
+msgstr "Kein Titel"
 
 #, fuzzy
 msgid "Show title header"
@@ -43761,7 +43783,19 @@ msgstr "Anwenden"
 msgid "Submit Report"
 msgstr "Bericht einsenden"
 
+#, fuzzy
+msgid "Submit license usage report"
+msgstr "Fehlerbericht wird eingesendet..."
+
+#, fuzzy
+msgid "Submit usage report"
+msgstr "Bericht einsenden"
+
 msgid "Submitting crash report..."
+msgstr "Fehlerbericht wird eingesendet..."
+
+#, fuzzy
+msgid "Submitting license usage report..."
 msgstr "Fehlerbericht wird eingesendet..."
 
 msgid "Subnet per DB subnet groups"
@@ -43838,6 +43872,10 @@ msgid "Successfully sent %d commands."
 msgstr "Erfolgreich %d Befehle gesendet."
 
 msgid "Successfully stored the report"
+msgstr "Gespeicherten Bericht erfolgreich gespeichert"
+
+#, fuzzy
+msgid "Successfully submitted the license usage report."
 msgstr "Gespeicherten Bericht erfolgreich gespeichert"
 
 #, python-format
@@ -46072,6 +46110,12 @@ msgstr ""
 "macht nur bei Ereignissen Sinn die durch eine negative Regel abgebrochen "
 "werde können."
 
+msgid ""
+"The credentials are part of your subscription and can be found in your "
+"contract. These credentials are also used for downloading <a href=\"https://"
+"checkmk.de/download\">Checkmk<a>."
+msgstr ""
+
 #, fuzzy
 msgid "The credentials for api calls with authentication."
 msgstr "Anmeldedaten für HTTP Basic Authentication"
@@ -46222,6 +46266,11 @@ msgstr ""
 
 msgid "The description of the interface as provided by the device"
 msgstr "Die Beschreibung der Schnittstelle wie vom Gerät angegeben"
+
+msgid ""
+"The details including start date, end date and sizing are part of your "
+"subscription and can be found in your contract."
+msgstr ""
 
 #, python-format
 msgid "The directory %s does not exist or is not a directory."
@@ -58613,6 +58662,11 @@ msgstr ""
 "auf."
 
 msgid ""
+"With this option you can define if icons in the navigation bar should show a "
+"title or not. This gives you the possibility to save some space in the UI."
+msgstr ""
+
+msgid ""
 "With this option you can implement rules that rule out certain message from "
 "the procession totally. Either you can totally abort further rule execution, "
 "or you can skip just the current rule pack and continue with the next one."
@@ -62414,6 +62468,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Download agent output"
+#~ msgid "Download usage dump"
+#~ msgstr "Agentenausgabe herunterladen"
 
 #~ msgid "Check current routing (uses <tt>traceroute</tt>)"
 #~ msgstr "Aktuelle Routen überwachen (verwendet <tt>traceroute</tt>)"

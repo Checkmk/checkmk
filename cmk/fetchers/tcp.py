@@ -100,7 +100,7 @@ class TCPFetcher(AgentFetcher):
         if self._socket is None:
             raise MKFetcherError("Not connected")
 
-        return self._decrypt(self._raw_data())
+        return self._validate_decrypted_data(self._decrypt(self._raw_data()))
 
     def _raw_data(self) -> AgentRawData:
         self._logger.debug("Reading data from agent")
@@ -114,7 +114,7 @@ class TCPFetcher(AgentFetcher):
                 if not data:
                     break
                 buffer.append(data)
-            return AgentRawData(b"".join(buffer))
+            return b"".join(buffer)
 
         try:
             return AgentRawData(recvall(self._socket))
@@ -124,6 +124,9 @@ class TCPFetcher(AgentFetcher):
             raise MKFetcherError("Communication failed: %s" % e)
 
     def _decrypt(self, output: AgentRawData) -> AgentRawData:
+        if not output:
+            return output  # nothing to to, validation will fail
+
         if output.startswith(b"<<<"):
             self._logger.debug("Output is not encrypted")
             if self.encryption_settings["use_regular"] == "enforce":
@@ -131,9 +134,10 @@ class TCPFetcher(AgentFetcher):
                     "Agent output is plaintext but encryption is enforced by configuration")
             return output
 
-        if self.encryption_settings["use_regular"] not in ["enforce", "allow"]:
-            self._logger.debug("Output is not encrypted")
-            return output
+        self._logger.debug("Output is encrypted")  # or corrupt
+        if self.encryption_settings["use_regular"] == "disable":
+            raise MKFetcherError(
+                "Agent output is encrypted but encryption is disabled by configuration")
 
         try:
             self._logger.debug("Decrypt encrypted output")
@@ -144,10 +148,12 @@ class TCPFetcher(AgentFetcher):
             if self.encryption_settings["use_regular"] == "enforce":
                 raise MKFetcherError("Failed to decrypt agent output: %s" % e)
 
-            # of course the package might indeed have been encrypted but
-            # in an incorrect format, but how would we find that out?
-            # In this case processing the output will fail
+        # of course the package might indeed have been encrypted but
+        # in an incorrect format, but how would we find that out?
+        # In this case processing the output will fail
+        return output
 
+    def _validate_decrypted_data(self, output: AgentRawData) -> AgentRawData:
         if not output:  # may be caused by xinetd not allowing our address
             raise MKFetcherError("Empty output from agent at %s:%d" % self.address)
         if len(output) < 16:

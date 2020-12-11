@@ -1,0 +1,18 @@
+Title: Do not treat site as dead when EC is not running
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1607680290
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The Event Console is used as data source for Event Console
+related views. Since it is a dedicated process, it may be unreachable
+while the monitoring core of a site is reachable.
+
+Previous versions treated a site as down once the Event Console was not
+running. This has now been changed. Sites in general are now still usable in
+the GUI, even when the Event Console is stopped.

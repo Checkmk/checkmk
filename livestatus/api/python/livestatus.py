@@ -78,10 +78,6 @@ class MKLivestatusTableNotFoundError(MKLivestatusException):
     pass
 
 
-class MKLivestatusBadGatewayError(MKLivestatusException):
-    """Raised when connection errors from CMC <> EC happen"""
-
-
 # We need some unique value here
 NO_DEFAULT = lambda: None
 
@@ -247,11 +243,11 @@ class Query:
     query. The object can be used to hand over the handling code some flags, for
     example to influence the error handling during query processing."""
 
-    default_suppressed_exceptions: Tuple[Type[Exception], ...] = (MKLivestatusTableNotFoundError,)
+    default_suppressed_exceptions: List[Type[Exception]] = [MKLivestatusTableNotFoundError]
 
     def __init__(self,
                  query: Union[str, bytes],
-                 suppress_exceptions: Optional[Tuple[Type[Exception], ...]] = None) -> None:
+                 suppress_exceptions: Optional[List[Type[Exception]]] = None) -> None:
         super(Query, self).__init__()
 
         self._query = _ensure_unicode(query)
@@ -486,7 +482,7 @@ class SingleSiteConnection(Helpers):
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
     def recv_response(self,
-                      query: Query,
+                      query: Optional[Query] = None,
                       add_headers: str = "",
                       timeout_at: Optional[float] = None) -> LivestatusResponse:
         try:
@@ -513,9 +509,6 @@ class SingleSiteConnection(Helpers):
             elif code == "404":
                 raise MKLivestatusTableNotFoundError("Not Found (%s): %s" % (code, data.strip()))
 
-            elif code == "502":
-                raise MKLivestatusBadGatewayError(data.strip())
-
             else:
                 raise MKLivestatusQueryError("%s: %s" % (code, data.strip()))
 
@@ -532,7 +525,7 @@ class SingleSiteConnection(Helpers):
                 raise MKLivestatusSocketError("Unix socket was closed by peer")
 
             now = time.time()
-            if not timeout_at or timeout_at > now:
+            if query and (not timeout_at or timeout_at > now):
                 if timeout_at is None:
                     # Try until timeout reached in case there was a timeout configured.
                     # Otherwise only retry once.
@@ -543,11 +536,12 @@ class SingleSiteConnection(Helpers):
                 time.sleep(0.1)
                 self.connect()
                 self.send_query(query, add_headers)
-                # do not send query again -> danger of infinite loop
-                return self.recv_response(query, add_headers, timeout_at)
+                return self.recv_response(
+                    query, add_headers,
+                    timeout_at)  # do not send query again -> danger of infinite loop
             raise MKLivestatusSocketError(str(e))
 
-        except query.suppress_exceptions:
+        except MKLivestatusTableNotFoundError:
             raise
 
         except Exception as e:
@@ -915,6 +909,8 @@ class MultiSiteConnection(Helpers):
                     "site": site,
                 }
 
+        suppress_exceptions = tuple(query.suppress_exceptions)
+
         # Then retrieve all answers. We will be as slow as the slowest of all
         # connections.
         result = LivestatusResponse([])
@@ -926,7 +922,7 @@ class MultiSiteConnection(Helpers):
                     for row in r:
                         row.insert(0, sitename)
                 result += r
-            except query.suppress_exceptions:
+            except suppress_exceptions:  # pylint: disable=catching-non-exception
                 stillalive.append((sitename, site, connection))
                 continue
 

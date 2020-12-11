@@ -735,8 +735,9 @@ class RowTableLivestatus(RowTable):
                 if c not in columns:
                     columns.append(c)
 
-        # Remove columns which are implicitely added by the datasource
-        return [c for c in columns if c not in datasource.add_columns], dynamic_columns
+        # Remove columns which are implicitly added by the datasource. We sort the remaining
+        # columns to allow for repeatable tests.
+        return [c for c in sorted(columns) if c not in datasource.add_columns], dynamic_columns
 
     def prepare_lql(self, columns: List[ColumnName], headers: str) -> LivestatusQuery:
         query = "GET %s\n" % self.table_name

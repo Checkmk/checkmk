@@ -196,11 +196,17 @@ class PageMenu:
         if self.breadcrumb and len(self.breadcrumb) > 1 and self.breadcrumb[-2].url:
             self.dropdowns.append(make_up_link(self.breadcrumb))
 
-    def get_dropdown_by_name(self, name: str, deflt: PageMenuDropdown) -> PageMenuDropdown:
+    def __getitem__(self, name):
         for dropdown in self.dropdowns:
             if dropdown.name == name:
                 return dropdown
-        return deflt
+        raise KeyError(f"Dropdown {name} not found.")
+
+    def get_dropdown_by_name(self, name: str, deflt: PageMenuDropdown) -> PageMenuDropdown:
+        try:
+            return self[name]
+        except KeyError:
+            return deflt
 
     @property
     def _entries(self) -> Iterator[PageMenuEntry]:

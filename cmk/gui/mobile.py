@@ -24,7 +24,6 @@ from cmk.gui.plugins.views.utils import (
     command_registry,
     data_source_registry,
     PainterOptions,
-    Cell,
 )
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows
@@ -301,8 +300,7 @@ def page_view() -> None:
     painter_options.load(view_name)
 
     try:
-        view_renderer = MobileViewRenderer(view)
-        views.process_view(view, view_renderer)
+        views.process_view(MobileViewRenderer(view))
     except Exception as e:
         logger.exception("error showing mobile view")
         if config.debug:
@@ -313,9 +311,14 @@ def page_view() -> None:
 
 
 class MobileViewRenderer(views.ABCViewRenderer):
-    def render(self, rows: Rows, group_cells: List[Cell], cells: List[Cell], show_checkboxes: bool,
-               num_columns: int, show_filters: List[Filter],
-               unfiltered_amount_of_rows: int) -> None:
+    def render(
+        self,
+        rows: Rows,
+        show_checkboxes: bool,
+        num_columns: int,
+        show_filters: List[Filter],
+        unfiltered_amount_of_rows: int,
+    ) -> None:
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")
 
@@ -378,8 +381,14 @@ class MobileViewRenderer(views.ABCViewRenderer):
                         cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit,
                                                                      config.user)
                         del rows[self.view.row_limit:]
-                    self.view.layout.render(rows, view_spec, group_cells, cells, num_columns,
-                                            show_checkboxes and not html.do_actions())
+                    self.view.layout.render(
+                        rows,
+                        view_spec,
+                        self.view.group_cells,
+                        self.view.row_cells,
+                        num_columns,
+                        show_checkboxes and not html.do_actions(),
+                    )
                 except Exception as e:
                     logger.exception("error rendering mobile view")
                     html.write(_("Error showing view: %s") % e)

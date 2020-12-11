@@ -277,7 +277,7 @@ class PainterOptions:
         html.end_form()
 
 
-def row_id(view_spec: Dict[str, Any], row: Row) -> str:
+def row_id(view_spec: ViewSpec, row: Row) -> str:
     """Calculates a uniq id for each data row which identifies the current
     row accross different page loadings."""
     key = u''

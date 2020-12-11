@@ -1291,6 +1291,10 @@ class CommandRemoveDowntime(Command):
     def tables(self):
         return ["downtime"]
 
+    @property
+    def is_shortcut(self):
+        return True
+
     def render(self, what):
         html.button("_remove_downtimes", _("Remove"))
 

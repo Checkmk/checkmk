@@ -31,12 +31,6 @@ from cmk.base.checkers.agent import AgentSource
 from cmk.base.checkers.snmp import SNMPSource
 import cmk.base.license_usage as license_usage
 
-# TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
-# too much time.
-
-# TODO (mo): now it's worse, we need to load all checks. remove this with CMK-4295
-#            after removing this, bring back the commented line below.
-
 
 @pytest.fixture(autouse=True)
 def mock_license_usage(monkeypatch):
@@ -252,7 +246,6 @@ def test_mode_check_discovery_cached(mocker):
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_all_hosts(mocker):
     _patch_data_source(mocker, maybe=True, max_age=120)
@@ -262,7 +255,6 @@ def test_mode_discover_all_hosts(mocker):
         len(active_real_hosts) * 2)
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts(mocker):
     # TODO: Is it correct that no cache is used here?
@@ -271,7 +263,6 @@ def test_mode_discover_explicit_hosts(mocker):
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts_cache(mocker):
     _patch_data_source(
@@ -285,7 +276,6 @@ def test_mode_discover_explicit_hosts_cache(mocker):
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts_no_cache(mocker):
     _patch_data_source(mocker, disabled=True, max_age=0)
@@ -376,7 +366,6 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
     ],
     ids=["raise_errors=@raiseerrors", "raise_errors=None"],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("reset_log_level")
 def test_automation_try_discovery_caching(scan, raise_errors, mocker):
@@ -413,7 +402,6 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
         "@scan",
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.usefixtures("scenario")
 def test_automation_discovery_caching(raise_errors, scan, mocker):
     kwargs = {}

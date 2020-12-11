@@ -843,7 +843,7 @@ class AutomationRestart(Automation):
 
             if os.path.exists(objects_file):
                 backup_path = objects_file + ".save"
-                os.rename(objects_file, backup_path)
+                shutil.copy(objects_file, backup_path)
             else:
                 backup_path = None
 

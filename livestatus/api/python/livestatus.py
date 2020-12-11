@@ -254,11 +254,11 @@ class Query:
     query. The object can be used to hand over the handling code some flags, for
     example to influence the error handling during query processing."""
 
-    default_suppressed_exceptions: List[Type[Exception]] = [MKLivestatusTableNotFoundError]
+    default_suppressed_exceptions: Tuple[Type[Exception], ...] = (MKLivestatusTableNotFoundError,)
 
     def __init__(self,
                  query: Union[str, bytes],
-                 suppress_exceptions: Optional[List[Type[Exception]]] = None) -> None:
+                 suppress_exceptions: Optional[Tuple[Type[Exception], ...]] = None) -> None:
         super(Query, self).__init__()
 
         self._query = _ensure_unicode(query)
@@ -444,11 +444,10 @@ class SingleSiteConnection(Helpers):
             result += packet
         return result
 
-    # TODO: change all call sites to hand over Query + str
     def do_query(self, query_obj: Query, add_headers: str = "") -> LivestatusResponse:
         query = self.build_query(query_obj, add_headers)
         self.send_query(query)
-        return self.recv_response(query)
+        return self.recv_response(query, query_obj.suppress_exceptions)
 
     def build_query(self, query_obj: Query, add_headers: str) -> str:
         query = str(query_obj)
@@ -497,7 +496,10 @@ class SingleSiteConnection(Helpers):
     # Reads a response from the livestatus socket. If the socket is closed
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
-    def recv_response(self, query: str, timeout_at: Optional[float] = None) -> LivestatusResponse:
+    def recv_response(self,
+                      query: str,
+                      suppress_exceptions: Tuple[Type[Exception], ...],
+                      timeout_at: Optional[float] = None) -> LivestatusResponse:
         try:
             # Headers are always ASCII encoded
             resp = self.receive_data(16)
@@ -550,10 +552,10 @@ class SingleSiteConnection(Helpers):
                 self.connect()
                 self.send_query(query)
                 # do not send query again -> danger of infinite loop
-                return self.recv_response(query, timeout_at)
+                return self.recv_response(query, suppress_exceptions, timeout_at)
             raise MKLivestatusSocketError(str(e))
 
-        except MKLivestatusTableNotFoundError:
+        except suppress_exceptions:
             raise
 
         except Exception as e:
@@ -923,21 +925,19 @@ class MultiSiteConnection(Helpers):
                     "site": site,
                 }
 
-        suppress_exceptions = tuple(query.suppress_exceptions)
-
         # Then retrieve all answers. We will be as slow as the slowest of all
         # connections.
         result = LivestatusResponse([])
         for sitename, site, connection in connect_to_sites:
             try:
                 str_query = connection.build_query(query, add_headers + limit_header)
-                r = connection.recv_response(str_query)
+                r = connection.recv_response(str_query, query.suppress_exceptions)
                 stillalive.append((sitename, site, connection))
                 if self.prepend_site:
                     for row in r:
                         row.insert(0, sitename)
                 result += r
-            except suppress_exceptions:  # pylint: disable=catching-non-exception
+            except query.suppress_exceptions:
                 stillalive.append((sitename, site, connection))
                 continue
 

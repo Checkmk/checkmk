@@ -770,10 +770,13 @@ class GUIViewRenderer(ABCViewRenderer):
                               self._page_menu_dropdown_add_to() + \
                               export_dropdown
 
-        if config.is_ntop_available(
-        ) and config.ntop_connection != {} and rows:  # type: ignore[attr-defined]
-            host_address = rows[0]["host_address"]
-            page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
+        # TODO this should only be shown if cmk host is defined in ntop,
+        # currently no way to do this without contacting ntop each time
+        if rows:
+            host_address = rows[0].get("host_address")
+            if config.is_ntop_available(
+            ) and config.ntop_connection != {} and host_address is not None:  # type: ignore[attr-defined]
+                page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
 
         menu = PageMenu(
             dropdowns=page_menu_dropdowns,

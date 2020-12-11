@@ -527,6 +527,7 @@ def test_registered_permissions():
         expected_permissions += [
             'dashboard.ntop_alerts',
             'dashboard.ntop_flows',
+            'dashboard.ntop_top_talkers',
             'general.edit_reports',
             'icons_and_actions.agent_deployment',
             'icons_and_actions.status_shadow',

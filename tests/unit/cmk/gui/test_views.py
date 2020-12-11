@@ -27,7 +27,7 @@ import cmk.gui.views
 @pytest.fixture(name="view")
 def view_fixture(register_builtin_html):
     view_name = "allhosts"
-    view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name])
+    view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name].copy())
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
 

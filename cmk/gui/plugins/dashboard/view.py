@@ -11,6 +11,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
 from cmk.gui.plugins.views import PainterOptions
+from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 
@@ -28,7 +29,7 @@ class ABCViewDashlet(IFrameDashlet):
     def has_context(cls):
         return True
 
-    def _show_view_as_dashlet(self, view_spec):
+    def _show_view_as_dashlet(self, view_spec: ViewSpec):
         html.add_body_css_class("view")
         html.open_div(id_="dashlet_content_wrapper")
 
@@ -50,12 +51,11 @@ class ABCViewDashlet(IFrameDashlet):
         view.only_sites = visuals.get_only_sites_from_context(self.context)
         view.user_sorters = views.get_user_sorters()
 
-        view_renderer = views.GUIViewRenderer(view, show_buttons=False)
-        views.process_view(view, view_renderer)
+        views.process_view(views.GUIViewRenderer(view, show_buttons=False))
 
         html.close_div()
 
-    def _get_infos_from_view_spec(self, view_spec):
+    def _get_infos_from_view_spec(self, view_spec: ViewSpec):
         ds_name = view_spec["datasource"]
         return views.data_source_registry[ds_name]().infos
 
@@ -149,7 +149,7 @@ class LinkedViewDashlet(ABCViewDashlet):
             (html.urlencode(html.request.var('name')),
              html.urlencode(makeuri(request, [('edit', '1')])))
 
-    def _get_view_spec(self):
+    def _get_view_spec(self) -> ViewSpec:
         view_name = self._dashlet_spec["name"]
         view_spec = views.get_permitted_views().get(view_name)
         if not view_spec:
@@ -162,6 +162,7 @@ class LinkedViewDashlet(ABCViewDashlet):
         return view_spec
 
     def display_title(self):
+        # TODO: Visual and ViewSpec are both Dict[str, Any]. How are these related?
         title = visuals.visual_title("view", self._get_view_spec())
         return self._dashlet_spec.get("title", title)
 

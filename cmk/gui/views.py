@@ -6,6 +6,7 @@
 
 import abc
 import ast
+import collections
 import functools
 import json
 import pprint
@@ -304,7 +305,7 @@ class PermissionSectionViews(PermissionSection):
 
 class View:
     """Manages processing of a single view, e.g. during rendering"""
-    def __init__(self, view_name: str, view_spec: Dict, context: Dict) -> None:
+    def __init__(self, view_name: str, view_spec: ViewSpec, context: Dict) -> None:
         super(View, self).__init__()
         self.name = view_name
         self.spec = view_spec
@@ -410,6 +411,7 @@ class View:
     def only_sites(self, only_sites: Optional[List[SiteId]]) -> None:
         self._only_sites = only_sites
 
+    # FIXME: The layout should get the view as a parameter by default.
     @property
     def layout(self) -> Layout:
         """Return the HTML layout of the view"""
@@ -547,10 +549,20 @@ class ABCViewRenderer(metaclass=abc.ABCMeta):
     def __init__(self, view: View) -> None:
         super().__init__()
         self.view = view
+        self._menu_topics: Dict[str, List[PageMenuTopic]] = collections.defaultdict(list)
+
+    def append_menu_topic(self, dropdown: str, topic: PageMenuTopic) -> None:
+        self._menu_topics[dropdown].append(topic)
 
     @abc.abstractmethod
-    def render(self, rows, group_cells, cells, show_checkboxes, num_columns, show_filters,
-               unfiltered_amount_of_rows):
+    def render(
+        self,
+        rows: Rows,
+        show_checkboxes: bool,
+        num_columns: int,
+        show_filters: List[Filter],
+        unfiltered_amount_of_rows: int,
+    ):
         raise NotImplementedError()
 
 
@@ -559,8 +571,14 @@ class GUIViewRenderer(ABCViewRenderer):
         super(GUIViewRenderer, self).__init__(view)
         self._show_buttons = show_buttons
 
-    def render(self, rows, group_cells, cells, show_checkboxes, num_columns, show_filters,
-               unfiltered_amount_of_rows):
+    def render(
+        self,
+        rows: Rows,
+        show_checkboxes: bool,
+        num_columns: int,
+        show_filters: List[Filter],
+        unfiltered_amount_of_rows: int,
+    ):
         view_spec = self.view.spec
 
         if html.transaction_valid() and html.do_actions():
@@ -574,7 +592,7 @@ class GUIViewRenderer(ABCViewRenderer):
             breadcrumb = self.view.breadcrumb()
             html.top_heading(view_title(view_spec),
                              breadcrumb,
-                             page_menu=self._page_menu(breadcrumb, rows, show_filters))
+                             page_menu=self._page_menu(rows, show_filters))
             html.begin_page_content()
 
         has_done_actions = False
@@ -650,8 +668,8 @@ class GUIViewRenderer(ABCViewRenderer):
                     del rows[self.view.row_limit:]
                     self.view.process_tracking.amount_rows_after_limit = len(rows)
 
-            layout.render(rows, view_spec, group_cells, cells, num_columns, show_checkboxes and
-                          not html.do_actions())
+            layout.render(rows, view_spec, self.view.group_cells, self.view.row_cells, num_columns,
+                          show_checkboxes and not html.do_actions())
             row_info = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
             if show_checkboxes:
                 selected = filter_selected_rows(
@@ -718,8 +736,8 @@ class GUIViewRenderer(ABCViewRenderer):
 
         return False
 
-    def _page_menu(self, breadcrumb: Breadcrumb, rows: Rows,
-                   show_filters: List[Filter]) -> PageMenu:
+    def _page_menu(self, rows: Rows, show_filters: List[Filter]) -> PageMenu:
+        breadcrumb: Breadcrumb = self.view.breadcrumb()
         if not display_options.enabled(display_options.B):
             return PageMenu()  # No buttons -> no menu
 
@@ -761,6 +779,9 @@ class GUIViewRenderer(ABCViewRenderer):
 
         self._extend_display_dropdown(menu, show_filters)
         self._extend_help_dropdown(menu)
+
+        for dropdown_name, topics in self._menu_topics.items():
+            menu[dropdown_name].topics.extend(topics)
 
         return menu
 
@@ -1540,24 +1561,24 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
-def render_view_config(view, general_properties=True):
-    ds_name = view.get("datasource", html.request.var("datasource"))
+def render_view_config(view_spec: ViewSpec, general_properties=True):
+    ds_name = view_spec.get("datasource", html.request.var("datasource"))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))
     if ds_name not in data_source_registry:
         raise MKInternalError(_('The given datasource is not supported.'))
 
-    view['datasource'] = ds_name
+    view_spec['datasource'] = ds_name
 
     if general_properties:
-        view_editor_general_properties(ds_name).render_input('view', view.get('view'))
+        view_editor_general_properties(ds_name).render_input('view', view_spec.get('view'))
 
     for ident, vs in [
             view_editor_column_spec('columns', _('Columns'), ds_name),
-            view_editor_sorter_specs(view),
+            view_editor_sorter_specs(view_spec),
             view_editor_column_spec('grouping', _('Grouping'), ds_name),
     ]:
-        vs.render_input(ident, view.get(ident))
+        vs.render_input(ident, view_spec.get(ident))
 
 
 # Is used to change the view structure to be compatible to
@@ -1727,8 +1748,7 @@ def page_view():
         painter_options = PainterOptions.get_instance()
         painter_options.load(view.name)
         painter_options.update_from_url(view)
-        view_renderer = GUIViewRenderer(view, show_buttons=True)
-        process_view(view, view_renderer)
+        process_view(GUIViewRenderer(view, show_buttons=True))
 
     _may_create_slow_view_log_entry(page_view_tracker, view)
 
@@ -1796,24 +1816,27 @@ def _patch_view_context(view_spec: ViewSpec) -> None:
             html.request.set_var("event_host", html.request.get_str_input_mandatory("host"))
 
 
-def process_view(view: View, view_renderer: ABCViewRenderer) -> None:
+def process_view(view_renderer: ABCViewRenderer) -> None:
     """Rendering all kind of views"""
     if html.request.var("mode") == "availability":
-        _process_availability_view(view)
+        _process_availability_view(view_renderer)
     else:
-        _process_regular_view(view, view_renderer)
+        _process_regular_view(view_renderer)
 
 
-def _process_regular_view(view: View, view_renderer: ABCViewRenderer) -> None:
-    all_active_filters = _get_view_filters(view)
-    unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=False)
+def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
+    all_active_filters = _get_view_filters(view_renderer.view)
+    unfiltered_amount_of_rows, rows = _get_view_rows(view_renderer.view,
+                                                     all_active_filters,
+                                                     only_count=False)
     if html.output_format != "html":
-        _export_view(view, rows)
+        _export_view(view_renderer.view, rows)
     else:
-        _show_view(view, view_renderer, unfiltered_amount_of_rows, rows)
+        _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 
-def _process_availability_view(view: View) -> None:
+def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
+    view = view_renderer.view
     all_active_filters = _get_view_filters(view)
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
@@ -1929,9 +1952,9 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: b
     return []
 
 
-def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int,
-               rows: Rows) -> None:
+def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, rows: Rows) -> None:
     display_options.load_from_html(html)
+    view = view_renderer.view
 
     # Load from hard painter options > view > hard coded default
     painter_options = PainterOptions.get_instance()
@@ -1959,8 +1982,8 @@ def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_
     # Until now no single byte of HTML code has been output.
     # Now let's render the view
     with CPUTracker() as view_render_tracker:
-        view_renderer.render(rows, view.group_cells, view.row_cells, show_checkboxes, num_columns,
-                             show_filters, unfiltered_amount_of_rows)
+        view_renderer.render(rows, show_checkboxes, num_columns, show_filters,
+                             unfiltered_amount_of_rows)
     view.process_tracking.duration_view_render = view_render_tracker.duration
 
 
@@ -3054,10 +3077,10 @@ def do_actions(view, what, action_rows, backurl):
     return True
 
 
-def filter_selected_rows(view, rows, selected_ids):
+def filter_selected_rows(view_spec: ViewSpec, rows, selected_ids):
     action_rows = []
     for row in rows:
-        if row_id(view, row) in selected_ids:
+        if row_id(view_spec, row) in selected_ids:
             action_rows.append(row)
     return action_rows
 

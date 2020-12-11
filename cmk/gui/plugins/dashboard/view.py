@@ -6,18 +6,13 @@
 
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.plugins.views import PainterOptions
-from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.exceptions import MKUserError
-
-from cmk.gui.plugins.dashboard import (
-    IFrameDashlet,
-    dashlet_registry,
-)
-
+from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
+from cmk.gui.plugins.views import PainterOptions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.valuespec import DropdownChoice
 
 
 class ABCViewDashlet(IFrameDashlet):

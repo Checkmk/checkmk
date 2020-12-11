@@ -3,7 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, Generator, List, Optional, Tuple, Type
+from typing import Any, Dict, Generator, List, Optional, Tuple, Type, cast
 
 from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.gui.plugins.openapi.livestatus_helpers.base import BaseQuery
@@ -84,6 +84,38 @@ class ResultRow(dict):
 
     def __setattr__(self, key, value):
         raise AttributeError(f"{key}: Setting of attributes not allowed.")
+
+
+def _get_column(table_class: Type[Table], col: str) -> Column:
+    """Strip prefixes from column names and return the correct column
+
+    Examples:
+
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Services
+        >>> _get_column(Hosts, "host_name")
+        Column(hosts.name: string)
+
+        >>> _get_column(Services, "host_name")
+        Column(services.host_name: string)
+
+    Args:
+        table_class:
+            A predefined Livestatus table class
+        col:
+            A string, giving the name of the wanted column
+
+    Returns:
+        A column instance
+
+    """
+    if hasattr(table_class, col):
+        return getattr(table_class, col)
+
+    table_name = cast(str, table_class.__tablename__)
+    prefix = table_name.rstrip('s') + "_"
+    if col.startswith(prefix):
+        col = col[len(prefix):]
+    return getattr(table_class, col)
 
 
 class Query(BaseQuery):
@@ -431,7 +463,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         for line in lines:
             if line.startswith('Columns: '):
                 column_names = line.split(": ", 1)[1].lstrip().split()
-                columns: List[Column] = [getattr(table_class, col) for col in column_names]
+                columns: List[Column] = [_get_column(table_class, col) for col in column_names]
                 break
         else:
             raise ValueError("No columns found")
@@ -451,7 +483,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         return cls(
             columns=columns,
-            filter_expr=filters[0],
+            filter_expr=filters[0] if filters else NothingExpression(),
         )
 
 

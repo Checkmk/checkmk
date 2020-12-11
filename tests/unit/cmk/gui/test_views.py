@@ -6353,3 +6353,5 @@ def test_view_page(wsgi_app, with_user, mock_livestatus):
     with live():
         resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
         assert 'heute' in resp
+        assert 'query=null' not in resp
+        assert '/domain-types/host/collections/all' in resp

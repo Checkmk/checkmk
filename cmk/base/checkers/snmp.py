@@ -153,7 +153,22 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ).make()
 
     def _make_fetcher(self) -> SNMPFetcher:
-        SNMPFetcher.plugin_store = make_plugin_store()
+        if not SNMPFetcher.plugin_store:
+            # That's a hack.
+            #
+            # `make_plugin_store()` depends on
+            # `iter_all_snmp_sections()` and `iter_all_inventory_plugins()`
+            # that are populated by the Check API upon loading the plugins.
+            #
+            # It is there, when the plugins are loaded, that we should
+            # make the plugin store.  However, it is not clear whether
+            # the API would let us register hooks to accomplish that.
+            #
+            # The current solution is brittle in that plugins loaded after
+            # this call will be ignored or crash the fetcher.
+            #
+            assert config.all_checks_loaded()
+            SNMPFetcher.plugin_store = make_plugin_store()
         return SNMPFetcher(
             self._make_file_cache(),
             sections=self._make_sections(),

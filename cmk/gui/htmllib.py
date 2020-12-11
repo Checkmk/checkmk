@@ -2424,7 +2424,6 @@ class html(ABCHTMLGenerator):
             self.img(id_=img_id,
                      class_=["treeangle", "open" if isopen else "closed"],
                      src="themes/%s/images/tree_closed.png" % (self._theme),
-                     align="absbottom",
                      onclick=onclick)
         if isinstance(title, HTML):  # custom HTML code
             if icon:
@@ -2500,17 +2499,11 @@ class html(ABCHTMLGenerator):
     def icon(self,
              icon: Icon,
              title: Optional[str] = None,
-             middle: bool = True,
              id_: Optional[str] = None,
              cssclass: Optional[str] = None,
              class_: CSSSpec = None) -> None:
         self.write_html(
-            self.render_icon(icon=icon,
-                             title=title,
-                             middle=middle,
-                             id_=id_,
-                             cssclass=cssclass,
-                             class_=class_))
+            self.render_icon(icon=icon, title=title, id_=id_, cssclass=cssclass, class_=class_))
 
     def empty_icon(self) -> None:
         self.write_html(self.render_icon("trans"))
@@ -2518,7 +2511,6 @@ class html(ABCHTMLGenerator):
     def render_icon(self,
                     icon: Icon,
                     title: Optional[str] = None,
-                    middle: bool = True,
                     id_: Optional[str] = None,
                     cssclass: Optional[str] = None,
                     class_: CSSSpec = None) -> HTML:
@@ -2541,7 +2533,6 @@ class html(ABCHTMLGenerator):
             title=title,
             id_=id_,
             class_=classes,
-            align='absmiddle' if middle else None,
             src=src,
         )
 

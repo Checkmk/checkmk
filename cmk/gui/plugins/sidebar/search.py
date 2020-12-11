@@ -8,7 +8,7 @@ import abc
 import re
 import traceback
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 from enum import Enum, unique
 
 import livestatus
@@ -26,7 +26,7 @@ import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.exceptions import HTTPRedirect
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
 from cmk.gui.type_defs import (
     HTTPVariables,
@@ -40,6 +40,12 @@ from cmk.gui.type_defs import (
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, get_index_store
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.labels import (
+    Labels,
+    encode_labels_for_http,
+    encode_labels_for_livestatus,
+    label_help_text,
+)
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -1137,6 +1143,90 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
 
 
 match_plugin_registry.register(HosttagMatchPlugin())
+
+
+class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
+    @staticmethod
+    def _input_to_key_value(inpt: str) -> Tuple[str, str]:
+        if ":" not in inpt:
+            raise MKUserError(None, label_help_text())
+        key, value = inpt.split(":", maxsplit=1)
+        if not key or not value:
+            raise MKUserError(None, label_help_text())
+        return key, value
+
+    def _user_inputs_to_labels(self, user_inputs: Iterable[str]) -> Labels:
+        yield from (self._input_to_key_value(inpt) for inpt in user_inputs)
+
+    def _user_inputs_to_http(self, user_inputs: Iterable[str]) -> str:
+        return encode_labels_for_http(self._user_inputs_to_labels(user_inputs))
+
+    def get_livestatus_filters(
+        self,
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+    ) -> LivestatusFilterHeaders:
+        user_inputs = used_filters.get(self.name, [])
+        return encode_labels_for_livestatus(
+            self.get_livestatus_columns(livestatus_table)[0],
+            self._user_inputs_to_labels(user_inputs),
+        )
+
+
+class HostLabelMatchPlugin(ABCLabelMatchPlugin):
+    def __init__(self) -> None:
+        super().__init__(["hosts", "services"], "hosts", "hl")
+        self._supported_views = {"host", "searchhost", "allservices", "searchsvc"}
+
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+        return ['labels'] if livestatus_table == 'hosts' else ['host_labels']
+
+    def get_match_topic(self) -> str:
+        return _("Host labels")
+
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        _rows: Rows,
+    ) -> Matches:
+        if for_view not in self._supported_views:
+            return None
+        if for_view == "host" and row:
+            return row["name"], [("host", row["name"])]
+        return "", [("host_label", self._user_inputs_to_http(used_filters[self.name]))]
+
+
+class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
+    def __init__(self) -> None:
+        super().__init__(["services"], "services", "sl")
+        self._supported_views = {"allservices", "searchsvc"}
+
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+        return ["labels"]
+
+    def get_match_topic(self) -> str:
+        return _("Service labels")
+
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        _rows: Rows,
+    ) -> Matches:
+        if for_view not in self._supported_views:
+            return None
+        if row:
+            return "", [("service", row["description"])]
+        return "", [("service_label", self._user_inputs_to_http(used_filters[self.name]))]
+
+
+match_plugin_registry.register(HostLabelMatchPlugin())
+match_plugin_registry.register(ServiceLabelMatchPlugin())
 
 #   .--Menu Search---------------------------------------------------------.
 #   |      __  __                    ____                      _           |

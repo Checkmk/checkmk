@@ -4,13 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# TODO (mo): move this where it belongs
-
-from ast import literal_eval
-
 import pytest  # type: ignore[import]
-
-from cmk.utils.type_defs import EvalableFloat
 
 from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, SNMPTree
 
@@ -33,8 +27,3 @@ def test_oidspec():
 
     assert repr(oid_c) == "OIDCached('1.2.3')"
     assert repr(oid_b) == "OIDBytes('4.5')"
-
-
-def test_evalable_float():
-    inf = EvalableFloat('inf')
-    assert literal_eval("%r" % inf) == float('inf')

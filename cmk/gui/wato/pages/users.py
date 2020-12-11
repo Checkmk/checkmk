@@ -704,8 +704,12 @@ class ModeEditUser(WatoMode):
         # ntopng
         if config.is_ntop_available():
             ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
-            if ntop_connection.get("use_custom_attribute_as_ntop_username"):
-                user_attrs["ntop_alias"] = html.request.get_unicode_input_mandatory("ntop_alias")
+            # ntop_username_attribute will be the name of the custom attribute or false
+            # see corresponding WATO rule
+            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
+            if ntop_username_attribute:
+                user_attrs[ntop_username_attribute] = html.request.get_unicode_input_mandatory(
+                    ntop_username_attribute)
 
         # Roles
         user_attrs["roles"] = [
@@ -827,9 +831,12 @@ class ModeEditUser(WatoMode):
         # ntopng
         if config.is_ntop_available():
             ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
-            if ntop_connection.get("use_custom_attribute_as_ntop_username"):
+            # ntop_username_attribute will be the name of the custom attribute or false
+            # see corresponding WATO rule
+            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
+            if ntop_username_attribute:
                 forms.section(_("ntopng Username"))
-                lockable_input('ntop_alias', '')
+                lockable_input(ntop_username_attribute, '')
                 html.help(
                     _("The corresponding username in ntopng of the current checkmk user. "
                       "It is used, in case the user mapping to ntopng is configured to use this "

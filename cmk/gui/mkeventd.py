@@ -295,8 +295,11 @@ def get_total_stats(only_sites):
 def get_stats_per_site(only_sites, stats_keys):
     try:
         sites.live().set_only_sites(only_sites)
-        for list_row in sites.live().query("GET eventconsolestatus\nColumns: %s" %
-                                           " ".join(stats_keys)):
+        # Do not mark the site as dead in case the Event Console is not available.
+        query = livestatus.Query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
+                                 suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
+                                                      livestatus.MKLivestatusBadGatewayError))
+        for list_row in sites.live().query(query):
             yield dict(zip(stats_keys, list_row))
     finally:
         sites.live().set_only_sites(None)

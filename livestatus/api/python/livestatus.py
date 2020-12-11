@@ -79,6 +79,10 @@ class MKLivestatusTableNotFoundError(MKLivestatusException):
     pass
 
 
+class MKLivestatusBadGatewayError(MKLivestatusException):
+    """Raised when connection errors from CMC <> EC happen"""
+
+
 # We need some unique value here
 NO_DEFAULT = lambda: None
 
@@ -524,6 +528,9 @@ class SingleSiteConnection(Helpers):
             elif code == "404":
                 raise MKLivestatusTableNotFoundError("Not Found (%s): %s" % (code, data.strip()))
 
+            elif code == "502":
+                raise MKLivestatusBadGatewayError(data.strip())
+
             else:
                 raise MKLivestatusQueryError("%s: %s" % (code, data.strip()))
 
@@ -540,7 +547,7 @@ class SingleSiteConnection(Helpers):
                 raise MKLivestatusSocketError("Unix socket was closed by peer")
 
             now = time.time()
-            if query and (not timeout_at or timeout_at > now):
+            if not timeout_at or timeout_at > now:
                 if timeout_at is None:
                     # Try until timeout reached in case there was a timeout configured.
                     # Otherwise only retry once.

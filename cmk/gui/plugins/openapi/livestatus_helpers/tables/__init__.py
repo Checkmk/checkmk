@@ -7,3 +7,4 @@ from cmk.gui.plugins.openapi.livestatus_helpers.tables.hosts import Hosts
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.hostgroups import Hostgroups
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.services import Services
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.servicegroups import Servicegroups
+from cmk.gui.plugins.openapi.livestatus_helpers.tables.status import Status

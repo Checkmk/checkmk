@@ -5784,7 +5784,7 @@ class IconSelector(ValueSpec):
         if id_.endswith('_emblem_img'):
             icon = {'icon': 'empty', 'emblem': icon}
 
-        icon_tag = html.render_icon(icon, title=title, middle=True, id_=id_)
+        icon_tag = html.render_icon(icon, title=title, id_=id_)
         if onclick:
             icon_tag = html.render_a(icon_tag, href="javascript:void(0)", onclick=onclick)
 

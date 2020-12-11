@@ -2371,7 +2371,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         self._current_settings = watolib.load_configuration_settings()
 
     @staticmethod
-    def _get_groups(_show_all: bool) -> Iterable[ConfigVariableGroup]:
+    def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
         return [
             g for g in sorted([g_class() for g_class in config_variable_group_registry.values()],
                               key=lambda grp: grp.sort_index())

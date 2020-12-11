@@ -4,34 +4,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Set, Tuple, Union, Optional, List
+from typing import List, Optional, Set, Tuple, Union
 
-import cmk.gui.views as views
 import cmk.gui.config as config
-import cmk.gui.visuals as visuals
+import cmk.gui.escaping as escaping
+import cmk.gui.pages
 import cmk.gui.utils
 import cmk.gui.view_utils
-from cmk.gui.plugins.views.utils import (
-    PainterOptions,
-    command_registry,
-    data_source_registry,
-)
-import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _
+import cmk.gui.views as views
+import cmk.gui.visuals as visuals
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.type_defs import (
-    Rows,)
+from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.plugins.views.utils import (
-    Cell,
     ABCDataSource,
+    command_registry,
+    data_source_registry,
+    PainterOptions,
+    Cell,
 )
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.type_defs import Rows
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.urls import makeuri
 
 HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
 Items = List[Tuple[str, str, str]]
@@ -451,7 +449,6 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
 
 # FIXME: Reduce ducplicate code with views.py
 def do_commands(what: str, rows: Rows) -> bool:
-    command = None
     title, executor = views.core_command(what, rows[0], 0, len(rows))[1:3]  # just get the title
     title_what = _("hosts") if what == "host" else _("services")
     r = confirm_with_preview(

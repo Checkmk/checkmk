@@ -6,51 +6,89 @@
 
 import abc
 import ast
-import time
-import pprint
-import traceback
-import json
 import functools
-from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple as _Tuple, Union,
-                    Iterator, Type)
+import json
+import pprint
+import time
+import traceback
 from dataclasses import dataclass
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Set
+from typing import Tuple as _Tuple
+from typing import Type, Union
 
 import livestatus
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
-from cmk.utils.structured_data import StructuredDataTree
-from cmk.utils.prediction import livestatus_lql
+import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
+from cmk.utils.prediction import livestatus_lql
+from cmk.utils.structured_data import StructuredDataTree
 
-import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
-import cmk.gui.inventory as inventory
-import cmk.gui.visuals as visuals
-import cmk.gui.sites as sites
-import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
-import cmk.gui.pages
-import cmk.gui.view_utils
+import cmk.gui.inventory as inventory
 import cmk.gui.log as log
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+import cmk.gui.pages
+import cmk.gui.pagetypes as pagetypes
+import cmk.gui.plugins.views.availability
+import cmk.gui.plugins.views.inventory
+import cmk.gui.sites as sites
+import cmk.gui.utils as utils
+import cmk.gui.view_utils
+import cmk.gui.visuals as visuals
+import cmk.gui.weblib as weblib
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
+from cmk.gui.globals import g, html, display_options
+from cmk.gui.globals import request as global_request
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
+    make_checkbox_selection_topic,
+    make_display_options_dropdown,
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuPopup,
     PageMenuSidePopup,
-    make_display_options_dropdown,
-    make_simple_link,
-    make_checkbox_selection_topic,
+    PageMenuTopic,
     toggle_page_menu_entries,
-    make_simple_form_page_menu,
+)
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
+    get_icons, get_multisite_icons, iconpainter_columns, multisite_icons_and_actions,
+)
+from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
+from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=unused-import
+    perfometers,)
+from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
+    _parse_url_sorters, ABCDataSource, Cell, cmp_custom_variable, cmp_insensitive_string,
+    cmp_ip_address, cmp_num_split, cmp_service_name_equiv, cmp_simple_number, cmp_simple_string,
+    cmp_string_list, Command, command_registry, CommandGroup, data_source_registry,
+    declare_1to1_sorter, declare_simple_sorter, DerivedColumnsSorter, exporter_registry,
+    format_plugin_output, get_all_views, get_custom_var, get_linked_visual_request_vars,
+    get_perfdata_nth_value, get_permitted_views, get_tag_groups, get_view_infos, group_value,
+    inventory_displayhints, is_stale, join_row, JoinCell, Layout, layout_registry,
+    make_host_breadcrumb, make_linked_visual_url, make_service_breadcrumb, multisite_builtin_views,
+    paint_age, paint_host_list, paint_stalified, Painter, painter_exists, painter_registry,
+    PainterOptions, register_command_group, register_legacy_command, register_painter,
+    register_sorter, replace_action_url_macros, row_id, Sorter, sorter_registry, SorterEntry,
+    SorterSpec, transform_action_url, view_hooks, view_is_enabled, view_title,
+)
+from cmk.gui.plugins.visuals.utils import (
+    Filter,
+    visual_info_registry,
+    visual_type_registry,
+    VisualInfo,
+    VisualType,
 )
 from cmk.gui.valuespec import (
     Alternative,
@@ -70,77 +108,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g, request as global_request, display_options
-from cmk.gui.exceptions import (
-    HTTPRedirect,
-    MKGeneralException,
-    MKUserError,
-    MKInternalError,
-)
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-    declare_permission,
-)
-from cmk.gui.plugins.visuals.utils import (
-    visual_info_registry,
-    VisualInfo,
-    visual_type_registry,
-    VisualType,
-    Filter,
-)
-from cmk.gui.plugins.views.icons.utils import (
-    icon_and_action_registry,
-    Icon,
-)
-from cmk.gui.plugins.views.utils import (
-    command_registry,
-    CommandGroup,
-    Command,
-    layout_registry,
-    exporter_registry,
-    data_source_registry,
-    painter_registry,
-    Painter,
-    sorter_registry,
-    get_permitted_views,
-    get_all_views,
-    painter_exists,
-    PainterOptions,
-    get_tag_groups,
-    _parse_url_sorters,
-    SorterEntry,
-    make_host_breadcrumb,
-    make_service_breadcrumb,
-    SorterSpec,
-    Sorter,
-    DerivedColumnsSorter,
-    make_linked_visual_url,
-    get_linked_visual_request_vars,
-)
-
-# Needed for legacy (pre 1.6) plugins
-from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
-    view_title, multisite_builtin_views, view_hooks, inventory_displayhints, register_command_group,
-    transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output, row_id,
-    group_value, view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter,
-    cmp_simple_number, cmp_simple_string, cmp_insensitive_string, cmp_num_split,
-    cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var,
-    get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell,
-    register_legacy_command, register_painter, register_sorter, ABCDataSource, Layout,
-)
-
-# Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
-    multisite_icons_and_actions, get_multisite_icons, get_icons, iconpainter_columns,
-)
-
-import cmk.gui.plugins.views.inventory
-import cmk.gui.plugins.views.availability
-from cmk.gui.plugins.views.perfometers import perfometers  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.views  # pylint: disable=no-name-in-module
@@ -149,11 +117,19 @@ if not cmk_version.is_raw_edition():
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
-from cmk.gui.type_defs import (PainterSpec, HTTPVariables, InfoName, FilterHeaders, Row, Rows,
-                               ColumnName, Visual, ViewSpec)
-
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.type_defs import (
+    ColumnName,
+    FilterHeaders,
+    HTTPVariables,
+    InfoName,
+    PainterSpec,
+    Row,
+    Rows,
+    ViewSpec,
+    Visual,
+)
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False

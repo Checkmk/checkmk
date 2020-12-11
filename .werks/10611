@@ -1,15 +1,22 @@
 Title: ntopng intergration: List of fixes
-Level: 1
-Component: multisite
 Class: fix
 Compatible: compat
+Component: multisite
+Date: 1607597712
 Edition: cee
+Knowledge: undoc
+Level: 1
 State: unknown
 Version: 2.0.0b2
-Date: 1607597712
 
+<b>Styling:</b>
 <ul>
 <li>Adapt styling to dark and light theme.</li>
 <li>Prevent pie chart labels from overlapping.</li>
 <li>Improve layout of tables and navigation.</li>
+</ul>
+
+<b>Crashes:</b>
+<ul>
+<li>In case the given ntopng user name has insufficients rights to see the data, a warning is now shown.</li>
 </ul>

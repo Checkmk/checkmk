@@ -94,30 +94,6 @@ def _filter_check(generator: Callable[..., Generator[Any, None, None]],) -> Chec
     return filtered_generator
 
 
-def _validate_discovery_ruleset(ruleset_name: Optional[str],
-                                default_parameters: Optional[dict]) -> None:
-    if ruleset_name is None:
-        return
-
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
-
-
-def _validate_check_ruleset(ruleset_name: Optional[str],
-                            default_parameters: Optional[dict]) -> None:
-    if ruleset_name is None:
-        return
-
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
-
-
 def _validate_kwargs(
     *,
     plugin_name: CheckPluginName,
@@ -141,10 +117,6 @@ def _validate_kwargs(
         discovery_ruleset_name,
         discovery_default_parameters,
     )
-    # _validate_discovery_ruleset(
-    #     discovery_ruleset_name,
-    #     discovery_default_parameters,
-    # )
     validate_ruleset_type(discovery_ruleset_type)
     validate_function_arguments(
         type_label="discovery",
@@ -159,10 +131,6 @@ def _validate_kwargs(
         check_ruleset_name,
         check_default_parameters,
     )
-    # _validate_check_ruleset(
-    #     check_ruleset_name,
-    #     check_default_parameters,
-    # )
     validate_function_arguments(
         type_label="check",
         function=check_function,

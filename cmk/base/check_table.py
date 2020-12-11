@@ -68,6 +68,9 @@ class HostCheckTable(CheckTable):
     def _get_static_check_entries(host_config: config.HostConfig,) -> Iterator[Service]:
         entries: List[Service] = []
         for _checkgroup_name, check_plugin_name_str, item, params in host_config.static_checks:
+            # TODO (mo): centralize maincheckify: CMK-4295
+            check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
+
             if config.has_timespecific_params(params):
                 timespec_params = [params]
                 params = {}
@@ -76,7 +79,7 @@ class HostCheckTable(CheckTable):
 
             new_params = config.compute_check_parameters(
                 host_config.hostname,
-                check_plugin_name_str,
+                check_plugin_name,
                 item,
                 params,
                 for_static_checks=True,
@@ -87,8 +90,6 @@ class HostCheckTable(CheckTable):
             else:
                 params = new_params
 
-            # TODO (mo): centralize maincheckify: CMK-4295
-            check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
             descr = config.service_description(host_config.hostname, check_plugin_name, item)
             entries.append(Service(check_plugin_name, item, descr, params))
 

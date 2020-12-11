@@ -2136,7 +2136,7 @@ def get_host_label_parameters(
 
 def compute_check_parameters(
     host: HostName,
-    checktype: Union[CheckPluginNameStr, CheckPluginName],
+    plugin_name: CheckPluginName,
     item: Item,
     params: LegacyCheckParameters,
     for_static_checks: bool = False,
@@ -2144,15 +2144,6 @@ def compute_check_parameters(
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
-    # TODO (mo): The signature of this function has been broadened to accept CheckPluginNameStr
-    # *or* CheckPluginName alternatively (to ease migration).
-    # Once we're ready, it should only accept the CheckPluginName (or even the plugin itself, we will
-    # see)
-    if isinstance(checktype, CheckPluginName):
-        plugin_name = checktype
-    else:
-        plugin_name = CheckPluginName(maincheckify(checktype))
-
     plugin = agent_based_register.get_check_plugin(plugin_name)
     if plugin is None:  # handle vanished check plugin
         return None

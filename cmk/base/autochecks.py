@@ -18,7 +18,6 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import (
     CheckPluginName,
-    CheckPluginNameStr,
     CheckVariables,
     HostName,
     Item,
@@ -29,13 +28,8 @@ from cmk.utils.log import console
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 from cmk.base.check_utils import LegacyCheckParameters, Service
 
-# this only ever applies to config.compute_check_parameters, whos
-# signature has been broadened to accept CheckPluginNameStr
-# *or* CheckPluginName alternatively (to ease migration).
-# Once we're ready, it should only accept the CheckPluginName
-ComputeCheckParameters = Callable[
-    [HostName, Union[CheckPluginNameStr, CheckPluginName], Item, LegacyCheckParameters],
-    Optional[LegacyCheckParameters]]
+ComputeCheckParameters = Callable[[HostName, CheckPluginName, Item, LegacyCheckParameters],
+                                  Optional[LegacyCheckParameters]]
 GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]

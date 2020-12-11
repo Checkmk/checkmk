@@ -13,6 +13,7 @@ import pytest  # type: ignore[import]
 
 import cmk.gui.config as config
 import cmk.utils.version as cmk_version
+from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -5703,39 +5704,39 @@ def test_get_needed_regular_columns(view):
 
     columns = cmk.gui.views._get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters, view.datasource)
     assert sorted(columns) == sorted([
-        'host_scheduled_downtime_depth',
-        'host_in_check_period',
-        'host_num_services_pending',
-        'host_downtimes_with_extra_info',
-        'host_pnpgraph_present',
-        'host_check_type',
         'host_accept_passive_checks',
-        'host_num_services_crit',
-        'host_icon_image',
-        'host_is_flapping',
-        'host_in_notification_period',
-        'host_check_command',
-        'host_modified_attributes_list',
-        'host_downtimes',
-        'host_filename',
         'host_acknowledged',
-        'host_custom_variable_names',
-        'host_state',
         'host_action_url_expanded',
-        'host_comments_with_extra_info',
-        'host_in_service_period',
-        'host_num_services_ok',
-        'host_has_been_checked',
-        'host_address',
-        'host_staleness',
-        'host_num_services_unknown',
-        'host_notifications_enabled',
         'host_active_checks_enabled',
-        'host_perf_data',
+        'host_address',
+        'host_check_command',
+        'host_check_type',
+        'host_comments_with_extra_info',
+        'host_custom_variable_names',
         'host_custom_variable_values',
+        'host_downtimes',
+        'host_downtimes_with_extra_info',
+        'host_filename',
+        'host_has_been_checked',
+        'host_icon_image',
+        'host_in_check_period',
+        'host_in_notification_period',
+        'host_in_service_period',
+        'host_is_flapping',
+        'host_modified_attributes_list',
         'host_name',
-        'host_num_services_warn',
         'host_notes_url_expanded',
+        'host_notifications_enabled',
+        'host_num_services_crit',
+        'host_num_services_ok',
+        'host_num_services_pending',
+        'host_num_services_unknown',
+        'host_num_services_warn',
+        'host_perf_data',
+        'host_pnpgraph_present',
+        'host_scheduled_downtime_depth',
+        'host_staleness',
+        'host_state',
     ])
 
 
@@ -6281,3 +6282,74 @@ def test_registered_display_hints():
 def test_get_inventory_display_hint():
     hint = cmk.gui.plugins.views.inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)
+
+
+def test_view_page(wsgi_app, with_user, mock_livestatus):
+    username, password = with_user
+    login = wsgi_app.get('/NO_SITE/check_mk/login.py')
+    login.form['_username'] = username
+    login.form['_password'] = password
+    resp = login.form.submit('_login', index=1)
+    assert "Invalid credentials." not in resp.text
+
+    def _prepend(prefix, dict_):
+        d = {}
+        for key, value in dict_.items():
+            d[key] = value
+            d[prefix + key] = value
+        return d
+
+    live: MockLiveStatusConnection = mock_livestatus
+    live.add_table('hosts', [_prepend('host_', {
+        'accept_passive_checks': 0,
+        'acknowledged': 0,
+        'action_url_expanded': '',
+        'active_checks_enabled': 1,
+        'address': '127.0.0.1',
+        'check_command': 'check-mk-host-smart',
+        'check_type': 0,
+        'comments_with_extra_info': '',
+        'custom_variable_name': '',
+        'custom_variable_names': ['FILENAME', 'ADDRESS_FAMILY', 'ADDRESS_4', 'ADDRESS_6', 'TAGS'],
+        'custom_variable_values': ['/wato/hosts.mk', 4, '127.0.0.1', '', '/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp'],
+        'downtimes': '',
+        'downtimes_with_extra_info': '',
+        'filename': '/wato/hosts.mk',
+        'has_been_checked': 1,
+        'icon_image': '',
+        'in_check_period': 1,
+        'in_notification_period': 1,
+        'in_service_period': 1,
+        'is_flapping': 0,
+        'modified_attributes_list': '',
+        'name': 'heute',
+        'notes_url_expanded': '',
+        'notifications_enabled': 1,
+        'num_services_crit': 2,
+        'num_services_ok': 37,
+        'num_services_pending': 0,
+        'num_services_unknown': 0,
+        'num_services_warn': 2,
+        'perf_data': '',
+        'pnpgraph_present': 0,
+        'scheduled_downtime_depth': 0,
+        'staleness': 0.833333,
+        'state': 0,
+    })])
+    live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
+    live.expect_query(
+        "GET hosts\n"
+        "Columns: host_accept_passive_checks host_acknowledged host_action_url_expanded "
+        "host_active_checks_enabled host_address host_check_command host_check_type "
+        "host_comments_with_extra_info host_custom_variable_names host_custom_variable_values "
+        "host_downtimes host_downtimes_with_extra_info host_filename host_has_been_checked "
+        "host_icon_image host_in_check_period host_in_notification_period host_in_service_period "
+        "host_is_flapping host_modified_attributes_list host_name host_notes_url_expanded "
+        "host_notifications_enabled host_num_services_crit host_num_services_ok "
+        "host_num_services_pending host_num_services_unknown host_num_services_warn host_perf_data "
+        "host_pnpgraph_present host_scheduled_downtime_depth host_staleness host_state"
+    )
+    live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
+    with live():
+        resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
+        assert 'heute' in resp

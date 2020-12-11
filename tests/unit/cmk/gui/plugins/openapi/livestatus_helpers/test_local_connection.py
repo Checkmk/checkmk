@@ -30,7 +30,7 @@ def test_row_table_object(mock_livestatus, register_builtin_html):
         }],
     )
     live.expect_query('GET hosts\n'
-                      'Columns: name host_has_been_checked host_state\n'
+                      'Columns: host_has_been_checked host_state name\n'
                       'Filter: name = heute')
 
     view_name = "hosts"

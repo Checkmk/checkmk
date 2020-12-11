@@ -14,6 +14,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.prediction import lq_logic
 
 import cmk.gui.utils
+from cmk.gui.utils.labels import encode_labels_for_livestatus
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
@@ -2089,21 +2090,7 @@ class LabelFilter(Filter):
         value = self._current_value()
         if not value:
             return ""
-
-        return self._get_label_filters(value)
-
-    def _get_label_filters(self, labels):
-        filters = []
-        for label_id, label_value in labels.items():
-            filters.append(self._label_filter(label_id, label_value))
-        return "".join(filters)
-
-    def _label_filter(self, label_id, label_value):
-        return "Filter: %s = %s %s\n" % (
-            livestatus.lqencode(self._column),
-            livestatus.lqencode(livestatus.quote_dict(label_id)),
-            livestatus.lqencode(livestatus.quote_dict(label_value)),
-        )
+        return encode_labels_for_livestatus(self._column, iter(value.items())) + "\n"
 
 
 filter_registry.register(

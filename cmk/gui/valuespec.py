@@ -60,6 +60,11 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html, request as global_request
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.labels import (
+    encode_labels_for_tagify,
+    encode_labels_for_http,
+    label_help_text,
+)
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.type_defs import Choices, GroupedChoices, ChoiceGroup
 from cmk.gui.view_utils import render_labels
@@ -5563,9 +5568,7 @@ class Labels(ValueSpec):
 
     def help(self) -> Union[str, HTML, None]:
         h = super().help()
-        return (u"" if h is None else h) + _(
-            "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>."
-        )
+        return (u"" if h is None else h) + label_help_text()
 
     def canonical_value(self):
         return {}
@@ -5607,11 +5610,8 @@ class Labels(ValueSpec):
 
     def render_input(self, varprefix, value):
         html.help(self.help())
-        # tagify outputs a warning for value of "[]" right now
-        # see: https://github.com/yairEO/tagify/pull/275
-        labels = _encode_labels_for_tagify(value.items())
         html.text_input(varprefix,
-                        default_value=ensure_str(json.dumps(labels)) if labels else "",
+                        default_value=encode_labels_for_http(value.items()),
                         cssclass="labels",
                         placeholder=_("Add some label"),
                         data_world=self._world.value,
@@ -5628,7 +5628,7 @@ class PageAutocompleteLabels(AjaxPage):
     """Return all known labels to support tagify label input dropdown completion"""
     def page(self):
         request = html.get_request()
-        return _encode_labels_for_tagify(
+        return encode_labels_for_tagify(
             self._get_labels(Labels.World(request["world"]), request["search_label"]))
 
     def _get_labels(self, world, search_label):
@@ -5658,10 +5658,6 @@ class PageAutocompleteLabels(AjaxPage):
             labels.update(row[1].items())
 
         return list(labels)
-
-
-def _encode_labels_for_tagify(labels):
-    return [{"value": "%s:%s" % e} for e in labels]
 
 
 class IconSelector(ValueSpec):

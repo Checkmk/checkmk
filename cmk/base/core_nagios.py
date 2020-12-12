@@ -1216,9 +1216,10 @@ def _get_needed_plugin_names(
     if host_config.do_status_data_inventory:
         for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
-            for section_name in inventory_plugin.sections:
+            for parsed_section_name in inventory_plugin.sections:
                 # check if we must add the legacy check plugin:
-                legacy_check_name = config.legacy_check_plugin_names.get(section_name)
+                legacy_check_name = config.legacy_check_plugin_names.get(
+                    CheckPluginName(str(parsed_section_name)))
                 if legacy_check_name is not None:
                     needed_legacy_check_plugin_names.add(legacy_check_name)
 

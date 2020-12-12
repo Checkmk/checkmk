@@ -136,8 +136,6 @@ def _extract_inventory_plugins(inf_info: Dict[InventoryPluginNameStr, InventoryI
                 create_inventory_plugin_from_legacy(
                     plugin_name,
                     plugin_info,
-                    # count inherited extra sections from check plugin:
-                    len(config.check_info.get(plugin_name, {}).get("extra_sections", [])),
                 ))
         except NotImplementedError:
             msg = config.AUTO_MIGRATION_ERR_MSG % ('inventory', plugin_name)

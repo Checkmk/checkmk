@@ -274,8 +274,6 @@ class MultiHostSections:
         a) Extract the section_content for the given check_plugin_name
         b) Adds node_info to the section_content (if check asks for this)
         c) Applies the parse function (if check has some)
-        d) Adds extra_sections (if check asks for this)
-           and also applies node_info and extra_section handling to this
 
         It can return an section_content construct or None when there is no section content
         for this check available.

@@ -1189,11 +1189,6 @@ def _get_needed_plugin_names(
         if legacy_name is None:
             continue
 
-        if config.check_info[legacy_name].get("extra_sections"):
-            for section_name in config.check_info[legacy_name]["extra_sections"]:
-                if section_name in config.check_info:
-                    needed_legacy_check_plugin_names.add(section_name)
-
         needed_legacy_check_plugin_names.add(legacy_name)
 
     # Also include the check plugins of the cluster nodes to be able to load

@@ -3,7 +3,8 @@ FROM ubuntu:19.10
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
-RUN apt-get update \
+RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list \
+    && apt-get update \
     && apt-get install -y \
     gdebi \
     git \
@@ -25,7 +26,8 @@ RUN apt-get update \
     vim \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update \
+RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list \
+    && apt-get update \
     && apt-get install -y \
     apache2 \
     apache2-dev \

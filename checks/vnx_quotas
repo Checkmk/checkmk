@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
@@ -14,76 +15,71 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
-# ..|..,total,avail,used,totalKB
-# <<<vnx_quotas:sep(124)>>>
-# [[[fs]]]
-# fv51_01|806636,806636,0,0,825996248
-# fv51_02|100774,100773,0,0,103193048
-# fv52_01|252030,252030,0,0,258079448
-# fv52_04|20104,20103,0,0,20586968
-# fv53_01|1032512,1032512,0,0,1057293272
-# fv53_04|20104,20103,0,0,20586968
-# fv54_01|50355,50355,0,0,51564248
-# fv54_02|120941,120941,0,0,123844568
-# fv56_01|50355,50355,0,0,51564248
-# fv56_02|50355,50355,0,0,51564248
-# fv56_03|352868,352867,0,0,361337048
-# fv56_04|100774,100773,0,0,103193048
-# fv56_05|30188,30187,0,0,30912728
-# fv56_06|857055,857055,0,0,877625048
-# fv58_01|30188,30187,0,0,30912728
-# fv61_01|201611,201611,0,0,206450648
-# fv61_02|70523,70522,0,0,72215768
-# fv61_03|30188,30187,0,0,30912728
-# fv61_04|10020,10020,0,0,10261208
-
-# ..|..|blochusage|blockhardlimit
-# [[[quotas]]]
-# vdmfv51|fv51_01|/hmtest|0|0
-# vdmfv51|fv51_01|/BOEINT|0|1048576
-# vdmfv51|fv51_01|/BOEPROD|0|73400320
-# vdmfv51|fv51_01|/QIA|0|1048576
-# vdmfv51|fv51_01|/DEV|0|157286400
-# vdmfv51|fv51_01|/P90|0|52428800
-# vdmfv51|fv51_01|/P62|0|786432000
-# vdmfv51|fv51_02|/bo_transfer|0|205520896
-# vdmfv52|fv52_01|/saptrans|0|471859200
-# vdmfv52|fv52_04|/b10_gkretail|0|134217728
-# vdmfv53|fv53_01|/sapcd|0|1073741824
-# vdmfv53|fv53_04|/sap-template|0|104857600
-# vdmfv54|fv54_01|/p22_archiv|0|1048576
-# vdmfv54|fv54_01|/f22_archiv|0|1048576
-# vdmfv54|fv54_01|/e22_archiv|0|1048576
-# vdmfv54|fv54_01|/u1_ebv_zr|0|52428800
 
 discovery_rules_vnx_quotas = []
 
+_MEGA = 1024.0**2
 
-def parse_vnx_quotas(info):
-    parsed = {"fs": {}, "quotas": {}}
+
+class Quota(NamedTuple):
+    name: str
+    fs: str
+    limit: str
+    used: int
+
+
+class Section(NamedTuple):
+    fs_sizes: Dict[str, int]
+    quotas: List[Quota]
+
+
+def parse_vnx_quotas(info) -> Section:
+    """
+        >>> from pprint import pprint as pp
+        >>> pp(parse_vnx_quotas([
+        ...     ['[[[fs]]]'],
+        ...     ['fv51_01', '806636,806636,0,0,825996248'],
+        ...     ['fv51_02', '100774,100773,0,0,103193048'],
+        ...     ['[[[quotas]]]'],
+        ...     ['vdmfv51', 'fv51_01', '/hmtest', '0', '0'],
+        ...     ['vdmfv51', 'fv51_01', '/BOEINT', '0', '1048576'],
+        ... ]))
+        {'fs_total_bytes': {'fv51_01': 825996248',
+                            fv51_02': 103193048}},
+        'quotas': {'vdmfv51 /hmtest': {'fs': 'fv51_01', 'limit': '0', 'used': 0},
+                   'vdmfv51 /BOEINT': {'fs': 'fv51_01', 'limit': '1048576', 'used': 0}}
+    """
+
+    section = Section(fs_sizes={}, quotas=[])
     subsection = None
     for line in info:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             subsection = line[0][3:-3]
             continue
 
-        stripped_entries = [x.strip() for x in line]
         if subsection == "fs":
-            parsed["fs"].setdefault(stripped_entries[0], {"data": stripped_entries[1].split(",")})
+            fs_name = line[0].strip()
+            fs_total_bytes = int(line[1].split(',')[4]) * 1024
+            section.fs_sizes[fs_name] = fs_total_bytes
 
         elif subsection == "quotas":
-            if len(stripped_entries) != 5:
+            if len(line) != 5:
                 continue
 
-            dms, fs, mp, used_str, limit_str = stripped_entries
-            name = "%s %s" % (dms, mp)
-            parsed["quotas"].setdefault(name, {"fs": fs, "usage": None})
-            parsed["quotas"][name]["usage"] = used_str, limit_str, 0
+            dms, fs, mp, used_str, limit_str = line
+            name = "%s %s" % (dms.strip(), mp.strip())
+            section.quotas.append(
+                Quota(
+                    name=name,
+                    fs=fs.strip(),
+                    limit=limit_str,
+                    used=int(used_str) * 1024,
+                ))
 
-    return parsed
+    return section
 
 
-def vnx_quotas_renaming(name, mappings):
+def vnx_quotas_renaming(name: str, mappings: Sequence[Tuple[str, str]]) -> str:
     for match, substitution in mappings:
         if match.startswith("~"):
             num_perc_s = substitution.count("%s")
@@ -91,8 +87,8 @@ def vnx_quotas_renaming(name, mappings):
             matchobj = reg.match(name)
             if matchobj:
                 matches = [g and g or "" for g in matchobj.groups()]
-                for nr, group in enumerate(matches):
-                    substitution = substitution.replace("%%%d" % (nr + 1), group)
+                for num, group in enumerate(matches, start=1):
+                    substitution = substitution.replace("%%%d" % num, group)
                 substitution = substitution % tuple(matches[:num_perc_s])
                 return substitution
 
@@ -104,44 +100,44 @@ def vnx_quotas_renaming(name, mappings):
 
 def discover_vnx_quotas(parsed):
     params = host_extra_conf(host_name(), discovery_rules_vnx_quotas)
-    for name in parsed["quotas"]:
-        dms, mp = name.split(" ")
-        if params:
-            dms = vnx_quotas_renaming(dms, params[0].get("dms_names"))
-            mp = vnx_quotas_renaming(mp, params[0].get("mp_names"))
-        yield "%s %s" % (dms, mp), {"pattern": name}
+
+    for quota in parsed.quotas:
+        dms, mpt = quota.name.split(" ")
+        if params and params[0]:
+            dms = vnx_quotas_renaming(dms, params[0]["dms_names"])
+            mpt = vnx_quotas_renaming(mpt, params[0]["mp_names"])
+        yield "%s %s" % (dms, mpt), {"pattern": quota.name}
 
 
-def _get_quota(item, params, parsed):
-    for quota_name in parsed["quotas"]:
-        if item == quota_name or quota_name == params["pattern"]:
-            return parsed["quotas"][quota_name]
+def _get_quota(item: str, params: Mapping[str, Any], section: Section) -> Optional[Quota]:
+    for quota in section.quotas:
+        if quota.name in (item, params["pattern"]):
+            return quota
     return None
 
 
-def check_vnx_quotas(item, params, parsed):
-    data = _get_quota(item, params, parsed)
-    if data is None:
+def check_vnx_quotas(item: str, params: Mapping[str, Any], parsed: Section):
+    quota = _get_quota(item, params, parsed)
+    if quota is None:
         return
-
-    fs = data.get("fs")
-    used_kb, limit_kb_str, reserved_kb = data["usage"]
 
     # Special case as customer said:
     # if BlockHardLimit == "0" or "NoLimit" then we take filesystem size
-    if limit_kb_str in ["0", "NoLimit"] and fs in parsed["fs"]:
-        _total_size_mb, available_mb, _used_mb, \
-            _used_perc, total_size_kb = parsed["fs"][fs]["data"]
-        size_mb = int(total_size_kb) / 1024.0
-    else:
-        size_mb = int(limit_kb_str) / 1024.0
+    use_fs = quota.limit in ("0", "NoLimit") and quota.fs in parsed.fs_sizes
+    size_mb = parsed.fs_sizes[quota.fs] / _MEGA if use_fs else int(quota.limit) / 1024.0
+    available_mb = size_mb - quota.used / _MEGA
 
-    available_mb = size_mb - int(used_kb) / 1024.0
-    reserved_mb = reserved_kb / 1024.0
-    state, infotext, perfdata = df_check_filesystem_single(item, size_mb, available_mb, reserved_mb,
-                                                           None, None, params)
+    state, infotext, perfdata = df_check_filesystem_single(
+        item,
+        size_mb,
+        available_mb,
+        0.0,
+        None,
+        None,
+        params,
+    )
 
-    return state, infotext.replace("filesystem", "quota"), perfdata
+    yield state, infotext.replace("filesystem", "quota"), perfdata
 
 
 check_info['vnx_quotas'] = {

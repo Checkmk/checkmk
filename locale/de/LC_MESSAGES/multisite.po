@@ -3036,6 +3036,10 @@ msgstr "Aktive Einheit"
 msgid "Activity log updates"
 msgstr "Aktive Pfade"
 
+#, fuzzy
+msgid "Actual Traffic"
+msgstr "Gesamtes Trefferverhältnis"
+
 msgid "Adaptable"
 msgstr "Anpassungsfähig"
 
@@ -3646,7 +3650,7 @@ msgid "Additional options"
 msgstr "Zusätzliche Optionen"
 
 #, fuzzy
-msgid "Additional rules for files"
+msgid "Additional rules for outliers"
 msgstr "Zusätzliche Headerzeilen"
 
 msgid "Additive: Effects of seasonality are added to the trend."
@@ -14331,6 +14335,13 @@ msgstr ""
 msgid "Display additional messages"
 msgstr "Alle zusätzlichen IPv4-Adresse anpingen"
 
+msgid ""
+"Display all files that have reached a WARN or a CRIT status in the service "
+"details. Note: displaying the files leads to a performance loss for large "
+"numbers of files within the file group. Please enable this feature only if "
+"it is needed."
+msgstr ""
+
 msgid "Display average"
 msgstr "Durchschnitt anzeigen"
 
@@ -14435,6 +14446,10 @@ msgstr "Schwellwerte für WARN/CRIT im Check anzeigen..."
 
 #, fuzzy
 msgid "Displays Gauge"
+msgstr "Anzeigename"
+
+#, fuzzy
+msgid "Displays Top Talkers"
 msgstr "Anzeigename"
 
 #, fuzzy
@@ -16944,6 +16959,14 @@ msgstr "Regelpakete der Event Console"
 
 msgid "Event Console rule packs"
 msgstr "Regelpakete für die Event Console"
+
+#, fuzzy
+msgid "Event Console rules"
+msgstr "Eventkonsolen-Regel"
+
+#, fuzzy
+msgid "Event Console settings"
+msgstr "Timing der Event Console"
 
 msgid "Event Console: Current Events"
 msgstr "Event Console: Aktuelle Ereignisse"
@@ -30857,6 +30880,14 @@ msgstr "Netzwerkadresse"
 msgid "Network ID"
 msgstr "Netzwerk-ID"
 
+#, fuzzy
+msgid "Network Interfaces: Realtime Traffic"
+msgstr "Netzwerkschnittstellen"
+
+#, fuzzy
+msgid "Network Interfaces: Yesterday Traffic"
+msgstr "Netzwerkschnittstellen"
+
 msgid "Network Load Balancer Listeners"
 msgstr "Listener von Netzwork-Loadbalancer"
 
@@ -32063,9 +32094,6 @@ msgstr "Name des Peers"
 #, fuzzy
 msgid "Ntop: Alerts"
 msgstr "Alarme"
-
-msgid "Ntop: Flows"
-msgstr ""
 
 msgid "Ntopng"
 msgstr ""
@@ -36433,26 +36461,28 @@ msgstr "Provisionierter Dateisystemplatz"
 msgid "Provisioning Levels"
 msgstr "Schwellen für Provisionierung"
 
-msgid "Proxmox"
+#, fuzzy
+msgid "Proxmox VE"
+msgstr "Gruppen auf einem Cluster"
+
+#, fuzzy
+msgid "Proxmox VE Node Info"
+msgstr "Fortschritt"
+
+msgid "Proxmox VE VM Backup"
 msgstr ""
 
 #, fuzzy
-msgid "Proxmox Node Info"
+msgid "Proxmox VE VM Info"
 msgstr "Fortschritt"
 
-msgid "Proxmox VM Backup"
-msgstr ""
-
-msgid "Proxmox VM Info"
-msgstr ""
+#, fuzzy
+msgid "Proxmox VE disk percentage used"
+msgstr "Prozentuale Nutzung"
 
 #, fuzzy
 msgid "Proxmox cluster"
 msgstr "Gruppen auf einem Cluster"
-
-#, fuzzy
-msgid "Proxmox disk percentage used"
-msgstr "Prozentuale Nutzung"
 
 msgid "Proxy URL"
 msgstr "Proxy-URL"
@@ -40910,9 +40940,6 @@ msgstr "Alle anzeigen"
 msgid "Show all %s topics"
 msgstr "Zeige alle Hosts"
 
-msgid "Show all files in long output"
-msgstr ""
-
 msgid "Show all hosts"
 msgstr "Zeige alle Hosts"
 
@@ -40979,6 +41006,10 @@ msgstr "Erkannte Label anzeigen"
 
 msgid "Show failed notifications"
 msgstr "%d fehlgeschlagene Alarmierungen"
+
+#, fuzzy
+msgid "Show files in service details"
+msgstr "BI Servicedetails"
 
 msgid "Show graph time range"
 msgstr "Zeige Graphzeitbereich"
@@ -42216,6 +42247,11 @@ msgstr ""
 "müssen auf den <b>Anfang</b> des Service zutreffen. Ein <tt>$</tt> am Ende "
 "erzwingt eine exakte Übereinstimmung. Muster verwenden <b>Reguläre "
 "Ausdrücke</b>. <tt>.*</tt> trifft auf jeden Text zu."
+
+msgid ""
+"Specify a user-friendly name that will be displayed in the service details, "
+"along with the pattern to match."
+msgstr ""
 
 msgid ""
 "Specify all expected mount options here. If the list of actually found "
@@ -49676,6 +49712,16 @@ msgstr ""
 "Kerne begrenzt."
 
 msgid ""
+"This feature is to apply different rules to files that are inconsistent with "
+"the files expected in this file group. This means that the rules set for the "
+"file group are overwritten. You can specify a filename or a regular "
+"expresion, and additional rules that are applied to the matching files. In "
+"case of multiple matching rules, the first matching rule is applied. Note: "
+"this feature is intended for outliers, and is therefore not suitable to "
+"configure subgroups. "
+msgstr ""
+
+msgid ""
 "This field declares the end date of the forecast, which starts on the last "
 "day given by the previous field of \"Consider history of\". Keep in mind "
 "that this value is dynamically calculated with reference to the day of "
@@ -53107,6 +53153,9 @@ msgstr "Hinweis"
 msgid "Top"
 msgstr "Oben"
 
+msgid "Top Talkers"
+msgstr ""
+
 msgid "Top of page handling"
 msgstr "Verhalten beim Seitenanfang"
 
@@ -54479,6 +54528,10 @@ msgstr "Bis zum Ende dieses Monats"
 
 msgid "Until end of year"
 msgstr "Bis zum Ende des Jahres"
+
+#, fuzzy
+msgid "Untitled setting"
+msgstr "%d Filtereinstellungen"
 
 msgid "Unused BI Rules"
 msgstr "Ungenutzte BI-Regeln"
@@ -59639,14 +59692,6 @@ msgstr ""
 "Simulieren Sie ein Ereignis und überprüfen Sie, welche Regeln zutreffen."
 
 msgid ""
-"You can specify a filename or a regular expresion, and additional rules that "
-"are applied to the matching files. This means that the rules set for the "
-"whole file group are overwritten for those files. Note that the order in "
-"which you specify the rules matters: in case of multiple matching rules, the "
-"first matching rule is applied."
-msgstr ""
-
-msgid ""
 "You can specify a hostname or IP address different from IP address of the "
 "host as configured in your host properties."
 msgstr ""
@@ -62210,6 +62255,15 @@ msgstr "sysoper"
 msgid "tasks"
 msgstr ""
 
+msgid "tcp://127.0.0.1:5556: Realtime Top Application Traffic"
+msgstr ""
+
+msgid "tcp://127.0.0.1:5556: Top Local Talkers"
+msgstr ""
+
+msgid "tcp://127.0.0.1:5556: Yesterday Top Application Traffic"
+msgstr ""
+
 msgid "testing"
 msgstr "Test läuft"
 
@@ -62679,11 +62733,6 @@ msgstr ""
 #~ msgid "This might take some time and involves a core restart..."
 #~ msgstr ""
 #~ "Das kann etwas dauern und erfordert einen Restart des Monitoring Cores."
-
-#, fuzzy
-#~| msgid "Total hitratio"
-#~ msgid "Total traffic"
-#~ msgstr "Gesamtes Trefferverhältnis"
 
 #~ msgid ""
 #~ "Use this option to hide the Check_MK edition and version information from "
@@ -68640,9 +68689,6 @@ msgstr ""
 
 #~ msgid "Event Console performance"
 #~ msgstr "Event Console: Leistung"
-
-#~ msgid "Event Console times"
-#~ msgstr "Timing der Event Console"
 
 #~ msgid ""
 #~ "If you work with rule based notifications then you should configure an "

@@ -2727,6 +2727,10 @@ msgid "Activity log updates"
 msgstr "actualizare"
 
 #, fuzzy
+msgid "Actual Traffic"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Adaptable"
 msgstr "spatiu utilizat"
 
@@ -3399,7 +3403,7 @@ msgid "Additional options"
 msgstr "Opțiuni adiționale"
 
 #, fuzzy
-msgid "Additional rules for files"
+msgid "Additional rules for outliers"
 msgstr "Linii de header adiționale"
 
 msgid "Additive: Effects of seasonality are added to the trend."
@@ -13554,6 +13558,13 @@ msgstr ""
 msgid "Display additional messages"
 msgstr "Optiuni tabel"
 
+msgid ""
+"Display all files that have reached a WARN or a CRIT status in the service "
+"details. Note: displaying the files leads to a performance loss for large "
+"numbers of files within the file group. Please enable this feature only if "
+"it is needed."
+msgstr ""
+
 msgid "Display average"
 msgstr ""
 
@@ -13655,6 +13666,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Displays Gauge"
+msgstr "% / gamă"
+
+#, fuzzy
+msgid "Displays Top Talkers"
 msgstr "% / gamă"
 
 #, fuzzy
@@ -16051,6 +16066,14 @@ msgstr ""
 
 #, fuzzy
 msgid "Event Console rule packs"
+msgstr "Acces la Consola de Evenimente"
+
+#, fuzzy
+msgid "Event Console rules"
+msgstr "Acces la Consola de Evenimente"
+
+#, fuzzy
+msgid "Event Console settings"
 msgstr "Acces la Consola de Evenimente"
 
 msgid "Event Console: Current Events"
@@ -29057,6 +29080,14 @@ msgstr "Adresă"
 msgid "Network ID"
 msgstr "Adresă"
 
+#, fuzzy
+msgid "Network Interfaces: Realtime Traffic"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Network Interfaces: Yesterday Traffic"
+msgstr "Adresă"
+
 msgid "Network Load Balancer Listeners"
 msgstr ""
 
@@ -30222,10 +30253,6 @@ msgstr "Numele elementului pentru eveniment"
 #, fuzzy
 msgid "Ntop: Alerts"
 msgstr "catre port:"
-
-#, fuzzy
-msgid "Ntop: Flows"
-msgstr "Element nou"
 
 msgid "Ntopng"
 msgstr ""
@@ -34431,25 +34458,27 @@ msgid "Provisioning Levels"
 msgstr ""
 
 #, fuzzy
-msgid "Proxmox"
+msgid "Proxmox VE"
 msgstr "Cluster nou"
 
-msgid "Proxmox Node Info"
+msgid "Proxmox VE Node Info"
 msgstr ""
 
 #, fuzzy
-msgid "Proxmox VM Backup"
+msgid "Proxmox VE VM Backup"
 msgstr "Cluster nou"
 
-msgid "Proxmox VM Info"
-msgstr ""
+#, fuzzy
+msgid "Proxmox VE VM Info"
+msgstr "Cluster nou"
+
+#, fuzzy
+msgid "Proxmox VE disk percentage used"
+msgstr "trei nivele"
 
 #, fuzzy
 msgid "Proxmox cluster"
 msgstr "Cluster nou"
-
-msgid "Proxmox disk percentage used"
-msgstr ""
 
 msgid "Proxy URL"
 msgstr ""
@@ -38877,9 +38906,6 @@ msgstr "afiseaza toate"
 msgid "Show all %s topics"
 msgstr "trimite notificare"
 
-msgid "Show all files in long output"
-msgstr ""
-
 #, fuzzy
 msgid "Show all hosts"
 msgstr "Scaneaza toate elementele"
@@ -38953,6 +38979,10 @@ msgstr "spatiu utilizat"
 #, fuzzy
 msgid "Show failed notifications"
 msgstr "trimite notificare"
+
+#, fuzzy
+msgid "Show files in service details"
+msgstr "servicii"
 
 msgid "Show graph time range"
 msgstr ""
@@ -40091,6 +40121,11 @@ msgid ""
 "must match the <b>beginning</b> of the service in question. Adding a <tt>$</"
 "tt> to the end forces an excact match. Pattern use <b>regular expressions</"
 "b>. A <tt>.*</tt> will match an arbitrary text."
+msgstr ""
+
+msgid ""
+"Specify a user-friendly name that will be displayed in the service details, "
+"along with the pattern to match."
 msgstr ""
 
 msgid ""
@@ -46336,6 +46371,16 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This feature is to apply different rules to files that are inconsistent with "
+"the files expected in this file group. This means that the rules set for the "
+"file group are overwritten. You can specify a filename or a regular "
+"expresion, and additional rules that are applied to the matching files. In "
+"case of multiple matching rules, the first matching rule is applied. Note: "
+"this feature is intended for outliers, and is therefore not suitable to "
+"configure subgroups. "
+msgstr ""
+
+msgid ""
 "This field declares the end date of the forecast, which starts on the last "
 "day given by the previous field of \"Consider history of\". Keep in mind "
 "that this value is dynamically calculated with reference to the day of "
@@ -48881,6 +48926,9 @@ msgstr ""
 msgid "Top"
 msgstr ""
 
+msgid "Top Talkers"
+msgstr ""
+
 msgid "Top of page handling"
 msgstr ""
 
@@ -50232,6 +50280,10 @@ msgstr " pe siteul de monitorizare: "
 #, fuzzy
 msgid "Until end of year"
 msgstr "licente nefolosite"
+
+#, fuzzy
+msgid "Untitled setting"
+msgstr "%d setări de Filtrare"
 
 #, fuzzy
 msgid "Unused BI Rules"
@@ -54625,14 +54677,6 @@ msgid "You can simulate an event here and check out, which rules are matching."
 msgstr ""
 
 msgid ""
-"You can specify a filename or a regular expresion, and additional rules that "
-"are applied to the matching files. This means that the rules set for the "
-"whole file group are overwritten for those files. Note that the order in "
-"which you specify the rules matters: in case of multiple matching rules, the "
-"first matching rule is applied."
-msgstr ""
-
-msgid ""
 "You can specify a hostname or IP address different from IP address of the "
 "host as configured in your host properties."
 msgstr ""
@@ -56995,6 +57039,15 @@ msgstr ""
 msgid "tasks"
 msgstr ""
 
+msgid "tcp://127.0.0.1:5556: Realtime Top Application Traffic"
+msgstr ""
+
+msgid "tcp://127.0.0.1:5556: Top Local Talkers"
+msgstr ""
+
+msgid "tcp://127.0.0.1:5556: Yesterday Top Application Traffic"
+msgstr ""
+
 msgid "testing"
 msgstr "testare"
 
@@ -57258,6 +57311,11 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "New host"
+#~ msgid "Ntop: Flows"
+#~ msgstr "Element nou"
 
 #, fuzzy
 #~ msgid "%d unacknowledged incompatible werks"
@@ -59792,10 +59850,6 @@ msgstr ""
 #~ msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
-#~ msgid "Event Console Settings"
-#~ msgstr "Acces la Consola de Evenimente"
-
-#, fuzzy
 #~ msgid "Exact name of the user"
 #~ msgstr "Numele elementului pentru eveniment"
 
@@ -60129,10 +60183,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Network Interface"
-#~ msgstr "Adresă"
-
-#, fuzzy
-#~ msgid "Network Interfaces"
 #~ msgstr "Adresă"
 
 #, fuzzy

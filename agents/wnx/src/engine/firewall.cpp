@@ -400,6 +400,25 @@ static std::wstring ToCanonical(std::wstring_view raw_app_name) {
     return std::wstring(raw_app_name);
 }
 
+namespace {
+long CorrectFirewallBitMask(long bit_mask) {
+    if constexpr (true) {
+        return NET_FW_PROFILE2_DOMAIN | NET_FW_PROFILE2_PRIVATE |
+               NET_FW_PROFILE2_PUBLIC;
+    }
+
+    // NOTE: This behavior is deprecated by CMK-6669:
+    // When possible we avoid adding firewall rules to the Public profile.
+    // If Public is currently active and it is not the only active profile,
+    // we remove it from the bitmask
+    if ((bit_mask & NET_FW_PROFILE2_PUBLIC) &&
+        (bit_mask != NET_FW_PROFILE2_PUBLIC)) {
+        return bit_mask ^ NET_FW_PROFILE2_PUBLIC;
+    }
+    return bit_mask;
+}
+}  // namespace
+
 bool CreateInboundRule(std::wstring_view rule_name,
                        std::wstring_view raw_app_name, int port) {
     auto app_name = ToCanonical(raw_app_name);
@@ -413,13 +432,7 @@ bool CreateInboundRule(std::wstring_view rule_name,
     long bit_mask = p.getCurrentProfileTypes();
     if (bit_mask == -1) return false;
 
-    // When possible we avoid adding firewall rules to the Public profile.
-    // If Public is currently active and it is not the only active profile, we
-    // remove it from the bitmask
-    if ((bit_mask & NET_FW_PROFILE2_PUBLIC) &&
-        (bit_mask != NET_FW_PROFILE2_PUBLIC)) {
-        bit_mask ^= NET_FW_PROFILE2_PUBLIC;
-    }
+    bit_mask = CorrectFirewallBitMask(bit_mask);
 
     auto rule = CreateRule();
 

@@ -136,7 +136,6 @@ check_info["mem.linux"] = {
     'default_levels_variable': 'mem_linux_default_levels',
     'has_perfdata': True,
     'group': 'memory_linux',
-    "handle_real_time_checks": True,
 }
 
 #.
@@ -287,7 +286,6 @@ check_info["mem.win"] = {
     'has_perfdata': True,
     'group': 'memory_pagefile_win',
     'default_levels_variable': 'memory_win_default_levels',
-    "handle_real_time_checks": True,
 }
 
 #.
@@ -367,5 +365,4 @@ check_info["mem.vmalloc"] = {
     'check_function': check_mem_vmalloc,
     'service_description': 'Vmalloc address space',
     'has_perfdata': True,
-    "handle_real_time_checks": True,
 }

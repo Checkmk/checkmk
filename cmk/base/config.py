@@ -1832,6 +1832,8 @@ def convert_check_info() -> None:
         # The 'handle_empty_info' feature predates the 'parse_function'
         # and is not needed nor used anymore.
         "handle_empty_info": False,
+        # The handle_real_time_checks was only used to determine the valid choices of the
+        # WATO rule, these are now hardcoded.
         "handle_real_time_checks": False,
         "default_levels_variable": None,
         "node_info": False,

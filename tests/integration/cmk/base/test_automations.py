@@ -333,16 +333,6 @@ def test_automation_get_section_information(test_cfg, site):
         assert info["type"] in ("snmp", "agent")
 
 
-def test_automation_get_real_time_checks(test_cfg, site):
-    data = _execute_automation(site, "get-real-time-checks")
-    assert isinstance(data, list)
-    assert len(data) > 5
-
-    for check_type, title in data:
-        assert isinstance(check_type, str)
-        assert isinstance(title, str)
-
-
 def test_automation_notification_replay(test_cfg, site):
     site.write_file(
         "var/check_mk/notify/backlog.mk",

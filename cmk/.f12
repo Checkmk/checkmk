@@ -110,6 +110,6 @@ if [ -z "$ONLY_COPY" ]; then
 fi
 
 (
-    cd fetchers
+    cd helpers
     bash .f12
 )

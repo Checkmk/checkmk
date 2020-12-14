@@ -11,7 +11,7 @@ from testlib.base import Scenario
 from cmk.utils.type_defs import result
 
 import cmk.base.automations.check_mk as check_mk
-from cmk.base.checkers.tcp import TCPSource
+from cmk.base.sources.tcp import TCPSource
 
 
 class TestAutomationDiagHost:

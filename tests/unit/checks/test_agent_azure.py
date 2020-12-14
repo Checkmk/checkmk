@@ -8,7 +8,7 @@ import json
 import pytest  # type: ignore[import]
 from testlib import SpecialAgent  # type: ignore[import]
 
-from cmk.base.checkers.programs import SpecialAgentConfiguration
+from cmk.base.sources.programs import SpecialAgentConfiguration
 
 pytestmark = pytest.mark.checks
 

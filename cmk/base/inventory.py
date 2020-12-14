@@ -50,7 +50,7 @@ from cmk.helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 from cmk.helpers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.checkers as checkers
+import cmk.base.sources as sources
 import cmk.base.config as config
 import cmk.base.decorator
 import cmk.base.ip_lookup as ip_lookup
@@ -61,8 +61,8 @@ from cmk.base.api.agent_based.inventory_classes import (
     InventoryResult,
     TableRow,
 )
-from cmk.base.checkers import Source
-from cmk.base.checkers.host_sections import HostKey, ParsedSectionsBroker
+from cmk.base.sources import Source
+from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 
 
 class InventoryTrees(NamedTuple):
@@ -252,12 +252,12 @@ def _fetch_parsed_sections_broker_for_inv(
 
     mode = (Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS)
 
-    nodes = checkers.make_nodes(
+    nodes = sources.make_nodes(
         config_cache,
         host_config,
         ipaddress,
         mode,
-        checkers.make_sources(
+        sources.make_sources(
             host_config,
             ipaddress,
             mode=mode,
@@ -265,13 +265,13 @@ def _fetch_parsed_sections_broker_for_inv(
         ),
     )
     parsed_sections_broker = ParsedSectionsBroker()
-    results = checkers.update_host_sections(
+    results = sources.update_host_sections(
         parsed_sections_broker,
         nodes,
         max_cachefile_age=host_config.max_cachefile_age,
         host_config=host_config,
         fetcher_messages=list(
-            checkers.fetch_all(
+            sources.fetch_all(
                 nodes,
                 max_cachefile_age=host_config.max_cachefile_age,
                 host_config=host_config,

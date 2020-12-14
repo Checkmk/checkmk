@@ -69,7 +69,7 @@ import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
-import cmk.base.checkers as checkers
+import cmk.base.sources as sources
 import cmk.base.checking as checking
 import cmk.base.config as config
 import cmk.base.core
@@ -82,7 +82,7 @@ from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
-from cmk.base.checkers.host_sections import HostKey, ParsedSectionsBroker
+from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import (
     DiscoveredHostLabels,
@@ -344,12 +344,12 @@ def do_discovery(
         section.section_begin(hostname)
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
-            nodes = checkers.make_nodes(
+            nodes = sources.make_nodes(
                 config_cache,
                 host_config,
                 ipaddress,
                 mode,
-                checkers.make_sources(
+                sources.make_sources(
                     host_config,
                     ipaddress,
                     mode=mode,
@@ -360,13 +360,13 @@ def do_discovery(
             max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
 
             parsed_sections_broker = ParsedSectionsBroker()
-            checkers.update_host_sections(
+            sources.update_host_sections(
                 parsed_sections_broker,
                 nodes,
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
                 fetcher_messages=list(
-                    checkers.fetch_all(
+                    sources.fetch_all(
                         nodes,
                         max_cachefile_age=max_cachefile_age,
                         host_config=host_config,
@@ -536,12 +536,12 @@ def discover_on_host(
         else:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-        nodes = checkers.make_nodes(
+        nodes = sources.make_nodes(
             config_cache,
             host_config,
             ipaddress,
             Mode.DISCOVERY,
-            checkers.make_sources(
+            sources.make_sources(
                 host_config,
                 ipaddress,
                 mode=Mode.DISCOVERY,
@@ -551,13 +551,13 @@ def discover_on_host(
 
         max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
         parsed_sections_broker = ParsedSectionsBroker()
-        checkers.update_host_sections(
+        sources.update_host_sections(
             parsed_sections_broker,
             nodes,
             max_cachefile_age=max_cachefile_age,
             host_config=host_config,
             fetcher_messages=list(
-                checkers.fetch_all(
+                sources.fetch_all(
                     nodes,
                     max_cachefile_age=max_cachefile_age,
                     host_config=host_config,
@@ -726,12 +726,12 @@ def check_discovery(
 
     mode = (Mode.DISCOVERY if params['inventory_check_do_scan'] else Mode.CACHED_DISCOVERY)
 
-    nodes = checkers.make_nodes(
+    nodes = sources.make_nodes(
         config_cache,
         host_config,
         ipaddress,
         mode,
-        checkers.make_sources(host_config, ipaddress, mode=mode),
+        sources.make_sources(host_config, ipaddress, mode=mode),
     )
     use_caches = cmk.helpers.cache.FileCacheFactory.maybe
     max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
@@ -739,14 +739,14 @@ def check_discovery(
         # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
         #       Also See: `cmk.base.checking.do_check()`
         fetcher_messages = list(
-            checkers.fetch_all(
+            sources.fetch_all(
                 nodes,
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,
             ))
 
     parsed_sections_broker = ParsedSectionsBroker()
-    result = checkers.update_host_sections(
+    result = sources.update_host_sections(
         parsed_sections_broker,
         nodes,
         max_cachefile_age=max_cachefile_age,
@@ -1185,7 +1185,7 @@ def _discover_host_labels(
 
 
 def _discover_host_labels_for_source_type(
-    host_key: checkers.host_sections.HostKey,
+    host_key: sources.host_sections.HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> DiscoveredHostLabels:
@@ -1768,9 +1768,9 @@ def get_check_preview(
 
     mode = Mode.CACHED_DISCOVERY if use_caches else Mode.DISCOVERY
 
-    nodes = checkers.make_nodes(
+    nodes = sources.make_nodes(
         config_cache, host_config, ip_address, mode,
-        checkers.make_sources(
+        sources.make_sources(
             host_config,
             ip_address,
             mode=mode,
@@ -1779,13 +1779,13 @@ def get_check_preview(
     max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
 
     parsed_sections_broker = ParsedSectionsBroker()
-    checkers.update_host_sections(
+    sources.update_host_sections(
         parsed_sections_broker,
         nodes,
         max_cachefile_age=max_cachefile_age,
         host_config=host_config,
         fetcher_messages=list(
-            checkers.fetch_all(
+            sources.fetch_all(
                 nodes,
                 max_cachefile_age=max_cachefile_age,
                 host_config=host_config,

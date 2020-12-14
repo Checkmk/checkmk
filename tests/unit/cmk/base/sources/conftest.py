@@ -10,10 +10,10 @@ import pytest  # type: ignore[import]
 
 from cmk.helpers.cache import FileCacheFactory
 
-from cmk.base.checkers import Source
-from cmk.base.checkers.agent import AgentSource
-from cmk.base.checkers.snmp import SNMPSource
-from cmk.base.checkers.tcp import TCPSource
+from cmk.base.sources import Source
+from cmk.base.sources.agent import AgentSource
+from cmk.base.sources.snmp import SNMPSource
+from cmk.base.sources.tcp import TCPSource
 
 
 @pytest.fixture(autouse=True)

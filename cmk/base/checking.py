@@ -63,7 +63,7 @@ from cmk.helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
-import cmk.base.checkers as checkers
+import cmk.base.sources as sources
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
@@ -78,7 +78,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_paramete
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
-from cmk.base.checkers.host_sections import HostKey, MultiHostSections, ParsedSectionsBroker
+from cmk.base.sources.host_sections import HostKey, MultiHostSections, ParsedSectionsBroker
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -177,12 +177,12 @@ def do_check(
             run_only_plugin_names=run_only_plugin_names,
         )
 
-        nodes = checkers.make_nodes(
+        nodes = sources.make_nodes(
             config_cache,
             host_config,
             ipaddress,
             mode,
-            checkers.make_sources(
+            sources.make_sources(
                 host_config,
                 ipaddress,
                 mode=mode,
@@ -196,7 +196,7 @@ def do_check(
             #       is `cmk.base.discovery.check_discovery(...)`.  This does
             #       not seem right.
             fetcher_messages = list(
-                checkers.fetch_all(
+                sources.fetch_all(
                     nodes,
                     max_cachefile_age=host_config.max_cachefile_age,
                     host_config=host_config,
@@ -204,7 +204,7 @@ def do_check(
 
         with CPUTracker() as tracker:
             broker = ParsedSectionsBroker()
-            result = checkers.update_host_sections(
+            result = sources.update_host_sections(
                 broker,
                 nodes,
                 max_cachefile_age=host_config.max_cachefile_age,

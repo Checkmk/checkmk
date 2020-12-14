@@ -38,6 +38,7 @@ from cmk.utils.type_defs import (
     SetAutochecksTable,
     AutomationDiscoveryResponse,
     DiscoveryResult,
+    LegacyCheckParameters,
 )
 
 import cmk.snmplib.snmp_modes as snmp_modes
@@ -658,24 +659,26 @@ class AutomationAnalyseServices(Automation):
                 # plugin should never be None for services that are in the check_table.
                 continue
 
-            check_parameters = service.parameters
-            if isinstance(check_parameters, cmk.base.config.TimespecificParamList):
-                check_parameters = cmk.base.checking.legacy_determine_check_params(check_parameters)
-                check_parameters = {
+            parameters = service.parameters
+            if isinstance(parameters, cmk.base.config.TimespecificParamList):
+                effective_parameters: LegacyCheckParameters = {
                     "tp_computed_params": {
-                        "params": check_parameters,
+                        "params": cmk.base.checking.legacy_determine_check_params(parameters),
                         "computed_at": time.time()
                     }
                 }
+                parameters = list(parameters)
+            else:
+                effective_parameters = parameters
 
             return {
                 "origin": "auto",
                 "checktype": str(plugin.name),
                 "checkgroup": str(plugin.check_ruleset_name),
                 "item": service.item,
-                "inv_parameters": service.parameters,
+                "inv_parameters": parameters,
                 "factory_settings": plugin.check_default_parameters,
-                "parameters": check_parameters,
+                "parameters": effective_parameters,
             }
 
         # 3. Classical checks

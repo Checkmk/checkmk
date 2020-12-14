@@ -23,7 +23,7 @@ export function hide() {
 export function show(event_, code, trigger_obj) {
     event_ = event_ || window.event;
     add(trigger_obj);
-    update_content(code);
+    update_content(code, event_);
 }
 
 export function add(trigger_obj) {
@@ -36,13 +36,14 @@ export function add(trigger_obj) {
     trigger_obj.parentNode.insertBefore(g_hover_menu, trigger_obj.nextSibling);
 }
 
-export function update_content(code) {
+export function update_content(code, event_) {
     if (!g_hover_menu) {
         return;
     }
 
     g_hover_menu.innerHTML = code;
     utils.execute_javascript_by_object(g_hover_menu);
+    update_position(event_);
 }
 
 // Position updates are triggered by the AJAX call response in graph_integration.js

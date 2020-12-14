@@ -33,11 +33,10 @@ function show_check_mk_hover_graphs(site_id, host_name, service, event_) {
 }
 
 function handle_check_mk_hover_graphs_response(handler_data, code) {
-    hover.update_content(code);
-    hover.update_position(handler_data.event_);
+    hover.update_content(code, handler_data.event_);
 }
 
-function handle_hover_graphs_error(_unused, status_code) {
+function handle_hover_graphs_error(handler_data, status_code) {
     var code = "<div class=error>Update failed (" + status_code + ")</div>";
-    hover.update_content(code);
+    hover.update_content(code, handler_data.event_);
 }

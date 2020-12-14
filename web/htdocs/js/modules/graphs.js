@@ -1074,7 +1074,6 @@ function update_mouse_hovering(event) {
     var graph_container = get_graph_container(canvas);
 
     hover.add(graph_container);
-    hover.update_position(event);
 
     var graph_node = get_graph_graph_node(canvas);
     var graph_id = get_graph_id_of_dom_node(graph_node);
@@ -1319,7 +1318,7 @@ function render_graph_hover_popup(graph, event, popup_data) {
         entries.appendChild(entry);
     }
 
-    hover.update_content(wrapper.innerHTML);
+    hover.update_content(wrapper.innerHTML, event);
 }
 
 function remove_all_graph_hover_popups() {

@@ -8,6 +8,7 @@ import functools
 import wsgiref.util
 
 from cmk.gui import http, config
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 
 
@@ -18,7 +19,7 @@ def with_context_middleware(app):
     @functools.wraps(app)
     def with_context(environ, start_response):
         req = http.Request(environ)
-        with AppContext(app), RequestContext(req=req):
+        with AppContext(app), RequestContext(req=req, display_options=DisplayOptions()):
             config.initialize()
             return app(environ, start_response)
 

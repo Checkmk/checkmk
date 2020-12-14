@@ -13,9 +13,8 @@ import cmk.utils.store as store
 import cmk.gui.pages
 import cmk.gui.config as config
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.display_options import display_options
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, display_options
 from cmk.gui.exceptions import (MKGeneralException, MKAuthException, MKUserError, FinalizeRequest)
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.plugins.wato.utils.html_elements import (
@@ -81,7 +80,7 @@ def page_handler() -> None:
     current_mode = html.request.var("mode") or "main"
     mode_permissions, mode_class = _get_mode_permission_and_class(current_mode)
 
-    display_options.load_from_html()
+    display_options.load_from_html(html)
 
     if display_options.disabled(display_options.N):
         html.add_body_css_class("inline")

@@ -22,6 +22,7 @@ from typing import (
 )
 from werkzeug.test import create_environ
 
+from cmk.gui.display_options import DisplayOptions
 from cmk.utils.paths import tmp_dir
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
@@ -279,8 +280,11 @@ class IndexSearcher:
     @contextmanager
     def _SearchContext(self) -> Iterator[None]:
         _request = Request(create_environ())
-        with RequestContext(html_obj=html(_request), req=_request), \
-             UserContext(self._user_id):
+        with RequestContext(
+                html_obj=html(_request),
+                req=_request,
+                display_options=DisplayOptions(),
+        ), UserContext(self._user_id):
             yield
 
     def search(self, query: SearchQuery) -> SearchResultsByTopic:

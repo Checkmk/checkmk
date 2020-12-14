@@ -100,10 +100,21 @@ def _lookup_req_object(name):
     return getattr(top, name)
 
 
+_unset = object()
+
+
 class RequestContext:
-    def __init__(self, html_obj=None, req=None, resp=None, prefix_logs_with_url: bool = True):
+    def __init__(
+        self,
+        html_obj=None,
+        req=None,
+        resp=None,
+        display_options=None,  # pylint: disable=redefined-outer-name
+        prefix_logs_with_url: bool = True,
+    ):
         self.html = html_obj
         self.auth_type = None
+        self.display_options = display_options
         self.session: Optional["userdb.SessionInfo"] = None
         self.flashes: Optional[List[str]] = None
         self._prefix_logs_with_url = prefix_logs_with_url
@@ -171,3 +182,4 @@ request: 'http.Request' = request_local_attr('request')
 session: 'userdb.Session' = request_local_attr('session')
 
 html: 'htmllib.html' = request_local_attr('html')
+display_options = request_local_attr('display_options')

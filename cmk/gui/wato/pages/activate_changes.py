@@ -29,8 +29,7 @@ import cmk.gui.watolib.activate_changes
 from cmk.gui.watolib.search import build_and_store_index_background
 
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.display_options import display_options
-from cmk.gui.globals import html, request as global_request
+from cmk.gui.globals import html, request as global_request, display_options
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode

@@ -5,9 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.config as config
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, display_options
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import display_options
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 

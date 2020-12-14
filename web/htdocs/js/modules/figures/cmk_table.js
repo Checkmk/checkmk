@@ -90,7 +90,7 @@ cmk_figures.figure_registry.register(TableFigure);
 function _update_dc_graphs_in_selection(selection, graph_group) {
     selection.selectAll(".figure_cell").each((d, idx, nodes) => {
         // TODO: implement better intialization solution, works for now
-        if (d.figure_config != undefined || d.figure_size != undefined)
+        if (d.figure_size != undefined)
             // new format, not to be handled by this legacy block
             return;
 

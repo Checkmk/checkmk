@@ -60,8 +60,8 @@
 #   '----------------------------------------------------------------------'
 # Example output:
 # disk.deviceLatency|naa.600605b002db9f7018d0a40c2a1444b0|0|millisecond
-# disk.numberRead|naa.600605b002db9f7018d0a40c2a1444b0|8|number
-# disk.numberWrite|naa.600605b002db9f7018d0a40c2a1444b0|47|number
+# disk.numberReadAveraged|naa.600605b002db9f7018d0a40c2a1444b0|8|number
+# disk.numberWriteAveraged|naa.600605b002db9f7018d0a40c2a1444b0|47|number
 # disk.read|naa.600605b002db9f7018d0a40c2a1444b0|12|kiloBytesPerSecond
 # disk.read||12|kiloBytesPerSecond
 # disk.write|naa.600605b002db9f7018d0a40c2a1444b0|51|kiloBytesPerSecond
@@ -73,12 +73,12 @@ def inventory_esx_vsphere_counters_diskio(parsed):
         yield "SUMMARY", {}
 
 
-def _concat_instance_multivalues(parsed, key):
-    all_multivalues = []
-    for data in parsed.get(key, {}).itervalues():
+def _sum_instance_counts(counts):
+    summed_avgs = 0.
+    for data in counts.values():
         multivalues, _unit = data[0]
-        all_multivalues.extend(multivalues)
-    return all_multivalues
+        summed_avgs += esx_vsphere_get_average(multivalues)
+    return summed_avgs
 
 
 def _max_latency(latencies):
@@ -100,10 +100,9 @@ def check_esx_vsphere_counters_diskio(item, params, parsed):
             summary['%s_throughput' % op_type] = esx_vsphere_get_average(multivalues) * 1024
 
         # sum up all instances
-        op_counts = _concat_instance_multivalues(parsed, "disk.number%s" % op_type.title())
-        if op_counts:
-            # these are absolute counts, every 20 seconds.
-            summary["%s_ios" % op_type] = esx_vsphere_get_average(op_counts) / 20
+        op_counts_key = "disk.number%sAveraged" % op_type.title()
+        if op_counts_key in parsed:
+            summary["%s_ios" % op_type] = _sum_instance_counts(parsed[op_counts_key])
 
     latency = _max_latency(parsed.get("disk.deviceLatency", {}))
     if latency is not None:

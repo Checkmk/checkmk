@@ -1,0 +1,17 @@
+Title: esx_vsphere_counters_diskio: IOPS
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1607935468
+
+The check plugin <tt>esx_vsphere_counters_diskio</tt>, which
+monitors the IO throughput of ESX host systems, displayed far
+too low values for the rates of IO operations. This has been
+fixed by using the metrics <tt>disk.numberReadAveraged</tt> and
+<tt>disk.numberWriteAveraged</tt> instead of <tt>disk.numberRead</tt>
+and <tt>disk.numberWrite</tt>.

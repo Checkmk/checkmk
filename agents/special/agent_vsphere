@@ -703,6 +703,8 @@ telegram_list = {
 REQUESTED_COUNTERS_KEYS = (
     'disk.numberRead',
     'disk.numberWrite',
+    'disk.numberReadAveraged',
+    'disk.numberWriteAveraged',
     'disk.read',
     'disk.write',
     'disk.deviceLatency',

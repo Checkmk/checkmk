@@ -29,6 +29,7 @@ import cmk.utils.paths as paths
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request
 from cmk.gui.utils import get_random_string
@@ -57,7 +58,7 @@ def register_builtin_html():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     environ = create_environ()
     with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
+            RequestContext(htmllib.html(Request(environ)), display_options=DisplayOptions()):
         yield
 
 
@@ -68,7 +69,7 @@ def module_wide_request_context():
     # course wrong. These other fixtures have to be fixed.
     environ = create_environ()
     with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
+            RequestContext(htmllib.html(Request(environ)), display_options=DisplayOptions()):
         yield
 
 

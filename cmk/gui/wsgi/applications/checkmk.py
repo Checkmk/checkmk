@@ -16,6 +16,7 @@ import cmk.utils.profile
 import cmk.utils.store
 
 from cmk.gui import config, pages, http, htmllib
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import (
     MKUserError,
     MKConfigError,
@@ -137,7 +138,11 @@ class CheckmkApp:
 
     def __call__(self, environ, start_response):
         req = http.Request(environ)
-        with AppContext(self), RequestContext(req=req, html_obj=htmllib.html(req)):
+        with AppContext(self), RequestContext(
+                req=req,
+                html_obj=htmllib.html(req),
+                display_options=DisplayOptions(),
+        ):
             config.initialize()
             html.init_modes()
             return self.wsgi_app(environ, start_response)

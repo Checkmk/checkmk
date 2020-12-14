@@ -47,9 +47,8 @@ from cmk.gui.valuespec import ValueSpec, DropdownChoice
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import g, html, request, display_options
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
 from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
 from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem

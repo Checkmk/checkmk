@@ -40,6 +40,7 @@ from werkzeug.test import EnvironBuilder
 from livestatus import MultiSiteConnection, LivestatusTestingError
 
 from cmk.gui import http, sites
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 
 MatchType = Literal["strict", "ellipsis", "loose"]
@@ -577,7 +578,11 @@ def mock_livestatus(with_context=False):
     req_context: ContextManager
     if with_context:
         app_context = AppContext(None)
-        req_context = RequestContext(req=req, prefix_logs_with_url=False)
+        req_context = RequestContext(
+            req=req,
+            display_options=DisplayOptions(),
+            prefix_logs_with_url=False,
+        )
     else:
         app_context = contextlib.nullcontext()
         req_context = contextlib.nullcontext()

@@ -49,7 +49,6 @@ from cmk.gui.page_menu import (
     toggle_page_menu_entries,
     make_simple_form_page_menu,
 )
-from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -70,7 +69,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g, request as global_request
+from cmk.gui.globals import html, g, request as global_request, display_options
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKGeneralException,
@@ -1790,7 +1789,7 @@ def _process_availability_view(view: View) -> None:
     all_active_filters = _get_view_filters(view)
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
-    display_options.load_from_html()
+    display_options.load_from_html(html)
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see
@@ -1889,7 +1888,7 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: b
 
 def _show_view(view: View, view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int,
                rows: Rows) -> None:
-    display_options.load_from_html()
+    display_options.load_from_html(html)
 
     # Load from hard painter options > view > hard coded default
     painter_options = PainterOptions.get_instance()
@@ -3132,7 +3131,7 @@ def ajax_popup_action_menu():
     svcdesc = html.request.get_unicode_input('service')
     what = 'service' if svcdesc else 'host'
 
-    display_options.load_from_html()
+    display_options.load_from_html(html)
 
     row = query_action_data(what, host, site, svcdesc)
     icons = get_icons(what, row, toplevel=False)

@@ -33,6 +33,7 @@ export function add(trigger_obj) {
 
     g_hover_menu = document.createElement("div");
     g_hover_menu.setAttribute("id", "hover_menu");
+    g_hover_menu.className = "hover_menu";
     trigger_obj.parentNode.insertBefore(g_hover_menu, trigger_obj.nextSibling);
 }
 

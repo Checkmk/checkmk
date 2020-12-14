@@ -12,12 +12,11 @@ import json
 import pprint
 import time
 import traceback
-from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Set, cast
+from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Sequence, Set
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
 import livestatus
-from cmk.gui.plugins.openapi.utils import create_url
 from livestatus import SiteId
 
 import cmk.utils.paths
@@ -40,7 +39,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import g, html, display_options
+from cmk.gui.globals import display_options, g, html
 from cmk.gui.globals import request as global_request
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
@@ -62,7 +61,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
     get_icons, get_multisite_icons, iconpainter_columns, multisite_icons_and_actions,
 )
@@ -1782,32 +1780,38 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
             all_active_filters,
             only_count=False,
         )
+
     if html.output_format != "html":
         _export_view(view_renderer.view, rows)
-    else:
-        entries = []
-        for text_query in queries:
-            query = Query.from_string(text_query)
-            table = cast(str, query.table.__tablename__)
-            if table != "hosts":
-                continue
-            url = create_url(config.omd_site(), query)
-            entries.append(
-                PageMenuEntry(
-                    title=_("Query %s resource") % table,
-                    icon_name="filter",
-                    item=make_simple_link(url),
-                ))
+        return
 
-        view_renderer.append_menu_topic(
-            dropdown='export',
-            topic=PageMenuTopic(
-                title="REST-API",
-                entries=entries,
-            ),
-        )
+    _add_rest_api_menu_entries(view_renderer, queries)
+    _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
-        _show_view(view_renderer, unfiltered_amount_of_rows, rows)
+
+def _add_rest_api_menu_entries(view_renderer, queries):
+    from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+    from cmk.gui.plugins.openapi.utils import create_url
+    entries = []
+    for text_query in queries:
+        query = Query.from_string(text_query)
+        table = cast(str, query.table.__tablename__)
+        if table != "hosts":
+            continue
+        url = create_url(config.omd_site(), query)
+        entries.append(
+            PageMenuEntry(
+                title=_("Query %s resource") % table,
+                icon_name="filter",
+                item=make_simple_link(url),
+            ))
+    view_renderer.append_menu_topic(
+        dropdown='export',
+        topic=PageMenuTopic(
+            title="REST API",
+            entries=entries,
+        ),
+    )
 
 
 def _process_availability_view(view_renderer: ABCViewRenderer) -> None:

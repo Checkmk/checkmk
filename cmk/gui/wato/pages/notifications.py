@@ -494,7 +494,10 @@ class ModeNotifications(ABCNotificationsMode):
                     ),
                     PageMenuEntry(
                         title=_("Hide analysis") if self._show_backlog else _("Show analysis"),
-                        icon_name="checkbox",
+                        icon_name={
+                            'icon': 'analyze',
+                            'emblem': 'disable' if self._show_backlog else "enable",
+                        },
                         item=make_simple_link(
                             html.makeactionuri([
                                 ("_show_backlog", "" if self._show_backlog else "1"),
@@ -504,7 +507,10 @@ class ModeNotifications(ABCNotificationsMode):
                     ),
                     PageMenuEntry(
                         title=_("Hide bulks") if self._show_bulks else _("Show bulks"),
-                        icon_name="checkbox",
+                        icon_name={
+                            'icon': 'bulk',
+                            'emblem': 'disable' if self._show_bulks else "enable",
+                        },
                         item=make_simple_link(
                             html.makeactionuri([
                                 ("_show_bulks", "" if self._show_bulks else "1"),

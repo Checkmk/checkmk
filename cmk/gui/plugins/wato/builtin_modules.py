@@ -608,7 +608,7 @@ class MainModuleLDAP(ABCMainModule):
 
     @property
     def icon(self):
-        return "roles"
+        return "ldap"
 
     @property
     def permission(self):

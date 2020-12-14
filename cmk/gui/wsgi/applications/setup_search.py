@@ -8,6 +8,7 @@ import http.client as http_client
 from werkzeug.exceptions import abort, HTTPException
 
 from cmk.gui import config, pages, http, htmllib
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKUnauthenticatedException
 from cmk.gui.globals import html, RequestContext, AppContext
 from cmk.gui.http import Response
@@ -21,7 +22,9 @@ class CheckmkSetupSearchApp:
     """The WSGI entry point for the app handling the setup search"""
     def __call__(self, environ, start_response) -> Response:
         req = http.Request(environ)
-        with AppContext(self), RequestContext(req=req, html_obj=htmllib.html(req)):
+        with AppContext(self), RequestContext(req=req,
+                                              display_options=DisplayOptions(),
+                                              html_obj=htmllib.html(req)):
             config.initialize()
             return _process_request(environ, start_response)
 

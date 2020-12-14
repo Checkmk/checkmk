@@ -34,6 +34,7 @@ from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-vio
 from cmk.base.api.agent_based import register  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
+from cmk.gui.display_options import DisplayOptions  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.regex import unescape
 from cmk.utils.log import VERBOSE
 import cmk.utils.debug
@@ -126,6 +127,7 @@ class UpdateConfig:
 
         with AppContext(DummyApplication(environ,
                                          None)), RequestContext(this_html,
+                                                                display_options=DisplayOptions(),
                                                                 prefix_logs_with_url=False):
             self._initialize_gui_environment()
 

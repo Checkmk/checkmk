@@ -1,0 +1,13 @@
+Title: Fix missing graph hover information
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1607939552
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+When hovering over a time series graph a small popup shows the values of the
+metrics at the time the mouse points on. This dialog was missing in 2.0.0b1
+release.

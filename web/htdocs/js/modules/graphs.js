@@ -1071,7 +1071,9 @@ function update_mouse_hovering(event) {
         return;
     }
 
-    hover.add();
+    var graph_container = get_graph_container(canvas);
+
+    hover.add(graph_container);
     hover.update_position(event);
 
     var graph_node = get_graph_graph_node(canvas);

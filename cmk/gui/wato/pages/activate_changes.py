@@ -121,7 +121,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         yield PageMenuEntry(
             title=_("Activate on affected sites"),
-            icon_name="activate",
+            icon_name="save",
             item=make_javascript_link("cmk.activation.activate_changes(\"affected\")"),
             name="activate_affected",
             is_shortcut=True,
@@ -141,7 +141,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         if self._may_activate_changes():
             yield PageMenuEntry(
                 title=_("Activate on selected sites"),
-                icon_name="activate",
+                icon_name={
+                    "icon": "save",
+                    "emblem": "refresh",
+                },
                 item=make_javascript_link("cmk.activation.activate_changes(\"selected\")"),
                 name="activate_selected",
                 is_enabled=self.has_changes(),

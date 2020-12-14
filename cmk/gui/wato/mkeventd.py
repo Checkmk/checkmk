@@ -1469,29 +1469,38 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                                      ("_dissolve", nr)])
                     html.icon_button(dissolve_url,
                                      _("Remove this rule pack from the Extension Packages module"),
-                                     "release_mkp_yellow")
+                                     {
+                                         'icon': 'mkps',
+                                         'emblem': 'disable',
+                                     })
                 elif type_ == ec.RulePackType.modified_mkp:
                     reset_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_reset", nr)])
-                    html.icon_button(reset_url, _("Reset rule pack to the MKP version"),
-                                     "release_mkp")
+                    html.icon_button(reset_url, _("Reset rule pack to the MKP version"), {
+                        'icon': 'mkps',
+                        'emblem': 'disable',
+                    })
                     sync_url = make_action_link([("mode", "mkeventd_rule_packs"),
                                                  ("_synchronize", nr)])
-                    html.icon_button(sync_url, _("Synchronize MKP with modified version"),
-                                     "sync_mkp")
+                    html.icon_button(sync_url, _("Synchronize MKP with modified version"), {
+                        'icon': 'mkps',
+                        'emblem': 'refresh',
+                    })
 
                 rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", id_)]
                 if found_packs.get(id_):
                     rules_url_vars.append(("search", search_expression))
                 rules_url = makeuri_contextless(request, rules_url_vars)
-                html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
+                html.icon_button(rules_url, _("Edit the rules in this pack"), "rules")
 
                 if type_ == ec.RulePackType.internal:
                     export_url = make_action_link([("mode", "mkeventd_rule_packs"),
                                                    ("_export", nr)])
                     html.icon_button(
                         export_url,
-                        _("Make this rule pack available in the Extension Packages module"),
-                        "cached")
+                        _("Make this rule pack available in the Extension Packages module"), {
+                            'icon': 'mkps',
+                            'emblem': 'add',
+                        })
 
                 # Icons for mkp export and disabling
                 table.cell("", css="buttons")
@@ -1500,11 +1509,14 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                               _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_])
                 elif type_ == ec.RulePackType.exported:
                     html.icon(
-                        "package",
+                        "mkps",
                         _("This is rule pack can be packaged with the Extension Packages module."))
                 elif type_ == ec.RulePackType.modified_mkp:
                     html.icon(
-                        "new_mkp",
+                        {
+                            'icon': 'mkps',
+                            'emblem': 'warning',
+                        },
                         _("This rule pack is modified. Originally it was provided via the MKP %s.")
                         % id_to_mkp[id_])
 

@@ -493,7 +493,7 @@ class ModeBIPacks(ABCBIMode):
                 rules_url = makeuri_contextless(request, [("mode", "bi_rules"), ("pack", pack.id)])
                 html.icon_button(rules_url,
                                  _("View and edit the rules and aggregations in this BI pack"),
-                                 "bi_rules")
+                                 "rules")
                 table.text_cell(_("ID"), pack.id)
                 table.text_cell(_("Title"), pack.title)
                 table.text_cell(_("Public"), pack.public and _("Yes") or _("No"))
@@ -650,7 +650,7 @@ class ModeBIRules(ABCBIMode):
                                 PageMenuEntry(
                                     title=unused_rules_title,
                                     icon_name={
-                                        "icon": "bi_rules",
+                                        "icon": "rules",
                                         "emblem": unused_rules_emblem
                                     },
                                     item=make_simple_link(unused_rules_url),
@@ -1816,7 +1816,7 @@ class BIModeAggregations(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Rules"),
-                                    icon_name="bi_rules",
+                                    icon_name="rules",
                                     item=make_simple_link(
                                         self.url_to_pack([("mode", "bi_rules")], self.bi_pack),),
                                     is_shortcut=True,

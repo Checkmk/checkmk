@@ -2844,7 +2844,7 @@ multisite_builtin_views.update({
         'title': _('Alert Statistics'),
         "topic": "problems",
         "sort_index": 50,
-        'icon': 'alert_statistics',
+        'icon': 'alerts',
         "is_show_more": True,
     },
 

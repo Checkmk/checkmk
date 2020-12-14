@@ -272,8 +272,8 @@ class MKBackupJob:
             return False
 
         state = self.state()
-        return state["state"] in [ "started", "running" ] \
-               and os.path.exists("/proc/%d" % state["pid"])
+        return state["state"] in ["started", "running"] \
+            and os.path.exists("/proc/%d" % state["pid"])
 
     def start(self, env=None):
         p = subprocess.Popen(self._start_command(),
@@ -571,7 +571,10 @@ class PageBackup:
                             entries=[
                                 PageMenuEntry(
                                     title=_("Restore"),
-                                    icon_name="backup_restore",
+                                    icon_name={
+                                        'icon': 'backup',
+                                        'emblem': 'refresh',
+                                    },
                                     item=make_simple_link(
                                         makeuri_contextless(request, [("mode", "backup_restore")])),
                                     is_shortcut=True,
@@ -595,7 +598,7 @@ class PageBackup:
         )
         yield PageMenuEntry(
             title=_("Backup encryption keys"),
-            icon_name="backup_key",
+            icon_name="signature_key",
             item=make_simple_link(makeuri_contextless(request, [("mode", "backup_keys")])),
             is_shortcut=True,
             is_suggested=True,
@@ -604,7 +607,7 @@ class PageBackup:
         if self._may_edit_config():
             yield PageMenuEntry(
                 title=_("Add job"),
-                icon_name="backup_job_new",
+                icon_name="new",
                 item=make_simple_link(makeuri_contextless(request, [("mode", "edit_backup_job")])),
                 is_shortcut=True,
                 is_suggested=True,
@@ -1002,8 +1005,10 @@ class Target(BackupEntity):
                     message=_("Do you really want to start the restore of this backup?"),
                 )
 
-                html.icon_button(start_url, _("Start restore of this backup"),
-                                 "backup_restore_start")
+                html.icon_button(start_url, _("Start restore of this backup"), {
+                    'icon': 'backup',
+                    'emblem': 'refresh',
+                })
 
                 from_info = info["hostname"]
                 if "site_id" in info:
@@ -1065,8 +1070,10 @@ class Targets(BackupEntityCollection):
                     request,
                     [("mode", "backup_restore"), ("target", target_ident)],
                 )
-                html.icon_button(restore_url, _("Restore from this backup target"),
-                                 "backup_restore")
+                html.icon_button(restore_url, _("Restore from this backup target"), {
+                    'icon': 'backup',
+                    'emblem': 'refresh',
+                })
 
                 if editable:
                     delete_url = make_confirm_link(
@@ -1660,7 +1667,7 @@ class PageBackupRestore:
                             entries=[
                                 PageMenuEntry(
                                     title=_("Stop"),
-                                    icon_name="backup_restore_stop",
+                                    icon_name="backup_stop",
                                     item=make_simple_link(
                                         make_confirm_link(
                                             url=html.makeactionuri([("_action", "stop")]),
@@ -1675,7 +1682,7 @@ class PageBackupRestore:
                                 ),
                                 PageMenuEntry(
                                     title=_("Complete the restore"),
-                                    icon_name="backup_restore_complete",
+                                    icon_name="save",
                                     item=make_simple_link(
                                         html.makeactionuri([("_action", "complete")])),
                                     is_shortcut=True,

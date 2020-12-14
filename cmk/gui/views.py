@@ -13,7 +13,7 @@ import pprint
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Set
+from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Sequence, Set
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -42,7 +42,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import g, html, display_options
+from cmk.gui.globals import display_options, g, html
 from cmk.gui.globals import request as global_request
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
@@ -1826,13 +1826,44 @@ def process_view(view_renderer: ABCViewRenderer) -> None:
 
 def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
     all_active_filters = _get_view_filters(view_renderer.view)
-    unfiltered_amount_of_rows, rows = _get_view_rows(view_renderer.view,
-                                                     all_active_filters,
-                                                     only_count=False)
+    with livestatus.intercept_queries() as queries:
+        unfiltered_amount_of_rows, rows = _get_view_rows(
+            view_renderer.view,
+            all_active_filters,
+            only_count=False,
+        )
+
     if html.output_format != "html":
         _export_view(view_renderer.view, rows)
-    else:
-        _show_view(view_renderer, unfiltered_amount_of_rows, rows)
+        return
+
+    _add_rest_api_menu_entries(view_renderer, queries)
+    _show_view(view_renderer, unfiltered_amount_of_rows, rows)
+
+
+def _add_rest_api_menu_entries(view_renderer, queries):
+    from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+    from cmk.gui.plugins.openapi.utils import create_url
+    entries = []
+    for text_query in queries:
+        query = Query.from_string(text_query)
+        table = cast(str, query.table.__tablename__)
+        if table != "hosts":
+            continue
+        url = create_url(config.omd_site(), query)
+        entries.append(
+            PageMenuEntry(
+                title=_("Query %s resource") % table,
+                icon_name="filter",
+                item=make_simple_link(url),
+            ))
+    view_renderer.append_menu_topic(
+        dropdown='export',
+        topic=PageMenuTopic(
+            title="REST API",
+            entries=entries,
+        ),
+    )
 
 
 def _process_availability_view(view_renderer: ABCViewRenderer) -> None:

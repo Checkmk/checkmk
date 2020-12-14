@@ -15,7 +15,7 @@ using `OIDCached` (that is: if the save_to_cache attribute of the OID object is 
 
 """
 import os
-from typing import Callable, List, MutableMapping, Optional, Set, Tuple
+from typing import Callable, Iterable, List, MutableMapping, Optional, Set, Tuple
 
 from six import ensure_binary
 
@@ -42,7 +42,7 @@ ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
-WalkCache = MutableMapping[str, SNMPRowInfo]
+WalkCache = MutableMapping[str, Tuple[bool, SNMPRowInfo]]
 
 
 def get_snmp_table(
@@ -63,7 +63,7 @@ def get_snmp_table_cached(
     *,
     backend: ABCSNMPBackend,
 ) -> SNMPTable:
-    walk_cache = _load_walk_cache(tree=oid_info, host_name=backend.hostname)
+    walk_cache = _load_walk_cache(trees=(oid_info,), host_name=backend.hostname)
     table_data = _get_snmp_table(section_name, oid_info, walk_cache=walk_cache, backend=backend)
     _save_walk_cache(backend.hostname, walk_cache)
     return table_data
@@ -203,15 +203,14 @@ def _get_snmpwalk(
     backend: ABCSNMPBackend,
 ) -> SNMPRowInfo:
     try:
-        rowinfo = walk_cache[fetchoid]
+        rowinfo = walk_cache[fetchoid][1]
         console.vverbose("Already fetched OID: {fetchoid}\n")
         return rowinfo
     except KeyError:
         pass
 
     rowinfo = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
-    if save_walk_cache:
-        walk_cache[fetchoid] = rowinfo
+    walk_cache[fetchoid] = (save_walk_cache, rowinfo)
     return rowinfo
 
 
@@ -342,39 +341,51 @@ def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> SNMPTable:
 
 def _load_walk_cache(
     *,
-    tree: BackendSNMPTree,
+    trees: Iterable[BackendSNMPTree],
     host_name: HostName,
 ) -> WalkCache:
     cache = {}
-    for oid in tree.oids:
-        fetchoid: OID = f"{tree.base}.{oid.column}"
-        path = _snmpwalk_cache_path(host_name, fetchoid)
+    for tree in trees:
+        for oid in tree.oids:
+            if not oid.save_to_cache:  # no point in reading
+                continue
 
-        console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
-        try:
-            read_walk = store.load_object_from_file(path)
-        except Exception:
-            console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
-            if cmk.utils.debug.enabled():
-                raise
-            continue
+            fetchoid: OID = f"{tree.base}.{oid.column}"
+            path = _snmpwalk_cache_path(host_name, fetchoid)
 
-        if read_walk is not None:
-            cache[fetchoid] = read_walk
+            console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
+            try:
+                read_walk = store.load_object_from_file(path)
+            except Exception:
+                console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                if cmk.utils.debug.enabled():
+                    raise
+                continue
+
+            if read_walk is not None:
+                cache[fetchoid] = (oid.save_to_cache, read_walk)
 
     return cache
 
 
-def _save_walk_cache(hostname: HostName, cache: WalkCache) -> None:
-    for fetchoid, rowinfo in cache.items():
-        path = _snmpwalk_cache_path(hostname, fetchoid)
+def _save_walk_cache(host_name: HostName, cache: WalkCache) -> None:
+    cache_dir = _snmpwalk_cache_path(host_name)
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
 
-        if not os.path.exists(os.path.dirname(path)):
-            os.makedirs(os.path.dirname(path))
+    for fetchoid, (save_flag, rowinfo) in cache.items():
+        if not save_flag:
+            continue
 
-        console.vverbose("  Saving walk of %s to walk cache %s\n" % (fetchoid, path))
+        path = _snmpwalk_cache_path(host_name, fetchoid)
+        console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
         store.save_object_to_file(path, rowinfo, pretty=False)
 
 
-def _snmpwalk_cache_path(hostname: HostName, fetchoid: OID) -> str:
-    return os.path.join(cmk.utils.paths.var_dir, "snmp_cache", hostname, fetchoid)
+def _snmpwalk_cache_path(
+    host_name: str,
+    fetchoid: Optional[str] = None,
+) -> str:
+    if not fetchoid:
+        return os.path.join(cmk.utils.paths.var_dir, "snmp_cache", host_name)
+    return os.path.join(cmk.utils.paths.var_dir, "snmp_cache", host_name, fetchoid)

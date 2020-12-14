@@ -1071,13 +1071,11 @@ function update_mouse_hovering(event) {
         return;
     }
 
-    var graph_container = get_graph_container(canvas);
-
-    hover.add(graph_container);
-
     var graph_node = get_graph_graph_node(canvas);
     var graph_id = get_graph_id_of_dom_node(graph_node);
     var graph = g_graphs[graph_id];
+
+    hover.add(graph_node);
 
     if (!graph.render_options.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
@@ -1322,7 +1320,11 @@ function render_graph_hover_popup(graph, event, popup_data) {
 }
 
 function remove_all_graph_hover_popups() {
-    hover.hide();
+    for (const menu of document.getElementsByClassName("hover_menu")) {
+        if (utils.has_class(menu.parentNode, "graph_container")) {
+            hover.hide();
+        }
+    }
 }
 
 //#.

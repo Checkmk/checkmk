@@ -15,25 +15,26 @@ export function hide() {
         return;
     }
 
-    const hover_menu = g_hover_menu;
+    var hover_menu = g_hover_menu;
     g_hover_menu = null;
     hover_menu.parentNode.removeChild(hover_menu);
 }
 
-export function show(event_, code, trigger_obj) {
-    event_ = event_ || window.event;
-    add(trigger_obj);
+export function show(event, code) {
+    event = event || window.event;
+    add();
     update_content(code);
+    update_position(event);
 }
 
-export function add(trigger_obj) {
+export function add() {
     if (g_hover_menu) {
         return;
     }
 
     g_hover_menu = document.createElement("div");
     g_hover_menu.setAttribute("id", "hover_menu");
-    trigger_obj.parentNode.insertBefore(g_hover_menu, trigger_obj.nextSibling);
+    document.body.appendChild(g_hover_menu);
 }
 
 export function update_content(code) {
@@ -45,89 +46,78 @@ export function update_content(code) {
     utils.execute_javascript_by_object(g_hover_menu);
 }
 
-// Position updates are triggered by the AJAX call response in graph_integration.js
-export function update_position(event_) {
+export function update_position(event) {
     if (!g_hover_menu) {
         return;
     }
 
-    const hoverSpacer = 8;
+    var hoverSpacer = 5;
 
     // document.body.scrollTop does not work in IE
-    let scrollTop = document.body.scrollTop
+    var scrollTop = document.body.scrollTop
         ? document.body.scrollTop
         : document.documentElement.scrollTop;
-    let scrollLeft = document.body.scrollLeft
+    var scrollLeft = document.body.scrollLeft
         ? document.body.scrollLeft
         : document.documentElement.scrollLeft;
 
-    // Change scroll variables to SimpleBar container values if in place
-    const scroll_container = g_hover_menu.closest(".simplebar-content-wrapper");
-    if (scroll_container) {
-        scrollTop = scroll_container.scrollTop;
-        scrollLeft = scroll_container.scrollLeft;
-    }
-
-    let x = event_.clientX;
-    let y = event_.clientY;
-    const content_wrapper = utils.get_content_wrapper_object();
-    if (content_wrapper) {
-        x = x - content_wrapper.offsetLeft;
-        y = y - content_wrapper.offsetTop;
-    }
+    var x = event.clientX;
+    var y = event.clientY;
 
     // hide the menu first to avoid an "up-then-over" visual effect
-    g_hover_menu.style.visibility = "hidden";
-    g_hover_menu.style.left = scrollLeft + x + hoverSpacer + "px";
-    g_hover_menu.style.top = scrollTop + y + hoverSpacer + "px";
+    g_hover_menu.style.display = "block";
+    g_hover_menu.style.left = x + hoverSpacer + scrollLeft + "px";
+    g_hover_menu.style.top = y + hoverSpacer + scrollTop + "px";
 
-    const hoverLeft = parseInt(g_hover_menu.style.left.replace("px", ""));
-    const container_size = utils.content_wrapper_size();
-    let covers_full_width = false;
+    /**
+     * Check if the menu is "in screen" or too large.
+     * If there is some need for reposition try to reposition the hover menu
+     */
 
-    if (hoverLeft + g_hover_menu.clientWidth > scrollLeft + container_size.width) {
-        // The hover menu runs out of screen horizontally
-        if (g_hover_menu.clientWidth + hoverSpacer <= x) {
-            // Put the hover menu to the left of the cursor
-            g_hover_menu.style.width = g_hover_menu.clientWidth + "px";
-            g_hover_menu.style.left =
-                scrollLeft + x - g_hover_menu.clientWidth - hoverSpacer + "px";
-        } else {
-            // Stretch the hover menu to full screen width
-            stretch_to_full_width(g_hover_menu, container_size, scrollLeft, hoverSpacer);
-            covers_full_width = true;
+    var hoverPosAndSizeOk = true;
+    if (!is_on_screen(g_hover_menu, hoverSpacer)) {
+        hoverPosAndSizeOk = false;
+    }
+
+    if (!hoverPosAndSizeOk) {
+        g_hover_menu.style.left = x - hoverSpacer - g_hover_menu.clientWidth + "px";
+
+        if (is_on_screen(g_hover_menu, hoverSpacer)) {
+            hoverPosAndSizeOk = true;
         }
     }
 
-    let hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
-    if (hoverTop + g_hover_menu.clientHeight > scrollTop + container_size.height) {
-        // The hover menu runs out of screen vertically
-        if (g_hover_menu.clientHeight + hoverSpacer <= container_size.height) {
-            // The hover menu fits into the screen vertically
-            if (covers_full_width && g_hover_menu.clientHeight + hoverSpacer < y) {
-                // Put the hover menu with full screen width above the cursor
-                g_hover_menu.style.top =
-                    scrollTop + y - g_hover_menu.clientHeight - hoverSpacer + "px";
-            } else if (!covers_full_width) {
-                // Pull the hover menu as far to the top as needed
-                g_hover_menu.style.top =
-                    scrollTop +
-                    container_size.height -
-                    g_hover_menu.clientHeight -
-                    hoverSpacer +
-                    "px";
-            } else {
-                stretch_to_full_width(g_hover_menu, container_size, scrollLeft, hoverSpacer);
-            }
-        } else {
-            stretch_to_full_width(g_hover_menu, container_size, scrollLeft, hoverSpacer);
-        }
+    // And if the hover menu is still not on the screen move it to the left edge
+    // and fill the whole screen width
+    if (!is_on_screen(g_hover_menu, hoverSpacer)) {
+        g_hover_menu.style.left = hoverSpacer + scrollLeft + "px";
+        g_hover_menu.style.width = utils.page_width() - 2 * hoverSpacer + "px";
     }
 
-    g_hover_menu.style.visibility = "visible";
+    var hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
+    // Only move the menu to the top when the new top will not be
+    // out of sight
+    if (
+        hoverTop + g_hover_menu.clientHeight > utils.page_height() &&
+        hoverTop - g_hover_menu.clientHeight >= 0
+    ) {
+        g_hover_menu.style.top = hoverTop - g_hover_menu.clientHeight - hoverSpacer + "px";
+    }
 }
 
-function stretch_to_full_width(hover_menu, container_size, scrollLeft, hoverSpacer) {
-    g_hover_menu.style.left = hoverSpacer + scrollLeft + "px";
-    g_hover_menu.style.width = container_size.width - 2 * hoverSpacer + "px";
+function is_on_screen(hoverMenu, hoverSpacer) {
+    var hoverLeft = parseInt(hoverMenu.style.left.replace("px", ""));
+    var scrollLeft = document.body.scrollLeft
+        ? document.body.scrollLeft
+        : document.documentElement.scrollLeft;
+
+    if (hoverLeft + hoverMenu.clientWidth >= utils.page_width() - scrollLeft) {
+        return false;
+    }
+
+    if (hoverLeft - hoverSpacer < 0) {
+        return false;
+    }
+
+    return true;
 }

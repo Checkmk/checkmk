@@ -6,16 +6,16 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import * as hover from "hover";
 
-export function show_hover_graphs(event_, site_id, host_name, service_description, trigger_obj) {
-    event_ = event_ || window.event;
+export function show_hover_graphs(event, site_id, host_name, service_description) {
+    event = event || window.event;
 
-    hover.show(event_, '<div class="message">Loading...</div>', trigger_obj);
+    hover.show(event, '<div class="message">Loading...</div>');
 
-    show_check_mk_hover_graphs(site_id, host_name, service_description, event_);
-    return utils.prevent_default_events(event_);
+    show_check_mk_hover_graphs(site_id, host_name, service_description);
+    return utils.prevent_default_events(event);
 }
 
-function show_check_mk_hover_graphs(site_id, host_name, service, event_) {
+function show_check_mk_hover_graphs(site_id, host_name, service) {
     var url =
         "host_service_graph_popup.py?site=" +
         encodeURIComponent(site_id) +
@@ -26,15 +26,13 @@ function show_check_mk_hover_graphs(site_id, host_name, service, event_) {
 
     ajax.call_ajax(url, {
         response_handler: handle_check_mk_hover_graphs_response,
-        handler_data: {event_: event_},
         error_handler: handle_hover_graphs_error,
         method: "GET",
     });
 }
 
-function handle_check_mk_hover_graphs_response(handler_data, code) {
+function handle_check_mk_hover_graphs_response(_unused, code) {
     hover.update_content(code);
-    hover.update_position(handler_data.event_);
 }
 
 function handle_hover_graphs_error(_unused, status_code) {

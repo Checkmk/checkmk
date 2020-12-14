@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from contextlib import redirect_stdout, redirect_stderr
 
-from six import ensure_binary, ensure_str
+from six import ensure_binary
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -981,19 +981,19 @@ class AutomationGetRealTimeChecks(Automation):
         manuals = man_pages.all_man_pages()
 
         rt_checks = []
-        for check_plugin_name, check in config.check_info.items():
+        for check_plugin_name_str, check in config.check_info.items():
             if check["handle_real_time_checks"]:
-                title = ensure_str(check_plugin_name)
+                plugin_name = maincheckify(check_plugin_name_str)
                 try:
-                    manfile = manuals.get(check_plugin_name)
+                    manfile = manuals.get(plugin_name)
                     if manfile:
                         title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
                 except Exception:
                     if cmk.utils.debug.enabled():
                         raise
+                    title = plugin_name
 
-                rt_checks.append(
-                    (check_plugin_name, u"%s - %s" % (ensure_str(check_plugin_name), title)))
+                rt_checks.append((check_plugin_name_str, f"{plugin_name} - {title}"))
 
         return rt_checks
 

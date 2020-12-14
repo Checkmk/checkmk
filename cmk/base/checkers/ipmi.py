@@ -17,13 +17,13 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.fetchers import FetcherType, IPMIFetcher
-from cmk.fetchers.agent import DefaultAgentFileCache
+from cmk.fetchers.agent import DefaultAgentFileCache, DefaultAgentFileCacheFactory
 
 import cmk.base.config as config
 from cmk.base.config import HostConfig, IPMICredentials
 
 from ._abstract import Mode
-from .agent import AgentHostSections, AgentSource, AgentSummarizer, DefaultAgentFileCacheFactory
+from .agent import AgentHostSections, AgentSource, AgentSummarizer
 
 
 class IPMISource(AgentSource):

@@ -38,8 +38,8 @@ from cmk.snmplib.type_defs import (
 )
 
 from . import factory
-from ._base import Fetcher, FileCache, verify_ipaddress
-from .cache import PersistedSections, SectionStore
+from ._base import Fetcher, verify_ipaddress
+from .cache import FileCache, FileCacheFactory, PersistedSections, SectionStore
 from .type_defs import Mode
 
 __all__ = ["SNMPFetcher", "SNMPFileCache", "SNMPPluginStore", "SNMPPluginStoreItem"]
@@ -137,6 +137,17 @@ class SNMPFileCache(FileCache[SNMPRawData]):
     @staticmethod
     def _to_cache_file(raw_data: SNMPRawData) -> bytes:
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
+
+
+class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
+    def make(self) -> SNMPFileCache:
+        return SNMPFileCache(
+            path=self.path,
+            max_age=self.max_age,
+            disabled=self.disabled | self.snmp_disabled,
+            use_outdated=self.use_outdated,
+            simulation=self.simulation,
+        )
 
 
 class SNMPFetcher(Fetcher[SNMPRawData]):

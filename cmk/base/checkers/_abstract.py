@@ -8,7 +8,7 @@ import abc
 import logging
 from functools import partial
 from pathlib import Path
-from typing import final, Final, Generic, Optional, Union
+from typing import final, Final, Generic, Optional
 
 import cmk.utils
 import cmk.utils.debug
@@ -36,73 +36,21 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import Fetcher, FileCache
+from cmk.fetchers import Fetcher
+from cmk.fetchers.cache import FileCache
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.host_sections import THostSections
 from cmk.fetchers.type_defs import Mode, SectionNameCollection
 
 from cmk.base.config import HostConfig
 
-__all__ = ["Source", "FileCacheFactory", "Mode", "set_cache_opts"]
+__all__ = ["Source", "Mode"]
 
 
 class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     """Parse raw data into host sections."""
     @abc.abstractmethod
     def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
-        raise NotImplementedError
-
-
-def set_cache_opts(use_caches: bool) -> None:
-    # TODO check these settings vs.
-    # cmk/base/automations/check_mk.py:_set_cache_opts_of_checkers
-    if use_caches:
-        FileCacheFactory.maybe = True
-        FileCacheFactory.use_outdated = True
-
-
-class FileCacheFactory(Generic[TRawData], abc.ABC):
-    """Factory / configuration to FileCache."""
-
-    # TODO: Clean these options up! We need to change all call sites to use
-    #       a single Checkers() object during processing first. Then we
-    #       can change these class attributes to object attributes.
-    #
-    # Set by the user via command line to prevent using cached information at all.
-    # Is also set by inventory for SNMP checks to handle the special situation that
-    # the inventory is not allowed to use the regular checking based SNMP data source
-    # cache.
-    disabled: bool = False
-    snmp_disabled: bool = False
-    agent_disabled: bool = False
-    # Set by the code in different situations where we recommend, but not enforce,
-    # to use the cache. The user can always use "--cache" to override this.
-    # It's used to 'transport' caching opt between modules, eg:
-    # - modes: FileCacheFactory.maybe = use_caches
-    # - discovery: use_caches = FileCacheFactory.maybe
-    maybe = False
-    # Is set by the "--cache" command line. This makes the caching logic use
-    # cache files that are even older than the max_cachefile_age of the host/mode.
-    use_outdated = False
-
-    def __init__(
-        self,
-        path: Union[Path, str],
-        *,
-        max_age: int,
-        simulation: bool = False,
-    ):
-        super().__init__()
-        self.path: Final[Path] = Path(path)
-        self.max_age: Final[int] = max_age
-        self.simulation: Final[bool] = simulation
-
-    @classmethod
-    def reset_maybe(cls):
-        cls.maybe = not cls.disabled
-
-    @abc.abstractmethod
-    def make(self) -> FileCache[TRawData]:
         raise NotImplementedError
 
 

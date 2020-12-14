@@ -44,6 +44,7 @@ import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, BackendSNMPTree, BackendOIDSpec
 
+import cmk.fetchers.cache
 from cmk.fetchers import factory
 from cmk.fetchers.type_defs import NO_SELECTION
 
@@ -97,11 +98,11 @@ def _set_cache_opts_of_checkers(use_caches: bool) -> None:
     # TODO check these settings vs.
     # cmk/base/checkers/_abstract.py:set_cache_opts
     if use_caches:
-        checkers.FileCacheFactory.use_outdated = True
+        cmk.fetchers.cache.FileCacheFactory.use_outdated = True
         # TODO why does this only apply to TCP data sources and not
         # to all agent data sources?
         checkers.tcp.TCPSource.use_only_cache = True
-    checkers.FileCacheFactory.maybe = use_caches
+    cmk.fetchers.cache.FileCacheFactory.maybe = use_caches
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -1440,7 +1441,7 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
             if ty == "agent":
-                checkers.FileCacheFactory.reset_maybe()
+                cmk.fetchers.cache.FileCacheFactory.reset_maybe()
                 for source in checkers.make_sources(
                         host_config,
                         ipaddress,

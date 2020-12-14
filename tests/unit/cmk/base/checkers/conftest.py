@@ -8,7 +8,9 @@ from contextlib import suppress
 
 import pytest  # type: ignore[import]
 
-from cmk.base.checkers import Source, FileCacheFactory
+from cmk.fetchers.cache import FileCacheFactory
+
+from cmk.base.checkers import Source
 from cmk.base.checkers.agent import AgentSource
 from cmk.base.checkers.snmp import SNMPSource
 from cmk.base.checkers.tcp import TCPSource

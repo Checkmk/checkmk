@@ -15,14 +15,20 @@ from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, 
 
 from cmk.fetchers import FetcherType, SNMPFetcher
 from cmk.fetchers.cache import SectionStore
-from cmk.fetchers.snmp import SectionMeta, SNMPFileCache, SNMPPluginStore, SNMPPluginStoreItem
+from cmk.fetchers.snmp import (
+    SectionMeta,
+    SNMPFileCache,
+    SNMPFileCacheFactory,
+    SNMPPluginStore,
+    SNMPPluginStoreItem,
+)
 from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 
-from ._abstract import FileCacheFactory, Mode, Parser, Source, Summarizer
+from ._abstract import Mode, Parser, Source, Summarizer
 from .host_sections import HostSections
 
 
@@ -47,17 +53,6 @@ def make_plugin_store() -> SNMPPluginStore:
 
 
 SNMPHostSections = HostSections[SNMPRawDataSection]
-
-
-class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
-    def make(self) -> SNMPFileCache:
-        return SNMPFileCache(
-            path=self.path,
-            max_age=self.max_age,
-            disabled=self.disabled | self.snmp_disabled,
-            use_outdated=self.use_outdated,
-            simulation=self.simulation,
-        )
 
 
 class SNMPSource(Source[SNMPRawData, SNMPHostSections]):

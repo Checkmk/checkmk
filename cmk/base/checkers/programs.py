@@ -13,14 +13,14 @@ import cmk.utils.paths
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.fetchers import FetcherType, ProgramFetcher
-from cmk.fetchers.agent import DefaultAgentFileCache
+from cmk.fetchers.agent import DefaultAgentFileCache, DefaultAgentFileCacheFactory
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.config import SpecialAgentConfiguration
 
 from ._abstract import Mode
-from .agent import AgentSource, AgentSummarizerDefault, DefaultAgentFileCacheFactory
+from .agent import AgentSource, AgentSummarizerDefault
 
 
 class ProgramSource(AgentSource):

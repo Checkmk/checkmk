@@ -5,148 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import itertools
 import logging
-from pathlib import Path
 from types import TracebackType
-from typing import Any, Dict, final, Final, Generic, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Dict, final, Final, Generic, Literal, Optional, Type, TypeVar
 
 import cmk.utils
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKFetcherError, MKGeneralException, MKIPAddressLookupError
+from cmk.utils.exceptions import MKFetcherError, MKIPAddressLookupError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, result
 
 from cmk.snmplib.type_defs import TRawData
 
+from .cache import FileCache
 from .type_defs import Mode
 
-__all__ = ["Fetcher", "FileCache", "verify_ipaddress"]
-
-TFileCache = TypeVar("TFileCache", bound="FileCache")
-
-
-class FileCache(Generic[TRawData], abc.ABC):
-    def __init__(
-        self,
-        *,
-        path: Union[str, Path],
-        max_age: int,
-        disabled: bool,
-        use_outdated: bool,
-        simulation: bool,
-    ) -> None:
-        super().__init__()
-        self.path: Final[Path] = Path(path)
-        self.max_age: Final[int] = max_age
-        self.disabled: Final[bool] = disabled
-        self.use_outdated: Final[bool] = use_outdated
-        self.simulation: Final[bool] = simulation
-        self._logger: Final[logging.Logger] = logging.getLogger("cmk.helper")
-
-    def __repr__(self) -> str:
-        return "%s(path=%r, max_age=%r, disabled=%r, use_outdated=%r, simulation=%r" % (
-            type(self).__name__,
-            self.path,
-            self.max_age,
-            self.disabled,
-            self.use_outdated,
-            self.simulation,
-        )
-
-    def __hash__(self) -> int:
-        *_rest, last = itertools.accumulate(
-            (self.path, self.max_age, self.disabled, self.use_outdated, self.simulation),
-            lambda acc, elem: acc ^ hash(elem),
-            initial=0,
-        )
-        return last
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return all((
-            self.path == other.path,
-            self.max_age == other.max_age,
-            self.disabled == other.disabled,
-            self.use_outdated == other.use_outdated,
-            self.simulation == other.simulation,
-        ))
-
-    def to_json(self) -> Dict[str, Any]:
-        return {
-            "path": str(self.path),
-            "max_age": self.max_age,
-            "disabled": self.disabled,
-            "use_outdated": self.use_outdated,
-            "simulation": self.simulation,
-        }
-
-    @classmethod
-    def from_json(cls: Type[TFileCache], serialized: Dict[str, Any]) -> TFileCache:
-        return cls(**serialized)
-
-    @staticmethod
-    @abc.abstractmethod
-    def _from_cache_file(raw_data: bytes) -> TRawData:
-        raise NotImplementedError()
-
-    @staticmethod
-    @abc.abstractmethod
-    def _to_cache_file(raw_data: TRawData) -> bytes:
-        raise NotImplementedError()
-
-    def read(self) -> Optional[TRawData]:
-        raw_data = self._read()
-        if raw_data is None and self.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
-        return raw_data
-
-    def _read(self) -> Optional[TRawData]:
-        if not self.path.exists():
-            self._logger.debug("Not using cache (Does not exist)")
-            return None
-
-        if self.disabled:
-            self._logger.debug("Not using cache (Cache usage disabled)")
-            return None
-
-        may_use_outdated = self.simulation or self.use_outdated
-        cachefile_age = cmk.utils.cachefile_age(self.path)
-        if not may_use_outdated and cachefile_age > self.max_age:
-            self._logger.debug(
-                "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
-                cachefile_age,
-                self.max_age,
-            )
-            return None
-
-        # TODO: Use some generic store file read function to generalize error handling,
-        # but there is currently no function that simply reads data from the file
-        cache_file = self.path.read_bytes()
-        if not cache_file:
-            self._logger.debug("Not using cache (Empty)")
-            return None
-
-        self._logger.log(VERBOSE, "Using data from cache file %s", self.path)
-        return self._from_cache_file(cache_file)
-
-    def write(self, raw_data: TRawData) -> None:
-        if self.disabled:
-            self._logger.debug("Not writing data to cache file (Cache usage disabled)")
-            return
-
-        try:
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            raise MKGeneralException("Cannot create directory %r: %s" % (self.path.parent, e))
-
-        self._logger.debug("Write data to cache file %s", self.path)
-        try:
-            store.save_file(self.path, self._to_cache_file(raw_data))
-        except Exception as e:
-            raise MKGeneralException("Cannot write cache file %s: %s" % (self.path, e))
-
+__all__ = ["Fetcher", "verify_ipaddress"]
 
 TFetcher = TypeVar("TFetcher", bound="Fetcher")
 

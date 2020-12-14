@@ -12,12 +12,12 @@ from cmk.utils.piggyback import get_piggyback_raw_data
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, ServiceCheckResult, SourceType
 
 from cmk.fetchers import FetcherType, PiggybackFetcher
-from cmk.fetchers.agent import NoCache
+from cmk.fetchers.agent import NoCache, NoCacheFactory
 
 import cmk.base.config as config
 
 from ._abstract import Mode
-from .agent import AgentHostSections, AgentSource, AgentSummarizer, NoCacheFactory
+from .agent import AgentHostSections, AgentSource, AgentSummarizer
 
 
 class PiggybackSource(AgentSource):

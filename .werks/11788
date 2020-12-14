@@ -1,0 +1,12 @@
+Title: k8s_replicas: discover paused deployments
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p20
+Date: 1607932184
+Class: fix
+
+The check plugin now discovers paused replicas as well.
+To obtain a "Replicas" service on a paused deployment
+you have to perform a service discovery.

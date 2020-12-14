@@ -56,7 +56,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.caching import runtime_cache as _runtime_cache
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
@@ -1219,19 +1218,7 @@ def is_cmc() -> bool:
     return monitoring_core == "cmc"
 
 
-def translate_piggyback_host(sourcehost: HostName, backedhost: HostName) -> HostName:
-    translation = _get_piggyback_translations(sourcehost)
-
-    # To make it possible to match umlauts we need to change the hostname
-    # to a unicode string which can then be matched with regexes etc.
-    # We assume the incoming name is correctly encoded in UTF-8
-    decoded_backedhost = ensure_str_with_fallback(backedhost,
-                                                  encoding="utf-8",
-                                                  fallback=fallback_agent_output_encoding)
-    return ensure_str(cmk.utils.translations.translate_hostname(translation, decoded_backedhost))
-
-
-def _get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
+def get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
     """Get a dict that specifies the actions to be done during the hostname translation"""
     rules = get_config_cache().host_extra_conf(hostname, piggyback_translation)
     translations: cmk.utils.translations.TranslationOptions = {}

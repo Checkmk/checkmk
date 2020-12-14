@@ -61,6 +61,8 @@ class TestParser:
             store,
             check_interval=0,
             keep_outdated=True,
+            translation={},
+            encoding_fallback="ascii",
             simulation=False,
             logger=logger,
         )

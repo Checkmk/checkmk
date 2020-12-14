@@ -29,6 +29,7 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.misc import normalize_ip_addresses
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
+from cmk.utils.translations import TranslationOptions, translate_piggyback_host
 from cmk.utils.type_defs import (
     AgentRawData,
     AgentRawDataSection,
@@ -132,6 +133,8 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             ),
             check_interval=check_interval,
             keep_outdated=self.use_outdated_persisted_sections,
+            translation=config.get_piggyback_translations(self.hostname),
+            encoding_fallback=config.fallback_agent_output_encoding,
             simulation=config.agent_simulator,
             logger=self._logger,
         )
@@ -361,11 +364,15 @@ class ParserState(abc.ABC):
         host_sections: AgentHostSections,
         *,
         section_info: MutableMapping[SectionName, "HostSectionParser.Header"],
+        translation: TranslationOptions,
+        encoding_fallback: str,
         logger: logging.Logger,
     ) -> None:
         self.hostname: Final = hostname
         self.host_sections = host_sections
         self.section_info = section_info
+        self.translation: Final = translation
+        self.encoding_fallback: Final = encoding_fallback
         self._logger: Final = logger
 
     def to_noop_parser(self) -> "NOOPParser":
@@ -373,6 +380,8 @@ class ParserState(abc.ABC):
             self.hostname,
             self.host_sections,
             section_info=self.section_info,
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
             logger=self._logger,
         )
 
@@ -385,6 +394,8 @@ class ParserState(abc.ABC):
             self.host_sections,
             section_header,
             section_info=self.section_info,
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
             logger=self._logger,
         )
 
@@ -397,6 +408,8 @@ class ParserState(abc.ABC):
             self.host_sections,
             piggybacked_hostname,
             section_info=self.section_info,
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
             logger=self._logger,
         )
 
@@ -411,7 +424,11 @@ class NOOPParser(ParserState):
 
         try:
             if PiggybackSectionParser.is_header(line):
-                piggybacked_hostname = PiggybackSectionParser.parse_header(line, self.hostname)
+                piggybacked_hostname = PiggybackSectionParser.parse_header(
+                    line,
+                    self.translation,
+                    encoding_fallback=self.encoding_fallback,
+                )
                 if piggybacked_hostname == self.hostname:
                     # Unpiggybacked "normal" host
                     return self
@@ -432,12 +449,16 @@ class PiggybackSectionParser(ParserState):
         piggybacked_hostname: HostName,
         *,
         section_info: MutableMapping[SectionName, "HostSectionParser.Header"],
+        translation: TranslationOptions,
+        encoding_fallback: str,
         logger: logging.Logger,
     ) -> None:
         super().__init__(
             hostname,
             host_sections,
             section_info=section_info,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
             logger=logger,
         )
         self.piggybacked_hostname: Final = piggybacked_hostname
@@ -451,7 +472,11 @@ class PiggybackSectionParser(ParserState):
                 return self.to_noop_parser()
             if PiggybackSectionParser.is_header(line):
                 # Footer is optional.
-                piggybacked_hostname = PiggybackSectionParser.parse_header(line, self.hostname)
+                piggybacked_hostname = PiggybackSectionParser.parse_header(
+                    line,
+                    self.translation,
+                    encoding_fallback=self.encoding_fallback,
+                )
                 if piggybacked_hostname == self.hostname:
                     # Unpiggybacked "normal" host
                     return self.to_noop_parser()
@@ -476,10 +501,19 @@ class PiggybackSectionParser(ParserState):
         return line.strip() == b'<<<<>>>>'
 
     @staticmethod
-    def parse_header(line: bytes, hostname: HostName) -> HostName:
+    def parse_header(
+        line: bytes,
+        translation: TranslationOptions,
+        *,
+        encoding_fallback: str,
+    ) -> HostName:
         piggybacked_hostname = ensure_str(line.strip()[4:-4])
         assert piggybacked_hostname
-        piggybacked_hostname = config.translate_piggyback_host(hostname, piggybacked_hostname)
+        piggybacked_hostname = translate_piggyback_host(
+            piggybacked_hostname,
+            translation,
+            encoding_fallback=encoding_fallback,
+        )
         # Protect Checkmk against unallowed host names. Normally source scripts
         # like agent plugins should care about cleaning their provided host names
         # up, but we need to be sure here to prevent bugs in Checkmk code.
@@ -557,6 +591,8 @@ class HostSectionParser(ParserState):
         section_header: Header,
         *,
         section_info: MutableMapping[SectionName, "HostSectionParser.Header"],
+        translation: TranslationOptions,
+        encoding_fallback: str,
         logger: logging.Logger,
     ) -> None:
         host_sections.sections.setdefault(section_header.name, [])
@@ -565,6 +601,8 @@ class HostSectionParser(ParserState):
             hostname,
             host_sections,
             section_info=section_info,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
             logger=logger,
         )
         self.section_header = section_header
@@ -575,7 +613,11 @@ class HostSectionParser(ParserState):
 
         try:
             if PiggybackSectionParser.is_header(line):
-                piggybacked_hostname = PiggybackSectionParser.parse_header(line, self.hostname)
+                piggybacked_hostname = PiggybackSectionParser.parse_header(
+                    line,
+                    self.translation,
+                    encoding_fallback=self.encoding_fallback,
+                )
                 if piggybacked_hostname == self.hostname:
                     # Unpiggybacked "normal" host
                     return self
@@ -631,6 +673,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         *,
         check_interval: int,
         keep_outdated: bool,
+        translation: TranslationOptions,
+        encoding_fallback: str,
         simulation: bool,
         logger: logging.Logger,
     ) -> None:
@@ -639,6 +683,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         self.check_interval: Final = check_interval
         self.section_store: Final = section_store
         self.keep_outdated: Final = keep_outdated
+        self.translation: Final = translation
+        self.encoding_fallback: Final = encoding_fallback
         self.simulation: Final = simulation
         self._logger = logger
 
@@ -684,6 +730,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             self.hostname,
             AgentHostSections(),
             section_info={},
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
             logger=self._logger,
         )
         for line in raw_data.split(b"\n"):

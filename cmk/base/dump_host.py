@@ -14,7 +14,7 @@ from cmk.utils.type_defs import HostName
 from cmk.helpers.type_defs import Mode
 
 import cmk.base.check_table as check_table
-import cmk.base.sources as sources
+import cmk.base.checkers as checkers
 import cmk.base.checking as checking
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -85,7 +85,7 @@ def dump_host(hostname: HostName) -> None:
                ", ".join(host_config.contactgroups) + "\n")
 
     agenttypes = [
-        source.description for source in sources.make_sources(
+        source.description for source in checkers.make_sources(
             host_config,
             ipaddress,
             mode=Mode.NONE,

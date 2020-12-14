@@ -32,18 +32,18 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.sources import make_nodes, make_sources, Source, update_host_sections
-from cmk.base.sources.agent import AgentHostSections
-from cmk.base.sources.host_sections import (
+from cmk.base.checkers import make_nodes, make_sources, Source, update_host_sections
+from cmk.base.checkers.agent import AgentHostSections
+from cmk.base.checkers.host_sections import (
     HostKey,
     HostSections,
     MultiHostSections,
     ParsedSectionsBroker,
 )
-from cmk.base.sources.piggyback import PiggybackSource
-from cmk.base.sources.programs import ProgramSource
-from cmk.base.sources.snmp import SNMPSource
-from cmk.base.sources.tcp import TCPSource
+from cmk.base.checkers.piggyback import PiggybackSource
+from cmk.base.checkers.programs import ProgramSource
+from cmk.base.checkers.snmp import SNMPSource
+from cmk.base.checkers.tcp import TCPSource
 
 _TestSection = collections.namedtuple(
     "TestSection",

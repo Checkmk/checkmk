@@ -47,8 +47,8 @@ def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
             args += ["--require-tag-value", tag, requirement[1]]
 
     # TODO: Cleanup this separation violation. This should be accessed through the check API
-    import cmk.base.config
-    return cmk.base.config.SpecialAgentConfiguration(args, json.dumps(secrets))
+    import cmk.base.checkers.programs
+    return cmk.base.checkers.programs.SpecialAgentConfiguration(args, json.dumps(secrets))
 
 
 special_agent_info['azure'] = agent_azure_arguments

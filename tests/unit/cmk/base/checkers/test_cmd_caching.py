@@ -26,9 +26,9 @@ import cmk.base.config as config
 import cmk.base.inventory_plugins
 import cmk.base.modes
 import cmk.base.modes.check_mk
-from cmk.base.sources import Source
-from cmk.base.sources.agent import AgentSource
-from cmk.base.sources.snmp import SNMPSource
+from cmk.base.checkers import Source
+from cmk.base.checkers.agent import AgentSource
+from cmk.base.checkers.snmp import SNMPSource
 import cmk.base.license_usage as license_usage
 
 

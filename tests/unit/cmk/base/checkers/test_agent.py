@@ -23,7 +23,7 @@ from cmk.helpers.type_defs import Mode, NO_SELECTION
 from cmk.helpers.agent import AgentParser, AgentSummarizer, HostSectionParser, NoCache
 from cmk.helpers.cache import PersistedSections, SectionStore
 
-from cmk.base.sources.agent import AgentSource
+from cmk.base.checkers.agent import AgentSource
 
 
 class TestSummarizer:

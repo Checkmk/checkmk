@@ -184,18 +184,21 @@ def percent(percentage: float) -> str:
 
         >>> percent(9.213)
         '9.21%'
+        >>> percent(0.003)
+        '<0.01%'
+        >>> percent(-0.003)
+        '-0.00%'
 
     """
     # There is another render.percent in cmk.utils. However, that deals extensively with
     # the rendering of small percentages (as is required for graphing applications)
     value = float(percentage)  # be nice
-    if value < 0.0:
-        return f"-{percent(-value)}"
 
     if value == 0.0:
         return "0%"
 
-    if value < 0.01:
+    if 0.0 < value < 0.01:
         return "<0.01%"
 
+    # this includes negative values!
     return f"{value:.2f}%"

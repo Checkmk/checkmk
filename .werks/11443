@@ -1,0 +1,13 @@
+Title: liveproxy: fixed broken cleanup of channels without client
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1607932981
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b2
+
+The liveproxy garbage collection was broken if a channel had no client.
+This could lead to a hanging liveproxyd, consequently a hanging GUI.

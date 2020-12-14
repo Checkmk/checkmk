@@ -410,6 +410,10 @@
     display: none;
     cursor: default;
     background-color: $popup-shadow-color;
+
+    &.min {
+      left: 48px;
+    }
   }
 
   div.popup_trigger.active + #popup_shadow {

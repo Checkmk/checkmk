@@ -196,7 +196,7 @@ class UIIconTitle(UserAttribute):
 
     def valuespec(self):
         return DropdownChoice(
-            title=_("Navigation icons"),
+            title=_("Navigation bar icons"),
             help=_("With this option you can define if icons in the navigation "
                    "bar should show a title or not. This gives you the possibility "
                    "to save some space in the UI."),
@@ -216,7 +216,7 @@ class UIIconPlacement(UserAttribute):
 
     def valuespec(self):
         return DropdownChoice(
-            title=_("Main menu icons"),
+            title=_("Mega menu icons"),
             choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
             no_preselect_value=False,
         )

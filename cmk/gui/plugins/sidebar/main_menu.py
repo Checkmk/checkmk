@@ -72,7 +72,10 @@ class MainMenuRenderer:
                 hover_switch_delay=150,  # ms
                 onopen=menu_item.onopen,
             )
-            html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")
+            html.div("",
+                     id_="popup_shadow",
+                     onclick="cmk.popup_menu.close_popup()",
+                     class_="min" if config.user.get_attribute("nav_hide_icons_title") else None)
             html.close_li()
 
     def _get_popup_trigger_content(self, active_icon: Icon, menu_item: MainMenuItem) -> HTML:

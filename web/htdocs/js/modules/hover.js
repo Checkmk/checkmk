@@ -20,10 +20,11 @@ export function hide() {
     hover_menu.parentNode.removeChild(hover_menu);
 }
 
-export function show(event_, code, trigger_obj) {
-    event_ = event_ || window.event;
-    add(trigger_obj);
-    update_content(code, event_);
+export function show(event, code) {
+    event = event || window.event;
+    add();
+    update_content(code);
+    update_position(event);
 }
 
 export function add() {
@@ -36,14 +37,13 @@ export function add() {
     document.body.appendChild(g_hover_menu);
 }
 
-export function update_content(code, event_) {
+export function update_content(code) {
     if (!g_hover_menu) {
         return;
     }
 
     g_hover_menu.innerHTML = code;
     utils.execute_javascript_by_object(g_hover_menu);
-    update_position(event_);
 }
 
 export function update_position(event) {

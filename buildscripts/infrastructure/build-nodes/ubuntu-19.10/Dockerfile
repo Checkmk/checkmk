@@ -3,7 +3,10 @@ FROM ubuntu:19.10
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list \
+# Currently old-releases.ubuntu.com has no "Release" file. Temporarily using another mirror from
+# https://launchpad.net/ubuntu/+archivemirrors.
+#RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list \
+RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/archive.canonical.com/g' /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y \
     apache2 \

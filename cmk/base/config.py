@@ -822,7 +822,7 @@ def strip_tags(tagged_hostlist: List[str]) -> List[str]:
 def _get_shadow_hosts() -> ShadowHosts:
     try:
         # Only available with CEE
-        return shadow_hosts
+        return shadow_hosts  # type: ignore[name-defined] # pylint: disable=undefined-variable
     except NameError:
         return {}
 

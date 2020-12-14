@@ -57,6 +57,6 @@ register.check_plugin(
     service_name="Proxmox VE Memory Usage",
     discovery_function=discover_single,
     check_function=check_proxmox_ve_mem_usage,
-    check_ruleset_name="memory_percentage_used",
+    check_ruleset_name="proxmox_ve_mem_usage",
     check_default_parameters={"levels": (80., 90.)},
 )

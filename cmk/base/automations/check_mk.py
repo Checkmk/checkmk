@@ -1297,12 +1297,13 @@ class AutomationDiagHost(Automation):
             snmp_backend=snmp_config.snmp_backend,
         )
 
-        data = snmp_table.get_snmp_table_cached(
-            None,
-            BackendSNMPTree(
+        data = snmp_table.get_snmp_table(
+            section_name=None,
+            tree=BackendSNMPTree(
                 base='.1.3.6.1.2.1.1',
                 oids=[BackendOIDSpec(c, "string", False) for c in '1456'],
             ),
+            walk_cache={},
             backend=factory.backend(snmp_config, log.logger),
         )
 

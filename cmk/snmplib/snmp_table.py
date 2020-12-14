@@ -46,33 +46,26 @@ WalkCache = MutableMapping[str, Tuple[bool, SNMPRowInfo]]
 
 
 def get_snmp_table(
-    section_name: Optional[SectionName],
-    oid_info: BackendSNMPTree,
     *,
+    section_name: Optional[SectionName],
+    tree: BackendSNMPTree,
+    walk_cache: WalkCache,
     backend: ABCSNMPBackend,
 ) -> SNMPTable:
-    walk_cache: WalkCache = {}
-    table_data = _get_snmp_table(section_name, oid_info, walk_cache=walk_cache, backend=backend)
-    _save_walk_cache(backend.hostname, walk_cache)
-    return table_data
-
-
-def get_snmp_table_cached(
-    section_name: Optional[SectionName],
-    oid_info: BackendSNMPTree,
-    *,
-    backend: ABCSNMPBackend,
-) -> SNMPTable:
-    walk_cache = _load_walk_cache(trees=(oid_info,), host_name=backend.hostname)
-    table_data = _get_snmp_table(section_name, oid_info, walk_cache=walk_cache, backend=backend)
+    table_data = _get_snmp_table(
+        section_name=section_name,
+        tree=tree,
+        walk_cache=walk_cache,
+        backend=backend,
+    )
     _save_walk_cache(backend.hostname, walk_cache)
     return table_data
 
 
 def _get_snmp_table(
+    *,
     section_name: Optional[SectionName],
     tree: BackendSNMPTree,
-    *,
     walk_cache: WalkCache,
     backend: ABCSNMPBackend,
 ) -> SNMPTable:
@@ -339,7 +332,7 @@ def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> SNMPTable:
     return new_info
 
 
-def _load_walk_cache(
+def load_walk_cache(
     *,
     trees: Iterable[BackendSNMPTree],
     host_name: HostName,

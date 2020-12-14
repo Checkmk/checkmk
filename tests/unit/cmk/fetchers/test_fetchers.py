@@ -536,8 +536,8 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         monkeypatch.setattr(
             snmp_table,
             "_get_snmp_table",
-            lambda _, oid_info, **__: table
-            if oid_info.base == fetcher.plugin_store[section_name].trees[0].base else [],
+            lambda tree, **__: table
+            if tree.base == fetcher.plugin_store[section_name].trees[0].base else [],
         )
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table, []]})
 

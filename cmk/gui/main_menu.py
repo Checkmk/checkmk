@@ -83,11 +83,19 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
                 TopicMenuItem(
+                    name="forum",
+                    title=_("Forum"),
+                    url="https://forum.checkmk.com/",
+                    target="_blank",
+                    sort_index=40,
+                    icon=None,  # TODO(CMK-5773): add an icon
+                ),
+                TopicMenuItem(
                     name="youtube_channel",
                     title=_("YouTube"),
                     url="https://www.youtube.com/checkmk-channel",
                     target="_blank",
-                    sort_index=30,
+                    sort_index=50,
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
             ],

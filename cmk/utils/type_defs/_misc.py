@@ -18,6 +18,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    TypedDict,
     Union,
 )
 
@@ -168,3 +169,19 @@ class EvalableFloat(float):
         if self < -1 * sys.float_info.max:
             return '-1e%d' % (sys.float_info.max_10_exp + 1)
         return super().__repr__()
+
+
+# Symbolic representations of states in plugin output
+# TODO(ml): Should probably be of type enum::int -> str
+state_markers = ("", "(!)", "(!!)", "(?)")
+
+
+class ExitSpec(TypedDict, total=False):
+    empty_output: int
+    connection: int
+    timeout: int
+    exception: int
+    wrong_version: int
+    missing_sections: int
+    specific_missing_sections: List[Tuple[str, int]]
+    restricted_address_mismatch: int

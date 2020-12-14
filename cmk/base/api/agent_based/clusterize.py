@@ -5,6 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Iterable
+
+from cmk.utils.type_defs import state_markers
+
 from cmk.base.api.agent_based.checking_classes import (
     CheckResult,
     IgnoreResultsError,
@@ -12,9 +15,6 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     State,
 )
-
-# TODO: move state_markers?
-from cmk.base.check_api_utils import state_markers  # pylint: disable=cmk-module-layer-violation
 
 
 def make_node_notice_results(

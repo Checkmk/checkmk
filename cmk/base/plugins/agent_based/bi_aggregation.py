@@ -6,7 +6,8 @@
 from typing import Any, Dict
 import ast
 
-from cmk.base.check_api_utils import state_markers  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.type_defs import state_markers  # pylint: disable=cmk-module-layer-violation
+
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .agent_based_api.v1 import register, Result, State, Service
 

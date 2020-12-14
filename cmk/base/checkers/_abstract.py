@@ -24,20 +24,24 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostAddress, HostName, result, ServiceCheckResult, SourceType
+from cmk.utils.type_defs import (
+    ExitSpec,
+    HostAddress,
+    HostName,
+    result,
+    ServiceCheckResult,
+    SourceType,
+    state_markers,
+)
 
 from cmk.snmplib.type_defs import TRawData
 
 from cmk.fetchers import Fetcher, FileCache
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.host_sections import THostSections
-from cmk.fetchers.type_defs import Mode
+from cmk.fetchers.type_defs import Mode, SectionNameCollection
 
-import cmk.base.check_api_utils as check_api_utils
-import cmk.base.config as config
 from cmk.base.config import HostConfig
-
-from cmk.fetchers.type_defs import SectionNameCollection
 
 __all__ = ["Source", "FileCacheFactory", "Mode", "set_cache_opts"]
 
@@ -227,9 +231,9 @@ class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
         that derive this class.
 
     """
-    def __init__(self, exit_spec: config.ExitSpec) -> None:
+    def __init__(self, exit_spec: ExitSpec) -> None:
         super().__init__()
-        self.exit_spec: Final[config.ExitSpec] = exit_spec
+        self.exit_spec: Final[ExitSpec] = exit_spec
 
     @abc.abstractmethod
     def summarize_success(
@@ -247,7 +251,7 @@ class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
         mode: Mode,
     ) -> ServiceCheckResult:
         status = self._extract_status(exc)
-        return status, str(exc) + check_api_utils.state_markers[status], []
+        return status, str(exc) + state_markers[status], []
 
     def _extract_status(self, exc: Exception) -> int:
         if isinstance(exc, MKEmptyAgentData):

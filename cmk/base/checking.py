@@ -43,6 +43,7 @@ from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
     CheckPluginName,
+    ExitSpec,
     HostAddress,
     HostName,
     MetricTuple,
@@ -53,6 +54,7 @@ from cmk.utils.type_defs import (
     ServiceName,
     ServiceState,
     SourceType,
+    state_markers,
 )
 
 from cmk.fetchers.protocol import FetcherMessage, FetcherType
@@ -285,7 +287,7 @@ def do_check(
 
 def _check_plugins_missing_data(
     plugins_missing_data: List[CheckPluginName],
-    exit_spec: config.ExitSpec,
+    exit_spec: ExitSpec,
     some_success: bool,
 ) -> Tuple[ServiceState, ServiceDetails]:
     if not some_success:
@@ -309,12 +311,12 @@ def _check_plugins_missing_data(
     infotexts = [
         "Missing monitoring data for check plugins: %s%s" % (
             ", ".join(sorted(generic_plugins)),
-            check_api_utils.state_markers[generic_plugins_status],
+            state_markers[generic_plugins_status],
         ),
     ]
 
     for plugin, status in sorted(specific_plugins):
-        infotexts.append("%s%s" % (plugin, check_api_utils.state_markers[status]))
+        infotexts.append("%s%s" % (plugin, state_markers[status]))
         generic_plugins_status = max(generic_plugins_status, status)
 
     return generic_plugins_status, ", ".join(infotexts)
@@ -794,7 +796,7 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
     status = checking_classes.State.OK
     for result in results:
         status = checking_classes.State.worst(status, result.state)
-        state_marker = check_api_utils.state_markers[int(result.state)] if needs_marker else ""
+        state_marker = state_markers[int(result.state)] if needs_marker else ""
 
         if result.summary:
             summaries.append(_add_state_marker(
@@ -876,7 +878,7 @@ def _sanitize_yield_check_result(result: Iterable[Any]) -> ServiceCheckResult:
         status = cmk.base.utils.worst_service_state(st, status)
 
         if text:
-            infotexts.append(text + check_api_utils.state_markers[st])
+            infotexts.append(text + state_markers[st])
 
         if perf is not None:
             perfdata += perf

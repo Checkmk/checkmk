@@ -32,7 +32,6 @@ from typing import (
     Sequence,
     Set,
     Tuple,
-    TypedDict,
     Union,
     Final,
 )
@@ -71,6 +70,7 @@ from cmk.utils.type_defs import (
     CheckPluginNameStr,
     CheckVariables,
     ContactgroupName,
+    ExitSpec,
     HostAddress,
     HostgroupName,
     HostKey,
@@ -150,17 +150,6 @@ RecurringDowntime = Dict[str, Union[int, str]]
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
-
-
-class ExitSpec(TypedDict, total=False):
-    empty_output: int
-    connection: int
-    timeout: int
-    exception: int
-    wrong_version: int
-    missing_sections: int
-    specific_missing_sections: List[Tuple[str, int]]
-    restricted_address_mismatch: int
 
 
 class _NestedExitSpec(ExitSpec, total=False):

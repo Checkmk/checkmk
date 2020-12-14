@@ -57,6 +57,7 @@ from cmk.utils.type_defs import (
     RulesetName,
     SectionName,
     SourceType,
+    state_markers,
 )
 
 from cmk.fetchers.protocol import FetcherMessage
@@ -843,7 +844,7 @@ def _check_service_lists(
                 sum(affected_check_plugin_names.values()),
                 title,
                 info,
-                check_api_utils.state_markers[st],
+                state_markers[st],
             ))
 
             if (unfiltered and

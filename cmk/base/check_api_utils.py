@@ -11,12 +11,10 @@
 
 from typing import Optional, Union
 
-from cmk.base.discovered_labels import DiscoveredServiceLabels
-from cmk.base.check_utils import LegacyCheckParameters
-from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, Item, HostName, ServiceName
+from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, HostName, Item, ServiceName
 
-# Symbolic representations of states in plugin output
-state_markers = ["", "(!)", "(!!)", "(?)"]
+from cmk.base.check_utils import LegacyCheckParameters
+from cmk.base.discovered_labels import DiscoveredServiceLabels
 
 # Management board checks
 MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST

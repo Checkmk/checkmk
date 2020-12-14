@@ -31,6 +31,7 @@ from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.type_defs import (
     AgentRawData,
     AgentRawDataSection,
+    ExitSpec,
     HostAddress,
     HostName,
     MetricTuple,
@@ -39,6 +40,7 @@ from cmk.utils.type_defs import (
     ServiceDetails,
     ServiceState,
     SourceType,
+    state_markers,
 )
 from cmk.utils.werks import parse_check_mk_version
 
@@ -47,7 +49,6 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
-from cmk.base.check_api_utils import state_markers
 from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import FileCacheFactory, Mode, Parser, SectionNameCollection, Source, Summarizer
@@ -142,7 +143,7 @@ class AgentSummarizerDefault(AgentSummarizer):
     # TODO: refactor
     def __init__(
         self,
-        exit_spec: config.ExitSpec,
+        exit_spec: ExitSpec,
         *,
         is_cluster: bool,
         agent_target_version: config.AgentTargetVersion,

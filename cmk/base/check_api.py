@@ -115,6 +115,7 @@ from cmk.utils.type_defs import (
     ServiceDetails,
     ServiceName,
     ServiceState,
+    state_markers,
 )
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
@@ -139,8 +140,7 @@ from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-im
     MGMT_ONLY  # Use host address/credentials when it's a SNMP HOST,
 )
 from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
-    check_type, host_name, Service, service_description, state_markers,
-)
+    check_type, host_name, Service, service_description)
 from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels  # noqa: F401 # pylint: disable=unused-import
 from cmk.base.discovered_labels import ServiceLabel  # noqa: F401 # pylint: disable=unused-import
 

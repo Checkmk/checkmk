@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Final, Optional, Tuple, List
+from typing import Final, List, Optional, Tuple
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
-from cmk.utils.type_defs import HostAddress, HostName, ServiceCheckResult, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, ServiceCheckResult, SourceType
 
 from cmk.fetchers import FetcherType, PiggybackFetcher
 from cmk.fetchers.agent import NoCache
@@ -17,7 +17,7 @@ from cmk.fetchers.agent import NoCache
 import cmk.base.config as config
 
 from ._abstract import Mode
-from .agent import AgentSource, AgentHostSections, AgentSummarizer, NoCacheFactory
+from .agent import AgentHostSections, AgentSource, AgentSummarizer, NoCacheFactory
 
 
 class PiggybackSource(AgentSource):
@@ -74,7 +74,7 @@ class PiggybackSource(AgentSource):
 class PiggybackSummarizer(AgentSummarizer):
     def __init__(
         self,
-        exit_spec: config.ExitSpec,
+        exit_spec: ExitSpec,
         *,
         hostname: HostName,
         ipaddress: Optional[HostAddress],

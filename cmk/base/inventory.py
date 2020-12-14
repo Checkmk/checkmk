@@ -43,13 +43,13 @@ from cmk.utils.type_defs import (
     ServiceDetails,
     ServiceState,
     SourceType,
+    state_markers,
 )
 
 from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
 from cmk.fetchers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_api_utils as check_api_utils
 import cmk.base.checkers as checkers
 import cmk.base.config as config
 import cmk.base.decorator
@@ -157,7 +157,7 @@ def do_inv_check(
     else:
         old_tree, sources_state = None, 1
         status = max(status, sources_state)
-        infotexts.append("Cannot update tree%s" % check_api_utils.state_markers[sources_state])
+        infotexts.append("Cannot update tree%s" % state_markers[sources_state])
 
     _run_inventory_export_hooks(host_config, trees.inventory)
 
@@ -171,7 +171,7 @@ def do_inv_check(
         if not trees.inventory.get_sub_container(['software']).has_edge('packages')\
            and _inv_sw_missing:
             infotexts.append("software packages information is missing" +
-                             check_api_utils.state_markers[_inv_sw_missing])
+                             state_markers[_inv_sw_missing])
             status = max(status, _inv_sw_missing)
 
         if old_tree is not None:
@@ -179,14 +179,14 @@ def do_inv_check(
                 infotext = "software changes"
                 if _inv_sw_changes:
                     status = max(status, _inv_sw_changes)
-                    infotext += check_api_utils.state_markers[_inv_sw_changes]
+                    infotext += state_markers[_inv_sw_changes]
                 infotexts.append(infotext)
 
             if not old_tree.is_equal(trees.inventory, edges=["hardware"]):
                 infotext = "hardware changes"
                 if _inv_hw_changes:
                     status = max(status, _inv_hw_changes)
-                    infotext += check_api_utils.state_markers[_inv_hw_changes]
+                    infotext += state_markers[_inv_hw_changes]
 
                 infotexts.append(infotext)
 

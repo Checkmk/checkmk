@@ -70,6 +70,29 @@ mega_menu_registry = MegaMenuRegistry()
 def _help_menu_topics() -> List[TopicMenuTopic]:
     return [
         TopicMenuTopic(
+            name="external_help",
+            title=_("External links"),
+            icon=None,  # TODO(CMK-5773): add an icon
+            items=[
+                TopicMenuItem(
+                    name="manual",
+                    title=_("Manual"),
+                    url="https://checkmk.com/cms.html",
+                    target="_blank",
+                    sort_index=30,
+                    icon=None,  # TODO(CMK-5773): add an icon
+                ),
+                TopicMenuItem(
+                    name="youtube_channel",
+                    title=_("YouTube"),
+                    url="https://www.youtube.com/checkmk-channel",
+                    target="_blank",
+                    sort_index=30,
+                    icon=None,  # TODO(CMK-5773): add an icon
+                ),
+            ],
+        ),
+        TopicMenuTopic(
             name="local_help",
             title=_("Internal links"),
             icon=None,
@@ -99,29 +122,6 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
             ]),
-        TopicMenuTopic(
-            name="external_help",
-            title=_("External links"),
-            icon=None,  # TODO(CMK-5773): add an icon
-            items=[
-                TopicMenuItem(
-                    name="manual",
-                    title=_("Manual"),
-                    url="https://checkmk.com/cms.html",
-                    target="_blank",
-                    sort_index=30,
-                    icon=None,  # TODO(CMK-5773): add an icon
-                ),
-                TopicMenuItem(
-                    name="youtube_channel",
-                    title=_("YouTube"),
-                    url="https://www.youtube.com/checkmk-channel",
-                    target="_blank",
-                    sort_index=30,
-                    icon=None,  # TODO(CMK-5773): add an icon
-                ),
-            ],
-        ),
     ]
 
 

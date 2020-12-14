@@ -133,8 +133,8 @@ def agent_aws_arguments(params, hostname, ipaddress):
         hostname,
     ]
     # TODO: Cleanup this separation violation. This should be accessed through the check API
-    import cmk.base.checkers.programs
-    return cmk.base.checkers.programs.SpecialAgentConfiguration(args, json.dumps(secrets))
+    import cmk.base.config
+    return cmk.base.config.SpecialAgentConfiguration(args, json.dumps(secrets))
 
 
 special_agent_info['aws'] = agent_aws_arguments

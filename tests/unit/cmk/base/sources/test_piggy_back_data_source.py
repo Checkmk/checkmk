@@ -13,7 +13,7 @@ from cmk.utils.type_defs import result
 from cmk.helpers.agent import AgentHostSections
 from cmk.helpers.type_defs import Mode
 
-from cmk.base.checkers.piggyback import PiggybackSource
+from cmk.base.sources.piggyback import PiggybackSource
 
 
 @pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))

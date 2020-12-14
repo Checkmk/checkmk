@@ -17,7 +17,7 @@ from cmk.helpers.type_defs import Mode
 
 import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
-from cmk.base.checkers.programs import DSProgramSource, SpecialAgentSource
+from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
 
 fun_args_stdin: Tuple[  #
     Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]  #

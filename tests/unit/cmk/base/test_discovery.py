@@ -19,9 +19,9 @@ from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.helpers.type_defs import NO_SELECTION
 
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.checkers.agent import AgentHostSections
-from cmk.base.checkers.snmp import SNMPHostSections
-from cmk.base.checkers.host_sections import HostKey, ParsedSectionsBroker
+from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.snmp import SNMPHostSections
+from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.discovered_labels import (
     ServiceLabel,
     DiscoveredServiceLabels,

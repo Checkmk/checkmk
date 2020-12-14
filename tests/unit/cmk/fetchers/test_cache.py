@@ -8,7 +8,7 @@ import copy
 
 from cmk.utils.type_defs import AgentRawDataSection, SectionName
 
-from cmk.fetchers.cache import PersistedSections
+from cmk.helpers.cache import PersistedSections
 
 
 class MockStore:

@@ -12,8 +12,8 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.fetchers.cache import ABCRawDataSection, PersistedSections, SectionStore
-from cmk.fetchers.host_sections import HostSections
+from cmk.helpers.cache import ABCRawDataSection, PersistedSections, SectionStore
+from cmk.helpers.host_sections import HostSections
 
 
 class MockStore(SectionStore):

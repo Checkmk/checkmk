@@ -16,10 +16,10 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.fetchers.agent import AgentHostSections, AgentParser
-from cmk.fetchers.cache import SectionStore
-from cmk.fetchers.controller import FetcherType
-from cmk.fetchers.type_defs import Mode
+from cmk.helpers.agent import AgentHostSections, AgentParser
+from cmk.helpers.cache import SectionStore
+from cmk.helpers.controller import FetcherType
+from cmk.helpers.type_defs import Mode
 
 import cmk.base.config as config
 

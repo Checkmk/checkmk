@@ -26,11 +26,11 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import Fetcher, Parser, Summarizer
-from cmk.fetchers.cache import FileCache
-from cmk.fetchers.controller import FetcherType
-from cmk.fetchers.host_sections import THostSections
-from cmk.fetchers.type_defs import Mode, SectionNameCollection
+from cmk.helpers import Fetcher, Parser, Summarizer
+from cmk.helpers.cache import FileCache
+from cmk.helpers.controller import FetcherType
+from cmk.helpers.host_sections import THostSections
+from cmk.helpers.type_defs import Mode, SectionNameCollection
 
 from cmk.base.config import HostConfig
 

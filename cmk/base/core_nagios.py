@@ -35,7 +35,7 @@ from cmk.utils.type_defs import (
     ConfigSerial,
 )
 
-from cmk.fetchers.type_defs import Mode
+from cmk.helpers.type_defs import Mode
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils

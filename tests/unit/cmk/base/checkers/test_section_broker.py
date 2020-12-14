@@ -17,7 +17,7 @@ import cmk.utils.piggyback
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import AgentRawData, ParsedSectionName, result, SectionName, SourceType
 
-from cmk.fetchers import (
+from cmk.helpers import (
     FetcherType,
     IPMIFetcher,
     PiggybackFetcher,
@@ -25,8 +25,8 @@ from cmk.fetchers import (
     SNMPFetcher,
     TCPFetcher,
 )
-from cmk.fetchers.protocol import FetcherMessage
-from cmk.fetchers.type_defs import Mode, NO_SELECTION
+from cmk.helpers.protocol import FetcherMessage
+from cmk.helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils

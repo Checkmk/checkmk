@@ -8,7 +8,7 @@ from contextlib import suppress
 
 import pytest  # type: ignore[import]
 
-from cmk.fetchers.cache import FileCacheFactory
+from cmk.helpers.cache import FileCacheFactory
 
 from cmk.base.checkers import Source
 from cmk.base.checkers.agent import AgentSource

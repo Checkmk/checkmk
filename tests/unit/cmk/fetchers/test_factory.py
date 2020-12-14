@@ -9,16 +9,16 @@ import logging
 
 from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig
 
-import cmk.fetchers.factory as factory
+import cmk.helpers.factory as factory
 
-from cmk.fetchers.snmp_backend import ClassicSNMPBackend
+from cmk.helpers.snmp_backend import ClassicSNMPBackend
 try:
-    from cmk.fetchers.cee.snmp_backend import pysnmp_backend  # type: ignore[import]
+    from cmk.helpers.cee.snmp_backend import pysnmp_backend  # type: ignore[import]
 except ImportError:
     pysnmp_backend = None  # type: ignore[assignment]
 
 try:
-    from cmk.fetchers.cee.snmp_backend import inline  # type: ignore[import]
+    from cmk.helpers.cee.snmp_backend import inline  # type: ignore[import]
 except ImportError:
     inline = None  # type: ignore[assignment]
 

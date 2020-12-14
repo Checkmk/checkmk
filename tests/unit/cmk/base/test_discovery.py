@@ -16,7 +16,7 @@ from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
 from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType, DiscoveryResult
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
-from cmk.fetchers.type_defs import NO_SELECTION
+from cmk.helpers.type_defs import NO_SELECTION
 
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers.agent import AgentHostSections

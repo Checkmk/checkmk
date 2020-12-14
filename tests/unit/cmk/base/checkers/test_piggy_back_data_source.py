@@ -10,8 +10,8 @@ from testlib.base import Scenario
 
 from cmk.utils.type_defs import result
 
-from cmk.fetchers.agent import AgentHostSections
-from cmk.fetchers.type_defs import Mode
+from cmk.helpers.agent import AgentHostSections
+from cmk.helpers.type_defs import Mode
 
 from cmk.base.checkers.piggyback import PiggybackSource
 

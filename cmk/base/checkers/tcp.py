@@ -9,13 +9,13 @@ from typing import Optional
 
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.fetchers import FetcherType, TCPFetcher
-from cmk.fetchers.agent import (
+from cmk.helpers import FetcherType, TCPFetcher
+from cmk.helpers.agent import (
     DefaultAgentFileCache,
     DefaultAgentFileCacheFactory,
     AgentSummarizerDefault,
 )
-from cmk.fetchers.type_defs import Mode
+from cmk.helpers.type_defs import Mode
 
 import cmk.base.config as config
 from cmk.base.config import HostConfig

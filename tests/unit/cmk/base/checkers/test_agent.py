@@ -18,10 +18,10 @@ from testlib.base import Scenario
 from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
 from cmk.utils.type_defs import AgentRawData, AgentRawDataSection, result, SectionName, SourceType
 
-from cmk.fetchers import FetcherType
-from cmk.fetchers.type_defs import Mode, NO_SELECTION
-from cmk.fetchers.agent import AgentParser, AgentSummarizer, HostSectionParser, NoCache
-from cmk.fetchers.cache import PersistedSections, SectionStore
+from cmk.helpers import FetcherType
+from cmk.helpers.type_defs import Mode, NO_SELECTION
+from cmk.helpers.agent import AgentParser, AgentSummarizer, HostSectionParser, NoCache
+from cmk.helpers.cache import PersistedSections, SectionStore
 
 from cmk.base.checkers.agent import AgentSource
 

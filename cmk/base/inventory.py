@@ -46,8 +46,8 @@ from cmk.utils.type_defs import (
     state_markers,
 )
 
-from cmk.fetchers.type_defs import Mode, NO_SELECTION, SectionNameCollection
-from cmk.fetchers.host_sections import HostSections
+from cmk.helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+from cmk.helpers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.checkers as checkers

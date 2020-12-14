@@ -11,7 +11,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import result, SectionName
 
-from cmk.fetchers.type_defs import Mode
+from cmk.helpers.type_defs import Mode
 
 from cmk.base import config
 from cmk.base.checkers import make_sources

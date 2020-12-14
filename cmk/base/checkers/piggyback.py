@@ -10,10 +10,10 @@ from typing import Final, Optional
 from cmk.utils.paths import tmp_dir
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.fetchers import FetcherType, PiggybackFetcher
-from cmk.fetchers.agent import NoCache, NoCacheFactory
-from cmk.fetchers.piggyback import PiggybackSummarizer
-from cmk.fetchers.type_defs import Mode
+from cmk.helpers import FetcherType, PiggybackFetcher
+from cmk.helpers.agent import NoCache, NoCacheFactory
+from cmk.helpers.piggyback import PiggybackSummarizer
+from cmk.helpers.type_defs import Mode
 
 import cmk.base.config as config
 

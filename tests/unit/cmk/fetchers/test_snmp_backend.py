@@ -6,8 +6,8 @@
 
 import pytest  # type: ignore[import]
 
-import cmk.fetchers.snmp_backend._utils as utils
-from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
+import cmk.helpers.snmp_backend._utils as utils
+from cmk.helpers.snmp_backend import StoredWalkSNMPBackend
 
 
 @pytest.mark.parametrize("value,expected", [

@@ -29,20 +29,20 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.fetchers import FetcherType, snmp
-from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
-from cmk.fetchers.ipmi import IPMIFetcher
-from cmk.fetchers.piggyback import PiggybackFetcher
-from cmk.fetchers.program import ProgramFetcher
-from cmk.fetchers.snmp import (
+from cmk.helpers import FetcherType, snmp
+from cmk.helpers.agent import DefaultAgentFileCache, NoCache
+from cmk.helpers.ipmi import IPMIFetcher
+from cmk.helpers.piggyback import PiggybackFetcher
+from cmk.helpers.program import ProgramFetcher
+from cmk.helpers.snmp import (
     SectionMeta,
     SNMPFetcher,
     SNMPFileCache,
     SNMPPluginStore,
     SNMPPluginStoreItem,
 )
-from cmk.fetchers.tcp import TCPFetcher
-from cmk.fetchers.type_defs import Mode
+from cmk.helpers.tcp import TCPFetcher
+from cmk.helpers.type_defs import Mode
 
 SensorReading = namedtuple(
     "SensorReading", "states health name imprecision units"

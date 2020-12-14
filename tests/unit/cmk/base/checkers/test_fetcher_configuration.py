@@ -11,7 +11,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.fetchers import FetcherType
+from cmk.helpers import FetcherType
 
 from cmk.base.checkers import fetcher_configuration
 

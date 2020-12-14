@@ -18,8 +18,8 @@ from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 
-from cmk.fetchers.protocol import FetcherMessage
-from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.helpers.protocol import FetcherMessage
+from cmk.helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

@@ -13,7 +13,7 @@ from testlib.base import Scenario
 
 import cmk.utils.paths
 
-from cmk.fetchers.type_defs import Mode
+from cmk.helpers.type_defs import Mode
 
 import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult

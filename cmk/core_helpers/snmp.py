@@ -8,7 +8,6 @@ import ast
 import dataclasses
 import logging
 import time
-from functools import partial
 from pathlib import Path
 from typing import (
     Any,
@@ -335,10 +334,14 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         if self._use_snmpwalk_cache(mode):
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
-            get_snmp = partial(snmp_table.get_snmp_table_cached, backend=self._backend)
+            walk_cache = snmp_table.load_walk_cache(
+                trees=(tree for section_name in section_names
+                       for tree in self.plugin_store[section_name].trees),
+                host_name=self._backend.hostname,
+            )
         else:
             walk_cache_msg = "SNMP walk cache is disabled"
-            get_snmp = partial(snmp_table.get_snmp_table, backend=self._backend)
+            walk_cache = {}
 
         fetched_data: MutableMapping[SectionName, SNMPRawDataSection] = {}
         for section_name in self._sort_section_names(section_names):
@@ -349,7 +352,12 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             except LookupError:
                 self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
                 section = [
-                    get_snmp(section_name, entry) for entry in self.plugin_store[section_name].trees
+                    snmp_table.get_snmp_table(
+                        section_name=section_name,
+                        tree=tree,
+                        walk_cache=walk_cache,
+                        backend=self._backend,
+                    ) for tree in self.plugin_store[section_name].trees
                 ]
 
                 if any(section):

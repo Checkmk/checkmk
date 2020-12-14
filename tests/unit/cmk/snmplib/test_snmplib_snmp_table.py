@@ -68,9 +68,19 @@ def test_get_snmp_table(monkeypatch, snmp_info, expected_values):
     def get_all_snmp_tables(info):
         backend = SNMPTestBackend(SNMPConfig, logger)
         if not isinstance(info, list):
-            return snmp_table.get_snmp_table(SectionName("unit_test"), info, backend=backend)
+            return snmp_table.get_snmp_table(
+                section_name=SectionName("unit_test"),
+                tree=info,
+                walk_cache={},
+                backend=backend,
+            )
         return [
-            snmp_table.get_snmp_table(SectionName("unit_test"), i, backend=backend) for i in info
+            snmp_table.get_snmp_table(
+                section_name=SectionName("unit_test"),
+                tree=i,
+                walk_cache={},
+                backend=backend,
+            ) for i in info
         ]
 
     assert get_all_snmp_tables(snmp_info) == expected_values

@@ -59,8 +59,9 @@ def test_get_data_types(backend, type_name, oid, expected_response):
     oid_start, oid_end = oid.rsplit(".", 1)
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
-        oid_info=BackendSNMPTree(base=oid_start, oids=[BackendOIDSpec(oid_end, "string", False)]),
+        tree=BackendSNMPTree(base=oid_start, oids=[BackendOIDSpec(oid_end, "string", False)]),
         backend=backend,
+        walk_cache={},
     )
 
     assert table[0][0] == expected_response
@@ -82,7 +83,8 @@ def test_get_simple_snmp_table_not_resolvable(backend):
     with pytest.raises(MKSNMPError, match=exc_match):
         snmp_table.get_snmp_table(
             section_name=SectionName("my_Section"),
-            oid_info=INFO_TREE,
+            tree=INFO_TREE,
+            walk_cache={},
             backend=backend,
         )
 
@@ -102,7 +104,8 @@ def test_get_simple_snmp_table_wrong_credentials(backend):
     with pytest.raises(MKSNMPError, match=exc_match):
         snmp_table.get_snmp_table(
             section_name=SectionName("my_Section"),
-            oid_info=INFO_TREE,
+            tree=INFO_TREE,
+            walk_cache={},
             backend=backend,
         )
 
@@ -112,7 +115,8 @@ def test_get_simple_snmp_table_bulkwalk(backend, bulk):
     backend.config = backend.config.update(is_bulkwalk_host=bulk)
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
-        oid_info=INFO_TREE,
+        tree=INFO_TREE,
+        walk_cache={},
         backend=backend,
     )
 
@@ -129,7 +133,8 @@ def test_get_simple_snmp_table_bulkwalk(backend, bulk):
 def test_get_simple_snmp_table(backend):
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
-        oid_info=INFO_TREE,
+        tree=INFO_TREE,
+        walk_cache={},
         backend=backend,
     )
 
@@ -155,7 +160,8 @@ def test_get_simple_snmp_table_oid_end(backend):
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
-        oid_info=oid_info,
+        tree=oid_info,
+        walk_cache={},
         backend=backend,
     )
 
@@ -178,7 +184,8 @@ def test_get_simple_snmp_table_oid_string(backend):
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
-        oid_info=oid_info,
+        tree=oid_info,
+        walk_cache={},
         backend=backend,
     )
 
@@ -201,7 +208,8 @@ def test_get_simple_snmp_table_oid_bin(backend):
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
-        oid_info=oid_info,
+        tree=oid_info,
+        walk_cache={},
         backend=backend,
     )
 
@@ -224,7 +232,8 @@ def test_get_simple_snmp_table_oid_end_bin(backend):
     )
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
-        oid_info=oid_info,
+        tree=oid_info,
+        walk_cache={},
         backend=backend,
     )
 
@@ -242,7 +251,8 @@ def test_get_simple_snmp_table_with_hex_str(backend):
 
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
-        oid_info=oid_info,
+        tree=oid_info,
+        walk_cache={},
         backend=backend,
     )
 

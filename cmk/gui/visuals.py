@@ -12,7 +12,7 @@ import json
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
-from livestatus import SiteId
+from livestatus import SiteId, LivestatusTestingError
 
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.version as cmk_version
@@ -1094,6 +1094,8 @@ def show_filter(f: Filter) -> None:
         with html.plugged():
             f.display()
             html.write(html.drain())
+    except LivestatusTestingError:
+        raise
     except Exception as e:
         logger.exception("error showing filter")
         tb = sys.exc_info()[2]

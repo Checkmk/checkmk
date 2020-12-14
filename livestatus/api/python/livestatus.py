@@ -26,6 +26,11 @@ LivestatusColumn = Any
 LivestatusRow = NewType("LivestatusRow", List[LivestatusColumn])
 LivestatusResponse = NewType("LivestatusResponse", List[LivestatusRow])
 
+
+class LivestatusTestingError(RuntimeError):
+    pass
+
+
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |
 #   |                   / ___| | ___ | |__   __ _| |___                    |
@@ -890,7 +895,7 @@ class MultiSiteConnection(Helpers):
                     limit -= len(r)  # Account for portion of limit used by this site
                 result += r
                 stillalive.append((sitename, site, connection))
-            except RuntimeError:
+            except LivestatusTestingError:
                 raise
             except Exception as e:
                 connection.disconnect()
@@ -924,7 +929,7 @@ class MultiSiteConnection(Helpers):
             try:
                 str_query = connection.build_query(query, add_headers + limit_header)
                 connection.send_query(str_query)
-            except RuntimeError:
+            except LivestatusTestingError:
                 raise
             except Exception as e:
                 self.deadsites[sitename] = {
@@ -947,8 +952,7 @@ class MultiSiteConnection(Helpers):
             except query.suppress_exceptions:
                 stillalive.append((sitename, site, connection))
                 continue
-
-            except RuntimeError:
+            except LivestatusTestingError:
                 raise
             except Exception as e:
                 connection.disconnect()

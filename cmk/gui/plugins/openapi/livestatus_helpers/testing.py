@@ -37,7 +37,7 @@ from unittest import mock
 
 from werkzeug.test import EnvironBuilder
 
-from livestatus import MultiSiteConnection
+from livestatus import MultiSiteConnection, LivestatusTestingError
 
 from cmk.gui import http, sites
 from cmk.gui.globals import AppContext, RequestContext
@@ -107,10 +107,10 @@ class MockLiveStatusConnection:
 
     The class will verify that the expected queries (and _only_ those) are being issued
     in the `with` block. This means that:
-         * Any additional query will trigger a RuntimeError
-         * Any missing query will trigger a RuntimeError
-         * Any mismatched query will trigger a RuntimeError
-         * Any wrong order of queries will trigger a RuntimeError
+         * Any additional query will trigger a LivestatusTestingError
+         * Any missing query will trigger a LivestatusTestingError
+         * Any mismatched query will trigger a LivestatusTestingError
+         * Any wrong order of queries will trigger a LivestatusTestingError
 
     Args:
         report_multiple (bool):
@@ -163,7 +163,7 @@ class MockLiveStatusConnection:
             ...      pass
             Traceback (most recent call last):
             ...
-            RuntimeError: Expected queries were not queried:
+            livestatus.LivestatusTestingError: Expected queries were not queried:
              * 'GET status\\nCache: reload\\nColumns: livestatus_version program_version \
 program_start num_hosts num_services'
 
@@ -174,7 +174,7 @@ program_start num_hosts num_services'
             ...     live._lookup_next_query("Foo\\nbar!")
             Traceback (most recent call last):
             ...
-            RuntimeError: Expected query (loose):
+            livestatus.LivestatusTestingError: Expected query (loose):
              * 'Hello\\nworld!'
             Got query:
              * 'Foo\\nbar!'
@@ -186,7 +186,7 @@ program_start num_hosts num_services'
             ...     live._lookup_next_query("Spanish inquisition!")
             Traceback (most recent call last):
             ...
-            RuntimeError: Got unexpected query:
+            livestatus.LivestatusTestingError: Got unexpected query:
              * 'Spanish inquisition!'
 
     """
@@ -324,7 +324,7 @@ program_start num_hosts num_services'
             remaining_queries = ""
             for query in self._expected_queries:
                 remaining_queries += f"\n * {repr(query[0])}"
-            raise RuntimeError(f"Expected queries were not queried:{remaining_queries}")
+            raise LivestatusTestingError(f"Expected queries were not queried:{remaining_queries}")
 
     def add_table(self, name: str, data: ResultList) -> 'MockLiveStatusConnection':
         """Add the data of a table.
@@ -442,22 +442,23 @@ program_start num_hosts num_services'
 
     def _lookup_next_query(self, query: str) -> Response:
         if self._expect_status_query is None:
-            raise RuntimeError("Please use MockLiveStatusConnection as a context manager.")
+            raise LivestatusTestingError(
+                "Please use MockLiveStatusConnection as a context manager.")
 
         header_dict = _unpack_headers(query)
         # NOTE: Cache, Localtime, OutputFormat, KeepAlive, ResponseHeader not yet honored
         show_columns = header_dict.pop('ColumnHeaders', 'off')
 
         if not self._expected_queries:
-            raise RuntimeError(f"Got unexpected query:\n" f" * {repr(query)}")
+            raise LivestatusTestingError(f"Got unexpected query:\n" f" * {repr(query)}")
 
         expected_query, columns, response, match_type = self._expected_queries[0]
 
         if not _compare(expected_query, query, match_type):
-            raise RuntimeError(f"Expected query ({match_type}):\n"
-                               f" * {repr(expected_query)}\n"
-                               f"Got query:\n"
-                               f" * {repr(query)}")
+            raise LivestatusTestingError(f"Expected query ({match_type}):\n"
+                                         f" * {repr(expected_query)}\n"
+                                         f"Got query:\n"
+                                         f" * {repr(query)}")
 
         # Passed, remove this entry.
         self._expected_queries.pop(0)
@@ -477,7 +478,7 @@ program_start num_hosts num_services'
 
     def socket_recv(self, length):
         if self._last_response is None:
-            raise RuntimeError("Nothing sent yet. Can't receive!")
+            raise LivestatusTestingError("Nothing sent yet. Can't receive!")
         return self._last_response.read(length).encode('utf-8')
 
     def socket_send(self, data: bytes):

@@ -11,8 +11,10 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import result, SectionName
 
+from cmk.fetchers.type_defs import Mode
+
 from cmk.base import config
-from cmk.base.checkers import make_sources, Mode
+from cmk.base.checkers import make_sources
 from cmk.base.checkers.piggyback import PiggybackSource
 from cmk.base.checkers.programs import DSProgramSource, SpecialAgentSource
 from cmk.base.checkers.snmp import SNMPSource

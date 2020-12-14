@@ -10,9 +10,10 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import result, SourceType
 
+from cmk.fetchers.type_defs import Mode
+
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentHostSections
 from cmk.base.checkers.ipmi import IPMISource, IPMISummarizer
 

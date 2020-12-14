@@ -46,7 +46,7 @@ from cmk.utils.type_defs import (
     state_markers,
 )
 
-from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.fetchers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 from cmk.fetchers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -250,8 +250,7 @@ def _fetch_parsed_sections_broker_for_inv(
     if host_config.is_cluster:
         return ParsedSectionsBroker(), []
 
-    mode = (checkers.Mode.INVENTORY
-            if selected_sections is NO_SELECTION else checkers.Mode.FORCE_SECTIONS)
+    mode = (Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS)
 
     nodes = checkers.make_nodes(
         config_cache,

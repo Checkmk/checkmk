@@ -13,9 +13,10 @@ from testlib.base import Scenario
 
 import cmk.utils.paths
 
+from cmk.fetchers.type_defs import Mode
+
 import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
-from cmk.base.checkers import Mode
 from cmk.base.checkers.programs import DSProgramSource, SpecialAgentSource
 
 fun_args_stdin: Tuple[  #

@@ -7,17 +7,19 @@
 import time
 from typing import Optional
 
-import cmk.utils.tty as tty
 import cmk.utils.render
+import cmk.utils.tty as tty
+from cmk.utils.type_defs import HostName
 
+from cmk.fetchers.type_defs import Mode
+
+import cmk.base.check_table as check_table
+import cmk.base.checkers as checkers
+import cmk.base.checking as checking
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-import cmk.base.obsolete_output as out
-import cmk.base.checkers as checkers
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.check_table as check_table
-import cmk.base.checking as checking
-from cmk.utils.type_defs import HostName
+import cmk.base.obsolete_output as out
 from cmk.base.check_utils import LegacyCheckParameters
 
 
@@ -86,7 +88,7 @@ def dump_host(hostname: HostName) -> None:
         source.description for source in checkers.make_sources(
             host_config,
             ipaddress,
-            mode=checkers.Mode.NONE,
+            mode=Mode.NONE,
         )
     ]
 

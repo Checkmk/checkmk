@@ -35,6 +35,8 @@ from cmk.utils.type_defs import (
     ConfigSerial,
 )
 
+from cmk.fetchers.type_defs import Mode
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
 import cmk.base.obsolete_output as out
@@ -1164,7 +1166,7 @@ def _get_needed_plugin_names(
     for source in checkers.make_sources(
             host_config,
             ipaddress,
-            mode=checkers.Mode.NONE,
+            mode=Mode.NONE,
     ):
         if isinstance(source, checkers.programs.SpecialAgentSource):
             needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)

@@ -44,6 +44,7 @@ import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.fetchers.factory as snmp_factory
 import cmk.fetchers.cache
+from cmk.fetchers.type_defs import Mode as FetchMode
 from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -406,7 +407,7 @@ def mode_dump_agent(hostname: HostName) -> None:
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        mode = checkers.Mode.CHECKING
+        mode = FetchMode.CHECKING
         for source in checkers.make_sources(
                 host_config,
                 ipaddress,

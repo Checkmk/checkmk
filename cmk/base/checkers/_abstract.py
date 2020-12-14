@@ -36,7 +36,7 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import Fetcher
+from cmk.fetchers import Fetcher, Parser
 from cmk.fetchers.cache import FileCache
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.host_sections import THostSections
@@ -44,14 +44,7 @@ from cmk.fetchers.type_defs import Mode, SectionNameCollection
 
 from cmk.base.config import HostConfig
 
-__all__ = ["Source", "Mode"]
-
-
-class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
-    """Parse raw data into host sections."""
-    @abc.abstractmethod
-    def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
-        raise NotImplementedError
+__all__ = ["Source"]
 
 
 class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
@@ -161,7 +154,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _make_parser(self) -> "Parser[TRawData, THostSections]":
+    def _make_parser(self) -> Parser[TRawData, THostSections]:
         """Create a parser with this configuration."""
         raise NotImplementedError
 

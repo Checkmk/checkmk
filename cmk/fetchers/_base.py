@@ -17,7 +17,8 @@ from cmk.utils.type_defs import HostAddress, result
 from cmk.snmplib.type_defs import TRawData
 
 from .cache import FileCache
-from .type_defs import Mode
+from .host_sections import THostSections
+from .type_defs import Mode, SectionNameCollection
 
 __all__ = ["Fetcher", "verify_ipaddress"]
 
@@ -127,6 +128,13 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
 
     def _fetch_from_cache(self) -> Optional[TRawData]:
         return self.file_cache.read()
+
+
+class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
+    """Parse raw data into host sections."""
+    @abc.abstractmethod
+    def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
+        raise NotImplementedError
 
 
 def verify_ipaddress(address: Optional[HostAddress]) -> None:

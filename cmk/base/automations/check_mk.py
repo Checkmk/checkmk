@@ -46,7 +46,7 @@ from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, BackendSNMPTr
 
 import cmk.fetchers.cache
 from cmk.fetchers import factory
-from cmk.fetchers.type_defs import NO_SELECTION
+from cmk.fetchers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
@@ -1147,7 +1147,7 @@ class AutomationDiagHost(Automation):
         for source in checkers.make_sources(
                 host_config,
                 ipaddress,
-                mode=checkers.Mode.CHECKING,
+                mode=Mode.CHECKING,
         ):
             source.file_cache_max_age = config.check_max_cachefile_age
             if isinstance(source, checkers.programs.DSProgramSource) and cmd:
@@ -1445,7 +1445,7 @@ class AutomationGetAgentOutput(Automation):
                 for source in checkers.make_sources(
                         host_config,
                         ipaddress,
-                        mode=checkers.Mode.CHECKING,
+                        mode=Mode.CHECKING,
                 ):
                     source.file_cache_max_age = config.check_max_cachefile_age
                     if not isinstance(source, checkers.agent.AgentSource):

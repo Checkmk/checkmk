@@ -62,7 +62,7 @@ from cmk.utils.type_defs import (
 
 import cmk.fetchers.cache
 from cmk.fetchers.protocol import FetcherMessage
-from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.fetchers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -336,7 +336,7 @@ def do_discovery(
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
-    mode = checkers.Mode.DISCOVERY if selected_sections is NO_SELECTION else checkers.Mode.FORCE_SECTIONS
+    mode = Mode.DISCOVERY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
 
     # Now loop through all hosts
     for hostname in sorted(host_names):
@@ -540,11 +540,11 @@ def discover_on_host(
             config_cache,
             host_config,
             ipaddress,
-            checkers.Mode.DISCOVERY,
+            Mode.DISCOVERY,
             checkers.make_sources(
                 host_config,
                 ipaddress,
-                mode=checkers.Mode.DISCOVERY,
+                mode=Mode.DISCOVERY,
                 on_scan_error=on_error,
             ),
         )
@@ -724,8 +724,7 @@ def check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-    mode = (checkers.Mode.DISCOVERY
-            if params['inventory_check_do_scan'] else checkers.Mode.CACHED_DISCOVERY)
+    mode = (Mode.DISCOVERY if params['inventory_check_do_scan'] else Mode.CACHED_DISCOVERY)
 
     nodes = checkers.make_nodes(
         config_cache,
@@ -1767,7 +1766,7 @@ def get_check_preview(
         only_host_labels=False,
     )
 
-    mode = checkers.Mode.CACHED_DISCOVERY if use_caches else checkers.Mode.DISCOVERY
+    mode = Mode.CACHED_DISCOVERY if use_caches else Mode.DISCOVERY
 
     nodes = checkers.make_nodes(
         config_cache, host_config, ip_address, mode,

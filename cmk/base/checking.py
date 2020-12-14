@@ -58,7 +58,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.fetchers.protocol import FetcherMessage, FetcherType
-from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.fetchers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
@@ -133,7 +133,7 @@ def do_check(
 
     exit_spec = host_config.exit_code_spec()
 
-    mode = checkers.Mode.CHECKING if selected_sections is NO_SELECTION else checkers.Mode.FORCE_SECTIONS
+    mode = Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
 
     status: ServiceState = 0
     infotexts: List[ServiceDetails] = []

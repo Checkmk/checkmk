@@ -19,12 +19,11 @@ from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
 from cmk.utils.type_defs import AgentRawData, AgentRawDataSection, result, SectionName, SourceType
 
 from cmk.fetchers import FetcherType
-from cmk.fetchers.type_defs import NO_SELECTION
-from cmk.fetchers.agent import NoCache
+from cmk.fetchers.type_defs import Mode, NO_SELECTION
+from cmk.fetchers.agent import HostSectionParser, NoCache
 from cmk.fetchers.cache import PersistedSections, SectionStore
 
-from cmk.base.checkers import Mode
-from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer, HostSectionParser
+from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer
 
 
 class TestSummarizer:

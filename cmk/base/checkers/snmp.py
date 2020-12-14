@@ -4,10 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
-import time
 from pathlib import Path
-from typing import Dict, Final, Mapping, Optional, Set
+from typing import Dict, Optional, Set
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
 
@@ -19,6 +17,8 @@ from cmk.fetchers.snmp import (
     SectionMeta,
     SNMPFileCache,
     SNMPFileCacheFactory,
+    SNMPHostSections,
+    SNMPParser,
     SNMPPluginStore,
     SNMPPluginStoreItem,
 )
@@ -28,8 +28,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 
-from ._abstract import Mode, Parser, Source, Summarizer
-from .host_sections import HostSections
+from ._abstract import Mode, Source, Summarizer
 
 
 def make_inventory_sections() -> Set[SectionName]:
@@ -50,9 +49,6 @@ def make_plugin_store() -> SNMPPluginStore:
             s.name in inventory_sections,
         ) for s in agent_based_register.iter_all_snmp_sections()
     })
-
-
-SNMPHostSections = HostSections[SNMPRawDataSection]
 
 
 class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
@@ -177,7 +173,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             ) for name in checking_sections
         }
 
-    def _make_parser(self) -> "SNMPParser":
+    def _make_parser(self) -> SNMPParser:
         host_config = config.HostConfig.make_host_config(self.hostname)
         return SNMPParser(
             self.hostname,
@@ -246,56 +242,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             snmp_config.port,
             snmp_config.snmp_backend.value,
         )
-
-
-class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
-    """A parser for SNMP data.
-
-    Note:
-        It is forbidden to add base dependencies to this class.
-
-    """
-    def __init__(
-        self,
-        hostname: HostName,
-        section_store: SectionStore[SNMPRawDataSection],
-        *,
-        check_intervals: Mapping[SectionName, Optional[int]],
-        keep_outdated: bool,
-        logger: logging.Logger,
-    ) -> None:
-        super().__init__()
-        self.hostname: Final = hostname
-        self.check_intervals: Final = check_intervals
-        self.section_store: Final = section_store
-        self.keep_outdated: Final = keep_outdated
-        self._logger = logger
-
-    def parse(
-        self,
-        raw_data: SNMPRawData,
-        *,
-        selection: SectionNameCollection,
-    ) -> SNMPHostSections:
-        selection = NO_SELECTION  # Selection is done in the fetcher for SNMP.
-        host_sections = SNMPHostSections(dict(raw_data))
-        now = int(time.time())
-
-        def fetch_interval(section_name: SectionName) -> Optional[int]:
-            fetch_interval = self.check_intervals.get(section_name)
-            if fetch_interval is None:
-                return fetch_interval
-            return now + fetch_interval
-
-        host_sections.add_persisted_sections(
-            raw_data,
-            section_store=self.section_store,
-            fetch_interval=fetch_interval,
-            now=now,
-            keep_outdated=self.keep_outdated,
-            logger=self._logger,
-        )
-        return host_sections.filter(selection)
 
 
 class SNMPSummarizer(Summarizer[SNMPHostSections]):

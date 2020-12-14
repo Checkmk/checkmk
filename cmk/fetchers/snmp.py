@@ -25,7 +25,7 @@ from typing import (
     Union,
 )
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
@@ -38,11 +38,14 @@ from cmk.snmplib.type_defs import (
 )
 
 from . import factory
-from ._base import Fetcher, verify_ipaddress
+from ._base import Fetcher, Parser, verify_ipaddress
 from .cache import FileCache, FileCacheFactory, PersistedSections, SectionStore
-from .type_defs import Mode
+from .host_sections import HostSections
+from .type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 __all__ = ["SNMPFetcher", "SNMPFileCache", "SNMPPluginStore", "SNMPPluginStoreItem"]
+
+SNMPHostSections = HostSections[SNMPRawDataSection]
 
 
 class SNMPPluginStoreItem(NamedTuple):
@@ -362,3 +365,53 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             section_names,
             key=lambda x: (not ('cpu' in str(x) or x in cls.CPU_SECTIONS_WITHOUT_CPU_IN_NAME), x),
         )
+
+
+class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
+    """A parser for SNMP data.
+
+    Note:
+        It is forbidden to add base dependencies to this class.
+
+    """
+    def __init__(
+        self,
+        hostname: HostName,
+        section_store: SectionStore[SNMPRawDataSection],
+        *,
+        check_intervals: Mapping[SectionName, Optional[int]],
+        keep_outdated: bool,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__()
+        self.hostname: Final = hostname
+        self.check_intervals: Final = check_intervals
+        self.section_store: Final = section_store
+        self.keep_outdated: Final = keep_outdated
+        self._logger = logger
+
+    def parse(
+        self,
+        raw_data: SNMPRawData,
+        *,
+        selection: SectionNameCollection,
+    ) -> SNMPHostSections:
+        selection = NO_SELECTION  # Selection is done in the fetcher for SNMP.
+        host_sections = SNMPHostSections(dict(raw_data))
+        now = int(time.time())
+
+        def fetch_interval(section_name: SectionName) -> Optional[int]:
+            fetch_interval = self.check_intervals.get(section_name)
+            if fetch_interval is None:
+                return fetch_interval
+            return now + fetch_interval
+
+        host_sections.add_persisted_sections(
+            raw_data,
+            section_store=self.section_store,
+            fetch_interval=fetch_interval,
+            now=now,
+            keep_outdated=self.keep_outdated,
+            logger=self._logger,
+        )
+        return host_sections.filter(selection)

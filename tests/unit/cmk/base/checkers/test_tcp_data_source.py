@@ -15,8 +15,8 @@ from testlib.base import Scenario  # type: ignore[import]
 from cmk.utils.type_defs import result
 
 from cmk.fetchers.type_defs import Mode
+from cmk.fetchers.agent import AgentHostSections, AgentSummarizerDefault
 
-from cmk.base.checkers.agent import AgentHostSections, AgentSummarizerDefault
 from cmk.base.checkers.tcp import TCPSource
 
 

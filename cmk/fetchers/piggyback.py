@@ -9,9 +9,15 @@ import logging
 from typing import Any, Dict, Final, List, Optional, Tuple
 
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
+from cmk.utils.type_defs import (
+    AgentRawData,
+    ExitSpec,
+    HostAddress,
+    HostName,
+    ServiceCheckResult,
+)
 
-from .agent import AgentFetcher, NoCache
+from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, NoCache
 from .type_defs import Mode
 
 
@@ -90,3 +96,56 @@ class PiggybackFetcher(AgentFetcher):
         time_settings: PiggybackTimeSettings,
     ) -> List[PiggybackRawDataInfo]:
         return get_piggyback_raw_data(hostname if hostname else "", time_settings)
+
+
+class PiggybackSummarizer(AgentSummarizer):
+    def __init__(
+        self,
+        exit_spec: ExitSpec,
+        *,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        time_settings: List[Tuple[Optional[str], str, int]],
+        always: bool,
+    ) -> None:
+        super().__init__(exit_spec)
+        self.hostname = hostname
+        self.ipaddress = ipaddress
+        self.time_settings = time_settings
+        self.always = always
+
+    def summarize_success(
+        self,
+        host_sections: AgentHostSections,
+        *,
+        mode: Mode,
+    ) -> ServiceCheckResult:
+        """Returns useful information about the data source execution
+
+        Return only summary information in case there is piggyback data"""
+
+        if mode is not Mode.CHECKING:
+            # Check_MK Discovery: Do not display information about piggyback files
+            # and source status file
+            return 0, '', []
+
+        summary = self._summarize_impl()
+        if self.always and not summary:
+            return 1, 'Missing data', []
+
+        if not host_sections:
+            return 0, "", []
+
+        return summary
+
+    def _summarize_impl(self) -> ServiceCheckResult:
+        states = [0]
+        infotexts = set()
+        for origin in (self.hostname, self.ipaddress):
+            for src in get_piggyback_raw_data(
+                    origin if origin else "",
+                    self.time_settings,
+            ):
+                states.append(src.reason_status)
+                infotexts.add(src.reason)
+        return max(states), ", ".join(infotexts), []

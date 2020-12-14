@@ -11,11 +11,12 @@ from testlib.base import Scenario  # type: ignore[import]
 from cmk.utils.type_defs import result, SourceType
 
 from cmk.fetchers.type_defs import Mode
+from cmk.fetchers.ipmi import IPMISummarizer
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.checkers.agent import AgentHostSections
-from cmk.base.checkers.ipmi import IPMISource, IPMISummarizer
+from cmk.base.checkers.ipmi import IPMISource
 
 
 @pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))

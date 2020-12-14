@@ -25,7 +25,7 @@ from typing import (
     Union,
 )
 
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import HostName, SectionName, ServiceCheckResult
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
@@ -38,12 +38,19 @@ from cmk.snmplib.type_defs import (
 )
 
 from . import factory
-from ._base import Fetcher, Parser, verify_ipaddress
+from ._base import Fetcher, Parser, Summarizer, verify_ipaddress
 from .cache import FileCache, FileCacheFactory, PersistedSections, SectionStore
 from .host_sections import HostSections
 from .type_defs import Mode, NO_SELECTION, SectionNameCollection
 
-__all__ = ["SNMPFetcher", "SNMPFileCache", "SNMPPluginStore", "SNMPPluginStoreItem"]
+__all__ = [
+    "SNMPFetcher",
+    "SNMPFileCache",
+    "SNMPParser",
+    "SNMPPluginStore",
+    "SNMPPluginStoreItem",
+    "SNMPSummarizer",
+]
 
 SNMPHostSections = HostSections[SNMPRawDataSection]
 
@@ -415,3 +422,13 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             logger=self._logger,
         )
         return host_sections.filter(selection)
+
+
+class SNMPSummarizer(Summarizer[SNMPHostSections]):
+    def summarize_success(
+        self,
+        host_sections: SNMPHostSections,
+        *,
+        mode: Mode,
+    ) -> ServiceCheckResult:
+        return 0, "Success", []

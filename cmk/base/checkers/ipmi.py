@@ -7,23 +7,17 @@
 from typing import cast, Final, Optional
 
 from cmk.utils.exceptions import MKAgentError
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    SectionName,
-    ServiceCheckResult,
-    ServiceDetails,
-    SourceType,
-)
+from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.fetchers import FetcherType, IPMIFetcher
 from cmk.fetchers.agent import DefaultAgentFileCache, DefaultAgentFileCacheFactory
+from cmk.fetchers.ipmi import IPMISummarizer
+from cmk.fetchers.type_defs import Mode
 
 import cmk.base.config as config
 from cmk.base.config import HostConfig, IPMICredentials
 
-from ._abstract import Mode
-from .agent import AgentHostSections, AgentSource, AgentSummarizer
+from .agent import AgentSource
 
 
 class IPMISource(AgentSource):
@@ -67,7 +61,7 @@ class IPMISource(AgentSource):
             password=self.credentials["password"],
         )
 
-    def _make_summarizer(self) -> "IPMISummarizer":
+    def _make_summarizer(self) -> IPMISummarizer:
         return IPMISummarizer(self.exit_spec)
 
     @staticmethod
@@ -81,28 +75,3 @@ class IPMISource(AgentSource):
         if items:
             description = "%s (%s)" % (description, ", ".join(items))
         return description
-
-
-class IPMISummarizer(AgentSummarizer):
-    def summarize_success(
-        self,
-        host_sections: AgentHostSections,
-        *,
-        mode: Mode,
-    ) -> ServiceCheckResult:
-        return 0, "Version: %s" % self._get_ipmi_version(host_sections), []
-
-    @staticmethod
-    def _get_ipmi_version(host_sections: Optional[AgentHostSections]) -> ServiceDetails:
-        if host_sections is None:
-            return "unknown"
-
-        section = host_sections.sections.get(SectionName("mgmt_ipmi_firmware"))
-        if not section:
-            return "unknown"
-
-        for line in section:
-            if line[0] == "BMC Version" and line[1] == "version":
-                return line[2]
-
-        return "unknown"

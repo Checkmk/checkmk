@@ -10,9 +10,16 @@ from types import TracebackType
 from typing import Any, Dict, final, Final, Generic, Literal, Optional, Type, TypeVar
 
 import cmk.utils
-from cmk.utils.exceptions import MKFetcherError, MKIPAddressLookupError
+from cmk.utils.exceptions import (
+    MKFetcherError,
+    MKIPAddressLookupError,
+    MKEmptyAgentData,
+    MKAgentError,
+    MKSNMPError,
+    MKTimeout,
+)
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostAddress, result
+from cmk.utils.type_defs import ExitSpec, HostAddress, result, ServiceCheckResult, state_markers
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -135,6 +142,51 @@ class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
         raise NotImplementedError
+
+
+class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
+    """Class to summarize parsed data into a ServiceCheckResult.
+
+    Note:
+        It is forbidden to add base dependencies to classes
+        that derive this class.
+
+    """
+    def __init__(self, exit_spec: ExitSpec) -> None:
+        super().__init__()
+        self.exit_spec: Final[ExitSpec] = exit_spec
+
+    @abc.abstractmethod
+    def summarize_success(
+        self,
+        host_sections: THostSections,
+        *,
+        mode: Mode,
+    ) -> ServiceCheckResult:
+        raise NotImplementedError
+
+    def summarize_failure(
+        self,
+        exc: Exception,
+        *,
+        mode: Mode,
+    ) -> ServiceCheckResult:
+        status = self._extract_status(exc)
+        return status, str(exc) + state_markers[status], []
+
+    def _extract_status(self, exc: Exception) -> int:
+        if isinstance(exc, MKEmptyAgentData):
+            return self.exit_spec.get("empty_output", 2)
+        if isinstance(exc, (
+                MKAgentError,
+                MKFetcherError,
+                MKIPAddressLookupError,
+                MKSNMPError,
+        )):
+            return self.exit_spec.get("connection", 2)
+        if isinstance(exc, MKTimeout):
+            return self.exit_spec.get("timeout", 2)
+        return self.exit_spec.get("exception", 3)
 
 
 def verify_ipaddress(address: Optional[HostAddress]) -> None:

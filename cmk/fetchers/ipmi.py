@@ -15,9 +15,15 @@ from six import ensure_binary
 
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import AgentRawData, HostAddress
+from cmk.utils.type_defs import (
+    AgentRawData,
+    HostAddress,
+    SectionName,
+    ServiceCheckResult,
+    ServiceDetails,
+)
 
-from .agent import AgentFetcher, DefaultAgentFileCache
+from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, DefaultAgentFileCache
 from .type_defs import Mode
 
 
@@ -241,3 +247,28 @@ class IPMIFetcher(AgentFetcher):
         # ipmi_sensors.include (freeipmi_status_txt_mapping),
         # where it will default to 2(CRIT)
         return AgentRawData(b', '.join(states))
+
+
+class IPMISummarizer(AgentSummarizer):
+    def summarize_success(
+        self,
+        host_sections: AgentHostSections,
+        *,
+        mode: Mode,
+    ) -> ServiceCheckResult:
+        return 0, "Version: %s" % self._get_ipmi_version(host_sections), []
+
+    @staticmethod
+    def _get_ipmi_version(host_sections: Optional[AgentHostSections]) -> ServiceDetails:
+        if host_sections is None:
+            return "unknown"
+
+        section = host_sections.sections.get(SectionName("mgmt_ipmi_firmware"))
+        if not section:
+            return "unknown"
+
+        for line in section:
+            if line[0] == "BMC Version" and line[1] == "version":
+                return line[2]
+
+        return "unknown"

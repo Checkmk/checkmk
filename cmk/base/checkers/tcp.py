@@ -10,13 +10,17 @@ from typing import Optional
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.fetchers import FetcherType, TCPFetcher
-from cmk.fetchers.agent import DefaultAgentFileCache, DefaultAgentFileCacheFactory
+from cmk.fetchers.agent import (
+    DefaultAgentFileCache,
+    DefaultAgentFileCacheFactory,
+    AgentSummarizerDefault,
+)
+from cmk.fetchers.type_defs import Mode
 
 import cmk.base.config as config
 from cmk.base.config import HostConfig
 
-from ._abstract import Mode
-from .agent import AgentSource, AgentSummarizerDefault
+from .agent import AgentSource
 
 
 class TCPSource(AgentSource):

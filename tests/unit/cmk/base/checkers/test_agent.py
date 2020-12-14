@@ -20,10 +20,10 @@ from cmk.utils.type_defs import AgentRawData, AgentRawDataSection, result, Secti
 
 from cmk.fetchers import FetcherType
 from cmk.fetchers.type_defs import Mode, NO_SELECTION
-from cmk.fetchers.agent import HostSectionParser, NoCache
+from cmk.fetchers.agent import AgentParser, AgentSummarizer, HostSectionParser, NoCache
 from cmk.fetchers.cache import PersistedSections, SectionStore
 
-from cmk.base.checkers.agent import AgentParser, AgentSource, AgentSummarizer
+from cmk.base.checkers.agent import AgentSource
 
 
 class TestSummarizer:

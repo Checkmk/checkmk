@@ -7,7 +7,7 @@
 from pathlib import Path
 from typing import Dict, Optional, Set
 
-from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheckResult, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
 
@@ -21,14 +21,15 @@ from cmk.fetchers.snmp import (
     SNMPParser,
     SNMPPluginStore,
     SNMPPluginStoreItem,
+    SNMPSummarizer,
 )
-from cmk.fetchers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.fetchers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 
-from ._abstract import Mode, Source, Summarizer
+from ._abstract import Source
 
 
 def make_inventory_sections() -> Set[SectionName]:
@@ -189,7 +190,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             logger=self._logger,
         )
 
-    def _make_summarizer(self) -> "SNMPSummarizer":
+    def _make_summarizer(self) -> SNMPSummarizer:
         return SNMPSummarizer(self.exit_spec)
 
     def _make_disabled_sections(self) -> Set[SectionName]:
@@ -242,13 +243,3 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             snmp_config.port,
             snmp_config.snmp_backend.value,
         )
-
-
-class SNMPSummarizer(Summarizer[SNMPHostSections]):
-    def summarize_success(
-        self,
-        host_sections: SNMPHostSections,
-        *,
-        mode: Mode,
-    ) -> ServiceCheckResult:
-        return 0, "Success", []

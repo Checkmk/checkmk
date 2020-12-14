@@ -8,16 +8,19 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-from contextlib import contextmanager
 import inspect
 import itertools
 import os
-from pathlib import Path
 import sys
 import time
-from typing import Any, Iterator, Callable, Dict, List, Optional, Set, Tuple, Union
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
+
+from six import ensure_str
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostAddress
 
 
 def quote_shell_string(s: str) -> str:
@@ -149,3 +152,22 @@ def umask(mask: int) -> Iterator[None]:
         yield None
     finally:
         os.umask(old_mask)
+
+
+def normalize_ip_addresses(ip_addresses: Union[AnyStr, List[AnyStr]]) -> List[HostAddress]:
+    """Expand 10.0.0.{1,2,3}."""
+    if not isinstance(ip_addresses, list):
+        ip_addresses = ip_addresses.split()
+
+    decoded_ip_addresses = [ensure_str(word) for word in ip_addresses]
+    expanded = [word for word in decoded_ip_addresses if '{' not in word]
+    for word in decoded_ip_addresses:
+        if word in expanded:
+            continue
+        try:
+            prefix, tmp = word.split('{')
+            curly, suffix = tmp.split('}')
+            expanded.extend(prefix + i + suffix for i in curly.split(','))
+        except Exception:
+            raise MKGeneralException("could not expand %r" % word)
+    return expanded

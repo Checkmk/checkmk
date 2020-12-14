@@ -7,15 +7,13 @@
 import errno
 import os
 import socket
-from typing import AnyStr, cast, Dict, List, Optional, Tuple, Union
-
-from six import ensure_str
+from typing import cast, Dict, List, Optional, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, MKTimeout
+from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
@@ -311,22 +309,3 @@ def _get_dns_cache_lookup_hosts(config_cache: config.ConfigCache) -> List[IPLook
             hosts.append((hostname, 6))
 
     return hosts
-
-
-def normalize_ip_addresses(ip_addresses: Union[AnyStr, List[AnyStr]]) -> List[HostAddress]:
-    """Expand 10.0.0.{1,2,3}."""
-    if not isinstance(ip_addresses, list):
-        ip_addresses = ip_addresses.split()
-
-    decoded_ip_addresses = [ensure_str(word) for word in ip_addresses]
-    expanded = [word for word in decoded_ip_addresses if '{' not in word]
-    for word in decoded_ip_addresses:
-        if word in expanded:
-            continue
-        try:
-            prefix, tmp = word.split('{')
-            curly, suffix = tmp.split('}')
-            expanded.extend(prefix + i + suffix for i in curly.split(','))
-        except Exception:
-            raise MKGeneralException("could not expand %r" % word)
-    return expanded

@@ -27,6 +27,7 @@ import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.misc
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.misc import normalize_ip_addresses
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.type_defs import (
     AgentRawData,
@@ -49,7 +50,6 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.controller import FetcherType
 
 import cmk.base.config as config
-from cmk.base.ip_lookup import normalize_ip_addresses
 
 from ._abstract import FileCacheFactory, Mode, Parser, SectionNameCollection, Source, Summarizer
 from .host_sections import HostSections

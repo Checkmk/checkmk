@@ -6,7 +6,7 @@ Date: 1607856582
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.0.0b2
 
 With this realease Windows agent opens firewall for all three Windows network profile:
 Private, Domain and Public.

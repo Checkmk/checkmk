@@ -32,6 +32,7 @@ from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.type_defs import (
     AgentRawData,
     AgentRawDataSection,
+    AgentTargetVersion,
     ExitSpec,
     HostAddress,
     HostName,
@@ -131,6 +132,7 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             ),
             check_interval=check_interval,
             keep_outdated=self.use_outdated_persisted_sections,
+            simulation=config.agent_simulator,
             logger=self._logger,
         )
 
@@ -146,13 +148,15 @@ class AgentSummarizerDefault(AgentSummarizer):
         exit_spec: ExitSpec,
         *,
         is_cluster: bool,
-        agent_target_version: config.AgentTargetVersion,
+        agent_min_version: int,
+        agent_target_version: AgentTargetVersion,
         only_from: Union[None, List[str], str],
     ) -> None:
         super().__init__(exit_spec)
-        self._is_cluster = is_cluster
-        self._agent_target_version = agent_target_version
-        self._only_from = only_from
+        self.is_cluster: Final = is_cluster
+        self.agent_min_version: Final = agent_min_version
+        self.agent_target_version: Final = agent_target_version
+        self.only_from: Final = only_from
 
     def summarize_success(
         self,
@@ -177,10 +181,10 @@ class AgentSummarizerDefault(AgentSummarizer):
         status: ServiceState = 0
         output: List[ServiceDetails] = []
         perfdata: List[MetricTuple] = []
-        if not self._is_cluster and agent_version is not None:
+        if not self.is_cluster and agent_version is not None:
             output.append("Version: %s" % agent_version)
 
-        if not self._is_cluster and agent_info["agentos"] is not None:
+        if not self.is_cluster and agent_info["agentos"] is not None:
             output.append("OS: %s" % agent_info["agentos"])
 
         if mode is Mode.CHECKING and cmk_section:
@@ -215,7 +219,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         agent_info: Dict[str, Optional[str]],
     ) -> Optional[ServiceCheckResult]:
         agent_version = str(agent_info["version"])
-        expected_version = self._agent_target_version
+        expected_version = self.agent_target_version
 
         if expected_version and agent_version \
              and not AgentSummarizerDefault._is_expected_agent_version(agent_version, expected_version):
@@ -239,11 +243,11 @@ class AgentSummarizerDefault(AgentSummarizer):
             return (status, "unexpected agent version %s (should be %s)%s" %
                     (agent_version, expected, state_markers[status]), [])
 
-        if config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
+        if self.agent_min_version and cast(int, agent_version) < self.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
             status = self.exit_spec.get("wrong_version", 1)
             return (status, "old plugin version %s (should be at least %s)%s" %
-                    (agent_version, config.agent_min_version, state_markers[status]), [])
+                    (agent_version, self.agent_min_version, state_markers[status]), [])
 
         return None
 
@@ -255,7 +259,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         if agent_only_from is None:
             return None
 
-        config_only_from = self._only_from
+        config_only_from = self.only_from
         if config_only_from is None:
             return None
 
@@ -281,7 +285,7 @@ class AgentSummarizerDefault(AgentSummarizer):
     @staticmethod
     def _is_expected_agent_version(
         agent_version: Optional[str],
-        expected_version: config.AgentTargetVersion,
+        expected_version: AgentTargetVersion,
     ) -> bool:
         try:
             if agent_version is None:
@@ -627,6 +631,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         *,
         check_interval: int,
         keep_outdated: bool,
+        simulation: bool,
         logger: logging.Logger,
     ) -> None:
         super().__init__()
@@ -634,6 +639,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         self.check_interval: Final = check_interval
         self.section_store: Final = section_store
         self.keep_outdated: Final = keep_outdated
+        self.simulation: Final = simulation
         self._logger = logger
 
     def parse(
@@ -642,7 +648,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         *,
         selection: SectionNameCollection,
     ) -> AgentHostSections:
-        if config.agent_simulator:
+        if self.simulation:
             raw_data = agent_simulator.process(raw_data)
 
         now = int(time.time())

@@ -56,7 +56,14 @@ class TestParser:
 
     @pytest.fixture
     def parser(self, hostname, store, logger):
-        return AgentParser(hostname, store, check_interval=0, keep_outdated=True, logger=logger)
+        return AgentParser(
+            hostname,
+            store,
+            check_interval=0,
+            keep_outdated=True,
+            simulation=False,
+            logger=logger,
+        )
 
     @pytest.mark.usefixtures("scenario")
     def test_missing_host_header(self, parser):

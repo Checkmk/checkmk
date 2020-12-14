@@ -44,6 +44,7 @@ def test_tcpdatasource_only_from(mode, monkeypatch, res, reported, rule):
     summarizer = AgentSummarizerDefault(
         source.exit_spec,
         is_cluster=source.host_config.is_cluster,
+        agent_min_version=0,
         agent_target_version=source.host_config.agent_target_version,
         only_from=source.host_config.only_from,
     )
@@ -96,6 +97,7 @@ def test_tcpdatasource_restricted_address_mismatch(
     summarizer = AgentSummarizerDefault(
         source.exit_spec,
         is_cluster=source.host_config.is_cluster,
+        agent_min_version=0,
         agent_target_version=source.host_config.agent_target_version,
         only_from=source.host_config.only_from,
     )

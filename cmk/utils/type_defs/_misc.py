@@ -30,6 +30,8 @@ ServicegroupName = str
 ContactgroupName = str
 TimeperiodName = str
 
+AgentTargetVersion = Union[None, str, Tuple[str, str], Tuple[str, Dict[str, str]]]
+
 AgentRawData = NewType("AgentRawData", bytes)
 # Note that the inner List[str] to AgentRawDataSection
 # is only **artificially** different from AgentRawData and

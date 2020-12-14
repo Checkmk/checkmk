@@ -414,7 +414,7 @@ class CommandFakeCheckResult(Command):
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Plugin output"))
+        html.write_text(_("Summary"))
         html.close_td()
         html.open_td()
         html.text_input("_fake_output", "", size=60)

@@ -187,7 +187,7 @@ def test_percent(percentage, output):
     assert output == render.percent(percentage)
     # 6. Bereich kleiner 0:
     #     negieren und "-" davorhängen
-    if percentage != 0.0:
+    if abs(percentage) >= 0.01:
         assert f"-{output}" == render.percent(-percentage)
 
 

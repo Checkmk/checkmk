@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Literal, Optional, Dict, Any
+from typing import Literal, Optional, Dict, Any, cast
 from urllib.parse import quote_plus
 
 from marshmallow import Schema
@@ -164,8 +164,19 @@ def create_url(site: SiteId, query: Query) -> str:
     Returns:
         The URL.
 
+    Raises:
+        A ValueError when no URL could be created.
+
     """
-    url = f"/{site}/check_mk/api/v0/domain-types/host/collections/all"
+    table = cast(str, query.table.__tablename__)
+    try:
+        domain_type = {
+            'hosts': 'host',
+            'services': 'service',
+        }[table]
+    except KeyError:
+        raise ValueError(f"Could not find a domain-type for table {table}.")
+    url = f"/{site}/check_mk/api/v0/domain-types/{domain_type}/collections/all"
     query_dict = query.dict_repr()
     if query_dict:
         query_string_value = quote_plus(json.dumps(query_dict))

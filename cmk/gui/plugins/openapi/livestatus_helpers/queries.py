@@ -13,6 +13,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
     NothingExpression,
     Or,
     QueryExpression,
+    Not,
 )
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, expr_to_tree, Table
 
@@ -446,6 +447,33 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ... ''')
             >>> q = Query.from_string(query_text)
 
+            We can faithfully recreate this query as a dict-representation.
+
+            >>> q.dict_repr()
+            {'op': 'and', 'expr': [\
+{'op': 'not', 'expr': \
+{'op': 'and', 'expr': [\
+{'op': '=', 'left': 'services.state', 'right': '0'}, \
+{'op': '=', 'left': 'services.has_been_checked', 'right': '1'}\
+]}}, \
+{'op': '=', 'left': 'services.has_been_checked', 'right': '1'}, \
+{'op': 'and', 'expr': [\
+{'op': '=', 'left': 'services.scheduled_downtime_depth', 'right': '0'}, \
+{'op': '=', 'left': 'services.host_scheduled_downtime_depth', 'right': '0'}\
+]}, \
+{'op': '=', 'left': 'services.acknowledged', 'right': '0'}, \
+{'op': 'not', 'expr': \
+{'op': 'and', 'expr': [\
+{'op': '=', 'left': 'services.host_state', 'right': '1'}, \
+{'op': '=', 'left': 'services.host_has_been_checked', 'right': '1'}\
+]}}, \
+{'op': 'not', 'expr': \
+{'op': 'and', 'expr': [\
+{'op': '=', 'left': 'services.host_state', 'right': '2'}, \
+{'op': '=', 'left': 'services.host_has_been_checked', 'right': '1'}\
+]}}\
+]}
+
             >>> q.columns
             [Column(services.host_address: string), Column(services.host_check_command: string), Column(services.host_check_type: int), Column(services.host_custom_variable_names: list), Column(services.host_custom_variable_values: list), Column(services.host_downtimes_with_extra_info: list), Column(services.host_has_been_checked: int), Column(services.host_name: string), Column(services.host_scheduled_downtime_depth: int), Column(services.host_state: int), Column(services.accept_passive_checks: int), Column(services.acknowledged: int), Column(services.action_url_expanded: string), Column(services.active_checks_enabled: int), Column(services.cache_interval: int), Column(services.cached_at: time), Column(services.check_command: string), Column(services.check_type: int), Column(services.comments_with_extra_info: list), Column(services.custom_variable_names: list), Column(services.custom_variable_values: list), Column(services.custom_variables: dict), Column(services.description: string), Column(services.downtimes: list), Column(services.downtimes_with_extra_info: list), Column(services.has_been_checked: int), Column(services.host_name: string), Column(services.icon_image: string), Column(services.in_check_period: int), Column(services.in_notification_period: int), Column(services.in_passive_check_period: int), Column(services.in_service_period: int), Column(services.is_flapping: int), Column(services.last_check: time), Column(services.last_state_change: time), Column(services.modified_attributes_list: list), Column(services.notes_url_expanded: string), Column(services.notifications_enabled: int), Column(services.perf_data: string), Column(services.plugin_output: string), Column(services.pnpgraph_present: int), Column(services.scheduled_downtime_depth: int), Column(services.description: string), Column(services.staleness: float), Column(services.state: int)]
 
@@ -555,6 +583,11 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
                     raise ValueError(f"Could not parse {op} for {filters!r}")
                 filters = filters[:-count]
                 filters.append(expr)
+            elif line.startswith('Negate:') or line.startswith('Not:'):
+                filters[-1] = Not(filters[-1])
+
+        if len(filters) > 1:
+            filters = [And(*filters)]
 
         return cls(
             columns=columns,

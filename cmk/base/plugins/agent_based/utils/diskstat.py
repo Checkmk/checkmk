@@ -39,7 +39,7 @@ DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
 
 
 def discovery_diskstat_generic(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     # Skip over on empty data
@@ -69,8 +69,8 @@ def discovery_diskstat_generic(
 
 def compute_rates_multiple_disks(
     disks: Section,
-    value_store: type_defs.ValueStore,
-    single_disk_rate_computer: Callable[[Disk, type_defs.ValueStore, str], Disk],
+    value_store: MutableMapping[str, Any],
+    single_disk_rate_computer: Callable[[Disk, MutableMapping[str, Any], str], Disk],
 ) -> Section:
     disks_with_rates = {}
     ignore_res_excpt = None

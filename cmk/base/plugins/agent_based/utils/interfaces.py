@@ -239,7 +239,7 @@ LevelSpec = Tuple[Optional[str], Tuple[Optional[float], Optional[float]]]
 GeneralTrafficLevels = Dict[Tuple[str, str], LevelSpec]
 
 
-def get_traffic_levels(params: type_defs.Parameters) -> GeneralTrafficLevels:
+def get_traffic_levels(params: Mapping[str, Any]) -> GeneralTrafficLevels:
     # Transform old style traffic parameters to new CascadingDropdown based data format
     new_traffic: List[Tuple[str, Tuple[str, LevelSpec]]] = []
     if 'traffic' in params and not isinstance(params['traffic'], list):
@@ -436,7 +436,7 @@ def _check_group_matching_conditions(
 
 
 def _groups_from_params(
-    discovery_params: Sequence[type_defs.Parameters],) -> Dict[str, GroupConfiguration]:
+    discovery_params: Sequence[Mapping[str, Any]],) -> Dict[str, GroupConfiguration]:
     groups: Dict[str, GroupConfiguration] = {}
     inclusion_importances = {}
     exclusion_conditions = []
@@ -472,7 +472,7 @@ def _groups_from_params(
 
 
 def discover_interfaces(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     if len(section) == 0:
@@ -619,7 +619,7 @@ GroupMembers = Dict[Optional[str], List[Dict[str, str]]]
 
 def _check_ungrouped_ifs(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
     timestamp: float,
     input_is_rate: bool,
@@ -669,7 +669,7 @@ def _check_ungrouped_ifs(
 
 def _check_grouped_ifs(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
     group_name: str,
     timestamp: float,
@@ -829,7 +829,7 @@ def _check_grouped_ifs(
 
 def check_multiple_interfaces(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
     group_name: str = "Interface group",
     timestamp: Optional[float] = None,
@@ -859,7 +859,7 @@ def check_multiple_interfaces(
 
 
 def _get_rate(
-    value_store: type_defs.ValueStore,
+    value_store: MutableMapping[str, Any],
     key: str,
     timestamp: float,
     value: float,
@@ -932,7 +932,7 @@ def _check_speed(interface: Interface, targetspeed: Optional[int]) -> Result:
 # One case of winperf_if appeared to indicate that in that case Errors = Discards.
 def check_single_interface(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     interface: Interface,
     group_members: Optional[GroupMembers] = None,
     group_name: str = "Interface group",
@@ -1413,7 +1413,7 @@ def _io_rates(
 
 def cluster_check(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> type_defs.CheckResult:
 

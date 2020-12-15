@@ -12,11 +12,11 @@
 #  - Rate counters (per second)
 """
 
-from typing import Dict, Tuple, Set, Optional
+from typing import Any, Dict, Tuple, Set, MutableMapping, Optional
 from contextlib import suppress
 
 from ..agent_based_api.v1 import Service, IgnoreResultsError, get_rate, GetRateError
-from ..agent_based_api.v1.type_defs import DiscoveryResult, ValueStore
+from ..agent_based_api.v1.type_defs import DiscoveryResult
 
 Counters = Dict[str, float]
 Section = Dict[Tuple[str, str], Counters]
@@ -33,7 +33,7 @@ def discovery_mssql_counters_generic(
 
 
 def get_rate_or_none(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     key: str,
     point_in_time: float,
     value: float,

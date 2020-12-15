@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
 
-from ..agent_based_api.v1.type_defs import CheckResult, ValueStore
+from ..agent_based_api.v1.type_defs import CheckResult
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -303,7 +303,7 @@ def _util_perfdata(
     core_index: int,
     total_perc: float,
     params: Mapping,
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:
     """Check a single cores performance.
@@ -376,7 +376,7 @@ def cpu_util_time(
     perc: float,
     threshold: float,
     levels: Optional[Tuple[float, float]],
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:
     """Check for how long a CPU was under high load.
@@ -405,7 +405,7 @@ def cpu_util_time(
 
 def _util_counter(
     stats: CPUInfo,
-    value_store: MutableMapping,
+    value_store: MutableMapping[str, Any],
 ) -> CPUInfo:
     """Compute jiffi-differences of all relevant counters"""
     diff_values = []

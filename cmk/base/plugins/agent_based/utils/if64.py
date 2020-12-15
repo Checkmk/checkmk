@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     List,
+    Mapping,
     Union,
 )
 from ..agent_based_api.v1 import (
@@ -382,7 +384,7 @@ def parse_if64(string_table: List[type_defs.StringByteTable]) -> interfaces.Sect
 
 def generic_check_if64(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: interfaces.Section,
 ) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(

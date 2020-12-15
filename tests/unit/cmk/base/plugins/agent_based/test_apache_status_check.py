@@ -7,7 +7,6 @@ from typing import Dict
 import pytest
 
 import cmk.base.plugins.agent_based.agent_based_api.v1
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     Metric,

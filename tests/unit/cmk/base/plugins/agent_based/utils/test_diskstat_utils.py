@@ -358,7 +358,7 @@ def test_scale_levels(levels, factor):
     ],
 )
 def test_check_diskstat_dict(params, disk, exp_res):
-    value_store: type_defs.ValueStore = {}
+    value_store: Dict[str, Any] = {}
 
     assert list(
         diskstat.check_diskstat_dict(params=params,

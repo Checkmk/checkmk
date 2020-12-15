@@ -9,7 +9,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.aws_rds import (
     check_aws_rds_network_io,
     parse_aws_rds,

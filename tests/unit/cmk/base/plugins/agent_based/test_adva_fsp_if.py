@@ -11,7 +11,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based import adva_fsp_if
 
 SECTION = {
@@ -128,6 +127,6 @@ def test_discover_adva_fsp_if():
 def test_check_huawei_osn_if(item, params, expected_result):
     assert list(adva_fsp_if.check_adva_fsp_if(
         item,
-        Parameters(params),
+        params,
         SECTION,
     )) == expected_result

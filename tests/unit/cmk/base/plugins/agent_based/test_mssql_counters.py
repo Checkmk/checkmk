@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
-
+from typing import Any, Dict
 import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -15,7 +15,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
     State as state,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import ValueStore
 
 from cmk.base.plugins.agent_based.mssql_counters_section import parse_mssql_counters
 from cmk.base.plugins.agent_based.mssql_counters_cache_hits import (
@@ -53,6 +52,10 @@ from cmk.base.plugins.agent_based.mssql_counters_transactions import (
     _check_base as check_transactions_base,
     _cluster_check_base as cluster_check_transactions_base,
 )
+
+
+ValueStore = Dict[str, Any]
+
 
 big_string_table = [
     ['None', 'utc_time', 'None', '19.08.2020 14:25:04'],

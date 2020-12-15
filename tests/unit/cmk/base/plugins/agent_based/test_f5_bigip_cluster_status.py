@@ -15,7 +15,6 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
     F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
@@ -32,7 +31,7 @@ def test_parse_f5_bigip_cluster_status(string_table, expected_parsed_data):
     ((def_params, 0), [Result(state=state.OK, summary="Node is standby")]),
 ])
 def test_check_f5_bigip_cluster_status(arg, result):
-    assert list(check_f5_bigip_cluster_status(Parameters(arg[0]), arg[1])) == result
+    assert list(check_f5_bigip_cluster_status(arg[0], arg[1])) == result
 
 
 @pytest.mark.parametrize("arg,result", [
@@ -43,7 +42,7 @@ def test_check_f5_bigip_cluster_status(arg, result):
     ((def_params, 0), [Result(state=state.UNKNOWN, summary="Node is unknown")]),
 ])
 def test_check_f5_bigip_cluster_status_v11_2(arg, result):
-    assert list(check_f5_bigip_cluster_status_v11_2(Parameters(arg[0]), arg[1])) == result
+    assert list(check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result
 
 
 @pytest.mark.parametrize("arg,result", [
@@ -69,7 +68,7 @@ def test_check_f5_bigip_cluster_status_v11_2(arg, result):
     ]),
 ])
 def test_cluster_check_f5_bigip_cluster_status(arg, result):
-    assert list(cluster_check_f5_bigip_cluster_status(Parameters(arg[0]), arg[1])) == result
+    assert list(cluster_check_f5_bigip_cluster_status(arg[0], arg[1])) == result
 
 
 @pytest.mark.parametrize("arg,result", [
@@ -103,4 +102,4 @@ def test_cluster_check_f5_bigip_cluster_status(arg, result):
     ]),
 ])
 def test_cluster_check_f5_bigip_cluster_status_v11_2(arg, result):
-    assert list(cluster_check_f5_bigip_cluster_status_v11_2(Parameters(arg[0]), arg[1])) == result
+    assert list(cluster_check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result

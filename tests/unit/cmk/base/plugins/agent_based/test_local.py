@@ -10,7 +10,6 @@ import pytest  # type: ignore[import]
 
 import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state, Metric
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 
 
 @pytest.mark.parametrize(
@@ -262,7 +261,7 @@ def test_cluster():
     }
 
     worst = local.cluster_check_local("item", {}, section)
-    best = local.cluster_check_local("item", Parameters({"outcome_on_cluster": "best"}), section)
+    best = local.cluster_check_local("item", {"outcome_on_cluster": "best"}, section)
 
     assert list(worst) == [
         Result(state=state.CRIT, notice="[node2]: Service is CRIT"),
@@ -291,7 +290,7 @@ def test_cluster_missing_item():
     }
 
     worst = local.cluster_check_local("item", {}, section)
-    best = local.cluster_check_local("item", Parameters({"outcome_on_cluster": "best"}), section)
+    best = local.cluster_check_local("item", {"outcome_on_cluster": "best"}, section)
 
     assert list(worst) == [
         Result(state=state.OK, summary="[node0]: Service is OK"),

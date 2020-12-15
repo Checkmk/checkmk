@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
     Result,
-    State as state,
+    State,
     type_defs,
 )
 from cmk.base.plugins.agent_based import aix_diskiod
@@ -46,9 +46,9 @@ def test_check_disk(value_store):
     with pytest.raises(IgnoreResultsError):
         list(aix_diskiod._check_disk({}, DISK))
     assert list(aix_diskiod._check_disk({}, DISK)) == [
-        Result(state=state.OK, summary='Read: 0.00 B/s'),
+        Result(state=State.OK, summary='Read: 0.00 B/s'),
         Metric('disk_read_throughput', 0.0),
-        Result(state=state.OK, summary='Write: 0.00 B/s'),
+        Result(state=State.OK, summary='Write: 0.00 B/s'),
         Metric('disk_write_throughput', 0.0),
     ]
 
@@ -58,14 +58,14 @@ def _test_check_aix_diskiod(item, section_1, section_2, check_func):
     with pytest.raises(IgnoreResultsError):
         list(check_func(
             item,
-            type_defs.Parameters({}),
+            {},
             section_1,
         ))
 
     # second call: get values
     check_results = list(check_func(
         item,
-        type_defs.Parameters({}),
+        {},
         section_2,
     ))
     for res in check_results:

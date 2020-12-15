@@ -6,7 +6,6 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Service, Result, State as state
 import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
 

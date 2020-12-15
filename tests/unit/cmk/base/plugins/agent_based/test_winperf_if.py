@@ -637,7 +637,7 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
     assert list(
         winperf_if.check_winperf_if(
             item,
-            type_defs.Parameters(params),
+            params,
             winperf_if_teaming_parsed(10, 1024 * 1024 * 1024 * 10),
         )) == results
 
@@ -904,6 +904,6 @@ def test_winperf_if_regression(
     for item, par, res in items_params_results:
         assert list(winperf_if.check_winperf_if(
             item,
-            type_defs.Parameters(par),
+            par,
             section,
         )) == res

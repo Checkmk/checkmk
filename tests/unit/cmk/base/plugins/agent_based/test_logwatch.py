@@ -11,7 +11,6 @@ import pytest  # type: ignore[import]
 from cmk.base.plugins.agent_based import logwatch
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 
 pytestmark = pytest.mark.checks
 
@@ -146,7 +145,9 @@ def test_logwatch_discover_single_restrict(monkeypatch):
     monkeypatch.setattr(
         logwatch.logwatch,
         'get_ec_rule_params',
-        lambda: [Parameters({'restrict_logfiles': [u'.*2']})],
+        lambda: [{
+            'restrict_logfiles': [u'.*2']
+        }],
     )
     assert sorted(
         logwatch.discover_logwatch_single(SECTION2),

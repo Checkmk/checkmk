@@ -78,7 +78,7 @@ public:
     // #TODO gtest
     bool tryBreakWait();
 
-    std::vector<std::string> segmentNameList();
+    std::vector<std::string> segmentNameList() const;
 
     // #TODO gtest
     auto awaitingSegments() const {

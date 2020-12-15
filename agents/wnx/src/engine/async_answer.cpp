@@ -16,10 +16,12 @@
 #include "section_header.h"       // names
 #include "windows_service_api.h"  // global situation
 
+using std::chrono::milliseconds;
+using std::chrono::steady_clock;
+
 namespace cma::srv {
 
-bool AsyncAnswer::isAnswerOlder(std::chrono::milliseconds period) const {
-    using namespace std::chrono;
+bool AsyncAnswer::isAnswerOlder(milliseconds period) const {
     auto tp = steady_clock::now();
 
     std::lock_guard lk(lock_);
@@ -34,16 +36,14 @@ void AsyncAnswer::dropAnswer() {
 }
 
 // returns true when answer is ready, false when timeout expires but not ready
-bool AsyncAnswer::waitAnswer(std::chrono::milliseconds to_wait) {
-    using namespace std::chrono;
-
+bool AsyncAnswer::waitAnswer(milliseconds to_wait) {
     std::unique_lock lk(lock_);
     ON_OUT_OF_SCOPE(sw_.stop());
     return cv_ready_.wait_until(
         lk, steady_clock::now() + to_wait, [this]() -> bool {
             // check for global exit
-            if (cma::srv::IsGlobalStopSignaled()) {
-                XLOG::l.i("Breaking Answer on stop");
+            if (IsGlobalStopSignaled()) {
+                XLOG::d.i("Breaking Answer on stop");
                 return true;
             }
             return awaited_segments_ <= received_segments_;
@@ -111,7 +111,7 @@ bool AsyncAnswer::prepareAnswer(std::string_view Ip) {
 }
 
 // sorted list of all received sections
-std::vector<std::string> AsyncAnswer::segmentNameList() {
+std::vector<std::string> AsyncAnswer::segmentNameList() const {
     std::unique_lock lk(lock_);
     std::vector<std::string> list;
     for (const auto& s : segments_) list.emplace_back(s.name_);

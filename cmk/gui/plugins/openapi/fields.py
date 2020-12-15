@@ -531,12 +531,19 @@ class ExprSchema(OneOfSchema):
         'or': LogicalExprSchema,
         'not': NotExprSchema,
         '=': BinaryExprSchema,
-        '!=': BinaryExprSchema,
         '~': BinaryExprSchema,
+        '~~': BinaryExprSchema,
         '<': BinaryExprSchema,
         '>': BinaryExprSchema,
         '>=': BinaryExprSchema,
         '<=': BinaryExprSchema,
+        '!=': BinaryExprSchema,
+        '!~': BinaryExprSchema,
+        '!~~': BinaryExprSchema,
+        '!<': BinaryExprSchema,
+        '!>': BinaryExprSchema,
+        '!>=': BinaryExprSchema,
+        '!<=': BinaryExprSchema,
     }
 
     def load(self, data, *, many=None, partial=None, unknown=None):

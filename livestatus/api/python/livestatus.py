@@ -154,8 +154,7 @@ def create_client_socket(family: socket.AddressFamily, tls: bool, verify: bool,
 
 @contextlib.contextmanager
 def intercept_queries():
-    # TODO: Temporarily disable query interception to prevent errors in GUI
-    #SingleSiteConnection.collect_queries.active = True
+    SingleSiteConnection.collect_queries.active = True
     SingleSiteConnection.collect_queries.queries = []
     try:
         yield SingleSiteConnection.collect_queries.queries

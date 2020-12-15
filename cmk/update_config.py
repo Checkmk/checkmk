@@ -420,6 +420,7 @@ class UpdateConfig:
             Path(cmk.utils.paths.include_cache_dir, "local"),
             Path(cmk.utils.paths.precompiled_checks_dir, "builtin"),
             Path(cmk.utils.paths.precompiled_checks_dir, "local"),
+            Path(cmk.utils.paths.var_dir, "snmp_cache"),
         ]
         for base_dir in paths:
             try:

@@ -42,12 +42,11 @@ def bearer_auth(auth_header: str) -> RFC7662:
         raise MKAuthException("Not authenticated.")
 
     # Auth with automation secret succeeded - mark transid as unneeded in this case
-    return _subject(user_id)
+    return rfc7662_subject(user_id, 'automation')
 
 
-def _subject(user_id: str) -> RFC7662:
-    # noinspection PyTypeChecker
-    return {'sub': user_id, 'iat': int(time.time()), 'active': True}
+def rfc7662_subject(user_id: str, auth_type: str) -> RFC7662:
+    return {'sub': user_id, 'iat': int(time.time()), 'active': True, 'scope': auth_type}
 
 
 @contextlib.contextmanager

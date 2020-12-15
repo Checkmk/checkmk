@@ -16,6 +16,36 @@
 #include "../engine/stdafx_defines.h"  // this is not very nice approach, still we want to test Engine with same definitions.
                                        // --- We just reuse header file
 
+// NOTE: This code block is used to speed compilation.
+// Sets usually for msbuild in script using environment variable
+// ExternalCompilerOptions.
+#ifdef DECREASE_COMPILE_TIME
+#include <algorithm>
+#include <cctype>
+#include <chrono>
+#include <condition_variable>
+#include <cstdint>
+#include <cstring>
+#include <cwctype>
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <future>
+#include <iostream>
+#include <iterator>
+#include <mutex>
+#include <optional>
+#include <random>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <tuple>
+#include <type_traits>
+#include <unordered_map>
+#include <vector>
+#endif
+
 #include <filesystem>
 
 #include "common/cfg_info.h"

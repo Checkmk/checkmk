@@ -10,3 +10,5 @@ x64/
 extlibs/
 .vs/
 *vcxproj.user
+*.h.hpp
+compile_commands.json

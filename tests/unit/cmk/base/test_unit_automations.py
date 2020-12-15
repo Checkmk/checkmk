@@ -24,6 +24,7 @@ def test_registered_automations():
         'get-check-information',
         'get-configuration',
         'get-labels-of',
+        'get-real-time-checks',
         'get-section-information',
         'get-service-configurations',
         'inventory',

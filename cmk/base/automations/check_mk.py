@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from contextlib import redirect_stdout, redirect_stderr
 
-from six import ensure_binary
+from six import ensure_binary, ensure_str
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -975,6 +975,35 @@ class AutomationGetSectionInformation(Automation):
 
 
 automations.register(AutomationGetSectionInformation())
+
+
+class AutomationGetRealTimeChecks(Automation):
+    cmd = "get-real-time-checks"
+    needs_config = False
+    needs_checks = True
+
+    def execute(self, args: List[str]) -> List[Tuple[CheckPluginNameStr, str]]:
+        manuals = man_pages.all_man_pages()
+
+        rt_checks = []
+        for check_plugin_name, check in config.check_info.items():
+            if check["handle_real_time_checks"]:
+                title = ensure_str(check_plugin_name)
+                try:
+                    manfile = manuals.get(check_plugin_name)
+                    if manfile:
+                        title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
+                except Exception:
+                    if cmk.utils.debug.enabled():
+                        raise
+
+                rt_checks.append(
+                    (check_plugin_name, u"%s - %s" % (ensure_str(check_plugin_name), title)))
+
+        return rt_checks
+
+
+automations.register(AutomationGetRealTimeChecks())
 
 
 class AutomationScanParents(Automation):

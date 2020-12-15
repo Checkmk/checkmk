@@ -1798,17 +1798,20 @@ def _add_rest_api_menu_entries(view_renderer, queries):
     from cmk.gui.plugins.openapi.utils import create_url
     entries = []
     for text_query in queries:
+        if "\nStats:" in text_query:
+            continue
         try:
             query = Query.from_string(text_query)
         except ValueError:
             continue
-        table = cast(str, query.table.__tablename__)
-        if table != "hosts":
+        try:
+            url = create_url(config.omd_site(), query)
+        except ValueError:
             continue
-        url = create_url(config.omd_site(), query)
+        table = cast(str, query.table.__tablename__)
         entries.append(
             PageMenuEntry(
-                title=_("Query %s resource") % table,
+                title=_("Query %s resource") % (table,),
                 icon_name="filter",
                 item=make_simple_link(url),
             ))

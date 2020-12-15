@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2020-12-09 20:37+0000\n"
-"Last-Translator: Marsellus Wallace <marsellus.wallace@tribe29.com>\n"
+"PO-Revision-Date: 2020-12-14 20:35+0000\n"
+"Last-Translator: Florian <florian.olching@gmail.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -365,9 +365,8 @@ msgstr "%d Zeitbereiche"
 msgid "%d translations"
 msgstr "%d Übersetzungen"
 
-#, fuzzy
 msgid "%m-%d"
-msgstr "%d.%m.%Y"
+msgstr "%d.%m"
 
 #, python-format
 msgid "%s"
@@ -3727,14 +3726,6 @@ msgid "Adhoc for %d minutes"
 msgstr "Adhoc für %d Minuten"
 
 msgid "Admin"
-msgstr "Admin"
-
-#, fuzzy
-msgid "Admin Password"
-msgstr "Passwort hinzufügen"
-
-#, fuzzy
-msgid "Admin User"
 msgstr "Admin"
 
 msgid "Admin state (SNMP with 64-bit counters only)"
@@ -19046,6 +19037,9 @@ msgstr "Fortigate Nodespeicher"
 msgid "Fortinet FortiSandbox Queue Length"
 msgstr "Länge der Fortinet FortiSandbox Wartenschlange"
 
+msgid "Forum"
+msgstr ""
+
 msgid "Forward Messages to Event Console"
 msgstr "Leite Logwatch Ereignisse an Eventkonsole weiter"
 
@@ -28220,6 +28214,10 @@ msgid "Mails in active mail queue"
 msgstr "Mails in der aktiven Mailqueue"
 
 #, fuzzy
+msgid "Mails in failed mail queue"
+msgstr "Mails in der aktiven Mailqueue"
+
+#, fuzzy
 msgid "Mails in outgoing mail queue"
 msgstr "Anzahl von E-Mails in der Sendewarteschlange"
 
@@ -28255,10 +28253,6 @@ msgstr "Hauptspeichernutzung von Geräten mit Modulen"
 
 msgid "Main memory usage of simple devices"
 msgstr "Hauptspeichernutzung von einfachen Geräten"
-
-#, fuzzy
-msgid "Main menu icons"
-msgstr "Hauptmenü"
 
 msgid "Maintenance"
 msgstr "Instandhaltung"
@@ -29285,6 +29279,10 @@ msgstr "Mediation Server - Fehlerindex für Leseaufrufe"
 
 msgid "Medium"
 msgstr "Mittel"
+
+#, fuzzy
+msgid "Mega menu icons"
+msgstr "Hauptmenü"
 
 msgid "MegaRAID monitoring (Windows)"
 msgstr "MegaRAID-Überwachung (Windows)"
@@ -30763,7 +30761,7 @@ msgid "Navigation"
 msgstr "Dauer i.D."
 
 #, fuzzy
-msgid "Navigation icons"
+msgid "Navigation bar icons"
 msgstr "Dauer i.D."
 
 #, python-format
@@ -32101,9 +32099,6 @@ msgstr ""
 #, fuzzy
 msgid "Ntopng Connection Parameters"
 msgstr "Individuelle Verbindungseinstellungen nutzen"
-
-msgid "Ntopng username to aquire data for"
-msgstr ""
 
 msgid "Nullmailer: Mail Queue"
 msgstr "Nullmailer: Mail Queue"
@@ -36481,6 +36476,10 @@ msgid "Proxmox VE disk percentage used"
 msgstr "Prozentuale Nutzung"
 
 #, fuzzy
+msgid "Proxmox VE memory percentage used"
+msgstr "Prozentuale Nutzung"
+
+#, fuzzy
 msgid "Proxmox cluster"
 msgstr "Gruppen auf einem Cluster"
 
@@ -36643,6 +36642,10 @@ msgstr ""
 
 msgid "Query"
 msgstr "Anfrage"
+
+#, fuzzy, python-format
+msgid "Query %s resource"
+msgstr "Speicherresourcen"
 
 msgid "Query Time Limit"
 msgstr "Zeitbegrenzung für Abfrage"
@@ -51239,6 +51242,14 @@ msgstr ""
 "befinden,oder in der allgemeinen Schlange für ausgehende Mails, wenn eine "
 "solche Unterscheidung nicht verfügbar ist."
 
+#, fuzzy
+msgid ""
+"This rule is applied to the number of E-Mails currently in the failed mail "
+"queue"
+msgstr ""
+"Diese Regel prüft die Anzahl von E-Mails, die sich in der aktiven "
+"Mailwarteschlange befinden."
+
 msgid ""
 "This rule is applied to the number of print jobs currently waiting in "
 "windows printer queue."
@@ -55352,9 +55363,6 @@ msgstr "Fettschritt verwenden"
 msgid "Use credentials"
 msgstr "Zugangsdaten angeben"
 
-msgid "Use current Checkmk username as ntopng user name"
-msgstr ""
-
 msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungseinstellungen nutzen"
 
@@ -55558,6 +55566,10 @@ msgstr "Systemweite CAs nutzen"
 #, python-format
 msgid "Use the <a href=\"%s\">global parameters</a> for this connection"
 msgstr "Die <a href=\"%s\">globalen Parameter</a> für diese Verbindung nutzen"
+
+#, fuzzy
+msgid "Use the Checkmk username as ntopng user name"
+msgstr "Benutzer \"Check_MK Automation\" verwenden"
 
 msgid "Use the FQDN of the machine on which the agent is running."
 msgstr "Den FQDN des Hosts, auf dem der Agent läuft, benutzen."
@@ -61813,8 +61825,15 @@ msgid "ntop GUI extensions"
 msgstr "Defekte GUI-Erweiterungen"
 
 #, fuzzy
+msgid "ntopng Admin User"
+msgstr "Admin"
+
+#, fuzzy
 msgid "ntopng Username"
 msgstr "Automatisierung Benutzername"
+
+msgid "ntopng username to aquire data for"
+msgstr ""
 
 msgid "objects"
 msgstr "Objekte"
@@ -62522,6 +62541,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Add Password"
+#~ msgid "Admin Password"
+#~ msgstr "Passwort hinzufügen"
 
 #, fuzzy
 #~| msgid "Download agent output"

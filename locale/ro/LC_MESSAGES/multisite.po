@@ -3475,14 +3475,6 @@ msgstr "Adhoc pentru %d minute"
 msgid "Admin"
 msgstr ""
 
-#, fuzzy
-msgid "Admin Password"
-msgstr "Parola"
-
-#, fuzzy
-msgid "Admin User"
-msgstr "Parola"
-
 msgid "Admin state (SNMP with 64-bit counters only)"
 msgstr ""
 
@@ -18073,6 +18065,9 @@ msgstr ""
 msgid "Fortinet FortiSandbox Queue Length"
 msgstr ""
 
+msgid "Forum"
+msgstr ""
+
 msgid "Forward Messages to Event Console"
 msgstr ""
 
@@ -26383,6 +26378,10 @@ msgid "Mails in active mail queue"
 msgstr ""
 
 #, fuzzy
+msgid "Mails in failed mail queue"
+msgstr "Numarul maxim de emailuri in coada"
+
+#, fuzzy
 msgid "Mails in outgoing mail queue"
 msgstr "Numarul maxim de emailuri in coada"
 
@@ -26419,10 +26418,6 @@ msgstr ""
 
 msgid "Main memory usage of simple devices"
 msgstr ""
-
-#, fuzzy
-msgid "Main menu icons"
-msgstr "Meniu Principal"
 
 #, fuzzy
 msgid "Maintenance"
@@ -27470,6 +27465,10 @@ msgstr ""
 
 msgid "Medium"
 msgstr ""
+
+#, fuzzy
+msgid "Mega menu icons"
+msgstr "Meniu Principal"
 
 msgid "MegaRAID monitoring (Windows)"
 msgstr ""
@@ -28962,7 +28961,7 @@ msgid "Navigation"
 msgstr "Agregare noua"
 
 #, fuzzy
-msgid "Navigation icons"
+msgid "Navigation bar icons"
 msgstr "Agregare noua"
 
 #, python-format
@@ -30260,9 +30259,6 @@ msgstr ""
 #, fuzzy
 msgid "Ntopng Connection Parameters"
 msgstr "Conexiuni Active"
-
-msgid "Ntopng username to aquire data for"
-msgstr ""
 
 msgid "Nullmailer: Mail Queue"
 msgstr ""
@@ -34477,6 +34473,10 @@ msgid "Proxmox VE disk percentage used"
 msgstr "trei nivele"
 
 #, fuzzy
+msgid "Proxmox VE memory percentage used"
+msgstr "trei nivele"
+
+#, fuzzy
 msgid "Proxmox cluster"
 msgstr "Cluster nou"
 
@@ -34631,6 +34631,10 @@ msgstr ""
 
 msgid "Query"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Query %s resource"
+msgstr "Tagul Aplicatiei in syslog"
 
 msgid "Query Time Limit"
 msgstr ""
@@ -47458,6 +47462,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This rule is applied to the number of E-Mails currently in the failed mail "
+"queue"
+msgstr ""
+
+msgid ""
 "This rule is applied to the number of print jobs currently waiting in "
 "windows printer queue."
 msgstr ""
@@ -51124,9 +51133,6 @@ msgstr ""
 msgid "Use credentials"
 msgstr ""
 
-msgid "Use current Checkmk username as ntopng user name"
-msgstr ""
-
 msgid "Use custom connection parameters"
 msgstr ""
 
@@ -51325,6 +51331,9 @@ msgstr "Spațiu liber exact"
 
 #, python-format
 msgid "Use the <a href=\"%s\">global parameters</a> for this connection"
+msgstr ""
+
+msgid "Use the Checkmk username as ntopng user name"
 msgstr ""
 
 msgid "Use the FQDN of the machine on which the agent is running."
@@ -56592,8 +56601,15 @@ msgid "ntop GUI extensions"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
+msgid "ntopng Admin User"
+msgstr "Parola"
+
+#, fuzzy
 msgid "ntopng Username"
 msgstr "Adaugă instanță NGINX"
+
+msgid "ntopng username to aquire data for"
+msgstr ""
 
 msgid "objects"
 msgstr ""
@@ -57311,6 +57327,11 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Password"
+#~ msgid "Admin Password"
+#~ msgstr "Parola"
 
 #, fuzzy
 #~| msgid "New host"

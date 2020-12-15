@@ -41,8 +41,10 @@
 # 1250 1330 1330 counter
 
 from typing import (
+    Any,
     Dict,
     Mapping,
+    MutableMapping,
     Optional,
     Sequence,
 )
@@ -124,7 +126,7 @@ register.agent_section(
 
 
 def discover_winperf_phydisk(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: diskstat.Section,
 ) -> type_defs.DiscoveryResult:
     yield from diskstat.discovery_diskstat_generic(
@@ -135,7 +137,7 @@ def discover_winperf_phydisk(
 
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
-    value_store: type_defs.ValueStore,
+    value_store: MutableMapping[str, Any],
     value_store_suffix: str = '',
 ) -> diskstat.Disk:
 
@@ -195,19 +197,19 @@ def _compute_rates_single_disk(
     return disk_with_rates
 
 
-def _averaging_to_seconds(params: type_defs.Parameters) -> type_defs.Parameters:
+def _averaging_to_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:
     key_avg = 'average'
     if key_avg in params:
-        params = type_defs.Parameters({
+        params = {
             **params,
             key_avg: params[key_avg] * 60,
-        })
+        }
     return params
 
 
 def check_winperf_phydisk(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: diskstat.Section,
 ) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
@@ -242,7 +244,7 @@ def check_winperf_phydisk(
 
 def cluster_check_winperf_phydisk(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, diskstat.Section],
 ) -> type_defs.CheckResult:
     # We potentially overwrite a disk from an earlier section with a disk with the same name from a

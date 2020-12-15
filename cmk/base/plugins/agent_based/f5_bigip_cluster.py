@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 """
-from typing import List
+from typing import Any, List, Mapping
 from collections import namedtuple
 
 from .agent_based_api.v1 import (
@@ -17,7 +17,6 @@ from .agent_based_api.v1 import (
     all_of,
 )
 from .agent_based_api.v1.type_defs import (
-    Parameters,
     StringTable,
     CheckResult,
     DiscoveryResult,
@@ -127,10 +126,10 @@ def parse_f5_bigip_config_sync_v11_plus(string_table: List[StringTable]) -> Stat
     return State(*string_table[0][0])
 
 
-def check_f5_bigip_config_sync_v11_plus(params: Parameters, section: State) -> CheckResult:
+def check_f5_bigip_config_sync_v11_plus(params: Mapping[str, Any], section: State) -> CheckResult:
     """
     >> for r in check_f5_bigip_config_sync_v11_plus(
-    ...         params=Parameters(CONFIG_SYNC_DEFAULT_PARAMETERS),
+    ...         params=Mapping[str, Any](CONFIG_SYNC_DEFAULT_PARAMETERS),
     ...         section={"node1": 0, "node2": 3}):
     ...     print(r)
     Result(state=<state.OK: 0>, summary='Node [node1] is standby')

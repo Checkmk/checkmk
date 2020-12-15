@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, TypedDict
+from typing import Any, Mapping, TypedDict
 from datetime import datetime
 import json
 
@@ -18,7 +18,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    Parameters,
     CheckResult,
     DiscoveryResult,
     StringTable,
@@ -61,7 +60,7 @@ def discover_single(section: Section) -> DiscoveryResult:
 
 def check_proxmox_ve_vm_backup_status(
     now: datetime,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """If conditions provided calculate and compare age of last backup agains provided
@@ -122,7 +121,8 @@ register.agent_section(
 )
 
 
-def check_proxmox_ve_vm_backup_status_unpure(params: Parameters, section: Section) -> CheckResult:
+def check_proxmox_ve_vm_backup_status_unpure(params: Mapping[str, Any],
+                                             section: Section) -> CheckResult:
     """Because of datetime.now() this function is not testable.
     Test check_proxmox_ve_vm_backup_status() instead."""
     yield from check_proxmox_ve_vm_backup_status(datetime.now(), params, section)

@@ -16,7 +16,7 @@
 import shlex
 import time
 
-from typing import Dict, Generator, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Tuple, Union
 
 import six
 
@@ -30,7 +30,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.clusterize import make_node_notice_results
-from .agent_based_api.v1.type_defs import Parameters
 
 Perfdata = NamedTuple("Perfdata", [
     ("name", str),
@@ -264,7 +263,7 @@ def check_local(item, params, section):
 
 def cluster_check_local(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Dict[str, Dict[str, LocalResult]],
 ) -> Generator[Union[Result, Metric], None, None]:
 

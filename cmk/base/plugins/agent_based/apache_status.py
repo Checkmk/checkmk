@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Final
-from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult, Parameters
+from typing import Any, Dict, Final, Mapping
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 import time
 import collections
@@ -175,7 +175,7 @@ def discover_apache_status(section: Section) -> DiscoveryResult:
         yield Service(item=item)
 
 
-def check_apache_status(item: str, params: Parameters, section: Section) -> CheckResult:
+def check_apache_status(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if item.endswith(":None"):
         # fix item name discovered before werk 2763
         item = item[:-5]

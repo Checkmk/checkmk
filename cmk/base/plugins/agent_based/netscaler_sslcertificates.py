@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     List,
     Mapping,
     Optional,
@@ -19,7 +20,6 @@ from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     StringTable,
-    Parameters,
 )
 from .utils.netscaler import SNMP_DETECT
 
@@ -71,7 +71,7 @@ def discover_netscaler_sslcertificates(section: Section) -> DiscoveryResult:
 
 def _check_netscaler_sslcertificates(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
     node_name: Optional[str] = None,
 ) -> CheckResult:
@@ -89,7 +89,7 @@ def _check_netscaler_sslcertificates(
 
 def check_netscaler_sslcertificates(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     yield from _check_netscaler_sslcertificates(
@@ -101,7 +101,7 @@ def check_netscaler_sslcertificates(
 
 def cluster_check_netscaler_sslcertificates(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     for node_name, node_section in section.items():

@@ -15,7 +15,6 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    Parameters,
     StringTable,
 )
 from .utils.interfaces import (
@@ -59,7 +58,7 @@ def discover_cadvisor_if(section: Section) -> DiscoveryResult:
 def check_cadvisor_if(item: str, section: Section) -> CheckResult:
     for output in check_single_interface(
             item,
-            Parameters({}),
+        {},
             Interface(
                 index="0",
                 descr=item,

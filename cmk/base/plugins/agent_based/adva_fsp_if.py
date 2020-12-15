@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Mapping
+from typing import Any, List, Mapping
 from .agent_based_api.v1 import (
     equals,
     Metric,
@@ -17,7 +17,6 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    Parameters,
     StringTable,
 )
 
@@ -104,7 +103,7 @@ _MAP_ADMIN_STATUS = {
 
 def check_adva_fsp_if(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     interface = section.get(item)

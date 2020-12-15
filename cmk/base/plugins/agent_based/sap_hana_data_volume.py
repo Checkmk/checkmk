@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Mapping
 from contextlib import suppress
 from .utils import (
     sap_hana,
@@ -21,7 +22,6 @@ from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
     CheckResult,
-    Parameters,
 )
 
 
@@ -66,7 +66,7 @@ def discovery_sap_hana_data_volume(section: sap_hana.ParsedSection) -> Discovery
         yield Service(item=item)
 
 
-def check_sap_hana_data_volume(item: str, params: Parameters,
+def check_sap_hana_data_volume(item: str, params: Mapping[str, Any],
                                section: sap_hana.ParsedSection) -> CheckResult:
     item_data = section.get(item)
     if item_data is None:

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Optional
+from typing import Any, Mapping, Optional
 from .agent_based_api.v1 import (
     check_levels,
     GetRateError,
@@ -63,7 +63,7 @@ def discover_netapp_api_vf_stats_common(
 
 def check_netapp_api_vf_stats(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
     section_netapp_api_cpu: Optional[netapp_api_cpu.Section],
 ) -> type_defs.CheckResult:

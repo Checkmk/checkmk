@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, Tuple
-from .agent_based_api.v1.type_defs import CheckResult, Parameters
+from typing import Any, Dict, List, Mapping, Optional, Tuple
+from .agent_based_api.v1.type_defs import CheckResult
 
 from .agent_based_api.v1 import register
 from .utils import ps
@@ -13,7 +13,7 @@ from .utils import ps
 
 def check_ps(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section_ps: Optional[ps.Section],
     section_mem: Optional[ps.SectionMem],
     section_cpu: Optional[ps.SectionCpu],
@@ -40,7 +40,7 @@ def check_ps(
 
 def cluster_check_ps(
         item: str,
-        params: Parameters,
+        params: Mapping[str, Any],
         section_ps: Dict[str, ps.Section],
         section_mem: Dict[str, ps.SectionMem],  # unused
         section_cpu: Dict[str, ps.SectionCpu],  # unused

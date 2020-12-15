@@ -24,7 +24,6 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
     CheckResult,
     DiscoveryResult,
-    Parameters,
 )
 # Output of old agent (< 1.1.10i2):
 # AeLookupSvc        running  Application Experience Lookup Service
@@ -130,7 +129,7 @@ def discovery_windows_services(params: List[Dict[str, Any]], section: Section) -
 
 def check_windows_services_single(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> Generator[Result, None, None]:
     """
@@ -162,7 +161,7 @@ def check_windows_services_single(
 
 def check_windows_services(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> Generator[Result, None, None]:
     results = list(check_windows_services_single(item, params, section))
@@ -174,7 +173,7 @@ def check_windows_services(
 
 def cluster_check_windows_services(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     # A service may appear more than once (due to clusters).
@@ -218,7 +217,7 @@ def discovery_services_summary(section: Section) -> DiscoveryResult:
         yield Service()
 
 
-def check_services_summary(params: Parameters, section: Section) -> CheckResult:
+def check_services_summary(params: Mapping[str, Any], section: Section) -> CheckResult:
     blacklist = params.get("ignored", [])
     stoplist = []
     num_blacklist = 0

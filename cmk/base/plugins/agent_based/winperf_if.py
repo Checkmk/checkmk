@@ -6,6 +6,7 @@
 
 import dataclasses
 from typing import (
+    Any,
     Dict,
     Iterator,
     List,
@@ -419,7 +420,7 @@ register.agent_section(
 
 
 def discover_winperf_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
@@ -430,7 +431,7 @@ def discover_winperf_if(
 
 def check_winperf_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     agent_timestamp, if_table, dhcp_info = section

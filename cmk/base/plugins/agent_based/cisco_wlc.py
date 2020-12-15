@@ -31,7 +31,7 @@ True
 False
 """
 
-from typing import Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from .agent_based_api.v1 import (
     SNMPTree,
@@ -42,7 +42,6 @@ from .agent_based_api.v1 import (
     matches,
 )
 from .agent_based_api.v1.type_defs import (
-    Parameters,
     StringTable,
     CheckResult,
     DiscoveryResult,
@@ -90,7 +89,7 @@ def discovery_cisco_wlc(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
-def _node_not_found(item: str, params: Parameters) -> Result:
+def _node_not_found(item: str, params: Mapping[str, Any]) -> Result:
     infotext = "Accesspoint not found"
     for ap_name, ap_state in params.get("ap_name", []):
         if item.startswith(ap_name):
@@ -107,7 +106,7 @@ def _ap_info(node: Optional[str], wlc_status: str) -> Result:
     )
 
 
-def check_cisco_wlc(item: str, params: Parameters, section: Section) -> CheckResult:
+def check_cisco_wlc(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     """
     >>> list(check_cisco_wlc("AP19", {}, {'AP19': '1', 'AP02': '1'}))
     [Result(state=<State.OK: 0>, summary='Accesspoint: online')]
@@ -122,7 +121,7 @@ def check_cisco_wlc(item: str, params: Parameters, section: Section) -> CheckRes
 
 def cluster_check_cisco_wlc(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     """

@@ -19,7 +19,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    Parameters,
     CheckResult,
     DiscoveryResult,
     StringTable,
@@ -36,7 +35,7 @@ def discover_single(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_proxmox_ve_vm_info(params: Parameters, section: Section) -> CheckResult:
+def check_proxmox_ve_vm_info(params: Mapping[str, Any], section: Section) -> CheckResult:
     """
     >>> for result in check_proxmox_ve_vm_info(
     ...     {},

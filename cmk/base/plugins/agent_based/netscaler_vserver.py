@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Iterable,
     List,
     Mapping,
@@ -198,12 +199,12 @@ def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryResult:
 
 
 def _check_netscaler_vservers(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     vsevers: Sequence[VServer],
 ) -> type_defs.CheckResult:
     """
     >>> for result in _check_netscaler_vservers(
-    ...     type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"}),
+    ...     {"health_levels": (100.0, 0.1), "cluster_status": "best"},
     ...     [{
     ...         'entity_service_type': 'loadbalancing',
     ...         'health': 100.0,
@@ -283,11 +284,11 @@ def _check_netscaler_vservers(
 
 def check_netscaler_vserver(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     """
-    >>> par = type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"})
+    >>> par = {"health_levels": (100.0, 0.1), "cluster_status": "best"}
     >>> assert list(check_netscaler_vserver('item', par, {})) == []
     >>> vserver = {
     ...     'entity_service_type': 'loadbalancing',
@@ -310,11 +311,11 @@ def check_netscaler_vserver(
 
 def cluster_check_netscaler_vserver(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> type_defs.CheckResult:
     """
-    >>> par = type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"})
+    >>> par = {"health_levels": (100.0, 0.1), "cluster_status": "best"}
     >>> vserver = {
     ...     'entity_service_type': 'loadbalancing',
     ...     'health': 100.0,

@@ -3,12 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    Parameters,
     StringTable,
 )
 
@@ -54,7 +53,7 @@ register.snmp_section(
 
 
 def discover_domino_tasks(
-    params: Sequence[Parameters],
+    params: Sequence[Mapping[str, Any]],
     section_domino_tasks: Optional[ps.Section],
     section_mem: Optional[Dict[str, float]],
 ) -> DiscoveryResult:
@@ -63,7 +62,7 @@ def discover_domino_tasks(
 
 def check_domino_tasks(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section_domino_tasks: Optional[ps.Section],
     section_mem: Optional[Dict[str, float]],
 ) -> CheckResult:
@@ -84,7 +83,7 @@ def check_domino_tasks(
 
 def cluster_check_domino_tasks(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section_domino_tasks: Dict[str, ps.Section],
     section_mem: Dict[str, Dict[str, int]],
 ) -> CheckResult:

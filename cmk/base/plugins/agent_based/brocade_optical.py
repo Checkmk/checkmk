@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
     List,
     Mapping,
@@ -291,7 +292,7 @@ def _check_matching_conditions(
 
 
 def discover_brocade_optical(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     if section:
@@ -345,7 +346,7 @@ def _infotext(
 def _check_light(
     reading: ValueAndStatus,
     metric_name: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     lane_num: Optional[int] = None,
 ) -> type_defs.CheckResult:
     if any(x is None for x in reading):
@@ -377,23 +378,23 @@ def _check_light(
 
 def check_brocade_optical(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     """
     >>> from pprint import pprint
     >>> for output in check_brocade_optical(
-    ... '001410',
-    ... type_defs.Parameters({}),
-    ... {'1410': {'description': '10GigabitEthernet23/2',
-    ...           'operational_status': '2',
-    ...           'part': '57-0000076-01',
-    ...           'port_type': '6',
-    ...           'rx_light': (-36.9897, 'Low-Alarm'),
-    ...           'serial': 'ADF2094300014UN',
-    ...           'temp': (31.4882, 'Normal'),
-    ...           'tx_light': (-1.4508, 'Normal'),
-    ...           'type': '10GE LR 10km SFP+'}}
+    ...     '001410',
+    ...     {},
+    ...     {'1410': {'description': '10GigabitEthernet23/2',
+    ...               'operational_status': '2',
+    ...               'part': '57-0000076-01',
+    ...               'port_type': '6',
+    ...               'rx_light': (-36.9897, 'Low-Alarm'),
+    ...               'serial': 'ADF2094300014UN',
+    ...               'temp': (31.4882, 'Normal'),
+    ...               'tx_light': (-1.4508, 'Normal'),
+    ...               'type': '10GE LR 10km SFP+'}}
     ... ):
     ...     pprint(output)
     Result(state=<State.OK: 0>, summary='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down')
@@ -405,20 +406,20 @@ def check_brocade_optical(
     Result(state=<State.OK: 0>, summary='RX Light -37.0 dBm (Low-Alarm)')
     Metric('rx_light', -36.9897)
     >>> for output in check_brocade_optical(
-    ... '1409',
-    ... type_defs.Parameters({'rx_light': True, 'tx_light': True, 'lanes': True}),
-    ... {'1409': {'description': '10GigabitEthernet23/1',
-    ...           'lanes': {1: {'rx_light': (-2.2504, 'Normal'),
-    ...                         'temp': (31.4531, 'Normal'),
-    ...                         'tx_light': (-1.6045, 'Normal')}},
-    ...           'operational_status': '1',
-    ...           'part': '57-0000076-01',
-    ...           'port_type': '6',
-    ...           'rx_light': (-2.2504, 'Normal'),
-    ...           'serial': 'ADF2094300014TL',
-    ...           'temp': (None, None),
-    ...           'tx_light': (-1.6045, 'Normal'),
-    ...           'type': '10GE LR 10km SFP+'}}
+    ...     '1409',
+    ...     {'rx_light': True, 'tx_light': True, 'lanes': True},
+    ...     {'1409': {'description': '10GigabitEthernet23/1',
+    ...               'lanes': {1: {'rx_light': (-2.2504, 'Normal'),
+    ...                             'temp': (31.4531, 'Normal'),
+    ...                             'tx_light': (-1.6045, 'Normal')}},
+    ...               'operational_status': '1',
+    ...               'part': '57-0000076-01',
+    ...               'port_type': '6',
+    ...               'rx_light': (-2.2504, 'Normal'),
+    ...               'serial': 'ADF2094300014TL',
+    ...               'temp': (None, None),
+    ...               'tx_light': (-1.6045, 'Normal'),
+    ...               'type': '10GE LR 10km SFP+'}}
     ... ):
     ...     pprint(output)
     Result(state=<State.OK: 0>, summary='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up')

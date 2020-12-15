@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Optional
+from typing import Any, Mapping, MutableMapping, Optional
 import collections
 from contextlib import suppress
 
@@ -22,8 +22,6 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     CheckResult,
-    Parameters,
-    ValueStore,
 )
 from .utils.k8s import (
     Section,
@@ -57,9 +55,9 @@ def discover_k8s_stats_network(
 
 
 def _k8s_network_err_pac(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     interface: Interface,
-    params: Parameters,
+    params: Mapping[str, Any],
     now: float,
 ) -> CheckResult:
     warn, crit = params.get('errors', (None, None))
@@ -104,9 +102,9 @@ def _k8s_network_err_pac(
 
 
 def _check__k8s_stats_network__core(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     now = section['timestamp']
@@ -154,9 +152,9 @@ def _check__k8s_stats_network__core(
 
 
 def _check__k8s_stats_network__proxy_results(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section_k8s_stats: Optional[Section],
     section_lnx_if: Optional[Section],
 ) -> CheckResult:
@@ -200,7 +198,7 @@ def _check__k8s_stats_network__proxy_results(
 
 def check_k8s_stats_network(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section_k8s_stats: Optional[Section],
     section_lnx_if: Optional[Section],
 ) -> CheckResult:

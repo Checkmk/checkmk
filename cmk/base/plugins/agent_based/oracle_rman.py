@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
     Optional,
     TypedDict,
@@ -21,7 +22,6 @@ from .agent_based_api.v1 import (
     State as state,
 )
 from .agent_based_api.v1.type_defs import (
-    Parameters,
     StringTable,
     DiscoveryResult,
     CheckResult,
@@ -165,7 +165,8 @@ def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryResult:
             yield Service(item="%s.%s" % (sid, backuptype))
 
 
-def check_oracle_rman(item: str, params: Parameters, section: SectionOracleRman) -> CheckResult:
+def check_oracle_rman(item: str, params: Mapping[str, Any],
+                      section: SectionOracleRman) -> CheckResult:
 
     rman_backup = section.get(item)
 
@@ -221,7 +222,7 @@ def check_oracle_rman(item: str, params: Parameters, section: SectionOracleRman)
                      summary="no COMPLETED backup found in last 14 days (very old plugin in use?)")
 
 
-def cluster_check_oracle_rman(item: str, params: Parameters,
+def cluster_check_oracle_rman(item: str, params: Mapping[str, Any],
                               section: Mapping[str, SectionOracleRman]) -> CheckResult:
 
     youngest_backup_age: Optional[int] = None

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
     Iterable,
     Mapping,
@@ -258,7 +259,7 @@ register.agent_section(
 
 
 def discover_lnx_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     # Always exclude dockers veth* interfaces on docker nodes
@@ -271,7 +272,7 @@ def discover_lnx_if(
 
 def check_lnx_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
@@ -283,7 +284,7 @@ def check_lnx_if(
 
 def cluster_check_lnx_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(

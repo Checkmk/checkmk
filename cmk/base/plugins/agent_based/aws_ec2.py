@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Mapping
 from .agent_based_api.v1 import (
     IgnoreResultsError,
     register,
@@ -12,7 +12,6 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    Parameters,
     StringTable,
 )
 from .utils.aws import (
@@ -86,7 +85,7 @@ def discover_aws_ec2_network_io(section: Section) -> DiscoveryResult:
 
 def check_aws_ec2_network_io(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     try:

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Mapping
+from typing import Any, List, Mapping
 from .agent_based_api.v1 import (
     register,
     Service,
@@ -13,7 +13,6 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    Parameters,
     StringTable,
 )
 from .utils import huawei_osn, interfaces
@@ -84,7 +83,7 @@ def discover_huawei_osn_if(section: Section) -> DiscoveryResult:
 
 def check_huawei_osn_if(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     interface = section.get(item)

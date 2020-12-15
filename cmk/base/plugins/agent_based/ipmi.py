@@ -6,6 +6,7 @@
 
 from typing import (
     Any,
+    Mapping,
     Optional,
 )
 from .agent_based_api.v1 import (
@@ -286,7 +287,7 @@ def ipmi_status_txt_mapping(status_txt: str) -> state:
 
 def check_ipmi(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_ipmi: Optional[ipmi.Section],
     section_ipmi_discrete: Optional[ipmi.Section],
 ) -> type_defs.CheckResult:

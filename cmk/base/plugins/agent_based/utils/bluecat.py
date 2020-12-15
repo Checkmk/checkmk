@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-from typing import Dict, List, Mapping, Tuple
+from typing import Any, Dict, List, Mapping, Tuple
 from ..agent_based_api.v1 import (
     equals,
     Metric,
@@ -56,7 +56,7 @@ def _get_service_name(section: Section) -> str:
 
 
 def check_bluecat_operational_state(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     oper_state = section['oper_state']
@@ -98,7 +98,7 @@ OKNodeResults = namedtuple(
 
 
 def cluster_check_bluecat_operational_state(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
 

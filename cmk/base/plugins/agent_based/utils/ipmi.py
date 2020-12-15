@@ -80,7 +80,7 @@ def ignore_sensor(
 
 def check_ipmi(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
@@ -110,7 +110,7 @@ def _unit_to_render_func(unit: str) -> Callable[[float], str]:
 def _check_numerical_levels(
     sensor_name: str,
     val: float,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     unit: str,
 ) -> type_defs.CheckResult:
     for this_sensorname, levels in params.get("numerical_sensor_levels", []):
@@ -137,7 +137,7 @@ def _sensor_levels_to_check_levels(
 
 def check_ipmi_detailed(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     sensor: Sensor,
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
@@ -201,7 +201,7 @@ def check_ipmi_detailed(
 
 
 def check_ipmi_summarized(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:

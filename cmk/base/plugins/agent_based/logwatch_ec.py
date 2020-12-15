@@ -20,7 +20,7 @@ import os
 import socket
 import time
 
-from typing import Any, Counter, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -164,7 +164,7 @@ def _logwatch_inventory_mode_rules(forward_settings) -> Tuple[str, Dict[str, Any
 
 def discover_logwatch_ec_common(
     section: logwatch.Section,
-    params: List[Parameters],
+    params: Sequence[Mapping[str, Any]],
     use_mode: str,
 ) -> DiscoveryResult:
 

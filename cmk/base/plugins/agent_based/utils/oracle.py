@@ -1,4 +1,4 @@
-from typing import List, TypedDict, Dict, Tuple, Optional, Any
+from typing import Any, Dict, List, Mapping, Optional, Tuple, TypedDict
 from ..agent_based_api.v1 import State as state, type_defs
 
 
@@ -102,7 +102,7 @@ def analyze_datafiles(
     datafiles: List[DataFiles],
     db_version: int,
     sid: str,
-    params: Optional[type_defs.Parameters] = None,
+    params: Optional[Mapping[str, Any]] = None,
     raise_on_offline_files: bool = False
 ) -> Tuple[int, int, int, int, int, int, bool, int, int, int, Dict[str, Dict[str, Any]]]:
     num_files = 0

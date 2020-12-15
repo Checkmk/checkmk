@@ -8,8 +8,17 @@ from dataclasses import dataclass, asdict
 from enum import Enum, unique
 from typing import Final, Optional, Tuple, TypedDict
 
-from ..agent_based_api.v1 import (any_of, check_levels, equals, render, Result, startswith, State,
-                                  type_defs, Service)
+from ..agent_based_api.v1 import (
+    any_of,
+    check_levels,
+    equals,
+    render,
+    Result,
+    startswith,
+    State,
+    type_defs,
+    Service,
+)
 
 DETECT_UPS_GENERIC = any_of(
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.165.3"),

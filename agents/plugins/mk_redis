@@ -5,7 +5,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-VERSION="2.0.0b2"
+VERSION="2.0.0b3"
 
 # sample output of pgrep command
 # 1051 /usr/bin/redis-server 127.0.0.1:6380

@@ -20,7 +20,7 @@ You should find an example configuration file at
 
 from __future__ import with_statement
 
-__version__ = "2.0.0b2"
+__version__ = "2.0.0b3"
 
 import sys
 if sys.version_info < (2, 6):

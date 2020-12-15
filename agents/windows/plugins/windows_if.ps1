@@ -1,4 +1,4 @@
-$VERSION = "2.0.0b2"
+$VERSION = "2.0.0b3"
 ## Windows Teaming Interfaces
 ## runs on windows 2003 or newer
 if ([Environment]::OSVersion.Version.Major -ge "5"){

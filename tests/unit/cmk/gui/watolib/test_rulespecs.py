@@ -30,7 +30,7 @@ from cmk.gui.watolib.rulespecs import (
     ManualCheckParameterRulespec,
 )
 from cmk.gui.watolib.search import MatchItem
-from cmk.gui.utils.urls import makeuri_contextless_ruleset_group
+from cmk.gui.utils.urls import makeuri_contextless_rulespec_group
 from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
@@ -1748,7 +1748,7 @@ def test_match_item_generator_rules():
     class SomeMainModule(ABCMainModule):
         @property
         def mode_or_url(self):
-            return makeuri_contextless_ruleset_group(request, "rulespec_group")
+            return makeuri_contextless_rulespec_group(request, "rulespec_group")
 
         @property
         def topic(self):

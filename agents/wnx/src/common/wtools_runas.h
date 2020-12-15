@@ -12,9 +12,10 @@
 #ifndef wtools_runas_h__
 #define wtools_runas_h__
 
-#include "minwindef.h"  // for DWORD, BOOL, FALSE
-#include "tuple"        // for tuple
-#include "winnt.h"      // for HANDLE
+#include <minwindef.h>  // for DWORD, BOOL, FALSE
+#include <winnt.h>      // for HANDLE
+
+#include <tuple>  // for tuple
 
 namespace wtools::runas {
 // windows like API

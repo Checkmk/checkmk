@@ -344,7 +344,6 @@ class ModeBulkImport(WatoMode):
                  UploadOrPasteTextFile(
                      title=_("Import Hosts"),
                      file_title=_("CSV File"),
-                     allow_empty=False,
                      default_mode="upload",
                  )),
                 ("do_service_detection", Checkbox(title=_("Perform automatic service discovery"),)),

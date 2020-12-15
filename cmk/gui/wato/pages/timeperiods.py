@@ -367,7 +367,6 @@ class ModeTimeperiodImportICal(WatoMode):
                  FileUpload(
                      title=_('iCalendar File'),
                      help=_("Select an iCalendar file (<tt>*.ics</tt>) from your PC"),
-                     allow_empty=False,
                      custom_validate=self._validate_ical_file,
                  )),
                 ('horizon',

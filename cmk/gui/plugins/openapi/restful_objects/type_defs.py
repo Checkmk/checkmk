@@ -38,6 +38,7 @@ DomainType = Literal[
     'host_group_config',
     'host_tag_group',
     'password',
+    'user_config',
     'service',
     'servicegroup',
     'service_discovery',

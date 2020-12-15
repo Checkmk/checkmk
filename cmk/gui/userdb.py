@@ -235,7 +235,7 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
     return False
 
 
-def _load_user(user_id: UserId) -> UserSpec:
+def load_user(user_id: UserId) -> UserSpec:
     """Loads of a single user profile
 
     This is called during regular page processing. We must not load the whole user database, because
@@ -251,11 +251,11 @@ def _load_user(user_id: UserId) -> UserSpec:
 
 
 def _is_local_user(user_id: UserId) -> bool:
-    return _load_user(user_id).get('connector', 'htpasswd') == 'htpasswd'
+    return load_user(user_id).get('connector', 'htpasswd') == 'htpasswd'
 
 
 def user_locked(user_id: UserId) -> bool:
-    return _load_user(user_id).get('locked', False)
+    return load_user(user_id).get('locked', False)
 
 
 def _root_dir() -> str:
@@ -1055,7 +1055,7 @@ def _save_cached_profile(user_id: UserId, user: UserSpec, multisite_keys: List[s
 
 
 def contactgroups_of_user(user_id: UserId) -> List[ContactgroupName]:
-    return _load_user(user_id).get("contactgroups", [])
+    return load_user(user_id).get("contactgroups", [])
 
 
 def _convert_idle_timeout(value: str) -> Union[int, bool, None]:

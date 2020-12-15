@@ -1,19 +1,20 @@
 // Configuration Parameters for whole Agent
 #include "stdafx.h"
 
-#define WIN32_LEAN_AND_MEAN
+#include "cfg.h"
+
+#include <WinSock2.h>
+
 #include <direct.h>  // known path
 #include <shellapi.h>
 #include <shlobj.h>  // known path
 #include <versionhelpers.h>
-#include <windows.h>
 
 #include <atomic>
 #include <filesystem>
 #include <string>
 
 #include "cap.h"
-#include "cfg.h"
 #include "cfg_details.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"

@@ -5,6 +5,7 @@
 #pragma once
 #include <mutex>
 #include <string>
+#include <unordered_map>
 
 namespace cma {
 constexpr std::string_view kMainObject = "main";

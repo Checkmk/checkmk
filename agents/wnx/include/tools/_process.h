@@ -6,9 +6,8 @@
 // Assorted process management routines
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#include <shlobj.h>  // known path
-#include <windows.h>
+#include <Windows.h>
+#include <shlobj.h>
 
 #include <fstream>
 #include <string>

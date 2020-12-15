@@ -12,7 +12,6 @@
 #ifndef wtools_h__
 #define wtools_h__
 #if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
 #include <aclapi.h>
 #include <comdef.h>
 

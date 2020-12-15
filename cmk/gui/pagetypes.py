@@ -1800,7 +1800,7 @@ class PagetypeTopics(Overridable):
                 "icon_name": "topic_network_statistics",
                 "description": "",
                 "sort_index": 75,
-                "hide": not _is_ntop_configured(),
+                "hide": not config.is_ntop_configured(),
             },
             # Only fallback for items without topic
             "other": {
@@ -1845,12 +1845,6 @@ def _no_bi_aggregate_active() -> bool:
     enabled_info_file = "%s/num_enabled_aggregations" % os.path.join(cmk.utils.paths.var_dir,
                                                                      "wato")
     return bool(not store.load_object_from_file(enabled_info_file))
-
-
-def _is_ntop_configured() -> bool:
-    if config.is_ntop_available() and config.ntop_connection != {}:  # type: ignore[attr-defined]
-        return True
-    return False
 
 
 #   .--Main menu-----------------------------------------------------------.

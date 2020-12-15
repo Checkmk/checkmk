@@ -74,12 +74,26 @@ class Hostgroups(Table):
     )
     """The number of hosts in the group that are down"""
 
+    num_hosts_handled_problems = Column(
+        'num_hosts_handled_problems',
+        col_type='int',
+        description='The total number of hosts in this group with handled problems',
+    )
+    """The total number of hosts in this group with handled problems"""
+
     num_hosts_pending = Column(
         'num_hosts_pending',
         col_type='int',
         description='The number of hosts in the group that are pending',
     )
     """The number of hosts in the group that are pending"""
+
+    num_hosts_unhandled_problems = Column(
+        'num_hosts_unhandled_problems',
+        col_type='int',
+        description='The total number of hosts in this group with unhandled problems',
+    )
+    """The total number of hosts in this group with unhandled problems"""
 
     num_hosts_unreach = Column(
         'num_hosts_unreach',

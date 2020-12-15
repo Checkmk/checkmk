@@ -424,8 +424,8 @@ class Services(Table):
     )
     """Whether checks of the object are enabled (0/1)"""
 
-    host_children = Column(
-        'host_childs',  # sic
+    host_childs = Column(
+        'host_childs',
         col_type='list',
         description='A list of all direct children of the host',
     )

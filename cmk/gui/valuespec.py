@@ -2514,6 +2514,9 @@ class DropdownChoice(ValueSpec):
         self._encode_value = encode_value
         self._deprecated_choices = deprecated_choices
 
+    def allow_empty(self) -> bool:
+        return self._read_only or not self._no_preselect
+
     def choices(self) -> List[DropdownChoiceEntry]:
         if callable(self._choices):
             result = self._choices()
@@ -2757,6 +2760,10 @@ class CascadingDropdown(ValueSpec):
         # once the user selected this choice in case it was initially hidden.
         self._render_sub_vs_page_name = render_sub_vs_page_name
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
+
+    def allow_empty(self) -> bool:
+        return not self._no_preselect and all(
+            vs.allow_empty() for _ident, _title, vs in self.choices() if vs is not None)
 
     def choices(self) -> List[CascadingDropdownCleanChoice]:
         if isinstance(self._choices, list):
@@ -5354,7 +5361,7 @@ class PasswordSpec(Password):
 class FileUpload(ValueSpec):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._allow_empty = kwargs.get('allow_empty', True)
+        self._allow_empty = kwargs.get('allow_empty', False)
         self._allowed_extensions = kwargs.get('allowed_extensions')
         self._allow_empty_content = kwargs.get('allow_empty_content', True)
 
@@ -5448,7 +5455,7 @@ class ImageUpload(FileUpload):
 class UploadOrPasteTextFile(Alternative):
     def __init__(self, **kwargs):
         file_title = kwargs.pop("file_title", _("File"))
-        allow_empty = kwargs.pop("allow_empty", True)
+        allow_empty = kwargs.pop("allow_empty", False)
         kwargs["elements"] = [
             FileUpload(title=_("Upload %s") % file_title, allow_empty=allow_empty),
             TextAreaUnicode(title=_("Content of %s") % file_title,

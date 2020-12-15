@@ -71,7 +71,6 @@ class ModeIcons(WatoMode):
                 ('icon',
                  ImageUpload(
                      title=_('Icon'),
-                     allow_empty=False,
                      max_size=(80, 80),
                      validate=self._validate_icon,
                  )),

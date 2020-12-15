@@ -7,6 +7,7 @@ import time
 from typing import (
     Any,
     Dict,
+    Mapping,
     MutableMapping,
     Optional,
 )
@@ -25,7 +26,6 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
     CheckResult,
     DiscoveryResult,
-    Parameters,
 )
 
 # Example output from agent:
@@ -121,7 +121,7 @@ def discovery_livestatus_status(
 
 def check_livestatus_status(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section_livestatus_status: Optional[ParsedSection],
     section_livestatus_ssl_certs: Optional[ParsedSection],
 ) -> CheckResult:
@@ -140,7 +140,7 @@ def check_livestatus_status(
 
 def _generate_livestatus_results(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section_livestatus_status: Optional[ParsedSection],
     section_livestatus_ssl_certs: Optional[ParsedSection],
     value_store: MutableMapping[str, Any],

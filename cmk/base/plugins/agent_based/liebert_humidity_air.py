@@ -12,7 +12,7 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Mapping, Tuple, Optional
 from .utils.liebert import (
     DETECT_LIEBERT,
     parse_liebert,
@@ -29,7 +29,6 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
     CheckResult,
     DiscoveryResult,
-    Parameters,
 )
 
 LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
@@ -73,7 +72,7 @@ def discover_liebert_humidity_air(
 
 def check_liebert_humidity_air(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section_liebert_humidity_air: Optional[ParsedSection],
     section_liebert_system: Optional[Dict[str, str]],
 ) -> CheckResult:

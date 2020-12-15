@@ -60,7 +60,7 @@ def check_pulse_secure_users(params: Mapping[str, Any], section: Section) -> Che
 
 
 def cluster_check_pulse_secure_users(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckOutput:
 

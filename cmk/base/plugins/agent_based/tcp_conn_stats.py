@@ -3,7 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult, Parameters
+from typing import Any, Mapping
+from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult
 
 from .agent_based_api.v1 import check_levels, register, Service
 from .utils.tcp_connections import empty_stats, TCPConnections, MAP_COUNTER_KEYS
@@ -78,7 +79,7 @@ def discover_tcp_connections(section: TCPConnections) -> DiscoveryResult:
         yield Service()
 
 
-def check_tcp_connections(params: Parameters, section: TCPConnections) -> CheckResult:
+def check_tcp_connections(params: Mapping[str, Any], section: TCPConnections) -> CheckResult:
     for tcp_state, tcp_count in sorted(section.items()):
         label = tcp_state.replace('_', ' ').capitalize()
         yield from check_levels(

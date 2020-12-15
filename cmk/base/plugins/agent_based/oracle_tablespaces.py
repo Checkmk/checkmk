@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
     Tuple,
     Optional,
@@ -18,7 +19,6 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
     DiscoveryResult,
     CheckResult,
-    Parameters,
 )
 
 from .agent_based_api.v1 import (
@@ -168,7 +168,7 @@ def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Discover
 
 def check_oracle_tablespaces(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: oracle.SectionTableSpaces,
 ) -> CheckResult:
     try:
@@ -202,7 +202,7 @@ def check_oracle_tablespaces(
 
     # Conversion of old autochecks params
     if isinstance(params, tuple):
-        params = Parameters({"autoextend": params[0], "levels": params[1:]})
+        params = Mapping[str, Any]({"autoextend": params[0], "levels": params[1:]})
 
     autoext = params.get("autoextend", None)
     uses_default_increment = False

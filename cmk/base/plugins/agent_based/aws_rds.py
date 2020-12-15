@@ -16,7 +16,6 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    Parameters,
     StringTable,
 )
 from .utils.aws import (
@@ -104,7 +103,7 @@ def discover_aws_rds_network_io(section: AWSSectionMetrics) -> DiscoveryResult:
 
 def check_aws_rds_network_io(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: AWSSectionMetrics,
 ) -> CheckResult:
     metrics = section.get(item)

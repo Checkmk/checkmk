@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from typing import Any, Mapping
 from .agent_based_api.v1 import (
     register,
     Service,
@@ -48,7 +48,7 @@ def discover_bluecat_dhcp(section: Section) -> type_defs.DiscoveryResult:
 
 
 def check_bluecat_dhcp(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     yield from check_bluecat_operational_state(
@@ -58,7 +58,7 @@ def check_bluecat_dhcp(
 
 
 def cluster_check_bluecat_dhcp(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
     yield from cluster_check_bluecat_operational_state(

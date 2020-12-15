@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
     List,
     Mapping,
@@ -65,7 +66,7 @@ def _add_admin_status_to_ifaces(
 
 
 def discover_if64(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section_if64: Optional[interfaces.Section],
     section_if64adm: Optional[If64AdmSection],
 ) -> type_defs.DiscoveryResult:
@@ -80,7 +81,7 @@ def discover_if64(
 
 def check_if64(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_if64: Optional[interfaces.Section],
     section_if64adm: Optional[If64AdmSection],
 ) -> type_defs.CheckResult:
@@ -96,7 +97,7 @@ def check_if64(
 
 def cluster_check_if64(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_if64: Mapping[str, Optional[interfaces.Section]],
     section_if64adm: Mapping[str, Optional[If64AdmSection]],
 ) -> type_defs.CheckResult:

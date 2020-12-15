@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Final, List, Optional, Tuple, Union
-from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult, Parameters
+from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, Union
+from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult
 
 import time
 
@@ -106,7 +106,7 @@ def discover_kernel_util(section: Section) -> DiscoveryResult:
 # - guest_nice: Time spent running a niced guest (since Linux 2.6.33)
 
 
-def check_kernel_util(params: Parameters, section: Section) -> CheckResult:
+def check_kernel_util(params: Mapping[str, Any], section: Section) -> CheckResult:
     total: Optional[CPUInfo] = None
     cores = []
 

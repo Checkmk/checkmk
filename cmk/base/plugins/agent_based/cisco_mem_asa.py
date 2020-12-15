@@ -25,7 +25,7 @@ True
 False
 """
 
-from typing import Dict, List, Sequence
+from typing import Any, Dict, List, Mapping, MutableMapping, Sequence
 from contextlib import suppress
 
 from .utils.size_trend import size_trend
@@ -48,10 +48,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import (
     StringTable,
-    Parameters,
     CheckResult,
     DiscoveryResult,
-    ValueStore,
 )
 
 Section = Dict[str, Sequence[str]]
@@ -145,14 +143,14 @@ def discovery_cisco_mem(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section if item != "Driver text")
 
 
-def check_cisco_mem(item: str, params: Parameters, section: Section) -> CheckResult:
+def check_cisco_mem(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     yield from _idem_check_cisco_mem(get_value_store(), item, params, section)
 
 
 def _idem_check_cisco_mem(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """
@@ -160,11 +158,11 @@ def _idem_check_cisco_mem(
     >>> for result in _idem_check_cisco_mem(
     ...         vs,
     ...         "MEMPOOL_DMA",
-    ...         Parameters({
+    ...         {
     ...             'trend_perfdata': True,
     ...             'trend_range': 24,
     ...             'trend_showtimeleft': True,
-    ...             'trend_timeleft': (12, 6)}),
+    ...             'trend_timeleft': (12, 6)},
     ...         {'System memory': ['3848263744', '8765044672'],
     ...          'MEMPOOL_MSGLYR': ['123040', '8265568'],
     ...          'MEMPOOL_DMA': ['429262192', '378092176'],
@@ -196,9 +194,9 @@ def _idem_check_cisco_mem(
 
 
 def check_cisco_mem_sub(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     mem_used: int,
     mem_total: int,
 ) -> CheckResult:

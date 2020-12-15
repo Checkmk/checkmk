@@ -71,6 +71,7 @@ from typing import (
     Any,
     Dict,
     Mapping,
+    MutableMapping,
     Optional,
     Sequence,
     Tuple,
@@ -294,7 +295,7 @@ def diskstat_convert_info(
 
 
 def discover_diskstat(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
 ) -> type_defs.DiscoveryResult:
@@ -311,7 +312,7 @@ def discover_diskstat(
 
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
-    value_store: type_defs.ValueStore,
+    value_store: MutableMapping[str, Any],
     value_store_suffix: str = '',
 ) -> diskstat.Disk:
 
@@ -377,7 +378,7 @@ def _compute_rates_single_disk(
 
 def check_diskstat(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
 ) -> type_defs.CheckResult:
@@ -429,7 +430,7 @@ def _merge_cluster_sections(
 
 def cluster_check_diskstat(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_diskstat: Mapping[str, Optional[diskstat.Section]],
     section_multipath: Mapping[str, Optional[SectionMultipath]],
 ) -> type_defs.CheckResult:

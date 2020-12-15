@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Sequence
+from typing import Any, Mapping, Sequence
 from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces
 
@@ -105,7 +105,7 @@ def _section_to_interface(section: Section) -> interfaces.Section:
 
 
 def discover_fritz_wan_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
@@ -116,7 +116,7 @@ def discover_fritz_wan_if(
 
 def check_fritz_wan_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     params_updated = dict(params)
@@ -127,7 +127,7 @@ def check_fritz_wan_if(
     })
     yield from interfaces.check_multiple_interfaces(
         item,
-        type_defs.Parameters(params_updated),
+        params_updated,
         _section_to_interface(section),
     )
 

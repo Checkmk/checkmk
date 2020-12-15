@@ -6,6 +6,7 @@
 
 import time
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
@@ -248,7 +249,7 @@ def _process_job_stats(
 
 def check_job(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
 
@@ -283,7 +284,7 @@ _STATE_TO_STR = {
 
 def cluster_check_job(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Dict[str, Section],
 ) -> type_defs.CheckResult:
     """

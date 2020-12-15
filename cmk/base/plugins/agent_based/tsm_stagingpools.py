@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Mapping
+from typing import Any, Dict, List, Mapping
 from .agent_based_api.v1 import (
     check_levels,
     type_defs,
@@ -87,7 +87,7 @@ def discovery_tsm_stagingpools(section: SECTION) -> type_defs.DiscoveryResult:
 
 def check_tsm_stagingpools(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: SECTION,
 ) -> type_defs.CheckResult:
     if item not in section:
@@ -122,7 +122,7 @@ def check_tsm_stagingpools(
 
 def cluster_check_tsm_stagingspools(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, SECTION],
 ) -> type_defs.CheckResult:
 

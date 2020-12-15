@@ -3,22 +3,16 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping
+from typing import Any, Mapping, MutableMapping
 import time
 
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .agent_based_api.v1 import (
     Service,
     IgnoreResults,
     register,
     check_levels,
     get_value_store,
-)
-
-from .agent_based_api.v1.type_defs import (
-    Parameters,
-    CheckResult,
-    DiscoveryResult,
-    ValueStore,
 )
 
 from .utils.mssql_counters import (
@@ -47,11 +41,11 @@ def discovery_mssql_counters_sqlstats(section: Section) -> DiscoveryResult:
 
 
 def _check_common(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     time_point: float,
     node_name: str,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     counters, counter = get_item(item, section)
@@ -75,10 +69,10 @@ def _check_common(
 
 
 def _check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     time_point: float,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """
@@ -97,17 +91,17 @@ def _check_base(
 
 def check_mssql_counters_sqlstats(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     yield from _check_base(get_value_store(), time.time(), item, params, section)
 
 
 def _cluster_check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     time_point: float,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     """
@@ -127,7 +121,7 @@ def _cluster_check_base(
 
 def cluster_check_mssql_counters_sqlstats(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)

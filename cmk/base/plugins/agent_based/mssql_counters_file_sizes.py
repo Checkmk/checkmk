@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import (
     Metric,
@@ -13,7 +13,6 @@ from .agent_based_api.v1 import (
     check_levels,
 )
 from .agent_based_api.v1.type_defs import (
-    Parameters,
     CheckResult,
     DiscoveryResult,
 )
@@ -37,7 +36,7 @@ def discovery_mssql_counters_file_sizes(section: Section) -> DiscoveryResult:
 def _check_mssql_file_sizes(
     node_info: str,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     counters, _counter = get_item(item, section)
@@ -83,7 +82,7 @@ def _check_mssql_file_sizes(
 
 def check_mssql_counters_file_sizes(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """
@@ -104,7 +103,7 @@ def check_mssql_counters_file_sizes(
 
 def cluster_check_mssql_counters_file_sizes(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     """

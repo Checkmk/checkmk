@@ -3,13 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict
+from typing import Any, Dict, Mapping
 
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     HostLabelGenerator,
-    Parameters,
 )
 from .agent_based_api.v1 import check_levels, HostLabel, register, Service
 
@@ -33,7 +32,7 @@ def discover_k8s_nodes(section: Dict) -> DiscoveryResult:
         yield Service()
 
 
-def check_k8s_nodes(params: Parameters, section: Dict) -> CheckResult:
+def check_k8s_nodes(params: Mapping[str, Any], section: Dict) -> CheckResult:
     yield from check_levels(  # type: ignore[call-overload]  # yes, it's tuples in the params.
         len(section.get('nodes', [])),
         metric_name='k8s_nodes',

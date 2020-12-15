@@ -30,7 +30,7 @@ import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 # import from legacy API until we come up with something better
 from cmk.base.check_api import host_name, service_extra_conf  # pylint: disable=cmk-module-layer-violation
 
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .agent_based_api.v1 import Metric, register, Result, Service, State as state
 from .utils import logwatch
 
@@ -41,7 +41,7 @@ def discover_group(section: logwatch.Section,) -> DiscoveryResult:
     yield from discover_logwatch_ec_common(section, logwatch.get_ec_rule_params(), "groups")
 
 
-def check_logwatch_ec(params: Parameters, section: logwatch.Section) -> CheckResult:
+def check_logwatch_ec(params: Mapping[str, Any], section: logwatch.Section) -> CheckResult:
     # fall back to the cluster case with None as node name.
     yield from check_logwatch_ec_common(
         None,
@@ -51,7 +51,7 @@ def check_logwatch_ec(params: Parameters, section: logwatch.Section) -> CheckRes
     )
 
 
-def cluster_check_logwatch_ec(params: Parameters, section: ClusterSection) -> CheckResult:
+def cluster_check_logwatch_ec(params: Mapping[str, Any], section: ClusterSection) -> CheckResult:
     yield from check_logwatch_ec_common(
         None,
         params,
@@ -78,7 +78,7 @@ def discover_single(section: logwatch.Section,) -> DiscoveryResult:
 
 def check_logwatch_ec_single(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: logwatch.Section,
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
@@ -92,7 +92,7 @@ def check_logwatch_ec_single(
 
 def cluster_check_logwatch_ec_single(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: ClusterSection,
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
@@ -202,7 +202,7 @@ def _filter_accumulated_lines(cluster_section: ClusterSection, item: str) -> Ite
 
 def check_logwatch_ec_common(
     item: Optional[str],
-    params: Parameters,
+    params: Mapping[str, Any],
     parsed: ClusterSection,
     *,
     service_level: int,

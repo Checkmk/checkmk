@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Mapping, MutableMapping
 import time
 
 from .agent_based_api.v1 import (
@@ -17,10 +17,8 @@ from .agent_based_api.v1 import (
 )
 
 from .agent_based_api.v1.type_defs import (
-    Parameters,
     CheckResult,
     DiscoveryResult,
-    ValueStore,
 )
 
 from .utils.mssql_counters import Section, get_rate_or_none, get_int
@@ -49,10 +47,10 @@ def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryResul
 
 
 def _check_common(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     node_name: str,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     data_locks = section.get(("%s:Locks" % item, "_Total"), {})
@@ -90,9 +88,9 @@ def _check_common(
 
 
 def _check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """
@@ -114,16 +112,16 @@ def _check_base(
 
 def check_mssql_counters_locks_per_batch(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     yield from _check_base(get_value_store(), item, params, section)
 
 
 def _cluster_check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     """
@@ -146,7 +144,7 @@ def _cluster_check_base(
 
 def cluster_check_mssql_counters_locks_per_batch(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), item, params, section)

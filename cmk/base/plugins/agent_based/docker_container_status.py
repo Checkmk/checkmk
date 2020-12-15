@@ -8,6 +8,7 @@ import datetime
 from typing import (
     Any,
     Dict,
+    Mapping,
     Optional,
 )
 from .utils import docker, uptime
@@ -17,7 +18,6 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
     CheckResult,
     HostLabelGenerator,
-    Parameters,
 )
 from .agent_based_api.v1 import (
     register,
@@ -246,7 +246,7 @@ def discover_docker_container_status_uptime(
 
 
 def check_docker_container_status_uptime(
-    params: Parameters,
+    params: Mapping[str, Any],
     section_docker_container_status: Optional[Dict[str, Any]],
     section_uptime: Optional[uptime.Section],
 ) -> CheckResult:

@@ -12,7 +12,7 @@ from typing import (
     Sequence,
     Tuple,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters, StringTable
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 import time
 from .agent_based_api.v1 import (
@@ -233,7 +233,7 @@ def convert_esx_counters_if(section: Section) -> interfaces.Section:
 
 
 def discover_esx_vsphere_counters_if(
-    params: Sequence[Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> DiscoveryResult:
     yield from interfaces.discover_interfaces(
@@ -244,7 +244,7 @@ def discover_esx_vsphere_counters_if(
 
 def check_esx_vsphere_counters_if(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     if "net.bytesRx" not in section:

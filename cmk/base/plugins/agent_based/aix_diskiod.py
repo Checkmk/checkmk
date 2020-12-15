@@ -25,7 +25,7 @@
 # 6. Kb_wrtn    -> Kilobytes written since system boot
 
 import time
-from typing import Mapping, Optional
+from typing import Any, Mapping, Optional
 from .agent_based_api.v1 import (
     get_value_store,
     get_rate,
@@ -82,7 +82,7 @@ def _compute_rates(
 
 
 def _check_disk(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     disk: diskstat.Disk,
 ) -> type_defs.CheckResult:
     value_store = get_value_store()
@@ -97,7 +97,7 @@ def _check_disk(
 
 def check_aix_diskiod(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: diskstat.Section,
 ) -> type_defs.CheckResult:
     if item == 'SUMMARY':
@@ -112,7 +112,7 @@ def check_aix_diskiod(
 
 def cluster_check_aix_diskiod(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, diskstat.Section],
 ) -> type_defs.CheckResult:
     if item == 'SUMMARY':

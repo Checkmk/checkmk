@@ -11,7 +11,6 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
     CheckResult,
     DiscoveryResult,
-    Parameters,
 )
 from .agent_based_api.v1 import (
     check_levels,
@@ -160,7 +159,7 @@ def _mssql_datafiles_process_sizes(
 
 def discover_mssql_common(
     mode: Literal["datafiles", "transactionlogs"],
-    params: List[Parameters],
+    params: List[Mapping[str, Any]],
     section: SectionDatafiles,
 ) -> DiscoveryResult:
 
@@ -174,20 +173,21 @@ def discover_mssql_common(
 
 
 def discover_mssql_datafiles(
-    params: List[Parameters],
+    params: List[Mapping[str, Any]],
     section: SectionDatafiles,
 ) -> DiscoveryResult:
     yield from discover_mssql_common("datafiles", params, section)
 
 
 def discover_mssql_transactionlogs(
-    params: List[Parameters],
+    params: List[Mapping[str, Any]],
     section: SectionDatafiles,
 ) -> DiscoveryResult:
     yield from discover_mssql_common("transactionlogs", params, section)
 
 
-def check_mssql_common(item: str, params: Parameters, section: SectionDatafiles) -> CheckResult:
+def check_mssql_common(item: str, params: Mapping[str, Any],
+                       section: SectionDatafiles) -> CheckResult:
     max_size_sum = 0.
     allocated_size_sum = 0.
     used_size_sum = 0.

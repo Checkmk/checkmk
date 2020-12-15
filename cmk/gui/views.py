@@ -1745,6 +1745,10 @@ def page_view():
         # to add e.g. views to dashboards or reports
         html.set_page_context(context)
 
+        # Need to be loaded before processing the painter_options below.
+        # TODO: Make this dependency explicit
+        display_options.load_from_html(html)
+
         painter_options = PainterOptions.get_instance()
         painter_options.load(view.name)
         painter_options.update_from_url(view)
@@ -1874,8 +1878,6 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
     all_active_filters = _get_view_filters(view)
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
-    display_options.load_from_html(html)
-
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see
     # later)
@@ -1987,7 +1989,6 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: b
 
 
 def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, rows: Rows) -> None:
-    display_options.load_from_html(html)
     view = view_renderer.view
 
     # Load from hard painter options > view > hard coded default

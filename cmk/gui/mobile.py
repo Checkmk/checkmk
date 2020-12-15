@@ -14,7 +14,7 @@ import cmk.gui.view_utils
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, display_options
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -295,6 +295,10 @@ def page_view() -> None:
 
     title = views.view_title(view_spec)
     mobile_html_head(title)
+
+    # Need to be loaded before processing the painter_options below.
+    # TODO: Make this dependency explicit
+    display_options.load_from_html(html)
 
     painter_options = PainterOptions.get_instance()
     painter_options.load(view_name)

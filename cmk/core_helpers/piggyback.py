@@ -123,29 +123,23 @@ class PiggybackSummarizer(AgentSummarizer):
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""
-
         if mode is not Mode.CHECKING:
-            # Check_MK Discovery: Do not display information about piggyback files
-            # and source status file
             return 0, '', []
 
-        summary = self._summarize_impl()
-        if self.always and not summary:
-            return 1, 'Missing data', []
-
-        if not host_sections:
-            return 0, "", []
-
-        return summary
-
-    def _summarize_impl(self) -> ServiceCheckResult:
         states = [0]
         infotexts = set()
         for origin in (self.hostname, self.ipaddress):
+            src = None
+            # TODO(ml): The code uses `get_piggyback_raw_data()` instead of
+            # `HostSections.piggyback_raw_data` because this allows it to
+            # sneakily use cached data.  At minimum, we should group all cache
+            # handling performed after the parser.
             for src in get_piggyback_raw_data(
                     origin if origin else "",
                     self.time_settings,
             ):
                 states.append(src.reason_status)
                 infotexts.add(src.reason)
+            if self.always and not src:
+                return 1, "Missing data", []
         return max(states), ", ".join(infotexts), []

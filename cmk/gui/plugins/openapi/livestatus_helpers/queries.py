@@ -86,7 +86,7 @@ class ResultRow(dict):
         raise AttributeError(f"{key}: Setting of attributes not allowed.")
 
 
-def _get_column(table_class: Type[Table], col: str) -> Column:
+def _get_column(table_class: Type[Table], col: str, error='raise') -> Column:
     """Strip prefixes from column names and return the correct column
 
     Examples:
@@ -189,7 +189,9 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         self.column_names = [col.query_name for col in columns]
         self.filter_expr = filter_expr
         _tables = {column.table for column in columns}
-        assert len(_tables) == 1
+        if len(_tables) != 1:
+            raise ValueError(f"Query doesn't specify a single table: {_tables!r}")
+
         self.table: Type[Table] = _tables.pop()
 
     def filter(self, filter_expr: QueryExpression) -> 'Query':
@@ -416,10 +418,28 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         Examples:
 
             >>> q = Query.from_string('GET hosts\\n'
+            ...                       'Columns: name service_description\\n'
+            ...                       'Filter: service_description = ')
+
+            All unknown columns are ignored, as there are many places in Checkmk where queries
+            specify wrong or unnecessary columns. Livestatus would normally ignore them.
+
+            >>> q.columns
+            [Column(hosts.name: string)]
+
+            >>> _ = Query.from_string('GET hosts\\n'
+            ...                       'Columns: service_description\\n'
+            ...                       'Filter: service_description = ')
+            Traceback (most recent call last):
+            ...
+            ValueError: Query doesn't specify a single table: set()
+
+            >>> q = Query.from_string('GET hosts\\n'
             ...                       'Columns: name\\n'
             ...                       'Filter: name = heute\\n'
             ...                       'Filter: alias = heute\\n'
             ...                       'Or: 2')
+
 
             >>> q.table.__name__
             'Hosts'
@@ -443,6 +463,10 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         Returns:
             A Query instance.
+
+        Raises:
+            A ValueError if no Query() instance could be created.
+
         """
         lines = string_query.split("\n")
         for line in lines:
@@ -463,7 +487,12 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         for line in lines:
             if line.startswith('Columns: '):
                 column_names = line.split(": ", 1)[1].lstrip().split()
-                columns: List[Column] = [_get_column(table_class, col) for col in column_names]
+                columns: List[Column] = []
+                for col in column_names:
+                    try:
+                        columns.append(_get_column(table_class, col))
+                    except AttributeError:
+                        pass
                 break
         else:
             raise ValueError("No columns found")
@@ -471,7 +500,10 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         filters: List[QueryExpression] = []
         for line in lines:
             if line.startswith('Filter: '):
-                filters.append(_parse_line(table_class, line))
+                try:
+                    filters.append(_parse_line(table_class, line))
+                except AttributeError:
+                    pass
             elif line.startswith('Or: ') or line.startswith("And: "):
                 op, _count = line.split(": ")
                 count = int(_count)
@@ -507,19 +539,22 @@ def _parse_line(
         >>> _parse_line(Hosts, "Filter: name !>= value")
         Filter(name !>= value)
 
+        >>> _parse_line(Hosts, "Filter: name =")
+        Filter(name = )
+
         >>> _parse_line(Hosts, "Filter: foo !>= value")
         Traceback (most recent call last):
         ...
-        ValueError: type object 'Hosts' has no attribute 'foo'
+        AttributeError: type object 'Hosts' has no attribute 'foo'
 
     Returns:
         A BinaryExpression
+
+    Raises:
+        An AttributeError if the Table has no such column.
     """
     if not filter_string.startswith("Filter:"):
         raise ValueError(f"Illegal filter string: {filter_string!r}")
-    _, column_name, op, value = filter_string.split(None, 3)
-    try:
-        column: Column = getattr(table, column_name)
-    except AttributeError as exc:
-        raise ValueError(str(exc))
+    _, column_name, op, *value = filter_string.split(None, 3)
+    column: Column = getattr(table, column_name)
     return column.op(op, value)

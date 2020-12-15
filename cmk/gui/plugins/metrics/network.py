@@ -1572,6 +1572,36 @@ graph_info["bandwidth"] = {
     ],
 }
 
+graph_info["if_errors"] = {
+    "title": _("Errors"),
+    "metrics": [
+        ("if_in_errors", "area"),
+        ("if_in_discards", "stack"),
+        ("if_out_errors", "-area"),
+        ("if_out_discards", "-stack"),
+    ],
+}
+
+graph_info["bm_packets"] = {
+    "title": _("Broad-/Multicast"),
+    "metrics": [
+        ("if_in_mcast", "line"),
+        ("if_in_bcast", "line"),
+        ("if_out_mcast", "-line"),
+        ("if_out_bcast", "-line"),
+    ],
+}
+
+graph_info["packets_1"] = {
+    "title": _("Packets"),
+    "metrics": [
+        ("if_in_unicast", "line"),
+        ("if_in_non_unicast", "line"),
+        ("if_out_unicast", "-line"),
+        ("if_out_non_unicast", "-line"),
+    ],
+}
+
 graph_info["packets_2"] = {
     "title": _("Packets"),
     "metrics": [

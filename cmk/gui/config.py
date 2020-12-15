@@ -308,19 +308,33 @@ def get_language() -> Optional[str]:
     return default_language
 
 
-def is_ntop_available() -> bool:
+def get_ntop_connection() -> Optional[Dict]:
+    # Use this function if you *really* want to try accessing the ntop connection settings
     try:
         # ntop is currently part of CEE and will *only* be defined if we are a CEE
-        ntop_connection  # type: ignore[name-defined]
+        return ntop_connection  # type: ignore[name-defined]
     except NameError:
-        return False
-    return True
+        return None
+
+
+def is_ntop_available() -> bool:
+    # Use this function if you want to know if the ntop intergration is available in general
+    return bool(get_ntop_connection())
 
 
 def is_ntop_configured() -> bool:
-    ntop = ntop_connection  # type: ignore[name-defined] # pylint: disable=undefined-variable
-    if is_ntop_available() and ntop != {}:
-        return True
+    # Use this function if you want to know if the connection to ntop is fully set-up
+    # e.g. to decide if ntop links should be hidden
+    ntop = get_ntop_connection()
+
+    if is_ntop_available() and isinstance(ntop, Dict):
+        custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
+        # We currently have two options to get an ntop username
+        # 1) User needs to define his own -> if this string is empty, declare ntop as not configured
+        # 2) Take the checkmk username as ntop username -> always declare ntop as configured
+        return bool(
+            isinstance(custom_attribute_name, str) and
+            user.get_attribute(custom_attribute_name, "")) or not custom_attribute_name
     return False
 
 

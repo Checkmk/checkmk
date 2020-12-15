@@ -66,7 +66,7 @@ class BIRuleEndpointSchema(BIRuleSchema):
           path_params=[BI_RULE_ID],
           response_schema=BIRuleEndpointSchema)
 def get_bi_rule(params):
-    """Get BI Rule"""
+    """Show a BI rule"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     try:
@@ -86,7 +86,7 @@ def get_bi_rule(params):
           request_schema=BIRuleEndpointSchema,
           response_schema=BIRuleEndpointSchema)
 def put_bi_rule(params):
-    """Save BI Rule"""
+    """Update a BI rule"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     rule_config = params["body"]
@@ -111,7 +111,7 @@ def put_bi_rule(params):
           path_params=[BI_RULE_ID],
           output_empty=True)
 def delete_bi_rule(params):
-    """Delete BI Rule"""
+    """Delete BI rule"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     try:
@@ -144,7 +144,7 @@ class BIAggregationEndpointSchema(BIAggregationSchema):
           path_params=[BI_AGGR_ID],
           response_schema=BIAggregationEndpointSchema)
 def get_bi_aggregation(params):
-    """Get BI Aggregation"""
+    """Show a BI aggregation"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     try:
@@ -164,7 +164,7 @@ def get_bi_aggregation(params):
           request_schema=BIAggregationEndpointSchema,
           response_schema=BIAggregationEndpointSchema)
 def put_bi_aggregation(params):
-    """Save BI Aggregation"""
+    """Update a BI aggregation"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
 
@@ -191,7 +191,7 @@ def put_bi_aggregation(params):
           path_params=[BI_AGGR_ID],
           output_empty=True)
 def delete_bi_aggregation(params):
-    """Delete BI Aggregation"""
+    """Delete a BI aggregation"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     try:
@@ -219,7 +219,7 @@ def delete_bi_aggregation(params):
           method='get',
           response_schema=response_schemas.DomainObjectCollection)
 def get_bi_packs(params):
-    """Show all BI Packs"""
+    """Show all BI packs"""
 
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
@@ -247,7 +247,7 @@ def get_bi_packs(params):
           path_params=[BI_PACK_ID],
           response_schema=response_schemas.DomainObject)
 def get_bi_pack(params):
-    """Get BI Pack"""
+    """Get a BI pack"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     bi_pack = bi_packs.get_pack(params["pack_id"])

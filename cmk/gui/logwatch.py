@@ -298,7 +298,7 @@ def show_file(site, host_name, file_name):
         return
 
     if log_chunks is None:
-        html.show_error(_("The logfile does not exist."))
+        html.show_error(_("The logfile does not exist on site."))
         html.footer()
         return
 
@@ -620,6 +620,10 @@ def parse_file(site, host_name, file_name, hidecontext=False):
                     line_level = 0
                     line_class = 'OK'
 
+                elif line[0] == '.':
+                    line_level = 0
+                    line_class = 'OK'
+
                 elif not hidecontext:
                     line_level = 0
                     line_class = 'context'
@@ -770,7 +774,7 @@ def get_logfile_lines(site, host_name, file_name):
         sites.live().set_only_sites(None)
     if file_content is None:
         return None
-    return file_content.splitlines()
+    return [line.decode("utf-8") for line in file_content.splitlines()]
 
 
 def all_logs():

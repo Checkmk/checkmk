@@ -1,0 +1,15 @@
+Title: Openlog: logfile was not displayed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608040417
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Openlog did not display the logfile with the Error:<br>
+<b>Logfile does not exist</b><br>
+The log data retrieved via Livestatus was not decoded properly.
+Thats why no data was found for this logfile.
+

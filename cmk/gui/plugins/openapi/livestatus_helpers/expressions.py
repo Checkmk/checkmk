@@ -31,6 +31,13 @@ LIVESTATUS_OPERATORS = [
     '>=',
     '~',
     '~~',
+    '!=',
+    '!<',
+    '!>',
+    '!<=',
+    '!>=',
+    '!~',
+    '!~~',
 ]
 
 
@@ -378,6 +385,9 @@ def tree_to_expr(filter_dict) -> QueryExpression:
 
         >>> tree_to_expr({'op': '=', 'left': 'hosts.name', 'right': 'example.com'})
         Filter(name = example.com)
+
+        >>> tree_to_expr({'op': '!=', 'left': 'hosts.name', 'right': 'example.com'})
+        Filter(name != example.com)
 
         >>> tree_to_expr({'op': 'and', \
                           'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \

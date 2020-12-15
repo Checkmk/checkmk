@@ -16,8 +16,8 @@ from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.helpers.cache import PersistedSections, SectionStore
-from cmk.helpers.type_defs import NO_SELECTION
+from cmk.core_helpers.cache import PersistedSections, SectionStore
+from cmk.core_helpers.type_defs import NO_SELECTION
 
 from cmk.base.sources.snmp import SNMPParser
 

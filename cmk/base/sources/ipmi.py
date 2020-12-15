@@ -9,10 +9,10 @@ from typing import cast, Final, Optional
 from cmk.utils.exceptions import MKAgentError
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.helpers import FetcherType, IPMIFetcher
-from cmk.helpers.agent import DefaultAgentFileCache, DefaultAgentFileCacheFactory
-from cmk.helpers.ipmi import IPMISummarizer
-from cmk.helpers.type_defs import Mode
+from cmk.core_helpers import FetcherType, IPMIFetcher
+from cmk.core_helpers.agent import DefaultAgentFileCache, DefaultAgentFileCacheFactory
+from cmk.core_helpers.ipmi import IPMISummarizer
+from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 from cmk.base.config import HostConfig, IPMICredentials

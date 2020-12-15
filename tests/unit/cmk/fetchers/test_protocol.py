@@ -25,8 +25,8 @@ from cmk.utils.type_defs import AgentRawData, result, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
-from cmk.helpers import FetcherType
-from cmk.helpers.protocol import (
+from cmk.core_helpers import FetcherType
+from cmk.core_helpers.protocol import (
     AgentResultMessage,
     CMCHeader,
     CMCMessage,

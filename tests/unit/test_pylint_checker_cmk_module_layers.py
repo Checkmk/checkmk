@@ -44,9 +44,9 @@ def test_utils_import_ok(component):
         # utils not ok in agent based plugins
         ("_nevermind_", "cmk.base.plugins.agent_based.utils.foo", "cmk.utils.debug", False),
         # `fetchers` in `utils` is wrong but anywhere else is OK
-        ("cmk/helpers", "cmk.helpers.snmp", "cmk.utils", True),
-        ("cmk/utils", "cmk.utils.foo", "cmk.helpers", False),
-        ("cmk/base", "cmk.base.sources", "cmk.helpers", True),
+        ("cmk/core_helpers", "cmk.core_helpers.snmp", "cmk.utils", True),
+        ("cmk/utils", "cmk.utils.foo", "cmk.core_helpers", False),
+        ("cmk/base", "cmk.base.sources", "cmk.core_helpers", True),
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),

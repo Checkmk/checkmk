@@ -60,7 +60,7 @@ def _allow_default_plus_fetchers_and_snmplib(
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.helpers` and `cmk.snmplib`.
+    Allow import of `cmk.core_helpers` and `cmk.snmplib`.
 
     The layering is such that `fetchers` and `snmplib` is between
     `utils` and `base` so that importing `fetchers` in `utils` is
@@ -68,7 +68,7 @@ def _allow_default_plus_fetchers_and_snmplib(
     """
     return any((
         _is_default_allowed_import(imported=imported, component=component),
-        _in_component(imported, Component("cmk.helpers")),
+        _in_component(imported, Component("cmk.core_helpers")),
         _in_component(imported, Component("cmk.snmplib")),
     ))
 
@@ -99,7 +99,7 @@ _COMPONENTS = (
     (Component("cmk.base.plugins.agent_based.agent_based_api"), _is_allowed_for_agent_based_api),
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
     (Component("cmk.base"), _allow_default_plus_fetchers_and_snmplib),
-    (Component("cmk.helpers"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.core_helpers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui"), _is_default_allowed_import),
     (Component("cmk.ec"), _is_default_allowed_import),
@@ -123,7 +123,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("enterprise/bin/dcd"): Component("cmk.cee.dcd"),
-    ModulePath("enterprise/bin/fetcher"): Component("cmk.helpers"),
+    ModulePath("enterprise/bin/fetcher"): Component("cmk.core_helpers"),
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),

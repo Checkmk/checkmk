@@ -11,7 +11,7 @@ import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.type_defs import HostName
 
-from cmk.helpers.type_defs import Mode
+from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.check_table as check_table
 import cmk.base.sources as sources

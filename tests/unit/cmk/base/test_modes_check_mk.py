@@ -10,7 +10,7 @@ from testlib.base import Scenario
 
 from cmk.utils.type_defs import result
 
-from cmk.helpers.cache import FileCacheFactory
+from cmk.core_helpers.cache import FileCacheFactory
 
 import cmk.base.modes.check_mk as check_mk
 from cmk.base.sources.tcp import TCPSource

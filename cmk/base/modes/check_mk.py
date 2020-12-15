@@ -42,10 +42,10 @@ from cmk.utils.type_defs import (
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
-import cmk.helpers.factory as snmp_factory
-import cmk.helpers.cache
-from cmk.helpers.type_defs import Mode as FetchMode
-from cmk.helpers.type_defs import NO_SELECTION, SectionNameCollection
+import cmk.core_helpers.factory as snmp_factory
+import cmk.core_helpers.cache
+from cmk.core_helpers.type_defs import Mode as FetchMode
+from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.backup
@@ -107,7 +107,7 @@ _verbosity = 0
 
 
 def option_cache() -> None:
-    cmk.helpers.cache.set_cache_opts(use_caches=True)
+    cmk.core_helpers.cache.set_cache_opts(use_caches=True)
 
 
 modes.register_general_option(
@@ -121,7 +121,7 @@ modes.register_general_option(
 
 
 def option_no_cache() -> None:
-    cmk.helpers.cache.FileCacheFactory.disabled = True
+    cmk.core_helpers.cache.FileCacheFactory.disabled = True
 
 
 modes.register_general_option(
@@ -1512,7 +1512,7 @@ def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         # This will make Checkmk only contact hosts in case the cache is not
         # new enough.
-        cmk.helpers.cache.FileCacheFactory.reset_maybe()
+        cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
 
     selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.do_discovery(
@@ -1702,7 +1702,7 @@ def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        cmk.helpers.cache.FileCacheFactory.reset_maybe()
+        cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:

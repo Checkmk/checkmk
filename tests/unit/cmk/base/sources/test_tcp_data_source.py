@@ -14,8 +14,8 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import result
 
-from cmk.helpers.type_defs import Mode
-from cmk.helpers.agent import AgentHostSections, AgentSummarizerDefault
+from cmk.core_helpers.type_defs import Mode
+from cmk.core_helpers.agent import AgentHostSections, AgentSummarizerDefault
 
 from cmk.base.sources.tcp import TCPSource
 

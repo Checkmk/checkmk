@@ -12,13 +12,13 @@ from six import ensure_str
 import cmk.utils.paths
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
-from cmk.helpers import FetcherType, ProgramFetcher
-from cmk.helpers.agent import (
+from cmk.core_helpers import FetcherType, ProgramFetcher
+from cmk.core_helpers.agent import (
     AgentSummarizerDefault,
     DefaultAgentFileCache,
     DefaultAgentFileCacheFactory,
 )
-from cmk.helpers.type_defs import Mode
+from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config

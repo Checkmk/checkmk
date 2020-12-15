@@ -7,7 +7,7 @@ SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
-DESTDIR="$ROOT/lib/python3/cmk/helpers/"
+DESTDIR="$ROOT/lib/python3/cmk/core_helpers/"
 
 echo "Update site $SITE..."
 
@@ -22,9 +22,9 @@ sudo rsync \
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
     for WHAT in enterprise managed; do
-        if [ -e ../../$WHAT/cmk/helpers/.f12 ]; then
+        if [ -e ../../$WHAT/cmk/core_helpers/.f12 ]; then
             (
-                cd ../../$WHAT/cmk/helpers
+                cd ../../$WHAT/cmk/core_helpers
                 ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
             )
         fi

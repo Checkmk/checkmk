@@ -17,16 +17,16 @@ from cmk.snmplib.type_defs import (
 from typing import List, Tuple, Optional, Type
 
 try:
-    from cmk.helpers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
+    from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 try:
-    from cmk.helpers.cee.snmp_backend.pysnmp_backend import PySNMPBackend  # type: ignore[import]
+    from cmk.core_helpers.cee.snmp_backend.pysnmp_backend import PySNMPBackend  # type: ignore[import]
 except ImportError:
     PySNMPBackend = None  # type: ignore[assignment, misc]
 
-from cmk.helpers.snmp_backend.classic import ClassicSNMPBackend
+from cmk.core_helpers.snmp_backend.classic import ClassicSNMPBackend
 
 logger = logging.getLogger(__name__)
 

@@ -60,9 +60,9 @@ from cmk.utils.type_defs import (
     state_markers,
 )
 
-import cmk.helpers.cache
-from cmk.helpers.protocol import FetcherMessage
-from cmk.helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+import cmk.core_helpers.cache
+from cmk.core_helpers.protocol import FetcherMessage
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -324,7 +324,7 @@ def do_discovery(
     only_host_labels: bool = False,
 ) -> None:
     config_cache = config.get_config_cache()
-    use_caches = not arg_hostnames or cmk.helpers.cache.FileCacheFactory.maybe
+    use_caches = not arg_hostnames or cmk.core_helpers.cache.FileCacheFactory.maybe
     on_error = "raise" if cmk.utils.debug.enabled() else "warn"
 
     discovery_parameters = DiscoveryParameters(
@@ -733,7 +733,7 @@ def check_discovery(
         mode,
         sources.make_sources(host_config, ipaddress, mode=mode),
     )
-    use_caches = cmk.helpers.cache.FileCacheFactory.maybe
+    use_caches = cmk.core_helpers.cache.FileCacheFactory.maybe
     max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
     if not fetcher_messages:
         # Note: *Not* calling `fetch_all(sources)` here is probably buggy.

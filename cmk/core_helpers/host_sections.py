@@ -10,7 +10,7 @@ from typing import Callable, cast, Dict, Generic, List, Mapping, MutableMapping,
 
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.helpers.cache import PersistedSections, SectionStore, TRawDataSection
+from cmk.core_helpers.cache import PersistedSections, SectionStore, TRawDataSection
 
 from .type_defs import NO_SELECTION, SectionCacheInfo, SectionNameCollection
 

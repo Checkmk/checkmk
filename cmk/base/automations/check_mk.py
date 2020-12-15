@@ -45,9 +45,9 @@ import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, BackendSNMPTree, BackendOIDSpec
 
-import cmk.helpers.cache
-from cmk.helpers import factory
-from cmk.helpers.type_defs import Mode, NO_SELECTION
+import cmk.core_helpers.cache
+from cmk.core_helpers import factory
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
@@ -99,11 +99,11 @@ def _set_cache_opts_of_checkers(use_caches: bool) -> None:
     # TODO check these settings vs.
     # cmk.base.sources/_abstract.py:set_cache_opts
     if use_caches:
-        cmk.helpers.cache.FileCacheFactory.use_outdated = True
+        cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
         # TODO why does this only apply to TCP data sources and not
         # to all agent data sources?
         sources.tcp.TCPSource.use_only_cache = True
-    cmk.helpers.cache.FileCacheFactory.maybe = use_caches
+    cmk.core_helpers.cache.FileCacheFactory.maybe = use_caches
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -1444,7 +1444,7 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = ip_lookup.lookup_ip_address(host_config)
             if ty == "agent":
-                cmk.helpers.cache.FileCacheFactory.reset_maybe()
+                cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
                 for source in sources.make_sources(
                         host_config,
                         ipaddress,

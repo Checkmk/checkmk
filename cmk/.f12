@@ -110,6 +110,6 @@ if [ -z "$ONLY_COPY" ]; then
 fi
 
 (
-    cd helpers
+    cd core_helpers
     bash .f12
 )

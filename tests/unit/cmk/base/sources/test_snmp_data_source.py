@@ -13,7 +13,7 @@ from testlib.base import Scenario  # type: ignore[import]
 from cmk.utils.exceptions import MKIPAddressLookupError
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, result, SourceType
 
-from cmk.helpers.type_defs import Mode, NO_SELECTION
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

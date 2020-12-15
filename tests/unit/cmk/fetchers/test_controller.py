@@ -11,17 +11,17 @@ import pytest  # type: ignore[import]
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial
 
-from cmk.helpers import FetcherType
-from cmk.helpers.controller import (
+from cmk.core_helpers import FetcherType
+from cmk.core_helpers.controller import (
     GlobalConfig,
     make_global_config_path,
     make_local_config_path,
     run_fetcher,
     write_bytes,
 )
-from cmk.helpers.protocol import CMCMessage
-from cmk.helpers.snmp import SNMPPluginStore
-from cmk.helpers.type_defs import Mode
+from cmk.core_helpers.protocol import CMCMessage
+from cmk.core_helpers.snmp import SNMPPluginStore
+from cmk.core_helpers.type_defs import Mode
 
 
 class TestGlobalConfig:

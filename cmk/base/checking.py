@@ -57,8 +57,8 @@ from cmk.utils.type_defs import (
     state_markers,
 )
 
-from cmk.helpers.protocol import FetcherMessage, FetcherType
-from cmk.helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.protocol import FetcherMessage, FetcherType
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils

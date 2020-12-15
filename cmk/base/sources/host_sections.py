@@ -31,8 +31,8 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.helpers.cache import ABCRawDataSection
-from cmk.helpers.host_sections import HostSections
+from cmk.core_helpers.cache import ABCRawDataSection
+from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.item_state as item_state

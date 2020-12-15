@@ -11,9 +11,9 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
 
-from cmk.helpers import FetcherType, SNMPFetcher
-from cmk.helpers.cache import SectionStore
-from cmk.helpers.snmp import (
+from cmk.core_helpers import FetcherType, SNMPFetcher
+from cmk.core_helpers.cache import SectionStore
+from cmk.core_helpers.snmp import (
     SectionMeta,
     SNMPFileCache,
     SNMPFileCacheFactory,
@@ -23,7 +23,7 @@ from cmk.helpers.snmp import (
     SNMPPluginStoreItem,
     SNMPSummarizer,
 )
-from cmk.helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table

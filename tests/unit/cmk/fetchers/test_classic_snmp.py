@@ -13,8 +13,8 @@ from cmk.utils.exceptions import MKGeneralException
 
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPBackend
 
-from cmk.helpers.snmp_backend import ClassicSNMPBackend
-import cmk.helpers.snmp_backend.classic as classic_snmp
+from cmk.core_helpers.snmp_backend import ClassicSNMPBackend
+import cmk.core_helpers.snmp_backend.classic as classic_snmp
 
 
 @pytest.mark.parametrize("port,expected", [

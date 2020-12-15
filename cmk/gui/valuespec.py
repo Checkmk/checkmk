@@ -4822,15 +4822,16 @@ class Dictionary(ValueSpec):
             html.close_table()
 
     def _render_input_form(self, varprefix, value, as_part=False):
-        headers = self._headers if self._headers else [(ensure_str(self.title() or _("Properties")),
-                                                        [])]
+        headers = self._headers or [(ensure_str(self.title() or _("Properties")), [])]
         for header, css, section_elements in map(self._normalize_header, headers):
-            self.render_input_form_header(varprefix,
-                                          value,
-                                          header,
-                                          section_elements,
-                                          as_part,
-                                          css=css)
+            if not as_part:
+                forms.header(
+                    header,
+                    isopen=self._form_isopen,
+                    narrow=self._form_narrow,
+                    show_more_toggle=self._section_has_show_more(section_elements),
+                )
+            self.render_input_form_header(varprefix, value, header, section_elements, css=css)
         if not as_part:
             forms.end()
 
@@ -4855,15 +4856,7 @@ class Dictionary(ValueSpec):
                    for param, vs in self._get_elements()
                    if param in section_elements)
 
-    def render_input_form_header(self, varprefix, value, title, section_elements, as_part, css):
-        if not as_part:
-            forms.header(
-                title,
-                isopen=self._form_isopen,
-                narrow=self._form_narrow,
-                show_more_toggle=self._section_has_show_more(section_elements),
-            )
-
+    def render_input_form_header(self, varprefix, value, title, section_elements, css):
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue

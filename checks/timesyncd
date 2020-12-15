@@ -15,7 +15,7 @@ factory_settings["timesyncd_default_levels"] = {
     "stratum_level": 10,
     "quality_levels": (200.0, 500.0),
     "alert_delay": (300, 3600),
-    "last_synchronized": (3600, 7200)
+    "last_synchronized": (5400, 7200)
 }
 
 

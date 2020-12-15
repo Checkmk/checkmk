@@ -1,0 +1,19 @@
+Title: <tt>timesyncd</tt>: increase default thresholds for last synchronisation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608036372
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b3
+
+The check plugin <tt>timesyncd</tt> monitors the synchronization of linux hosts
+with time servers. One of the monitored quantities is the time passed since the
+last synchronization with the time server. Up to now, the corresponding default
+thresholds were set to 1h (WARN) and 2h (CRIT). However, practice has shown that
+1:30h (WARN) and 2h (CRIT) are more suitable, therefore, with this werk, we
+change the defaults to these values. Note that this does not affect any user-
+defined levels (ruleset "Systemd Timesyncd time synchronisation", option
+"Allowed duration since last synchronisation").

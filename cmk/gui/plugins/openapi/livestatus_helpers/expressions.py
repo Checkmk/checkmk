@@ -300,7 +300,7 @@ class BoolExpression(QueryExpression):
         if not args:
             # For now this seems reasonable, but there are cases where it could be advantageous
             # to have empty arguments, though we'd have to decide on an actual use-case to be sure.
-            raise RuntimeError("Need at least one parameter.")
+            raise ValueError("Need at least one parameter.")
 
     def __repr__(self):
         return f"{self.expr}{self.args!r}"

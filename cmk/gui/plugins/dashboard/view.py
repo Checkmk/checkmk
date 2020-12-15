@@ -7,7 +7,7 @@
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, display_options
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
 from cmk.gui.plugins.views import PainterOptions
@@ -35,13 +35,17 @@ class ABCViewDashlet(IFrameDashlet):
 
         is_reload = html.request.has_var("_reload")
 
-        display_options = "SIXLW"
+        view_display_options = "SIXLW"
         if not is_reload:
-            display_options += "HR"
+            view_display_options += "HR"
 
-        html.request.set_var('display_options', display_options)
-        html.request.set_var('_display_options', display_options)
+        html.request.set_var('display_options', view_display_options)
+        html.request.set_var('_display_options', view_display_options)
         html.add_body_css_class('dashlet')
+
+        # Need to be loaded before processing the painter_options below.
+        # TODO: Make this dependency explicit
+        display_options.load_from_html(html)
 
         painter_options = PainterOptions.get_instance()
         painter_options.load(self._dashlet_spec["name"])

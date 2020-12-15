@@ -6335,6 +6335,7 @@ def test_view_page(wsgi_app, with_user, mock_livestatus):
         'scheduled_downtime_depth': 0,
         'staleness': 0.833333,
         'state': 0,
+        'host_labels': {"cmk/os_family": "linux","cmk/check_mk_server": "yes",},
     })])
     live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     live.expect_query(
@@ -6344,7 +6345,7 @@ def test_view_page(wsgi_app, with_user, mock_livestatus):
         "host_comments_with_extra_info host_custom_variable_names host_custom_variable_values "
         "host_downtimes host_downtimes_with_extra_info host_filename host_has_been_checked "
         "host_icon_image host_in_check_period host_in_notification_period host_in_service_period "
-        "host_is_flapping host_modified_attributes_list host_name host_notes_url_expanded "
+        "host_is_flapping host_labels host_modified_attributes_list host_name host_notes_url_expanded "
         "host_notifications_enabled host_num_services_crit host_num_services_ok "
         "host_num_services_pending host_num_services_unknown host_num_services_warn host_perf_data "
         "host_pnpgraph_present host_scheduled_downtime_depth host_staleness host_state"

@@ -1,0 +1,12 @@
+Title: Fix changing refresh interval of views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1608017816
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+In previous 2.0.0 releases it was not possible to use the display options
+to change the refresh interval of views.

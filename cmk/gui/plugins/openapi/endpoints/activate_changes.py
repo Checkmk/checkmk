@@ -100,7 +100,7 @@ def _serve_activation_run(activation_id, is_running=False):
           will_do_redirects=True,
           output_empty=True)
 def activate_changes_state(params):
-    """Wait for an activation-run to complete.
+    """Wait for activation completion
 
     This endpoint will periodically redirect on itself to prevent timeouts.
     """
@@ -123,7 +123,7 @@ def activate_changes_state(params):
           path_params=[ACTIVATION_ID],
           response_schema=response_schemas.DomainObject)
 def show_activation(params):
-    """Show the status of a particular activation-run.
+    """Show the activation status
     """
     activation_id = params['activation_id']
     manager = watolib.ActivateChangesManager()

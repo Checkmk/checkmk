@@ -3,7 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Host Tag Groups"""
+"""Host tag groups"""
 
 import json
 
@@ -85,7 +85,7 @@ def create_host_tag_group(params):
     response_schema=response_schemas.ConcreteHostTagGroup,
 )
 def show_host_tag_group(params):
-    """Show host tag group"""
+    """Show a host tag group"""
     ident = params['name']
     if not tag_group_exists(ident):
         return problem(

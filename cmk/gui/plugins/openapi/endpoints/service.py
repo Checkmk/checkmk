@@ -70,7 +70,7 @@ PARAMETERS = [{
           tag_group='Monitoring',
           response_schema=response_schemas.DomainObjectCollection)
 def _list_host_services(param):
-    """List a host's monitored services.
+    """Show the monitored services of a host
 
     This list is filterable by various parameters."""
     return _list_services(param)
@@ -85,7 +85,7 @@ def _list_host_services(param):
     response_schema=response_schemas.DomainObjectCollection,
 )
 def _list_all_services(param):
-    """List all monitored services.
+    """Show all monitored services
 
     This list is filterable by various parameters."""
     return _list_services(param)

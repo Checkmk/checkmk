@@ -152,7 +152,7 @@ def move_service(params):
               **HOST_NAME,
           }])
 def execute(params):
-    """Execute a service discovery of a host"""
+    """Execute a service discovery on a host"""
     host = watolib.Host.host(params["host_name"])
     discovery_request = StartDiscoveryRequest(host=host,
                                               folder=host.folder(),

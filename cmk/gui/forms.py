@@ -105,6 +105,7 @@ def header(title: str,
            table_id: str = "",
            narrow: bool = False,
            css: Optional[str] = None,
+           show_table_head: bool = True,
            show_more_toggle: bool = False,
            show_more_mode: bool = False) -> None:
     global g_header_open, g_section_open
@@ -114,6 +115,7 @@ def header(title: str,
     id_ = ensure_str(base64.b64encode(ensure_binary(title)))
     treename = html.form_name or "nform"
     isopen = html.foldable_container_is_open(treename, id_, isopen)
+    container_id = html.foldable_container_id(treename, id_)
 
     html.open_table(id_=table_id if table_id else None,
                     class_=[
@@ -124,29 +126,30 @@ def header(title: str,
                         "more" if show_more_mode else None,
                     ])
 
-    _begin_foldable_nform_container(
-        treename=treename,
-        id_=id_,
-        isopen=isopen,
-        title=title,
-        show_more_toggle=show_more_toggle,
-    )
+    if show_table_head:
+        _table_head(
+            treename=treename,
+            id_=id_,
+            isopen=isopen,
+            title=title,
+            show_more_toggle=show_more_toggle,
+        )
+
+    html.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
     html.tr(html.render_td('', colspan=2))
     g_header_open = True
     g_section_open = False
 
 
-def _begin_foldable_nform_container(
+def _table_head(
     treename: str,
     id_: str,
     isopen: bool,
     title: str,
     show_more_toggle: bool,
-) -> bool:
-    isopen = html.foldable_container_is_open(treename, id_, isopen)
+) -> None:
     onclick = html.foldable_container_onclick(treename, id_, fetch_url=None)
     img_id = html.foldable_container_img_id(treename, id_)
-    container_id = html.foldable_container_id(treename, id_)
 
     html.open_thead()
     html.open_tr(class_="heading")
@@ -161,9 +164,6 @@ def _begin_foldable_nform_container(
     html.close_td()
     html.close_tr()
     html.close_thead()
-    html.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
-
-    return isopen
 
 
 # container without legend and content

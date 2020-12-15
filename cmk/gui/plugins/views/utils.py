@@ -259,7 +259,7 @@ class PainterOptions:
             return
 
         html.begin_form("painteroptions")
-        forms.header(_("Display options"))
+        forms.header("", show_table_head=False)
         for name in self._used_option_names:
             vs = self.get_valuespec_of(name)
             forms.section(vs.title())

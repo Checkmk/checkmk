@@ -50,6 +50,7 @@ from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_simple_form_page_menu,
     make_simple_link,
+    make_external_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
@@ -1813,7 +1814,7 @@ def _add_rest_api_menu_entries(view_renderer, queries):
             PageMenuEntry(
                 title=_("Query %s resource") % (table,),
                 icon_name="filter",
-                item=make_simple_link(url),
+                item=make_external_link(url),
             ))
     view_renderer.append_menu_topic(
         dropdown='export',

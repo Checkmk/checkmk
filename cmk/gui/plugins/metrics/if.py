@@ -6,10 +6,7 @@
 
 from cmk.gui.i18n import _
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
+from cmk.gui.plugins.metrics import metric_info
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -150,60 +147,4 @@ metric_info["if_out_bcast"] = {
     "title": _("Output broadcast packets"),
     "unit": "1/s",
     "color": "#0080c0",
-}
-
-#.
-#   .--Graphs--------------------------------------------------------------.
-#   |                    ____                 _                            |
-#   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
-#   |                  | |  _| '__/ _` | '_ \| '_ \/ __|                   |
-#   |                  | |_| | | | (_| | |_) | | | \__ \                   |
-#   |                   \____|_|  \__,_| .__/|_| |_|___/                   |
-#   |                                  |_|                                 |
-#   +----------------------------------------------------------------------+
-#   |  Definitions of time series graphs                                   |
-#   '----------------------------------------------------------------------'
-
-# TODO: show this graph instead of Bandwidth if this is configured
-# in the check's parameters. But is this really a good solution?
-# We could use a condition on if_in_octets:min. But if this value
-# is missing then evaluating the condition will fail. Solution
-# could be using 0 for bits and 1 for octets and making sure that
-# this value is not used anywhere.
-# graph_info["octets"] = {
-#     "title" : _("Octets"),
-#     "metrics" : [
-#         ( "if_in_octets",      "area" ),
-#         ( "if_out_octets",     "-area" ),
-#     ],
-# }
-
-graph_info["packets_1"] = {
-    "title": _("Packets"),
-    "metrics": [
-        ("if_in_unicast", "line"),
-        ("if_in_non_unicast", "line"),
-        ("if_out_unicast", "-line"),
-        ("if_out_non_unicast", "-line"),
-    ],
-}
-
-graph_info["if_errors"] = {
-    "title": _("Errors"),
-    "metrics": [
-        ("if_in_errors", "area"),
-        ("if_in_discards", "stack"),
-        ("if_out_errors", "-area"),
-        ("if_out_discards", "-stack"),
-    ],
-}
-
-graph_info["bm_packets"] = {
-    "title": _("Broad-/Multicast"),
-    "metrics": [
-        ("if_in_mcast", "line"),
-        ("if_in_bcast", "line"),
-        ("if_out_mcast", "-line"),
-        ("if_out_bcast", "-line"),
-    ],
 }

@@ -86,7 +86,7 @@ class ResultRow(dict):
         raise AttributeError(f"{key}: Setting of attributes not allowed.")
 
 
-def _get_column(table_class: Type[Table], col: str, error='raise') -> Column:
+def _get_column(table_class: Type[Table], col: str) -> Column:
     """Strip prefixes from column names and return the correct column
 
     Examples:
@@ -97,6 +97,9 @@ def _get_column(table_class: Type[Table], col: str, error='raise') -> Column:
 
         >>> _get_column(Services, "host_name")
         Column(services.host_name: string)
+
+        >>> _get_column(Services, "service_description")
+        Column(services.description: string)
 
     Args:
         table_class:
@@ -113,7 +116,7 @@ def _get_column(table_class: Type[Table], col: str, error='raise') -> Column:
 
     table_name = cast(str, table_class.__tablename__)
     prefix = table_name.rstrip('s') + "_"
-    if col.startswith(prefix):
+    while col.startswith(prefix):
         col = col[len(prefix):]
     return getattr(table_class, col)
 
@@ -417,22 +420,59 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         Examples:
 
+            >>> q = Query.from_string('GET services\\n'
+            ...                       'Columns: service_service_description\\n'
+            ...                       'Filter: service_service_description = \\n')
+
+            >>> query_text = ('''GET services
+            ... Columns: host_address host_check_command host_check_type host_custom_variable_names host_custom_variable_values host_downtimes_with_extra_info host_file name host_has_been_checked host_name host_scheduled_downtime_depth host_state service_accept_passive_checks service_acknowledged service_action_url_expanded service_active_checks_enabled service_cache_interval service_cached_at service_check_command service_check_type service_comments_with_extra_info service_custom_variable_names service_custom_variable_values service_custom_variables service_description service_downtimes service_downtimes_with_extra_info service_has_been_checked service_host_name service_icon_image service_in_check_period service_in_notification_period service_in_passive_check_period service_in_service_period service_is_flapping service_last_check service_last_state_change service_modified_attributes_list service_notes_url_expanded service_notifications_enabled service_perf_data service_plugin_output service_pnpgraph_present service_scheduled_downtime_depth service_service_description service_staleness service_state
+            ... Filter: service_state = 0
+            ... Filter: service_has_been_checked = 1
+            ... And: 2
+            ... Negate:
+            ... Filter: service_has_been_checked = 1
+            ... Filter: service_scheduled_downtime_depth = 0
+            ... Filter: host_scheduled_downtime_depth = 0
+            ... And: 2
+            ... Filter: service_acknowledged = 0
+            ... Filter: host_state = 1
+            ... Filter: host_has_been_checked = 1
+            ... And: 2
+            ... Negate:
+            ... Filter: host_state = 2
+            ... Filter: host_has_been_checked = 1
+            ... And: 2
+            ... Negate:
+            ... ''')
+            >>> q = Query.from_string(query_text)
+
+            >>> q.columns
+            [Column(services.host_address: string), Column(services.host_check_command: string), Column(services.host_check_type: int), Column(services.host_custom_variable_names: list), Column(services.host_custom_variable_values: list), Column(services.host_downtimes_with_extra_info: list), Column(services.host_has_been_checked: int), Column(services.host_name: string), Column(services.host_scheduled_downtime_depth: int), Column(services.host_state: int), Column(services.accept_passive_checks: int), Column(services.acknowledged: int), Column(services.action_url_expanded: string), Column(services.active_checks_enabled: int), Column(services.cache_interval: int), Column(services.cached_at: time), Column(services.check_command: string), Column(services.check_type: int), Column(services.comments_with_extra_info: list), Column(services.custom_variable_names: list), Column(services.custom_variable_values: list), Column(services.custom_variables: dict), Column(services.description: string), Column(services.downtimes: list), Column(services.downtimes_with_extra_info: list), Column(services.has_been_checked: int), Column(services.host_name: string), Column(services.icon_image: string), Column(services.in_check_period: int), Column(services.in_notification_period: int), Column(services.in_passive_check_period: int), Column(services.in_service_period: int), Column(services.is_flapping: int), Column(services.last_check: time), Column(services.last_state_change: time), Column(services.modified_attributes_list: list), Column(services.notes_url_expanded: string), Column(services.notifications_enabled: int), Column(services.perf_data: string), Column(services.plugin_output: string), Column(services.pnpgraph_present: int), Column(services.scheduled_downtime_depth: int), Column(services.description: string), Column(services.staleness: float), Column(services.state: int)]
+
             >>> q = Query.from_string('GET hosts\\n'
             ...                       'Columns: name service_description\\n'
             ...                       'Filter: service_description = ')
+            Traceback (most recent call last):
+            ...
+            ValueError: Table 'hosts': Could not decode line 'Filter: service_description = '
 
             All unknown columns are ignored, as there are many places in Checkmk where queries
             specify wrong or unnecessary columns. Livestatus would normally ignore them.
 
-            >>> q.columns
-            [Column(hosts.name: string)]
-
             >>> _ = Query.from_string('GET hosts\\n'
-            ...                       'Columns: service_description\\n'
+            ...                       'Columns: service_service_description\\n'
             ...                       'Filter: service_description = ')
             Traceback (most recent call last):
             ...
-            ValueError: Query doesn't specify a single table: set()
+            ValueError: Table 'hosts': Could not decode line 'Filter: service_description = '
+
+            >>> _ = Query.from_string('GET foobazbar\\n'
+            ...                       'Columns: name service_description\\n'
+            ...                       'Filter: service_description = ')
+            Traceback (most recent call last):
+            ...
+            ValueError: Table foobazbar was not defined in the tables module.
+
 
             >>> q = Query.from_string('GET hosts\\n'
             ...                       'Columns: name\\n'
@@ -503,13 +543,16 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
                 try:
                     filters.append(_parse_line(table_class, line))
                 except AttributeError:
-                    pass
+                    raise ValueError(f"Table {table_name!r}: Could not decode line {line!r}")
             elif line.startswith('Or: ') or line.startswith("And: "):
                 op, _count = line.split(": ")
                 count = int(_count)
                 # I'm sorry. :)
                 # We take the last `count` filters and pass them into the BooleanExpression
-                expr = {'or': Or, 'and': And}[op.lower()](*filters[-count:])
+                try:
+                    expr = {'or': Or, 'and': And}[op.lower()](*filters[-count:])
+                except ValueError:
+                    raise ValueError(f"Could not parse {op} for {filters!r}")
                 filters = filters[:-count]
                 filters.append(expr)
 
@@ -556,5 +599,5 @@ def _parse_line(
     if not filter_string.startswith("Filter:"):
         raise ValueError(f"Illegal filter string: {filter_string!r}")
     _, column_name, op, *value = filter_string.split(None, 3)
-    column: Column = getattr(table, column_name)
+    column = _get_column(table, column_name)
     return column.op(op, value)

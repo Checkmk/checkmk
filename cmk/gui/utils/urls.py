@@ -99,7 +99,7 @@ def makeactionuri_contextless(
     )
 
 
-def makeuri_contextless_ruleset_group(
+def makeuri_contextless_rulespec_group(
     request: Request,
     group_name: str,
 ):

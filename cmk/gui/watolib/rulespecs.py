@@ -43,7 +43,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
-    makeuri_contextless_ruleset_group,
+    makeuri_contextless_rulespec_group,
 )
 
 
@@ -1235,7 +1235,7 @@ def main_module_from_rulespec_group_name(
     group_name: str,
     main_module_reg: ModuleRegistry,
 ) -> ABCMainModule:
-    return main_module_reg[makeuri_contextless_ruleset_group(
+    return main_module_reg[makeuri_contextless_rulespec_group(
         request,
         group_name,
     )]()

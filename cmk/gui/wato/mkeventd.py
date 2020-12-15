@@ -155,7 +155,7 @@ from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotific
 
 from cmk.gui.utils.urls import (
     makeuri_contextless,
-    makeuri_contextless_ruleset_group,
+    makeuri_contextless_rulespec_group,
     make_confirm_link,
 )
 
@@ -4091,7 +4091,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
 
     @property
     def mode_or_url(self):
-        return makeuri_contextless_ruleset_group(request, "eventconsole")
+        return makeuri_contextless_rulespec_group(request, "eventconsole")
 
     @property
     def topic(self):

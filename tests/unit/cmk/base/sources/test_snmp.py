@@ -19,7 +19,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.helpers.cache import PersistedSections, SectionStore
 from cmk.helpers.type_defs import NO_SELECTION
 
-from cmk.base.checkers.snmp import SNMPParser
+from cmk.base.sources.snmp import SNMPParser
 
 
 class TestSNMPParser:

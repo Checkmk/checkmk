@@ -46,7 +46,7 @@ def test_utils_import_ok(component):
         # `fetchers` in `utils` is wrong but anywhere else is OK
         ("cmk/helpers", "cmk.helpers.snmp", "cmk.utils", True),
         ("cmk/utils", "cmk.utils.foo", "cmk.helpers", False),
-        ("cmk/base", "cmk.base.checkers", "cmk.helpers", True),
+        ("cmk/base", "cmk.base.sources", "cmk.helpers", True),
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),

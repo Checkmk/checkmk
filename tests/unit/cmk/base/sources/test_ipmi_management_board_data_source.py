@@ -15,8 +15,8 @@ from cmk.helpers.ipmi import IPMISummarizer
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.checkers.agent import AgentHostSections
-from cmk.base.checkers.ipmi import IPMISource
+from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.ipmi import IPMISource
 
 
 @pytest.fixture(name="mode", params=(mode for mode in Mode if mode is not Mode.NONE))

@@ -1253,6 +1253,7 @@ class MenuSearchResultsRenderer:
             self._generate_results = IndexSearcher(get_index_store()).search
         else:
             raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
+        self.search_type = search_type
 
     def render(self, query: str) -> str:
         try:
@@ -1299,10 +1300,12 @@ class MenuSearchResultsRenderer:
 
     def _render_result(self, result, hidden=False):
         html.open_li()
-        html.open_a(href=result.url,
-                    target="main",
-                    onclick="cmk.popup_menu.close_popup()",
-                    class_="hidden" if hidden else "")
+        html.open_a(
+            href=result.url,
+            target="main",
+            onclick=
+            f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');",
+            class_="hidden" if hidden else "")
         html.write_text(result.title)
         html.close_a()
         html.close_li()

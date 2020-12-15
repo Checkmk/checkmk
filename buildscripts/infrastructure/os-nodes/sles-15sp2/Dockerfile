@@ -12,6 +12,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp2 sles15sp2 \
     curl \
     cyrus-sasl-devel \
     enchant-devel \
+    gcc-c++ \
     git \
     krb5-devel \
     libmysqlclient-devel \

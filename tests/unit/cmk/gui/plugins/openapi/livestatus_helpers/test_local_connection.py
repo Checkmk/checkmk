@@ -3,9 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-import pytest
-
 from cmk.gui import sites
 from cmk.gui.plugins.views import RowTableLivestatus
 from cmk.gui.plugins.wato.ac_tests import ACTestGenericCheckHelperUsage
@@ -59,7 +56,6 @@ def test_row_table_object(mock_livestatus, register_builtin_html):
         )
 
 
-@pytest.mark.skip("fix mich")
 def test_intercept_queries(mock_livestatus, register_builtin_html):
     with mock_livestatus(expect_status_query=True):
         live = sites.live()

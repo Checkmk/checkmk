@@ -18,8 +18,8 @@ from cmk.helpers.type_defs import Mode, NO_SELECTION
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.sources.agent import AgentHostSections
-from cmk.base.sources.snmp import SNMPSource
+from cmk.base.checkers.agent import AgentHostSections
+from cmk.base.checkers.snmp import SNMPSource
 import cmk.utils.version as cmk_version
 
 

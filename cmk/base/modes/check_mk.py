@@ -53,7 +53,7 @@ import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_nagios
-import cmk.base.sources as sources
+import cmk.base.checkers as checkers
 import cmk.base.diagnostics
 import cmk.base.discovery as discovery
 import cmk.base.dump_host
@@ -133,7 +133,7 @@ modes.register_general_option(
 
 
 def option_no_tcp() -> None:
-    sources.tcp.TCPSource.use_only_cache = True
+    checkers.tcp.TCPSource.use_only_cache = True
 
 
 # TODO: Check whether or not this is used only for -I as written in the help.
@@ -408,13 +408,13 @@ def mode_dump_agent(hostname: HostName) -> None:
         # Show errors of problematic data sources
         has_errors = False
         mode = FetchMode.CHECKING
-        for source in sources.make_sources(
+        for source in checkers.make_sources(
                 host_config,
                 ipaddress,
                 mode=mode,
         ):
             source.file_cache_max_age = config.check_max_cachefile_age
-            if not isinstance(source, sources.agent.AgentSource):
+            if not isinstance(source, checkers.agent.AgentSource):
                 continue
 
             raw_data = source.fetch()
@@ -1706,7 +1706,7 @@ def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        sources.agent.AgentSource.use_outdated_persisted_sections = True
+        checkers.agent.AgentSource.use_outdated_persisted_sections = True
 
     selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     inventory.do_inv(

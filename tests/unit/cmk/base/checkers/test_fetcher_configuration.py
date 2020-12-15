@@ -13,7 +13,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.helpers import FetcherType
 
-from cmk.base.sources import fetcher_configuration
+from cmk.base.checkers import fetcher_configuration
 
 
 def make_scenario(hostname, tags):

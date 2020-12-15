@@ -17,7 +17,7 @@ from cmk.utils.type_defs import result
 from cmk.helpers.type_defs import Mode
 from cmk.helpers.agent import AgentHostSections, AgentSummarizerDefault
 
-from cmk.base.sources.tcp import TCPSource
+from cmk.base.checkers.tcp import TCPSource
 
 
 @pytest.fixture(name="mode", params=Mode)

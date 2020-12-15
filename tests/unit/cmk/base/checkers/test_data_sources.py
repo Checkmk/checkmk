@@ -14,11 +14,11 @@ from cmk.utils.type_defs import result, SectionName
 from cmk.helpers.type_defs import Mode
 
 from cmk.base import config
-from cmk.base.sources import make_sources
-from cmk.base.sources.piggyback import PiggybackSource
-from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
-from cmk.base.sources.snmp import SNMPSource
-from cmk.base.sources.tcp import TCPSource
+from cmk.base.checkers import make_sources
+from cmk.base.checkers.piggyback import PiggybackSource
+from cmk.base.checkers.programs import DSProgramSource, SpecialAgentSource
+from cmk.base.checkers.snmp import SNMPSource
+from cmk.base.checkers.tcp import TCPSource
 
 
 @pytest.fixture(name="mode", params=Mode)

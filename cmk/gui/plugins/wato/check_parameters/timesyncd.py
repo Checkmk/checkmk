@@ -59,7 +59,7 @@ def _parameter_valuespec_timesyncd_time():
                            Age(
                                title=_("Warning at"),
                                display=["hours", "minutes"],
-                               default_value=3600,
+                               default_value=5400,
                            ),
                            Age(
                                title=_("Critical at"),

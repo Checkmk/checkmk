@@ -74,7 +74,7 @@ class UnaryExpression(abc.ABC):
 
     def op(self, operator: str, other: Any) -> 'BinaryExpression':
         # TODO: typing
-        if isinstance(other, list):
+        if isinstance(other, (list, tuple)):
             other = LiteralExpression(' '.join(other))
         if not isinstance(other, UnaryExpression):
             other = LiteralExpression(other)
@@ -169,6 +169,10 @@ class ListExpression(UnaryExpression):
     > 	Case-insensitive disparity
     ~ 	The character string for a regular expression*
     ~~ 	The case-insensitive character string for a regular expression*
+
+    >>> ListExpression("column").empty()
+    Filter(column = )
+
     """
     def __eq__(self, other):
         return self.equals(other)

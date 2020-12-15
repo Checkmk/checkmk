@@ -1846,7 +1846,10 @@ def _add_rest_api_menu_entries(view_renderer, queries):
     from cmk.gui.plugins.openapi.utils import create_url
     entries = []
     for text_query in queries:
-        query = Query.from_string(text_query)
+        try:
+            query = Query.from_string(text_query)
+        except ValueError:
+            continue
         table = cast(str, query.table.__tablename__)
         if table != "hosts":
             continue

@@ -189,7 +189,7 @@ def _get_session_id_from_cookie(username: UserId, revalidate_cookie: bool) -> st
 
     # Has been checked before, but validate before using that information, just to be sure
     if revalidate_cookie:
-        _check_parsed_auth_cookie(username, session_id, cookie_hash)
+        check_parsed_auth_cookie(username, session_id, cookie_hash)
 
     if cookie_username != username:
         auth_logger.error("Invalid session: (User: %s, Session: %s)", username, session_id)
@@ -211,7 +211,7 @@ def _renew_cookie(cookie_name: str, username: UserId, session_id: str) -> None:
 
 def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     username, session_id, cookie_hash = _parse_auth_cookie(cookie_name)
-    _check_parsed_auth_cookie(username, session_id, cookie_hash)
+    check_parsed_auth_cookie(username, session_id, cookie_hash)
 
     try:
         userdb.on_access(username, session_id)
@@ -247,7 +247,7 @@ def _parse_auth_cookie(cookie_name: str) -> Tuple[UserId, str, str]:
     return UserId(username), session_id, cookie_hash
 
 
-def _check_parsed_auth_cookie(username: UserId, session_id: str, cookie_hash: str) -> None:
+def check_parsed_auth_cookie(username: UserId, session_id: str, cookie_hash: str) -> None:
     if not userdb.user_exists(username):
         raise MKAuthException(_('Username is unknown'))
 
@@ -257,7 +257,7 @@ def _check_parsed_auth_cookie(username: UserId, session_id: str, cookie_hash: st
 
 def _auth_cookie_is_valid(cookie_name: str) -> bool:
     try:
-        _check_parsed_auth_cookie(*_parse_auth_cookie(cookie_name))
+        check_parsed_auth_cookie(*_parse_auth_cookie(cookie_name))
         return True
     except MKAuthException:
         return False

@@ -13,20 +13,24 @@ from typing import Dict, Type, Any, Optional, Callable
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
-from werkzeug import Response
+from werkzeug import Response, Request
 from werkzeug.exceptions import HTTPException
 
 from werkzeug.routing import Map, Submount, Rule
 
 from cmk.gui import config
+from cmk.gui.config import omd_site
 from cmk.gui.exceptions import MKUserError, MKAuthException
+from cmk.gui.login import check_parsed_auth_cookie
 from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.wsgi.auth import verify_user, bearer_auth
+from cmk.gui.wsgi.auth import verify_user, bearer_auth, rfc7662_subject
 from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
+from cmk.gui.wsgi.type_defs import RFC7662
 from cmk.gui.wsgi.wrappers import ParameterDict
 from cmk.utils import crash_reporting
 from cmk.utils.exceptions import MKException
+from cmk.utils.type_defs import UserId
 
 ARGS_KEY = 'CHECK_MK_REST_API_ARGS'
 
@@ -38,6 +42,23 @@ EXCEPTION_STATUS: Dict[Type[Exception], int] = {
 }
 
 WSGIEnvironment = Dict[str, Any]
+
+
+def _verify_request(environ) -> RFC7662:
+    auth_header = environ.get('HTTP_AUTHORIZATION', '')
+    if auth_header:
+        return bearer_auth(auth_header)
+
+    cookie = Request(environ).cookies.get(f"auth_{omd_site()}")
+    if cookie:
+        try:
+            username, session_id, cookie_hash = cookie.split(':', 2)
+        except ValueError:
+            raise MKAuthException("Invalid auth cookie.")
+        check_parsed_auth_cookie(UserId(username), session_id, cookie_hash)
+        return rfc7662_subject(username, 'cookie')
+
+    raise MKAuthException("You need to be authenticated to use the REST API.")
 
 
 class Authenticate:
@@ -53,14 +74,13 @@ class Authenticate:
 
     def __call__(self, environ, start_response):
         path_args = environ[ARGS_KEY]
-        auth_header = environ.get('HTTP_AUTHORIZATION', '')
+
         try:
-            rfc7662 = bearer_auth(auth_header)
+            rfc7662 = _verify_request(environ)
         except MKException as exc:
             return problem(
                 status=401,
                 title=str(exc),
-                ext={'auth_header': auth_header},
             )(environ, start_response)
 
         with verify_user(rfc7662['sub'], rfc7662):

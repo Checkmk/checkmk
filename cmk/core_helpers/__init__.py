@@ -3,7 +3,38 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Package containing the fetchers to the data sources."""
+"""This package contains the business logic for the core helpers.
+
+Generally, the helpers implement three interfaces:
+
+* `Fetcher` performs I/O and returns raw data.
+* `Parser` parses the raw data into `HostSections` and handles caching.
+* `Summarizer` extracts the `ServiceCheckResult` from the `HostSection`.
+
+The typical sequence of events is
+
+.. uml::
+
+    actor User
+    participant Fetcher
+    participant Parser
+    participant Summarizer
+
+    User -> Fetcher : fetch()
+    Fetcher --> Fetcher : I/O
+    Fetcher -> Parser : parse(RawData)
+    Parser --> Parser : parse data
+    Parser --> Parser : cache data
+    Parser -> Summarizer : summarize(HostSections)
+    Summarizer --> User : ServiceCheckResult
+
+See Also:
+    cmk.base.sources: The entry point into the core helpers from base.
+
+Todo:
+    Handle the caches separately from the parsers.
+
+"""
 
 import enum
 from typing import Any, Dict, Literal, Optional, Type

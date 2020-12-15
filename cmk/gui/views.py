@@ -753,8 +753,7 @@ class GUIViewRenderer(ABCViewRenderer):
         # currently no way to do this without contacting ntop each time
         if rows:
             host_address = rows[0].get("host_address")
-            if config.is_ntop_available(
-            ) and config.ntop_connection != {} and host_address is not None:  # type: ignore[attr-defined]
+            if config.is_ntop_configured() and host_address is not None:
                 page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
 
         menu = PageMenu(

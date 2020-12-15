@@ -1,0 +1,14 @@
+Title: Crash in SNMP data source for hosts with cached SNMP walks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608030057
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b2
+
+In sites that have been upgraded from pre 2.0 versions to 2.0.0i1 or 2.0.0b1 the SNMP data source for host could fail if the host had some SNMP walks cached.
+
+This is a consequence of our migration from python2 to python3.
+This problem can also be fixed manually by removing the <tt>var/check_mk/snmp_cache/</tt> folder.

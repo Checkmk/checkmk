@@ -317,6 +317,13 @@ def is_ntop_available() -> bool:
     return True
 
 
+def is_ntop_configured() -> bool:
+    ntop = ntop_connection  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    if is_ntop_available() and ntop != {}:
+        return True
+    return False
+
+
 #.
 #   .--Permissions---------------------------------------------------------.
 #   |        ____                     _         _                          |

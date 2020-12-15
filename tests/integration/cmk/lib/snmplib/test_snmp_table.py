@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List, MutableMapping, Tuple
+
 import pytest  # type: ignore[import]
 
 from cmk.utils.exceptions import MKSNMPError
@@ -128,6 +130,20 @@ def test_get_simple_snmp_table_bulkwalk(backend, bulk):
         ],
     ]
     assert isinstance(table[0][0], str)
+
+
+def test_get_simple_snmp_table_fills_cache(backend):
+
+    walk_cache: MutableMapping[str, Tuple[bool, List[Tuple[str, bytes]]]] = {}
+
+    _ = snmp_table.get_snmp_table(
+        section_name=SectionName("my_Section"),
+        tree=INFO_TREE,
+        walk_cache=walk_cache,
+        backend=backend,
+    )
+
+    assert sorted(walk_cache) == [".1.3.6.1.2.1.1.1.0" ".1.3.6.1.2.1.1.2.0" ".1.3.6.1.2.1.1.5.0"]
 
 
 def test_get_simple_snmp_table(backend):

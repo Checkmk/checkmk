@@ -511,7 +511,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
-            "_get_snmp_table",
+            "get_snmp_table",
             lambda *_, **__: table,
         )
         section_name = SectionName('pim')
@@ -538,7 +538,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
-            "_get_snmp_table",
+            "get_snmp_table",
             lambda tree, **__: table
             if tree.base == fetcher.plugin_store[section_name].trees[0].base else [],
         )

@@ -4,19 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Provide methods to get an snmp table with or without caching
-
-NOTE on caching:
-
-*Before* fetching the data the cached version tries to read the OIDs data from a cache file.
-
-*After* having fetched live data both the cached and the uncached version do write the
-fetched data to a file if the respective OID is marked as being cached by the plugin
-using `OIDCached` (that is: if the save_to_cache attribute of the OID object is true).
-
 """
-import os
-from typing import Callable, Iterable, List, MutableMapping, Optional, Set, Tuple
+from typing import Callable, Iterable, Iterator, List, MutableMapping, Optional, Set, Tuple
 
+from pathlib import Path
 from six import ensure_binary
 
 import cmk.utils.debug
@@ -42,31 +33,82 @@ ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
-WalkCache = MutableMapping[str, Tuple[bool, SNMPRowInfo]]
+
+class WalkCache(MutableMapping[str, Tuple[bool, SNMPRowInfo]]):
+    """A cache on a per-fetchoid basis
+
+    This cache is different from section stores in that is per-fetchoid,
+    which means it deduplicates fetch operations across section definitions.
+
+    The fetched data is always saved to a file *if* the respective OID is marked as being cached
+    by the plugin using `OIDCached` (that is: if the save_to_cache attribute of the OID object
+    is true).
+    """
+    __slots__ = ("_store", "_path")
+
+    def __init__(self, host_name: HostName):
+        self._store: MutableMapping[str, Tuple[bool, SNMPRowInfo]] = {}
+        self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self._store)
+
+    def __getitem__(self, key: str) -> Tuple[bool, SNMPRowInfo]:
+        return self._store.__getitem__(key)
+
+    def __setitem__(self, key: str, value: Tuple[bool, SNMPRowInfo]) -> None:
+        return self._store.__setitem__(key, value)
+
+    def __delitem__(self, key: str) -> None:
+        return self._store.__delitem__(key)
+
+    def __iter__(self) -> Iterator[str]:
+        return self._store.__iter__()
+
+    def __len__(self) -> int:
+        return self._store.__len__()
+
+    def load(
+        self,
+        *,
+        trees: Iterable[BackendSNMPTree],
+    ) -> None:
+        """Try to read the OIDs data from cache files"""
+        for tree in trees:
+            for oid in (o for o in tree.oids if o.save_to_cache):  # no point in reading otherwise
+
+                fetchoid = f"{tree.base}.{oid.column}"
+                path = self._path / fetchoid
+
+                console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
+                try:
+                    read_walk = store.load_object_from_file(path)
+                except Exception:
+                    console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                    if cmk.utils.debug.enabled():
+                        raise
+                    continue
+
+                if read_walk is not None:
+                    self._store[fetchoid] = (oid.save_to_cache, read_walk)  # (True, ...)
+
+    def save(self) -> None:
+        self._path.mkdir(parents=True, exist_ok=True)
+
+        for fetchoid, (save_flag, rowinfo) in self._store.items():
+            if not save_flag:
+                continue
+
+            path = self._path / fetchoid
+            console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
+            store.save_object_to_file(path, rowinfo, pretty=False)
 
 
 def get_snmp_table(
     *,
     section_name: Optional[SectionName],
     tree: BackendSNMPTree,
-    walk_cache: WalkCache,
-    backend: SNMPBackend,
-) -> SNMPTable:
-    table_data = _get_snmp_table(
-        section_name=section_name,
-        tree=tree,
-        walk_cache=walk_cache,
-        backend=backend,
-    )
-    _save_walk_cache(backend.hostname, walk_cache)
-    return table_data
-
-
-def _get_snmp_table(
-    *,
-    section_name: Optional[SectionName],
-    tree: BackendSNMPTree,
-    walk_cache: WalkCache,
+    walk_cache: MutableMapping[str, Tuple[bool, SNMPRowInfo]],
     backend: SNMPBackend,
 ) -> SNMPTable:
 
@@ -191,7 +233,7 @@ def _get_snmpwalk(
     base: str,
     fetchoid: OID,
     *,
-    walk_cache: WalkCache,
+    walk_cache: MutableMapping[str, Tuple[bool, SNMPRowInfo]],
     save_walk_cache: bool,
     backend: SNMPBackend,
 ) -> SNMPRowInfo:
@@ -330,55 +372,3 @@ def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> SNMPTable:
         row = [c[index] for c in columns]
         new_info.append(row)
     return new_info
-
-
-def load_walk_cache(
-    *,
-    trees: Iterable[BackendSNMPTree],
-    host_name: HostName,
-) -> WalkCache:
-    cache = {}
-    for tree in trees:
-        for oid in tree.oids:
-            if not oid.save_to_cache:  # no point in reading
-                continue
-
-            fetchoid: OID = f"{tree.base}.{oid.column}"
-            path = _snmpwalk_cache_path(host_name, fetchoid)
-
-            console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
-            try:
-                read_walk = store.load_object_from_file(path)
-            except Exception:
-                console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
-                if cmk.utils.debug.enabled():
-                    raise
-                continue
-
-            if read_walk is not None:
-                cache[fetchoid] = (oid.save_to_cache, read_walk)
-
-    return cache
-
-
-def _save_walk_cache(host_name: HostName, cache: WalkCache) -> None:
-    cache_dir = _snmpwalk_cache_path(host_name)
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
-
-    for fetchoid, (save_flag, rowinfo) in cache.items():
-        if not save_flag:
-            continue
-
-        path = _snmpwalk_cache_path(host_name, fetchoid)
-        console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
-        store.save_object_to_file(path, rowinfo, pretty=False)
-
-
-def _snmpwalk_cache_path(
-    host_name: str,
-    fetchoid: Optional[str] = None,
-) -> str:
-    if not fetchoid:
-        return os.path.join(cmk.utils.paths.var_dir, "snmp_cache", host_name)
-    return os.path.join(cmk.utils.paths.var_dir, "snmp_cache", host_name, fetchoid)

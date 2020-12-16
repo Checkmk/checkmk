@@ -4535,6 +4535,9 @@ class Tuple(ValueSpec):
         self._separator = separator  # in case of float
         self._title_br = title_br
 
+    def allow_empty(self) -> bool:
+        return all(vs.allow_empty() for vs in self._elements)
+
     def canonical_value(self):
         return tuple([x.canonical_value() for x in self._elements])
 

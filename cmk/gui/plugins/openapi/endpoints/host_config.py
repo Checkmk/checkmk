@@ -332,6 +332,7 @@ def _serve_host(host):
 
 
 def serialize_host(host):
+    # TODO: readd link mechanism once object ref between endpoints is in place
     base = constructors.object_href('host_config', host.ident())
     members = constructors.DomainObjectMembers(base)
     members.object_property(
@@ -339,6 +340,7 @@ def serialize_host(host):
         value=constructors.object_href('folder_config',
                                        host.folder().id()),
         prop_format='string',
+        linkable=False,
     )
 
     attributes = host.attributes().copy()

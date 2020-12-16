@@ -8,7 +8,12 @@ from typing import Dict, List
 import pytest  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
-from cmk.gui.plugins.sidebar.wato import get_wato_menu_items
+from cmk.gui.plugins.sidebar.wato import (
+    MatchItemGeneratorSetupMenu,
+    get_wato_menu_items,
+)
+from cmk.gui.type_defs import TopicMenuTopic, TopicMenuItem
+from cmk.gui.watolib.search import MatchItem
 
 
 def expected_items() -> Dict[str, List[str]]:
@@ -128,3 +133,23 @@ def test_unique_wato_menu_item_titels():
         for entry in topic_menu_topic.items
     ]
     assert len(titles) == len(set(titles))
+
+
+def test_match_item_generator_setup_menu():
+    assert list(
+        MatchItemGeneratorSetupMenu(
+            "setup",
+            lambda: [
+                TopicMenuTopic(
+                    name="topic",
+                    title="Topic",
+                    items=[
+                        TopicMenuItem(name="item 1", title="Item 1", sort_index=0, url="url 1"),
+                        TopicMenuItem(name="item 2", title="Item 2", sort_index=1, url="url 2"),
+                    ],
+                )
+            ],
+        ).generate_match_items()) == [
+            MatchItem(title='Item 1', topic='Setup', url='url 1', match_texts=['item 1']),
+            MatchItem(title='Item 2', topic='Setup', url='url 2', match_texts=['item 2']),
+        ]

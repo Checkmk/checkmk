@@ -1,0 +1,31 @@
+Title: Expect messages: Can now keep acknowledged state on merging
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1608105731
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b3
+
+With the option "Expect regular messages" you can make the Event Console
+monitor that a certain number of messages are <b>at least</b> seen within each
+regular time interval. Otherwise an event will be created.
+
+If there already exists an open event because of absent messages according to
+this rule, you can optionally merge the new incident with the existing event.
+You can choose to not only merge events in "open" state, but also in
+"acknowledged" state.
+
+Previously the Event console always reset the state back to "open", even even
+in case an "acknowledged" event is being merged. This behavior is based on the
+assumption that you want to be informed when there is new information. However,
+there are also use cases where new incoming messages should be counted to the
+already existing event in the "acknowledged" state and the "acknowledged" state
+should be kept. To achieve this, the new configuration option "Reset
+acknowledged state" can now be disabled.
+
+Existing rules will work as before. New created rules will automatically untick
+the checkbox "Reset acknowledged state" to keep the acknowledged state by
+default.

@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.0.0b2
+Version: 2.0.0b3
 
 <b>Styling:</b>
 <ul>
@@ -19,4 +19,5 @@ Version: 2.0.0b2
 <b>Crashes:</b>
 <ul>
 <li>In case the given ntopng user name has insufficients rights to see the data, a warning is now shown.</li>
+<li>In case the user mapping is derived from the custom attribute "ntopng username" and this attribute is empty, all ntop links will now be hidden.</li>
 </ul>

@@ -1204,7 +1204,14 @@ class EventServer(ECServerThread):
         # If there is already an incidence about this absent message, we can merge and
         # not create a new event. There is a setting for this.
         merge_event = None
+
+        reset_ack = True
         merge = rule["expect"].get("merge", "open")
+
+        # Changed "acked" to ("acked", bool) with 1.6.0p20
+        if isinstance(merge, tuple):
+            merge, reset_ack = merge
+
         if merge != "never":
             for event in self._event_status.events():
                 if event["rule_id"] == rule["id"] and \
@@ -1216,7 +1223,13 @@ class EventServer(ECServerThread):
         if merge_event:
             merge_event["last"] = now
             merge_event["count"] += 1
-            merge_event["phase"] = "open"
+
+            # This was resetting the state back to "open", even in case an
+            # "ack" event is being merged. This was made configurable in
+            # 1.6.0p20 because of SUP-4803.
+            if reset_ack:
+                merge_event["phase"] = "open"
+
             merge_event["time"] = now
             merge_event["text"] = text
             # Better rewrite (again). Rule might have changed. Also we have changed

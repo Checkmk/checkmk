@@ -595,101 +595,128 @@ def vs_mkeventd_rule(customer=None):
                   )),
              ],
          )),
-        ("expect",
-         Dictionary(title=_("Expect regular messages"),
-                    help=_("With this option activated you can make the Event Console monitor "
-                           "that a certain number of messages are <b>at least</b> seen within "
-                           "each regular time interval. Otherwise an event will be created. "
-                           "The options <i>week</i>, <i>two days</i> and <i>day</i> refer to "
-                           "periodic intervals aligned at 00:00:00 on the 1st of January 1970. "
-                           "You can specify a relative offset in hours in order to re-align this "
-                           "to any other point of time. In a distributed environment, make "
-                           "sure to specify which site should expect the messages in the match "
-                           "criteria above, else all sites with config replication will warn if "
-                           "messages fail to arrive."),
-                    optional_keys=False,
-                    columns=2,
-                    elements=[
-                        ("interval",
-                         CascadingDropdown(
-                             title=_("Interval"),
-                             separator="&nbsp;",
-                             choices=[
-                                 (7 * 86400, _("week"),
-                                  Integer(
-                                      label=_("Timezone offset"),
-                                      unit=_("hours"),
-                                      default_value=0,
-                                      minvalue=-167,
-                                      maxvalue=167,
-                                  )),
-                                 (2 * 86400, _("two days"),
-                                  Integer(
-                                      label=_("Timezone offset"),
-                                      unit=_("hours"),
-                                      default_value=0,
-                                      minvalue=-47,
-                                      maxvalue=47,
-                                  )),
-                                 (86400, _("day"),
-                                  DropdownChoice(
-                                      label=_("in timezone"),
-                                      choices=[
-                                          (-12, _("UTC -12 hours")),
-                                          (-11, _("UTC -11 hours")),
-                                          (-10, _("UTC -10 hours")),
-                                          (-9, _("UTC -9 hours")),
-                                          (-8, _("UTC -8 hours")),
-                                          (-7, _("UTC -7 hours")),
-                                          (-6, _("UTC -6 hours")),
-                                          (-5, _("UTC -5 hours")),
-                                          (-4, _("UTC -4 hours")),
-                                          (-3, _("UTC -3 hours")),
-                                          (-2, _("UTC -2 hours")),
-                                          (-1, _("UTC -1 hour")),
-                                          (0, _("UTC")),
-                                          (1, _("UTC +1 hour")),
-                                          (2, _("UTC +2 hours")),
-                                          (3, _("UTC +3 hours")),
-                                          (4, _("UTC +4 hours")),
-                                          (5, _("UTC +5 hours")),
-                                          (6, _("UTC +8 hours")),
-                                          (7, _("UTC +7 hours")),
-                                          (8, _("UTC +8 hours")),
-                                          (9, _("UTC +9 hours")),
-                                          (10, _("UTC +10 hours")),
-                                          (11, _("UTC +11 hours")),
-                                          (12, _("UTC +12 hours")),
-                                      ],
-                                      default_value=0,
-                                  )),
-                                 (3600, _("hour")),
-                                 (900, _("15 minutes")),
-                                 (300, _("5 minutes")),
-                                 (60, _("minute")),
-                                 (10, _("10 seconds")),
-                             ],
-                             default_value=3600,
-                         )),
-                        ("count", Integer(
-                            title=_("Number of expected messages"),
-                            minvalue=1,
+        (
+            "expect",
+            Dictionary(
+                title=_("Expect regular messages"),
+                help=_("With this option activated you can make the Event Console monitor "
+                       "that a certain number of messages are <b>at least</b> seen within "
+                       "each regular time interval. Otherwise an event will be created. "
+                       "The options <i>week</i>, <i>two days</i> and <i>day</i> refer to "
+                       "periodic intervals aligned at 00:00:00 on the 1st of January 1970. "
+                       "You can specify a relative offset in hours in order to re-align this "
+                       "to any other point of time. In a distributed environment, make "
+                       "sure to specify which site should expect the messages in the match "
+                       "criteria above, else all sites with config replication will warn if "
+                       "messages fail to arrive."),
+                optional_keys=False,
+                columns=2,
+                elements=[
+                    ("interval",
+                     CascadingDropdown(
+                         title=_("Interval"),
+                         separator="&nbsp;",
+                         choices=[
+                             (7 * 86400, _("week"),
+                              Integer(
+                                  label=_("Timezone offset"),
+                                  unit=_("hours"),
+                                  default_value=0,
+                                  minvalue=-167,
+                                  maxvalue=167,
+                              )),
+                             (2 * 86400, _("two days"),
+                              Integer(
+                                  label=_("Timezone offset"),
+                                  unit=_("hours"),
+                                  default_value=0,
+                                  minvalue=-47,
+                                  maxvalue=47,
+                              )),
+                             (86400, _("day"),
+                              DropdownChoice(
+                                  label=_("in timezone"),
+                                  choices=[
+                                      (-12, _("UTC -12 hours")),
+                                      (-11, _("UTC -11 hours")),
+                                      (-10, _("UTC -10 hours")),
+                                      (-9, _("UTC -9 hours")),
+                                      (-8, _("UTC -8 hours")),
+                                      (-7, _("UTC -7 hours")),
+                                      (-6, _("UTC -6 hours")),
+                                      (-5, _("UTC -5 hours")),
+                                      (-4, _("UTC -4 hours")),
+                                      (-3, _("UTC -3 hours")),
+                                      (-2, _("UTC -2 hours")),
+                                      (-1, _("UTC -1 hour")),
+                                      (0, _("UTC")),
+                                      (1, _("UTC +1 hour")),
+                                      (2, _("UTC +2 hours")),
+                                      (3, _("UTC +3 hours")),
+                                      (4, _("UTC +4 hours")),
+                                      (5, _("UTC +5 hours")),
+                                      (6, _("UTC +8 hours")),
+                                      (7, _("UTC +7 hours")),
+                                      (8, _("UTC +8 hours")),
+                                      (9, _("UTC +9 hours")),
+                                      (10, _("UTC +10 hours")),
+                                      (11, _("UTC +11 hours")),
+                                      (12, _("UTC +12 hours")),
+                                  ],
+                                  default_value=0,
+                              )),
+                             (3600, _("hour")),
+                             (900, _("15 minutes")),
+                             (300, _("5 minutes")),
+                             (60, _("minute")),
+                             (10, _("10 seconds")),
+                         ],
+                         default_value=3600,
+                     )),
+                    ("count", Integer(
+                        title=_("Number of expected messages"),
+                        minvalue=1,
+                    )),
+                    (
+                        "merge",
+                        Transform(
+                            CascadingDropdown(
+                                title=_("Merge with open event"),
+                                help=_("If there already exists an open event because of absent "
+                                       "messages according to this rule, you can optionally merge "
+                                       "the new incident with the exising event or create a new "
+                                       "event for each interval with absent messages."),
+                                choices=[
+                                    ("open", _("Merge if there is an open un-acknowledged event")),
+                                    (
+                                        "acked",
+                                        _("Merge even if there is an acknowledged event"),
+                                        Checkbox(
+                                            title=_("Reset acknowledged state"),
+                                            label=_(
+                                                "Reset acknowledged events back to \"open\" on merge"
+                                            ),
+                                            help=
+                                            _("The state of the event is reset back to "
+                                              "\"open\" in this case. This behavior is based on the "
+                                              "assumption that you want to be informed when there is "
+                                              "new information. However, there are also use cases where "
+                                              "new incoming messages should be counted to the already "
+                                              "existing event in the \"ack\" state and the \"ack\" "
+                                              "state should be kept. To achieve this, the configuration "
+                                              "option \"Reset acknowledged state\" can be disabled below."
+                                             ),
+                                        ),
+                                    ),
+                                    ("never",
+                                     _("Create a new event for each incident - never merge")),
+                                ],
+                                default_value="open",
+                            ),
+                            # The "ackend" sub option was introduced with 1.6.0p20
+                            forth=lambda v: ("acked", True) if v == "acked" else v,
                         )),
-                        ("merge",
-                         DropdownChoice(
-                             title=_("Merge with open event"),
-                             help=_("If there already exists an open event because of absent "
-                                    "messages according to this rule, you can optionally merge "
-                                    "the new incident with the exising event or create a new "
-                                    "event for each interval with absent messages."),
-                             choices=[
-                                 ("open", _("Merge if there is an open un-acknowledged event")),
-                                 ("acked", _("Merge even if there is an acknowledged event")),
-                                 ("never", _("Create a new event for each incident - never merge")),
-                             ],
-                             default_value="open",
-                         )),
-                    ])),
+                ])),
         ("delay",
          Age(title=_("Delay event creation"),
              help=_("The creation of an event will be delayed by this time period. This "

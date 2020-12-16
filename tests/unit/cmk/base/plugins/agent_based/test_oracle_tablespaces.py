@@ -358,22 +358,20 @@ def test_discovery():
     ]),
 ])
 def test_check(item, params, expected):
-    assert expected == list(
-        oracle_tablespaces.check_oracle_tablespaces(
-            item,
-            type_defs.Parameters(params),
-            Section,
-        ))
+    assert expected == list(oracle_tablespaces.check_oracle_tablespaces(
+        item,
+        (params),
+        Section,
+    ))
 
 
 def test_check_raises():
     with pytest.raises(IgnoreResultsError):
-        list(
-            oracle_tablespaces.check_oracle_tablespaces(
-                "item.not.sent",
-                type_defs.Parameters({}),
-                Section,
-            ))
+        list(oracle_tablespaces.check_oracle_tablespaces(
+            "item.not.sent",
+            {},
+            Section,
+        ))
 
 
 def test_check_cluster():

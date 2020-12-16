@@ -374,13 +374,17 @@ def test_process_job_stats(
     [
         (
             'SHREK',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             SECTION_1,
             RESULTS_SHREK,
         ),
         (
             'item',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             {
                 'item': {}
             },
@@ -388,7 +392,9 @@ def test_process_job_stats(
         ),
         (
             'cleanup_remote_logs',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             SECTION_2,
             [
                 Result(state=state.OK, summary='Latest exit code: 0',
@@ -418,7 +424,9 @@ def test_process_job_stats(
         ),
         (
             'backup.sh',
-            type_defs.Parameters({'age': (1, 2)},),
+            {
+                'age': (1, 2)
+            },
             SECTION_2,
             [
                 Result(state=state.OK, summary='Latest exit code: 0'),
@@ -451,7 +459,9 @@ def test_process_job_stats(
         ),
         (
             'missing',
-            type_defs.Parameters({'age': (1, 2)},),
+            {
+                'age': (1, 2)
+            },
             SECTION_2,
             [],
         ),
@@ -467,7 +477,9 @@ def test_check_job(item, params, section, expected_results):
     [
         (
             'SHREK',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             {
                 'node1': SECTION_1
             },
@@ -481,7 +493,9 @@ def test_check_job(item, params, section, expected_results):
         ),
         (
             'SHREK',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             {
                 'node1': SECTION_1,
                 'node2': SECTION_1,
@@ -497,10 +511,10 @@ def test_check_job(item, params, section, expected_results):
         ),
         (
             'SHREK',
-            type_defs.Parameters({
+            {
                 'age': (3600, 7200),
                 'outcome_on_cluster': 'best',
-            },),
+            },
             {
                 'node1': SECTION_1,
                 'node2': {
@@ -586,7 +600,9 @@ def test_check_job(item, params, section, expected_results):
         ),
         (
             'missing',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             {
                 'node1': SECTION_1,
                 'node2': SECTION_2,

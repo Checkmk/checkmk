@@ -44,8 +44,8 @@ def test_compute_rates(value_store):
 
 def test_check_disk(value_store):
     with pytest.raises(IgnoreResultsError):
-        list(aix_diskiod._check_disk(type_defs.Parameters({}), DISK))
-    assert list(aix_diskiod._check_disk(type_defs.Parameters({}), DISK)) == [
+        list(aix_diskiod._check_disk({}, DISK))
+    assert list(aix_diskiod._check_disk({}, DISK)) == [
         Result(state=state.OK, summary='Read: 0.00 B/s'),
         Metric('disk_read_throughput', 0.0),
         Result(state=state.OK, summary='Write: 0.00 B/s'),

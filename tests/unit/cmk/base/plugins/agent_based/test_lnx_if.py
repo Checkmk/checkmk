@@ -63,12 +63,12 @@ def test_parse_lnx_if(string_table, result):
 INTERFACE = interfaces.Interface('1', 'wlp3s0', 'wlp3s0', '6', 0, '1', 130923553, 217262, 16078, 0,
                                  0, 0, 23586281, 142684, 0, 0, 0, 0, 0, '\xaa\xaa\xaa\xaa\xaa\xaa')
 
-PARAMS = type_defs.Parameters({
+PARAMS = {
     'errors': (0.01, 0.1),
     'speed': 10000000,
     'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
     'state': ['1'],
-})
+}
 
 
 def test_check_lnx_if(monkeypatch, value_store):
@@ -503,32 +503,30 @@ def test_lnx_if_regression(
 ):
     section = lnx_if.parse_lnx_if(string_table)
 
-    assert list(
-        lnx_if.discover_lnx_if(
-            [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
-            section,
-        )) == discovery_results
+    assert list(lnx_if.discover_lnx_if(
+        [interfaces.DISCOVERY_DEFAULT_PARAMETERS],
+        section,
+    )) == discovery_results
 
     monkeypatch.setattr(interfaces, 'get_value_store', lambda: {})
     for item, par, res in items_params_results:
         assert list(lnx_if.check_lnx_if(
             item,
-            type_defs.Parameters(par),
+            par,
             section,
         )) == res
 
     node_name = 'node'
     for item, par, res in items_params_results:
-        assert list(
-            lnx_if.cluster_check_lnx_if(
-                item,
-                type_defs.Parameters(par),
-                {node_name: section},
-            )) == [
-                Result(  # type: ignore[call-overload]
-                    state=res[0].state,
-                    summary=res[0].summary + ' on %s' % node_name if res[0].summary else None,
-                    notice=res[0].summary + ' on %s' % node_name if not res[0].summary else None,
-                    details=res[0].details + ' on %s' % node_name if res[0].details else None,
-                ),
-            ] + res[1:]
+        assert list(lnx_if.cluster_check_lnx_if(
+            item,
+            par,
+            {node_name: section},
+        )) == [
+            Result(  # type: ignore[call-overload]
+                state=res[0].state,
+                summary=res[0].summary + ' on %s' % node_name if res[0].summary else None,
+                notice=res[0].summary + ' on %s' % node_name if not res[0].summary else None,
+                details=res[0].details + ' on %s' % node_name if res[0].details else None,
+            ),
+        ] + res[1:]

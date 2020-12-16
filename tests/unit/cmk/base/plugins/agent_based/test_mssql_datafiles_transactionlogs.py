@@ -40,7 +40,7 @@ def _get_section():
 
 def test_discovery_mssql_transactionlogs(section):
     assert sorted(
-        msdt.discover_mssql_transactionlogs([Parameters({})], section),
+        msdt.discover_mssql_transactionlogs([{}], section),
         key=lambda s: s.item or "",  # type: ignore[attr-defined]
     ) == [
         Service(item='MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log'),
@@ -59,7 +59,7 @@ def test_check_mssql_transactionlogs(section):
     assert list(
         msdt.check_mssql_common(
             'MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log',
-            Parameters({}),
+            {},
             section,
         ),) == [
             Result(

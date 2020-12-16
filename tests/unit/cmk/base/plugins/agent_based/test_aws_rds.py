@@ -761,7 +761,7 @@ def test_parse_aws_rds():
 def test_check_aws_rds_network_io():
     assert list(check_aws_rds_network_io(
         "database-1 [eu-central-1]",
-        Parameters({}),
+        {},
         SECTION,
     )) == [
         Result(state=State.OK, summary='[database-1]'),

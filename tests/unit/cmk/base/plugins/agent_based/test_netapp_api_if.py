@@ -214,7 +214,7 @@ def test_netapp_api_if_regression(
 
     assert list(
         netapp_api_if.discover_netapp_api_if(
-            [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
+            [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
             section,
         )) == discovery_results
 
@@ -222,6 +222,6 @@ def test_netapp_api_if_regression(
     for item, par, res in items_params_results:
         assert list(netapp_api_if.check_netapp_api_if(
             item,
-            type_defs.Parameters(par),
+            (par),
             section,
         )) == res

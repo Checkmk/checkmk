@@ -16,7 +16,7 @@ def test_discovery_winperf_section():
 
 
 def test_check_winperf_section():
-    assert list(tcp_conn_stats.check_tcp_connections(Parameters({}), {'ESTABLISHED': 3})) == [
+    assert list(tcp_conn_stats.check_tcp_connections({}, {'ESTABLISHED': 3})) == [
         Result(
             state=State.OK,
             summary="Established: 3",
@@ -26,22 +26,21 @@ def test_check_winperf_section():
 
 
 def test_check_tcp_conn_section():
-    assert list(
-        tcp_conn_stats.check_tcp_connections(
-            Parameters({}),
-            {
-                'ESTABLISHED': 29,
-                'LISTEN': 26,
-                # ...
-            })) == [
-                Result(
-                    state=State.OK,
-                    summary="Established: 29",
-                ),
-                Metric("ESTABLISHED", 29),
-                Result(
-                    state=State.OK,
-                    notice="Listen: 26",
-                ),
-                Metric("LISTEN", 26),
-            ]
+    assert list(tcp_conn_stats.check_tcp_connections(
+        {},
+        {
+            'ESTABLISHED': 29,
+            'LISTEN': 26,
+            # ...
+        })) == [
+            Result(
+                state=State.OK,
+                summary="Established: 29",
+            ),
+            Metric("ESTABLISHED", 29),
+            Result(
+                state=State.OK,
+                notice="Listen: 26",
+            ),
+            Metric("LISTEN", 26),
+        ]

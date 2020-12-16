@@ -87,10 +87,10 @@ value_store_fixture = get_value_store_fixture(interfaces)
 def test_winperf_if_netconnection_id(string_table, settings, items):
     assert [
         service.item for service in winperf_if.discover_winperf_if(
-            [type_defs.Parameters({
+            [{
                 **interfaces.DISCOVERY_DEFAULT_PARAMETERS,
                 **settings,
-            })],
+            }],
             winperf_if.parse_winperf_if(string_table),
         ) if isinstance(service, Service)
     ] == items
@@ -99,18 +99,16 @@ def test_winperf_if_netconnection_id(string_table, settings, items):
 def test_winperf_if_inventory_teaming():
     assert list(
         winperf_if.discover_winperf_if(
-            [
-                type_defs.Parameters({
-                    **interfaces.DISCOVERY_DEFAULT_PARAMETERS,
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'descr',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                })
-            ],
+            [{
+                **interfaces.DISCOVERY_DEFAULT_PARAMETERS,
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'descr',
+                        'pad_portnumbers': True,
+                    },
+                ),
+            }],
             winperf_if.parse_winperf_if([
                 [u'1542018413.59', u'510', u'2341040'],
                 [
@@ -382,7 +380,7 @@ def test_winperf_if_group_patterns(value_store):
     assert list(
         winperf_if.discover_winperf_if(
             [
-                type_defs.Parameters({
+                {
                     'discovery_single': (
                         False,
                         {},
@@ -409,8 +407,8 @@ def test_winperf_if_group_patterns(value_store):
                             ],
                         },
                     ),
-                }),
-                type_defs.Parameters({
+                },
+                {
                     'grouping': (
                         True,
                         {
@@ -429,8 +427,8 @@ def test_winperf_if_group_patterns(value_store):
                             ],
                         },
                     ),
-                }),
-                type_defs.Parameters({
+                },
+                {
                     **interfaces.DISCOVERY_DEFAULT_PARAMETERS,
                     'discovery_single': (
                         True,
@@ -439,7 +437,7 @@ def test_winperf_if_group_patterns(value_store):
                             'pad_portnumbers': True,
                         },
                     ),
-                }),
+                },
             ],
             section,
         )) == expected_services
@@ -447,7 +445,7 @@ def test_winperf_if_group_patterns(value_store):
     assert [
         result for service in expected_services for result in winperf_if.check_winperf_if(
             service.item or "",  # or "" to make mypy happy
-            type_defs.Parameters(service.parameters),
+            service.parameters,
             section,
         ) if not isinstance(result, IgnoreResults)
     ] == [
@@ -626,12 +624,11 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
     # Initialize counters
     monkeypatch.setattr('time.time', lambda: 0)
     with suppress(IgnoreResultsError):
-        list(
-            winperf_if.check_winperf_if(
-                item,
-                type_defs.Parameters(params),
-                winperf_if_teaming_parsed(0, 0),
-            ))
+        list(winperf_if.check_winperf_if(
+            item,
+            params,
+            winperf_if_teaming_parsed(0, 0),
+        ))
 
     # winperf_if should use the timestamp of the parsed data. To check that it does not use
     # time.time by accident, we set it to 20 s instead of 10 s. If winperf_if would now used
@@ -898,11 +895,10 @@ def test_winperf_if_regression(
     items_params_results,
 ):
     section = winperf_if.parse_winperf_if(string_table)
-    assert list(
-        winperf_if.discover_winperf_if(
-            [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
-            section,
-        )) == discovery_results
+    assert list(winperf_if.discover_winperf_if(
+        [interfaces.DISCOVERY_DEFAULT_PARAMETERS],
+        section,
+    )) == discovery_results
 
     monkeypatch.setattr(interfaces, 'get_value_store', lambda: {})
     for item, par, res in items_params_results:

@@ -43,14 +43,14 @@ def test_discover_mssql_databases(section):
 
 def test_check_error(section):
 
-    assert list(check_mssql_databases("MSSQL_Mouse -", Parameters({}), section)) == [
+    assert list(check_mssql_databases("MSSQL_Mouse -", {}, section)) == [
         Result(state=state.CRIT, summary="We are out of cheese!"),
     ]
 
 
 def test_check_warn_auto_shrink(section):
 
-    assert list(check_mssql_databases("MSSQL_MSSQL46 NOC_ALARM_T", Parameters({}), section)) == [
+    assert list(check_mssql_databases("MSSQL_MSSQL46 NOC_ALARM_T", {}, section)) == [
         Result(state=state.OK, summary="Status: ONLINE"),
         Result(state=state.OK, summary="Recovery: FULL"),
         Result(state=state.OK, summary="Auto close: off"),

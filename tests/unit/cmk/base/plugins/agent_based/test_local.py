@@ -261,7 +261,7 @@ def test_cluster():
         },
     }
 
-    worst = local.cluster_check_local("item", Parameters({}), section)
+    worst = local.cluster_check_local("item", {}, section)
     best = local.cluster_check_local("item", Parameters({"outcome_on_cluster": "best"}), section)
 
     assert list(worst) == [
@@ -290,7 +290,7 @@ def test_cluster_missing_item():
         "node1": {},
     }
 
-    worst = local.cluster_check_local("item", Parameters({}), section)
+    worst = local.cluster_check_local("item", {}, section)
     best = local.cluster_check_local("item", Parameters({"outcome_on_cluster": "best"}), section)
 
     assert list(worst) == [

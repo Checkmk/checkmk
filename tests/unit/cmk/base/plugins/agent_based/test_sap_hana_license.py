@@ -129,6 +129,5 @@ def test_sap_hana_license_discovery():
                               ],
                           )])
 def test_sap_hana_license_check(cur_item, result):
-    yielded_results = list(
-        sap_hana_license.check_sap_hana_license(cur_item, Parameters({}), SECTION))
+    yielded_results = list(sap_hana_license.check_sap_hana_license(cur_item, {}, SECTION))
     assert yielded_results == result

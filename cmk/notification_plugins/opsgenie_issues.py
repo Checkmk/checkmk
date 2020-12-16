@@ -55,6 +55,7 @@ def main():
     owner = context.get('PARAMETER_OWNER')
     entity_value = context.get('PARAMETER_ENTITY')
     host_url = context.get("PARAMETER_URL")
+    proxy_url = context.get("PARAMETER_PROXY_URL")
 
     if context.get('PARAMETER_TAGSS'):
         tags_list = None or context.get('PARAMETER_TAGSS').split(" ")
@@ -112,21 +113,24 @@ $LONGSERVICEOUTPUT$
             owner,
             entity_value,
             host_url,
+            proxy_url,
         )
     elif context['NOTIFICATIONTYPE'] == 'RECOVERY':
-        handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url)
+        handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url, proxy_url)
     elif context['NOTIFICATIONTYPE'] == 'ACKNOWLEDGEMENT':
-        handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url)
+        handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url, proxy_url)
     else:
         sys.stdout.write('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE']))
         return 0
 
 
-def configure_authorization(key, host_url):
+def configure_authorization(key, host_url, proxy_url):
     configuration.api_key['Authorization'] = key
     configuration.api_key_prefix['Authorization'] = 'GenieKey'
     if host_url is not None:
         configuration.host = '%s' % host_url
+    if proxy_url is not None:
+        configuration.proxy = proxy_url
 
 
 def handle_alert_creation(
@@ -143,8 +147,9 @@ def handle_alert_creation(
         owner,
         entity_value,
         host_url,
+        proxy_url,
 ):
-    configure_authorization(key, host_url)
+    configure_authorization(key, host_url, proxy_url)
 
     body = CreateAlertRequest(  # type: ignore
         note=note_created,
@@ -170,8 +175,8 @@ def handle_alert_creation(
         return 2
 
 
-def handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url):
-    configure_authorization(key, host_url)
+def handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url, proxy_url):
+    configure_authorization(key, host_url, proxy_url)
 
     body = CloseAlertRequest(
         source=alert_source,
@@ -189,8 +194,8 @@ def handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url
         return 2
 
 
-def handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url):
-    configure_authorization(key, host_url)
+def handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url, proxy_url):
+    configure_authorization(key, host_url, proxy_url)
 
     body = AcknowledgeAlertRequest(  # type: ignore
         source=alert_source,

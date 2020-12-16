@@ -862,6 +862,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      regex_error=_("The URL must begin with <tt>https</tt>."),
                      size=64,
                  )),
+                ("proxy_url", HTTPProxyReference()),
                 ("owner",
                  TextUnicode(
                      title=_("Owner"),

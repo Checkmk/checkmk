@@ -20,6 +20,7 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 
 PACKAGES := \
     openssl \
+    redis \
     libgsf \
     postgresql \
     perl-modules \

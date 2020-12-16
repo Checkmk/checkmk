@@ -14,6 +14,7 @@ from werkzeug.test import create_environ
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
+from cmk.gui.watolib.search import MatchItem
 import cmk.gui.htmllib as htmllib
 from cmk.gui.watolib.utils import has_agent_bakery
 
@@ -406,3 +407,27 @@ def test_subfolder_creation():
     # Upon instantiation, all the subfolders should be already known.
     folder = hosts_and_folders.Folder.root_folder()
     assert len(folder._subfolders) == 1
+
+
+def test_match_item_generator_hosts():
+    assert list(
+        hosts_and_folders.MatchItemGeneratorHosts(
+            "hosts",
+            lambda: {
+                "host": {
+                    "edit_url": "some_url",
+                    "alias": "alias",
+                    "ipaddress": "1.2.3.4",
+                    "ipv6address": "",
+                    "additional_ipv4addresses": ["5.6.7.8"],
+                    "additional_ipv6addresses": [],
+                },
+            },
+        ).generate_match_items()) == [
+            MatchItem(
+                title='host',
+                topic='Hosts',
+                url='some_url',
+                match_texts=['host', 'alias', '1.2.3.4', '5.6.7.8'],
+            )
+        ]

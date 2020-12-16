@@ -196,36 +196,6 @@ def test_timerange_value_to_json_conversion():
             assert vs.Timerange().value_from_json(json_value) == choice_value
 
 
-@pytest.mark.parametrize("value, result", [
-    ({
-        "time_range": ("date", (1577833200, 1580425200)),
-        "time_resolution": "h"
-    }, "Time range: Date range, 2019-12-31, 2020-01-30, Time resolution: Show alerts per hour"),
-    ({
-        "time_range": ("age", 158000),
-        "time_resolution": "d"
-    },
-     "Time range: The last..., 1 days 19 hours 53 minutes 20 seconds, Time resolution: Show alerts per day"
-    ),
-])
-def test_dictionary_value_to_json_conversion(value, result):
-    with on_time("2020-03-02", "UTC"):
-        # TODO: Obtain this valuespec directly by importing AlertBarChartDashlet
-        #       once it's available and simplify to:
-        #       abcd_vs = AlertBarChartDashlet.vs_parameters()
-        abcd_vs = vs.Dictionary([
-            ("time_range", vs.Timerange(title="Time range")),
-            ("time_resolution",
-             vs.DropdownChoice(title="Time resolution",
-                               choices=[("h", "Show alerts per hour"),
-                                        ("d", "Show alerts per day")])),
-        ])
-        abcd_vs._render = "oneline"
-        assert abcd_vs.value_to_text(value) == result
-        json_value = abcd_vs.value_to_json(value)
-        assert abcd_vs.value_from_json(json_value) == value
-
-
 @pytest.mark.parametrize(
     "address",
     [

@@ -4740,21 +4740,16 @@ class Dictionary(ValueSpec):
         else:
             self._render_input_normal(varprefix,
                                       value,
-                                      oneline=render == "oneline",
                                       small_headers=self._headers == "sup",
                                       two_columns=self._columns == 2)
 
-    def _render_input_normal(self, varprefix, value, oneline, small_headers, two_columns):
-        if not oneline or small_headers:
-            html.open_table(class_=["dictionary"])
-        if oneline and small_headers:
-            html.open_tr()
+    def _render_input_normal(self, varprefix, value, small_headers, two_columns):
+        html.open_table(class_=["dictionary"])
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue
-            if not oneline:
-                html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
-                html.open_td(class_="dictleft")
+            html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
+            html.open_td(class_="dictleft")
 
             div_id = varprefix + "_d_" + param
             vp = varprefix + "_p_" + param
@@ -4775,33 +4770,22 @@ class Dictionary(ValueSpec):
             else:
                 visible = True
                 if vs.title():
-                    if oneline and small_headers:
-                        html.open_td()
-                        html.open_b(class_=["header"])
                     html.write(" %s" % vs.title())
-                    if oneline and small_headers:
-                        html.close_b()
-                        html.br()
-                    if oneline and not small_headers:
-                        html.write_text(": ")
 
             if two_columns:
                 if vs.title() and not colon_printed:
                     html.write_text(':')
                 html.help(vs.help())
-                if not oneline:
-                    html.close_td()
-                    html.open_td(class_="dictright")
+                html.close_td()
+                html.open_td(class_="dictright")
 
             else:
-                if not oneline:
-                    html.br()
+                html.br()
 
             html.open_div(
                 id_=div_id,
                 class_=["dictelement", "indent" if (self._indent and not two_columns) else None],
-                style="display:none;" if not visible else
-                ("display:inline-block;" if oneline else None))
+                style="display:none;" if not visible else None)
 
             if not two_columns:
                 html.help(vs.help())
@@ -4811,15 +4795,9 @@ class Dictionary(ValueSpec):
             the_value = value.get(param, vs.default_value()) if isinstance(value, dict) else None
             vs.render_input(vp, the_value)
             html.close_div()
-            if not oneline or small_headers:
-                html.close_td()
-            if not oneline:
-                html.close_tr()
-
-        if oneline and small_headers:
+            html.close_td()
             html.close_tr()
-        if not oneline or small_headers:
-            html.close_table()
+        html.close_table()
 
     def _render_input_form(self, varprefix, value, as_part=False):
         headers = self._headers or [(ensure_str(self.title() or _("Properties")), [])]
@@ -4911,7 +4889,6 @@ class Dictionary(ValueSpec):
 
     def value_to_text(self, value):
         value = self.migrate(value)
-        oneline = self._render == "oneline"
         if not value:
             return self._empty_text
 
@@ -4919,17 +4896,7 @@ class Dictionary(ValueSpec):
             return self._default_text
 
         elem = self._get_elements()
-        return self._value_to_text_oneline(
-            elem, value) if oneline else self._value_to_text_multiline(elem, value)
-
-    def _value_to_text_oneline(self, elem, value):
-        s = ''
-        for param, vs in elem:
-            if param in value:
-                if param != elem[0][0]:
-                    s += ", "
-                s += "%s: %s" % (vs.title(), self._funny_workaround(vs, value[param]))
-        return s
+        return self._value_to_text_multiline(elem, value)
 
     def _value_to_text_multiline(self, elem, value):
         s = HTML()

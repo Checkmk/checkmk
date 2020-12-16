@@ -19,7 +19,7 @@ Example:
 
         def check_my_plugin(
             item: str,
-            params: Parameters,
+            params: Mapping[str, Any],
             section: Dict[str, str],
         ) -> CheckResult:
             pass
@@ -33,10 +33,8 @@ from cmk.base.api.agent_based.checking_classes import (
 )
 from cmk.base.api.agent_based.type_defs import (
     HostLabelGenerator,
-    Parameters,
     StringByteTable,
     StringTable,
-    ValueStore,
 )
 
 from cmk.snmplib.type_defs import SNMPDeviceTypes  # pylint: disable=cmk-module-layer-violation
@@ -46,9 +44,7 @@ __all__ = [
     "DiscoveryResult",
     "HostLabelGenerator",
     "InventoryResult",
-    "Parameters",
     "StringByteTable",
     "StringTable",
-    "ValueStore",
     "SNMPDeviceTypes",
 ]

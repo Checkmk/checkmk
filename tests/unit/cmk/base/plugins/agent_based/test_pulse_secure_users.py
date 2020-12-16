@@ -27,29 +27,28 @@ def test_parse_pulse_secure_users(string_table, expected_parsed_data):
 
 
 def test_check_pulse_secure_users():
-    assert list(
-        pulse_secure_users.check_pulse_secure_users(
-            type_defs.Parameters({}),
-            {'n_users': 172},
-        )) == [
-            Result(
-                state=state.OK,
-                summary='Pulse Secure users: 172',
-                details='Pulse Secure users: 172',
-            ),
-            Metric(
-                'current_users',
-                172.0,
-                levels=(None, None),
-                boundaries=(None, None),
-            ),
-        ]
+    assert list(pulse_secure_users.check_pulse_secure_users(
+        {},
+        {'n_users': 172},
+    )) == [
+        Result(
+            state=state.OK,
+            summary='Pulse Secure users: 172',
+            details='Pulse Secure users: 172',
+        ),
+        Metric(
+            'current_users',
+            172.0,
+            levels=(None, None),
+            boundaries=(None, None),
+        ),
+    ]
 
 
 def test_cluster_check_pulse_secure_users():
     assert list(
         pulse_secure_users.cluster_check_pulse_secure_users(
-            type_defs.Parameters({}),
+            {},
             {
                 'node1': {
                     'n_users': 20

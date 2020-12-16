@@ -7,7 +7,6 @@ from typing import Dict
 import pytest
 
 import cmk.base.plugins.agent_based.agent_based_api.v1
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     Metric,
@@ -182,7 +181,7 @@ def test_check_function(monkeypatch):
         },
     )
 
-    assert list(apache_status.check_apache_status("MY CHECK MK", Parameters({}), SECTION_2)) == [
+    assert list(apache_status.check_apache_status("MY CHECK MK", {}, SECTION_2)) == [
         Result(state=State.OK, summary='Uptime: 1 day 3 hours'),
         Metric('Uptime', 99739),
         Result(state=State.OK, summary='Idle workers: 49'),

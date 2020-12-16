@@ -9,7 +9,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.aws_rds import (
     check_aws_rds_network_io,
     parse_aws_rds,
@@ -761,7 +760,7 @@ def test_parse_aws_rds():
 def test_check_aws_rds_network_io():
     assert list(check_aws_rds_network_io(
         "database-1 [eu-central-1]",
-        Parameters({}),
+        {},
         SECTION,
     )) == [
         Result(state=State.OK, summary='[database-1]'),

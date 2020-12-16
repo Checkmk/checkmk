@@ -20,8 +20,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State as state,
 )
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters, ValueStore
-
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
     (
@@ -72,12 +70,12 @@ def test_discovery_cisco_mem(string_table, expected_parsed_data):
     (
         {
             "item": "MEMPOOL_DMA",
-            "params": Parameters({
+            "params": {
                 'trend_perfdata': True,
                 'trend_range': 24,
                 'trend_showtimeleft': True,
                 'trend_timeleft': (12, 6)
-            }),
+            },
             "section": {
                 'System memory': ['3848263744', '8765044672'],
                 'MEMPOOL_MSGLYR': ['123040', '8265568'],
@@ -92,8 +90,7 @@ def test_discovery_cisco_mem(string_table, expected_parsed_data):
     ),
 ])
 def test_check_cisco_mem(check_args, expected_result):
-    vs: ValueStore = {}
-    assert list(_idem_check_cisco_mem(value_store=vs, **check_args)) == list(expected_result)
+    assert list(_idem_check_cisco_mem(value_store={}, **check_args)) == list(expected_result)
 
 
 if __name__ == "__main__":

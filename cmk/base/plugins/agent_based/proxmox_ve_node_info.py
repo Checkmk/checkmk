@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping, Any
+from typing import Any, Mapping
 import json
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -14,7 +14,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    Parameters,
     CheckResult,
     DiscoveryResult,
     StringTable,
@@ -31,7 +30,7 @@ def discover_single(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_proxmox_ve_node_info(params: Parameters, section: Section) -> CheckResult:
+def check_proxmox_ve_node_info(params: Mapping[str, Any], section: Section) -> CheckResult:
     """
     >>> for result in check_proxmox_ve_node_info(
     ...     {},

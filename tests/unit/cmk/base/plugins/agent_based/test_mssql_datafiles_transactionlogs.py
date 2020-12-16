@@ -6,7 +6,6 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Service, Result, State as state
 import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
 
@@ -40,7 +39,7 @@ def _get_section():
 
 def test_discovery_mssql_transactionlogs(section):
     assert sorted(
-        msdt.discover_mssql_transactionlogs([Parameters({})], section),
+        msdt.discover_mssql_transactionlogs([{}], section),
         key=lambda s: s.item or "",  # type: ignore[attr-defined]
     ) == [
         Service(item='MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log'),
@@ -59,7 +58,7 @@ def test_check_mssql_transactionlogs(section):
     assert list(
         msdt.check_mssql_common(
             'MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log',
-            Parameters({}),
+            {},
             section,
         ),) == [
             Result(

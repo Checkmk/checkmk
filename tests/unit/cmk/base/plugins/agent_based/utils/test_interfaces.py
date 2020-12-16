@@ -86,7 +86,7 @@ def _add_group_info_to_results(results, members):
     ] + results[3:]
 
 
-DEFAULT_DISCOVERY_PARAMS = type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)
+DEFAULT_DISCOVERY_PARAMS = interfaces.DISCOVERY_DEFAULT_PARAMETERS
 
 SINGLE_SERVICES = [
     Service(item='5', parameters={
@@ -111,7 +111,7 @@ def test_discovery_ungrouped_empty_section():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'discovery_single': (
                         True,
                         {
@@ -120,7 +120,7 @@ def test_discovery_ungrouped_empty_section():
                         },
                     ),
                     'matching_conditions': (True, {}),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             [],
@@ -133,7 +133,7 @@ def test_discovery_ungrouped_admin_status():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'discovery_single': (
                         False,
                         {},
@@ -144,7 +144,7 @@ def test_discovery_ungrouped_admin_status():
                             'admin_states': ['2']
                         },
                     ),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             ifaces,
@@ -165,7 +165,7 @@ def test_discovery_ungrouped_one():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (
                         False,
                         {
@@ -173,7 +173,7 @@ def test_discovery_ungrouped_one():
                         },
                     ),
                     'discovery_single': (False, {}),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -184,10 +184,10 @@ def test_discovery_ungrouped_off():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (True, {}),
                     'discovery_single': (False, {}),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -214,18 +214,16 @@ def test_discovery_duplicate_index():
 def test_discovery_duplicate_descr():
     assert list(
         interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    **DEFAULT_DISCOVERY_PARAMS,
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'descr',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                })
-            ],
+            [{
+                **DEFAULT_DISCOVERY_PARAMS,
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'descr',
+                        'pad_portnumbers': True,
+                    },
+                ),
+            }],
             _create_interfaces(0, descr='description'),
         )) == [
             Service(
@@ -250,23 +248,21 @@ def test_discovery_duplicate_descr():
 def test_discovery_duplicate_alias():
     assert list(
         interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'alias',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                    'matching_conditions': (
-                        False,
-                        {
-                            'match_index': ['5'],
-                        },
-                    ),
-                })
-            ],
+            [{
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'alias',
+                        'pad_portnumbers': True,
+                    },
+                ),
+                'matching_conditions': (
+                    False,
+                    {
+                        'match_index': ['5'],
+                    },
+                ),
+            }],
             _create_interfaces(0, alias='alias'),
         )) == [
             Service(
@@ -288,23 +284,21 @@ def test_discovery_partial_duplicate_desc_duplicate_alias():
         iface.alias = 'alias'
     assert list(
         interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'descr',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                    'matching_conditions': (
-                        False,
-                        {
-                            'match_index': ['4', '5', '6'],
-                        },
-                    ),
-                })
-            ],
+            [{
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'descr',
+                        'pad_portnumbers': True,
+                    },
+                ),
+                'matching_conditions': (
+                    False,
+                    {
+                        'match_index': ['4', '5', '6'],
+                    },
+                ),
+            }],
             ifaces,
         )) == [
             Service(
@@ -338,7 +332,7 @@ def test_discovery_grouped_simple():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (True, {}),
                     'grouping': (
                         True,
@@ -349,7 +343,7 @@ def test_discovery_grouped_simple():
                             }],
                         },
                     ),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -374,7 +368,7 @@ def test_discovery_grouped_hierarchy():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (
                         False,
                         {
@@ -390,8 +384,8 @@ def test_discovery_grouped_hierarchy():
                             }],
                         },
                     ),
-                }),
-                type_defs.Parameters({
+                },
+                {
                     'matching_conditions': (True, {}),
                     "grouping": (
                         True,
@@ -402,7 +396,7 @@ def test_discovery_grouped_hierarchy():
                             }],
                         },
                     ),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -429,7 +423,7 @@ def test_discovery_grouped_exclusion_condition():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (
                         False,
                         {
@@ -442,8 +436,8 @@ def test_discovery_grouped_exclusion_condition():
                             'group_items': [],
                         },
                     ),
-                }),
-                type_defs.Parameters({
+                },
+                {
                     'matching_conditions': (True, {}),
                     "grouping": (
                         True,
@@ -454,7 +448,7 @@ def test_discovery_grouped_exclusion_condition():
                             }],
                         },
                     ),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -481,7 +475,7 @@ def test_discovery_grouped_empty():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (
                         False,
                         {
@@ -497,7 +491,7 @@ def test_discovery_grouped_empty():
                             }],
                         },
                     ),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -533,7 +527,7 @@ def test_discovery_grouped_by_agent_and_in_rules():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                ({
                     'matching_conditions': (True, {}),
                     "grouping": (
                         True,
@@ -569,7 +563,7 @@ def test_discovery_labels():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'discovery_single': (
                         True,
                         {
@@ -595,8 +589,8 @@ def test_discovery_labels():
                     'matching_conditions': (False, {
                         'match_desc': ['wlp']
                     }),
-                }),
-                type_defs.Parameters({
+                },
+                {
                     'discovery_single': (
                         True,
                         {
@@ -620,7 +614,7 @@ def test_discovery_labels():
                         },
                     ),
                     'matching_conditions': (True, {}),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -691,13 +685,13 @@ def test_discovery_labels():
 ITEM_PARAMS_RESULTS = (
     (
         '5',
-        type_defs.Parameters({
+        {
             'errors_in': (0.01, 0.1),
             'errors_out': (0.01, 0.1),
             'speed': 10_000_000,
             'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
             'state': ['1'],
-        }),
+        },
         [
             Result(state=state.OK, summary='[vboxnet0]'),
             Result(state=state.OK, summary='(up)', details='Operational state: up'),
@@ -724,14 +718,14 @@ ITEM_PARAMS_RESULTS = (
     ),
     (
         '6',
-        type_defs.Parameters({
+        {
             'errors_in': (0.01, 0.1),
             'errors_out': (0.01, 0.1),
             'speed': 100_000_000,
             'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
             'total_traffic': {},
             'state': ['1'],
-        }),
+        },
         [
             Result(state=state.OK, summary='[wlp2s0]'),
             Result(state=state.OK, summary='(up)', details='Operational state: up'),
@@ -766,7 +760,7 @@ ITEM_PARAMS_RESULTS = (
     ),
     (
         '6',
-        type_defs.Parameters({
+        {
             'errors_in': (0.01, 0.1),
             'errors_out': (0.01, 0.1),
             'speed': 100000000,
@@ -774,7 +768,7 @@ ITEM_PARAMS_RESULTS = (
             'state': ['1'],
             'nucasts': (1, 2),
             'discards': (1, 2),
-        }),
+        },
         [
             Result(state=state.OK, summary='[wlp2s0]'),
             Result(state=state.OK, summary='(up)', details='Operational state: up'),
@@ -832,7 +826,7 @@ def test_check_single_interface_same_index_descr_alias(value_store):
     result = next(  # type: ignore[call-overload]
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({}),
+            {},
             _create_interfaces(0, index=item, descr=item, alias=item)[0],
         ))
     assert result == Result(
@@ -844,10 +838,10 @@ def test_check_single_interface_same_index_descr_alias(value_store):
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
 def test_check_single_interface_admin_status(value_store, item, params, result):
-    params = type_defs.Parameters({
+    params = {
         **params,
         'discovered_admin_status': '1',
-    })
+    }
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_single_interface(
@@ -873,22 +867,22 @@ def test_check_single_interface_states(value_store, item, params, result):
         list(
             interfaces.check_single_interface(
                 item,
-                type_defs.Parameters({
+                {
                     **params,
                     'state': ['4'],
                     'admin_state': ['2'],
-                }),
+                },
                 _create_interfaces(0, admin_status='1')[int(item) - 1],
                 timestamp=0,
             ))
     assert list(
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({
+            {
                 **params,
                 'state': ['4'],
                 'admin_state': ['2'],
-            }),
+            },
             _create_interfaces(4000000, admin_status='1')[int(item) - 1],
             timestamp=5,
         )) == result[:1] + [
@@ -903,22 +897,22 @@ def test_check_single_interface_map_states(value_store, item, params, result):
         list(
             interfaces.check_single_interface(
                 item,
-                type_defs.Parameters({
+                {
                     **params,
                     'map_operstates': [(['1'], 3)],
                     'map_admin_states': [(['2'], 3)],
-                }),
+                },
                 _create_interfaces(0, admin_status='2')[int(item) - 1],
                 timestamp=0,
             ))
     assert list(
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({
+            {
                 **params,
                 'map_operstates': [(['1'], 3)],
                 'map_admin_states': [(['2'], 3)],
-            }),
+            },
             _create_interfaces(4000000, admin_status='2')[int(item) - 1],
             timestamp=5,
         )) == result[:1] + [
@@ -933,20 +927,20 @@ def test_check_single_interface_ignore_state(value_store, item, params, result):
         list(
             interfaces.check_single_interface(
                 item,
-                type_defs.Parameters({
+                {
                     **params,
                     'state': None,
-                }),
+                },
                 _create_interfaces(0, oper_status=4)[int(item) - 1],
                 timestamp=0,
             ))
     assert list(
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({
+            {
                 **params,
                 'state': None,
-            }),
+            },
             _create_interfaces(4000000, oper_status=4)[int(item) - 1],
             timestamp=5,
         )) == result
@@ -997,10 +991,10 @@ def test_check_single_interface_averaging(value_store, item, params, result):
     assert list(
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({
+            {
                 **params,
                 'average': 5,
-            }),
+            },
             _create_interfaces(4000000)[int(item) - 1],
             timestamp=5,
         )) == result
@@ -1224,7 +1218,7 @@ def test_check_multiple_interfaces_duplicate_alias(value_store, item, params, re
 
 
 def test_check_multiple_interfaces_group_simple(value_store):
-    params = type_defs.Parameters({
+    params = {
         'errors_in': (0.01, 0.1),
         'errors_out': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
@@ -1240,7 +1234,7 @@ def test_check_multiple_interfaces_group_simple(value_store):
         'discovered_speed': 20000000,
         'state': ['8'],
         'speed': 123456,
-    })
+    }
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_multiple_interfaces(
@@ -1287,7 +1281,7 @@ def test_check_multiple_interfaces_group_simple(value_store):
 
 
 def test_check_multiple_interfaces_group_exclude(value_store):
-    params = type_defs.Parameters({
+    params = {
         'errors_in': (0.01, 0.1),
         'errors_out': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
@@ -1303,7 +1297,7 @@ def test_check_multiple_interfaces_group_exclude(value_store):
         },
         'discovered_oper_status': ['1'],
         'discovered_speed': 20000000,
-    })
+    }
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_multiple_interfaces(
@@ -1349,7 +1343,7 @@ def test_check_multiple_interfaces_group_exclude(value_store):
 
 
 def test_check_multiple_interfaces_group_by_agent(value_store):
-    params = type_defs.Parameters({
+    params = {
         'errors_in': (0.01, 0.1),
         'errors_out': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
@@ -1361,7 +1355,7 @@ def test_check_multiple_interfaces_group_by_agent(value_store):
         },
         'discovered_oper_status': ['1'],
         'discovered_speed': 20000000
-    })
+    }
     with pytest.raises(IgnoreResultsError):
         ifaces = _create_interfaces(0)
         ifaces[3].group = 'group'
@@ -1453,7 +1447,7 @@ def test_check_multiple_interfaces_same_item_twice_cluster(value_store, item, pa
 
 
 def test_check_multiple_interfaces_group_multiple_nodes(value_store):
-    params = type_defs.Parameters({
+    params = {
         'errors_in': (0.01, 0.1),
         'errors_out': (0.01, 0.1),
         'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
@@ -1471,7 +1465,7 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
         },
         'discovered_oper_status': ['1'],
         'discovered_speed': 20000000,
-    })
+    }
     node_names = ['node1', 'node2', 'node3']
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1530,7 +1524,7 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
 
 
 def test_cluster_check(monkeypatch, value_store):
-    params = type_defs.Parameters({
+    params = {
         'errors_in': (0.01, 0.1),
         'errors_out': (0.01, 0.1),
         'speed': 10000000,
@@ -1539,7 +1533,7 @@ def test_cluster_check(monkeypatch, value_store):
             'levels': [('upper', ('perc', (10.0, 30.0))),]
         },
         'state': ['1'],
-    })
+    }
     section = {}
     ifaces = []
     for i in range(3):

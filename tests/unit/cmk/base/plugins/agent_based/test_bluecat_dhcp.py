@@ -16,12 +16,12 @@ from cmk.base.plugins.agent_based import bluecat_dhcp
 def check_bluecat_dhcp_ok():
     assert list(
         bluecat_dhcp.check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'oper_state': 1,
                 'leases': 11,
@@ -45,12 +45,12 @@ def check_bluecat_dhcp_ok():
 def check_bluecat_dhcp_crit():
     assert list(
         bluecat_dhcp.check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [5],
                 },
-            },),
+            },
             {
                 'oper_state': 5,
                 'leases': 10,
@@ -74,12 +74,12 @@ def check_bluecat_dhcp_crit():
 def check_bluecat_dhcp_one_lease():
     assert list(
         bluecat_dhcp.check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'oper_state': 1,
                 'leases': 1,
@@ -103,12 +103,12 @@ def check_bluecat_dhcp_one_lease():
 def test_cluster_check_bluecat_all_ok():
     assert list(
         bluecat_dhcp.cluster_check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'node1': {
                     'oper_state': 1,
@@ -154,12 +154,12 @@ def test_cluster_check_bluecat_all_ok():
 def test_cluster_check_bluecat_one_ok():
     assert list(
         bluecat_dhcp.cluster_check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [4],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'node1': {
                     'oper_state': 1,
@@ -205,12 +205,12 @@ def test_cluster_check_bluecat_one_ok():
 def test_cluster_check_bluecat_none_ok():
     assert list(
         bluecat_dhcp.cluster_check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [1],
                     "critical": [2, 3],
                 },
-            },),
+            },
             {
                 'node1': {
                     'oper_state': 1,

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based import tcp_conn_stats
 
@@ -16,7 +15,7 @@ def test_discovery_winperf_section():
 
 
 def test_check_winperf_section():
-    assert list(tcp_conn_stats.check_tcp_connections(Parameters({}), {'ESTABLISHED': 3})) == [
+    assert list(tcp_conn_stats.check_tcp_connections({}, {'ESTABLISHED': 3})) == [
         Result(
             state=State.OK,
             summary="Established: 3",
@@ -26,22 +25,21 @@ def test_check_winperf_section():
 
 
 def test_check_tcp_conn_section():
-    assert list(
-        tcp_conn_stats.check_tcp_connections(
-            Parameters({}),
-            {
-                'ESTABLISHED': 29,
-                'LISTEN': 26,
-                # ...
-            })) == [
-                Result(
-                    state=State.OK,
-                    summary="Established: 29",
-                ),
-                Metric("ESTABLISHED", 29),
-                Result(
-                    state=State.OK,
-                    notice="Listen: 26",
-                ),
-                Metric("LISTEN", 26),
-            ]
+    assert list(tcp_conn_stats.check_tcp_connections(
+        {},
+        {
+            'ESTABLISHED': 29,
+            'LISTEN': 26,
+            # ...
+        })) == [
+            Result(
+                state=State.OK,
+                summary="Established: 29",
+            ),
+            Metric("ESTABLISHED", 29),
+            Result(
+                state=State.OK,
+                notice="Listen: 26",
+            ),
+            Metric("LISTEN", 26),
+        ]

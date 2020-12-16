@@ -75,20 +75,19 @@ SECTION_NETAPP_API_CPU: netapp_api_cpu.Section = {
     ],
 )
 def test_check_netapp_api_vf_stats(value_store, params, exp_res):
-    par = type_defs.Parameters(params)
     # initialize counters
     with pytest.raises(IgnoreResultsError):
         list(
             netapp_api_vf_stats.check_netapp_api_vf_stats(
                 'vfiler0',
-                par,
+                params,
                 SECTION_NETAPP_API_VF_STATS,
                 SECTION_NETAPP_API_CPU,
             ))
     assert list(
         netapp_api_vf_stats.check_netapp_api_vf_stats(
             'vfiler0',
-            par,
+            params,
             SECTION_NETAPP_API_VF_STATS,
             SECTION_NETAPP_API_CPU,
         )) == exp_res

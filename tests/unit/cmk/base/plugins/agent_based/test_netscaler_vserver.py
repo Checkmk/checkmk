@@ -6,7 +6,6 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
@@ -45,10 +44,10 @@ def clustered_vservers_fixture():
 def test_check_netscaler_vservers_clustered_best(clustered_vservers):
     assert list(
         _check_netscaler_vservers(
-            Parameters({
+            {
                 "health_levels": (100.0, 0.1),
                 "cluster_status": "best",
-            }),
+            },
             clustered_vservers,
         )) == [
             Result(state=state.OK, summary='Status: up (node1)'),
@@ -75,10 +74,10 @@ def test_check_netscaler_vservers_clustered_worst(clustered_vservers):
         "transition to out of service",
     )
     result, *_ = _check_netscaler_vservers(
-        Parameters({
+        {
             "health_levels": (100.0, 0.1),
             "cluster_status": "worst",
-        }),
+        },
         clustered_vservers,
     )
     assert result == Result(

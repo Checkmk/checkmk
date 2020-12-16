@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
     'item, params, sensor, temperature_metrics_only, status_txt_mapping, exp_result', [
         (
             'something',
-            type_defs.Parameters({}),
+            {},
             ipmi.Sensor(status_txt='ok',
                         unit='',
                         value=None,
@@ -34,7 +34,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'PCH_1.05V',
-            type_defs.Parameters({}),
+            {},
             ipmi.Sensor(status_txt='ok',
                         unit='Volts',
                         value=1.04,
@@ -52,7 +52,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'PCH_1.05V',
-            type_defs.Parameters({}),
+            {},
             ipmi.Sensor(status_txt='ok',
                         unit='Volts',
                         value=1.04,
@@ -70,7 +70,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'PCH_1.05V',
-            type_defs.Parameters({}),
+            {},
             ipmi.Sensor(status_txt='ok',
                         unit='Volts',
                         value=1.04,
@@ -87,7 +87,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'Temperature',
-            type_defs.Parameters({}),
+            {},
             ipmi.Sensor(status_txt='ok',
                         unit='C',
                         value=1.04,
@@ -105,7 +105,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'PCH_1.05V',
-            type_defs.Parameters({}),
+            {},
             ipmi.Sensor(status_txt='nc',
                         unit='Volts',
                         value=1.04,
@@ -126,7 +126,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'PCH_1.05V',
-            type_defs.Parameters({}),
+            {},
             ipmi.Sensor(status_txt='ok',
                         unit='Volts',
                         value=2.1,
@@ -146,7 +146,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'PCH_1.05V',
-            type_defs.Parameters({}),
+            {},
             ipmi.Sensor(status_txt='ok',
                         unit='Volts',
                         value=0.5,
@@ -166,7 +166,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'PCH_1.05V',
-            type_defs.Parameters({
+            ({
                 'numerical_sensor_levels': [('PCH_1.05V', {
                     'lower': (1.0, 2.0),
                     'upper': (1.0, 4.0),
@@ -192,7 +192,7 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'PCH_1.05V',
-            type_defs.Parameters({
+            ({
                 'numerical_sensor_levels': [('PCH_1.05V', {
                     'upper': (1.0, 4.0),
                 })]
@@ -217,7 +217,9 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
         (
             'PCH_1.05V',
-            type_defs.Parameters({'sensor_states': [('ok', 3)]}),
+            ({
+                'sensor_states': [('ok', 3)]
+            }),
             ipmi.Sensor(status_txt='ok',
                         unit='Volts',
                         value=1.04,
@@ -332,7 +334,7 @@ SECTION = {
 
 @pytest.mark.parametrize('params, status_txt_mapping, exp_result', [
     (
-        type_defs.Parameters({}),
+        {},
         lambda txt: state.OK,
         [
             Metric('ambient_temp', 18.5),
@@ -340,7 +342,7 @@ SECTION = {
         ],
     ),
     (
-        type_defs.Parameters({}),
+        {},
         lambda txt: ('Failure detected' in txt and state.CRIT) or
         ('State Deasserted' in txt and state.WARN or state.OK),
         [
@@ -355,7 +357,9 @@ SECTION = {
         ],
     ),
     (
-        type_defs.Parameters({"ignored_sensors": ["CPU", "VCORE"]}),
+        ({
+            "ignored_sensors": ["CPU", "VCORE"]
+        }),
         lambda txt: state.OK,
         [
             Metric('ambient_temp', 18.5),
@@ -365,7 +369,9 @@ SECTION = {
         ],
     ),
     (
-        type_defs.Parameters({"ignored_sensorstates": ["ns", "nr", "na"]}),
+        ({
+            "ignored_sensorstates": ["ns", "nr", "na"]
+        }),
         lambda txt: state.OK,
         [
             Metric('ambient_temp', 18.5),
@@ -375,7 +381,7 @@ SECTION = {
         ],
     ),
     (
-        type_defs.Parameters({
+        ({
             "ignored_sensorstates": ["ns", "nr", "na"],
             'sensor_states': [('ok', 1)],
         }),
@@ -392,9 +398,11 @@ SECTION = {
         ],
     ),
     (
-        type_defs.Parameters({'numerical_sensor_levels': [('PCH_1.05V', {
-            'upper': (1.0, 4.0),
-        })]}),
+        ({
+            'numerical_sensor_levels': [('PCH_1.05V', {
+                'upper': (1.0, 4.0),
+            })]
+        }),
         lambda txt: state.OK,
         [
             Metric('ambient_temp', 18.5),

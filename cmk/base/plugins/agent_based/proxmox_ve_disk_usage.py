@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Mapping
 import json
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -17,7 +17,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    Parameters,
     CheckResult,
     DiscoveryResult,
     StringTable,
@@ -34,7 +33,7 @@ def discover_single(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_proxmox_ve_disk_usage(params: Parameters, section: Section) -> CheckResult:
+def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> CheckResult:
     """
     >>> for result in check_proxmox_ve_disk_usage(
     ...     {"levels": (80., 90.)},

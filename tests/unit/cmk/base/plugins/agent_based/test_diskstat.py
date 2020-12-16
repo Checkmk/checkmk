@@ -934,13 +934,13 @@ def test_check_diskstat_single_item(value_store):
     with pytest.raises(IgnoreResultsError):
         list(diskstat.check_diskstat(
             'item',
-            type_defs.Parameters({}),
+            {},
             {'item': DISK_HALF},
             None,
         ))
     assert list(diskstat.check_diskstat(
         'item',
-        type_defs.Parameters({}),
+        {},
         {'item': DISK},
         None,
     )) == [
@@ -972,20 +972,19 @@ def test_check_diskstat_single_item(value_store):
 
 def test_check_diskstat_summary(value_store):
     with pytest.raises(IgnoreResultsError):
-        list(
-            diskstat.check_diskstat(
-                'SUMMARY',
-                type_defs.Parameters({}),
-                {
-                    'disk1': DISK_HALF,
-                    'disk2': DISK_HALF,
-                },
-                {},
-            ))
+        list(diskstat.check_diskstat(
+            'SUMMARY',
+            {},
+            {
+                'disk1': DISK_HALF,
+                'disk2': DISK_HALF,
+            },
+            {},
+        ))
     results_summary = list(
         diskstat.check_diskstat(
             'SUMMARY',
-            type_defs.Parameters({}),
+            {},
             {
                 'disk1': DISK,
                 'disk2': DISK,
@@ -1020,20 +1019,19 @@ def test_check_diskstat_summary(value_store):
 
     # compare against single-item output
     with pytest.raises(IgnoreResultsError):
-        list(
-            diskstat.check_diskstat(
-                'disk1',
-                type_defs.Parameters({}),
-                {
-                    'disk1': DISK_HALF,
-                    'disk2': DISK_HALF,
-                },
-                None,
-            ))
+        list(diskstat.check_diskstat(
+            'disk1',
+            {},
+            {
+                'disk1': DISK_HALF,
+                'disk2': DISK_HALF,
+            },
+            None,
+        ))
     results_single_disk = list(
         diskstat.check_diskstat(
             'disk1',
-            type_defs.Parameters({}),
+            {},
             {
                 'disk1': DISK,
                 'disk2': DISK,
@@ -1053,7 +1051,7 @@ def test_cluster_check_diskstat_single_item(value_store):
         list(
             diskstat.cluster_check_diskstat(
                 'disk1',
-                type_defs.Parameters({}),
+                {},
                 {
                     'node1': {
                         'disk1': DISK_HALF,
@@ -1066,7 +1064,7 @@ def test_cluster_check_diskstat_single_item(value_store):
     results_cluster = list(
         diskstat.cluster_check_diskstat(
             'disk1',
-            type_defs.Parameters({}),
+            {},
             {
                 'node_overwritten': {
                     'disk1': DISK_HALF,
@@ -1081,24 +1079,22 @@ def test_cluster_check_diskstat_single_item(value_store):
             },
         ))
     with pytest.raises(IgnoreResultsError):
-        list(
-            diskstat.check_diskstat(
-                'disk1',
-                type_defs.Parameters({}),
-                {
-                    'disk1': DISK_HALF,
-                },
-                None,
-            ))
-    results_non_cluster = list(
-        diskstat.check_diskstat(
+        list(diskstat.check_diskstat(
             'disk1',
-            type_defs.Parameters({}),
+            {},
             {
-                'disk1': DISK,
+                'disk1': DISK_HALF,
             },
             None,
         ))
+    results_non_cluster = list(diskstat.check_diskstat(
+        'disk1',
+        {},
+        {
+            'disk1': DISK,
+        },
+        None,
+    ))
     assert results_cluster == results_non_cluster
 
 
@@ -1107,7 +1103,7 @@ def test_cluster_check_diskstat_summary(value_store):
         list(
             diskstat.cluster_check_diskstat(
                 'SUMMARY',
-                type_defs.Parameters({}),
+                {},
                 {
                     'node1': {
                         'disk1': DISK_HALF,
@@ -1124,7 +1120,7 @@ def test_cluster_check_diskstat_summary(value_store):
     results_cluster = list(
         diskstat.cluster_check_diskstat(
             'SUMMARY',
-            type_defs.Parameters({}),
+            {},
             {
                 'node1': {
                     'disk1': DISK,
@@ -1142,7 +1138,7 @@ def test_cluster_check_diskstat_summary(value_store):
         list(
             diskstat.check_diskstat(
                 'SUMMARY',
-                type_defs.Parameters({}),
+                {},
                 {
                     'disk1': DISK_HALF,
                     'disk2': DISK_HALF,
@@ -1152,7 +1148,7 @@ def test_cluster_check_diskstat_summary(value_store):
     results_non_cluster = list(
         diskstat.check_diskstat(
             'SUMMARY',
-            type_defs.Parameters({}),
+            {},
             {
                 'disk1': DISK,
                 'disk2': DISK,

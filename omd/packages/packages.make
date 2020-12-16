@@ -121,6 +121,7 @@ debug:
 # Include rules to make packages
 include \
     packages/openssl/openssl.make \
+    packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \

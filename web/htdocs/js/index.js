@@ -35,6 +35,7 @@ import * as profile_replication from "profile_replication";
 import * as wato from "wato";
 import * as popup_menu from "popup_menu";
 import * as valuespecs from "valuespecs";
+import * as number_format from "number_format";
 import * as views from "views";
 import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
@@ -130,6 +131,7 @@ export const cmk_export = {
         wato: wato,
         popup_menu: popup_menu,
         valuespecs: valuespecs,
+        number_format: number_format,
         views: views,
         reload_pause: reload_pause,
         graph_integration: graph_integration,

@@ -1,34 +1,21 @@
 @startuml
-rectangle "Host" {
-  () "SNMP Trap" as snmptrap
-  () "SNMP" as snmp
-  () "TCP/IP" as tcpip
-  () "Special Agents" as specialagents
-  () "IPMI" as ipmi
-  () "Windows Agents" as windowsagents
-  () "Event Console" as eventconsole
+!include globals.iuml
+
+package "Checkmk Run-time environment: OMD" as omd {
+[Checkmk] as cmk
 }
-rectangle "3rd Party" as 3rdparty {
-  () "Notification"
-}
-rectangle "End User" as enduser {
-  () "RestAPI"
-  () "WebAPI"
-  () "Livestatus"
-  () "GUI"
-  () "Config Files" as configfiles
-}
-[Checkmk] --> snmptrap: SNMP
-[Checkmk] --> snmp: SNMP
-[Checkmk] --> tcpip: "TCP/IP"
-[Checkmk] --> specialagents: "TCP/IP"
-[Checkmk] --> ipmi: IPMI
-[Checkmk] --> windowsagents: "CMK Protocol"
-[Checkmk] --> eventconsole
-[Checkmk] -up-> Notification
-[Checkmk] --> RestAPI: "REST over TCP/IP"
-[Checkmk] --> WebAPI: "TCP/IP"
-[Checkmk] --> Livestatus: "LSQ/Unix socket"
-[Checkmk] --> GUI
-[Checkmk] --> configfiles
+[Host] as host
+
+cmk <-down- host: SNMP
+cmk <-down- host: TCP/IP
+cmk <-down- host: IPMI
+cmk <-down- host: SNMP Trap
+cmk <-down- host: Syslog
+
+cmk <-> end_user: REST / Web API
+cmk <-> end_user: LSQ/Unix Sockets
+cmk <-> end_user: WebUI
+
+cmk <-left-> third_party: notifications
+
 @enduml

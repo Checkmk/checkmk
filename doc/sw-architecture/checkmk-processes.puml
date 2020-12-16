@@ -4,6 +4,7 @@ node "OMD Processes" as omd_p {
     [mknotifyd]
     [mkeventd]
     [rrdcached]
+    [liveproxyd]
     [crontab]
     [DCD]
     [Apache]

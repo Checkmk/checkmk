@@ -13603,10 +13603,6 @@ msgid "Display only a summary of all Transactionlogs"
 msgstr ""
 
 #, fuzzy
-msgid "Display options"
-msgstr "Optiuni tabel"
-
-#, fuzzy
 msgid "Display range"
 msgstr "% / gamă"
 
@@ -57327,6 +57323,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Display options"
+#~ msgstr "Optiuni tabel"
 
 #, fuzzy
 #~| msgid "Password"

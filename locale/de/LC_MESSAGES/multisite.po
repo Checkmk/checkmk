@@ -14382,10 +14382,6 @@ msgid "Display only a summary of all Transactionlogs"
 msgstr "Nur eine Zusammenfassung der Transaktionslogs anzeigen"
 
 #, fuzzy
-msgid "Display options"
-msgstr "Anzeigeoptionen"
-
-#, fuzzy
 msgid "Display range"
 msgstr "Durchschnitt anzeigen"
 
@@ -62541,6 +62537,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Display Options"
+#~ msgid "Display options"
+#~ msgstr "Anzeigeoptionen"
 
 #, fuzzy
 #~| msgid "Add Password"

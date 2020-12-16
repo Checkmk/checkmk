@@ -17,4 +17,5 @@ Class: fix
 <b>Crashes:</b>
 <ul>
 <li>In case the given ntopng user name has insufficients rights to see the data, a warning is now shown.</li>
+<li>In case the user mapping is derived from the custom attribute "ntopng username" and this attribute is empty, all ntop links will now be hidden.</li>
 </ul>

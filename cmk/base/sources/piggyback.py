@@ -63,7 +63,7 @@ class PiggybackSource(AgentSource):
             ipaddress=self.ipaddress,
             time_settings=self.time_settings,
             # Tag: 'Always use and expect piggback data'
-            always='piggyback' in self.host_config.tags,
+            always=self.host_config.is_piggyback_host,
         )
 
     @staticmethod

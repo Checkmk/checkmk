@@ -318,12 +318,13 @@ class IndexSearcher:
                     ))
         return results
 
+    @classmethod
     def _sort_search_results(
-        self,
+        cls,
         results: IntermediateSearchResult,
     ) -> SearchResultsByTopic:
-        first_topics = self._first_topics()
-        last_topics = self._last_topics()
+        first_topics = cls._first_topics()
+        last_topics = cls._last_topics()
         middle_topics = sorted(set(results.keys()) - set(first_topics) - set(last_topics))
         yield from ((
             topic,

@@ -544,6 +544,10 @@ table.dictionary {
     width: 1%;
     white-space: nowrap;
 
+    span.required {
+      color: $success;
+    }
+
     div.popup_menu {
       white-space: normal;
     }

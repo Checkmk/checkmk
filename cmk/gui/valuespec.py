@@ -4744,6 +4744,7 @@ class Dictionary(ValueSpec):
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue
+
             html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
             html.open_td(class_="dictleft")
 
@@ -4767,6 +4768,11 @@ class Dictionary(ValueSpec):
                 visible = True
                 if vs.title():
                     html.write(" %s" % vs.title())
+                # two_columns are used for space efficiency in very few places like e.g. filters
+                # where it is clear from the context if values are required or not. Therefore, we
+                # dont add a required label in this case.
+                if not two_columns and not vs.allow_empty():
+                    html.span(" (required)", class_="required")
 
             if two_columns:
                 if vs.title() and not colon_printed:
@@ -4774,7 +4780,6 @@ class Dictionary(ValueSpec):
                 html.help(vs.help())
                 html.close_td()
                 html.open_td(class_="dictright")
-
             else:
                 html.br()
 
@@ -4791,6 +4796,7 @@ class Dictionary(ValueSpec):
             the_value = value.get(param, vs.default_value()) if isinstance(value, dict) else None
             vs.render_input(vp, the_value)
             html.close_div()
+
             html.close_td()
             html.close_tr()
         html.close_table()

@@ -133,6 +133,7 @@ repoze-profile = "==2.3"  # used for GUI/API profiling
 pyparsing = "==2.4.7"  # direct dependency
 ordered-set = "==4.0.2"  # needed by deepdiff
 deepdiff = "==5.0.2"  # used for recording setup audit log
+redis = "==3.5.3"  # needed by GUI (caching)
 
 [requires]
 python_version = "3.8"

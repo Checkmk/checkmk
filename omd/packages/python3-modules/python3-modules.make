@@ -128,6 +128,7 @@ PYTHON3_MODULES_LIST += repoze.profile-2.3.tar.gz  # very minimal wsgi profiling
 PYTHON3_MODULES_LIST += pyparsing-2.4.7.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += ordered-set-4.0.2.tar.gz # needed by deepdiff
 PYTHON3_MODULES_LIST += deepdiff-5.0.2.tar.gz  # used for recording setup audit log
+PYTHON3_MODULES_LIST += redis-3.5.3.tar.gz  # needed by GUI (caching)
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target

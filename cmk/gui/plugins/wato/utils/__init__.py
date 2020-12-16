@@ -894,7 +894,6 @@ def PredictiveLevels(**args):
         ],
         default_keys=["levels_upper"],
         columns=1,
-        headers="sup",
         elements=[
             ("period",
              DropdownChoice(title=_("Base prediction on"),

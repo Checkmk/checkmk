@@ -367,6 +367,7 @@ def serialize_host(host, attributes):
         value=constructors.object_href('folder_config',
                                        host.folder().id()),
         prop_format='string',
+        linkable=False,
     )
 
     if 'meta_data' in attributes:

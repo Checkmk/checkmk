@@ -761,13 +761,18 @@ def render_context_specs(visual, context_specs):
     if not context_specs:
         return
 
-    forms.header(_("Context / Search Filters"))
+    forms.header(_("Context / Search Filters"),
+                 show_more_toggle=any(
+                     vs.has_show_more() for _title, vs in context_specs if vs is not None))
     # Trick: the field "context" contains a dictionary with
     # all filter settings, from which the value spec will automatically
     # extract those that it needs.
     value = visual.get('context', {})
     for info_key, spec in context_specs:
-        forms.section(spec.title())
+        forms.section(
+            spec.title(),
+            is_show_more=spec.has_show_more() if isinstance(spec, Dictionary) else all(
+                flt.is_show_more for _title, flt in spec.filter_items() if flt is not None))
         ident = 'context_' + info_key
         spec.render_input(ident, value)
 
@@ -1465,6 +1470,12 @@ class VisualFilterList(ListOfMultiple):
 
     def filter_names(self):
         return self._filters.keys()
+
+    def filter_items(self):
+        return self._filters.items()
+
+    def has_show_more(self) -> bool:
+        return all(vs.is_show_more for _key, vs in self.filter_items())
 
 
 class VisualFilterListWithAddPopup(VisualFilterList):

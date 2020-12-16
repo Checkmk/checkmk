@@ -16,6 +16,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (  #
     render,)
 
 
+# ==================================================================================================
+# DEPRECATED WARNING
+# tolerance_check HERE HAS ALREADY BEEN MIGRATED TO THE NEW CHECK API.
+# PLEASE DO NOT MODIFY THIS FUNCTION ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
+# RESIDING IN
+# cmk/base/plugins/agent_based/utils/timesync.py
+# ==================================================================================================
 def tolerance_check(
     *,
     set_sync_time: Optional[float],

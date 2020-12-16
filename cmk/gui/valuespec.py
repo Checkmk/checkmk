@@ -4670,8 +4670,7 @@ class Dictionary(ValueSpec):
         render: str = "normal",
         form_narrow: bool = False,
         form_isopen: bool = True,
-        headers: Union[None, str, List[Union[_Tuple[str, List[str]], _Tuple[str, str,
-                                                                            List[str]]]]] = None,
+        headers: _Optional[List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]]] = None,
         migrate: _Optional[Callable[[_Tuple], Dict]] = None,
         indent: bool = True,
         # ValueSpec
@@ -4706,7 +4705,7 @@ class Dictionary(ValueSpec):
         self._render = render  # also: "form" -> use forms.section()
         self._form_narrow = form_narrow  # used if render == "form"
         self._form_isopen = form_isopen  # used if render == "form"
-        self._headers = headers  # "sup" -> small headers in oneline mode
+        self._headers = headers
         self._migrate = migrate  # value migration from old tuple version
         self._indent = indent
 
@@ -4738,12 +4737,9 @@ class Dictionary(ValueSpec):
         elif render == "form_part":
             self._render_input_form(varprefix, value, as_part=True)
         else:
-            self._render_input_normal(varprefix,
-                                      value,
-                                      small_headers=self._headers == "sup",
-                                      two_columns=self._columns == 2)
+            self._render_input_normal(varprefix, value, two_columns=self._columns == 2)
 
-    def _render_input_normal(self, varprefix, value, small_headers, two_columns):
+    def _render_input_normal(self, varprefix, value, two_columns):
         html.open_table(class_=["dictionary"])
         for param, vs in self._get_elements():
             if param in self._hidden_keys:

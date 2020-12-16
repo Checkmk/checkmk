@@ -211,14 +211,9 @@ def percent(perc: float, scientific_notation: bool = False) -> str:
         return "0%"
 
     # 1000 < oo
-    if abs(perc) > 999.5:
-        if scientific_notation and abs(perc) >= 100000:
-            result = "%1.e" % perc
-        else:
-            # TODO: in python3 change to >= 999.5
-            # the way python rounds x.5 changed between py2 and py3
-            result = "%d" % perc
-    # 100 < 1000
+    if scientific_notation and abs(perc) >= 100000:
+        result = "%1.e" % perc
+    # 100 < 1000 < oo
     elif abs(perc) >= 100:
         result = "%d" % perc
     # 0.0 < 0.001
@@ -233,8 +228,7 @@ def percent(perc: float, scientific_notation: bool = False) -> str:
             result = result.rstrip("0")
     # 0.001 < 100
     else:
-        result = "%.2f" % perc
-        result = result.rstrip("0").rstrip(".")
+        result = drop_dotzero(perc, 2)
 
     # add .0 to all integers < 100
     if float(result).is_integer() and float(result) < 100:

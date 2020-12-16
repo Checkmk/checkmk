@@ -4,7 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, List, Dict
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+)
 
 import cmk.gui.config as config
 import cmk.gui.views as views
@@ -111,6 +117,14 @@ mega_menu_registry.register(
 
 
 class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        topic_generator: Callable[[], Iterable[TopicMenuTopic]],
+    ) -> None:
+        super().__init__(name)
+        self._topic_generator = topic_generator
+
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
             title=topic_menu_item.title,
@@ -118,7 +132,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
             url=topic_menu_item.url,
             match_texts=[topic_menu_item.title],
         )
-                    for topic_menu_topic in mega_menu_registry["setup"].topics()
+                    for topic_menu_topic in self._topic_generator()
                     for topic_menu_item in topic_menu_topic.items)
 
     @staticmethod
@@ -130,7 +144,11 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
         return True
 
 
-match_item_generator_registry.register(MatchItemGeneratorSetupMenu("setup"))
+match_item_generator_registry.register(
+    MatchItemGeneratorSetupMenu(
+        "setup",
+        mega_menu_registry["setup"].topics,
+    ))
 
 
 @snapin_registry.register

@@ -4371,6 +4371,14 @@ hooks.register_builtin("pre-activate-changes", mkeventd_update_notifiation_confi
 
 
 class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        rule_pack_loader: Callable[[], ec.ECRulePacks],
+    ) -> None:
+        super().__init__(name)
+        self._rule_pack_loader = rule_pack_loader
+
     def generate_match_items(self) -> MatchItems:
         for rule_pack in self._iter_rulepacks():
             rule_pack_title = rule_pack["title"]
@@ -4387,7 +4395,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
     def _iter_rulepacks(self) -> Iterable[ec.ECRulePackSpec]:
         yield from (opt_rule_pack
                     for opt_rule_pack in (self._rule_pack_from_rule_pack_or_mkp(rule_pack_or_mkp)
-                                          for rule_pack_or_mkp in ec.load_rule_packs())
+                                          for rule_pack_or_mkp in self._rule_pack_loader())
                     if opt_rule_pack)
 
     def _rule_pack_from_rule_pack_or_mkp(
@@ -4428,7 +4436,11 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         return False
 
 
-match_item_generator_registry.register(MatchItemGeneratorECRulePacksAndRules("event_console"))
+match_item_generator_registry.register(
+    MatchItemGeneratorECRulePacksAndRules(
+        "event_console",
+        ec.load_rule_packs,
+    ))
 
 match_item_generator_registry.register(
     MatchItemGeneratorSettings(

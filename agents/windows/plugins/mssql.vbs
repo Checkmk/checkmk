@@ -109,6 +109,7 @@ sections.add "transactionlogs", "<<<mssql_transactionlogs:sep(124)>>>"
 sections.add "datafiles", "<<<mssql_datafiles:sep(124)>>>"
 sections.add "clusters", "<<<mssql_cluster:sep(124)>>>"
 sections.add "jobs", "<<<mssql_jobs:sep(09)>>>"
+sections.add "mirroring", "<<<mssql_mirroring:sep(09)>>>"
 ' Has been deprecated with 1.4.0i1. Keep this for nicer transition for some versions.
 sections.add "versions", "<<<mssql_versions:sep(124)>>>"
 sections.add "connections", "<<<mssql_connections>>>"
@@ -727,6 +728,37 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             " ORDER BY sj.name " &_
             "          ,sjs.next_run_date ASC " &_
             "          ,sjs.next_run_time ASC " &_
+            "; ", CONN
+
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        addOutput(instance_id & " " & errMsg)
+    Else
+        Do While Not RS.Eof
+            'See following documentation for use of parameters and the GetString method:
+            'https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/getstring-method-ado?view=sql-server-ver15
+            addOutput(instance_id & vbCrLf & RS.GetString(2,,vbTab,vbCrLf,""))
+        Loop
+        RS.Close
+    End If
+
+    addOutput(sections("mirroring"))
+    RS.Open "USE [master];", CONN
+    RS.Open "SELECT @@SERVERNAME as server_name, " &_
+            "       DB_NAME(database_id) AS [database_name], " &_
+            "       mirroring_state, " &_
+            "       mirroring_state_desc, " &_
+            "       mirroring_role, " &_
+            "       mirroring_role_desc, " &_
+            "       mirroring_safety_level, " &_
+            "       mirroring_safety_level_desc, " &_
+            "       mirroring_partner_name, " &_
+            "       mirroring_partner_instance, " &_
+            "       mirroring_witness_name, " &_
+            "       mirroring_witness_state, " &_
+            "       mirroring_witness_state_desc " &_
+            "  FROM sys.database_mirroring " &_
+            "  WHERE mirroring_state IS NOT NULL " &_
             "; ", CONN
 
     errMsg = checkConnErrors(CONN)

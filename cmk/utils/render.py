@@ -80,8 +80,7 @@ class Age:
 
         days = hours / 24.0
         if days < 6:
-            d = ("%.1f" % days).rstrip("0").rstrip(".")
-            return "%s %s" % (d, _("d"))
+            return "%s %s" % (drop_dotzero(days, 1), _("d"))
         if days < 999:
             return "%.0f %s" % (days, _("d"))
         years = days / 365.0

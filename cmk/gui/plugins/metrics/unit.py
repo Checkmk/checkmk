@@ -53,12 +53,14 @@ unit_info[""] = {
     "description": _("Floating point number"),
     "symbol": "",
     "render": lambda v: cmk.utils.render.scientific(v, 2),
+    "js_render": "v => cmk.number_format.scientific(v, 2)",
 }
 
 unit_info["count"] = {
     "title": _("Count"),
     "symbol": "",
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, drop_zeroes=True),
+    "js_render": "v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)",
     "stepping": "integer",  # for vertical graph labels
 }
 
@@ -68,6 +70,7 @@ unit_info["%"] = {
     "description": _("Percentage (0...100)"),
     "symbol": _("%"),
     "render": lambda v: cmk.utils.render.percent(v, scientific_notation=True),
+    "js_render": "v => cmk.number_format.percent(v, true)",
 }
 
 unit_info["s"] = {
@@ -75,6 +78,7 @@ unit_info["s"] = {
     "description": _("Timespan or Duration in seconds"),
     "symbol": _("s"),
     "render": cmk.utils.render.approx_age,
+    "js_render": "cmk.number_format.approx_age",
     "stepping": "time",  # for vertical graph labels
 }
 
@@ -83,6 +87,7 @@ unit_info["1/s"] = {
     "description": _("Frequency (displayed in events/s)"),
     "symbol": _("/s"),
     "render": lambda v: "%s%s" % (cmk.utils.render.drop_dotzero(v), _("/s")),
+    "js_render": "v => cmk.number_format.drop_dotzero(v) + '/s'",
 }
 
 unit_info["hz"] = {
@@ -90,12 +95,14 @@ unit_info["hz"] = {
     "symbol": _("Hz"),
     "description": _("Frequency (displayed in Hz)"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("Hz")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'Hz')",
 }
 
 unit_info["bytes"] = {
     "title": _("Bytes"),
     "symbol": _("B"),
     "render": cmk.utils.render.fmt_bytes,
+    "js_render": "cmk.number_format.fmt_bytes",
     "stepping": "binary",  # for vertical graph labels
 }
 
@@ -103,6 +110,7 @@ unit_info["bytes/s"] = {
     "title": _("Bytes per second"),
     "symbol": _("B/s"),
     "render": lambda v: cmk.utils.render.fmt_bytes(v) + _("/s"),
+    "js_render": "(v) => cmk.number_format.fmt_bytes(v)+'/s'",
     "stepping": "binary",  # for vertical graph labels
 }
 
@@ -116,10 +124,7 @@ def physical_precision_list(values, precision, unit_symbol):
     scale_symbol, places_after_comma, scale_factor = cmk.utils.render.calculate_physical_precision(
         reference, precision)
 
-    scaled_values = []
-    for value in values:
-        scaled_value = float(value) / scale_factor
-        scaled_values.append(("%%.%df" % places_after_comma) % scaled_value)
+    scaled_values = ["%.*f" % (places_after_comma, float(value) / scale_factor) for value in values]
 
     return "%s%s" % (scale_symbol, unit_symbol), scaled_values
 
@@ -128,6 +133,7 @@ unit_info["bits/s"] = {
     "title": _("Bits per second"),
     "symbol": _("bits/s"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("bit/s")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'bit/s')",
     "graph_unit": lambda v: physical_precision_list(v, 3, _("bit/s")),
 }
 
@@ -153,6 +159,7 @@ unit_info["bytes/d"] = {
     "title": _("Bytes per day"),
     "symbol": _("B/d"),
     "render": lambda v: cmk.utils.render.fmt_bytes(v * 86400.0) + "/d",
+    "js_render": "v => cmk.number_format.fmt_bytes(v * 86400) + '/d'",
     "graph_unit": lambda values: bytes_human_readable_list([v * 86400.0 for v in values],
                                                            unit=_("B/d")),
     "stepping": "binary",  # for vertical graph labels
@@ -162,54 +169,63 @@ unit_info["c"] = {
     "title": _("Degree Celsius"),
     "symbol": u"°C",
     "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), u"°C"),
+    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' °C'",
 }
 
 unit_info["a"] = {
     "title": _("Electrical Current (Amperage)"),
     "symbol": _("A"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("A")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'A')",
 }
 
 unit_info["v"] = {
     "title": _("Electrical Tension (Voltage)"),
     "symbol": _("V"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("V")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'V')",
 }
 
 unit_info["w"] = {
     "title": _("Electrical Power"),
     "symbol": _("W"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("W")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'W')",
 }
 
 unit_info["va"] = {
     "title": _("Electrical Apparent Power"),
     "symbol": _("VA"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("VA")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'VA')",
 }
 
 unit_info["wh"] = {
     "title": _("Electrical Energy"),
     "symbol": _("Wh"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("Wh")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'Wh')",
 }
 
 unit_info["dbm"] = {
     "title": _("Decibel-milliwatts"),
     "symbol": _("dBm"),
     "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), _("dBm")),
+    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' dBm'",
 }
 
 unit_info["dbmv"] = {
     "title": _("Decibel-millivolt"),
     "symbol": _("dBmV"),
     "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), _("dBmV")),
+    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' dBmV'",
 }
 
 unit_info["db"] = {
     "title": _("Decibel"),
     "symbol": _("dB"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("dB")),
+    "js_render": "v => cmk.number_format.drop_dotzero(v) + 'dB'",
 }
 
 unit_info["ppm"] = {
@@ -217,6 +233,7 @@ unit_info["ppm"] = {
     "symbol": _("ppm"),
     "description": _("Parts per Million"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("ppm")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'ppm')",
 }
 
 # 'Percent obscuration per meter'-Obscuration for any atmospheric phenomenon, e.g. smoke, dust, snow
@@ -224,30 +241,35 @@ unit_info["%/m"] = {
     "title": _("Percent Per Meter"),
     "symbol": _("%/m"),
     "render": lambda v: cmk.utils.render.percent(v, scientific_notation=True) + _("/m"),
+    "js_render": "v => cmk.number_format.percent(v, true) + '/m'",
 }
 
 unit_info["bar"] = {
     "title": _("Bar"),
     "symbol": _("bar"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 4, _("bar")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 4, 'bar')",
 }
 
 unit_info["pa"] = {
     "title": _("Pascal"),
     "symbol": _("Pa"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("Pa")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'Pa')",
 }
 
 unit_info["l/s"] = {
     "title": _("Liters per second"),
     "symbol": _("l/s"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("l/s")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 3, 'l/s')",
 }
 
 unit_info["rpm"] = {
     "title": _("Revolutions per minute"),
     "symbol": _("rpm"),
     "render": lambda v: cmk.utils.render.physical_precision(v, 4, _("rpm")),
+    "js_render": "v => cmk.number_format.physical_precision(v, 4, 'rpm')",
 }
 
 unit_info['bytes/op'] = {
@@ -255,12 +277,14 @@ unit_info['bytes/op'] = {
     'symbol': 'bytes/op',
     'color': '#4080c0',
     "render": cmk.utils.render.fmt_bytes,
+    "js_render": "cmk.number_format.fmt_bytes",
 }
 
 unit_info['EUR'] = {
     "title": _("Euro"),
     "symbol": u"€",
     "render": lambda v: u"%s €" % v,
+    "js_render": "v => v.toFixed(2) + ' €'",
 }
 
 unit_info['RCU'] = {
@@ -268,6 +292,7 @@ unit_info['RCU'] = {
     "symbol": _("RCU"),
     "description": _("Read Capacity Units"),
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="RCU"),
+    "js_render": "v => cmk.number_format.fmt_number_with_precision(v, 1000, 3, false, 'RCU')",
 }
 
 unit_info['WCU'] = {
@@ -275,4 +300,5 @@ unit_info['WCU'] = {
     "symbol": _("WCU"),
     "description": _("Write Capacity Units"),
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, precision=3, unit="WCU"),
+    "js_render": "v => cmk.number_format.fmt_number_with_precision(v, 1000, 3, false, 'WCU')",
 }

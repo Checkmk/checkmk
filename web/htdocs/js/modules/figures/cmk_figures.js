@@ -701,6 +701,10 @@ export function split_unit(recipe) {
     return {value: text, unit: "", url: recipe.url};
 }
 
+export function get_function(render_string) {
+    return Function(`"use strict"; return ${render_string}`)();
+}
+
 export function metric_value_component(selection, value, attr, style) {
     let link = selection
         .selectAll("a.single_value")

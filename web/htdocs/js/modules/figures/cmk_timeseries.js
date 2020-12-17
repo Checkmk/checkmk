@@ -1126,14 +1126,18 @@ class SingleValuePlot extends SubPlot {
         );
         const levels = cmk_figures.make_levels(domain, plot.metrics);
 
-        const data_point = this.transformed_data.find(element => element.formatted_value);
+        const formatter = cmk_figures.get_function(plot.js_render);
+        const last_value = this.transformed_data.find(element => element.url);
         const plot_size = this._renderer.plot_size;
         const color = levels.length
-            ? levels.find(element => data_point.value < element.to).color
+            ? levels.find(element => last_value.value < element.to).color
             : "#FFFFFF";
         const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
 
-        const value = cmk_figures.split_unit(data_point);
+        const value = cmk_figures.split_unit({
+            formatted_value: formatter(last_value.value),
+            url: last_value.url,
+        });
         cmk_figures.metric_value_component(
             this.svg,
             value,

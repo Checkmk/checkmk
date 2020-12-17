@@ -86,17 +86,17 @@ class GaugeFigure extends cmk_figures.FigureBase {
                     .endAngle(limit)
             );
     }
-    _render_gauge_range_labels(domain) {
+    _render_gauge_range_labels(domain, formatter) {
         let limit = (15 * Math.PI) / 24;
         let label_rad = 0.8 * this._radius;
         let domain_labels = [
             {
-                value: domain[0].toFixed(2),
+                value: formatter(domain[0]),
                 y: -label_rad * Math.cos(limit),
                 x: label_rad * Math.sin(-limit),
             },
             {
-                value: domain[1].toFixed(2),
+                value: formatter(domain[1]),
                 y: -label_rad * Math.cos(limit),
                 x: label_rad * Math.sin(limit),
             },
@@ -131,8 +131,9 @@ class GaugeFigure extends cmk_figures.FigureBase {
         if (Array.isArray(display_range) && display_range[0] === "fixed") domain = display_range[1];
 
         const levels = cmk_figures.make_levels(domain, plot.metrics);
+        const formatter = cmk_figures.get_function(plot.js_render);
 
-        // this._render_gauge_range_labels(domain);
+        this._render_gauge_range_labels(domain, formatter);
 
         const limit = (7 * Math.PI) / 12;
         const scale_x = d3.scaleLinear().domain(domain).range([-limit, limit]);
@@ -156,14 +157,22 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .join("title")
             .text(d => d.from + " -> " + d.to);
 
-        const value = data[data.length - 1].value;
-        const color = levels.length ? levels.find(element => value < element.to).color : "#3CC2FF";
+        const last_value = data[data.length - 1];
+        const color = levels.length
+            ? levels.find(element => last_value.value < element.to).color
+            : "#3CC2FF";
 
-        this._render_text(data, color);
+        this._render_text(
+            {
+                formatted_value: formatter(last_value.value),
+                url: last_value.url,
+            },
+            color
+        );
         // gauge bar
         this.plot
             .selectAll("path.value")
-            .data([{value, color}])
+            .data([{value: last_value.value, color}])
             .join(enter => enter.append("path").classed("value", true))
             .attr("fill", d => d.color)
             .attr("opacity", 0.9)
@@ -225,10 +234,10 @@ class GaugeFigure extends cmk_figures.FigureBase {
             });
     }
 
-    _render_text(data, color) {
+    _render_text(value, color) {
         cmk_figures.metric_value_component(
             this.plot,
-            cmk_figures.split_unit(data[data.length - 1]),
+            cmk_figures.split_unit(value),
             {x: 0, y: -this._radius / 5},
             {font_size: this._radius / 3.5, color: color}
         );

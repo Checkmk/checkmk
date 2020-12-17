@@ -34,7 +34,7 @@ def signl4_msg(context):
         service_problem_id = ''
 
     # Check if this is a new problem or a recovery
-    s4_status = 'new' if notification_type == "RECOVERY" else 'resolved'
+    s4_status = 'new' if notification_type != "RECOVERY" else 'resolved'
 
     message = {
         'Title': f'{notification_type} on {host_name}',
@@ -52,6 +52,7 @@ def signl4_msg(context):
         'HostProblemId': host_problem_id,
         'ServiceProblemId': service_problem_id,
         'DateTime': context.get('SHORTDATETIME', ''),
+        'X-S4-SourceSystem': 'Checkmk',
         'X-S4-ExternalID': 'Checkmk: ' + host_name + '-' + host_problem_id + '-' +
                            service_problem_id,
         'X-S4-Status': s4_status

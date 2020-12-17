@@ -4826,7 +4826,7 @@ class RulespecGroupMonitoringAgents(RulespecGroup):
 
     @property
     def title(self):
-        return _("Monitoring Agents")
+        return _("Agent rules")
 
     @property
     def help(self):

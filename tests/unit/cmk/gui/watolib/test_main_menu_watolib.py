@@ -45,6 +45,7 @@ def test_registered_modules():
         'rule_search',
         'wato.py?group=activechecks&mode=rulesets',
         'wato.py?group=agent&mode=rulesets',
+        'wato.py?group=agents&mode=rulesets',
         'wato.py?group=checkparams&mode=rulesets',
         'wato.py?group=custom_checks&mode=rulesets',
         'wato.py?group=datasource_programs&mode=rulesets',

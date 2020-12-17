@@ -1085,18 +1085,16 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName, board: DashboardCon
             (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
     )
 
-    # TODO: Renable Top Talkers Dashboard as soon the feature is ready
-    # CMK-6746
-    # yield PageMenuEntry(
-    #     title='Top talkers',
-    #     icon_name={
-    #         'icon': 'ntop',
-    #         'emblem': 'statistic',
-    #     },
-    #     item=make_simple_link(
-    #         'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_top_talkers' %
-    #         (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
-    # )
+    yield PageMenuEntry(
+        title='Top talkers',
+        icon_name={
+            'icon': 'ntop',
+            'emblem': 'statistic',
+        },
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_top_talkers' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
 
 
 def _dashboard_add_other_dashlet_entries(name: DashboardName, board: DashboardConfig,

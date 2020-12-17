@@ -1255,19 +1255,16 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
         self._rulespec_registry = rulespec_reg
 
     def _topic_from_group_name(self, group_name: str) -> str:
-        main_group = self._rulespec_group_registry[group_name]()
-        if isinstance(main_group, RulespecSubGroup):
-            main_group = main_group.main_group()
         topic_prefix = main_module_from_rulespec_group_name(
-            main_group.name,
+            group_name,
             self._main_module_registry,
         ).topic.title
-        return f"{topic_prefix} > {main_group.title}"
+        return f"{topic_prefix} > {self._rulespec_group_registry[group_name]().title}"
 
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
             title=rulespec.title,
-            topic=self._topic_from_group_name(group),
+            topic=self._topic_from_group_name(rulespec.main_group_name),
             url=makeuri_contextless(
                 request,
                 [("mode", "edit_ruleset"), ("varname", rulespec.name)],

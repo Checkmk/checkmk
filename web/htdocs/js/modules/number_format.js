@@ -73,6 +73,52 @@ export function scientific(v, precision) {
     return v.toExponetial(precision);
 }
 
+export function calculate_physical_precision(v, precision) {
+    if (v == 0) return ["", precision - 1, 1];
+
+    let [_mantissa, exponent] = frexpb(v, 10);
+
+    if (Number.isInteger(v)) precision = Math.min(precision, exponent + 1);
+
+    let scale = 0;
+
+    while (exponent < 0 && scale > -5) {
+        scale -= 1;
+        exponent += 3;
+    }
+    let places_before_comma = exponent + 1;
+    let places_after_comma = precision - places_before_comma;
+    while (places_after_comma < 0 && scale < 5) {
+        scale += 1;
+        exponent -= 3;
+        places_before_comma = exponent + 1;
+        places_after_comma = precision - places_before_comma;
+    }
+
+    const scale_symbols = {
+        "-5": "f",
+        "-4": "p",
+        "-3": "n",
+        "-2": "µ",
+        "-1": "m",
+        0: "",
+        1: "k",
+        2: "M",
+        3: "G",
+        4: "T",
+        5: "P",
+    };
+
+    return [scale_symbols[scale], places_after_comma, 1000 ** scale];
+}
+
+export function physical_precision(v, precision, unit_symbol) {
+    if (v < 0) return "-" + physical_precision(-1 * v, precision, unit_symbol);
+    const [symbol, places_after_comma, factor] = calculate_physical_precision(v, precision);
+    const scaled_value = v / factor;
+    return scaled_value.toFixed(places_after_comma) + symbol + unit_symbol;
+}
+
 export function frexpb(x, base) {
     let exp = Math.floor(Math.log(x) / Math.log(base));
     let mantissa = x / base ** exp;

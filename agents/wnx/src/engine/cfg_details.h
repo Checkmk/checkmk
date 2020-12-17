@@ -26,10 +26,10 @@
 namespace cma::cfg::details {
 
 // tool to get ImagePath value from Registry
-std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept;
+std::wstring FindServiceImagePath(std::wstring_view service_name);
 
 std::filesystem::path ExtractPathFromServiceName(
-    std::wstring_view service_name) noexcept;
+    std::wstring_view service_name);
 
 std::filesystem::path FindRootByExePath(const std::wstring& cmd_line);
 
@@ -50,7 +50,7 @@ public:
                    const std::wstring& preset_root);  // look in disk
     enum class CreateMode { with_path, direct };
     enum class Protection { no, yes };
-    void createDataFolderStructure(const std::wstring& AgentDataFolder,
+    void createDataFolderStructure(const std::wstring& proposed_folder,
                                    CreateMode mode, Protection protection);
 
     // for testing and reloading
@@ -142,7 +142,7 @@ private:
 std::vector<std::wstring_view> AllDirTable();
 std::vector<std::wstring_view> RemovableDirTable();
 
-int CreateTree(const std::filesystem::path& base_path) noexcept;
+int CreateTree(const std::filesystem::path& base_path);
 
 }  // namespace cma::cfg::details
 
@@ -153,14 +153,14 @@ constexpr size_t kMaxFoldersStackSize = 10;
 enum class Combine { overwrite, merge, merge_value };
 constexpr Combine GetCombineMode(std::string_view name);
 void CombineSequence(std::string_view name, YAML::Node target_value,
-                     const YAML::Node source_value, Combine combine);
+                     const YAML::Node& source_value, Combine combine);
 
 // critical and invisible global variables
 // YAML config and PAThs are here
 class ConfigInfo {
     struct YamlData {
         YamlData(const std::filesystem::path& Path,
-                 std::filesystem::file_time_type Timestamp)
+                 std::filesystem::file_time_type Timestamp) noexcept
             : path_(Path) {}
 
         void loadFile() {
@@ -230,9 +230,10 @@ public:
     ConfigInfo() {}
     ConfigInfo(const ConfigInfo&) = delete;
     ConfigInfo& operator=(const ConfigInfo&) = delete;
-    void initFolders(const std::wstring& ServiceValidName,  // look in registry
-                     const std::wstring& RootFolder,        // look in disk
-                     const std::wstring& AgentDataFolder);  // look in disk
+    void initFolders(
+        const std::wstring& service_valid_name,  // look in registry
+        const std::wstring& root_folder,         // look in disk
+        const std::wstring& data_folder);        // look in disk
 
     void cleanFolders();
     void cleanConfig();
@@ -389,20 +390,21 @@ public:
     LoadCfgStatus loadAggregated(const std::wstring& config_filename,
                                  YamlCacheOp cache_op);
 
-    static bool smartMerge(YAML::Node Target, YAML::Node Src, Combine combine);
+    static bool smartMerge(YAML::Node& target, const YAML::Node& source,
+                           Combine combine);
 
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path& file);
 
-    uint64_t uniqId() const noexcept { return uniq_id_; }
+    uint64_t uniqId() const noexcept { return s_uniq_id_; }
 
 private:
-    void fillExePaths(std::filesystem::path root);
+    void fillExePaths(const std::filesystem::path& root);
     void fillConfigDirs();
     std::vector<YamlData> buildYamlData(
-        const std::wstring& ConfigFileName) const noexcept;
-    void loadYamlDataWithMerge(YAML::Node Config,
-                               const std::vector<YamlData>& Yd);
+        const std::wstring& config_file_name) const;
+    void loadYamlDataWithMerge(YAML::Node config_node,
+                               const std::vector<YamlData>& yaml_data);
     // LOOOONG operation
     // when failed old config retained
     void initEnvironment();
@@ -440,7 +442,7 @@ private:
     std::atomic<int> backup_log_max_count_ = kBackupLogMaxCount;
     std::atomic<size_t> backup_log_max_size_ = kBackupLogMaxSize;
 
-    static std::atomic<uint64_t> uniq_id_;
+    static std::atomic<uint64_t> s_uniq_id_;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class StartTest;
@@ -454,8 +456,8 @@ private:
 
 std::filesystem::path ConvertLocationToLogPath(std::string_view location);
 std::filesystem::path GetDefaultLogPath();
-std::wstring FindMsiExec() noexcept;
-std::string FindHostName() noexcept;
+std::wstring FindMsiExec();
+std::string FindHostName();
 }  // namespace details
 details::ConfigInfo& GetCfg();
 }  // namespace cma::cfg

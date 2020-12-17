@@ -103,11 +103,11 @@ constexpr const KNOWNFOLDERID& kPublicFolderId = FOLDERID_Public;
 constexpr const KNOWNFOLDERID& kWindowsFolderId = FOLDERID_Windows;
 
 // gtest [+] everywhere
-const std::string GetCurrentLogFileName();
-const int GetCurrentDebugLevel();
+std::string GetCurrentLogFileName();
+int GetCurrentDebugLevel();
 XLOG::EventLevel GetCurrentEventLevel();  // fixed at the moment on Critical
-const bool GetCurrentWinDbg();
-const bool GetCurrentEventLog();
+bool GetCurrentWinDbg();
+bool GetCurrentEventLog();
 
 // gtest [+] everywhere
 inline const std::wstring GetDefaultPrefixName() {
@@ -119,12 +119,12 @@ inline const std::wstring GetDefaultPrefixName() {
 }
 
 // where you can find executables
-const std::vector<std::wstring>& ExternalCommandPaths();
+std::vector<std::wstring>& ExternalCommandPaths();
 
 // API to find a file on exe path
-const std::wstring FindExeFileOnPath(const std::wstring& File);
-const std::wstring FindConfigFile(const std::filesystem::path& Dir,
-                                  const std::wstring& File);
+std::wstring FindExeFileOnPath(const std::wstring& file_name);
+std::wstring FindConfigFile(const std::filesystem::path& dir_name,
+                            const std::wstring& file_name);
 
 // API for testing and logging
 std::vector<std::filesystem::path> GetExePaths();
@@ -164,19 +164,19 @@ constexpr const wchar_t* kLog = L"log";        // owned by agent
 namespace envs {
 
 // to inform plugins where place state file
-constexpr const char* const kMkStateDirName = "MK_STATEDIR";
-constexpr const char* const kMkConfDirName = "MK_CONFDIR";
-constexpr const char* const kMkLocalDirName = "MK_LOCALDIR";
-constexpr const char* const kMkTempDirName = "MK_TEMPDIR";
-constexpr const char* const kMkSpoolDirName = "MK_SPOOLDIR";
-constexpr const char* const kMkPluginsDirName = "MK_PLUGINSDIR";
-constexpr const char* const kMkLogDirName = "MK_LOGDIR";
-constexpr const char* const kRemoteHost = "REMOTE_HOST";
-constexpr const char* const kRemote = "REMOTE";
+constexpr std::string_view kMkStateDirName{"MK_STATEDIR"};
+constexpr std::string_view kMkConfDirName{"MK_CONFDIR"};
+constexpr std::string_view kMkLocalDirName{"MK_LOCALDIR"};
+constexpr std::string_view kMkTempDirName{"MK_TEMPDIR"};
+constexpr std::string_view kMkSpoolDirName{"MK_SPOOLDIR"};
+constexpr std::string_view kMkPluginsDirName{"MK_PLUGINSDIR"};
+constexpr std::string_view kMkLogDirName{"MK_LOGDIR"};
+constexpr std::string_view kRemoteHost{"REMOTE_HOST"};
+constexpr std::string_view kRemote{"REMOTE"};
 
-constexpr std::string_view kMkInstallDirName = "MK_INSTALLDIR";
-constexpr std::string_view kMkModulesDirName = "MK_MODULESDIR";
-constexpr std::string_view kMkMsiPathName = "MK_MSI_PATH";
+constexpr std::string_view kMkInstallDirName{"MK_INSTALLDIR"};
+constexpr std::string_view kMkModulesDirName{"MK_MODULESDIR"};
+constexpr std::string_view kMkMsiPathName{"MK_MSI_PATH"};
 
 };  // namespace envs
 

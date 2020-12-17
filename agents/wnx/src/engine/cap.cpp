@@ -212,8 +212,10 @@ static std::string GetTryKillMode() {
                   std::string(cma::cfg::defaults::kTryKillPluginProcess));
 }
 
-static const std::wstring TryToKillAllowedNames[] = {
+namespace {
+const std::array<std::wstring, 3> TryToKillAllowedNames = {
     L"cmk-update-agent.exe", L"mk_logwatch.exe", L"mk_jolokia.exe"};
+}
 
 [[nodiscard]] bool IsAllowedToKill(std::wstring_view proc_name) {
     auto try_kill_mode = GetTryKillMode();
@@ -257,7 +259,8 @@ static const std::wstring TryToKillAllowedNames[] = {
         if (!allowed_to_kill) return false;
 
         wtools::KillProcessFully(proc_name);
-        cma::tools::sleep(500ms);
+        constexpr auto delay = 500ms;
+        cma::tools::sleep(delay);
     }
 
     return false;
@@ -271,7 +274,7 @@ static const std::wstring TryToKillAllowedNames[] = {
 bool CheckAllFilesWritable(const std::string &Directory) {
     namespace fs = std::filesystem;
     bool all_writable = true;
-    for (auto &p : fs::recursive_directory_iterator(Directory)) {
+    for (const auto &p : fs::recursive_directory_iterator(Directory)) {
         std::error_code ec;
         auto const &path = p.path();
         if (fs::is_directory(path, ec)) continue;
@@ -280,13 +283,14 @@ bool CheckAllFilesWritable(const std::string &Directory) {
         auto path_string = path.wstring();
         if (path_string.empty()) continue;
 
-        auto handle = ::CreateFile(path_string.c_str(),  // file to open
-                                   GENERIC_WRITE,        // open for write
-                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                   nullptr,  // default security
-                                   OPEN_EXISTING,
-                                   FILE_ATTRIBUTE_NORMAL,  // normal file
-                                   nullptr);
+        auto *handle =
+            ::CreateFile(path_string.c_str(),                 // file to open
+                         GENERIC_WRITE,                       // open for write
+                         FILE_SHARE_READ | FILE_SHARE_WRITE,  // NOLINT
+                         nullptr,  // default security
+                         OPEN_EXISTING,
+                         FILE_ATTRIBUTE_NORMAL,  // normal file
+                         nullptr);
         if (wtools::IsGoodHandle(handle)) {
             ::CloseHandle(handle);
         } else {
@@ -439,21 +443,6 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
     return changed;
 }
 
-static void ConvertIniToBakery(const std::filesystem::path &bakery_yml,
-                               const std::filesystem::path &source_ini) {
-    auto yaml = upgrade::LoadIni(source_ini);
-
-    if (!yaml.has_value()) return;  // bad ini
-
-    XLOG::l.i("Creating Bakery file '{}'", bakery_yml);
-    std::ofstream ofs(bakery_yml);
-    if (ofs) {
-        ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
-        ofs << *yaml;
-    }
-    XLOG::l.i("Creating Bakery file SUCCESS");
-}
-
 namespace details {
 void UninstallYaml(const std::filesystem::path &bakery_yaml,
                    const std::filesystem::path &target_yaml) {
@@ -583,7 +572,7 @@ static std::string KillTrailingCR(std::string &&message) {
 bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
                        std::wstring_view target_dir,  // $CUSTOM_PLUGINS_PATH$
                        std::wstring_view source_dir,  // @root/install
-                       Mode mode) noexcept {
+                       Mode mode) {
     namespace fs = std::filesystem;
 
     std::error_code ec;
@@ -708,12 +697,12 @@ bool ReInstall() {
     };
 
     try {
-        for (const auto [name, func] : data_vector) {
-            auto target = user_dir / name;
-            auto source = root_dir / name;
+        for (const auto &p : data_vector) {
+            auto target = user_dir / p.first;
+            auto source = root_dir / p.first;
 
             XLOG::l.i("Forced Reinstalling '{}' with '{}'", target, source);
-            func(target, source);
+            p.second(target, source);
         }
 
         ReinstallYaml(bakery_dir / files::kBakeryYmlFile,

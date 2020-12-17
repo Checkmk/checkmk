@@ -20,8 +20,8 @@
 #include "tools/_win.h"
 
 namespace cma::details {
-extern bool G_Service;
-extern bool G_Test;
+extern bool g_is_service;
+extern bool g_is_test;
 }  // namespace cma::details
 
 namespace wtools {  // to become friendly for cma::cfg classes
@@ -534,13 +534,13 @@ TEST(Wtools, UserGroupName) {
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"").empty());
     EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_TST_XX");
 
-    cma::details::G_Service = true;
-    ON_OUT_OF_SCOPE(cma::details::G_Service = false;
-                    cma::details::G_Test = true);
+    cma::details::g_is_service = true;
+    ON_OUT_OF_SCOPE(cma::details::g_is_service = false;
+                    cma::details::g_is_test = true);
 
     EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_in_XX");
-    cma::details::G_Service = false;
-    cma::details::G_Test = false;
+    cma::details::g_is_service = false;
+    cma::details::g_is_test = false;
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"XX").empty());
 }
 

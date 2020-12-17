@@ -1007,12 +1007,16 @@ counter-balanced via explanatory comments.
 
 ## Localization
 
-The User interface of Checkmk can be localized. Currently we maintain a German
-localization of Checkmk for all users. We are open to support other languages
-when the localization is in a good state and nearly complete.
+The user interface of Checkmk can be localized using [Weblate](https://translate.checkmk.com/).
+We are very happy about any contributions to the localization of Checkmk. To
+contribute, please first register an account at our Weblate server. Afterwards,
+you can iterate through untranslated source strings and localize them. See this
+[forum post](https://forum.checkmk.com/t/about-the-localization-category/21578)
+for further information.
 
-If you are interested: We can use [POEditor.com](https://poeditor.com) for
-upstream localizations. Please contact us at info@checkmk.com if you are interested.
+Please note that any PRs which directly edit the PO-files will be disregarded,
+since the localization should be done exclusively via Weblate to avoid merge
+conflicts.
 
 ### Translation of technical terms
 

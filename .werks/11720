@@ -1,0 +1,28 @@
+Title: Cleanup graphs and check output for network interface checks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608196016
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+All graphs showing average metrics (e.g. "In_avg15" for the 15-minutes average
+value of incoming traffic) have been removed from all interface services, as
+the underlying value is only needed for evaluation of average-based warn/crit
+levels and the graph adds no additional information to the normal output.
+
+All displayed graphs now show the absolute value of the corresponding
+rate, independent of the type of the specified warn/crit levels (percentual, absolute).
+This had not been the case for errors, multicast and broadcast graphs.
+
+All available packet rates, i.e. unicast, non-unicast, multicast, broadcast,
+errors, discards, are now displayed in the detailed service output. The values will be shown
+as percetual or absolute values, depending on the type of the underlying warn/crit levels,
+with the absolute value being the default, if no levels are specified. Please note that
+for error levels, there is a default of warn:0.01% and crit:0.001%, therefore,
+the error rates will be displayed in percent by default. If averaging is activated for
+the packet rate levels, the corresponding average value will be displayed instead.
+
+Finally, the bandwidth graph has been moved up to the top of the displayed graphs.

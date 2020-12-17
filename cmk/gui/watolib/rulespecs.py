@@ -34,6 +34,7 @@ from cmk.gui.watolib.search import (
     match_item_generator_registry,
 )
 from cmk.gui.watolib.main_menu import (
+    ABCMainModule,
     ModuleRegistry,
     main_module_registry,
 )
@@ -1230,6 +1231,16 @@ class TimeperiodValuespec(ValueSpec):
         return self._get_used_valuespec(value).transform_value(value)
 
 
+def main_module_from_rulespec_group_name(
+    group_name: str,
+    main_module_reg: ModuleRegistry,
+) -> ABCMainModule:
+    return main_module_reg[makeuri_contextless_ruleset_group(
+        request,
+        group_name,
+    )]()
+
+
 class MatchItemGeneratorRules(ABCMatchItemGenerator):
     def __init__(
         self,
@@ -1244,21 +1255,13 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
         self._rulespec_registry = rulespec_reg
 
     def _topic_from_group_name(self, group_name: str) -> str:
-
         main_group = self._rulespec_group_registry[group_name]()
         if isinstance(main_group, RulespecSubGroup):
             main_group = main_group.main_group()
-
-        main_module_cls = self._main_module_registry.get(
-            makeuri_contextless_ruleset_group(
-                request,
-                main_group.name,
-            ))
-        if main_module_cls:
-            topic_prefix = main_module_cls().topic.title
-        else:
-            topic_prefix = _('Rules')
-
+        topic_prefix = main_module_from_rulespec_group_name(
+            main_group.name,
+            self._main_module_registry,
+        ).topic.title
         return f"{topic_prefix} > {main_group.title}"
 
     def generate_match_items(self) -> MatchItems:

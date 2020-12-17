@@ -61,6 +61,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import RuleConditions
 from cmk.gui.watolib.rulespecs import (
+    main_module_from_rulespec_group_name,
     rulespec_group_registry,
     rulespec_registry,
     Rulespec,
@@ -87,7 +88,7 @@ from cmk.gui.plugins.wato import (
 
 from cmk.gui.plugins.wato.utils import LabelCondition
 
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless_ruleset_group
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 from cmk.gui.watolib.utils import may_edit_ruleset
 
@@ -420,16 +421,12 @@ class ModeRulesetGroup(ABCRulesetMode):
 
     def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
         """Return the BreadcrumbItem for the topic of this mode"""
-
-        url = makeuri_contextless_ruleset_group(request, str(self._group_name))
-        main_module = main_module_registry.get(url)
-        if main_module is None:
-            # Anomaly: We should not reach this, but currently we do for some pages. Best we can do
-            # at the moment is not to add a topic in this case.
-            return
-
+        main_module = main_module_from_rulespec_group_name(
+            str(self._group_name),
+            main_module_registry,
+        )
         yield BreadcrumbItem(
-            title=main_module().topic.title,
+            title=main_module.topic.title,
             url=None,
         )
         yield from main_module.additional_breadcrumb_items()

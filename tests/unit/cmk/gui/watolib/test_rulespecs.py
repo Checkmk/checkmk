@@ -1276,7 +1276,6 @@ def _expected_rulespec_group_choices():
          u'&nbsp;&nbsp;\u2319 Discovery and Checkmk settings'),
         ('datasource_programs', u'Other integrations'),
         ('eventconsole', u'Event Console'),
-        ('grouping', u'Grouping'),
         ('inventory', u'Hardware / Software Inventory'),
         ('host_monconf', u'Host monitoring rules'),
         ('host_monconf/host_checks', u'&nbsp;&nbsp;\u2319 Host checks'),
@@ -1373,7 +1372,6 @@ def test_rulespec_get_main_groups():
     ]
     assert sorted(main_group_names) == sorted([
         'activechecks',
-        'grouping',
         'monconf',
         'host_monconf',
         'agent',
@@ -1393,7 +1391,6 @@ def test_rulespec_get_main_groups():
 def test_rulespec_get_all_groups():
     expected_rulespec_groups = [
         'activechecks',
-        'grouping',
         'host_monconf/host_checks',
         'host_monconf/host_notifications',
         'host_monconf/host_various',
@@ -1448,7 +1445,6 @@ def test_rulespec_get_all_groups():
 def test_rulespec_get_host_groups():
 
     expected_rulespec_host_groups = [
-        'grouping',
         'host_monconf/host_checks',
         'host_monconf/host_notifications',
         'host_monconf/host_various',

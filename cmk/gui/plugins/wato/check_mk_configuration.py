@@ -2755,21 +2755,6 @@ class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
         return _("Various")
 
 
-@rulespec_group_registry.register
-class RulespecGroupGrouping(RulespecGroup):
-    @property
-    def name(self):
-        return "grouping"
-
-    @property
-    def title(self):
-        return _("Grouping")
-
-    @property
-    def help(self):
-        return _("Assignment of host & services to host, service and contacts groups.")
-
-
 def _valuespec_host_groups():
     return HostGroupSelection(
         title=_("Assignment of hosts to host groups"),
@@ -2781,7 +2766,7 @@ def _valuespec_host_groups():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         match_type="all",
         name="host_groups",
         valuespec=_valuespec_host_groups,
@@ -2794,7 +2779,7 @@ def _valuespec_service_groups():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
         match_type="all",
         name="service_groups",
@@ -2808,7 +2793,7 @@ def _valuespec_host_contactgroups():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         match_type="all",
         name="host_contactgroups",
         valuespec=_valuespec_host_contactgroups,
@@ -2821,7 +2806,7 @@ def _valuespec_service_contactgroups():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
         match_type="all",
         name="service_contactgroups",

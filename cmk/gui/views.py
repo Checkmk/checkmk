@@ -18,6 +18,7 @@ from typing import Tuple as _Tuple
 from typing import Type, Union
 
 import livestatus
+from cmk.gui.cee.ntop.connector import get_connector
 from livestatus import SiteId
 
 import cmk.utils.paths
@@ -764,11 +765,10 @@ class GUIViewRenderer(ABCViewRenderer):
                               self._page_menu_dropdown_add_to() + \
                               export_dropdown
 
-        # TODO this should only be shown if cmk host is defined in ntop,
-        # currently no way to do this without contacting ntop each time
         if rows:
             host_address = rows[0].get("host_address")
-            if config.is_ntop_configured() and host_address is not None:
+            if config.is_ntop_configured() and host_address is not None and get_connector(
+            ).is_ntop_host(host_address):
                 page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
 
         menu = PageMenu(

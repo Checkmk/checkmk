@@ -22,7 +22,7 @@ from cmk.gui.globals import html, g, request
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri_contextless_ruleset_group
+from cmk.gui.utils.urls import makeuri_contextless
 
 from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 from cmk.gui.watolib.changes import add_change
@@ -405,12 +405,16 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return True
 
     def help(self):
-        url = makeuri_contextless_ruleset_group(request, 'grouping')
+        url = makeuri_contextless(
+            request,
+            [("mode", "edit_ruleset"), ("varname", "host_contactgroups")],
+            filename="wato.py",
+        )
         return _("Only members of the contact groups listed here have WATO permission "
                  "to the host / folder. If you want, you can make those contact groups "
                  "automatically also <b>monitoring contacts</b>. This is completely "
-                 "optional. Assignment of host and services to contact groups "
-                 "can be done by <a href='%s'>rules</a> as well.") % url
+                 "optional. Assignment of host to contact groups can be done by "
+                 "<a href='%s'>rules</a> as well.") % url
 
     def show_in_table(self):
         return False

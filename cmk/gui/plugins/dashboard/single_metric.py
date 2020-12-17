@@ -156,6 +156,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
                 "plot_type": "single_value",
                 "use_tags": [row_id],
                 "svc_state": svc_map(row),
+                "js_render": metric['unit'].get("js_render"),
                 "metrics": {
                     "warn": metric["scalar"].get("warn"),
                     "crit": metric["scalar"].get("crit"),

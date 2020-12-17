@@ -116,7 +116,7 @@ export function physical_precision(v, precision, unit_symbol) {
     if (v < 0) return "-" + physical_precision(-1 * v, precision, unit_symbol);
     const [symbol, places_after_comma, factor] = calculate_physical_precision(v, precision);
     const scaled_value = v / factor;
-    return scaled_value.toFixed(places_after_comma) + symbol + unit_symbol;
+    return scaled_value.toFixed(places_after_comma) + " " + symbol + unit_symbol;
 }
 
 export function frexpb(x, base) {

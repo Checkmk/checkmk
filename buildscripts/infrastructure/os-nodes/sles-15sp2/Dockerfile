@@ -25,6 +25,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp2 sles15sp2 \
     python-pyOpenSSL \
     python-xml \
     rrdtool-devel \
+    sendmail \
     sudo \
     && zypper clean -a
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \

@@ -81,24 +81,6 @@ class RulespecGroupActiveChecks(RulespecGroup):
                  "you to monitor network services directly from the outside.")
 
 
-@rulespec_group_registry.register
-class RulespecGroupBI(RulespecGroup):
-    @property
-    def name(self):
-        return "bi"
-
-    @property
-    def title(self):
-        return _("Check state of BI aggregations")
-
-    @property
-    def help(self):
-        return _(
-            "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
-            "several states to a single BI aggregation, which you want to show up as a single "
-            "service.")
-
-
 # These elements are also used in check_parameters.py
 def check_icmp_params():
     return [
@@ -1797,7 +1779,7 @@ def _valuespec_active_checks_bi_aggr():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupBI,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:bi_aggr",
         valuespec=_valuespec_active_checks_bi_aggr,

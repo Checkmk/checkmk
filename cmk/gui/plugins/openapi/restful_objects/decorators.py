@@ -377,7 +377,6 @@ class Endpoint:
         assert self.operation_id is not None, "This object must be used in a decorator environment."
 
         module_obj = import_string(self.func.__module__)
-        module_name = module_obj.__name__
 
         headers: Dict[str, OpenAPIParameter] = {}
         if self.etag in ('output', 'both'):
@@ -422,12 +421,11 @@ class Endpoint:
                 'headers': headers,
             }
 
-        tag_obj: OpenAPITag = {
-            'name': module_name,
-        }
         docstring_name = _docstring_name(module_obj.__doc__)
-        if docstring_name:
-            tag_obj['x-displayName'] = docstring_name
+        tag_obj: OpenAPITag = {
+            'name': docstring_name,
+            'x-displayName': docstring_name,
+        }
         docstring_desc = _docstring_description(module_obj.__doc__)
         if docstring_desc:
             tag_obj['description'] = docstring_desc
@@ -435,7 +433,7 @@ class Endpoint:
 
         operation_spec: OperationSpecType = {
             'operationId': self.operation_id,
-            'tags': [module_name],
+            'tags': [docstring_name],
             'description': '',
             'responses': {
                 'default': {
@@ -719,13 +717,18 @@ def _tag_from_schema(schema: Type[Schema]) -> OpenAPITag:
     return tag
 
 
-def _docstring_name(docstring: Union[Any, str, None]) -> Optional[str]:
+def _docstring_name(docstring: Union[Any, str, None]) -> str:
     """Split the docstring by title and rest.
 
     This is part of the rest.
 
     >>> _docstring_name(_docstring_name.__doc__)
     'Split the docstring by title and rest.'
+
+    >>> _docstring_name("")
+    Traceback (most recent call last):
+    ...
+    ValueError: No name for the module defined. Please add a docstring!
 
     Args:
         docstring:
@@ -734,12 +737,11 @@ def _docstring_name(docstring: Union[Any, str, None]) -> Optional[str]:
         A string or nothing.
 
     """ ""
-    if not docstring:
-        return None
-    parts = apispec.utils.dedent(docstring).split("\n\n", 1)
-    if len(parts) > 0:
-        return parts[0].strip()
-    return None
+    parts = [part.strip() for part in apispec.utils.dedent(docstring).split("\n\n", 1)]
+    if len(parts) > 0 and parts[0]:
+        return parts[0]
+
+    raise ValueError("No name for the module defined. Please add a docstring!")
 
 
 def _docstring_description(docstring: Union[Any, str, None]) -> Optional[str]:

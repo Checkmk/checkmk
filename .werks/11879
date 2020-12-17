@@ -1,0 +1,18 @@
+Title: ntp: Parametrize discovery via WATO
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1608221773
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+This werk only affects users who have configured the NTP service discovery manually via mk
+file.
+The discovery of the "NTP Peer <item>" and "NTP Time" service has been configurable only via
+the config variable <tt>ntp_inventory_mode</tt>. This variable is no longer valid.
+To configure the service discovery please use in the new discovery rule "NTP Discovery".
+If you do not configure a WATO rule, the plugin will fall back to its default behaviour,
+which is to discover a summary service.

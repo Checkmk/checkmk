@@ -24,5 +24,5 @@ description:
 
 inventory:
  One service is created if at least one peer is present
- if {ntp_inventory_mode} is set to {"summary"} or {"both"}.
+ and the mode in the rule {NTP Discovery} is set to {"summary"} or {"both"}.
 

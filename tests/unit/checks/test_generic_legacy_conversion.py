@@ -805,7 +805,6 @@ def test_all_check_variables_present(config_check_variables):
         'nimble_latency_default_levels',
         'nodes_info',
         'ntp_default_levels',
-        'ntp_inventory_mode',
         'ntp_state_codes',
         'ntp_time_default_levels',
         'nullmailer_mailq_default_levels',

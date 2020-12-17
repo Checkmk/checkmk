@@ -22,7 +22,7 @@ All available packet rates, i.e. unicast, non-unicast, multicast, broadcast,
 errors, discards, are now displayed in the detailed service output. The values will be shown
 as percetual or absolute values, depending on the type of the underlying warn/crit levels,
 with the absolute value being the default, if no levels are specified. Please note that
-for error levels, there is a default of warn:0.01% and crit:0.001%, therefore,
+for error levels, there is a default of warn:0.01% and crit:0.1%, therefore,
 the error rates will be displayed in percent by default. If averaging is activated for
 the packet rate levels, the corresponding average value will be displayed instead.
 

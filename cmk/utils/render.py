@@ -187,32 +187,13 @@ def filesize(size: float) -> str:
 
 def percent(perc: float, scientific_notation: bool = False) -> str:
     """Renders a given number as percentage string"""
-    # 0 / 0.0 -> 0%
-    # 9.0e-05 -> 0.00009%
-    # 0.00009 -> 0.00009%
-    # 0.00103 -> 0.001%
-    # 0.0019  -> 0.002%
-    # 0.129   -> 0.13%
-    # 8.25752 -> 8.26%
-    # 8       -> 8.0%
-    # 80      -> 80.0%
-    # 100.123 -> 100%
-    # 200.123 -> 200%
-    # 1234567 -> 1234567%
-    #
-    # with scientific_notation:
-    # 0.00009 -> 9.0e-05%
-    # 0.00019 -> 0.0002%
-    # 12345 -> 12345%
-    # 1234567 -> 1.2e+06%
-
     # 0 and 0.0 is a special case
     if perc == 0:
         return "0%"
 
     # 1000 < oo
     if scientific_notation and abs(perc) >= 100000:
-        result = "%1.e" % perc
+        result = scientific(perc, 1)
     # 100 < 1000 < oo
     elif abs(perc) >= 100:
         result = "%d" % perc
@@ -223,7 +204,7 @@ def percent(perc: float, scientific_notation: bool = False) -> str:
         if float(result) == 0:
             return "0%"
         if scientific_notation and perc < 0.0001:
-            result = "%1.e" % float(result)
+            result = scientific(perc, 1)
         else:
             result = result.rstrip("0")
     # 0.001 < 100
@@ -247,9 +228,9 @@ def scientific(v: float, precision: int = 3) -> str:
     mantissa, exponent = _frexp10(float(v))
     # Render small numbers without exponent
     if -3 <= exponent <= 4:
-        return "%%.%df" % max(0, precision - exponent) % v
+        return "%.*f" % (max(0, precision - exponent), v)
 
-    return "%%.%dfe%%d" % precision % (mantissa, exponent)
+    return "%.*fe%+d" % (precision, mantissa, exponent)
 
 
 # Render a physical value with a precision of p

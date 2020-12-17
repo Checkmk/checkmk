@@ -327,7 +327,7 @@ def is_ntop_configured() -> bool:
     # e.g. to decide if ntop links should be hidden
     ntop = get_ntop_connection()
 
-    if is_ntop_available() and isinstance(ntop, Dict):
+    if is_ntop_available() and isinstance(ntop, dict):
         custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
         # We currently have two options to get an ntop username
         # 1) User needs to define his own -> if this string is empty, declare ntop as not configured

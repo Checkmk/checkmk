@@ -1,0 +1,21 @@
+Title: Levels for packet rates for network interface checks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608194217
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b3
+
+Previously, the error, multicast and broadcast WARN/CRIT levels
+specified within the ruleset "Network interfaces and switch ports" were not
+applied correctly. I.e., all levels were interpreted as percentual
+levels, regardless of whether they had been specified as absolute or percentual
+levels.
+This behavior is fixed with this werk.
+
+Additionally, the forms for error, multicast and broadcast levels now
+yield a unified structure, that allows the specification of independent levels
+for the in and out directions.

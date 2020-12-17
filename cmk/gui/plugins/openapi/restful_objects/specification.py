@@ -97,7 +97,7 @@ For backwards compatibility reasons we only keep the fields that have already be
 versions. You can consult the documentation to see what changed in each API revision.
 
 """
-from typing import List, Literal, Sequence, Dict, TypedDict
+from typing import List, Literal, Sequence, Dict, TypedDict, Union
 
 import apispec.utils  # type: ignore[import]
 import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
@@ -176,18 +176,13 @@ OPTIONS: ReDocSpec = {
             'name': 'Setup',
             'tags': []
         },
-        # TODO: remove
-        {
-            'name': 'Endpoints',
-            'tags': []
-        },
     ],
     'x-ignoredHeaderParameters': [
         'User-Agent',
         'X-Test-Header',
     ],
     'security': [{
-        'BearerAuth': []
+        'bearerAuth': []
     }]
 }
 
@@ -210,15 +205,15 @@ def make_spec(options: ReDocSpec):
 
 SPEC = make_spec(options=OPTIONS)
 SPEC.components.security_scheme(
-    'BearerAuth',
+    'bearerAuth',
     {
         'type': 'http',
         'scheme': 'bearer',
         'in': 'header',
         'description': 'The format of the header-value is "Bearer $automation_user '
-                       '$automation_user_password"\n\nExample: `Bearer hansdampf miezekatze123`',
+                       '$automation_user_password"\n\n'
+                       'An example could be: `hansdampf miezekatze123`',
         'bearerFormat': 'username password',
-        'x-bearerInfoFunc': 'cmk.gui.wsgi.auth.bearer_auth',
     },
 )
 
@@ -244,7 +239,7 @@ ErrorType = Literal['ignore', 'raise']
 
 
 def find_all_parameters(
-    params: Sequence[OpenAPIParameter],
+    params: Sequence[Union[OpenAPIParameter, str]],
     errors: ErrorType = 'ignore',
 ) -> List[OpenAPIParameter]:
     """Find all parameters, while de-referencing string based parameters.

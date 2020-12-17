@@ -7,6 +7,7 @@ import functools
 import json
 import logging
 import mimetypes
+import os
 import re
 import urllib.parse
 from typing import Dict, Type, Any, Optional, Callable
@@ -14,7 +15,7 @@ from typing import Dict, Type, Any, Optional, Callable
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
 from werkzeug import Response, Request
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, NotFound
 
 from werkzeug.routing import Map, Submount, Rule
 
@@ -102,6 +103,32 @@ def serve_file(file_name: str, content: str) -> Response:
 
 
 def get_url(environ: WSGIEnvironment) -> str:
+    """Reconstruct an URL from a WSGI environment
+
+    >>> get_url({
+    ...     'HTTP_HOST': 'localhorst',
+    ...     'SERVER_PORT': '81',
+    ...     'SERVER_NAME': 'localhost',
+    ...     'wsgi.url_scheme': 'http',
+    ... })
+    'http://localhorst'
+
+    >>> get_url({
+    ...     'SERVER_PORT': '443',
+    ...     'SERVER_NAME': 'localhost',
+    ...     'wsgi.url_scheme': 'https',
+    ...     'PATH_INFO': '/NO_SITE/check_mk/view.py'
+    ... })
+    'https://localhost/NO_SITE/check_mk/view.py'
+
+    Args:
+        environ:
+            A WSGI environment
+
+    Returns:
+        A HTTP URL.
+
+    """
     url = environ['wsgi.url_scheme'] + '://'
 
     if environ.get('HTTP_HOST'):
@@ -188,17 +215,28 @@ class ServeSwaggerUI:
 
         file_path = swagger_ui_3_path + self._relative_path(environ)
 
-        with open(file_path) as fh:
+        if not os.path.exists(file_path):
+            return NotFound()(environ, start_response)
+
+        with open(file_path, 'r') as fh:
             content = fh.read()
 
         if file_path.endswith("/index.html"):
-            content = content.replace("<title>Swagger UI</title>",
-                                      "<title>REST-API Interactive GUI - Checkmk</title>")
-            content = content.replace("https://petstore.swagger.io/v2/swagger.json", yaml_file)
-            content = content.replace(
-                "        dom_id",
-                '        validatorUrl: null,\n        dom_id',
-            )
+            page = []
+            for line in content.splitlines():
+                if "<title>" in line:
+                    page.append("<title>REST-API Interactive GUI - Checkmk</title>")
+                elif "favicon" in line:
+                    continue
+                elif "petstore.swagger.io" in line:
+                    page.append(f'        url: "{yaml_file}",')
+                    page.append('        validatorUrl: null,')
+                    page.append('        displayOperationId: false,')
+                else:
+                    page.append(line)
+
+            content = '\n'.join(page)
+
         return serve_file(file_path, content)(environ, start_response)
 
 

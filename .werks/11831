@@ -1,0 +1,13 @@
+Title: SIGNL4: status in case of recovery
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1608278316
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b3
+
+In case of a recovery, the notification is now shown as resolved.
+Otherwise, it is shown as new. This was not the case before.

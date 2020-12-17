@@ -28,6 +28,34 @@ def test_frexpb(args, result):
     assert cmk.utils.render._frexpb(*args) == result
 
 
+@pytest.mark.parametrize("perc, result", [
+    (0.0, "0%"),
+    (9.0e-05, "0.00009%"),
+    (0.00009, "0.00009%"),
+    (0.00103, "0.001%"),
+    (0.0019, "0.002%"),
+    (0.129, "0.13%"),
+    (8.25752, "8.26%"),
+    (8, "8.0%"),
+    (80, "80.0%"),
+    (100.123, "100%"),
+    (200.123, "200%"),
+    (1234567, "1234567%"),
+])
+def test_percent_std(perc, result):
+    assert cmk.utils.render.percent(perc, False) == result
+
+
+@pytest.mark.parametrize("perc, result", [
+    (0.00009, "9.0e-5%"),
+    (0.00019, "0.0002%"),
+    (12345, "12345%"),
+    (1234567, "1.2e+6%"),
+])
+def test_percent_scientific(perc, result):
+    assert cmk.utils.render.percent(perc, True) == result
+
+
 @pytest.mark.parametrize("value, kwargs, result", [
     (10000486, {
         'precision': 5

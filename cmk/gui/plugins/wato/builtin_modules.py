@@ -9,11 +9,16 @@
 # fields: mode, title, icon, permission, help
 
 import time
+from typing import Iterable
 import cmk.utils.version as cmk_version
 
+from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.i18n import _
 from cmk.gui.globals import request
-from cmk.gui.utils.urls import makeuri_contextless_ruleset_group
+from cmk.gui.utils.urls import (
+    makeuri_contextless,
+    makeuri_contextless_ruleset_group,
+)
 
 from cmk.gui.plugins.wato import (
     main_module_registry,
@@ -1229,6 +1234,56 @@ class MainModuleAgentsLinux(ABCMainModule):
 if cmk_version.is_raw_edition():
     main_module_registry.register(MainModuleAgentsWindows)
     main_module_registry.register(MainModuleAgentsLinux)
+
+
+@main_module_registry.register
+class MainModuleAgentRules(ABCMainModule):
+    @property
+    def enabled(self) -> bool:
+        return False
+
+    @property
+    def mode_or_url(self):
+        return makeuri_contextless_ruleset_group(request, "agents")
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("Agent rules")
+
+    @property
+    def icon(self):
+        return {"icon": "agents", "emblem": "settings"}
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Configuration of monitoring agents for Linux, Windows and Unix")
+
+    @property
+    def sort_index(self):
+        return 80
+
+    @property
+    def is_show_more(self):
+        return True
+
+    @classmethod
+    def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
+        yield BreadcrumbItem(
+            title="Windows, Linux, Solaris, AIX",
+            url=makeuri_contextless(
+                request,
+                [("mode", "agents")],
+                filename="wato.py",
+            ),
+        )
 
 
 @main_module_registry.register

@@ -51,6 +51,7 @@ if cmk_version.is_managed_edition():
 else:
     managed = None  # type: ignore[assignment]
 
+from cmk.gui.breadcrumb import BreadcrumbItem
 import cmk.gui.forms as forms
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -152,7 +153,11 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import (
+    makeuri_contextless,
+    makeuri_contextless_ruleset_group,
+    make_confirm_link,
+)
 
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -4078,6 +4083,56 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
         return True
 
 
+@main_module_registry.register
+class MainModuleEventConsoleRules(ABCMainModule):
+    @property
+    def enabled(self) -> bool:
+        return False
+
+    @property
+    def mode_or_url(self):
+        return makeuri_contextless_ruleset_group(request, "eventconsole")
+
+    @property
+    def topic(self):
+        return MainModuleTopicEvents
+
+    @property
+    def title(self):
+        return _("Event Console rules")
+
+    @property
+    def icon(self):
+        return {"icon": "event_console", "emblem": "settings"}
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Host and service rules related to the Event Console")
+
+    @property
+    def sort_index(self):
+        return 40
+
+    @property
+    def is_show_more(self):
+        return True
+
+    @classmethod
+    def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
+        yield BreadcrumbItem(
+            title="Event Console rule packages",
+            url=makeuri_contextless(
+                request,
+                [("mode", "mkeventd_rule_packs")],
+                filename="wato.py",
+            ),
+        )
+
+
 @rulespec_group_registry.register
 class RulespecGroupEventConsole(RulespecGroup):
     @property
@@ -4086,11 +4141,11 @@ class RulespecGroupEventConsole(RulespecGroup):
 
     @property
     def title(self):
-        return _("Event Console")
+        return _("Event Console rules")
 
     @property
     def help(self):
-        return _("Settings and Checks dealing with the Checkmk Event Console")
+        return _("Host and service rules related to the Event Console")
 
 
 def convert_mkevents_hostspec(value):

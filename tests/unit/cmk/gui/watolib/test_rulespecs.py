@@ -1275,7 +1275,7 @@ def _expected_rulespec_group_choices():
         ('checkparams/inventory_and_check_mk_settings',
          u'&nbsp;&nbsp;\u2319 Discovery and Checkmk settings'),
         ('datasource_programs', u'Other integrations'),
-        ('eventconsole', u'Event Console'),
+        ('eventconsole', u'Event Console rules'),
         ('inventory', u'Hardware / Software Inventory'),
         ('host_monconf', u'Host monitoring rules'),
         ('host_monconf/host_checks', u'&nbsp;&nbsp;\u2319 Host checks'),

@@ -966,8 +966,15 @@ class ModeEditUser(WatoMode):
         forms.header(_("Contact Groups"), isopen=False)
         forms.section()
         groups_page_url = watolib.folder_preserving_link([("mode", "contact_groups")])
-        group_assign_url = watolib.folder_preserving_link([("mode", "rulesets"),
-                                                           ("group", "grouping")])
+        hosts_assign_url = watolib.folder_preserving_link([
+            ("mode", "edit_ruleset"),
+            ("varname", "host_contactgroups"),
+        ])
+        services_assign_url = watolib.folder_preserving_link([
+            ("mode", "edit_ruleset"),
+            ("varname", "service_contactgroups"),
+        ])
+
         if not self._contact_groups:
             html.write(
                 _("Please first create some <a href='%s'>contact groups</a>") % groups_page_url)
@@ -997,11 +1004,13 @@ class ModeEditUser(WatoMode):
         html.help(
             _("Contact groups are used to assign monitoring "
               "objects to users. If you haven't defined any contact groups yet, "
-              "then first <a href='%s'>do so</a>. Hosts and services can be "
-              "assigned to contact groups using <a href='%s'>rules</a>.<br><br>"
+              "then first <a href='%s'>do so</a>. "
+              "Hosts and services can be assigned to contact groups using this "
+              "<a href='%s'>rule for hosts</a> and this "
+              "<a href='%s'>rule for services</a>.<br><br>"
               "If you do not put the user into any contact group "
               "then no monitoring contact will be created for the user.") %
-            (groups_page_url, group_assign_url))
+            (groups_page_url, hosts_assign_url, services_assign_url))
 
         forms.header(_("Notifications"), isopen=False)
         if not self._rbn_enabled():

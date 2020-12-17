@@ -2688,6 +2688,36 @@ class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
 
 
 @rulespec_group_registry.register
+class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupHostsMonitoringRules
+
+    @property
+    def sub_group_name(self):
+        return "host_various"
+
+    @property
+    def title(self):
+        return _("Various")
+
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringConfiguration
+
+    @property
+    def sub_group_name(self):
+        return "various"
+
+    @property
+    def title(self):
+        return _("Various")
+
+
+@rulespec_group_registry.register
 class RulespecGroupGrouping(RulespecGroup):
     @property
     def name(self):
@@ -3712,36 +3742,6 @@ rulespec_registry.register(
         name="periodic_discovery",
         valuespec=_valuespec_periodic_discovery,
     ))
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupMonitoringConfiguration
-
-    @property
-    def sub_group_name(self):
-        return "various"
-
-    @property
-    def title(self):
-        return _("Various")
-
-
-@rulespec_group_registry.register
-class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupHostsMonitoringRules
-
-    @property
-    def sub_group_name(self):
-        return "host_various"
-
-    @property
-    def title(self):
-        return _("Various")
 
 
 def _valuespec_custom_service_attributes():

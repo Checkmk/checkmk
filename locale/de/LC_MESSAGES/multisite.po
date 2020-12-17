@@ -47065,7 +47065,8 @@ msgid "The log level for user authentication related log entries."
 msgstr ""
 "Der Loglevel für die Authentifizierung von Benutzern mit der Weboberfläche."
 
-msgid "The logfile does not exist."
+#, fuzzy
+msgid "The logfile does not exist on site."
 msgstr "Die Logdatei existiert nicht."
 
 msgid "The login is currently locked"

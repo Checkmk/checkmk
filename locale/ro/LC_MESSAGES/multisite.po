@@ -44276,7 +44276,7 @@ msgid "The log level for user authentication related log entries."
 msgstr ""
 
 #, fuzzy
-msgid "The logfile does not exist."
+msgid "The logfile does not exist on site."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "The login is currently locked"

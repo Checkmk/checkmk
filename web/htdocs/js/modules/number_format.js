@@ -128,3 +128,28 @@ export function frexpb(x, base) {
     }
     return [mantissa, exp];
 }
+
+export function approx_age(secs) {
+    if (secs < 0) return approx_age(-1 * secs);
+
+    if (0 < secs && secs < 1) return physical_precision(secs, 3, "s");
+
+    if (secs < 10) return secs.toFixed(2) + " s";
+    if (secs < 60) return secs.toFixed(1) + " s";
+    if (secs < 240) return secs.toFixed(0) + " s";
+
+    const mins = Math.floor(secs / 60);
+    if (mins < 360) return mins.toFixed(0) + " m";
+
+    const hours = Math.floor(mins / 60);
+    if (hours < 48) return hours.toFixed(0) + " h";
+
+    const days = hours / 24;
+    if (days < 6) return drop_dotzero(days, 1);
+    if (days < 999) return days.toFixed() + " d";
+
+    const years = days / 365;
+    if (years < 10) return drop_dotzero(years, 1) + " y";
+
+    return years.toFixed() + " y";
+}

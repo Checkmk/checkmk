@@ -54,6 +54,7 @@ def test_registered_modules():
         'wato.py?group=host_monconf&mode=rulesets',
         'wato.py?group=snmp&mode=rulesets',
         'wato.py?group=vm_cloud_container&mode=rulesets',
+        'wato.py?group=eventconsole&mode=rulesets',
     ]
 
     if cmk_version.is_raw_edition():

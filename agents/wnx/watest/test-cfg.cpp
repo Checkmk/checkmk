@@ -28,8 +28,8 @@ namespace cma {
 void ResetCleanOnExit();
 
 namespace details {
-extern bool G_Service;
-extern bool G_Test;
+extern bool g_is_service;
+extern bool g_is_test;
 }  // namespace details
 }  // namespace cma
 
@@ -388,10 +388,10 @@ TEST(Cma, CleanApi) {
     alert.set();
     ASSERT_FALSE(alert.isSet())
         << "forbidden to set for non service executable";
-    cma::details::G_Service = true;
+    cma::details::g_is_service = true;
     alert.set();
     EXPECT_TRUE(alert.isSet());
-    cma::details::G_Service = false;
+    cma::details::g_is_service = false;
     alert.clear();
     EXPECT_FALSE(alert.isSet());
 }

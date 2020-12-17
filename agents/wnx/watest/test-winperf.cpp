@@ -22,7 +22,7 @@ extern std::vector<int> TsValues;
 }
 
 namespace cma::cfg::details {
-extern uint64_t RegisteredPerformanceFreq;
+extern uint64_t g_registered_performance_freq;
 }
 
 static bool ValidIndexOfTs(int index) {
@@ -42,7 +42,7 @@ auto GetIndexOfTS() {
 
 TEST(WinPerfTest, Pre) {
     auto pf = cma::cfg::GetPerformanceFrequency();
-    EXPECT_EQ(cma::cfg::details::RegisteredPerformanceFreq, pf)
+    EXPECT_EQ(cma::cfg::details::g_registered_performance_freq, pf)
         << "Something wrong and value was not initialized";
 }
 

@@ -36,7 +36,7 @@ bool ReInstall();  // forced installation of all files from the MSI
 bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
                        std::wstring_view target_dir,  // $CUSTOM_PLUGINS_PATH$
                        std::wstring_view source_dir,  // @root/install
-                       Mode mode) noexcept;
+                       Mode mode);
 
 bool NeedReinstall(const std::filesystem::path &Target,
                    const std::filesystem::path &Src);

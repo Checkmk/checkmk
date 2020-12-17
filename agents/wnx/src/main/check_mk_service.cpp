@@ -289,11 +289,11 @@ static void ServiceUsage(std::wstring_view comment) {
 
 namespace cma {
 namespace details {
-extern bool G_Service;
+extern bool g_is_service;
 }
 
 AppType AppDefaultType() {
-    return details::G_Service ? AppType::srv : AppType::exe;
+    return details::g_is_service ? AppType::srv : AppType::exe;
 }
 
 template <typename T>
@@ -360,7 +360,7 @@ int RunService(std::wstring_view app_name) {
     using namespace std::chrono;
     using namespace cma::cfg;
 
-    cma::details::G_Service = true;  // we know that we are service
+    cma::details::g_is_service = true;  // we know that we are service
 
     auto ret = cma::srv::ServiceAsService(app_name, 1000ms, [](const void *) {
         // optional commands listed here

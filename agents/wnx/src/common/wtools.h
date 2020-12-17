@@ -668,7 +668,7 @@ uint64_t GetValueFromBlock(const PERF_COUNTER_DEFINITION& Counter,
 std::string GetName(uint32_t CounterType) noexcept;
 }  // namespace perf
 
-inline int64_t QueryPerformanceFreq() {
+inline int64_t QueryPerformanceFreq() noexcept {
     LARGE_INTEGER frequency;
     ::QueryPerformanceFrequency(&frequency);
     return frequency.QuadPart;

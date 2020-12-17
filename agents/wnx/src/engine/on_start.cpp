@@ -13,7 +13,7 @@
 #include "windows_service_api.h"
 
 namespace cma::details {
-extern bool G_Test;
+extern bool g_is_test;
 }
 
 namespace cma {
@@ -92,7 +92,7 @@ bool FindAndPrepareWorkingFolders(AppType Type) {
 
 static AppType CalcAppType(AppType Type) {
     if (Type == AppType::automatic) return AppDefaultType();
-    if (Type == AppType::test) cma::details::G_Test = true;
+    if (Type == AppType::test) cma::details::g_is_test = true;
 
     return Type;
 }
@@ -125,7 +125,7 @@ void UninstallAlert::set() noexcept {
 bool LoadConfig(AppType Type, const std::wstring& ConfigFile) {
     cfg::details::KillDefaultConfig();
     // load config is here
-    auto cfg_files = cfg::DefaultConfigArray(Type);
+    auto cfg_files = cfg::DefaultConfigArray();
     if (!ConfigFile.empty()) {
         cfg_files.clear();
         cfg_files.push_back(ConfigFile);

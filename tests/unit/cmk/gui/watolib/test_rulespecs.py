@@ -14,8 +14,9 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import request
-from cmk.gui.watolib.main_menu import ModuleRegistry
+from cmk.gui.watolib.main_menu import ModuleRegistry, main_module_registry
 from cmk.gui.watolib.rulespecs import (
+    main_module_from_rulespec_group_name,
     MatchItemGeneratorRules,
     rulespec_group_registry,
     RulespecGroupRegistry,
@@ -1819,3 +1820,12 @@ def test_match_item_generator_rules():
             match_texts=['title', 'some_host_rulespec'],
         )
     ]
+
+
+def test_all_rulespec_groups_have_main_group(load_plugins):
+    for rulespec_group_name, rulespec_group_cls in rulespec_group_registry.items():
+        if issubclass(rulespec_group_cls, RulespecGroup):
+            main_module_from_rulespec_group_name(
+                rulespec_group_name,
+                main_module_registry,
+            )

@@ -1209,29 +1209,6 @@ std::tuple<bool, std::filesystem::path> IsInstallProtocolExists(
     return {std::filesystem::exists(install_file, ec), install_file};
 }
 
-// #TODO deprecated
-[[deprecated]] void UpdateInstallProtocolFile(
-    bool exists_install_protocol, const std::filesystem::path& install_file) {
-    if (install_file.empty()) {
-        XLOG::l("Install file cannot be generated, because it is not correct");
-        return;
-    }
-
-    if (exists_install_protocol) {
-        XLOG::l.i("Install protocol exists, no generation.");
-        return;
-    }
-
-    XLOG::l.i("Creating '{}' to indicate that installation is finished",
-              install_file);
-    std::ofstream ofs(install_file, std::ios::binary);
-
-    if (ofs) {
-        ofs << "Installed:\n";
-        ofs << "  time: '" << cma::cfg::ConstructTimeString() << "'\n";
-    }
-}
-
 void ConfigInfo::fillExePaths(const std::filesystem::path& root) {
     constexpr std::array<std::wstring_view, 3> dir_tails{
         dirs::kAgentPlugins, dirs::kAgentProviders, dirs::kAgentUtils};
@@ -1281,12 +1258,6 @@ void ConfigInfo::initFolders(
 
     if (folders_.getData().empty())
         XLOG::l.crit("Data folder is empty.This is bad.");
-    else {
-        // code is disabled as deprecated
-        // auto [exists_install_protocol, install_file] =
-        //    IsInstallProtocolExists(root);
-        // UpdateInstallProtocolFile(exists_install_protocol, install_file);
-    }
 
     // exe
     fillExePaths(root);
@@ -1309,9 +1280,9 @@ void ConfigInfo::cleanConfig() {
     std::lock_guard lk(lock_);
 
     yaml_.reset();
-    root_yaml_path_ = L"";
-    user_yaml_path_ = L"";
-    bakery_yaml_path_ = L"";
+    root_yaml_path_.clear();
+    user_yaml_path_.clear();
+    bakery_yaml_path_.clear();
     aggregated_ = false;
     generated_ = false;
     ok_ = false;
@@ -1346,17 +1317,18 @@ bool ConfigInfo::popFolders() {
 }
 
 std::wstring FindMsiExec() {
-    std::filesystem::path p = cma::tools::win::GetSystem32Folder();
+    namespace fs = std::filesystem;
+    fs::path p = cma::tools::win::GetSystem32Folder();
     p /= "msiexec.exe";
 
     std::error_code ec;
-    if (std::filesystem::exists(p, ec)) {
-        XLOG::t.i("Found msiexec {}", p);
+    if (fs::exists(p, ec)) {
+        XLOG::t.i("Found msiexec '{}'", p);
         return p.wstring();
     }
 
     XLOG::l.crit(
-        "Cannot find msiexec {} error [{}] '{}', automatic update is not possible",
+        "Cannot find msiexec '{}' error [{}] '{}', automatic update is not possible",
         p, ec.value(), ec.message());
     return {};
 }
@@ -1394,11 +1366,12 @@ bool IsYamlSeq(const YAML::Node& node) {
 
 std::string GetMapNodeName(const YAML::Node& node) {
     try {
-        if (!node.IsDefined() || !node.IsMap()) return {};
-        auto s_iterator = node.begin();
+        if (!IsYamlMap(node)) return {};
 
-        auto s_id = s_iterator->first;
-        return s_id.as<std::string>();
+        auto iterator = node.begin();
+
+        auto id = iterator->first;
+        return id.as<std::string>();
     } catch (const std::exception& e) {
         XLOG::l(XLOG_FUNC + " Exception on conversion '{}'", e.what());
         return {};
@@ -1481,8 +1454,7 @@ static void loadMap(std::string_view name, YAML::Node target_value,
     }
 
     // MAP-MAP
-    for (YAML::const_iterator itx = source_value.begin();
-         itx != source_value.end(); ++itx) {
+    for (auto itx = source_value.begin(); itx != source_value.end(); ++itx) {
         auto combine_type = GetCombineMode(name);
         ConfigInfo::smartMerge(target_value, source_value, combine_type);
     }
@@ -1492,7 +1464,7 @@ static void loadMap(std::string_view name, YAML::Node target_value,
 bool ConfigInfo::smartMerge(YAML::Node& target, const YAML::Node& source,
                             Combine combine) {
     // we are scanning source
-    for (YAML::const_iterator it = source.begin(); it != source.end(); ++it) {
+    for (auto it = source.begin(); it != source.end(); ++it) {
         const auto& source_name = it->first;
         const auto& source_value = it->second;
         if (!source_name.IsDefined()) {
@@ -1538,7 +1510,7 @@ std::vector<ConfigInfo::YamlData> ConfigInfo::buildYamlData(
     yamls[2].path_.replace_extension(files::kDefaultUserExt);
 
     for (auto& yd : yamls) {
-        XLOG::d.t("Loading {}", yd.path_);
+        XLOG::d.t("Loading '{}'", yd.path_);
         yd.loadFile();
     }
 
@@ -1636,11 +1608,9 @@ private:
     }
 
     static std::string makeOsInfoString() {
-        const std::string_view server =
-            IsWindowsServer() ? "server" : "desktop";
-        const std::string_view bits_count = Is64BitWindows() ? "64" : "32";
-
-        const std::string_view os_id = GetWindowsId();
+        const std::string_view server{IsWindowsServer() ? "server" : "desktop"};
+        const std::string_view bits_count{Is64BitWindows() ? "64" : "32"};
+        const std::string_view os_id{GetWindowsId()};
 
         return fmt::format("Win{}-{} {}", os_id, bits_count, server);
     }
@@ -1649,6 +1619,22 @@ private:
     std::string os_string_;
 };
 
+namespace {
+bool TryMerge(YAML::Node config_node, const ConfigInfo::YamlData& yaml_data) {
+    if (!yaml_data.exists() || yaml_data.bad()) {
+        return false;
+    }
+
+    auto bakery = YAML::LoadFile(yaml_data.path_.u8string());
+    // special cases for plugins and folder
+    PreMergeSections(bakery, config_node);
+
+    // normal cases
+    ConfigInfo::smartMerge(config_node, bakery, Combine::overwrite);
+    return true;
+}
+}  // namespace
+
 // config_node is a resulting full config
 // yaml_data is array from root, bakery and user configs
 // we will load all others configs and try to merge
@@ -1656,39 +1642,29 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node config_node,
                                        const std::vector<YamlData>& yaml_data) {
     bool bakery_ok = false;
     bool user_ok = false;
-    try {
-        if (yaml_data[1].exists() && !yaml_data[1].bad()) {
-            auto bakery = YAML::LoadFile(yaml_data[1].path_.u8string());
-            // special cases for plugins and folder
-            PreMergeSections(bakery, config_node);
 
-            // normal cases
-            smartMerge(config_node, bakery, Combine::overwrite);
-            bakery_ok = true;
-        }
+    auto& root_data = yaml_data[0];
+    auto& bakery_data = yaml_data[1];
+    auto& user_data = yaml_data[2];
+
+    try {
+        bakery_ok = TryMerge(config_node, bakery_data);
     } catch (...) {
-        XLOG::l.bp("Bakery {} is bad", yaml_data[1].path_);
+        XLOG::l.bp("Bakery {} is bad", bakery_data.path_);
     }
 
     try {
-        if (yaml_data[2].exists() && !yaml_data[2].bad()) {
-            auto user = YAML::LoadFile(yaml_data[2].path_.u8string());
-            // special cases for plugins and folder
-            PreMergeSections(user, config_node);
-            // normal cases
-            smartMerge(config_node, user, Combine::overwrite);
-            user_ok = true;
-        }
+        user_ok = TryMerge(config_node, user_data);
     } catch (...) {
-        XLOG::l.bp("User {} is bad", yaml_data[2].path_);
+        XLOG::l.bp("User {} is bad", user_data.path_);
     }
 
     std::lock_guard lk(lock_);
-    root_yaml_time_ = yaml_data[0].timestamp();
-    bakery_yaml_time_ = bakery_ok ? yaml_data[1].timestamp()
+    root_yaml_time_ = root_data.timestamp();
+    bakery_yaml_time_ = bakery_ok ? bakery_data.timestamp()
                                   : std::filesystem::file_time_type::min();
     bakery_ok_ = bakery_ok;
-    user_yaml_time_ = user_ok ? yaml_data[2].timestamp()
+    user_yaml_time_ = user_ok ? user_data.timestamp()
                               : std::filesystem::file_time_type::min();
     user_ok_ = user_ok;
 
@@ -1703,22 +1679,22 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node config_node,
         "    user:   '{}' size={} {}",
         InfoStrings::get().agentString(), InfoStrings::get().osString(),
         //
-        yaml_data[0].path_.u8string(), yaml_data[0].data().size(),
-        yaml_data[0].bad() ? "[FAIL]" : "[OK]",
+        root_data.path_, root_data.data().size(),
+        root_data.bad() ? "[FAIL]" : "[OK]",
         //
-        yaml_data[1].path_.u8string(), yaml_data[1].data().size(),
-        yaml_data[1].bad() ? "[FAIL]" : "[OK]",
+        bakery_data.path_, bakery_data.data().size(),
+        bakery_data.bad() ? "[FAIL]" : "[OK]",
         //
-        yaml_data[2].path_.u8string(), yaml_data[2].data().size(),
-        yaml_data[2].bad() ? "[FAIL]" : "[OK]");
+        user_data.path_, user_data.data().size(),
+        user_data.bad() ? "[FAIL]" : "[OK]");
 
     // setting up paths  to the other files
-    root_yaml_path_ = yaml_data[0].path_;
-    bakery_yaml_path_ = yaml_data[1].path_;
-    user_yaml_path_ = yaml_data[2].path_;
+    root_yaml_path_ = root_data.path_;
+    bakery_yaml_path_ = bakery_data.path_;
+    user_yaml_path_ = user_data.path_;
 
     aggregated_ = true;
-    s_uniq_id_++;
+    g_uniq_id++;
     ok_ = true;
 }
 
@@ -1733,8 +1709,7 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& config_filename,
         XLOG::l(XLOG_FLINE + " empty name");
         return LoadCfgStatus::kAllFailed;
     }
-    using namespace cma::tools;
-    std::vector<YamlData> yamls = buildYamlData(config_filename);
+    auto yamls = buildYamlData(config_filename);
 
     // check root
     auto& root = yamls[0];
@@ -1825,7 +1800,7 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
     bakery_yaml_path_.clear();
     aggregated_ = false;
     ok_ = true;
-    s_uniq_id_++;
+    g_uniq_id++;
     return true;
 }
 
@@ -2010,6 +1985,6 @@ bool UninstallProduct(std::string_view name) {
 }
 
 details::ConfigInfo& GetCfg() { return details::g_config_info; }
-std::atomic<uint64_t> details::ConfigInfo::s_uniq_id_ = 1;
+std::atomic<uint64_t> details::ConfigInfo::g_uniq_id = 1;
 
 }  // namespace cma::cfg

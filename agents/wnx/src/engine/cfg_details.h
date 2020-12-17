@@ -158,6 +158,7 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
 // critical and invisible global variables
 // YAML config and PAThs are here
 class ConfigInfo {
+public:
     struct YamlData {
         YamlData(const std::filesystem::path& Path,
                  std::filesystem::file_time_type Timestamp) noexcept
@@ -225,7 +226,6 @@ class ConfigInfo {
         std::filesystem::file_time_type timestamp_;
     };
 
-public:
     using sptr = std::shared_ptr<ConfigInfo>;
     ConfigInfo() {}
     ConfigInfo(const ConfigInfo&) = delete;
@@ -396,7 +396,7 @@ public:
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path& file);
 
-    uint64_t uniqId() const noexcept { return s_uniq_id_; }
+    uint64_t uniqId() const noexcept { return g_uniq_id; }
 
 private:
     void fillExePaths(const std::filesystem::path& root);
@@ -442,7 +442,7 @@ private:
     std::atomic<int> backup_log_max_count_ = kBackupLogMaxCount;
     std::atomic<size_t> backup_log_max_size_ = kBackupLogMaxSize;
 
-    static std::atomic<uint64_t> s_uniq_id_;
+    static std::atomic<uint64_t> g_uniq_id;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class StartTest;

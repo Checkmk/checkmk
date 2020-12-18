@@ -10,6 +10,7 @@ set sec_param=%2
 if "%param%" == "" powershell Write-Host "Full and Looooooong test was requested." -Foreground Cyan && set sec_param=both
 
 powershell Write-Host "32-bit test" -Foreground Cyan
+call build_watest.cmd %sec_param%
 cd %REMOTE_MACHINE%
 %REMOTE_MACHINE%\watest32.exe %param%
 if not %errorlevel% == 0 goto error

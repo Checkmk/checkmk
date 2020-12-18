@@ -113,7 +113,7 @@ std::wstring GetProcessPath(uint32_t pid) noexcept {
 
 // returns count of killed processes
 int KillProcessesByDir(const std::filesystem::path& dir) noexcept {
-    constexpr size_t minimum_path_len = 16;  // safety
+    constexpr size_t minimum_path_len = 12;  // safety
 
     if (dir.empty()) return -1;
 

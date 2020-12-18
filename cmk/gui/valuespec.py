@@ -1034,6 +1034,7 @@ class TextAsciiAutocomplete(TextAscii):
         self,
         completion_ident: str,
         completion_params: Dict[str, Any],
+        completion_params_js: str = "",
         # TextAscii
         label: _Optional[str] = None,
         size: Union[int, str] = 40,
@@ -1059,7 +1060,7 @@ class TextAsciiAutocomplete(TextAscii):
     ):
         onkeyup = "cmk.valuespecs.autocomplete(this, %s, %s, %s)" % (
             json.dumps(completion_ident),
-            json.dumps(completion_params),
+            completion_params_js or json.dumps(completion_params),
             json.dumps(onkeyup),
         )
         super().__init__(
@@ -1157,6 +1158,9 @@ class MonitoredServiceDescription(TextAsciiAutocomplete):
     ident = "monitored_service_description"
 
     def __init__(self, **kwargs):
+        kwargs.setdefault(
+            'completion_params_js',
+            '(() => ({host: document.getElementsByName("context_host_p_host")[0].value}))()')
         super().__init__(completion_ident=self.ident, completion_params={}, **kwargs)
 
     @classmethod
@@ -1166,7 +1170,10 @@ class MonitoredServiceDescription(TextAsciiAutocomplete):
         query = ("GET services\n"
                  "Cache: reload\n"
                  "Columns: service_description\n"
-                 "Filter: service_description ~~ %s" % livestatus.lqencode(value))
+                 "Filter: service_description ~~ %s\n" % livestatus.lqencode(value))
+
+        if params.get("host"):
+            query += "Filter: host_name = %s\n" % livestatus.lqencode(params['host'])
 
         return [(h, h) for h in sorted(sites.live().query_column_unique(query))]
 

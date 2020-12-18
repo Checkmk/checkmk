@@ -6,12 +6,16 @@
 """Module to hold shared code for main module internals and the plugins"""
 
 from collections import OrderedDict
+import re
 import colorsys
 import random
 import shlex
+import json
 from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union, TypeVar
 
 from six import ensure_binary, ensure_str
+
+import livestatus
 
 import cmk.utils.regex
 from cmk.utils.memoize import MemoizeCache
@@ -19,13 +23,14 @@ from cmk.utils.werks import parse_check_mk_version
 import cmk.utils.version as cmk_version
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.type_defs import MetricName as _MetricName
+from cmk.gui.type_defs import Choices
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.valuespec import DropdownChoice, TextAsciiAutocomplete, MonitoredHostname, MonitoredServiceDescription
 import cmk.gui.sites as sites
 
 LegacyPerfometer = Tuple[str, Any]
@@ -955,23 +960,131 @@ def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]
     return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
-def MetricName():
-    """Factory of a Dropdown menu from all known metric names"""
-    def _require_metric(value, varprefix):
-        if value is None:
-            raise MKUserError(varprefix, _("You need to select a metric"))
+def find_host_services(host_name: str,
+                       service_description: str = "") -> Iterator[Tuple[str, str, Tuple[str, ...]]]:
+    if not host_name and not service_description:  # optimization: avoid query with empty result
+        return
+    # TODO: site hint!
 
-    choices: List[Tuple[Any, str]] = [(None, "")]
-    choices += [
-        (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
-    ]
-    return DropdownChoice(
-        title=_("Metric"),
-        sorted=True,
-        default_value=None,
-        validate=_require_metric,
-        choices=choices,
-    )
+    # Also fetch host data with the *same* query. This saves one round trip. And head
+    # host has at least one service
+    query = "GET services\n" \
+            "Columns: description check_command metrics host_check_command host_metrics \n"
+
+    if host_name:
+        query += "Filter: host_name = %s\n" % livestatus.lqencode(host_name)
+
+    if service_description:
+        query += "Filter: service_description = %s\n" % livestatus.lqencode(service_description)
+
+    host_check_command, host_metrics = None, None
+    for svc_desc, check_command, metrics, \
+        host_check_command, host_metrics in sites.live().query(query):
+        yield svc_desc, check_command, tuple(metrics)
+
+    if host_check_command:
+        yield "_HOST_", host_check_command, tuple(host_metrics)
+
+
+def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tuple[str, str]]:
+    for perfvar in perfvars:
+        translated = perfvar_translation(perfvar, check_command)
+        name = translated["name"]
+        mi = metric_info.get(name, {})
+        yield name, mi.get("title", name.title())
+
+
+class MetricName(DropdownChoice):
+    """Factory of a Dropdown menu from all known metric names"""
+    def __init__(self):
+        # Customer's metrics from local checks or other custom plugins will now appear as metric
+        # options extending the registered metric names on the system. Thus assuming the user
+        # only selects from available options we skip the input validation(invalid_choice=None)
+        # Since it is not possible anymore on the backend to collect the host & service hints
+        super().__init__(title=_("Metric"),
+                         sorted=True,
+                         encode_value=False,
+                         choices=[(None, _("Select metric"))])
+        self._regex = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
+        self._regex_error = _("Metric names must only consist of letters, digits and "
+                              "underscores and they must start with a letter.")
+
+    def from_html_vars(self, varprefix: str) -> Optional[str]:
+        return html.request.var(varprefix)
+
+    def _validate_value(self, value: Optional[str], varprefix: str) -> None:
+        if value is not None and not self._regex.match(ensure_str(value)):
+            raise MKUserError(varprefix, self._regex_error)
+
+    def render_input(self, varprefix: str, value: str) -> None:
+        if self._label:
+            html.write(self._label)
+            html.nbsp()
+
+        if value is None:
+            clean_choices = self.choices()
+        else:
+            # Need to create an on the fly metric option
+            clean_choices = [
+                next(((metric_id, metric_detail['title'])
+                      for metric_id, metric_detail in metric_info.items()
+                      if metric_id == value), (value, value.title()))
+            ]
+
+        html.write(_("Select metric: "))
+        html.dropdown(varprefix,
+                      self._options_for_html(clean_choices),
+                      deflt=self._option_for_html(value),
+                      class_="metric-selector",
+                      style="width: 250px;",
+                      read_only=self._read_only)
+
+        vs_host = MonitoredHostname(
+            label=_("Filter metric selection by hostname: "),
+            placeholder=_("Hint a hostname"),
+            size=20,
+        )
+        html.br()
+        host_varprefix = varprefix + "_hostname_hint"
+        vs_host.render_input(host_varprefix, None)
+        html.javascript("cmk.valuespecs.transfer_context_onchange('context_host_p_host', %s)" %
+                        json.dumps(host_varprefix))
+
+        completion_js = '(() => ({host: document.getElementsByName(%s)[0].value}))()' % json.dumps(
+            host_varprefix)
+        vs_service = MonitoredServiceDescription(label=_("Filter metric selection by service: "),
+                                                 placeholder=_("Hint a service"),
+                                                 completion_params_js=completion_js,
+                                                 size=20)
+        service_varprefix = varprefix + "_service_hint"
+        html.br()
+        vs_service.render_input(service_varprefix, None)
+        html.javascript(
+            "cmk.valuespecs.transfer_context_onchange('context_service_p_service', %s)" %
+            json.dumps(service_varprefix))
+
+
+class MonitoredMetrics(TextAsciiAutocomplete):
+    ident = "monitored_metrics"
+
+    # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        """Return the matching list of dropdown choices
+        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+        def metrics():
+            options = set(find_host_services(params.get("host", ""), params.get("service", "")))
+            for _, check_command, metrics in options:
+                # Check_command replace is for 1.6 backwards compatibility
+                yield from metric_choices(check_command.replace(".", "_"), metrics)
+
+        if not params.get("host") and not params.get("service"):
+            choices: Choices = [(metric_id, metric_detail['title'])
+                                for metric_id, metric_detail in metric_info.items()]
+        else:
+            choices = list(set(metrics()))
+
+        return sorted(v for v in choices if value.lower() in v[1].lower())
 
 
 #.

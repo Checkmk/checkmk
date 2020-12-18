@@ -129,6 +129,7 @@ def check_ntp(
     if peer.reach == "0":
         yield Result(state=State.UNKNOWN, summary=f"Peer {peer.name} is unreachable")
         return
+
     crit_stratum, warn, crit = params["ntp_levels"]
     yield from check_levels(
         value=peer.offset,
@@ -138,28 +139,28 @@ def check_ntp(
         render_func=lambda f: "%.4f ms" % f,
         label="Offset",
     )
-    if peer.when > 0:
-        yield Result(state=State.OK,
-                     summary="Time since last sync: %s" % render.timespan(peer.when))
-    state = NTP_STATE_CODES.get(peer.statecode, "unknown")
-    if state == "falsetick":
-        yield Result(state=State.CRIT, summary="")
-    else:
-        yield Result(state=State.OK, notice=f"State: {state}")
-    yield from check_levels(
-        value=peer.jitter,
-        metric_name="jitter",
-        render_func=lambda f: "%.4f ms" % f,
-        label="Jitter",
-        notice_only=True,
-    )
     yield from check_levels(
         value=peer.stratum,
         levels_upper=(crit_stratum, crit_stratum),
         render_func=lambda d: str(int(d)),
         label="Stratum",
-        notice_only=True,
     )
+    yield from check_levels(
+        value=peer.jitter,
+        metric_name="jitter",
+        render_func=lambda f: "%.4f ms" % f,
+        label="Jitter",
+    )
+
+    if peer.when > 0:
+        yield Result(state=State.OK,
+                     summary="Time since last sync: %s" % render.timespan(peer.when))
+
+    state = NTP_STATE_CODES.get(peer.statecode, "unknown")
+    if state == "falsetick":
+        yield Result(state=State.CRIT, summary="")
+    else:
+        yield Result(state=State.OK, notice=f"State: {state}")
 
 
 def check_ntp_summary(

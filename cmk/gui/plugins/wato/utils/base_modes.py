@@ -6,7 +6,7 @@
 
 import abc
 import http.client
-from typing import List, Optional, Type
+from typing import Iterable, List, Optional, Type
 
 from cmk.utils.plugin_registry import Registry
 
@@ -85,10 +85,7 @@ class WatoMode(metaclass=abc.ABCMeta):
         else:
             breadcrumb = Breadcrumb()
 
-            topic_item = self._topic_breadcrumb_item()
-            if topic_item:
-                breadcrumb.append(topic_item)
-
+        breadcrumb.extend(self._topic_breadcrumb_item())
         breadcrumb.append(self._breadcrumb_item())
 
         return breadcrumb
@@ -114,8 +111,8 @@ class WatoMode(metaclass=abc.ABCMeta):
         """
         return self.mode_url()
 
-    def _topic_breadcrumb_item(self) -> Optional[BreadcrumbItem]:
-        """Return the BreadcrumbItem for the topic of this mode
+    def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
+        """Yield the BreadcrumbItem(s) for the topic of this mode
 
         For the top level modes we need to prepend the topic of the mode.
         The mode is sadly not available directly in WatoMode. Instead it is
@@ -133,14 +130,15 @@ class WatoMode(metaclass=abc.ABCMeta):
 
         main_module = main_module_registry.get(mode_name)
         if main_module is None:
-            return None
+            return
             # TODO: Can be activated once all non top level modes have a parent_mode set
             #raise RuntimeError("Could not determine topic breadcrumb item for mode %r" % mode_name)
 
-        return BreadcrumbItem(
+        yield BreadcrumbItem(
             title=main_module().topic.title,
             url=None,
         )
+        yield from main_module.additional_breadcrumb_items()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         """Returns the data structure representing the page menu for this mode"""

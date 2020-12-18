@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Optional, NamedTuple, Type
+from typing import Iterable, NamedTuple, Optional, Type
 
 from cmk.gui.type_defs import Icon
+from cmk.gui.breadcrumb import BreadcrumbItem
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.utils.plugin_registry
@@ -143,6 +144,12 @@ class ABCMainModule(MenuItem, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def is_show_more(self) -> bool:
         raise NotImplementedError()
+
+    @classmethod
+    def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
+        """This class method allows for adding additional items to the breadcrumb navigation"""
+        return
+        yield  # pylint: disable=unreachable
 
 
 class ModuleRegistry(cmk.utils.plugin_registry.Registry[Type[ABCMainModule]]):

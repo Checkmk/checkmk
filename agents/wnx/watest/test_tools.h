@@ -21,6 +21,7 @@ class Node;
 }
 
 namespace tst {
+
 std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root);
 std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root);
 
@@ -72,6 +73,14 @@ inline std::filesystem::path CreateWorkFile(const std::filesystem::path& Name,
     ofs << Text << "\n";
     return path;
 }
+
+inline void CreateBinaryFile(const std::filesystem::path& name,
+                             std::string_view data) {
+    std::ofstream ofs(name.u8string(), std::ios::binary);
+    ofs.write(data.data(), data.size());
+}
+
+std::filesystem::path GetTempDir();
 
 inline std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
     namespace fs = std::filesystem;

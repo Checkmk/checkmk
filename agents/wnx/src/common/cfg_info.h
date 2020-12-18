@@ -13,6 +13,7 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "common/cfg_yaml.h"
 #include "common/yaml.h"

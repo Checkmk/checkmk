@@ -4,20 +4,9 @@
 #include "pch.h"
 
 #include <chrono>
-#include <filesystem>
-#include <future>
 
-#include "cfg_details.h"
-#include "common/cfg_info.h"
-#include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "common/yaml.h"
-#include "read_file.h"
 #include "test_tools.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-#include "tools/_tgt.h"
-#include "tools/_win.h"
 
 namespace cma::details {
 extern bool g_is_service;
@@ -265,12 +254,11 @@ TEST(Wtools, ConditionallyConvert) {
     }
 }
 
-TEST(Wtools, FreqCo) {
-    auto f = wtools::QueryPerformanceFreq();
+TEST(Wtools, PerformanceFrequency) {
     LARGE_INTEGER freq;
     ::QueryPerformanceFrequency(&freq);
 
-    EXPECT_EQ(f, freq.QuadPart);
+    EXPECT_EQ(wtools::QueryPerformanceFreq(), freq.QuadPart);
 
     LARGE_INTEGER c1;
     ::QueryPerformanceCounter(&c1);
@@ -390,15 +378,13 @@ TEST(Wtools, Perf) {
     }
 }
 
-static auto null_handle = (HANDLE)0;
-
 TEST(Wtools, AppRunnerCtorDtor) {
     wtools::AppRunner app;
     EXPECT_EQ(app.exitCode(), STILL_ACTIVE);
     EXPECT_EQ(app.getCmdLine(), L"");
     EXPECT_TRUE(app.getData().size() == 0);
-    EXPECT_EQ(app.getStderrRead(), null_handle);
-    EXPECT_EQ(app.getStdioRead(), null_handle);
+    EXPECT_EQ(app.getStderrRead(), nullptr);
+    EXPECT_EQ(app.getStdioRead(), nullptr);
     EXPECT_EQ(app.processId(), 0);
 }
 
@@ -426,45 +412,43 @@ TEST(Wtools, AppRunnerRunAndSTop) {
 
 TEST(Wtools, SimplePipeBase) {
     wtools::SimplePipe pipe;
-    EXPECT_EQ(pipe.getRead(), null_handle);
-    EXPECT_EQ(pipe.getWrite(), null_handle);
+    EXPECT_EQ(pipe.getRead(), nullptr);
+    EXPECT_EQ(pipe.getWrite(), nullptr);
 
     pipe.create();
-    EXPECT_NE(pipe.getRead(), null_handle);
-    EXPECT_NE(pipe.getWrite(), null_handle);
+    EXPECT_NE(pipe.getRead(), nullptr);
+    EXPECT_NE(pipe.getWrite(), nullptr);
 
     auto write_handle = pipe.getWrite();
     auto handle = pipe.moveWrite();
-    EXPECT_EQ(pipe.getWrite(), null_handle);
+    EXPECT_EQ(pipe.getWrite(), nullptr);
     EXPECT_EQ(handle, write_handle);
 
     pipe.shutdown();
-    EXPECT_EQ(pipe.getRead(), null_handle);
-    EXPECT_EQ(pipe.getWrite(), null_handle);
+    EXPECT_EQ(pipe.getRead(), nullptr);
+    EXPECT_EQ(pipe.getWrite(), nullptr);
 }
 
-TEST(Wtools, Perf2) {
-    {
-        auto index = wtools::perf::FindPerfIndexInRegistry(L"Zuxxx");
-        EXPECT_TRUE(false == index.has_value());
-    }
-    {
-        auto index =
-            wtools::perf::FindPerfIndexInRegistry(L"Terminal Services");
-        ASSERT_TRUE(index.has_value());
-        int i = index.value();
-        EXPECT_TRUE(cma::tools::find(TsValues, i));
-    }
-    {
-        auto index = wtools::perf::FindPerfIndexInRegistry(L"Memory");
-        ASSERT_TRUE(index.has_value());
-        EXPECT_EQ(index, 4);
-    }
+TEST(Wtools, PerfIndex) {
+    auto index = wtools::perf::FindPerfIndexInRegistry(L"Zuxxx");
+    EXPECT_FALSE(index);
+
+    index = wtools::perf::FindPerfIndexInRegistry(L"Terminal Services");
+    ASSERT_TRUE(index);
+
+    int i = index.value();
+    EXPECT_TRUE(cma::tools::find(TsValues, i));
+
+    index = wtools::perf::FindPerfIndexInRegistry(L"Memory");
+    ASSERT_TRUE(index);
+    EXPECT_EQ(index, 4);
 }
-TEST(Wtools, GetArgv2) {
-    std::filesystem::path val = GetArgv(0);
+TEST(Wtools, GetArgv) {
+    namespace fs = std::filesystem;
+
+    fs::path val{GetArgv(0)};
     EXPECT_TRUE(cma::tools::IsEqual(val.extension().wstring(), L".exe"));
-    std::filesystem::path val1 = GetArgv(10);
+    fs::path val1{GetArgv(10)};
     EXPECT_TRUE(val1.empty());
 }
 
@@ -473,14 +457,8 @@ TEST(Wtools, MemSize) {
     EXPECT_TRUE(sz > static_cast<size_t>(400'000));
 }
 
-TEST(Wtools, ParentPid) {
-    //    uint32_t pid = 0;
-    //    auto parent_pid = GetParentPid(pid);
-    //    EXPECT_TRUE(pid == 0);
-}
-
 TEST(Wtools, KillTree) {
-    //
+    // Safety double check
     EXPECT_FALSE(kProcessTreeKillAllowed);
 }
 
@@ -504,26 +482,15 @@ TEST(Wtools, Acl) {
     }
 }
 
-// #TODO (sk): remove load config, use OS temp folder
 TEST(Wtools, LineEnding) {
-    cma::OnStartTest();
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    std::filesystem::path tmp = cma::cfg::GetTempDir();
+    constexpr std::string_view to_write{"a\nb\r\nc\nd\n\n"};
+    constexpr std::string_view expected{"a\r\nb\r\r\nc\r\nd\r\n\r\n"};
 
-    auto work_file = tmp / "lf.test";
-
-    const std::string s{"a\nb\r\nc\nd\n\n"};
-    const std::string expected{"a\r\nb\r\r\nc\r\nd\r\n\r\n"};
-
-    std::ofstream tst(work_file, std::ios::binary);
-    tst.write(s.c_str(), s.size());
-    tst.close();
+    auto work_file = tst::GetTempDir() / "line_ending.tst";
+    tst::CreateBinaryFile(work_file, to_write);
 
     wtools::PatchFileLineEnding(work_file);
-
-    auto result = ReadWholeFile(work_file);
-    EXPECT_EQ(result, expected);
+    EXPECT_EQ(wtools::ReadWholeFile(work_file), expected);
 }
 
 TEST(Wtools, UserGroupName) {

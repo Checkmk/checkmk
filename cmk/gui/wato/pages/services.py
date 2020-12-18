@@ -241,10 +241,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 host_labels=previous_discovery_result.host_labels,
             )
 
-        # Clean the requested action after performing it
-        performed_action = self._options.action
-        self._options = self._options._replace(action=DiscoveryAction.NONE)
-
         self._update_persisted_discovery_options()
 
         renderer = DiscoveryPageRenderer(
@@ -252,6 +248,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             self._options,
         )
         page_code = renderer.render(discovery_result, request)
+
+        # Clean the requested action after performing it
+        performed_action = self._options.action
+        self._options = self._options._replace(action=DiscoveryAction.NONE)
 
         return {
             "is_finished": not self._is_active(discovery_result),

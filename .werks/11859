@@ -1,0 +1,12 @@
+Title: Fix handling of upper case characters in login _origtarget
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1608281918
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b3
+
+URLs with upper case characters were rejected by the validation mechanism of
+the argument.

@@ -1,0 +1,11 @@
+Title: Add opsgenie-sdk needed for opsgenie_issues
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1608300996
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b3
+
+Added opsgenie-sdk, which is needed by opsgenie_issues

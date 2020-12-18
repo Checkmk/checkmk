@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "65fe820dfa5b75ea27f7b080c31c8d0f5eab9d0dfb0576c46432235831cfba26"
+            "sha256": "383eb7e5753b4b4c7ea91d58beaca3488d072fd275256f56001cba3e2bf42b89"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -504,6 +504,14 @@
             ],
             "index": "pypi",
             "version": "==0.2.9"
+        },
+        "opsgenie-sdk": {
+            "hashes": [
+                "sha256:85a33ef683ac4e3ac39801636131ef247dc85e6df6de58f687dd5795f90c88c5",
+                "sha256:f4a705eada596dfd5f8112fdecaa77400262900d62b22500fca566f92f1532a1"
+            ],
+            "index": "pypi",
+            "version": "==2.0.3"
         },
         "ordered-set": {
             "hashes": [
@@ -1129,6 +1137,14 @@
             ],
             "index": "pypi",
             "version": "==0.0.6"
+        },
+        "tenacity": {
+            "hashes": [
+                "sha256:baed357d9f35ec64264d8a4bbf004c35058fad8795c5b0d8a7dc77ecdcbb8f39",
+                "sha256:e14d191fb0a309b563904bbc336582efe2037de437e543b38da749769b544d7f"
+            ],
+            "index": "pypi",
+            "version": "==6.3.1"
         },
         "typing-extensions": {
             "hashes": [
@@ -2092,7 +2108,7 @@
                 "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b",
                 "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
             ],
-            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==0.10.2"
         },
         "typed-ast": {
@@ -2168,7 +2184,7 @@
                 "sha256:a3c89a8e9ba0aeb17382836cdb73c516d0ecf6630ec40ec28288f3ed459ce87b",
                 "sha256:aa3a917ed752ba3e0b242234b2a373f9c4e2a75d35291dcbe977649bd21fd108"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==1.8.6"
         },
         "websocket-client": {

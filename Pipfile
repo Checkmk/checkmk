@@ -135,6 +135,8 @@ pyparsing = "==2.4.7"  # direct dependency
 ordered-set = "==4.0.2"  # needed by deepdiff
 deepdiff = "==5.0.2"  # used for recording setup audit log
 redis = "==3.5.3"  # needed by GUI (caching)
+tenacity = "==6.3.1"  # needed by opsgenie-sdk
+opsgenie-sdk = "==2.0.3"  # needed by opsgenie_issues
 
 [requires]
 python_version = "3.8"

@@ -413,7 +413,7 @@ class ModeBIPacks(ABCBIMode):
                             title=_("Of aggregations"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Monitor state"),
+                                    title=_("BI Aggregations"),
                                     icon_name="rulesets",
                                     item=make_simple_link(
                                         makeuri_contextless(
@@ -425,7 +425,7 @@ class ModeBIPacks(ABCBIMode):
                                         )),
                                 ),
                                 PageMenuEntry(
-                                    title=_("Monitor single state (Deprecated)"),
+                                    title=_("Check State of BI Aggregation"),
                                     icon_name="rulesets",
                                     item=make_simple_link(
                                         makeuri_contextless(

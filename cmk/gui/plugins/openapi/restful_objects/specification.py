@@ -71,15 +71,15 @@ This provision of additional information as a REST-API principle is also called
 
 # Authentication
 
-To use this API from a automated client, an *automation* user needs to be set up in Checkmk.
-With such a user, perform actions can be performed via the API. For a newly created site an
-automation user is already created. You can find it, like other users, in Checkmk at
-*Setup* > *Users*.
+To use this API from a automated client, a user needs to be set up in Checkmk. Ideally this
+would be an automation-user, with which actions can be performed via the API. For a newly
+created site an automation user is already created. You can find it, like other users, in
+Checkmk at *Setup* > *Users*.
 
 As an alternative, users who already logged into Checkmk can also access the API, although these
 users are not very suitable for automation, because their session will time out eventually.
 
-For scripting, please use *automation* users.
+For scripting, please use the Bearer authentication format.
 
 <SecurityDefinitions />
 
@@ -213,8 +213,7 @@ SPEC.components.security_scheme(
         'type': 'http',
         'scheme': 'bearer',
         'in': 'header',
-        'description': 'The format of the header-value is "Bearer $automation_user '
-                       '$automation_user_password"\n\n'
+        'description': 'The format of the header-value is "Bearer $user $password"\n\n'
                        'An example could be: `hansdampf miezekatze123`',
         'bearerFormat': 'username password',
     },

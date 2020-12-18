@@ -10,28 +10,28 @@ import mimetypes
 import os
 import re
 import urllib.parse
-from typing import Dict, Type, Any, Optional, Callable
+from typing import Any, Callable, Dict, Optional, Tuple, Type
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
-from werkzeug import Response, Request
+from werkzeug import Request, Response
 from werkzeug.exceptions import HTTPException, NotFound
+from werkzeug.routing import Map, Rule, Submount
 
-from werkzeug.routing import Map, Submount, Rule
+from cmk.utils import crash_reporting
+from cmk.utils.exceptions import MKException
+from cmk.utils.type_defs import UserId
 
 from cmk.gui import config
 from cmk.gui.config import omd_site
 from cmk.gui.exceptions import MKUserError, MKAuthException
-from cmk.gui.login import check_parsed_auth_cookie
+from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
 from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.wsgi.auth import verify_user, bearer_auth, rfc7662_subject
+from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
 from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
 from cmk.gui.wsgi.type_defs import RFC7662
 from cmk.gui.wsgi.wrappers import ParameterDict
-from cmk.utils import crash_reporting
-from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import UserId
 
 ARGS_KEY = 'CHECK_MK_REST_API_ARGS'
 
@@ -48,18 +48,43 @@ WSGIEnvironment = Dict[str, Any]
 def _verify_request(environ) -> RFC7662:
     auth_header = environ.get('HTTP_AUTHORIZATION', '')
     if auth_header:
-        return bearer_auth(auth_header)
+        user_id, secret = user_from_bearer_header(auth_header)
+        user = automation_auth(user_id, secret)
+        if user:
+            return user
+
+        user = gui_user_auth(user_id, secret)
+        if user:
+            return user
+
+        raise MKAuthException(f"{user_id} not authorized.")
 
     cookie = Request(environ).cookies.get(f"auth_{omd_site()}")
     if cookie:
-        try:
-            username, session_id, cookie_hash = cookie.split(':', 2)
-        except ValueError:
-            raise MKAuthException("Invalid auth cookie.")
-        check_parsed_auth_cookie(UserId(username), session_id, cookie_hash)
-        return rfc7662_subject(username, 'cookie')
+        user_id, session_id, cookie_hash = user_from_cookie(cookie)
+        check_parsed_auth_cookie(user_id, session_id, cookie_hash)
+        return rfc7662_subject(user_id, 'cookie')
 
     raise MKAuthException("You need to be authenticated to use the REST API.")
+
+
+def user_from_bearer_header(auth_header: str) -> Tuple[UserId, str]:
+    try:
+        _, token = auth_header.split("Bearer", 1)
+    except ValueError:
+        raise MKAuthException("Not a valid Bearer token.")
+    try:
+        user_id, secret = token.strip().split(' ', 1)
+    except ValueError:
+        raise MKAuthException("No user/password combination in Bearer token.")
+    if not secret:
+        raise MKAuthException("Empty password not allowed.")
+    if not user_id:
+        raise MKAuthException("Empty user not allowed.")
+    if "/" in user_id:
+        raise MKAuthException("No slashes / allowed in username.")
+
+    return UserId(user_id), secret
 
 
 class Authenticate:
@@ -84,13 +109,14 @@ class Authenticate:
                 title=str(exc),
             )(environ, start_response)
 
-        with verify_user(rfc7662['sub'], rfc7662):
+        with set_user_context(rfc7662['sub'], rfc7662):
             wsgi_app = self.func(ParameterDict(path_args))
             return wsgi_app(environ, start_response)
 
 
 @functools.lru_cache
 def serve_file(file_name: str, content: str) -> Response:
+    """Construct and cache a Response from a static file."""
     content_type, _ = mimetypes.guess_type(file_name)
 
     resp = Response()

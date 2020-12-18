@@ -868,6 +868,30 @@ input[type="checkbox"] {
   margin-left: 0;
 }
 
+@mixin button-mixin {
+  display: inline-block;
+  width: auto;
+  margin-top: 8px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  margin-left: 0;
+  font-size: $font-size-default;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-table;
+  color: $input-button-color;
+  background-color: $input-button-bg-color;
+  box-shadow: none;
+
+  &:hover,
+  &:active {
+    background-color: $input-button-hover-bg-color;
+  }
+}
+
+button {
+  @include button-mixin;
+}
+
 input,
 select {
   &.number {
@@ -875,23 +899,7 @@ select {
   }
 
   &.button {
-    display: inline-block;
-    width: auto;
-    margin-top: 8px;
-    margin-right: 8px;
-    margin-bottom: 8px;
-    margin-left: 0;
-    font-size: $font-size-default;
-    font-weight: $font-weight-bold;
-    letter-spacing: $letter-spacing-table;
-    color: $input-button-color;
-    background-color: $input-button-bg-color;
-    box-shadow: none;
-
-    &:hover,
-    &:active {
-      background-color: $input-button-hover-bg-color;
-    }
+    @include button-mixin;
   }
 
   &[type="radio"] {

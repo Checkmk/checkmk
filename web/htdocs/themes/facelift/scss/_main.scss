@@ -53,6 +53,7 @@ input.number {
 }
 
 /* Styling for input elements */
+button,
 input,
 select,
 textarea {
@@ -149,7 +150,7 @@ select.icon option {
   background-size: 18px;
 }
 
-// TODO : Figure out where these can be found in the front end
+button,
 input.button,
 table.vs_duallist a.control {
   padding: 2px 6px;
@@ -166,6 +167,7 @@ body.main .popup_menu table.vs_duallist span.control {
   box-shadow: none;
 }
 
+button,
 input.button,
 table.vs_duallist a.control,
 .wato div.mainmenu a {
@@ -178,6 +180,7 @@ table.vs_duallist a.control,
   }
 }
 
+button,
 input.button,
 input.button:not([type="text"]),
 input.button:not([type="password"]) {
@@ -193,6 +196,7 @@ input.button:not([type="password"]) {
   }
 }
 
+button.hot,
 input.button.hot {
   &,
   &:active {

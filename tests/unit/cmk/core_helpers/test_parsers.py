@@ -7,26 +7,24 @@
 # pylint: disable=protected-access
 
 import logging
-import os
 import time
-from pathlib import Path
+from collections import defaultdict
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
+from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
-from cmk.utils.type_defs import AgentRawData, AgentRawDataSection, result, SectionName, SourceType
+from cmk.utils.type_defs import AgentRawData, AgentRawDataSection, SectionName
 
-from cmk.core_helpers import FetcherType
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION
-from cmk.core_helpers.agent import AgentParser, AgentSummarizer, HostSectionParser, NoCache
+from cmk.snmplib.type_defs import SNMPRawData
+
+from cmk.core_helpers.agent import AgentParser, HostSectionParser
 from cmk.core_helpers.cache import PersistedSections, SectionStore
+from cmk.core_helpers.snmp import SNMPParser
+from cmk.core_helpers.type_defs import NO_SELECTION
 
-from cmk.base.sources.agent import AgentSource
 
-
-class TestParser:
+class TestAgentParser:
     @pytest.fixture
     def hostname(self):
         return "testhost"
@@ -282,85 +280,66 @@ class TestParser:
         assert section_header.separator is None
 
 
-class StubSummarizer(AgentSummarizer):
-    def summarize_success(self, host_sections, *, mode):
-        return 0, "", []
-
-
-class StubSource(AgentSource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args,
-            fetcher_type=FetcherType.NONE,
-            main_data_source=False,
-            **kwargs,
-        )
-
-    def to_json(self):
-        return {}
-
-    def _make_file_cache(self):
-        return NoCache(
-            path=Path(os.devnull),
-            max_age=0,
-            disabled=True,
-            use_outdated=False,
-            simulation=True,
-        )
-
-    def _make_fetcher(self):
-        return self
-
-    def _make_checker(self):
-        return self
-
-    def _make_summarizer(self):
-        return StubSummarizer(self.exit_spec)
-
-
-class TestAgentSummaryResult:
+class TestSNMPParser:
     @pytest.fixture
     def hostname(self):
-        return "testhost"
+        return "hostname"
 
-    @pytest.fixture(params=(mode for mode in Mode if mode is not Mode.NONE))
-    def mode(self, request):
-        return request.param
-
-    @pytest.fixture
-    def scenario(self, hostname, monkeypatch):
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.apply(monkeypatch)
-        return ts
+    @pytest.fixture(autouse=True)
+    def scenario_fixture(self, hostname, monkeypatch):
+        Scenario().add_host(hostname).apply(monkeypatch)
 
     @pytest.fixture
-    def source(self, hostname, mode):
-        return StubSource(
+    def parser(self, hostname):
+        return SNMPParser(
             hostname,
-            "1.2.3.4",
-            mode=mode,
-            source_type=SourceType.HOST,
-            id_="agent_id",
-            description="agent description",
+            SectionStore(
+                "/tmp/store",
+                logger=logging.Logger("test"),
+            ),
+            check_intervals={},
+            keep_outdated=True,
+            logger=logging.Logger("test"),
         )
 
-    @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, source):
-        assert source.summarize(result.OK(source.default_host_sections)) == (0, "", [])
+    def test_empty_raw_data(self, parser):
+        raw_data: SNMPRawData = {}
 
-    @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, source):
-        assert source.summarize(result.Error(Exception())) == (3, "(?)", [])
+        host_sections = parser.parse(raw_data, selection=NO_SELECTION)
+        assert host_sections.sections == {}
+        assert host_sections.cache_info == {}
+        assert not host_sections.piggybacked_raw_data
 
-    @pytest.mark.usefixtures("scenario")
-    def test_with_MKEmptyAgentData_exception(self, source):
-        assert source.summarize(result.Error(MKEmptyAgentData())) == (2, "(!!)", [])
+    @pytest.fixture
+    def sections(self):
+        # See also the tests to HostSections.
+        section_a = SectionName("section_a")
+        content_a = [["first", "line"], ["second", "line"]]
+        section_b = SectionName("section_b")
+        content_b = [["third", "line"], ["forth", "line"]]
+        return {section_a: content_a, section_b: content_b}
 
-    @pytest.mark.usefixtures("scenario")
-    def test_with_MKAgentError_exception(self, source):
-        assert source.summarize(result.Error(MKAgentError())) == (2, "(!!)", [])
+    def test_no_cache(self, parser, sections):
+        host_sections = parser.parse(sections, selection=NO_SELECTION)
+        assert host_sections.sections == sections
+        assert host_sections.cache_info == {}
+        assert not host_sections.piggybacked_raw_data
 
-    @pytest.mark.usefixtures("scenario")
-    def test_with_MKTimeout_exception(self, source):
-        assert source.summarize(result.Error(MKTimeout())) == (2, "(!!)", [])
+    def test_with_persisted_sections(self, parser, sections, monkeypatch):
+        monkeypatch.setattr(time, "time", lambda: 1000)
+        monkeypatch.setattr(parser, "check_intervals", defaultdict(lambda: 33))
+        monkeypatch.setattr(
+            SectionStore, "load", lambda self: PersistedSections({
+                SectionName("persisted"): (42, 69, [["content"]]),
+            }))
+        # Patch IO:
+        monkeypatch.setattr(SectionStore, "store", lambda self, sections: None)
+
+        raw_data = sections
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        all_sections = sections.copy()
+        all_sections[SectionName("persisted")] = [["content"]]
+        assert ahs.sections == all_sections
+        assert ahs.cache_info == {SectionName("persisted"): (42, 27)}
+        assert ahs.piggybacked_raw_data == {}

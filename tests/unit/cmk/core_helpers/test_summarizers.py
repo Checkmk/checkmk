@@ -7,9 +7,10 @@
 import pytest  # type: ignore[import]
 
 import cmk.utils.piggyback
-from cmk.core_helpers.type_defs import Mode
-from cmk.core_helpers.piggyback import PiggybackSummarizer
+
 from cmk.core_helpers.agent import AgentHostSections
+from cmk.core_helpers.piggyback import PiggybackSummarizer
+from cmk.core_helpers.type_defs import Mode
 
 
 class TestPiggybackSummarizer:

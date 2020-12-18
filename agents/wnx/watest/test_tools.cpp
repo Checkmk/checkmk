@@ -21,6 +21,39 @@
 #include "yaml-cpp/node/node.h"  // for Node
 
 namespace tst {
+
+class TestEnv : public testing::Environment {
+public:
+    ~TestEnv() override = default;
+
+    void SetUp() override {
+        namespace fs = std::filesystem;
+        using namespace std::string_literals;
+        fs::path path{cma::tools::win::GetTempFolder()};
+        path /= "checkmk_"s + std::to_string(::GetCurrentProcessId());
+        fs::create_directories(path);
+        path_ = path;
+    }
+
+    void TearDown() override {
+        namespace fs = std::filesystem;
+        std::error_code ec;
+        fs::remove_all(path_, ec);
+    }
+
+    [[nodiscard]] std::filesystem::path getTempPath() const { return path_; }
+
+private:
+    std::filesystem::path path_;
+};
+
+testing::Environment* const g_env =
+    testing::AddGlobalTestEnvironment(new TestEnv);
+
+std::filesystem::path GetTempDir() {
+    return dynamic_cast<TestEnv*>(g_env)->getTempPath();
+}
+
 const std::filesystem::path G_ProjectPath = PROJECT_DIR;
 const std::filesystem::path G_SolutionPath = SOLUTION_DIR;
 const std::filesystem::path G_TestPath =

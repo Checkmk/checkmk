@@ -77,7 +77,7 @@ def is_allowed_url(url):
         return False
 
     # Don't allow bad characters in path
-    if not re.match(r"[/a-z0-9_\.-]*$", parsed.path):
+    if not re.match(r"[/a-zA-Z0-9_\.-]*$", parsed.path):
         return False
 
     return True

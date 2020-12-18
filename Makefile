@@ -66,9 +66,6 @@ THEME_JSON_FILES   := $(addprefix web/htdocs/themes/,$(addsuffix /theme.json,$(T
 THEME_IMAGE_DIRS   := $(addprefix web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
 THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
-OPENAPI_DOC        := web/htdocs/openapi/api-documentation.html
-OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
-
 LOCK_FD := 200
 LOCK_PATH := .venv.lock
 
@@ -290,24 +287,6 @@ headers:
 	doc/helpers/headrify
 
 
-$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
-	@export PYTHONPATH=${REPO_PATH} ; \
-	export TMPFILE=$$(mktemp);  \
-	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \
-	mv $$TMPFILE $@
-
-
-$(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules/.bin/redoc-cli
-	node_modules/.bin/redoc-cli bundle -o $(OPENAPI_DOC) $(OPENAPI_SPEC) && \
-		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
-		echo >> $(OPENAPI_DOC)  # fix trailing whitespaces and end of file newline
-
-openapi-clean:
-	rm -f $(OPENAPI_SPEC)
-openapi: $(OPENAPI_SPEC)
-openapi-doc: $(OPENAPI_DOC)
-
-
 optimize-images:
 	@if type pngcrush >/dev/null 2>&1; then \
 	    for F in $(PNG_FILES); do \
@@ -335,7 +314,6 @@ optimize-images:
 # https://npm.community/t/crash-npm-err-cb-never-called/858.
 .INTERMEDIATE: .ran-npm
 node_modules/.bin/webpack: .ran-npm
-node_modules/.bin/redoc-cli: .ran-npm
 .ran-npm: package.json package-lock.json
 	@echo "npm version: $$(npm --version)"
 	@echo "node version: $$(node --version)"
@@ -350,7 +328,7 @@ node_modules/.bin/redoc-cli: .ran-npm
 	    echo "Installing from public registry" ; \
         fi ; \
 	npm install --audit=false --unsafe-perm $$REGISTRY
-	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli
+	touch node_modules/.bin/webpack
 
 web/htdocs/js/%_min.js: node_modules/.bin/webpack webpack.config.js $(JAVASCRIPT_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)

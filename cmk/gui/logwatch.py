@@ -767,8 +767,8 @@ def get_logfile_lines(site, host_name, file_name):
         sites.live().set_only_sites([site])
     query = \
         "GET hosts\n" \
-        "Columns: mk_logwatch_file:file:%s\n" \
-        "Filter: name = %s\n" % (livestatus.lqencode(file_name.replace('\\', '\\\\').replace(' ', '\\s')), livestatus.lqencode(host_name))
+        "Columns: mk_logwatch_file:file:%s/%s\n" \
+        "Filter: name = %s\n" % (livestatus.lqencode(host_name), livestatus.lqencode(file_name.replace('\\', '\\\\').replace(' ', '\\s')), livestatus.lqencode(host_name))
     file_content = sites.live().query_value(query)
     if site:  # Honor site hint if available
         sites.live().set_only_sites(None)

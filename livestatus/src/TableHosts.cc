@@ -691,8 +691,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", offsets,
         [mc]() { return mc->mkLogwatchPath(); },
-        [](const host &r, const std::string &args) {
-            return std::filesystem::path{r.name} / args;
+        [](const host & /*r*/, const std::string &args) {
+            return std::filesystem::path{args};
         }));
 
     table->addColumn(std::make_unique<HostSpecialDoubleColumn>(

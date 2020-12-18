@@ -26,6 +26,7 @@ extern bool g_is_test;
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
+namespace {
 constexpr std::string_view expected_name =
     tgt::Is64bit() ? "watest64.exe" : "watest32.exe";
 
@@ -46,62 +47,59 @@ void KillTmpProcesses() {
 }
 
 int RunMeAgain(int requested) {
-    namespace fs = std::filesystem;
-
     KillTmpProcesses();
 
-    // start process again
-    auto path = GetCurrentProcessPath();
-    if (path.empty()) return false;
+    std::filesystem::path exe{GetCurrentProcessPath()};
 
-    if (fs::path(path).filename().u8string() != expected_name) return false;
+    if (exe.filename().u8string() != expected_name) {
+        return 0;
+    }
 
-    auto cmd = fmt::format("{} wait", fs::path{path}.u8string());
+    auto cmd = fmt::format("{} wait", exe);
+
     int count = 0;
     for (int i = 0; i < requested; i++) {
-        auto success = cma::tools::RunDetachedCommand(cmd);
-        if (success) count++;
+        if (cma::tools::RunDetachedCommand(cmd)) {
+            count++;
+        }
     }
 
     return count;
 }
 
+std::tuple<std::wstring, uint32_t> FindExpectedProcess() {
+    uint32_t pid = 0;
+    std::wstring path;
+    ScanProcessList([&path, &pid ](const PROCESSENTRY32& entry) -> auto {
+        auto fname = wtools::ConvertToUTF8(entry.szExeFile);
+        if (fname != expected_name) {
+            return true;
+        }
+
+        path = GetProcessPath(entry.th32ProcessID);
+        pid = entry.th32ProcessID;
+        return false;
+    });
+
+    return {path, pid};
+}
+
+}  // namespace
+
 TEST(Wtools, ProcessManagement) {
-    namespace fs = std::filesystem;
     auto started = RunMeAgain(1);
     ASSERT_EQ(started, 1);
     ON_OUT_OF_SCOPE(KillTmpProcesses());
 
-    uint32_t pid = 0;
-    std::wstring path;
-    wtools::ScanProcessList(
-        [&path, &pid ](const PROCESSENTRY32& entry) -> auto {
-            auto fname = wtools::ConvertToUTF8(entry.szExeFile);
-            if (fname == expected_name) {
-                path = GetProcessPath(entry.th32ProcessID);
-                pid = entry.th32ProcessID;
-                return false;
-            }
-            return true;
-        });
-
-    EXPECT_TRUE(!path.empty());
-    EXPECT_TRUE(pid != 0);
-    if (pid != 0) {
+    {
+        auto [path, pid] = FindExpectedProcess();
+        EXPECT_TRUE(!path.empty());
+        ASSERT_NE(pid, 0);
         EXPECT_TRUE(wtools::KillProcess(pid, 1));
-        pid = 0;
-        path.clear();
-        wtools::ScanProcessList(
-            [&path, &pid ](const PROCESSENTRY32& entry) -> auto {
-                auto fname = wtools::ConvertToUTF8(entry.szExeFile);
-                if (fname == expected_name) {
-                    path = GetProcessPath(entry.th32ProcessID);
-                    pid = entry.th32ProcessID;
-                    return false;
-                }
-                return true;
-            });
+    }
 
+    {
+        auto [path, pid] = FindExpectedProcess();
         EXPECT_TRUE(path.empty());
         EXPECT_TRUE(pid == 0);
     }
@@ -109,14 +107,12 @@ TEST(Wtools, ProcessManagement) {
 
 TEST(Wtools, KillProcsByDir) {
     namespace fs = std::filesystem;
-    auto started = RunMeAgain(3);
-    ASSERT_EQ(started, 3);
+    auto started = RunMeAgain(2);
+    ASSERT_EQ(started, 2);
     ON_OUT_OF_SCOPE(KillTmpProcesses());
 
-    uint32_t pid = 0;
     auto path = fs::path{GetCurrentProcessPath()};
-
-    auto killed = wtools::KillProcessesByDir(path.parent_path().parent_path());
+    auto killed = KillProcessesByDir(path.parent_path().parent_path());
     EXPECT_EQ(killed, started);
 }
 
@@ -508,6 +504,7 @@ TEST(Wtools, Acl) {
     }
 }
 
+// #TODO (sk): remove load config, use OS temp folder
 TEST(Wtools, LineEnding) {
     cma::OnStartTest();
     tst::SafeCleanTempDir();
@@ -516,8 +513,8 @@ TEST(Wtools, LineEnding) {
 
     auto work_file = tmp / "lf.test";
 
-    const std::string s = "a\nb\r\nc\nd\n\n";
-    const std::string expected = "a\r\nb\r\r\nc\r\nd\r\n\r\n";
+    const std::string s{"a\nb\r\nc\nd\n\n"};
+    const std::string expected{"a\r\nb\r\r\nc\r\nd\r\n\r\n"};
 
     std::ofstream tst(work_file, std::ios::binary);
     tst.write(s.c_str(), s.size());
@@ -530,7 +527,6 @@ TEST(Wtools, LineEnding) {
 }
 
 TEST(Wtools, UserGroupName) {
-    cma::OnStartTest();
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"").empty());
     EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_TST_XX");
 

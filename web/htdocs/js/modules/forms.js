@@ -27,6 +27,37 @@ export function enable_select2_dropdowns(container) {
         dropdownAutoWidth: true,
         minimumResultsForSearch: 5,
     });
+
+    // handle metric selection dropdowns dynamic narrowing
+    elements = $(container)
+        .find(".metric-selector")
+        .each((i, elem) =>
+            $(elem).select2({
+                language: {
+                    searching: () => "Type to trigger search",
+                },
+                width: "style",
+                ajax: {
+                    url: "ajax_vs_autocomplete.py",
+                    type: "POST",
+                    data: term =>
+                        "request=" +
+                        JSON.stringify({
+                            ident: "monitored_metrics",
+                            params: {
+                                host: $(`input[name='${elem.id}_hostname_hint']`).val(),
+                                service: $(`input[name='${elem.id}_service_hint']`).val(),
+                            },
+                            value: term.term || "",
+                        }),
+
+                    processResults: resp => ({
+                        results: resp.result.choices.map(x => ({id: x[0], text: x[1]})),
+                    }),
+                    cache: true,
+                },
+            })
+        );
 }
 
 function enable_label_input_fields(container) {

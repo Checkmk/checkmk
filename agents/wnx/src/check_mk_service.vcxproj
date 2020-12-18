@@ -80,6 +80,9 @@
     <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)</TargetName>
     <CustomBuildBeforeTargets>DebugSymbolsProjectOutputGroup</CustomBuildBeforeTargets>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -87,6 +90,9 @@
     <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)</TargetName>
     <CustomBuildBeforeTargets>DebugSymbolsProjectOutputGroup</CustomBuildBeforeTargets>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -94,6 +100,9 @@
     <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)</TargetName>
     <CustomBuildBeforeTargets>DebugSymbolsProjectOutputGroup</CustomBuildBeforeTargets>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -101,6 +110,9 @@
     <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)</TargetName>
     <CustomBuildBeforeTargets>DebugSymbolsProjectOutputGroup</CustomBuildBeforeTargets>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

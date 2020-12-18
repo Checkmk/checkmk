@@ -131,16 +131,26 @@ export function textinput_enter_submit(e, submit) {
 }
 
 // Helper function to display nice popup confirm dialogs
-// TODO: This needs to be styled to match the current user theme
 export function confirm_dialog(optional_args, confirm_handler) {
     let args = utils.merge_args(
         {
-            icon: "question",
+            // https://sweetalert2.github.io/#configuration
+            target: "#page_menu_popups",
+            position: "top-start",
+            grow: "row",
+            backdrop: false,
+            animation: false,
+            buttonsStyling: false,
             showCancelButton: true,
-            confirmButtonColor: "#444",
-            cancelButtonColor: "#444",
             confirmButtonText: "Yes",
             cancelButtonText: "No",
+            customClass: {
+                container: "confirm_container",
+                popup: "confirm_popup",
+                content: "confirm_content",
+                actions: "confirm_actions",
+                confirmButton: "hot",
+            },
         },
         optional_args
     );

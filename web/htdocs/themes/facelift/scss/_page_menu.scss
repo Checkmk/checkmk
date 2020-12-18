@@ -498,6 +498,28 @@ div#top_heading {
 }
 
 div#page_menu_popups {
+  .confirm_container {
+    position: static;
+    padding: 0;
+
+    .confirm_popup {
+      padding: $spacing;
+      background-color: $base-color;
+    }
+
+    .confirm_content {
+      padding: 0;
+      font-size: $font-size-global;
+      color: $font-color;
+      text-align: left;
+    }
+
+    .confirm_actions {
+      justify-content: flex-start;
+      margin: $spacing 0 0;
+    }
+  }
+
   div.page_menu_popup {
     position: relative;
     display: none;
@@ -552,12 +574,13 @@ div#page_menu_popups {
       padding-right: $spacing;
       white-space: initial;
     }
+  }
 
-    input.button {
-      padding: 8px 16px;
-      margin-top: 0;
-      margin-bottom: 0;
-    }
+  button,
+  input.button {
+    padding: 8px 16px;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 }
 

@@ -40,21 +40,23 @@ def check_ups_capacity(_item, params, info):
     minutes_on_bat, minutes_left, percent_fuel = (
         int(num) if num.strip() else None  #
         for num in info[0])
+
     on_battery = minutes_left is not None and minutes_on_bat
+    if not on_battery:
+        yield 0, "On mains"
 
     # Check time left on battery
     # `minutes_left` can be 0 which not always means that there's no time left but the device might
     # also just be on main power supply
-    if on_battery:
+    if minutes_left is not None:
+        ignore_levels = minutes_left == 0 and not on_battery
         yield check_levels(
-            minutes_left * 60,
+            minutes_left,
             "capacity",
-            (None, None, warn * 60, crit * 60),
-            human_readable_func=get_age_human_readable,
-            infoname="Minutes left",
+            None if ignore_levels else (None, None, warn, crit),
+            human_readable_func=lambda x: get_age_human_readable(x * 60),
+            infoname="Time left",
         )
-    else:
-        yield 0, "on mains"
 
     # Check percentual capacity - note that capacity will only be checked on battery
     if percent_fuel is not None:

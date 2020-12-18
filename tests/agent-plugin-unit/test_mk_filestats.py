@@ -5,10 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import configparser
 # pylint: disable=protected-access,redefined-outer-name
 import os
 import pytest  # type: ignore[import]
+import sys
 from utils import import_module
+
+
+def configparser_library_name():
+    python_version = sys.version_info
+    if python_version[0] == 2 and python_version[1] < 7:
+        # the configparser library is named ConfigParser in Python 2.6 and below.
+        # its name is replaced by the 3to2 tool automatically in-code, but
+        # obviously the strings are not replaced
+        return 'ConfigParser'
+    return 'configparser'
 
 
 @pytest.fixture(scope="module")
@@ -145,3 +157,55 @@ def test_output_aggregator_single_file_servicename(mk_filestats, lazyfile, group
 
     actual = mk_filestats.output_aggregator_single_file(group_name, [lazyfile])
     assert expected == list(actual)[0]
+
+
+class MockConfigParser(configparser.RawConfigParser):
+    def read(self, cfg_file):
+        pass
+
+
+class TestConfigParsing:
+    @pytest.fixture
+    def config_file_name(self):
+        return 'filestats.cfg'
+
+    @pytest.fixture
+    def config_options(self):
+        return [
+            ('banana', 'input_patterns', '/home/banana/*'),
+            ('strawberry', 'input_patterns', '/var/log/*'),
+        ]
+
+    @pytest.fixture
+    def mocked_configparser(self, mk_filestats, config_options):
+        parser = MockConfigParser(mk_filestats.DEFAULT_CFG_SECTION)
+        for section, option, value in config_options:
+            parser.add_section(section)
+            parser.set(section, option, value)
+        return parser
+
+    def test_iter_config_section_dicts(
+        self,
+        mk_filestats,
+        config_file_name,
+        mocked_configparser,
+        mocker,
+    ):
+        mocker.patch(
+            configparser_library_name() + '.ConfigParser',
+            return_value=mocked_configparser,
+        )
+        actual_results = list(mk_filestats.iter_config_section_dicts(config_file_name))
+
+        assert actual_results
+        assert sorted([r[0] for r in actual_results]) == ['banana', 'strawberry']
+
+        for section, config_dict in [r for r in actual_results if r[0] == 'banana']:
+            assert len(config_dict.items()) == 2
+            assert config_dict['input_patterns'] == '/home/banana/*'
+            assert config_dict['output'] == 'file_stats'
+
+        for section, config_dict in [r for r in actual_results if r[0] == 'strawberry']:
+            assert len(config_dict.items()) == 2
+            assert config_dict['input_patterns'] == '/var/log/*'
+            assert config_dict['output'] == 'file_stats'

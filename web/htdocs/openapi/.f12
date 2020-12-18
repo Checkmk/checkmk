@@ -5,7 +5,6 @@ SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; e
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-echo "OpenAPI spec f12d"
-sudo cp index.html checkmk.yaml $ROOT/share/check_mk/web/htdocs/openapi/
+echo "OpenAPI f12d"
+sudo cp index.html $ROOT/share/check_mk/web/htdocs/openapi/
 sudo chmod 755 $ROOT/share/check_mk/web/htdocs/openapi/*
-sudo omd restart $SITE apache

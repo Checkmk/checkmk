@@ -2154,16 +2154,8 @@ msgid "Absolute levels"
 msgstr "Liber Exact"
 
 #, fuzzy, python-format
-msgid "Absolute levels for %s error rates"
-msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy, python-format
 msgid "Absolute levels for %s memory"
 msgstr "Memorie liberă exactă"
-
-#, fuzzy
-msgid "Absolute levels for broadcast packets"
-msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Absolute levels for committed heap space"
@@ -2210,10 +2202,6 @@ msgid "Absolute levels for memory reclaimed by GC"
 msgstr "Memorie liberă exactă"
 
 #, fuzzy
-msgid "Absolute levels for multicast packets"
-msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
 msgid "Absolute levels for output traffic"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -2238,6 +2226,10 @@ msgstr "Nivel-urile exacte în bits sau bytes per secundă"
 #, fuzzy
 msgid "Absolute levels of active sessions"
 msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy, python-brace-format
+msgid "Absolute levels{abs_detail}"
+msgstr "Liber Exact"
 
 #, fuzzy
 msgid "Absolute number of active connections"
@@ -5145,11 +5137,6 @@ msgstr ""
 
 msgid "Assign via regular expressions"
 msgstr ""
-
-#, fuzzy
-msgid "Assignment of host & services to host, service and contacts groups."
-msgstr ""
-"Arata doar elementele si serviciile pentru care utilizatorul este contact"
 
 msgid "Assignment of hosts to contact groups"
 msgstr ""
@@ -9915,9 +9902,10 @@ msgstr ""
 msgid ""
 "Contact groups are used to assign monitoring objects to users. If you "
 "haven't defined any contact groups yet, then first <a href='%s'>do so</a>. "
-"Hosts and services can be assigned to contact groups using <a "
-"href='%s'>rules</a>.<br><br>If you do not put the user into any contact "
-"group then no monitoring contact will be created for the user."
+"Hosts and services can be assigned to contact groups using this <a "
+"href='%s'>rule for hosts</a> and this <a href='%s'>rule for services</a>."
+"<br><br>If you do not put the user into any contact group then no monitoring "
+"contact will be created for the user."
 msgstr ""
 
 msgid "Contact groups are used to assign users to hosts and services"
@@ -24424,10 +24412,6 @@ msgstr ""
 msgid "Levels for %s %s"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Levels for %s error rates"
-msgstr "Nivelurile maxime pentru voltaj"
-
 msgid "Levels for <i>device not responding</i>"
 msgstr ""
 
@@ -29076,11 +29060,11 @@ msgid "Network ID"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "Network Interfaces: Realtime Traffic"
+msgid "Network Interfaces: Last Day View"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "Network Interfaces: Yesterday Traffic"
+msgid "Network Interfaces: Last Hour View"
 msgstr "Adresă"
 
 msgid "Network Load Balancer Listeners"
@@ -31329,8 +31313,7 @@ msgid ""
 "Only members of the contact groups listed here have WATO permission to the "
 "host / folder. If you want, you can make those contact groups automatically "
 "also <b>monitoring contacts</b>. This is completely optional. Assignment of "
-"host and services to contact groups can be done by <a href='%s'>rules</a> as "
-"well."
+"host to contact groups can be done by <a href='%s'>rules</a> as well."
 msgstr ""
 
 msgid "Only needed if you have multiple MySQL Instances on one server"
@@ -32837,15 +32820,7 @@ msgid "Percentual levels ->"
 msgstr "trei nivele"
 
 #, fuzzy, python-format
-msgid "Percentual levels for %s error rates"
-msgstr "trei nivele"
-
-#, fuzzy, python-format
 msgid "Percentual levels for %s memory"
-msgstr "trei nivele"
-
-#, fuzzy
-msgid "Percentual levels for broadcast packets"
 msgstr "trei nivele"
 
 #, fuzzy
@@ -32855,10 +32830,6 @@ msgstr "trei nivele"
 #, python-format
 msgid "Percentual levels for free %s"
 msgstr ""
-
-#, fuzzy
-msgid "Percentual levels for multicast packets"
-msgstr "trei nivele"
 
 msgid "Percentual levels for unused licenses"
 msgstr ""
@@ -32893,6 +32864,10 @@ msgstr "trei nivele"
 #, python-format
 msgid "Percentual levels%s"
 msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Percentual levels{percent_detail}"
+msgstr "trei nivele"
 
 msgid "Perf-O-Meter"
 msgstr ""
@@ -45782,27 +45757,24 @@ msgstr ""
 
 msgid ""
 "These levels make the check go warning or critical whenever the "
-"<b>percentual packet rate</b> or the <b>absolute packet rate</b> of the "
-"monitored interface reaches the given bounds. The percentual packet rate is "
-"computed by dividing the number of broadcast packets by the number of "
-"unicast packets."
+"<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
+"monitored interface reaches the given bounds. The percentual error rate is "
+"computed by the formula <b>(errors / (unicast + non-unicast + errors))*100</"
+"b> "
 msgstr ""
 
 msgid ""
 "These levels make the check go warning or critical whenever the "
 "<b>percentual packet rate</b> or the <b>absolute packet rate</b> of the "
 "monitored interface reaches the given bounds. The percentual packet rate is "
-"computed by dividing the number of multicast packets by the number of "
-"unicast packets."
+"computed by the formula <b>(broadcast / (unicast + non-unicast))*100</b>"
 msgstr ""
 
-#, python-brace-format
 msgid ""
 "These levels make the check go warning or critical whenever the "
-"<b>percentual {0} error rate</b> or the <b>absolute {0} error rate</b> of "
-"the monitored interface reaches the given bounds. The percentual {0} error "
-"rate is computed by dividing number of errors by the total number of packets "
-"(successful plus errors)."
+"<b>percentual packet rate</b> or the <b>absolute packet rate</b> of the "
+"monitored interface reaches the given bounds. The percentual packet rate is "
+"computed by the formula <b>(multicast / (unicast + non-unicast))*100</b>"
 msgstr ""
 
 msgid ""
@@ -56746,10 +56718,6 @@ msgid "percent higher than average"
 msgstr ""
 
 #, fuzzy
-msgid "percent packets"
-msgstr "trei nivele"
-
-#, fuzzy
 msgid "percentage left"
 msgstr "trei nivele"
 
@@ -57051,15 +57019,6 @@ msgstr ""
 msgid "tasks"
 msgstr ""
 
-msgid "tcp://127.0.0.1:5556: Realtime Top Application Traffic"
-msgstr ""
-
-msgid "tcp://127.0.0.1:5556: Top Local Talkers"
-msgstr ""
-
-msgid "tcp://127.0.0.1:5556: Yesterday Top Application Traffic"
-msgstr ""
-
 msgid "testing"
 msgstr "testare"
 
@@ -57321,8 +57280,58 @@ msgstr "ieri"
 msgid "z/OS"
 msgstr ""
 
+#, python-brace-format
+msgid "{self.iface}: Top Application Traffic: Last Day View"
+msgstr ""
+
+#, python-brace-format
+msgid "{self.iface}: Top Application Traffic: Last Hour View"
+msgstr ""
+
+#, python-brace-format
+msgid "{self.iface}: Top Local Talkers"
+msgstr ""
+
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Absolute levels for %s error rates"
+#~ msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+#~ msgid "Absolute levels for broadcast packets"
+#~ msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+#~| msgid "Absolute levels for unused licenses"
+#~ msgid "Absolute levels for multicast packets"
+#~ msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+#~ msgid "Assignment of host & services to host, service and contacts groups."
+#~ msgstr ""
+#~ "Arata doar elementele si serviciile pentru care utilizatorul este contact"
+
+#, fuzzy
+#~ msgid "Levels for %s error rates"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Percentual levels for %s error rates"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Percentual levels for broadcast packets"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Percentual levels for multicast packets"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "percent packets"
+#~ msgstr "trei nivele"
 
 #, fuzzy
 #~ msgid "Display options"

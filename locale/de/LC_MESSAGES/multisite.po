@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2020-12-14 20:35+0000\n"
+"PO-Revision-Date: 2020-12-18 07:00+0000\n"
 "Last-Translator: Florian <florian.olching@gmail.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -432,7 +432,7 @@ msgstr "%s-Anfragen"
 
 #, python-format
 msgid "%s Retrieve created dump file"
-msgstr ""
+msgstr "%s erstellte Dump-Datei laden"
 
 #, python-format
 msgid "%s alerts"
@@ -2498,16 +2498,8 @@ msgid "Absolute levels"
 msgstr "Absolute Schwellen"
 
 #, fuzzy, python-format
-msgid "Absolute levels for %s error rates"
-msgstr "Absolute Schellen für Fehlerraten"
-
-#, fuzzy, python-format
 msgid "Absolute levels for %s memory"
 msgstr "Absolute Schwellen für freien Speicher"
-
-#, fuzzy
-msgid "Absolute levels for broadcast packets"
-msgstr "Absolute Schellen für Fehlerraten"
 
 #, fuzzy
 msgid "Absolute levels for committed heap space"
@@ -2549,10 +2541,6 @@ msgid "Absolute levels for memory reclaimed by GC"
 msgstr "Absolute Schellen für Fehlerraten"
 
 #, fuzzy
-msgid "Absolute levels for multicast packets"
-msgstr "Absolute Schellen für Fehlerraten"
-
-#, fuzzy
 msgid "Absolute levels for output traffic"
 msgstr "Absolute Schellen für Fehlerraten"
 
@@ -2576,6 +2564,10 @@ msgstr "Schwellenwert in Bits oder Bytes pro Sek."
 
 msgid "Absolute levels of active sessions"
 msgstr "Absolute Schwellen für aktive Sitzungen"
+
+#, fuzzy, python-brace-format
+msgid "Absolute levels{abs_detail}"
+msgstr "Absolute Schwellen"
 
 #, fuzzy
 msgid "Absolute number of active connections"
@@ -5532,9 +5524,6 @@ msgstr "Anfragende Hosts zuordnen"
 
 msgid "Assign via regular expressions"
 msgstr "Zuweisung über reguläre Ausdrücke"
-
-msgid "Assignment of host & services to host, service and contacts groups."
-msgstr "Zuordnung von Host & Services zu Host-, Service- und Kontaktgruppen."
 
 msgid "Assignment of hosts to contact groups"
 msgstr "Zuweisung von Hosts zu Kontaktgruppen"
@@ -10667,13 +10656,14 @@ msgstr "Kontakgruppe (effektiv)"
 msgid "Contact groups"
 msgstr "Kontaktgruppen"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Contact groups are used to assign monitoring objects to users. If you "
 "haven't defined any contact groups yet, then first <a href='%s'>do so</a>. "
-"Hosts and services can be assigned to contact groups using <a "
-"href='%s'>rules</a>.<br><br>If you do not put the user into any contact "
-"group then no monitoring contact will be created for the user."
+"Hosts and services can be assigned to contact groups using this <a "
+"href='%s'>rule for hosts</a> and this <a href='%s'>rule for services</a>."
+"<br><br>If you do not put the user into any contact group then no monitoring "
+"contact will be created for the user."
 msgstr ""
 "Kontaktgruppen werden benutzt um Monitoring-Objekte Benutzern zuzuordnen. "
 "Wenn Sie bisher keine Kontaktgruppen angelegt haben, dann <a "
@@ -26274,10 +26264,6 @@ msgstr "Schwellen für %s"
 msgid "Levels for %s %s"
 msgstr "Schwellen für %s %s"
 
-#, fuzzy, python-format
-msgid "Levels for %s error rates"
-msgstr "Level für Fehlerraten"
-
 msgid "Levels for <i>device not responding</i>"
 msgstr "Schwellwerte für <i>device not responding</i>"
 
@@ -30875,11 +30861,11 @@ msgid "Network ID"
 msgstr "Netzwerk-ID"
 
 #, fuzzy
-msgid "Network Interfaces: Realtime Traffic"
+msgid "Network Interfaces: Last Day View"
 msgstr "Netzwerkschnittstellen"
 
 #, fuzzy
-msgid "Network Interfaces: Yesterday Traffic"
+msgid "Network Interfaces: Last Hour View"
 msgstr "Netzwerkschnittstellen"
 
 msgid "Network Load Balancer Listeners"
@@ -33171,13 +33157,12 @@ msgstr ""
 "Nur Port des eingestellten Typs werden in die Gruppe aufgenommen (z.B. 53 "
 "für propVirtual)."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Only members of the contact groups listed here have WATO permission to the "
 "host / folder. If you want, you can make those contact groups automatically "
 "also <b>monitoring contacts</b>. This is completely optional. Assignment of "
-"host and services to contact groups can be done by <a href='%s'>rules</a> as "
-"well."
+"host to contact groups can be done by <a href='%s'>rules</a> as well."
 msgstr ""
 "Nur Mitglieder der hier gelisteten Kontaktgruppen haben die WATO "
 "Berechtigung für Hosts/Ordner. Optional: Wenn Sie möchten, dann können Sie "
@@ -34733,16 +34718,8 @@ msgid "Percentual levels ->"
 msgstr "Prozentuale Schwellen ->"
 
 #, fuzzy, python-format
-msgid "Percentual levels for %s error rates"
-msgstr "Prozentuale Schwellen für Fehlerraten"
-
-#, fuzzy, python-format
 msgid "Percentual levels for %s memory"
 msgstr "Prozentuale Schwellen für benutzen Speicher"
-
-#, fuzzy
-msgid "Percentual levels for broadcast packets"
-msgstr "Prozentuale Schwellen für Fehlerraten"
 
 msgid "Percentual levels for error rates"
 msgstr "Prozentuale Schwellen für Fehlerraten"
@@ -34750,10 +34727,6 @@ msgstr "Prozentuale Schwellen für Fehlerraten"
 #, python-format
 msgid "Percentual levels for free %s"
 msgstr "Prozentuale Schwellen für freien %s"
-
-#, fuzzy
-msgid "Percentual levels for multicast packets"
-msgstr "Prozentuale Schwellen für genutzten %s"
 
 msgid "Percentual levels for unused licenses"
 msgstr "Prozentuale Schwellen für unbenutzte Lizenzen"
@@ -34786,6 +34759,10 @@ msgstr "Prozentuale Schwellen für benutzten Swap"
 #, python-format
 msgid "Percentual levels%s"
 msgstr "Prozentualle Schwellen%s"
+
+#, fuzzy, python-brace-format
+msgid "Percentual levels{percent_detail}"
+msgstr "Prozentuale Schwellen"
 
 msgid "Perf-O-Meter"
 msgstr "Perf-O-Meter"
@@ -48897,35 +48874,35 @@ msgstr ""
 "der Check-Status zu WARN oder CRIT wechselt. Die Fehlerrate wird so "
 "ermittelt: Gesamtzahl aller Pakete / Anzahl der Fehler."
 
+#, fuzzy
 msgid ""
 "These levels make the check go warning or critical whenever the "
-"<b>percentual packet rate</b> or the <b>absolute packet rate</b> of the "
-"monitored interface reaches the given bounds. The percentual packet rate is "
-"computed by dividing the number of broadcast packets by the number of "
-"unicast packets."
+"<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
+"monitored interface reaches the given bounds. The percentual error rate is "
+"computed by the formula <b>(errors / (unicast + non-unicast + errors))*100</"
+"b> "
 msgstr ""
 "Diese Grenzwerte legen die <b>prozentuale Fehlerrate</b> fest, bei welcher "
 "der Check-Status zu WARN oder CRIT wechselt. Die Fehlerrate wird so "
 "ermittelt: Gesamtzahl aller Pakete / Anzahl der Fehler."
 
+#, fuzzy
 msgid ""
 "These levels make the check go warning or critical whenever the "
 "<b>percentual packet rate</b> or the <b>absolute packet rate</b> of the "
 "monitored interface reaches the given bounds. The percentual packet rate is "
-"computed by dividing the number of multicast packets by the number of "
-"unicast packets."
+"computed by the formula <b>(broadcast / (unicast + non-unicast))*100</b>"
 msgstr ""
 "Diese Grenzwerte legen die <b>prozentuale Fehlerrate</b> fest, bei welcher "
 "der Check-Status zu WARN oder CRIT wechselt. Die Fehlerrate wird so "
 "ermittelt: Gesamtzahl aller Pakete / Anzahl der Fehler."
 
-#, python-brace-format
+#, fuzzy
 msgid ""
 "These levels make the check go warning or critical whenever the "
-"<b>percentual {0} error rate</b> or the <b>absolute {0} error rate</b> of "
-"the monitored interface reaches the given bounds. The percentual {0} error "
-"rate is computed by dividing number of errors by the total number of packets "
-"(successful plus errors)."
+"<b>percentual packet rate</b> or the <b>absolute packet rate</b> of the "
+"monitored interface reaches the given bounds. The percentual packet rate is "
+"computed by the formula <b>(multicast / (unicast + non-unicast))*100</b>"
 msgstr ""
 "Diese Grenzwerte legen die <b>prozentuale Fehlerrate</b> fest, bei welcher "
 "der Check-Status zu WARN oder CRIT wechselt. Die Fehlerrate wird so "
@@ -61969,10 +61946,6 @@ msgstr "Prozent Fehlerrate"
 msgid "percent higher than average"
 msgstr "Perzentil innerhalb des Zeitbereichs"
 
-#, fuzzy
-msgid "percent packets"
-msgstr "Prozent Fehlerrate"
-
 msgid "percentage left"
 msgstr "Prozent übrig"
 
@@ -62271,15 +62244,6 @@ msgstr "sysoper"
 msgid "tasks"
 msgstr ""
 
-msgid "tcp://127.0.0.1:5556: Realtime Top Application Traffic"
-msgstr ""
-
-msgid "tcp://127.0.0.1:5556: Top Local Talkers"
-msgstr ""
-
-msgid "tcp://127.0.0.1:5556: Yesterday Top Application Traffic"
-msgstr ""
-
 msgid "testing"
 msgstr "Test läuft"
 
@@ -62536,8 +62500,72 @@ msgstr "gestern"
 msgid "z/OS"
 msgstr "z/OS"
 
+#, python-brace-format
+msgid "{self.iface}: Top Application Traffic: Last Day View"
+msgstr ""
+
+#, python-brace-format
+msgid "{self.iface}: Top Application Traffic: Last Hour View"
+msgstr ""
+
+#, python-brace-format
+msgid "{self.iface}: Top Local Talkers"
+msgstr ""
+
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Absolute levels for %s error rates"
+#~ msgstr "Absolute Schellen für Fehlerraten"
+
+#, fuzzy
+#~| msgid "Absolute levels for discards rates"
+#~ msgid "Absolute levels for broadcast packets"
+#~ msgstr "Absolute Schellen für Fehlerraten"
+
+#, fuzzy
+#~| msgid "Absolute levels for discards rates"
+#~ msgid "Absolute levels for multicast packets"
+#~ msgstr "Absolute Schellen für Fehlerraten"
+
+#~ msgid "Assignment of host & services to host, service and contacts groups."
+#~ msgstr ""
+#~ "Zuordnung von Host & Services zu Host-, Service- und Kontaktgruppen."
+
+#, fuzzy
+#~ msgid "Levels for %s error rates"
+#~ msgstr "Level für Fehlerraten"
+
+#, fuzzy
+#~ msgid "Percentual levels for %s error rates"
+#~ msgstr "Prozentuale Schwellen für Fehlerraten"
+
+#, fuzzy
+#~| msgid "Percentual levels for error rates"
+#~ msgid "Percentual levels for broadcast packets"
+#~ msgstr "Prozentuale Schwellen für Fehlerraten"
+
+#, fuzzy
+#~| msgid "Percentual levels for used %s"
+#~ msgid "Percentual levels for multicast packets"
+#~ msgstr "Prozentuale Schwellen für genutzten %s"
+
+#~ msgid ""
+#~ "These levels make the check go warning or critical whenever the "
+#~ "<b>percentual {0} error rate</b> or the <b>absolute {0} error rate</b> of "
+#~ "the monitored interface reaches the given bounds. The percentual {0} "
+#~ "error rate is computed by dividing number of errors by the total number "
+#~ "of packets (successful plus errors)."
+#~ msgstr ""
+#~ "Diese Grenzwerte legen die <b>prozentuale Fehlerrate</b> fest, bei "
+#~ "welcher der Check-Status zu WARN oder CRIT wechselt. Die Fehlerrate wird "
+#~ "so ermittelt: Gesamtzahl aller Pakete / Anzahl der Fehler."
+
+#, fuzzy
+#~| msgid "percent errors"
+#~ msgid "percent packets"
+#~ msgstr "Prozent Fehlerrate"
 
 #, fuzzy
 #~| msgid "Display Options"

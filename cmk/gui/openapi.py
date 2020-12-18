@@ -11,10 +11,16 @@ from typing import Any, Dict
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from openapi_spec_validator import validate_spec  # type: ignore[import]
+
+from cmk.gui import config
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.utils import version
+
+# TODO
+#   Eventually move all of SPEC stuff in here, so we have nothing statically defined.
+#   This removes variation from the code.
 
 # NOTE
 # This import needs to be here, because the decorators populate the
@@ -36,10 +42,31 @@ def generate_data() -> Dict[str, Any]:
     # NOTE: deepcopy the dict because validate_spec modifies the SPEC in-place, leaving some
     # internal properties lying around, which leads to an invalid spec-file.
     check_dict = copy.deepcopy(SPEC.to_dict())
+    _add_cookie_auth(check_dict)
     validate_spec(check_dict)
     # NOTE: We want to modify the thing afterwards. The SPEC object would be a global reference
     # which would make modifying the spec very awkward, so we deepcopy again.
-    return copy.deepcopy(SPEC.to_dict())
+    rv = copy.deepcopy(SPEC.to_dict())
+    _add_cookie_auth(rv)
+    return rv
+
+
+def _add_cookie_auth(check_dict):
+    """Add the cookie authentication schema to the SPEC.
+
+    We do this here, because every site has a different cookie name and such can't be predicted
+    before this code here actually runs.
+    """
+    schema_name = 'cookieAuth'
+    check_dict['security'].append({schema_name: []})
+    check_dict['components']['securitySchemes'][schema_name] = {
+        'in': 'cookie',
+        'name': f'{config.omd_site()}_auth',
+        'type': 'apiKey',
+        'description': 'Any user of Checkmk, who has already logged in, and thus got a cookie '
+                       'assigned, can use the REST API. Some actions may or may not succeed due '
+                       'to group and permission restrictions.',
+    }
 
 
 def generate(args=None):

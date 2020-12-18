@@ -71,12 +71,15 @@ This provision of additional information as a REST-API principle is also called
 
 # Authentication
 
-To use this API from a client, an *automation* user must be set up in Checkmk. Only this user is
-authorized to perform actions via the API. For a newly created site the automation user is
-already created. You can find it, like other users, in Checkmk at *Setup* > *Users*.
+To use this API from a automated client, an *automation* user needs to be set up in Checkmk.
+With such a user, perform actions can be performed via the API. For a newly created site an
+automation user is already created. You can find it, like other users, in Checkmk at
+*Setup* > *Users*.
 
-Username and password of the automation user must be transmitted in the HTTP header in the
-`Bearer` format in every request to the Checkmk server.
+As an alternative, users who already logged into Checkmk can also access the API, although these
+users are not very suitable for automation, because their session will time out eventually.
+
+For scripting, please use *automation* users.
 
 <SecurityDefinitions />
 

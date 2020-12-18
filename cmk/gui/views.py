@@ -115,7 +115,7 @@ from cmk.gui.watolib.activate_changes import get_pending_changes_info
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.views  # pylint: disable=no-name-in-module
     import cmk.gui.cee.plugins.views.icons  # pylint: disable=no-name-in-module
-    from cmk.gui.cee.ntop.connector import get_connector
+    from cmk.gui.cee.ntop.connector import NtopCache
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
@@ -767,8 +767,8 @@ class GUIViewRenderer(ABCViewRenderer):
 
         if rows:
             host_address = rows[0].get("host_address")
-            if config.is_ntop_configured() and host_address is not None and get_connector(
-            ).is_ntop_host(host_address):
+            if config.is_ntop_configured() and host_address is not None and NtopCache.is_ntop_host(
+                    host_address):
                 page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
 
         menu = PageMenu(

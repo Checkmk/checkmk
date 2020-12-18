@@ -130,6 +130,9 @@ PYTHON3_MODULES_LIST += ordered-set-4.0.2.tar.gz # needed by deepdiff
 PYTHON3_MODULES_LIST += deepdiff-5.0.2.tar.gz  # used for recording setup audit log
 PYTHON3_MODULES_LIST += redis-3.5.3.tar.gz  # needed by GUI (caching)
 
+PYTHON3_MODULES_LIST += tenacity-6.3.1.tar.gz # needed by opsgenie-sdk
+PYTHON3_MODULES_LIST += opsgenie-sdk-2.0.3.tar.gz # needed by opsgenie_issues
+
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INSTALL) $(FREETDS_INTERMEDIATE_INSTALL) $(POSTGRESQL_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_PATCHING)

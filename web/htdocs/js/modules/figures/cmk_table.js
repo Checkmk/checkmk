@@ -39,7 +39,7 @@ export class TableFigure extends cmk_figures.FigureBase {
             .selectAll("tr")
             .data(data.rows)
             .join("tr")
-            .attr("class", d => (d.classed && d.classes.join(" ")) || null);
+            .attr("class", d => (d.classes && d.classes.join(" ")) || null);
 
         let cells = rows
             .selectAll(".cell")

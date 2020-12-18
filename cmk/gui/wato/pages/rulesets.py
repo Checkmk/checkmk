@@ -418,7 +418,7 @@ class ModeRulesetGroup(ABCRulesetMode):
         if not self._group_name:
             raise MKUserError(None, _("The mandatory group name is missing"))
 
-    def _topic_breadcrumb_item(self) -> Optional[BreadcrumbItem]:
+    def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
         """Return the BreadcrumbItem for the topic of this mode"""
 
         url = makeuri_contextless_ruleset_group(request, str(self._group_name))
@@ -426,12 +426,13 @@ class ModeRulesetGroup(ABCRulesetMode):
         if main_module is None:
             # Anomaly: We should not reach this, but currently we do for some pages. Best we can do
             # at the moment is not to add a topic in this case.
-            return None
+            return
 
-        return BreadcrumbItem(
+        yield BreadcrumbItem(
             title=main_module().topic.title,
             url=None,
         )
+        yield from main_module.additional_breadcrumb_items()
 
     def _breadcrumb_url(self) -> str:
         assert self._group_name is not None

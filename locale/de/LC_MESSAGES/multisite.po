@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2020-12-18 07:00+0000\n"
-"Last-Translator: Florian <florian.olching@gmail.com>\n"
+"PO-Revision-Date: 2020-12-19 07:00+0000\n"
+"Last-Translator: Marcus Aßhauer <marcus.asshauer@gmail.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -455,7 +455,7 @@ msgstr "%s beendet nach %s um %s."
 
 #, python-format
 msgid "%s for %d hosts started (%s)..."
-msgstr ""
+msgstr "%s für %d Hosts gestartet (%s)..."
 
 #, python-format
 msgid "%s for all hosts started..."
@@ -903,8 +903,9 @@ msgstr "# Services"
 msgid "2 weeks back"
 msgstr "2 Wochen zurück"
 
+#, fuzzy
 msgid "2.0 - 5.0 ms"
-msgstr ""
+msgstr "2.0 - 5.0 ms"
 
 #, fuzzy
 msgid "2.000.000 Services"
@@ -8725,10 +8726,6 @@ msgstr ""
 
 msgid "Check specific host(s)"
 msgstr "Bestimmte(n) Host(s) prüfen"
-
-#, fuzzy
-msgid "Check state of BI aggregations"
-msgstr "Status der BI-Aggregationen prüfen"
 
 msgid ""
 "Check submission of HTML forms via HTTP/HTTPS using the plugin "
@@ -21338,6 +21335,10 @@ msgstr "Host/Service-Ereignisse"
 msgid "Host and service configuration rule"
 msgstr "Host-/Service-Konfigurationsregel"
 
+#, fuzzy
+msgid "Host and service rules related to the Event Console"
+msgstr "Test-Ereignis generiert und zur Event Console geschickt"
+
 msgid ""
 "Host attributes are locked (You cannot create, edit or delete hosts in this "
 "folder)"
@@ -29987,19 +29988,11 @@ msgstr "Überwachung von Anforderungsmetriken"
 msgid "Monitor service limits"
 msgstr "Überwache Servicelimits"
 
-#, fuzzy
-msgid "Monitor single state (Deprecated)"
-msgstr "Überwachungszustandsanforderung"
-
 msgid "Monitor specific TCP/UDP connections and listeners"
 msgstr "Überwache spezifische TCP/UDP-Verbindungen oder Sockets"
 
 msgid "Monitor specific files in folder"
 msgstr "Bestimmte Dateien im Verzeichnis überwachen"
-
-#, fuzzy
-msgid "Monitor state"
-msgstr "Monitoring-Zustand"
 
 msgid "Monitor temporary Tablespace"
 msgstr "Temporären Tablespace überwachen"
@@ -30045,9 +30038,6 @@ msgstr "Überwachte Services"
 #, fuzzy
 msgid "Monitoring"
 msgstr "Monitoring URL"
-
-msgid "Monitoring Agents"
-msgstr "Monitoringagenten"
 
 msgid "Monitoring Core"
 msgstr "Kern"
@@ -30429,6 +30419,10 @@ msgstr "NTLS-Clients"
 
 msgid "NTLS Links"
 msgstr "NTLS-Links"
+
+#, fuzzy
+msgid "NTP discovery"
+msgstr "eWON-Serviceerkennung"
 
 #, fuzzy
 msgid "NTP or timesyncd time synchronisation"
@@ -32052,7 +32046,7 @@ msgid "Ntop integration of this host"
 msgstr "Kommentar/Beschreibung für Host"
 
 #, fuzzy
-msgid "Ntop interface integration of this host"
+msgid "Ntop integration of this interface"
 msgstr "Kommentar/Beschreibung für Host"
 
 #, fuzzy
@@ -32062,10 +32056,6 @@ msgstr "zu Port:"
 #, fuzzy
 msgid "Ntop protocol breakdown"
 msgstr "% der Portgeschwindigkeit"
-
-#, fuzzy
-msgid "Ntop service interface"
-msgstr "Benutzerschnittstelle"
 
 #, fuzzy
 msgid "Ntop top peers"
@@ -38093,6 +38083,14 @@ msgid "Reset"
 msgstr "Zurücksetzen"
 
 #, fuzzy
+msgid "Reset acknowledged events back to \"open\" on merge"
+msgstr "quittierte Ereignisse werden nicht berücksichtigt"
+
+#, fuzzy
+msgid "Reset acknowledged state"
+msgstr "Entferne Quittierung"
+
+#, fuzzy
 msgid "Reset counters"
 msgstr "Zähler zurücksetzen"
 
@@ -40721,10 +40719,6 @@ msgid "Settings"
 msgstr "Einstellungen"
 
 #, fuzzy
-msgid "Settings and Checks dealing with the Checkmk Event Console"
-msgstr "Einstellungen und Checks für Zusammenarbeit mit Event Console"
-
-#, fuzzy
 msgid "Settings concerning the connection to the Checkmk and SNMP agents"
 msgstr "Einstellungen für die Verbindungen zu Check_MK/SNMP Agenten"
 
@@ -41435,6 +41429,10 @@ msgstr "Einzelhost-Probleme"
 #, fuzzy
 msgid "Single metric"
 msgstr "Ändere Metrik"
+
+#, fuzzy
+msgid "Single peers or summary"
+msgstr "Einzelsensoren"
 
 #, fuzzy
 msgid "Single quotes are not allowed here."
@@ -48256,6 +48254,15 @@ msgstr ""
 "Wert von 1,5 bedeutet, dass das aktuelle Resultat eineinhalb Intervalle alt "
 "ist. Bei einer Standardeinstellung des Intervalls von 60 Sekunden bedeutet "
 "dies 90 Sekunden."
+
+msgid ""
+"The state of the event is reset back to \"open\" in this case. This behavior "
+"is based on the assumption that you want to be informed when there is new "
+"information. However, there are also use cases where new incoming messages "
+"should be counted to the already existing event in the \"ack\" state and the "
+"\"ack\" state should be kept. To achieve this, the configuration option "
+"\"Reset acknowledged state\" can be disabled below."
+msgstr ""
 
 #, fuzzy
 msgid "The state of the job is ignored by default."
@@ -62516,6 +62523,39 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~| msgid "Check state of BI Aggregations"
+#~ msgid "Check state of BI aggregations"
+#~ msgstr "Status der BI-Aggregationen prüfen"
+
+#, fuzzy
+#~| msgid "Monitoring state requirement"
+#~ msgid "Monitor single state (Deprecated)"
+#~ msgstr "Überwachungszustandsanforderung"
+
+#, fuzzy
+#~| msgid "Monitoring state"
+#~ msgid "Monitor state"
+#~ msgstr "Monitoring-Zustand"
+
+#~ msgid "Monitoring Agents"
+#~ msgstr "Monitoringagenten"
+
+#, fuzzy
+#~| msgid "A comment or description of this host"
+#~ msgid "Ntop interface integration of this host"
+#~ msgstr "Kommentar/Beschreibung für Host"
+
+#, fuzzy
+#~| msgid "User interface"
+#~ msgid "Ntop service interface"
+#~ msgstr "Benutzerschnittstelle"
+
+#, fuzzy
+#~| msgid "Settings and Checks dealing with the Check_MK Event Console"
+#~ msgid "Settings and Checks dealing with the Checkmk Event Console"
+#~ msgstr "Einstellungen und Checks für Zusammenarbeit mit Event Console"
+
+#, fuzzy
 #~ msgid "Absolute levels for %s error rates"
 #~ msgstr "Absolute Schellen für Fehlerraten"
 
@@ -68865,9 +68905,6 @@ msgstr ""
 
 #~ msgid "Failed outbound stream establishes"
 #~ msgstr "Fehlschläge bei Aufbau ausgehender Streams"
-
-#~ msgid "Single sensors"
-#~ msgstr "Einzelsensoren"
 
 #~ msgid "Variable for <tt>%s.mk</tt>"
 #~ msgstr "Variable für <tt>%s.mk</tt>"

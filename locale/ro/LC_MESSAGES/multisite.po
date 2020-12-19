@@ -8124,10 +8124,6 @@ msgstr ""
 msgid "Check specific host(s)"
 msgstr ""
 
-#, fuzzy
-msgid "Check state of BI aggregations"
-msgstr "O agregare legată de un singur element"
-
 msgid ""
 "Check submission of HTML forms via HTTP/HTTPS using the plugin "
 "<tt>check_form_submit</tt> provided with Check_MK. This plugin provides more "
@@ -20124,6 +20120,10 @@ msgstr ""
 msgid "Host and service configuration rule"
 msgstr "Adaugp o noua configurație de utilizator"
 
+#, fuzzy
+msgid "Host and service rules related to the Event Console"
+msgstr "(nu trimite notificări câtre Event Console)"
+
 msgid ""
 "Host attributes are locked (You cannot create, edit or delete hosts in this "
 "folder)"
@@ -28179,19 +28179,11 @@ msgstr " pe siteul de monitorizare: "
 msgid "Monitor service limits"
 msgstr ""
 
-#, fuzzy
-msgid "Monitor single state (Deprecated)"
-msgstr " pe siteul de monitorizare: "
-
 msgid "Monitor specific TCP/UDP connections and listeners"
 msgstr ""
 
 msgid "Monitor specific files in folder"
 msgstr ""
-
-#, fuzzy
-msgid "Monitor state"
-msgstr " pe siteul de monitorizare: "
 
 msgid "Monitor temporary Tablespace"
 msgstr ""
@@ -28239,9 +28231,6 @@ msgstr "Afectat de serviciu"
 #, fuzzy
 msgid "Monitoring"
 msgstr " pe siteul de monitorizare: "
-
-msgid "Monitoring Agents"
-msgstr ""
 
 #, fuzzy
 msgid "Monitoring Core"
@@ -28619,6 +28608,10 @@ msgstr ""
 
 msgid "NTLS Links"
 msgstr ""
+
+#, fuzzy
+msgid "NTP discovery"
+msgstr "Inventariere in masa"
 
 msgid "NTP or timesyncd time synchronisation"
 msgstr ""
@@ -30211,7 +30204,7 @@ msgid "Ntop integration of this host"
 msgstr "O descriere sau comentariu despre acest element"
 
 #, fuzzy
-msgid "Ntop interface integration of this host"
+msgid "Ntop integration of this interface"
 msgstr "O descriere sau comentariu despre acest element"
 
 #, fuzzy
@@ -30220,10 +30213,6 @@ msgstr "catre port:"
 
 msgid "Ntop protocol breakdown"
 msgstr ""
-
-#, fuzzy
-msgid "Ntop service interface"
-msgstr "Adresă"
 
 #, fuzzy
 msgid "Ntop top peers"
@@ -36085,6 +36074,13 @@ msgstr "spatiu utilizat"
 msgid "Reset"
 msgstr "Reguli"
 
+msgid "Reset acknowledged events back to \"open\" on merge"
+msgstr ""
+
+#, fuzzy
+msgid "Reset acknowledged state"
+msgstr "Autorul Confirmației"
+
 #, fuzzy
 msgid "Reset counters"
 msgstr "Reseteaza contoarele"
@@ -38692,9 +38688,6 @@ msgstr ""
 msgid "Settings"
 msgstr "Setari"
 
-msgid "Settings and Checks dealing with the Checkmk Event Console"
-msgstr ""
-
 msgid "Settings concerning the connection to the Checkmk and SNMP agents"
 msgstr ""
 
@@ -39389,6 +39382,9 @@ msgstr "Probleme"
 #, fuzzy
 msgid "Single metric"
 msgstr "Afectat de serviciu"
+
+msgid "Single peers or summary"
+msgstr ""
 
 msgid "Single quotes are not allowed here."
 msgstr ""
@@ -45228,6 +45224,15 @@ msgid ""
 "current check result has been gathered one and a half check intervals of an "
 "object. This would mean 90 seconds in case of a check which is checked each "
 "60 seconds."
+msgstr ""
+
+msgid ""
+"The state of the event is reset back to \"open\" in this case. This behavior "
+"is based on the assumption that you want to be informed when there is new "
+"information. However, there are also use cases where new incoming messages "
+"should be counted to the already existing event in the \"ack\" state and the "
+"\"ack\" state should be kept. To achieve this, the configuration option "
+"\"Reset acknowledged state\" can be disabled below."
 msgstr ""
 
 msgid "The state of the job is ignored by default."
@@ -57294,6 +57299,27 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Check state of BI aggregations"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Monitor single state (Deprecated)"
+#~ msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+#~ msgid "Monitor state"
+#~ msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+#~| msgid "A comment or description of this host"
+#~ msgid "Ntop interface integration of this host"
+#~ msgstr "O descriere sau comentariu despre acest element"
+
+#, fuzzy
+#~ msgid "Ntop service interface"
+#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "Absolute levels for %s error rates"

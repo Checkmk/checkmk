@@ -69,24 +69,28 @@ def inventory_ucs_bladecenter_psu(parsed):
 
 @get_parsed_item_data
 def check_ucs_bladecenter_psu(item, params, psu):
-    for param_key, perfname, key, text in [
-        ("levels_3v_", "3_3v", "Output3v3Avg", "Output 3.3V-Average"),
-        ("levels_12v_", "12v", "Output12vAvg", "Output 12V-Average")
-    ]:
-        voltage = float(psu[key])
-        yield 0, "%s: %.2f V" % (text, voltage), [(perfname, voltage)]
-        if key in psu:
-            warn_lower, crit_lower = params[param_key + "lower"]
-            if voltage <= crit_lower:
-                yield 2, "too low (warn/crit below %.2f/%.2f V)" % params[param_key + "lower"]
-            elif voltage <= warn_lower:
-                yield 1, "too low (warn/crit below %.2f/%.2f V)" % params[param_key + "lower"]
+    value_3v = float(psu["Output3v3Avg"])
+    value_12v = float(psu["Output12vAvg"])
 
-            warn_upper, crit_upper = params[param_key + "upper"]
-            if voltage >= crit_upper:
-                yield 2, "too high (warn/crit at %.2f/%.2f V)" % params[param_key + "upper"]
-            elif voltage >= warn_upper:
-                yield 1, "too high (warn/crit at %.2f/%.2f V)" % params[param_key + "upper"]
+    levels_3v = params["levels_3v_upper"] + params["levels_3v_lower"]
+    levels_12v = params["levels_12v_upper"] + params["levels_12v_lower"]
+
+    # TODO: be ok if both are zero
+
+    yield check_levels(
+        value_3v,
+        "3_3v",
+        levels_3v,
+        human_readable_func=lambda v: "%.2f V" % v,
+        infoname="Output 3.3V-Average",
+    )
+    yield check_levels(
+        value_12v,
+        "12v",
+        levels_12v,
+        human_readable_func=lambda v: "%.2f V" % v,
+        infoname="Output 12V-Average",
+    )
 
 
 check_info["ucs_bladecenter_psu"] = {

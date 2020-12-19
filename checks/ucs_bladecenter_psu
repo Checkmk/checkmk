@@ -75,22 +75,25 @@ def check_ucs_bladecenter_psu(item, params, psu):
     levels_3v = params["levels_3v_upper"] + params["levels_3v_lower"]
     levels_12v = params["levels_12v_upper"] + params["levels_12v_lower"]
 
-    # TODO: be ok if both are zero
+    power_save_mode = value_3v == 0.0 and value_12v == 0.0
 
     yield check_levels(
         value_3v,
         "3_3v",
-        levels_3v,
+        None if power_save_mode else levels_3v,
         human_readable_func=lambda v: "%.2f V" % v,
         infoname="Output 3.3V-Average",
     )
     yield check_levels(
         value_12v,
         "12v",
-        levels_12v,
+        None if power_save_mode else levels_12v,
         human_readable_func=lambda v: "%.2f V" % v,
         infoname="Output 12V-Average",
     )
+
+    if power_save_mode:
+        yield 0, "Assuming 'Power Save Mode'"
 
 
 check_info["ucs_bladecenter_psu"] = {

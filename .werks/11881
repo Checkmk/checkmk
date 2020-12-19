@@ -1,0 +1,12 @@
+Title: ucs_bladecenter_psu: assume power save mode if both voltages are zero
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608416757
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If both output voltages (3V and 12V) are zero, we assume the PSU has switched to power
+save mode and the service remains {OK}.

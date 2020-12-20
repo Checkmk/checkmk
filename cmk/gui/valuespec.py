@@ -27,6 +27,7 @@ import json
 import logging
 import math
 import numbers
+import os
 from pathlib import Path
 import re
 import socket
@@ -43,6 +44,7 @@ from dateutil.tz import tzlocal
 from PIL import Image  # type: ignore[import]
 from six import ensure_binary, ensure_str
 from Cryptodome.PublicKey import RSA
+from Cryptodome.Cipher import AES
 from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.log
@@ -5282,9 +5284,10 @@ class Password(TextAscii):
             html.write(self._label)
             html.nbsp()
 
+        html.hidden_field(varprefix + "_orig", value=ValueEncrypter.encrypt(value) if value else "")
         html.password_input(
             varprefix,
-            str(value),
+            default_value="",
             size=self._size,
             autocomplete="new-password" if self._autocomplete is False else None,
         )
@@ -5300,6 +5303,69 @@ class Password(TextAscii):
         if value is None:
             return _("none")
         return u'******'
+
+    def from_html_vars(self, varprefix: str) -> str:
+        value = super().from_html_vars(varprefix)
+        if value:
+            return value  # New password entered
+
+        # Gather the value produced by render_input() and use it.
+        value = html.request.get_str_input_mandatory(varprefix + "_orig", "")
+        if not value:
+            return value
+
+        return ValueEncrypter.decrypt(value)
+
+
+class ValueEncrypter:
+    """Helping to secure transport of secrets
+
+    A basic concept of valuespecs is that they transport ALL data back and forth between
+    different states. This has also the consequence that also secrets, like passwords, must be
+    transported to the client, which should remain better only on the server.
+
+    To deal with this in a reasonably secure way, we encrypt passwords for transport from backend =>
+    HTML => backend.
+
+    If it turns out that the approach is not sufficient, then we will have to soften this principle
+    of valuespecs and somehow leave the passwords on the server.
+
+    The encrypted values are only used for transactions and not persisted. This means you can change
+    the algorithm at any time.
+    """
+    @staticmethod
+    def _secret_key(salt: bytes) -> bytes:
+        """Build some secret for the ecryption
+
+        Use the sites auth.secret for encryption. This secret is only known to the current site
+        and other distributed sites.
+        """
+        secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
+        with secret_path.open(mode="rb") as f:
+            passphrase = f.read().strip()
+            return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
+
+    @staticmethod
+    def _cipher(salt: bytes, nonce: bytes):
+        return AES.new(ValueEncrypter._secret_key(salt), AES.MODE_GCM, nonce=nonce)
+
+    @staticmethod
+    def encrypt(value: str) -> str:
+        salt = os.urandom(AES.block_size)
+        nonce = os.urandom(AES.block_size)
+        cipher = ValueEncrypter._cipher(salt, nonce)
+        encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
+        return base64.b64encode(salt + nonce + tag + encrypted).decode("ascii")
+
+    @staticmethod
+    def decrypt(value: str) -> str:
+        raw = base64.b64decode(value.encode("ascii"))
+        salt, rest = raw[:AES.block_size], raw[AES.block_size:]
+        nonce, rest = rest[:AES.block_size], rest[AES.block_size:]
+        tag, encrypted = rest[:AES.block_size], rest[AES.block_size:]
+
+        return ValueEncrypter._cipher(salt, nonce).decrypt_and_verify(encrypted,
+                                                                      tag).decode("utf-8")
 
 
 class PasswordSpec(Password):

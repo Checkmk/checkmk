@@ -231,9 +231,9 @@ def check_mail(args: Args) -> CheckResult:
                 mailbox.fetch_mails(args.match_subject),
             )
             result = forward_to_ec(args, messages)
-            if args.cleanup_messages:
-                if args.cleanup_messages != 'delete':
-                    mailbox.copy_mails(forwarded, args.cleanup_messages)
+            if args.cleanup:
+                if args.cleanup != 'delete':
+                    mailbox.copy_mails(forwarded, args.cleanup)
                 mailbox.delete_mails(forwarded)
 
             return result

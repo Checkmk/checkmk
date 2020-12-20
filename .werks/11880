@@ -1,0 +1,16 @@
+Title: ups_capacity: Bring back UPS 'capacity' metric
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608290493
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b3
+
+In versions 1.6.0p12 to 1.6.0p19 the 'capacity' metric was not produced if the
+correspinding devices were on main power supply.
+
+Note that some devices report "0 minutes left" in case they are on mains.
+In this case no levels are applied, to avoid false positives.

@@ -54,6 +54,8 @@ RESULTS_TIME_ON_BATTERY_NO_FLAG: type_defs.CheckResult = [
 ]
 
 RESULTS_NOT_ON_BATTERY: type_defs.CheckResult = [
+    Result(state=State.OK, summary='10 minutes 0 seconds'),
+    Metric('battery_seconds_remaining', 600.0),
     Result(state=State.OK, summary='On mains'),
     Result(state=State.OK, summary='80.00%'),
     Metric('battery_capacity', 80.0),

@@ -136,20 +136,20 @@ def _output_time_remaining(
     on_battery: bool,
     levels: Tuple[int, int],
 ) -> type_defs.CheckResult:
-    # Metric for time left on battery - check remaining time only when on battery
-    if not on_battery:
-        yield Result(
-            state=State.OK,
-            summary="On mains",
-        )
-        return
-
+    # Metric for time left on battery always - check remaining time only when on battery
+    ignore_levels = seconds_left == 0 and not on_battery
     if seconds_left is not None:
         yield from check_levels(
             seconds_left,
             metric_name="battery_seconds_remaining",
-            levels_lower=(levels[0] * 60, levels[1] * 60),
+            levels_lower=None if ignore_levels else (levels[0] * 60, levels[1] * 60),
             render_func=render.timespan,
+        )
+
+    if not on_battery:
+        yield Result(
+            state=State.OK,
+            summary="On mains",
         )
 
 

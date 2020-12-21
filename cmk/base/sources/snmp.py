@@ -149,7 +149,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ).make()
 
     def _make_fetcher(self) -> SNMPFetcher:
-        if not SNMPFetcher.plugin_store:
+        if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():
             # That's a hack.
             #
             # `make_plugin_store()` depends on
@@ -160,10 +160,8 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             # make the plugin store.  However, it is not clear whether
             # the API would let us register hooks to accomplish that.
             #
-            # The current solution is brittle in that plugins loaded after
-            # this call will be ignored or crash the fetcher.
-            #
-            assert config.all_checks_loaded()
+            # The current solution is brittle in that there is not guarantee
+            # that all the relevant plugins are loaded at this point.
             SNMPFetcher.plugin_store = make_plugin_store()
         return SNMPFetcher(
             self._make_file_cache(),

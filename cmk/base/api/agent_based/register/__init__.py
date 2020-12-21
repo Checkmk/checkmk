@@ -33,6 +33,12 @@ from cmk.base.api.agent_based.register._config import (
     iter_all_host_label_rulesets,
     iter_all_inventory_plugins,
     iter_all_snmp_sections,
+    len_agent_sections,
+    len_check_plugins,
+    len_discovery_rulesets,
+    len_host_label_rulesets,
+    len_inventory_plugins,
+    len_snmp_sections,
     set_discovery_ruleset,
     set_host_label_ruleset,
 )

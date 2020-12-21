@@ -38,7 +38,7 @@ Section = Mapping[str, BackupData]
 
 def parse_proxmox_ve_vm_backup_status(string_table: StringTable) -> Section:
     result = BackupData()
-    backup_data = json.loads(string_table[0][0])['last_backup']
+    backup_data = json.loads(string_table[0][0])['last_backup'] or {}
     if 'archive_name' in backup_data:
         result['archive_name'] = str(backup_data['archive_name'])
     if 'archive_size' in backup_data:

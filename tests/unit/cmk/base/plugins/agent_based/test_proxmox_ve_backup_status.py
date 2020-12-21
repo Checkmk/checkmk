@@ -14,32 +14,35 @@ from cmk.base.plugins.agent_based.proxmox_ve_backup_status import (
 )
 
 FROZEN_TIME = datetime.strptime("2020-04-17 17:00:00", '%Y-%m-%d %H:%M:%S')
-BACKUP_DATA = parse_proxmox_ve_vm_backup_status([[
+
+NO_BACKUP_DATA = [['{"last_backup": null}']]
+
+BACKUP_DATA = [[
     '{"last_backup": {'
     '    "archive_name": "/mnt/pve/StorageBox-219063/dump/vzdump-qemu-115-2020_04_16-22_20_43.vma.lzo",'
     '    "archive_size": 1099511627776,'
     '    "started_time": "2020-04-16 22:20:43",'
     '    "transfer_size": 2199023255552,'
     '    "transfer_time": 1000}}'
-]])
+]]
 
 
 @pytest.mark.parametrize("params,section,expected_results", (
     (
         {},
-        {},
+        parse_proxmox_ve_vm_backup_status(NO_BACKUP_DATA),
         (Result(state=State.OK, summary='No backup found and none needed'),),
     ),
     (
         {
             'age_levels_upper': (43200, 86400)
         },
-        {},
+        parse_proxmox_ve_vm_backup_status(NO_BACKUP_DATA),
         (Result(state=State.CRIT, summary='No backup found'),),
     ),
     (
         {},
-        BACKUP_DATA,
+        parse_proxmox_ve_vm_backup_status(BACKUP_DATA),
         (
             Result(state=State.OK, summary='Age: 18 hours 39 minutes'),
             Metric('age', 67157.0),
@@ -52,7 +55,7 @@ BACKUP_DATA = parse_proxmox_ve_vm_backup_status([[
         {
             'age_levels_upper': (43200, 86400)
         },
-        BACKUP_DATA,
+        parse_proxmox_ve_vm_backup_status(BACKUP_DATA),
         (
             Result(
                 state=State.WARN,

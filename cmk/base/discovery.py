@@ -1008,8 +1008,8 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
 
     service_filters = get_service_filter_funcs(params)
 
-    why_not = _may_rediscover(params, now_ts, oldest_queued)
-    if not why_not:
+    reason = _may_rediscover(params, now_ts, oldest_queued)
+    if not reason:
         result = discover_on_host(
             config_cache,
             host_config,
@@ -1057,7 +1057,7 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
         except OSError:
             pass
     else:
-        console.verbose("  skipped: %s\n" % why_not)
+        console.verbose("  skipped: %s\n" % reason)
 
     return something_changed
 
@@ -1071,7 +1071,7 @@ def _queue_age() -> float:
 
 
 def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
-                    oldest_queued: float) -> Optional[str]:
+                    oldest_queued: float) -> str:
     if "inventory_rediscovery" not in params:
         return "automatic discovery disabled for this host"
 
@@ -1091,7 +1091,7 @@ def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
     if now_ts - oldest_queued < rediscovery_parameters["group_time"]:
         return "last activation is too recent"
 
-    return None
+    return ""
 
 
 #.

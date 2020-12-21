@@ -1,0 +1,13 @@
+Title: proxmox_ve_backup_status: crash if last_backup is null
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608528140
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b3
+
+In case the agent_proxmox_ve returns no backup data (last_backup is 'null' in JSON data) the
+parsing function would crash.
+This fix handles this case appropriately.

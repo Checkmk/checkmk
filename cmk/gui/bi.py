@@ -3246,6 +3246,7 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
     only_group = None
     only_service = None
     only_aggr_name = None
+    aggr_name_regex = None
     group_prefix = None
     for filter_ in all_active_filters:
         if filter_.ident == "aggr_group":
@@ -3260,6 +3261,10 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
         #       See BITextFilter(Filter): filter_table(self, rows)
         elif filter_.ident == "aggr_group_tree":
             group_prefix = filter_.value().get("aggr_group_tree")
+        elif filter_.ident == "aggr_name_regex":
+            value = filter_.value().get("aggr_name_regex")
+            if value != "":
+                aggr_name_regex = value
 
     if config.bi_precompile_on_demand and only_group:
         # optimized mode: if aggregation group known only precompile this one
@@ -3287,8 +3292,22 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
 
     # Prefetch data for later usage - this saves lots of redundant livestatus queries
     def is_tree_required(tree):
-        if only_aggr_name and only_aggr_name != tree.get("title"):
+        title = tree["title"]
+        if only_aggr_name and only_aggr_name != title:
             return False
+
+        if aggr_name_regex is not None:
+            try:
+                if not re.search(aggr_name_regex, title, re.IGNORECASE):
+                    return False
+            except re.error:
+                # Worst outcome on any exception:
+                # - More data will be queried, but discarded during processing
+                pass
+
+        if group_prefix is not None:
+            if not any(name.startswith(group_prefix) for name in tree.get("aggr_group_tree")):
+                return False
 
         aggr_sites = set(x[0] for x in tree.get("reqhosts"))
         if not aggr_sites.intersection(online_sites):

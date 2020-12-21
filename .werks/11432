@@ -1,0 +1,13 @@
+Title: BI Aggregation: Improved performance when using filter in "All aggregations"
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1608560789
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p20
+
+The required hosts and services for aggregations were filtered too late.
+In most cases all data for all aggregations were retrieved and then discarded,
+since it was not needed by the actual computation.

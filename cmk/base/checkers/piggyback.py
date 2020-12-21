@@ -90,13 +90,20 @@ class PiggybackSummarizer(AgentSummarizer):
         return summary
 
     def _summarize_impl(self) -> ServiceCheckResult:
-        states = [0]
-        infotexts = set()
-        for origin in (self.source.hostname, self.source.ipaddress):
+        sources = [
+            src for origin in (self.source.hostname, self.source.ipaddress)
             for src in get_piggyback_raw_data(
-                    origin if origin else "",
-                    self.source.time_settings,
-            ):
-                states.append(src.reason_status)
-                infotexts.add(src.reason)
-        return max(states), ", ".join(infotexts), []
+                origin if origin else "",
+                self.source.time_settings,
+            )
+        ]
+        valid_sources = [src.reason for src in sources if src.successfully_processed]
+        failed_sources = [src.reason for src in sources if not src.successfully_processed]
+        return (
+            max((src.reason_status for src in sources), default=0),
+            ", ".join(string for string in (
+                (f"Valid sources: {valid_sources!r}" if valid_sources else ""),
+                (f"Failed sources: {failed_sources!r}" if failed_sources else ""),
+            ) if string),
+            [],
+        )

@@ -222,14 +222,22 @@ def _get_piggyback_processed_file_info(
 
     status_file_path = _get_source_status_file_path(source_hostname)
     if not status_file_path.exists():
-        reason = "Source '%s' not sending piggyback data" % source_hostname
-        return _eval_file_in_validity_period(file_age, validity_period, validity_state, reason)
+        return _eval_file_in_validity_period(
+            file_age,
+            validity_period,
+            validity_state,
+            reason=f"{source_hostname!r} (not sending piggyback data)",
+        )
 
     if _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
-        reason = "Piggyback file not updated by source '%s'" % source_hostname
-        return _eval_file_in_validity_period(file_age, validity_period, validity_state, reason)
+        return _eval_file_in_validity_period(
+            file_age,
+            validity_period,
+            validity_state,
+            reason=f"{source_hostname!r} (piggyback file not updated)",
+        )
 
-    return True, "Successfully processed from source '%s'" % source_hostname, 0
+    return True, source_hostname, 0
 
 
 def _get_max_cache_age(source_hostname: str, piggybacked_hostname: str,

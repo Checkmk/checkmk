@@ -1,0 +1,13 @@
+Title: Shorten Check_MK service summary
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608554723
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+Gathering piggyback info from multiple hosts resulted in longish summary strings with repeating
+phrases.
+This change consolidates successful hosts and shortens overall summary.

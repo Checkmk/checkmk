@@ -128,7 +128,7 @@ def test_get_piggyback_raw_data_successful(time_settings):
         assert raw_data_info.source_hostname == "source1"
         assert raw_data_info.file_path.endswith('/test-host/source1')
         assert raw_data_info.successfully_processed is True
-        assert raw_data_info.reason == "Successfully processed from source 'source1'"
+        assert raw_data_info.reason == "source1"
         assert raw_data_info.reason_status == 0
         assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
@@ -145,7 +145,7 @@ def test_get_piggyback_raw_data_not_updated():
         assert raw_data_info.source_hostname == "source1"
         assert raw_data_info.file_path.endswith('/test-host/source1')
         assert raw_data_info.successfully_processed is False
-        assert raw_data_info.reason == "Piggyback file not updated by source 'source1'"
+        assert raw_data_info.reason == "'source1' (piggyback file not updated)"
         assert raw_data_info.reason_status == 0
         assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
@@ -162,7 +162,7 @@ def test_get_piggyback_raw_data_not_sending():
         assert raw_data_info.source_hostname == "source1"
         assert raw_data_info.file_path.endswith('/test-host/source1')
         assert raw_data_info.successfully_processed is False
-        assert raw_data_info.reason == "Source 'source1' not sending piggyback data"
+        assert raw_data_info.reason == "'source1' (not sending piggyback data)"
         assert raw_data_info.reason_status == 0
         assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
@@ -243,7 +243,7 @@ def test_store_piggyback_raw_data_new_host():
         assert raw_data_info.source_hostname == "source2"
         assert raw_data_info.file_path.endswith('/pig/source2')
         assert raw_data_info.successfully_processed is True
-        assert raw_data_info.reason.startswith("Successfully processed from source 'source2'")
+        assert raw_data_info.reason == "source2"
         assert raw_data_info.reason_status == 0
         assert raw_data_info.raw_data == b'<<<check_mk>>>\nlulu\n'
 
@@ -262,14 +262,14 @@ def test_store_piggyback_raw_data_second_source():
         if raw_data_info.source_hostname == "source1":
             assert raw_data_info.file_path.endswith('/test-host/source1')
             assert raw_data_info.successfully_processed is True
-            assert raw_data_info.reason.startswith("Successfully processed from source 'source1'")
+            assert raw_data_info.reason == 'source1'
             assert raw_data_info.reason_status == 0
             assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
         else:  # source2
             assert raw_data_info.file_path.endswith('/test-host/source2')
             assert raw_data_info.successfully_processed is True
-            assert raw_data_info.reason.startswith("Successfully processed from source 'source2'")
+            assert raw_data_info.reason == 'source2'
             assert raw_data_info.reason_status == 0
             assert raw_data_info.raw_data == b'<<<check_mk>>>\nlulu\n'
 
@@ -321,12 +321,12 @@ def test_get_source_and_piggyback_hosts():
     ([
         (None, "max_cache_age", piggyback_max_cachefile_age),
         ("source1", "validity_period", 1000),
-    ], True, "Source 'source1' not sending piggyback data (still valid", 0),
+    ], True, "'source1' (not sending piggyback data) (still valid", 0),
     ([
         (None, "max_cache_age", piggyback_max_cachefile_age),
         ("source1", "validity_period", 1000),
         ("source1", "validity_state", 1),
-    ], True, "Source 'source1' not sending piggyback data (still valid", 1),
+    ], True, "'source1' (not sending piggyback data) (still valid", 1),
 ])
 def test_get_piggyback_raw_data_source_validity(time_settings, successfully_processed, reason,
                                                 reason_status):
@@ -347,7 +347,7 @@ def test_get_piggyback_raw_data_source_validity(time_settings, successfully_proc
     ([
         (None, "max_cache_age", piggyback_max_cachefile_age),
         ("source1", "validity_period", -1),
-    ], False, "Source 'source1' not sending piggyback data", 0),
+    ], False, "'source1' (not sending piggyback data)", 0),
 ])
 def test_get_piggyback_raw_data_source_validity2(time_settings, successfully_processed, reason,
                                                  reason_status):
@@ -369,14 +369,14 @@ def test_get_piggyback_raw_data_source_validity2(time_settings, successfully_pro
         (None, "max_cache_age", piggyback_max_cachefile_age),
         ("source1", "validity_period", -1),
         ("test-host", "validity_period", 1000),
-    ], True, "Piggyback file not updated by source 'source1' (still valid", 0),
+    ], True, "'source1' (piggyback file not updated) (still valid", 0),
     ([
         (None, "max_cache_age", piggyback_max_cachefile_age),
         ("source1", "validity_period", -1),
         ("source1", "validity_state", 2),
         ("test-host", "validity_period", 1000),
         ("test-host", "validity_state", 1),
-    ], True, "Piggyback file not updated by source 'source1' (still valid", 1),
+    ], True, "'source1' (piggyback file not updated) (still valid", 1),
 ])
 def test_get_piggyback_raw_data_piggybacked_host_validity(time_settings, successfully_processed,
                                                           reason, reason_status):
@@ -400,7 +400,7 @@ def test_get_piggyback_raw_data_piggybacked_host_validity(time_settings, success
         ("source1", "validity_state", 2),
         ("test-host", "validity_period", -1),
         ("test-host", "validity_state", 1),
-    ], False, "Piggyback file not updated by source 'source1'", 0),
+    ], False, "'source1' (piggyback file not updated)", 0),
 ])
 def test_get_piggyback_raw_data_piggybacked_host_validity2(time_settings, successfully_processed,
                                                            reason, reason_status):

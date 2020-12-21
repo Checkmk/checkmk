@@ -4,6 +4,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # force load of environment
+
+read_python3_version() {
+    if command -v python3 >/dev/null 2>&1; then
+        python3_minor_version="$(python3 -c 'import sys; print(sys.version_info[1])')"
+        if [ "$python3_minor_version" -ge 4 ]; then
+            echo "$python3_minor_version"
+        fi
+    fi
+}
+read_python2_version() {
+    if command -v python2 >/dev/null 2>&1; then
+        python2 -c 'import sys; print(sys.version_info[1])'
+        return
+    fi
+    if command -v python >/dev/null 2>&1; then
+        python -c 'import sys; print(sys.version_info[1])'
+        return
+    fi
+}
+PYTHON3=$(read_python3_version)
+PYTHON2=$(read_python2_version)
+
 if [ -e $HOME/.profile ]
 then
     . $HOME/.profile >/dev/null 2>&1
@@ -117,6 +139,34 @@ function run_cached {
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]
     then
         nohup sh -c $CMDLINE > $CACHEFILE.new 2> /dev/null && mv $CACHEFILE.new $CACHEFILE  &
+    fi
+}
+
+function run_agent_plugin {
+    if [ "${1:0:2}" == "./" ]; then
+        agent_plugin="${1:2}"
+    else
+        agent_plugin="$1"
+    fi
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+    # Execute all non python plugins with ./foo
+    if [ "$extension" != "py" ]; then
+        ./"$agent_plugin"
+        return
+    fi
+    if [ "${filename#${filename%??}}" != "_2" ]; then
+        if [ -n "$PYTHON3" ]; then
+            ./"$agent_plugin"
+            return
+        fi
+        return
+    fi
+    if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
+        return
+    fi
+    if [ -n "$PYTHON2" ]; then
+        ./"$agent_plugin"
     fi
 }
 
@@ -282,17 +332,19 @@ then
     for skript in $(ls)
     do
         if [ -x "$skript" ] ; then
-            ./$skript
+            run_agent_plugin "$skript"
     fi
   done
 
   # Call some plugins only every X'th second
   for skript in [1-9]*/* ; do
       if [ -x "$skript" ] ; then
-          run_cached plugins_${skript//\//\#} ${skript%/*} "$skript"
+          run_cached plugins_${skript//\//\#} ${skript%/*} run_agent_plugin "$skript"
       fi
   done
 fi
+
+
 
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg

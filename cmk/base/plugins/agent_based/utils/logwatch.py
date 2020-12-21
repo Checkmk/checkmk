@@ -18,7 +18,7 @@ from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequen
 
 import re
 
-from ..agent_based_api.v1 import regex, Result, State as state
+from ..agent_based_api.v1 import regex, escape_regex_chars, Result, State as state
 
 from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
     get_checkgroup_parameters, host_extra_conf, host_name,
@@ -92,7 +92,7 @@ def reclassify(
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
     for level, pattern, _ in patterns.get("reclassify_patterns", []):
-        reg = regex(pattern, re.UNICODE)
+        reg = regex(escape_regex_chars(pattern), re.UNICODE)
         if reg.search(text):
             # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
             # then we count how many times this pattern has already matched and

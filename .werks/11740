@@ -1,0 +1,14 @@
+Title: ceph_status_mgrs: fix crash on KeyError(epoch)
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1608656578
+
+The Ceph Status MGRs check crashed on a missing key: KeyError(epoch). This
+crash occurs when there is no epoch data available. An UNKNOWN status is now
+shown when this data is not found.

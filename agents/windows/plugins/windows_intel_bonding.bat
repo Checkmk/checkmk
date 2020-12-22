@@ -1,4 +1,4 @@
-set VERSION="2.0.0b3"
+set VERSION="2.0.0b4"
 @echo off
 echo ^<^<^<windows_intel_bonding^>^>^>
 

@@ -1,4 +1,4 @@
-set VERSION="2.0.0b3"
+set VERSION="2.0.0b4"
 @ECHO off & setlocal EnableDelayedExpansion
 REM ***
 REM * plugin to to monitor Intel RST raids

@@ -34,7 +34,7 @@ import multiprocessing
 import logging
 
 
-__version__ = "2.0.0b3"
+__version__ = "2.0.0b4"
 
 
 def which(prg):

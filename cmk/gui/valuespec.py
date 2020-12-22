@@ -5290,6 +5290,7 @@ class Password(TextAscii):
             default_value="",
             size=self._size,
             autocomplete="new-password" if self._autocomplete is False else None,
+            placeholder="******" if value else "",
         )
 
     def password_plaintext_warning(self) -> None:

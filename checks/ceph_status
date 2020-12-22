@@ -252,6 +252,8 @@ def inventory_ceph_status_mgrs(parsed):
 
 def check_ceph_status_mgrs(_no_item, params, parsed):
     data = parsed["mgrmap"]
+    if "epoch" not in data:
+        return
     yield ceph_check_epoch("ceph_mgrs", data["epoch"], params)
 
 

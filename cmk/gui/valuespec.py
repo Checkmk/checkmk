@@ -5352,7 +5352,7 @@ class Password(TextInput):
             default_value=default_value,
             size=self._size,
             autocomplete="new-password" if self._autocomplete is False else None,
-            placeholder="******",
+            placeholder="******" if value else "",
         )
 
     def password_plaintext_warning(self) -> None:

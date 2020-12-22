@@ -341,6 +341,10 @@ class ModeRuleSearch(ABCRulesetMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(
+                default_value=self._search_options.get("fulltext", ""),
+                placeholder=_("Filter"),
+            ) if self._page_type is not PageType.RuleSearch else None,
         )
         return menu
 
@@ -348,9 +352,7 @@ class ModeRuleSearch(ABCRulesetMode):
         yield _page_menu_entry_predefined_conditions()
 
     def page(self):
-        # When the detailed search form is involved, don't show the quick search field on the result
-        # page
-        if not html.form_submitted("rule_search"):
+        if self._page_type is PageType.RuleSearch and not html.request.has_var("filled_in"):
             search_form(title="%s: " % _("Quick search"),
                         default_value=self._search_options.get("fulltext", ""))
         super().page()
@@ -562,8 +564,7 @@ def _page_menu_entry_search_rules(search_options: SearchOptions, mode: str,
 
 
 def _is_deprecated_rulesets_page(search_options):
-    return (list(search_options.keys()) == ["ruleset_deprecated"] and
-            search_options["ruleset_deprecated"])
+    return search_options.get("ruleset_deprecated") is True
 
 
 def _is_ineffective_rules_page(search_options):
@@ -1111,10 +1112,12 @@ class ModeRuleSearchForm(WatoMode):
         return _("Search rulesets and rules")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
-                                          form_name="rule_search",
-                                          button_name="_do_search",
-                                          save_title=_("Search"))
+        menu = make_simple_form_page_menu(
+            breadcrumb,
+            form_name="rule_search",
+            button_name="_do_search",
+            save_title=_("Search"),
+        )
         action_topic = menu.dropdowns[0].topics[0]
         action_topic.entries.insert(
             1,

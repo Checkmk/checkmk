@@ -392,7 +392,8 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
                                save_icon: str = "save",
                                save_is_enabled: bool = True,
                                add_abort_link: bool = False,
-                               abort_url: Optional[str] = None) -> PageMenu:
+                               abort_url: Optional[str] = None,
+                               inpage_search: Optional[PageMenuSearch] = None) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
     entries = []
 
@@ -417,6 +418,7 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
             ),
         ],
         breadcrumb=breadcrumb,
+        inpage_search=inpage_search,
     )
 
 

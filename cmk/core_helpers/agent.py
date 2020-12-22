@@ -117,7 +117,7 @@ class ParserState(abc.ABC):
     .. uml::
 
         state "NOOPState" as noop
-        state "PiggybackSectionParser" as piggy
+        state "PiggybackParser" as piggy
         state "HostSectionParser" as host
         state c <<choice>>
 
@@ -181,8 +181,8 @@ class ParserState(abc.ABC):
     def to_piggyback_section_parser(
         self,
         piggybacked_hostname: HostName,
-    ) -> "PiggybackSectionParser":
-        return PiggybackSectionParser(
+    ) -> "PiggybackParser":
+        return PiggybackParser(
             self.hostname,
             self.host_sections,
             piggybacked_hostname,
@@ -202,8 +202,8 @@ class NOOPParser(ParserState):
             return self
 
         try:
-            if PiggybackSectionParser.is_header(line):
-                piggybacked_hostname = PiggybackSectionParser.parse_header(
+            if PiggybackParser.is_header(line):
+                piggybacked_hostname = PiggybackParser.parse_header(
                     line,
                     self.translation,
                     encoding_fallback=self.encoding_fallback,
@@ -220,7 +220,7 @@ class NOOPParser(ParserState):
         return self
 
 
-class PiggybackSectionParser(ParserState):
+class PiggybackParser(ParserState):
     def __init__(
         self,
         hostname: HostName,
@@ -247,11 +247,11 @@ class PiggybackSectionParser(ParserState):
             return self
 
         try:
-            if PiggybackSectionParser.is_footer(line):
+            if PiggybackParser.is_footer(line):
                 return self.to_noop_parser()
-            if PiggybackSectionParser.is_header(line):
+            if PiggybackParser.is_header(line):
                 # Footer is optional.
-                piggybacked_hostname = PiggybackSectionParser.parse_header(
+                piggybacked_hostname = PiggybackParser.parse_header(
                     line,
                     self.translation,
                     encoding_fallback=self.encoding_fallback,
@@ -273,7 +273,7 @@ class PiggybackSectionParser(ParserState):
     @staticmethod
     def is_header(line: bytes) -> bool:
         return (line.strip().startswith(b'<<<<') and line.strip().endswith(b'>>>>') and
-                not PiggybackSectionParser.is_footer(line))
+                not PiggybackParser.is_footer(line))
 
     @staticmethod
     def is_footer(line: bytes) -> bool:
@@ -391,8 +391,8 @@ class HostSectionParser(ParserState):
             return self
 
         try:
-            if PiggybackSectionParser.is_header(line):
-                piggybacked_hostname = PiggybackSectionParser.parse_header(
+            if PiggybackParser.is_header(line):
+                piggybacked_hostname = PiggybackParser.parse_header(
                     line,
                     self.translation,
                     encoding_fallback=self.encoding_fallback,
@@ -425,9 +425,8 @@ class HostSectionParser(ParserState):
     def is_header(line: bytes) -> bool:
         line = line.strip()
         return (line.startswith(b'<<<') and line.endswith(b'>>>') and
-                not HostSectionParser.is_footer(line) and
-                not PiggybackSectionParser.is_header(line) and
-                not PiggybackSectionParser.is_footer(line))
+                not HostSectionParser.is_footer(line) and not PiggybackParser.is_header(line) and
+                not PiggybackParser.is_footer(line))
 
     @staticmethod
     def is_footer(line: bytes) -> bool:

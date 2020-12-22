@@ -1,0 +1,16 @@
+Title: Avoid duplicate display for extension packages
+Class: fix
+Compatible: compat
+Component: core
+Date: 1608647288
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b4
+
+This fixes the case where <tt>mkp find<\tt> shows
+the same file under multiple categories.
+
+This also fixes the same error in the UI for the
+"Extension packages" display.

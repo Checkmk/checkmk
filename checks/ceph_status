@@ -115,7 +115,8 @@ def inventory_ceph_status_osds(parsed):
 
 
 def check_ceph_status_osds(_no_item, params, parsed):
-    data = parsed["osdmap"]["osdmap"]
+    # some instances of ceph give out osdmap data in a flat structure
+    data = parsed["osdmap"].get("osdmap") or parsed["osdmap"]
     num_osds = int(data["num_osds"])
     yield ceph_check_epoch("ceph_osds", data["epoch"], params)
 

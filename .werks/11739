@@ -1,0 +1,14 @@
+Title: ceph_status_osds: fix crash on KeyError(osdmap)
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1608654452
+
+The Ceph Status OSDs check crashed with an error relating to a missing key:
+KeyError(osdmap). This is due to discrepancies in the format of the data
+retrieved by the mk_ceph agent. This has been fixed.

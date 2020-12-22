@@ -8,7 +8,7 @@ import os
 import logging
 import sys
 import tarfile
-from typing import BinaryIO, cast, List
+from typing import AbstractSet, BinaryIO, cast, List
 from pathlib import Path
 
 from six import ensure_str
@@ -26,6 +26,7 @@ from cmk.utils.packaging import (
     write_package_info,
     parse_package_info,
     get_package_parts,
+    unpackaged_files,
     unpackaged_files_in_dir,
     get_config_parts,
     get_initial_package_info,
@@ -208,22 +209,26 @@ def package_create(args: List[str]) -> None:
 
 
 def package_find(_no_args: List[str]) -> None:
-    first = True
-    for part in get_package_parts() + get_config_parts():
-        files = unpackaged_files_in_dir(part.ident, part.path)
-        if len(files) > 0:
-            if first:
+    visited: AbstractSet[Path] = set()
+    for part, files in unpackaged_files().items():
+        if files:
+            if not visited:
                 logger.log(VERBOSE, "Unpackaged files:")
-                first = False
 
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-            for f in files:
+            found = frozenset(
+                Path(part.path) / f
+                for f in files
+                if (Path(part.path) / f).resolve() not in visited)
+            if found:
+                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+            for p in found:
                 if logger.isEnabledFor(VERBOSE):
-                    logger.log(VERBOSE, "    %s", f)
+                    logger.log(VERBOSE, "    %s", p.relative_to(part.path))
                 else:
-                    logger.info("%s/%s", part.path, f)
+                    logger.info("%s", p)
+            visited |= {p.resolve() for p in found}
 
-    if first:
+    if not visited:
         logger.log(VERBOSE, "No unpackaged files found.")
 
 

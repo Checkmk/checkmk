@@ -287,7 +287,7 @@ def test_remove():
 
 
 def test_unpackaged_files_none():
-    assert packaging.unpackaged_files() == {
+    assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
         'agent_based': [],
         'agents': [],
         'alert_handlers': [],
@@ -317,7 +317,7 @@ def test_unpackaged_files():
     with p.open("w", encoding="utf-8") as f:
         f.write(u"huhu\n")
 
-    assert packaging.unpackaged_files() == {
+    assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
         'agent_based': ['dada'],
         'agents': [],
         'alert_handlers': [],

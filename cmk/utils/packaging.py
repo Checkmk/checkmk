@@ -574,7 +574,7 @@ def get_all_package_infos() -> Packages:
 
     return {
         "installed": packages,
-        "unpackaged": unpackaged_files(),
+        "unpackaged": {part.ident: files for part, files in unpackaged_files().items()},
         "parts": package_part_info(),
         "optional_packages": get_optional_package_infos(),
         "disabled_packages": get_disabled_package_infos(),
@@ -613,10 +613,10 @@ def _get_disabled_package_paths() -> List[Path]:
     return list(cmk.utils.paths.disabled_packages_dir.iterdir())
 
 
-def unpackaged_files() -> Dict[PackageName, List[str]]:
+def unpackaged_files() -> Dict[PackagePart, List[str]]:
     unpackaged = {}
     for part in get_package_parts() + get_config_parts():
-        unpackaged[part.ident] = unpackaged_files_in_dir(part.ident, part.path)
+        unpackaged[part] = unpackaged_files_in_dir(part.ident, part.path)
     return unpackaged
 
 

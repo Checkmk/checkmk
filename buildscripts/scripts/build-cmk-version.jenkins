@@ -48,7 +48,6 @@ def DOCKER_BUILDS = [:]
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def BRANCH_VERSION
-def WS_ARCHIVE="WS-${JOB_NAME}-${BUILD_NUMBER}.tar.gz".replaceAll("/","-")
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
 def UPLOAD_DEST_OLD = 'bauwelt@mathias-kettner.de:/bauwelt/download/'
@@ -72,6 +71,7 @@ def DOCKER_BASE_ARGS = "-u 0:0 --ulimit nofile=1024:1024"
 def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${ARCHIVE_DIR}:${ARCHIVE_DIR}"
 
 def DOCKER_REGISTRY_NO_HTTP = ''
+def SOURCE_DIR = ''
 
 //
 // MAIN
@@ -150,6 +150,7 @@ node(NODE) {
             prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
             create_source_package(WORKSPACE, CMK_VERS)
 
+            SOURCE_DIR = WORKSPACE + "/git"
             def SOURCE_PACKAGE_NAME = get_source_package_name(WORKSPACE, EDITION, CMK_VERS)
             def BUILD_SOURCE_PACKAGE_PATH = WORKSPACE + "/git/" + SOURCE_PACKAGE_NAME
             def FINAL_SOURCE_PACKAGE_PATH = ARCHIVE_DIR + "/" + SOURCE_PACKAGE_NAME
@@ -159,51 +160,54 @@ node(NODE) {
             cleanup_source_package(WORKSPACE, FINAL_SOURCE_PACKAGE_PATH)
             test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, CMK_VERS)
             upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST_OLD, UPLOAD_DEST, CMK_VERS)
-
-            create_workspace_package(WORKSPACE, WS_ARCHIVE)
-            stash_package(WORKSPACE, WS_ARCHIVE, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
         }
     }
-}
 
-try{
-    DISTRO_LIST.each { DISTRO ->
-        PACKAGE_BUILDS[DISTRO] = {
-            node(NODE) {
-                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
-                        clean_workpace()
-                        unstash_package(WS_ARCHIVE)
-                        unpack_workspace_package("git", WS_ARCHIVE)
-                        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                            versioning.print_image_tag()
-                            build_package(DISTRO, OMD_ENV_VARS)
+    try {
+        DISTRO_LIST.each { DISTRO ->
+            PACKAGE_BUILDS[DISTRO] = {
+                // The following node call allocates a new workspace for each
+                // DISTRO.
+                //
+                // Note: Do it inside the first node block to ensure all distro
+                // workspaces start with a fresh one. Otherwise one of the node
+                // calls would reuse the workspace of the source package step.
+                //
+                // The DISTRO workspaces will then be initialized with the contents
+                // of the first workspace, which contains the prepared git repo.
+                node(NODE) {
+                    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                        def DISTRO_DIR = WORKSPACE + "/git"
+
+                        docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro --privileged --hostname ${DISTRO}") {
+                            initialize_workspace(DISTRO, SOURCE_DIR, DISTRO_DIR)
+
+                            withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                                versioning.print_image_tag()
+                                build_package(DISTRO, OMD_ENV_VARS)
+                            }
                         }
-                    }
-                    docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
-                        def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS, DEMO)
-                        def BUILD_PACKAGE_PATH = WORKSPACE + "/git/" + PACKAGE_NAME
-                        def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
 
-                        clean_venv()
+                        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+                            def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS, DEMO)
+                            def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
+                            def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
 
-                        sign_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE)
-                        test_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE, CMK_VERS)
-                        copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
-                        upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST_OLD, UPLOAD_DEST, CMK_VERS)
+                            clean_venv()
+
+                            sign_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE)
+                            test_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE, CMK_VERS)
+                            copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
+                            upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST_OLD, UPLOAD_DEST, CMK_VERS)
+                        }
                     }
                 }
             }
         }
-    }
-    parallel PACKAGE_BUILDS
-}catch(Exception e) {
-    notify.notify_error(e)
-}finally {
-    node(NODE) {
-        stage("Remove Stashed package") {
-            delete_stashed_package(DOCKER_REGISTRY_NO_HTTP, WS_ARCHIVE)
-        }
+        parallel PACKAGE_BUILDS
+    }catch(Exception e) {
+        notify.notify_error(e)
+    }finally {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
                 create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST_OLD, UPLOAD_DEST, CMK_VERS)
@@ -218,6 +222,7 @@ try{
         }
     }
 }
+
 //
 // FUNCTIONS
 //
@@ -345,6 +350,12 @@ def copy_source_package(PACKAGE_PATH, ARCHIVE_PATH) {
     }
 }
 
+def initialize_workspace(DISTRO, SOURCE_DIR, DISTRO_DIR) {
+    stage(DISTRO + ' initialize workspace') {
+        sh("rsync -a ${SOURCE_DIR}/ ${DISTRO_DIR}/")
+    }
+}
+
 def build_package(DISTRO, OMD_ENV_VARS) {
     stage(DISTRO + ' build package') {
         dir('git') {
@@ -427,28 +438,6 @@ def clean_venv() {
     sh('rm -rf git/.venv')
 }
 
-def create_workspace_package(DIR, ARCHIVE_NAME) {
-    sh("tar -cz -C ${DIR}/git/ -f ${ARCHIVE_NAME} .")
-}
-
-def unpack_workspace_package(DIR, ARCHIVE_NAME) {
-    sh("mkdir -p ${DIR}")
-    sh("tar -x -C ${DIR} -f ${ARCHIVE_NAME}")
-}
-
-def stash_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
-    stage(NAME + ' upload package') {
-        def FILE_BASE = sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
-        def ARCHIVE_BASE = sh(script: "dirname ${FILE_BASE}", returnStdout: true).toString().trim()
-
-        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-            sh """
-                curl -sSf -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" --upload-file "${FILE_PATH}/${FILE_NAME}" "${NEXUS_ARCHIVES_URL}"
-            """
-        }
-    }
-}
-
 def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST_OLD, UPLOAD_DEST, CMK_VERS) {
     stage(NAME + ' upload package') {
         def FILE_BASE = sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
@@ -476,31 +465,6 @@ def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_P
                 archiveArtifacts("*")
             }
         }
-    }
-}
-
-
-def unstash_package(FILE_NAME) {
-    stage(FILE_NAME + ' download package') {
-        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-            print("""
-                curl -1 -sSf -o "${FILE_NAME}" "${NEXUS_ARCHIVES_URL}${FILE_NAME}"
-""")
-            sh """
-                curl -1 -sSf -o "${FILE_NAME}" "${NEXUS_ARCHIVES_URL}${FILE_NAME}"
-            """
-        }
-    }
-}
-
-def delete_stashed_package(DOCKER_REG, FILE_NAME) {
-    def DOCKER_REPO = NEXUS_ARCHIVES_URL
-    def CONTAINER = "nexus3-cli"
-    def URL_ELEMENTS = NEXUS_ARCHIVES_URL.split('/')
-    def NEXUS_URL = URL_ELEMENTS[0] + '//' + URL_ELEMENTS[2]
-    def REPO = URL_ELEMENTS[URL_ELEMENTS.length -1]
-    withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-        sh("docker run -t -a stdout -a stderr ${DOCKER_REG}/${CONTAINER} nexus3-del-artifacts.py $NEXUS_URL $NEXUS_USERNAME $NEXUS_PASSWORD --repo $REPO --pattern ${FILE_NAME}")
     }
 }
 

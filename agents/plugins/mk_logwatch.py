@@ -1046,11 +1046,11 @@ def _subnetwork_to_ip_range(subnetwork):
     raise ValueError("invalid subnetwork: %r" % subnetwork)
 
 
-def _filter_maxoutputsize(encoded_lines, maxoutputsize):
+def _filter_maxoutputsize(lines, maxoutputsize):
     """Produce lines right *before* maxoutputsize is exceeded"""
     bytecount = 0
-    for line in encoded_lines:
-        bytecount += len(line)
+    for line in lines:
+        bytecount += len(line.encode('utf-8'))
         if bytecount > maxoutputsize:
             break
         yield line
@@ -1081,18 +1081,10 @@ def write_output(header, lines, options):
     if options.maxcontextlines:
         lines = _filter_maxcontextlines(lines, *options.maxcontextlines)
 
-    if sys.version_info[0] == 3:
-        # in Python 3 we use 100% unicode and hope that this is good idea
-        sys.stdout.write(header)
-        filtered_enc_lines = _filter_maxoutputsize(lines, options.maxoutputsize)
-    else:
-        # Original strange code for Python 2
-        encoded_lines = (l.encode('utf-8') for l in lines)
-        sys.stdout.write(header.encode('utf-8'))
-        filtered_enc_lines = _filter_maxoutputsize(encoded_lines, options.maxoutputsize)
+    lines = _filter_maxoutputsize(lines, options.maxoutputsize)
 
-    for line in filtered_enc_lines:
-        sys.stdout.write(line)
+    sys.stdout.write(header)
+    sys.stdout.writelines(lines)
 
 
 def main(argv=None):

@@ -2031,15 +2031,11 @@ def test_save_packed_config(monkeypatch, serial):
 
     assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
                     "precompiled_check_config.mk").exists()
-    assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
-                    "precompiled_check_config.mk.orig").exists()
 
     config.save_packed_config(serial, config_cache)
 
     assert Path(cmk.utils.paths.core_helper_config_dir, serial,
                 "precompiled_check_config.mk").exists()
-    assert Path(cmk.utils.paths.core_helper_config_dir, serial,
-                "precompiled_check_config.mk.orig").exists()
 
 
 def test_load_packed_config(serial):
@@ -2059,13 +2055,13 @@ class TestPackedConfigStore:
 
     def test_latest_serial_path(self):
         store = config.PackedConfigStore(serial=LATEST_SERIAL)
-        assert store._compiled_path == Path(cmk.utils.paths.core_helper_config_dir, "latest",
-                                            "precompiled_check_config.mk")
+        assert store.path == Path(cmk.utils.paths.core_helper_config_dir, "latest",
+                                  "precompiled_check_config.mk")
 
     def test_given_serial_path(self):
         store = config.PackedConfigStore(serial=ConfigSerial("42"))
-        assert store._compiled_path == Path(cmk.utils.paths.core_helper_config_dir, "42",
-                                            "precompiled_check_config.mk")
+        assert store.path == Path(cmk.utils.paths.core_helper_config_dir, "42",
+                                  "precompiled_check_config.mk")
 
     def test_read_not_existing_file(self, store):
         with pytest.raises(FileNotFoundError):
@@ -2074,16 +2070,12 @@ class TestPackedConfigStore:
     def test_write(self, store, serial):
         assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
                         "precompiled_check_config.mk").exists()
-        assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
-                        "precompiled_check_config.mk.orig").exists()
 
         store.write({"abc": 1})
 
         packed_file_path = Path(cmk.utils.paths.core_helper_config_dir, serial,
                                 "precompiled_check_config.mk")
         assert packed_file_path.exists()
-        assert Path(cmk.utils.paths.core_helper_config_dir, serial,
-                    "precompiled_check_config.mk.orig").exists()
 
         assert store.read() == {
             "abc": 1,

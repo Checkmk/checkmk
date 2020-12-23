@@ -27,7 +27,7 @@ def test_do_create_config_nagios(core_scenario):
     core_config.do_create_config(create_core("nagios"))
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
-    assert config.PackedConfigStore(LATEST_SERIAL)._compiled_path.exists()
+    assert config.PackedConfigStore(LATEST_SERIAL).path.exists()
 
 
 def test_active_check_arguments_basics():

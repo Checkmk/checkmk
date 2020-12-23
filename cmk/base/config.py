@@ -28,6 +28,8 @@ from typing import (
     List,
     Literal,
     NamedTuple,
+    Mapping,
+    MutableMapping,
     Optional,
     Sequence,
     Set,
@@ -626,8 +628,8 @@ class PackedConfigGenerator:
     def __init__(self, config_cache: "ConfigCache") -> None:
         self._config_cache = config_cache
 
-    def generate(self) -> Sequence[Tuple[Union[ABCName, str], Any]]:
-        helper_config: List[Tuple[Union[ABCName, str], Any]] = []
+    def generate(self) -> Mapping[Union[ABCName, str], Any]:
+        helper_config: MutableMapping[Union[ABCName, str], Any] = {}
 
         # These functions purpose is to filter out hosts which are monitored on different sites
         active_hosts = self._config_cache.all_active_hosts()
@@ -688,7 +690,7 @@ class PackedConfigGenerator:
             if varname in filter_var_functions:
                 val = filter_var_functions[varname](val)
 
-            helper_config.append((varname, val))
+            helper_config[varname] = val
 
         #
         # Add discovery rules
@@ -699,7 +701,7 @@ class PackedConfigGenerator:
             if not value:
                 continue
 
-            helper_config.append((ruleset_name, value))
+            helper_config[ruleset_name] = value
 
         #
         # Add modified check specific Checkmk base settings
@@ -709,7 +711,7 @@ class PackedConfigGenerator:
             if val == _check_variable_defaults[varname]:
                 continue
 
-            helper_config.append((varname, val))
+            helper_config[varname] = val
 
         return helper_config
 
@@ -725,7 +727,7 @@ class PackedConfigStore:
         self._compiled_path: Final[Path] = base_path / "precompiled_check_config.mk"
         self._source_path: Final[Path] = base_path / "precompiled_check_config.mk.orig"
 
-    def write(self, helper_config: Sequence[Tuple[Union[ABCName, str], Any]]) -> None:
+    def write(self, helper_config: Mapping[Union[ABCName, str], Any]) -> None:
         def is_serializable(varname: Union[ABCName, str], val: Any) -> bool:
             """Check whether `val` is serializable."""
             if isinstance(val, (str, int, bool)) or not val:
@@ -738,7 +740,7 @@ class PackedConfigStore:
                 return False
 
         serialized = PackedConfigStore.HEADER + "\n\n".join(
-            "%s = %r" % line for line in helper_config if is_serializable(*line))
+            "%s = %r" % line for line in helper_config.items() if is_serializable(*line))
 
         self._source_path.parent.mkdir(parents=True, exist_ok=True)
         store.save_file(self._source_path, serialized + "\n")
@@ -749,7 +751,7 @@ class PackedConfigStore:
             marshal.dump(code, compiled_file)
         tmp_path.rename(self._compiled_path)
 
-    def read(self) -> Dict[str, Any]:
+    def read(self) -> Mapping[str, Any]:
         with self._compiled_path.open("rb") as f:
             namespace: Dict[str, Any] = {}
             exec(marshal.load(f), globals(), namespace)

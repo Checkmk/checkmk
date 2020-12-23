@@ -2043,7 +2043,7 @@ def test_save_packed_config(monkeypatch, serial):
 
 
 def test_load_packed_config(serial):
-    config.PackedConfigStore(serial).write([("abc", 1)])
+    config.PackedConfigStore(serial).write({"abc": 1})
 
     assert "abc" not in config.__dict__
     config.load_packed_config(serial)
@@ -2077,7 +2077,7 @@ class TestPackedConfigStore:
         assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
                         "precompiled_check_config.mk.orig").exists()
 
-        store.write([("abc", 1)])
+        store.write({"abc": 1})
 
         packed_file_path = Path(cmk.utils.paths.core_helper_config_dir, serial,
                                 "precompiled_check_config.mk")

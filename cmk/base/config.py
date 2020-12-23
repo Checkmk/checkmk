@@ -63,6 +63,7 @@ import cmk.utils.migrated_check_variables
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
+    ABCName,
     ActiveCheckPluginName,
     BuiltinBakeryHostName,
     CheckPluginName,
@@ -637,10 +638,8 @@ class PackedConfigGenerator:
     def __init__(self, config_cache: "ConfigCache") -> None:
         self._config_cache = config_cache
 
-    def generate(self) -> str:
-        helper_config = ("#!/usr/bin/env python\n"
-                         "# encoding: utf-8\n"
-                         "# Created by Checkmk. Dump of the currently active configuration\n\n")
+    def generate(self) -> Sequence[Tuple[Union[ABCName, str], Any]]:
+        helper_config: List[Tuple[Union[ABCName, str], Any]] = []
 
         # These functions purpose is to filter out hosts which are monitored on different sites
         active_hosts = self._config_cache.all_active_hosts()
@@ -698,13 +697,10 @@ class PackedConfigGenerator:
             if varname not in derived_config_variable_names and val == variable_defaults[varname]:
                 continue
 
-            if not self._packable(varname, val):
-                continue
-
             if varname in filter_var_functions:
                 val = filter_var_functions[varname](val)
 
-            helper_config += "\n%s = %r\n" % (varname, val)
+            helper_config.append((varname, val))
 
         #
         # Add discovery rules
@@ -715,10 +711,7 @@ class PackedConfigGenerator:
             if not value:
                 continue
 
-            if not self._packable(str(ruleset_name), value):
-                continue
-
-            helper_config += "\n%s = %r\n" % (ruleset_name, value)
+            helper_config.append((ruleset_name, value))
 
         #
         # Add modified check specific Checkmk base settings
@@ -728,38 +721,41 @@ class PackedConfigGenerator:
             if val == _check_variable_defaults[varname]:
                 continue
 
-            if not self._packable(varname, val):
-                continue
-
-            helper_config += "\n%s = %r\n" % (varname, val)
+            helper_config.append((varname, val))
 
         return helper_config
-
-    def _packable(self, varname: str, val: Any) -> bool:
-        """Checks whether or not a variable can be written to the config.mk
-        and read again from it."""
-        if isinstance(val, (str, int, bool)) or not val:
-            return True
-
-        try:
-            eval(repr(val))
-            return True
-        except SyntaxError:
-            return False
 
 
 class PackedConfigStore:
     """Caring about persistence of the packed configuration"""
+    HEADER = ("#!/usr/bin/env python\n"
+              "# encoding: utf-8\n"
+              "# Created by Checkmk. Dump of the currently active configuration\n\n")
+
     def __init__(self, serial: OptionalConfigSerial) -> None:
         base_path: Final[Path] = cmk.utils.paths.make_helper_config_path(serial)
         self._compiled_path: Final[Path] = base_path / "precompiled_check_config.mk"
         self._source_path: Final[Path] = base_path / "precompiled_check_config.mk.orig"
 
-    def write(self, helper_config: str) -> None:
-        self._source_path.parent.mkdir(parents=True, exist_ok=True)
-        store.save_file(self._source_path, helper_config + "\n")
+    def write(self, helper_config: Sequence[Tuple[Union[ABCName, str], Any]]) -> None:
+        def is_serializable(varname: Union[ABCName, str], val: Any) -> bool:
+            """Check whether `val` is serializable."""
+            if isinstance(val, (str, int, bool)) or not val:
+                return True
 
-        code = compile(helper_config, '<string>', 'exec')
+            try:
+                eval(repr(val))
+                return True
+            except SyntaxError:
+                return False
+
+        serialized = PackedConfigStore.HEADER + "\n\n".join(
+            "%s = %r" % line for line in helper_config if is_serializable(*line))
+
+        self._source_path.parent.mkdir(parents=True, exist_ok=True)
+        store.save_file(self._source_path, serialized + "\n")
+
+        code = compile(serialized, '<string>', 'exec')
         tmp_path = self._compiled_path.parent / (self._compiled_path.name + ".compiled")
         with tmp_path.open("wb") as compiled_file:
             marshal.dump(code, compiled_file)

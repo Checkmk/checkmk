@@ -15,7 +15,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Mapping,
     Optional,
     Sequence,
     Set,
@@ -428,6 +427,7 @@ def _execute_check(
             plugin,
             lambda: _final_read_only_check_parameters(service.parameters),
             value_store_manager=value_store_manager,
+            persist_value_store_changes=not dry_run,
         )
 
     if submittable.submit:
@@ -454,6 +454,7 @@ def get_aggregated_result(
     params_function: Callable[[], Parameters],
     *,
     value_store_manager: value_store.ValueStoreManager,
+    persist_value_store_changes: bool,
 ) -> AggregatedResult:
     """Run the check function and aggregate the subresults
 
@@ -471,6 +472,8 @@ def get_aggregated_result(
         mode='native',
         clusterization_parameters={},
         plugin=plugin,
+        service_id=service.id(),
+        persist_value_store_changes=persist_value_store_changes,
     ) if host_config.is_cluster else plugin.check_function
 
     source_type = (SourceType.MANAGEMENT

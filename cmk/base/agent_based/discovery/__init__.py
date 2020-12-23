@@ -1193,6 +1193,7 @@ def _check_preview_table_row(
             plugin,
             lambda p=wrapped_params: p,  # type: ignore[misc]  # "type of lambda"
             value_store_manager=value_store_manager,
+            persist_value_store_changes=False,  # never during discovery
         ).result
 
     # Service discovery never uses the perfdata in the check table. That entry

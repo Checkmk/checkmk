@@ -297,10 +297,23 @@ class BIAggregationPacks:
                 if not bi_aggr.computation_options.disabled
             ]))
 
-        enabled_info_path = os.path.join(cmk.utils.paths.var_dir, "wato")
-        store.makedirs(enabled_info_path)
-        store.save_file(os.path.join(enabled_info_path, "num_enabled_aggregations"),
-                        enabled_aggregations)
+        store.makedirs(self._num_enabled_aggregations_dir())
+        store.save_file(self._num_enabled_aggregations_path(), enabled_aggregations)
+
+    @classmethod
+    def _num_enabled_aggregations_dir(cls):
+        return os.path.join(cmk.utils.paths.var_dir, "wato")
+
+    @classmethod
+    def _num_enabled_aggregations_path(cls):
+        return os.path.join(cls._num_enabled_aggregations_dir(), "num_enabled_aggregations")
+
+    @classmethod
+    def get_num_enabled_aggregations(cls):
+        try:
+            return int(store.load_text_from_file(cls._num_enabled_aggregations_path()))
+        except (TypeError, ValueError):
+            return 0
 
     def generate_config(self) -> Dict[str, Any]:
         self._check_rule_cycles()

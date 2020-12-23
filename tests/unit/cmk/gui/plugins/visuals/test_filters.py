@@ -673,12 +673,10 @@ filter_table_tests = [
             {"site": "s", "host_name": "h", "service_description": "srv1"},
             {"site": "s", "host_name": "h", "service_description": "srv2"},
             {"site": "s", "host_name": "h2", "service_description": "srv2"},
-            {"site": "b", "host_name": "h", "service_description": "srv1"},
         ],
         expected_rows=[
             {'host_name': 'h', 'service_description': 'srv2', 'site': 's'},
             {'host_name': 'h2', 'service_description': 'srv2', 'site': 's'},
-            {'host_name': 'h', 'service_description': 'srv1', 'site': 'b'},
         ],
     ),
     FilterTableTest(
@@ -688,7 +686,6 @@ filter_table_tests = [
             {"site": "s", "host_name": "h", "service_description": "srv1"},
             {"site": "s", "host_name": "h", "service_description": "srv2"},
             {"site": "s", "host_name": "h2", "service_description": "srv2"},
-            {"site": "b", "host_name": "h", "service_description": "srv1"},
         ],
         expected_rows=[
             {"site": "s", "host_name": "h", "service_description": "srv1"},
@@ -1045,10 +1042,10 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
     monkeypatch.setattr(cmk.gui.inventory, "get_inventory_data", get_inventory_data_patch)
 
     # Needed for FilterAggrServiceUsed test
-    def is_part_of_aggregation_patch(what, site, host, service):
+    def is_part_of_aggregation_patch(host, service):
         return {
-            ("s", "h", "srv1"): True
-        }.get((site, host, service), False)
+            ("h", "srv1"): True
+        }.get((host, service), False)
 
     monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)
 

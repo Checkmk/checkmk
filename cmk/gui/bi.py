@@ -62,8 +62,10 @@ permission_registry.register(
     ))
 
 
-def is_part_of_aggregation(what, site, host, service):
-    return get_cached_bi_manager().compiler.used_in_aggregation(host, service)
+def is_part_of_aggregation(host, service):
+    if BIAggregationPacks.get_num_enabled_aggregations() == 0:
+        return False
+    return get_cached_bi_manager().compiler.is_part_of_aggregation(host, service)
 
 
 def get_aggregation_group_trees():
@@ -933,7 +935,7 @@ class BIManager:
 
     @classmethod
     def bi_configuration_file(cls) -> str:
-        return str(Path(watolib.multisite_dir()) / "bi_config.mk")
+        return str(Path(watolib.multisite_dir()) / "bi_config.bi")
 
 
 def get_cached_bi_packs() -> BIAggregationPacks:

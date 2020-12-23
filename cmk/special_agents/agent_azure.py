@@ -196,14 +196,22 @@ class BaseApiClient(metaclass=abc.ABCMeta):
         self._ratelimit = min(self._ratelimit, new_value)
 
     def _get(self, uri_end, key=None, params=None):
-        request_url = self._base_url + uri_end
-        response = requests.get(request_url, params=params, headers=self._headers)
-        self._update_ratelimit(response)
-        json_data = response.json()
-        LOGGER.debug('response: %r', json_data)
+        json_data = self._get_json_from_url(self._base_url + uri_end, params=params)
 
         if key is None:
             return json_data
+
+        return self._lookup(json_data, key)
+
+    def _get_json_from_url(self, url, *, params=None):
+        response = requests.get(url, params=params, headers=self._headers)
+        self._update_ratelimit(response)
+        json_data = response.json()
+        LOGGER.debug('response: %r', json_data)
+        return json_data
+
+    @staticmethod
+    def _lookup(json_data, key):
         try:
             return json_data[key]
         except KeyError:

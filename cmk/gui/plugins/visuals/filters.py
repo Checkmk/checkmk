@@ -1856,8 +1856,7 @@ class FilterAggrServiceUsed(FilterTristate):
             return rows
         new_rows = []
         for row in rows:
-            is_part = bi.is_part_of_aggregation("service", row["site"], row["host_name"],
-                                                row["service_description"])
+            is_part = bi.is_part_of_aggregation(row["host_name"], row["service_description"])
             if (is_part and current == 1) or \
                (not is_part and current == 0):
                 new_rows.append(row)

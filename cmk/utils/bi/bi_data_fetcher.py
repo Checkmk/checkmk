@@ -91,15 +91,6 @@ class BIStructureFetcher:
             cached_program_starts.add((site_id, timestamp))
         return cached_program_starts
 
-    def _read_cached_data(self, required_program_starts: Set[SiteProgramStart]) -> None:
-        for path_object, (site_id, _timestamp) in self._get_site_data_files():
-            if site_id in self._have_sites:
-                # This data was already read during the live query
-                continue
-
-            site_data = self._marshal_load_data(str(path_object))
-            self.add_site_data(site_id, site_data)
-
     def update_data(self, required_program_starts: Set[SiteProgramStart]) -> None:
         missing_program_starts = required_program_starts - self.get_cached_program_starts()
 
@@ -144,6 +135,21 @@ class BIStructureFetcher:
                 self._site_data_filename(site_id, only_sites[site_id]))
             self._marshal_save_data(str(path), hosts)
 
+    def _read_cached_data(self, required_program_starts: Set[SiteProgramStart]) -> None:
+        required_sites = {x[0] for x in required_program_starts}
+        for path_object, (site_id, _timestamp) in self._get_site_data_files():
+            if site_id in self._have_sites:
+                # This data was already read during the live query
+                continue
+
+            if site_id not in required_sites:
+                # The data for this site is no longer required
+                # The site probably got disabled in the distributed monitoring page
+                continue
+
+            site_data = self._marshal_load_data(str(path_object))
+            self.add_site_data(site_id, site_data)
+
     @classmethod
     def _structure_columns(cls) -> List[str]:
         return [
@@ -182,7 +188,7 @@ class BIStructureFetcher:
 
         self._have_sites.add(site_id)
 
-    def _cleanup_orphaned_files(self, known_sites: Dict[str, int]) -> None:
+    def cleanup_orphaned_files(self, known_sites: Dict[str, int]) -> None:
         for path_object, (site_id, timestamp) in self._get_site_data_files():
             try:
                 if known_sites.get(site_id) == timestamp:

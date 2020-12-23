@@ -978,9 +978,7 @@ class AggregationsIcon(Icon):
         # Link to aggregations of the host/service
         # When precompile on demand is enabled, this icon is displayed for all hosts/services
         # otherwise only for the hosts/services which are part of aggregations.
-        if config.bi_precompile_on_demand \
-           or bi.is_part_of_aggregation(what, row["site"], row["host_name"],
-                                        row.get("service_description")):
+        if bi.is_part_of_aggregation(row["host_name"], row.get("service_description")):
             view_name = "aggr_%s" % what
 
             if not config.user.may("view.%s" % view_name):

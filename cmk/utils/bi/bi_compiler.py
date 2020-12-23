@@ -6,6 +6,7 @@
 
 import os
 import time
+import redis
 import cmk
 import marshal
 from pathlib import Path
@@ -14,7 +15,6 @@ from typing import (
     Set,
     Optional,
     TypedDict,
-    Tuple,
     List,
 )
 
@@ -33,7 +33,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledAggregationSchema
 from cmk.utils.bi.bi_aggregation import BIAggregation
-from cmk.utils.type_defs import HostName, ServiceName
 from cmk.utils.bi.bi_lib import SitesCallback
 
 
@@ -54,9 +53,8 @@ class BICompiler:
         self._path_compilation_timestamp = Path(get_cache_dir(), "last_compilation")
         self._path_compiled_aggregations = Path(get_cache_dir(), "compiled_aggregations")
         self._path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
-        self._part_of_aggregation_map: Dict[Tuple[HostName, Optional[ServiceName]],
-                                            List[Tuple[str, str]]] = {}
 
+        self._redis_client = None
         self._setup()
 
     def _setup(self):
@@ -87,20 +85,6 @@ class BICompiler:
             self._logger.debug("Loading cached aggregation results %s" % aggr_id)
             aggr_data = self._marshal_load_data(str(path_object))
             self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(aggr_data)
-
-        self._update_part_of_aggregation_map()
-
-    def used_in_aggregation(self, host_name: HostName, service_description: ServiceName) -> bool:
-        return (host_name, service_description) in self._part_of_aggregation_map
-
-    def _update_part_of_aggregation_map(self) -> None:
-        self._part_of_aggregation_map = {}
-        for aggr_id, compiled_aggregation in self._compiled_aggregations.items():
-            for branch in compiled_aggregation.branches:
-                for _site, host_name, service_description in branch.required_elements():
-                    key = (host_name, service_description)
-                    self._part_of_aggregation_map.setdefault(key, [])
-                    self._part_of_aggregation_map[key].append((aggr_id, branch.properties.title))
 
     def _check_compilation_status(self) -> None:
         current_configstatus = self.compute_current_configstatus()
@@ -136,9 +120,11 @@ class BICompiler:
                 self._marshal_save_data(self._path_compiled_aggregations.joinpath(aggr_id), result)
                 self._logger.debug("Save dump to disk took %f" % (time.time() - start))
 
+            self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
+
         known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
         self._cleanup_vanished_aggregations()
-        self._bi_structure_fetcher._cleanup_orphaned_files(known_sites)
+        self._bi_structure_fetcher.cleanup_orphaned_files(known_sites)
 
         self._path_compilation_timestamp.write_text(
             str(current_configstatus["configfile_timestamp"]))
@@ -256,3 +242,76 @@ class BICompiler:
                 return marshal.load(f)
         except ValueError:
             return {}
+
+    def _get_redis_client(self):
+        if self._redis_client is None:
+            self._redis_client = redis.from_url("unix://%s/tmp/run/redis?db=0" %
+                                                os.environ["OMD_ROOT"],
+                                                charset="utf-8",
+                                                decode_responses=True)
+        return self._redis_client
+
+    def is_part_of_aggregation(self, host_name, service_description):
+        self._check_redis_lookup_integrity()
+        self._get_redis_client().exists("bi:aggregation_lookup:%s:%s" %
+                                        (host_name, service_description))
+
+    def _check_redis_lookup_integrity(self):
+        client = self._get_redis_client()
+        if client.exists("bi:aggregation_lookup"):
+            return True
+
+        # The following scenario only happens if the redis daemon loses its data
+        # In the normal workflow the lookup cache is updated after the compilation phase
+        # What happens if multiple apache process want to read the cache at the same time:
+        # - One apache gets the lock, updates the cache
+        # - The other apache wait till the cache has been updated
+        lookup_lock = client.lock("bi:aggregation_lookup_lock")
+        try:
+            lookup_lock.acquire()
+            if not client.exists("bi:aggregation_lookup"):
+                self.load_compiled_aggregations()
+                self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
+        finally:
+            if lookup_lock.owned():
+                lookup_lock.release()
+
+    def _generate_part_of_aggregation_lookup(self, compiled_aggregations):
+        part_of_aggregation_map: Dict[str, List[str]] = {}
+        for aggr_id, compiled_aggregation in compiled_aggregations.items():
+            for branch in compiled_aggregation.branches:
+                for _site, host_name, service_description in branch.required_elements():
+                    # This information can be used to selectively load the relevant compiled
+                    # aggregation for any host/service. Right now it is only an indicator if this
+                    # host/service is part of an aggregation
+                    key = "bi:aggregation_lookup:%s:%s" % (host_name, service_description)
+                    part_of_aggregation_map.setdefault(key, []).append(
+                        "%s\t%s" % (aggr_id, branch.properties.title))
+
+        client = self._get_redis_client()
+
+        # The main task here is to add/update/remove keys without causing other processes
+        # to wait for the updated data. There is no tempfile -> live mechanism.
+        # Updates are done on the live data via pipeline, using transactions.
+
+        # Fetch existing keys
+        cursor = 0
+        existing_keys = set()
+        while True:
+            cursor, matches = client.scan(cursor, "bi:aggregation_lookup:*", count=10000)
+            existing_keys.update(matches)
+            if cursor == 0:
+                break
+
+        # Update keys
+        pipeline = client.pipeline()
+        for key, values in part_of_aggregation_map.items():
+            pipeline.lpush(key, *values)
+        pipeline.set("bi:aggregation_lookup", "1")
+
+        # Remove obsolete keys
+        obsolete_keys = existing_keys - set(part_of_aggregation_map.keys())
+        if obsolete_keys:
+            pipeline.delete(*obsolete_keys)
+
+        pipeline.execute()

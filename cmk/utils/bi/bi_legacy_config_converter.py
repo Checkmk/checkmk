@@ -583,12 +583,18 @@ class BILegacyConfigConverter(BIManagement):
 
 class BILegacyPacksConverter(BIAggregationPacks):
     def convert_config(self):
-        if Path(self._bi_configuration_file).exists():
-            # Already converted bi.mk -> bi_config.mk
-            return
-        if not Path(watolib.multisite_dir(), "bi.mk").exists():
+        old_bi_config = Path(watolib.multisite_dir(), "bi.mk")
+        if not old_bi_config.exists():
             # No legacy bi.mk available
             return
-        packs_data = BILegacyConfigConverter().get_schema_for_packs()
-        self._instantiate_packs(packs_data)
-        self.save_config()
+
+        try:
+            if Path(self._bi_configuration_file).exists():
+                # Already converted bi.mk -> bi_config.bi
+                return
+            packs_data = BILegacyConfigConverter().get_schema_for_packs()
+            self._instantiate_packs(packs_data)
+            self.save_config()
+        finally:
+            # Delete superfluous bi.mk, otherwise it would be read on every web request
+            old_bi_config.unlink(missing_ok=True)

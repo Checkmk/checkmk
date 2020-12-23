@@ -1,0 +1,19 @@
+Title: Allow additional tags for baked RPM agent packages
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1608720574
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+The Linux RPM packages built by the agent bakery are packaged independently
+of any Linux distribution. Hence, the <tt>DISTRIBUTION</tt> and <tt>DISTTAG</tt>
+tags are left empty within the underlying RPM spec file.
+
+If you happen to need these tags, (e.g., if you employ some sort of additional
+deployment mechanism, that reads from these tags) you can now specify
+them with the help of the agent rule "Specify RPM package tags (Linux)".
+

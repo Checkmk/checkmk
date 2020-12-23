@@ -12,6 +12,7 @@ import itertools
 import marshal
 import numbers
 import os
+import pickle
 import py_compile
 import struct
 import sys
@@ -730,44 +731,20 @@ class PackedConfigGenerator:
 
 class PackedConfigStore:
     """Caring about persistence of the packed configuration"""
-    HEADER = ("#!/usr/bin/env python\n"
-              "# encoding: utf-8\n"
-              "# Created by Checkmk. Dump of the currently active configuration\n\n")
-
     def __init__(self, serial: OptionalConfigSerial) -> None:
         base_path: Final[Path] = cmk.utils.paths.make_helper_config_path(serial)
-        self._compiled_path: Final[Path] = base_path / "precompiled_check_config.mk"
-        self._source_path: Final[Path] = base_path / "precompiled_check_config.mk.orig"
+        self.path: Final[Path] = base_path / "precompiled_check_config.mk"
 
     def write(self, helper_config: Mapping[Union[ABCName, str], Any]) -> None:
-        def is_serializable(varname: Union[ABCName, str], val: Any) -> bool:
-            """Check whether `val` is serializable."""
-            if isinstance(val, (str, int, bool)) or not val:
-                return True
-
-            try:
-                eval(repr(val))
-                return True
-            except SyntaxError:
-                return False
-
-        serialized = PackedConfigStore.HEADER + "\n\n".join(
-            "%s = %r" % line for line in helper_config.items() if is_serializable(*line))
-
-        self._source_path.parent.mkdir(parents=True, exist_ok=True)
-        store.save_file(self._source_path, serialized + "\n")
-
-        code = compile(serialized, '<string>', 'exec')
-        tmp_path = self._compiled_path.parent / (self._compiled_path.name + ".compiled")
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = self.path.with_suffix(self.path.suffix + ".compiled")
         with tmp_path.open("wb") as compiled_file:
-            marshal.dump(code, compiled_file)
-        tmp_path.rename(self._compiled_path)
+            pickle.dump(helper_config, compiled_file)
+        tmp_path.rename(self.path)
 
     def read(self) -> Mapping[str, Any]:
-        with self._compiled_path.open("rb") as f:
-            namespace: Dict[str, Any] = {}
-            exec(marshal.load(f), globals(), namespace)
-            return namespace
+        with self.path.open("rb") as f:
+            return pickle.load(f)
 
 
 def make_core_autochecks_dir(serial: OptionalConfigSerial) -> Path:

@@ -201,7 +201,18 @@ class BaseApiClient(metaclass=abc.ABCMeta):
         if key is None:
             return json_data
 
-        return self._lookup(json_data, key)
+        data = self._lookup(json_data, key)
+
+        # The API will not send more than 1000 recources at once.
+        # See if we must fetch another page:
+        next_link = json_data.get('nextLink')
+        while next_link is not None:
+            json_data = self._get_json_from_url(next_link)
+            # we only know of lists. Let exception happen otherwise
+            data += self._lookup(json_data, key)
+            next_link = json_data.get('nextLink')
+
+        return data
 
     def _get_json_from_url(self, url, *, params=None):
         response = requests.get(url, params=params, headers=self._headers)

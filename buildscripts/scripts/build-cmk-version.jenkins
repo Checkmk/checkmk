@@ -345,6 +345,7 @@ def copy_source_package(PACKAGE_PATH, ARCHIVE_PATH) {
 
 def initialize_workspace(DISTRO, SOURCE_DIR, DISTRO_DIR) {
     stage(DISTRO + ' initialize workspace') {
+        sh("rm -rf ${DISTRO_DIR}")
         sh("rsync -a ${SOURCE_DIR}/ ${DISTRO_DIR}/")
     }
 }

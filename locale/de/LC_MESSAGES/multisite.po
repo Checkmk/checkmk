@@ -7477,13 +7477,6 @@ msgstr ""
 "diese implizit bekannt ist. Wenn Sie jedoch mehrere Hosts in einem "
 "gemeinsamen Check überwachen möchten, können Sie hier IP-Adressen angeben."
 
-msgid ""
-"By default, the Python 3 executable is started using the command "
-"<tt>python3</tt>, wheras Python 2.x is is started using the command "
-"<tt>python</tt>. If this behavior doesn't match your requirements, you can "
-"choose or specify an alternative executable path."
-msgstr ""
-
 #, fuzzy
 msgid ""
 "By default, the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
@@ -11964,10 +11957,6 @@ msgid "Custom notification table of this user"
 msgstr "Benutzer-Alarmtabelle diese Benutzers"
 
 msgid "Custom path prefix"
-msgstr "Benutzerdefiniertes Pfadpräfix"
-
-#, fuzzy
-msgid "Custom python path"
 msgstr "Benutzerdefiniertes Pfadpräfix"
 
 #, fuzzy
@@ -19219,18 +19208,6 @@ msgstr ""
 
 msgid "From Start"
 msgstr "Von Anfang an"
-
-#, fuzzy
-msgid "From environment: python"
-msgstr "Verwendung aus der Umgebung"
-
-#, fuzzy
-msgid "From environment: python2"
-msgstr "Verwendung aus der Umgebung"
-
-#, fuzzy
-msgid "From environment: python3"
-msgstr "Verwendung aus der Umgebung"
 
 msgid "From left of the page"
 msgstr "Vom linken Seitenrand"
@@ -34355,9 +34332,6 @@ msgstr "Pfad zu <tt>MegaCLI.exe</tt>"
 msgid "Path to a CA certificate"
 msgstr "CA-Zertifikat hinzufügen"
 
-msgid "Path to python executable"
-msgstr ""
-
 msgid "Path to sapgenpse"
 msgstr "Pfad zu sapgenpse"
 
@@ -36536,31 +36510,10 @@ msgstr "Geben Sie hier den Namen der Datenbank an, z.B. SATURN\\ARCSERVE_DB"
 msgid "Put this element on"
 msgstr "Dieses Element auf folgende Seiten setzen:"
 
-msgid "Python 2.5/2.6"
-msgstr ""
-
-msgid "Python 2.7"
-msgstr ""
-
-#, fuzzy
-msgid "Python 3"
-msgstr "Python-Version"
-
 msgid "Python Module Paths"
 msgstr "Python-Modul-Pfad"
 
 msgid "Python Version"
-msgstr "Python-Version"
-
-msgid "Python agent plugin options (UNIX)"
-msgstr ""
-
-#, fuzzy
-msgid "Python executable"
-msgstr "Programm:"
-
-#, fuzzy
-msgid "Python version"
 msgstr "Python-Version"
 
 msgid "QOS class"
@@ -40758,16 +40711,6 @@ msgstr "Diese Instanz ist deaktiviert"
 
 msgid "Setup, site management"
 msgstr "Installation, Instanzverwaltung"
-
-msgid ""
-"Several agent plugins are implemented using Python. They require a python "
-"installation on the target hosts. In this rule, you can choose which python "
-"version is available on your hosts. This helps the bakery to decide which "
-"plugin file to include in the baked agents. Optionally, you can choose a "
-"command for the execution.<br>If this rule is not set, the agent bakery will "
-"deploy Python 3 plugins, that get executed with command <tt>python3</tt> on "
-"the hosts."
-msgstr ""
 
 msgid ""
 "Several pages which use tables to show data in rows, like the \"Users\" "
@@ -47659,11 +47602,6 @@ msgstr ""
 "ein bereits existierendes Verzeichnis wählen."
 
 msgid ""
-"The path specified here will be prepended with <tt>#!</t> and act as shebang "
-"for the target python plugin file."
-msgstr ""
-
-msgid ""
 "The path to the value within the MBean, for example NonHeapMemoryUsage/used"
 msgstr ""
 "Der Pfad zum Wert innerhalb der MBean, zum Beispiel NonHeapMemoryUsage/used"
@@ -50223,15 +50161,6 @@ msgstr ""
 "Ansicht neuerlich geöffnet wird dann werden neuen Auswahlen verwendet. "
 "Vorhandene Auswahlen bleiben nur für die maximale Lebensdauer am Server "
 "erhalten."
-
-msgid ""
-"This option determines the script file version and the execution command on "
-"the target host. For <b>Python 3</b> and <b>Python 2.7</b>, the same script "
-"will be deployed. Between Python 2.5/2.6 and Python 2.7, there are some "
-"breaking syntax changes in the python language. Hence, for the choice "
-"<b>Python 2.5/2.6</b>, a legacy script will be deployed. Older versions are "
-"not supported.<br>"
-msgstr ""
 
 msgid ""
 "This option enables a new implementation of the Livestatus table "
@@ -62521,6 +62450,41 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Custom path prefix"
+#~ msgid "Custom python path"
+#~ msgstr "Benutzerdefiniertes Pfadpräfix"
+
+#, fuzzy
+#~| msgid "Use from environment"
+#~ msgid "From environment: python"
+#~ msgstr "Verwendung aus der Umgebung"
+
+#, fuzzy
+#~| msgid "Use from environment"
+#~ msgid "From environment: python2"
+#~ msgstr "Verwendung aus der Umgebung"
+
+#, fuzzy
+#~| msgid "Use from environment"
+#~ msgid "From environment: python3"
+#~ msgstr "Verwendung aus der Umgebung"
+
+#, fuzzy
+#~| msgid "Python Version"
+#~ msgid "Python 3"
+#~ msgstr "Python-Version"
+
+#, fuzzy
+#~| msgid "Executable:"
+#~ msgid "Python executable"
+#~ msgstr "Programm:"
+
+#, fuzzy
+#~| msgid "Python Version"
+#~ msgid "Python version"
+#~ msgstr "Python-Version"
 
 #, fuzzy
 #~| msgid "Check state of BI Aggregations"

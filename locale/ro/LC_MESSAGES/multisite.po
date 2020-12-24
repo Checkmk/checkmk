@@ -6933,13 +6933,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"By default, the Python 3 executable is started using the command "
-"<tt>python3</tt>, wheras Python 2.x is is started using the command "
-"<tt>python</tt>. If this behavior doesn't match your requirements, you can "
-"choose or specify an alternative executable path."
-msgstr ""
-
-msgid ""
 "By default, the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) "
 "will create a single service for each filesystem. By defining grouping "
 "patterns, you can handle groups of filesystems like one filesystem. For each "
@@ -11216,10 +11209,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Custom path prefix"
-msgstr "Atribute personalizate"
-
-#, fuzzy
-msgid "Custom python path"
 msgstr "Atribute personalizate"
 
 #, fuzzy
@@ -18224,15 +18213,6 @@ msgid "From 0 to Monitoring in <10min"
 msgstr ""
 
 msgid "From Start"
-msgstr ""
-
-msgid "From environment: python"
-msgstr ""
-
-msgid "From environment: python2"
-msgstr ""
-
-msgid "From environment: python3"
 msgstr ""
 
 msgid "From left of the page"
@@ -32466,9 +32446,6 @@ msgstr ""
 msgid "Path to a CA certificate"
 msgstr "Adaugă notificare"
 
-msgid "Path to python executable"
-msgstr ""
-
 msgid "Path to sapgenpse"
 msgstr ""
 
@@ -34528,30 +34505,11 @@ msgstr ""
 msgid "Put this element on"
 msgstr ""
 
-msgid "Python 2.5/2.6"
-msgstr ""
-
-msgid "Python 2.7"
-msgstr ""
-
-msgid "Python 3"
-msgstr ""
-
 msgid "Python Module Paths"
 msgstr ""
 
 msgid "Python Version"
 msgstr ""
-
-msgid "Python agent plugin options (UNIX)"
-msgstr ""
-
-msgid "Python executable"
-msgstr ""
-
-#, fuzzy
-msgid "Python version"
-msgstr "Conexiuni Active"
 
 msgid "QOS class"
 msgstr ""
@@ -38722,16 +38680,6 @@ msgid "Setup is disabled."
 msgstr "Notificari"
 
 msgid "Setup, site management"
-msgstr ""
-
-msgid ""
-"Several agent plugins are implemented using Python. They require a python "
-"installation on the target hosts. In this rule, you can choose which python "
-"version is available on your hosts. This helps the bakery to decide which "
-"plugin file to include in the baked agents. Optionally, you can choose a "
-"command for the execution.<br>If this rule is not set, the agent bakery will "
-"deploy Python 3 plugins, that get executed with command <tt>python3</tt> on "
-"the hosts."
 msgstr ""
 
 msgid ""
@@ -44727,11 +44675,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The path specified here will be prepended with <tt>#!</t> and act as shebang "
-"for the target python plugin file."
-msgstr ""
-
-msgid ""
 "The path to the value within the MBean, for example NonHeapMemoryUsage/used"
 msgstr ""
 
@@ -46730,15 +46673,6 @@ msgid ""
 "persisted for the currently open view. When a view is re-opened a new "
 "selection is used. The old one remains on the server until the livetime is "
 "exceeded."
-msgstr ""
-
-msgid ""
-"This option determines the script file version and the execution command on "
-"the target host. For <b>Python 3</b> and <b>Python 2.7</b>, the same script "
-"will be deployed. Between Python 2.5/2.6 and Python 2.7, there are some "
-"breaking syntax changes in the python language. Hence, for the choice "
-"<b>Python 2.5/2.6</b>, a legacy script will be deployed. Older versions are "
-"not supported.<br>"
 msgstr ""
 
 msgid ""
@@ -57299,6 +57233,14 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Custom python path"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Python version"
+#~ msgstr "Conexiuni Active"
 
 #, fuzzy
 #~ msgid "Check state of BI aggregations"

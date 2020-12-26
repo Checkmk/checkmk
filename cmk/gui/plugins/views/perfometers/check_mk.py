@@ -828,7 +828,7 @@ perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
 
 def perfometer_humidity(row, check_command, perf_data):
     humidity = float(perf_data[0][1])
-    return "%3.1f% %" % humidity, perfometer_linear(humidity, '#6f2')
+    return "%3.1f%%" % humidity, perfometer_linear(humidity, '#6f2')
 
 
 perfometers['check_mk-carel_uniflair_cooling'] = perfometer_humidity

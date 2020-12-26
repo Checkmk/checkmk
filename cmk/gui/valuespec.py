@@ -3981,7 +3981,7 @@ class TimeHelper:
         elif unit == 'y':
             lt += relativedelta(years=count)
         else:
-            MKGeneralException("invalid time unit %s" % unit)
+            raise MKGeneralException(_("Invalid time unit %s") % unit)
 
         return time.mktime(lt.timetuple())
         # py3 return lt.timestamp()

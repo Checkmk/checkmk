@@ -156,8 +156,8 @@ def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
                 raise ValueError("invalid regex in value of 'detect' keyword: %s" % exc)
 
         if not isinstance(expected_match, bool):
-            TypeError("value of 'detect' keywords third element must be a boolean: %r" %
-                      (expected_match,))
+            raise TypeError("value of 'detect' keywords third element must be a boolean: %r" %
+                            (expected_match,))
 
 
 def _validate_type_list_snmp_trees(trees: List[SNMPTree]) -> None:

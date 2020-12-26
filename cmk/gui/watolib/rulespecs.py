@@ -1075,10 +1075,9 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
     def register_without_manual_check_rulespec(self, instance: Rulespec) -> None:
         """Use this register method to prevent adding a manual check rulespec"""
         if not isinstance(instance, Rulespec):
-            MKGeneralException(
-                _("!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec %r")
-                % instance)
-            return
+            raise MKGeneralException(
+                _("Error: Received class in RulespecRegistry:register_manual_check_rulespec %r") %
+                instance)
         super(RulespecRegistry, self).register(instance)
 
 

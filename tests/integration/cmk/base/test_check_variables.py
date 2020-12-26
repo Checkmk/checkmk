@@ -26,15 +26,17 @@ def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer
     )
 
     site.makedirs("var/check_mk/agent_output/")
-    web.activate_changes()
 
-    yield None
-
-    #
-    # Cleanup code
-    #
-    print("Cleaning up test config")
-    web.delete_host("modes-test-host")
+    try:
+        web.activate_changes()
+        yield None
+    finally:
+        #
+        # Cleanup code
+        #
+        print("Cleaning up test config")
+        web.delete_host("modes-test-host")
+        web.activate_changes()
 
 
 # Test whether or not registration of check configuration variables works

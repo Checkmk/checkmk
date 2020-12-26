@@ -56,22 +56,24 @@ def test_cfg_fixture(web, site):  # noqa: F811  # pylint: disable=redefined-oute
     web.discover_services("modes-test-host2")
     web.discover_services("modes-test-host3")
 
-    web.activate_changes()
-    yield None
+    try:
+        web.activate_changes()
+        yield None
+    finally:
+        #
+        # Cleanup code
+        #
+        print("Cleaning up test config")
 
-    #
-    # Cleanup code
-    #
-    print("Cleaning up test config")
+        site.delete_dir("var/check_mk/agent_output")
 
-    site.delete_dir("var/check_mk/agent_output")
+        site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-    site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
-
-    web.delete_host("modes-test-host")
-    web.delete_host("modes-test-host2")
-    web.delete_host("modes-test-host3")
-    web.delete_host("modes-test-host4")
+        web.delete_host("modes-test-host")
+        web.delete_host("modes-test-host2")
+        web.delete_host("modes-test-host3")
+        web.delete_host("modes-test-host4")
+        web.activate_changes()
 
 
 #.

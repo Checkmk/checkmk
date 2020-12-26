@@ -95,7 +95,7 @@ def _get_trial_expired_message():
         "The Checkmk Enterprise Free Edition is expired and you can create a distributed setup "
         "with only two sites: one central and one remote site. In case you want to test "
         "more complex distributed setups, please "
-        "<a href=\"mailto:info@checkmk.com\">contact us</a>.")
+        "<a href=\"https://checkmk.com/contact.php?\" target=\"_blank\">contact us</a>.")
 
 
 @mode_registry.register

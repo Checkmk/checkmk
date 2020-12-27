@@ -99,6 +99,7 @@ RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-cmk-dependencies.sh
 
 # Exclusively for this distro at the moment, because it is used by several CI
 # jobs for special tasks (checking out git, "make dist", orchestrating other

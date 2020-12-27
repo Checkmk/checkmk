@@ -15,7 +15,7 @@ properties([
         string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
     ]),
     pipelineTriggers([
-        cron('H 0 * * *')
+        cron('H 2 * * *')
     ])
 ])
 

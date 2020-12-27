@@ -203,8 +203,7 @@ class ABCPackageManagerRPM(ABCPackageManager):
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
     def _install_package(self, package_path):
-        # TODO: Cleanup --no-gpg-checks
-        self._execute(["zypper", "--no-gpg-checks", "in", "-y", package_path])
+        self._execute(["zypper", "in", "-y", package_path])
 
 
 class PackageManagerRHEL(ABCPackageManagerRPM):

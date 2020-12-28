@@ -3,9 +3,9 @@ FROM centos:centos8
 SHELL ["/bin/bash", "-c"]
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
-RUN yum -y --enablerepo=PowerTools --allowerasing install \
+RUN yum -y --enablerepo=powertools --allowerasing install \
     epel-release \
-    && yum -y --enablerepo=PowerTools --allowerasing install \
+    && yum -y --enablerepo=powertools --allowerasing install \
     curl \
     enchant \
     gcc \
@@ -26,7 +26,7 @@ RUN yum -y --enablerepo=PowerTools --allowerasing install \
     && yum clean all
 
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools install \
+    && yum -y --enablerepo=powertools install \
     bind-utils \
     curl \
     curl-devel \
@@ -84,7 +84,7 @@ RUN yum -y makecache \
     && yum clean all
 # --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools reinstall \
+    && yum -y --enablerepo=powertools reinstall \
     kernel-headers \
     --nogpgcheck \
     && yum clean all
@@ -101,7 +101,7 @@ RUN yum -y makecache \
 # We avoid rebuild of the whole previous steps this way
 # --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools install \
+    && yum -y --enablerepo=powertools install \
     chrpath \
     joe \
     iputils \

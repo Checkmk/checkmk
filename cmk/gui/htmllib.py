@@ -1699,7 +1699,7 @@ class html(ABCHTMLGenerator):
         if page_menu:
             PageMenuRenderer().show(
                 page_menu,
-                hide_suggestions=not self.foldable_container_is_open("suggestions", "all", True),
+                hide_suggestions=not config.user.get_tree_state("suggestions", "all", True),
             )
 
         self.close_div()  # top_heading
@@ -2415,7 +2415,7 @@ class html(ABCHTMLGenerator):
                                  fetch_url: Optional[str] = None,
                                  title_url: Optional[str] = None,
                                  title_target: Optional[str] = None) -> bool:
-        isopen = self.foldable_container_is_open(treename, id_, isopen)
+        isopen = config.user.get_tree_state(treename, id_, isopen)
         onclick = self.foldable_container_onclick(treename, id_, fetch_url)
         img_id = self.foldable_container_img_id(treename, id_)
         container_id = self.foldable_container_id(treename, id_)
@@ -2462,14 +2462,6 @@ class html(ABCHTMLGenerator):
     def end_foldable_container(self) -> None:
         self.close_ul()
         self.close_div()
-
-    def foldable_container_is_open(self, treename: str, id_: str, isopen: bool) -> bool:
-        # try to get persisted state of tree
-        tree_state = config.user.get_tree_states(treename)
-
-        if id_ in tree_state:
-            isopen = tree_state[id_] == "on"
-        return isopen
 
     def foldable_container_onclick(self, treename: str, id_: str, fetch_url: Optional[str]) -> str:
         return "cmk.foldable_container.toggle(%s, %s, %s)" % (
@@ -2624,7 +2616,7 @@ class html(ABCHTMLGenerator):
                     dom_levels_up: int,
                     additional_js: str = "",
                     with_text: bool = False) -> None:
-        if config.user.get_attribute("show_mode") == "enforce_show_more":
+        if config.user.show_mode == "enforce_show_more":
             return
 
         self.open_a(href="javascript:void(0)",

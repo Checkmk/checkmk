@@ -1,0 +1,15 @@
+Title: Fix show more mode for dictionary valuespecs
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1609144895
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+The options "Default to show less" and "Default to show more" in the user
+interface settings "Show more/Show less" had the same effect, e.g. on ruleset
+pages. It was always shown less.
+
+This has been fixed.

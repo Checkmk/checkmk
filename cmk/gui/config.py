@@ -540,6 +540,14 @@ class LoggedInUser:
         self._unset_attribute("language")
 
     @property
+    def show_mode(self) -> str:
+        return self.get_attribute("show_mode")
+
+    @property
+    def show_more_mode(self) -> bool:
+        return "show_more" in self.show_mode
+
+    @property
     def customer_id(self) -> Optional[str]:
         return self.get_attribute("customer")
 
@@ -637,6 +645,14 @@ class LoggedInUser:
     def get_tree_states(self, tree):
         return self.tree_states.get(tree, {})
 
+    def get_tree_state(self, treename: str, id_: str, isopen: bool) -> bool:
+        # try to get persisted state of tree
+        tree_state = self.get_tree_states(treename)
+
+        if id_ in tree_state:
+            isopen = tree_state[id_] == "on"
+        return isopen
+
     def set_tree_state(self, tree, key, val):
         if tree not in self.tree_states:
             self.tree_states[tree] = {}
@@ -648,6 +664,16 @@ class LoggedInUser:
 
     def save_tree_states(self) -> None:
         self.save_file("treestates", self._tree_states)
+
+    def get_show_more_setting(self, more_id: str) -> bool:
+        if self.show_mode == "enforce_show_more":
+            return True
+
+        return self.get_tree_state(
+            treename="more_buttons",
+            id_=more_id,
+            isopen=self.show_mode == "default_show_more",
+        )
 
     @property
     def bi_assumptions(self):

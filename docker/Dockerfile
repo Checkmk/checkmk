@@ -6,7 +6,7 @@ ARG CMK_VERSION="1.6.0p20"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
 
-ARG CMK_DL_URL="https://checkmk.com/support"
+ARG CMK_DL_URL="https://download.checkmk.com/checkmk"
 
 # The following variables can be set during container init (docker run -e KEY=val)
 ARG CMK_SITE_ID

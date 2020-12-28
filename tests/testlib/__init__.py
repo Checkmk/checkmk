@@ -278,7 +278,7 @@ class CMKVersion(object):
                 (self.edition(), self.version, distro, self._needed_architecture())
 
     def package_url(self):
-        return "https://mathias-kettner.de/support/%s/%s" % (self.version, self.package_name())
+        return "https://download.checkmk.com/checkmk/%s/%s" % (self.version, self.package_name())
 
     def _build_system_package_path(self):
         return os.path.join("/bauwelt/download", self.version, self.package_name())

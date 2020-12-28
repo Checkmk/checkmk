@@ -102,15 +102,17 @@ def _execute_automation(site,
 
     stdout, stderr = p.communicate(stdin)
 
-    assert p.wait() == expect_exit_code, "Output: %r, Error: %r" % (stdout, stderr)
+    error_msg = "Exit code: %d, Output: %r, Error: %r" % (p.wait(), stdout, stderr)
+
+    assert p.wait() == expect_exit_code, error_msg
 
     if expect_stderr_pattern:
-        assert re.match(expect_stderr_pattern, stderr) is not None
+        assert re.match(expect_stderr_pattern, stderr) is not None, error_msg
     else:
-        assert stderr == expect_stderr
+        assert stderr == expect_stderr, error_msg
 
     if expect_stdout is not None:
-        assert stdout == expect_stdout
+        assert stdout == expect_stdout, error_msg
 
     if parse_data:
         data = ast.literal_eval(stdout)

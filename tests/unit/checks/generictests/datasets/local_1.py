@@ -62,8 +62,7 @@ checks = {
             ]),
         ]),
         ('Some_other_Service', {}, [
-            (0, 'On node node_1: Result is computed from two values', []),
-            (0, 'value1: 10.00', [
+            (0, 'On node node_1: Result is computed from two values, value1: 10.00', [
                 ('value1', 10.0, 30.0, 50.0, None, None),
             ]),
             (1, u'value2: 20.00 (warn/crit at 20.00/50.00)', [

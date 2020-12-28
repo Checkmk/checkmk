@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, List, Optional, Tuple
-from .agent_based_api.v1.type_defs import StringTable
 
+from .agent_based_api.v1.type_defs import StringTable
 from .agent_based_api.v1 import register, SNMPTree
 from .utils import ucd_hr_detection
 
@@ -27,6 +27,9 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
         '.1.3.6.1.2.1.25.2.1.9': 'flash memory',
         '.1.3.6.1.2.1.25.2.1.10': 'network disk',
         '.1.3.6.1.2.1.25.3.9': None,  # not relevant, contains info about file systems
+        # known misbehaving devices returning rubbish for .1.3.6.1.2.1.25.2.3.1.2.1 (hrStorageType)
+        '.0.1.3.6.1.2.1.25.2.1': "RAM",  # HP bug - taken from other walk
+        '.0.0': None,  #                   Arris modems set ".0.0"
     }
 
     def to_bytes(units: str) -> int:
@@ -44,8 +47,9 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
         try:
             map_type = map_types[hrtype]
         except KeyError:
-            oid_base = '.'.join(hrtype.split('.')[:-1])
-            map_type = map_types[oid_base]
+            # split last OID digit in order to identify
+            # '.1.3.6.1.2.1.25.3.9.*'
+            map_type = map_types[hrtype[:hrtype.rfind(".")]]
 
         if map_type:
             # Sometimes one of the values that is being converted is an empty

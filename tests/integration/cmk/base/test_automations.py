@@ -209,7 +209,8 @@ def test_automation_try_discovery_not_existing_host(test_cfg, site):
         args=["xxx-not-existing-host"],
         expect_stderr_pattern=(r"Failed to lookup IPv4 address of xxx-not-existing-host "
                                r"via DNS: (\[Errno -2\] Name or service not known"
-                               r"|\[Errno -3\] Temporary failure in name resolution)\n"),
+                               r"|\[Errno -3\] Temporary failure in name resolution"
+                               r"|\[Errno -5\] No address associated with hostname)\n"),
         expect_stdout="",
         expect_exit_code=2,
         parse_data=False,

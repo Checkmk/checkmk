@@ -774,8 +774,8 @@ class CMKWebSession:
         for site_changes_path in glob.glob(base_dir + "/replication_*"):
             logger.debug("Replication changes of site: %r", site_changes_path)
             if os.path.exists(site_changes_path):
-                with open(site_changes_path) as f:
-                    logger.debug(f.read())
+                logger.debug(
+                    self.site.read_file(base_dir + "/" + os.path.basename(site_changes_path)))
 
         logger.debug("Start activate changes: %r", request)
         time_started = time.time()

@@ -23,16 +23,6 @@
 enum class PollEvents { in = 1 << 0, out = 1 << 1, hup = 1 << 2 };
 IS_BIT_MASK(PollEvents);
 
-namespace {
-template <class Protocol, class SocketService>
-int native_handle(const asio::basic_socket<Protocol, SocketService>& sock) {
-    // socket::native_handle is not const but we just want
-    // the copy of an int here.
-    return const_cast<asio::basic_socket<Protocol, SocketService>&>(sock)
-        .native_handle();
-}
-}  // namespace
-
 class Poller {
 public:
     template <typename Rep, typename Period>
@@ -139,6 +129,15 @@ private:
             (is_empty_bit_mask(e & PollEvents::in) ? 0 : POLLIN) |
             (is_empty_bit_mask(e & PollEvents::out) ? 0 : POLLOUT) |
             (is_empty_bit_mask(e & PollEvents::hup) ? 0 : POLLHUP));
+    }
+
+    template <class Protocol, class SocketService>
+    static int native_handle(
+        const asio::basic_socket<Protocol, SocketService>& sock) {
+        // socket::native_handle is not const but we just want the copy of an
+        // int here.
+        return const_cast<asio::basic_socket<Protocol, SocketService>&>(sock)
+            .native_handle();
     }
 };
 #endif  // Poller_h

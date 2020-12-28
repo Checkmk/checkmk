@@ -140,4 +140,31 @@ private:
             .native_handle();
     }
 };
+
+struct POSIXPollEvents {
+    short value;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const POSIXPollEvents& e) {
+    os << "{";
+    auto emit_separator{false};
+    for (const auto& [mask, description] : {std::pair{POLLIN, "in"},
+                                            {POLLPRI, "pri"},
+                                            {POLLOUT, "out"},
+                                            {POLLERR, "err"},
+                                            {POLLHUP, "hup"},
+                                            {POLLNVAL, "nval"}}) {
+        if ((e.value & mask) != 0) {
+            os << (emit_separator ? "," : "") << description;
+            emit_separator = true;
+        }
+    }
+    return os << "}";
+}
+
+inline std::ostream& operator<<(std::ostream& os, const pollfd& p) {
+    return os << "pollfd{fd=" << p.fd << ",events=" << POSIXPollEvents{p.events}
+              << ",revents=" << POSIXPollEvents{p.revents} << "}";
+}
+
 #endif  // Poller_h

@@ -53,7 +53,7 @@ RUN set -e \
 #
 # Optionally copy an existing Checkmk debian package to the container. In case the file is
 # available that is later used by the build procedure the file will not be downloaded.
-COPY check-mk-${CMK_EDITION}-${CMK_VERSION}_0.stretch_*.deb Check_MK-pubkey.gpg /
+COPY check-mk-${CMK_EDITION}-${CMK_VERSION}_0.stretch_*.deb Check_MK-pubkey*gpg needed-packages /
 
 # Now install the Checkmk version specific things
 # hadolint ignore=DL3003,DL3008,DL4006
@@ -72,11 +72,17 @@ RUN set -e \
         echo "--user \"${CMK_DL_CREDENTIALS}\"" \
             | curl -o "${PKG_FILE}" -K - "${CMK_DL_URL}/${CMK_VERSION}/${PKG_FILE}" ; \
        fi \
-    && gpg -q --import "/Check_MK-pubkey.gpg" \
+    && if [ ! -e "/Check_MK-pubkey.gpg" ]; then \
+        echo "Downloading Check_MK-pubkey.gpg..." && \
+        curl -sS "${CMK_DL_URL}/Check_MK-pubkey.gpg" \
+            | gpg -q --import ; \
+       else \
+            gpg -q --import "/Check_MK-pubkey.gpg" ; \
+       fi \
     && dpkg-sig --verify "${PKG_FILE}" \
     && dpkg -i "${PKG_FILE}" \
     && dpkg -i "$(ls /omd/versions/default/share/check_mk/agents/check-mk-agent_*-1_all.deb)" \
-    && rm -f -- *.deb *.gpg \
+    && rm -f -- *.deb *.gpg needed-packages \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/*

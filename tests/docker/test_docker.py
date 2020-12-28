@@ -294,10 +294,7 @@ def test_build_using_local_deb(request, client, version):
 # Test that the local GPG file is used by making the build fail because of an empty file
 def test_build_using_local_gpg_pubkey(request, client, version):
     pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
-    pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
     try:
-        os.rename(pkg_path, pkg_path_sav)
-
         with open(pkg_path, "w") as f:
             f.write("")
 
@@ -305,7 +302,6 @@ def test_build_using_local_gpg_pubkey(request, client, version):
             _build(request, client, version)
     finally:
         os.unlink(pkg_path)
-        os.rename(pkg_path_sav, pkg_path)
 
 
 def test_start_enable_mail(request, client):

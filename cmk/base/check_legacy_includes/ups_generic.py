@@ -21,4 +21,8 @@ def ups_generic_scan_function(oid):
 
 
 def discovery_ups_generic(info, default_levels_name):
-    return [(idx, default_levels_name) for idx, raw_voltage, _raw_value in info if int(raw_voltage)]
+    return [
+        (idx, default_levels_name)  #
+        for idx, raw_voltage, _raw_value in info  #
+        if raw_voltage and int(raw_voltage)
+    ]

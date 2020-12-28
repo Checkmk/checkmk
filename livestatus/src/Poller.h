@@ -27,7 +27,7 @@ class Poller {
 public:
     template <typename Rep, typename Period>
     int poll(std::chrono::duration<Rep, Period> timeout) {
-        int retval;
+        int retval{0};
         // I/O primitives can fail when interrupted by a signal, so we should
         // retry the operation. In the plain C world, this is already
         // encapsulated in e.g. glibc's TEMP_FAILURE_RETRY macro, see:

@@ -523,7 +523,7 @@ Function sqlcall {
 Function sql_performance {
      if ($DBVERSION -gt 121000) {
           $query_performance = @'
-          PROMPT <<<oracle_performance:sep(124)>>>'
+          PROMPT <<<oracle_performance:sep(124)>>>;
           select upper(i.INSTANCE_NAME)
                ||'|'|| 'sys_time_model'
                ||'|'|| S.STAT_NAME
@@ -1070,7 +1070,7 @@ Function sql_recovery_status {
      }
      elseif ($DBVERSION -gt 92000) {
           $query_recovery_status = @'
-          prompt <<<oracle_recovery_status:sep(124)>>>
+          prompt <<<oracle_recovery_status:sep(124)>>>;
           SELECT upper(d.NAME)
                      ||'|'|| d.NAME
                      ||'|'|| d.DATABASE_ROLE

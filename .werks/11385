@@ -1,0 +1,15 @@
+Title: mk_oracle_crs: Added support for Solaris
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1609169400
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The plugin is now ready to run in a Solaris environment as all operating system
+specific commands are now encapsulated at the start of the script. This is
+done in the same way as in the regular mk_oracle plugin and therefore already
+prepared to support other operating systems ter on, that do support/use the
+bash shell.

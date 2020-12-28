@@ -272,7 +272,7 @@ class GroupedBoxesLayout(Layout):
 
 
 def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
-    is_open = html.foldable_container_is_open("grouped_rows", index, False)
+    is_open = config.user.get_tree_state("grouped_rows", index, False)
     html.open_tr(
         class_=["data", "grouped_row_header", "closed" if not is_open else '',
                 "%s0" % trclass])

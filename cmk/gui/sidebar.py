@@ -66,7 +66,7 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     write_snapin_exception,
 )
 
-from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer, get_show_more_setting
+from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -439,7 +439,7 @@ class SidebarRenderer:
 
         more_id = "sidebar_snapin_%s" % name
 
-        show_more = get_show_more_setting(more_id)
+        show_more = config.user.get_show_more_setting(more_id)
         html.open_div(id_="snapin_container_%s" % name,
                       class_=["snapin", ("more" if show_more else "less")])
 

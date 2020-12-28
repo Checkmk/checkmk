@@ -13,6 +13,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
+import cmk.gui.config as config
 
 if TYPE_CHECKING:
     from typing import Sequence
@@ -114,7 +115,7 @@ def header(title: str,
 
     id_ = ensure_str(base64.b64encode(ensure_binary(title)))
     treename = html.form_name or "nform"
-    isopen = html.foldable_container_is_open(treename, id_, isopen)
+    isopen = config.user.get_tree_state(treename, id_, isopen)
     container_id = html.foldable_container_id(treename, id_)
 
     html.open_table(id_=table_id if table_id else None,
@@ -123,7 +124,8 @@ def header(title: str,
                         "narrow" if narrow else None,
                         css if css else None,
                         "open" if isopen else "closed",
-                        "more" if show_more_mode else None,
+                        "more" if config.user.get_show_more_setting("foldable_%s" % id_) or
+                        show_more_mode else None,
                     ])
 
     if show_table_head:

@@ -35,16 +35,6 @@ MainMenuItem = NamedTuple("MainMenuItem", [
 ])
 
 
-def get_show_more_setting(more_id: str) -> bool:
-    if config.user.get_attribute("show_mode") == "enforce_show_more":
-        return True
-
-    return html.foldable_container_is_open(
-        treename="more_buttons",
-        id_=more_id,
-        isopen=config.user.get_attribute("show_mode") == "default_show_more")
-
-
 class MainMenuRenderer:
     """Renders the main navigation sidebar"""
     def show(self) -> None:
@@ -119,7 +109,7 @@ class MegaMenuRenderer:
     def show(self, menu: MegaMenu) -> None:
         more_id = "main_menu_" + menu.name
 
-        show_more = get_show_more_setting(more_id)
+        show_more = config.user.get_show_more_setting(more_id)
         html.open_div(id_=more_id, class_=["main_menu", "more" if show_more else "less"])
         hide_entries_js = "cmk.popup_menu.mega_menu_hide_entries('%s')" % more_id
 

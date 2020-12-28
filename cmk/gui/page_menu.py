@@ -506,9 +506,8 @@ class PageMenuRenderer:
 
     def _show_dropdown_area(self, dropdown: PageMenuDropdown) -> None:
         id_ = "menu_%s" % dropdown.name
-        show_more_mode = user.get_attribute("show_mode") == "enforce_show_more"
-        show_more = html.foldable_container_is_open("more_buttons", id_,
-                                                    isopen=False) or show_more_mode
+        show_more_mode = user.show_mode == "enforce_show_more"
+        show_more = user.get_tree_state("more_buttons", id_, isopen=False) or show_more_mode
         html.open_div(class_=["menu", ("more" if show_more else "less")], id_=id_)
 
         if dropdown.any_show_more_entries:

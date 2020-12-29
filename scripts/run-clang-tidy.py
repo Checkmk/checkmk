@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # NOTE: This is our YAPF'd version of upstream's version 03ded5497a2.
 #

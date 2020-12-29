@@ -297,7 +297,7 @@ documentation: doc/plantuml.jar
 	$(DOXYGEN) doc/Doxyfile
 
 doc/plantuml.jar:
-	wget https://master.dl.sourceforge.net/project/plantuml/$(PLANTUTML_VERSION)/plantuml.$(PLANTUTML_VERSION).jar -O $@ || { $(RM) $@; exit 1; }
+	wget https://master.dl.sourceforge.net/project/plantuml/$(PLANTUTML_VERSION)/plantuml.$(PLANTUTML_VERSION).jar --quiet --output-document=$@ || { $(RM) $@; exit 1; }
 
 all-local: livestatus.o
 

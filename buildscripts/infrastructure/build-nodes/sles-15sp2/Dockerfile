@@ -1,4 +1,7 @@
-FROM registry.suse.com/suse/sle15:15.2
+FROM registry.suse.com/suse/sle15:15.2.8.2.794
+# Pin to a fixed version for the moment to have it in line with our package mirror.
+# Once the package mirror has been updated, we can set it back to the major version.
+#FROM registry.suse.com/suse/sle15:15.2
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"
@@ -14,14 +17,12 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp2 sles15sp2 \
     enchant-devel \
     git \
     krb5-devel \
-    libmysqlclient-devel \
     make \
     nodejs10 \
     npm10 \
     openldap2-devel \
     python \
     python-devel \
-    python-pyOpenSSL \
     python-xml \
     rrdtool-devel \
     sudo \
@@ -52,7 +53,7 @@ RUN zypper ref -s \
     libgnutls-devel \
     libjpeg62-devel \
     libltdl7 \
-    libmysqlclient-devel \
+    libmariadb-devel \
     libopenssl-devel \
     libpcap-devel \
     libpng16-devel \
@@ -62,7 +63,7 @@ RUN zypper ref -s \
     libvpx-devel \
     libxml2-devel \
     make \
-    mysql \
+    mariadb-client \
     openldap2-devel \
     openssh \
     pango-devel \

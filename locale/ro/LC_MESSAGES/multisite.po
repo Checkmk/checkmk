@@ -144,12 +144,6 @@ msgstr " peste următoarele %d minute "
 msgid " to:"
 msgstr " către:"
 
-#, python-format
-msgid ""
-"!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
-"%r"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "\"%s\" is not a valid python encoding."
 msgstr "%s nu este un număr întreg valid."
@@ -15907,6 +15901,11 @@ msgstr ""
 msgid "Error while rendering element type '%s'"
 msgstr ""
 
+#, python-format
+msgid ""
+"Error: Received class in RulespecRegistry:register_manual_check_rulespec %r"
+msgstr ""
+
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -23302,6 +23301,10 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Invalid time resolution key \"%s\" given"
 msgstr " pe siteul de monitorizare: "
+
+#, fuzzy, python-format
+msgid "Invalid time unit %s"
+msgstr " Parametrul este: %r"
 
 msgid ""
 "Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are "

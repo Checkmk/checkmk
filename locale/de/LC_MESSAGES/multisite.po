@@ -149,14 +149,6 @@ msgid " to:"
 msgstr " An:"
 
 #, python-format
-msgid ""
-"!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
-"%r"
-msgstr ""
-"!!! Fehler: Empfangene Klasse in RulespecRegistry:"
-"register_manual_check_rulespec %r"
-
-#, python-format
 msgid "\"%s\" is not a valid python encoding."
 msgstr "'%s' ist keine gültiges Python-Encoding."
 
@@ -16802,6 +16794,13 @@ msgstr "Fehler in Ansicht: %s"
 msgid "Error while rendering element type '%s'"
 msgstr "Fehler bei der Darstellung von Elementtyp '%s'"
 
+#, fuzzy, python-format
+msgid ""
+"Error: Received class in RulespecRegistry:register_manual_check_rulespec %r"
+msgstr ""
+"!!! Fehler: Empfangene Klasse in RulespecRegistry:"
+"register_manual_check_rulespec %r"
+
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -25115,6 +25114,10 @@ msgstr "Ungültiges Zeitformat '%s'. Gültiges Format: <tt>24:00</tt>."
 #, fuzzy, python-format
 msgid "Invalid time resolution key \"%s\" given"
 msgstr "Ungültiger Graph-Spezifikations-Typ \"%s\" angegeben"
+
+#, fuzzy, python-format
+msgid "Invalid time unit %s"
+msgstr "Ungültiger Schlüssel: %s"
 
 msgid ""
 "Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are "

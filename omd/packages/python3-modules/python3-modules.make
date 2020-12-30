@@ -1,11 +1,15 @@
 PYTHON3_MODULES := python3-modules
-PYTHON3_MODULES_VERS := $(OMD_VERSION)
+# Use some pseudo version here. Don't use OMD_VERSION (would break the package cache)
+PYTHON3_MODULES_VERS := 1.0
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
+# Increase this to enforce a recreation of the build cache
+PYTHON3_MODULES_BUILD_ID := 1
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
 PYTHON3_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-build
 PYTHON3_MODULES_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install-intermediate
+PYTHON3_MODULES_CACHE_PKG_PROCESS := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-cache-pkg-process
 PYTHON3_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install
 
 PYTHON3_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON3_MODULES_DIR)
@@ -189,8 +193,19 @@ $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
 	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/test/
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_MODULES_INSTALL_DIR)/bin/,chardetect fakebmc jirashell pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
-# Ensure all native modules have the correct rpath set
-	set -e ; for F in $$(find $(PACKAGE_PYTHON3_MODULES_PYTHONPATH) -name \*.so); do \
+	$(TOUCH) $@
+
+PYTHON3_MODULES_CACHE_PKG_PATH := $(call cache_pkg_path,$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID))
+
+$(PYTHON3_MODULES_CACHE_PKG_PATH):
+	$(call pack_pkg_archive,$@,$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID),$(PYTHON3_MODULES_INTERMEDIATE_INSTALL))
+
+$(PYTHON3_MODULES_CACHE_PKG_PROCESS): $(PYTHON3_MODULES_CACHE_PKG_PATH)
+	$(call unpack_pkg_archive,$(PYTHON3_MODULES_CACHE_PKG_PATH),$(PYTHON3_MODULES_DIR))
+	$(call upload_pkg_archive,$(PYTHON3_MODULES_CACHE_PKG_PATH),$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID))
+# Ensure that the rpath of the python binary and dynamic libs always points to the current version path
+	set -e ; for F in $$(find $(PYTHON3_MODULES_INSTALL_DIR) -name \*.so); do \
+	    chrpath -r "$(OMD_ROOT)/lib" $$F; \
 	    echo -n "Test rpath of $$F..." ; \
 		if chrpath "$$F" | grep "=$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
 		    echo OK ; \
@@ -201,7 +216,7 @@ $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
 	done
 	$(TOUCH) $@
 
-$(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_INTERMEDIATE_INSTALL)
+$(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_CACHE_PKG_PROCESS)
 	$(RSYNC) -v $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
 

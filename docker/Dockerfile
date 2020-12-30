@@ -6,7 +6,7 @@ ARG CMK_VERSION="1.5.0p26"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
 
-ARG CMK_DL_URL="https://mathias-kettner.de/support"
+ARG CMK_DL_URL="https://download.checkmk.com/checkmk"
 # Give download credentials in "USER:PASSWORD" format. You can only use Raw Edition without
 ARG CMK_DL_CREDENTIALS=""
 

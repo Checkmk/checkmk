@@ -27,14 +27,16 @@ following targets to build a package for the current git:
 
 ## Dealing with Windows artifacts
 
-Checkmk ships with serveral parts that are compiled on Windows build systems,
-these are a) the Windows agent, the windows agent updater and some compiled
-windows agent plugins. When these files are not existing previous to the
-packaging of Checkmk, the build will fail.
+Checkmk ships with several parts that are compiled on Windows build systems,
+these are a) the Windows agent and b) the optional python interpreter for
+plugins. When these files are not existing previous to the packaging of Checkmk,
+the build will fail.
 
 For the moment there is an internal helper script
-`zeug_cmk/bin/fake-windows-artifacts` that simply creates empty files at the
-required locations to prevent the packaging issues.
+`scripts/fake-windows-artifacts` that creates empty stub files at the required
+locations to prevent the packaging issues. Obviously the Windows agent and
+related features in your built package will not be usable when building with
+these faked artifacts.
 
 TODO: Shouldn't we put them into dedicated packages which can then easily be
 excluded when there is no need to pack them (e.g. for tests)?
@@ -53,10 +55,45 @@ Once this is configured correctly the first build will produce build artifacts
 and upload them to the nexus server. On the next run, either the locally or
 remotely cached build artifacts are used.
 
+The build cache is saved per branch based on the `BRANCH_VERSION` definition in
+`defines.make`. It needs to be updated when a new stable branch is forked from
+the master branch.
+
+## How to build locally?
+
+Clone from the Checkmk Git, then execute the following commands:
+
+```
+cd omd
+make setup
+../scripts/fake-windows-artifacts
+NEXUS_BUILD_CACHE_URL=https://artifacts.lan.tribe29.com/repository/omd-build-cache \
+NEXUS_USERNAME=nexus-user \
+NEXUS_PASSWORD=nexus-pw \
+make deb
+```
+
+It will use the OMD package build cache to create a `.deb` file in the `omd`
+directory.
+
 ## Incremental package building
 
 TODO: See omd/Makefile and omd/debian/rules. Should be configurable by
 environment variables in the future.
+
+## Measuring build times
+
+To improve build times it is first important to understand which parts of the
+build take how much time. To do this, you can use `remake` like this:
+
+```
+cd omd
+MAKE="remake --profile" make deb
+```
+
+It will call `remake` in profiling mode, instead of bare `make`, for package
+building which creates `callgrind.out.*` files that then can be opened with
+`kcachegrind callgrind.out.*`.
 
 ## Makefile organization
 

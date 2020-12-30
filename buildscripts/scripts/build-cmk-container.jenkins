@@ -27,6 +27,7 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
+def UPLOAD_DEST = 'deploy@customer.checkmk.com:/var/downloads/checkmk/'
 
 // Workaround to build arbitrary version: Copy the CMK package to /bauwelt/download/
 def ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
@@ -83,7 +84,7 @@ node (NODE) {
                                 --exclude '*dbgsym*.deb' \
                                 -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
                                 ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                                bauwelt@mathias-kettner.de:${PACKAGE_DIR}/
+                                ${UPLOAD_DEST}
                         """
                     }
                 }

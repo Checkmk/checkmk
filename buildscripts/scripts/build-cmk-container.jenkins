@@ -17,6 +17,7 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
+def UPLOAD_DEST = 'deploy@customer.checkmk.com:/var/downloads/checkmk/'
 
 def ARCHIVE_DIR = ''
 def DAILY_DATA = ''
@@ -60,12 +61,11 @@ node {
                         cd ${PACKAGE_DIR}/${CMK_VERS}
                         rm -f HASHES
                         ${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}
-                        rsync -av \
+                        rsync -av --relative \
                             --exclude '*dbgsym*.deb' \
-                            -e "ssh -o StrictHostKeyChecking=no \
-                            -i ${RELEASE_KEY_DIR}" \
-                            ${PACKAGE_DIR}/${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                            bauwelt@mathias-kettner.de:${PACKAGE_DIR}/${CMK_VERS}/
+                            -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR} -p 52022" \
+                            ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
+                            ${UPLOAD_DEST}
                     """
                 }
             }

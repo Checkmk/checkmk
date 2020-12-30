@@ -82,7 +82,7 @@ node (NODE) {
                             cd ${PACKAGE_DIR}/${CMK_VERS}
                             rsync -av --relative \
                                 --exclude '*dbgsym*.deb' \
-                                -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
+                                -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR} -p 52022" \
                                 ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
                                 ${UPLOAD_DEST}
                         """

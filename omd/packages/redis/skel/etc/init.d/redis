@@ -10,6 +10,10 @@ OPTS="$OMD_ROOT/etc/redis/redis.conf"
 case "$1" in
 start)
     echo -n 'Starting redis...'
+    if kill -0 "$THE_PID" >/dev/null 2>&1; then
+        echo 'Already running.'
+        exit 0
+    fi
     $DAEMON $OPTS
     echo OK
     ;;

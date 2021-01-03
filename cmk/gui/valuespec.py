@@ -4441,16 +4441,20 @@ class PageAutocompleteLabels(AjaxPage):
             self._get_labels(Labels.World(request["world"]), request["search_label"]))
 
     def _get_labels(self, world, search_label):
-        if world == Labels.World.CONFIG:
+        if world is Labels.World.CONFIG:
             return self._get_labels_from_config(search_label)
 
-        if world == Labels.World.CORE:
+        if world is Labels.World.CORE:
             return self._get_labels_from_core(search_label)
 
         raise NotImplementedError()
 
     def _get_labels_from_config(self, search_label):
-        return []  # TODO: Implement me
+        # TODO: Until we have a config specific implementation we now use the labels known to the
+        # core. This is not optimal, but better than doing nothing.
+        # To implement a setup specific search, we need to decide which occurrences of labels we
+        # want to search: hosts / folders, rules, ...?
+        return self._get_labels_from_core(search_label)
 
     # TODO: Provide information about the label source
     # Would be better to optimize this kind of query somehow. The best we can

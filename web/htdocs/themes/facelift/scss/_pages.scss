@@ -1826,7 +1826,10 @@ table.data.job_table {
   }
 
   &__dropdown {
-    background: none;
+    /* filter forms have z-index: 1000 and this needs to be above */
+    z-index: 1001;
+
+    background: $tag-input-bg-color;
     border: none;
     box-shadow: none;
 
@@ -1836,7 +1839,7 @@ table.data.job_table {
       &--active {
         color: $tag-dropdown-active-color;
         background-color: $tag-dropdown-active-bg-color;
-        border: $primary-table-border;
+        border: $tag-dropdown-active-border;
       }
     }
   }

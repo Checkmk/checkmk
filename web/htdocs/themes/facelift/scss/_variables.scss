@@ -174,9 +174,10 @@ $tag-opacity: null;
 $tag-discovered-opacity: null;
 $tag-hover-opacity: 0.5;
 
-$tag-input-bg-color: rgb(204, 207, 219);
-$tag-dropdown-active-color: inherit;
-$tag-dropdown-active-bg-color: null;
+$tag-input-bg-color: $form-element-color;
+$tag-dropdown-active-color: $success;
+$tag-dropdown-active-bg-color: $form-element-color;
+$tag-dropdown-active-border: none;
 
 // -----------------------------------------------------------------------------
 // Temporary variables for implementing the dark theme

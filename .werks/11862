@@ -1,4 +1,4 @@
-Title: Fix label completion in config dialogs
+Title: Fix label completion
 Class: fix
 Compatible: compat
 Component: wato
@@ -8,6 +8,6 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0b4
 
-The label completion of label input fields was not working in the setup. The
-label completion of the config now uses the labels known to the core to execute
-the completion.
+The label completion of label input fields was not working. The label
+completion of the config now uses the labels known to the core to execute the
+completion.

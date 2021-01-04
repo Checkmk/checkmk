@@ -12,7 +12,7 @@ import livestatus
 from cmk.gui.node_vis_lib import BILayoutManagement
 from cmk.gui.plugins.wato import bi_valuespecs
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
-from cmk.utils.bi.bi_trees import BICompiledRule
+from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledLeaf
 from cmk.utils.type_defs import HostName
 
 from cmk.gui import sites
@@ -372,13 +372,13 @@ class NodeVisualizationBIDataMapper:
         self._is_single_host_aggregation = is_single_host_aggregation
 
     def consume(self, node_result_bundle: NodeResultBundle, depth: int = 1) -> Dict[str, Any]:
-        if node_result_bundle.nested_results:
-            node_data = self._get_node_data_of_bi_aggregator(node_result_bundle)
+        instance = node_result_bundle.instance
+        if isinstance(instance, BICompiledRule):
+            node_data = self._get_node_data_for_rule(instance)
         else:
-            node_data = self._get_node_data_of_bi_leaf(node_result_bundle)
+            node_data = self._get_node_data_for_leaf(instance)
 
         actual_result = node_result_bundle.actual_result
-        instance = node_result_bundle.instance
         if isinstance(instance, BICompiledRule) and instance.properties.icon:
             node_data["icon"] = html.detect_icon_path(instance.properties.icon, prefix="icon")
 
@@ -392,43 +392,36 @@ class NodeVisualizationBIDataMapper:
             node_data["children"].append(self.consume(nested_bundle, depth=depth + 1))
         return node_data
 
-    def _get_node_data_of_bi_aggregator(self,
-                                        node_result_bundle: NodeResultBundle) -> Dict[str, Any]:
+    def _get_node_data_for_rule(self, bi_compiled_rule: BICompiledRule) -> Dict[str, Any]:
         node_data: Dict[str, Any] = {
             "node_type": "bi_aggregator",
-            "name": node_result_bundle.instance.properties.title,
+            "name": bi_compiled_rule.properties.title,
         }
 
-        aggregation_function = node_result_bundle.instance.aggregation_function
+        aggregation_function = bi_compiled_rule.aggregation_function
         function_data = BIAggregationFunctionSchema().dump(aggregation_function)
         aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
             aggregation_function.type()]
 
         node_data["rule_id"] = {
-            "pack": node_result_bundle.instance.pack_id,
-            "rule": node_result_bundle.instance.id,
+            "pack": bi_compiled_rule.pack_id,
+            "rule": bi_compiled_rule.id,
             "aggregation_function_description": str(aggr_func_gui(function_data))
         }
-
-        # node_vis = node_result_bundle.instance.node_visualization
-        # Will be fixed in later commit
-        #        node_data["rule_layout_style"] = node_vis["rule_layout_style"]
-        #        if "aggregation_id" in node:
-        #            node_data["aggregation_id"] = node["aggregation_id"]
+        node_data["rule_layout_style"] = bi_compiled_rule.node_visualization
         return node_data
 
-    def _get_node_data_of_bi_leaf(self, node_result_bundle: NodeResultBundle) -> Dict[str, Any]:
-        instance = node_result_bundle.instance
-        node_data: Dict[str, Any] = {"node_type": "bi_leaf", "hostname": instance.host_name}
-
-        if not instance.service_description:
-            node_data["name"] = instance.host_name
+    def _get_node_data_for_leaf(self, bi_compiled_leaf: BICompiledLeaf) -> Dict[str, Any]:
+        node_data: Dict[str, Any] = {"node_type": "bi_leaf", "hostname": bi_compiled_leaf.host_name}
+        if not bi_compiled_leaf.service_description:
+            node_data["name"] = bi_compiled_leaf.host_name
         else:
-            node_data["service"] = instance.service_description
+            node_data["service"] = bi_compiled_leaf.service_description
             if self._is_single_host_aggregation:
-                node_data["name"] = instance.service_description
+                node_data["name"] = bi_compiled_leaf.service_description
             else:
-                node_data["name"] = " ".join([instance.host_name, instance.service_description])
+                node_data["name"] = " ".join(
+                    [bi_compiled_leaf.host_name, bi_compiled_leaf.service_description])
         return node_data
 
 

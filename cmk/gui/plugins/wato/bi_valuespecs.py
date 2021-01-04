@@ -27,6 +27,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
 )
 
+from cmk.utils.defines import short_service_state_name
 from cmk.gui.plugins.wato.utils import DictHostTagCondition, LabelCondition
 
 import cmk.utils.plugin_registry as plugin_registry
@@ -576,7 +577,8 @@ bi_config_aggregation_function_registry = BIConfigAggregationFunctionRegistry()
 @bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggregationFunction):
     def __str__(self):
-        return _("Best state, %d nodes, restrict to %d") % (self.count, self.restrict_state)
+        return _("Best state, %d nodes, restrict to %s") % (
+            self.count, short_service_state_name(self.restrict_state))
 
     @classmethod
     def title(cls):
@@ -623,7 +625,8 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
 @bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAggregationFunction):
     def __str__(self):
-        return _("Worst state, %d nodes, restrict to %d") % (self.count, self.restrict_state)
+        return _("Worst state, %d nodes, restrict to %s") % (
+            self.count, short_service_state_name(self.restrict_state))
 
     @classmethod
     def title(cls):

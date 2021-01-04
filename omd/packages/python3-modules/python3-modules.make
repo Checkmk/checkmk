@@ -3,7 +3,10 @@ PYTHON3_MODULES := python3-modules
 PYTHON3_MODULES_VERS := 1.0
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Increase this to enforce a recreation of the build cache
-PYTHON3_MODULES_BUILD_ID := 1
+# Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
+#       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
+#       change.
+PYTHON3_MODULES_BUILD_ID := 2
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -37,7 +40,7 @@ PYTHON3_MODULES_LIST += vcrpy-4.1.0.tar.gz # used by various unit tests to mock 
 PYTHON3_MODULES_LIST += pycparser-2.20.tar.gz # needed by cffi
 PYTHON3_MODULES_LIST += cffi-1.14.3.tar.gz # needed by PyNaCl, cryptography, bcrypt
 PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # needed by paramiko
-PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # needed by paramiko, pyOpenSSL
+PYTHON3_MODULES_LIST += cryptography-3.3.1.tar.gz # needed by paramiko, pyOpenSSL
 PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # needed by paramiko
 PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency, used for SFTP transactions in check_sftp
 

@@ -403,8 +403,8 @@ private:
     void fillConfigDirs();
     std::vector<YamlData> buildYamlData(
         const std::wstring& config_file_name) const;
-    void loadYamlDataWithMerge(YAML::Node config_node,
-                               const std::vector<YamlData>& yaml_data);
+    void mergeYamlData(YAML::Node& config_node,
+                       const std::vector<YamlData>& yaml_data);
     // LOOOONG operation
     // when failed old config retained
     void initEnvironment();

@@ -1620,7 +1620,7 @@ private:
 };
 
 namespace {
-bool TryMerge(YAML::Node config_node, const ConfigInfo::YamlData& yaml_data) {
+bool TryMerge(YAML::Node& config_node, const ConfigInfo::YamlData& yaml_data) {
     if (!yaml_data.exists() || yaml_data.bad()) {
         return false;
     }
@@ -1638,14 +1638,14 @@ bool TryMerge(YAML::Node config_node, const ConfigInfo::YamlData& yaml_data) {
 // config_node is a resulting full config
 // yaml_data is array from root, bakery and user configs
 // we will load all others configs and try to merge
-void ConfigInfo::loadYamlDataWithMerge(YAML::Node config_node,
-                                       const std::vector<YamlData>& yaml_data) {
+void ConfigInfo::mergeYamlData(YAML::Node& config_node,
+                               const std::vector<YamlData>& yaml_data) {
     bool bakery_ok = false;
     bool user_ok = false;
 
-    auto& root_data = yaml_data[0];
-    auto& bakery_data = yaml_data[1];
-    auto& user_data = yaml_data[2];
+    const auto& root_data = yaml_data[0];
+    const auto& bakery_data = yaml_data[1];
+    const auto& user_data = yaml_data[2];
 
     try {
         bakery_ok = TryMerge(config_node, bakery_data);
@@ -1667,8 +1667,6 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node config_node,
     user_yaml_time_ = user_ok ? user_data.timestamp()
                               : std::filesystem::file_time_type::min();
     user_ok_ = user_ok;
-
-    // RemoveInvalidNodes(node); <-- disabled at the moment
 
     yaml_ = config_node;
 
@@ -1730,10 +1728,10 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& config_filename,
 
     int error_code = 0;
     try {
-        YAML::Node config = YAML::LoadFile(yamls[0].path_.u8string());
+        auto config = YAML::LoadFile(yamls[0].path_.u8string());
 
         if (config[groups::kGlobal].IsDefined()) {
-            loadYamlDataWithMerge(config, yamls);
+            mergeYamlData(config, yamls);
 
             if (ok_ && user_ok_ && cache_op == YamlCacheOp::update)
                 StoreUserYamlToCache();
@@ -1794,7 +1792,7 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
 
     // setting up paths  to the other files
     user_yaml_path_ = file;
-    root_yaml_time_ = std::filesystem::last_write_time(file);
+    root_yaml_time_ = fs::last_write_time(file);
     user_yaml_path_.clear();
     user_yaml_time_ = decltype(user_yaml_time_)::min();
     bakery_yaml_path_.clear();

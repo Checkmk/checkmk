@@ -11,6 +11,7 @@
 #include <poll.h>
 
 #include <asio/basic_socket.hpp>
+#include <cassert>
 #include <cerrno>
 #include <chrono>
 #include <string>
@@ -91,7 +92,7 @@ public:
     }
 
     void addFileDescriptor(int fd, PollEvents e) {
-        // TODO (ml): potential problem with same fd
+        assert(_fd_to_pollfd.find(fd) == std::cend(_fd_to_pollfd));
         _fd_to_pollfd[fd] = _pollfds.size();
         _pollfds.push_back({fd, toMask(e), 0});
     }

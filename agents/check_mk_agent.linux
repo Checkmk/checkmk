@@ -1065,13 +1065,13 @@ run_runas_executor() {
     fi
 }
 
+# This function ensures that a file is executable and does not have certain
+# extensions (remnants from distro upgrades).
 is_valid_plugin() {
-    # NOTE: Due to an escaping-related bug in some old bash versions
-    # (3.2.x), we have to use an intermediate variable for the pattern.
-    pattern='\.dpkg-(new|old|temp)$'
-    #TODO Maybe we should change this mechanism
-    # shellcheck disable=SC2015
-    [[ -f "$1" && -x "$1" && ! "$1" =~ $pattern ]] && true || false
+    case "${1:?No plugin defined}" in
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *) test -f "$1" -a -x "$1" ;;
+    esac
 }
 
 run_local_checks() {

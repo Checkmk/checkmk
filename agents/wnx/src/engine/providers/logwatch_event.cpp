@@ -461,7 +461,7 @@ std::optional<std::string> ReadDataFromLog(EvlType type, State& state,
 
     auto [pos, out] = DumpEventLog(*log, state, lwl);
 
-    if (provider::config::G_SetLogwatchPosToEnd && last_pos > pos) {
+    if (provider::config::g_set_logwatch_pos_to_end && last_pos > pos) {
         XLOG::l.t("Skipping logwatch pos from [{}] to [{}]", pos, last_pos);
         pos = last_pos;
     }

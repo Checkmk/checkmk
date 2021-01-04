@@ -50,7 +50,7 @@ else
 fi
 
 # Runs a command asynchronous by use of a cache file
-function run_cached() {
+run_cached() {
     if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
     local NAME=$1
     local MAXAGE=$2

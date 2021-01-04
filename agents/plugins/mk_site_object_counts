@@ -17,7 +17,7 @@ VERSION="2.1.0i1"
 #   '----------------------------------------------------------------------'
 
 
-function get_tag_stats () {
+get_tag_stats() {
     local socket="$1"
     local site="$2"
     local header="$3"
@@ -34,7 +34,7 @@ function get_tag_stats () {
 }
 
 
-function get_check_command_stats () {
+get_check_command_stats() {
     local socket="$1"
     local site="$2"
     local header="$3"

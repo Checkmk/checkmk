@@ -26,7 +26,7 @@ resourcefilter="^NAME=|^TYPE=|^STATE=|^TARGET=|^ENABLED="
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-function set_has_env(){
+set_has_env(){
     test -f ${ocrcfgfile} || exit 0
     local_has_type=$(cat $ocrcfgfile | grep "^local_only=" | cut -d"=" -f2 | tr '[:lower:]' '[:upper:]')
     local_has_type=${local_has_type:-"FALSE"}
@@ -50,7 +50,7 @@ function set_has_env(){
     CRS_STAT=${has_ORACLE_HOME}/bin/crs_stat
 }
 
-function printhasdata() {
+printhasdata() {
     ps -e | grep cssd.bin > /dev/null || exit 0
 
     echo "<<<oracle_crs_version:sep(124)>>>"
@@ -60,7 +60,7 @@ function printhasdata() {
     $CRSCTL stat res -f | grep -E $resourcefilter
 }
 
-function printcrsdata() {
+printcrsdata() {
     ps -e | grep -e ohasd.bin -e crsd.bin > /dev/null || exit 0
 
     echo "<<<oracle_crs_version:sep(124)>>>"

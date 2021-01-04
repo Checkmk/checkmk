@@ -40,7 +40,7 @@ else
     exec </dev/null 2>/dev/null
 fi
 
-function file_age() {
+file_age() {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
 }
 
@@ -49,7 +49,7 @@ file_mtime () {
 }
 
 
-function run_mrpe() {
+run_mrpe() {
     local descr=$1
     shift
     local cmdline="$@"
@@ -66,7 +66,7 @@ export -f run_mrpe
 
 
 # Runs a command asynchronous by use of a cache file
-function run_cached () {
+run_cached() {
     local mrpe=0
     local append_age=0
     # TODO: this function is unable to handle mulitple args at once

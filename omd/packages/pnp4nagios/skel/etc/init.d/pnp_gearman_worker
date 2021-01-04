@@ -42,7 +42,7 @@ USER=###SITE###
 USERID=`id -u`
 CMD="$DAEMON --pidfile=$PIDFILE --config=$CFG $GM_PORT --daemon"
 
-function get_status() {
+get_status() {
         pid=`cat $PIDFILE 2>/dev/null`
         if [ "$pid" != "" ]; then
             ps -p $pid > /dev/null 2>&1
@@ -55,7 +55,7 @@ function get_status() {
         return 1;
 }
 
-function kill_procs() {
+kill_procs() {
     pid=`cat $PIDFILE 2>/dev/null`
     if [ -z $pid ]; then
         echo ". Not running."

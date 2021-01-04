@@ -2967,7 +2967,7 @@ do_dummy_sections
 
 #   ---local----------------------------------------------------------------
 
-function execute_queries_for_sid () {
+execute_queries_for_sid() {
     local sid="$1"
     set_ora_env "$sid"
     if [ $? -eq 2 ] ; then

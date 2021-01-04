@@ -57,8 +57,7 @@ fi
 # commands. This version does not conserve the original exit code
 # of the command. It is successfull if the command terminated
 # in time.
-function waitmax
-{
+waitmax() {
    TIMEOUT=${1}0
    SIGNAL=9
    shift
@@ -83,7 +82,7 @@ function waitmax
    return 255
 }
 
-function run_cached {
+run_cached() {
     NAME=$1
     # Be aware: Maxage was expected to be given in minutes but this was
     # confusing because all other agents use seconds here. So this has

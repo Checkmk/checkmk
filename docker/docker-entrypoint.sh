@@ -7,7 +7,7 @@ set -e -o pipefail
 
 HOOKROOT=/docker-entrypoint.d
 
-function exec_hook() {
+exec_hook() {
     HOOKDIR="$HOOKROOT/$1"
     if [ -d "$HOOKDIR" ]; then
         pushd "$HOOKDIR" >/dev/null
@@ -21,7 +21,7 @@ function exec_hook() {
     fi
 }
 
-function create_system_apache_config() {
+create_system_apache_config() {
     # We have the special situation that the site apache is directly accessed from
     # external without a system apache reverse proxy. We need to disable the canonical
     # name redirect here to make redirects work as expected.

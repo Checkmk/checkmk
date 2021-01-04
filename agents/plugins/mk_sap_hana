@@ -11,7 +11,7 @@ VERSION="2.1.0i1"
 # Copyright Gerd Stolz - SVA - 2016
 # (c) 2017 Heinlein Support GmbH, Robert Sander <r.sander@heinlein-support.de>
 
-display_usage () {
+display_usage() {
     cat <<USAGE
 
 USAGE:
@@ -84,7 +84,7 @@ fi
 #   '----------------------------------------------------------------------'
 
 
-function mk_hdbsql () {
+mk_hdbsql() {
     local sid="$1"
     local instance="$2"
     local instance_user="$3"
@@ -124,7 +124,7 @@ function mk_hdbsql () {
 #   '----------------------------------------------------------------------'
 
 
-function query_sap_hana_status () {
+query_sap_hana_status() {
     cat <<QUERY
 SELECT Name, Status, Value FROM M_SYSTEM_OVERVIEW Where NAME='Version' or
 NAME='All Started'
@@ -132,7 +132,7 @@ QUERY
 }
 
 
-function query_sap_hana_backup_snapshots () {
+query_sap_hana_backup_snapshots() {
     cat <<QUERY
 Select TOP 1 entry_type_name, sys_end_time, state_name, comment, message from
 M_BACKUP_CATALOG where entry_type_name = 'data snapshot' AND state_name <>
@@ -141,7 +141,7 @@ QUERY
 }
 
 
-function query_sap_hana_backup_complete () {
+query_sap_hana_backup_complete() {
     cat <<QUERY
 Select TOP 1 entry_type_name, sys_end_time, state_name, comment, message from
 M_BACKUP_CATALOG where entry_type_name = 'complete data backup' AND state_name
@@ -150,7 +150,7 @@ QUERY
 }
 
 
-function query_sap_hana_backup_log () {
+query_sap_hana_backup_log() {
     cat <<QUERY
 Select TOP 1 entry_type_name, sys_end_time, state_name, comment, message from
 M_BACKUP_CATALOG where entry_type_name = 'log backup' AND state_name <>
@@ -159,7 +159,7 @@ QUERY
 }
 
 
-function query_sap_hana_diskusage () {
+query_sap_hana_diskusage() {
     cat <<QUERY
 SELECT name,status,value FROM M_SYSTEM_OVERVIEW Where NAME='Data' or NAME='Log'
 or NAME='Trace'
@@ -167,7 +167,7 @@ QUERY
 }
 
 
-function query_sap_hana_data_volume () {
+query_sap_hana_data_volume() {
     local hostname="$1"
     cat <<QUERY
 SELECT FILE_TYPE, SERVICE_NAME, VOLUME_ID, FILE_NAME, DISK_USED_SIZE,
@@ -190,7 +190,7 @@ QUERY
 }
 
 
-function query_sap_hana_license () {
+query_sap_hana_license() {
     cat <<QUERY
 SELECT
 ENFORCED,PERMANENT,LOCKED_DOWN,PRODUCT_USAGE,PRODUCT_LIMIT,VALID,EXPIRATION_DATE
@@ -199,7 +199,7 @@ QUERY
 }
 
 
-function query_logwatch_alerts_last_check () {
+query_logwatch_alerts_last_check() {
     local alerts_last_check="$1"
     cat <<QUERY
 Select ALERT_TIMESTAMP,ALERT_ID,ALERT_RATING,ALERT_DETAILS from
@@ -210,7 +210,7 @@ QUERY
 }
 
 
-function query_logwatch_no_alerts () {
+query_logwatch_no_alerts() {
     cat <<QUERY
 Select ALERT_TIMESTAMP,ALERT_ID,ALERT_RATING,ALERT_DETAILS from
 _SYS_STATISTICS.STATISTICS_ALERTS Where ALERT_TIMESTAMP IN (Select
@@ -221,7 +221,7 @@ QUERY
 }
 
 
-function query_sap_hana_ess_started () {
+query_sap_hana_ess_started() {
     local hostname="$1"
     cat <<QUERY
 SELECT 'started', count(*) FROM M_SERVICE_THREADS where
@@ -230,7 +230,7 @@ QUERY
 }
 
 
-function query_sap_hana_ess_active () {
+query_sap_hana_ess_active() {
     cat <<QUERY
 select 'active', MAP(IFNULL(SYSTEM_VALUE, IFNULL(HOST_VALUE,DEFAULT_VALUE)),
 'true', 'yes', 'false', 'no', 'unknown') FROM (SELECT  MAX(MAP(LAYER_NAME,
@@ -241,14 +241,14 @@ SYSTEM_VALUE FROM  M_INIFILE_CONTENTS WHERE  FILE_NAME IN ('indexserver.ini',
 QUERY
 }
 
-function query_sap_hana_ess_migration () {
+query_sap_hana_ess_migration() {
     cat << QUERY
 select value from _SYS_STATISTICS.STATISTICS_PROPERTIES where key = 'internal.installation.state'
 QUERY
 }
 
 
-function query_sap_hana_memrate () {
+query_sap_hana_memrate() {
     local hostname="$1"
     cat <<QUERY
 SELECT 'mem_rate', INSTANCE_TOTAL_MEMORY_USED_SIZE, ALLOCATION_LIMIT FROM
@@ -257,14 +257,14 @@ QUERY
 }
 
 
-function query_sap_hana_events_open () {
+query_sap_hana_events_open() {
     cat <<QUERY
 select 'open_events', count(*) from m_events where acknowledged='FALSE'
 QUERY
 }
 
 
-function query_sap_hana_events_disabled_alerts () {
+query_sap_hana_events_disabled_alerts() {
     cat <<QUERY
 select 'disabled_alerts', count(*) from _sys_statistics.STATISTICS_SCHEDULE
 where status='Disabled'
@@ -272,7 +272,7 @@ QUERY
 }
 
 
-function query_sap_hana_events_high_alerts () {
+query_sap_hana_events_high_alerts() {
     cat <<QUERY
 select 'high_alerts', count(*) from _sys_statistics.statistics_current_alerts
 where  alert_rating >=4
@@ -280,7 +280,7 @@ QUERY
 }
 
 
-function query_sap_hana_proc () {
+query_sap_hana_proc() {
     local hostname="$1"
     cat <<QUERY
 SELECT PORT,SERVICE_NAME,PROCESS_ID,DETAIL,ACTIVE_STATUS,SQL_PORT,COORDINATOR_TYPE
@@ -289,7 +289,7 @@ QUERY
 }
 
 
-function query_sap_hana_threads_max () {
+query_sap_hana_threads_max() {
     local hostname="$1"
     cat <<QUERY
 select MAX(CPU_TIME_CUMULATIVE), THREAD_METHOD from M_SERVICE_THREADS where
@@ -298,7 +298,7 @@ QUERY
 }
 
 
-function query_sap_hana_threads_service_name () {
+query_sap_hana_threads_service_name() {
     local hostname="$1"
     cat <<QUERY
 SELECT SERVICE_NAME, CONNECTION_ID, THREAD_ID, THREAD_METHOD, CALLER, DURATION
@@ -307,7 +307,7 @@ QUERY
 }
 
 
-function query_fileinfo () {
+query_fileinfo() {
     local sid="$1"
     local instance="$2"
     local hostname="$3"
@@ -330,7 +330,7 @@ QUERY
 #   '----------------------------------------------------------------------'
 
 
-function sap_hana_check_alerts () {
+sap_hana_check_alerts() {
     local sid="$1"
     local instance="$2"
     local instance_user="$3"
@@ -370,7 +370,7 @@ function sap_hana_check_alerts () {
 }
 
 
-function sap_hana_replication_status () {
+sap_hana_replication_status() {
     local sid="$1"
     local instance="$2"
     local instance_user="$3"
@@ -379,7 +379,7 @@ function sap_hana_replication_status () {
     echo "$result"
 }
 
-function sap_hana_connect() {
+sap_hana_connect() {
     local sid="$1"
     local instance="$2"
     local instance_user="$3"
@@ -415,7 +415,7 @@ function sap_hana_connect() {
     echo "$resp" | tr ';' ','  |  tr '\n' ';' | sed -e "s/^;//g" -e "s/;$/\n/g"
 }
 
-function sap_hana_role_from_landscape() {
+sap_hana_role_from_landscape() {
     local landscape="$1"
     local hostname="$2"
 
@@ -452,7 +452,7 @@ function sap_hana_role_from_landscape() {
     done <<< "$landscape"
 }
 
-function sap_hana_host_from_landscape() {
+sap_hana_host_from_landscape() {
     local landscape=$1
 
     local col_hosts=1
@@ -509,7 +509,7 @@ function sap_hana_host_from_landscape() {
 #   '----------------------------------------------------------------------'
 
 
-function do_query () {
+do_query() {
     local SID="$1"
     local INSTANCE="$2"
     local INSTANCE_USER="$3"

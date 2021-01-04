@@ -35,7 +35,7 @@ fi
 cp -a /bauwelt/etc/.gnupg /gnupg
 export GNUPGHOME=/gnupg
 
-function is_already_signed() {
+is_already_signed() {
     if [[ "$FILE_PATH" == *rpm ]]; then
         if rpm -qp "$FILE_PATH" --qf='%-{NAME} %{SIGPGP:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
             return 0
@@ -52,7 +52,7 @@ function is_already_signed() {
     exit 1
 }
 
-function sign_package() {
+sign_package() {
     if [[ "$FILE_PATH" == *rpm ]]; then
         echo "$GPG_PASSPHRASE" |
             rpm \

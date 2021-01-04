@@ -194,9 +194,7 @@ export class LayeredIconOverlay extends node_visualization_viewport_utils.Layere
         icons = icons
             .enter()
             .append("img")
-            .attr("src", d => {
-                return "images/icons/" + d.data.icon + ".png";
-            })
+            .attr("src", d => d.data.icon)
             .classed("node_icon", true)
             .style("position", "absolute")
             .style("pointer-events", "none")
@@ -653,35 +651,19 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
     }
 
     _get_basic_quickinfo() {
-        let tokens = this.node.data.rule_id.function.split("!");
-
         let quickinfo = [];
-
         quickinfo.push({name: "Rule Title", value: this.node.data.name});
-        quickinfo.push({name: "Rule ID", value: this.node.data.rule_id.rule});
-
         quickinfo.push({
             name: "State",
             css_classes: ["state", "svcstate", "state" + this.node.data.state],
             value: this._state_to_text(this.node.data.state),
         });
-        if (tokens[0] == "worst" || tokens[0] == "best") {
-            let restriction_info = "Restrict severity to CRIT at worst.";
-            let infotext = "Take the " + tokens[0] + " state.";
-            if (tokens.length > 1) {
-                restriction_info =
-                    "Restrict severity to " + this._state_to_text(tokens[2]) + " at worst.";
-                let count = tokens[1];
-                if (count > 1) infotext = "Take the " + count + "'th " + tokens[0] + " state.";
-            }
-            quickinfo.push({name: "Condition", value: infotext});
-            quickinfo.push({name: "Severity settings", value: restriction_info});
-        } else if (tokens[0] == "count_ok") {
-            let infotext_ok = "Require " + tokens[1] + " OK-nodes for a total state of OK.";
-            let infotext_warn = "Require " + tokens[2] + " OK-nodes for a total state of WARN.";
-            // TODO: finish
-            quickinfo.push({name: "Condition", value: infotext_ok});
-        }
+        quickinfo.push({name: "Pack ID", value: this.node.data.rule_id.pack});
+        quickinfo.push({name: "Rule ID", value: this.node.data.rule_id.rule});
+        quickinfo.push({
+            name: "Aggregation Function",
+            value: this.node.data.rule_id.aggregation_function_description,
+        });
         return quickinfo;
     }
 
@@ -703,7 +685,7 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
                 this.node.data.rule_id.rule +
                 "&pack=" +
                 this.node.data.rule_id.pack,
-            img: "themes/facelift/images/icon_edit.png",
+            img: "themes/facelift/images/icon_edit.svg",
         });
 
         if (this.node.children != this.node._children)

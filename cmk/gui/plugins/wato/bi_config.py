@@ -75,7 +75,7 @@ from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
 )
 
-from cmk.gui.node_visualization import BILayoutManagement
+from cmk.gui.node_vis_lib import BILayoutManagement
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
 from cmk.utils.bi.bi_packs import BIAggregationPack
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema

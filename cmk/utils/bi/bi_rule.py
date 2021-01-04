@@ -120,6 +120,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
         bi_rule_result = BICompiledRule(
             self.id,
+            self.pack_id,
             nodes,
             list(required_hosts),
             BIRuleProperties(self._properties_config),
@@ -133,6 +134,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
     @classmethod
     def create_tree_from_schema(cls, schema_config: Dict[str, Any]) -> BICompiledRule:
         rule_id = schema_config["id"]
+        pack_id = schema_config["pack_id"]
         nodes = [cls._create_node(x) for x in schema_config["nodes"]]
         required_hosts = [(x["site_id"], x["host_name"]) for x in schema_config["required_hosts"]]
         properties = BIRuleProperties(schema_config["properties"])
@@ -142,6 +144,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
         return BICompiledRule(
             rule_id,
+            pack_id,
             nodes,
             required_hosts,
             properties,

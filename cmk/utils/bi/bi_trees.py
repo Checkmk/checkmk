@@ -461,7 +461,7 @@ class BICompiledAggregation:
             "aggr_hosts": bi_compiled_branch.required_hosts,
             "aggr_type": "multi",
             "aggr_group": "dummy",  # dummy, will be set later on within the old bi madness
-            # Required in availablity
+            # Required in availability
             "aggr_compiled_aggregation": self,
             "aggr_compiled_branch": bi_compiled_branch,
         }
@@ -500,6 +500,8 @@ class BICompiledAggregation:
             result["reqhosts"] = list(node.required_hosts)
             result["nodes"] = list(map(self.eval_result_node, node.nodes))
             result["rule_layout_style"] = node.node_visualization
+            if node.properties.icon:
+                result["icon"] = node.properties.icon
             return result
 
         raise NotImplementedError("Unknown node type %r" % node)

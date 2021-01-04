@@ -1,0 +1,14 @@
+Title: Fix upload of CA files to "Agent Updater" rule
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1609786708
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+Uploading CA files to rules in the "Agent updater" ruleset resulted
+in wrong stored CA information. These files are now handled correctly.
+
+Displaying of the CA certificate issuer and subject has also been fixed.

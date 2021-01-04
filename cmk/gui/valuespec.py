@@ -5503,11 +5503,11 @@ class UploadOrPasteTextFile(Alternative):
 
         super().__init__(**kwargs)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix) -> str:
         value = super().from_html_vars(varprefix)
-        # Convert textarea value to format of upload field
-        if not isinstance(value, tuple):
-            value = (None, None, value)
+        if isinstance(value, tuple):
+            # We are only interested in the file content here. Get it from FileUpload value.
+            return value[2].decode("utf-8")
         return value
 
 
@@ -6138,12 +6138,6 @@ class CAorCAChain(UploadOrPasteTextFile):
         args.setdefault("file_title", _("CRT/PEM File"))
         super().__init__(**args)
 
-    def from_html_vars(self, varprefix):
-        value = Alternative.from_html_vars(self, varprefix)
-        if isinstance(value, tuple):
-            value = value[2]  # FileUpload sends (filename, mime-type, content)
-        return value
-
     def _validate_value(self, value, varprefix):
         try:
             self.analyse_cert(value)
@@ -6151,7 +6145,7 @@ class CAorCAChain(UploadOrPasteTextFile):
             raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
 
     def analyse_cert(self, value):
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, value)
+        cert = crypto.load_certificate(crypto.FILETYPE_PEM, value.encode("utf-8"))
         titles = {
             "C": _("Country"),
             "ST": _("State or Province Name"),
@@ -6159,15 +6153,16 @@ class CAorCAChain(UploadOrPasteTextFile):
             "O": _("Organization Name"),
             "CN": _("Common Name"),
         }
-        cert_info: Dict[str, Dict] = {}
+        cert_info: Dict[str, Dict[str, str]] = {}
         for what, x509 in [
             ("issuer", cert.get_issuer()),
             ("subject", cert.get_subject()),
         ]:
             cert_info[what] = {}
-            for key, val in x509.get_components():
+            for raw_key, raw_val in x509.get_components():
+                key = raw_key.decode("utf-8")
                 if key in titles:
-                    cert_info[what][titles[key]] = val.decode("utf8")
+                    cert_info[what][titles[key]] = raw_val.decode("utf-8")
         return cert_info
 
     def value_to_text(self, value):

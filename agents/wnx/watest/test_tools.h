@@ -187,5 +187,7 @@ private:
     std::filesystem::path base_;
 };
 
+const extern std::filesystem::path G_SolutionPath;
+
 }  // namespace tst
 #endif  // test_tools_h__

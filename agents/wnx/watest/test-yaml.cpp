@@ -721,9 +721,14 @@ TEST(AgentConfig, InternalArray) {
 }
 
 TEST(AgentConfig, WorkConfig) {
-    using namespace std::filesystem;
+    namespace fs = std::filesystem;
     using namespace std;
     using namespace cma::cfg;
+
+    tst::TempCfgFs test_fs;
+    std::filesystem::copy_file(tst::G_SolutionPath / "install" / "resources" /
+                                   files::kDefaultMainConfig,
+                               test_fs.root() / files::kDefaultMainConfig);
 
     vector<wstring> cfg_files;
     cfg_files.emplace_back(files::kDefaultMainConfig);
@@ -870,7 +875,7 @@ TEST(AgentConfig, WorkConfig) {
     {
         auto table =
             GetArray<YAML::Node>(groups::kModules, vars::kModulesTable);
-        EXPECT_TRUE(table.size() == 1);
+        EXPECT_EQ(table.size(), 1);
         auto modules_table =
             GetLoadedConfig()[groups::kModules][vars::kModulesTable];
         auto pos = 0;
@@ -886,7 +891,7 @@ TEST(AgentConfig, WorkConfig) {
             pos++;
         }
 
-        EXPECT_TRUE(pos == 1) << "one entry allowed for the modules.table";
+        EXPECT_EQ(pos, 1) << "one entry allowed for the modules.table";
     }
 
     // system

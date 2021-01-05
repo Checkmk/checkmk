@@ -53,8 +53,12 @@ import urlparse
 from UserDict import DictMixin
 from StringIO import StringIO
 from PIL import Image  # type: ignore
+from pathlib2 import Path
 
 from Cryptodome.PublicKey import RSA
+from Cryptodome.Cipher import AES
+import bcrypt  # type: ignore[import]
+
 import six
 
 import cmk.utils.log
@@ -4139,14 +4143,13 @@ class Password(TextAscii):
             html.write(self._label)
             html.nbsp()
 
-        kwargs = {
-            "size": self._size,
-        }
-
-        if self._autocomplete is False:
-            kwargs["autocomplete"] = "new-password"
-
-        html.password_input(varprefix, str(value), **kwargs)
+        html.hidden_field(varprefix + "_orig", value=ValueEncrypter.encrypt(value) if value else "")
+        html.password_input(
+            varprefix,
+            default_value="",
+            size=self._size,
+            autocomplete="new-password" if self._autocomplete is False else None,
+        )
 
     def password_plaintext_warning(self):
         if self._is_stored_plain:
@@ -4159,6 +4162,74 @@ class Password(TextAscii):
         if value is None:
             return _("none")
         return '******'
+
+    def from_html_vars(self, varprefix):
+        value = super(Password, self).from_html_vars(varprefix)
+        if value:
+            return value  # New password entered
+
+        # Gather the value produced by render_input() and use it.
+        value = html.request.var(varprefix + "_orig", "")
+        if not value:
+            return value
+
+        return ValueEncrypter.decrypt(value)
+
+
+class ValueEncrypter(object):  # pylint: disable=no-init
+    """Helping to secure transport of secrets
+
+    A basic concept of valuespecs is that they transport ALL data back and forth between
+    different states. This has also the consequence that also secrets, like passwords, must be
+    transported to the client, which should remain better only on the server.
+
+    To deal with this in a reasonably secure way, we encrypt passwords for transport from backend =>
+    HTML => backend.
+
+    If it turns out that the approach is not sufficient, then we will have to soften this principle
+    of valuespecs and somehow leave the passwords on the server.
+
+    The encrypted values are only used for transactions and not persisted. This means you can change
+    the algorithm at any time.
+    """
+    @staticmethod
+    def _secret_key(salt):
+        """Build some secret for the ecryption
+
+        Use the sites auth.secret for encryption. This secret is only known to the current site
+        and other distributed sites.
+        """
+
+        secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
+        # Is fixed in newer pathlib / mypy
+        with secret_path.open(mode="rb") as f:  # pylint: disable=no-member
+            passphrase = f.read().strip()
+            # Checkmk 2.0 uses hashlib.scrypt, but Checkmk 1.6 has to use
+            # another algorithm, because of the old Python 2.7 and different
+            # SSL dependencies.
+            bcrypt_passphrase = bcrypt.hashpw(passphrase, salt)
+            return hashlib.sha256(bcrypt_passphrase).digest()
+
+    @staticmethod
+    def _cipher(salt, nonce):
+        return AES.new(ValueEncrypter._secret_key(salt), AES.MODE_GCM, nonce=nonce)
+
+    @staticmethod
+    def encrypt(value):
+        salt = bcrypt.gensalt()
+        nonce = os.urandom(AES.block_size)
+        cipher = ValueEncrypter._cipher(salt, nonce)
+        encrypted, tag = cipher.encrypt_and_digest(value)
+        return base64.b64encode(salt + nonce + tag + encrypted)
+
+    @staticmethod
+    def decrypt(value):
+        raw = base64.b64decode(value)
+        salt, rest = raw[:29], raw[29:]
+        nonce, rest = rest[:AES.block_size], rest[AES.block_size:]
+        tag, encrypted = rest[:AES.block_size], rest[AES.block_size:]
+
+        return ValueEncrypter._cipher(salt, nonce).decrypt_and_verify(encrypted, tag)
 
 
 class PasswordSpec(Password):

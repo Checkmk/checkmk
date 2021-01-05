@@ -1,9 +1,13 @@
 # -*- encoding: utf-8 -*-
 
-import pytest
+import pytest  # type: ignore[import]
+from pathlib2 import Path
+
+import cmk.gui.config
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
 from testlib import on_time
+from cmk.gui.globals import html
 
 
 @pytest.mark.parametrize("entry, result", [
@@ -153,3 +157,61 @@ def test_unicode_email_validation_non_compliance(address):
 def test_unicode_email_validation_raises(address):
     with pytest.raises(MKUserError):
         vs.EmailAddressUnicode().validate_value(address, "")
+
+
+@pytest.fixture()
+def fixture_auth_secret():
+    secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
+    secret_path.parent.mkdir(parents=True, exist_ok=True)
+    with secret_path.open("wb") as f:
+        f.write(b"auth-secret")
+
+
+def test_password_from_html_vars_empty(register_builtin_html):
+    html.request.set_var("pw_orig", "")
+    html.request.set_var("pw", "")
+
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == ""
+
+
+def test_password_from_html_vars_not_set(register_builtin_html):
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == ""
+
+
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_password_from_html_vars_initial_pw(register_builtin_html):
+    html.request.set_var("pw_orig", "")
+    html.request.set_var("pw", "abc")
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == "abc"
+
+
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_password_from_html_vars_unchanged_pw(register_builtin_html):
+    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw", "")
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == "abc"
+
+
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_password_from_html_vars_change_pw(register_builtin_html):
+    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw", "xyz")
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == "xyz"
+
+
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_value_encrypter_encrypt():
+    encrypted = vs.ValueEncrypter.encrypt("abc")
+    assert isinstance(encrypted, str)
+    assert encrypted != "abc"
+
+
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_value_encrypter_transparent():
+    enc = vs.ValueEncrypter
+    assert enc.decrypt(enc.encrypt("abc")) == "abc"

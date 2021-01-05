@@ -1,0 +1,17 @@
+Title: Password dialogs now handle passwords more securely
+Knowledge: doc
+Level: 2
+Component: wato
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1608470328
+
+Previous Checkmk versions did not handle passwords well in some edit dialogs.
+Especially in the setup (WATO) it was possible to access saved passwords in
+some places, which should not be possible.
+
+The dialogs now ensure that these accesses from passwords entered once and
+stored on the checkmk server are no longer easily possible.

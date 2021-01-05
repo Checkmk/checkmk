@@ -102,8 +102,8 @@ class PiggybackSummarizer(AgentSummarizer):
         return (
             max((src.reason_status for src in sources), default=0),
             ", ".join(string for string in (
-                (f"Valid sources: {valid_sources!r}" if valid_sources else ""),
-                (f"Failed sources: {failed_sources!r}" if failed_sources else ""),
+                (f"Valid sources: {', '.join(valid_sources)}" if valid_sources else ""),
+                (f"Failed sources: {', '.join(failed_sources)}" if failed_sources else ""),
             ) if string),
             [],
         )

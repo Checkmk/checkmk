@@ -452,19 +452,21 @@ class ModeFolder(WatoMode):
         if html.request.var("_search"):  # just commit to search form
             return None
 
+        folder_url = mode_url("folder", folder=self._folder.path())
+
         # Operations on SUBFOLDERS
 
         if html.request.var("_delete_folder"):
             if html.check_transaction():
                 self._folder.delete_subfolder(html.request.var("_delete_folder"))
-            return redirect(mode_url("folder", folder=self._folder.path()))
+            return redirect(folder_url)
 
         if html.request.has_var("_move_folder_to"):
             if html.check_transaction():
                 what_folder = watolib.Folder.folder(html.request.var("_ident"))
                 target_folder = watolib.Folder.folder(html.request.var("_move_folder_to"))
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
-            return redirect(mode_url("folder", folder=self._folder.path()))
+            return redirect(folder_url)
 
         # Operations on HOSTS
 
@@ -472,19 +474,19 @@ class ModeFolder(WatoMode):
         delname = html.request.var("_delete_host")
         if delname and watolib.Folder.current().has_host(delname):
             watolib.Folder.current().delete_hosts([delname])
-            return redirect(mode_url("folder", folder=self._folder.path()))
+            return redirect(folder_url)
 
         # Move single hosts to other folders
         if html.request.has_var("_move_host_to"):
             hostname = html.request.var("_ident")
-            if hostname:
+            if hostname and watolib.Folder.current().has_host(hostname):
                 target_folder = watolib.Folder.folder(html.request.var("_move_host_to"))
                 watolib.Folder.current().move_hosts([hostname], target_folder)
-                return None
+                return redirect(folder_url)
 
         # bulk operation on hosts
         if not html.transaction_valid():
-            return None
+            return redirect(folder_url)
 
         # Host table: No error message on search filter reset
         if html.request.var("_hosts_reset_sorting") or html.request.var("_hosts_sort"):
@@ -504,12 +506,12 @@ class ModeFolder(WatoMode):
             target_folder = watolib.Folder.folder(target_folder_path)
             watolib.Folder.current().move_hosts(selected_host_names, target_folder)
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
-            return None
+            return redirect(folder_url)
 
         # Move to target folder (from import)
         if html.request.var("_bulk_movetotarget"):
             self._move_to_imported_folders(selected_host_names)
-            return None
+            return redirect(folder_url)
 
         # Deletion
         if html.request.var("_bulk_delete"):

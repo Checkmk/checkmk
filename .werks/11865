@@ -1,0 +1,12 @@
+Title: Fix errors after moving hosts on folder page
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1609858062
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+When executing bulk moves a confusing browser popup message appeared.
+After moving a single host to another folder an crash occurred.

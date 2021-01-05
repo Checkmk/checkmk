@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // Provides simple, exception-free and always succeessful functions to access
 // yaml data
@@ -15,9 +16,9 @@
 #include "logger.h"
 namespace cma::yml {
 void LogException(const std::string& format, std::string_view group,
-                  std::string_view name, const std::exception& e) noexcept;
+                  std::string_view name, const std::exception& e);
 void LogException(const std::string& format, std::string_view name,
-                  const std::exception& e) noexcept;
+                  const std::exception& e);
 template <typename T>
 std::optional<T> GetVal(YAML::Node yaml, const std::string& group_name,
                         const std::string& value_name) noexcept {

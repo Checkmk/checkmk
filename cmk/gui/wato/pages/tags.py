@@ -181,7 +181,7 @@ class ModeTags(ABCTagMode):
         if html.request.has_var("_del_aux"):
             return self._delete_aux_tag()
 
-        if html.request.var("_move") and html.check_transaction():
+        if html.request.var("_move"):
             return self._move_tag_group()
 
         return redirect(mode_url("tags"))

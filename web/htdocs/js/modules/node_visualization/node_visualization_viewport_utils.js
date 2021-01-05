@@ -118,8 +118,8 @@ export class AbstractGUINode {
         this._text_selection = null;
 
         this._quickinfo_selection = null;
+
         // Data fetched from external sources, e.g livestatus
-        //
         this._has_quickinfo = true;
         this._provides_external_quickinfo_data = false;
         this._quickinfo_fetch_in_progress = false;
@@ -228,8 +228,12 @@ export class AbstractGUINode {
     }
 
     _render_into_transform(selection) {
-        let spawn_point_x = this.node.x;
-        let spawn_point_y = this.node.y;
+        let spawn_reference = this.node;
+        if (this.node.parent && this.node.parent.x) {
+            spawn_reference = this.node.parent;
+        }
+        let spawn_point_x = spawn_reference.x;
+        let spawn_point_y = spawn_reference.y;
 
         let coords = this.nodes_layer.viewport.scale_to_zoom({
             x: spawn_point_x,
@@ -290,6 +294,7 @@ export class AbstractGUINode {
             }
         });
         node.children = critical_children;
+        node.data.user_interactions.bi = "root_cause";
         this.update_collapsed_indicator(node);
     }
 
@@ -302,18 +307,9 @@ export class AbstractGUINode {
         });
     }
 
-    toggle_collapse() {
-        d3.event.stopPropagation();
-        if (!this.node._children) return;
-
-        this.node.children = this.node.children ? null : this.node._children;
-        this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
-        this.update_collapsed_indicator(this.node);
-        this.viewport.update_layers();
-    }
-
     collapse_node() {
         this.node.children = null;
+        this.node.data.user_interactions.bi = "collapsed";
         this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
         this.update_collapsed_indicator(this.node);
         this.viewport.update_layers();
@@ -321,6 +317,7 @@ export class AbstractGUINode {
 
     expand_node() {
         this.node.children = this.node._children;
+        delete this.node.data.user_interactions.bi;
         this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
         this.update_collapsed_indicator(this.node);
         this.viewport.update_layers();
@@ -331,6 +328,7 @@ export class AbstractGUINode {
             node.children = node._children;
             node.children.forEach(child_node => this.expand_node_including_children(child_node));
         }
+        delete node.data.user_interactions.bi;
         this.update_collapsed_indicator(node);
     }
 
@@ -338,7 +336,7 @@ export class AbstractGUINode {
         if (!node._children) return;
 
         let collapsed = node.children != node._children;
-        let outer_circle = node.selection.select("#outer_circle");
+        let outer_circle = node.selection.select("circle");
         outer_circle.classed("collapsed", collapsed);
 
         let nodes = this.viewport.get_all_nodes();

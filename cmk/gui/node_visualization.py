@@ -384,7 +384,6 @@ class NodeVisualizationBIDataMapper:
 
         node_data["state"] = actual_result.state
 
-        # TODO: BI cleanup: in_downtime has two states 0, False
         node_data["in_downtime"] = actual_result.downtime_state > 0
         node_data["acknowledged"] = actual_result.acknowledged
         node_data["children"] = []

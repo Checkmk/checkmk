@@ -228,14 +228,14 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
     }
 
     compute_node_position(node) {
-        var current_positioning = {
+        let current_positioning = {
             weight: 0,
             free: true,
             type: "force",
         };
 
-        for (var force_id in node.data.node_positioning) {
-            var force = node.data.node_positioning[force_id];
+        for (let force_id in node.data.node_positioning) {
+            let force = node.data.node_positioning[force_id];
             if (force.weight > current_positioning.weight) {
                 current_positioning = force;
             }

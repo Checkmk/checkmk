@@ -989,6 +989,13 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         nodes_selection
             .exit()
             .each(node_data => this._remove_node(node_data))
+            .classed("node_element", false)
+            .transition()
+            .attr("transform", node => {
+                if (node.parent) return node.parent.selection.attr("transform");
+                else return node.selection.attr("transform");
+            })
+            .style("opacity", 0)
             .remove();
     }
 

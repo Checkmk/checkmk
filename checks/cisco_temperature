@@ -14,9 +14,17 @@ from cmk.base.check_legacy_includes.cisco_sensor_item import *  # pylint: disabl
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Devices of type 3850 with firmware versions 3.2.0SE, 3.2.1, 3.2.2
 # have been observed to display a tenth of the actual temperature value.
 # A firmware update on the device fixes this.
+
+# NOTE: But, in 2020/2021:
+# Wrong values for transceivers (DOM) in C9500-24Y4C and C9500-48Y4C CSCvt16172
+# The bug link: https://bst.cloudapps.cisco.com/bugsearch/bug/CSCvt16172
+#
+# See: SUP-4746
+#
 
 # OID: ifAdminStatus
 cisco_temperature_admin_state_map = {

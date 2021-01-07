@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+from unittest.mock import Mock
+
+import pytest
+import requests
 
 from cmk.notification_plugins import utils
 
@@ -289,3 +292,55 @@ def test_api_endpoint_url(monkeypatch, value, result):
 def test_escape_context(input_context, expected_context):
     utils.html_escape_context(input_context)
     assert input_context == expected_context
+
+
+@pytest.mark.parametrize("response, result_map, expected_exit_msg, expected_exit_code", [
+    (
+        Mock(requests.models.Response, status_code=200, text="whatever"),
+        {},
+        "Details for Status Code are not defined\n200: OK\n",
+        3,
+    ),
+    (
+        Mock(requests.models.Response, status_code=200, text="whatever"),
+        {
+            (400, 500): utils.StateInfo(state=0, type="str", title="some title"),
+        },
+        "Details for Status Code are not defined\n200: OK\n",
+        3,
+    ),
+    (
+        Mock(requests.models.Response, status_code=200, text="whatever"),
+        {
+            (200, 300): utils.StateInfo(state=0, type="str", title="some title"),
+        },
+        "some title\n200: OK\n",
+        0,
+    ),
+    (
+        Mock(requests.models.Response, status_code=201, text="whatever"),
+        {
+            (200, 300): utils.StateInfo(state=0, type="str", title="some title"),
+        },
+        "some title\n200: OK\n",
+        0,
+    ),
+    (
+        Mock(requests.models.Response, status_code=300, text="whatever"),
+        {
+            (200, 300): utils.StateInfo(state=0, type="str", title="some title"),
+        },
+        "some title\n200: OK\n",
+        0,
+    ),
+])
+def test_process_by_result_map(
+    response,
+    result_map,
+    expected_exit_msg,
+    expected_exit_code,
+):
+    with pytest.raises(SystemExit) as sys_exit:
+        utils.process_by_result_map(response, result_map)
+        assert sys_exit.value == expected_exit_msg
+        assert sys_exit.value.code == expected_exit_code

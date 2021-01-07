@@ -344,7 +344,7 @@ def process_by_result_map(response: requests.models.Response, result_map: Dict[S
     details = ""
 
     for status_code_range, state_info in result_map.items():
-        if status_code in status_code_range:
+        if status_code_range[0] <= status_code <= status_code_range[1]:
             if state_info.type == 'json':
                 details = response.json()
                 details = get_details_from_json(details, state_info.title)

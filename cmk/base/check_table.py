@@ -38,20 +38,17 @@ class HostCheckTable(CheckTable):
             skip_ignored=skip_ignored,
         )
 
-        hostname = host_config.hostname
-
         # Now process all entries that are specific to the host
         # in search (single host) or that might match the host.
         if not skip_autochecks:
-            self._update(config_cache.get_autochecks_of(hostname), sfilter)
+            self._update(config_cache.get_autochecks_of(host_config.hostname), sfilter)
 
         self._update(_get_static_check_entries(host_config), sfilter)
 
         # Now add checks a cluster might receive from its nodes
         if host_config.is_cluster:
-            self._update(
-                _get_clustered_services(config_cache, host_config, hostname, skip_autochecks),
-                sfilter)
+            self._update(_get_clustered_services(config_cache, host_config, skip_autochecks),
+                         sfilter)
 
     def _update(self, services: Iterable[Service], sfilter: '_ServiceFilter') -> None:
         self.update({s.id(): s for s in services if sfilter.keep(s)})
@@ -148,7 +145,6 @@ def _get_static_check_entries(host_config: config.HostConfig,) -> Iterator[Servi
 def _get_clustered_services(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-    hostname: str,
     skip_autochecks: bool,
 ) -> Iterable[Service]:
     for node in host_config.nodes or []:
@@ -159,11 +155,12 @@ def _get_clustered_services(
             node_checks += config_cache.get_autochecks_of(node)
 
         for service in node_checks:
-            if config_cache.host_of_clustered_service(node, service.description) != hostname:
+            services_host = config_cache.host_of_clustered_service(node, service.description)
+            if services_host != host_config.hostname:
                 continue
 
             cluster_params = config.compute_check_parameters(
-                hostname,
+                host_config.hostname,
                 service.check_plugin_name,
                 service.item,
                 service.parameters,

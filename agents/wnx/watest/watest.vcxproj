@@ -315,6 +315,7 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
     <ClCompile Include="test-eventlog.cpp" />
     <ClCompile Include="test-external-port.cpp" />
     <ClCompile Include="test-firewall.cpp" />
+    <ClCompile Include="test-fmt_ext.cpp" />
     <ClCompile Include="test-health.cpp" />
     <ClCompile Include="test-install-auto.cpp" />
     <ClCompile Include="test-log.cpp" />

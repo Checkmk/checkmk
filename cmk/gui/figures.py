@@ -196,6 +196,10 @@ class TableFigureDataCreator:
         return cell
 
     @classmethod
+    def get_number_cell(cls, text, attrs=None, classes=None):
+        return cls.get_text_cell(text, attrs, ["number"] + classes if classes else ["number"])
+
+    @classmethod
     def get_text_cell(cls, text, attrs=None, classes=None):
         cell = {"text": text}
         cell.update(cls.compute_attr_and_classes(attrs, classes))
@@ -211,7 +215,7 @@ class TableFigureDataCreator:
     # This cell is generally used by graphs
     @classmethod
     def get_empty_cell(cls, attrs=None, classes=None):
-        return cls.compute_attr_and_classes(attrs, classes)
+        return cls.compute_attr_and_classes(attrs, ["empty"] + classes if classes else ["empty"])
 
     @classmethod
     def compute_attr_and_classes(cls, attrs, classes):

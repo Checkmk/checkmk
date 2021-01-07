@@ -4,14 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import hashlib
 from pathlib import Path
+
+import pytest  # type: ignore[import]
 
 import cmk.gui.config
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
-from testlib import on_time
 from cmk.gui.globals import html
+
+from testlib import on_time
 
 
 @pytest.mark.parametrize("entry, result", [
@@ -342,6 +345,8 @@ def test_password_from_html_vars_initial_pw(register_builtin_html):
     assert pw.from_html_vars("pw") == "abc"
 
 
+@pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
+                    reason="OpenSSL version too old, must be >= 1.1")
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_unchanged_pw(register_builtin_html):
     html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
@@ -350,6 +355,8 @@ def test_password_from_html_vars_unchanged_pw(register_builtin_html):
     assert pw.from_html_vars("pw") == "abc"
 
 
+@pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
+                    reason="OpenSSL version too old, must be >= 1.1")
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_change_pw(register_builtin_html):
     html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
@@ -358,6 +365,8 @@ def test_password_from_html_vars_change_pw(register_builtin_html):
     assert pw.from_html_vars("pw") == "xyz"
 
 
+@pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
+                    reason="OpenSSL version too old, must be >= 1.1")
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_value_encrypter_encrypt():
     encrypted = vs.ValueEncrypter.encrypt("abc")
@@ -365,6 +374,8 @@ def test_value_encrypter_encrypt():
     assert encrypted != "abc"
 
 
+@pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
+                    reason="OpenSSL version too old, must be >= 1.1")
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_value_encrypter_transparent():
     enc = vs.ValueEncrypter

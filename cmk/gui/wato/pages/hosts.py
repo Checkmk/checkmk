@@ -395,6 +395,20 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                                                 ("host", host.name())])),
         )
 
+    if mode_name == "object_parameters" and config.user.may('wato.rulesets'):
+        yield PageMenuEntry(
+            title=_("Rules"),
+            icon_name="search",
+            item=make_simple_link(
+                watolib.folder_preserving_link([
+                    ("mode", "rule_search"),
+                    ("filled_in", "search"),
+                    ("search_p_ruleset_deprecated", "OFF"),
+                    ("search_p_rule_host_list_USE", "ON"),
+                    ("search_p_rule_host_list", host.name()),
+                ],)),
+        )
+
     yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
 
     if config.user.may('wato.rulesets') and host.is_cluster():

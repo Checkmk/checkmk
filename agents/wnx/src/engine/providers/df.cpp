@@ -21,33 +21,34 @@ namespace cma::provider {
 namespace df {
 std::pair<std::string, std::string> GetNamesByVolumeId(
     std::string_view volume_id) {
-    constexpr DWORD kFileSystemSize = 128;
-    constexpr DWORD kVolumeNameSize = 512;
-    std::array<char, kFileSystemSize> filesystem_name = {};
-    std::array<char, kVolumeNameSize> volume_name = {};
+    constexpr DWORD file_system_size = 128;
+    constexpr DWORD volume_name_size = 512;
+    std::array<char, file_system_size> filesystem_name = {};  // zero init
+    std::array<char, volume_name_size> volume_name = {};      // zero init
 
     DWORD flags = 0;
-    if (!::GetVolumeInformationA(volume_id.data(), volume_name.data(),
-                                 kVolumeNameSize, nullptr, nullptr, &flags,
-                                 filesystem_name.data(), kFileSystemSize)) {
+    if (::GetVolumeInformationA(volume_id.data(), volume_name.data(),
+                                volume_name_size, nullptr, nullptr, &flags,
+                                filesystem_name.data(),
+                                file_system_size) == FALSE) {
         filesystem_name[0] =
             '\0';  // May be necessary if partial information returned
-        XLOG::d("df: Information for volume '{}' is not available [{}]",
-                volume_id, ::GetLastError());
+        XLOG::d("Information for volume '{}' is not available [{}]", volume_id,
+                ::GetLastError());
     }
 
     return {filesystem_name.data(), volume_name.data()};
 }
 
 std::pair<uint64_t, uint64_t> GetSpacesByVolumeId(std::string_view volume_id) {
-    ULARGE_INTEGER avail, total, free;
-    avail.QuadPart = 0;
-    total.QuadPart = 0;
-    free.QuadPart = 0;
+    ULARGE_INTEGER avail{.QuadPart = 0};
+    ULARGE_INTEGER total{.QuadPart = 0};
+    ULARGE_INTEGER free{.QuadPart = 0};
     int ret = ::GetDiskFreeSpaceExA(volume_id.data(), &avail, &total, &free);
-    if (ret == 0) {
-        avail.QuadPart = 0;
-        total.QuadPart = 0;
+    if (ret == FALSE) {
+        XLOG::d("GetDiskFreeSpaceExA is failed with error [{}]",
+                ::GetLastError());
+        return {0, 0};
     }
     return {avail.QuadPart, total.QuadPart};
 }
@@ -59,7 +60,6 @@ uint64_t CalcUsage(uint64_t avail, uint64_t total) {
     return 100 - (100 * avail) / total;
 }
 
-// wrapper for win32
 std::string ProduceFileSystemOutput(std::string_view volume_id) {
     auto [fs_name, volume_name] = df::GetNamesByVolumeId(volume_id);
     auto [avail, total] = df::GetSpacesByVolumeId(volume_id);
@@ -81,15 +81,14 @@ std::string ProduceFileSystemOutput(std::string_view volume_id) {
                        volume_id);
 }
 
-// #TODO integrate in solution
 std::vector<std::string> GetMountPointVector(std::string_view volume_id) {
     constexpr int sz = 2048;
     auto storage = std::make_unique<char[]>(sz);
 
     std::vector<std::string> result;
 
-    XLOG::t("df: Volume is '{}'", volume_id);
-    auto handle =
+    XLOG::t("Volume is '{}'", volume_id);
+    auto* handle =
         ::FindFirstVolumeMountPointA(volume_id.data(), storage.get(), sz);
 
     if (wtools::IsBadHandle(handle)) return {};
@@ -100,34 +99,38 @@ std::vector<std::string> GetMountPointVector(std::string_view volume_id) {
         result.emplace_back(vol + storage.get());
 
         auto success = ::FindNextVolumeMountPointA(handle, storage.get(), sz);
-        if (FALSE == success) {
+        if (success == FALSE) {
             auto error = ::GetLastError();
             if (error != ERROR_NO_MORE_FILES)
-                XLOG::l("df: Error  [{}] looking for volume '{}'", error,
+                XLOG::l("Error  [{}] looking for volume '{}'", error,
                         volume_id);
             break;
         }
-        XLOG::t("df: Next mount point '{}'", storage.get());
+        XLOG::t("Next mount point '{}'", storage.get());
     }
 
     return result;
 }
 
-std::string ProduceMountPointsOutput(const std::string& VolumeId) {
+std::string ProduceMountPointsOutput(const std::string& volume_id) {
     constexpr int sz = 2048;
     auto storage = std::make_unique<char[]>(sz);
 
-    XLOG::t("df: Volume is '{}'", VolumeId);
-    auto handle =
-        ::FindFirstVolumeMountPointA(VolumeId.c_str(), storage.get(), sz);
+    XLOG::t("Volume is '{}'", volume_id);
+    auto* handle =
+        ::FindFirstVolumeMountPointA(volume_id.c_str(), storage.get(), sz);
 
-    if (wtools::IsBadHandle(handle)) return {};
-    ON_OUT_OF_SCOPE(FindVolumeMountPointClose(handle));
+    if (wtools::IsBadHandle(handle)) {
+        XLOG::d("Failed FindFirstVolumeMountPointA, error is [{}]",
+                ::GetLastError());
+        return {};
+    }
+    ON_OUT_OF_SCOPE(::FindVolumeMountPointClose(handle));
 
     std::string out;
 
+    const auto combined_path = volume_id + storage.get();
     while (true) {
-        const std::string combined_path = VolumeId + storage.get();
         out += ProduceFileSystemOutput(combined_path);
         out += ProduceMountPointsOutput(combined_path);
 
@@ -135,29 +138,29 @@ std::string ProduceMountPointsOutput(const std::string& VolumeId) {
         if (FALSE == success) {
             auto error = ::GetLastError();
             if (error != ERROR_NO_MORE_FILES)
-                XLOG::l("df: Error  [{}] looking for volume '{}'", error,
-                        VolumeId);
+                XLOG::l("Error  [{}] looking for volume '{}'", error,
+                        volume_id);
             break;
         }
-        XLOG::t("df: Next mount point '{}'", storage.get());
+        XLOG::t("Next mount point '{}'", storage.get());
     }
 
     return out;
 }
 
-std::vector<std::string> GetDriveVector() noexcept {
-    std::vector<std::string> drives;
+std::vector<std::string> GetDriveVector() {
     constexpr int sz = 2048;
-    auto buffer = std::make_unique<char[]>(sz);
-    auto len = ::GetLogicalDriveStringsA(sz, buffer.get());
+    auto drive_string_buffer = std::make_unique<char[]>(sz);
+    auto len = ::GetLogicalDriveStringsA(sz, drive_string_buffer.get());
 
-    auto end = buffer.get() + len;
-    auto drive = buffer.get();
+    auto* end = drive_string_buffer.get() + len;
+    auto* drive = drive_string_buffer.get();
 
+    std::vector<std::string> drives;
     while (drive < end) {
-        auto drvType = ::GetDriveTypeA(drive);
-
-        if (drvType != DRIVE_UNKNOWN) drives.emplace_back(drive);
+        if (::GetDriveTypeA(drive) != DRIVE_UNKNOWN) {
+            drives.emplace_back(drive);
+        }
 
         drive += strlen(drive) + 1;
     }
@@ -167,8 +170,6 @@ std::vector<std::string> GetDriveVector() noexcept {
 }  // namespace df
 
 std::string Df::makeBody() {
-    XLOG::t(XLOG_FUNC + " entering");
-
     std::string out;
     auto drives = df::GetDriveVector();
     XLOG::t("Processing of [{}] drives", drives.size());
@@ -177,17 +178,16 @@ std::string Df::makeBody() {
     for (auto& drive : drives) {
         auto drive_type = ::GetDriveTypeA(drive.c_str());
 
-        // #FEATURE 'removable support' future
-        if (drive_type == DRIVE_FIXED)  // only process local hard disks
+        if (drive_type == DRIVE_FIXED)  // means local hard disks
         {
             out += df::ProduceFileSystemOutput(drive);
             out += df::ProduceMountPointsOutput(drive);
             count++;
         } else
-            XLOG::t("df: Drive '{}' is skipped due to type [{}]", drive,
+            XLOG::t("Drive '{}' is skipped due to type [{}]", drive,
                     drive_type);
     }
-    XLOG::d.t("df: Processed [{}] drives", count);
+    XLOG::d.i("Processed [{}] drives", count);
 
     return out;
 }

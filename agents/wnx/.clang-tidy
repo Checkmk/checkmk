@@ -75,6 +75,8 @@ CheckOptions:
     value:           'lower_case'
   - key:             bugprone-signed-char-misuse.CharTypdefsToIgnore
     value:           'int8_t'
+  - key:             readability-identifier-naming.ParameterCase
+    value:           'lower_case'
   - key:             readability-identifier-naming.GlobalVariableCase
     value:           'lower_case'
   - key:             readability-identifier-naming.GlobalVariablePrefix

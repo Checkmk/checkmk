@@ -455,8 +455,7 @@ def test_check_table__get_static_check_entries(monkeypatch, check_group_paramete
 
     host_config = config_cache.get_host_config(hostname)
     static_check_parameters = [
-        service.parameters
-        for service in check_table.HostCheckTable._get_static_check_entries(host_config)
+        service.parameters for service in check_table._get_static_check_entries(host_config)
     ]
 
     entries = config._get_checkgroup_parameters(

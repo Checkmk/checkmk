@@ -46,127 +46,127 @@ class HostCheckTable(CheckTable):
             self.update({
                 service.id(): service
                 for service in config_cache.get_autochecks_of(hostname)
-                if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
+                if _keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
             })
 
         self.update({
             service.id(): service
-            for service in self._get_static_check_entries(host_config)
-            if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
+            for service in _get_static_check_entries(host_config)
+            if _keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
         })
 
         # Now add checks a cluster might receive from its nodes
         if host_config.is_cluster:
             self.update({
                 service.id(): service
-                for service in self._get_clustered_services(config_cache, host_config, hostname,
-                                                            skip_autochecks)
-                if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
+                for service in _get_clustered_services(config_cache, host_config, hostname,
+                                                       skip_autochecks)
+                if _keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
             })
 
-    @staticmethod
-    def _get_static_check_entries(host_config: config.HostConfig,) -> Iterator[Service]:
-        entries: List[Service] = []
-        for _checkgroup_name, check_plugin_name_str, item, params in host_config.static_checks:
-            # TODO (mo): centralize maincheckify: CMK-4295
-            check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
 
-            if config.has_timespecific_params(params):
-                timespec_params = [params]
-                params = {}
-            else:
-                timespec_params = []
+def _keep_service(
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+    service: Service,
+    filter_mode: Optional[Literal["only_clustered", "include_clustered"]],
+    skip_ignored: bool,
+) -> bool:
+    hostname = host_config.hostname
 
-            new_params = config.compute_check_parameters(
-                host_config.hostname,
-                check_plugin_name,
-                item,
-                params,
-                for_static_checks=True,
-            )
+    # drop unknown plugins:
+    if agent_based_register.get_check_plugin(service.check_plugin_name) is None:
+        return False
 
-            if timespec_params:
-                params = config.set_timespecific_param_list(timespec_params, new_params)
-            else:
-                params = new_params
+    if skip_ignored and config.service_ignored(hostname, service.check_plugin_name,
+                                               service.description):
+        return False
 
-            descr = config.service_description(host_config.hostname, check_plugin_name, item)
-            entries.append(Service(check_plugin_name, item, descr, params))
+    if filter_mode == "include_clustered":
+        return True
 
-        # Note: We need to reverse the order of the static_checks. This is
-        # because users assume that earlier rules have precedence over later
-        # ones. For static checks that is important if there are two rules for
-        # a host with the same combination of check type and item.
-        return reversed(entries)
+    if not host_config.part_of_clusters:
+        return filter_mode != "only_clustered"
 
-    @staticmethod
-    def _keep_service(
-        config_cache: config.ConfigCache,
-        host_config: config.HostConfig,
-        service: Service,
-        filter_mode: Optional[Literal["only_clustered", "include_clustered"]],
-        skip_ignored: bool,
-    ) -> bool:
-        hostname = host_config.hostname
+    host_of_service = config_cache.host_of_clustered_service(
+        hostname,
+        service.description,
+        part_of_clusters=host_config.part_of_clusters,
+    )
+    svc_is_mine = (hostname == host_of_service)
 
-        # drop unknown plugins:
-        if agent_based_register.get_check_plugin(service.check_plugin_name) is None:
-            return False
+    if filter_mode is None:
+        return svc_is_mine
 
-        if skip_ignored and config.service_ignored(hostname, service.check_plugin_name,
-                                                   service.description):
-            return False
+    # filter_mode == "only_clustered"
+    return not svc_is_mine
 
-        if filter_mode == "include_clustered":
-            return True
 
-        if not host_config.part_of_clusters:
-            return filter_mode != "only_clustered"
+def _get_static_check_entries(host_config: config.HostConfig,) -> Iterator[Service]:
+    entries: List[Service] = []
+    for _checkgroup_name, check_plugin_name_str, item, params in host_config.static_checks:
+        # TODO (mo): centralize maincheckify: CMK-4295
+        check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
 
-        host_of_service = config_cache.host_of_clustered_service(
-            hostname,
-            service.description,
-            part_of_clusters=host_config.part_of_clusters,
+        if config.has_timespecific_params(params):
+            timespec_params = [params]
+            params = {}
+        else:
+            timespec_params = []
+
+        new_params = config.compute_check_parameters(
+            host_config.hostname,
+            check_plugin_name,
+            item,
+            params,
+            for_static_checks=True,
         )
-        svc_is_mine = (hostname == host_of_service)
 
-        if filter_mode is None:
-            return svc_is_mine
+        if timespec_params:
+            params = config.set_timespecific_param_list(timespec_params, new_params)
+        else:
+            params = new_params
 
-        # filter_mode == "only_clustered"
-        return not svc_is_mine
+        descr = config.service_description(host_config.hostname, check_plugin_name, item)
+        entries.append(Service(check_plugin_name, item, descr, params))
 
-    def _get_clustered_services(
-        self,
-        config_cache: config.ConfigCache,
-        host_config: config.HostConfig,
-        hostname: str,
-        skip_autochecks: bool,
-    ) -> Iterable[Service]:
-        for node in host_config.nodes or []:
-            # TODO: Cleanup this to work exactly like the logic above (for a single host)
-            node_config = config_cache.get_host_config(node)
-            node_checks = list(self._get_static_check_entries(node_config))
-            if not skip_autochecks:
-                node_checks += config_cache.get_autochecks_of(node)
+    # Note: We need to reverse the order of the static_checks. This is
+    # because users assume that earlier rules have precedence over later
+    # ones. For static checks that is important if there are two rules for
+    # a host with the same combination of check type and item.
+    return reversed(entries)
 
-            for service in node_checks:
-                if config_cache.host_of_clustered_service(node, service.description) != hostname:
-                    continue
 
-                cluster_params = config.compute_check_parameters(
-                    hostname,
-                    service.check_plugin_name,
-                    service.item,
-                    service.parameters,
-                )
-                yield Service(
-                    service.check_plugin_name,
-                    service.item,
-                    service.description,
-                    cluster_params,
-                    service.service_labels,
-                )
+def _get_clustered_services(
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+    hostname: str,
+    skip_autochecks: bool,
+) -> Iterable[Service]:
+    for node in host_config.nodes or []:
+        # TODO: Cleanup this to work exactly like the logic above (for a single host)
+        node_config = config_cache.get_host_config(node)
+        node_checks = list(_get_static_check_entries(node_config))
+        if not skip_autochecks:
+            node_checks += config_cache.get_autochecks_of(node)
+
+        for service in node_checks:
+            if config_cache.host_of_clustered_service(node, service.description) != hostname:
+                continue
+
+            cluster_params = config.compute_check_parameters(
+                hostname,
+                service.check_plugin_name,
+                service.item,
+                service.parameters,
+            )
+            yield Service(
+                service.check_plugin_name,
+                service.item,
+                service.description,
+                cluster_params,
+                service.service_labels,
+            )
 
 
 def get_check_table(

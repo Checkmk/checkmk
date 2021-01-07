@@ -353,6 +353,8 @@ public:
     }
 
 private:
+    void readAndAppend(HANDLE read_handle, std::chrono::milliseconds timeout);
+    [[nodiscard]] bool waitForBreakLoop(std::chrono::milliseconds timeout);
     HANDLE stop_event_;
     bool waitForStop(std::chrono::milliseconds interval);
     wtools::StopWatch sw_;

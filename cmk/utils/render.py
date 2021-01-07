@@ -141,9 +141,12 @@ def fmt_number_with_precision(v: float,
                               base: float = 1000.0,
                               precision: int = 2,
                               drop_zeroes: bool = False,
-                              unit: str = "") -> str:
+                              unit: str = "",
+                              zero_non_decimal: bool = False) -> str:
     factor, prefix = scale_factor_prefix(v, base)
     value = float(v) / factor
+    if zero_non_decimal and value == 0:
+        return '0 %s' % prefix + unit
     number = drop_dotzero(value, precision) if drop_zeroes else '%.*f' % (precision, value)
     return '%s %s' % (number, prefix + unit)
 

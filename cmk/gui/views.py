@@ -112,7 +112,7 @@ from cmk.gui.watolib.activate_changes import get_pending_changes_info
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.views  # pylint: disable=no-name-in-module
     import cmk.gui.cee.plugins.views.icons  # pylint: disable=no-name-in-module
-    from cmk.gui.cee.ntop.connector import NtopCache
+    from cmk.gui.cee.ntop.connector import NtopCache  # pylint: disable=no-name-in-module
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module

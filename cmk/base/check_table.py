@@ -24,82 +24,90 @@ from cmk.base.check_utils import CheckTable, Service
 class HostCheckTable(CheckTable):
     def __init__(
         self,
+        *,
         config_cache: config.ConfigCache,
         host_config: config.HostConfig,
         skip_autochecks: bool,
         filter_mode: Optional[Literal["only_clustered", "include_clustered"]],
         skip_ignored: bool,
     ) -> None:
-        """Returns check table for a specific host
+        sfilter = _ServiceFilter(
+            config_cache=config_cache,
+            host_config=host_config,
+            mode=filter_mode,
+            skip_ignored=skip_ignored,
+        )
 
-        Format of check table is: {(checkname, item): (params, description)}
-
-        filter_mode: None                -> default, returns only checks for this host
-        filter_mode: "only_clustered"    -> returns only checks belonging to clusters
-        filter_mode: "include_clustered" -> returns checks of own host, including clustered checks
-        """
         hostname = host_config.hostname
 
         # Now process all entries that are specific to the host
         # in search (single host) or that might match the host.
         if not skip_autochecks:
-            self.update({
-                service.id(): service
-                for service in config_cache.get_autochecks_of(hostname)
-                if _keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
-            })
+            self._update(config_cache.get_autochecks_of(hostname), sfilter)
 
-        self.update({
-            service.id(): service
-            for service in _get_static_check_entries(host_config)
-            if _keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
-        })
+        self._update(_get_static_check_entries(host_config), sfilter)
 
         # Now add checks a cluster might receive from its nodes
         if host_config.is_cluster:
-            self.update({
-                service.id(): service
-                for service in _get_clustered_services(config_cache, host_config, hostname,
-                                                       skip_autochecks)
-                if _keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
-            })
+            self._update(
+                _get_clustered_services(config_cache, host_config, hostname, skip_autochecks),
+                sfilter)
+
+    def _update(self, services: Iterable[Service], sfilter: '_ServiceFilter') -> None:
+        self.update({s.id(): s for s in services if sfilter.keep(s)})
 
 
-def _keep_service(
-    config_cache: config.ConfigCache,
-    host_config: config.HostConfig,
-    service: Service,
-    filter_mode: Optional[Literal["only_clustered", "include_clustered"]],
-    skip_ignored: bool,
-) -> bool:
-    hostname = host_config.hostname
+class _ServiceFilter:
+    def __init__(
+        self,
+        *,
+        config_cache: config.ConfigCache,
+        host_config: config.HostConfig,
+        mode: Optional[Literal["only_clustered", "include_clustered"]],
+        skip_ignored: bool,
+    ) -> None:
+        """Filter services for a specific host
 
-    # drop unknown plugins:
-    if agent_based_register.get_check_plugin(service.check_plugin_name) is None:
-        return False
+        filter_mode: None                -> default, returns only checks for this host
+        filter_mode: "only_clustered"    -> returns only checks belonging to clusters
+        filter_mode: "include_clustered" -> returns checks of own host, including clustered checks
+        """
+        self._config_cache = config_cache
+        self._host_name = host_config.hostname
+        self._host_part_of_clusters = host_config.part_of_clusters
+        self._mode = mode
+        self._skip_ignored = skip_ignored
 
-    if skip_ignored and config.service_ignored(hostname, service.check_plugin_name,
-                                               service.description):
-        return False
+    def keep(self, service: Service) -> bool:
+        # drop unknown plugins:
+        if agent_based_register.get_check_plugin(service.check_plugin_name) is None:
+            return False
 
-    if filter_mode == "include_clustered":
-        return True
+        if self._skip_ignored and config.service_ignored(
+                self._host_name,
+                service.check_plugin_name,
+                service.description,
+        ):
+            return False
 
-    if not host_config.part_of_clusters:
-        return filter_mode != "only_clustered"
+        if self._mode == "include_clustered":
+            return True
 
-    host_of_service = config_cache.host_of_clustered_service(
-        hostname,
-        service.description,
-        part_of_clusters=host_config.part_of_clusters,
-    )
-    svc_is_mine = (hostname == host_of_service)
+        if not self._host_part_of_clusters:
+            return self._mode != "only_clustered"
 
-    if filter_mode is None:
-        return svc_is_mine
+        host_of_service = self._config_cache.host_of_clustered_service(
+            self._host_name,
+            service.description,
+            part_of_clusters=self._host_part_of_clusters,
+        )
+        svc_is_mine = (self._host_name == host_of_service)
 
-    # filter_mode == "only_clustered"
-    return not svc_is_mine
+        if self._mode is None:
+            return svc_is_mine
+
+        # self._mode == "only_clustered"
+        return not svc_is_mine
 
 
 def _get_static_check_entries(host_config: config.HostConfig,) -> Iterator[Service]:
@@ -191,11 +199,11 @@ def get_check_table(
             return config_cache.check_table_cache[table_cache_id]
 
     host_check_table = HostCheckTable(
-        config_cache,
-        host_config,
-        skip_autochecks,
-        filter_mode,
-        skip_ignored,
+        config_cache=config_cache,
+        host_config=host_config,
+        skip_autochecks=skip_autochecks,
+        skip_ignored=skip_ignored,
+        filter_mode=filter_mode,
     )
 
     if use_cache_for_real:

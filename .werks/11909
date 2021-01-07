@@ -1,0 +1,12 @@
+Title: Fix hostname as required field in host search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1610019126
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+The field "Hostname" was required for searching for any host. This is of course
+not intended in a search and has been fixed.

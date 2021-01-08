@@ -64,13 +64,13 @@ public:
     }
     virtual ~Basic() {}
 
-    virtual bool startSynchronous(
-        const std::string& InternalPort,  // format "type:value", where type:
+    virtual bool startExecution(
+        const std::string& internal_port,  // format "type:value", where type:
         // mail - for mail slot
         // asio - for TCP
         // grpc - for GRPC
         // rest - for Rest
-        const std::string& CommandLine  // anything here
+        const std::string& command_line  // anything here
         ) = 0;
 
     virtual bool stop(bool Wait) = 0;
@@ -98,7 +98,7 @@ public:
     void loadStandardConfig();
     virtual void loadConfig() {}
     int timeout() const { return timeout_; }
-    virtual void registerCommandLine(const std::string& CmdLine);
+    virtual void registerCommandLine(const std::string& command_line);
 
     void registerOwner(cma::srv::ServiceProcessor* sp);
 
@@ -122,12 +122,13 @@ protected:
     // usually related to the openhardware monitor
     void disableSectionTemporary();
 
-    bool sendGatheredData(const std::string& CommandLine);
-    virtual std::string makeHeader(const std::string_view SectionName) const {
-        return section::MakeHeader(SectionName == cma::section::kUseEmbeddedName
-                                       ? std::string_view(uniq_name_)
-                                       : SectionName,
-                                   separator_);
+    bool sendGatheredData(const std::string& command_line);
+    virtual std::string makeHeader(const std::string_view section_name) const {
+        return section::MakeHeader(
+            section_name == cma::section::kUseEmbeddedName
+                ? std::string_view(uniq_name_)
+                : section_name,
+            separator_);
     }
     virtual std::string makeBody() = 0;
 
@@ -170,19 +171,16 @@ private:
 // use as a parent
 class Synchronous : public Basic {
 public:
-    Synchronous(const std::string_view& Name, char Separator = 0)
-        : Basic(Name, Separator) {}
-    virtual ~Synchronous() {}
+    Synchronous(const std::string_view& name) : Basic(name, 0) {}
+    Synchronous(const std::string_view& name, char separator)
+        : Basic(name, separator) {}
+    virtual ~Synchronous() = default;
 
-    bool startSynchronous(
-        const std::string& InternalPort,  // format "type:value", where type:
-        // mail - for mail slot
-        // asio - for TCP
-        // grpc - for GRPC
-        // rest - for Rest
-        const std::string& CommandLine  // format "id name whatever"
+    bool startExecution(
+        const std::string& internal_port,  // format "type:value
+        const std::string& command_line    // format "id name whatever"
         ) override;
-    virtual bool stop(bool Wait) { return true; }  // rather not possible
+    bool stop(bool wait) override { return true; }
 };
 
 // Reference *ASYNC* Class for internal Sections
@@ -190,37 +188,23 @@ public:
 // When you need choice, then  use this class
 class Asynchronous : public Basic {
 public:
-    Asynchronous(const std::string_view& Name, char Separator = 0)
-        : Basic(Name, Separator) {}
-    virtual ~Asynchronous() {}
+    Asynchronous(const std::string_view& name) : Basic(name, 0) {}
+    Asynchronous(const std::string_view& name, char separator)
+        : Basic(name, separator) {}
+    virtual ~Asynchronous() = default;
 
-    // #TODO remove: this function is obsolete - no need be to more async
-    virtual bool startAsynchronous(
-        const std::string& InternalPort,  // format "type:value", where type:
-        // mail - for mail slot
-        // asio - for TCP
-        // grpc - for GRPC
-        // rest - for Rest
-        const std::string& CommandLine,  // anything here
-        bool Detached,                   // no waiting
-        std::chrono::milliseconds Period = std::chrono::milliseconds{0});
+    bool startExecution(
+        const std::string& internal_port,  // format "type:value"
+        const std::string& command_line    // format "id name whatever"
+        ) override;
 
-    // use this function when switch between sync async is possible
-    virtual bool startSynchronous(
-        const std::string& InternalPort,  // format "type:value", where type:
-        // mail - for mail slot
-        // asio - for TCP
-        // grpc - for GRPC
-        // rest - for Rest
-        const std::string& CommandLine) override;
-
-    bool stop(bool Wait);
+    bool stop(bool wait) override;
 
 protected:
     // ASYNCHRONOUS PART:
-    void threadProc(const std::string& InternalPort,
-                    const std::string& CommandLine,
-                    std::chrono::milliseconds Period) noexcept;
+    void threadProc(const std::string& internal_port,
+                    const std::string& command_line,
+                    std::chrono::milliseconds period) noexcept;
 
     // thread
     std::thread thread_;

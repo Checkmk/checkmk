@@ -484,7 +484,7 @@ TEST(WmiProviderTest, WmiDotnet) {
         << "please, run start_wmi.cmd\n dot net clr not found\n";
 
     auto cmd_line = std::to_string(12345) + " " + wmi_name + " ";
-    e2.startSynchronous("file:" FNAME_USE, cmd_line);
+    e2.startExecution("file:" FNAME_USE, cmd_line);
 
     std::error_code ec;
     ASSERT_TRUE(fs::exists(f, ec));  // check that file is exists
@@ -571,7 +571,7 @@ TEST(WmiProviderTest, WmiMsExch) {
     EXPECT_TRUE(e2.isAllowedByTime());
 
     auto cmd_line = std::to_string(12345) + " " + wmi_name + " ";
-    e2.startSynchronous("file:" FNAME_USE, cmd_line);
+    e2.startExecution("file:" FNAME_USE, cmd_line);
 
     std::error_code ec;
     ASSERT_TRUE(fs::exists(f, ec));
@@ -601,7 +601,7 @@ TEST(WmiProviderTest, WmiWeb) {
     EXPECT_TRUE(e2.isAllowedByTime());
 
     auto cmd_line = std::to_string(12345) + " " + wmi_name + " ";
-    e2.startSynchronous("file:" FNAME_USE, cmd_line);
+    e2.startExecution("file:" FNAME_USE, cmd_line);
 
     std::error_code ec;
     ASSERT_TRUE(fs::exists(f, ec));
@@ -634,7 +634,7 @@ TEST(WmiProviderTest, WmiCpu) {
     EXPECT_TRUE(!data.empty());
 
     auto cmd_line = std::to_string(12345) + " " + wmi_name + " ";
-    e2.startSynchronous("file:" FNAME_USE, cmd_line);
+    e2.startExecution("file:" FNAME_USE, cmd_line);
 
     std::error_code ec;
     ASSERT_TRUE(fs::exists(f, ec));

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Iterable, Iterator, List, Set
+from typing import Dict, Iterable, Iterator, List, Mapping, Set
 from contextlib import suppress
 import enum
 
@@ -16,7 +16,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 
-from cmk.base.check_utils import CheckTable, Service
+from cmk.base.check_utils import Service, ServiceID
 
 
 class FilterMode(enum.Enum):
@@ -25,10 +25,8 @@ class FilterMode(enum.Enum):
     INCLUDE_CLUSTERED = enum.auto()
 
 
-# TODO: This is just a first cleanup step: Continue cleaning this up.
-# - Caching a Dict is dangerous. This should be an immutable mapping.
-# - Make this a helper object of HostConfig?
-class HostCheckTable(CheckTable):
+# TODO: Make this a helper object of HostConfig?
+class HostCheckTable(Mapping[ServiceID, Service]):
     def __init__(
         self,
         *,
@@ -38,12 +36,15 @@ class HostCheckTable(CheckTable):
         filter_mode: FilterMode,
         skip_ignored: bool,
     ) -> None:
+        self._data: Dict[ServiceID, Service] = {}
+
         sfilter = _ServiceFilter(
             config_cache=config_cache,
             host_config=host_config,
             mode=filter_mode,
             skip_ignored=skip_ignored,
         )
+
         # process all entries that are specific to the host
         # in search (single host) or that might match the host.
         if not (skip_autochecks or host_config.is_ping_host):
@@ -57,7 +58,16 @@ class HostCheckTable(CheckTable):
                          sfilter)
 
     def _update(self, services: Iterable[Service], sfilter: '_ServiceFilter') -> None:
-        self.update({s.id(): s for s in services if sfilter.keep(s)})
+        self._data.update({s.id(): s for s in services if sfilter.keep(s)})
+
+    def __getitem__(self, key: ServiceID) -> Service:
+        return self._data[key]
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self) -> Iterator[ServiceID]:
+        return iter(self._data)
 
 
 class _ServiceFilter:

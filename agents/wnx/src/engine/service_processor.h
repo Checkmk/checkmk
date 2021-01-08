@@ -178,7 +178,7 @@ protected:
         auto cmd_line =
             std::to_string(Marker) + " " + SectionName + " " + CommandLine;
 
-        engine_.startSynchronous(Port, cmd_line);
+        engine_.startExecution(Port, cmd_line);
         auto us_count = engine_.stopWatchStop();
         XLOG::d.i("perf: Section '{}' took [{}] milliseconds",
                   provider_uniq_name_, us_count / 1000);

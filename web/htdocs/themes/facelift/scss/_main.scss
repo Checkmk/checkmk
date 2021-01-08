@@ -462,8 +462,7 @@ div.warning {
 }
 
 div.really {
-  background-color: rgb(253, 196, 0);
-  border-color: rgb(136, 0, 0);
+  background-color: $warning;
 }
 
 div.success {
@@ -494,8 +493,7 @@ div.error {
 .warning,
 body.main div.warning {
   color: rgb(0, 0, 0);
-  background-color: $yellow;
-  border-color: rgb(255, 204, 0);
+  background-color: $warning;
 
   a,
   a:link {

@@ -428,7 +428,7 @@ def _valuespec_inventory_if_rules():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
-        match_type="list",
+        match_type="all",
         name="inventory_if_rules",
         valuespec=_valuespec_inventory_if_rules,
     ))

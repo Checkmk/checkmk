@@ -43,7 +43,7 @@ public:
 
 protected:
     std::string makeBody() override;
-    std::string generateFileList(YAML::Node path_array_val);
+    std::string generateFileList(const YAML::Node& path_array_val);
     Mode mode_ = Mode::legacy;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class FileInfoTest;

@@ -421,11 +421,11 @@ export function schedule_reload(url, remaining_ms) {
     update_page_state_reload_indicator(remaining_ms);
 
     if (remaining_ms <= 0) {
-        // The time is over. Now trigger the desired actions
+        // The time is over. Now trigger the desired actions and do not reschedule anymore.
+        // The action to be triggered will care about either performing a full page reload
+        // or partial update and fire the reload scheduler again.
         do_reload(url);
-
-        // Prepare for the next update interval
-        remaining_ms = parseFloat(g_reload_interval) * 1000;
+        return;
     }
 
     stop_reload_timer();

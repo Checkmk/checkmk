@@ -35,9 +35,6 @@ class CacheManager:
     def get_dict(self, name: str) -> 'DictCache':
         return cast(DictCache, self.get(name, DictCache))
 
-    def get_set(self, name: str) -> 'SetCache':
-        return cast(SetCache, self.get(name, SetCache))
-
     def get_list(self, name: str) -> 'ListCache':
         return cast(ListCache, self.get(name, ListCache))
 
@@ -111,12 +108,6 @@ class DictCache(dict, Cache):
 #            "misses": self._num_misses,
 #            "items": len(self),
 #        }
-
-
-class SetCache(set, Cache):
-    def clear(self) -> None:
-        super(SetCache, self).clear()
-        self.set_not_populated()
 
 
 class ListCache(list, Cache):

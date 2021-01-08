@@ -57,7 +57,6 @@ import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.caching import runtime_cache as _runtime_cache
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.labels import LabelManager
@@ -1520,11 +1519,8 @@ def load_checks(get_check_api_context: GetCheckApiContext, filelist: List[str]) 
     convert_check_info()
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
 
-    errors = (_extract_agent_and_snmp_sections(validate_creation_kwargs=did_compile) +
-              _extract_check_plugins(validate_creation_kwargs=did_compile))
-    initialize_check_type_caches()
-
-    return errors
+    return (_extract_agent_and_snmp_sections(validate_creation_kwargs=did_compile) +
+            _extract_check_plugins(validate_creation_kwargs=did_compile))
 
 
 def all_checks_loaded() -> bool:
@@ -2001,18 +1997,6 @@ def _extract_check_plugins(
             errors.append(AUTO_MIGRATION_ERR_MSG % ("check plugin", check_plugin_name))
 
     return errors
-
-
-# These caches both only hold the base names of the checks
-def initialize_check_type_caches() -> None:
-    snmp_cache = _runtime_cache.get_set("check_type_snmp")
-    snmp_cache.update(snmp_info)
-
-    tcp_cache = _runtime_cache.get_set("check_type_tcp")
-    for check_plugin_name in check_info:
-        section_name = section_name_of(check_plugin_name)
-        if section_name not in snmp_cache:
-            tcp_cache.add(section_name)
 
 
 #.

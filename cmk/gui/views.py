@@ -2297,7 +2297,12 @@ def _get_context_page_menu_dropdowns(view: View, rows: Rows,
     # First gather a flat list of all visuals to be linked to
     singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
                                                                      view.spec["single_infos"])
-    linked_visuals = list(_collect_linked_visuals(view, rows, singlecontext_request_vars, mobile))
+    # Reports are displayed by separate dropdown (Export > Report)
+    linked_visuals = [
+        (t, v)
+        for t, v in _collect_linked_visuals(view, rows, singlecontext_request_vars, mobile)
+        if t.ident != "reports"
+    ]
 
     # Now get the "info+single object" combinations to show dropdown menus for
     for info_name, is_single_info in _get_relevant_infos(view):
@@ -2515,9 +2520,6 @@ def collect_context_links(view: View,
 def _collect_linked_visuals(view: View, rows: Rows, singlecontext_request_vars: Dict[str, str],
                             mobile: bool) -> Iterator[_Tuple[VisualType, Visual]]:
     for type_name in visual_type_registry.keys():
-        if type_name == "reports":
-            continue  # Reports are displayed by separate dropdown (Export > Report)
-
         yield from _collect_linked_visuals_of_type(type_name, view, rows,
                                                    singlecontext_request_vars, mobile)
 

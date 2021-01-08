@@ -1,0 +1,12 @@
+Title: Views: Host/service context PDF links are now visible in Export menu
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1610120844
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+The links to context sensitive PDF reports were previously not shown
+in the page menu.

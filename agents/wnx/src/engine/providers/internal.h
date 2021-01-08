@@ -204,7 +204,7 @@ protected:
     // ASYNCHRONOUS PART:
     void threadProc(const std::string& internal_port,
                     const std::string& command_line,
-                    std::chrono::milliseconds period) noexcept;
+                    std::chrono::milliseconds period);
 
     // thread
     std::thread thread_;

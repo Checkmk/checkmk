@@ -725,15 +725,15 @@ img.icon {
     height: 20px;
   }
 
-  &:hover {
-    opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
-  }
-
   &.reload_failed {
     filter: sepia(100%);
     -webkit-filter: sepia(100%);
   }
+}
+
+img.iconbutton:hover {
+  opacity: 0.5;
+  filter: alpha(opacity=50); /* For IE8 and earlier */
 }
 
 /* TODO: Reproduce this html item */

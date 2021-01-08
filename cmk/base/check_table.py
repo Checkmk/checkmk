@@ -37,10 +37,9 @@ class HostCheckTable(CheckTable):
             mode=filter_mode,
             skip_ignored=skip_ignored,
         )
-
-        # Now process all entries that are specific to the host
+        # process all entries that are specific to the host
         # in search (single host) or that might match the host.
-        if not skip_autochecks:
+        if not (skip_autochecks or host_config.is_ping_host):
             self._update(config_cache.get_autochecks_of(host_config.hostname), sfilter)
 
         self._update(_get_static_check_entries(host_config), sfilter)
@@ -149,9 +148,11 @@ def _get_clustered_services(
 ) -> Iterable[Service]:
     for node in host_config.nodes or []:
         # TODO: Cleanup this to work exactly like the logic above (for a single host)
+        # (mo): in particular: this means that autochecks will win over static checks.
+        #       for a single host the static ones win.
         node_config = config_cache.get_host_config(node)
         node_checks = list(_get_static_check_entries(node_config))
-        if not skip_autochecks:
+        if not (skip_autochecks or host_config.is_ping_host):
             node_checks += config_cache.get_autochecks_of(node)
 
         for service in node_checks:
@@ -185,10 +186,7 @@ def get_check_table(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    if host_config.is_ping_host:
-        skip_autochecks = True
-
-    use_cache_for_real = not skip_autochecks and use_cache
+    use_cache_for_real = not host_config.is_ping_host and not skip_autochecks and use_cache
     # speed up multiple lookup of same host
     table_cache_id = host_config.hostname, filter_mode
     if use_cache_for_real:

@@ -355,7 +355,7 @@ def test_get_sorted_check_table_cmc(monkeypatch, service_list):
     # all arguments are ignored in test
     sorted_service_list = check_table.get_sorted_service_list(
         "",
-        filter_mode=None,
+        filter_mode=check_table.FilterMode.NONE,
         skip_ignored=True,
     )
     assert sorted_service_list == sorted(service_list, key=lambda s: s.description)
@@ -375,7 +375,7 @@ def test_get_sorted_check_table_no_cmc(monkeypatch, service_list):
     # all arguments are ignored in test
     sorted_service_list = check_table.get_sorted_service_list(
         "",
-        filter_mode=None,
+        filter_mode=check_table.FilterMode.NONE,
         skip_ignored=True,
     )
     assert [s.description for s in sorted_service_list] == [
@@ -406,7 +406,7 @@ def test_get_sorted_check_table_cyclic(monkeypatch, service_list):
                            " 'description D' (plugin_D / item)")):
         _ = check_table.get_sorted_service_list(
             "MyHost",
-            filter_mode=None,
+            filter_mode=check_table.FilterMode.NONE,
             skip_ignored=True,
         )
 

@@ -385,7 +385,8 @@ def _get_services_to_fetch(
     clusters the nodes have to fetch the information for the checking phase of the clustered
     services.
     """
-    services = check_table.get_sorted_service_list(host_name, filter_mode="include_clustered")
+    services = check_table.get_sorted_service_list(
+        host_name, filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED)
 
     # When check types are specified via command line, enforce them. Otherwise accept all check
     # plugin names.

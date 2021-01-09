@@ -1154,7 +1154,7 @@ if '-d' in sys.argv:
 def _get_needed_plugin_names(
     host_config: config.HostConfig,
 ) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[InventoryPluginName]]:
-    from cmk.base.check_table import get_needed_check_names  # pylint: disable=import-outside-toplevel
+    from cmk.base import check_table  # pylint: disable=import-outside-toplevel
     needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
@@ -1178,9 +1178,9 @@ def _get_needed_plugin_names(
     # when determining the needed *section* plugins.
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
-    needed_agent_based_check_plugin_names = get_needed_check_names(
+    needed_agent_based_check_plugin_names = check_table.get_needed_check_names(
         host_config.hostname,
-        filter_mode="include_clustered",
+        filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
     )
 
@@ -1200,7 +1200,7 @@ def _get_needed_plugin_names(
         if nodes is None:
             raise MKGeneralException("Invalid cluster configuration")
         for node in nodes:
-            for check_plugin_name in get_needed_check_names(node, skip_ignored=False):
+            for check_plugin_name in check_table.get_needed_check_names(node, skip_ignored=False):
                 opt_legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
                 if opt_legacy_name is not None:
                     needed_legacy_check_plugin_names.add(opt_legacy_name)

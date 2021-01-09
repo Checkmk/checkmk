@@ -217,7 +217,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                 agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_table.get_needed_check_names(
                         self.hostname,
-                        filter_mode="include_clustered",
+                        filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
                         skip_ignored=True,
                     ),
                     inventory_plugin_names=()))

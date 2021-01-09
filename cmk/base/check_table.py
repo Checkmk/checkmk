@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Iterable, Iterator, List, Literal, Optional, Set
+from typing import Iterable, Iterator, List, Set
 from contextlib import suppress
+import enum
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
@@ -16,6 +17,12 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 
 from cmk.base.check_utils import CheckTable, Service
+
+
+class FilterMode(enum.Enum):
+    NONE = enum.auto()
+    ONLY_CLUSTERED = enum.auto()
+    INCLUDE_CLUSTERED = enum.auto()
 
 
 # TODO: This is just a first cleanup step: Continue cleaning this up.
@@ -28,7 +35,7 @@ class HostCheckTable(CheckTable):
         config_cache: config.ConfigCache,
         host_config: config.HostConfig,
         skip_autochecks: bool,
-        filter_mode: Optional[Literal["only_clustered", "include_clustered"]],
+        filter_mode: FilterMode,
         skip_ignored: bool,
     ) -> None:
         sfilter = _ServiceFilter(
@@ -59,14 +66,14 @@ class _ServiceFilter:
         *,
         config_cache: config.ConfigCache,
         host_config: config.HostConfig,
-        mode: Optional[Literal["only_clustered", "include_clustered"]],
+        mode: FilterMode,
         skip_ignored: bool,
     ) -> None:
         """Filter services for a specific host
 
-        filter_mode: None                -> default, returns only checks for this host
-        filter_mode: "only_clustered"    -> returns only checks belonging to clusters
-        filter_mode: "include_clustered" -> returns checks of own host, including clustered checks
+        FilterMode.NONE              -> default, returns only checks for this host
+        FilterMode.ONLY_CLUSTERED    -> returns only checks belonging to clusters
+        FilterMode.INCLUDE_CLUSTERED -> returns checks of own host, including clustered checks
         """
         self._config_cache = config_cache
         self._host_name = host_config.hostname
@@ -86,11 +93,11 @@ class _ServiceFilter:
         ):
             return False
 
-        if self._mode == "include_clustered":
+        if self._mode is FilterMode.INCLUDE_CLUSTERED:
             return True
 
         if not self._host_part_of_clusters:
-            return self._mode != "only_clustered"
+            return self._mode is not FilterMode.ONLY_CLUSTERED
 
         host_of_service = self._config_cache.host_of_clustered_service(
             self._host_name,
@@ -99,10 +106,10 @@ class _ServiceFilter:
         )
         svc_is_mine = (self._host_name == host_of_service)
 
-        if self._mode is None:
+        if self._mode is FilterMode.NONE:
             return svc_is_mine
 
-        # self._mode == "only_clustered"
+        # self._mode is FilterMode.ONLY_CLUSTERED
         return not svc_is_mine
 
 
@@ -180,7 +187,7 @@ def get_check_table(
     *,
     use_cache: bool = True,
     skip_autochecks: bool = False,
-    filter_mode: Optional[Literal["only_clustered", "include_clustered"]] = None,
+    filter_mode: FilterMode = FilterMode.NONE,
     skip_ignored: bool = True,
 ) -> HostCheckTable:
     config_cache = config.get_config_cache()
@@ -209,7 +216,8 @@ def get_check_table(
 
 def get_needed_check_names(
     hostname: HostName,
-    filter_mode: Optional[Literal["only_clustered", "include_clustered"]] = None,
+    *,
+    filter_mode: FilterMode = FilterMode.NONE,
     skip_ignored: bool = True,
 ) -> Set[CheckPluginName]:
     return {
@@ -224,7 +232,7 @@ def get_needed_check_names(
 def get_sorted_service_list(
     hostname: HostName,
     *,
-    filter_mode: Optional[Literal["only_clustered", "include_clustered"]] = None,
+    filter_mode: FilterMode = FilterMode.NONE,
     skip_ignored: bool = True,
 ) -> List[Service]:
 

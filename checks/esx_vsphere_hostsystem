@@ -314,60 +314,58 @@ def check_esx_vsphere_hostsystem_multipath(item, params, parsed):
     message = ""
     path_names = []
 
-    for path, states in esx_vsphere_multipath_convert(parsed).items():
-        if path == item:
-            # Collect states
-            for path_state, path_name in states:
-                state_item = state_infos.get(path_state)
-                path_info = path_name
-                if state_item:
-                    state_item[1] += 1
-                    state = max(state_item[0], state)
-                    path_info += state_markers[state_item[0]]
-                path_names.append(path_info)
+    states = esx_vsphere_multipath_convert(parsed).get(item)
+    if states is None:
+        return states
 
-            # Check warn, critical
-            if not params or isinstance(params, list):
-                if state_infos["standby"][1] > 0 and \
-                   state_infos["standby"][1] != state_infos["active"][1]:
-                    state = max(state_infos["standby"][0], state)
-            else:
-                state = 0
-                for state_name, state_values in state_infos.items():
-                    if params.get(state_name):
-                        limits = params.get(state_name)
-                        if len(limits) == 2:
-                            warn_max, crit_max = limits
-                            crit_min, warn_min = 0, 0
-                        else:
-                            crit_min, warn_min, warn_max, crit_max = limits
+    # Collect states
+    for path_state, path_name in states:
+        state_item = state_infos.get(path_state)
+        path_info = path_name
+        if state_item:
+            state_item[1] += 1
+            state = max(state_item[0], state)
+            path_info += state_markers[state_item[0]]
+        path_names.append(path_info)
 
-                        count = state_values[1]
-                        if count < crit_min:
-                            state = max(state, 2)
-                            state_values[2] = "(!!)(less than %d)" % crit_min
-                        elif count > crit_max:
-                            state = max(state, 2)
-                            state_values[2] = "(!!)(more than %d)" % crit_max
-                        elif count < warn_min:
-                            state = max(state, 1)
-                            state_values[2] = "(!)(less than %d)" % warn_min
-                        elif count > warn_max:
-                            state = max(state, 1)
-                            state_values[2] = "(!)(more than %d)" % warn_max
-
-            # Output message
-            message = ""
-
-            element_text = []
-            for element in "active", "dead", "disabled", "standby", "unknown":
-                element_text.append("%d %s%s" %
-                                    (state_infos[element][1], element, state_infos[element][2]))
-            message += ", ".join(element_text)
-            message += "\nIncluded Paths:\n" + "\n".join(path_names)
-            break
+    # Check warn, critical
+    if not params or isinstance(params, list):
+        if state_infos["standby"][1] > 0 and \
+           state_infos["standby"][1] != state_infos["active"][1]:
+            state = max(state_infos["standby"][0], state)
     else:
-        return 3, "Path not found in agent output"
+        state = 0
+        for state_name, state_values in state_infos.items():
+            if params.get(state_name):
+                limits = params.get(state_name)
+                if len(limits) == 2:
+                    warn_max, crit_max = limits
+                    crit_min, warn_min = 0, 0
+                else:
+                    crit_min, warn_min, warn_max, crit_max = limits
+
+                count = state_values[1]
+                if count < crit_min:
+                    state = max(state, 2)
+                    state_values[2] = "(!!)(less than %d)" % crit_min
+                elif count > crit_max:
+                    state = max(state, 2)
+                    state_values[2] = "(!!)(more than %d)" % crit_max
+                elif count < warn_min:
+                    state = max(state, 1)
+                    state_values[2] = "(!)(less than %d)" % warn_min
+                elif count > warn_max:
+                    state = max(state, 1)
+                    state_values[2] = "(!)(more than %d)" % warn_max
+
+    # Output message
+    message = ""
+
+    element_text = []
+    for element in "active", "dead", "disabled", "standby", "unknown":
+        element_text.append("%d %s%s" % (state_infos[element][1], element, state_infos[element][2]))
+    message += ", ".join(element_text)
+    message += "\nIncluded Paths:\n" + "\n".join(path_names)
 
     return state, message
 

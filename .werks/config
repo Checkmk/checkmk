@@ -55,4 +55,4 @@ compatible = [
     ("incomp", "Incompatible"),
 ]
 
-online_url = "https://checkmk.com/check_mk-werks.php?werk_id=%d"
+online_url = "https://checkmk.com/werk/%d"

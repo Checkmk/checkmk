@@ -61,4 +61,4 @@ knowledge = [
     ( "doc",   "Is reflected in user manual or does not need to" ),
 ]
 
-online_url = "https://checkmk.com/check_mk-werks.php?werk_id=%d"
+online_url = "https://checkmk.com/werk/%d"

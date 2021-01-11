@@ -72,7 +72,7 @@ void AppRunner::kill(bool kill_tree) {
             // normally only updater here, be careful
             KillProcessTree(proc_id);
             auto success = KillProcess(proc_id);
-            XLOG::d.i("Process [{}] had been killed {}", proc_id,
+            XLOG::d.i("Process [{}] had been {}", proc_id,
                       success ? "killed SUCCESSFULLY" : "FAILED to kill");
         }
 

@@ -165,6 +165,8 @@ public:
 
     ~TempCfgFs();
 
+    [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
+
     [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
                                       const std::string& content) const;
     [[nodiscard]] bool createDataFile(const std::filesystem::path& relative_p,
@@ -188,6 +190,7 @@ private:
 };
 
 const extern std::filesystem::path G_SolutionPath;
+std::filesystem::path GetFabricYml();
 
 }  // namespace tst
 #endif  // test_tools_h__

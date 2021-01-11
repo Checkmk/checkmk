@@ -193,9 +193,10 @@ TEST(LogWatchEventTest, LoadFrom) {
 }
 
 TEST(LogWatchEventTest, Config) {
-    using namespace std;
     using namespace cma::cfg;
-    tst::YamlLoader w;
+    tst::TempCfgFs test_fs;
+    ASSERT_TRUE(test_fs.loadConfig(tst::GetFabricYml()));
+
     {
         auto enabled = GetVal(groups::kLogWatchEvent, vars::kEnabled, false);
         EXPECT_EQ(enabled, true);

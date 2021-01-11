@@ -13,6 +13,7 @@
 #include "cfg.h"
 #include "corecrt_terminate.h"  // for terminate
 #include "exception"            // for terminate
+#include "on_start.h"
 #include "tools/_misc.h"
 #include "tools/_tgt.h"          // for IsDebug
 #include "yaml-cpp/emitter.h"    // for Emitter
@@ -224,6 +225,16 @@ TempCfgFs ::~TempCfgFs() {
     std::filesystem::remove_all(base_);
 }
 
+bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
+    std::filesystem::copy_file(yml,
+                               root() / cma::cfg::files::kDefaultMainConfig);
+
+    std::vector<std::wstring> cfg_files;
+    cfg_files.emplace_back(cma::cfg::files::kDefaultMainConfig);
+
+    return cma::cfg::InitializeMainConfig(cfg_files, cma::YamlCacheOp::nothing);
+}
+
 [[nodiscard]] bool TempCfgFs::createFile(
     const std::filesystem::path& filepath,
     const std::filesystem::path& filepath_base, const std::string& content) {
@@ -264,5 +275,10 @@ TempCfgFs ::~TempCfgFs() {
 [[nodiscard]] void TempCfgFs::removeDataFile(
     const std::filesystem::path& filepath) const {
     TempCfgFs::removeFile(filepath, data_);
+}
+
+std::filesystem::path GetFabricYml() {
+    return G_SolutionPath / "install" / "resources" /
+           cma::cfg::files::kDefaultMainConfig;
 }
 }  // namespace tst

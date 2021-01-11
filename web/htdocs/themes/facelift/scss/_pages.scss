@@ -1213,55 +1213,6 @@ form.visual {
 }
 
 /*-------------------------------------------------------------------------.
-|                     _        _   _                                       |
-|                    / \   ___| |_(_) ___  _ __  ___                       |
-|                   / _ \ / __| __| |/ _ \| '_ \/ __|                      |
-|                  / ___ \ (__| |_| | (_) | | | \__ \                      |
-|                 /_/   \_\___|\__|_|\___/|_| |_|___/                      |
-|                                                                          |
-+--------------------------------------------------------------------------+
-| Confirmation dialogs, success and error messages when performing actions |
-'-------------------------------------------------------------------------*/
-div.really,
-div.success,
-div.error,
-div.message,
-div.warning {
-  padding: 1em 2em;
-  margin: 2em 0;
-  border-radius: $theme-border-radius;
-  box-shadow: none;
-
-  h1 {
-    margin-bottom: 5px;
-    margin-left: 0;
-    font-size: 16px;
-    font-weight: bold;
-    color: rgb(255, 255, 255);
-  }
-}
-
-// TODO: Check whether this must be $primary-font-color as is for .success
-div.message {
-  color: rgb(0, 0, 0);
-}
-
-div.really {
-  color: $black;
-}
-
-div.success {
-  color: $primary-font-color;
-}
-
-/* TODO: Reproduce this html element */
-form.confirm {
-  position: relative;
-  left: -1px;
-  margin-top: 8px;
-}
-
-/*-------------------------------------------------------------------------.
 |                         _   _      _                                     |
 |                        | | | | ___| |_ __                                |
 |                        | |_| |/ _ \ | '_ \                               |

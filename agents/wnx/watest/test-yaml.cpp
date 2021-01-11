@@ -725,11 +725,8 @@ TEST(AgentConfig, WorkConfig) {
     using namespace std;
     using namespace cma::cfg;
 
-    vector<wstring> cfg_files;
-    cfg_files.emplace_back(files::kDefaultMainConfig);
-
-    auto ret = cma::cfg::InitializeMainConfig(cfg_files, YamlCacheOp::nothing);
-    ASSERT_EQ(ret, true);
+    tst::TempCfgFs test_fs;
+    ASSERT_TRUE(test_fs.loadConfig(tst::GetFabricYml()));
     auto cfg = cma::cfg::GetLoadedConfig();
     EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
 

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -84,9 +85,10 @@ public:
     ~LogWatchEntry() = default;
 
     // bool loadFrom(const YAML::Node Node) noexcept;
-    bool loadFromMapNode(const YAML::Node Node) noexcept;
-    bool loadFrom(std::string_view Line) noexcept;
-    void init(std::string_view Name, std::string_view Param, bool Context);
+    bool loadFromMapNode(const YAML::Node& node);
+    bool loadFrom(std::string_view line);
+    void init(std::string_view name, std::string_view level_value,
+              bool context);
     LogWatchEntry& withDefault() {
         init("*", ConvertLogWatchLevelToString(cfg::EventLevels::kWarn), true);
         return *this;
@@ -165,7 +167,7 @@ enum class SendMode { all, normal };
 // Update States vector with log entries and Send All flags
 // event logs are available
 // returns count of processed Logs entries
-int UpdateEventLogStates(StateVector& states, std::vector<std::string> logs,
+int UpdateEventLogStates(StateVector& states, std::vector<std::string>& logs,
                          SendMode send_mode);
 
 LogWatchEntry GenerateDefaultValue();
@@ -174,11 +176,12 @@ std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name);
 bool LoadFromConfig(State& state, const LogWatchEntryVector& entries) noexcept;
 
 std::pair<uint64_t, std::string> DumpEventLog(cma::evl::EventLogBase& log,
-                                              State state, LogWatchLimits lwl);
+                                              const State& state,
+                                              LogWatchLimits lwl);
 // Fix Values in states according to the config
-void UpdateStatesByConfig(StateVector& States,
-                          const LogWatchEntryVector& Entries,
-                          const LogWatchEntry* Default);
+void UpdateStatesByConfig(StateVector& states,
+                          const LogWatchEntryVector& entries,
+                          const LogWatchEntry* dflt);
 // manual adding: two things possible
 // 1. added brand new
 // 2. existing marked as presented_
@@ -186,8 +189,8 @@ void AddLogState(StateVector& states, bool from_config,
                  const std::string& log_name, SendMode send_mode);
 
 // to use for load entries of config
-void AddConfigEntry(StateVector& States, const LogWatchEntry&,
-                    bool ResetToNull);
+void AddConfigEntry(StateVector& states, const LogWatchEntry& log_entry,
+                    bool reset_to_null);
 
 // returns output from log and set value validity
 // nothing when log is absent
@@ -202,7 +205,7 @@ std::string GenerateOutputFromStates(
 // used to check presence of some logs in registry
 bool IsEventLogInRegistry(std::string_view name);
 
-cma::cfg::EventLevels LabelToEventLevel(std::string_view LevelValue);
+cma::cfg::EventLevels LabelToEventLevel(std::string_view required_level);
 
 // used for a testing /analyzing
 struct RawLogWatchData {

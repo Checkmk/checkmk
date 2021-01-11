@@ -305,7 +305,14 @@ def _define_fileinfo_group_check(files_matching, date_inclusion):
     ]
 
 
-def check_fileinfo_groups(_item, params, parsed):
+def _get_group_patterns_from_extra_conf(item):
+    try:
+        return collections.OrderedDict(host_extra_conf(host_name(), fileinfo_groups)[0]).get(item)
+    except IndexError:
+        return None
+
+
+def check_fileinfo_groups(item, params, parsed):
 
     outof_range_txt = fileinfo_check_timeranges(params)
     date_inclusion = None
@@ -325,13 +332,17 @@ def check_fileinfo_groups(_item, params, parsed):
         yield 3, "Missing reference timestamp"
         return
 
-    try:
-        group_patterns = set((p, '') if isinstance(p, str) else p for p in params['group_patterns'])
-    except KeyError:
-        yield 3, ("No group pattern found in autocheck. Temporarily disable this service "
-                  "to get this fixed. See "
-                  "https://checkmk.com/cms_wato_services.html#Removing%20unwanted%20services")
+    raw_group_patterns = params.get(
+        'group_patterns',
+        # group pattern is not available in autochecks for enforced services
+        _get_group_patterns_from_extra_conf(item),
+    )
+
+    if not raw_group_patterns:
+        yield 3, ("No group pattern found.")
         return
+
+    group_patterns = set((p, '') if isinstance(p, str) else p for p in raw_group_patterns)
 
     # Start counting values on all files
     for file_stat in parsed.get('files', {}).values():

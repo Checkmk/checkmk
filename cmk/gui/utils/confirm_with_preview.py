@@ -36,8 +36,8 @@ def confirm_with_preview(msg: Union[str, HTML], method: str = "POST") -> Optiona
         html.write_text(msg)
         html.begin_form("confirm", method=method, add_transid=False)
         html.hidden_fields(add_action_vars=True)
-        html.button("_do_confirm", _("Yes!"), "really")
-        html.button("_do_actions", _("No"), "")
+        html.button("_do_confirm", _("Yes"), "really")
+        html.button("_do_actions", _("No"))
         html.end_form()
         html.close_div()
         if html.mobile:

@@ -455,8 +455,8 @@ div.success,
 div.error,
 div.message,
 div.warning {
-  padding: 1em 2em;
-  margin: 2em 0;
+  padding: 16px;
+  margin: $spacing 0;
   border-radius: $theme-border-radius;
   box-shadow: none;
 
@@ -464,8 +464,14 @@ div.warning {
     margin-bottom: 5px;
     margin-left: 0;
     font-size: 16px;
-    font-weight: bold;
-    color: rgb(255, 255, 255);
+    font-weight: $font-weight-bold;
+    color: $white;
+  }
+
+  input.button {
+    padding: 8px 16px;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 }
 
@@ -480,7 +486,7 @@ div.success {
 }
 
 div.message {
-  color: rgb(0, 0, 0); // TODO: Check whether this must be $primary-font-color as is for .success
+  color: $black; // TODO: Check whether this must be $primary-font-color as is for .success
   background-color: rgb(157, 190, 205);
   border-color: rgb(0, 68, 136);
 }
@@ -502,13 +508,17 @@ div.error {
 
 .warning,
 body.main div.warning {
-  color: rgb(0, 0, 0);
+  color: $black;
   background-color: $warning;
 
   a,
   a:link {
     color: $black;
   }
+}
+
+form.confirm {
+  margin-top: $spacing;
 }
 
 /* Warnings embedded in tables without margins and padding, those are
@@ -524,13 +534,6 @@ td > div.error {
     padding-left: 0;
     margin: 5px 10px;
   }
-}
-
-/* TODO: Reproduce this html element */
-form.confirm {
-  position: relative;
-  left: -1px;
-  margin-top: 8px;
 }
 
 /*-ValueSpec---------------------------------------------------------------.

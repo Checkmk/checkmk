@@ -33,6 +33,7 @@ from cmk.gui.globals import html, request as global_request
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKUserError,
+    MKAuthException,
 )
 import cmk.gui.config as config
 from cmk.gui.valuespec import (
@@ -406,6 +407,10 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 @page_registry.register_page("download_diagnostics_dump")
 class PageDownloadDiagnosticsDump(Page):
     def page(self) -> None:
+        if not config.user.may("wato.diagnostics"):
+            raise MKAuthException(
+                _("Sorry, you lack the permission for downloading diagnostics dumps."))
+
         site = html.request.get_ascii_input_mandatory("site")
         tarfile_name = html.request.get_ascii_input_mandatory("tarfile_name")
         file_content = self._get_diagnostics_dump_file(site, tarfile_name)
@@ -436,14 +441,13 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand):
 
 
 def _get_diagnostics_dump_file(tarfile_name: str) -> bytes:
+    _validate_diagnostics_dump_tarfile_name(tarfile_name)
     tarfile_path = cmk.utils.paths.diagnostics_dir.joinpath(tarfile_name)
-    _validate_diagnostics_dump_filepath(tarfile_path)
     with tarfile_path.open("rb") as f:
         return f.read()
 
 
-def _validate_diagnostics_dump_filepath(tarfile_path: Path) -> None:
-    try:
-        tarfile_path.relative_to(cmk.utils.paths.diagnostics_dir)
-    except ValueError:
+def _validate_diagnostics_dump_tarfile_name(tarfile_name: str) -> None:
+    # Prevent downloading files like 'tarfile_name=../../../../../../../../../../etc/passwd'
+    if Path(tarfile_name).parent != Path('.'):
         raise MKUserError("_diagnostics_dump_file", _("Invalid file name for tarfile_name given."))

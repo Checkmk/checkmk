@@ -47,6 +47,45 @@ void AppRunner::cleanResources() noexcept {
     stderr_.shutdown();
 }
 
+// #TODO test this(directly not tested)
+void AppRunner::kill(bool kill_tree) {
+    auto proc_id = process_id_.exchange(0);
+    if (proc_id == 0) {
+        XLOG::d(
+            "Attempt to kill process which is not started or already killed");
+        return;
+    }
+
+    if (kill_tree) {
+        if (job_handle_) {
+            // this is normal case but with job
+            TerminateJobObject(job_handle_, 0);
+
+            // job:
+            CloseHandle(job_handle_);
+            job_handle_ = nullptr;
+
+            // process:
+            CloseHandle(process_handle_);  // must
+            process_handle_ = nullptr;
+        } else {
+            // normally only updater here, be careful
+            KillProcessTree(proc_id);
+            auto success = KillProcess(proc_id);
+            XLOG::d.i("Process [{}] had been killed {}", proc_id,
+                      success ? "killed SUCCESSFULLY" : "FAILED to kill");
+        }
+
+        return;
+    }
+
+    if (exit_code_ == STILL_ACTIVE) {
+        auto success = KillProcess(proc_id, -1);
+        if (!success)
+            XLOG::l("Failed kill {} status {}", proc_id, GetLastError());
+    }
+}
+
 // returns PID or 0,
 uint32_t AppRunner::goExecAsJob(std::wstring_view CommandLine) noexcept {
     try {
@@ -2354,7 +2393,6 @@ bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept {
         return false;
     }
 }
-
 
 bool ProtectPathFromUserWrite(const std::filesystem::path& path) {
     // CONTEXT: to prevent malicious file creation or modification  in folder

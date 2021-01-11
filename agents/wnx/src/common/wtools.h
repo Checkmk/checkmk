@@ -262,39 +262,7 @@ public:
     // returns process id
     uint32_t goExecAsUpdater(std::wstring_view CommandLine) noexcept;
 
-    void kill(bool KillTreeToo) {
-        auto proc_id = process_id_.exchange(0);
-        if (proc_id == 0) {
-            xlog::v(
-                "Attempt to kill process which is not started or already killed");
-            return;
-        }
-
-        if (KillTreeToo) {
-            if (job_handle_) {
-                // this is normal case but with job
-                TerminateJobObject(job_handle_, 0);
-
-                // job:
-                CloseHandle(job_handle_);
-                job_handle_ = nullptr;
-
-                // process:
-                CloseHandle(process_handle_);  // must
-                process_handle_ = nullptr;
-            } else {
-                if (kProcessTreeKillAllowed) KillProcessTree(proc_id);
-            }
-
-            return;
-        }
-
-        if (exit_code_ == STILL_ACTIVE) {
-            auto success = KillProcess(proc_id, -1);
-            if (!success)
-                xlog::v("Failed kill {} status {}", proc_id, GetLastError());
-        }
-    }
+    void kill(bool kill_tree);
 
     const auto getCmdLine() const { return cmd_line_; }
     const auto processId() const { return process_id_.load(); }

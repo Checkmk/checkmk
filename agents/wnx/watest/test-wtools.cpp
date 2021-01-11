@@ -381,11 +381,6 @@ TEST(Wtools, ParentPid) {
     //    EXPECT_TRUE(pid == 0);
 }
 
-TEST(Wtools, KillTree) {
-    //
-    EXPECT_FALSE(kProcessTreeKillAllowed);
-}
-
 TEST(Wtools, Acl) {
     wtools::ACLInfo info("c:\\windows\\notepad.exe");
     auto ret = info.query();

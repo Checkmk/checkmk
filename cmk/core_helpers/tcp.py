@@ -133,13 +133,14 @@ class TCPFetcher(AgentFetcher):
                     "Agent output is plaintext but encryption is enforced by configuration")
             return output
 
-        self._logger.debug("Output is encrypted")  # or corrupt
+        self._logger.debug("Output is encrypted or invalid")
         if self.encryption_settings["use_regular"] == "disable":
             raise MKFetcherError(
-                "Agent output is encrypted but encryption is disabled by configuration")
+                "Agent output is either invalid or encrypted but encryption is disabled by configuration"
+            )
 
         try:
-            self._logger.debug("Decrypt encrypted output")
+            self._logger.debug("Try to decrypt output")
             output = self._real_decrypt(output)
         except MKFetcherError:
             raise

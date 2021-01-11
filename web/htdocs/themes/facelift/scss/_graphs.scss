@@ -26,11 +26,11 @@ tr.data > td > div.graph_container {
 }
 
 div.graph {
-  border-spacing: 0px;
-  padding: 0;
-  margin-bottom: 5px;
   position: relative;
   display: inline-block;
+  padding: 0;
+  margin-bottom: 5px;
+  border-spacing: 0;
 
   a {
     text-decoration: none;
@@ -42,8 +42,8 @@ div.graph {
 
   div.title {
     margin-bottom: 1ex;
-    text-align: center;
     font-weight: bold;
+    text-align: center;
   }
 
   img.loading {
@@ -53,11 +53,11 @@ div.graph {
 
   div.time {
     position: absolute;
-    margin-top: 5px;
     top: 0;
     right: 18px;
-    text-align: right;
     z-index: 10;
+    margin-top: 5px;
+    text-align: right;
   }
 
   div.v_axis_label {
@@ -69,12 +69,12 @@ div.graph {
 
   img.resize {
     position: absolute;
-    bottom: 3px;
     right: 3px;
+    bottom: 3px;
+    z-index: 10;
     width: 12px;
     height: 12px;
     cursor: se-resize;
-    z-index: 10;
   }
 
   img.iconbutton {
@@ -85,8 +85,8 @@ div.graph {
   }
 
   canvas {
-    margin: 0px;
     display: block;
+    margin: 0;
     cursor: crosshair;
   }
 
@@ -94,17 +94,17 @@ div.graph {
     border-collapse: collapse;
 
     .scalar {
-      padding: 1px 10px;
       width: 80px;
+      padding: 1px 10px;
     }
 
     th,
     th.scalar {
-      background-color: transparent;
-      border-style: none;
-      text-align: right;
       padding-bottom: 3px;
       font-weight: bold;
+      text-align: right;
+      background-color: transparent;
+      border-style: none;
     }
 
     th.scalar.inactive {
@@ -175,25 +175,23 @@ div.graph {
 
     > div.title {
       position: absolute;
-      z-index: 10;
-      font-weight: normal;
-      font-size: 120%;
       top: 5px;
+      z-index: 10;
       width: 100%;
+      font-size: 120%;
+      font-weight: normal;
     }
   }
 
   div.title.inline,
   div.time.inline {
     position: absolute;
-    z-index: 10;
-
     top: 10px;
+    z-index: 10;
     margin: 0;
-
     font-size: 100%;
-    text-align: center;
     font-weight: bold;
+    text-align: center;
   }
 
   div.title.inline {
@@ -202,25 +200,25 @@ div.graph {
 }
 
 table.prediction td {
-  padding: 0px;
+  padding: 0;
 }
 
 div.graph table.legend th,
 div.graph table,
 legend td {
   padding: 2px 8px 2.5px 2px;
-  white-space: nowrap;
   font-size: 11px;
+  white-space: nowrap;
 }
 
 div.color {
-  height: 9px;
-  width: 9px;
-  vertical-align: top;
   position: relative;
   top: 1px;
   display: inline-block;
+  width: 9px;
+  height: 9px;
   margin-right: 8px;
+  vertical-align: top;
 }
 
 /* Graphs with timerange selection */

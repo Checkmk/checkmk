@@ -282,7 +282,8 @@ function rgb2hex(rgb) {
 function handle_render_popup_contents(data, response_text) {
     if (data.content) {
         data.content.innerHTML = response_text;
-        fix_popup_menu_position(data.event, data.content);
+        const menu = data.content.closest("div#popup_menu");
+        fix_popup_menu_position(data.event, menu);
     }
 }
 

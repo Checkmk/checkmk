@@ -31,72 +31,178 @@ div.graph {
   margin-bottom: 5px;
   position: relative;
   display: inline-block;
-}
 
-div.graph a {
-  text-decoration: none;
-}
+  a {
+    text-decoration: none;
 
-div.graph a:hover {
-  text-decoration: underline;
-}
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 
-div.graph div.title {
-  margin-bottom: 1ex;
-  text-align: center;
-  font-weight: bold;
-}
+  div.title {
+    margin-bottom: 1ex;
+    text-align: center;
+    font-weight: bold;
+  }
 
-div.graph img.loading {
-  display: block;
-  margin: 20px auto;
-}
+  img.loading {
+    display: block;
+    margin: 20px auto;
+  }
 
-div.graph div.time {
-  position: absolute;
-  margin-top: 5px;
-  top: 0;
-  right: 18px;
-  text-align: right;
-  z-index: 10;
-}
+  div.time {
+    position: absolute;
+    margin-top: 5px;
+    top: 0;
+    right: 18px;
+    text-align: right;
+    z-index: 10;
+  }
 
-div.graph div.v_axis_label {
-  position: absolute;
-  top: 10px;
-  left: 18px;
-  text-align: left;
-}
+  div.v_axis_label {
+    position: absolute;
+    top: 10px;
+    left: 18px;
+    text-align: left;
+  }
 
-div.graph img.resize {
-  position: absolute;
-  bottom: 3px;
-  right: 3px;
-  width: 12px;
-  height: 12px;
-  cursor: se-resize;
-  z-index: 10;
-}
+  img.resize {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 12px;
+    height: 12px;
+    cursor: se-resize;
+    z-index: 10;
+  }
 
-div.graph img.iconbutton {
-  /* sync graphs currently only */
-  position: absolute;
-  bottom: 33px;
-  left: 9px;
-}
+  img.iconbutton {
+    /* sync graphs currently only */
+    position: absolute;
+    bottom: 33px;
+    left: 9px;
+  }
 
-div.graph canvas {
-  margin: 0px;
-  display: block;
-  cursor: crosshair;
+  canvas {
+    margin: 0px;
+    display: block;
+    cursor: crosshair;
+  }
+
+  table.legend {
+    border-collapse: collapse;
+
+    .scalar {
+      padding: 1px 10px;
+      width: 80px;
+    }
+
+    th,
+    th.scalar {
+      background-color: transparent;
+      border-style: none;
+      text-align: right;
+      padding-bottom: 3px;
+      font-weight: bold;
+    }
+
+    th.scalar.inactive {
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    > tbody > tr:nth-child(2) td {
+      padding-top: 4px;
+    }
+
+    td {
+      text-align: left;
+
+      &.scalar {
+        text-align: right;
+      }
+    }
+
+    > tbody > tr.scalar.first {
+      border-top: 1px solid #000;
+
+      td {
+        padding-top: 4px;
+      }
+    }
+
+    div {
+      display: inline-block;
+      float: none;
+
+      &.entry {
+        margin-right: 20px;
+        margin-left: 5px;
+      }
+    }
+  }
+
+  div.popup_trigger {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+  }
+
+  a.popup_trigger {
+    display: block;
+    width: 20px;
+    height: 20px;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  div.indicator {
+    position: absolute;
+    width: 1px;
+    height: 30px;
+  }
+
+  /* Small preview graphs */
+  &.preview {
+    padding: 0;
+    margin: 0;
+
+    > div.title {
+      position: absolute;
+      z-index: 10;
+      font-weight: normal;
+      font-size: 120%;
+      top: 5px;
+      width: 100%;
+    }
+  }
+
+  div.title.inline,
+  div.time.inline {
+    position: absolute;
+    z-index: 10;
+
+    top: 10px;
+    margin: 0;
+
+    font-size: 100%;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  div.title.inline {
+    width: 100%;
+  }
 }
 
 table.prediction td {
   padding: 0px;
-}
-
-div.graph table.legend {
-  border-collapse: collapse;
 }
 
 div.graph table.legend th,
@@ -105,53 +211,6 @@ legend td {
   padding: 2px 8px 2.5px 2px;
   white-space: nowrap;
   font-size: 11px;
-}
-
-div.graph table.legend .scalar {
-  padding: 1px 10px;
-  width: 80px;
-}
-
-div.graph table.legend th,
-div.graph table.legend th.scalar {
-  background-color: transparent;
-  border-style: none;
-  text-align: right;
-  padding-bottom: 3px;
-  font-weight: bold;
-}
-
-div.graph table.legend th.scalar.inactive {
-  cursor: pointer;
-}
-
-div.graph table.legend th.scalar.inactive:hover {
-  text-decoration: underline;
-}
-
-div.graph table.legend > tbody > tr:nth-child(2) td {
-  padding-top: 4px;
-}
-
-div.graph table.legend td {
-  text-align: left;
-}
-
-div.graph table.legend td.scalar {
-  text-align: right;
-}
-
-div.graph table.legend > tbody > tr.scalar.first {
-  border-top: 1px solid #000;
-}
-
-div.graph table.legend > tbody > tr.scalar.first td {
-  padding-top: 4px;
-}
-
-div.graph table.legend div {
-  display: inline-block;
-  float: none;
 }
 
 div.color {
@@ -164,88 +223,27 @@ div.color {
   margin-right: 8px;
 }
 
-div.graph table.legend div.entry {
-  margin-right: 20px;
-  margin-left: 5px;
-}
-
-div.graph div.popup_trigger {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-}
-
-div.graph a.popup_trigger {
-  display: block;
-  width: 20px;
-  height: 20px;
-}
-
-div.graph a.popup_trigger:hover {
-  cursor: pointer;
-}
-
-div.graph div.indicator {
-  position: absolute;
-  width: 1px;
-  height: 30px;
-}
-
-/* Small preview graphs */
-
-div.graph.preview {
-  padding: 0;
-  margin: 0;
-}
-
-div.graph.preview > div.title {
-  position: absolute;
-  z-index: 10;
-  font-weight: normal;
-  font-size: 120%;
-  top: 5px;
-  width: 100%;
-}
-
-div.graph div.title.inline,
-div.graph div.time.inline {
-  position: absolute;
-  z-index: 10;
-
-  top: 10px;
-  margin: 0;
-
-  font-size: 100%;
-  text-align: center;
-  font-weight: bold;
-}
-
-div.graph div.title.inline {
-  width: 100%;
-}
-
 /* Graphs with timerange selection */
-
 div.graph_with_timeranges {
   display: block;
   white-space: nowrap;
-}
 
-div.graph_with_timeranges > div.graph_container {
-  display: inline-block;
-}
+  > div.graph_container {
+    display: inline-block;
+  }
 
-div.graph_with_timeranges tr.data > td > div.timerange {
-  display: block;
-}
+  tr.data > td > div.timerange {
+    display: block;
+  }
 
-div.graph_with_timeranges table.timeranges {
-  display: inline-block;
-  vertical-align: top;
-  border-spacing: 0;
-}
+  table.timeranges {
+    display: inline-block;
+    vertical-align: top;
+    border-spacing: 0;
 
-div.graph_with_timeranges table.timeranges div.graph:hover {
-  cursor: pointer;
-  opacity: 0.75;
+    div.graph:hover {
+      cursor: pointer;
+      opacity: 0.75;
+    }
+  }
 }

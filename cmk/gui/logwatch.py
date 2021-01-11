@@ -452,7 +452,7 @@ def _page_menu_entry_acknowledge(site: Optional[config.SiteId] = None,
 
     urivars: HTTPVariables = [('_ack', '1')]
     if int_filename:
-        urivars.append(("file", int_filename))
+        urivars.append(("file", form_file_to_ext(int_filename)))
 
     ack_msg = _get_ack_msg(host_name, form_file_to_ext(int_filename) if int_filename else None)
 

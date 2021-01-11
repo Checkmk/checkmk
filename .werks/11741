@@ -1,0 +1,20 @@
+Title: fileinfo.groups: group pattern not found for enforced services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610365528
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+The fileinfo.groups check has the option to persist a service in the
+monitoring overview even when there are no files found for the file group. This
+is done by configuring an enforced service for this check, which always
+returned an UNKNOWN status with the following error message:
+
+"No group pattern found in autocheck. Temporarily disable this service to get
+this fixed."
+
+However, the problem could not be fixed with this action. This has now been
+resolved with a different approach, requiring no further action from the user.

@@ -1,0 +1,23 @@
+Title: mkbackup: Fix permission issues when backing up different sites
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p21
+Date: 1610367240
+Class: fix
+
+The site and appliance backup functionality of Checkmk share a global
+lock which ensures that only a single backup or restore job is running
+at a time.
+
+However, on current linux distributions, a permission issue may occur when
+backing up multiple sites on a single Checkmk server. The problem appears when
+one site creates the global lock file (<tt>/tmp/mkbackup.lock</tt>), locks it and
+releases the lock after the backup. The file is kept after that. Once another
+site tries to lock the file during it's backup, a "Permission denied" error is
+raised. This is caused by specific file restrictions in directories where the
+sticky bit is set.
+
+The lock file has now been moved to <tt>/var/lock/mkbackup/mkbackup.lock</tt>
+to solve this issue.

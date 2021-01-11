@@ -1258,7 +1258,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     for check_source, discovered_service in services.values():
         params = None
         exitcode = None
-        perfdata = []  # type: List[Tuple]
         if check_source not in ['legacy', 'active', 'custom']:
             if discovered_service.check_plugin_name not in config.check_info:
                 continue  # Skip not existing check silently
@@ -1345,11 +1344,10 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         3, u"UNKNOWN - invalid output from agent or error in check implementation")
                 if len(result) == 2:
                     result = (result[0], result[1], [])
-                exitcode, output, perfdata = result
+                exitcode, output, _perfdata = result
         else:
             exitcode = None
             output = u"WAITING - %s check, cannot be done offline" % check_source.title()
-            perfdata = []
 
         if check_source == "active":
             params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
@@ -1370,6 +1368,11 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 }
             }
 
+        # Service discovery never uses the perfdata in the check table. That entry
+        # is constantly discarded, yet passed around(back and forth) as part of the
+        # discovery result in the request elements. Some perfdata VALUES are not parsable
+        # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
+        perfdata = []  # type: List[Tuple]
         table.append((check_source, discovered_service.check_plugin_name, checkgroup,
                       discovered_service.item, discovered_service.parameters_unresolved, params,
                       discovered_service.description, exitcode, output, perfdata,

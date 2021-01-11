@@ -375,11 +375,12 @@ div#top_heading {
 
       input#inpage_search_form_reset,
       input.submit {
-        margin: 0 4px;
         padding: 0;
+        margin: 0 4px;
         background-repeat: no-repeat;
 
-        &:disabled {
+        &:disabled,
+        &.hidden {
           display: none;
         }
       }

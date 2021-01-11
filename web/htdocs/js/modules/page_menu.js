@@ -220,13 +220,12 @@ export function side_popup_add_simplebar_scrollbar(popup_id) {
 
 export function inpage_search_init(reset_button_id, was_submitted) {
     const reset_button = document.getElementById(reset_button_id);
-    const submit_button = reset_button.parentNode.getElementsByClassName("button submit")[0];
+    if (!reset_button) return;
 
-    if (reset_button && !was_submitted) {
-        reset_button.disabled = true;
-        reset_button.title = "";
+    if (was_submitted) {
+        const submit_button = reset_button.parentNode.getElementsByClassName("button submit")[0];
+        utils.add_class(submit_button, "hidden");
     } else {
-        submit_button.disabled = true;
-        submit_button.title = "";
+        reset_button.disabled = true;
     }
 }

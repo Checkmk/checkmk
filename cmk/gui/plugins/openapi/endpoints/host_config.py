@@ -22,6 +22,7 @@ import operator
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -52,7 +53,7 @@ def create_host(params):
     body['folder'].create_hosts([(host_name, body['attributes'], None)])
 
     host = watolib.Host.host(host_name)
-    return _serve_host(host)
+    return _serve_host(host, host.attributes())
 
 
 @Endpoint(constructors.collection_href('host_config', "clusters"),
@@ -72,7 +73,7 @@ def create_cluster_host(params):
     body['folder'].create_hosts([(host_name, body['attributes'], body['nodes'])])
 
     host = watolib.Host.host(host_name)
-    return _serve_host(host)
+    return _serve_host(host, host.attributes())
 
 
 @Endpoint(constructors.domain_type_action_href('host_config', 'bulk-create'),
@@ -180,7 +181,7 @@ def update_host(params):
     if update_attributes:
         host.update_attributes(update_attributes)
 
-    return _serve_host(host)
+    return _serve_host(host, host.attributes())
 
 
 @Endpoint(constructors.domain_type_action_href('host_config', 'bulk-update'),
@@ -238,7 +239,7 @@ def rename_host(params):
             title="Rename process failed",
             detail=f"It was not possible to rename the host {host_name} to {new_name}",
         )
-    return _serve_host(host)
+    return _serve_host(host, host.attributes())
 
 
 @Endpoint(constructors.object_action_href('host_config', '{host_name}', action_name='move'),
@@ -251,7 +252,7 @@ def rename_host(params):
 def move(params):
     """Move a host to another folder"""
     host_name = params['host_name']
-    host = watolib.Host.host(host_name)
+    host: watolib.CREHost = watolib.Host.host(host_name)
     if host is None:
         return _missing_host_problem(host_name)
 
@@ -272,7 +273,7 @@ def move(params):
             title="Problem moving host",
             detail=exc.message,
         )
-    return _serve_host(watolib.Host.host(host_name))
+    return _serve_host(host, host.attributes())
 
 
 @Endpoint(constructors.object_href('host_config', '{host_name}'),
@@ -286,7 +287,7 @@ def delete(params):
     host_name = params['host_name']
     # Parameters can't be validated through marshmallow yet.
     check_hostname(host_name, should_exist=True)
-    host = watolib.Host.host(host_name)
+    host: watolib.CREHost = watolib.Host.host(host_name)
     constructors.require_etag(constructors.etag_of_obj(host))
     host.folder().delete_hosts([host.name()])
     return Response(status=204)
@@ -306,32 +307,48 @@ def bulk_delete(params):
     return Response(status=204)
 
 
-@Endpoint(constructors.object_href('host_config', '{host_name}'),
-          'cmk/show',
-          method='get',
-          path_params=[HOST_NAME],
-          etag='output',
-          response_schema=response_schemas.DomainObject)
+@Endpoint(
+    constructors.object_href('host_config', '{host_name}'),
+    'cmk/show',
+    method='get',
+    path_params=[HOST_NAME],
+    query_params=[{
+        'effective_attributes': fields.Boolean(
+            missing=False,
+            required=False,
+            example=False,
+            description=("Show all effective attributes, which affect this host, not just the "
+                         "attributes which were set on this host specifically. This includes "
+                         "all attributes of all of this host's parent folders."),
+        )
+    }],
+    etag='output',
+    response_schema=response_schemas.DomainObject)
 def show_host(params):
     """Show a host"""
     host_name = params['host_name']
-    host = watolib.Host.host(host_name)
+    host: watolib.CREHost = watolib.Host.host(host_name)
+    if params['effective_attributes']:
+        attributes = host.effective_attributes()
+    else:
+        attributes = host.attributes()
     if host is None:
         return problem(
             404, f'Host "{host_name}" is not known.',
             'The host you asked for is not known. Please check for eventual misspellings.')
-    return _serve_host(host)
+    return _serve_host(host, attributes)
 
 
-def _serve_host(host):
+def _serve_host(host, attributes):
     response = Response()
-    response.set_data(json.dumps(serialize_host(host)))
+    response.set_data(json.dumps(serialize_host(host, attributes)))
     response.set_content_type('application/json')
     response.headers.add('ETag', constructors.etag_of_obj(host).to_header())
     return response
 
 
-def serialize_host(host):
+def serialize_host(host, attributes):
+    # TODO: readd link mechanism once object ref between endpoints is in place
     base = constructors.object_href('host_config', host.ident())
     members = constructors.DomainObjectMembers(base)
     members.object_property(
@@ -341,8 +358,9 @@ def serialize_host(host):
         prop_format='string',
     )
 
-    attributes = host.attributes().copy()
-    del attributes['meta_data']
+    if 'meta_data' in attributes:
+        attributes = attributes.copy()
+        del attributes['meta_data']
 
     return constructors.domain_object(
         domain_type='host_config',

@@ -3608,7 +3608,11 @@ commands.append(
         args_text="...",
         handler=main_config,
         options=[],
-        description="Show and set site configuration parameters",
+        description="Show and set site configuration parameters.\n\n\
+Usage:\n\
+ omd config [site]\t\t\tinteractive mode\n\
+ omd config [site] show\t\t\tshow configuration settings\n\
+ omd config [site] set VAR VAL\t\tset specific setting VAR to VAL",
         confirm_text="",
     ))
 
@@ -3777,7 +3781,10 @@ def _parse_command_options(args: Arguments,
     # Give a short overview over the command specific options
     # when the user specifies --help:
     if len(args) and args[0] in ['-h', '--help']:
-        sys.stdout.write("Possible options for this command:\n")
+        if options:
+            sys.stdout.write("Possible options for this command:\n")
+        else:
+            sys.stdout.write("No options for this command\n")
         for option in options:
             args_text = "%s--%s" % ("-%s," % option.short_opt if option.short_opt else "",
                                     option.long_opt)
@@ -3910,6 +3917,10 @@ def main() -> None:
 
     # Parse command options. We need to do this now in order to know,
     # if a site name has been specified or not
+
+    # Give a short description for the command when the user specifies --help:
+    if len(args) and args[0] in ['-h', '--help']:
+        sys.stdout.write("%s\n\n" % command.description)
     args, command_options = _parse_command_options(args, command.options)
 
     # Some commands need a site to be specified. If we are

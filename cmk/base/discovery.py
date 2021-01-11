@@ -1809,7 +1809,6 @@ def get_check_preview(
             if check_source in ['legacy', 'active', 'custom']:
                 exitcode = None
                 output = u"WAITING - %s check, cannot be done offline" % check_source.title()
-                perfdata: List[MetricTuple] = []
                 ruleset_name: Optional[RulesetName] = None
             else:
                 if plugin is None:
@@ -1819,7 +1818,7 @@ def get_check_preview(
                 wrapped_params = (None if plugin.check_default_parameters is None else Parameters(
                     wrap_parameters(params)))
 
-                _submit, _data_rx, (exitcode, output, perfdata) = checking.get_aggregated_result(
+                _submit, _data_rx, (exitcode, output, _perfdata) = checking.get_aggregated_result(
                     parsed_sections_broker,
                     host_config,
                     ip_address,
@@ -1828,6 +1827,11 @@ def get_check_preview(
                     lambda p=wrapped_params: p,  # type: ignore[misc]  # "type of lambda"
                 )
 
+            # Service discovery never uses the perfdata in the check table. That entry
+            # is constantly discarded, yet passed around(back and forth) as part of the
+            # discovery result in the request elements. Some perfdata VALUES are not parsable
+            # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
+            perfdata: List[MetricTuple] = []
             table.append((
                 _preview_check_source(host_name, service, check_source),
                 str(service.check_plugin_name),

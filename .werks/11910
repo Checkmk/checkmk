@@ -1,0 +1,11 @@
+Title: Add warn/crit metrics for percentage usage of filesystems
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610364721
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Levels where only shown for absolute size. This has been fixed.

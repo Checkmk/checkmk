@@ -131,7 +131,7 @@ def value_store_fixture(monkeypatch):
     ("H62 10 - DATA 20", df.FILESYSTEM_DEFAULT_LEVELS, [
         Metric('fs_used', 84.703125, levels=(256.0, 288.0), boundaries=(0.0, 320.0)),
         Metric('fs_size', 320.0),
-        Metric('fs_used_percent', 26.4697265625),
+        Metric('fs_used_percent', 26.4697265625, levels=(80.0, 90.0)),
         Result(state=state.OK, summary='26.47% used (84.7 of 320 MiB)'),
         Metric('growth', -4470.553049074118),
         Result(state=state.OK, summary='trend per 1 day 0 hours: +621 TiB'),
@@ -145,7 +145,7 @@ def value_store_fixture(monkeypatch):
     ("H62 10 - DATA 20", LEVELS_CRIT, [
         Metric('fs_used', 84.703125, levels=(32.0, 48.0), boundaries=(0.0, 320.0)),
         Metric('fs_size', 320.0),
-        Metric('fs_used_percent', 26.4697265625),
+        Metric('fs_used_percent', 26.4697265625, levels=(10.0, 15.0)),
         Result(state=state.CRIT,
                summary='26.47% used (84.7 of 320 MiB, warn/crit at 10.00%/15.00%)'),
         Metric('growth', -4470.553049074118),

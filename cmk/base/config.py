@@ -66,7 +66,6 @@ import cmk.utils.migrated_check_variables
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
-    ABCName,
     ActiveCheckPluginName,
     BuiltinBakeryHostName,
     CheckPluginName,
@@ -641,8 +640,8 @@ class PackedConfigGenerator:
     def __init__(self, config_cache: "ConfigCache") -> None:
         self._config_cache = config_cache
 
-    def generate(self) -> Mapping[Union[ABCName, str], Any]:
-        helper_config: MutableMapping[Union[ABCName, str], Any] = {}
+    def generate(self) -> Mapping[str, Any]:
+        helper_config: MutableMapping[str, Any] = {}
 
         # These functions purpose is to filter out hosts which are monitored on different sites
         active_hosts = self._config_cache.all_active_hosts()
@@ -714,7 +713,7 @@ class PackedConfigGenerator:
             if not value:
                 continue
 
-            helper_config[ruleset_name] = value
+            helper_config[str(ruleset_name)] = value
 
         #
         # Add modified check specific Checkmk base settings
@@ -735,7 +734,7 @@ class PackedConfigStore:
         base_path: Final[Path] = cmk.utils.paths.make_helper_config_path(serial)
         self.path: Final[Path] = base_path / "precompiled_check_config.mk"
 
-    def write(self, helper_config: Mapping[Union[ABCName, str], Any]) -> None:
+    def write(self, helper_config: Mapping[str, Any]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp_path = self.path.with_suffix(self.path.suffix + ".compiled")
         with tmp_path.open("wb") as compiled_file:

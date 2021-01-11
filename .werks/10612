@@ -1,0 +1,11 @@
+Title: Service graphs: Vertically align the timerange choices with the displayed graph
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 2.0.0b4
+Date: 1610362984
+
+Alignment was broken so that with multiple graphs the timeranges floated upwards and away from their corresponding graph.

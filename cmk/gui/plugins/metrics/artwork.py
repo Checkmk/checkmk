@@ -631,7 +631,7 @@ def create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_
                 line_width = 2
             else:
                 label_value = None
-                line_width = 1
+                line_width = 0
 
             label_specs.append((pos, label_value, line_width))
             if len(label_specs) > 1000:
@@ -920,13 +920,7 @@ def dist_month(start_time, end_time, months):
                     broken_tm_yday,
                     broken_tm_isdst,
                 ))
-                yield pos, 1, False
-
-    # Add weeks if months are low
-    if months <= 2:
-        for pos, line_width, _has_label in dist_week(start_time, end_time):
-            if line_width == 2:
-                yield pos, 1, False
+                yield pos, 0, False
 
 
 # These distance functions yield a sequence of useful
@@ -960,7 +954,7 @@ def dist_equal(start_time, end_time, distance, subdivision):
         if f <= 0.0000001 or f >= 0.9999999:
             yield (pos, 2, True)
         else:
-            yield (pos, 1, False)
+            yield (pos, 0, False)
         pos += subdivision
 
 

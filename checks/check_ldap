@@ -35,12 +35,11 @@ def check_ldap_arguments(params):
         args += ["-p", settings["port"]]
 
     if "version" in settings:
-        versions = {
-            "v2": "-2",
-            "v3": "-3",
-            "v3tls": "-3 -T",
-        }
-        args.append(versions[settings["version"]])
+        args += {
+            "v2": ["-2"],
+            "v3": ["-3"],
+            "v3tls": ["-3", "-T"],
+        }[settings["version"]]
 
     if settings.get("ssl"):
         args.append("--ssl")

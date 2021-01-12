@@ -61,7 +61,7 @@ PiggybackTimeSettings = List[Tuple[Optional[str], str, int]]
 
 
 def get_piggyback_raw_data(
-    piggybacked_hostname: str,
+    piggybacked_hostname: Optional[str],
     time_settings: PiggybackTimeSettings,
 ) -> List[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host

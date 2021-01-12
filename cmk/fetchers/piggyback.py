@@ -89,4 +89,4 @@ class PiggybackFetcher(AgentFetcher):
         hostname: Optional[str],
         time_settings: PiggybackTimeSettings,
     ) -> List[PiggybackRawDataInfo]:
-        return get_piggyback_raw_data(hostname if hostname else "", time_settings)
+        return get_piggyback_raw_data(hostname, time_settings)

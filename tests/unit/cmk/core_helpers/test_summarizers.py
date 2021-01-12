@@ -6,20 +6,30 @@
 # pylint: disable=undefined-variable
 import pytest  # type: ignore[import]
 
-import cmk.utils.piggyback
+from cmk.utils.piggyback import PiggybackRawDataInfo
+from cmk.utils.type_defs import AgentRawData
 
+import cmk.core_helpers.piggyback
 from cmk.core_helpers.agent import AgentHostSections
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 from cmk.core_helpers.type_defs import Mode
 
 
 class TestPiggybackSummarizer:
+    @pytest.fixture(params=["testhost", None])
+    def hostname(self, request):
+        return request.param
+
+    @pytest.fixture(params=["1.2.3.4", None])
+    def ipaddress(self, request):
+        return request.param
+
     @pytest.fixture
-    def summarizer(self):
+    def summarizer(self, hostname, ipaddress):
         return PiggybackSummarizer(
             {},
-            hostname="testhost",
-            ipaddress=None,
+            hostname=hostname,
+            ipaddress=ipaddress,
             time_settings=[("", "", 0)],
             always=False,
         )
@@ -35,7 +45,7 @@ class TestPiggybackSummarizer:
     @pytest.fixture
     def patch_get_piggyback_raw_data(self, monkeypatch):
         monkeypatch.setattr(
-            cmk.utils.piggyback,
+            cmk.core_helpers.piggyback,
             "get_piggyback_raw_data",
             lambda *args, **kwargs: (),
         )
@@ -70,3 +80,42 @@ class TestPiggybackSummarizer:
             host_sections,
             mode=Mode.CHECKING,
         ) == (1, "Missing data", [])
+
+    def test_summarize_existing_data_with_always_option(
+        self,
+        summarizer,
+        host_sections,
+        monkeypatch,
+    ):
+        def get_piggyback_raw_data(source_hostname, time_settings):
+            if not source_hostname:
+                return ()
+            return [
+                PiggybackRawDataInfo(
+                    source_hostname=source_hostname,
+                    file_path="/dev/null",
+                    successfully_processed=True,
+                    reason="success",
+                    reason_status=0,
+                    raw_data=AgentRawData(b""),
+                )
+            ]
+
+        monkeypatch.setattr(summarizer, "always", True)
+        monkeypatch.setattr(
+            cmk.core_helpers.piggyback,
+            "get_piggyback_raw_data",
+            get_piggyback_raw_data,
+        )
+
+        if summarizer.hostname is None and summarizer.ipaddress is None:
+            return pytest.skip()
+        if summarizer.hostname is None or summarizer.ipaddress is None:
+            reason = "success"
+        else:
+            reason = "success, success"
+
+        assert summarizer.summarize_success(
+            host_sections,
+            mode=Mode.CHECKING,
+        ) == (0, reason, [])

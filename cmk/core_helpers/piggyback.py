@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import json
 import logging
-from typing import Any, Dict, Final, List, Optional, Tuple
+from typing import Any, Dict, Final, List, Optional, Sequence, Tuple
 
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import (
@@ -136,17 +137,20 @@ class PiggybackSummarizer(AgentSummarizer):
         if mode is not Mode.CHECKING:
             return 0, '', []
 
-        states = [0]
-        infotexts = set()
-        for origin in (self.hostname, self.ipaddress):
-            src = None
-            # TODO(ml): The code uses `get_piggyback_raw_data()` instead of
-            # `HostSections.piggyback_raw_data` because this allows it to
-            # sneakily use cached data.  At minimum, we should group all cache
-            # handling performed after the parser.
-            for src in get_piggyback_raw_data(origin, self.time_settings):
-                states.append(src.reason_status)
-                infotexts.add(src.reason)
-            if self.always and not src:
+        sources: Final[Sequence[PiggybackRawDataInfo]] = list(
+            itertools.chain.from_iterable(
+                # TODO(ml): The code uses `get_piggyback_raw_data()` instead of
+                # `HostSections.piggyback_raw_data` because this allows it to
+                # sneakily use cached data.  At minimum, we should group all cache
+                # handling performed after the parser.
+                get_piggyback_raw_data(origin, self.time_settings)
+                for origin in (self.hostname, self.ipaddress)))
+        if not sources:
+            if self.always:
                 return 1, "Missing data", []
-        return max(states), ", ".join(infotexts), []
+            return 0, '', []
+        return (
+            max(src.reason_status for src in sources),
+            ", ".join(src.reason for src in sources if src.reason),
+            [],
+        )

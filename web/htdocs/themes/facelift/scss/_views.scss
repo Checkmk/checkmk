@@ -398,60 +398,6 @@ table.filtertime td {
   vertical-align: middle;
 }
 
-div.optiondial {
-  &,
-  &.num_columns,
-  &.refresh {
-    top: 0;
-    width: 80.5px;
-    height: 28px;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    color: $font-color;
-    background: $bg-color-secondary;
-    border: 1px solid $color-table-border;
-    box-shadow: none;
-    box-sizing: border-box;
-
-    div {
-      padding: 0;
-      line-height: 27px;
-    }
-  }
-
-  & {
-    position: relative;
-    float: left;
-    margin-top: 0;
-    margin-left: 0;
-    overflow: hidden;
-    color: rgb(34, 34, 34);
-    text-shadow: 0 0.5px 0.5px rgb(255, 255, 255);
-    cursor: pointer;
-    border-radius: $primary-border-radius;
-    box-shadow: 0 0 3px rgb(17, 34, 51);
-  }
-
-  &.num_columns {
-    margin-right: 0;
-    border-right: none;
-    border-radius: $first-child-border-radius;
-  }
-
-  &.refresh {
-    margin-left: -6px;
-    border-radius: $last-child-border-radius;
-  }
-
-  div {
-    position: relative;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-  }
-}
-
 div.view_form {
   margin-bottom: 10px;
 }

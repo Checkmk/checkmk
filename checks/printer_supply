@@ -62,7 +62,7 @@ def parse_printer_supply(info):
     if len(info) < 2:
         return {}
 
-    parsed = []
+    parsed = {}
     colors = []
 
     color_mapping = {_get_oid_end_last_index(oid_end): value for oid_end, value in info[0]}
@@ -95,14 +95,13 @@ def parse_printer_supply(info):
         # fix trailing zero bytes (seen on HP Jetdirect 143)
         description = line_0.split(' S/N:')[0].strip('\0')
 
-        parsed.append([description, unit_info, max_capacity, level, class_, color])
+        parsed[description] = [unit_info, max_capacity, level, class_, color]
+
     return parsed
 
 
 def inventory_printer_supply(parsed):
-    return [
-        (description, {}) for description, _unit_info, max_capacity, level, _class, color in parsed
-    ]
+    return [(item, {}) for item in parsed]
 
 
 def check_printer_supply(item, params, parsed):
@@ -115,73 +114,75 @@ def check_printer_supply(item, params, parsed):
                 "upturn_toner": params[2],
             }
 
-    for description, unit_info, max_capacity, level, class_, color in parsed:
-        if description == item:
+    supply = parsed.get(item)
+    if supply is None:
+        return
 
-            color_info = ""
-            if color and color.lower() not in item.lower():
-                color_info = "[%s] " % color
+    unit_info, max_capacity, level, class_, color = supply
 
-            # Assume 100% as maximum when 0 is reported
-            # Saw some toner cartridge reporting value=0 and max_capacity=0 on empty toner
-            if max_capacity == 0:
-                max_capacity = 100
+    color_info = ""
+    if color and color.lower() not in item.lower():
+        color_info = "[%s] " % color
 
-            warn, crit = params["levels"]
-            # Levels are in percent, SuppliesMaxCapacity and SuppliesLevel have different units:
-            # see Printer-MIB::prtMarkerSuppliesSupplyUnit::PrtMarkerSuppliesSupplyUnitTC
-            perfdata = [("pages", level, 0.01 * warn * max_capacity, 0.01 * crit * max_capacity, 0,
-                         max_capacity)]
+    # Assume 100% as maximum when 0 is reported
+    # Saw some toner cartridge reporting value=0 and max_capacity=0 on empty toner
+    if max_capacity == 0:
+        max_capacity = 100
 
-            # handle cases with partial data
-            if max_capacity == -2 or level in [-3, -2, -1]:  # no percentage possible
-                if level == -1 or max_capacity == -1:
-                    return 0, "%sThere are no restrictions on this supply" % color_info
-                elif level == -3:
-                    return params.get("some_remaining",
-                                      1), "%sSome remaining" % color_info, perfdata
-                elif level == -2:
-                    return 3, "%s Unknown level" % color_info
-                elif max_capacity == -2:
-                    # no percentage possible. We compare directly against levels
-                    return 0, "%sLevel: %d" % (color_info, level), [("pages", level)]
+    warn, crit = params["levels"]
+    # Levels are in percent, SuppliesMaxCapacity and SuppliesLevel have different units:
+    # see Printer-MIB::prtMarkerSuppliesSupplyUnit::PrtMarkerSuppliesSupplyUnitTC
+    perfdata = [("pages", level, 0.01 * warn * max_capacity, 0.01 * crit * max_capacity, 0,
+                 max_capacity)]
 
-            leftperc = 100.0 * level / max_capacity
-            # When unit type is
-            # 1 = other
-            # 3 = supplyThatIsConsumed
-            # 4 = supplyThatIsFilled
-            # the value is contains the current level if this supply is a container
-            # but when the remaining space if this supply is a receptacle
-            #
-            # This table can be missing on some devices. Assume type 3 in this case.
-            if class_ == '4':
-                leftperc = 100 - leftperc
+    # handle cases with partial data
+    if max_capacity == -2 or level in [-3, -2, -1]:  # no percentage possible
+        if level == -1 or max_capacity == -1:
+            return 0, "%sThere are no restrictions on this supply" % color_info
+        elif level == -3:
+            return params.get("some_remaining", 1), "%sSome remaining" % color_info, perfdata
+        elif level == -2:
+            return 3, "%s Unknown level" % color_info
+        elif max_capacity == -2:
+            # no percentage possible. We compare directly against levels
+            return 0, "%sLevel: %d" % (color_info, level), [("pages", level)]
 
-            # Some printers handle the used / remaining material differently
-            # With the upturn option we can toggle the point of view (again)
-            if params.get("upturn_toner", False):
-                leftperc = 100 - leftperc
+    leftperc = 100.0 * level / max_capacity
+    # When unit type is
+    # 1 = other
+    # 3 = supplyThatIsConsumed
+    # 4 = supplyThatIsFilled
+    # the value is contains the current level if this supply is a container
+    # but when the remaining space if this supply is a receptacle
+    #
+    # This table can be missing on some devices. Assume type 3 in this case.
+    if class_ == '4':
+        leftperc = 100 - leftperc
 
-            infotext = "%sRemaining: %.0f%%" % (color_info, leftperc)
-            state = 0
-            if leftperc <= crit:
-                state = 2
-            elif leftperc <= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %.0f%%/%.0f%%)" % (warn, crit)
+    # Some printers handle the used / remaining material differently
+    # With the upturn option we can toggle the point of view (again)
+    if params.get("upturn_toner", False):
+        leftperc = 100 - leftperc
 
-            unit = map_unit.get(unit_info)
-            if unit in (None, "other", "unknown"):
-                unit = ""
-            elif unit == "%":
-                # No space in between
-                pass
-            else:
-                unit = " %s" % unit
-            infotext += ", Supply: %s of max. %s%s" % (level, max_capacity, unit)
-            return state, infotext, perfdata
+    infotext = "%sRemaining: %.0f%%" % (color_info, leftperc)
+    state = 0
+    if leftperc <= crit:
+        state = 2
+    elif leftperc <= warn:
+        state = 1
+    if state:
+        infotext += " (warn/crit at %.0f%%/%.0f%%)" % (warn, crit)
+
+    unit = map_unit.get(unit_info)
+    if unit in (None, "other", "unknown"):
+        unit = ""
+    elif unit == "%":
+        # No space in between
+        pass
+    else:
+        unit = " %s" % unit
+    infotext += ", Supply: %s of max. %s%s" % (level, max_capacity, unit)
+    return state, infotext, perfdata
 
 
 check_info["printer_supply"] = {

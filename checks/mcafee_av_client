@@ -35,21 +35,13 @@ def check_mcafee_av_client(_no_item, params, parsed):
     else:
         warn, crit = params
 
-    age = time.time() - parsed
-    infotext = "Time since last update of signatures: %s" % (get_age_human_readable(age))
-
-    if age >= crit:
-        state = 2
-    elif age >= warn:
-        state = 1
-    else:
-        state = 0
-
-    if state > 0:
-        infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
-                                               get_age_human_readable(crit))
-
-    yield state, infotext
+    yield check_levels(
+        time.time() - parsed,
+        None,  # no metric name -> no metric produced
+        (warn, crit),
+        human_readable_func=get_age_human_readable,
+        infoname="Time since last update of signatures",
+    )
 
 
 check_info['mcafee_av_client'] = {

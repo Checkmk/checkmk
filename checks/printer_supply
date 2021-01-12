@@ -69,6 +69,10 @@ def parse_printer_supply(info):
 
     for index, (description, unit_info, max_capacity, level, class_,
                 color_id) in enumerate(info[1]):
+        # Ignore devices which show -2 for current value and -2 for max value -> useless
+        if (max_capacity == '-2' and level == '-2') or not level or not len(max_capacity) > 0:
+            continue
+
         # give chance for latin1->utf8 decoding
         line_0 = description
 
@@ -85,21 +89,16 @@ def parse_printer_supply(info):
             if color:
                 line_0 = '%s %s' % (color.title(), line_0)
 
-        if " S/N:" in line_0:
-            line_0 = line_0[:line_0.find(" S/N:")]
+        # fix trailing zero bytes (seen on HP Jetdirect 143)
+        description = line_0.split(' S/N:')[0].strip('\0')
 
-        parsed.append([line_0, unit_info, max_capacity, level, class_, color_id, color])
+        parsed.append([description, unit_info, int(max_capacity), saveint(level), class_, color])
     return parsed
 
 
 def inventory_printer_supply(parsed):
-    # Ignore devices which show -2 for current value and -2 for max value -> useless
-    # Also fix trailing zero bytes (seen on HP Jetdirect 143)
     return [
-        (description.rstrip('\0'), {})
-        for description, _unit_info, max_capacity, level, _class, _color_id, color in parsed
-        # ignore useless devices
-        if not (max_capacity == '-2' and level == '-2') and level and len(max_capacity) > 0
+        (description, {}) for description, _unit_info, max_capacity, level, _class, color in parsed
     ]
 
 
@@ -113,10 +112,8 @@ def check_printer_supply(item, params, parsed):
                 "upturn_toner": params[2],
             }
 
-    for description, unit_info, max_capacity, level, class_, color_id, color in parsed:
-        if description.rstrip('\0') == item:
-            max_capacity = int(max_capacity)
-            level = saveint(level)
+    for description, unit_info, max_capacity, level, class_, color in parsed:
+        if description == item:
 
             color_info = ""
             if color and color.lower() not in item.lower():
@@ -146,7 +143,7 @@ def check_printer_supply(item, params, parsed):
                     # no percentage possible. We compare directly against levels
                     return 0, "%sLevel: %d" % (color_info, level), [("pages", level)]
 
-            leftperc = 100.0 * float(level) / max_capacity
+            leftperc = 100.0 * level / max_capacity
             # When unit type is
             # 1 = other
             # 3 = supplyThatIsConsumed

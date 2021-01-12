@@ -49,12 +49,10 @@ TEST(SectionProviderMrpe, Construction) {
     EXPECT_TRUE(cma::cfg::groups::global.allowedSection(groups::kMrpe));
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
-    EXPECT_EQ(mrpe.checks_.size(), 0);
-    EXPECT_EQ(mrpe.entries_.size(), 0);
-    EXPECT_EQ(mrpe.includes_.size(), 0);
-    auto out = mrpe.makeBody();
-    EXPECT_TRUE(out.empty());
-    out = mrpe.generateContent();
+    EXPECT_TRUE(mrpe.checks().empty());
+    EXPECT_TRUE(mrpe.entries().empty());
+    EXPECT_TRUE(mrpe.includes().empty());
+    auto out = mrpe.generateContent();
 
     EXPECT_TRUE(out.empty());
 }
@@ -139,26 +137,25 @@ TEST(SectionProviderMrpe, ConfigLoad) {
 
     auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
     EXPECT_EQ(strings.size(), 8);
-    mrpe.parseConfig();
-    ASSERT_EQ(mrpe.includes_.size(), 3);
-    mrpe.parseConfig();
-    ASSERT_EQ(mrpe.includes_.size(), 3);
-    EXPECT_EQ(mrpe.includes_[0], "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
-    EXPECT_EQ(mrpe.includes_[1], "=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
-    EXPECT_EQ(mrpe.includes_[2], "=   'mrpe_checks.cfg'");
-    ASSERT_EQ(mrpe.checks_.size(), 2);
-    EXPECT_EQ(mrpe.checks_[0],
+    mrpe.loadConfig();
+    ASSERT_EQ(mrpe.includes().size(), 3);
+    mrpe.loadConfig();
+    ASSERT_EQ(mrpe.includes().size(), 3);
+    EXPECT_EQ(mrpe.includes()[0], "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes()[1], "=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes()[2], "=   'mrpe_checks.cfg'");
+    ASSERT_EQ(mrpe.checks().size(), 2);
+    EXPECT_EQ(mrpe.checks()[0],
               "Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS");
-    EXPECT_EQ(mrpe.checks_[1],
+    EXPECT_EQ(mrpe.checks()[1],
               "'c:\\windows\\system32\\mode.com' CON CP /STATUS");
 
-    mrpe.addParsedConfig();
-    EXPECT_EQ(mrpe.includes_.size(), 3);
-    EXPECT_EQ(mrpe.checks_.size(), 2);
+    EXPECT_EQ(mrpe.includes().size(), 3);
+    EXPECT_EQ(mrpe.checks().size(), 2);
     if (kMrpeRemoveAbsentFiles)
-        EXPECT_EQ(mrpe.entries_.size(), 4);
+        EXPECT_EQ(mrpe.entries().size(), 4);
     else
-        EXPECT_EQ(mrpe.entries_.size(), 5);
+        EXPECT_EQ(mrpe.entries().size(), 5);
 }
 
 TEST(SectionProviderMrpe, YmlCheck) {
@@ -257,8 +254,8 @@ TEST(SectionProviderMrpe, Ctor) {
         EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
         EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
         EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_EQ(me.add_age_, false);
-        ASSERT_EQ(me.cache_max_age_, 0);
+        ASSERT_EQ(me.add_age(), false);
+        ASSERT_EQ(me.cache_age_max(), 0);
     }
 
     {
@@ -269,8 +266,8 @@ TEST(SectionProviderMrpe, Ctor) {
         EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
         EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
         EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_EQ(me.add_age_, true);
-        ASSERT_EQ(me.cache_max_age_, 123456);
+        ASSERT_EQ(me.add_age(), true);
+        ASSERT_EQ(me.cache_age_max(), 123456);
     }
 }
 
@@ -302,29 +299,30 @@ TEST(SectionProviderMrpe, Run) {
 
     auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
     EXPECT_EQ(strings.size(), 2);
-    mrpe.parseConfig();
-    ASSERT_EQ(mrpe.includes_.size(), 0);
-    ASSERT_EQ(mrpe.checks_.size(), 2);
+    mrpe.loadConfig();
+    ASSERT_EQ(mrpe.includes().size(), 0);
+    ASSERT_EQ(mrpe.checks().size(), 2);
 
-    mrpe.addParsedConfig();
-    EXPECT_EQ(mrpe.entries_.size(), 2);
+    EXPECT_EQ(mrpe.entries().size(), 2);
     mrpe.updateSectionStatus();
 
     // sequential
     yaml[groups::kMrpe][vars::kMrpeParallel] = false;
     {
-        auto accu = mrpe.makeBody();
+        auto accu = mrpe.generateContent();
         ASSERT_TRUE(!accu.empty());
         auto table = cma::tools::SplitString(accu, "\n");
+        EXPECT_EQ(table[0], "<<<mrpe>>>");
+        table.erase(table.begin());
         ASSERT_EQ(table.size(), 2);
 
-        auto& e0 = mrpe.entries_[0];
+        auto e0 = mrpe.entries()[0];
         {
             auto hdr = fmt::format("({})", e0.exe_name_) + " " +
                        e0.description_ + " 0";
             EXPECT_TRUE(table[0].find(hdr) == 0);
         }
-        auto& e1 = mrpe.entries_[1];
+        auto e1 = mrpe.entries()[1];
         {
             auto hdr = fmt::format("({})", e1.exe_name_) + " " +
                        e1.description_ + " 0";
@@ -334,16 +332,17 @@ TEST(SectionProviderMrpe, Run) {
 
     yaml[groups::kMrpe][vars::kMrpeParallel] = true;
     {
-        auto accu = mrpe.makeBody();
+        auto accu = mrpe.generateContent();
         ASSERT_TRUE(!accu.empty());
         auto table = cma::tools::SplitString(accu, "\n");
+        table.erase(table.begin());
         ASSERT_EQ(table.size(), 2);
 
-        auto& e0 = mrpe.entries_[0];
+        auto e0 = mrpe.entries()[0];
         auto hdr0 =
             fmt::format("({})", e0.exe_name_) + " " + e0.description_ + " 0";
 
-        auto& e1 = mrpe.entries_[1];
+        auto e1 = mrpe.entries()[1];
         auto hdr1 =
             fmt::format("({})", e1.exe_name_) + " " + e1.description_ + " 0";
         { EXPECT_TRUE(table[0].find(hdr0) == 0 || table[1].find(hdr0) == 0); }

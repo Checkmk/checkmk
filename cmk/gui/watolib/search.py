@@ -6,28 +6,27 @@
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from itertools import chain
-import pathlib
-import pickle
 from typing import (
+    TYPE_CHECKING,
     Callable,
     DefaultDict,
     Dict,
     Final,
     Iterable,
     Iterator,
+    List,
     Mapping,
-    Tuple,
+    Optional,
 )
+
+import redis
 from werkzeug.test import create_environ
 
-from cmk.gui.display_options import DisplayOptions
-from cmk.utils.paths import tmp_dir
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.plugin_registry import Registry
-from cmk.gui.config import UserContext, user
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
+from cmk.gui.config import UserContext, user
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import RequestContext, g, request
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
@@ -40,8 +39,14 @@ from cmk.gui.plugins.watolib.utils import (
     sample_config_generator_registry,
 )
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
-from cmk.gui.watolib.utils import may_edit_ruleset
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
+from cmk.gui.watolib.utils import may_edit_ruleset
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.redis import get_redis_client
+from cmk.utils.plugin_registry import Registry
+
+if TYPE_CHECKING:
+    from cmk.utils.redis import RedisDecoded
 
 _NAME_DEFAULT_LANGUAGE = 'default'
 
@@ -58,24 +63,12 @@ class MatchItem:
     url: str
     match_texts: Iterable[str]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.match_texts = [match_text.lower() for match_text in self.match_texts]
 
 
 MatchItems = Iterable[MatchItem]
 MatchItemsByTopic = Dict[str, MatchItems]
-
-
-@dataclass
-class Index:
-    localization_independent: MatchItemsByTopic = field(default_factory=dict)
-    localization_dependent: Dict[str, MatchItemsByTopic] = field(default_factory=dict)
-
-    # TODO: Would be nice to use the positional-only syntax here (, /) once yapf supports it
-    def update(self, newer_index: 'Index'):
-        self.localization_independent.update(newer_index.localization_independent)
-        for language, match_items_by_topic in newer_index.localization_dependent.items():
-            self.localization_dependent.setdefault(language, {}).update(match_items_by_topic)
 
 
 class ABCMatchItemGenerator(ABC):
@@ -107,89 +100,100 @@ class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
 
 
 class IndexBuilder:
-    def __init__(self, registry: MatchItemGeneratorRegistry):
+    _KEY_INDEX_BUILT = "si.index_built"
+
+    def __init__(self, registry: MatchItemGeneratorRegistry) -> None:
         self._registry = registry
         self._all_languages = {
             name: name or _NAME_DEFAULT_LANGUAGE for language in get_languages()
             for name in [language[0]]
         }
+        self._redis_client = get_redis_client()
 
     def _build_index(
         self,
-        names_and_generators: Iterable[Tuple[str, ABCMatchItemGenerator]],
-    ) -> Index:
-        index = Index()
+        names_and_generators: Iterable[ABCMatchItemGenerator],
+    ) -> None:
         localization_dependent_generators = []
 
-        for name, match_item_generator in names_and_generators:
-            if match_item_generator.is_localization_dependent:
-                localization_dependent_generators.append((name, match_item_generator))
-                continue
-            index.localization_independent[name] = self._evaluate_match_item_generator(
-                match_item_generator)
+        with self._redis_client.pipeline() as pipeline:
+            prefix_li = "si.li"
+            for match_item_generator in names_and_generators:
+                if match_item_generator.is_localization_dependent:
+                    localization_dependent_generators.append(match_item_generator)
+                    continue
+                pipeline.sadd(
+                    f"{prefix_li}.categories",
+                    match_item_generator.name,
+                )
+                self._add_match_items_to_redis(
+                    match_item_generator,
+                    pipeline,
+                    prefix_li,
+                )
 
-        index.localization_dependent = {
-            language_name: {
-                name: self._evaluate_match_item_generator(match_item_generator)
-                for name, match_item_generator in localization_dependent_generators
-            } for language, language_name in self._all_languages.items()
-            for _ in [localize(language)]  # type: ignore[func-returns-value]
-        }
+            prefix_ld = "si.ld"
+            for language, language_name in self._all_languages.items():
+                localize(language)
+                prefix_language = f"{prefix_ld}.{language_name}"
+                for match_item_generator in localization_dependent_generators:
+                    pipeline.sadd(
+                        f"{prefix_ld}.categories",
+                        match_item_generator.name,
+                    )
+                    self._add_match_items_to_redis(
+                        match_item_generator,
+                        pipeline,
+                        prefix_language,
+                    )
 
-        return index
+            pipeline.execute()
 
     @staticmethod
-    def _evaluate_match_item_generator(match_item_generator: ABCMatchItemGenerator) -> MatchItems:
-        return list(match_item_generator.generate_match_items())
+    def _add_match_items_to_redis(
+        match_item_generator: ABCMatchItemGenerator,
+        redis_pipeline: redis.client.Pipeline,
+        redis_prefix: str,
+    ) -> None:
+        prefix = f"{redis_prefix}.{match_item_generator.name}"
+        key_match_texts = f"{prefix}.match_texts"
+        redis_pipeline.delete(key_match_texts)
+        for idx, match_item in enumerate(match_item_generator.generate_match_items()):
+            redis_pipeline.hset(
+                key_match_texts,
+                key=" ".join(match_item.match_texts),
+                value=idx,
+            )
+            redis_pipeline.hset(  # type: ignore[call-arg]  # no idea why this is necessary...
+                f"{prefix}.{idx}",
+                mapping={
+                    "title": match_item.title,
+                    "topic": match_item.topic,
+                    "url": match_item.url,
+                },
+            )
 
-    def build_full_index(self) -> Index:
-        return self._build_index(self._registry.items())
-
-    def build_changed_sub_indices(self, change_action_name: str) -> Index:
-        return self._build_index(
-            ((name, match_item_generator)
-             for name, match_item_generator in self._registry.items()
-             if match_item_generator.is_affected_by_change(change_action_name)))
-
-
-class IndexStore:
-    _cached_index = None
-    _cached_mtime = 0.
-
-    def __init__(self, path: pathlib.Path) -> None:
-        self._path = path
-        self._path.parent.mkdir(
-            parents=True,
-            exist_ok=True,
+    def _mark_index_as_built(self) -> None:
+        self._redis_client.set(
+            self._KEY_INDEX_BUILT,
+            1,
         )
 
-    def store_index(self, index: Index) -> None:
-        with self._path.open(mode='wb') as index_file:
-            pickle.dump(index, index_file)
+    def build_full_index(self) -> None:
+        self._build_index(self._registry.values())
+        self._mark_index_as_built()
 
-    def load_index(self, launch_rebuild_if_missing: bool = True) -> Index:
-        try:
-            current_mtime = self._path.stat().st_mtime
-            if self._is_cache_valid(current_mtime):
-                return self.__class__._cached_index  # type: ignore[return-value]
-            self.__class__._cached_index = self._load_index_from_file()
-            self.__class__._cached_mtime = current_mtime
-            return self.__class__._cached_index
-        except FileNotFoundError:
-            if launch_rebuild_if_missing:
-                build_and_store_index_background()
-            raise IndexNotFoundException
+    def build_changed_sub_indices(self, change_action_name: str) -> None:
+        self._build_index(match_item_generator for match_item_generator in self._registry.values()
+                          if match_item_generator.is_affected_by_change(change_action_name))
 
-    def _is_cache_valid(self, current_mtime: float) -> bool:
-        return self.__class__._cached_index is not None and self._cached_mtime >= current_mtime
-
-    def _load_index_from_file(self) -> Index:
-        with self._path.open(mode="rb") as index_file:
-            return pickle.load(index_file)
+    @classmethod
+    def index_is_built(cls, client: Optional['RedisDecoded'] = None) -> bool:
+        return (client or get_redis_client()).exists(cls._KEY_INDEX_BUILT) == 1
 
 
 class URLChecker:
-    def __init__(self):
+    def __init__(self) -> None:
         from cmk.gui.wato.pages.hosts import ModeEditHost
         self._mode_edit_host = ModeEditHost
 
@@ -236,8 +240,8 @@ class URLChecker:
 
 
 class PermissionsHandler:
-    def __init__(self):
-        self._topic_permissions = {
+    def __init__(self) -> None:
+        self._category_permissions = {
             "global_settings": user.may("wato.global") or user.may("wato.seeall"),
             "folders": user.may("wato.hosts"),
             "hosts": user.may("wato.hosts"),
@@ -254,8 +258,8 @@ class PermissionsHandler:
     def _permissions_url(self, url: str) -> bool:
         return self._url_checker.is_permitted(url)
 
-    def may_see_topic(self, topic: str) -> bool:
-        return user.may("wato.use") and self._topic_permissions.get(topic, True)
+    def may_see_category(self, category: str) -> bool:
+        return user.may("wato.use") and self._category_permissions.get(category, True)
 
     def permissions_for_items(self) -> Mapping[str, Callable[[str], bool]]:
         return {
@@ -267,17 +271,14 @@ class PermissionsHandler:
         }
 
 
-IntermediateSearchResult = Mapping[str, Iterable[SearchResult]]
-
-
 class IndexSearcher:
-    def __init__(self, index_store: IndexStore) -> None:
-        self._index_store = index_store
+    def __init__(self) -> None:
         permissions_handler = PermissionsHandler()
-        self._may_see_topic = permissions_handler.may_see_topic
+        self._may_see_category = permissions_handler.may_see_category
         self._may_see_item_func = permissions_handler.permissions_for_items()
         self._current_language = get_current_language() or _NAME_DEFAULT_LANGUAGE
         self._user_id = user.ident
+        self._redis_client = get_redis_client()
 
     @contextmanager
     def _SearchContext(self) -> Iterator[None]:
@@ -294,36 +295,63 @@ class IndexSearcher:
             results = self._search(query)
         yield from self._sort_search_results(results)
 
-    def _search(self, query: SearchQuery) -> IntermediateSearchResult:
-        query_lowercase = query.lower()
-        results = DefaultDict(list)
-
-        index = self._index_store.load_index()
-        if self._current_language not in index.localization_dependent:
-            build_and_store_index_background()
+    def _search(self, query: SearchQuery) -> Mapping[str, Iterable[SearchResult]]:
+        if not IndexBuilder.index_is_built(self._redis_client):
+            build_index_background()
             raise IndexNotFoundException
 
-        for topic, match_items in chain(
-                index.localization_independent.items(),
-                index.localization_dependent[self._current_language].items(),
-        ):
-            if not self._may_see_topic(topic):
-                continue
-            permissions_check = self._may_see_item_func.get(topic, lambda _: True)
+        query_preprocessed = f"*{query.lower().replace(' ', '*')}*"
+        results: DefaultDict[str, List[SearchResult]] = DefaultDict(list)
 
-            for match_item in match_items:
-                if (any(query_lowercase in match_text for match_text in match_item.match_texts) and
-                        permissions_check(match_item.url)):
-                    results[match_item.topic].append(SearchResult(
-                        match_item.title,
-                        match_item.url,
-                    ))
+        self._search_redis(
+            query_preprocessed,
+            "si.li.categories",
+            "si.li",
+            results,
+        )
+        self._search_redis(
+            query_preprocessed,
+            "si.ld.categories",
+            f"si.ld.{self._current_language}",
+            results,
+        )
+
         return results
+
+    def _search_redis(
+        self,
+        query: str,
+        key_categories: str,
+        key_prefix_match_items: str,
+        results: DefaultDict[str, List[SearchResult]],
+    ) -> None:
+        for category in self._redis_client.smembers(key_categories):
+            if not self._may_see_category(category):
+                continue
+
+            prefix_category = f"{key_prefix_match_items}.{category}"
+            permissions_check = self._may_see_item_func.get(category, lambda _: True)
+
+            for _matched_text, idx_matched_item in self._redis_client.hscan_iter(
+                    f"{prefix_category}.match_texts",
+                    match=query,
+            ):
+                match_item_dict = self._redis_client.hgetall(
+                    f"{prefix_category}.{idx_matched_item}")
+
+                if not permissions_check(match_item_dict["url"]):
+                    continue
+
+                results[match_item_dict["topic"]].append(
+                    SearchResult(
+                        match_item_dict["title"],
+                        match_item_dict["url"],
+                    ))
 
     @classmethod
     def _sort_search_results(
         cls,
-        results: IntermediateSearchResult,
+        results: Mapping[str, Iterable[SearchResult]],
     ) -> SearchResultsByTopic:
         first_topics = cls._first_topics()
         last_topics = cls._last_topics()
@@ -364,58 +392,43 @@ class IndexSearcher:
         )
 
 
-def get_index_store() -> IndexStore:
-    return IndexStore(pathlib.Path(tmp_dir / pathlib.Path('wato/search_index.pkl')))
+def build_index() -> None:
+    IndexBuilder(match_item_generator_registry).build_full_index()
 
 
-def build_and_store_index() -> None:
-    index_builder = IndexBuilder(match_item_generator_registry)
-    index_store = get_index_store()
-    index_store.store_index(index_builder.build_full_index())
-
-
-def _build_and_store_index_background(job_interface: BackgroundProcessInterface) -> None:
+def _build_index_background(job_interface: BackgroundProcessInterface) -> None:
     job_interface.send_progress_update(_("Building of search index started"))
-    build_and_store_index()
+    build_index()
     job_interface.send_result_message(_("Search index successfully built"))
 
 
-def build_and_store_index_background() -> None:
+def build_index_background() -> None:
     build_job = SearchIndexBackgroundJob()
-    build_job.set_function(_build_and_store_index_background)
+    build_job.set_function(_build_index_background)
     try:
         build_job.start()
     except BackgroundJobAlreadyRunning:
         pass
 
 
-def _update_and_store_index_background(
+def _update_index_background(
     change_action_name: str,
     job_interface: BackgroundProcessInterface,
 ) -> None:
-
     job_interface.send_progress_update(_("Updating of search index started"))
 
-    index_builder = IndexBuilder(match_item_generator_registry)
-    index_store = get_index_store()
-
-    try:
-        current_index = index_store.load_index(launch_rebuild_if_missing=False)
-    except IndexNotFoundException:
-        job_interface.send_progress_update(
-            _("Search index file not found, re-building from scratch"))
-        _build_and_store_index_background(job_interface)
+    if not IndexBuilder.index_is_built():
+        job_interface.send_progress_update(_("Search index not found, re-building from scratch"))
+        _build_index_background(job_interface)
         return
 
-    current_index.update(index_builder.build_changed_sub_indices(change_action_name))
-    index_store.store_index(current_index)
-
+    IndexBuilder(match_item_generator_registry).build_changed_sub_indices(change_action_name)
     job_interface.send_result_message(_("Search index successfully updated"))
 
 
-def update_and_store_index_background(change_action_name: str) -> None:
+def update_index_background(change_action_name: str) -> None:
     update_job = SearchIndexBackgroundJob()
-    update_job.set_function(_update_and_store_index_background, change_action_name)
+    update_job.set_function(_update_index_background, change_action_name)
     try:
         update_job.start()
     except BackgroundJobAlreadyRunning:
@@ -427,10 +440,10 @@ class SearchIndexBackgroundJob(GUIBackgroundJob):
     job_prefix = "search_index"
 
     @classmethod
-    def gui_title(cls):
+    def gui_title(cls) -> str:
         return _("Search index")
 
-    def __init__(self):
+    def __init__(self) -> None:
         last_job_status = GUIBackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
@@ -452,7 +465,7 @@ class SampleConfigGeneratorSearchIndex(SampleConfigGenerator):
         return 70
 
     def generate(self) -> None:
-        build_and_store_index()
+        build_index()
 
 
 match_item_generator_registry = MatchItemGeneratorRegistry()

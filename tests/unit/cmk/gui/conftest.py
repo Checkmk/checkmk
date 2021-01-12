@@ -33,10 +33,8 @@ from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request
 from cmk.gui.utils import get_random_string
-from cmk.gui.watolib import search
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
-from cmk.gui.background_job import BackgroundProcessInterface
 
 SPEC_LOCK = threading.Lock()
 
@@ -352,20 +350,3 @@ def wsgi_app(monkeypatch):
 @pytest.fixture(scope='function')
 def wsgi_app_debug_off(monkeypatch):
     return _make_webtest(debug=False)
-
-
-@pytest.fixture(scope='function', autouse=True)
-def store_search_index():
-    search.get_index_store().store_index(search.Index())
-
-
-@pytest.fixture(scope='function', autouse=True)
-def avoid_search_index_update_background(monkeypatch):
-    monkeypatch.setattr(
-        search,
-        'update_and_store_index_background',
-        lambda change_action_name: search._update_and_store_index_background(
-            change_action_name,
-            MagicMock(BackgroundProcessInterface),
-        ),
-    )

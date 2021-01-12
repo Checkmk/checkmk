@@ -38,7 +38,7 @@ from cmk.gui.type_defs import (
     ViewName,
 )
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, get_index_store
+from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.utils.labels import (
     Labels,
@@ -1250,7 +1250,7 @@ class MenuSearchResultsRenderer:
             self._generate_results = QuicksearchManager(
                 raise_too_many_rows_error=False).generate_results
         elif search_type == "setup":
-            self._generate_results = IndexSearcher(get_index_store()).search
+            self._generate_results = IndexSearcher().search
         else:
             raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
         self.search_type = search_type

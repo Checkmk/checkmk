@@ -327,8 +327,8 @@ public:
 
     // stupid wrapper
     void processResults(
-        std::function<void(const std::wstring CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char>& Data)>
+        std::function<void(const std::wstring cmd_line, uint32_t pid,
+                           uint32_t code, const std::vector<char>& data_block)>
             Func) {
         std::unique_lock lk(lock_);
         Func(process_->getCmdLine(), process_->processId(),

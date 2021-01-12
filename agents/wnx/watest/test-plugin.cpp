@@ -8,6 +8,7 @@
 #include <chrono>
 #include <filesystem>
 #include <future>
+#include <regex>
 #include <string_view>
 
 #include "cfg.h"

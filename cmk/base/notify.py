@@ -1705,7 +1705,8 @@ def do_bulk_notify(plugin_name: NotificationPluginNameStr, params: NotifyPluginP
     bulkby_custom = bulk.get("groupby_custom", [])
     for macroname in bulkby_custom:
         macroname = macroname.lstrip("_").upper()
-        value = plugin_context.get(what + "_" + macroname, "")
+        value = plugin_context.get("SERVICE" + "_" + macroname, "") or plugin_context.get(
+            "HOST" + "_" + macroname, "")
         bulk_path.extend([
             macroname.lower(),
             value,

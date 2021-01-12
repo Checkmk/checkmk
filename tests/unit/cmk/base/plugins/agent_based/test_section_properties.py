@@ -147,7 +147,6 @@ def test_section_parse_function_does_something():
         'logins',
         'lvm_vgs',
         'mailman_lists',
-        'mcafee_av_client',
         'megaraid_bbu',
         'megaraid_pdisks',
         'mongodb_asserts',

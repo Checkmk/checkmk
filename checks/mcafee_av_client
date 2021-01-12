@@ -14,16 +14,20 @@ factory_settings['mcafee_av_client_default_levels'] = {
 }
 
 
-def inventory_mcafee_av_client(info):
-    return [(None, {})]
-
-
-def check_mcafee_av_client(_no_item, params, info):
-    now = time.time()
+def parse_mcafee_av_client(info):
     # We assume that the timestamp is to be interpreted in the timezone of
     # the Checkmk server. This might be a problem, if e.g. the agent is located
     # in China and the Checkmk server in USA.
-    age = now - time.mktime(time.strptime(info[0][0], '%Y/%m/%d'))
+    return time.mktime(time.strptime(info[0][0], '%Y/%m/%d'))
+
+
+def inventory_mcafee_av_client(parsed):
+    return [(None, {})]
+
+
+def check_mcafee_av_client(_no_item, params, parsed):
+    now = time.time()
+    age = now - parsed
     if isinstance(params, dict):
         warn, crit = params['signature_age']
     else:
@@ -46,6 +50,7 @@ def check_mcafee_av_client(_no_item, params, info):
 
 
 check_info['mcafee_av_client'] = {
+    'parse_function': parse_mcafee_av_client,
     'check_function': check_mcafee_av_client,
     'inventory_function': inventory_mcafee_av_client,
     'service_description': 'McAfee AV',

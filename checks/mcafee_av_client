@@ -6,32 +6,37 @@
 
 import time
 
-# <<<mcafee_av_client>>>
-# 2015/05/06
-
-factory_settings['mcafee_av_client_default_levels'] = {
-    'signature_age': (86400, 7 * 86400),
-}
-
 
 def parse_mcafee_av_client(info):
+    """
+        Section:
+          # <<<mcafee_av_client>>>
+          # 2015/05/06
+
+        >>> timestamp = parse_mcafee_av_client([
+        ...     ['2015/05/06'],
+        ... ])
+        >>> 1400000000.0 < timestamp < 1500000000.0  # exact value is timezone dependent
+        True
+    """
     # We assume that the timestamp is to be interpreted in the timezone of
     # the Checkmk server. This might be a problem, if e.g. the agent is located
     # in China and the Checkmk server in USA.
     return time.mktime(time.strptime(info[0][0], '%Y/%m/%d'))
 
 
-def inventory_mcafee_av_client(parsed):
-    return [(None, {})]
+def discover_mcafee_av_client(parsed):
+    yield None, {}
 
 
 def check_mcafee_av_client(_no_item, params, parsed):
-    now = time.time()
-    age = now - parsed
     if isinstance(params, dict):
         warn, crit = params['signature_age']
     else:
         warn, crit = params
+
+    age = time.time() - parsed
+    infotext = "Time since last update of signatures: %s" % (get_age_human_readable(age))
 
     if age >= crit:
         state = 2
@@ -40,20 +45,22 @@ def check_mcafee_av_client(_no_item, params, parsed):
     else:
         state = 0
 
-    infotext = "Last update of signatures %s ago" % (get_age_human_readable(age))
-
     if state > 0:
         infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
                                                get_age_human_readable(crit))
 
-    return state, infotext
+    yield state, infotext
 
 
 check_info['mcafee_av_client'] = {
     'parse_function': parse_mcafee_av_client,
     'check_function': check_mcafee_av_client,
-    'inventory_function': inventory_mcafee_av_client,
+    'inventory_function': discover_mcafee_av_client,
     'service_description': 'McAfee AV',
     'default_levels_variable': 'mcafee_av_client_default_levels',
     'group': 'mcafee_av_client',
+}
+
+factory_settings['mcafee_av_client_default_levels'] = {
+    'signature_age': (86400, 7 * 86400),
 }

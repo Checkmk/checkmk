@@ -794,7 +794,6 @@ function autocomplete_show_choices(input_id, on_change, choices) {
 function autocomplete_show(input_id, select) {
     var input = $(`#${input_id}`);
     input.parent().append(select);
-    input.parent().addClass("vs_autocomplete");
     // make sure select is at the correct position
     select.insertBefore(input);
     // hide original input field

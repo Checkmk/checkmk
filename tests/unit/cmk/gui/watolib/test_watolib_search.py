@@ -4,9 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from copy import deepcopy
-from pathlib import Path
 import pytest
+
 from cmk.gui.type_defs import SearchResult
 from cmk.gui.watolib import (
     hosts_and_folders,
@@ -15,27 +14,15 @@ from cmk.gui.watolib import (
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
-    Index,
     IndexBuilder,
     IndexNotFoundException,
     IndexSearcher,
-    IndexStore,
     MatchItem,
     MatchItems,
     MatchItemGeneratorRegistry,
     PermissionsHandler,
     URLChecker,
 )
-from cmk.utils.paths import tmp_dir
-
-
-@pytest.fixture(scope="function", autouse=True)
-def get_languages(monkeypatch):
-    monkeypatch.setattr(
-        search,
-        "get_languages",
-        lambda: [[""], ["de"]],
-    )
 
 
 def test_match_item():
@@ -45,44 +32,6 @@ def test_match_item():
         "3",
         ["ABC", "Some text", "df"],
     ).match_texts == ["abc", "some text", "df"]
-
-
-class TestIndex:
-    def test_update_localization_dependent(self):
-        current_idx = Index(localization_independent={
-            "topic 1": [MatchItem("1", "2", "3", ["4"])],
-        },)
-        current_idx_copy = deepcopy(current_idx)
-        newer_idx = Index(localization_independent={"topic 3": []},)
-        current_idx.update(newer_idx)
-        assert (current_idx.localization_independent["topic 1"] ==
-                current_idx_copy.localization_independent["topic 1"])
-        assert (current_idx.localization_independent["topic 3"] ==
-                newer_idx.localization_independent["topic 3"])
-
-    def test_update_localization_independent(self):
-        current_idx = Index(localization_dependent={
-            "de": {
-                "topic 2": [MatchItem("De", "2", "3", ["de"])]
-            },
-            "en": {
-                "topic 2": [MatchItem("En", "2", "3", ["en"])]
-            },
-        },)
-        current_idx_copy = deepcopy(current_idx)
-        newer_idx = Index(localization_dependent={
-            "de": {
-                "topic 2": [MatchItem("De-Neu", "2", "3", ["de-neu"])]
-            },
-            "ro": {
-                "topic 2": [MatchItem("Ro-Nou", "2", "3", ["ro-nou"])]
-            },
-        },)
-        current_idx.update(newer_idx)
-        assert current_idx.localization_dependent["en"] == current_idx_copy.localization_dependent[
-            "en"]
-        assert current_idx.localization_dependent["de"] == newer_idx.localization_dependent["de"]
-        assert current_idx.localization_dependent["ro"] == newer_idx.localization_dependent["ro"]
 
 
 class MatchItemGeneratorLocDep(ABCMatchItemGenerator):
@@ -133,6 +82,15 @@ class MatchItemGeneratorChangeDep(ABCMatchItemGenerator):
         return False
 
 
+@pytest.fixture(name="get_languages", scope="function", autouse=True)
+def fixture_get_languages(monkeypatch):
+    monkeypatch.setattr(
+        search,
+        "get_languages",
+        lambda: [[""], ["de"]],
+    )
+
+
 @pytest.fixture(name="match_item_generator_registry")
 def fixture_match_item_generator_registry():
     match_item_generator_registry = MatchItemGeneratorRegistry()
@@ -146,94 +104,69 @@ def fixture_index_builder(match_item_generator_registry):
     return IndexBuilder(match_item_generator_registry)
 
 
+@pytest.fixture(name="index_searcher")
+def fixture_index_searcher(index_builder):
+    index_searcher = IndexSearcher()
+    index_searcher._redis_client = index_builder._redis_client
+    return index_searcher
+
+
 class TestIndexBuilder:
-    def test_build_index(self, match_item_generator_registry, index_builder):
-        assert index_builder._build_index(match_item_generator_registry.items()) == Index(
-            localization_independent={"change_dependent": [MatchItemGeneratorChangeDep.match_item]},
-            localization_dependent={
-                "default": {
-                    "localization_dependent": [MatchItemGeneratorLocDep.match_item]
-                },
-                "de": {
-                    "localization_dependent": [MatchItemGeneratorLocDep.match_item]
-                },
-            },
-        )
-
-    def test_evaluate_match_item_generator(self):
-        assert IndexBuilder._evaluate_match_item_generator(
-            MatchItemGeneratorLocDep("localization_dependent")) == [
-                MatchItemGeneratorLocDep.match_item
-            ]
-
-    def test_build_full_index(self, match_item_generator_registry, index_builder):
-        assert index_builder.build_full_index() == index_builder._build_index(
-            match_item_generator_registry.items())
-
-    @pytest.mark.parametrize(
-        "change_action_name, index",
-        [
-            (
-                "something",
-                Index(
-                    localization_independent={},
-                    localization_dependent={
-                        "de": {},
-                        "default": {},
-                    },
-                ),
-            ),
-            (
-                "some_change_dependent_whatever",
-                Index(
-                    localization_independent={
-                        "change_dependent": [MatchItemGeneratorChangeDep.match_item]
-                    },
-                    localization_dependent={
-                        "de": {},
-                        "default": {},
-                    },
-                ),
-            ),
-        ],
-    )
-    def test_build_changed_sub_indices(self, index_builder, change_action_name, index):
-        assert index_builder.build_changed_sub_indices(change_action_name) == index
+    def test_update_only_not_built(self, with_admin_login, index_builder):
+        index_builder.build_changed_sub_indices("something")
+        assert not index_builder.index_is_built(index_builder._redis_client)
 
 
-@pytest.fixture(name="index")
-def fixture_index(index_builder):
-    return index_builder.build_full_index()
+class TestIndexBuilderAndSearcher:
+    def test_full_build_and_search(self, with_admin_login, index_builder, index_searcher):
+        index_builder.build_full_index()
+        assert list(index_searcher.search("**")) == [
+            ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
+            ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
+        ]
 
+    def test_update_and_search_no_update(
+        self,
+        with_admin_login,
+        index_builder,
+        index_searcher,
+    ):
+        index_builder._mark_index_as_built()
+        index_builder.build_changed_sub_indices("something")
+        assert not list(index_searcher.search("**"))
 
-@pytest.fixture(name="index_store", scope="function")
-def fixture_index_store(tmp_path):
-    path = Path(tmp_dir) / 'search_index_test.pkl'
-    path.unlink(missing_ok=True)
-    IndexStore._cached_index = None
-    IndexStore._cached_mtime = 0.
-    return IndexStore(path)
+    def test_update_and_search_with_update(
+        self,
+        with_admin_login,
+        index_builder,
+        index_searcher,
+    ):
+        index_builder._mark_index_as_built()
+        index_builder.build_changed_sub_indices("some_change_dependent_whatever")
+        assert list(index_searcher.search("**")) == [
+            ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
+        ]
 
+    def test_update_with_empty_and_search(
+        self,
+        with_admin_login,
+        match_item_generator_registry,
+        index_builder,
+        index_searcher,
+    ):
+        """
+        Test if things can also be deleted from the index during an update
+        """
+        def empty_match_item_gen():
+            yield from ()
 
-class TestIndexStore:
-    def test_store_index(self, index, index_store):
-        assert not index_store._path.is_file()
-        index_store.store_index(index)
-        assert index_store._path.is_file()
-
-    def test_load_index(self, index, index_store):
-        with pytest.raises(IndexNotFoundException):
-            index_store.load_index(launch_rebuild_if_missing=False)
-        index_store.store_index(index)
-        loaded_index = index_store.load_index()
-        assert loaded_index == index
-        assert index_store.load_index() is loaded_index
-
-    def test_is_cache_valid(self, index, index_store):
-        assert not index_store._is_cache_valid(10)
-        index_store.store_index(index)
-        index_store.load_index()
-        assert index_store._is_cache_valid(index_store._cached_mtime)
+        index_builder.build_full_index()
+        match_item_generator_registry[
+            "change_dependent"].generate_match_items = empty_match_item_gen
+        index_builder.build_changed_sub_indices("some_change_dependent_whatever")
+        assert list(index_searcher.search("**")) == [
+            ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
+        ]
 
 
 @pytest.fixture(name="created_host_url")
@@ -268,20 +201,18 @@ class TestURLChecker:
 
 
 class TestPermissionHandler:
-    def test_may_see_topic(self, with_admin_login):
+    def test_may_see_category(self, with_admin_login):
         permissions_handler = PermissionsHandler()
-        for topic in permissions_handler._topic_permissions:
-            assert permissions_handler.may_see_topic(topic)
+        for category in permissions_handler._category_permissions:
+            assert permissions_handler.may_see_category(category)
 
 
 class TestIndexSearcher:
-    def test_search(self, with_admin_login, index, index_store):
-        index_store.store_index(index)
-        assert list(IndexSearcher(index_store).search("change_dep")) == [
-            ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
-        ]
+    def test_search_no_index(self, with_admin_login):
+        with pytest.raises(IndexNotFoundException):
+            list(IndexSearcher().search("change_dep"))
 
-    def test_sort_search_results(self, with_admin_login):
+    def test_sort_search_results(self):
         assert list(
             IndexSearcher._sort_search_results({
                 "Hosts": [SearchResult(title="host", url="")],

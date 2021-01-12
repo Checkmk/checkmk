@@ -606,7 +606,7 @@ class UpdateConfig:
 
         This is necessary for example if a new Rulespec was added by an MKP.
         """
-        cmk.gui.watolib.search.build_and_store_index()
+        cmk.gui.watolib.search.build_index()
 
     def _rewrite_bi_configuration(self):
         """Convert the bi configuration to the new (REST API compatible) format"""

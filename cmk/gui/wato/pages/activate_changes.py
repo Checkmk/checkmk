@@ -26,7 +26,7 @@ from cmk.gui.watolib.changes import ObjectRef, ObjectRefType
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
-from cmk.gui.watolib.search import build_and_store_index_background
+from cmk.gui.watolib.search import build_index_background
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html, request as global_request, display_options
@@ -202,7 +202,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         for site_id in config.activation_sites():
             self.confirm_site_changes(site_id)
 
-        build_and_store_index_background()
+        build_index_background()
 
         html.header(self.title(),
                     breadcrumb=self.breadcrumb(),

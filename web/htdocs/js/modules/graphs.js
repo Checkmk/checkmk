@@ -379,56 +379,47 @@ function render_graph(graph) {
 
         var points = curve["points"];
         // the hex color code can have additional opacity information
-        // if these are none existing, set opacity value to fully opaque
+        // if these are none existing default to 0.3 UX project
         if (curve["color"].length == 9) {
             color = curve["color"].substr(0, 7);
-            opacity = parse_color_with_opacity(curve["color"].slice(-2));
+            opacity = curve["color"].slice(-2);
         } else {
             color = curve["color"];
-            opacity = 1.0;
+            opacity = "4c"; // that is 0.3
         }
 
         if (curve["type"] == "area") {
             var prev_lower = null;
             var prev_upper = null;
             ctx.save();
-            var gradient = ctx.createLinearGradient(t_orig, v_pixels, t_orig, -v_pixels);
-            ctx.globalAlpha = opacity;
-            gradient.addColorStop(
-                0,
-                render_color(darken_color(parse_color(color), color_gradient))
-            );
-            gradient.addColorStop(0.5, color);
-            gradient.addColorStop(
-                1,
-                render_color(lighten_color(parse_color(color), color_gradient))
-            );
-            ctx.fillStyle = gradient;
-            // <F12><F3><F12>ctx.fillStyle = color;
-            ctx.strokeStyle = "#000";
+            ctx.fillStyle = color + opacity;
             ctx.imageSmoothingEnabled = true; // seems no difference on FF
+
             for (j = 0; j < points.length; j++) {
                 var point = points[j];
                 var lower = point[0];
                 var upper = point[1];
                 if (lower != null && upper != null && prev_lower != null && prev_upper != null) {
                     ctx.beginPath();
-                    ctx.moveTo(trans_t(t - step) - 1, trans_v(prev_lower));
-                    ctx.lineTo(trans_t(t - step) - 1, trans_v(prev_upper));
+                    ctx.moveTo(trans_t(t - step), trans_v(prev_lower));
+                    ctx.lineTo(trans_t(t - step), trans_v(prev_upper));
                     ctx.lineTo(trans_t(t), trans_v(upper));
                     ctx.lineTo(trans_t(t), trans_v(lower));
-                    ctx.lineTo(trans_t(t - step) - 1, trans_v(prev_lower));
                     ctx.closePath();
                     ctx.fill();
-                    // paint_rect(trans(t, upper), step * t_pixels_per_second, (upper - lower) * v_pixels_per_unit, color);
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = curve_line_width;
+                    ctx.moveTo(trans_t(t - step), trans_v(prev_upper));
+                    ctx.lineTo(trans_t(t), trans_v(upper));
+                    ctx.stroke();
                 }
                 prev_lower = lower;
                 prev_upper = upper;
                 t += step;
             }
             ctx.restore();
-            // reset alpha to be fully opaque
-            ctx.globalAlpha = 1;
         } else {
             // "line"
             ctx.save();
@@ -712,12 +703,6 @@ function parse_color(hexcolor) {
     var g = ((bits >> 8) & 255) / 255.0;
     var b = (bits & 255) / 255.0;
     return [r, g, b];
-}
-
-function parse_color_with_opacity(hexcolor) {
-    var bits = parseInt(hexcolor, 16);
-    var opacity = (bits & 255) / 255.0;
-    return opacity;
 }
 
 function render_color(rgb) {

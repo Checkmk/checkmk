@@ -16,8 +16,6 @@ const axis_over_width = 5; // pixel that the axis is longer for optical reasons
 const color_gradient = 0.2; // ranges from 0 to 1
 const curve_line_width = 2.0;
 const rule_line_width = 2.0;
-const v_line_dash = [null, [1, 5], [1]];
-const t_line_dash = [null, [1, 5], [1]];
 const g_page_update_delay = 60; // prevent page update for X seconds
 const g_delayed_graphs = [];
 
@@ -281,8 +279,7 @@ function render_graph(graph) {
 
     var v_axis_width = graph_vertical_axis_width(graph);
 
-    var v_line_color = [graph.render_options.foreground_color, "#a0a0a0", "#a0a0a0"];
-    var t_line_color = [graph.render_options.foreground_color, "#a0a0a0", "#666666"];
+    var v_line_color = [graph.render_options.foreground_color, "#a0a0a09c", "#a0a0a09c"];
 
     // Prepare position and translation of origin
     var t_range_from = graph["time_axis"]["range"][0];
@@ -460,8 +457,7 @@ function render_graph(graph) {
                 paint_line(
                     trans(t_range_from, position),
                     trans(t_range_to, position),
-                    v_line_color[line_width],
-                    v_line_dash[line_width]
+                    v_line_color[line_width]
                 );
             }
 
@@ -484,8 +480,7 @@ function render_graph(graph) {
                 paint_line(
                     trans(position, v_range_from),
                     trans(position, v_range_to),
-                    t_line_color[line_width],
-                    t_line_dash[line_width]
+                    v_line_color[line_width]
                 );
             }
             if (graph.render_options.show_time_axis && label != null)
@@ -673,24 +668,8 @@ function graph_bottom_border(graph) {
     else return 0;
 }
 
-function paint_line(p0, p1, color, dash) {
+function paint_line(p0, p1, color) {
     ctx.save();
-
-    if (typeof dash !== "undefined") {
-        if (ctx.setLineDash) {
-            ctx.setLineDash(dash);
-        } else {
-            // Alpha color
-            // FIXME: Currently not taking the base color into account, but this
-            // fits our needs for the moment.
-            if (dash[0] == 1 && dash[1] == 5) {
-                color = "rgba(0, 0, 0, 0.1)";
-            } else if (dash[0] == 1) {
-                color = "rgba(0, 0, 0, 0.2)";
-            }
-        }
-    }
-
     ctx.strokeStyle = color;
     ctx.beginPath();
     ctx.moveTo(p0[0], p0[1]);

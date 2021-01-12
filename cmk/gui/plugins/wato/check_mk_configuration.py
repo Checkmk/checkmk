@@ -2491,7 +2491,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def valuespec(self):
         return Transform(
             DropdownChoice(
-                title=_("Choose SNMP Backend"),
+                title=_("Choose SNMP Backend (Enterprise Edition only)"),
                 choices=[
                     (SNMPBackend.classic, _("Use Classic SNMP Backend")),
                     (SNMPBackend.inline, _("Use Inline SNMP (PySNMP) Backend")),
@@ -2503,7 +2503,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
                   "program is being executed. It is now possible to use the Inline SNMP implementation "
                   "which calls the respective libraries directly via its python bindings. This "
                   "should increase the performance of SNMP checks in a significant way. Both "
-                  "SNMP modes are featurse which improve the performance for large installations and are "
+                  "SNMP modes are features which improve the performance for large installations and are "
                   "only available via our subscription."),
             ),
             forth=transform_snmp_backend_default_forth,
@@ -4497,7 +4497,7 @@ rulespec_registry.register(
         group=RulespecGroupAgentSNMP,
         help_func=_help_snmp_backend,
         name="snmp_backend_hosts",
-        title=lambda: _("Hosts using a specific SNMP Backend"),
+        title=lambda: _("Hosts using a specific SNMP Backend (Enterprise Edition only)"),
     ))
 
 

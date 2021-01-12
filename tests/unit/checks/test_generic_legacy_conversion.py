@@ -852,7 +852,6 @@ def test_all_check_variables_present(config_check_variables):
         'printer_output_default_levels',
         'printer_supply_default_levels',
         'printer_supply_ricoh_default_levels',
-        'printer_supply_some_remaining_status',
         'prism_container_default_levels',
         'ps_default_levels',
         'pse_poe_default_levels',

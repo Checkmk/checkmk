@@ -27,15 +27,6 @@ factory_settings["printer_supply_default_levels"] = {
     "levels": (20.0, 10.0),
 }
 
-# When the printer reports -3 as fill threshold the toner
-# might be empty or might have some small remaining capacities
-# the exact amount is unknown. This makes the nagios state reported
-# in this state configurable
-printer_supply_some_remaining_status = 1
-
-# TODO: This variable is deprecated. Remove it in future
-check_config_variables.append("printer_supply_some_remaining_status")
-
 # Workaround for toners and drum units in c5900 devices
 # which have equal names for the single parts.
 # Add the color description to that item
@@ -147,8 +138,8 @@ def check_printer_supply(item, params, parsed):
                 if level == -1 or max_capacity == -1:
                     return 0, "%sThere are no restrictions on this supply" % color_info
                 elif level == -3:
-                    return params.get("some_remaining", printer_supply_some_remaining_status),\
-                            "%sSome remaining" % color_info, perfdata
+                    return params.get("some_remaining",
+                                      1), "%sSome remaining" % color_info, perfdata
                 elif level == -2:
                     return 3, "%s Unknown level" % color_info
                 elif max_capacity == -2:

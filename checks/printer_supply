@@ -67,14 +67,17 @@ def parse_printer_supply(info):
 
     color_mapping = {_get_oid_end_last_index(oid_end): value for oid_end, value in info[0]}
 
-    for index, (description, unit_info, max_capacity, level, class_,
+    for index, (line_0, unit_info, raw_max_capacity, raw_level, class_,
                 color_id) in enumerate(info[1]):
-        # Ignore devices which show -2 for current value and -2 for max value -> useless
-        if (max_capacity == '-2' and level == '-2') or not level or not len(max_capacity) > 0:
-            continue
 
-        # give chance for latin1->utf8 decoding
-        line_0 = description
+        try:
+            max_capacity = int(raw_max_capacity)
+            level = int(raw_level)
+        except ValueError:
+            continue
+        # Ignore devices which show -2 for current value and -2 for max value -> useless
+        if max_capacity == -2 and level == -2:
+            continue
 
         color = color_mapping.get(color_id, '')
         # For toners or drum units add the color (if available)
@@ -92,7 +95,7 @@ def parse_printer_supply(info):
         # fix trailing zero bytes (seen on HP Jetdirect 143)
         description = line_0.split(' S/N:')[0].strip('\0')
 
-        parsed.append([description, unit_info, int(max_capacity), saveint(level), class_, color])
+        parsed.append([description, unit_info, max_capacity, level, class_, color])
     return parsed
 
 

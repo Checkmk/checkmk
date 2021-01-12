@@ -6,11 +6,11 @@
 
 import os
 import time
-import redis
 import cmk
 import marshal
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Dict,
     Set,
     Optional,
@@ -35,6 +35,10 @@ from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledAggregationSc
 from cmk.utils.bi.bi_aggregation import BIAggregation
 from cmk.utils.bi.bi_lib import SitesCallback
 
+from cmk.utils.redis import get_redis_client
+if TYPE_CHECKING:
+    from cmk.utils.redis import RedisDecoded
+
 
 class ConfigStatus(TypedDict):
     configfile_timestamp: float
@@ -54,7 +58,7 @@ class BICompiler:
         self._path_compiled_aggregations = Path(get_cache_dir(), "compiled_aggregations")
         self._path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
 
-        self._redis_client = None
+        self._redis_client: Optional['RedisDecoded'] = None
         self._setup()
 
     def _setup(self):
@@ -243,12 +247,9 @@ class BICompiler:
         except ValueError:
             return {}
 
-    def _get_redis_client(self):
+    def _get_redis_client(self) -> 'RedisDecoded':
         if self._redis_client is None:
-            self._redis_client = redis.from_url("unix://%s/tmp/run/redis?db=0" %
-                                                os.environ["OMD_ROOT"],
-                                                charset="utf-8",
-                                                decode_responses=True)
+            self._redis_client = get_redis_client()
         return self._redis_client
 
     def is_part_of_aggregation(self, host_name, service_description):

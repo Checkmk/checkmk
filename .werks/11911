@@ -1,0 +1,15 @@
+Title: Fix missing context/search filters in report scheduler
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1610441098
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If you created a report scheduler for, e.g. "BI Availability", the section
+"Context/Search filters" was empty because of missing single info context in
+the report element. That affected all reports without single info context.
+
+The behavior for the reports concerned is now the same as in version 1.6.

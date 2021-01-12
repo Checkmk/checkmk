@@ -144,10 +144,7 @@ class PiggybackSummarizer(AgentSummarizer):
             # `HostSections.piggyback_raw_data` because this allows it to
             # sneakily use cached data.  At minimum, we should group all cache
             # handling performed after the parser.
-            for src in get_piggyback_raw_data(
-                    origin if origin else "",
-                    self.time_settings,
-            ):
+            for src in get_piggyback_raw_data(origin, self.time_settings):
                 states.append(src.reason_status)
                 infotexts.add(src.reason)
             if self.always and not src:

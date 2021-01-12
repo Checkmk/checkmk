@@ -114,6 +114,16 @@ class PiggybackSummarizer(AgentSummarizer):
         self.time_settings = time_settings
         self.always = always
 
+    def __repr__(self) -> str:
+        return "%s(%r, hostname=%r, ipaddress=%r, time_settings=%r, always=%r)" % (
+            type(self).__name__,
+            self.exit_spec,
+            self.hostname,
+            self.ipaddress,
+            self.time_settings,
+            self.always,
+        )
+
     def summarize_success(
         self,
         host_sections: AgentHostSections,

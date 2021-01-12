@@ -40,6 +40,9 @@ class TestPiggybackSummarizer:
             lambda *args, **kwargs: (),
         )
 
+    def test_repr_smoke_test(self, summarizer):
+        assert isinstance(repr(summarizer), str)
+
     @pytest.mark.usefixtures("patch_get_piggyback_raw_data")
     def test_discovery_is_noop(self, summarizer, host_sections):
         assert summarizer.summarize_success(

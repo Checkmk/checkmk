@@ -624,9 +624,8 @@ class ModeEditUser(WatoMode):
         user_attrs["locked"] = html.get_checkbox("locked")
         increase_serial = False
 
-        if (UserId(self._user_id) in self._users and
-                self._users[UserId(self._user_id)]["locked"] != user_attrs["locked"] and
-                user_attrs["locked"]):
+        if (UserId(self._user_id) in self._users and user_attrs["locked"] and
+                self._users[UserId(self._user_id)]["locked"] != user_attrs["locked"]):
             increase_serial = True  # when user is being locked now, increase the auth serial
 
         # Authentication: Password or Secret

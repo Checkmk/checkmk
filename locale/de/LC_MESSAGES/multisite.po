@@ -41962,6 +41962,12 @@ msgstr ""
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
 msgstr "Sie haben keine Berechtigungen für den Ordner <b>%s</b>. "
 
+#, fuzzy
+msgid "Sorry, you lack the permission for downloading diagnostics dumps."
+msgstr ""
+"Sie haben leider keine Berechtigung, diese Art von Anzeigeobjekt zu "
+"editieren."
+
 msgid "Sorry, you lack the permission for editing this type of visuals."
 msgstr ""
 "Sie haben leider keine Berechtigung, diese Art von Anzeigeobjekt zu "

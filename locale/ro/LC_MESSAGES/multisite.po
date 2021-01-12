@@ -39860,6 +39860,9 @@ msgstr ""
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
 msgstr ""
 
+msgid "Sorry, you lack the permission for downloading diagnostics dumps."
+msgstr ""
+
 msgid "Sorry, you lack the permission for editing this type of visuals."
 msgstr ""
 

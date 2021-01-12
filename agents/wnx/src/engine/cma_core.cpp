@@ -981,62 +981,69 @@ bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
     // never here
 }
 
-constexpr bool G_KillUpdaterOnEnd = false;
+namespace {
+constexpr std::chrono::milliseconds time_grane{250};
+}
+
+void TheMiniBox::readAndAppend(HANDLE read_handle,
+                               std::chrono::milliseconds timeout) {
+    auto buf = cma::tools::ReadFromHandle<std::vector<char>>(read_handle);
+    if (buf.empty()) {
+        return;
+    }
+
+    if (process_->getData().empty()) {
+        // after getting first data, we need to decrease timeout to
+        // prevent too long waiting for nothing
+        timeout = std::min(timeout, 10 * time_grane);
+    }
+    appendResult(read_handle, buf);
+    XLOG::d.t("Appended [{}] bytes from '{}', timeout is [{}ms]", buf.size(),
+              wtools::ConvertToUTF8(exec_), timeout.count());
+}
+
+bool TheMiniBox::waitForBreakLoop(std::chrono::milliseconds timeout) {
+    if (timeout < time_grane) {
+        XLOG::d("Plugin '{}' hits timeout", wtools::ConvertToUTF8(exec_));
+        return true;
+    }
+
+    if (waitForStop(time_grane)) {
+        XLOG::d("Plugin '{}' gets signal stop [{}], timeout left [{}ms]!",
+                wtools::ConvertToUTF8(exec_), stop_set_, timeout.count());
+        return true;
+    }
+
+    return false;
+}
+
+/// Modified version to be used by Updater
 bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
-    using namespace std::chrono;
     if (stop_set_) return false;
-    ON_OUT_OF_SCOPE(readWhatLeft());
 
-    constexpr std::chrono::milliseconds kGrane = 250ms;
-    auto waiting_processes = getProcessId();
     auto read_handle = getReadHandle();
-    int safety_poll_count = 5;
-    for (;;) {
-        auto buf = cma::tools::ReadFromHandle<std::vector<char>>(read_handle);
-        if (buf.size()) {
-            appendResult(read_handle, buf);
-            XLOG::d.t("Appended [{}] bytes from '{}'",
-                      process_->getData().size(), wtools::ConvertToUTF8(exec_));
-        } else {
-            // we have data inside we have nothing from the cmk-update
-            if (!process_->getData().empty()) {
-                --safety_poll_count;
-                if (safety_poll_count == 0) return true;
-            }
+
+    while (true) {
+        readAndAppend(read_handle, timeout);
+
+        if (waitForBreakLoop(timeout)) {
+            break;
         }
 
-        // normal processing block
-        if (timeout >= kGrane) {
-            std::unique_lock lk(lock_);
-            auto stop_time = std::chrono::steady_clock::now() + kGrane;
-            auto stopped = cv_stop_.wait_until(
-                lk, stop_time, [this]() -> bool { return stop_set_; });
+        timeout -= time_grane;
+    }
 
-            if (stopped || stop_set_) {
-                XLOG::d(
-                    "Plugin '{}' signaled to be stopped [{}] [{}] left timeout [{}ms]!",
-                    wtools::ConvertToUTF8(exec_), stopped, stop_set_,
-                    timeout.count());
-            } else {
-                timeout -= kGrane;
-                continue;
-            }
-        }
-
-        if (buf.size()) return true;
-
-        if (timeout < kGrane) failed_ = true;
-
-        if constexpr (G_KillUpdaterOnEnd) {
-            // we do not kill updater normally
-            process_->kill(true);
-            // cma::tools::win::KillProcess(waiting_processes, -1);
-            XLOG::d("Process '{}' [{}] killed", wtools::ConvertToUTF8(exec_),
-                    waiting_processes);  // not normal situation
-        }
-
+    if (process_->getData().empty()) {
+        auto process_id = getProcessId();
+        failed_ = timeout < time_grane;
+        process_->kill(true);
+        XLOG::l("Process '{}' [{}] is killed", wtools::ConvertToUTF8(exec_),
+                process_id);
         return false;
     }
+
+    readWhatLeft();
+    return true;
 }
 
 void PluginEntry::threadCore(const std::wstring& Id) {

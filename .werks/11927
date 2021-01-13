@@ -1,0 +1,14 @@
+Title: Pattern Editor: Unable to analyze matching, because "service" parameter is missing
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1610525534
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b4
+
+The "service" parameter was not needed for the Pattern Editor.
+Now it is removed completely.
+

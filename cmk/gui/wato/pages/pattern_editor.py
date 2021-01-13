@@ -61,6 +61,8 @@ class ModePatternEditor(WatoMode):
         # only way to get these information to the modes breadcrumb method.
         with html.stashed_vars():
             html.request.set_var("varname", "logwatch_rules")
+            html.request.del_var("host")
+            html.request.del_var("service")
             return super().breadcrumb()
 
     def _from_vars(self):

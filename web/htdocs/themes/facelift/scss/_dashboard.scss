@@ -29,13 +29,6 @@ div#dashboard {
   margin: 0;
 }
 
-body.dashlet {
-  #data_container {
-    padding: 0;
-    border: none;
-  }
-}
-
 div.dashlet {
   position: absolute;
   z-index: 1;
@@ -235,24 +228,18 @@ div.dashlet_inner div.stats {
 body.main.dashlet {
   padding: 8px;
   background-color: $dashlet-body-bg-color;
-  border-top: none;
   box-sizing: border-box;
 
   table.data.table {
     padding: 0 8px;
 
-    tr.data {
-      border-bottom: $dashboard-tr-border-bottom;
-      transition: 0.15s ease-in-out;
-    }
-  }
-
-  table.data {
-    border-spacing: 0;
-
     th:nth-child(1) {
       padding-bottom: 2px;
       padding-left: 1px;
+    }
+
+    tr.data {
+      transition: 0.15s ease-in-out;
     }
   }
 
@@ -265,16 +252,7 @@ body.main.dashlet {
 
       &.state {
         border-top: none;
-        border-top-color: $state-border-top-color;
       }
-    }
-
-    &:last-of-type > td:not(.state):not(.gap) {
-      border-bottom: 1px solid $color-table-border;
-    }
-
-    &:nth-child(2) > td.state {
-      border-top-color: $color-table-border !important;
     }
   }
 
@@ -293,11 +271,6 @@ body.main.dashlet {
     div#dashlet_content_wrapper[data-simplebar="init"] {
       height: 100%;
       overflow: auto;
-
-      div#data_container {
-        padding-right: 12px;
-        padding-bottom: 12px;
-      }
 
       div.simplebar-track {
         background-color: $dashlet-body-bg-color;

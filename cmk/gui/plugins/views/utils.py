@@ -1819,7 +1819,7 @@ class Cell:
         assert self._tooltip_painter_name is not None
         return painter_registry[self._tooltip_painter_name]()
 
-    def paint_as_header(self, is_last_column_header: bool = False) -> None:
+    def paint_as_header(self) -> None:
         # Optional: Sort link in title cell
         # Use explicit defined sorter or implicit the sorter with the painter name
         # Important for links:
@@ -1842,9 +1842,6 @@ class Cell:
             onclick = "location.href=\'%s\'" % makeuri(
                 request, addvars=params, remove_prefix='sort')
             title = _('Sort by %s') % self.title()
-
-        if is_last_column_header:
-            classes.append("last_col")
 
         html.open_th(class_=classes, onclick=onclick, title=title)
         html.write(self.title())
@@ -2014,16 +2011,10 @@ class Cell:
             raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
         return result
 
-    def paint(self, row: Row, tdattrs: str = "", is_last_cell: bool = False) -> bool:
+    def paint(self, row: Row, tdattrs: str = "") -> bool:
         tdclass, content = self.render(row)
         has_content = content != ""
         assert not isinstance(content, dict)
-
-        if is_last_cell:
-            if tdclass is None:
-                tdclass = "last_col"
-            else:
-                tdclass += " last_col"
 
         if tdclass:
             html.write("<td %s class=\"%s\">" % (tdattrs, tdclass))
@@ -2119,7 +2110,7 @@ class EmptyCell(Cell):
     def render(self, row):
         return "", ""
 
-    def paint(self, row, tdattrs="", is_last_cell=False):
+    def paint(self, row, tdattrs=""):
         return False
 
 

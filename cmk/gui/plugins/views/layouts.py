@@ -677,9 +677,8 @@ class LayoutTable(Layout):
             if show_checkboxes:
                 render_checkbox_td(view, row, num_cells)
 
-            last_cell = cells[-1]
             for cell in cells:
-                cell.paint(row, is_last_cell=last_cell == cell)
+                cell.paint(row)
 
             column += 1
 
@@ -700,9 +699,8 @@ class LayoutTable(Layout):
                 else:
                     html.th('')
 
-            last_cell = cells[-1]
             for cell in cells:
-                cell.paint_as_header(is_last_column_header=cell == last_cell)
+                cell.paint_as_header()
 
             if n < num_columns:
                 html.td('', class_="gap")

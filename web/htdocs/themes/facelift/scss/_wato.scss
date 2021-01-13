@@ -238,11 +238,6 @@ div#service_container {
       height: auto;
       padding: 3px 7px;
 
-      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
-        border-top: none;
-        border-bottom: none;
-      }
-
       &.service {
         width: 250px;
         max-width: 250px;

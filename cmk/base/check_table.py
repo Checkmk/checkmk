@@ -203,12 +203,12 @@ def get_check_table(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    use_cache_for_real = not host_config.is_ping_host and not skip_autochecks and use_cache
-    # speed up multiple lookup of same host
-    table_cache_id = host_config.hostname, filter_mode
-    if use_cache_for_real:
+    # TODO (mo): find out why skip_ignored is ignored here. That seems wrong to me.
+    cache_key = (host_config.hostname, filter_mode, skip_autochecks) if use_cache else None
+
+    if cache_key:
         with suppress(KeyError):
-            return config_cache.check_table_cache[table_cache_id]
+            return config_cache.check_table_cache[cache_key]
 
     host_check_table = HostCheckTable(
         config_cache=config_cache,
@@ -218,8 +218,8 @@ def get_check_table(
         filter_mode=filter_mode,
     )
 
-    if use_cache_for_real:
-        config_cache.check_table_cache[table_cache_id] = host_check_table
+    if cache_key:
+        config_cache.check_table_cache[cache_key] = host_check_table
 
     return host_check_table
 

@@ -1,0 +1,15 @@
+Title: Extension packages: Be more robust against broken packages
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1610541104
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+The extension packages GUI and also command line tool "mkp" was failing
+with a crash in case a in incompatible package or not expected file was
+found in the disabled packages path.
+
+The error handling is now more robust against this kind of issue.

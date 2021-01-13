@@ -380,12 +380,6 @@ table.data {
     }
   }
 
-  &.oddeven > tbody > tr:nth-child(odd),
-  &.oddeven > tbody > tr:nth-child(even),
-  &.oddeven > tbody > tr.groupheader {
-    background-color: $oddeven-table-bg-color;
-  }
-
   /* Two-lined header, for example in WATO: ChangeLog->Site Status */
   /* TODO: Reproduce this html element */
   tr.dualheader th {
@@ -402,7 +396,6 @@ table.data {
       height: 26px;
       padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
-      background-color: $data-td-bg-color;
       border-right: none;
 
       a {

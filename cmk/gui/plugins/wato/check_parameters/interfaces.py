@@ -548,7 +548,7 @@ def _vs_packet_levels(
     return CascadingDropdown(orientation="horizontal",
                              title=title,
                              choices=[
-                                 ("perc", _(f"Percentual levels{percent_detail}"),
+                                 ("perc", _("Percentual levels") + percent_detail,
                                   Tuple(orientation="float",
                                         show_titles=False,
                                         elements=[
@@ -559,7 +559,7 @@ def _vs_packet_levels(
                                                        default_value=percent_levels[1],
                                                        display_format='%.3f')
                                         ])),
-                                 ("abs", _(f"Absolute levels{abs_detail}"),
+                                 ("abs", _("Absolute levels") + abs_detail,
                                   Tuple(orientation="float",
                                         show_titles=False,
                                         elements=[
@@ -740,8 +740,8 @@ def _parameter_valuespec_if():
                             "the given bounds. The percentual error rate is computed by "
                             "the formula <b>(errors / (unicast + non-unicast + errors))*100</b> "),
                         percent_levels=PERC_ERROR_LEVELS,
-                        percent_detail=" (in relation to all packets (successful + error))",
-                        abs_detail=" (in errors per second)",
+                        percent_detail=_(" (in relation to all packets (successful + error))"),
+                        abs_detail=_(" (in errors per second)"),
                     ),
                 ),
                 ("speed",
@@ -950,8 +950,8 @@ def _parameter_valuespec_if():
                                "bounds. The percentual packet rate is computed by "
                                "the formula <b>(multicast / (unicast + non-unicast))*100</b>"),
                         percent_levels=PERC_PKG_LEVELS,
-                        percent_detail=" (in relation to all successful packets)",
-                        abs_detail=" (in packets per second)"),
+                        percent_detail=_(" (in relation to all successful packets)"),
+                        abs_detail=_(" (in packets per second)")),
                 ),
                 (
                     "broadcast",
@@ -963,8 +963,8 @@ def _parameter_valuespec_if():
                                "bounds. The percentual packet rate is computed by "
                                "the formula <b>(broadcast / (unicast + non-unicast))*100</b>"),
                         percent_levels=PERC_PKG_LEVELS,
-                        percent_detail=" (in relation to all successful packets)",
-                        abs_detail=" (in packets per second)"),
+                        percent_detail=_(" (in relation to all successful packets)"),
+                        abs_detail=_(" (in packets per second)")),
                 ),
                 ("average_bm",
                  Integer(

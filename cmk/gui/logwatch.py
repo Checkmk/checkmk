@@ -277,7 +277,7 @@ def list_logs(site, host_name, logfile_names):
 def show_file(site, host_name, file_name):
     int_filename = form_file_to_int(file_name)
 
-    title = _("Logfiles of Host %s: %s") % (host_name, file_name)
+    title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
     breadcrumb = _show_file_breadcrumb(host_name, title)
     html.header(title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename))
 
@@ -319,7 +319,7 @@ def show_file(site, host_name, file_name):
 
         for line in log['lines']:
             html.open_p(class_=line['class'])
-            html.icon_button(analyse_url(site, host_name, file_name, line['line']),
+            html.icon_button(analyse_url(site, host_name, int_filename, line['line']),
                              _("Analyze this line"), "analyze")
             html.write_text(line['line'].replace(" ", "&nbsp;").replace("\1", "<br>"))
             html.close_p()

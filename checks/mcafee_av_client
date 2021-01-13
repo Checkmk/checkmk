@@ -30,15 +30,10 @@ def discover_mcafee_av_client(parsed):
 
 
 def check_mcafee_av_client(_no_item, params, parsed):
-    if isinstance(params, dict):
-        warn, crit = params['signature_age']
-    else:
-        warn, crit = params
-
     yield check_levels(
         time.time() - parsed,
         None,  # no metric name -> no metric produced
-        (warn, crit),
+        params['signature_age'],
         human_readable_func=get_age_human_readable,
         infoname="Time since last update of signatures",
     )

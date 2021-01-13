@@ -82,8 +82,8 @@ def _k8s_network_err_pac(
         if pac_rate is None or err_rate is None:
             continue
 
-        yield Metric('if_%s_pkts' % pway, pac_rate)
-        yield Metric('if_%s_errors' % pway, err_rate)
+        yield Metric('if_%s_pkts' % pway, pac_rate, boundaries=(0, None))
+        yield Metric('if_%s_errors' % pway, err_rate, boundaries=(0, None))
 
         if isinstance(warn, float) and isinstance(crit, float):
             yield from check_levels(
@@ -91,6 +91,7 @@ def _k8s_network_err_pac(
                 levels_upper=(warn, crit),
                 render_func=render.percent,
                 label="%s errors" % name,
+                boundaries=(0, None),
             )
         else:  # absolute levels or no levels
             yield from check_levels(
@@ -98,6 +99,7 @@ def _k8s_network_err_pac(
                 levels_upper=(warn, crit),
                 render_func=lambda value: "%.2f/s" % value,
                 label="%s error rate" % name,
+                boundaries=(0, None),
             )
 
 
@@ -148,6 +150,7 @@ def _check__k8s_stats_network__core(
                 levels_upper=params.get('discards'),
                 render_func=lambda v: "%.2f/s" % v,
                 label=name,
+                boundaries=(0, None),
             )
 
 
@@ -174,16 +177,16 @@ def _check__k8s_stats_network__proxy_results(
     Metric('in', 0.0)
     Result(state=<State.OK: 0>, summary='Out: 0.00 Bit/s')
     Metric('out', 0.0)
-    Metric('if_in_pkts', 0.0)
-    Metric('if_in_errors', 0.0)
+    Metric('if_in_pkts', 0.0, boundaries=(0.0, None))
+    Metric('if_in_errors', 0.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Input error rate: 0.00/s')
-    Metric('if_out_pkts', 0.0)
-    Metric('if_out_errors', 0.0)
+    Metric('if_out_pkts', 0.0, boundaries=(0.0, None))
+    Metric('if_out_errors', 0.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Output error rate: 0.00/s')
     Result(state=<State.OK: 0>, summary='Input Discards: 0.00/s')
-    Metric('if_in_discards', 0.0)
+    Metric('if_in_discards', 0.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Output Discards: 0.00/s')
-    Metric('if_out_discards', 0.0)
+    Metric('if_out_discards', 0.0, boundaries=(0.0, None))
     """
     if section_k8s_stats is None:
         return

@@ -255,8 +255,8 @@ def test_discover_k8s_stats_network(section, expected_items):
            4158.4921875,
            levels=(13193.91875, 14843.15859375),
            boundaries=(0.0, 16492.3984375)),
-    Metric('fs_size', 16492.3984375),
-    Metric('fs_used_percent', 25.21459933956316, levels=(80.0, 90.0)),
+    Metric('fs_size', 16492.3984375, boundaries=(0.0, None)),
+    Metric('fs_used_percent', 25.21459933956316, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     Result(state=state.OK, summary='25.21% used (4.06 of 16.1 GiB)'),
 ])])
 def test__check_k8s_stats_fs(section, expected_results):

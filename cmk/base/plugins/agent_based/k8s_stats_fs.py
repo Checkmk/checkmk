@@ -61,8 +61,8 @@ def _check__k8s_stats_fs__core(
     ... }):
     ...     print(result)
     Metric('fs_used', 4158.4921875, levels=(13193.91875, 14843.15859375), boundaries=(0.0, 16492.3984375))
-    Metric('fs_size', 16492.3984375)
-    Metric('fs_used_percent', 25.21459933956316, levels=(80.0, 90.0))
+    Metric('fs_size', 16492.3984375, boundaries=(0.0, None))
+    Metric('fs_used_percent', 25.21459933956316, levels=(80.0, 90.0), boundaries=(0.0, 100.0))
     Result(state=<State.OK: 0>, summary='25.21% used (4.06 of 16.1 GiB)')
     Metric('growth', 0.0)
     Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0 B')

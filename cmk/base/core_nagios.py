@@ -1165,11 +1165,12 @@ def _get_needed_plugin_names(
     # when determining the needed *section* plugins.
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
-    needed_agent_based_check_plugin_names = check_table.get_needed_check_names(
+    needed_agent_based_check_plugin_names = check_table.get_check_table(
         host_config.hostname,
         filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
-    )
+    ).needed_check_names()
+
     legacy_names = (_resolve_legacy_plugin_name(pn) for pn in needed_agent_based_check_plugin_names)
     needed_legacy_check_plugin_names.update(ln for ln in legacy_names if ln is not None)
 
@@ -1182,7 +1183,8 @@ def _get_needed_plugin_names(
         if nodes is None:
             raise MKGeneralException("Invalid cluster configuration")
         for node in nodes:
-            for check_plugin_name in check_table.get_needed_check_names(node, skip_ignored=False):
+            node_table = check_table.get_check_table(node, skip_ignored=False)
+            for check_plugin_name in node_table.needed_check_names():
                 opt_legacy_name = _resolve_legacy_plugin_name(check_plugin_name)
                 if opt_legacy_name is not None:
                     needed_legacy_check_plugin_names.add(opt_legacy_name)

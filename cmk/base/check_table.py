@@ -43,6 +43,9 @@ class HostCheckTable(Mapping[ServiceID, Service]):
     def __iter__(self) -> Iterator[ServiceID]:
         return iter(self._data)
 
+    def needed_check_names(self) -> Set[CheckPluginName]:
+        return {s.check_plugin_name for s in self.values()}
+
 
 def _aggregate_check_table_services(
     *,
@@ -226,21 +229,6 @@ def get_check_table(
         config_cache.check_table_cache[cache_key] = host_check_table
 
     return host_check_table
-
-
-def get_needed_check_names(
-    hostname: HostName,
-    *,
-    filter_mode: FilterMode = FilterMode.NONE,
-    skip_ignored: bool = True,
-) -> Set[CheckPluginName]:
-    return {
-        s.check_plugin_name for s in get_check_table(
-            hostname,
-            filter_mode=filter_mode,
-            skip_ignored=skip_ignored,
-        ).values()
-    }
 
 
 def get_sorted_service_list(

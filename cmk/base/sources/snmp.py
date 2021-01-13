@@ -206,11 +206,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         else:
             checking_sections = set(
                 agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=check_table.get_needed_check_names(
+                    check_plugin_names=check_table.get_check_table(
                         self.hostname,
                         filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
                         skip_ignored=True,
-                    ),
+                    ).needed_check_names(),
                     inventory_plugin_names=()))
         return checking_sections.intersection(
             s.name for s in agent_based_register.iter_all_snmp_sections())

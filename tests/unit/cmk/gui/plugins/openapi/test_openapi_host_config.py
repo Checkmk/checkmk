@@ -81,7 +81,29 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )
+    assert resp.json['extensions']['attributes'] == {'ipaddress': '127.0.0.1'}
 
+    resp = wsgi_app.follow_link(
+        resp,
+        '.../update',
+        base=base,
+        status=200,
+        params='{"update_attributes": {"alias": "bar"}}',
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+    assert resp.json['extensions']['attributes'] == {'ipaddress': '127.0.0.1', 'alias': 'bar'}
+
+    resp = wsgi_app.follow_link(
+        resp,
+        '.../update',
+        base=base,
+        status=200,
+        params='{"remove_attributes": ["alias"]}',
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+    assert resp.json['extensions']['attributes'] == {'ipaddress': '127.0.0.1'}
     # also try to update with wrong attribute
 
     wsgi_app.follow_link(

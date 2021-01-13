@@ -278,16 +278,16 @@ def test__check_k8s_stats_fs(section, expected_results):
     Metric('in', 0.0),
     Result(state=state.OK, summary='Out: 0.00 Bit/s'),
     Metric('out', 0.0),
-    Metric('if_in_pkts', 0.0),
-    Metric('if_in_errors', 0.0),
+    Metric('if_in_pkts', 0.0, boundaries=(0.0, None)),
+    Metric('if_in_errors', 0.0, boundaries=(0.0, None)),
     Result(state=state.OK, summary='Input error rate: 0.00/s'),
-    Metric('if_out_pkts', 0.0),
-    Metric('if_out_errors', 0.0),
+    Metric('if_out_pkts', 0.0, boundaries=(0.0, None)),
+    Metric('if_out_errors', 0.0, boundaries=(0.0, None)),
     Result(state=state.OK, summary='Output error rate: 0.00/s'),
     Result(state=state.OK, summary='Input Discards: 0.00/s'),
-    Metric('if_in_discards', 0.0),
+    Metric('if_in_discards', 0.0, boundaries=(0.0, None)),
     Result(state=state.OK, summary='Output Discards: 0.00/s'),
-    Metric('if_out_discards', 0.0),
+    Metric('if_out_discards', 0.0, boundaries=(0.0, None)),
 ])])
 def test__check_k8s_stats_network(section, expected_results):
     vs: Dict[str, Any] = {}

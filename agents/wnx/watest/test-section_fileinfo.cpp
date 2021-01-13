@@ -143,64 +143,111 @@ TEST(FileInfoTest, Globs) {
     }
 }
 
-TEST(FileInfoTest, Base) {
-    using namespace cma::provider;
-    using namespace cma::cfg;
-    cma::OnStartTest();
-    ON_OUT_OF_SCOPE(cma::OnStartTest());
-    constexpr const char* hdr = "<<<fileinfo:sep(124)>>>\n";
+TEST(FileInfoTest, ValidFileInfoPathEntry) {
+    EXPECT_TRUE(!details::ValidFileInfoPathEntry("a\\x"));
+    EXPECT_TRUE(!details::ValidFileInfoPathEntry("c:a\\x"));
+    EXPECT_TRUE(!details::ValidFileInfoPathEntry("\\a\\x"));
+    EXPECT_TRUE(details::ValidFileInfoPathEntry("\\\\a\\x"));
+    EXPECT_TRUE(details::ValidFileInfoPathEntry("d:\\a\\x"));
+    EXPECT_TRUE(details::ValidFileInfoPathEntry("D:\\a\\x"));
+}
 
-    //
-    {
-        EXPECT_TRUE(!details::ValidFileInfoPathEntry("a\\x"));
-        EXPECT_TRUE(!details::ValidFileInfoPathEntry("c:a\\x"));
-        EXPECT_TRUE(!details::ValidFileInfoPathEntry("\\a\\x"));
-        EXPECT_TRUE(details::ValidFileInfoPathEntry("\\\\a\\x"));
-        EXPECT_TRUE(details::ValidFileInfoPathEntry("d:\\a\\x"));
-        EXPECT_TRUE(details::ValidFileInfoPathEntry("D:\\a\\x"));
+namespace {
+constexpr const char* hdr = "<<<fileinfo:sep(124)>>>";
+}
+TEST(FileInfoTest, ValidateConfig) {
+    tst::TempCfgFs test_fs;
+    ASSERT_TRUE(test_fs.loadConfig(tst::GetFabricYml()));
 
-    }  // namespace cma::provider
+    auto cfg = cma::cfg::GetLoadedConfig();
+    auto x = cfg[cfg::groups::kFileInfo];
+    ASSERT_TRUE(x);
+    ASSERT_TRUE(x.IsMap());
 
-    {
+    auto p = x[cfg::vars::kFileInfoPath];
+    ASSERT_TRUE(p);
+    ASSERT_TRUE(p.IsSequence());
+}
+
+class FileInfoFixture : public ::testing::Test {
+public:
+    void loadFilesInConfig() {
         auto cfg = cma::cfg::GetLoadedConfig();
-        auto x = cfg[groups::kFileInfo];
-        ASSERT_TRUE(x);
-        x.remove(vars::kFileInfoPath);
-        FileInfo fi;
-        auto out = fi.makeBody();
-        EXPECT_TRUE(!out.empty());
-        EXPECT_EQ(out.back(), '\n');
-        out.pop_back();
-        auto val = std::stoll(out);
-        EXPECT_TRUE(val > 100000);
-        cfg.remove(groups::kFileInfo);
-        out = fi.makeBody();
-        EXPECT_TRUE(!out.empty());
+
+        cfg[cfg::groups::kFileInfo][cfg::vars::kFileInfoPath] = YAML::Load(
+            "['c:\\windows\\notepad.exe','c:\\windows\\explorer.exe']");
     }
-    // reload config
-    cma::OnStartTest();
 
-    {
+    std::vector<std::string> generate() {
         FileInfo fi;
-        auto out_h = fi.makeHeader(cma::section::kUseEmbeddedName);
-        ASSERT_TRUE(!out_h.empty());
-        EXPECT_EQ(out_h, hdr);
+        auto result = fi.generateContent();
 
-        auto cfg = cma::cfg::GetLoadedConfig();
-        auto x = cfg[groups::kFileInfo];
-        ASSERT_TRUE(x);
-        ASSERT_TRUE(x.IsMap());
-
-        auto p = x[vars::kFileInfoPath];
-        ASSERT_TRUE(p);
-        ASSERT_TRUE(p.IsSequence());
-
-        p.reset();
-        p.push_back(groups::global.fullLogFileNameAsString());
-
-        auto out = fi.makeBody();
-        ASSERT_TRUE(!out.empty());
+        EXPECT_EQ(result.back(), '\n');
+        return cma::tools::SplitString(result, "\n");
     }
+
+protected:
+    void SetUp() override {
+        ASSERT_TRUE(test_fs_.loadConfig(tst::GetFabricYml()));
+    }
+
+    void TearDown() override {}
+    tst::TempCfgFs test_fs_;
+};
+
+TEST_F(FileInfoFixture, ValidateConfig) {
+    auto cfg = cma::cfg::GetLoadedConfig();
+
+    auto fileinfo_node = cfg[cfg::groups::kFileInfo];
+    ASSERT_TRUE(fileinfo_node.IsDefined());
+    ASSERT_TRUE(fileinfo_node.IsMap());
+
+    EXPECT_TRUE(
+        cfg::GetVal(cfg::groups::kFileInfo, cfg::vars::kEnabled, false));
+
+    auto paths = cfg::GetArray<std::string>(cfg::groups::kFileInfo,
+                                            cfg::vars::kFileInfoPath);
+    EXPECT_EQ(paths.size(), 0);
+}
+
+TEST_F(FileInfoFixture, ConfigWithoutFiles) {
+    // we generate data using fabric config
+    auto table = generate();
+
+    // The expected Result
+    // <<<fileinfo:sep(124)>>>\n
+    // 123456788\n
+    EXPECT_EQ(table[0], hdr);
+    EXPECT_TRUE(!table[1].empty());
+
+    auto val = std::stoll(table[1]);
+    EXPECT_TRUE(val > 100000);
+
+    // retry generation, results should be same
+    table = generate();
+
+    EXPECT_EQ(table[0], hdr);
+    EXPECT_TRUE(!table[1].empty());
+}
+
+TEST_F(FileInfoFixture, ConfigWithFiles) {
+    // we simulate changing in config
+    loadFilesInConfig();
+    // we generate data using changed config
+    auto table = generate();
+
+    // The expected Result
+    // <<<fileinfo:sep(124)>>>\n
+    // 123456788\n
+    // c:\windows\notepad.exe|1345|123456788\n
+    // c:\windows\explorer.exe|1345|123456788\n
+
+    // check is simplified now
+    EXPECT_EQ(table[0], hdr);
+    EXPECT_EQ(table.size(), 4);
+
+    auto val = std::stoll(table[1]);
+    EXPECT_TRUE(val > 100000);
 }
 
 TEST(FileInfoTest, Misc) {
@@ -391,21 +438,6 @@ TEST(FileInfoTest, CheckOutput) {
             EXPECT_TRUE(f);
         }
     }
-}
-
-TEST(FileInfoTest, YmlCheck) {
-    using namespace cma::cfg;
-    tst::YamlLoader w;
-    auto cfg = cma::cfg::GetLoadedConfig();
-
-    auto fileinfo_node = cfg[groups::kFileInfo];
-    ASSERT_TRUE(fileinfo_node.IsDefined());
-    ASSERT_TRUE(fileinfo_node.IsMap());
-
-    auto enabled = GetVal(groups::kFileInfo, vars::kEnabled, false);
-    EXPECT_TRUE(enabled);
-    auto paths = GetArray<std::string>(groups::kFileInfo, vars::kFileInfoPath);
-    EXPECT_EQ(paths.size(), 0);
 }
 
 TEST(FileInfoTest, Reality) {

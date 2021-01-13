@@ -199,7 +199,14 @@ bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
     std::vector<std::wstring> cfg_files;
     cfg_files.emplace_back(cma::cfg::files::kDefaultMainConfig);
 
-    return cma::cfg::InitializeMainConfig(cfg_files, cma::YamlCacheOp::nothing);
+    auto ret =
+        cma::cfg::InitializeMainConfig(cfg_files, cma::YamlCacheOp::nothing);
+    if (ret) {
+        cma::cfg::ProcessKnownConfigGroups();
+        cma::cfg::SetupEnvironmentFromGroups();
+    }
+
+    return ret;
 }
 
 [[nodiscard]] bool TempCfgFs::createFile(

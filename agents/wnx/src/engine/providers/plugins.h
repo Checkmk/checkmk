@@ -3,8 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// provides basic api to start and stop service
-
 #pragma once
 #ifndef plugins_h__
 #define plugins_h__
@@ -17,14 +15,12 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 namespace config {
 // set behavior of the output
 // i future may be controlled using yml
-extern bool G_LocalNoSendIfEmptyBody;
-extern bool G_LocalSendEmptyAtEnd;
+extern bool g_local_no_send_if_empty_body;
+extern bool g_local_send_empty_at_end;
 };  // namespace config
 
 enum class PluginType { normal, local };
@@ -46,19 +42,19 @@ public:
         cfg_name_ = cma::cfg::groups::kPlugins;
     }
 
-    virtual void loadConfig();
+    void loadConfig() override;
 
-    virtual void updateSectionStatus();
+    void updateSectionStatus() override;
 
-    virtual bool isAllowedByCurrentConfig() const override;
+    bool isAllowedByCurrentConfig() const override;
 
-    void preStart() noexcept override;
+    void preStart() override;
 
-    void detachedStart() noexcept;
+    void detachedStart();
 
-    void updateCommandLine() noexcept;
+    void updateCommandLine();
 
-    void updateTimeout() noexcept;
+    void updateTimeout();
 
 protected:
     std::vector<std::string> gatherAllowedExtensions() const;
@@ -73,9 +69,6 @@ protected:
     std::string makeBody() override;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class FileInfoTest;
-    FRIEND_TEST(FileInfoTest, Base);
-
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ModulesCmdLine);
     FRIEND_TEST(PluginTest, AllowedExtensions);
@@ -94,8 +87,6 @@ public:
 enum class PluginMode { all, sync, async };
 int FindMaxTimeout(const cma::PluginMap& pm, PluginMode type);
 
-}  // namespace provider
-
-};  // namespace cma
+}  // namespace cma::provider
 
 #endif  // plugins_h__

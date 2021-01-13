@@ -30,7 +30,7 @@ $navbar-color: rgb(53, 63, 74);
 $bg-color: rgb(241, 241, 241);
 $base-color: rgb(248, 248, 248);
 $headline-color: $base-color;
-$table-highlight-color: rgb(238, 239, 240);
+$table-highlight-color: rgb(227, 229, 231);
 $img-color: rgb(80, 88, 98);
 $inpage-highlight-color: rgb(221, 222, 223);
 
@@ -229,15 +229,12 @@ $success-alert-border-color: $color-state-success-border;
 
 $data-container-bg-color: null;
 
-$oddeven-table-bg-color: transparent;
-$data-td-bg-color: $base-color;
-
 $input-button-bg-color: $success;
 $input-button-hover-bg-color: rgb(17, 189, 123);
 $input-button-color: $grey-5;
 
-$odd-tr-bg-color: null;
-$even-tr-bg-color: null;
+$odd-tr-bg-color: $bg-color-secondary;
+$even-tr-bg-color: $table-highlight-color;
 
 $tr-data-border-bottom: null;
 
@@ -249,7 +246,6 @@ $select2-rendered-color: none;
 $select2-search-field-border: none;
 
 $td-single-bg-color: $white;
-$wato-tr-bg-color: transparent;
 $wato-a-hover-bg-color: $color-table-background;
 
 $td-unused-color: rgb(34, 85, 102);

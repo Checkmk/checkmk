@@ -189,6 +189,7 @@ def _check_job_levels(job: Job, metric: str, notice_only: bool = True):
         label=label,
         render_func=render_func,
         notice_only=notice_only,
+        boundaries=(0, None),
     )
 
 
@@ -241,6 +242,7 @@ def _process_job_stats(
         # which must not result in actually applying these levels.
         levels_upper=age_levels if age_levels != (0, 0) else None,
         render_func=render.timespan,
+        boundaries=(0, None),
     )
 
     for metric in sorted(metrics_to_output):

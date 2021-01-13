@@ -102,7 +102,7 @@ public:
 
     void registerOwner(cma::srv::ServiceProcessor* sp);
 
-    virtual void preStart() noexcept {}
+    virtual void preStart() {}
     uint64_t errorCount() const { return error_count_; }
     uint64_t resetError() { return error_count_.exchange(0); }
 

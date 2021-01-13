@@ -2202,14 +2202,14 @@ TEST(PluginTest, EmptyPlugins) {
     // new behavior
     {
         using namespace cma::provider;
-        bool no_send_if_empty_body = config::G_LocalNoSendIfEmptyBody;
-        bool send_empty_end = config::G_LocalSendEmptyAtEnd;
-        ON_OUT_OF_SCOPE(config::G_LocalNoSendIfEmptyBody =
+        bool no_send_if_empty_body = config::g_local_no_send_if_empty_body;
+        bool send_empty_end = config::g_local_send_empty_at_end;
+        ON_OUT_OF_SCOPE(config::g_local_no_send_if_empty_body =
                             no_send_if_empty_body;
-                        config::G_LocalSendEmptyAtEnd = send_empty_end;)
+                        config::g_local_send_empty_at_end = send_empty_end;)
 
-        config::G_LocalNoSendIfEmptyBody = false;
-        config::G_LocalSendEmptyAtEnd = true;
+        config::g_local_no_send_if_empty_body = false;
+        config::g_local_send_empty_at_end = true;
         cma::provider::LocalProvider plugins;
         auto yaml = GetLoadedConfig();
         yaml[groups::kGlobal][vars::kSectionsEnabled] = YAML::Load("[local]");
@@ -2614,7 +2614,8 @@ TEST(PluginTest, ModulesCmdLine) {
     using namespace wtools;
     namespace fs = std::filesystem;
 
-    cma::OnStartTest();
+    tst::TempCfgFs test_fs;
+    ASSERT_TRUE(test_fs.loadConfig(tst::GetFabricYml()));
     std::vector<Plugins::ExeUnit> exe_units = {
         //
         {"*.cmd",
@@ -2634,8 +2635,6 @@ TEST(PluginTest, ModulesCmdLine) {
     CreatePluginInTemp(vp[0], 5, "a");
     CreatePluginInTemp(vp[1], 0, "b");
 
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, false, vp, exe_units, false);
     ASSERT_EQ(pm.size(), 2);
@@ -2648,6 +2647,7 @@ TEST(PluginTest, ModulesCmdLine) {
     mc.LoadDefault();
     ASSERT_TRUE(mc.isModuleScript("this.py"))
         << "we should have configured python module";
+
     PluginsProvider::UpdatePluginMapCmdLine(pm, &sp);
 
     for (auto& [name, entry] : pm) {
@@ -2659,7 +2659,7 @@ TEST(PluginTest, AllowedExtensions) {
     using namespace wtools;
     namespace fs = std::filesystem;
 
-    cma::OnStartTest();
+    tst::TempCfgFs temp_fs;
     auto yaml = cma::cfg::GetLoadedConfig();
     yaml = YAML::Load(
         "global:\n"
@@ -2673,8 +2673,6 @@ TEST(PluginTest, AllowedExtensions) {
         "      exec: zzz\n"
 
     );
-
-    ON_OUT_OF_SCOPE(OnStartTest());
 
     cma::srv::ServiceProcessor sp;
     auto& mc = sp.getModuleCommander();

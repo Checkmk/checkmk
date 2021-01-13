@@ -139,7 +139,7 @@ def _set_acknowlegement_on_queried_hosts(
     persistent: bool,
     comment: str,
 ):
-    q = Query([Hosts.name, Hosts.state]).filter(tree_to_expr(query))
+    q = Query([Hosts.name, Hosts.state]).filter(tree_to_expr(query, Hosts.__tablename__))
     hosts = list(q.iterate(connection))
 
     if not hosts:
@@ -224,7 +224,7 @@ def set_acknowledgement_on_service_related(params):
 
     if acknowledge_type == 'service_by_query':
         q = Query([Services.host_name, Services.description,
-                   Services.state]).filter(tree_to_expr(body['query']))
+                   Services.state]).filter(tree_to_expr(body['query'], Services.__tablename__))
         return _set_acknowledgement_on_queried_services(
             live,
             [(row['host_name'], row['description']) for row in q.iterate(live) if row['state'] > 0],

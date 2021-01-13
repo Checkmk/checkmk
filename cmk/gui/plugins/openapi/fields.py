@@ -460,16 +460,15 @@ class FolderField(String):
 class BinaryExprSchema(BaseSchema):
     """
 
-    >>> q = {'left': 'foo.bar', 'op': '=', 'right': 'foo'}
+    >>> q = {'left': 'name', 'op': '=', 'right': 'foo'}
     >>> result = BinaryExprSchema().load(q)
     >>> assert result == q
 
     """
     op = String(description="The operator.")
-    left = String(description="The LiveStatus table and column in the form "
-                  "`$TABLE_NAME.$COLUMN_NAME`, e.g. `hosts.name`.",
-                  pattern=r"[a-z]+\.[_a-z]+",
-                  example="hosts.name")
+    left = String(description="The LiveStatus column name.",
+                  pattern=r"([a-z]+\.)?[_a-z]+",
+                  example="name")
     right = String(
         description="The value to compare the column to.")  # should be AnyOf(all openapi types)
 
@@ -515,8 +514,8 @@ class ExprSchema(OneOfSchema):
         >>> q = {'op': 'and', 'expr': [
         ...         {'op': 'not', 'expr':
         ...             {'op': 'or', 'expr': [
-        ...                 {'op': '=', 'left': 'foo.bar', 'right': 'foo'},
-        ...                 {'op': '=', 'left': 'foo.bar', 'right': 'foo'},
+        ...                 {'op': '=', 'left': 'name', 'right': 'foo'},
+        ...                 {'op': '=', 'left': 'name', 'right': 'bar'},
         ...             ]},
         ...         },
         ...     ]}

@@ -29,13 +29,12 @@ discovery = {
 checks = {
     '': [
         ('TUX2', {'levels': (600, 300), 'nospaceerrcnt_state': 2}, [
-            (0, (
-                'Undo retention: 18 m, '
-                'Active undo blocks: 160, '
-                'Max concurrent transactions: 3, '
-                'Max querylen: 5 m, '
-                'Space errors: 0'
-            ), [
+            (0, 'Undo retention: 18 m', []),
+            (0, 'Active undo blocks: 160', []),
+            (0, 'Max concurrent transactions: 3', []),
+            (0, 'Max querylen: 5 m', []),
+            (0, 'Space errors: 0', []),
+            (0, '', [
                 ('activeblk', 160, None, None, None, None),
                 ('transconcurrent', 3, None, None, None, None),
                 ('tunedretention', 1081, 600, 300, None, None),
@@ -44,13 +43,12 @@ checks = {
             ]),
         ]),
         ('TUX3', {'levels': (600, 180), 'nospaceerrcnt_state': 2}, [
-            (2, (
-                'Undo retention: 7 m (warn/crit below 10 m/180 s), '
-                'Active undo blocks: 150, '
-                'Max concurrent transactions: 2, '
-                'Max querylen: 200 s, '
-                'Space errors: 1(!!)'
-            ), [
+            (1, 'Undo retention: 7 m (warn/crit below 10 m/180 s)', []),
+            (0, 'Active undo blocks: 150', []),
+            (0, 'Max concurrent transactions: 2', []),
+            (0, 'Max querylen: 200 s', []),
+            (2, 'Space errors: 1', []),
+            (0, '', [
                 ('activeblk', 150, None, None, None, None),
                 ('transconcurrent', 2, None, None, None, None),
                 ('tunedretention', 420, 600, 180, None, None),

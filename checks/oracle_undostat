@@ -20,7 +20,8 @@ def parse_oracle_undostat(info):
 
 
 def discover_oracle_undostat(parsed):
-    return [(item, {}) for item in parsed]
+    for item in parsed:
+        yield item, {}
 
 
 def check_oracle_undostat(item, params, parsed):
@@ -35,7 +36,7 @@ def check_oracle_undostat(item, params, parsed):
     activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = data
     warn, crit = params["levels"]
 
-    state, infotext, _no_perf = check_levels(
+    yield check_levels(
         tuned_undoretention,
         None,
         params=None if tuned_undoretention == -1 else (None, None, warn, crit),
@@ -44,27 +45,14 @@ def check_oracle_undostat(item, params, parsed):
     )
 
     if tuned_undoretention >= 0:
-        infotext += ", Active undo blocks: %d" % activeblks
+        yield 0, "Active undo blocks: %d" % activeblks
 
-    nospaceerrcntpic = ""
-    if nospaceerrcnt:
-        state_errcnt = params['nospaceerrcnt_state']
-        state = max(state, state_errcnt)
-        if state_errcnt == 1:
-            nospaceerrcntpic = "(!)"
-        elif state_errcnt == 2:
-            nospaceerrcntpic = "(!!)"
-        elif state_errcnt == 3:
-            nospaceerrcntpic = "(?)"
+    yield 0, "Max concurrent transactions: %d" % maxconcurrency
+    yield 0, "Max querylen: %s" % get_age_human_readable(maxquerylen)
+    state_errcnt = params['nospaceerrcnt_state'] if nospaceerrcnt else 0
+    yield state_errcnt, "Space errors: %d" % nospaceerrcnt
 
-    infotext += ", Max concurrent transactions: %d, Max querylen: %s, Space errors: %d%s" % (
-        maxconcurrency,
-        get_age_human_readable(maxquerylen),
-        nospaceerrcnt,
-        nospaceerrcntpic,
-    )
-
-    perfdata = [
+    yield 0, '', [
         ('activeblk', activeblks),
         ('transconcurrent', maxconcurrency),
         # lower levels are unorthodox here (at least), but we keep it for compatibility (for now)
@@ -72,8 +60,6 @@ def check_oracle_undostat(item, params, parsed):
         ('querylen', maxquerylen),
         ('nonspaceerrcount', nospaceerrcnt),
     ]
-
-    return state, infotext, perfdata
 
 
 check_info['oracle_undostat'] = {

@@ -6238,7 +6238,7 @@ msgid "Best state"
 msgstr ""
 
 #, python-format
-msgid "Best state, %d nodes, restrict to %d"
+msgid "Best state, %d nodes, restrict to %s"
 msgstr ""
 
 #, fuzzy
@@ -6777,7 +6777,7 @@ msgid ""
 "program is being executed. It is now possible to use the Inline SNMP "
 "implementation which calls the respective libraries directly via its python "
 "bindings. This should increase the performance of SNMP checks in a "
-"significant way. Both SNMP modes are featurse which improve the performance "
+"significant way. Both SNMP modes are features which improve the performance "
 "for large installations and are only available via our subscription."
 msgstr ""
 
@@ -8464,6 +8464,9 @@ msgid "Child time in user space"
 msgstr ""
 
 msgid "Choose SNMP Backend"
+msgstr ""
+
+msgid "Choose SNMP Backend (Enterprise Edition only)"
 msgstr ""
 
 msgid ""
@@ -14516,10 +14519,6 @@ msgid "Download snmp walk"
 msgstr "Descarca"
 
 #, fuzzy
-msgid "Download stats"
-msgstr "Descarca"
-
-#, fuzzy
 msgid "Download this key"
 msgstr "Descarca"
 
@@ -17574,7 +17573,7 @@ msgstr ""
 msgid "First"
 msgstr ""
 
-msgid "First / Last Seen"
+msgid "First Seen"
 msgstr ""
 
 #, fuzzy
@@ -20622,7 +20621,7 @@ msgstr ""
 msgid "Hosts to create in each folder"
 msgstr ""
 
-msgid "Hosts using a specific SNMP Backend"
+msgid "Hosts using a specific SNMP Backend (Enterprise Edition only)"
 msgstr ""
 
 msgid ""
@@ -24134,6 +24133,10 @@ msgstr ""
 
 msgid "Last Scan Result"
 msgstr ""
+
+#, fuzzy
+msgid "Last Seen"
+msgstr "Adaugă Excepție"
 
 msgid "Last Updated"
 msgstr ""
@@ -32516,7 +32519,7 @@ msgstr "Adresă"
 msgid "Peer Name"
 msgstr "Numele Elementului"
 
-msgid "Peers: Active"
+msgid "Peers"
 msgstr ""
 
 msgid "Pending DHCP leases"
@@ -49323,7 +49326,10 @@ msgstr "Întreruperi adhoc"
 msgid "Traffic"
 msgstr ""
 
-msgid "Traffic Sent / Received"
+msgid "Traffic Received"
+msgstr ""
+
+msgid "Traffic Sent"
 msgstr ""
 
 msgid "Transaction Logs Disk Usage"
@@ -53975,7 +53981,7 @@ msgid "Worst state"
 msgstr ""
 
 #, python-format
-msgid "Worst state, %d nodes, restrict to %d"
+msgid "Worst state, %d nodes, restrict to %s"
 msgstr ""
 
 msgid "Write"
@@ -54137,9 +54143,6 @@ msgstr ""
 #, fuzzy
 msgid "Yes"
 msgstr "da"
-
-msgid "Yes!"
-msgstr ""
 
 msgid "Yesterday"
 msgstr ""
@@ -57239,6 +57242,11 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Download"
+#~ msgid "Download stats"
+#~ msgstr "Descarca"
 
 #, fuzzy
 #~ msgid "Custom python path"

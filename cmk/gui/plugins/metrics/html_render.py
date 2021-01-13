@@ -845,6 +845,8 @@ def _graph_title_height_ex(graph_render_options):
 
 default_dashlet_graph_render_options = {
     "font_size": 8,
+    "show_graph_time": False,
+    "show_margin": False,
     "show_legend": False,
     "show_title": False,
     "title_format": ["plain", "add_host_name", "add_service_description"],

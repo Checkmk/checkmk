@@ -585,7 +585,12 @@ def get_optional_package_infos() -> Dict[str, PackageInfo]:
     optional = {}
     for pkg_path in _get_optional_package_paths():
         with pkg_path.open("rb") as pkg:
-            package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
+            try:
+                package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
+            except Exception:
+                # Do not make broken files / packages fail the whole mechanism
+                logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
+                continue
             optional[ensure_str(pkg_path.name)] = package_info
 
     return optional
@@ -601,7 +606,12 @@ def get_disabled_package_infos() -> Dict[str, PackageInfo]:
     optional = {}
     for pkg_path in _get_disabled_package_paths():
         with pkg_path.open("rb") as pkg:
-            package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
+            try:
+                package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
+            except Exception:
+                # Do not make broken files / packages fail the whole mechanism
+                logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
+                continue
             optional[ensure_str(pkg_path.name)] = package_info
 
     return optional

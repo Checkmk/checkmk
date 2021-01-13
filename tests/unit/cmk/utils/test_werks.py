@@ -63,7 +63,7 @@ def test_werk_versions_after_tagged(precompiled_werks):
 
         # Some werks were added after the version was released. Mostly (but not the
         # 10947 :) they were forgotten by the developer. Consider it a hall of shame ;)
-        if werk_id in set([10062, 10063, 10064, 10125, 10947, 10694]):
+        if werk_id in set([10062, 10063, 10064, 10125, 10947, 10694, 11839]):
             continue
 
         tag_name = "v%s" % werk["version"]

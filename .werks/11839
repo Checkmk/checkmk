@@ -1,0 +1,18 @@
+Title: Windows agent allows only one windows agent updater process to run
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.6.0p21
+Date: 1610537138
+Class: fix
+
+In some rare cases, Windows agent updater process may hang.
+
+Previously, Windows agent has ignored this situation - OS might be overloaded 
+with many running cmk-agent-updater processess.
+
+With this release, Windows agent terminates (on timeout) previousy started 
+updater process and thus fixes the problem.
+
+

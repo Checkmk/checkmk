@@ -1090,6 +1090,10 @@ def get_final_service_description(hostname: HostName, description: ServiceName) 
     # and trailing spaces in the configuration file.
     description = description.strip()
 
+    # The description for the CMC Core doesn't need to be sanitized
+    if is_cmc():
+        return description
+
     # Sanitize; Remove illegal characters from a service description
     cache = _config_cache.get_dict("final_service_description")
     try:

@@ -95,12 +95,12 @@ class WithPermissions:
         except MKAuthException:
             return False
 
-    def reason_why_may_not(self, how: str) -> Union[bool, HTML]:
+    def reason_why_may_not(self, how: str) -> Optional[str]:
         try:
             self._user_needs_permission(how)
-            return False
+            return None
         except MKAuthException as e:
-            return HTML("%s" % e)
+            return str(e)
 
     def need_permission(self, how: str) -> None:
         self._user_needs_permission(how)

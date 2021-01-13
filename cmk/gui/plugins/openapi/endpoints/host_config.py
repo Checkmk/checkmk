@@ -170,7 +170,8 @@ def update_host(params):
     host_name = params['host_name']
     body = params['body']
     new_attributes = body['attributes']
-    update_attributes = body['attributes']
+    update_attributes = body['update_attributes']
+    remove_attributes = body['remove_attributes']
     check_hostname(host_name, should_exist=True)
     host: watolib.CREHost = watolib.Host.host(host_name)
     constructors.require_etag(constructors.etag_of_obj(host))
@@ -180,6 +181,9 @@ def update_host(params):
 
     if update_attributes:
         host.update_attributes(update_attributes)
+
+    for attribute in remove_attributes:
+        host.remove_attribute(attribute)
 
     return _serve_host(host, host.attributes())
 
@@ -198,7 +202,8 @@ def bulk_update_hosts(params):
     for update_detail in entries:
         host_name = update_detail['host_name']
         new_attributes = update_detail['attributes']
-        update_attributes = update_detail['attributes']
+        update_attributes = update_detail['update_attributes']
+        remove_attributes = update_detail['remove_attributes']
         check_hostname(host_name)
         host: watolib.CREHost = watolib.Host.host(host_name)
         if new_attributes:
@@ -206,6 +211,10 @@ def bulk_update_hosts(params):
 
         if update_attributes:
             host.update_attributes(update_attributes)
+
+        for attribute in remove_attributes:
+            host.remove_attribute(attribute)
+
         hosts.append(host)
 
     return _host_collection(hosts)

@@ -176,7 +176,6 @@ def test_section_parse_function_does_something():
         'oracle_recovery_area',
         'oracle_recovery_status',
         'oracle_rman_backups',
-        'oracle_undostat',
         'oracle_version',
         'plesk_backups',
         'plesk_domains',

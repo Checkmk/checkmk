@@ -12,28 +12,51 @@
 checkname = 'oracle_undostat'
 
 
-info = [['TUX2', '160', '3', '1081', '300', '0'],
-        ['TUX3', '150', '2', '1041', '200', '1']]
+info = [
+    ['TUX2', '160', '3', '1081', '300', '0'],
+    ['TUX3', '150', '2', '420', '200', '1'],
+]
 
 
-discovery = {'': [('TUX2', {}), ('TUX3', {})]}
+discovery = {
+    '': [
+        ('TUX2', {}),
+        ('TUX3', {}),
+    ],
+}
 
 
-checks = {'': [('TUX2',
-                {'levels': (600, 300), 'nospaceerrcnt_state': 2},
-                [(0,
-                  '18 m Undoretention (warn/crit at 10 m/5 m), 160 active undoblocks, 3 max concurrent transactions, 5 m max querylen, 0 space errors',
-                  [('activeblk', 160, None, None, None, None),
-                   ('transconcurrent', 3, None, None, None, None),
-                   ('tunedretention', 1081, 600, 300, None, None),
-                   ('querylen', 300, None, None, None, None),
-                   ('nonspaceerrcount', 0, None, None, None, None)])]),
-               ('TUX3',
-                {'levels': (600, 300), 'nospaceerrcnt_state': 2},
-                [(2,
-                  '17 m Undoretention (warn/crit at 10 m/5 m), 150 active undoblocks, 2 max concurrent transactions, 200 s max querylen, 1 space errors(!!)',
-                  [('activeblk', 150, None, None, None, None),
-                   ('transconcurrent', 2, None, None, None, None),
-                   ('tunedretention', 1041, 600, 300, None, None),
-                   ('querylen', 200, None, None, None, None),
-                   ('nonspaceerrcount', 1, None, None, None, None)])])]}
+checks = {
+    '': [
+        ('TUX2', {'levels': (600, 300), 'nospaceerrcnt_state': 2}, [
+            (0, (
+                'Undo retention: 18 m, '
+                'Active undo blocks: 160, '
+                'Max concurrent transactions: 3, '
+                'Max querylen: 5 m, '
+                'Space errors: 0'
+            ), [
+                ('activeblk', 160, None, None, None, None),
+                ('transconcurrent', 3, None, None, None, None),
+                ('tunedretention', 1081, 600, 300, None, None),
+                ('querylen', 300, None, None, None, None),
+                ('nonspaceerrcount', 0, None, None, None, None),
+            ]),
+        ]),
+        ('TUX3', {'levels': (600, 180), 'nospaceerrcnt_state': 2}, [
+            (2, (
+                'Undo retention: 7 m (warn/crit below 10 m/180 s), '
+                'Active undo blocks: 150, '
+                'Max concurrent transactions: 2, '
+                'Max querylen: 200 s, '
+                'Space errors: 1(!!)'
+            ), [
+                ('activeblk', 150, None, None, None, None),
+                ('transconcurrent', 2, None, None, None, None),
+                ('tunedretention', 420, 600, 180, None, None),
+                ('querylen', 200, None, None, None, None),
+                ('nonspaceerrcount', 1, None, None, None, None),
+            ]),
+        ]),
+    ],
+}

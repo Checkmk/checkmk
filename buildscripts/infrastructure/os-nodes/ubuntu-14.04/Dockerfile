@@ -34,7 +34,7 @@ RUN apt-get update \
     && pip install --upgrade pip==20.0.2 zipp==1.2.0 \
     && pip install --upgrade 'setuptools<45' \
     && pip install enum34==1.1.10 typing==3.7.4.1 \
-    && pip install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7 \
+    && pip install importlib_resources==1.5.0 importlib_metadata==1.6.0 git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN rm -rf /bin/systemctl \

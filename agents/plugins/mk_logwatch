@@ -830,8 +830,17 @@ def find_matching_logfiles(glob_pattern):
     Soft links may not be detected properly dependent on the Python runtime
     [Python Standard Lib, os.path.islink()].
     """
+    if platform.system() == "Windows":
+        # windows is the easy case:
+        # provide unicode, and let python deal with the rest
+        # (see https://www.python.org/dev/peps/pep-0277)
+        matches = list(glob.glob(glob_pattern))
+    else:
+        # we can't use glob on unicode, as it would try to re-decode matches with ascii
+        matches = glob.glob(glob_pattern.encode('utf8'))
+
     files = []
-    for match in glob.glob(glob_pattern):
+    for match in matches:
         if os.path.isdir(match):
             continue
 

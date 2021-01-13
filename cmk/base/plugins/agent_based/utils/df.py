@@ -346,10 +346,13 @@ def df_check_filesystem_single(
 
     status = state.CRIT if used_mb >= crit_mb else state.WARN if used_mb >= warn_mb else state.OK
     yield Metric("fs_used", used_mb, levels=(warn_mb, crit_mb), boundaries=(0, size_mb))
-    yield Metric("fs_size", size_mb)
-    yield Metric("fs_used_percent",
-                 100.0 * used_mb / size_mb,
-                 levels=(_mb_to_perc(warn_mb, size_mb), _mb_to_perc(crit_mb, size_mb)))
+    yield Metric("fs_size", size_mb, boundaries=(0, None))
+    yield Metric(
+        "fs_used_percent",
+        100.0 * used_mb / size_mb,
+        levels=(_mb_to_perc(warn_mb, size_mb), _mb_to_perc(crit_mb, size_mb)),
+        boundaries=(0.0, 100.0),
+    )
 
     # Expand infotext according to current params
     infotext = ["%s used (%s of %s)" % (used_perc_hr, used_hr, used_max_hr)]

@@ -144,6 +144,7 @@ def check_adva_fsp_if(
             "%s_power" % power_type,
             power,
             levels=(None, upper),
+            boundaries=(0, None),
         )
 
 

@@ -1,12 +1,13 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
-// provides basic api to start and stop service
 #include "stdafx.h"
 
 #if defined(_WIN32)
 #include <shellapi.h>
 #endif
-
-#include <fmt/format.h>
 
 #include <string>
 #include <tuple>
@@ -18,11 +19,8 @@
 #include "providers/wmi.h"
 #include "tools/_raii.h"
 #include "tools/_win.h"
-#include "tools/_xlog.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 // Process Line Formatter
 // not static to be fully tested by unit tests
@@ -82,47 +80,49 @@ std::wstring GetProcessListFromWmi(std::wstring_view separator) {
 }
 
 // code from legacy client:
-std::string ExtractProcessOwner(HANDLE Process) {
+std::string ExtractProcessOwner(HANDLE process) {
     // Get process token
     HANDLE raw_handle{wtools::InvalidHandle()};
 
-    if (!::OpenProcessToken(Process, TOKEN_READ, &raw_handle)) {
+    if (::OpenProcessToken(process, TOKEN_READ, &raw_handle) == FALSE) {
         if (GetLastError() != 5)
             XLOG::t.w("Failed to open process  to get a token {} ",
                       GetLastError());
         return {};
     }
-    ON_OUT_OF_SCOPE(CloseHandle(raw_handle));
+    ON_OUT_OF_SCOPE(::CloseHandle(raw_handle));
 
     // First get size needed, TokenUser indicates we want user information from
     // given token
-    DWORD process_info = 0;
-    ::GetTokenInformation(raw_handle, TokenUser, NULL, 0, &process_info);
+    DWORD process_info{0};
+    ::GetTokenInformation(raw_handle, TokenUser, nullptr, 0, &process_info);
 
     // Call should have failed due to zero-length buffer.
-    if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) return {};
+    if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+        return {};
+    }
 
     // Allocate buffer for user information in the token.
-    std::vector<unsigned char> UserToken(process_info, 0);
-    auto pUserToken = reinterpret_cast<PTOKEN_USER>(UserToken.data());
+    std::vector<unsigned char> user_token(process_info, 0);
+    auto *user_token_data = reinterpret_cast<PTOKEN_USER>(user_token.data());
     // Now get user information in the allocated buffer
-    if (!::GetTokenInformation(raw_handle, TokenUser, pUserToken, process_info,
-                               &process_info)) {
+    if (::GetTokenInformation(raw_handle, TokenUser, user_token_data,
+                              process_info, &process_info) == FALSE) {
         XLOG::l.w("Failed to get token information {}", GetLastError());
         return {};
     }
 
     // Some vars that we may need
-    SID_NAME_USE snuSIDNameUse;
+    SID_NAME_USE snu_sid_name_use{SidTypeUser};
     WCHAR user_name[MAX_PATH] = {0};
     DWORD user_name_length = MAX_PATH;
     WCHAR domain_name[MAX_PATH] = {0};
     DWORD domain_name_length = MAX_PATH;
 
     // Retrieve user name and domain name based on user's SID.
-    if (::LookupAccountSidW(NULL, pUserToken->User.Sid, user_name,
+    if (::LookupAccountSidW(nullptr, user_token_data->User.Sid, user_name,
                             &user_name_length, domain_name, &domain_name_length,
-                            &snuSIDNameUse)) {
+                            &snu_sid_name_use) == TRUE) {
         std::string out = "\\\\" + wtools::ConvertToUTF8(domain_name) + "\\" +
                           wtools::ConvertToUTF8(user_name);
         return out;
@@ -131,37 +131,49 @@ std::string ExtractProcessOwner(HANDLE Process) {
     return {};
 }
 
-// gtest[-]
-std::wstring BuildProcessName(IWbemClassObject *Object, bool FullPath) {
-    using namespace wtools;
-
+namespace {
+std::wstring GetFullPath(IWbemClassObject *wbem_object) {
     std::wstring process_name;
+    auto executable_path =
+        wtools::WmiTryGetString(wbem_object, L"ExecutablePath");
 
-    if (!FullPath) return WmiStringFromObject(Object, L"Caption");
-
-    auto executable_path = WmiTryGetString(Object, L"ExecutablePath");
     if (executable_path.has_value()) {
         process_name = *executable_path;
-    } else
-        process_name = WmiStringFromObject(Object, L"Caption");
+    } else {
+        process_name = wtools::WmiStringFromObject(wbem_object, L"Caption");
+    }
 
-    auto cmd_line = WmiTryGetString(Object, L"CommandLine");
-    if (!cmd_line) return process_name;
+    auto cmd_line = wtools::WmiTryGetString(wbem_object, L"CommandLine");
+    if (!cmd_line) {
+        return process_name;
+    }
 
     int argc = 0;
-    auto argv = ::CommandLineToArgvW(cmd_line->c_str(), &argc);
-    if (!argv) return process_name;
+    auto *argv = ::CommandLineToArgvW(cmd_line->c_str(), &argc);
+    if (argv == nullptr) {
+        return process_name;
+    }
 
     ON_OUT_OF_SCOPE(::LocalFree(argv));
     for (int i = 1; i < argc; ++i) {
-        if (argv[i]) process_name += std::wstring(L" ") + argv[i];
+        if (argv[i] != nullptr) {
+            process_name += std::wstring(L" ") + argv[i];
+        }
     }
     return process_name;
 }
 
+std::wstring BuildProcessName(IWbemClassObject *wbem_object,
+                              bool use_full_path) {
+    return use_full_path ? GetFullPath(wbem_object)
+                         : wtools::WmiStringFromObject(wbem_object, L"Caption");
+}
+
+}  // namespace
+
 // we need string here(null terminated for C-functions)
 // returns 0 on error
-time_t ConvertWmiTimeToHumanTime(const std::string &creation_date) noexcept {
+time_t ConvertWmiTimeToHumanTime(const std::string &creation_date) {
     // check input
     if (creation_date.size() <= 14) {
         XLOG::l.w("Bad creation date from WMI '{}'", creation_date);
@@ -182,32 +194,32 @@ time_t ConvertWmiTimeToHumanTime(const std::string &creation_date) noexcept {
     auto creation_tm = *std::localtime(&current_time);
 
     // fill variable fields data
-    creation_tm.tm_year = std::strtoul(year.c_str(), nullptr, 10) - 1900;
-    creation_tm.tm_mon = std::strtoul(month.c_str(), nullptr, 10) - 1;
-    creation_tm.tm_mday = std::strtoul(day.c_str(), nullptr, 10);
+    creation_tm.tm_year = std::strtol(year.c_str(), nullptr, 10) - 1900;
+    creation_tm.tm_mon = std::strtol(month.c_str(), nullptr, 10) - 1;
+    creation_tm.tm_mday = std::strtol(day.c_str(), nullptr, 10);
 
-    creation_tm.tm_hour = std::strtoul(hour.c_str(), nullptr, 10);
-    creation_tm.tm_min = std::strtoul(minutes.c_str(), nullptr, 10);
-    creation_tm.tm_sec = std::strtoul(seconds.c_str(), nullptr, 10);
+    creation_tm.tm_hour = std::strtol(hour.c_str(), nullptr, 10);
+    creation_tm.tm_min = std::strtol(minutes.c_str(), nullptr, 10);
+    creation_tm.tm_sec = std::strtol(seconds.c_str(), nullptr, 10);
     creation_tm.tm_isdst = -1;  // we do not know DST, so we will ask system
 
     // calculate with possible correction of not-so-important fields
     return ::mktime(&creation_tm);
 }
 
-static time_t GetWmiObjectCreationTime(IWbemClassObject *wbem_object) {
-    // get string from wmi
+namespace {
+time_t GetWmiObjectCreationTime(IWbemClassObject *wbem_object) {
     auto wmi_time_wide =
         wtools::WmiStringFromObject(wbem_object, L"CreationDate");
-    auto wmi_time = wtools::ConvertToUTF8(wmi_time_wide);
 
     // calculate creation time
-    return ConvertWmiTimeToHumanTime(wmi_time);
+    return ConvertWmiTimeToHumanTime(wtools::ConvertToUTF8(wmi_time_wide));
 }
 
-// on error returns reasonable, but unusual data: 0 or current_time
-static unsigned long long CreationTimeToUptime(time_t creation_time,
-                                               IWbemClassObject *wbem_object) {
+/// returns uptime
+// on error returns 0 (reasonable, but unusual)
+unsigned long long CreationTimeToUptime(time_t creation_time,
+                                        IWbemClassObject *wbem_object) {
     // lambda for logging
     auto obj_name = [wbem_object]() {
         auto process_name = BuildProcessName(wbem_object, true);
@@ -215,7 +227,7 @@ static unsigned long long CreationTimeToUptime(time_t creation_time,
     };
 
     // check that time is not 0(not error)
-    if (0 == creation_time) {
+    if (creation_time == 0) {
         XLOG::l.w("Can't determine creation time of the process '{}'",
                   obj_name());
 
@@ -235,8 +247,8 @@ static unsigned long long CreationTimeToUptime(time_t creation_time,
 
     return static_cast<unsigned long long>(current_time - creation_time);
 }
+}  // namespace
 
-// returns reasonable data ALWAYS
 unsigned long long CalculateUptime(IWbemClassObject *wbem_object) {
     if (nullptr == wbem_object) {
         XLOG::l.bp(XLOG_FUNC + " nullptr as parameter");
@@ -250,31 +262,32 @@ unsigned long long CalculateUptime(IWbemClassObject *wbem_object) {
 }
 
 // idiotic functions required for idiotic method we are using in legacy software
-int64_t GetUint32AsInt64(IWbemClassObject *Object, const std::wstring &Name) {
+int64_t GetUint32AsInt64(IWbemClassObject *wbem_object,
+                         const std::wstring &name) {
     VARIANT value;
-    auto hres = Object->Get(Name.c_str(), 0, &value, nullptr, nullptr);
+    auto hres = wbem_object->Get(name.c_str(), 0, &value, nullptr, nullptr);
     if (SUCCEEDED(hres)) {
-        ON_OUT_OF_SCOPE(VariantClear(&value));
+        ON_OUT_OF_SCOPE(::VariantClear(&value));
         return static_cast<int64_t>(
             wtools::WmiGetUint32(value));  // read 32bit unsigned and convert
                                            // to 64 bit signed
     }
 
-    XLOG::l.e("Fail to get {} {:#X}", wtools::ConvertToUTF8(Name),
+    XLOG::l.e("Fail to get '{}' {:#X}", wtools::ConvertToUTF8(name),
               static_cast<unsigned int>(hres));
     return 0;
 };
 
-std::string GetProcessOwner(int64_t ProcessId) {
-    auto process_id = static_cast<DWORD>(ProcessId);
-    auto process_handle = ::OpenProcess(
+std::string GetProcessOwner(int64_t pid) {
+    auto process_id = static_cast<DWORD>(pid);
+    auto *process_handle = ::OpenProcess(
         PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, process_id);
-    if (!process_handle) {
+    if (process_handle == nullptr) {
         XLOG::t("Can't open process [{}] status is [{}]. Check access rights.",
                 process_id, ::GetLastError());
         return "SYSTEM";
     }
-    ON_OUT_OF_SCOPE(CloseHandle(process_handle));
+    ON_OUT_OF_SCOPE(::CloseHandle(process_handle));
 
     auto owner = ExtractProcessOwner(process_handle);
     if (owner.empty()) {
@@ -286,50 +299,50 @@ std::string GetProcessOwner(int64_t ProcessId) {
     return owner;
 }
 
-uint64_t GetWstringAsUint64(IWbemClassObject *Object,
-                            const std::wstring &Name) {
-    using namespace wtools;
-
-    auto str = WmiTryGetString(Object, Name);
+uint64_t GetWstringAsUint64(IWbemClassObject *wmi_object,
+                            const std::wstring &name) {
+    auto str = wtools::WmiTryGetString(wmi_object, name);
     if (!str) {
-        XLOG::l.e("Name {} is not found", ConvertToUTF8(Name));
+        XLOG::l.e("Name {} is not found", wtools::ConvertToUTF8(name));
         return 0;
     }
 
     return ::wcstoull(str->c_str(), nullptr, 0);
 }
 
-// gtest[+]
-std::string ProducePsWmi(bool FullPath) {
-    using namespace wtools;
-    XLOG::t(XLOG_FUNC + " entering");
-
+std::string ProducePsWmi(bool use_full_path) {
     // auto processes = GetProcessListFromWmi();
     wtools::WmiWrapper wmi;
 
     if (!wmi.open() || !wmi.connect(cma::provider::kWmiPathStd)) {
+        XLOG::l("PS is failed to conect to WMI");
         return {};
     }
 
     wmi.impersonate();
-    auto processes = wmi.queryEnumerator({}, L"Win32_Process");
-    if (!processes) {
+    auto *processes = wmi.queryEnumerator({}, L"Win32_Process");
+    if (processes == nullptr) {
         XLOG::l("Skipping scanning, enumerator can't be opened");
         return {};
     }
     ON_OUT_OF_SCOPE(processes->Release());
 
     std::string out;
-    while (1) {
-        auto [object, status] = wtools::WmiGetNextObject(processes);
-        if (!object) break;
+    while (true) {
+        IWbemClassObject *object{nullptr};
+        wtools::WmiStatus status{wtools::WmiStatus::ok};
+        std::tie(object, status) = wtools::WmiGetNextObject(processes);
+        if (object == nullptr) {
+            break;
+        }
+
         ON_OUT_OF_SCOPE(object->Release());
 
         auto process_id = GetUint32AsInt64(object, L"ProcessId");
 
         auto process_owner = GetProcessOwner(process_id);
 
-        auto process_name = BuildProcessName(object, FullPath);
+        auto process_name = BuildProcessName(object, use_full_path);
 
         auto uptime = CalculateUptime(object);
 
@@ -346,24 +359,22 @@ std::string ProducePsWmi(bool FullPath) {
         out += OutputProcessLine(virtual_size, working_set, pagefile_use,
                                  uptime, user_time, kernel_time, process_id,
                                  handle_count, thread_count, process_owner,
-                                 ConvertToUTF8(process_name));
+                                 wtools::ConvertToUTF8(process_name));
     }
     return out;
 }
 
 void Ps::loadConfig() {
-    using namespace cma::cfg;
-    use_wmi_ = GetVal(groups::kPs, vars::kPsUseWmi, true);
-    full_path_ = GetVal(groups::kPs, vars::kPsFullPath, false);
+    use_wmi_ = cfg::GetVal(cfg::groups::kPs, cfg::vars::kPsUseWmi, true);
+    full_path_ = cfg::GetVal(cfg::groups::kPs, cfg::vars::kPsFullPath, false);
 }
 
 std::string Ps::makeBody() {
-    XLOG::t(XLOG_FUNC + " entering");
-
-    if (!use_wmi_) XLOG::l.e("Native PS NOT IMPLEMENTED!");
+    if (!use_wmi_) {
+        XLOG::l.e("Native PS NOT IMPLEMENTED!");
+    }
 
     return ProducePsWmi(full_path_);
 }
 
-}  // namespace provider
-};  // namespace cma
+};  // namespace cma::provider

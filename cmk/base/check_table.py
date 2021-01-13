@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Dict, Iterable, Iterator, List, Mapping, Set
+from typing import Iterable, Iterator, List, Mapping, Set
 from contextlib import suppress
 import enum
 
@@ -30,35 +30,9 @@ class HostCheckTable(Mapping[ServiceID, Service]):
     def __init__(
         self,
         *,
-        config_cache: config.ConfigCache,
-        host_config: config.HostConfig,
-        skip_autochecks: bool,
-        filter_mode: FilterMode,
-        skip_ignored: bool,
+        services: Iterable[Service],
     ) -> None:
-        self._data: Dict[ServiceID, Service] = {}
-
-        sfilter = _ServiceFilter(
-            config_cache=config_cache,
-            host_config=host_config,
-            mode=filter_mode,
-            skip_ignored=skip_ignored,
-        )
-
-        # process all entries that are specific to the host
-        # in search (single host) or that might match the host.
-        if not (skip_autochecks or host_config.is_ping_host):
-            self._update(config_cache.get_autochecks_of(host_config.hostname), sfilter)
-
-        self._update(_get_static_check_entries(host_config), sfilter)
-
-        # Now add checks a cluster might receive from its nodes
-        if host_config.is_cluster:
-            self._update(_get_clustered_services(config_cache, host_config, skip_autochecks),
-                         sfilter)
-
-    def _update(self, services: Iterable[Service], sfilter: '_ServiceFilter') -> None:
-        self._data.update({s.id(): s for s in services if sfilter.keep(s)})
+        self._data = {s.id(): s for s in services}
 
     def __getitem__(self, key: ServiceID) -> Service:
         return self._data[key]
@@ -68,6 +42,36 @@ class HostCheckTable(Mapping[ServiceID, Service]):
 
     def __iter__(self) -> Iterator[ServiceID]:
         return iter(self._data)
+
+
+def _aggregate_check_table_services(
+    *,
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+    skip_autochecks: bool,
+    skip_ignored: bool,
+    filter_mode: FilterMode,
+) -> Iterable[Service]:
+
+    sfilter = _ServiceFilter(
+        config_cache=config_cache,
+        host_config=host_config,
+        mode=filter_mode,
+        skip_ignored=skip_ignored,
+    )
+
+    # process all entries that are specific to the host
+    # in search (single host) or that might match the host.
+    if not (skip_autochecks or host_config.is_ping_host):
+        yield from (
+            s for s in config_cache.get_autochecks_of(host_config.hostname) if sfilter.keep(s))
+
+    yield from (s for s in _get_static_check_entries(host_config) if sfilter.keep(s))
+
+    # Now add checks a cluster might receive from its nodes
+    if host_config.is_cluster:
+        yield from (s for s in _get_clustered_services(config_cache, host_config, skip_autochecks)
+                    if sfilter.keep(s))
 
 
 class _ServiceFilter:
@@ -210,13 +214,13 @@ def get_check_table(
         with suppress(KeyError):
             return config_cache.check_table_cache[cache_key]
 
-    host_check_table = HostCheckTable(
+    host_check_table = HostCheckTable(services=_aggregate_check_table_services(
         config_cache=config_cache,
         host_config=host_config,
         skip_autochecks=skip_autochecks,
         skip_ignored=skip_ignored,
         filter_mode=filter_mode,
-    )
+    ),)
 
     if cache_key:
         config_cache.check_table_cache[cache_key] = host_check_table

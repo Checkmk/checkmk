@@ -1,11 +1,13 @@
-// test-winperf.cpp
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
-//
 #include "pch.h"
 
+#include <string>
 #include <string_view>
 
-#include "carrier.h"
 #include "cfg.h"
 #include "cfg_details.h"
 #include "common/cfg_info.h"
@@ -25,12 +27,14 @@ namespace cma::cfg::details {
 extern uint64_t g_registered_performance_freq;
 }
 
-static bool ValidIndexOfTs(int index) {
+namespace {
+bool ValidIndexOfTs(int index) {
     for (auto a : wtools::TsValues)
         if (a == index) return true;
 
     return false;
 }
+}  // namespace
 
 namespace cma::provider {  // to become friendly for wtools classes
 
@@ -40,27 +44,39 @@ auto GetIndexOfTS() {
     return key_index;
 }
 
-TEST(WinPerfTest, Pre) {
-    auto pf = cma::cfg::GetPerformanceFrequency();
-    EXPECT_EQ(cma::cfg::details::g_registered_performance_freq, pf)
-        << "Something wrong and value was not initialized";
+TEST(WinPerfTest, GetPerformanceFrequency) {
+    auto pf = cfg::GetPerformanceFrequency();
+    EXPECT_EQ(cfg::details::g_registered_performance_freq, pf);
 }
 
-TEST(WinPerfTest, YmlCheck) {
-    using namespace cma::cfg;
+TEST(WinPerfTest, ValidateFabricConfig) {
+    namespace groups = cma::cfg::groups;
+    namespace vars = cma::cfg::vars;
     using namespace cma::tools;
-    tst::YamlLoader w;
+    tst::TempCfgFs temp_fs;
+    ASSERT_TRUE(temp_fs.loadConfig(tst::GetFabricYml()));
     auto cfg = cma::cfg::GetLoadedConfig();
 
     auto winperf_node = cfg[groups::kWinPerf];
     ASSERT_TRUE(winperf_node.IsDefined());
     ASSERT_TRUE(winperf_node.IsMap());
 
-    auto enabled = GetVal(groups::kWinPerf, vars::kEnabled, false);
+    auto wp_group = cfg[groups::kWinPerf];
+    auto cfg_timeout = wp_group[vars::kWinPerfTimeout].as<int>(1234567);
+    ASSERT_NE(cfg_timeout, 1234567);
+    EXPECT_EQ(groups::winperf.timeout(), cfg_timeout);
+
+    auto cfg_prefix =
+        wp_group[vars::kWinPerfPrefixName].as<std::string>("1234567");
+    ASSERT_EQ(cfg_prefix, vars::kWinPerfPrefixDefault);
+    EXPECT_EQ(groups::winperf.prefix(), cfg_prefix);
+
+    auto enabled = cma::cfg::GetVal(groups::kWinPerf, vars::kEnabled, false);
     EXPECT_TRUE(enabled);
-    auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
+    auto counters =
+        cma::cfg::GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
     ASSERT_EQ(counters.size(), 3);
-    const StringPairArray base_counters = {
+    const cma::cfg::StringPairArray base_counters = {
         {"238", "processor"},
         {"234", "phydisk"},
         {"510", "if"},
@@ -79,123 +95,109 @@ TEST(WinPerfTest, YmlCheck) {
     EXPECT_EQ(found_count, 3) << "not correct counter list in the yml";
 }
 
-TEST(WinPerfTest, RootCalls) {
-    //  testing first line stamping
-    // 1548673688.07 510 2156253
-    auto index_iofts = GetIndexOfTS();
-    ASSERT_TRUE(ValidIndexOfTs(index_iofts))  // latest Windows
-        << "not supported index " << index_iofts << std::endl;
-    {
-        auto x = details::MakeWinPerfStamp(0);
-        ASSERT_TRUE(!x.empty());
+TEST(WinPerfTest, MakeWinPerfStamp) {
+    auto x = details::MakeWinPerfStamp(0);
+    ASSERT_TRUE(!x.empty());
 
-        auto table = cma::tools::SplitString(x, " ");
-        ASSERT_EQ(table.size(), 3);
-        EXPECT_EQ(table[1], "0");
+    auto table = cma::tools::SplitString(x, " ");
+    ASSERT_EQ(table.size(), 3);
+    EXPECT_EQ(table[1], "0");
 
-        auto value = cma::tools::ConvertToUint64(table[2], 12345678);
-        EXPECT_NE(value, 12345678);
-        EXPECT_TRUE(value > 1000);
-    }
-    {
-        auto x = details::MakeWinPerfHeader(L"wp", L"zzz");
-        EXPECT_EQ(x, "<<<wp_zzz>>>\n");
-    }
+    auto value = cma::tools::ConvertToUint64(table[2], 12345678);
+    EXPECT_NE(value, 12345678);
+    EXPECT_TRUE(value > 1000);
+}
 
-    {
-        auto x = details::MakeWinPerfHeader(L"www", L"");
-        EXPECT_EQ(x, "<<<www_>>>\n");
-    }
+TEST(WinPerfTest, MakeWinPerfHeader) {
+    auto x = details::MakeWinPerfHeader(L"wp", L"zzz");
+    EXPECT_EQ(x, "<<<wp_zzz>>>\n");
+    x = details::MakeWinPerfHeader(L"www", L"");
+    EXPECT_EQ(x, "<<<www_>>>\n");
+}
+TEST(WinPerfTest, MakeBodyForTS) {
+    auto ts_index = GetIndexOfTS();
+    ASSERT_TRUE(ValidIndexOfTs(ts_index)) << "not supported index " << ts_index;
 
-    {
-        uint32_t key_index = 0;
-        auto result =
-            details::LoadWinPerfData(std::to_wstring(index_iofts), key_index);
+    uint32_t key_index = 0;
+    auto result =
+        details::LoadWinPerfData(std::to_wstring(ts_index), key_index);
 
-        ASSERT_TRUE(result.len_ > 0);
-        auto object = wtools::perf::FindPerfObject(result, key_index);
+    ASSERT_TRUE(result.len_ > 0);
+    auto object = wtools::perf::FindPerfObject(result, key_index);
 
-        EXPECT_NO_THROW(details::MakeWinPerfNakedList(nullptr, key_index));
-        EXPECT_NO_THROW(details::MakeWinPerfNakedList(nullptr, -1));
-        EXPECT_NO_THROW(details::MakeWinPerfNakedList(object, 1));
+    EXPECT_NO_THROW(details::MakeWinPerfNakedList(nullptr, key_index));
+    EXPECT_NO_THROW(details::MakeWinPerfNakedList(nullptr, -1));
+    EXPECT_NO_THROW(details::MakeWinPerfNakedList(object, 1));
 
-        auto str = details::MakeWinPerfNakedList(object, key_index);
-        auto table = cma::tools::SplitString(str, "\n");
-        ASSERT_TRUE(table.size() > 0);
-        for (size_t pos = 0; pos < table.size(); ++pos) {
-            auto words = cma::tools::SplitString(table[pos], " ");
-            EXPECT_EQ(words.size(), 3);
-            EXPECT_NE(cma::tools::ConvertToUint64(words[0], 12345), 12345)
-                << "words[0] must be number";
-            EXPECT_NE(cma::tools::ConvertToUint64(words[1], 12345), 12345)
-                << "words[1] must be number";
-            EXPECT_EQ(cma::tools::ConvertToUint64(words[2], 12345), 12345)
-                << "words[2] must be NOT number";
-        }
+    auto str = details::MakeWinPerfNakedList(object, key_index);
+    auto table = cma::tools::SplitString(str, "\n");
+    ASSERT_TRUE(table.size() > 0);
+    for (size_t pos = 0; pos < table.size(); ++pos) {
+        auto words = cma::tools::SplitString(table[pos], " ");
+        EXPECT_EQ(words.size(), 3);
+        EXPECT_NE(cma::tools::ConvertToUint64(words[0], 12345), 12345)
+            << "words[0] must be number";
+        EXPECT_NE(cma::tools::ConvertToUint64(words[1], 12345), 12345)
+            << "words[1] must be number";
+        EXPECT_EQ(cma::tools::ConvertToUint64(words[2], 12345), 12345)
+            << "words[2] must be NOT number";
     }
 }
 
-TEST(WinPerfTest, Calls) {
+TEST(WinPerfTest, InvalidCounter) {
+    auto name = L"ifxz";
+    auto index = L"12345510";
+    auto x = BuildWinPerfSection(L"winp", name, index);
+    EXPECT_TRUE(x.empty());
+}
+
+TEST(WinPerfTest, IfCounter) {
+    using namespace std::string_literals;
+    auto x = BuildWinPerfSection(L"winp", L"if", L"510");
+    ASSERT_TRUE(!x.empty());
+
+    // check all
+    auto table = cma::tools::SplitString(x, "\n");
+    ASSERT_TRUE(table.size() > 3);
+
+    // check header
+    EXPECT_EQ(table[0], "<<<winp_if>>>"s);
+    auto stamp = cma::tools::SplitString(table[1], " ");
+    ASSERT_EQ(stamp.size(), 3);
+
+    // check stamp
+    auto stamp_time = cma::tools::ConvertToUint64(stamp[0], 12345678);
+    EXPECT_NE(stamp_time, 12345678);
+    EXPECT_TRUE(stamp_time > 100000);  // we are sure that time is going
+
+    auto stamp_index = cma::tools::ConvertToUint64(stamp[1], 12345678);
+    EXPECT_EQ(std::to_string(stamp_index), "510");
+
+    auto stamp_counter = cma::tools::ConvertToUint64(stamp[2], 12345678);
+    EXPECT_EQ(stamp_counter, cma::cfg::GetPerformanceFrequency());
+}
+
+TEST(WinPerfTest, TcpConnCounter) {
+    auto x = BuildWinPerfSection(L"winperf", L"tcp_conn", L"638");
+    ASSERT_TRUE(!x.empty());
+
+    auto table = tools::SplitString(x, "\n");
+    ASSERT_TRUE(table.size() > 3);
+}
+
+TEST(WinPerfTest, PhyDiskCounter) {
+    auto x = BuildWinPerfSection(L"winperf", L"phydisk", L"234");
+    ASSERT_TRUE(!x.empty());
+
+    auto table = tools::SplitString(x, "\n");
+    ASSERT_TRUE(table.size() > 3);
+}
+
+TEST(WinPerfTest, TsCounter) {
     using namespace std::string_view_literals;
     auto index_iofts = GetIndexOfTS();
     ASSERT_TRUE(ValidIndexOfTs(index_iofts))  // windows 10 latest
         << "not supported index " << index_iofts << std::endl;
-    {
-        auto name = L"ifxz"sv;
-        auto index = L"12345510"sv;
-        auto x = BuildWinPerfSection(L"winp", name, index);
-        ASSERT_TRUE(x.empty());
-    }
-    {
-        constexpr const char* name = "if";
-        constexpr const char* index = "510";
-        auto x = BuildWinPerfSection(L"winp", wtools::ConvertToUTF16("if"),
-                                     wtools::ConvertToUTF16("510"));
-        ASSERT_TRUE(!x.empty());
-
-        // check all
-        auto table = cma::tools::SplitString(x, "\n");
-        ASSERT_TRUE(table.size() > 3);
-
-        // check header
-        EXPECT_EQ(table[0], std::string("<<<winp_") + name + ">>>");
-        auto stamp = cma::tools::SplitString(table[1], " ");
-        ASSERT_EQ(stamp.size(), 3);
-
-        // check stamp
-        auto stamp_time = cma::tools::ConvertToUint64(stamp[0], 12345678);
-        EXPECT_NE(stamp_time, 12345678);
-        EXPECT_TRUE(stamp_time > 100000);  // we are sure that time is going
-
-        auto stamp_index = cma::tools::ConvertToUint64(stamp[1], 12345678);
-        EXPECT_EQ(std::to_string(stamp_index), index);
-
-        auto stamp_counter = cma::tools::ConvertToUint64(stamp[2], 12345678);
-        EXPECT_EQ(stamp_counter, cma::cfg::GetPerformanceFrequency());
-    }
-    {
-        constexpr const wchar_t* name = L"tcp_conn";
-        constexpr const wchar_t* index = L"638";
-        auto x = BuildWinPerfSection(L"winperf", name, index);
-        ASSERT_TRUE(!x.empty());
-
-        // check all
-        auto table = cma::tools::SplitString(x, "\n");
-        ASSERT_TRUE(table.size() > 3);
-    }
-
-    {
-        constexpr const wchar_t* name = L"phydisk";
-        constexpr const wchar_t* index = L"234";
-        auto x = BuildWinPerfSection(L"winperf", wtools::ConvertToUTF16("if"),
-                                     wtools::ConvertToUTF16("510"));
-        ASSERT_TRUE(!x.empty());
-
-        // check all
-        auto table = cma::tools::SplitString(x, "\n");
-        ASSERT_TRUE(table.size() > 3);
-    }
-
     {
         auto x = BuildWinPerfSection(L"winperf", std::to_wstring(index_iofts),
                                      std::to_wstring(index_iofts));
@@ -227,44 +229,6 @@ TEST(WinPerfTest, Calls) {
         ASSERT_TRUE(table.size() > 3);
         auto words = cma::tools::SplitString(table[2], " ");
         EXPECT_EQ(words.size(), 3);
-    }
-}
-
-TEST(WinPerfTest, Config) {
-    using namespace cma::cfg;
-    cma::OnStart(cma::AppType::test);
-    {
-        auto c = groups::winperf.counters();
-        EXPECT_TRUE(c.size() >= 3)
-            << "In Config we have to have at least three indexes described";
-        auto cmd_line = groups::winperf.buildCmdLine();
-        ASSERT_TRUE(!cmd_line.empty());
-
-        auto list = cma::tools::SplitString(cmd_line, L" ");
-        ASSERT_TRUE(!list.empty());
-        ASSERT_EQ(list.size(), c.size());
-
-        int pos = 0;
-        for (auto& l : list) {
-            auto words = cma::tools::SplitString(l, L":");
-            EXPECT_EQ(words.size(), 2);
-            std::replace(words[0].begin(), words[0].end(), '*', ' ');
-            EXPECT_EQ(wtools::ConvertToUTF8(words[0]), c[pos].id());
-            EXPECT_EQ(wtools::ConvertToUTF8(words[1]), c[pos].name());
-            ++pos;
-        }
-    }
-    {
-        auto cfg = cma::cfg::GetLoadedConfig();
-        auto wp_group = cfg[groups::kWinPerf];
-        auto cfg_timeout = wp_group[vars::kWinPerfTimeout].as<int>(1234567);
-        ASSERT_NE(cfg_timeout, 1234567);
-        EXPECT_EQ(groups::winperf.timeout(), cfg_timeout);
-
-        auto cfg_prefix =
-            wp_group[vars::kWinPerfPrefixName].as<std::string>("1234567");
-        ASSERT_EQ(cfg_prefix, vars::kWinPerfPrefixDefault);
-        EXPECT_EQ(groups::winperf.prefix(), cfg_prefix);
     }
 }
 

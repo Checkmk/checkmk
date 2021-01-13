@@ -1461,16 +1461,6 @@ div.color {
   box-shadow: $color-div-box-shadow;
 }
 
-/* TODO: Reproduce this element then get rid of important styles */
-th.header_state {
-  color: $font-color !important;
-  background: transparent !important;
-
-  &:hover {
-    background: transparent !important;
-  }
-}
-
 .hot a,
 .hot body.main .popup_menu span,
 body.main .popup_menu .hot span {

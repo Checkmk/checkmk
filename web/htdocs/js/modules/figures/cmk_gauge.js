@@ -109,7 +109,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .classed("range", true)
             .text(d => d.value)
             .attr("text-anchor", "middle")
-            .style("font-size", "12px")
+            .style("font-size", "8pt")
             .attr("x", d => d.x)
             .attr("y", d => d.y);
     }

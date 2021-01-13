@@ -286,10 +286,6 @@ body {
 
 #data_container {
   min-width: min-content;
-  padding: 10px;
-  background: $data-container-bg-color;
-  border: $data-container-border;
-  border-radius: $primary-border-radius;
 }
 
 table.data {
@@ -297,8 +293,8 @@ table.data {
   padding: 0;
   margin: 0;
   color: $font-color;
-  border-collapse: $data-table-border-collapse;
-  border-spacing: $data-table-border-spacing;
+  border-collapse: collapse;
+  border-spacing: 0;
   empty-cells: show;
 
   .checkbox_hover {
@@ -316,16 +312,6 @@ table.data {
     text-transform: uppercase;
     background: transparent;
     border: none;
-
-    &:first-child {
-      padding-left: 0; /* left align first column header with group header */
-    }
-
-    /* TODO: Check whether this style is redundant due to a .last_col style in
-     *       _views.scss */
-    &:last-child {
-      border-right-style: none;
-    }
 
     /* Table header links (For sorting) */
     &.sort:hover {
@@ -419,46 +405,12 @@ table.data {
       background-color: $data-td-bg-color;
       border-right: none;
 
-      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
-        border-top: $data-table-border-top;
-        border-bottom: $data-table-border-bottom;
-      }
-
-      &:first-child {
-        border-radius: $first-child-border-radius;
-
-        &:not(.state):not(.gap):not(.bulksearch):not(.bulkactions) {
-          border-left: 1px solid $color-table-border;
-        }
-      }
-
-      &:last-child:not(.fillup):not(.bulkactions),
-      &.last_col {
-        border-right: 1px solid $color-table-border;
-        border-radius: $table-cell-last-child-border-radius;
-      }
-
-      &:only-child {
-        border: 1px solid $color-table-border;
-        border-radius: $theme-border-radius;
-      }
-
       a {
         color: $secondary-font-color;
 
         &:hover {
           color: $primary-hover-font-color;
         }
-      }
-
-      &:not(.gap):not(.last_col) {
-        border-left: $td-border-left-right;
-        border-right: $td-border-left-right;
-      }
-
-      &.state {
-        border-top: $data-table-state-border-top;
-        border-bottom: $data-table-state-border-bottom;
       }
 
       &:not(.state) {
@@ -585,11 +537,6 @@ table.data {
 table.data .popup_menu,
 body.main table.data .popup_menu {
   color: $font-color;
-}
-
-/* Give each table's topmost row a top border */
-table.data tr:not(.data) + tr.data > td:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
-  border-top: $data-table-border-topmost;
 }
 
 /* TODO: Check whether these narrow and wide styles are deprecated */
@@ -993,7 +940,7 @@ table.nform {
   margin: 5px 0;
   background: $bg-color-secondary;
   border-spacing: 0 0;
-  border-radius: $primary-border-radius;
+  border-radius: $theme-border-radius;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
   empty-cells: show;
 

@@ -188,17 +188,14 @@ $primary-link-color: $font-color;
 $secondary-link-color: $grey-6;
 
 $primary-border: null;
-$primary-table-border: 1px solid $color-table-border;
 $secondary-table-border: null;
 
 $primary-th-bg-color: rgb(245, 245, 245);
 $primary-td-bg-color: $color-table-background;
 
 $primary-box-shadow: 0.5px 0.5px 1px rgb(204, 204, 204);
-$primary-border-radius: $theme-border-radius;
 
 $dashboard-stats-bg-color: $white;
-$dashboard-tr-border-bottom: null;
 
 $checkbox-border-color: rgb(115, 118, 122);
 $checkbox-shadow: rgb(136, 136, 136);
@@ -231,17 +228,9 @@ $success-alert-bg-color: $color-state-success-background;
 $success-alert-border-color: $color-state-success-border;
 
 $data-container-bg-color: null;
-$data-container-border: null;
 
 $oddeven-table-bg-color: transparent;
 $data-td-bg-color: $base-color;
-$data-table-border-collapse: null;
-$data-table-border-spacing: 0 2px;
-$data-table-border-topmost: $primary-table-border;
-$data-table-border-top: $primary-table-border;
-$data-table-border-bottom: $primary-table-border;
-$data-table-state-border-top: null;
-$data-table-state-border-bottom: null;
 
 $input-button-bg-color: $success;
 $input-button-hover-bg-color: rgb(17, 189, 123);
@@ -274,12 +263,9 @@ $dark-font-color: null;
 $dashlet-body-bg-color: $base-color;
 $dashlet-bg-color: null;
 
-$state-border-top-color: null;
-
 $body-side-bg-color: $color-table-border-dark;
 
 $td-gap-bg-color: $color-background;
-$td-border-left-right: null;
 
 $td-text-overflow: null;
 
@@ -306,7 +292,6 @@ $wato-subtitle-color: $darkgrey;
 $footnote-link-color: $success;
 
 $table-data-single-padding: 8px 16px;
-$td-single-left-border-right: 1px solid $color-table-border;
 $td-single-left-padding: 2px 20px 2px 16px;
 
 $host-diag-success-bg-color: rgb(238, 255, 238);
@@ -346,9 +331,6 @@ $repprogress-msg-color: null;
 $repprogress-progress-bg-color: $color-state-6-background;
 $repprogress-progress-border-color: $color-nuance-17;
 
-$first-child-border-radius: 4px 0 0 4px;
-$last-child-border-radius: 0 4px 4px 0;
-
 $nform-table-hr-color: rgb(229, 229, 229);
 
 $iconbutton-filter: invert(0%);
@@ -386,8 +368,6 @@ $data-table-td-count-state-border-color: null;
 $timelineevents-data-table-border: $wato-data-table-border;
 $timelineevents-data-th-bg-color: $wato-data-th-bg-color;
 $timelineevents-data-table-box-shadow: $wato-data-table-box-shadow;
-
-$table-cell-last-child-border-radius: $last-child-border-radius;
 
 $duallist-control-a-hover-bg-color: $wato-a-hover-bg-color;
 

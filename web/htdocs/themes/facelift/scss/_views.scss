@@ -413,12 +413,6 @@ div.view_form {
 | Styles used by layouts of the views (plugins/views/layouts.py)           |
 '-------------------------------------------------------------------------*/
 
-table.data tr.data > td.gap,
-table.data tr > td.last_col,
-table.data tr > th.last_col {
-  border-right: none;
-}
-
 td.gap,
 table.data .checkbox_hover.gap {
   width: 5px;
@@ -442,19 +436,11 @@ table.boxlayout {
 }
 
 /* tiled layout */
-table.tiled td {
-  border-style: none;
-}
-
 .tile {
   float: left;
   width: 180px;
   margin-right: 6px;
   margin-bottom: 6px;
-  background-color: rgb(204, 204, 204);
-  border: 1px solid rgb(0, 0, 0);
-  border-radius: 0;
-  box-shadow: 1px 1px 3px rgb(0, 0, 0);
 
   img.icon {
     width: 16px;
@@ -510,7 +496,6 @@ table.data.tiled td.tiles {
     width: 240px;
     padding: 4px;
     background: $bg-color-secondary;
-    border: 1px solid $color-table-border;
     border-radius: $theme-border-radius;
     box-shadow: none;
 
@@ -603,7 +588,6 @@ table.data.single {
 
     &.left {
       font-weight: $font-weight-bold;
-      border-right: $td-single-left-border-right;
       transition: 0.15s ease-in-out;
     }
 
@@ -638,18 +622,11 @@ table.data.matrix {
   tbody > tr.data {
     > td {
       padding: 8px;
-      border: 1px solid $color-table-border;
-      border-left: none;
 
       &.left {
         font-weight: $font-weight-bold;
         background-color: $bg-color-secondary;
         transition: 0.15s ease-in-out;
-
-        &:not(.state) {
-          border-right: 1px solid $color-table-border;
-          border-left: 1px solid $color-table-border;
-        }
       }
 
       &.cell td.perfometer {

@@ -352,8 +352,6 @@ function render_graph(graph) {
         // Paint time axis
         labels = graph["time_axis"]["labels"];
         ctx.save();
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
         ctx.fillStyle = graph.render_options.foreground_color;
         for (i = 0; i < labels.length; i++) {
             position = labels[i][0];
@@ -366,8 +364,6 @@ function render_graph(graph) {
                     v_line_color[line_width]
                 );
             }
-            if (graph.render_options.show_time_axis && label != null)
-                ctx.fillText(label, trans(position, 0)[0], v_orig + t_label_margin);
         }
         ctx.restore();
     }
@@ -457,7 +453,7 @@ function render_graph(graph) {
     }
 
     // Clear areas where values have been painted out of range. This is
-    // At top and bottom
+    // At top and bottom. This is a Hack to cover incorrect paint area size.
     if (graph.render_options.background_color) {
         paint_rect([t_orig - 1, 0], t_pixels + 1, 0);
         paint_rect(
@@ -466,6 +462,19 @@ function render_graph(graph) {
             height - v_orig,
             graph.render_options.background_color
         );
+    }
+
+    if (!graph.render_options.preview && graph.render_options.show_time_axis) {
+        // Paint time axis labels
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = graph.render_options.foreground_color;
+        let labels = graph["time_axis"]["labels"];
+        labels.forEach(([position, label, _]) => {
+            if (label != null) ctx.fillText(label, trans(position, 0)[0], v_orig + t_label_margin);
+        });
+        ctx.restore();
     }
 
     // Paint axes and a strong line at 0, if that is in the range

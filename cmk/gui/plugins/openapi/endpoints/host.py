@@ -54,7 +54,7 @@ class HostParameters(BaseSchema):
             'op': 'not',
             'expr': {
                 'op': '=',
-                'left': 'hosts.name',
+                'left': 'name',
                 'right': 'example.com'
             }
         }),
@@ -66,8 +66,8 @@ class HostParameters(BaseSchema):
             mandatory=[Hosts.name.name],
             required=True,
         ),
-        description=("The desired columns of the hosts table. If left empty, a default set of "
-                     "columns is used."),
+        description=("The desired columns of the hosts table. "
+                     "If left empty, only the name column is used."),
         missing=[Hosts.name.name],
         required=False,
     )
@@ -92,7 +92,7 @@ def list_hosts(param):
     # TODO: add sites parameter
     filter_tree = param.get('query')
     if filter_tree:
-        expr = tree_to_expr(filter_tree)
+        expr = tree_to_expr(filter_tree, Hosts.__tablename__)
         q = q.filter(expr)
 
     result = q.iterate(live)

@@ -66,7 +66,7 @@ def test_openapi_livestatus_service(
         resp = wsgi_app.call_method(
             'get',
             base +
-            '/domain-types/service/collections/all?query={"op": "~", "left": "services.host_alias", "right": "heute"}',
+            '/domain-types/service/collections/all?query={"op": "~", "left": "host_alias", "right": "heute"}',
             status=200,
         )
         assert len(resp.json['value']) == 1

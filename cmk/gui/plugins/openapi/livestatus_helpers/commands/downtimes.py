@@ -77,7 +77,8 @@ def del_service_downtime(connection, downtime_id: int):
 
 def delete_downtime_with_query(connection, query):
     """Delete scheduled downtimes based upon a query"""
-    q = Query([Downtimes.id, Downtimes.is_service]).filter(tree_to_expr(query))
+    q = Query([Downtimes.id,
+               Downtimes.is_service]).filter(tree_to_expr(query, Downtimes.__tablename__))
     for downtime_id, is_service in [(row['id'], row['is_service']) for row in q.iterate(connection)
                                    ]:
         if is_service:
@@ -110,7 +111,8 @@ def schedule_services_downtimes_with_query(
 ):
     """Schedule downtimes for services based upon a query"""
 
-    q = Query([Services.description, Services.host_name]).filter(tree_to_expr(query))
+    q = Query([Services.description,
+               Services.host_name]).filter(tree_to_expr(query, Services.__tablename__))
     for host_name, service_description in [
         (row['host_name'], row['description']) for row in q.iterate(connection)
     ]:
@@ -422,7 +424,7 @@ def schedule_hosts_downtimes_with_query(
 ):
     """Schedule a downtimes for hosts based upon a query"""
 
-    q = Query([Hosts.name]).filter(tree_to_expr(query))
+    q = Query([Hosts.name]).filter(tree_to_expr(query, Hosts.__tablename__))
     hosts = [row['name'] for row in q.iterate(connection)]
     if not comment:
         comment = f"Downtime for hosts {', '.join(hosts)}"

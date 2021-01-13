@@ -15,7 +15,7 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 """
 
 import abc
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Optional
 
 # TODO: statistics operators
 # TODO: column functions
@@ -370,15 +370,18 @@ class Not(QueryExpression):
         return self.other.render() + [("Negate", "1")]
 
 
-def lookup_column(table_column_name) -> UnaryExpression:
+def lookup_column(table_name, column_name) -> UnaryExpression:
     from cmk.gui.plugins.openapi.livestatus_helpers import tables
-    table_name, column_name = table_column_name.split('.')
-    table_class = getattr(tables, table_name.title())
+    if isinstance(table_name, str):
+        table_class = getattr(tables, table_name.title())
+    else:
+        table_class = table_name
+
     column = getattr(table_class, column_name)
     return column.expr
 
 
-def tree_to_expr(filter_dict) -> QueryExpression:
+def tree_to_expr(filter_dict, table: Optional[str] = None) -> QueryExpression:
     """Turn a filter-dict into a QueryExpression.
 
     Examples:
@@ -387,6 +390,9 @@ def tree_to_expr(filter_dict) -> QueryExpression:
         Filter(name = example.com)
 
         >>> tree_to_expr({'op': '!=', 'left': 'hosts.name', 'right': 'example.com'})
+        Filter(name != example.com)
+
+        >>> tree_to_expr({'op': '!=', 'left': 'name', 'right': 'example.com'}, 'hosts')
         Filter(name != example.com)
 
         >>> tree_to_expr({'op': 'and', \
@@ -420,25 +426,38 @@ def tree_to_expr(filter_dict) -> QueryExpression:
         filter_dict:
             A filter-dict, which can either be persisted or passed over the wire.
 
+        table:
+            Optionally a table name. Only used when the columns are used in plain form
+            (without table name prefixes).
+
     Returns:
         A valid LiveStatus query expression.
 
     """
+
     op = filter_dict['op']
     if op in LIVESTATUS_OPERATORS:
+        left = filter_dict['left']
+        if "." in left:
+            _table, column = left.split(".")
+        else:
+            if table is None:
+                raise ValueError("Missing table parameter.")
+            _table = table
+            column = left
         return BinaryExpression(
-            lookup_column(filter_dict['left']),
+            lookup_column(_table, column),
             LiteralExpression(filter_dict['right']),
             op,
         )
 
     if op == 'and':
-        return And(*[tree_to_expr(expr) for expr in filter_dict['expr']])
+        return And(*[tree_to_expr(expr, table) for expr in filter_dict['expr']])
 
     if op == 'or':
-        return Or(*[tree_to_expr(expr) for expr in filter_dict['expr']])
+        return Or(*[tree_to_expr(expr, table) for expr in filter_dict['expr']])
 
     if op == 'not':
-        return Not(tree_to_expr(filter_dict['expr']))
+        return Not(tree_to_expr(filter_dict['expr'], table))
 
     raise ValueError(f"Unknown operator: {op}")

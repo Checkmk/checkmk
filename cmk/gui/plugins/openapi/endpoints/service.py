@@ -40,7 +40,7 @@ PARAMETERS = [{
             'op': 'not',
             'expr': {
                 'op': '=',
-                'left': 'hosts.name',
+                'left': 'name',
                 'right': 'example.com'
             }
         }),
@@ -103,7 +103,7 @@ def _list_services(param):
 
     filter_tree = param.get('query')
     if filter_tree:
-        expr = tree_to_expr(filter_tree)
+        expr = tree_to_expr(filter_tree, Services.__tablename__)
         q = q.filter(expr)
 
     result = q.iterate(live)

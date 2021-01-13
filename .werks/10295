@@ -1,0 +1,13 @@
+Title: REST API: host and service filtering now usable without table prefixes
+Class: fix
+Compatible: compat
+Component: core
+Date: 1610551950
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+Previously, a column had to have a table name prefix (e.g. services.host_name). In
+the hosts and services endpoints, specifying columns is now possible without these
+explicit table name prefixes.

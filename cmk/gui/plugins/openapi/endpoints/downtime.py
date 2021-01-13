@@ -187,7 +187,7 @@ def show_downtimes(param):
     host_name = param.get('host_name')
     service_description = param.get('service_description')
     if filter_tree is not None:
-        expr = tree_to_expr(filter_tree)
+        expr = tree_to_expr(filter_tree, Downtimes.__tablename__)
         q = q.filter(expr)
 
     if host_name is not None:

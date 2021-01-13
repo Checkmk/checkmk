@@ -69,6 +69,7 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
         label="Age of latest",
         render_func=render.timespan,
         notice_only=True,
+        boundaries=(0, None),
     )
 
     # Display oldest snapshot only, if it is not identical with the latest snapshot
@@ -82,6 +83,7 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
         label="Age of oldest",
         render_func=render.timespan,
         notice_only=True,
+        boundaries=(0, None),
     )
 
 

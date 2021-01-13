@@ -44,6 +44,7 @@ RUN set -e \
         iputils-ping \
         dpkg-sig \
         net-tools \
+        git \
         $(cat needed-packages) \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \

@@ -1,0 +1,14 @@
+Title: Docker container: Add git client to support setup git integration
+Class: fix
+Compatible: compat
+Component: core
+Date: 1610547261
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+To make it possible to use the git integration of the setup (WATO) in the
+Checkmk docker container, we now ship the git client with the docker container
+by default.

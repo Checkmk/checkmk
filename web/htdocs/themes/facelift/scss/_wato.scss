@@ -27,22 +27,8 @@
 }
 
 .wato table.data {
-  border-style: none;
-  box-shadow: none;
-
-  &.job_table {
-    border: none;
-    box-shadow: none;
-  }
-
-  &:not(.job_table) th {
-    background: transparent;
-    border-radius: 0;
-
-    &.header_state {
-      color: rgb(119, 119, 119) !important;
-      background: transparent !important;
-    }
+  &:not(.job_table) th.header_state {
+    background: transparent !important;
   }
 
   /* TODO: Reproduce this html element */
@@ -57,30 +43,6 @@
     &.buttons img {
       white-space: nowrap;
     }
-  }
-}
-
-/* Tables renderes in forms. */
-/* TODO: Reproduce these data tables within nform tables */
-.wato table.nform table.data {
-  box-shadow: 1px 1px 2px rgb(68, 68, 68);
-
-  th {
-    background-color: rgb(82, 114, 128);
-  }
-}
-
-.wato th {
-  /* TODO: Reproduce this html element */
-  &.left {
-    border-left-style: none;
-    border-radius: 4px 0 0;
-  }
-
-  /* TODO: Reproduce these .right elements */
-  &.right {
-    border-right-style: none;
-    border-radius: 0 4px 0 0;
   }
 }
 

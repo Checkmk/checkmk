@@ -321,6 +321,57 @@ function render_graph(graph) {
         return [trans_t(t), trans_v(v)];
     };
 
+    var position, label;
+    // render grid
+    if (!graph.render_options.preview) {
+        let line_width;
+
+        // Paint the vertical axis
+        let labels = graph["vertical_axis"]["labels"];
+        ctx.save();
+        ctx.textAlign = "end";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = graph.render_options.foreground_color;
+        for (i = 0; i < labels.length; i++) {
+            position = labels[i][0];
+            label = labels[i][1];
+            line_width = labels[i][2];
+            if (line_width > 0) {
+                paint_line(
+                    trans(t_range_from, position),
+                    trans(t_range_to, position),
+                    v_line_color[line_width]
+                );
+            }
+
+            if (graph.render_options.show_vertical_axis && label != null)
+                ctx.fillText(label, t_orig - v_label_margin, trans(t_range_from, position)[1]);
+        }
+        ctx.restore();
+
+        // Paint time axis
+        labels = graph["time_axis"]["labels"];
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = graph.render_options.foreground_color;
+        for (i = 0; i < labels.length; i++) {
+            position = labels[i][0];
+            label = labels[i][1];
+            line_width = labels[i][2];
+            if (line_width > 0) {
+                paint_line(
+                    trans(position, v_range_from),
+                    trans(position, v_range_to),
+                    v_line_color[line_width]
+                );
+            }
+            if (graph.render_options.show_time_axis && label != null)
+                ctx.fillText(label, trans(position, 0)[0], v_orig + t_label_margin);
+        }
+        ctx.restore();
+    }
+
     // Paint curves
     var curves = graph["curves"];
     var step = graph["step"] / 2.0;
@@ -438,56 +489,6 @@ function render_graph(graph) {
             trans(graph["end_time"], 0),
             graph.render_options.foreground_color
         );
-
-    var position, label;
-    if (!graph.render_options.preview) {
-        var line_width;
-
-        // Paint the vertical axis
-        var labels = graph["vertical_axis"]["labels"];
-        ctx.save();
-        ctx.textAlign = "end";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = graph.render_options.foreground_color;
-        for (i = 0; i < labels.length; i++) {
-            position = labels[i][0];
-            label = labels[i][1];
-            line_width = labels[i][2];
-            if (line_width > 0) {
-                paint_line(
-                    trans(t_range_from, position),
-                    trans(t_range_to, position),
-                    v_line_color[line_width]
-                );
-            }
-
-            if (graph.render_options.show_vertical_axis && label != null)
-                ctx.fillText(label, t_orig - v_label_margin, trans(t_range_from, position)[1]);
-        }
-        ctx.restore();
-
-        // Paint time axis
-        labels = graph["time_axis"]["labels"];
-        ctx.save();
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        ctx.fillStyle = graph.render_options.foreground_color;
-        for (i = 0; i < labels.length; i++) {
-            position = labels[i][0];
-            label = labels[i][1];
-            line_width = labels[i][2];
-            if (line_width > 0) {
-                paint_line(
-                    trans(position, v_range_from),
-                    trans(position, v_range_to),
-                    v_line_color[line_width]
-                );
-            }
-            if (graph.render_options.show_time_axis && label != null)
-                ctx.fillText(label, trans(position, 0)[0], v_orig + t_label_margin);
-        }
-        ctx.restore();
-    }
 
     // Paint horizontal rules like warn and crit
     ctx.save();

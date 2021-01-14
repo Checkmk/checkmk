@@ -111,7 +111,7 @@ class AgentFetcher(Fetcher[AgentRawData]):
     pass
 
 
-class SectionHeader(NamedTuple):
+class SectionMarker(NamedTuple):
     name: SectionName
     cached: Optional[Tuple[int, int]]
     encoding: str
@@ -119,8 +119,19 @@ class SectionHeader(NamedTuple):
     persist: Optional[int]
     separator: Optional[str]
 
+    @staticmethod
+    def is_header(line: bytes) -> bool:
+        line = line.strip()
+        return (line.startswith(b'<<<') and line.endswith(b'>>>') and
+                not SectionMarker.is_footer(line) and not PiggybackParser.is_header(line) and
+                not PiggybackParser.is_footer(line))
+
+    @staticmethod
+    def is_footer(line: bytes) -> bool:
+        return line.strip() == b'<<<>>>'
+
     @classmethod
-    def from_headerline(cls, headerline: bytes) -> "SectionHeader":
+    def from_headerline(cls, headerline: bytes) -> "SectionMarker":
         def parse_options(elems: Iterable[str]) -> Iterable[Tuple[str, str]]:
             for option in elems:
                 if "(" not in option:
@@ -129,7 +140,7 @@ class SectionHeader(NamedTuple):
                 assert value[-1] == ")", value
                 yield name, value[:-1]
 
-        if not HostSectionParser.is_header(headerline):
+        if not SectionMarker.is_header(headerline):
             raise ValueError(headerline)
 
         headerparts = ensure_str(headerline[3:-3]).split(":")
@@ -156,7 +167,7 @@ class SectionHeader(NamedTuple):
         except KeyError:
             separator = None
 
-        return SectionHeader(
+        return SectionMarker(
             name=SectionName(headerparts[0]),
             cached=cached,
             encoding=encoding,
@@ -206,7 +217,7 @@ class ParserState(abc.ABC):
         hostname: HostName,
         host_sections: AgentHostSections,
         *,
-        section_info: MutableMapping[SectionName, SectionHeader],
+        section_info: MutableMapping[SectionName, SectionMarker],
         translation: TranslationOptions,
         encoding_fallback: str,
         logger: logging.Logger,
@@ -230,7 +241,7 @@ class ParserState(abc.ABC):
 
     def to_host_section_parser(
         self,
-        section_header: SectionHeader,
+        section_header: SectionMarker,
     ) -> "HostSectionParser":
         return HostSectionParser(
             self.hostname,
@@ -276,8 +287,8 @@ class NOOPParser(ParserState):
                     # Unpiggybacked "normal" host
                     return self
                 return self.to_piggyback_parser(piggybacked_hostname)
-            if HostSectionParser.is_header(line):
-                return self.to_host_section_parser(HostSectionParser.parse_header(line))
+            if SectionMarker.is_header(line):
+                return self.to_host_section_parser(SectionMarker.from_headerline(line))
         except Exception:
             self._logger.warning("Ignoring invalid raw section: %r" % line, exc_info=True)
             return self.to_noop_parser()
@@ -291,7 +302,7 @@ class PiggybackParser(ParserState):
         host_sections: AgentHostSections,
         piggybacked_hostname: HostName,
         *,
-        section_info: MutableMapping[SectionName, SectionHeader],
+        section_info: MutableMapping[SectionName, SectionMarker],
         translation: TranslationOptions,
         encoding_fallback: str,
         logger: logging.Logger,
@@ -368,9 +379,9 @@ class HostSectionParser(ParserState):
         self,
         hostname: HostName,
         host_sections: AgentHostSections,
-        section_header: SectionHeader,
+        section_header: SectionMarker,
         *,
-        section_info: MutableMapping[SectionName, SectionHeader],
+        section_info: MutableMapping[SectionName, SectionMarker],
         translation: TranslationOptions,
         encoding_fallback: str,
         logger: logging.Logger,
@@ -402,11 +413,11 @@ class HostSectionParser(ParserState):
                     # Unpiggybacked "normal" host
                     return self
                 return self.to_piggyback_parser(piggybacked_hostname)
-            if HostSectionParser.is_footer(line):
+            if SectionMarker.is_footer(line):
                 return self.to_noop_parser()
-            if HostSectionParser.is_header(line):
+            if SectionMarker.is_header(line):
                 # Footer is optional.
-                return self.to_host_section_parser(HostSectionParser.parse_header(line))
+                return self.to_host_section_parser(SectionMarker.from_headerline(line))
 
             if not self.section_header.nostrip:
                 line = line.strip()
@@ -421,21 +432,6 @@ class HostSectionParser(ParserState):
             self._logger.warning("Ignoring invalid raw section: %r" % line, exc_info=True)
             return self.to_noop_parser()
         return self
-
-    @staticmethod
-    def is_header(line: bytes) -> bool:
-        line = line.strip()
-        return (line.startswith(b'<<<') and line.endswith(b'>>>') and
-                not HostSectionParser.is_footer(line) and not PiggybackParser.is_header(line) and
-                not PiggybackParser.is_footer(line))
-
-    @staticmethod
-    def is_footer(line: bytes) -> bool:
-        return line.strip() == b'<<<>>>'
-
-    @staticmethod
-    def parse_header(line: bytes) -> SectionHeader:
-        return SectionHeader.from_headerline(line)
 
 
 class AgentParser(Parser[AgentRawData, AgentHostSections]):
@@ -533,7 +529,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             Return any other line without modification.
 
             """
-            if not HostSectionParser.is_header(line):
+            if not SectionMarker.is_header(line):
                 return line
             if b':cached(' in line or b':persist(' in line:
                 return line

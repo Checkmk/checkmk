@@ -18,7 +18,7 @@ from cmk.utils.type_defs import AgentRawData, AgentRawDataSection, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.core_helpers.agent import AgentParser, SectionHeader
+from cmk.core_helpers.agent import AgentParser, SectionMarker
 from cmk.core_helpers.cache import PersistedSections, SectionStore
 from cmk.core_helpers.snmp import SNMPParser
 from cmk.core_helpers.type_defs import NO_SELECTION
@@ -246,7 +246,7 @@ class TestAgentParser:
     )  # yapf: disable
     def test_section_header_options(self, headerline, section_name, section_options):
         try:
-            SectionHeader.from_headerline(
+            SectionMarker.from_headerline(
                 f"<<<{headerline}>>>".encode("ascii")) == (  # type: ignore[comparison-overlap]
                     section_name,
                     section_options,
@@ -255,7 +255,7 @@ class TestAgentParser:
             assert section_name is None
 
     def test_section_header_options_decode_values(self):
-        section_header = SectionHeader.from_headerline(b"<<<" + b":".join((
+        section_header = SectionMarker.from_headerline(b"<<<" + b":".join((
             b"name",
             b"cached(1,2)",
             b"encoding(ascii)",
@@ -271,7 +271,7 @@ class TestAgentParser:
         assert section_header.separator == "|"
 
     def test_section_header_options_decode_nothing(self):
-        section_header = SectionHeader.from_headerline(b"<<<name>>>")
+        section_header = SectionMarker.from_headerline(b"<<<name>>>")
         assert section_header.name == SectionName("name")
         assert section_header.cached is None
         assert section_header.encoding == "utf-8"

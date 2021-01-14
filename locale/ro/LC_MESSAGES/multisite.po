@@ -43,6 +43,20 @@ msgstr " (Copiază)"
 msgid " (day %d)"
 msgstr ""
 
+#, fuzzy
+msgid " (in errors per second)"
+msgstr " secunde "
+
+#, fuzzy
+msgid " (in packets per second)"
+msgstr "cereri/sec"
+
+msgid " (in relation to all packets (successful + error))"
+msgstr ""
+
+msgid " (in relation to all successful packets)"
+msgstr ""
+
 msgid " (invalid)"
 msgstr " (invalid)"
 
@@ -581,6 +595,18 @@ msgstr ""
 #, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
+
+#, python-format
+msgid "%s: Top Application Traffic: Last Day View"
+msgstr ""
+
+#, python-format
+msgid "%s: Top Application Traffic: Last Hour View"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "%s: Top Local Talkers"
+msgstr "% / gamă"
 
 #, fuzzy, python-format
 msgid "%s: Uses SSL"
@@ -2220,10 +2246,6 @@ msgstr "Nivel-urile exacte în bits sau bytes per secundă"
 #, fuzzy
 msgid "Absolute levels of active sessions"
 msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy, python-brace-format
-msgid "Absolute levels{abs_detail}"
-msgstr "Liber Exact"
 
 #, fuzzy
 msgid "Absolute number of active connections"
@@ -21724,12 +21746,14 @@ msgstr ""
 msgid ""
 "If you enter the names of host/service-custom macros here then for each "
 "different combination of values of those macros a separate bulk will be "
-"created. This can be used in combination with the grouping by folder, host "
-"etc. Omit any leading underscore. <b>Note</b>: If you are using Nagios as a "
-"core you need to make sure that the values of the required macros are "
-"present in the notification context. This is done in <tt>check_mk_templates."
-"cfg</tt>. If you macro is <tt>_FOO</tt> then you need to add the variables "
-"<tt>NOTIFY_HOST_FOO</tt> and <tt>NOTIFY_SERVICE_FOO</tt>."
+"created. Service macros match first, if no service macro is found, the host "
+"macros are searched. This can be used in combination with the grouping by "
+"folder, host etc. Omit any leading underscore. <b>Note</b>: If you are using "
+"Nagios as a core you need to make sure that the values of the required "
+"macros are present in the notification context. This is done in "
+"<tt>check_mk_templates.cfg</tt>. If you macro is <tt>_FOO</tt> then you need "
+"to add the variables <tt>NOTIFY_HOST_FOO</tt> and <tt>NOTIFY_SERVICE_FOO</"
+"tt>."
 msgstr ""
 
 msgid ""
@@ -32836,10 +32860,6 @@ msgstr "trei nivele"
 #, python-format
 msgid "Percentual levels%s"
 msgstr ""
-
-#, fuzzy, python-brace-format
-msgid "Percentual levels{percent_detail}"
-msgstr "trei nivele"
 
 msgid "Perf-O-Meter"
 msgstr ""
@@ -57228,20 +57248,16 @@ msgstr "ieri"
 msgid "z/OS"
 msgstr ""
 
-#, python-brace-format
-msgid "{self.iface}: Top Application Traffic: Last Day View"
-msgstr ""
-
-#, python-brace-format
-msgid "{self.iface}: Top Application Traffic: Last Hour View"
-msgstr ""
-
-#, python-brace-format
-msgid "{self.iface}: Top Local Talkers"
-msgstr ""
-
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Absolute levels{abs_detail}"
+#~ msgstr "Liber Exact"
+
+#, fuzzy
+#~ msgid "Percentual levels{percent_detail}"
+#~ msgstr "trei nivele"
 
 #, fuzzy
 #~| msgid "Download"

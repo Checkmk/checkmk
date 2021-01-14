@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-01-13 13:00+0000\n"
 "Last-Translator: Marcel Arentz <marcel.arentz@tribe29.com>\n"
@@ -42,6 +42,20 @@ msgstr " (Kopie)"
 #, python-format
 msgid " (day %d)"
 msgstr " (Tag %d)"
+
+#, fuzzy
+msgid " (in errors per second)"
+msgstr "Liter pro Sekunde"
+
+#, fuzzy
+msgid " (in packets per second)"
+msgstr "RMON-Pakete pro Sekunde"
+
+msgid " (in relation to all packets (successful + error))"
+msgstr ""
+
+msgid " (in relation to all successful packets)"
+msgstr ""
 
 msgid " (invalid)"
 msgstr " (ungültig)"
@@ -594,6 +608,18 @@ msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
 "%s: Nutzt kein SSL. Prüfen Sie, ob Sie SSL aktivieren können um die "
 "Verbindung abzusichern."
+
+#, python-format
+msgid "%s: Top Application Traffic: Last Day View"
+msgstr ""
+
+#, python-format
+msgid "%s: Top Application Traffic: Last Hour View"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "%s: Top Local Talkers"
+msgstr "Anzeigename"
 
 #, python-format
 msgid "%s: Uses SSL"
@@ -1585,8 +1611,8 @@ msgstr ""
 "dann werden nur die ersten passenden Unterausdrücke für die "
 "Servicebeschreibungen verwendet. Die übereinstimmenden Teilzeichenketten, "
 "die den übrigen Gruppen entsprechen, werden dennoch in den regulären "
-"Ausdruck kopiert. </p><p>Als Alternative zu <tt>%s</tt> können Sie auch "
-"<tt>%1</tt>, <tt>%2</tt>, etc. verwenden.  Diese werden durch die erste, "
+"Ausdruck kopiert. </p><p>Als Alternative zu <tt>%s</tt> können Sie auch <tt>"
+"%1</tt>, <tt>%2</tt>, etc. verwenden.  Diese werden durch die erste, "
 "zweite, ... passende Gruppe ersetzt. Dies ermöglicht es Ihnen, die Dinge neu "
 "zu ordnen."
 
@@ -2522,10 +2548,6 @@ msgstr "Schwellenwert in Bits oder Bytes pro Sek."
 
 msgid "Absolute levels of active sessions"
 msgstr "Absolute Schwellen für aktive Sitzungen"
-
-#, python-brace-format
-msgid "Absolute levels{abs_detail}"
-msgstr "Absolute Schwellwerte{abs_detail}"
 
 msgid "Absolute number of active connections"
 msgstr "Gesamtzahl von aktiven Verbindungen"
@@ -3800,14 +3822,14 @@ msgid ""
 "day, week or bank (30 day) month."
 msgstr ""
 "Nachdem der Monitoring Kern die konsolidierte Zeitreihe mit Tagesauflösung "
-"zurückgibt, wird der Trend berechnet. Es stehen zwei Verfahren zur Verfügung:"
-" Das Erste wendet eine lineare Regression auf die Daten an.  Das Zweite "
-"benutzt die Forecast engine um einen Forecast Graphen für den Trend der "
-"Daten zu berechnen. Dieses Verfahren ist relativ rechenintensiv und dauert "
-"deswegen auch länger. Es sollte nicht für Ansichten verwendet werden die "
-"unmittelbare Visualisierung benötigen, sondern eher in geplanten Reports. Da "
-"der Trend eine Rate ist, muss ein Zeitbereich dafür festgelegt werden (Tag, "
-"Woche, Monat)."
+"zurückgibt, wird der Trend berechnet. Es stehen zwei Verfahren zur "
+"Verfügung: Das Erste wendet eine lineare Regression auf die Daten an.  Das "
+"Zweite benutzt die Forecast engine um einen Forecast Graphen für den Trend "
+"der Daten zu berechnen. Dieses Verfahren ist relativ rechenintensiv und "
+"dauert deswegen auch länger. Es sollte nicht für Ansichten verwendet werden "
+"die unmittelbare Visualisierung benötigen, sondern eher in geplanten "
+"Reports. Da der Trend eine Rate ist, muss ein Zeitbereich dafür festgelegt "
+"werden (Tag, Woche, Monat)."
 
 msgid "After this number of days old logfile of event history will be deleted."
 msgstr ""
@@ -4943,8 +4965,8 @@ msgid ""
 msgstr ""
 "Bei der Bearbeitung Ihrer Anfrage ist ein interner Fehler aufgetreten. Sie "
 "können dieses Problem an Ihren Checkmk-Administrator melden. Detaillierte "
-"Informationen finden Sie in dem Crash-Report oder unter <tt>var/log/web."
-"log</tt>."
+"Informationen finden Sie in dem Crash-Report oder unter <tt>var/log/web.log</"
+"tt>."
 
 msgid ""
 "An involuntary context switch takes place when a thread executes for the "
@@ -22079,9 +22101,6 @@ msgstr "IP-Adresse des Spectrumservers, der die SNMP-Traps empfangen soll"
 msgid "IP Addresses"
 msgstr "IP-Adressen"
 
-msgid "Event source IP address"
-msgstr "IP Adresse der Quelle des Ereignisses"
-
 msgid "IP Network"
 msgstr "IP-Netzwerk"
 
@@ -23135,15 +23154,18 @@ msgstr ""
 "verwendet, oder der Service heißt nur \"Events\", wenn auch keine Anwendung "
 "konfiguriert wurde."
 
+#, fuzzy
 msgid ""
 "If you enter the names of host/service-custom macros here then for each "
 "different combination of values of those macros a separate bulk will be "
-"created. This can be used in combination with the grouping by folder, host "
-"etc. Omit any leading underscore. <b>Note</b>: If you are using Nagios as a "
-"core you need to make sure that the values of the required macros are "
-"present in the notification context. This is done in <tt>check_mk_templates."
-"cfg</tt>. If you macro is <tt>_FOO</tt> then you need to add the variables "
-"<tt>NOTIFY_HOST_FOO</tt> and <tt>NOTIFY_SERVICE_FOO</tt>."
+"created. Service macros match first, if no service macro is found, the host "
+"macros are searched. This can be used in combination with the grouping by "
+"folder, host etc. Omit any leading underscore. <b>Note</b>: If you are using "
+"Nagios as a core you need to make sure that the values of the required "
+"macros are present in the notification context. This is done in "
+"<tt>check_mk_templates.cfg</tt>. If you macro is <tt>_FOO</tt> then you need "
+"to add the variables <tt>NOTIFY_HOST_FOO</tt> and <tt>NOTIFY_SERVICE_FOO</"
+"tt>."
 msgstr ""
 "Sie können hier die Namen von Benutzermakros von Hosts und Services angeben. "
 "Für jede unterschiedliche Kombination der Werte dieser Makros wird dann ein "
@@ -23462,9 +23484,9 @@ msgstr ""
 "ein, die der Agent ausführen wird. Dies vermeidet beispielsweise die "
 "Ausführung eines Notepads, wenn eine Datei mit der Endung <tt>.txt</tt> "
 "gefunden wird. <b>Anmerkung:</b> Wenn Sie einige der Standardendungen "
-"entfernen, werden nicht alle ausgelieferten Agentenplugins "
-"funktionieren!<br><br> Geben Sie die Endungen in Kleinbuchstaben und ohne "
-"führenden Punkt an."
+"entfernen, werden nicht alle ausgelieferten Agentenplugins funktionieren!"
+"<br><br> Geben Sie die Endungen in Kleinbuchstaben und ohne führenden Punkt "
+"an."
 
 msgid ""
 "If you want, you can specify a name that will be used in the <tt>define "
@@ -34628,10 +34650,6 @@ msgstr "Prozentuale Schwellen für benutzten Swap"
 msgid "Percentual levels%s"
 msgstr "Prozentualle Schwellen%s"
 
-#, fuzzy, python-brace-format
-msgid "Percentual levels{percent_detail}"
-msgstr "Prozentuale Schwellen"
-
 msgid "Perf-O-Meter"
 msgstr "Perf-O-Meter"
 
@@ -35333,8 +35351,8 @@ msgstr ""
 "Bitte wählen Sie hier die Aggregationsstufen. Die RRD fasst Metriken "
 "automatisch zusammen, sobald diese älter werden, um einen Kompromiss "
 "zwischen Genauigkeit und Speicherplatzbedarf zu schaffen. Per Default werden "
-"Daten 2880 Minuten lang mit einer Genauigkeit von einer Minute gespeichert ("
-"48 Stunden). Danach wird auf einen Wert pro 5 Minuten aggregiert (10 Tage), "
+"Daten 2880 Minuten lang mit einer Genauigkeit von einer Minute gespeichert "
+"(48 Stunden). Danach wird auf einen Wert pro 5 Minuten aggregiert (10 Tage), "
 "dann einen Wert pro 30 Minuten (90 Tage) und zum Schluss ein Wert pro 6 "
 "Stunden (4 Jahre). Beim Zusammenfassen wird aus z.B. 5 Werten ein neuer "
 "berechnet. Hier muss sich RRD entscheiden, ob das Minimum, Maximum oder der "
@@ -43999,23 +44017,11 @@ msgstr "Synology Updates"
 msgid "Syslog Facility"
 msgstr "Syslog Facility"
 
-msgid "Syslog facility"
-msgstr "Syslog Facility"
-
 msgid "Syslog Facility to use"
 msgstr "Syslog Facility"
 
 msgid "Syslog Priority"
 msgstr "Syslog Priority"
-
-msgid "Syslog priority"
-msgstr "Syslog Priority"
-
-msgid "Syslog Level"
-msgstr "Syslog Level"
-
-msgid "Syslog level"
-msgstr "Syslog Level"
 
 msgid "Syslog application to cancel event"
 msgstr "Ereignis abbrechen bei Syslog-Anwendung"
@@ -46584,8 +46590,8 @@ msgstr "Hostname passt nicht."
 msgid "The host name may not contain spaces."
 msgstr "Der Hostname darf keine Leerzeichen enthalten."
 
-msgid "Hostname, IP address or host alias the event is relevant for"
-msgstr "Hostname, IP Adresse oder Host Alias des Hosts für den das Ereignis relevant ist"
+msgid "The host name of the event"
+msgstr "Hostname des Ereignisses"
 
 msgid "The host or service was in a scheduled downtime"
 msgstr "Der Host oder Service war in einer Wartungszeit"
@@ -49300,14 +49306,14 @@ msgid "This check is not configurable via WATO"
 msgstr "Dieser Check ist nicht via WATO konfigurierbar"
 
 msgid ""
-"This check is part of the Check_MK Event Console and monitors "
-"whether there are any open events for a particular host. "
-"The overall state of the service generated by the check reflects "
-"the most critical status of any open event for that host."
+"This check is part of the Check_MK Event Console and will check if there are "
+"any open events for a certain host (and maybe a certain application on that "
+"host. The state of the check will reflect the status of the worst open event "
+"for that host."
 msgstr ""
 "Dieser Check ist Teil der Check_MK Event Console. Er überprüft ob auf einem "
 "bestimmten Host offene Ereignisse vorliegen (möglicherweise auch eine "
-"bestimmte Anwendung auf diesem Host). Der Status liefert das kritischste "
+"bestimmte Anwendung auf diesem Host). Der Status liefert das schlechteste "
 "offene Ereignis des Hosts."
 
 msgid ""
@@ -57678,11 +57684,10 @@ msgstr ""
 "Abschnitt \"Alternative PING-Adresse\" auswählen."
 
 msgid ""
-"When querying the event status, you can match events to a particular host "
-"using the hostname, the IP address, or the host alias. This is due to the "
-"fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
-"same host using different specification methods. Alternatively, you can "
-"specify an explicit host for which to show events."
+"When quering the event status you can either use the monitoring host name, "
+"the IP address, the host alias or a custom host name for referring to a "
+"host. This is needed in cases where the event source (syslog, snmptrapd) do "
+"not send a host name that matches the monitoring host name."
 msgstr ""
 "Um den Event-Status abzufragen, könne Sie entweder den Monitoring-Hostname, "
 "die IP-Adresse, den Hostalias oder einen benutzerdefinierten Hostnamen "
@@ -59535,7 +59540,7 @@ msgid ""
 "and warning and critical levels to 10% and 20% respectively."
 msgstr ""
 
-msgid "You can simulate an event here and check out which rules are matching."
+msgid "You can simulate an event here and check out, which rules are matching."
 msgstr ""
 "Simulieren Sie ein Ereignis und überprüfen Sie, welche Regeln zutreffen."
 
@@ -62362,20 +62367,16 @@ msgstr "gestern"
 msgid "z/OS"
 msgstr "z/OS"
 
-#, python-brace-format
-msgid "{self.iface}: Top Application Traffic: Last Day View"
-msgstr ""
-
-#, python-brace-format
-msgid "{self.iface}: Top Application Traffic: Last Hour View"
-msgstr ""
-
-#, python-brace-format
-msgid "{self.iface}: Top Local Talkers"
-msgstr ""
-
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "Absolute levels{abs_detail}"
+#~ msgstr "Absolute Schwellwerte{abs_detail}"
+
+#, fuzzy
+#~| msgid "Percentual levels"
+#~ msgid "Percentual levels{percent_detail}"
+#~ msgstr "Prozentuale Schwellen"
 
 #, fuzzy
 #~| msgid "Download"

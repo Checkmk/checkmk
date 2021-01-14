@@ -113,6 +113,26 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
 from cmk.gui.plugins.openapi.restful_objects.type_defs import OpenAPIParameter
 
+SECURITY_SCHEMES = {
+    'bearerAuth': {
+        'type': 'http',
+        'scheme': 'bearer',
+        'in': 'header',
+        'description': 'Use automation user credentials. The format of the header value is '
+                       '`Bearer $user $password`. This method has the highest precedence. If it '
+                       'succeeds, all other authentication methods are skipped.',
+        'bearerFormat': 'username password',
+    },
+    'webserverAuth': {
+        'type': 'http',
+        'scheme': 'basic',
+        'in': 'header',
+        'description': "Use the authentication method of the webserver ('basic' or 'digest'). To "
+                       "use this, you'll have to re-configure the site's Apache instance "
+                       "yourself. This method takes precedence over the cookieAuth method."
+    }
+}
+
 DEFAULT_HEADERS = [
     ('Accept', 'Media type(s) that is/are acceptable for the response.', 'application/json'),
 ]
@@ -185,8 +205,8 @@ OPTIONS: ReDocSpec = {
         'X-Test-Header',
     ],
     'security': [{
-        'bearerAuth': []
-    }]
+        sec_scheme_name: []
+    } for sec_scheme_name in SECURITY_SCHEMES]
 }
 
 __version__ = "0.3.2"
@@ -207,17 +227,8 @@ def make_spec(options: ReDocSpec):
 
 
 SPEC = make_spec(options=OPTIONS)
-SPEC.components.security_scheme(
-    'bearerAuth',
-    {
-        'type': 'http',
-        'scheme': 'bearer',
-        'in': 'header',
-        'description': 'The format of the header-value is "Bearer $user $password"\n\n'
-                       'An example could be: `hansdampf miezekatze123`',
-        'bearerFormat': 'username password',
-    },
-)
+for sec_scheme_name, sec_scheme_spec in SECURITY_SCHEMES.items():
+    SPEC.components.security_scheme(sec_scheme_name, sec_scheme_spec)
 
 # All the supported response headers by the spec.
 

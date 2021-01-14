@@ -141,53 +141,53 @@ def test_on_succeeded_login(user_id):
 def test_on_failed_login_no_locking(user_id):
     assert config.lock_on_logon_failures is False
     assert userdb._load_failed_logins(user_id) == 0
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 1
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 2
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 3
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
 
 @pytest.mark.usefixtures("register_builtin_html")
 def test_on_failed_login_count_reset_on_succeeded_login(user_id):
     assert config.lock_on_logon_failures is False
     assert userdb._load_failed_logins(user_id) == 0
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 1
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
     userdb.on_succeeded_login(user_id)
     assert userdb._load_failed_logins(user_id) == 0
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
 
 @pytest.mark.usefixtures("lock_on_logon_failures_enabled", "register_builtin_html")
 def test_on_failed_login_with_locking(user_id):
     assert config.lock_on_logon_failures == 3
     assert userdb._load_failed_logins(user_id) == 0
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 1
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 2
-    assert userdb._user_locked(user_id) is False
+    assert userdb.user_locked(user_id) is False
 
     userdb.on_failed_login(user_id)
     assert userdb._load_failed_logins(user_id) == 3
-    assert userdb._user_locked(user_id) is True
+    assert userdb.user_locked(user_id) is True
 
 
 def test_on_logout_no_session(user_id):

@@ -31,14 +31,31 @@ def test_profiling(wsgi_app, mocker):
     assert os.path.exists(var_dir + "/multisite.cachegrind")
 
 
+def test_webserver_auth(wsgi_app, with_user):
+    username, _ = with_user
+    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=401)
+
+    wsgi_app.get("/NO_SITE/check_mk/api/v0/version",
+                 status=401,
+                 extra_environ={'REMOTE_USER': 'unknown_random_dude'})
+
+    wsgi_app.get("/NO_SITE/check_mk/api/v0/version",
+                 status=200,
+                 extra_environ={'REMOTE_USER': username})
+
+
 def test_normal_auth(wsgi_app, with_user):
     username, password = with_user
+    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=401)
+
     login: 'webtest.TestResponse' = wsgi_app.get('/NO_SITE/check_mk/login.py')
     login.form['_username'] = username
     login.form['_password'] = password
     resp = login.form.submit('_login', index=1)
 
     assert "Invalid credentials." not in resp.text
+
+    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
 
 
 def test_openapi_version(wsgi_app, with_automation_user):

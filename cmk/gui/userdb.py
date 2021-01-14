@@ -254,7 +254,7 @@ def _is_local_user(user_id: UserId) -> bool:
     return _load_user(user_id).get('connector', 'htpasswd') == 'htpasswd'
 
 
-def _user_locked(user_id: UserId) -> bool:
+def user_locked(user_id: UserId) -> bool:
     return _load_user(user_id).get('locked', False)
 
 
@@ -1163,7 +1163,7 @@ def check_credentials(username: UserId, password: str) -> Union[UserId, Literal[
 
         # Now, after successfull login (and optional user account creation), check whether or
         # not the user is locked.
-        if _user_locked(user_id):
+        if user_locked(user_id):
             auth_logger.debug("User '%s' is not allowed to login: Account locked" % user_id)
             return False  # The account is locked
 

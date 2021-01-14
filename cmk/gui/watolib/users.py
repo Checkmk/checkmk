@@ -35,7 +35,7 @@ from cmk.gui.watolib.user_scripts import (
     user_script_title,
     user_script_choices,
 )
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+import cmk.gui.watolib.global_settings as global_settings
 
 
 def delete_users(users_to_delete):
@@ -161,7 +161,7 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
     vs_user_idle_timeout.validate_value(idle_timeout, "idle_timeout")
 
     # Notification settings are only active if we do *not* have rule based notifications!
-    if not rulebased_notifications_enabled():
+    if not global_settings.rulebased_notifications_enabled():
         # Notifications
         notifications_enabled = user_attrs.get("notification_enabled")
 

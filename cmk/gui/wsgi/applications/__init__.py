@@ -7,10 +7,8 @@
 from cmk.gui.wsgi.applications.checkmk import CheckmkApp
 from cmk.gui.wsgi.applications.rest_api import (
     CheckmkRESTAPI,)
-from cmk.gui.wsgi.applications.setup_search import CheckmkSetupSearchApp
 
 __all__ = [
     'CheckmkApp',
     'CheckmkRESTAPI',
-    'CheckmkSetupSearchApp',
 ]

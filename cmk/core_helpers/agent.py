@@ -178,7 +178,7 @@ class ParserState(abc.ABC):
             logger=self._logger,
         )
 
-    def to_piggyback_section_parser(
+    def to_piggyback_parser(
         self,
         piggybacked_hostname: HostName,
     ) -> "PiggybackParser":
@@ -211,7 +211,7 @@ class NOOPParser(ParserState):
                 if piggybacked_hostname == self.hostname:
                     # Unpiggybacked "normal" host
                     return self
-                return self.to_piggyback_section_parser(piggybacked_hostname)
+                return self.to_piggyback_parser(piggybacked_hostname)
             if HostSectionParser.is_header(line):
                 return self.to_host_section_parser(HostSectionParser.parse_header(line))
         except Exception:
@@ -259,7 +259,7 @@ class PiggybackParser(ParserState):
                 if piggybacked_hostname == self.hostname:
                     # Unpiggybacked "normal" host
                     return self.to_noop_parser()
-                return self.to_piggyback_section_parser(piggybacked_hostname)
+                return self.to_piggyback_parser(piggybacked_hostname)
             self.host_sections.piggybacked_raw_data.setdefault(
                 self.piggybacked_hostname,
                 [],
@@ -400,7 +400,7 @@ class HostSectionParser(ParserState):
                 if piggybacked_hostname == self.hostname:
                     # Unpiggybacked "normal" host
                     return self
-                return self.to_piggyback_section_parser(piggybacked_hostname)
+                return self.to_piggyback_parser(piggybacked_hostname)
             if HostSectionParser.is_footer(line):
                 return self.to_noop_parser()
             if HostSectionParser.is_header(line):

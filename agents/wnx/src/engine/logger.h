@@ -359,7 +359,7 @@ public:
     template <>
     std::ostream& operator<<(const std::wstring& Value) {
         auto s_wide = fmt::format(L"{}", Value);
-        auto s = wtools::ConvertToUTF8(Value);
+        auto s = wtools::ToUtf8(Value);
         if (!constructed()) {
             auto _ = xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;
@@ -371,7 +371,7 @@ public:
 
     std::ostream& operator<<(const wchar_t* Value) {
         auto s_wide = fmt::format(L"{}", Value);
-        auto s = wtools::ConvertToUTF8(Value);
+        auto s = wtools::ToUtf8(Value);
         if (!constructed()) {
             auto _ = xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;

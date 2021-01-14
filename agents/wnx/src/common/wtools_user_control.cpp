@@ -135,7 +135,7 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
                                   std::wstring_view group_comment) {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
-        XLOG::d("Groups is '{}' predefined group", ConvertToUTF8(group_name));
+        XLOG::d("Groups is '{}' predefined group", ToUtf8(group_name));
         return Status::error;
     }
 
@@ -166,7 +166,7 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
 Status LdapControl::localGroupDel(std::wstring_view group_name) {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
-        XLOG::d("Groups is '{}' predefined group", ConvertToUTF8(group_name));
+        XLOG::d("Groups is '{}' predefined group", ToUtf8(group_name));
         return Status::error;
     }
 

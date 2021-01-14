@@ -233,7 +233,7 @@ void normalizeCommand(std::string &cmd) {
         auto quoteType = getQuoteType(cmd);
         removeQuotes(cmd, quoteType);
         auto dir = cma::cfg::GetUserDir();
-        cmd.insert(0, wtools::ConvertToUTF8(dir) + "\\");
+        cmd.insert(0, wtools::ToUtf8(dir) + "\\");
         wrapInQuotes(cmd, quoteType);
     }
 }
@@ -293,7 +293,7 @@ std::string ToYamlString(const mrpe_entry &Entry, bool) {
 
     std::string out = "- check = ";
     std::string p = Entry.command_line;
-    auto data_path = wtools::ConvertToUTF8(cma::cfg::GetUserDir());
+    auto data_path = wtools::ToUtf8(cma::cfg::GetUserDir());
     auto pos = p.find(data_path);
     if (pos == 0 || pos == 1) {
         cma::cfg::ReplaceInString(p, data_path,

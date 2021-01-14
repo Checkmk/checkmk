@@ -229,7 +229,7 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
         if (in_list) return true;
 
         XLOG::l.w("Can't kill the process for file '{}' as not safe process",
-                  wtools::ConvertToUTF8(proc_name));
+                  wtools::ToUtf8(proc_name));
         return false;
     }
 
@@ -250,7 +250,7 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
         auto proc_name = GetProcessToKill(name);
         if (proc_name.empty()) {
             XLOG::l.w("Can't kill the process for file '{}'",
-                      wtools::ConvertToUTF8(name));
+                      wtools::ToUtf8(name));
             return false;
         }
 
@@ -357,8 +357,7 @@ bool Process(const std::string &cap_name, ProcMode Mode,
                                                     kMaxAttemptsToStoreFile)
                                : StoreFile(full_path, data);
             if (!success)
-                XLOG::l("Can't store file '{}'",
-                        wtools::ConvertToUTF8(full_path));
+                XLOG::l("Can't store file '{}'", wtools::ToUtf8(full_path));
 
             std::error_code ec;
             if (fs::exists(full_path, ec)) FilesLeftOnDisk.push_back(full_path);
@@ -369,7 +368,7 @@ bool Process(const std::string &cap_name, ProcMode Mode,
                 FilesLeftOnDisk.push_back(full_path);
             else {
                 XLOG::l("Cannot remove '{}' error {}",
-                        wtools::ConvertToUTF8(full_path), ec.value());
+                        wtools::ToUtf8(full_path), ec.value());
             }
         } else if (Mode == ProcMode::list) {
             FilesLeftOnDisk.push_back(full_path);
@@ -420,7 +419,7 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
             XLOG::l.t("File '{}' uninstall-ed", target_cap);
             fs::remove(target_cap, ec);
             for (auto &name : files_left)
-                XLOG::l.i("\tRemoved '{}'", wtools::ConvertToUTF8(name));
+                XLOG::l.i("\tRemoved '{}'", wtools::ToUtf8(name));
             changed = true;
         }
     } else
@@ -433,7 +432,7 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
             XLOG::l.t("File '{}' installed", source_cap);
             fs::copy_file(source_cap, target_cap, ec);
             for (auto &name : files_left)
-                XLOG::l.i("\tAdded '{}'", wtools::ConvertToUTF8(name));
+                XLOG::l.i("\tAdded '{}'", wtools::ToUtf8(name));
             changed = true;
         }
     } else

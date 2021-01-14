@@ -27,7 +27,7 @@ std::wstring GetCurrentProcessPath() {
 void KillTmpProcesses() {
     // kill process
     wtools::ScanProcessList([](const PROCESSENTRY32& entry) -> auto {
-        auto fname = wtools::ConvertToUTF8(entry.szExeFile);
+        auto fname = wtools::ToUtf8(entry.szExeFile);
         if (fname == expected_name) {
             wtools::KillProcess(entry.th32ProcessID);
         }
@@ -60,7 +60,7 @@ std::tuple<std::wstring, uint32_t> FindExpectedProcess() {
     uint32_t pid = 0;
     std::wstring path;
     ScanProcessList([&path, &pid ](const PROCESSENTRY32& entry) -> auto {
-        auto fname = wtools::ConvertToUTF8(entry.szExeFile);
+        auto fname = wtools::ToUtf8(entry.szExeFile);
         if (fname != expected_name) {
             return true;
         }
@@ -111,7 +111,7 @@ TEST(Wtools, ScanProcess) {
         std::vector<std::string> names;
 
         wtools::ScanProcessList([&names](const PROCESSENTRY32& entry) -> auto {
-            names.emplace_back(wtools::ConvertToUTF8(entry.szExeFile));
+            names.emplace_back(wtools::ToUtf8(entry.szExeFile));
             if (names.back() == "watest32.exe" ||
                 names.back() == "watest64.exe") {
                 XLOG::l.w(
@@ -157,7 +157,7 @@ TEST(Wtools, ScanProcess) {
             wtools::ScanProcessList([
                 proc_id, &proc_name, &found, &names, &parent_process_id
             ](const PROCESSENTRY32& entry) -> auto {
-                names.push_back(wtools::ConvertToUTF8(entry.szExeFile));
+                names.push_back(wtools::ToUtf8(entry.szExeFile));
                 if (entry.th32ProcessID == proc_id) {
                     proc_name = entry.szExeFile;
                     parent_process_id = entry.th32ParentProcessID;
@@ -272,7 +272,7 @@ TEST(Wtools, PerformanceFrequency) {
 TEST(Wtools, Utf16Utf8) {
     using namespace std;
     unsigned short utf16string[] = {0x41, 0x0448, 0x65e5, 0xd834, 0xdd1e, 0};
-    auto x = ConvertToUTF8((wchar_t*)utf16string);
+    auto x = ToUtf8((wchar_t*)utf16string);
     EXPECT_EQ(x.size(), 10);
 }
 

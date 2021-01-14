@@ -112,8 +112,7 @@ TEST(WmiWrapper, TablePostProcess) {
         EXPECT_EQ(line1.size(), last_line.size());
 
         {
-            auto str =
-                WmiPostProcess(ConvertToUTF8(result), StatusColumn::ok, ',');
+            auto str = WmiPostProcess(ToUtf8(result), StatusColumn::ok, ',');
             XLOG::l.i("string is {}", str);
             EXPECT_TRUE(!str.empty());
             auto t1 = cma::tools::SplitString(str, "\n");
@@ -127,8 +126,8 @@ TEST(WmiWrapper, TablePostProcess) {
             EXPECT_EQ(t1_last.back(), "OK");
         }
         {
-            auto str = WmiPostProcess(ConvertToUTF8(result),
-                                      StatusColumn::timeout, ',');
+            auto str =
+                WmiPostProcess(ToUtf8(result), StatusColumn::timeout, ',');
             XLOG::l("{}", str);
             EXPECT_TRUE(!str.empty());
             auto t1 = cma::tools::SplitString(str, "\n");
@@ -259,9 +258,9 @@ TEST(WmiProviderTest, WmiSubSection) {
             EXPECT_FALSE(table[2].empty());
             {
                 auto headers = cma::tools::SplitString(
-                    table[1], wtools::ConvertToUTF8(wmi::kSepString));
+                    table[1], wtools::ToUtf8(wmi::kSepString));
                 auto values = cma::tools::SplitString(
-                    table[2], wtools::ConvertToUTF8(wmi::kSepString));
+                    table[2], wtools::ToUtf8(wmi::kSepString));
                 EXPECT_FALSE(headers.empty());
                 EXPECT_FALSE(values.empty());
                 ASSERT_TRUE(headers.size() > 10);
@@ -294,7 +293,7 @@ TEST(WmiProviderTest, WmiSubSection) {
 TEST(WmiProviderTest, WmiAll) {  //
     using namespace std::chrono;
     std::wstring sep(wmi::kSepString);
-    std::string sep_ascii = wtools::ConvertToUTF8(sep);
+    std::string sep_ascii = wtools::ToUtf8(sep);
     {
         auto [r, status] =
             GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystem", {}, sep);

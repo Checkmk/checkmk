@@ -955,7 +955,7 @@ TEST(AgentConfig, UTF16LE) {
     EXPECT_TRUE(name_utf8 != "");
     auto name_utf16 = wtools::ConvertToUTF16(name_utf8);
     EXPECT_TRUE(name_utf16 != L"");
-    auto utf8_from_utf16 = wtools::ConvertToUTF8(name_utf16);
+    auto utf8_from_utf16 = wtools::ToUtf8(name_utf16);
     EXPECT_TRUE(utf8_from_utf16 != "");
 
     EXPECT_TRUE(utf8_from_utf16 == name_utf8);

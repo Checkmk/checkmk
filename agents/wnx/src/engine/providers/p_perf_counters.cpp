@@ -46,10 +46,9 @@ std::string MakeWinPerfStamp(uint32_t key_index) {
 // <<<winperf_something>>>
 std::string MakeWinPerfHeader(std::wstring_view prefix,
                               std::wstring_view name) {
-    auto name_string = wtools::ConvertToUTF8(name);
+    auto name_string = wtools::ToUtf8(name);
 
-    return cma::section::MakeHeader(wtools::ConvertToUTF8(prefix) + "_" +
-                                    name_string);
+    return cma::section::MakeHeader(wtools::ToUtf8(prefix) + "_" + name_string);
 }
 
 // retrieve the next line from a Windows Registry MULTI_SZ registry value
@@ -82,7 +81,7 @@ std::string MakeWinPerfInstancesLine(const PERF_OBJECT_TYPE* perf_object) {
     auto names = wtools::perf::GenerateInstanceNames(perf_object);
     for (auto name : names) {
         std::replace(name.begin(), name.end(), L' ', L'_');
-        auto name_of_instance = wtools::ConvertToUTF8(name);
+        auto name_of_instance = wtools::ToUtf8(name);
         out += ' ';
         out += name_of_instance;
     }
@@ -106,19 +105,18 @@ wtools::perf::DataSequence LoadWinPerfData(const std::wstring& key,
     if (ret.has_value()) {
         result = perf::ReadPerformanceDataFromRegistry(key);
         if (result.len_ == 0) {
-            XLOG::d.t("Obtained no data from counter {}",
-                      wtools::ConvertToUTF8(key));
+            XLOG::d.t("Obtained no data from counter {}", wtools::ToUtf8(key));
             return {};
         }
 
     } else {
         // attempt to get named parameter
         XLOG::t("Key Index {} is not found, looking in registry",
-                wtools::ConvertToUTF8(key));
+                wtools::ToUtf8(key));
         ret = perf::FindPerfIndexInRegistry(key);
         if (!ret.has_value()) {
             XLOG::d.t("Key value cannot be processed '{}'",
-                      wtools::ConvertToUTF8(key));
+                      wtools::ToUtf8(key));
             return {};
         }
 
@@ -196,7 +194,7 @@ std::string BuildWinPerfSection(std::wstring_view prefix,
     const auto* object = perf::FindPerfObject(result, key_index);
     if (object == nullptr) {
         XLOG::d("Winperf Object name '{}' index [{}] is not found",
-                wtools::ConvertToUTF8(key), key_index);
+                wtools::ToUtf8(key), key_index);
         return {};
     }
 

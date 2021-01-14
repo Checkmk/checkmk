@@ -126,7 +126,7 @@ inline void SafeCleanBakeryDir() {
         fs::create_directory(bakery_dir);
     } else {
         XLOG::l("attempt to delete suspicious dir {}",
-                wtools::ConvertToUTF8(bakery_dir));
+                wtools::ToUtf8(bakery_dir));
     }
 }
 

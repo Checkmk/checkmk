@@ -36,7 +36,7 @@ std::string AccumulateCounters(
 
         // ip is not a real counter
         if (key == L"ip") {
-            XLOG::d.i("From ip {}", wtools::ConvertToUTF8(name));
+            XLOG::d.i("From ip {}", wtools::ToUtf8(name));
             continue;
         }
 
@@ -66,7 +66,7 @@ int RunPerf(
 
     auto result = carrier::CoreCarrier::FireSend(peer_name, answer_id, port,
                                                  accu.c_str(), accu.size());
-    XLOG::d.i("Send to '{}' [{}]", wtools::ConvertToUTF8(port), accu.size());
+    XLOG::d.i("Send to '{}' [{}]", wtools::ToUtf8(port), accu.size());
 
     return result ? 0 : -1;
 }

@@ -145,8 +145,8 @@ inline std::wstring FindPowershellExe() noexcept {
         if (fs::exists(ps)) return ps;
         XLOG::l("Not found powershell");
     } catch (const std::exception& e) {
-        XLOG::l("malformed name {} e:{}",
-                wtools::ConvertToUTF8(powershell_path), e.what());
+        XLOG::l("malformed name {} e:{}", wtools::ToUtf8(powershell_path),
+                e.what());
     }
     return {};
 }
@@ -368,8 +368,7 @@ private:
 
     static std::string formatProcessInLog(uint32_t pid,
                                           const std::wstring_view name) {
-        return fmt::format("Process '{}' pid [{}]", wtools::ConvertToUTF8(name),
-                           pid);
+        return fmt::format("Process '{}' pid [{}]", wtools::ToUtf8(name), pid);
     }
 
     // check processes for exit

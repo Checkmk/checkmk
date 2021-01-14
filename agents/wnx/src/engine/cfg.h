@@ -195,8 +195,8 @@ T GetVal(std::string_view section_name, std::string_view key,
         return Default;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), section_name,
-                key, e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, key,
+                e.what());
     }
     return Default;
 }
@@ -212,8 +212,8 @@ inline YAML::Node GetNode(std::string_view section_name,
         return section[key];
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), section_name,
-                key, e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, key,
+                e.what());
     }
     return {};
 }
@@ -253,7 +253,7 @@ T GetVal(const YAML::Node& yaml, std::string_view name, T dflt,
         return dflt;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), name, e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), name, e.what());
     }
     return dflt;
 }
@@ -267,7 +267,7 @@ inline YAML::Node GetNode(const YAML::Node& yaml, std::string_view name,
         return val;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml node in file {} with {} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), name, e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), name, e.what());
     }
     return {};
 }
@@ -349,7 +349,7 @@ std::vector<T> GetArray(std::string_view Section, std::string_view Name,
                   val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
+                wtools::ToUtf8(GetPathOfLoadedConfig()), Section, Name,
                 e.what());
     }
     return {};
@@ -378,7 +378,7 @@ inline StringPairArray GetPairArray(std::string_view section_name,
                   value_name, val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), section_name,
+                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name,
                 value_name, e.what());
     }
     return {};
@@ -420,8 +420,7 @@ std::vector<T> GetArray(const YAML::Node& yaml, std::string_view node_name,
             XLOG::d("Node '{}' has bad type [{}]", node_name, val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), node_name,
-                e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), node_name, e.what());
     }
     return {};
 }

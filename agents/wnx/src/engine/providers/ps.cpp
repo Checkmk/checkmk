@@ -123,8 +123,8 @@ std::string ExtractProcessOwner(HANDLE process) {
     if (::LookupAccountSidW(nullptr, user_token_data->User.Sid, user_name,
                             &user_name_length, domain_name, &domain_name_length,
                             &snu_sid_name_use) == TRUE) {
-        std::string out = "\\\\" + wtools::ConvertToUTF8(domain_name) + "\\" +
-                          wtools::ConvertToUTF8(user_name);
+        std::string out = "\\\\" + wtools::ToUtf8(domain_name) + "\\" +
+                          wtools::ToUtf8(user_name);
         return out;
     }
 
@@ -213,7 +213,7 @@ time_t GetWmiObjectCreationTime(IWbemClassObject *wbem_object) {
         wtools::WmiStringFromObject(wbem_object, L"CreationDate");
 
     // calculate creation time
-    return ConvertWmiTimeToHumanTime(wtools::ConvertToUTF8(wmi_time_wide));
+    return ConvertWmiTimeToHumanTime(wtools::ToUtf8(wmi_time_wide));
 }
 
 /// returns uptime
@@ -223,7 +223,7 @@ unsigned long long CreationTimeToUptime(time_t creation_time,
     // lambda for logging
     auto obj_name = [wbem_object]() {
         auto process_name = BuildProcessName(wbem_object, true);
-        return wtools::ConvertToUTF8(process_name);
+        return wtools::ToUtf8(process_name);
     };
 
     // check that time is not 0(not error)
@@ -273,7 +273,7 @@ int64_t GetUint32AsInt64(IWbemClassObject *wbem_object,
                                            // to 64 bit signed
     }
 
-    XLOG::l.e("Fail to get '{}' {:#X}", wtools::ConvertToUTF8(name),
+    XLOG::l.e("Fail to get '{}' {:#X}", wtools::ToUtf8(name),
               static_cast<unsigned int>(hres));
     return 0;
 };
@@ -303,7 +303,7 @@ uint64_t GetWstringAsUint64(IWbemClassObject *wmi_object,
                             const std::wstring &name) {
     auto str = wtools::WmiTryGetString(wmi_object, name);
     if (!str) {
-        XLOG::l.e("Name {} is not found", wtools::ConvertToUTF8(name));
+        XLOG::l.e("Name {} is not found", wtools::ToUtf8(name));
         return 0;
     }
 
@@ -359,7 +359,7 @@ std::string ProducePsWmi(bool use_full_path) {
         out += OutputProcessLine(virtual_size, working_set, pagefile_use,
                                  uptime, user_time, kernel_time, process_id,
                                  handle_count, thread_count, process_owner,
-                                 wtools::ConvertToUTF8(process_name));
+                                 wtools::ToUtf8(process_name));
     }
     return out;
 }

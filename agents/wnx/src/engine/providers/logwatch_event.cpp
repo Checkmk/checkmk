@@ -95,7 +95,7 @@ bool LogWatchEntry::loadFromMapNode(const YAML::Node& node) {
     } catch (const std::exception& e) {
         XLOG::l(
             "Failed to load logwatch entry from Node exception: '{}' in file '{}'",
-            e.what(), wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
+            e.what(), wtools::ToUtf8(cma::cfg::GetPathOfLoadedConfig()));
         return false;
     }
 }
@@ -134,7 +134,7 @@ bool LogWatchEntry::loadFrom(std::string_view line) {
         XLOG::l(
             "Failed to load logwatch entry '{}' exception: '{}' in file '{}'",
             std::string(line), e.what(),
-            wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
+            wtools::ToUtf8(cma::cfg::GetPathOfLoadedConfig()));
         return false;
     }
 }

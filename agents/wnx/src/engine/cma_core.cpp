@@ -243,8 +243,7 @@ TheMiniBox::StartMode GetStartMode(const std::filesystem::path& filepath) {
     auto fname = filepath.filename();
     auto filename = fname.u8string();
     cma::tools::StringLower(filename);
-    if (filename ==
-        wtools::ConvertToUTF8(cma::cfg::files::kAgentUpdaterPython)) {
+    if (filename == wtools::ToUtf8(cma::cfg::files::kAgentUpdaterPython)) {
         XLOG::d.i("Plugin '{}' has updater start mode", filepath);
         return TheMiniBox::StartMode::updater;
     }
@@ -618,14 +617,14 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
     if (exec.empty()) {
         XLOG::l(
             "Failed to start minibox sync '{}', can't find executables for the '{}'",
-            wtools::ConvertToUTF8(Id), path().u8string());
+            wtools::ToUtf8(Id), path().u8string());
         return {};
     }
 
     auto started =
         minibox_.startEx(L"id", exec, TheMiniBox::StartMode::job, iu_);
     if (!started) {
-        XLOG::l("Failed to start minibox sync '{}'", wtools::ConvertToUTF8(Id));
+        XLOG::l("Failed to start minibox sync '{}'", wtools::ToUtf8(Id));
         return {};
     }
 
@@ -651,8 +650,7 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
             storeData(pid, accu);
             if (cma::cfg::LogPluginOutput())
                 XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                        wtools::ConvertToUTF8(cmd_line), pid, code,
-                        data.data());
+                        wtools::ToUtf8(cmd_line), pid, code, data.data());
         });
 
     } else {
@@ -736,7 +734,7 @@ bool TheMiniBox::startEx(std::wstring_view uniq_id, const std::wstring& exec,
     try {
         // now exec
         auto ar = std::make_unique<wtools::AppRunner>();
-        XLOG::d.t("Exec app '{}', mode [{}]", wtools::ConvertToUTF8(exec),
+        XLOG::d.t("Exec app '{}', mode [{}]", wtools::ToUtf8(exec),
                   static_cast<int>(start_mode));
 
         switch (start_mode) {
@@ -777,7 +775,7 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
     constexpr std::chrono::milliseconds grane_long = 50ms;
     constexpr std::chrono::milliseconds grane_short = 20ms;
     auto* read_handle = getReadHandle();
-    ProcInfo pi = {getProcessId(), wtools::ConvertToUTF8(exec_), 0, 0};
+    ProcInfo pi = {getProcessId(), wtools::ToUtf8(exec_), 0, 0};
 
     for (;;) {
         auto grane = grane_long;
@@ -827,7 +825,7 @@ bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
     ON_OUT_OF_SCOPE(readWhatLeft());
 
     auto* read_handle = getReadHandle();
-    ProcInfo pi = {getProcessId(), wtools::ConvertToUTF8(exec_), 0, 0};
+    ProcInfo pi = {getProcessId(), wtools::ToUtf8(exec_), 0, 0};
     constexpr std::chrono::milliseconds time_grane_windows = 250ms;
 
     for (;;) {
@@ -902,18 +900,18 @@ void TheMiniBox::readAndAppend(HANDLE read_handle,
     }
     appendResult(read_handle, buf);
     XLOG::d.t("Appended [{}] bytes from '{}', timeout is [{}ms]", buf.size(),
-              wtools::ConvertToUTF8(exec_), timeout.count());
+              wtools::ToUtf8(exec_), timeout.count());
 }
 
 bool TheMiniBox::waitForBreakLoop(std::chrono::milliseconds timeout) {
     if (timeout < time_grane) {
-        XLOG::d("Plugin '{}' hits timeout", wtools::ConvertToUTF8(exec_));
+        XLOG::d("Plugin '{}' hits timeout", wtools::ToUtf8(exec_));
         return true;
     }
 
     if (waitForStop(time_grane)) {
         XLOG::d("Plugin '{}' gets signal stop [{}], timeout left [{}ms]!",
-                wtools::ConvertToUTF8(exec_), stop_set_, timeout.count());
+                wtools::ToUtf8(exec_), stop_set_, timeout.count());
         return true;
     }
 
@@ -940,7 +938,7 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
         auto process_id = getProcessId();
         failed_ = timeout < time_grane;
         process_->kill(true);
-        XLOG::l("Process '{}' [{}] is killed", wtools::ConvertToUTF8(exec_),
+        XLOG::l("Process '{}' [{}] is killed", wtools::ToUtf8(exec_),
                 process_id);
         return false;
     }
@@ -952,8 +950,7 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
 void PluginEntry::threadCore(const std::wstring& Id) {
     // pre entry
     // thread counters block
-    XLOG::d.i("Async Thread for {} is to be started",
-              wtools::ConvertToUTF8(Id));
+    XLOG::d.i("Async Thread for {} is to be started", wtools::ToUtf8(Id));
     g_tread_count++;
     ON_OUT_OF_SCOPE(g_tread_count--);
     std::unique_lock lk(lock_);
@@ -976,13 +973,13 @@ void PluginEntry::threadCore(const std::wstring& Id) {
     if (exec.empty()) {
         XLOG::l(
             "Failed to start minibox '{}', can't find executables for the '{}'",
-            wtools::ConvertToUTF8(Id), path().u8string());
+            wtools::ToUtf8(Id), path().u8string());
         return;
     }
 
     auto started = minibox_.startEx(Id, exec, mode, iu_);
     if (!started) {
-        XLOG::l("Failed to start minibox thread {}", wtools::ConvertToUTF8(Id));
+        XLOG::l("Failed to start minibox thread {}", wtools::ToUtf8(Id));
         return;
     }
 
@@ -1006,8 +1003,7 @@ void PluginEntry::threadCore(const std::wstring& Id) {
             }
             if (cma::cfg::LogPluginOutput())
                 XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                        wtools::ConvertToUTF8(cmd_line), pid, code,
-                        data.data());
+                        wtools::ToUtf8(cmd_line), pid, code, data.data());
         });
     } else {
         // process was either stopped or failed(timeout)
@@ -1038,7 +1034,7 @@ void PluginEntry::fillInternalUser() {
     if (!group_.empty()) {
         iu_ = ObtainInternalUser(wtools::ConvertToUTF16(group_));
         XLOG::t("Entry '{}' uses user '{}' as group config", path(),
-                wtools::ConvertToUTF8(iu_.first));
+                wtools::ToUtf8(iu_.first));
         return;
     }
 
@@ -1047,7 +1043,7 @@ void PluginEntry::fillInternalUser() {
     // user
     iu_ = PluginsExecutionUser2Iu(user_);
     XLOG::t("Entry '{}' uses user '{}' as direct config", path(),
-            wtools::ConvertToUTF8(iu_.first));
+            wtools::ToUtf8(iu_.first));
 }
 
 // if thread finished join old and start new thread again

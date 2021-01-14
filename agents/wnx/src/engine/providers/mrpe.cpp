@@ -357,8 +357,7 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
 
         if (cfg::LogMrpeOutput()) {
             XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                    wtools::ConvertToUTF8(cmd_line), pid, error_code,
-                    data.data());
+                    wtools::ToUtf8(cmd_line), pid, error_code, data.data());
         }
 
         result += std::to_string(error_code) + " " + data;

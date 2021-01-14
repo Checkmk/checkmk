@@ -92,8 +92,7 @@ std::string MakeDirs() {
 
     std::string out;
     for (const auto& d : directories) {
-        out +=
-            fmt::format("{}: {}\n", d.first, wtools::ConvertToUTF8(d.second));
+        out += fmt::format("{}: {}\n", d.first, wtools::ToUtf8(d.second));
     }
 
     return out;

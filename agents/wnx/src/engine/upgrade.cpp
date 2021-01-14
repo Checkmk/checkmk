@@ -181,7 +181,7 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
         }
 
         XLOG::l("during copy from '{}' to '{}' error {}", p,
-                wtools::ConvertToUTF8(cma::cfg::GetUserDir()), ec.value());
+                wtools::ToUtf8(cma::cfg::GetUserDir()), ec.value());
     }
 
     return count;
@@ -295,8 +295,8 @@ std::tuple<SC_HANDLE, SC_HANDLE, DWORD> OpenServiceForControl(
 
     if (nullptr == handle) {
         auto error = ::GetLastError();
-        XLOG::l("OpenService '{}' failed [{}]",
-                wtools::ConvertToUTF8(service_name), error);
+        XLOG::l("OpenService '{}' failed [{}]", wtools::ToUtf8(service_name),
+                error);
         return {manager_handle, handle, error};
     }
 
@@ -384,7 +384,7 @@ static bool TryStopService(SC_HANDLE handle, const std::string& name_to_log,
 }
 
 bool StopWindowsService(std::wstring_view service_name) {
-    auto name_to_log = wtools::ConvertToUTF8(service_name);
+    auto name_to_log = wtools::ToUtf8(service_name);
     XLOG::l.t("Service {} stopping ...", name_to_log);
 
     // Get a handle to the SCM database.
@@ -410,7 +410,7 @@ bool StopWindowsService(std::wstring_view service_name) {
 
 static void LogStartStatus(const std::wstring& service_name,
                            DWORD last_error_code) {
-    auto name = wtools::ConvertToUTF8(service_name);
+    auto name = wtools::ToUtf8(service_name);
     if (last_error_code == 0) {
         XLOG::l.i("Service '{}' started successfully ", name);
         return;
@@ -431,7 +431,7 @@ bool StartWindowsService(const std::wstring& service_name) {
 
     if (nullptr == handle) {
         XLOG::l("Cannot open service '{}' with error [{}]",
-                wtools::ConvertToUTF8(service_name), error);
+                wtools::ToUtf8(service_name), error);
         return false;
     }
 
@@ -471,7 +471,7 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
         OpenService(manager_handle, Name.c_str(), SERVICE_CHANGE_CONFIG);
     if (nullptr == handle) {
         XLOG::l.crit("Cannot open Service {}, error =  {}",
-                     wtools::ConvertToUTF8(Name), GetLastError());
+                     wtools::ToUtf8(Name), GetLastError());
         return false;
     }
     ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
@@ -489,8 +489,8 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
                             nullptr,            // password: no change
                             nullptr);           // display name: no change
     if (0 == result) {
-        XLOG::l("ChangeServiceConfig '{}' failed [{}]",
-                wtools::ConvertToUTF8(Name), GetLastError());
+        XLOG::l("ChangeServiceConfig '{}' failed [{}]", wtools::ToUtf8(Name),
+                GetLastError());
         return false;
     }
 
@@ -746,8 +746,8 @@ bool RunDetachedProcess(const std::wstring& Name) {
         &si,      // Pointer to STARTUPINFO structure
         &pi);     // Pointer to PROCESS_INFORMATION structure
     if (ret != TRUE) {
-        XLOG::l("Cant start the process {}, error is {}",
-                wtools::ConvertToUTF8(Name), GetLastError());
+        XLOG::l("Cant start the process {}, error is {}", wtools::ToUtf8(Name),
+                GetLastError());
     }
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -1014,7 +1014,7 @@ bool UpgradeLegacy(Force force_upgrade) {
     if (IsProtocolFileExists(protocol_dir) && !force) {
         XLOG::l.i(
             "Protocol File at '{}' exists, upgrade(migration) not required",
-            wtools::ConvertToUTF8(protocol_dir));
+            wtools::ToUtf8(protocol_dir));
         RecoverOldStateFileWithPreemtiveHashPatch();
         return false;
     }
@@ -1024,7 +1024,7 @@ bool UpgradeLegacy(Force force_upgrade) {
         XLOG::l.t("Legacy Agent not found Upgrade is not possible");
         return true;
     }
-    XLOG::l.i("Legacy Agent is found in '{}'", wtools::ConvertToUTF8(path));
+    XLOG::l.i("Legacy Agent is found in '{}'", wtools::ToUtf8(path));
 
     PatchOldFilesWithDatHash();
 
@@ -1082,8 +1082,7 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
     std::error_code ec;
     if (fs::exists(local_ini_file, ec)) {
         XLOG::l.i("Converting local ini file '{}'", local_ini_file);
-        auto user_yaml_file =
-            wtools::ConvertToUTF8(files::kDefaultMainConfigName);
+        auto user_yaml_file = wtools::ToUtf8(files::kDefaultMainConfigName);
 
         auto out_file =
             CreateUserYamlFromIni(local_ini_file, ProgramData, user_yaml_file);
@@ -1124,7 +1123,7 @@ bool ConvertUserIniFile(
     XLOG::l.i("User ini File {} to be processed", user_ini_file);
 
     // check_mk.user.yml or check_mk.bakery.yml
-    const auto name = wtools::ConvertToUTF8(files::kDefaultMainConfigName);
+    const auto name = wtools::ToUtf8(files::kDefaultMainConfigName);
 
     // generate
     auto out_folder = pdata;
@@ -1178,11 +1177,11 @@ bool ConvertIniFiles(const std::filesystem::path& legacy_root,
             ini_file.u8string(),
 
             IsBakeryIni(ini_file) ? "managed by Bakery/WATO" : "user defined",
-            wtools::ConvertToUTF8(cma::cfg::GetBakeryDir()),
-            wtools::ConvertToUTF8(files::kBakeryYmlFile),
-            wtools::ConvertToUTF8(files::kIniFile),
-            wtools::ConvertToUTF8(cma::cfg::GetRootInstallDir()),
-            wtools::ConvertToUTF8(files::kWatoIniFile)
+            wtools::ToUtf8(cma::cfg::GetBakeryDir()),
+            wtools::ToUtf8(files::kBakeryYmlFile),
+            wtools::ToUtf8(files::kIniFile),
+            wtools::ToUtf8(cma::cfg::GetRootInstallDir()),
+            wtools::ToUtf8(files::kWatoIniFile)
             //
         );
 
@@ -1473,8 +1472,8 @@ bool IsToRemove() {
             "The Legacy Agent is already removed. "
             "To remove the Legacy Agent again, please, "
             "use command line or set registry entry HKLM\\{}\\{} to \"1\"",
-            wtools::ConvertToUTF8(cma::install::registry::GetMsiRegistryPath()),
-            wtools::ConvertToUTF8(cma::install::registry::kMsiRemoveLegacy));
+            wtools::ToUtf8(cma::install::registry::GetMsiRegistryPath()),
+            wtools::ToUtf8(cma::install::registry::kMsiRemoveLegacy));
         return false;
     }
 

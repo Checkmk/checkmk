@@ -322,7 +322,7 @@ ServiceController::StopType ServiceController::registerAndRun(
 
             XLOG::l(XLOG::kStdio)
                 .crit("Cannot Start Service '{}' error = [{}]",
-                      ConvertToUTF8(ServiceName), error);
+                      ToUtf8(ServiceName), error);
             return StopType::fail;
         }
         return StopType::normal;
@@ -404,7 +404,7 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
         if (error == ERROR_SERVICE_EXISTS) {
             XLOG::l(XLOG::kStdio)
                 .crit("The Service '{}' already exists",
-                      wtools::ConvertToUTF8(ServiceName));
+                      wtools::ToUtf8(ServiceName));
             return false;
         }
         XLOG::l(XLOG::kStdio).crit("CreateService failed w/err {}", error);
@@ -412,7 +412,7 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
     ON_OUT_OF_SCOPE(CloseServiceHandle(service););
 
     XLOG::l(XLOG::kStdio)
-        .i("The Service '{}' is installed.", ConvertToUTF8(ServiceName));
+        .i("The Service '{}' is installed.", ToUtf8(ServiceName));
 
     return true;
 }
@@ -437,7 +437,7 @@ bool UninstallService(const wchar_t* service_name,
         XLOG::l(XLOG::kStdio).crit("Parameter is null");
         return false;
     }
-    auto name = wtools::ConvertToUTF8(service_name);
+    auto name = wtools::ToUtf8(service_name);
     // Open the local default service control manager database
     SC_HANDLE service_manager =
         ::OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
@@ -981,7 +981,7 @@ DataSequence ReadPerformanceDataFromRegistry(
 
         if (ret != ERROR_MORE_DATA) {
             XLOG::l("Can't read counter '{}' error [{}]",
-                    wtools::ConvertToUTF8(counter_name), ret);
+                    wtools::ToUtf8(counter_name), ret);
             return {};
         }
 
@@ -1402,8 +1402,8 @@ std::wstring WmiStringFromObject(IWbemClassObject* object,
             ON_OUT_OF_SCOPE(VariantClear(&value));
             auto str = wtools::WmiGetWstring(value);
             if (str[0] == '-') {
-                XLOG::t("WMI Negative value '{}' [{}], type [{}]",
-                        ConvertToUTF8(name), ConvertToUTF8(str), value.vt);
+                XLOG::t("WMI Negative value '{}' [{}], type [{}]", ToUtf8(name),
+                        ToUtf8(str), value.vt);
             }
             result += str;
             result += separator;
@@ -1510,7 +1510,7 @@ std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject) {
 // returns valid enumerator or nullptr
 IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
                                    const std::wstring& Query) noexcept {
-    XLOG::t("Query is '{}'", ConvertToUTF8(Query));
+    XLOG::t("Query is '{}'", ToUtf8(Query));
     IEnumWbemClassObject* enumerator = nullptr;
     auto hres = Services->ExecQuery(
         bstr_t("WQL"),          // always the same
@@ -1522,7 +1522,7 @@ IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
     if (SUCCEEDED(hres)) return enumerator;
     // SHOULD NOT HAPPEN
     XLOG::l.e("Failed query wmi {:#X}, query is {}",
-              static_cast<unsigned>(hres), ConvertToUTF8(Query));
+              static_cast<unsigned>(hres), ToUtf8(Query));
     return nullptr;  // Program has failed.
 }
 
@@ -1595,8 +1595,8 @@ bool WmiWrapper::connect(const std::wstring& NameSpace) noexcept {
 
     if (SUCCEEDED(hres)) return true;
 
-    XLOG::l.e("Can't connect to the namespace {} {:#X}",
-              ConvertToUTF8(NameSpace), static_cast<unsigned long>(hres));
+    XLOG::l.e("Can't connect to the namespace {} {:#X}", ToUtf8(NameSpace),
+              static_cast<unsigned long>(hres));
     return false;  // Program has failed.
 }
 
@@ -1737,7 +1737,7 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
 
     // make a table using enumerator and supplied Names vector
     if (nullptr == enumerator) {
-        XLOG::d("WMI enumerator is null for '{}'", ConvertToUTF8(target));
+        XLOG::d("WMI enumerator is null for '{}'", ToUtf8(target));
         return {std::wstring(), WmiStatus::error};
     }
     ON_OUT_OF_SCOPE(enumerator->Release());
@@ -1842,8 +1842,8 @@ uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
         }
     }
     // failure here
-    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]", ConvertToUTF8(path),
-              ConvertToUTF8(value_name), ret);
+    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]", ToUtf8(path),
+              ToUtf8(value_name), ret);
     return dflt;
 }
 
@@ -1856,18 +1856,18 @@ bool DeleteRegistryValue(std::wstring_view path,
         ret = ::RegDeleteValue(hkey, value_name.data());
         if (ret == ERROR_SUCCESS) return true;
         if (ret == ERROR_FILE_NOT_FOUND) {
-            XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}",
-                      ConvertToUTF8(path), ConvertToUTF8(value_name));
+            XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}", ToUtf8(path),
+                      ToUtf8(value_name));
             return true;
         }
 
-        XLOG::l(XLOG_FLINE + "Failed to delete {}\\{} error [{}]",
-                ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+        XLOG::l(XLOG_FLINE + "Failed to delete {}\\{} error [{}]", ToUtf8(path),
+                ToUtf8(value_name), ret);
         return false;
     }
     //  here
-    XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}", ConvertToUTF8(path),
-              ConvertToUTF8(value_name));
+    XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}", ToUtf8(path),
+              ToUtf8(value_name));
     return true;
 }
 
@@ -1928,7 +1928,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
     if (ERROR_SUCCESS != result || nullptr == hkey) {
         // failure here
         XLOG::t.t(XLOG_FLINE + "Cannot open Key '{}' query return code [{}]",
-                  ConvertToUTF8(path), result);
+                  ToUtf8(path), result);
         return dflt.data();
     }
 
@@ -1944,7 +1944,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
     if (count == 0 || !type_ok) {
         // failure here
         XLOG::t.t(XLOG_FLINE + "Can't open '{}\\{}' query returns [{}]",
-                  ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+                  ToUtf8(path), ToUtf8(value_name), ret);
         return dflt.data();
     }
 
@@ -1965,7 +1965,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
         if (count == 0 || !type_ok) {
             // failure here
             XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query return [{}]",
-                      ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+                      ToUtf8(path), ToUtf8(value_name), ret);
             return dflt.data();
         }
 
@@ -1975,8 +1975,8 @@ std::wstring GetRegistryValue(std::wstring_view path,
     }
 
     // failure here
-    XLOG::t.t(XLOG_FLINE + "Bad key {}\\{} query return [{}]",
-              ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+    XLOG::t.t(XLOG_FLINE + "Bad key {}\\{} query return [{}]", ToUtf8(path),
+              ToUtf8(value_name), ret);
     return dflt.data();
 }
 
@@ -2586,7 +2586,7 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
 InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
     uc::LdapControl primary_dc;
 
-    auto g = wtools::ConvertToUTF8(group);
+    auto g = wtools::ToUtf8(group);
 
     // Set up the LOCALGROUP_INFO_1 structure.
     uc::Status add_group_status = uc::Status::exists;
@@ -2596,7 +2596,7 @@ InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
     auto name = GenerateCmaUserNameInGroup(group);
     if (name.empty()) return {};
 
-    auto n = wtools::ConvertToUTF8(name);
+    auto n = wtools::ToUtf8(name);
 
     auto pwd = GenerateRandomString(12);
 
@@ -2643,7 +2643,7 @@ bool ProtectPathFromUserWrite(const std::filesystem::path& path) {
         auto cmd = fmt::format(t.data(), path.wstring());
         if (!cma::tools::RunCommandAndWait(cmd)) {
             // logging is almost useless: at this phase logfile is absent
-            XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
+            XLOG::l.e("Failed command '{}'", wtools::ToUtf8(cmd));
             return false;
         }
     }
@@ -2666,7 +2666,7 @@ bool ProtectFileFromUserWrite(const std::filesystem::path& path) {
         auto cmd = fmt::format(t.data(), path.wstring());
         if (!cma::tools::RunCommandAndWait(cmd)) {
             // logging is almost useless: at this phase logfile is absent
-            XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
+            XLOG::l.e("Failed command '{}'", wtools::ToUtf8(cmd));
             return false;
         }
     }
@@ -2687,7 +2687,7 @@ bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
         auto cmd = fmt::format(t.data(), entry.wstring());
         if (!cma::tools::RunCommandAndWait(cmd)) {
             // logging is almost useless: at this phase logfile is absent
-            XLOG::l.e("Failed command '{}'", wtools::ConvertToUTF8(cmd));
+            XLOG::l.e("Failed command '{}'", wtools::ToUtf8(cmd));
             return false;
         }
     }
@@ -2700,7 +2700,7 @@ std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
     if (str.empty()) return std::wstring{str};
 
     auto log_error_and_return_default = [](std::wstring_view str) {
-        XLOG::l("Can't expand the string #1 '{}' [{}]", ConvertToUTF8(str),
+        XLOG::l("Can't expand the string #1 '{}' [{}]", ToUtf8(str),
                 GetLastError());
         return std::wstring{str};
     };

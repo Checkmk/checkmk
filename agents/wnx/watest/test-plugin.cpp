@@ -328,35 +328,35 @@ TEST(PluginTest, ConfigFolders) {
         std::string s(yml_var::kCore);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
     }
 
     {
         std::string s(yml_var::kBuiltinPlugins);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
     }
 
     {
         std::string s(yml_var::kUserPlugins);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetUserPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetUserPluginsDir()) + "\\");
     }
 
     {
         std::string s(yml_var::kAgent);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetUserDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetUserDir()) + "\\");
     }
 
     {
         std::string s(yml_var::kLocal);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetLocalDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetLocalDir()) + "\\");
     }
 
     {
@@ -719,8 +719,8 @@ TEST(PluginTest, FilesAndFolders) {
             auto f = groups::plugins.folders();
             XLOG::l(XLOG::kStdio | XLOG::kInfo)(
                 "\n\nTEST IS SKIPPED> YOU HAVE NO PLUGINS {} {} {} {}\n\n\n ",
-                wtools::ConvertToUTF8(f[0]), wtools::ConvertToUTF8(f[1]),
-                wtools::ConvertToUTF8(f[2]), wtools::ConvertToUTF8(f[3]));
+                wtools::ToUtf8(f[0]), wtools::ToUtf8(f[1]),
+                wtools::ToUtf8(f[2]), wtools::ToUtf8(f[3]));
             return;
         }
 

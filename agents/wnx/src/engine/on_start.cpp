@@ -139,7 +139,7 @@ bool LoadConfig(AppType Type, const std::wstring& ConfigFile) {
     }
 
     XLOG::l.i("Loaded start config {}",
-              wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
+              wtools::ToUtf8(cma::cfg::GetPathOfLoadedConfig()));
     return true;
 }
 

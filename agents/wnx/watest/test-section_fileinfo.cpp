@@ -568,7 +568,7 @@ TEST(FileInfoTest, Reality) {
                 auto russian_file = p / test_russian_file;
                 auto w_name = russian_file.wstring();
                 auto ut8_name = russian_file.u8string();
-                auto utf8_name_2 = wtools::ConvertToUTF8(w_name);
+                auto utf8_name_2 = wtools::ToUtf8(w_name);
                 EXPECT_TRUE(std::find(files.begin(), files.end(), w_name) !=
                             std::end(files));
             } catch (const std::exception& e) {

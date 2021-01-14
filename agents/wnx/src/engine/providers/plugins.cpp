@@ -126,7 +126,7 @@ void PluginsProvider::UpdatePluginMapCmdLine(PluginMap& pm,
         auto cmd_line = mc.buildCommandLine(fname);
         if (!cmd_line.empty()) {
             XLOG::d.i("A Module changes command line of the plugin '{}'",
-                      wtools::ConvertToUTF8(cmd_line));
+                      wtools::ToUtf8(cmd_line));
             entry.setCmdLine(cmd_line);
         }
     }

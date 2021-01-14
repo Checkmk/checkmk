@@ -1,26 +1,22 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
-// provides basic api to start and stop service
 #include "stdafx.h"
 
 #include "providers/spool.h"
 
-#include <fmt/format.h>
-
 #include <chrono>
 #include <filesystem>
-#include <regex>
 #include <string>
 #include <string_view>
-#include <tuple>
 
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/wtools.h"
-#include "glob_match.h"
 #include "logger.h"
-#include "read_file.h"
 #include "tools/_raii.h"
-#include "tools/_xlog.h"
 
 namespace cma::provider {
 
@@ -28,20 +24,17 @@ void SpoolProvider::loadConfig() {}
 
 void SpoolProvider::updateSectionStatus() {}
 
-bool IsDirectoryValid(const std::filesystem::path &Dir) {
-    using namespace cma::cfg;
+bool IsDirectoryValid(const std::filesystem::path &dir) {
     namespace fs = std::filesystem;
+
     std::error_code ec;
-    if (!fs::exists(Dir, ec)) {
-        XLOG::l.crit(
-            "Installation is bad. Spool directory '{}' is absent ec:{}", Dir,
-            ec.value());
+    if (!fs::exists(dir, ec)) {
+        XLOG::l("Spool directory '{}' is absent error [{}]", dir, ec.value());
         return false;
     }
 
-    if (!fs::is_directory(Dir, ec)) {
-        XLOG::l.crit("Installation is bad. '{}' isn't directory {}", Dir,
-                     ec.value());
+    if (!fs::is_directory(dir, ec)) {
+        XLOG::l("'{}' isn't directory, error [{}]", dir, ec.value());
         return false;
     }
 
@@ -49,62 +42,63 @@ bool IsDirectoryValid(const std::filesystem::path &Dir) {
 }
 
 // direct conversion from LWA
-bool IsSpoolFileValid(const std::filesystem::path &Path) {
-    using namespace std::chrono;
+bool IsSpoolFileValid(const std::filesystem::path &path) {
     namespace fs = std::filesystem;
 
     // Checking the file is good
     std::error_code ec;
-    if (!fs::exists(Path, ec)) {
-        XLOG::d("File is absent. '{}' ec:{}", Path, ec.value());
+    if (!fs::exists(path, ec)) {
+        XLOG::d("File is absent. '{}' ec:{}", path, ec.value());
         return false;
     }
 
-    if (!fs::is_regular_file(Path, ec)) {
-        XLOG::d("File is bad. '{}' ec:{}", Path, ec.value());
+    if (!fs::is_regular_file(path, ec)) {
+        XLOG::d("File is bad. '{}' ec:{}", path, ec.value());
         return false;
     }
 
-    const auto filename = Path.filename().string();
-    const int max_age = 0 != isdigit(filename[0]) ? atoi(filename.c_str()) : -1;
+    const auto filename = path.filename().string();
+    const int max_age = isdigit(filename[0]) != 0 ? atoi(filename.c_str()) : -1;
 
-    if (max_age >= 0) {
-        // extremely stupid
-        // different clocks no conversion between clocks
-        // only in C++ 20
-        auto ftime = fs::last_write_time(Path, ec);
-        if (ec.value() != 0) {
-            XLOG::l("Crazy file{} gives ec : {}", Path, ec.value());
-            return false;
-        }
-        const auto age = duration_cast<seconds>(
-                             fs::_File_time_clock::now().time_since_epoch() -
-                             ftime.time_since_epoch())
-                             .count();
-        if (age >= max_age) {
-            XLOG::l.t() << "    " << filename
-                        << ": skipping outdated file: age is " << age
-                        << " sec, "
-                        << "max age is " << max_age << " sec.";
-            return false;
-        }
+    if (max_age < 0) {
+        return true;
     }
 
-    return true;
+    // Name of the file contains age
+    // extremely stupid
+    // different clocks no conversion between clocks
+    // only in C++ 20
+    auto ftime = fs::last_write_time(path, ec);
+    if (ec.value() != 0) {
+        XLOG::l("Crazy file{} gives ec : {}", path, ec.value());
+        return false;
+    }
+    const auto age = std::chrono::duration_cast<std::chrono::seconds>(
+                         fs::_File_time_clock::now().time_since_epoch() -
+                         ftime.time_since_epoch())
+                         .count();
+    if (age < max_age) {
+        return true;
+    }
+
+    XLOG::l.t() << "    " << filename << ": skipping outdated file: age is "
+                << age << " sec, "
+                << "max age is " << max_age << " sec.";
+    return false;
 }
 
 std::string SpoolProvider::makeBody() {
     namespace fs = std::filesystem;
-    XLOG::t(XLOG_FUNC + " entering");
 
     fs::path dir = cma::cfg::GetSpoolDir();
-    // check presence of the folder
+
     if (!IsDirectoryValid(dir)) {
         XLOG::d("Spool directory absent. But spool is requested");
         return {};
     }
 
     std::string out;
+
     // Look for files in the spool directory and append these files to
     // the agent output. The name of the files may begin with a number
     // of digits. If this is the case then it is interpreted as a time
@@ -121,7 +115,7 @@ std::string SpoolProvider::makeBody() {
         auto data = cma::tools::ReadFileInVector(path);
         if (data) {
             auto add_size = data->size();
-            if (0 == add_size) continue;
+            if (add_size == 0) continue;
 
             auto old_size = out.size();
             try {

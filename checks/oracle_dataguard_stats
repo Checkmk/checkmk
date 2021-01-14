@@ -150,20 +150,16 @@ def check_oracle_dataguard_stats(item, params, parsed):
                          % dgdata['switchover_status']
 
     if dgdata['database_role'] == 'PHYSICAL STANDBY':
+        mrp_status = dgdata.get('mrp_status')
 
-        if 'mrp_status' in dgdata:
-
+        if mrp_status:
             # todo: check against rule for automatic managed recovery
-            if dgdata['mrp_status']:
-                yield 0, "Managed Recovery Process state %s" % dgdata['mrp_status'].lower()
-                try:
-                    if dgdata['open_mode'] == 'READ ONLY WITH APPLY':
-                        value = params.get("active_dataguard_option")
-                        yield value, 'Active Data-Guard found'
-                except KeyError:
-                    pass
-            else:
-                yield 2, "Managed Recovery Process not started"
+            yield 0, "Managed Recovery Process state %s" % mrp_status.lower()
+
+            if dgdata.get('open_mode', '') == 'READ ONLY WITH APPLY':
+                yield params.get('active_dataguard_option'), 'Active Data-Guard found'
+        elif mrp_status is not None:
+            yield 2, 'Managed Recovery Process not started'
 
         for dgstat_param in sorted(dgdata['dgstat']):
 

@@ -76,7 +76,7 @@ def check_proxmox_ve_vm_backup_status(
     ...       '  "transfer_time": 100}}']])):
     ...   print(result)
     Result(state=<State.OK: 0>, summary='Age: 1 day 0 hours')
-    Metric('age', 86400.0, levels=(93600.0, 180000.0))
+    Metric('age', 86400.0, levels=(93600.0, 180000.0), boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Time: 2020-12-06 21:28:02')
     Result(state=<State.OK: 0>, summary='Size: 1.00 TiB')
     Result(state=<State.OK: 0>, summary='Bandwidth: 11.0 GB/s')
@@ -104,6 +104,7 @@ def check_proxmox_ve_vm_backup_status(
             metric_name="age",
             render_func=render.timespan,
             label="Age",
+            boundaries=(0, None),
         )
     yield Result(state=State.OK, summary=f"Time: {last_backup.get('started_time')}")
     yield Result(state=State.OK, summary=f"Size: {render.bytes(last_backup['archive_size'])}")

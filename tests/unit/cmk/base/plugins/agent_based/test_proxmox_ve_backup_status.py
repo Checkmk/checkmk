@@ -45,7 +45,7 @@ BACKUP_DATA = [[
         parse_proxmox_ve_vm_backup_status(BACKUP_DATA),
         (
             Result(state=State.OK, summary='Age: 18 hours 39 minutes'),
-            Metric('age', 67157.0),
+            Metric('age', 67157.0, boundaries=(0.0, None)),
             Result(state=State.OK, summary='Time: 2020-04-16 22:20:43'),
             Result(state=State.OK, summary='Size: 1.00 TiB'),
             Result(state=State.OK, summary='Bandwidth: 2.20 GB/s'),
@@ -60,7 +60,7 @@ BACKUP_DATA = [[
             Result(
                 state=State.WARN,
                 summary='Age: 18 hours 39 minutes (warn/crit at 12 hours 0 minutes/1 day 0 hours)'),
-            Metric('age', 67157.0, levels=(43200.0, 86400.0)),
+            Metric('age', 67157.0, levels=(43200.0, 86400.0), boundaries=(0.0, None)),
             Result(state=State.OK, summary='Time: 2020-04-16 22:20:43'),
             Result(state=State.OK, summary='Size: 1.00 TiB'),
             Result(state=State.OK, summary='Bandwidth: 2.20 GB/s'),

@@ -46,7 +46,6 @@
 #include "read_file.h"
 #include "realtime.h"
 #include "tools/_win.h"
-#include "tools/_xlog.h"
 
 namespace cma::srv {
 // mini processes of the global type

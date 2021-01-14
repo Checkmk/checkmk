@@ -1,6 +1,8 @@
-// test-section-providers.cpp
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
-//
 #include "pch.h"
 
 #include "cfg.h"
@@ -207,23 +209,32 @@ TEST(SectionProviders, BasicCheckMkOnlyFrom) {
     }
 }
 
-TEST(SectionProviders, BasicServices) {
-    using namespace cma::section;
-    using namespace cma::provider;
+class SectionProvidersFixture : public ::testing::Test {
+public:
+    Services& getEngine() { return services_provider.getEngine(); }
 
-    cma::srv::SectionProvider<Services> services_provider;
-    EXPECT_EQ(services_provider.getEngine().getUniqName(), kServices);
+private:
+    srv::SectionProvider<Services> services_provider;
+};
 
-    auto& e5 = services_provider.getEngine();
-    auto sp = e5.generateContent(section_name);
-    ASSERT_TRUE(!sp.empty());
-    auto result = cma::tools::SplitString(sp, "\n");
+TEST_F(SectionProvidersFixture, ServicesCtor) {
+    EXPECT_EQ(getEngine().getUniqName(), section::kServices);
+}
+TEST_F(SectionProvidersFixture, ServicesIntegration) {
+    auto content = getEngine().generateContent(section_name);
+
+    // Validate content is presented and correct
+    ASSERT_TRUE(!content.empty());
+    auto result = tools::SplitString(content, "\n");
     EXPECT_TRUE(result.size() > 20);
+
+    // Validate Header
     EXPECT_EQ(result[0], "<<<services>>>");
 
+    // Validate Body
     auto count = result.size();
     for (size_t i = 1; i < count; ++i) {
-        auto values = cma::tools::SplitString(result[i], " ", 2);
+        auto values = tools::SplitString(result[i], " ", 2);
         EXPECT_FALSE(values[0].empty());
         EXPECT_FALSE(values[1].empty());
         EXPECT_FALSE(values[2].empty());

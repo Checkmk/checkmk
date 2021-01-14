@@ -51,10 +51,27 @@ value_store_fixture = get_value_store_fixture(interfaces)
             [u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
         ],
         [
+            '1', 'wlp3s0', 'wlp3s0', '6', 0, '2', 130923553, 217262, 16078, 0, 0, 0, 23586281,
+            142684, 0, 0, 0, 0, 0, '\xbb\xbb\xbb\xbb\xbb\xbb'
+        ],
+    ),
+    (
+        [
+            [u'[start_iplink]'],
+            [
+                u'1:', u'wlp3s0:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500', u'qdisc',
+                u'fq_codel', u'state', u'UP', u'mode', u'DORMANT', u'group', u'default', u'qlen',
+                u'1000'
+            ],
+            [u'link/ether', u'BB:BB:BB:BB:BB:BB', u'brd', u'BB:BB:BB:BB:BB:BB'],
+            [u'[end_iplink]'],
+            [u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
+        ],
+        [
             '1', 'wlp3s0', 'wlp3s0', '6', 0, '1', 130923553, 217262, 16078, 0, 0, 0, 23586281,
             142684, 0, 0, 0, 0, 0, '\xbb\xbb\xbb\xbb\xbb\xbb'
         ],
-    )
+    ),
 ])
 def test_parse_lnx_if(string_table, result):
     assert lnx_if.parse_lnx_if(string_table)[0][0] == interfaces.Interface(*result)

@@ -1,0 +1,23 @@
+Title: lnx_if: Treat only interfaces with UP and LOWER_UP (bracket info from ip address) as UP
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610640335
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+Previously we only checked {{<...,UP>}} in the bracket info and treated this
+interface as {{UP}} if and only if no output of ethtool is available.
+
+Please have a look at the following scenarios and how we now determine whether
+an interface is {{UP}}:
+<ul>
+<li>{{<BROADCAST,MULTICAST,UP,LOWER_UP>}} means that this interface has a link
+and is UP</li>
+<li>{{<NO-CARRIER,BROADCAST,MULTICAST,UP>}} means that this interface is
+configured and ADMIN UP but has no link</li>
+<li>{{<BROADCAST,MULTICAST>}} means that this interface is not configured</li>
+</ul>

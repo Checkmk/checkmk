@@ -558,7 +558,7 @@ def load_man_page(name: str) -> Optional[ManPage]:
     header["agents"] = [a.strip() for a in header["agents"].split(",")]
 
     if 'catalog' not in header:
-        header['catalog'] = ['unsorted']
+        header['catalog'] = 'unsorted'
     man_page['header'] = header
 
     return man_page

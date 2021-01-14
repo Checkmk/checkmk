@@ -237,6 +237,8 @@ class ModeCheckPluginTopic(WatoMode):
             self._topic_title = self._titles.get(self._path[1], self._path[1])
 
     def title(self):
+        if self._topic == "unsorted":
+            return "unsorted"
         return self._topic_title
 
     def page(self):
@@ -438,6 +440,11 @@ class ModeCheckManPage(WatoMode):
                                        ("" if self._check_type == "check-mk" else " Discovery"),
                 **self._manpage,
             }
+        else:
+            raise MKUserError(
+                None,
+                _("Could not detect type of manpage: %s. Maybe the check is missing ") %
+                self._check_type)
 
     def title(self):
         return self._manpage["header"]["title"]

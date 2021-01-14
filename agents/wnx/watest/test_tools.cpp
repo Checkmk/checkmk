@@ -183,8 +183,8 @@ TempCfgFs::TempCfgFs() {
     root_ = base_ / "r";
     fs::create_directories(root_);
     data_ = base_ / "d";
-    fs::create_directories(base_);
-    cma::cfg::GetCfg().pushFolders(root_, base_);
+    fs::create_directories(data_);
+    cma::cfg::GetCfg().pushFolders(root_, data_);
 }
 
 TempCfgFs ::~TempCfgFs() {

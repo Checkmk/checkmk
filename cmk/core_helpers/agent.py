@@ -111,6 +111,39 @@ class AgentFetcher(Fetcher[AgentRawData]):
     pass
 
 
+class PiggybackMarker(NamedTuple):
+    hostname: HostName
+
+    @staticmethod
+    def is_header(line: bytes) -> bool:
+        return (line.strip().startswith(b'<<<<') and line.strip().endswith(b'>>>>') and
+                not PiggybackMarker.is_footer(line))
+
+    @staticmethod
+    def is_footer(line: bytes) -> bool:
+        return line.strip() == b'<<<<>>>>'
+
+    @classmethod
+    def from_headerline(
+        cls,
+        line: bytes,
+        translation: TranslationOptions,
+        *,
+        encoding_fallback: str,
+    ) -> "PiggybackMarker":
+        hostname = ensure_str(line.strip()[4:-4])
+        assert hostname
+        hostname = translate_piggyback_host(
+            hostname,
+            translation,
+            encoding_fallback=encoding_fallback,
+        )
+        # Protect Checkmk against unallowed host names. Normally source scripts
+        # like agent plugins should care about cleaning their provided host names
+        # up, but we need to be sure here to prevent bugs in Checkmk code.
+        return cls(regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", hostname))
+
+
 class SectionMarker(NamedTuple):
     name: SectionName
     cached: Optional[Tuple[int, int]]
@@ -123,8 +156,8 @@ class SectionMarker(NamedTuple):
     def is_header(line: bytes) -> bool:
         line = line.strip()
         return (line.startswith(b'<<<') and line.endswith(b'>>>') and
-                not SectionMarker.is_footer(line) and not PiggybackParser.is_header(line) and
-                not PiggybackParser.is_footer(line))
+                not SectionMarker.is_footer(line) and not PiggybackMarker.is_header(line) and
+                not PiggybackMarker.is_footer(line))
 
     @staticmethod
     def is_footer(line: bytes) -> bool:
@@ -255,12 +288,12 @@ class ParserState(abc.ABC):
 
     def to_piggyback_parser(
         self,
-        piggybacked_hostname: HostName,
+        header: PiggybackMarker,
     ) -> "PiggybackParser":
         return PiggybackParser(
             self.hostname,
             self.host_sections,
-            piggybacked_hostname,
+            header,
             section_info=self.section_info,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
@@ -277,16 +310,16 @@ class NOOPParser(ParserState):
             return self
 
         try:
-            if PiggybackParser.is_header(line):
-                piggybacked_hostname = PiggybackParser.parse_header(
+            if PiggybackMarker.is_header(line):
+                piggyback_header = PiggybackMarker.from_headerline(
                     line,
                     self.translation,
                     encoding_fallback=self.encoding_fallback,
                 )
-                if piggybacked_hostname == self.hostname:
+                if piggyback_header.hostname == self.hostname:
                     # Unpiggybacked "normal" host
                     return self
-                return self.to_piggyback_parser(piggybacked_hostname)
+                return self.to_piggyback_parser(piggyback_header)
             if SectionMarker.is_header(line):
                 return self.to_host_section_parser(SectionMarker.from_headerline(line))
         except Exception:
@@ -300,7 +333,7 @@ class PiggybackParser(ParserState):
         self,
         hostname: HostName,
         host_sections: AgentHostSections,
-        piggybacked_hostname: HostName,
+        piggyback_header: PiggybackMarker,
         *,
         section_info: MutableMapping[SectionName, SectionMarker],
         translation: TranslationOptions,
@@ -315,28 +348,28 @@ class PiggybackParser(ParserState):
             encoding_fallback=encoding_fallback,
             logger=logger,
         )
-        self.piggybacked_hostname: Final = piggybacked_hostname
+        self.piggyback_header: Final = piggyback_header
 
     def __call__(self, line: bytes) -> ParserState:
         if not line.strip():
             return self
 
         try:
-            if PiggybackParser.is_footer(line):
+            if PiggybackMarker.is_footer(line):
                 return self.to_noop_parser()
-            if PiggybackParser.is_header(line):
+            if PiggybackMarker.is_header(line):
                 # Footer is optional.
-                piggybacked_hostname = PiggybackParser.parse_header(
+                piggyback_header = PiggybackMarker.from_headerline(
                     line,
                     self.translation,
                     encoding_fallback=self.encoding_fallback,
                 )
-                if piggybacked_hostname == self.hostname:
+                if piggyback_header.hostname == self.hostname:
                     # Unpiggybacked "normal" host
                     return self.to_noop_parser()
-                return self.to_piggyback_parser(piggybacked_hostname)
+                return self.to_piggyback_parser(piggyback_header)
             self.host_sections.piggybacked_raw_data.setdefault(
-                self.piggybacked_hostname,
+                self.piggyback_header.hostname,
                 [],
             ).append(line)
         except Exception:
@@ -344,34 +377,6 @@ class PiggybackParser(ParserState):
             return self.to_noop_parser()
 
         return self
-
-    @staticmethod
-    def is_header(line: bytes) -> bool:
-        return (line.strip().startswith(b'<<<<') and line.strip().endswith(b'>>>>') and
-                not PiggybackParser.is_footer(line))
-
-    @staticmethod
-    def is_footer(line: bytes) -> bool:
-        return line.strip() == b'<<<<>>>>'
-
-    @staticmethod
-    def parse_header(
-        line: bytes,
-        translation: TranslationOptions,
-        *,
-        encoding_fallback: str,
-    ) -> HostName:
-        piggybacked_hostname = ensure_str(line.strip()[4:-4])
-        assert piggybacked_hostname
-        piggybacked_hostname = translate_piggyback_host(
-            piggybacked_hostname,
-            translation,
-            encoding_fallback=encoding_fallback,
-        )
-        # Protect Checkmk against unallowed host names. Normally source scripts
-        # like agent plugins should care about cleaning their provided host names
-        # up, but we need to be sure here to prevent bugs in Checkmk code.
-        return regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", piggybacked_hostname)
 
 
 class HostSectionParser(ParserState):
@@ -403,16 +408,16 @@ class HostSectionParser(ParserState):
             return self
 
         try:
-            if PiggybackParser.is_header(line):
-                piggybacked_hostname = PiggybackParser.parse_header(
+            if PiggybackMarker.is_header(line):
+                piggyback_header = PiggybackMarker.from_headerline(
                     line,
                     self.translation,
                     encoding_fallback=self.encoding_fallback,
                 )
-                if piggybacked_hostname == self.hostname:
+                if piggyback_header.hostname == self.hostname:
                     # Unpiggybacked "normal" host
                     return self
-                return self.to_piggyback_parser(piggybacked_hostname)
+                return self.to_piggyback_parser(piggyback_header)
             if SectionMarker.is_footer(line):
                 return self.to_noop_parser()
             if SectionMarker.is_header(line):

@@ -305,13 +305,10 @@ table.data {
   th {
     padding: 0 8px 2px;
     font-size: $font-size-default;
-    font-weight: $font-weight-bold;
+    font-weight: $font-weight-default;
     letter-spacing: $letter-spacing-table;
     color: $primary-link-color;
     text-align: left;
-    text-transform: uppercase;
-    background: transparent;
-    border: none;
 
     /* Table header links (For sorting) */
     &.sort:hover {
@@ -327,9 +324,8 @@ table.data {
   }
 
   td {
-    padding: 4px 8px;
     font-size: $font-size-default;
-    font-weight: 500;
+    font-weight: $font-weight-default;
     line-height: 1.3;
     letter-spacing: $letter-spacing-default;
     color: $font-color;
@@ -520,11 +516,6 @@ table.data {
   body.main .popup_menu & tr th span.toggle_actions img {
     filter: $treeangle-img-filter;
   }
-
-  tr.groupheader,
-  tr.groupheader.td {
-    background-color: transparent;
-  }
 }
 
 table.data .popup_menu,
@@ -543,19 +534,37 @@ td.wide {
 
 /* Group header used in table, box and tiled layout */
 table.groupheader {
-  padding: 6px 0 3px;
+  width: 100%;
+  padding: 4px 0 4px 8px;
   margin: 0;
-  border: none;
+  font-size: $font-size-default;
+  font-weight: $font-weight-bold;
+  background-color: $headline-color;
+  border-radius: $theme-border-radius $theme-border-radius 0 0;
 
-  tr.groupheader td,
-  tr.groupheader td a {
-    font-size: $theme-font-table-header;
-    font-weight: $font-weight-default;
+  td {
+    text-align: left;
+
+    &:last-child {
+      width: 100%;
+    }
+  }
+
+  a {
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &:not(:first-child) {
+    margin-top: 2 * $spacing;
   }
 }
 
-tr.groupheader a:hover {
-  text-decoration: underline;
+tr.groupheader:not(:first-child) table.groupheader {
+  margin-top: 2 * $spacing;
 }
 
 /* TODO: Reproduce these .grouped_row_header elements */
@@ -573,84 +582,12 @@ tr.data.group_end {
   border-bottom: 2px solid rgb(204, 204, 204);
 }
 
-/* state in group header must have fixed width */
-.groupheader td.state {
-  width: 50px;
-  padding: 2px 5px;
-  border: 1px solid rgb(0, 0, 0);
-  border-radius: 5px;
-  box-shadow: 1px 1px 2px rgb(68, 68, 68);
-}
-
-tr.groupheader {
-  td {
-    padding: 0;
-    margin: 0;
-    font-weight: bold;
-    color: $font-color;
-    background: transparent;
-    border-style: none;
-
-    &.groupheader .groupheader tbody tr td {
-      display: inline-block;
-      padding: 12px 0 4px;
-      font-size: $theme-font-table-header;
-      font-weight: $font-weight-default;
-      letter-spacing: $letter-spacing-table;
-      color: $font-color;
-      vertical-align: baseline;
-
-      &.state {
-        width: auto;
-        padding: 0 8px;
-        margin-top: 12px;
-        font-size: 14px;
-        text-transform: uppercase;
-        box-shadow: none;
-      }
-
-      a,
-      body.main .popup_menu span,
-      body.main .popup_menu & span {
-        display: inline-block;
-        font-size: $theme-font-table-header;
-        font-weight: $font-weight-default;
-        letter-spacing: $letter-spacing-table;
-        color: $font-color;
-      }
-
-      &.state a,
-      &.state body.main .popup_menu span,
-      body.main .popup_menu &.state span {
-        font-size: 14px;
-        text-transform: uppercase;
-      }
-
-      &.state.hstate1 a,
-      &.state.hstate1 body.main .popup_menu span,
-      body.main .popup_menu &.state.hstate1 span {
-        color: $lightgrey;
-      }
-    }
-  }
-
-  a,
-  body.main .popup_menu span,
-  body.main .popup_menu & span {
-    color: $font-color;
-    text-decoration: none;
-  }
-
-  &:first-of-type td.groupheader table.groupheader {
-    &,
-    tbody tr td {
-      padding-top: 0;
-
-      .state {
-        margin-top: 0;
-      }
-    }
-  }
+tr.groupheader td {
+  padding: 0;
+  margin: 0;
+  font-weight: $font-weight-bold;
+  color: $font-color;
+  background: transparent;
 }
 
 img.iconbutton,
@@ -1296,7 +1233,6 @@ body.main .popup_menu {
   }
 }
 
-body.main .popup_menu,
 body.main .popup_menu {
   a,
   span {

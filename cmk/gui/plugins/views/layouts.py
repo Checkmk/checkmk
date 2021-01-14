@@ -168,15 +168,8 @@ class GroupedBoxesLayout(Layout):
                       show_checkboxes):
         repeat_heading_every = 20  # in case column_headers is "repeat"
 
-        html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
-        html.open_tr(class_="groupheader")
-        painted = False
-        for cell in group_cells:
-            if painted:
-                html.td(",&nbsp;")
-            painted = cell.paint(rows_with_ids[0][1])
-        html.close_tr()
-        html.close_table()
+        if group_cells:
+            self._show_group_header_table(group_cells, rows_with_ids[0][1])
 
         html.open_table(class_="data")
         odd = "odd"
@@ -243,6 +236,17 @@ class GroupedBoxesLayout(Layout):
 
         html.close_table()
         init_rowselect(view)
+
+    def _show_group_header_table(self, group_cells, first_row):
+        html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
+        html.open_tr(class_="groupheader")
+        painted = False
+        for cell in group_cells:
+            if painted:
+                html.td(",&nbsp;")
+            painted = cell.paint(first_row)
+        html.close_tr()
+        html.close_table()
 
     def _show_header_line(self, cells, show_checkboxes):
         html.open_tr()
@@ -777,7 +781,7 @@ class LayoutMatrix(Layout):
 
         painter_options = PainterOptions.get_instance()
         for groups, unique_row_ids, matrix_cells in \
-                 create_matrices(rows, group_cells, cells, num_columns):
+                create_matrices(rows, group_cells, cells, num_columns):
 
             # Paint the matrix. Begin with the group headers
             html.open_table(class_="data matrix")

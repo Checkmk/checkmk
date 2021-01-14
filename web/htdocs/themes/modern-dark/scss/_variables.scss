@@ -103,10 +103,8 @@ $color-state-2-background: $danger;
 $color-state-2-border: mix($black, $danger, 30%);
 
 $color-state-3-background: rgb(255, 179, 0);
-$color-state-3-border: rgb(255, 179, 0);
 
 $color-state-4-background: rgb(136, 136, 136);
-$color-state-4-border: rgb(123, 123, 123);
 
 $color-state-5-background: rgb(72, 203, 240);
 
@@ -135,8 +133,6 @@ $color-table-border-dark: $grey-7; // dark grey
 $color-table-background-dark: $grey-7; // dark grey
 
 $color-table-border-dark-2: rgb(49, 54, 56); // dark grey
-
-$theme-font-table-header: 16px;
 
 // -----------------------------------------------------------------------------
 // Sidebar

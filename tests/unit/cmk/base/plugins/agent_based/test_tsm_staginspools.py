@@ -23,7 +23,7 @@ NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {'foo': ['7.1', '9.
         Result(state=state.OK,
                summary='Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1',
                details='Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1'),
-        Metric('free', 1.0),
+        Metric('free', 1.0, boundaries=(0.0, 1.0)),
         Metric('tapes', 1.0),
         Metric('util', 0.071),
     ]),
@@ -38,7 +38,7 @@ NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {'foo': ['7.1', '9.
             details=
             'Total tapes: 2, Utilization: 2.0 tapes, Tapes less then 70% full: 0 (warn/crit below 2/1)'
         ),
-        Metric('free', 0.0),
+        Metric('free', 0.0, boundaries=(0.0, 2.0)),
         Metric('tapes', 2.0),
         Metric('util', 1.9780000000000002),
     ]),
@@ -56,7 +56,7 @@ def test_check(item, params, expected):
         Result(state=state.OK,
                summary='Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1',
                details='Total tapes: 1, Utilization: 0.1 tapes, Tapes less then 70% full: 1'),
-        Metric('free', 1.0),
+        Metric('free', 1.0, boundaries=(0.0, 1.0)),
         Metric('tapes', 1.0),
         Metric('util', 0.071),
         Result(state=state.UNKNOWN,
@@ -75,7 +75,7 @@ def test_check(item, params, expected):
             details=
             'Total tapes: 2, Utilization: 2.0 tapes, Tapes less then 70% full: 0 (warn/crit below 2/1)'
         ),
-        Metric('free', 0.0),
+        Metric('free', 0.0, boundaries=(0.0, 2.0)),
         Metric('tapes', 2.0),
         Metric('util', 1.9780000000000002),
     ]),

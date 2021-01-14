@@ -29,7 +29,7 @@
 #include "upgrade.h"
 
 // out of namespace
-bool G_SkypeTesting = false;
+bool g_skype_testing = false;
 
 namespace cma {
 
@@ -881,7 +881,7 @@ const wchar_t* GetMultiSzEntry(wchar_t*& Pos, const wchar_t* End) {
 // on -skype
 // verify that skype business is present
 int ExecSkypeTest() {
-    G_SkypeTesting = true;
+    g_skype_testing = true;
     XLOG::setup::DuplicateOnStdio(true);
     XLOG::setup::ColoredOutputOnStdio(true);
     ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false););
@@ -931,7 +931,7 @@ int ExecSkypeTest() {
 // on -skype
 // verify that skype business is present
 int ExecResetOhm() {
-    G_SkypeTesting = true;
+    g_skype_testing = true;
     XLOG::setup::DuplicateOnStdio(true);
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::SendStringToStdio("Resetting OHM internally\n", XLOG::Colors::yellow);

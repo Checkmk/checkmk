@@ -1,57 +1,59 @@
-// test-section_skype.cpp
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
-//
 #include "pch.h"
 
-#include <time.h>
-
-#include <chrono>
-#include <filesystem>
-#include <future>
-#include <string_view>
-
-#include "cfg.h"
-#include "cfg_details.h"
-#include "cma_core.h"
-#include "common/cfg_info.h"
 #include "providers/skype.h"
-#include "read_file.h"
 
-namespace cma::provider {  // to become friendly for wtools classes
-auto SkypeCounters = internal::GetSkypeCountersVector();
-extern std::wstring SkypeAspSomeCounter;
+namespace cma::provider {
+
+namespace {
+auto g_skype_counters = internal::GetSkypeCountersVector();
+auto g_skype_asp_some_counter = internal::GetSkypeAspSomeCounter();
+}  // namespace
 
 TEST(SectionProviderSkype, Construction) {
     SkypeProvider skype;
     EXPECT_EQ(skype.getUniqName(), cma::section::kSkype);
+}
+
+TEST(SectionProviderSkype, Counters) {
     auto vec = internal::GetSkypeCountersVector();
     EXPECT_EQ(vec->size(), 30);
-    for (auto entry : *SkypeCounters) {
+    for (auto entry : *g_skype_counters) {
         EXPECT_EQ(entry.substr(0, 3), L"LS:");
         EXPECT_TRUE(entry.find(L" - ") != std::string::npos);
     }
 }
 
+TEST(SectionProviderSkype, StandardRun) {
+    SkypeProvider skype;
+    EXPECT_TRUE(skype.generateContent().empty());
+}
+
 // Skype is tested with simulated data
 // We have no possibilities to install Skype Business on testing, dev and
 // integration machines So. Sorry. Guys. Your SK
-TEST(SectionProviderSkype, Api) {
+// We will use first best Windows counters as a base for our Skype provider
+TEST(SectionProviderSkype, SimulatedIntegration) {
     SkypeProvider skype;
 
     // verify registry keys
     EXPECT_EQ(skype.getUniqName(), cma::section::kSkype);
-    EXPECT_EQ(SkypeCounters->size(), 30);
+    EXPECT_EQ(g_skype_counters->size(), 30);
 
     // store old values
-    auto save = *SkypeCounters;
-    ON_OUT_OF_SCOPE(*SkypeCounters = save;
+    auto save = *g_skype_counters;
+    ON_OUT_OF_SCOPE(*g_skype_counters = save;
                     EXPECT_TRUE(internal::GetSkypeCountersVector()->size() ==
                                 30));  // recover
 
     // prepare testing keys array
-    SkypeCounters->clear();
-    SkypeCounters->push_back(L"Memory");
-    SkypeCounters->push_back(L"510");
+    g_skype_counters->clear();
+    g_skype_counters->push_back(L"Memory");
+    g_skype_counters->push_back(L"510");
 
     // run
     auto ret = skype.generateContent();
@@ -70,12 +72,15 @@ TEST(SectionProviderSkype, Api) {
     EXPECT_EQ(hdr1[0], "sampletime");
     EXPECT_TRUE(std::atoll(hdr1[1].c_str()) > 0);
     EXPECT_TRUE(std::atoll(hdr1[2].c_str()) > 0);
-    EXPECT_EQ(table[2],
-              fmt::format("[{}]", wtools::ConvertToUTF8((*SkypeCounters)[0])));
-    EXPECT_EQ(table[5],
-              fmt::format("[{}]", wtools::ConvertToUTF8((*SkypeCounters)[1])));
-    EXPECT_EQ(table[table.size() - 3],
-              fmt::format("[{}]", wtools::ConvertToUTF8(SkypeAspSomeCounter)));
+    EXPECT_EQ(
+        table[2],
+        fmt::format("[{}]", wtools::ConvertToUTF8((*g_skype_counters)[0])));
+    EXPECT_EQ(
+        table[5],
+        fmt::format("[{}]", wtools::ConvertToUTF8((*g_skype_counters)[1])));
+    EXPECT_EQ(
+        table[table.size() - 3],
+        fmt::format("[{}]", wtools::ConvertToUTF8(g_skype_asp_some_counter)));
 }
 
 }  // namespace cma::provider

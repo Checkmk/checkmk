@@ -380,9 +380,9 @@ def test_discovery_mssql_counters_file_sizes(section, expected_services):
 @pytest.mark.parametrize("item,params,section,expected_results", [
     ("MSSQL_VEEAMSQL2012 tempdb cache_hit_ratio", {}, big_parsed_data, [
         Result(state=state.OK, summary='Data files: 161 MiB'),
-        Metric('data_files', 168886272.0),
+        Metric('data_files', 168886272.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Log files total: 13.3 MiB'),
-        Metric('log_files', 13950976.0),
+        Metric('log_files', 13950976.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_check_mssql_counters_file_sizes(item, params, section, expected_results):
@@ -400,9 +400,9 @@ def test_check_mssql_counters_file_sizes(item, params, section, expected_results
         "node1": big_parsed_data
     }, [
         Result(state=state.OK, summary='[node1] Data files: 161 MiB'),
-        Metric('data_files', 168886272.0),
+        Metric('data_files', 168886272.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='[node1] Log files total: 13.3 MiB'),
-        Metric('log_files', 13950976.0),
+        Metric('log_files', 13950976.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_cluster_check_mssql_counters_file_sizes(item, params, section, expected_results):
@@ -429,7 +429,7 @@ def test_discovery_mssql_counters_locks_per_batch(section, expected_services):
     ("MSSQL_VEEAMSQL2012", {}, big_parsed_data, [
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='0.0'),
-        Metric('locks_per_batch', 0.0),
+        Metric('locks_per_batch', 0.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_check_mssql_locks_per_batch(item, params, section, expected_results):
@@ -449,7 +449,7 @@ def test_check_mssql_locks_per_batch(item, params, section, expected_results):
     }, [
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='[node1] 0.0'),
-        Metric('locks_per_batch', 0.0),
+        Metric('locks_per_batch', 0.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_cluster_check_mssql_locks_per_batch(item, params, section, expected_results):
@@ -482,13 +482,13 @@ def test_discovery_mssql_counters_locks(section, expected_services):
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='Requests: 0.0/s'),
-        Metric('lock_requests_per_second', 0.0),
+        Metric('lock_requests_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Timeouts: 0.0/s'),
-        Metric('lock_timeouts_per_second', 0.0),
+        Metric('lock_timeouts_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Deadlocks: 0.0/s'),
-        Metric('number_of_deadlocks_per_second', 0.0),
+        Metric('number_of_deadlocks_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Waits: 0.0/s'),
-        Metric('lock_waits_per_second', 0.0)
+        Metric('lock_waits_per_second', 0.0, boundaries=(0.0, None))
     ]),
 ])
 def test_check_mssql_locks(item, params, section, expected_results):
@@ -512,13 +512,13 @@ def test_check_mssql_locks(item, params, section, expected_results):
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='[node1] Requests: 0.0/s'),
-        Metric('lock_requests_per_second', 0.0),
+        Metric('lock_requests_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='[node1] Timeouts: 0.0/s'),
-        Metric('lock_timeouts_per_second', 0.0),
+        Metric('lock_timeouts_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='[node1] Deadlocks: 0.0/s'),
-        Metric('number_of_deadlocks_per_second', 0.0),
+        Metric('number_of_deadlocks_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='[node1] Waits: 0.0/s'),
-        Metric('lock_waits_per_second', 0.0)
+        Metric('lock_waits_per_second', 0.0, boundaries=(0.0, None))
     ]),
 ])
 def test_cluster_check_mssql_locks(item, params, section, expected_results):
@@ -549,9 +549,9 @@ def test_discovery_mssql_counters_pageactivity(section, expected_services):
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='Writes: 0.0/s'),
-        Metric('page_writes_per_second', 0.0),
+        Metric('page_writes_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Lookups: 0.0/s'),
-        Metric('page_lookups_per_second', 0.0),
+        Metric('page_lookups_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_check_mssql_counters_pageactivity(item, params, section, expected_results):
@@ -573,9 +573,9 @@ def test_check_mssql_counters_pageactivity(item, params, section, expected_resul
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='[node1] Writes: 0.0/s'),
-        Metric('page_writes_per_second', 0.0),
+        Metric('page_writes_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='[node1] Lookups: 0.0/s'),
-        Metric('page_lookups_per_second', 0.0),
+        Metric('page_lookups_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_cluster_check_mssql_counters_pageactivity(item, params, section, expected_results):
@@ -607,7 +607,7 @@ def test_discovery_mssql_counters_sqlstats(section, expected_services):
     ("MSSQL_VEEAMSQL2012:SQL_Statistics None sql_compilations/sec", {}, big_parsed_data, [
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='0.0/s'),
-        Metric('sql_compilations_per_second', 0.0),
+        Metric('sql_compilations_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_check_mssql_counters_sqlstats(item, params, section, expected_results):
@@ -628,7 +628,7 @@ def test_check_mssql_counters_sqlstats(item, params, section, expected_results):
     }, [
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='[node1] 0.0/s'),
-        Metric('sql_compilations_per_second', 0.0),
+        Metric('sql_compilations_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_cluster_check_mssql_counters_sqlstats(item, params, section, expected_results):
@@ -660,11 +660,11 @@ def test_discovery_mssql_counters_transactions(section, expected_services):
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='Transactions: 0.0/s'),
-        Metric('transactions_per_second', 0.0),
+        Metric('transactions_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Write Transactions: 0.0/s'),
-        Metric('write_transactions_per_second', 0.0),
+        Metric('write_transactions_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Tracked Transactions: 0.0/s'),
-        Metric('tracked_transactions_per_second', 0.0),
+        Metric('tracked_transactions_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_check_mssql_counters_transactions(item, params, section, expected_results):
@@ -687,11 +687,11 @@ def test_check_mssql_counters_transactions(item, params, section, expected_resul
         IgnoreResults(value="Cannot calculate rates yet"),
         IgnoreResults(value="Cannot calculate rates yet"),
         Result(state=state.OK, summary='[node1] Transactions: 0.0/s'),
-        Metric('transactions_per_second', 0.0),
+        Metric('transactions_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='[node1] Write Transactions: 0.0/s'),
-        Metric('write_transactions_per_second', 0.0),
+        Metric('write_transactions_per_second', 0.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='[node1] Tracked Transactions: 0.0/s'),
-        Metric('tracked_transactions_per_second', 0.0),
+        Metric('tracked_transactions_per_second', 0.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_cluster_check_mssql_counters_transactions(item, params, section, expected_results):

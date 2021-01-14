@@ -52,6 +52,7 @@ def _check_mssql_file_sizes(
             levels_upper=params.get(key),
             render_func=lambda v, t=title: "%s%s: %s" % (node_info, t, render.bytes(v)),
             metric_name=key,
+            boundaries=(0, None),
         )
 
     log_files_used = counters.get("log_file(s)_used_size_(kb)")
@@ -65,6 +66,7 @@ def _check_mssql_file_sizes(
             levels_upper=levels_upper,
             render_func=render.percent,
             label="Log files used",
+            boundaries=(0, None),
         )
     else:
         yield from check_levels(
@@ -72,11 +74,13 @@ def _check_mssql_file_sizes(
             levels_upper=levels_upper,
             render_func=render.bytes,
             label="Log files used",
+            boundaries=(0, None),
         )
     yield Metric(
         "log_files_used",
         log_files_used,
         levels=levels_upper,
+        boundaries=(0, None),
     )
 
 
@@ -92,11 +96,11 @@ def check_mssql_counters_file_sizes(
     ... }):
     ...   print(result)
     Result(state=<State.OK: 0>, summary='Data files: 161 MiB')
-    Metric('data_files', 168886272.0)
+    Metric('data_files', 168886272.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Log files total: 13.3 MiB')
-    Metric('log_files', 13950976.0)
+    Metric('log_files', 13950976.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Log files used: 8.56 KiB')
-    Metric('log_files_used', 8768.0)
+    Metric('log_files_used', 8768.0, boundaries=(0.0, None))
     """
     yield from _check_mssql_file_sizes("", item, params, section)
 
@@ -113,11 +117,11 @@ def cluster_check_mssql_counters_file_sizes(
     ... }}):
     ...   print(result)
     Result(state=<State.OK: 0>, summary='[node1] Data files: 161 MiB')
-    Metric('data_files', 168886272.0)
+    Metric('data_files', 168886272.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Log files total: 13.3 MiB')
-    Metric('log_files', 13950976.0)
+    Metric('log_files', 13950976.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Log files used: 8.56 KiB')
-    Metric('log_files_used', 8768.0)
+    Metric('log_files_used', 8768.0, boundaries=(0.0, None))
     """
     for node_name, node_section in section.items():
         yield from _check_mssql_file_sizes("[%s] " % node_name, item, params, node_section)

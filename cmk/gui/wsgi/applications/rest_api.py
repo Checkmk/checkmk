@@ -10,7 +10,7 @@ import mimetypes
 import os
 import re
 import urllib.parse
-from typing import Any, Callable, Dict, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Optional, Tuple, Type, List
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
@@ -22,7 +22,7 @@ from cmk.utils import crash_reporting
 from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import UserId
 
-from cmk.gui import config
+from cmk.gui import config, userdb
 from cmk.gui.config import omd_site
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
@@ -45,27 +45,47 @@ EXCEPTION_STATUS: Dict[Type[Exception], int] = {
 WSGIEnvironment = Dict[str, Any]
 
 
-def _verify_request(environ) -> RFC7662:
+def _verify_user(environ) -> RFC7662:
+    verified: List[RFC7662] = []
+
     auth_header = environ.get('HTTP_AUTHORIZATION', '')
     if auth_header:
         user_id, secret = user_from_bearer_header(auth_header)
-        user = automation_auth(user_id, secret)
-        if user:
-            return user
+        automation_user = automation_auth(user_id, secret)
+        gui_user = gui_user_auth(user_id, secret)
 
-        user = gui_user_auth(user_id, secret)
-        if user:
-            return user
+        if not (automation_user or gui_user):
+            raise MKAuthException(f"{user_id} not authorized.")
 
-        raise MKAuthException(f"{user_id} not authorized.")
+        if automation_user:
+            verified.append(automation_user)
+
+        if gui_user:
+            verified.append(gui_user)
+
+    remote_user = environ.get('REMOTE_USER', '')
+    if remote_user and userdb.user_exists(UserId(remote_user)):
+        verified.append(rfc7662_subject(UserId(remote_user), 'webserver'))
 
     cookie = Request(environ).cookies.get(f"auth_{omd_site()}")
     if cookie:
         user_id, session_id, cookie_hash = user_from_cookie(cookie)
         check_parsed_auth_cookie(user_id, session_id, cookie_hash)
-        return rfc7662_subject(user_id, 'cookie')
+        verified.append(rfc7662_subject(user_id, 'cookie'))
 
-    raise MKAuthException("You need to be authenticated to use the REST API.")
+    if not verified:
+        raise MKAuthException("You need to be authenticated to use the REST API.")
+
+    # We pick the first successful authentication method, which means the precedence is the same
+    # as the oder in the code.
+    final_candidate = verified[0]
+    if not userdb.is_customer_user_allowed_to_login(final_candidate['sub']):
+        raise MKAuthException(f"{final_candidate['sub']} may not log in here.")
+
+    if userdb.user_locked(final_candidate['sub']):
+        raise MKAuthException(f"{final_candidate['sub']} not authorized.")
+
+    return final_candidate
 
 
 def user_from_bearer_header(auth_header: str) -> Tuple[UserId, str]:
@@ -102,7 +122,7 @@ class Authenticate:
         path_args = environ[ARGS_KEY]
 
         try:
-            rfc7662 = _verify_request(environ)
+            rfc7662 = _verify_user(environ)
         except MKException as exc:
             return problem(
                 status=401,

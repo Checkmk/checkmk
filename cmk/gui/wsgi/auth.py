@@ -12,7 +12,7 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
 from cmk.gui.config import clear_user_login, set_user_by_id
-from cmk.gui.exceptions import MKAuthException
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.login import set_auth_type, verify_automation_secret
 from cmk.gui.wsgi.type_defs import AuthType, RFC7662
 
@@ -25,8 +25,11 @@ def automation_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
 
 
 def gui_user_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
-    if userdb.check_credentials(user_id, secret):
-        return rfc7662_subject(user_id, 'cookie')
+    try:
+        if userdb.check_credentials(user_id, secret):
+            return rfc7662_subject(user_id, 'cookie')
+    except MKUserError:
+        return None
 
     return None
 

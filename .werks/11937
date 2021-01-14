@@ -1,0 +1,14 @@
+Title: REST API: support users authenticated via site Apache
+Class: feature
+Compatible: compat
+Component: core
+Date: 1610553332
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b4
+
+When a site's Apache instance is configured to perform authentication,
+the there authenticated user is used. This method only works when
+a user has already been created in Checkmk.

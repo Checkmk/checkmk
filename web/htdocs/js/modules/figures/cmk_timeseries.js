@@ -143,6 +143,12 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             .scaleExtent([0.01, 100])
             .on("zoom", () => {
                 let last_y = this._current_zoom.y;
+                if (this.lock_zoom_x) {
+                    d3.event.transform.x = 0;
+                    d3.event.transform.k = 1;
+                }
+                if (this.lock_zoom_x_scale) d3.event.transform.k = 1;
+
                 this._current_zoom = d3.event.transform;
                 if (d3.event.sourceEvent.type === "wheel") this._current_zoom.y = last_y;
                 this._zoomed();
@@ -182,11 +188,22 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         data.data.forEach(d => {
             d.date = new Date(d.timestamp * 1000);
         });
+        cmk_figures.FigureBase.prototype.update_data.call(this, data);
         this._title = data.title;
+        this._update_zoom_settings();
         this._update_crossfilter(data.data);
-        this._data = data;
         this._update_subplots(data.plot_definitions);
         this._compute_stack_values();
+    }
+
+    _update_zoom_settings() {
+        let settings = this._data.zoom_settings;
+        if (settings === undefined) return;
+
+        ["lock_zoom_x", "lock_zoom_y", "lock_zoom_x_scale"].forEach(option => {
+            if (settings[option] == undefined) return;
+            this[option] = settings[option];
+        });
     }
 
     update_gui() {

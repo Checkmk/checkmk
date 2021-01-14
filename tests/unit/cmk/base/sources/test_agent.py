@@ -6,102 +6,40 @@
 
 # pylint: disable=protected-access
 
-import os
-from pathlib import Path
-
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
-
 from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
-from cmk.utils.type_defs import result, SourceType
+from cmk.utils.type_defs import ExitSpec, AgentRawData
 
-from cmk.core_helpers import FetcherType
 from cmk.core_helpers.type_defs import Mode
-from cmk.core_helpers.agent import AgentSummarizer, NoCache
-
-from cmk.base.sources.agent import AgentSource
+from cmk.core_helpers.agent import AgentSummarizer
 
 
-class StubSummarizer(AgentSummarizer):
+class Summarizer(AgentSummarizer):
     def summarize_success(self, host_sections, *, mode):
         return 0, "", []
 
 
-class StubSource(AgentSource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args,
-            fetcher_type=FetcherType.NONE,
-            main_data_source=False,
-            **kwargs,
-        )
-
-    def to_json(self):
-        return {}
-
-    def _make_file_cache(self):
-        return NoCache(
-            path=Path(os.devnull),
-            max_age=0,
-            disabled=True,
-            use_outdated=False,
-            simulation=True,
-        )
-
-    def _make_fetcher(self):
-        return self
-
-    def _make_checker(self):
-        return self
-
-    def _make_summarizer(self):
-        return StubSummarizer(self.exit_spec)
-
-
-class TestAgentSummaryResult:
+class TestAgentSummarizer:
     @pytest.fixture
-    def hostname(self):
-        return "testhost"
+    def summarizer(self):
+        return Summarizer(ExitSpec())
 
-    @pytest.fixture(params=(mode for mode in Mode if mode is not Mode.NONE))
+    @pytest.fixture(params=Mode)
     def mode(self, request):
         return request.param
 
-    @pytest.fixture
-    def scenario(self, hostname, monkeypatch):
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.apply(monkeypatch)
-        return ts
+    def test_summarize_success(self, summarizer, mode):
+        assert summarizer.summarize_success(AgentRawData(b""), mode=mode) == (0, "", [])
 
-    @pytest.fixture
-    def source(self, hostname, mode):
-        return StubSource(
-            hostname,
-            "1.2.3.4",
-            mode=mode,
-            source_type=SourceType.HOST,
-            id_="agent_id",
-            description="agent description",
-        )
+    def test_summarize_base_exception(self, summarizer, mode):
+        assert summarizer.summarize_failure(Exception(), mode=mode) == (3, "(?)", [])
 
-    @pytest.mark.usefixtures("scenario")
-    def test_defaults(self, source):
-        assert source.summarize(result.OK(source.default_host_sections)) == (0, "", [])
+    def test_summarize_MKEmptyAgentData_exception(self, summarizer, mode):
+        assert summarizer.summarize_failure(MKEmptyAgentData(), mode=mode) == (2, "(!!)", [])
 
-    @pytest.mark.usefixtures("scenario")
-    def test_with_exception(self, source):
-        assert source.summarize(result.Error(Exception())) == (3, "(?)", [])
+    def test_summarize_MKAgentError_exception(self, summarizer, mode):
+        assert summarizer.summarize_failure(MKAgentError(), mode=mode) == (2, "(!!)", [])
 
-    @pytest.mark.usefixtures("scenario")
-    def test_with_MKEmptyAgentData_exception(self, source):
-        assert source.summarize(result.Error(MKEmptyAgentData())) == (2, "(!!)", [])
-
-    @pytest.mark.usefixtures("scenario")
-    def test_with_MKAgentError_exception(self, source):
-        assert source.summarize(result.Error(MKAgentError())) == (2, "(!!)", [])
-
-    @pytest.mark.usefixtures("scenario")
-    def test_with_MKTimeout_exception(self, source):
-        assert source.summarize(result.Error(MKTimeout())) == (2, "(!!)", [])
+    def test_summarize_MKTimeout_exception(self, summarizer, mode):
+        assert summarizer.summarize_failure(MKTimeout(), mode=mode) == (2, "(!!)", [])

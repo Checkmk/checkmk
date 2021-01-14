@@ -1,4 +1,4 @@
-$VERSION = "2.0.0b4"
+$VERSION = "2.0.0b5"
 ## filename for timestamp
 $MK_CONFDIR = $env:MK_CONFDIR
 

@@ -31,7 +31,7 @@ fi
 
 
 echo "<<<check_mk>>>"
-echo "Version: 2.0.0b4"
+echo "Version: 2.0.0b5"
 echo "AgentOS: hpux"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

@@ -1,4 +1,4 @@
-set VERSION="2.0.0b4"
+set VERSION="2.0.0b5"
 @echo off
 echo ^<^<^<winperf_if^>^>^>
 echo [dhcp_start]

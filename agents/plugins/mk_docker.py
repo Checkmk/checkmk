@@ -19,7 +19,7 @@ This plugin it will be called by the agent without any arguments.
 
 from __future__ import with_statement
 
-__version__ = "2.1.0i1"
+__version__ = "2.0.0b5"
 
 # N O T E:
 # docker is available for python versions from 2.6 / 3.3
@@ -40,7 +40,7 @@ try:
 except ImportError:
     pass
 
-__version__ = "2.0.0b4"
+__version__ = "2.0.0b5"
 
 
 def which(prg):

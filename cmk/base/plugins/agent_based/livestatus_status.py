@@ -177,7 +177,7 @@ def _generate_livestatus_results(
         else:
             yield Result(state=state.OK, notice="%s: %.1f/s" % (title, value))
 
-        yield Metric(name=key, value=value)
+        yield Metric(name=key, value=value, boundaries=(0, None))
 
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.
@@ -212,6 +212,7 @@ def _generate_livestatus_results(
                 render_func=render_func,
                 label=label,
                 notice_only=True,
+                boundaries=(0, None),
             )
 
     yield from check_levels(
@@ -220,6 +221,7 @@ def _generate_livestatus_results(
         levels_upper=params.get("levels_hosts"),
         label="Hosts",
         notice_only=True,
+        boundaries=(0, None),
     )
     yield from check_levels(
         value=int(status["num_services"]),
@@ -227,6 +229,7 @@ def _generate_livestatus_results(
         levels_upper=params.get("levels_services"),
         label="Services",
         notice_only=True,
+        boundaries=(0, None),
     )
     # Output some general information
     yield Result(
@@ -256,6 +259,7 @@ def _generate_livestatus_results(
             levels_lower=None if None in (warn_d, crit_d) else (warn_d * 86400.0, crit_d * 86400.0),
             render_func=render.timespan,
             notice_only=True,
+            boundaries=(0, None),
         )
         yield Metric("site_cert_days", secs_left / 86400.0)
 

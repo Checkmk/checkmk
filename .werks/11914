@@ -1,0 +1,14 @@
+Title: Remove 'Individual program call' option from connection tests page
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1610650008
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+The option "Individual program call" has been removed from the connection test page.
+This has not worked as intended since at least version 1.6 and brings more
+risks in terms of security than advantages for the user.

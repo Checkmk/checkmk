@@ -315,7 +315,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                      title=_("Webhook-URL"),
                      help=
                      _("Webhook URL. Setup Cisco Webex Teams Webhook " +
-                       "<a href=\"https://apphub.webex.com/teams/applications/incoming-webhooks-cisco-systems\" target=\"_blank\">here</a>"
+                       "<a href=\"https://apphub.webex.com/messaging/applications/incoming-webhooks-cisco-systems-38054\" target=\"_blank\">here</a>"
                        "<br />This URL can also be collected from the Password Store from Check_MK."
                       ),
                      choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,

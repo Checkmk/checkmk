@@ -233,9 +233,10 @@ class ModeFolder(WatoMode):
         self._folder.show_breadcrump()
 
         if not self._folder.may("read"):
-            html.message(
-                html.render_icon("autherr", cssclass="authicon") + " " +
-                self._folder.reason_why_may_not("read"))
+            reason = self._folder.reason_why_may_not("read")
+            if reason:
+                html.message(
+                    html.render_icon("autherr", cssclass="authicon") + html.render_text(reason))
 
         self._folder.show_locking_information()
         self._show_subfolders_of()
@@ -297,9 +298,7 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:
-            html.icon(html.strip_tags(subfolder.reason_why_may_not("read")),
-                      "autherr",
-                      class_=["autherr"])
+            html.icon(subfolder.reason_why_may_not("read"), "autherr", class_=["autherr"])
             html.div('', class_="hoverarea")
 
     def _show_subfolder_title(self, subfolder):
@@ -558,7 +557,7 @@ class ModeFolder(WatoMode):
             title = _("You have permission to this host.")
         else:
             icon = "autherr"
-            title = html.strip_tags(reason)
+            title = reason
 
         table.cell(_('Auth'), html.render_icon(icon, title), css="buttons", sortable=False)
 

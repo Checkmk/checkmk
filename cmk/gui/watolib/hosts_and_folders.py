@@ -90,9 +90,9 @@ class WithPermissions(object):
     def reason_why_may_not(self, how):
         try:
             self._user_needs_permission(how)
-            return False
+            return None
         except MKAuthException as e:
-            return HTML("%s" % e)
+            return "%s" % e
 
     def need_permission(self, how):
         self._user_needs_permission(how)

@@ -257,9 +257,12 @@ def check_oracle_tablespaces(
         warn, crit, _as_perc, _info_text = \
             db.get_tablespace_levels_in_bytes(max_size, params)
 
-        yield Metric(name="size",
-                     value=current_size,
-                     levels=(max_size - warn, max_size - crit) if warn and crit else None)
+        yield Metric(
+            name="size",
+            value=current_size,
+            levels=(max_size - warn, max_size - crit) if warn and crit else None,
+            boundaries=(0, max_size),
+        )
         yield Metric(
             name="used",
             value=used_size,

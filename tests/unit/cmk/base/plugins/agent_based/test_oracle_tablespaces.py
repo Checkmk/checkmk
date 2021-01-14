@@ -272,7 +272,10 @@ def test_discovery():
             details=
             'ONLINE (TEMPORARY), Size: 707 MiB, 0.51% used (168 MiB of max. 32.0 GiB), Free: 31.8 GiB'
         ),
-        Metric('size', 741343232.0, levels=(30923749785.6, 32641735884.8)),
+        Metric('size',
+               741343232.0,
+               levels=(30923749785.6, 32641735884.8),
+               boundaries=(0.0, 34359721984.0)),
         Metric('used', 176160768.0),
         Metric('max_size', 34359721984.0),
         Result(state=state.OK, summary='autoextend'),
@@ -288,10 +291,12 @@ def test_discovery():
             details=
             'ONLINE (TEMPORARY), Size: 707 MiB, 0.51% used (168 MiB of max. 32.0 GiB), Free: 31.8 GiB'
         ),
-        Metric('size',
-               741343232.0,
-               levels=(103079165.95199585, 6871944396.799999),
-               boundaries=(None, None)),
+        Metric(
+            'size',
+            741343232.0,
+            levels=(103079165.95199585, 6871944396.799999),
+            boundaries=(0.0, 34359721984.0),
+        ),
         Metric('used', 176160768.0),
         Metric('max_size', 34359721984.0),
         Result(state=state.OK, summary='autoextend'),
@@ -307,7 +312,8 @@ def test_discovery():
             details=
             'ONLINE (TEMPORARY), Size: 707 MiB, 23.76% used (168 MiB of max. 707 MiB), Free: 539 MiB'
         ),
-        Metric('size', 741343232.0, levels=(667208908.8, 704276070.4)),
+        Metric(
+            'size', 741343232.0, levels=(667208908.8, 704276070.4), boundaries=(0.0, 741343232.0)),
         Metric('used', 176160768.0),
         Metric('max_size', 741343232.0),
         Result(state=state.OK, summary='no autoextend'),
@@ -332,7 +338,10 @@ def test_discovery():
             'ONLINE (TEMPORARY), Size: 17.6 GiB, 53.12% used (10.4 GiB of max. 19.5 GiB), Free: 9.16 GiB'
         ),
         Result(state=state.OK, summary='10 increments (1.95 GiB)'),
-        Metric('size', 18874368000.0, levels=(18874368000.0, 19922944000.0)),
+        Metric('size',
+               18874368000.0,
+               levels=(18874368000.0, 19922944000.0),
+               boundaries=(0.0, 20971520000.0)),
         Metric('used', 11141120000.0),
         Metric('max_size', 20971520000.0),
         Result(state=state.OK, summary='autoextend'),
@@ -348,7 +357,10 @@ def test_discovery():
             'ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB'
         ),
         Result(state=state.OK, summary='20 increments (3.91 GiB)'),
-        Metric('size', 37748736000.0, levels=(37748736000.0, 39845888000.0)),
+        Metric('size',
+               37748736000.0,
+               levels=(37748736000.0, 39845888000.0),
+               boundaries=(0.0, 41943040000.0)),
         Metric('used', 22271754240.0),
         Metric('max_size', 41943040000.0),
         Result(state=state.OK, summary='autoextend'),
@@ -393,10 +405,12 @@ def test_check_cluster():
         Result(state=state.OK,
                summary='20 increments (3.91 GiB)',
                details='20 increments (3.91 GiB)'),
-        Metric('size',
-               37748736000.0,
-               levels=(37748736000.0, 39845888000.0),
-               boundaries=(None, None)),
+        Metric(
+            'size',
+            37748736000.0,
+            levels=(37748736000.0, 39845888000.0),
+            boundaries=(0.0, 41943040000.0),
+        ),
         Metric('used', 22271754240.0),
         Metric('max_size', 41943040000.0),
         Result(state=state.OK, summary='autoextend'),

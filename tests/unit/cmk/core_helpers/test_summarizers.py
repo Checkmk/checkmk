@@ -6,13 +6,44 @@
 # pylint: disable=undefined-variable
 import pytest  # type: ignore[import]
 
+from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
 from cmk.utils.piggyback import PiggybackRawDataInfo
-from cmk.utils.type_defs import AgentRawData
+from cmk.utils.type_defs import AgentRawData, ExitSpec
 
 import cmk.core_helpers.piggyback
-from cmk.core_helpers.agent import AgentHostSections
+from cmk.core_helpers.agent import AgentHostSections, AgentSummarizer
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 from cmk.core_helpers.type_defs import Mode
+
+
+class Summarizer(AgentSummarizer):
+    def summarize_success(self, host_sections, *, mode):
+        return 0, "", []
+
+
+class TestAgentSummarizer:
+    @pytest.fixture
+    def summarizer(self):
+        return Summarizer(ExitSpec())
+
+    @pytest.fixture(params=Mode)
+    def mode(self, request):
+        return request.param
+
+    def test_summarize_success(self, summarizer, mode):
+        assert summarizer.summarize_success(AgentRawData(b""), mode=mode) == (0, "", [])
+
+    def test_summarize_base_exception(self, summarizer, mode):
+        assert summarizer.summarize_failure(Exception(), mode=mode) == (3, "(?)", [])
+
+    def test_summarize_MKEmptyAgentData_exception(self, summarizer, mode):
+        assert summarizer.summarize_failure(MKEmptyAgentData(), mode=mode) == (2, "(!!)", [])
+
+    def test_summarize_MKAgentError_exception(self, summarizer, mode):
+        assert summarizer.summarize_failure(MKAgentError(), mode=mode) == (2, "(!!)", [])
+
+    def test_summarize_MKTimeout_exception(self, summarizer, mode):
+        assert summarizer.summarize_failure(MKTimeout(), mode=mode) == (2, "(!!)", [])
 
 
 class TestPiggybackSummarizer:

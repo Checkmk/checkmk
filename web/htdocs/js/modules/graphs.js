@@ -279,7 +279,7 @@ function render_graph(graph) {
 
     var v_axis_width = graph_vertical_axis_width(graph);
 
-    var v_line_color = [graph.render_options.foreground_color, "#a0a0a09c", "#a0a0a09c"];
+    var v_line_color = [graph.render_options.foreground_color, "#8097b19c", "#8097b19c"];
 
     // Prepare position and translation of origin
     var t_range_from = graph["time_axis"]["range"][0];

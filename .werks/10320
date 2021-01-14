@@ -1,0 +1,17 @@
+Title: Enable SAML athentication
+Class: feature
+Compatible: compat
+Component: packages
+Date: 1610626282
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+Enable SAML athentication
+    
+It is now possible to configure SAML authentication at the site apache level using mod_auth_melon.
+How to do this exactly will be explained separately in a user manual article.
+
+This feature is not supported in sles-12sp3, sles-12sp4 and sles-15 (missing dependencies).
+To use this feature please upgrade to a newer Distro.

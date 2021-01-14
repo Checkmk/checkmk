@@ -547,7 +547,7 @@ class BulkUpdateFolder(BaseSchema):
     entries = fields.Nested(UpdateFolderEntry,
                             many=True,
                             example=[{
-                                'ident': 'root',
+                                'folder': 'root',
                                 'title': 'Virtual Servers',
                                 'attributes': {
                                     'key': 'foo'

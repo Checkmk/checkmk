@@ -47,11 +47,14 @@ def get_k8s_resources_check_function(name, default, readable):
 
         if allocatable:
             usage = 100.0 * request / allocatable
-            yield check_levels(usage,
-                               'k8s_%s_usage' % name,
-                               params.get(name),
-                               infoname='Usage',
-                               human_readable_func=get_percent_human_readable)
+            yield check_levels(
+                usage,
+                'k8s_%s_usage' % name,
+                params.get(name),
+                infoname='Usage',
+                human_readable_func=get_percent_human_readable,
+                boundaries=(0, None),
+            )
 
     return check_resources
 

@@ -26,6 +26,7 @@ def check_k8s_roles(item, params, parsed):
         params.get('total'),
         infoname='Total',
         human_readable_func=int,
+        boundaries=(0, None),
     )
     yield check_levels(
         cluster_roles,
@@ -33,6 +34,7 @@ def check_k8s_roles(item, params, parsed):
         params.get('cluster_roles'),
         infoname='Cluster roles',
         human_readable_func=int,
+        boundaries=(0, None),
     )
     yield check_levels(
         roles,
@@ -40,6 +42,7 @@ def check_k8s_roles(item, params, parsed):
         params.get('roles'),
         infoname='Roles',
         human_readable_func=int,
+        boundaries=(0, None),
     )
 
 

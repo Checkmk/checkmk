@@ -37,7 +37,8 @@ def check_k8s_pods_memory(item, params, metrics):
                                what,
                                params.get(what),
                                human_readable_func=get_bytes_human_readable,
-                               infoname=title)
+                               infoname=title,
+                               boundaries=(0, None))
         except KeyError:
             yield 0, "Memory %s currently unavailable" % what
 

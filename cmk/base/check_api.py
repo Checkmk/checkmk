@@ -356,8 +356,9 @@ def _do_check_levels(value: Union[int, float], levels: Levels, human_readable_fu
 
 def _levelsinfo_ty(ty: str, warn: Warn, crit: Crit, human_readable_func: Callable,
                    unit_info: str) -> str:
-    return u" (warn/crit {0} {1}{3}/{2}{3})".format(ty, human_readable_func(warn),
-                                                    human_readable_func(crit), unit_info)
+    warn_str = "never" if warn is None else "%s%s" % (human_readable_func(warn), unit_info)
+    crit_str = "never" if crit is None else "%s%s" % (human_readable_func(crit), unit_info)
+    return " (warn/crit %s %s/%s)" % (ty, warn_str, crit_str)
 
 
 def _build_perfdata(dsname: Union[None, MetricName],

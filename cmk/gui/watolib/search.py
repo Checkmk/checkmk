@@ -260,7 +260,9 @@ class PermissionsHandler:
     def permissions_for_items(self) -> Mapping[str, Callable[[str], bool]]:
         return {
             "rules": self._permissions_rule,
-            "hosts": self._permissions_url,
+            "hosts": lambda url:
+                     (any(user.may(perm) for perm in ("wato.all_folders", "wato.see_all_folders"))
+                      or self._permissions_url(url)),
             "setup": self._permissions_url,
         }
 

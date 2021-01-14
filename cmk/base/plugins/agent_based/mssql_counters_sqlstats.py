@@ -65,6 +65,7 @@ def _check_common(
         levels_upper=params.get(counter),
         render_func=lambda v, n=node_name: "%s%.1f/s" % (n and "[%s] " % n, v),
         metric_name=counter.replace("/sec", "_per_second"),
+        boundaries=(0, None),
     )
 
 
@@ -84,7 +85,7 @@ def _check_base(
     ...     print(result)
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='1.0/s')
-    Metric('sql_compilations_per_second', 1.0)
+    Metric('sql_compilations_per_second', 1.0, boundaries=(0.0, None))
     """
     yield from _check_common(value_store, time_point, "", item, params, section)
 
@@ -113,7 +114,7 @@ def _cluster_check_base(
     ...     print(result)
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='[node1] 1.0/s')
-    Metric('sql_compilations_per_second', 1.0)
+    Metric('sql_compilations_per_second', 1.0, boundaries=(0.0, None))
     """
     for node_name, node_section in section.items():
         yield from _check_common(value_store, time_point, node_name, item, params, node_section)

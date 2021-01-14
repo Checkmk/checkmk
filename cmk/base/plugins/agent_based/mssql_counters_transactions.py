@@ -68,6 +68,7 @@ def _check_common(
             levels_upper=params.get(counter_key),
             render_func=lambda v, n=node_name, t=title: "%s%s: %.1f/s" % (n and "[%s] " % n, t, v),
             metric_name=counter_key.replace("/sec", "_per_second"),
+            boundaries=(0, None),
         )
 
 
@@ -89,11 +90,11 @@ def _check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='Transactions: 1.0/s')
-    Metric('transactions_per_second', 1.0)
+    Metric('transactions_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Write Transactions: 1.0/s')
-    Metric('write_transactions_per_second', 1.0)
+    Metric('write_transactions_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Tracked Transactions: 1.0/s')
-    Metric('tracked_transactions_per_second', 1.0)
+    Metric('tracked_transactions_per_second', 1.0, boundaries=(0.0, None))
     """
     yield from _check_common(value_store, time_point, "", item, params, section)
 
@@ -124,11 +125,11 @@ def _cluster_check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='[node1] Transactions: 1.0/s')
-    Metric('transactions_per_second', 1.0)
+    Metric('transactions_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Write Transactions: 1.0/s')
-    Metric('write_transactions_per_second', 1.0)
+    Metric('write_transactions_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Tracked Transactions: 1.0/s')
-    Metric('tracked_transactions_per_second', 1.0)
+    Metric('tracked_transactions_per_second', 1.0, boundaries=(0.0, None))
     """
     for node_name, node_section in section.items():
         yield from _check_common(value_store, time_point, node_name, item, params, node_section)

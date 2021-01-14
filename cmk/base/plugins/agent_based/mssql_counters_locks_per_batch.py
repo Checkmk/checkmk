@@ -84,6 +84,7 @@ def _check_common(
         levels_upper=params.get('locks_per_batch'),
         metric_name="locks_per_batch",
         render_func=lambda v: "%s%.1f" % (node_name and "[%s] " % node_name, v),
+        boundaries=(0, None),
     )
 
 
@@ -105,7 +106,7 @@ def _check_base(
     ...       print(result)
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='1.0')
-    Metric('locks_per_batch', 1.0)
+    Metric('locks_per_batch', 1.0, boundaries=(0.0, None))
     """
     yield from _check_common(value_store, "", item, params, section)
 
@@ -136,7 +137,7 @@ def _cluster_check_base(
     ...       print(result)
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='[node1] 1.0')
-    Metric('locks_per_batch', 1.0)
+    Metric('locks_per_batch', 1.0, boundaries=(0.0, None))
     """
     for node_name, node_section in section.items():
         yield from _check_common(value_store, node_name, item, params, node_section)

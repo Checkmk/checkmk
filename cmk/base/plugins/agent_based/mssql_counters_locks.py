@@ -73,6 +73,7 @@ def _check_common(
             levels_upper=params.get(counter_key),
             render_func=lambda v, i=node_info, t=title: "%s%s: %.1f/s" % (i, t, v),
             metric_name=counter_key.replace("/sec", "_per_second"),
+            boundaries=(0, None),
         )
 
 
@@ -96,13 +97,13 @@ def _check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='Requests: 1.0/s')
-    Metric('lock_requests_per_second', 1.0)
+    Metric('lock_requests_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Timeouts: 1.0/s')
-    Metric('lock_timeouts_per_second', 1.0)
+    Metric('lock_timeouts_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Deadlocks: 1.0/s')
-    Metric('number_of_deadlocks_per_second', 1.0)
+    Metric('number_of_deadlocks_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Waits: 1.0/s')
-    Metric('lock_waits_per_second', 1.0)
+    Metric('lock_waits_per_second', 1.0, boundaries=(0.0, None))
     """
     yield from _check_common(value_store, time_point, "", item, params, section)
 
@@ -134,13 +135,13 @@ def _cluster_check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='[node1] Requests: 1.0/s')
-    Metric('lock_requests_per_second', 1.0)
+    Metric('lock_requests_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Timeouts: 1.0/s')
-    Metric('lock_timeouts_per_second', 1.0)
+    Metric('lock_timeouts_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Deadlocks: 1.0/s')
-    Metric('number_of_deadlocks_per_second', 1.0)
+    Metric('number_of_deadlocks_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Waits: 1.0/s')
-    Metric('lock_waits_per_second', 1.0)
+    Metric('lock_waits_per_second', 1.0, boundaries=(0.0, None))
     """
     for node_name, node_section in section.items():
         yield from _check_common(

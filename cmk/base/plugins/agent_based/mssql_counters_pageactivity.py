@@ -67,6 +67,7 @@ def _check_common(
                 render_func=lambda v, n=node_name, t=title: ("%s%s: %.1f/s" %
                                                              (n and "[%s] " % n, t, v)),
                 metric_name=counter_key.replace("/sec", "_per_second"),
+                boundaries=(0, None),
             )
         except GetRateError:
             yield IgnoreResults("Cannot calculate rates yet")
@@ -90,11 +91,11 @@ def _check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='Reads: 1.0/s')
-    Metric('page_reads_per_second', 1.0)
+    Metric('page_reads_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Writes: 1.0/s')
-    Metric('page_writes_per_second', 1.0)
+    Metric('page_writes_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Lookups: 1.0/s')
-    Metric('page_lookups_per_second', 1.0)
+    Metric('page_lookups_per_second', 1.0, boundaries=(0.0, None))
     """
     yield from _check_common(value_store, time_point, "", item, params, section)
 
@@ -125,11 +126,11 @@ def _cluster_check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='[node1] Reads: 1.0/s')
-    Metric('page_reads_per_second', 1.0)
+    Metric('page_reads_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Writes: 1.0/s')
-    Metric('page_writes_per_second', 1.0)
+    Metric('page_writes_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Lookups: 1.0/s')
-    Metric('page_lookups_per_second', 1.0)
+    Metric('page_lookups_per_second', 1.0, boundaries=(0.0, None))
     """
     for node_name, node_section in section.items():
         yield from _check_common(value_store, time_point, node_name, item, params, node_section)

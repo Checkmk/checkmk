@@ -10,6 +10,7 @@ import time
 from typing import (
     cast,
     Dict,
+    final,
     Final,
     Iterable,
     List,
@@ -209,6 +210,22 @@ class SectionMarker(NamedTuple):
             separator=separator,
         )
 
+    def __str__(self) -> str:
+        opts: MutableMapping[str, str] = {}
+        if self.cached:
+            opts["cached"] = ",".join(str(c) for c in self.cached)
+        if self.encoding != "utf-8":
+            opts["encoding"] = self.encoding
+        if self.nostrip:
+            opts["nostrip"] = ""
+        if self.persist is not None:
+            opts["persist"] = str(self.persist)
+        if self.separator is not None:
+            opts["sep"] = str(ord(self.separator))
+        if not opts:
+            return f"<<<{self.name}>>>"
+        return "<<<%s:%s>>>" % (self.name, ":".join("%s(%s)" % (k, v) for k, v in opts.items()))
+
     def cache_info(self, cached_at: int) -> Optional[Tuple[int, int]]:
         # If both `persist` and `cached` are present, `cached` has priority
         # over `persist`.  I do not know whether this is correct.
@@ -223,23 +240,29 @@ class ParserState(abc.ABC):
     """Base class for the state machine.
 
     .. uml::
+        state FSM {
 
         state "NOOPState" as noop
         state "PiggybackParser" as piggy
-        state "HostSectionParser" as host
-        state c <<choice>>
+        state "PiggybackSectionParser" as psection
+        state "SectionParser" as section
+
+        noop --> section: ""<<~<STR>>>""
+        section --> section: ""<<~<STR>>>""
+        section --> piggy: ""<<<~<STR>>>>""
+
+        noop -> piggy: ""<<<~<STR>>>>""
+        piggy --> piggy: ""<<<~<>>>>""
+        piggy --> psection: ""<<~<STR>>>""
+
+        psection --> piggy: ""<<<~<STR>>>>""
+        psection --> psection: ""<<~<STR>>>""
+        psection --> noop: ""<<<~<>>>>""
+
+        }
 
         [*] --> noop
-        noop --> c
-
-        c --> host: ""<<~<STR>>>""
-        host -up-> host: ""<<~<STR>>>""
-        host -> piggy: ""<<<~<STR>>>>""
-        host -up-> noop: ""<<~<>>>""\nOR error
-
-        c --> piggy : ""<<<~<STR>>>>""
-        piggy --> piggy : ""<<<~<STR>>>>""
-        piggy -up-> noop: ""<<<~<>>>>""\nOR error
+        FSM -> noop: ERROR
 
     See Also:
         Gamma, Helm, Johnson, Vlissides (1995) Design Patterns "State pattern"
@@ -262,7 +285,28 @@ class ParserState(abc.ABC):
         self.encoding_fallback: Final = encoding_fallback
         self._logger: Final = logger
 
+    @abc.abstractmethod
+    def do_action(self, line: bytes) -> "ParserState":
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def on_section_header(self, line: bytes) -> "ParserState":
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def on_section_footer(self, line: bytes) -> "ParserState":
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def on_piggyback_header(self, line: bytes) -> "ParserState":
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def on_piggyback_footer(self, line: bytes) -> "ParserState":
+        raise NotImplementedError()
+
     def to_noop_parser(self) -> "NOOPParser":
+        self._logger.debug("Transition %s -> %s", type(self).__name__, NOOPParser.__name__)
         return NOOPParser(
             self.hostname,
             self.host_sections,
@@ -276,6 +320,7 @@ class ParserState(abc.ABC):
         self,
         section_header: SectionMarker,
     ) -> "HostSectionParser":
+        self._logger.debug("Transition %s -> %s", type(self).__name__, HostSectionParser.__name__)
         return HostSectionParser(
             self.hostname,
             self.host_sections,
@@ -290,6 +335,7 @@ class ParserState(abc.ABC):
         self,
         header: PiggybackMarker,
     ) -> "PiggybackParser":
+        self._logger.debug("Transition %s -> %s", type(self).__name__, PiggybackParser.__name__)
         return PiggybackParser(
             self.hostname,
             self.host_sections,
@@ -300,32 +346,80 @@ class ParserState(abc.ABC):
             logger=self._logger,
         )
 
+    def to_piggyback_section_parser(
+        self,
+        piggyback_header: PiggybackMarker,
+        section_header: SectionMarker,
+    ) -> "PiggybackSectionParser":
+        self._logger.debug(
+            "Transition %s -> %s",
+            type(self).__name__,
+            PiggybackSectionParser.__name__,
+        )
+        return PiggybackSectionParser(
+            self.hostname,
+            self.host_sections,
+            piggyback_header,
+            section_header,
+            section_info=self.section_info,
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
+            logger=self._logger,
+        )
+
+    def to_error(self, line: bytes) -> "ParserState":
+        self._logger.warning(
+            "%s: Ignoring invalid data %r",
+            type(self).__name__,
+            line,
+            exc_info=True,
+        )
+        return self.to_noop_parser()
+
+    @final
     def __call__(self, line: bytes) -> "ParserState":
-        raise NotImplementedError()
-
-
-class NOOPParser(ParserState):
-    def __call__(self, line: bytes) -> ParserState:
         if not line.strip():
             return self
 
         try:
             if PiggybackMarker.is_header(line):
-                piggyback_header = PiggybackMarker.from_headerline(
-                    line,
-                    self.translation,
-                    encoding_fallback=self.encoding_fallback,
-                )
-                if piggyback_header.hostname == self.hostname:
-                    # Unpiggybacked "normal" host
-                    return self
-                return self.to_piggyback_parser(piggyback_header)
+                return self.on_piggyback_header(line)
+            if PiggybackMarker.is_footer(line):
+                return self.on_piggyback_footer(line)
             if SectionMarker.is_header(line):
-                return self.to_host_section_parser(SectionMarker.from_headerline(line))
+                return self.on_section_header(line)
+            if SectionMarker.is_footer(line):
+                return self.on_section_footer(line)
+            return self.do_action(line)
         except Exception:
-            self._logger.warning("Ignoring invalid raw section: %r" % line, exc_info=True)
-            return self.to_noop_parser()
+            return self.to_error(line)
+
         return self
+
+
+class NOOPParser(ParserState):
+    def do_action(self, line: bytes) -> "ParserState":
+        return self
+
+    def on_piggyback_header(self, line: bytes) -> "ParserState":
+        piggyback_header = PiggybackMarker.from_headerline(
+            line,
+            self.translation,
+            encoding_fallback=self.encoding_fallback,
+        )
+        if piggyback_header.hostname == self.hostname:
+            # Unpiggybacked "normal" host
+            return self
+        return self.to_piggyback_parser(piggyback_header)
+
+    def on_piggyback_footer(self, line: bytes) -> "ParserState":
+        return self
+
+    def on_section_header(self, line: bytes) -> "ParserState":
+        return self.to_host_section_parser(SectionMarker.from_headerline(line))
+
+    def on_section_footer(self, line: bytes) -> "ParserState":
+        return self.to_error(line)
 
 
 class PiggybackParser(ParserState):
@@ -350,32 +444,90 @@ class PiggybackParser(ParserState):
         )
         self.piggyback_header: Final = piggyback_header
 
-    def __call__(self, line: bytes) -> ParserState:
-        if not line.strip():
-            return self
+    def do_action(self, line: bytes) -> "ParserState":
+        self.host_sections.piggybacked_raw_data.setdefault(
+            self.piggyback_header.hostname,
+            [],
+        ).append(line)
+        return self
 
-        try:
-            if PiggybackMarker.is_footer(line):
-                return self.to_noop_parser()
-            if PiggybackMarker.is_header(line):
-                # Footer is optional.
-                piggyback_header = PiggybackMarker.from_headerline(
-                    line,
-                    self.translation,
-                    encoding_fallback=self.encoding_fallback,
-                )
-                if piggyback_header.hostname == self.hostname:
-                    # Unpiggybacked "normal" host
-                    return self.to_noop_parser()
-                return self.to_piggyback_parser(piggyback_header)
-            self.host_sections.piggybacked_raw_data.setdefault(
-                self.piggyback_header.hostname,
-                [],
-            ).append(line)
-        except Exception:
-            self._logger.warning("Ignoring invalid raw section: %r" % line, exc_info=True)
+    def on_piggyback_header(self, line: bytes) -> "ParserState":
+        piggyback_header = PiggybackMarker.from_headerline(
+            line,
+            self.translation,
+            encoding_fallback=self.encoding_fallback,
+        )
+        if piggyback_header.hostname == self.hostname:
+            # Unpiggybacked "normal" host
             return self.to_noop_parser()
+        return self.to_piggyback_parser(piggyback_header)
 
+    def on_piggyback_footer(self, line: bytes) -> "ParserState":
+        return self.to_noop_parser()
+
+    def on_section_header(self, line: bytes) -> "ParserState":
+        return self.to_piggyback_section_parser(
+            self.piggyback_header,
+            SectionMarker.from_headerline(line),
+        )
+
+    def on_section_footer(self, line: bytes) -> "ParserState":
+        return self.to_error(line)
+
+
+class PiggybackSectionParser(ParserState):
+    def __init__(
+        self,
+        hostname: HostName,
+        host_sections: AgentHostSections,
+        piggyback_header: PiggybackMarker,
+        section_header: SectionMarker,
+        *,
+        section_info: MutableMapping[SectionName, SectionMarker],
+        translation: TranslationOptions,
+        encoding_fallback: str,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__(
+            hostname,
+            host_sections,
+            section_info=section_info,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
+            logger=logger,
+        )
+        self.piggyback_header: Final = piggyback_header
+        self.section_header: Final = section_header
+
+        # Entry action:
+        self.host_sections.piggybacked_raw_data.setdefault(
+            self.piggyback_header.hostname,
+            [],
+        ).append(str(self.section_header).encode("utf8"))
+
+    def do_action(self, line: bytes) -> "ParserState":
+        self.host_sections.piggybacked_raw_data[self.piggyback_header.hostname].append(line)
+        return self
+
+    def on_piggyback_header(self, line: bytes) -> "ParserState":
+        piggyback_header = PiggybackMarker.from_headerline(
+            line,
+            self.translation,
+            encoding_fallback=self.encoding_fallback,
+        )
+        return self.to_piggyback_parser(piggyback_header)
+
+    def on_piggyback_footer(self, line: bytes) -> "ParserState":
+        return self.to_noop_parser()
+
+    def on_section_header(self, line: bytes) -> "ParserState":
+        return self.to_piggyback_section_parser(
+            self.piggyback_header,
+            SectionMarker.from_headerline(line),
+        )
+
+    def on_section_footer(self, line: bytes) -> "ParserState":
+        # Optional
         return self
 
 
@@ -391,8 +543,6 @@ class HostSectionParser(ParserState):
         encoding_fallback: str,
         logger: logging.Logger,
     ) -> None:
-        host_sections.sections.setdefault(section_header.name, [])
-        section_info[section_header.name] = section_header
         super().__init__(
             hostname,
             host_sections,
@@ -403,39 +553,41 @@ class HostSectionParser(ParserState):
         )
         self.section_header = section_header
 
-    def __call__(self, line: bytes) -> ParserState:
-        if not line.strip():
+        # Entry action:
+        self.host_sections.sections.setdefault(self.section_header.name, [])
+        self.section_info[self.section_header.name] = self.section_header
+
+    def do_action(self, line: bytes) -> "ParserState":
+        if not self.section_header.nostrip:
+            line = line.strip()
+
+        self.host_sections.sections[self.section_header.name].append(
+            ensure_str_with_fallback(
+                line,
+                encoding=self.section_header.encoding,
+                fallback="latin-1",
+            ).split(self.section_header.separator))
+        return self
+
+    def on_piggyback_header(self, line: bytes) -> "ParserState":
+        piggyback_header = PiggybackMarker.from_headerline(
+            line,
+            self.translation,
+            encoding_fallback=self.encoding_fallback,
+        )
+        if piggyback_header.hostname == self.hostname:
+            # Unpiggybacked "normal" host
             return self
+        return self.to_piggyback_parser(piggyback_header)
 
-        try:
-            if PiggybackMarker.is_header(line):
-                piggyback_header = PiggybackMarker.from_headerline(
-                    line,
-                    self.translation,
-                    encoding_fallback=self.encoding_fallback,
-                )
-                if piggyback_header.hostname == self.hostname:
-                    # Unpiggybacked "normal" host
-                    return self
-                return self.to_piggyback_parser(piggyback_header)
-            if SectionMarker.is_footer(line):
-                return self.to_noop_parser()
-            if SectionMarker.is_header(line):
-                # Footer is optional.
-                return self.to_host_section_parser(SectionMarker.from_headerline(line))
+    def on_piggyback_footer(self, line: bytes) -> "ParserState":
+        return self.to_error(line)
 
-            if not self.section_header.nostrip:
-                line = line.strip()
+    def on_section_header(self, line: bytes) -> "ParserState":
+        return self.to_host_section_parser(SectionMarker.from_headerline(line))
 
-            self.host_sections.sections[self.section_header.name].append(
-                ensure_str_with_fallback(
-                    line,
-                    encoding=self.section_header.encoding,
-                    fallback="latin-1",
-                ).split(self.section_header.separator))
-        except Exception:
-            self._logger.warning("Ignoring invalid raw section: %r" % line, exc_info=True)
-            return self.to_noop_parser()
+    def on_section_footer(self, line: bytes) -> "ParserState":
+        # Optional
         return self
 
 

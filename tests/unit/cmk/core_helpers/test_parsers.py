@@ -88,7 +88,7 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
 
     @pytest.mark.usefixtures("scenario")
-    def test_no_host_header_after_piggyback(self, parser):
+    def test_no_section_header_after_piggyback(self, parser):
         raw_data = AgentRawData(b"\n".join((
             b"<<<<piggy>>>>",
             b"line0",
@@ -230,6 +230,25 @@ class TestAgentParser:
         }
         assert ahs.piggybacked_raw_data == {}
 
+
+class TestSectionMarker:
+    def test_options_serialize_options(self):
+        section_header = SectionMarker.from_headerline(b"<<<" + b":".join((
+            b"section",
+            b"cached(1,2)",
+            b"encoding(ascii)",
+            b"nostrip()",
+            b"persist(42)",
+            b"sep(124)",
+        )) + b">>>")
+        assert section_header == SectionMarker.from_headerline(str(section_header).encode("ascii"))
+
+    def test_options_deserialize_defaults(self):
+        section_header = SectionMarker.from_headerline(b"<<<section>>>")
+        other_header = SectionMarker.from_headerline(str(section_header).encode("ascii"))
+        assert section_header == other_header
+        assert str(section_header) == str(other_header)
+
     @pytest.mark.parametrize(
         "headerline, section_name, section_options",
         [
@@ -244,7 +263,7 @@ class TestAgentParser:
             ("", None, {}),  # invalid section name
         ],
     )  # yapf: disable
-    def test_section_header_options(self, headerline, section_name, section_options):
+    def test_options_from_headerline(self, headerline, section_name, section_options):
         try:
             SectionMarker.from_headerline(
                 f"<<<{headerline}>>>".encode("ascii")) == (  # type: ignore[comparison-overlap]
@@ -254,7 +273,7 @@ class TestAgentParser:
         except ValueError:
             assert section_name is None
 
-    def test_section_header_options_decode_values(self):
+    def test_options_decode_values(self):
         section_header = SectionMarker.from_headerline(b"<<<" + b":".join((
             b"name",
             b"cached(1,2)",
@@ -270,7 +289,7 @@ class TestAgentParser:
         assert section_header.persist == 42
         assert section_header.separator == "|"
 
-    def test_section_header_options_decode_nothing(self):
+    def test_options_decode_defaults(self):
         section_header = SectionMarker.from_headerline(b"<<<name>>>")
         assert section_header.name == SectionName("name")
         assert section_header.cached is None

@@ -42,7 +42,7 @@ info_recreate = [[
         info_unavailable_ok,
         [
             (0, 'Ready: 1/2', [
-                ('ready_replicas', 1, None, 4.0, None, None),
+                ('ready_replicas', 1, None, 4.0, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 25%)', []),
@@ -52,7 +52,7 @@ info_recreate = [[
         info_surge_ok,
         [
             (0, 'Ready: 3/2', [
-                ('ready_replicas', 3, None, 4.0, None, None),
+                ('ready_replicas', 3, None, 4.0, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 1)', []),
@@ -62,7 +62,7 @@ info_recreate = [[
         info_unavailable_crit,
         [
             (2, 'Ready: 0/2 (crit below 1)', [
-                ('ready_replicas', 0, None, 4.0, None, None),
+                ('ready_replicas', 0, None, 4.0, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 25%)', []),
@@ -72,7 +72,7 @@ info_recreate = [[
         info_surge_crit,
         [
             (2, 'Ready: 4/2 (crit at 4)', [
-                ('ready_replicas', 4, None, 4.0, None, None),
+                ('ready_replicas', 4, None, 4.0, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 25%)', []),
@@ -82,7 +82,7 @@ info_recreate = [[
         info_paused,
         [
             (0, 'Ready: 4/2 (paused)', [
-                ('ready_replicas', 4, None, None, None, None),
+                ('ready_replicas', 4, None, None, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 25%)', []),
@@ -92,7 +92,7 @@ info_recreate = [[
         info_recreate,
         [
             (0, 'Ready: 0/10', [
-                ('ready_replicas', 0, None, None, None, None),
+                ('ready_replicas', 0, None, None, 0.0, 10.0),
                 ('total_replicas', 10, None, None, None, None),
             ]),
             (0, u'Strategy: Recreate', []),

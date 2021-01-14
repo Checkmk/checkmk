@@ -61,7 +61,7 @@ def check_k8s_replicas(_no_item, _params, parsed):
         infotext += " (crit below %d)" % crit_lower
 
     perfdata = [
-        ('ready_replicas', ready, None, crit),
+        ('ready_replicas', ready, None, crit, 0, total),
         ('total_replicas', total),
     ]
     yield state, infotext, perfdata

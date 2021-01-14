@@ -40,6 +40,7 @@ def check_k8s_nodes(params: Mapping[str, Any], section: Dict) -> CheckResult:
         levels_lower=params.get('levels_lower'),
         render_func=lambda x: str(int(x)),
         label='Number of nodes',
+        bounderies=(0, None),
     )
 
 

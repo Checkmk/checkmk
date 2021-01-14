@@ -358,7 +358,9 @@ class Discovery:
         return None
 
     def _get_table_target(self, table_source, check_type, item):
-        if self._options.action == DiscoveryAction.FIX_ALL:
+        if (self._options.action == DiscoveryAction.FIX_ALL) and \
+            ((not self._options.show_checkboxes) or (checkbox_id(check_type, item)
+                                                       in self._discovery_info["update_services"])):
             if table_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
             if table_source == DiscoveryState.IGNORED:
@@ -368,7 +370,7 @@ class Discovery:
 
         update_target = self._discovery_info["update_target"]
         if not update_target:
-            return table_source  # should never happen
+            return table_source
 
         if self._options.action == DiscoveryAction.BULK_UPDATE:
             if table_source != self._discovery_info["update_source"]:

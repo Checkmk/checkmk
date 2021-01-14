@@ -1,0 +1,10 @@
+Title: Service discovery: Make the 'Add missing, remove vanished' action responsive to checkboxes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.1.0i1
+Date: 1610620676
+Class: fix
+
+Applying the service discovery action 'Add missing, remove vanished' can now be restricted to selected services by the use of checkboxes. So far this action could only be performed on all services.

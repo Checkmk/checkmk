@@ -85,7 +85,7 @@ def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
         return plugin
 
     # create management board plugin on the fly:
-    non_mgmt_plugin = registered_check_plugins.get(plugin_name.create_host_name())
+    non_mgmt_plugin = registered_check_plugins.get(plugin_name.create_basic_name())
     if non_mgmt_plugin is not None:
         return management_plugin_factory(non_mgmt_plugin)
 

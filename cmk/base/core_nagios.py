@@ -1244,7 +1244,7 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> Optional[
         return None
 
     # just try to get the legacy name of the 'regular' plugin:
-    return config.legacy_check_plugin_names.get(check_plugin_name.create_host_name())
+    return config.legacy_check_plugin_names.get(check_plugin_name.create_basic_name())
 
 
 def _get_legacy_check_file_names_to_load(

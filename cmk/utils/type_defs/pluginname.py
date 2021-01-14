@@ -118,7 +118,7 @@ class CheckPluginName(ABCName):
             return self
         return CheckPluginName("%s%s" % (self.MANAGEMENT_PREFIX, self._value))
 
-    def create_host_name(self) -> 'CheckPluginName':
+    def create_basic_name(self) -> 'CheckPluginName':
         if self.is_management_name():
             return CheckPluginName(self._value[len(self.MANAGEMENT_PREFIX):])
         return self

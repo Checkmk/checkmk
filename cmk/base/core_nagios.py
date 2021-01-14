@@ -1183,7 +1183,7 @@ def _get_needed_plugin_names(
     )
 
     for check_plugin_name in needed_agent_based_check_plugin_names:
-        legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
+        legacy_name = _resolve_legacy_plugin_name(check_plugin_name)
         if legacy_name is None:
             continue
 
@@ -1204,7 +1204,7 @@ def _get_needed_plugin_names(
             raise MKGeneralException("Invalid cluster configuration")
         for node in nodes:
             for check_plugin_name in get_needed_check_names(node, skip_ignored=False):
-                opt_legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
+                opt_legacy_name = _resolve_legacy_plugin_name(check_plugin_name)
                 if opt_legacy_name is not None:
                     needed_legacy_check_plugin_names.add(opt_legacy_name)
                 else:
@@ -1228,6 +1228,26 @@ def _get_needed_plugin_names(
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
     )
+
+
+def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> Optional[CheckPluginNameStr]:
+    legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
+    if legacy_name:
+        return legacy_name
+
+    if not check_plugin_name.is_management_name():
+        return None
+
+    # See if me must include a legacy plugin from which we derived the given one:
+    # A management plugin *could have been* created on the fly, from a 'regular' legacy
+    # check plugin. In this case, we must load that.
+    plugin = agent_based_register.get_check_plugin(check_plugin_name)
+    if not plugin or plugin.module is not None:
+        # it does *not* result from a legacy plugin, if module is not None
+        return None
+
+    # just try to get the legacy name of the 'regular' plugin:
+    return config.legacy_check_plugin_names.get(check_plugin_name.create_host_name())
 
 
 def _get_legacy_check_file_names_to_load(

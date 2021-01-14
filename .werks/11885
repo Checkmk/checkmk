@@ -1,0 +1,12 @@
+Title: Stale services of management boards in CRE
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610614324
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b4
+
+In Checkmk versions 2.0.0b1 to 2.0.0b3 hosts with an management board configured
+exhibitetd stale services if using the nagios core (i.E. CRE).

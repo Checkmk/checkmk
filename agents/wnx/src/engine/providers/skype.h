@@ -1,18 +1,15 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
-
-// provides basic api to start and stop service
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 #ifndef skype_h__
 #define skype_h__
 
-#include <filesystem>
 #include <string>
 #include <string_view>
 
-#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "providers/internal.h"
 #include "section_header.h"
@@ -26,27 +23,23 @@ public:
         delay_on_fail_ = cma::cfg::G_DefaultDelayOnFail;
     }
 
-    SkypeProvider(const std::string_view& Name, char Separator)
-        : Asynchronous(Name, Separator) {}
+    SkypeProvider(const std::string_view& name, char separator)
+        : Asynchronous(name, separator) {}
 
-    virtual void loadConfig();
+    void loadConfig() override;
 
-    virtual void updateSectionStatus();
+    void updateSectionStatus() override;
 
 protected:
     static std::string makeFirstLine();
-    static std::wstring makeSubSection(const std::wstring& RegName);
+    static std::wstring makeSubSection(std::wstring_view name);
     std::string makeBody() override;
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class SkypeTest;
-    FRIEND_TEST(SkypeTest, Base);
-#endif
 };
 
-// special API used for testing
+// Special API used for testing
 namespace internal {
 std::vector<std::wstring>* GetSkypeCountersVector();
+std::wstring_view GetSkypeAspSomeCounter();
 }  // namespace internal
 
 }  // namespace cma::provider

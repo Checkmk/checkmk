@@ -23,9 +23,7 @@ namespace cma::srv {
 class ServiceProcessor;
 }
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 // simple creator valid state name
 inline std::string MakeStateFileName(const std::string& name,
@@ -215,8 +213,6 @@ protected:
     bool stop_requested_ = false;
 };
 
-}  // namespace provider
-
-};  // namespace cma
+}  // namespace cma::provider
 
 #endif  // p_internal_h__

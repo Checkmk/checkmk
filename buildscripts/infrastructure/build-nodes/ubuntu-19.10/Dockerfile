@@ -1,37 +1,41 @@
-FROM debian:9
+FROM ubuntu:19.10
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
-RUN apt-get update \
+RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list \
+    && apt-get update \
     && apt-get install -y \
-    default-libmysqlclient-dev \
     gdebi \
     git \
     libenchant1c2a \
     libkrb5-dev \
     libldap2-dev \
+    libmysqlclient-dev \
     librrd-dev \
     libsasl2-dev \
     libssl-dev \
     make \
+    nullmailer \
     python-dev \
     python-dev \
     python3-pip \
     rrdtool \
     strace \
+    sudo \
     vim \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update \
+RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list \
+    && apt-get update \
     && apt-get install -y \
     apache2 \
     apache2-dev \
+    autoconf \
     build-essential \
     chrpath \
     curl \
-    default-libmysqlclient-dev \
-    dietlibc-dev \
+    devscripts \
     dnsutils \
     dpatch \
     flex \
@@ -41,7 +45,6 @@ RUN apt-get update \
     iputils-ping \
     joe \
     libcurl4-openssl-dev \
-    libdbi-dev \
     libevent-dev \
     libffi-dev \
     libfreeradius-dev \
@@ -53,6 +56,7 @@ RUN apt-get update \
     libldap2-dev \
     libltdl-dev \
     libmcrypt-dev \
+    libmysqlclient-dev \
     libncurses5-dev \
     libpango1.0-dev \
     libpcap-dev \
@@ -60,11 +64,14 @@ RUN apt-get update \
     libpq-dev \
     libreadline-dev \
     libsqlite3-dev \
+    libssl-dev \
+    libtool \
     libxml2-dev \
     libxmlsec1-dev \
     openssh-client \
     patch \
     rpcbind \
+    rsync \
     smbclient \
     texinfo \
     tk-dev \

@@ -62,7 +62,7 @@ def _get_sidebar_position() -> str:
 
 
 def _sidebar_position_title(stored_value: str) -> str:
-    return _("Left") if stored_value == "left" else "right"
+    return _("Left") if stored_value == "left" else _("Right")
 
 
 def _sidebar_position_id(stored_value: str) -> str:

@@ -883,7 +883,6 @@ table.nform {
 
   tr.heading {
     height: auto;
-    background: $headline-color;
 
     > td {
       vertical-align: middle;
@@ -897,9 +896,10 @@ table.nform {
       height: auto;
       padding: 4px 10px 3px 9px;
       font-size: $font-size-global;
+      font-weight: $font-weight-bold;
       letter-spacing: $letter-spacing-table;
       color: $secondary-font-color;
-      text-transform: uppercase;
+      background-color: $headline-color;
     }
 
     img.treeangle.nform {
@@ -911,7 +911,7 @@ table.nform {
 
       div::after {
         position: relative;
-        top: 2px;
+        top: 1px;
       }
     }
   }

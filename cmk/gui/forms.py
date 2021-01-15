@@ -162,7 +162,7 @@ def _table_head(
              align="absbottom")
     html.write_text(title)
     if show_more_toggle:
-        html.more_button("foldable_" + id_, dom_levels_up=4)
+        html.more_button("foldable_" + id_, dom_levels_up=4, with_text=True)
     html.close_td()
     html.close_tr()
     html.close_thead()

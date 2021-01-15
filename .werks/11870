@@ -6,7 +6,7 @@ Date: 1610541104
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0b4
+Version: 2.0.0b5
 
 The extension packages GUI and also command line tool "mkp" was failing
 with a crash in case a in incompatible package or not expected file was

@@ -2621,7 +2621,10 @@ class HostConfig:
         rules = self._config_cache.host_extra_conf(self.hostname, snmp_exclude_sections)
         merged_section_settings = {'if64adm': True}
         for rule in reversed(rules):
-            merged_section_settings.update(dict(rule.get("sections", [])))
+            for section in rule.get("sections_enabled", ()):
+                merged_section_settings[section] = False
+            for section in rule.get("sections_disabled", ()):
+                merged_section_settings[section] = True
 
         return {
             SectionName(name)

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 import re
 import logging
 from typing import Dict, List, Tuple as _Tuple, Any
@@ -22,34 +21,35 @@ from cmk.gui.globals import request
 from cmk.snmplib.type_defs import SNMPBackend  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    Checkbox,
     Dictionary,
+    DropdownChoice,
+    DualListChoice,
+    FixedValue,
+    Float,
+    IconSelector,
+    ID,
+    Integer,
+    IPNetwork,
+    Labels,
+    ListChoice,
+    ListOf,
+    ListOfCAs,
+    ListOfStrings,
+    ListOfTimeRanges,
+    LogLevelChoice,
+    MonitoringState,
+    Optional,
+    PasswordSpec,
+    RegExpUnicode,
     TextAscii,
     TextUnicode,
-    DropdownChoice,
-    Tuple,
-    ListOf,
-    Integer,
-    Float,
     Transform,
-    ListOfStrings,
-    IPNetwork,
-    CascadingDropdown,
-    MonitoringState,
-    RegExpUnicode,
-    IconSelector,
-    PasswordSpec,
-    ListOfTimeRanges,
-    Age,
-    FixedValue,
-    Optional,
-    Alternative,
-    ListChoice,
-    Checkbox,
-    ID,
-    ListOfCAs,
-    LogLevelChoice,
-    Labels,
-    CascadingDropdownChoice,
+    Tuple,
     ValueSpec,
 )
 
@@ -4944,50 +4944,75 @@ rulespec_registry.register(
     ))
 
 
+def _transform_2_0_beta_params(params: Dict[str, Any]) -> Dict[str, Any]:
+    """this transforms a parameter format that was only created by Checkmk 2.0.0b1 - 2.0.0b4"""
+    if 'sections' not in params:
+        return params
+
+    new_params: Dict[str, Any] = {}
+    for section, is_disabled in params['sections']:
+        new_params.setdefault(
+            'sections_disabled' if is_disabled else 'sections_enabled',
+            [],
+        ).append(section)
+
+    return new_params
+
+
 def _valuespec_snmp_config_agent_sections():
-    return Dictionary(
-        title=_("Include or exclude SNMP sections"),
-        elements=[
-            (
-                "sections",
-                ListOf(
-                    Tuple(elements=[
-                        DropdownChoice(
-                            title=_("SNMP section name"),
-                            choices=get_snmp_section_names,
-                        ),
-                        DropdownChoice(choices=[(True, _("Disable")), (False, _("Enable"))]),
-                    ],),),
-            ),
-        ],
-        help=_("This option allows to omit individual sections from being fetched at all. "
-               "Disabled sections will not be fetched. As a result, associated Checkmk "
-               "services may be entirely missing.") + " " +
-        _("However, some check plugins process multiple sections and their behavior may change if "
-          "one of them is excluded. In such cases, you may want to disable individual sections, "
-          "instead of the check plugin itself. Furthermore, SNMP sections can supersede other SNMP "
-          "sections in order to prevent duplicate services. By excluding a section which "
-          "supersedes another one, the superseded section might become available. One such use "
-          "case is the enforcing of 32-bit network interface counters (section <tt>if</tt>, "
-          "superseded by <tt>if64</tt>) in case the 64-bit counters reported by the device are "
-          "useless due to broken firmware."),
-        validate=_validate_snmp_config_agent_sections,
-        optional_keys=[],
+    return Transform(
+        Dictionary(
+            title=_("Disabled or enabled sections (SNMP)"),
+            help=_(
+                "This option allows to omit individual sections from being fetched at all. "
+                "As a result, associated Checkmk services may be entirely missing. "
+                "However, some check plugins process multiple sections and their behavior may "
+                "change if one of them is excluded. In such cases, you may want to disable "
+                "individual sections, instead of the check plugin itself. "
+                "Furthermore, SNMP sections can supersede other SNMP sections in order to "
+                "prevent duplicate services. By excluding a section which supersedes another one, "
+                "the superseded section might become available. One such use case is the enforcing "
+                "of 32-bit network interface counters (section <tt>if</tt>, superseded by "
+                "<tt>if64</tt>) in case the 64-bit counters reported by the device are useless "
+                "due to broken firmware."),
+            elements=[
+                (
+                    "sections_disabled",
+                    DualListChoice(
+                        title=_("Disabled sections"),
+                        choices=get_snmp_section_names,
+                        rows=25,
+                    ),
+                ),
+                (
+                    "sections_enabled",
+                    DualListChoice(
+                        title=_("Enabled sections"),
+                        choices=get_snmp_section_names,
+                        rows=25,
+                    ),
+                ),
+            ],
+            validate=_validate_snmp_config_agent_sections,
+            optional_keys=[],
+        ),
+        forth=_transform_2_0_beta_params,
     )
 
 
 def _validate_snmp_config_agent_sections(value, varprefix):
-    section_settings = value.get('sections', [])
-    if not section_settings:
+    enabled_set = set(value.get('sections_enabled', ()))
+    conflicts = enabled_set.intersection(value.get('sections_disabled', ()))
+    if not conflicts:
         return
 
-    most_common = collections.Counter(s for s, _v in section_settings).most_common()
-    if most_common[0][1] > 1:  # count of the very most common one
-        offenders = ', '.join(name for name, count in most_common if count > 1)
-        raise MKUserError(
-            varprefix,
-            "%s %s" % (_("Section(s) specified more than once:"), offenders),
-        )
+    raise MKUserError(
+        varprefix,
+        "%s %s" % (
+            _("Section(s) cannot be disabled and enabled at the same time:"),
+            ', '.join(sorted(conflicts)),
+        ),
+    )
 
 
 rulespec_registry.register(

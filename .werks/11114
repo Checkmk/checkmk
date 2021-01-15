@@ -9,7 +9,8 @@ Level: 1
 Version: 2.0.0i1
 
 Users can now entirely disable individual SNMP sections using the rule
-"Include or exclude SNMP sections".
+"Disabled and enabled sections (SNMP)" (during the 2.0.0 beta phase it
+has briefly been called "Include or exclude SNMP sections").
 
 As a result, the related data will not be fetched from the corresponding devices.
 This may be useful if you want reduce the traffic on your network, or

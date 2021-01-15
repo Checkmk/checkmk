@@ -1,16 +1,17 @@
-Title: Add Rule set to disable individual SNMP sections
+Title: New rule set "Disabled and enabled sections (SNMP)" versus "Disabled Checks"
 Class: feature
-Compatible: compat
+Compatible: incomp
 Component: checks
 Date: 1599469895
 Edition: cre
 Knowledge: undoc
-Level: 1
+Level: 2
 Version: 2.0.0i1
 
 Users can now entirely disable individual SNMP sections using the rule
-"Disabled and enabled sections (SNMP)" (during the 2.0.0 beta phase it
-has briefly been called "Include or exclude SNMP sections").
+"Disabled and enabled sections (SNMP)".
+(During the 2.0.0 beta phase it has briefly been called "Include or
+exclude SNMP sections".)
 
 As a result, the related data will not be fetched from the corresponding devices.
 This may be useful if you want reduce the traffic on your network, or
@@ -21,3 +22,16 @@ An SNMP section may be used by multiple check plugins, and it may or may
 not be *required* by an individual check plugin.
 Check plugins that require a section which has been disabled will not be
 discovered subsequently.
+
+<b>In Checkmk versions prior to 2.0.0, the check plugins that have been disabled
+using the "Disabled Checks" rule also affected which SNMP sections were fetched
+from the host during discovery. This is no longer the case.</b>
+
+During the update process (when the configuration is updated via cmk-update-config)
+we try to automatically deduce the SNMP sections that must be disabled, such that
+during discovery the same sections will be ommited as prior to the update.
+However, for very convoluted "Disabled Checks"-schemes, this migration step may
+miss out on some sections, which as a result will be fetched unexpectedly.
+
+We recommend to review the settings in the rulesets "Disabled checks" and
+"Disabled and enabled sections (SNMP)" after the update.

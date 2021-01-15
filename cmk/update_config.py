@@ -118,6 +118,7 @@ class UpdateConfig:
             logging.getLogger().addHandler(console_handler)
 
     def run(self):
+
         self._logger.log(VERBOSE, "Initializing application...")
         environ = dict(create_environ(), REQUEST_URI='')
 
@@ -330,6 +331,7 @@ class UpdateConfig:
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
         self._transform_ignored_checks_to_maincheckified_list(all_rulesets)
+        self._extract_disabled_snmp_sections_from_ignored_checks(all_rulesets)
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
@@ -345,6 +347,45 @@ class UpdateConfig:
                 rule.value = [maincheckify(rule.value)]
             else:
                 rule.value = [maincheckify(s) for s in rule.value]
+
+    def _extract_disabled_snmp_sections_from_ignored_checks(self, all_rulesets):
+        ignored_checks_ruleset = all_rulesets.get("ignored_checks")
+        if ignored_checks_ruleset.is_empty():
+            # nothing to do
+            return
+        if not all_rulesets.get("snmp_exclude_sections").is_empty():
+            # this must be an upgrade from 2.0.0 or newer - don't mess with
+            # the existing rules!
+            return
+
+        self._logger.log(VERBOSE, "Extracting excluded SNMP sections")
+
+        all_snmp_section_names = set(s.name for s in register.iter_all_snmp_sections())
+        all_check_plugin_names = set(p.name for p in register.iter_all_check_plugins())
+        all_inventory_plugin_names = set(i.name for i in register.iter_all_inventory_plugins())
+
+        snmp_exclude_sections_ruleset = cmk.gui.watolib.rulesets.Ruleset(
+            "snmp_exclude_sections", ignored_checks_ruleset.tag_to_group_map)
+
+        for folder, _index, rule in ignored_checks_ruleset.get_rules():
+            disabled = {CheckPluginName(n) for n in rule.value}
+            still_needed_sections_names = set(
+                register.get_relevant_raw_sections(
+                    check_plugin_names=all_check_plugin_names - disabled,
+                    inventory_plugin_names=all_inventory_plugin_names,
+                ))
+            sections_to_disable = all_snmp_section_names - still_needed_sections_names
+
+            new_rule = cmk.gui.watolib.rulesets.Rule(rule.folder, snmp_exclude_sections_ruleset)
+            new_rule.from_config(rule.to_config())
+            new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
+            new_rule.value = {  # type: ignore[assignment]
+                'sections_disabled': sorted(str(s) for s in sections_to_disable),
+                'sections_enabled': [],
+            }
+            snmp_exclude_sections_ruleset.append_rule(folder, new_rule)
+
+        all_rulesets.set(snmp_exclude_sections_ruleset.name, snmp_exclude_sections_ruleset)
 
     def _transform_replaced_wato_rulesets(self, all_rulesets):
         replacements: Dict[str, cmk.gui.watolib.rulesets.Ruleset] = {}

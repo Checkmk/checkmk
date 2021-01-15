@@ -3,18 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Remove locale settings to eliminate localized outputs where possible
-# The locale logic here is used to make the Python encoding detection
-# work (see CMK-2778).
-if command -v locale >/dev/null 2>&1; then
-    for i in $(locale -a); do
-        if [ "$i" = "C.UTF-8" ] || [ "$i" = "C.utf8" ] || [ "$i" = "C" ]; then
-            export LC_ALL="$i"
-            break
-        fi
-    done
-fi
-
 export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
 export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
 export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
@@ -56,6 +44,23 @@ SPOOLDIR=$MK_VARDIR/spool
 # When the nodes agent is executed by a e.g. docker node in a container,
 # then don't close stdin, because the agent is piped through it in this
 # case.
+if [ "$1" = -d ]; then
+    set -xv
+elif [ -z "$MK_FROM_NODE" ]; then
+    exec </dev/null 2>/dev/null
+fi
+
+# Remove locale settings to eliminate localized outputs where possible
+# The locale logic here is used to make the Python encoding detection
+# work (see CMK-2778).
+if command -v locale >/dev/null 2>&1; then
+    for i in $(locale -a); do
+        if [ "$i" = "C.UTF-8" ] || [ "$i" = "C.utf8" ] || [ "$i" = "C" ]; then
+            export LC_ALL="$i"
+            break
+        fi
+    done
+fi
 
 read_python3_version() {
     if command -v python3 >/dev/null 2>&1; then
@@ -77,12 +82,6 @@ read_python2_version() {
 }
 PYTHON3=$(read_python3_version)
 PYTHON2=$(read_python2_version)
-
-if [ "$1" = -d ]; then
-    set -xv
-elif [ -z "$MK_FROM_NODE" ]; then
-    exec </dev/null 2>/dev/null
-fi
 
 # Detect whether or not the agent is being executed in a container
 # environment.

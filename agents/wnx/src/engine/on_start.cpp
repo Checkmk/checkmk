@@ -102,7 +102,7 @@ bool ReloadConfig() {
     return LoadConfig(AppDefaultType(), {});
 }
 
-UninstallAlert G_UninstallALert;
+UninstallAlert g_uninstall_alert;
 
 // usually for testing
 void UninstallAlert::clear() noexcept {

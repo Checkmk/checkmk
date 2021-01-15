@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // tools to control starting operations
 
@@ -51,7 +52,7 @@ private:
     bool set_ = false;
 };
 
-extern UninstallAlert G_UninstallALert;
+extern UninstallAlert g_uninstall_alert;
 
 std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
     std::wstring_view environment_variable);

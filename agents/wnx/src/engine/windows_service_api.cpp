@@ -1153,10 +1153,11 @@ bool ProcessServiceConfiguration(std::wstring_view service_name) {
     return true;
 }
 
-static void TryCleanOnExit() {
-    using namespace cma::cfg;
-    if (!cma::G_UninstallALert.isSet()) {
-        XLOG::l.i("Clean on exit was not requested");
+namespace {
+void TryCleanOnExit() {
+    namespace details = cfg::details;
+    if (!cma::g_uninstall_alert.isSet()) {
+        XLOG::l.i("Clean on exit was not requested, not uninstall sequence");
 
         return;
     }
@@ -1165,10 +1166,11 @@ static void TryCleanOnExit() {
 
     auto mode = details::GetCleanDataFolderMode();  // read config
     XLOG::l.i(
-        "Clean on exit was requested, trying to remove what we have mode is [{}]",
+        "Clean on exit was requested, trying to remove what we have, mode is [{}]",
         static_cast<int>(mode));
     details::CleanDataFolder(mode);  // normal
 }
+}  // namespace
 
 // entry point in service mode
 // normally this is "BLOCKING FOR EVER"
@@ -1189,19 +1191,16 @@ int ServiceAsService(
 
     // infinite loop to protect from exception in future SEH too
     while (1) {
-        using namespace wtools;
         // we can exit from the service if service set to disabled
         try {
-            using namespace cma::cfg;
-
             std::unique_ptr<wtools::BaseServiceProcessor> processor =
                 std::make_unique<ServiceProcessor>(Delay, InternalCallback);
 
             wtools::ServiceController service_controller(std::move(processor));
             auto ret = service_controller.registerAndRun(
-                cma::srv::kServiceName);  // we will stay here till
-                                          // service will be stopped
-                                          // itself or from outside
+                srv::kServiceName);  // we will stay here till
+                                     // service will be stopped
+                                     // itself or from outside
             switch (ret) {
                 case wtools::ServiceController::StopType::normal:
                     XLOG::l.i("Service is stopped normally");
@@ -1212,7 +1211,7 @@ int ServiceAsService(
                     TryCleanOnExit();
                     return -1;
                 case wtools::ServiceController::StopType::no_connect:
-                    // may happen when we try to call usual exe
+                    // may happen when service manager is not available
                     return 0;
             }
         } catch (const std::exception& e) {

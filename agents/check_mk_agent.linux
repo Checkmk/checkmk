@@ -6,10 +6,8 @@
 # Remove locale settings to eliminate localized outputs where possible
 # The locale logic here is used to make the Python encoding detection
 # work (see CMK-2778).
-unset LANG
-INSTALLED_LOCALES=$(locale -a)
-for i in "C.UTF-8" "C.utf8" "C"; do
-    if echo "$INSTALLED_LOCALES" | grep -q -w -F "$i"; then
+for i in $(locale -a); do
+    if [ "$i" = "C.UTF-8" ] || [ "$i" = "C.utf8" ] || [ "$i" = "C" ]; then
         export LC_ALL="$i"
         break
     fi

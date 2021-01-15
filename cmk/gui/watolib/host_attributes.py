@@ -24,6 +24,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
 )
 from cmk.gui.watolib.utils import host_attribute_matches
+from cmk.gui.type_defs import Choices
 
 
 class HostAttributeTopic(metaclass=abc.ABCMeta):
@@ -216,6 +217,16 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
         if this is a Nagios-bound attribute (e.g. "alias" or "_SERIAL")"""
         return None
 
+    def is_explicit(self) -> bool:
+        """The return value indicates if this attribute represents an explicit set
+        value. Explicit attributes do not require cpu-intensive rule evaluations.
+        Instead, an exclicit_host_config entry will be generated, e.g.
+        explicit_host_config["alias"][hostname] = value
+
+        Used in: cmk.gui.watolib.hosts_and_folders:CREFolder:_save_hosts_file
+        """
+        return False
+
     def help(self) -> Optional[str]:
         """Return an optional help text"""
         return None
@@ -383,14 +394,14 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttri
         else:
             self.__class__._index = max(instance.sort_index(), self.__class__._index)
 
-    def attributes(self):
+    def attributes(self) -> List[ABCHostAttribute]:
         return [cls() for cls in self.values()]
 
     def get_sorted_host_attributes(self) -> List[ABCHostAttribute]:
         """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
         return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()().title))
 
-    def get_choices(self):
+    def get_choices(self) -> Choices:
         return [(a.name(), a.title()) for a in self.get_sorted_host_attributes()]
 
 
@@ -786,16 +797,6 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
 
     def default_value(self):
         return self.valuespec().default_value()
-
-    def is_explicit(self):
-        """The return value indicates if this attribute represents an explicit set
-        value. Explicit attributes do not require cpu-intensive rule evaluations.
-        Instead, an exclicit_host_config entry will be generated, e.g.
-        explicit_host_config["alias"][hostname] = value
-
-        Used in: cmk.gui.watolib.hosts_and_folders:CREFolder:_save_hosts_file
-        """
-        return False
 
     def paint(self, value, hostname):
         return "", self.valuespec().value_to_text(value)

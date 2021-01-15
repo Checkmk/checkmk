@@ -331,7 +331,7 @@ bool CheckForUpdateFile(std::wstring_view msi_name, std::wstring_view msi_dir,
     BackupLogFile(log_file_name);
 
     XLOG::l.i("File '{}' exists\n\tCommand is '{}'", msi_to_install,
-              wtools::ConvertToUTF8(command));
+              wtools::ToUtf8(command));
 
     if (start_update_process == UpdateProcess::skip) {
         XLOG::l.i("Actual Updating is disabled");

@@ -184,7 +184,7 @@ public:
             // can't read from the system, this may happen
             auto n = GetLastError();
             XLOG::t("open publishing meta error {} {}", n,
-                    wtools::ConvertToUTF8(source().c_str()));
+                    wtools::ToUtf8(source().c_str()));
             result.resize(0);
         }
 
@@ -317,7 +317,7 @@ EVT_HANDLE CreateLogHandle(EVT_QUERY_FLAGS flags, const std::wstring &path) {
     handle = g_evt.query(nullptr, path.c_str(), L"*", flags | EvtQueryFilePath);
 
     if (handle == nullptr) {
-        XLOG::l("failed to open log '{}'", wtools::ConvertToUTF8(path));
+        XLOG::l("failed to open log '{}'", wtools::ToUtf8(path));
     }
     return handle;
 }
@@ -351,7 +351,7 @@ void EventLogVista::seek(uint64_t record_id) {
             g_evt.next(log_handle, 1, &event_handle, INFINITE, 0, &num_events);
             if (event_handle == nullptr) {
                 XLOG::t("Record [{}] not found in '{}'", record_id,
-                        wtools::ConvertToUTF8(log_name_));
+                        wtools::ToUtf8(log_name_));
                 return;
             }
             ON_OUT_OF_SCOPE(g_evt.close(event_handle));
@@ -389,7 +389,7 @@ void EventLogVista::seek(uint64_t record_id) {
         nullptr, nullptr, EvtSubscribeStartAfterBookmark);
 
     if (subscription_handle_ == nullptr) {
-        XLOG::l("failed to subscribe to {}", wtools::ConvertToUTF8(log_name_));
+        XLOG::l("failed to subscribe to {}", wtools::ToUtf8(log_name_));
     }
 }
 
@@ -423,7 +423,7 @@ uint64_t EventLogVista::getLastRecordId() {
     auto handle = CreateLogHandle(EvtQueryReverseDirection, log_name_);
     if (!handle) {
         XLOG::d("SHOT in the HEAD ERROR ERROR 2 '{}'",
-                wtools::ConvertToUTF8(log_name_));
+                wtools::ToUtf8(log_name_));
         return 0;
     }
     ON_OUT_OF_SCOPE(if (handle) g_evt.close(handle));
@@ -456,7 +456,7 @@ bool EventLogVista::fillBuffer() {
             auto error = GetLastError();
             if (error != ERROR_NO_MORE_ITEMS) {
                 XLOG::d("failed to enumerate events '{}' error = {}",
-                        wtools::ConvertToUTF8(log_name_), error);
+                        wtools::ToUtf8(log_name_), error);
             }
             return false;
         }

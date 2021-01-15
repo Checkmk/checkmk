@@ -260,8 +260,7 @@ static void ServiceUsage(std::wstring_view comment) {
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::DuplicateOnStdio(true);
     if (!comment.empty()) {
-        xlog::sendStringToStdio(wtools::ConvertToUTF8(comment).data(),
-                                Colors::red);
+        xlog::sendStringToStdio(wtools::ToUtf8(comment).data(), Colors::red);
     }
 
     try {
@@ -336,7 +335,7 @@ auto ToUint(const T W, uint32_t Dflt = 0) noexcept {
 int CheckMainService(const std::wstring &What, int Interval) {
     using namespace std::chrono;
 
-    auto what = wtools::ConvertToUTF8(What);
+    auto what = wtools::ToUtf8(What);
 
     if (what == cma::cmdline::kCheckParamMt) return cma::srv::TestMt();
     if (what == cma::cmdline::kCheckParamIo) return cma::srv::TestIo();
@@ -530,7 +529,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
 
     if (param == wtools::ConvertToUTF16(kShowConfigParam)) {
         std::wstring second_param = argc > 2 ? Argv[2] : L"";
-        return cma::srv::ExecShowConfig(wtools::ConvertToUTF8(second_param));
+        return cma::srv::ExecShowConfig(wtools::ToUtf8(second_param));
     }
 
     if (param == wtools::ConvertToUTF16(kUpgradeParam)) {

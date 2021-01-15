@@ -65,7 +65,7 @@ void SafeCleanTempDir() {
     std::error_code ec;
     fs::remove_all(temp_dir, ec);
     if (ec)
-        XLOG::l("error removing '{}' with {} ", wtools::ConvertToUTF8(temp_dir),
+        XLOG::l("error removing '{}' with {} ", wtools::ToUtf8(temp_dir),
                 ec.message());
     fs::create_directory(temp_dir);
 }
@@ -83,8 +83,8 @@ void SafeCleanTmpxDir() {
     std::error_code ec;
     fs::remove_all(very_temp, ec);
     if (ec)
-        XLOG::l("error removing '{}' with {} ",
-                wtools::ConvertToUTF8(very_temp), ec.message());
+        XLOG::l("error removing '{}' with {} ", wtools::ToUtf8(very_temp),
+                ec.message());
 }
 
 void SafeCleanTempDir(std::string_view sub_dir) {
@@ -93,7 +93,7 @@ void SafeCleanTempDir(std::string_view sub_dir) {
     auto really_temp_dir = temp_dir.find(L"\\tmp", 0) != std::wstring::npos;
     if (!really_temp_dir) {
         XLOG::l("attempt to delete suspicious dir {}",
-                wtools::ConvertToUTF8(temp_dir));
+                wtools::ToUtf8(temp_dir));
         return;
     }
 

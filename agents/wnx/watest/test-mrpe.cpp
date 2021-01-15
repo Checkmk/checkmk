@@ -80,27 +80,24 @@ TEST(SectionProviderMrpe, SmallApi) {
         auto [user, path] = cma::provider::ParseIncludeEntry(
             "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
         EXPECT_EQ(user, "sk");
-        EXPECT_EQ(path.u8string(),
-                  wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
-                      "mrpe_checks.cfg");
+        EXPECT_EQ(path.u8string(), wtools::ToUtf8(cma::cfg::GetUserDir()) +
+                                       "\\" + "mrpe_checks.cfg");
     }
 
     {
         auto [user, path] = cma::provider::ParseIncludeEntry(
             " = $CUSTOM_AGENT_PATH$\\mpe_cecks.cfg  ");
         EXPECT_TRUE(user.empty());
-        EXPECT_EQ(path.u8string(),
-                  wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
-                      "mpe_cecks.cfg");
+        EXPECT_EQ(path.u8string(), wtools::ToUtf8(cma::cfg::GetUserDir()) +
+                                       "\\" + "mpe_cecks.cfg");
     }
 
     {
         auto [user, path] = cma::provider::ParseIncludeEntry(
             " = '$CUSTOM_AGENT_PATH$\\mpe_cecks.cfg'  ");
         EXPECT_TRUE(user.empty());
-        EXPECT_EQ(path.u8string(),
-                  wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
-                      "mpe_cecks.cfg");
+        EXPECT_EQ(path.u8string(), wtools::ToUtf8(cma::cfg::GetUserDir()) +
+                                       "\\" + "mpe_cecks.cfg");
     }
 }
 

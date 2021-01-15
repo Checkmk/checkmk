@@ -191,7 +191,7 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
     XLOG::l.i("---------------------------------------------\n");
     auto to_utf8 = [](const auto bstr) -> auto {
         if (bstr == nullptr) return std::string("nullptr");
-        return wtools::ConvertToUTF8(bstr);
+        return wtools::ToUtf8(bstr);
     };
 
     if (SUCCEEDED(fw_rule->get_Name(&bstrVal))) {
@@ -219,13 +219,13 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
             case NET_FW_IP_PROTOCOL_TCP:
 
                 XLOG::l.i("IP Protocol:      '{}'",
-                          wtools::ConvertToUTF8(NET_FW_IP_PROTOCOL_TCP_NAME));
+                          wtools::ToUtf8(NET_FW_IP_PROTOCOL_TCP_NAME));
                 break;
 
             case NET_FW_IP_PROTOCOL_UDP:
 
                 XLOG::l.i("IP Protocol:      '{}'",
-                          wtools::ConvertToUTF8(NET_FW_IP_PROTOCOL_UDP_NAME));
+                          wtools::ToUtf8(NET_FW_IP_PROTOCOL_UDP_NAME));
                 break;
 
             default:
@@ -278,13 +278,13 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
             case NET_FW_RULE_DIR_IN:
 
                 XLOG::l.i("Direction:        '{}'",
-                          wtools::ConvertToUTF8(NET_FW_RULE_DIR_IN_NAME));
+                          wtools::ToUtf8(NET_FW_RULE_DIR_IN_NAME));
                 break;
 
             case NET_FW_RULE_DIR_OUT:
 
                 XLOG::l.i("Direction:        '{}'",
-                          wtools::ConvertToUTF8(NET_FW_RULE_DIR_OUT_NAME));
+                          wtools::ToUtf8(NET_FW_RULE_DIR_OUT_NAME));
                 break;
 
             default:
@@ -298,13 +298,13 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
             case NET_FW_ACTION_BLOCK:
 
                 XLOG::l.i("Action:           '{}'",
-                          wtools::ConvertToUTF8(NET_FW_RULE_ACTION_BLOCK_NAME));
+                          wtools::ToUtf8(NET_FW_RULE_ACTION_BLOCK_NAME));
                 break;
 
             case NET_FW_ACTION_ALLOW:
 
                 XLOG::l.i("Action:           '{}'",
-                          wtools::ConvertToUTF8(NET_FW_RULE_ACTION_ALLOW_NAME));
+                          wtools::ToUtf8(NET_FW_RULE_ACTION_ALLOW_NAME));
                 break;
 
             default:
@@ -323,7 +323,7 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
                  index < (long)pSa->rgsabound->cElements; index++) {
                 SafeArrayGetElement(pSa, &index, &InterfaceString);
                 XLOG::l.i("Interfaces:       '{}'",
-                          wtools::ConvertToUTF8((BSTR)InterfaceString.bstrVal));
+                          wtools::ToUtf8((BSTR)InterfaceString.bstrVal));
                 InterfaceString.Clear();
             }
         }
@@ -337,10 +337,10 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
     if (SUCCEEDED(fw_rule->get_Enabled(&bEnabled))) {
         if (bEnabled) {
             XLOG::l.i("Enabled:          '{}'",
-                      wtools::ConvertToUTF8(NET_FW_RULE_ENABLE_IN_NAME));
+                      wtools::ToUtf8(NET_FW_RULE_ENABLE_IN_NAME));
         } else {
             XLOG::l.i("Enabled:          '{}'",
-                      wtools::ConvertToUTF8(NET_FW_RULE_DISABLE_IN_NAME));
+                      wtools::ToUtf8(NET_FW_RULE_DISABLE_IN_NAME));
         }
     }
 
@@ -352,10 +352,10 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
     if (SUCCEEDED(fw_rule->get_EdgeTraversal(&bEnabled))) {
         if (bEnabled) {
             XLOG::l.i("Edge Traversal:   '{}'",
-                      wtools::ConvertToUTF8(NET_FW_RULE_ENABLE_IN_NAME));
+                      wtools::ToUtf8(NET_FW_RULE_ENABLE_IN_NAME));
         } else {
             XLOG::l.i("Edge Traversal:   '{}'",
-                      wtools::ConvertToUTF8(NET_FW_RULE_DISABLE_IN_NAME));
+                      wtools::ToUtf8(NET_FW_RULE_DISABLE_IN_NAME));
         }
     }
 
@@ -395,7 +395,7 @@ static std::wstring ToCanonical(std::wstring_view raw_app_name) {
 
     XLOG::l.i(
         "Path '{}' cannot be canonical: probably based on the environment variables",
-        wtools::ConvertToUTF8(raw_app_name));
+        wtools::ToUtf8(raw_app_name));
 
     return std::wstring(raw_app_name);
 }
@@ -542,8 +542,7 @@ bool RemoveRule(std::wstring_view name, std::wstring_view raw_app_name) {
                     new_name = GenerateRandomRuleName();
                     fw_rule->put_Name(wtools::Bstr(new_name));
                     XLOG::t("Rule '{}' renamed to '{}' for deletion",
-                            wtools::ConvertToUTF8(name),
-                            wtools::ConvertToUTF8(new_name));
+                            wtools::ToUtf8(name), wtools::ToUtf8(new_name));
                     return fw_rule;  // found
                 }
             }
@@ -552,8 +551,8 @@ bool RemoveRule(std::wstring_view name, std::wstring_view raw_app_name) {
     // in any case we have to clean
     if (rule) rule->Release();
     if (!new_name.empty()) {
-        XLOG::t("Removing Rule '{}' for exe '{}'", wtools::ConvertToUTF8(name),
-                wtools::ConvertToUTF8(app_name));
+        XLOG::t("Removing Rule '{}' for exe '{}'", wtools::ToUtf8(name),
+                wtools::ToUtf8(app_name));
         return RemoveRule(new_name);
     }
 

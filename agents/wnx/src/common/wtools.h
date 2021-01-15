@@ -532,17 +532,15 @@ private:
     }
 };
 
-// standard converter, generates no exception in Windows but!
+// Standard converter, generates no exception in Windows
 // we support two converters
 // one is deprecated, second is windows only
-// nice, yes?
-// gtest [+]
-inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
+inline std::string ToUtf8(const std::wstring_view src) noexcept {
 #if defined(WINDOWS_OS)
     // Windows only
-    auto in_len = static_cast<int>(Src.length());
+    auto in_len = static_cast<int>(src.length());
     auto out_len =
-        ::WideCharToMultiByte(CP_UTF8, 0, Src.data(), in_len, NULL, 0, 0, 0);
+        ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len, NULL, 0, 0, 0);
     if (out_len == 0) return {};
 
     std::string str;
@@ -554,31 +552,30 @@ inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
     }
 
     // convert
-    ::WideCharToMultiByte(CP_UTF8, 0, Src.data(), -1, str.data(), out_len, 0,
+    ::WideCharToMultiByte(CP_UTF8, 0, src.data(), -1, str.data(), out_len, 0,
                           0);
     return str;
 #else
     // standard but deprecated
     try {
-        return wstring_convert<codecvt_utf8<wchar_t>>().to_bytes(Src);
+        return wstring_convert<codecvt_utf8<wchar_t>>().to_bytes(src);
     } catch (const exception& e) {
-        xlog::l("Failed to convert %ls", Src.c_str());
+        xlog::l("Failed to convert %ls", src.c_str());
         return "";
     }
 #endif  // endif
 }
 
-inline std::string ConvertToUTF8(const std::string_view src) noexcept {
+inline std::string ToUtf8(const std::string_view src) noexcept {
     return std::string(src);
 }
 
 // standard Windows converter from Microsoft
 // WINDOWS ONLY
-// gtest [+] in yaml
-inline std::wstring ConvertToUTF16(const std::string_view Src) noexcept {
+inline std::wstring ConvertToUTF16(const std::string_view src) noexcept {
 #if defined(WINDOWS_OS)
-    auto in_len = static_cast<int>(Src.length());
-    auto utf8_str = Src.data();
+    auto in_len = static_cast<int>(src.length());
+    auto utf8_str = src.data();
     auto out_len = MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, NULL, 0);
     std::wstring wstr;
     try {
@@ -720,7 +717,7 @@ std::string SmartConvertUtf16toUtf8(const std::vector<T>& original_data) {
         std::wstring wdata(raw_data, raw_data + (original_data.size() - 2) / 2);
         if (wdata.empty()) return {};
 
-        return wtools::ConvertToUTF8(wdata);
+        return wtools::ToUtf8(wdata);
     }
 
     std::string data;

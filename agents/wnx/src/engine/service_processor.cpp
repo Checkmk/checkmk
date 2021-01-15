@@ -283,7 +283,7 @@ void ServiceProcessor::resetOhm() noexcept {
     auto cmd_line = powershell_exe;
     cmd_line += L" ";
     cmd_line += std::wstring(cma::provider::ohm::kResetCommand);
-    XLOG::l.i("I'm going to execute '{}'", wtools::ConvertToUTF8(cmd_line));
+    XLOG::l.i("I'm going to execute '{}'", wtools::ToUtf8(cmd_line));
 
     cma::tools::RunStdCommand(cmd_line, true);
 }
@@ -510,7 +510,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
             XLOG::l("Service is disabled in config, leaving...");
 
             cma::tools::RunDetachedCommand(std::string("net stop ") +
-                                           wtools::ConvertToUTF8(kServiceName));
+                                           wtools::ToUtf8(kServiceName));
             break;
         }
 
@@ -784,14 +784,14 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
         PROCESS_INFORMATION pi{0};
         if (!::CreateProcess(exe_name.c_str(), nullptr, nullptr, nullptr, TRUE,
                              0, nullptr, nullptr, &si, &pi)) {
-            XLOG::l("Failed to run {}", wtools::ConvertToUTF8(exe_name));
+            XLOG::l("Failed to run {}", wtools::ToUtf8(exe_name));
             return false;
         }
         process_handle_ = pi.hProcess;
         process_id_ = pi.dwProcessId;
         CloseHandle(pi.hThread);  // as in LA
 
-        process_name_ = wtools::ConvertToUTF8(exe_name);
+        process_name_ = wtools::ToUtf8(exe_name);
         XLOG::d.i("Started '{}' wih pid [{}]", process_name_, process_id_);
     }
 

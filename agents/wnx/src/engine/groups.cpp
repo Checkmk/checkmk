@@ -433,7 +433,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
         cli.cmd_line_.pop_back();
 
     XLOG::t.i("Expected to execute [{}] plugins '{}'", files.size(),
-              wtools::ConvertToUTF8(cli.cmd_line_));
+              wtools::ToUtf8(cli.cmd_line_));
 
     return cli;
 }

@@ -490,7 +490,7 @@ protected:
         auto table = details::AllDirTable();
         auto table_removed = details::RemovableDirTable();
         for (auto& n : table) {
-            tst::ConstructFile(pd / n / "1.tmp", wtools::ConvertToUTF8(n));
+            tst::ConstructFile(pd / n / "1.tmp", wtools::ToUtf8(n));
         }
 
         user_folders_count_ = table.size() - table_removed.size();

@@ -978,7 +978,7 @@ TEST(UpgradeTest, CopyFiles) {
         lwa_path, cma::cfg::GetTempDir(), fs::copy_options::overwrite_existing,
         [lwa_path](fs::path P) {
             XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, lwa_path),
-                      wtools::ConvertToUTF8(cma::cfg::GetTempDir()));
+                      wtools::ToUtf8(cma::cfg::GetTempDir()));
             return true;
         });
     EXPECT_EQ(count, 4);
@@ -987,7 +987,7 @@ TEST(UpgradeTest, CopyFiles) {
         lwa_path, cma::cfg::GetTempDir(), fs::copy_options::skip_existing,
         [lwa_path](fs::path path) {
             XLOG::l.i("Copy '{}' to '{}'", fs::relative(path, lwa_path),
-                      wtools::ConvertToUTF8(cma::cfg::GetTempDir()));
+                      wtools::ToUtf8(cma::cfg::GetTempDir()));
             return true;
         });
     EXPECT_TRUE(count == 0);

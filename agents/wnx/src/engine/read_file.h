@@ -38,7 +38,7 @@ void DisplayReadFileError(const T* file_name) {
     std::error_code ec;
     auto cur_dir = std::filesystem::current_path(ec);
     if constexpr (sizeof(T) == 2)
-        XLOG::l("File '{}' not found in {}", wtools::ConvertToUTF8(file_name),
+        XLOG::l("File '{}' not found in {}", wtools::ToUtf8(file_name),
                 cur_dir);
     else
         XLOG::l("File '{}' not found in {}", file_name, cur_dir);

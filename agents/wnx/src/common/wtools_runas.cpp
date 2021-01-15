@@ -176,7 +176,7 @@ std::optional<LUID> GetLookupPrivilegeValue(const wchar_t* privilegs) {
     LUID luid;
     if (::LookupPrivilegeValue(nullptr, privilegs, &luid) == FALSE) {
         XLOG::l.bp("Could not find privilege  '{}' [{}]",
-                   wtools::ConvertToUTF8(privilegs), ::GetLastError());
+                   wtools::ToUtf8(privilegs), ::GetLastError());
         return {};
     }
 
@@ -504,8 +504,8 @@ bool GetUserHandlePredefinedUser(HANDLE& user_handle,
         LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_WINNT50, &user_handle);
     XLOG::l.t("LogonUser {}", ::GetLastError());
     if ((FALSE == logged_in) || wtools::IsBadHandle(user_handle)) {
-        XLOG::l("Error logging in as '{}' [{}]",
-                wtools::ConvertToUTF8(user_name), ::GetLastError());
+        XLOG::l("Error logging in as '{}' [{}]", wtools::ToUtf8(user_name),
+                ::GetLastError());
         return false;
     }
 
@@ -702,7 +702,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
 
     XLOG::t("Exec using desktop {}", si.lpDesktop == nullptr
                                          ? "{default}"
-                                         : wtools::ConvertToUTF8(si.lpDesktop));
+                                         : wtools::ToUtf8(si.lpDesktop));
 
     DWORD start_flags = CREATE_SUSPENDED;  //| CREATE_NEW_CONSOLE <- forbidden
 
@@ -721,18 +721,18 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
 
     auto [domain, user] = GetDomainUser(settings.user);
 
-    XLOG::t(
-        "U:{} D:{} P:{} bP:{} Env:{} WD:{}", wtools::ConvertToUTF8(user),
-        wtools::ConvertToUTF8(domain), wtools::ConvertToUTF8(settings.password),
-        settings.dont_load_profile, environment != nullptr ? "true" : "null",
-        starting_dir.empty() ? "null" : wtools::ConvertToUTF8(starting_dir));
+    XLOG::t("U:{} D:{} P:{} bP:{} Env:{} WD:{}", wtools::ToUtf8(user),
+            wtools::ToUtf8(domain), wtools::ToUtf8(settings.password),
+            settings.dont_load_profile,
+            environment != nullptr ? "true" : "null",
+            starting_dir.empty() ? "null" : wtools::ToUtf8(starting_dir));
 
     BOOL launched = FALSE;
     DWORD launch_gle = 0;
 
     if (settings.use_system_account) {
         XLOG::l.i("Exec starting process [{}] as Local System",
-                  wtools::ConvertToUTF8(path));
+                  wtools::ToUtf8(path));
 
         if (wtools::IsBadHandle(settings.hUser))
             XLOG::l("Have bad user handle");
@@ -753,18 +753,17 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
         if (0 != launch_gle)
             XLOG::t(
                 "Launch (launchGLE={}) params: user=[x{:X}] path=[{}] flags=[x{:X}], pEnv=[{}], dir=[{}], stdin=[x{:X}], stdout=[x{:X}], stderr=[x{:X}]",
-                launch_gle, settings.hUser, wtools::ConvertToUTF8(path),
-                start_flags, environment != nullptr ? "{env}" : "{null}",
-                starting_dir.empty() ? "{null}" : ConvertToUTF8(starting_dir),
+                launch_gle, settings.hUser, wtools::ToUtf8(path), start_flags,
+                environment != nullptr ? "{env}" : "{null}",
+                starting_dir.empty() ? "{null}" : ToUtf8(starting_dir),
                 si.hStdInput, si.hStdOutput, si.hStdError);
 
         ::RevertToSelf();
     } else {
         if (!settings.user.empty())  // launching as a specific user
         {
-            XLOG::l.t("Exec starting process [{}] as {}",
-                      wtools::ConvertToUTF8(path),
-                      wtools::ConvertToUTF8(settings.user));
+            XLOG::l.t("Exec starting process [{}] as {}", wtools::ToUtf8(path),
+                      wtools::ToUtf8(settings.user));
 
             if (!settings.run_limited) {
                 launched = CreateProcessWithLogonW(
@@ -781,19 +780,18 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
                         "Launch (launchGLE={:X}) params: user=[{}] "
                         "domain=[{}] "
                         "prof=[x{:X}] ",
-                        launch_gle, wtools::ConvertToUTF8(user),
-                        wtools::ConvertToUTF8(domain),
+                        launch_gle, wtools::ToUtf8(user),
+                        wtools::ToUtf8(domain),
                         settings.dont_load_profile ? 0 : LOGON_WITH_PROFILE);
                     XLOG::t(
                         "path=[{}] flags=[x{:X}],"
                         " pEnv=[{}],"
                         " dir=[{}],"
                         " stdin=[x{:X}], stdout=[x{:X}], stderr=[x{:X}]",
-                        wtools::ConvertToUTF8(path), start_flags,
+                        wtools::ToUtf8(path), start_flags,
                         environment != nullptr ? "{env}" : "{null}",
-                        starting_dir.empty()
-                            ? "{null}"
-                            : wtools::ConvertToUTF8(starting_dir),
+                        starting_dir.empty() ? "{null}"
+                                             : wtools::ToUtf8(starting_dir),
                         si.hStdInput, si.hStdOutput, si.hStdError);
                 }
             } else
@@ -827,17 +825,16 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
                 if (0 != launch_gle)
                     XLOG::t(
                         "Launch (launchGLE={}) params: user=[x{:X}] path=[{}] pEnv=[{}], dir=[{}], stdin=[x{:X}], stdout=[x{:X}], stderr=[x{:X}]",
-                        launch_gle, settings.hUser, wtools::ConvertToUTF8(path),
+                        launch_gle, settings.hUser, wtools::ToUtf8(path),
                         environment != nullptr ? "{env}" : "{null}",
-                        starting_dir.empty()
-                            ? "{null}"
-                            : wtools::ConvertToUTF8(starting_dir),
+                        starting_dir.empty() ? "{null}"
+                                             : wtools::ToUtf8(starting_dir),
                         si.hStdInput, si.hStdOutput, si.hStdError);
                 ::RevertToSelf();
             }
         } else {
             XLOG::l.t("Exec starting process [{}] as current user",
-                      wtools::ConvertToUTF8(path));
+                      wtools::ToUtf8(path));
 
             EnablePrivilege(SE_ASSIGNPRIMARYTOKEN_NAME);
             EnablePrivilege(SE_INCREASE_QUOTA_NAME);
@@ -860,11 +857,10 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
 
             XLOG::d.i(
                 "Launch (launchGLE={}) params: path=[{}] user=[{}], pEnv=[{}], dir=[{}], stdin=[{:X}], stdout=[{:X}], stderr=[{:X}]",
-                launch_gle, wtools::ConvertToUTF8(path),
+                launch_gle, wtools::ToUtf8(path),
                 settings.hUser != nullptr ? "{non-null}" : "{null}",
                 environment != nullptr ? "{env}" : "{null}",
-                starting_dir.empty() ? "{null}"
-                                     : wtools::ConvertToUTF8(starting_dir),
+                starting_dir.empty() ? "{null}" : wtools::ToUtf8(starting_dir),
                 si.hStdInput, si.hStdOutput, si.hStdError);
         }
     }
@@ -884,8 +880,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
         if (ret == FALSE) XLOG::l(XLOG_FLINE + " error [{}]", ::GetLastError());
 
     } else {
-        XLOG::l("Failed to start {} [{}]", wtools::ConvertToUTF8(path),
-                launch_gle);
+        XLOG::l("Failed to start {} [{}]", wtools::ToUtf8(path), launch_gle);
         if ((ERROR_ELEVATION_REQUIRED == launch_gle) && (!g_in_service))
             XLOG::l("HINT: Exec probably needs to be 'Run As Administrator'");
     }

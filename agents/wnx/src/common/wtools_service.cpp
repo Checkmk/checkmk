@@ -21,7 +21,7 @@ uint32_t WinService::ReadUint32(std::wstring_view service_name,
 
 std::string WinService::pathToRegistry(std::wstring_view service) {
     const std::string base{R"(SYSTEM\CurrentControlSet\Services\)"};
-    return base + wtools::ConvertToUTF8(service);
+    return base + wtools::ToUtf8(service);
 }
 
 WinService::WinService(std::wstring_view name) {
@@ -37,7 +37,7 @@ WinService::WinService(std::wstring_view name) {
 
     if (nullptr == handle_) {
         XLOG::l.crit("Cannot open Service {}, error =  {}",
-                     wtools::ConvertToUTF8(name), ::GetLastError());
+                     wtools::ToUtf8(name), ::GetLastError());
     }
 }
 

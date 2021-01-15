@@ -580,9 +580,8 @@ private:
             [this, ExeName](const AnswerId Tp, ServiceProcessor* Proc,
                             const std::wstring& SegmentName, int Timeout,
                             const std::wstring& CommandLine) {
-                XLOG::l.i("Exec {} for {} started",
-                          wtools::ConvertToUTF8(ExeName),
-                          wtools::ConvertToUTF8(SegmentName));
+                XLOG::l.i("Exec {} for {} started", wtools::ToUtf8(ExeName),
+                          wtools::ToUtf8(SegmentName));
 
                 auto full_path = cma::cfg::FindExeFileOnPath(ExeName);
                 if (full_path.empty()) {
@@ -592,7 +591,7 @@ private:
                         path_string += dir.u8string() + "\n";
                     }
                     XLOG::l("File {} not found on the path {}",
-                            wtools::ConvertToUTF8(ExeName), path_string);
+                            wtools::ToUtf8(ExeName), path_string);
                     return false;
                 }
 
@@ -606,8 +605,7 @@ private:
                                 Tp.time_since_epoch().count(),  // answer id
                                 Timeout, CommandLine);
 
-                XLOG::d.i("async RunStdCmd: {}",
-                          wtools::ConvertToUTF8(cmd_line));
+                XLOG::d.i("async RunStdCmd: {}", wtools::ToUtf8(cmd_line));
                 cma::tools::RunStdCommand(cmd_line, false);
 
                 return true;

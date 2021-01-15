@@ -134,7 +134,7 @@ std::string Services::makeBody() {
         auto state_name = ConvertState2Name(state);
 
         // replace in name ' ' with  '_'
-        auto service_name = wtools::ConvertToUTF8(service->lpServiceName);
+        auto service_name = wtools::ToUtf8(service->lpServiceName);
         std::replace(service_name.begin(), service_name.end(), ' ', '_');
 
         auto start_type = GetServiceStartType(handle, service->lpServiceName);
@@ -143,7 +143,7 @@ std::string Services::makeBody() {
                            service_name,     // name
                            state_name,       // state
                            start_type,       // start
-                           wtools::ConvertToUTF8(service->lpDisplayName));
+                           wtools::ToUtf8(service->lpDisplayName));
 
         ++service;
     }

@@ -289,7 +289,7 @@ std::wstring GetPathOfLoadedConfig() {
 }
 
 std::string GetPathOfLoadedConfigAsString() {
-    return wtools::ConvertToUTF8(GetPathOfLoadedConfig());
+    return wtools::ToUtf8(GetPathOfLoadedConfig());
 }
 
 std::wstring GetPathOfLoadedUserConfig() noexcept {
@@ -451,7 +451,7 @@ std::wstring FindServiceImagePath(std::wstring_view service_name) {
     using namespace std::literals;
     if (service_name.empty()) return {};
 
-    XLOG::l.t("Try registry '{}'", wtools::ConvertToUTF8(service_name));
+    XLOG::l.t("Try registry '{}'", wtools::ToUtf8(service_name));
 
     auto key_path = L"System\\CurrentControlSet\\services\\"s;
     key_path += service_name;
@@ -466,7 +466,7 @@ std::filesystem::path ExtractPathFromServiceName(
     std::wstring_view service_name) {
     namespace fs = std::filesystem;
     if (service_name.empty()) return {};
-    XLOG::l.t("Try service '{}'", wtools::ConvertToUTF8(service_name));
+    XLOG::l.t("Try service '{}'", wtools::ToUtf8(service_name));
 
     fs::path service_path = FindServiceImagePath(service_name);
     std::error_code ec;
@@ -489,8 +489,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
 ) {
     namespace fs = std::filesystem;
     XLOG::d.t("Setting root. service: '{}', preset: '{}'",
-              wtools::ConvertToUTF8(service_name),
-              wtools::ConvertToUTF8(preset_root));
+              wtools::ToUtf8(service_name), wtools::ToUtf8(preset_root));
 
     // Path from registry if provided
     auto service_path_new = ExtractPathFromServiceName(service_name);
@@ -498,7 +497,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
         // location of the services
         root_ = service_path_new.lexically_normal();
         XLOG::l.i("Set root '{}' from registry '{}'", root_,
-                  wtools::ConvertToUTF8(service_name));
+                  wtools::ToUtf8(service_name));
         return true;
     }
 
@@ -839,7 +838,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
         if (full_path.empty()) {
             XLOG::l.i(
                 "Loading {} direct. User and Bakery files will be IGNORED",
-                wtools::ConvertToUTF8(name));
+                wtools::ToUtf8(name));
             auto loaded = GetCfg().loadDirect(name);
             if (!loaded) continue;
 
@@ -864,7 +863,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
     if (code >= 0) return true;
 
     XLOG::l.e("Failed usable_name: '{}' at root: '{}' code is '{}'",
-              wtools::ConvertToUTF8(usable_name), GetCfg().getRootDir(), code);
+              wtools::ToUtf8(usable_name), GetCfg().getRootDir(), code);
 
     return false;
 }
@@ -967,7 +966,7 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring& file_name,
                                 FallbackPolicy fallback_policy,
                                 int* error_code_ptr) {
     namespace fs = std::filesystem;
-    auto name = wtools::ConvertToUTF8(file_name);
+    auto name = wtools::ToUtf8(file_name);
     if (fs::exists(file_name)) {
         int error_code = 0;
         try {
@@ -1039,7 +1038,7 @@ std::vector<std::string> GetInternalArray(std::string_view section_name,
         return GetInternalArray(section, value_name);
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file '{}' with '{}.{}' code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), section_name,
+                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name,
                 value_name, e.what());
     }
     return {};
@@ -1060,8 +1059,7 @@ void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
         yaml_node[value_name] = result;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file '{}' with '{}' code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), value_name,
-                e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), value_name, e.what());
     }
 }
 
@@ -1079,7 +1077,7 @@ void PutInternalArray(std::string_view section_name,
         PutInternalArray(section, value_name, arr);
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file '{}' with '{}.{} 'code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), section_name,
+                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name,
                 value_name, e.what());
     }
 }
@@ -1133,7 +1131,7 @@ std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
 
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file '{}' with '{}' code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), name, e.what());
+                wtools::ToUtf8(GetPathOfLoadedConfig()), name, e.what());
     }
     return {};
 }
@@ -1152,8 +1150,7 @@ void SetupPluginEnvironment() {
                    {envs::kMkMsiPathName, GetUpdateDir()}}};
 
     for (const auto& d : env_pairs)
-        cma::tools::win::SetEnv(std::string{d.first},
-                                wtools::ConvertToUTF8(d.second));
+        cma::tools::win::SetEnv(std::string{d.first}, wtools::ToUtf8(d.second));
 }
 
 void ProcessPluginEnvironment(
@@ -1182,7 +1179,7 @@ void ProcessPluginEnvironment(
         }};
 
     for (const auto& d : env_pairs) {
-        func(d.first, wtools::ConvertToUTF8(d.second()));
+        func(d.first, wtools::ToUtf8(d.second()));
     }
 }
 
@@ -1894,7 +1891,7 @@ std::string ReplacePredefinedMarkers(std::string_view work_path) {
 
     std::string f(work_path);
     for (const auto& [marker, path] : pairs) {
-        if (ReplaceInString(f, marker, wtools::ConvertToUTF8(path))) return f;
+        if (ReplaceInString(f, marker, wtools::ToUtf8(path))) return f;
     }
 
     return f;

@@ -72,15 +72,12 @@ TEST(SectionProviderSkype, SimulatedIntegration) {
     EXPECT_EQ(hdr1[0], "sampletime");
     EXPECT_TRUE(std::atoll(hdr1[1].c_str()) > 0);
     EXPECT_TRUE(std::atoll(hdr1[2].c_str()) > 0);
-    EXPECT_EQ(
-        table[2],
-        fmt::format("[{}]", wtools::ConvertToUTF8((*g_skype_counters)[0])));
-    EXPECT_EQ(
-        table[5],
-        fmt::format("[{}]", wtools::ConvertToUTF8((*g_skype_counters)[1])));
-    EXPECT_EQ(
-        table[table.size() - 3],
-        fmt::format("[{}]", wtools::ConvertToUTF8(g_skype_asp_some_counter)));
+    EXPECT_EQ(table[2],
+              fmt::format("[{}]", wtools::ToUtf8((*g_skype_counters)[0])));
+    EXPECT_EQ(table[5],
+              fmt::format("[{}]", wtools::ToUtf8((*g_skype_counters)[1])));
+    EXPECT_EQ(table[table.size() - 3],
+              fmt::format("[{}]", wtools::ToUtf8(g_skype_asp_some_counter)));
 }
 
 }  // namespace cma::provider

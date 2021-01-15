@@ -106,7 +106,7 @@ std::wstring GetCounters(
                  counter_names.size(), counters.size(), name_map.size());
 
     for (auto& counter_name : counter_names) {
-        SkypeTestLog("scanning {} name", wtools::ConvertToUTF8(counter_name));
+        SkypeTestLog("scanning {} name", wtools::ToUtf8(counter_name));
         wide += L"," + counter_name;
     }
     wide += L"\n";
@@ -148,7 +148,7 @@ void AddData(std::wstring& body,
 std::wstring SkypeProvider::makeSubSection(std::wstring_view name) {
     namespace perf = wtools::perf;
 
-    auto reg_name = wtools::ConvertToUTF8(name);
+    auto reg_name = wtools::ToUtf8(name);
     SkypeTestLog("Skyping Perf Counter '{}'", reg_name);
 
     uint32_t key_index = 0;
@@ -206,7 +206,7 @@ std::string SkypeProvider::makeBody() {
     }
 
     subsections += makeSubSection(g_skype_asp_some_counter);
-    return makeFirstLine() + wtools::ConvertToUTF8(subsections);
+    return makeFirstLine() + wtools::ToUtf8(subsections);
 }
 
 }  // namespace cma::provider

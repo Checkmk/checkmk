@@ -210,11 +210,11 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     if (wmi_object.empty() || wmi_namespace.empty())
         return {"", WmiStatus::bad_param};
 
-    auto object_name = ConvertToUTF8(wmi_object);
+    auto object_name = ToUtf8(wmi_object);
     cma::tools::TimeLog tl(object_name);  // start measure
     auto id = [ wmi_namespace, object_name ]() -> auto {
-        return fmt::formatv(R"("{}\{}")",                  //
-                            ConvertToUTF8(wmi_namespace),  //
+        return fmt::formatv(R"("{}\{}")",           //
+                            ToUtf8(wmi_namespace),  //
                             object_name);
     };
 
@@ -237,7 +237,7 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
 
     tl.writeLog(ret.size());  // fix measure
 
-    return {ConvertToUTF8(ret), status};
+    return {ToUtf8(ret), status};
 }
 
 static std::wstring CharToWideString(char ch) {

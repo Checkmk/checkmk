@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // API "Internal transport"
 
@@ -178,16 +179,15 @@ public:
 
         auto id = ConvertToUint64(Id);
         if (id.has_value()) {
-            auto port = wtools::ConvertToUTF8(Port);
+            auto port = wtools::ToUtf8(Port);
             CoreCarrier cc;
             cc.establishCommunication(port);
-            auto ret = cc.sendData(wtools::ConvertToUTF8(PeerName), id.value(),
-                                   Data, Length);
+            auto ret =
+                cc.sendData(wtools::ToUtf8(PeerName), id.value(), Data, Length);
             cc.shutdownCommunication();
             return ret;
         } else {
-            XLOG::l("Failed to convert id value '{}'",
-                    wtools::ConvertToUTF8(Id));
+            XLOG::l("Failed to convert id value '{}'", wtools::ToUtf8(Id));
             return false;
         }
     }
@@ -197,10 +197,10 @@ public:
     static bool FireCommand(const std::wstring& Name, const T& Port,
                             const void* Data, size_t Length) {
         CoreCarrier cc;
-        auto port = wtools::ConvertToUTF8(Port);
+        auto port = wtools::ToUtf8(Port);
         cc.establishCommunication(port);
 
-        cc.sendLog(wtools::ConvertToUTF8(Name), Data, Length);
+        cc.sendLog(wtools::ToUtf8(Name), Data, Length);
         cc.shutdownCommunication();
         return true;
     }
@@ -210,10 +210,10 @@ public:
     static bool FireLog(const std::wstring& Name, const T& Port,
                         const void* Data, size_t Length) {
         CoreCarrier cc;
-        auto port = wtools::ConvertToUTF8(Port);
+        auto port = wtools::ToUtf8(Port);
         cc.establishCommunication(port);
 
-        cc.sendLog(wtools::ConvertToUTF8(Name), Data, Length);
+        cc.sendLog(wtools::ToUtf8(Name), Data, Length);
         cc.shutdownCommunication();
         return true;
     }

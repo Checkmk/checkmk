@@ -144,19 +144,19 @@ TEST(PlayerTest, ConfigFolders) {
     {
         std::string s = "$BUILTIN_AGENT_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
     }
 
     {
         std::string s = "$BUILTIN_PLUGINS_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
     }
 
     {
         std::string s = "$CUSTOM_PLUGINS_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetUserPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetUserPluginsDir()) + "\\");
     }
 
     {
@@ -372,14 +372,14 @@ TEST(PlayerTest, RealLifeInventory_Long) {
             auto raw_data = reinterpret_cast<const wchar_t*>(Data.data() + 2);
             wstring wdata(raw_data, raw_data + (Data.size() - 2) / 2);
             if (wdata.back() != 0) wdata += L'\0';
-            data = wtools::ConvertToUTF8(wdata);
+            data = wtools::ToUtf8(wdata);
         } else {
             data.assign(Data.begin(), Data.end());
         }
 
         if (data.back() != 0) data += '\0';
         XLOG::d("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+                wtools::ToUtf8(CmdLine), Pid, Code, data.data());
 
         cma::tools::AddVector(accu, data);
         count++;

@@ -89,9 +89,9 @@ GlobType DetermineGlobType(const std::wstring &input) {
             std::regex_match(input, match, std::wregex(patterns[2])))
             return GlobType::kSimple;
     } catch (const std::exception &e) {
-        XLOG::l("Bad pattern {} '{}'", wtools::ConvertToUTF8(input), e.what());
+        XLOG::l("Bad pattern {} '{}'", wtools::ToUtf8(input), e.what());
     } catch (...) {
-        XLOG::l.crit("Bad pattern {} '{}'", wtools::ConvertToUTF8(input));
+        XLOG::l.crit("Bad pattern {} '{}'", wtools::ToUtf8(input));
     }
 
     return GlobType::kNone;
@@ -332,7 +332,7 @@ PathVector FindFilesByMask(const std::wstring &mask) {
     // Trivial case, standard file, just return it back
     std::error_code ec;
     if (fs::is_regular_file(mask, ec)) {
-        XLOG::t("Found regular file as path '{}'", wtools::ConvertToUTF8(mask));
+        XLOG::t("Found regular file as path '{}'", wtools::ToUtf8(mask));
         return {fs::path(mask)};
     }
 

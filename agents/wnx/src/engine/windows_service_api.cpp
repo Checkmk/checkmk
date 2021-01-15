@@ -83,7 +83,7 @@ static bool execMsi() {
         return false;
     std::wstring exe = str;
     exe += L"\\msiexec.exe";
-    auto command = wtools::ConvertToUTF8(exe);
+    auto command = wtools::ToUtf8(exe);
     std::wstring options =
         L" /i \"C:\\z\\m\\check_mk\\agents\\wnx\\build\\install\\Release\\check_mk_service.msi\" "
         L"REINSTALL=ALL REINSTALLMODE=amus "
@@ -433,7 +433,7 @@ int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
 int ExecExtractCap(std::wstring_view cap_file, std::wstring_view to) {
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::DuplicateOnStdio(true);
-    return cma::cfg::cap::ExtractAll(wtools::ConvertToUTF8(cap_file), to);
+    return cma::cfg::cap::ExtractAll(wtools::ToUtf8(cap_file), to);
 }
 
 // on -cvt
@@ -500,7 +500,7 @@ int ExecSection(const std::wstring& SecName, int RepeatPause,
 
     auto y = cma::cfg::GetLoadedConfig();
     std::vector<std::string> sections;
-    sections.emplace_back(wtools::ConvertToUTF8(SecName));
+    sections.emplace_back(wtools::ToUtf8(SecName));
     cma::cfg::PutInternalArray(cma::cfg::groups::kGlobal,
                                cma::cfg::vars::kSectionsEnabled, sections);
     cma::cfg::ProcessKnownConfigGroups();
@@ -608,7 +608,7 @@ void ReportNoUpdaterFile(const std::filesystem::path& f,
             "\n\tYou must install Agent Updater Python plugin to use the command '{}'.\n"
             "\tTo install the plugin you may use the Bakery.\n"
             "\tAnother possibility is copy Agent Updater file manually into the plugins directory\n",
-            wtools::ConvertToUTF8(param)),
+            wtools::ToUtf8(param)),
         XLOG::Colors::white);
 }
 
@@ -619,7 +619,7 @@ void ReportNoPythonModule(std::wstring_view param) {
         fmt::format(
             "\n\tYou must install Python Module to use the command '{}'.\n"
             "\tTo install Python Module you should use Bakery.\n",
-            wtools::ConvertToUTF8(param)),
+            wtools::ToUtf8(param)),
         XLOG::Colors::white);
 }
 
@@ -666,7 +666,7 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
     }
 
     XLOG::l("Agent Updater process '{}' failed to start\n",
-            wtools::ConvertToUTF8(command_to_run));
+            wtools::ToUtf8(command_to_run));
     return 1;
 }
 
@@ -803,7 +803,7 @@ int ExecShowConfig(std::string_view sec) {
         XLOG::stdio("# {}=\"{}\"\n", name, value);
     });
 
-    auto files = wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig());
+    auto files = wtools::ToUtf8(cma::cfg::GetPathOfLoadedConfig());
     auto file_table = cma::tools::SplitString(files, ",");
 
     XLOG::SendStringToStdio("# Loaded Config Files:\n", XLOG::Colors::green);
@@ -906,8 +906,8 @@ int ExecSkypeTest() {
             if (!potential_name) break;
 
             // check name
-            result += wtools::ConvertToUTF8(potential_id) + ": " +
-                      wtools::ConvertToUTF8(potential_name) + "\n";
+            result += wtools::ToUtf8(potential_id) + ": " +
+                      wtools::ToUtf8(potential_name) + "\n";
         }
         XLOG::l.i("{}", result);
     }
@@ -1067,7 +1067,7 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
         if (success)
             XLOG::l.i(
                 "Firewall rule '{}' had been added successfully for ports [{}]",
-                wtools::ConvertToUTF8(kSrvFirewallRuleName), port);
+                wtools::ToUtf8(kSrvFirewallRuleName), port);
         return;
     }
 
@@ -1079,10 +1079,10 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
         if (count)
             XLOG::l.i(
                 "Firewall rule '{}' had been removed successfully [{}] times",
-                wtools::ConvertToUTF8(kSrvFirewallRuleName), count);
+                wtools::ToUtf8(kSrvFirewallRuleName), count);
         else
             XLOG::d.i("Firewall rule '{}' is absent, nothing to remove",
-                      wtools::ConvertToUTF8(kSrvFirewallRuleName));
+                      wtools::ToUtf8(kSrvFirewallRuleName));
         return;
     }
 }
@@ -1331,8 +1331,7 @@ SC_HANDLE SelfOpen() {
                                 SERVICE_ALL_ACCESS);
     if (nullptr == handle) {
         XLOG::l.crit("Cannot open Service {}, error =  {}",
-                     wtools::ConvertToUTF8(cma::srv::kServiceName),
-                     ::GetLastError());
+                     wtools::ToUtf8(cma::srv::kServiceName), ::GetLastError());
     }
 
     return handle;

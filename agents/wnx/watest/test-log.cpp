@@ -220,7 +220,7 @@ TEST(LogTest, All) {
 
     // DEFAULT
     auto prefix = GetDefaultPrefixName();
-    auto prefix_ascii = wtools::ConvertToUTF8(prefix);
+    auto prefix_ascii = wtools::ToUtf8(prefix);
     auto& lp = l.log_param_;
 
     EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint);

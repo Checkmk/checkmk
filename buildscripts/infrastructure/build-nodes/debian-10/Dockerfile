@@ -29,8 +29,6 @@ RUN apt-get update \
     apache2 \
     apache2-dev \
     build-essential \
-    chrpath \
-    curl \
     default-libmysqlclient-dev \
     dietlibc-dev \
     dnsutils \
@@ -38,9 +36,7 @@ RUN apt-get update \
     flex \
     gettext \
     git-buildpackage \
-    gtk-doc-tools \
-    iputils-ping \
-    joe \
+    curl \
     libcurl4-openssl-dev \
     libdbi-dev \
     libevent-dev \
@@ -63,7 +59,6 @@ RUN apt-get update \
     libsqlite3-dev \
     libssl-dev \
     libxml2-dev \
-    libxmlsec1-dev \
     openssh-client \
     patch \
     rpcbind \
@@ -72,8 +67,11 @@ RUN apt-get update \
     texinfo \
     tk-dev \
     uuid-dev \
-    valgrind \
+    chrpath \
+    joe \
+    iputils-ping \
     vim \
+    valgrind \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

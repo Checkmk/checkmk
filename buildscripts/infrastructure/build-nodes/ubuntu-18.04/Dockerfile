@@ -31,17 +31,13 @@ RUN apt-get update \
     apache2-dev \
     autoconf \
     build-essential \
-    chrpath \
-    curl \
     devscripts \
     dnsutils \
     dpatch \
     flex \
     gettext \
     git-buildpackage \
-    gtk-doc-tools \
-    iputils-ping \
-    joe \
+    curl \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \
@@ -65,7 +61,6 @@ RUN apt-get update \
     libssl-dev \
     libtool \
     libxml2-dev \
-    libxmlsec1-dev \
     openssh-client \
     patch \
     rpcbind \
@@ -74,8 +69,11 @@ RUN apt-get update \
     texinfo \
     tk-dev \
     uuid-dev \
-    valgrind \
+    chrpath \
+    joe \
+    iputils-ping \
     vim \
+    valgrind \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

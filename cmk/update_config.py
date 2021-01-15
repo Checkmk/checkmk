@@ -7,7 +7,7 @@
 
 This command is normally executed automatically at the end of "omd update" on
 all sites and on remote sites after receiving a snapshot and does not need to
-be called manually.",
+be called manually.
 """
 
 import re
@@ -41,6 +41,7 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 import cmk.utils
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName, UserId
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
@@ -325,10 +326,22 @@ class UpdateConfig:
     def _rewrite_wato_rulesets(self):
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
         all_rulesets.load()
+        self._transform_ignored_checks_to_maincheckified_list(all_rulesets)
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
         all_rulesets.save()
+
+    def _transform_ignored_checks_to_maincheckified_list(self, all_rulesets):
+        ignored_checks_ruleset = all_rulesets.get("ignored_checks")
+        if ignored_checks_ruleset.is_empty():
+            return
+
+        for _folder, _index, rule in ignored_checks_ruleset.get_rules():
+            if isinstance(rule.value, str):
+                rule.value = [maincheckify(rule.value)]
+            else:
+                rule.value = [maincheckify(s) for s in rule.value]
 
     def _transform_replaced_wato_rulesets(self, all_rulesets):
         replacements: Dict[str, cmk.gui.watolib.rulesets.Ruleset] = {}

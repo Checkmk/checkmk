@@ -1133,9 +1133,7 @@ def _checktype_ignored_for_host(
 ) -> bool:
     ignored = get_config_cache().host_extra_conf(host_name, ignored_checks)
     for e in ignored:
-        if isinstance(e, str) and check_plugin_name_str == maincheckify(e):
-            return True
-        if isinstance(e, list) and check_plugin_name_str in [maincheckify(n) for n in e]:
+        if check_plugin_name_str in e:
             return True
     return False
 

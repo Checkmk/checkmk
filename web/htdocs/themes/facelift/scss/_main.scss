@@ -22,6 +22,8 @@
 /* Change some general defaults of HTML that we do not like */
 td,
 th {
+  padding: 0;
+  font-weight: $font-weight-default;
   vertical-align: top;
 }
 

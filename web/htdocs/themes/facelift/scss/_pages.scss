@@ -305,7 +305,6 @@ table.data {
   th {
     padding: 0 8px 2px;
     font-size: $font-size-default;
-    font-weight: $font-weight-default;
     letter-spacing: $letter-spacing-table;
     color: $primary-link-color;
     text-align: left;
@@ -325,11 +324,9 @@ table.data {
 
   td {
     font-size: $font-size-default;
-    font-weight: $font-weight-default;
     line-height: 1.3;
     letter-spacing: $letter-spacing-default;
     color: $font-color;
-    border: none;
 
     &.buttons {
       width: 1%;
@@ -345,10 +342,6 @@ table.data {
       font-family: sans-serif;
       font-weight: bold;
       text-align: right;
-
-      &[class*="state"] {
-        border-color: $data-table-td-count-state-border-color;
-      }
     }
 
     &.number {
@@ -392,7 +385,6 @@ table.data {
       height: 26px;
       padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
-      border-right: none;
 
       a {
         color: $secondary-font-color;

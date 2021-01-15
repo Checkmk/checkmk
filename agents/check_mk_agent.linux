@@ -1178,6 +1178,8 @@ run_agent_plugin() {
     fi
 }
 
+export -f run_agent_plugin
+
 # Runs a command asynchronous by use of a cache file. Usage:
 # run_cached [-s] NAME MAXAGE
 #   -s creates the section header <<<$NAME>>>

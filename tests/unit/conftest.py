@@ -9,10 +9,12 @@ import shutil
 import logging
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+from fakeredis import FakeRedis  # type: ignore[import]
+import pytest
 import livestatus
 
 import cmk.utils.paths
+import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
@@ -219,3 +221,13 @@ def _mock_livestatus():
     """
     with mock_livestatus(with_context=False) as live:
         yield live
+
+
+@pytest.fixture(scope="function", autouse=True)
+def use_fakeredis_client(monkeypatch):
+    """Use fakeredis client instead of redis.Redis"""
+    monkeypatch.setattr(
+        redis,
+        "Redis",
+        FakeRedis,
+    )

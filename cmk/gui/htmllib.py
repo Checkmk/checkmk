@@ -2627,11 +2627,11 @@ class html(ABCHTMLGenerator):
                     (json.dumps(id_), dom_levels_up, additional_js))
         self.open_div(title="Show more items" if not with_text else "", class_="show_more")
         if with_text:
-            self.span(_("show more"))
+            self.write_text(_("show more"))
         self.close_div()
         self.open_div(title="Show less items" if not with_text else "", class_="show_less")
         if with_text:
-            self.span(_("show less"))
+            self.write_text(_("show less"))
         self.close_div()
         self.close_a()
 

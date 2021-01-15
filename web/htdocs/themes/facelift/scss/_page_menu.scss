@@ -4,13 +4,9 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 body.main {
-  tr#suggestions {
-    display: table-row;
-  }
-
   td.shortcuts {
     a.suggested {
-      display: none;
+      visibility: hidden;
     }
   }
 }
@@ -336,8 +332,7 @@ div#top_heading {
 
     &#page_menu_bar.hide_suggestions {
       td.shortcuts a.suggested {
-        display: inline-block;
-        line-height: 26px;
+        visibility: visible;
       }
 
       tr#suggestions {

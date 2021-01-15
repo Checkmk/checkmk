@@ -22,7 +22,7 @@ port state <i>9 - admin down</i> is not available any more.
 Previously, the monitoring of the admin state was activated implicitly by configuring
 Checkmk to discover ports in the state <i>9 - admin down</i> (rule "Network Interface
 and Switch Port Discovery"). Now, this is handled via the rule for including and
-excluding SNMP sections ("Include or exclude SNMP sections"). If and only if the section
+excluding SNMP sections ("Disabled and enabled sections (SNMP)"). If and only if the section
 <tt>if64adm</tt> is enabled via this rule, the admin status will be monitored,
 independently of the configuration in "Network Interface and Switch Port Discovery".
 
@@ -43,7 +43,7 @@ This change is incompatible for all users who are currently monitoring the admin
 status using <tt>if64adm</tt>. These users should follow these steps:
 <ul>
 <li>Activate the monitoring of the admin status by enabling the section <tt>if64adm</tt>
-via the rule "Include or exclude SNMP sections".</li>
+via the rule "Disabled and enabled sections (SNMP)".</li>
 <li>Check the discovery configuration (rule "Network Interface and Switch Port
 Discovery"). As mentioned above, the admin state can now be used to further refine the
 discovery of network interfaces. On the other hand, the port state <i>9 - admin down</i>

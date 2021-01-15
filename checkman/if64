@@ -10,7 +10,7 @@ description:
 
  Also, this check can use {ifAlias} instead if {ifDescr} for retrieving
  the admin-configured interface description. This is useful e.g. for HP ProCurve
- switches which do not show that aliasses in {ifDescr}.
+ switches which do not show the aliasses in {ifDescr}.
 
  {Note}: This check needs SNMP v2c and thus only works if your hosts are
  added to {bulkwalk_hosts}.
@@ -31,13 +31,13 @@ description:
  This check also supports monitoring of the administrative status ({ifAdminStatus}),
  however, by default, this option is deactivated to reduce SNMP traffic. To activate
  the monitoring of the admin status, you have to configure Checkmk to fetch this
- information. This is done by activating the section {if64adm} via the rule "Include
- or exclude SNMP sections", which will lead to an increase in SNMP traffic of
- approximately 5%.
+ information. This is done by activating the section {if64adm} via the rule
+ "Disabled or enabled sections (SNMP)", which will lead to an increase in SNMP
+ traffic of approximately 5%.
 
  Note that there are some devices with broken firmware which report that
  they support 64-bit counters even though they do not. In such cases, use the rule
- "Include or exclude SNMP sections" to disable the section {if64}. This will make
+ "Disabled or enabled sections (SNMP)" to disable the section {if64}. This will make
  Checkmk fall back to the 32-bit interface check.
 
 item:

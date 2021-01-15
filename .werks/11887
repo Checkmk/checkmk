@@ -1,0 +1,15 @@
+Title: Rename Linux agent section ruleset
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1610711360
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+The ruleset <i>"Exclude specific agent sections"</i> has been renamed
+to <i>"Disabled sections (Linux agent)"</i>.
+This makes the naming scheme more consistent with other section
+disabling rulesets (Windows agent and SNMP).
+

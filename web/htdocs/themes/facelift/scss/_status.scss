@@ -29,7 +29,7 @@
 
 td.state {
   width: 32px;
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   text-align: center;
 }
 
@@ -53,8 +53,7 @@ body.main .popup_menu .state0 span,
 .hstate0 a,
 .hstate0 body.main .popup_menu span,
 body.main .popup_menu .hstate0 span {
-  background-color: $color-state-success-background !important;
-  border-color: $color-state-success-border !important;
+  color: $success !important;
 }
 
 /* TODO: Replace class "odd0" with "odd state0" */
@@ -68,8 +67,7 @@ body.main .popup_menu .hstate0 span {
   .hstate0 a,
   .hstate0 body.main .popup_menu span,
   body.main .popup_menu & .hstate0 span {
-    color: $dark-font-color;
-    background-color: $color-state-success-background !important;
+    color: $success !important;
   }
 }
 
@@ -82,8 +80,7 @@ body.main .popup_menu .hstate0 span {
 .even1 .state1,
 .state1 a,
 .state1 body.main .popup_menu span,
-body.main .popup_menu .state1 span,
-tr.groupheader td.state1 {
+body.main .popup_menu .state1 span {
   color: $black !important;
   background-color: $color-state-1-background !important;
 }
@@ -104,13 +101,13 @@ body.main .popup_menu .state2 span,
 .hstate2 a,
 .hstate2 body.main .popup_menu span,
 body.main .popup_menu .hstate2 span {
-  color: $lightgrey !important;
+  color: $white !important;
   background-color: $color-state-2-background !important;
 }
 
 .odd0 .state2,
 .odd2 .state2 {
-  color: $lightgrey !important;
+  color: $white !important;
   background-color: $color-state-2-background !important;
 }
 
@@ -124,18 +121,9 @@ body.main .popup_menu .state3 span,
 .hstate2 a,
 .hstate2 body.main .popup_menu span,
 body.main .popup_menu .hstate2 span,
-.odd0 .state3,
-.odd3 .state3 {
-  color: $state3-font-color !important;
+.odd0 .state3 {
+  color: $white !important;
   background-color: $color-state-3-background !important;
-}
-
-tr.odd3 {
-  background-color: $tr-odd3-bg-color;
-}
-
-tr.even3 {
-  background-color: $tr-even3-bg-color;
 }
 
 /* PENDING / in DOWNTIME */
@@ -159,7 +147,6 @@ b.stmark {
   padding: 1px 3px;
   margin-left: 2px;
   font-size: 9px;
-  border: 1px solid rgb(102, 102, 102);
   border-radius: 4px;
 }
 
@@ -387,7 +374,6 @@ td.statex {
 tr[class*="odd"] {
   background-color: $odd-tr-bg-color;
 
-  td.state0 a,
   td.state1 a,
   td.state3 a {
     color: $dark-font-color;
@@ -401,7 +387,6 @@ tr[class*="even"] {
     border-bottom: none;
   }
 
-  td.state0 a,
   td.state1 a,
   td.state3 a {
     color: $dark-font-color;
@@ -411,7 +396,7 @@ tr[class*="even"] {
 .data div.hostdown {
   padding-right: 3px;
   padding-left: 3px;
-  background-color: rgb(255, 34, 34);
+  background-color: $danger;
   border: 2px solid rgb(0, 0, 0);
   border-radius: 4px;
 }
@@ -423,7 +408,7 @@ table.data {
 
     &.staletime {
       font-weight: bold;
-      color: rgb(255, 0, 0);
+      color: $danger;
     }
 
     &.recent {
@@ -434,11 +419,7 @@ table.data {
 
   .state2 *,
   .state3 * {
-    color: rgb(255, 255, 255);
-  }
-
-  td.state {
-    border-top: none;
+    color: $white;
   }
 
   tr.data td.states {

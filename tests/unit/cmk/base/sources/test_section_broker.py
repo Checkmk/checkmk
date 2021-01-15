@@ -119,26 +119,6 @@ def _fixture_patch_register(monkeypatch):
                         MOCK_SECTIONS.__getitem__)
 
 
-def test_abstract_hostsections_filter():
-    host_sections: HostSections = HostSections(
-        sections={
-            SectionName("foo"): NODE_1,  # data does not matter, NODE_1 is the correct type.
-            SectionName("bar"): NODE_1,
-        },
-        cache_info={SectionName("foo"): (0, 0)},
-        piggybacked_raw_data={
-            "moo": [b''],
-            "bar": [b''],
-        },
-    )
-
-    filtered = host_sections.filter({SectionName("bar")})
-
-    assert list(filtered.sections) == [SectionName("bar")]
-    assert not filtered.cache_info
-    assert list(filtered.piggybacked_raw_data) == ["bar"]
-
-
 @pytest.mark.parametrize("node_section_content,expected_result", [
     ({}, None),
     ({

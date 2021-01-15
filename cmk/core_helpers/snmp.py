@@ -40,7 +40,7 @@ from . import factory
 from ._base import Fetcher, Parser, Summarizer, verify_ipaddress
 from .cache import FileCache, FileCacheFactory, PersistedSections, SectionStore
 from .host_sections import HostSections
-from .type_defs import Mode, NO_SELECTION, SectionNameCollection
+from .type_defs import Mode, SectionNameCollection
 
 __all__ = [
     "SNMPFetcher",
@@ -409,9 +409,10 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         self,
         raw_data: SNMPRawData,
         *,
+        # The selection argument is ignored: Selection is done
+        # in the fetcher for SNMP.
         selection: SectionNameCollection,
     ) -> SNMPHostSections:
-        selection = NO_SELECTION  # Selection is done in the fetcher for SNMP.
         host_sections = SNMPHostSections(dict(raw_data))
         now = int(time.time())
 
@@ -429,7 +430,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             keep_outdated=self.keep_outdated,
             logger=self._logger,
         )
-        return host_sections.filter(selection)
+        return host_sections
 
 
 class SNMPSummarizer(Summarizer[SNMPHostSections]):

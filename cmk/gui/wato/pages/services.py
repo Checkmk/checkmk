@@ -1102,11 +1102,11 @@ def service_page_menu(breadcrumb, host: watolib.CREHost, options: DiscoveryOptio
                 title=_("Actions"),
                 topics=[
                     PageMenuTopic(
-                        title=_("Service configuration"),
+                        title=_("Discovery"),
                         entries=list(_page_menu_service_configuration_entries(host, options)),
                     ),
                     PageMenuTopic(
-                        title=_("On selected services"),
+                        title=_("Services"),
                         entries=list(_page_menu_selected_services_entries(host, options)),
                     ),
                     PageMenuTopic(
@@ -1304,17 +1304,6 @@ def _page_menu_entry_show_plugin_names(host: watolib.CREHost,
 def _page_menu_service_configuration_entries(host: watolib.CREHost,
                                              options: DiscoveryOptions) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
-        title=_("Add missing, remove vanished"),
-        icon_name="services_fix_all",
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.FIX_ALL))),
-        name="fix_all",
-        is_enabled=False,
-        is_shortcut=True,
-        css_classes=["action"],
-    )
-
-    yield PageMenuEntry(
         title=_("Full service scan"),
         icon_name="services_full_scan",
         item=make_javascript_link(
@@ -1358,6 +1347,16 @@ BulkEntry = NamedTuple("BulkEntry", [
 
 def _page_menu_selected_services_entries(host: watolib.CREHost,
                                          options: DiscoveryOptions) -> Iterator[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_("Add missing, remove vanished"),
+        icon_name="services_fix_all",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.FIX_ALL))),
+        name="fix_all",
+        is_enabled=False,
+        is_shortcut=True,
+        css_classes=["action"],
+    )
 
     for entry in [
             BulkEntry(True, False, DiscoveryState.UNDECIDED, DiscoveryState.MONITORED,

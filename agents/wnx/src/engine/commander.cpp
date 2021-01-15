@@ -44,7 +44,7 @@ bool RunCommand(std::string_view peer, std::string_view cmd) {
         if (cma::IsTest()) return false;
         if (!cma::IsService()) return false;
 
-        cma::G_UninstallALert.set();
+        cma::g_uninstall_alert.set();
         return true;
     }
 

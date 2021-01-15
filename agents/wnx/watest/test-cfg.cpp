@@ -381,7 +381,7 @@ TEST(CmaCfg, ReloadCfg) {
 }
 
 TEST(Cma, CleanApi) {
-    auto& alert = cma::G_UninstallALert;
+    auto& alert = cma::g_uninstall_alert;
     ASSERT_FALSE(alert.isSet()) << "initial always false";
     alert.clear();
     ASSERT_FALSE(alert.isSet());

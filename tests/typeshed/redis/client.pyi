@@ -79,7 +79,7 @@ class Redis(Generic[_StrType]):
         encoding_errors: Text = ...,
         charset: Optional[Text] = ...,
         errors: Optional[Text] = ...,
-        decode_responses: Optional[bool] = ...,
+        decode_responses: Literal[True] = ...,
         retry_on_timeout: bool = ...,
         ssl: bool = ...,
         ssl_keyfile: Optional[Text] = ...,
@@ -92,7 +92,7 @@ class Redis(Generic[_StrType]):
         health_check_interval: float = ...,
         client_name: Optional[Text] = ...,
         username: Optional[Text] = ...,
-    ) -> Redis[bytes]: ...
+    ) -> Redis[str]: ...
     @overload
     @classmethod
     def from_url(
@@ -111,7 +111,7 @@ class Redis(Generic[_StrType]):
         encoding: Text = ...,
         encoding_errors: Text = ...,
         charset: Optional[Text] = ...,
-        decode_responses: Literal[True] = ...,
+        decode_responses: bool = ...,
         errors: Optional[Text] = ...,
         retry_on_timeout: bool = ...,
         ssl: bool = ...,
@@ -125,7 +125,7 @@ class Redis(Generic[_StrType]):
         health_check_interval: float = ...,
         client_name: Optional[Text] = ...,
         username: Optional[Text] = ...,
-    ) -> Redis[str]: ...
+    ) -> Redis[bytes]: ...
     connection_pool: Any
     response_callbacks: Any
     @overload
@@ -144,6 +144,7 @@ class Redis(Generic[_StrType]):
         encoding: Text = ...,
         encoding_errors: Text = ...,
         charset: Optional[Text] = ...,
+        decode_responses: Literal[True] = ...,
         errors: Optional[Text] = ...,
         retry_on_timeout: bool = ...,
         ssl: bool = ...,
@@ -157,7 +158,7 @@ class Redis(Generic[_StrType]):
         health_check_interval: float = ...,
         client_name: Optional[Text] = ...,
         username: Optional[Text] = ...,
-    ) -> Redis[bytes]: ...
+    ) -> Redis[str]: ...
     @overload
     def __new__(
         cls,
@@ -175,7 +176,7 @@ class Redis(Generic[_StrType]):
         encoding_errors: Text = ...,
         charset: Optional[Text] = ...,
         errors: Optional[Text] = ...,
-        decode_responses: Literal[True] = ...,
+        decode_responses: bool = ...,
         retry_on_timeout: bool = ...,
         ssl: bool = ...,
         ssl_keyfile: Optional[Text] = ...,
@@ -188,7 +189,7 @@ class Redis(Generic[_StrType]):
         health_check_interval: float = ...,
         client_name: Optional[Text] = ...,
         username: Optional[Text] = ...,
-    ) -> Redis[str]: ...
+    ) -> Redis[bytes]: ...
     @overload
     def __init__(
         self: Redis[str],
@@ -237,7 +238,7 @@ class Redis(Generic[_StrType]):
         encoding_errors: Text = ...,
         charset: Optional[Text] = ...,
         errors: Optional[Text] = ...,
-        decode_responses: Optional[bool] = ...,
+        decode_responses: bool = ...,
         retry_on_timeout: bool = ...,
         ssl: bool = ...,
         ssl_keyfile: Optional[Text] = ...,

@@ -4,9 +4,8 @@
 
 #include "cma_core.h"
 
-#include <time.h>
-
 #include <chrono>
+#include <ctime>
 #include <filesystem>
 #include <set>
 #include <string>
@@ -24,15 +23,14 @@ namespace cma {
 
 namespace security {
 void ProtectFiles(const std::filesystem::path& root) {
-    using namespace cma::cfg;
-
     for (const auto& p : {
-             root / kAppDataAppName / files::kUserYmlFile,
-             root / kAppDataAppName / dirs::kBakery / files::kBakeryYmlFile,
-             root / kAppDataAppName / dirs::kInstall,
-             root / kAppDataAppName / dirs::kBackup,
-             root / kAppDataAppName / dirs::kPluginConfig,
-             root / kAppDataAppName / dirs::kUpdate,
+             root / cfg::kAppDataAppName / cfg::files::kUserYmlFile,
+             root / cfg::kAppDataAppName / cfg::dirs::kBakery /
+                 cfg::files::kBakeryYmlFile,
+             root / cfg::kAppDataAppName / cfg::dirs::kInstall,
+             root / cfg::kAppDataAppName / cfg::dirs::kBackup,
+             root / cfg::kAppDataAppName / cfg::dirs::kPluginConfig,
+             root / cfg::kAppDataAppName / cfg::dirs::kUpdate,
 
          }) {
         if (!wtools::ProtectPathFromUserAccess(p)) {
@@ -52,54 +50,8 @@ void ProtectAll(const std::filesystem::path& root) {
 
 }  // namespace security
 
-namespace ntfs {
-bool G_SimulateBadRemove = false;
-
-static bool WindowsDeleteFile(const std::filesystem::path& Target,
-                              std::error_code& Ec) noexcept {
-    auto ret = ::DeleteFileW(Target.wstring().c_str());
-    if (ret) {
-        Ec.clear();
-        return true;
-    }
-    auto err = GetLastError();
-
-    // this is virtually impossible
-    XLOG::d(
-        "File '{}' can't be removed Also with Windows RemoveFile, this is not normal",
-        Target);
-
-    if (err == 2 || err == 0)
-        Ec.clear();  // this is to simulate behavior of the fs::remove
-    else
-        Ec.assign(err, std::generic_category());
-    //
-    return false;
-}
-
-bool Remove(const std::filesystem::path& Target, std::error_code& Ec) noexcept {
-    if (G_SimulateBadRemove) {
-        Ec.assign(1,
-                  std::generic_category());  // situation on the VMWare SCSI HDD
-    } else {
-        const auto result = std::filesystem::remove(Target, Ec);
-        if (result) return true;
-    }
-
-    // false here
-    if (Ec.value() != 1) return false;  // problems with deletion get away
-    XLOG::t(
-        "File '{}' can't be removed with std::filesystem::remove with error 1, try Windows remove",
-        Target.u8string());
-
-    // special case for FS without support Posix mode
-    // this code is hack for old Windows ST libraries
-    return WindowsDeleteFile(Target, Ec);
-}
-}  // namespace ntfs
-
 // we are counting threads in to have control exit/stop/wait
-std::atomic<int> PluginEntry::thread_count_ = 0;
+std::atomic<int> PluginEntry::g_tread_count = 0;
 
 namespace tools {
 
@@ -131,14 +83,14 @@ bool AreFilesSame(const std::filesystem::path& tgt,
 
 bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
                        std::string_view value) noexcept {
-    return argv && argc > pos && pos > 0 && argv[pos] &&
+    return argv != nullptr && argc > pos && pos > 0 && argv[pos] != nullptr &&
            std::wstring(argv[pos]) == wtools::ConvertToUTF16(value);
 }
 
 }  // namespace tools
 
 bool MatchNameOrAbsolutePath(const std::string& Pattern,
-                             const std::filesystem::path file_full_path) {
+                             const std::filesystem::path& file_full_path) {
     namespace fs = std::filesystem;
 
     fs::path pattern = Pattern;
@@ -149,13 +101,12 @@ bool MatchNameOrAbsolutePath(const std::string& Pattern,
 
     // support for absolute path
     auto full_name = file_full_path.u8string();
-    if (cma::tools::GlobMatch(Pattern, full_name)) return true;
-
-    return false;
+    return cma::tools::GlobMatch(Pattern, full_name);
 }
 
-static bool MatchPattern(const std::string& Pattern,
-                         const std::filesystem::path file_full_path) {
+namespace {
+bool MatchPattern(const std::string& Pattern,
+                  const std::filesystem::path& file_full_path) {
     namespace fs = std::filesystem;
 
     fs::path pattern = Pattern;
@@ -169,15 +120,16 @@ static bool MatchPattern(const std::string& Pattern,
     auto pattern_name = pattern.filename();
     return cma::tools::GlobMatch(pattern_name.u8string(), file_name.u8string());
 }
+}  // namespace
 
 PathVector GatherAllFiles(const PathVector& Folders) {
     namespace fs = std::filesystem;
-    using namespace std;
     PathVector paths;
 
-    for (auto& dir : Folders) {
-        error_code ec;
+    for (const auto& dir : Folders) {
+        std::error_code ec;
         if (!fs::exists(dir, ec)) continue;
+
         // #TODO potential error we need recursive here
         for (const auto& p : fs::directory_iterator(dir)) {
             // Found files must match the entire path pattern.
@@ -185,14 +137,13 @@ PathVector GatherAllFiles(const PathVector& Folders) {
             auto status = p.status();
             if (ec) {
                 XLOG::d("Cant obtain status for dir {} path {}status is {}",
-                        dir.u8string(), p.path().u8string(), ec.value());
+                        dir, p.path(), ec.value());
                 continue;
             }
 
-            auto path = p.path();
             // normal file
             if (fs::is_regular_file(status)) {
-                paths.push_back(path);
+                paths.push_back(p.path());
                 continue;
             }
         }
@@ -203,84 +154,77 @@ PathVector GatherAllFiles(const PathVector& Folders) {
 
 // Scan one folder and add contents to the dirs and files
 void GatherMatchingFilesAndDirs(
-    const std::filesystem::path& SearchDir,    // c:\windows
-    const std::filesystem::path& DirPattern,   // c:\windows\L*
-    const std::filesystem::path& FilePattern,  // c:\windows\L*\*.log
-    PathVector& FilesFound                     // output
+    const std::filesystem::path& search_dir,       // c:\windows
+    const std::filesystem::path& /*dir_pattern*/,  // c:\windows\L*
+    const std::filesystem::path& file_pattern,     // c:\windows\L*\*.log
+    PathVector& files_found                        // output
 ) {
     namespace fs = std::filesystem;
-    for (const auto& p : fs::directory_iterator(SearchDir)) {
+    for (const auto& p : fs::directory_iterator(search_dir)) {
         // Found files must match the entire path pattern.
         std::error_code ec;
         auto status = p.status();  // CMK-1417, to be confirmed in ticket
         if (ec) {                  // ! error
             XLOG::d("Cant obtain status for dir {} path {}status is {}",
-                    SearchDir.u8string(), p.path().u8string(), ec.value());
+                    search_dir, p.path(), ec.value());
             continue;
         }
 
-        auto path = p.path();
         // normal file
         if (fs::is_regular_file(status) &&
-            cma::tools::GlobMatch(FilePattern.wstring(), path.wstring())) {
-            FilesFound.push_back(path);
+            cma::tools::GlobMatch(file_pattern.wstring(), p.path().wstring())) {
+            files_found.push_back(p.path());
             continue;
         }
     }
 }
 
-void FilterPathByExtension(PathVector& Paths, std::vector<std::string> Exts) {
+void FilterPathByExtension(PathVector& paths,
+                           const std::vector<std::string>& exts) {
     namespace fs = std::filesystem;
+    using namespace std::string_literals;
 
-    // black magic first param
-    auto end = std::remove_if(Paths.begin(),        // from
-                              Paths.end(),          // to
-                              [Exts](fs::path P) {  // lambda to delete
-                                  for (auto& ext : Exts) {
-                                      auto cur_ext = P.extension().u8string();
-                                      if (cur_ext == std::string(".") + ext)
+    auto end = std::remove_if(paths.begin(),  // from
+                              paths.end(),    // to
+                              [exts](const fs::path& path) {
+                                  for (const auto& ext : exts) {
+                                      auto cur_ext =
+                                          path.extension().u8string();
+                                      if (cur_ext == "."s + ext)
                                           return false;  // do not remove
                                   }
+
                                   // extension is bad, remove
                                   return true;
                               }  //
     );
 
     // actual remove
-    Paths.erase(end, Paths.end());
+    paths.erase(end, paths.end());
 }
 
 // remove all duplicated names
-void RemoveDuplicatedNames(PathVector& Paths) {
+void RemoveDuplicatedNames(PathVector& paths) {
     namespace fs = std::filesystem;
-    using namespace std;
-    std::unordered_set<std::string>
-        filename_set;  // mk_inventory.vbs, smth.bat, etc
-    auto end = std::remove_if(Paths.begin(), Paths.end(),
+    std::unordered_set<std::string> filename_set;  // mk_inventory.vbs, smth.bat
+    auto end = std::remove_if(paths.begin(), paths.end(),
                               [&filename_set](fs::path const& p) {
                                   auto fname = p.filename().u8string();
                                   return !filename_set.insert(fname).second;
                               });
 
-    Paths.erase(end, Paths.end());
-}
-
-// usually you have to apply this function per Exe
-PathVector SelectPathVectorByPattern(const PathVector& Paths,
-                                     const std::string& Pattern) {
-    namespace fs = std::filesystem;
-    return {};
+    paths.erase(end, paths.end());
 }
 
 // make a list of files to be run(check exists normally is true)
-const PathVector FilterPathVector(
-    const PathVector& FoundFiles,
-    const std::vector<cma::cfg::Plugins::ExeUnit>& Units, bool CheckExists) {
+PathVector FilterPathVector(
+    const PathVector& found_files,
+    const std::vector<cma::cfg::Plugins::ExeUnit>& units, bool check_exists) {
     namespace fs = std::filesystem;
     PathVector really_found;
-    for (auto& ff : FoundFiles) {
-        for (auto& unit : Units) {
-            if (CheckExists) {
+    for (const auto& ff : found_files) {
+        for (const auto& unit : units) {
+            if (check_exists) {
                 std::error_code ec;
                 if (!fs::exists(ff, ec)) continue;
             }
@@ -308,50 +252,49 @@ TheMiniBox::StartMode GetStartMode(const std::filesystem::path& filepath) {
     return TheMiniBox::StartMode::job;
 }
 
-const PluginEntry* GetEntrySafe(const PluginMap& Pm, const std::string& Key) {
+const PluginEntry* GetEntrySafe(const PluginMap& plugin_map,
+                                const std::string& key) {
     try {
-        auto& z = Pm.at(Key);
+        const auto& z = plugin_map.at(key);
         return &z;
     } catch (...) {
         return nullptr;
     }
 }
 
-PluginEntry* GetEntrySafe(PluginMap& Pm, const std::string& Key) {
+PluginEntry* GetEntrySafe(PluginMap& plugin_map, const std::string& key) {
     try {
-        auto& z = Pm.at(Key);
+        auto& z = plugin_map.at(key);
         return &z;
     } catch (...) {
         return nullptr;
     }
 }
 
-// NOT THREAD SAFE!
-void InsertInPluginMap(PluginMap& Out, const PathVector& FoundFiles) {
-    // remove what not present in the file vector
-    for (auto& ff : FoundFiles) {
-        auto ptr = GetEntrySafe(Out, ff.u8string());
-        if (!ptr) {
-            Out.emplace(std::make_pair(ff.u8string(), ff));
+void InsertInPluginMap(PluginMap& plugin_map, const PathVector& found_files) {
+    for (const auto& ff : found_files) {
+        const auto* ptr = GetEntrySafe(plugin_map, ff.u8string());
+        if (ptr == nullptr) {
+            plugin_map.emplace(std::make_pair(ff.u8string(), ff));
         }
     }
 }
 
-static cma::cfg::Plugins::ExeUnit* GetEntrySafe(UnitMap& Pm,
-                                                const std::string& Key) {
+namespace {
+cma::cfg::Plugins::ExeUnit* GetEntrySafe(UnitMap& unit_map,
+                                         const std::string& key) {
     try {
-        auto& z = Pm.at(Key);
+        auto& z = unit_map.at(key);
         return &z;
     } catch (...) {
         return nullptr;
     }
 }
 
-static void UpdatePluginMapWithUnitMap(PluginMap& out, UnitMap& um,
-                                       bool local) {
+void UpdatePluginMapWithUnitMap(PluginMap& out, UnitMap& um, bool local) {
     for (auto& [name, unit] : um) {
-        auto ptr = GetEntrySafe(out, name);
-        if (ptr) {
+        auto* ptr = GetEntrySafe(out, name);
+        if (ptr != nullptr) {
             if (unit.run())
                 ptr->applyConfigUnit(unit, local);
             else
@@ -360,22 +303,22 @@ static void UpdatePluginMapWithUnitMap(PluginMap& out, UnitMap& um,
             if (unit.run()) {
                 out.emplace(name, name);
                 ptr = GetEntrySafe(out, name);
-                if (ptr) ptr->applyConfigUnit(unit, local);
+                if (ptr != nullptr) ptr->applyConfigUnit(unit, local);
             }
         }
     }
 
     // remove entries with missing configuration
     for (auto& [name, p] : out) {
-        auto ptr = GetEntrySafe(um, name);
-        if (!ptr) {
+        const auto* ptr = GetEntrySafe(um, name);
+        if (ptr == nullptr) {
             p.removeFromExecution();
         }
     }
 
     // reporting
     for (auto& [name, unit] : um) {
-        auto ptr = GetEntrySafe(out, name);
+        auto* ptr = GetEntrySafe(out, name);
         if (ptr == nullptr) continue;
         XLOG::d.i("{} '{}'  is  {} with age:{} timeout:{} retry:{}",
                   local ? "Local" : "Plugin", name,
@@ -383,6 +326,7 @@ static void UpdatePluginMapWithUnitMap(PluginMap& out, UnitMap& um,
                   ptr->timeout(), ptr->retry());
     }
 }
+}  // namespace
 
 namespace tools {
 bool AddUniqStringToSetIgnoreCase(std::set<std::string>& cache,
@@ -417,7 +361,7 @@ static void ApplyEverythingLogResult(const std::string& format,
     XLOG::t(format, file, local ? "[local]" : "[plugins]");
 }
 
-static void PrintNode(YAML::Node node, std::string_view S) {
+static void PrintNode(const YAML::Node& node, std::string_view S) {  // NOLINT
     if (tgt::IsDebug()) {
         YAML::Emitter emit;
         emit << node;
@@ -463,21 +407,21 @@ void RemoveDuplicatedEntriesByName(UnitMap& um, bool local) {
 }
 
 void ApplyEverythingToPluginMap(
-    PluginMap& out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
+    PluginMap& plugin_map, const std::vector<cma::cfg::Plugins::ExeUnit>& units,
     const std::vector<std::filesystem::path>& found_files, bool local) {
     UnitMap um;
 
     auto files = found_files;
 
     for (auto& f : files) {
-        for (auto it = Units.rbegin(); it != Units.rend(); ++it) {
+        for (auto it = units.rbegin(); it != units.rend(); ++it) {
             if (!MatchPattern(it->pattern(), f)) continue;
 
             // string is match
             auto entry_full_name = f.u8string();
-            auto exe = GetEntrySafe(um, entry_full_name);
+            auto* exe = GetEntrySafe(um, entry_full_name);
             std::string fmt_string;
-            if (exe) {
+            if (exe != nullptr) {
                 fmt_string = "Plugin '{}' to be updated to {}";
 
             } else {
@@ -488,7 +432,7 @@ void ApplyEverythingToPluginMap(
                 exe = GetEntrySafe(um, entry_full_name);
             }
 
-            if (exe) {
+            if (exe != nullptr) {
                 XLOG::t("To plugin '{}' to be applied rule '{}'", f,
                         it->sourceText());
                 exe->apply(f.u8string(), it->source());
@@ -502,100 +446,59 @@ void ApplyEverythingToPluginMap(
     for (auto& f : files) {
         auto entry_full_name = f.u8string();
         cma::tools::StringLower(entry_full_name);
-        auto exe = GetEntrySafe(um, entry_full_name);
+        auto* exe = GetEntrySafe(um, entry_full_name);
         if (exe == nullptr || !exe->run()) continue;
         auto fname = f.filename().u8string();
         auto added = tools::AddUniqStringToSetIgnoreCase(cache, fname);
         if (!added) {
             um.erase(entry_full_name);
-            auto fmt_string = "Skipped duplicated file by name '{}' in {}";
+            const auto* fmt_string =
+                "Skipped duplicated file by name '{}' in {}";
             ApplyEverythingLogResult(fmt_string, entry_full_name, local);
         }
     }
     // apply config for presented
-    UpdatePluginMapWithUnitMap(out, um, local);
-}
-
-void ApplyEverythingToPluginMapDeprecated(
-    PluginMap& out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-    const std::vector<std::filesystem::path>& found_files, bool local) {
-    UnitMap um;
-    std::set<std::string> cache;
-    auto files = found_files;
-    for (auto& unit : Units) {
-        for (auto& f : files) {
-            if (f == ".") continue;
-            if (!MatchPattern(unit.pattern(), f)) continue;
-
-            // string is match
-            auto entry_full_name = f.u8string();
-            auto ptr = GetEntrySafe(um, entry_full_name);
-            std::string fmt_string;
-            if (!ptr) {
-                // check duplicated filename
-                auto fname = f.filename().u8string();
-                auto added = tools::AddUniqStringToSetIgnoreCase(cache, fname);
-                if (added) {
-                    um.emplace(std::make_pair(entry_full_name, unit));
-                    fmt_string = "Plugin '{}' added to {}";
-                } else {
-                    fmt_string = "Skipped duplicated file by name '{}' in {}";
-                }
-            } else {
-                fmt_string = "skipped duplicated file by full name'{}' in {}";
-            }
-
-            ApplyEverythingLogResult(fmt_string, entry_full_name, local);
-
-            f = ".";
-        }
-    }
-
-    // apply config for presented
-    UpdatePluginMapWithUnitMap(out, um, local);
+    UpdatePluginMapWithUnitMap(plugin_map, um, local);
 }
 
 // Main API
-void UpdatePluginMap(PluginMap& Out,  // output is here
-                     bool Local,      // type of plugin
-                     const PathVector& FoundFiles,
-                     const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-                     bool CheckExists) {
-    namespace fs = std::filesystem;
-    if (FoundFiles.empty() || Units.empty()) {
-        Out.clear();  // nothing todo
+void UpdatePluginMap(PluginMap& plugin_map,  // output is here
+                     bool local,             // type of plugin
+                     const PathVector& found_files,
+                     const std::vector<cma::cfg::Plugins::ExeUnit>& units,
+                     bool check_exists) {
+    if (found_files.empty() || units.empty()) {
+        plugin_map.clear();  // nothing todo
         return;
     }
 
     // remove from path vector not presented entries
-    auto really_found = FilterPathVector(FoundFiles, Units, CheckExists);
+    auto really_found = FilterPathVector(found_files, units, check_exists);
 
     // remove absent entries from the map
-    FilterPluginMap(Out, really_found);
+    FilterPluginMap(plugin_map, really_found);
 
     if constexpr (true) {
-        ApplyEverythingToPluginMap(Out, Units, really_found, Local);
+        ApplyEverythingToPluginMap(plugin_map, units, really_found, local);
 
     } else {
         // Insert new items from the map
-        InsertInPluginMap(Out, really_found);
+        InsertInPluginMap(plugin_map, really_found);
 
         // Apply information from ExeUnits
-        ApplyExeUnitToPluginMap(Out, Units, Local);
+        ApplyExeUnitToPluginMap(plugin_map, units, local);
     }
 
     // last step is deletion of all duplicated names
-    RemoveDuplicatedPlugins(Out, CheckExists);
+    RemoveDuplicatedPlugins(plugin_map, check_exists);
 }
 
 std::optional<std::string> GetPiggyBackName(const std::string& in_string) {
-    using namespace cma::section;
+    if (in_string.find(section::kFooter4Left) != 0) return {};
 
-    if (in_string.find(kFooter4Left) != 0) return {};
-
-    auto end = in_string.find(kFooter4Right);
+    auto end = in_string.find(section::kFooter4Right);
     if (end == std::string::npos) return {};
-    constexpr auto footer_len = kFooter4Left.length();
+    constexpr auto footer_len = section::kFooter4Left.length();
     if (footer_len > end) {
         XLOG::l(XLOG_FUNC + " impossible");
         return {};
@@ -624,10 +527,10 @@ bool TryToHackStringWithCachedInfo(std::string& in_string,
     return false;
 }
 
-static bool ConfigRemoveSlashR = false;
+static bool g_config_remove_slash_r = false;
 
 std::string ConstructPatchString(time_t time_now, int cache_age,
-                                 HackDataMode mode) noexcept {
+                                 HackDataMode mode) {
     if (time_now == 0 || cache_age == 0) return {};
 
     return mode == HackDataMode::line
@@ -645,7 +548,7 @@ bool HackDataWithCacheInfo(std::vector<char>& out,
     std::string stringized(original_data.data(), original_data.size());
     if (stringized.empty()) return false;
 
-    if (patch.empty() && !ConfigRemoveSlashR) {
+    if (patch.empty() && !g_config_remove_slash_r) {
         out = original_data;
         return true;
     }
@@ -655,7 +558,7 @@ bool HackDataWithCacheInfo(std::vector<char>& out,
     size_t data_count = 0;
     bool hack_allowed = true;
     for (auto& t : table) {
-        if (ConfigRemoveSlashR) {
+        if (g_config_remove_slash_r) {
             while (t.back() == '\r') t.pop_back();
         }
 
@@ -666,7 +569,7 @@ bool HackDataWithCacheInfo(std::vector<char>& out,
         if (patch.empty()) continue;
 
         if (mode == HackDataMode::line) {
-            t = patch + t;
+            t = patch + t;  // NOLINT
             continue;
         }
 
@@ -738,17 +641,18 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
     std::vector<char> accu;
 
     if (success) {
-        minibox_.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                                    uint32_t Code,
-                                    const std::vector<char>& Data) {
-            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+        minibox_.processResults([&](const std::wstring& cmd_line, uint32_t pid,
+                                    uint32_t code,
+                                    const std::vector<char>& datablock) {
+            auto data = wtools::ConditionallyConvertFromUTF16(datablock);
             if (!data.empty() && data.back() == 0)
                 data.pop_back();  // conditional convert adds 0
             cma::tools::AddVector(accu, data);
-            storeData(Pid, accu);
+            storeData(pid, accu);
             if (cma::cfg::LogPluginOutput())
                 XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                        wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+                        wtools::ConvertToUTF8(cmd_line), pid, code,
+                        data.data());
         });
 
     } else {
@@ -779,11 +683,11 @@ void PluginEntry::joinAndReleaseMainThread() {
     if (!t || !t->joinable()) return;
 
     try {
-        minibox_.stopWaiting();  // signal to stop thread
+        minibox_.stopWaiting();
         t->join();
-        minibox_.clean();  // critical to reset all after thread left
+        minibox_.clean();
     } catch (const std::exception& e) {
-        XLOG::l.bp("Join disaster '{}' out {}", path(), e.what());
+        XLOG::l("Join disaster '{}' out {}", path(), e.what());
     } catch (...) {
         XLOG::l.bp("JOIN '{}' out", path());
     }
@@ -791,10 +695,10 @@ void PluginEntry::joinAndReleaseMainThread() {
 
 namespace {
 struct ProcInfo {
-    uint32_t waiting_processes = 0;
+    uint32_t waiting_processes{0};
     std::string proc_name;
-    size_t added = 0;
-    int blocks = 0;
+    size_t added{0};
+    int blocks{0};
 };
 
 void LogProcessStatus(bool success, uint64_t ustime, ProcInfo& pi) {
@@ -818,11 +722,11 @@ bool TheMiniBox::waitForStop(std::chrono::milliseconds interval) {
     return stopped || stop_set_;
 }
 
-bool TheMiniBox::startEx(std::wstring_view uniq_id, std::wstring exec,
+bool TheMiniBox::startEx(std::wstring_view uniq_id, const std::wstring& exec,
                          StartMode start_mode,
-                         wtools::InternalUser internal_user) {
+                         const wtools::InternalUser& internal_user) {
     std::lock_guard lk(lock_);
-    if (process_) return false;
+    if (process_ != nullptr) return false;
 
     sw_.start();
     id_ = uniq_id;
@@ -831,7 +735,7 @@ bool TheMiniBox::startEx(std::wstring_view uniq_id, std::wstring exec,
     // send exec array entries to internal
     try {
         // now exec
-        auto ar = new wtools::AppRunner;
+        auto ar = std::make_unique<wtools::AppRunner>();
         XLOG::d.t("Exec app '{}', mode [{}]", wtools::ConvertToUTF8(exec),
                   static_cast<int>(start_mode));
 
@@ -848,12 +752,11 @@ bool TheMiniBox::startEx(std::wstring_view uniq_id, std::wstring exec,
                 break;
         }
 
-        if (proc_id_) {
-            process_ = ar;
+        if (proc_id_ != 0) {
+            process_ = ar.release();
             return true;
         }
 
-        delete ar;  // start failed
     } catch (const std::exception& e) {
         XLOG::l(XLOG_FLINE + " exception {}", e.what());
     }
@@ -867,17 +770,17 @@ bool TheMiniBox::startEx(std::wstring_view uniq_id, std::wstring exec,
 
 // #TODO to be deprecated in 1.7 for Windows
 bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
     if (stop_set_) return false;
     ON_OUT_OF_SCOPE(readWhatLeft());
 
-    constexpr std::chrono::milliseconds kGraneLong = 50ms;
-    constexpr std::chrono::milliseconds kGraneShort = 20ms;
-    auto read_handle = getReadHandle();
+    constexpr std::chrono::milliseconds grane_long = 50ms;
+    constexpr std::chrono::milliseconds grane_short = 20ms;
+    auto* read_handle = getReadHandle();
     ProcInfo pi = {getProcessId(), wtools::ConvertToUTF8(exec_), 0, 0};
 
     for (;;) {
-        auto grane = kGraneLong;
+        auto grane = grane_long;
         auto ready = checkProcessExit(pi.waiting_processes) ||  // process exit?
                      cma::srv::IsGlobalStopSignaled();  // agent is exiting?
         auto buf = cma::tools::ReadFromHandle<std::vector<char>>(read_handle);
@@ -885,7 +788,7 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
             pi.added += buf.size();
             pi.blocks++;
             appendResult(read_handle, buf);
-            grane = kGraneShort;  // using short time period to poll
+            grane = grane_short;  // using short time period to poll
         }
 
         if (ready) {
@@ -919,19 +822,19 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
 
 // #TODO 1.7 new function to speed up handles processing in windows
 bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
     if (stop_set_) return false;
     ON_OUT_OF_SCOPE(readWhatLeft());
 
-    auto read_handle = getReadHandle();
+    auto* read_handle = getReadHandle();
     ProcInfo pi = {getProcessId(), wtools::ConvertToUTF8(exec_), 0, 0};
-    constexpr std::chrono::milliseconds kGraneWindows = 250ms;
+    constexpr std::chrono::milliseconds time_grane_windows = 250ms;
 
     for (;;) {
         auto ready = checkProcessExit(pi.waiting_processes);
         HANDLE handles[] = {read_handle, stop_event_};
         auto ret = ::WaitForMultipleObjects(
-            2, handles, FALSE, static_cast<DWORD>(kGraneWindows.count()));
+            2, handles, FALSE, static_cast<DWORD>(time_grane_windows.count()));
 
         if (ret == WAIT_OBJECT_0) {
             auto buf =
@@ -954,15 +857,15 @@ bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
             continue;
         }
 
-        if (ret == WAIT_TIMEOUT && Timeout > kGraneWindows) {
-            Timeout -= kGraneWindows;
+        if (ret == WAIT_TIMEOUT && Timeout > time_grane_windows) {
+            Timeout -= time_grane_windows;
             continue;
         }
 
         // here we will break always
 
         // check that we are breaking by timeout
-        if (Timeout < 250ms)
+        if (Timeout < time_grane_windows)
             failed_ = true;
         else
             // stopped outside
@@ -1051,8 +954,8 @@ void PluginEntry::threadCore(const std::wstring& Id) {
     // thread counters block
     XLOG::d.i("Async Thread for {} is to be started",
               wtools::ConvertToUTF8(Id));
-    thread_count_++;
-    ON_OUT_OF_SCOPE(thread_count_--);
+    g_tread_count++;
+    ON_OUT_OF_SCOPE(g_tread_count--);
     std::unique_lock lk(lock_);
     if (!thread_on_) {
         XLOG::l(XLOG::kBp)("Attempt to start without resource acquiring");
@@ -1092,18 +995,19 @@ void PluginEntry::threadCore(const std::wstring& Id) {
             : minibox_.waitForEnd(std::chrono::seconds(timeout()));
     if (success) {
         // we have probably data, try to get and and store
-        minibox_.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                                    uint32_t Code,
-                                    const std::vector<char>& Data) {
-            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+        minibox_.processResults([&](const std::wstring& cmd_line, uint32_t pid,
+                                    uint32_t code,
+                                    const std::vector<char>& datablock) {
+            auto data = wtools::ConditionallyConvertFromUTF16(datablock);
             cma::tools::AddVector(accu, data);
             {
                 std::lock_guard l(data_lock_);
-                storeData(Pid, accu);
+                storeData(pid, accu);
             }
             if (cma::cfg::LogPluginOutput())
                 XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                        wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+                        wtools::ConvertToUTF8(cmd_line), pid, code,
+                        data.data());
         });
     } else {
         // process was either stopped or failed(timeout)
@@ -1174,7 +1078,7 @@ void PluginEntry::restartAsyncThreadIfFinished(const std::wstring& Id) {
 }
 
 std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
     if (failed()) return {};
 
     // check is valid parameters
@@ -1185,7 +1089,7 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
     }
     // check data are ready and new enough
     bool data_ok = false;
-    seconds allowed_age(cacheAge());
+    std::chrono::seconds allowed_age(cacheAge());
     auto data_age = getDataAge();
     bool going_to_be_old = false;
     {
@@ -1206,7 +1110,7 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
     }
     if (!data_ok)
         XLOG::d("Data '{}' is too old, age is '{}' seconds", path(),
-                duration_cast<seconds>(data_age).count());
+                duration_cast<std::chrono::seconds>(data_age).count());
 
     // execution phase
     if (going_to_be_old) {
@@ -1224,8 +1128,6 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
 }
 
 void PluginEntry::restartIfRequired() {
-    using namespace std::chrono;
-
     // check is valid parameters
     if (cacheAge() < cma::cfg::kMinimumCacheAge) {
         XLOG::l(
@@ -1234,7 +1136,7 @@ void PluginEntry::restartIfRequired() {
         return;
     }
     // check data are ready and new enough
-    seconds allowed_age(cacheAge());
+    std::chrono::seconds allowed_age{cacheAge()};
     auto data_age = getDataAge();
     {
         std::lock_guard l(data_lock_);
@@ -1284,7 +1186,6 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     }
 
     process_id_ = 0;
-    auto end_time = std::chrono::steady_clock::now();
     auto now = std::chrono::steady_clock::now();
     auto diff =
         std::chrono::duration_cast<std::chrono::seconds>(now - start_time_)
@@ -1303,7 +1204,7 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     }
 
     data_time_ = std::chrono::steady_clock::now();
-    auto legacy_time = time(0);
+    auto legacy_time = ::time(nullptr);
 
     if (cacheAge() > 0) {
         data_.clear();
@@ -1317,25 +1218,25 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     }
     legacy_time_ = legacy_time;
 
-    // remove trailing zero's
+    // Remove trailing zero's looks weird, but nulls
     // can be created in some cases by plugin and processing(ConvertTo)
     // But must be removed in output
-    while (data_.size() && data_.back() == 0) data_.pop_back();
+    while (!data_.empty() && data_.back() == '\0') data_.pop_back();
 }  // namespace cma
 
 // remove what not present in the file vector
-void FilterPluginMap(PluginMap& Out, const PathVector& FoundFiles) {
+void FilterPluginMap(PluginMap& out_map, const PathVector& found_files) {
     std::vector<std::string> to_delete;
-    if (FoundFiles.size() == 0) {
-        Out.clear();
+    if (found_files.empty()) {
+        out_map.clear();
         return;
     }
 
     // check every entry for presence in the foundfiles vector
     // absent entries are in to_delete
-    for (auto& out : Out) {
+    for (auto& out : out_map) {
         bool exists = false;
-        for (auto& ff : FoundFiles) {
+        for (const auto& ff : found_files) {
             if (out.first == ff.u8string()) {
                 exists = true;
                 break;
@@ -1348,23 +1249,23 @@ void FilterPluginMap(PluginMap& Out, const PathVector& FoundFiles) {
     // second deletion phase - we can't delete
     // while iterating through container
     for (auto& del : to_delete) {
-        Out.erase(del);
+        out_map.erase(del);
     }
 }
 
 // gtest only partly(name, but not full path)
-void ApplyExeUnitToPluginMap(
-    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-    bool Local) {
-    for (auto& out : Out) {
+void ApplyExeUnitToPluginMap(PluginMap& out_map,
+                             const std::vector<cfg::Plugins::ExeUnit>& units,
+                             bool local) {
+    for (auto& out : out_map) {
         auto p = out.second.path();
 
-        for (auto& unit : Units) {
+        for (const auto& unit : units) {
             if (!MatchNameOrAbsolutePath(unit.pattern(), p)) continue;
 
             // string is match stop scanning exe units
             if (unit.run())
-                out.second.applyConfigUnit(unit, Local);
+                out.second.applyConfigUnit(unit, local);
             else {
                 XLOG::d.t("Run is 'NO' for the '{}'", p);
                 out.second.removeFromExecution();
@@ -1377,67 +1278,61 @@ void ApplyExeUnitToPluginMap(
 // CheckExists = false is only for testing,
 // set true for Production
 // Out is mutable
-void RemoveDuplicatedPlugins(PluginMap& Out, bool CheckExists) {
+void RemoveDuplicatedPlugins(PluginMap& plugin_map, bool check_exists) {
     namespace fs = std::filesystem;
-    using namespace std;
     std::unordered_set<std::string>
         filename_set;  // mk_inventory.vbs, smth.bat, etc
 
     std::error_code ec;
-    for (auto it = Out.begin(); it != Out.end();) {
+    for (auto it = plugin_map.begin(); it != plugin_map.end();) {
         fs::path p = it->first;
 
         if (it->second.path().empty()) {
-            it = Out.erase(it);
+            it = plugin_map.erase(it);
             continue;
         }
 
-        if (CheckExists && !fs::exists(p, ec)) {
-            it = Out.erase(it);
+        if (check_exists && !fs::exists(p, ec)) {
+            it = plugin_map.erase(it);
             continue;
         }
 
         if (!filename_set.insert(p.filename().u8string()).second)
-            it = Out.erase(it);
+            it = plugin_map.erase(it);
         else
             ++it;
     }
 }
 
 namespace provider::config {
-const bool G_AsyncPluginWithoutCacheAge_RunAsync = true;
-const bool G_SetLogwatchPosToEnd = true;
+const bool g_async_plugin_without_cache_age_run_async = true;
+const bool g_set_logwatch_pos_to_end = true;
 
 bool IsRunAsync(const PluginEntry& plugin) noexcept {
     auto run_async = plugin.async();
 
-    if (G_AsyncPluginWithoutCacheAge_RunAsync) return run_async;
+    if (g_async_plugin_without_cache_age_run_async) return run_async;
 
     if (run_async && plugin.cacheAge() == 0)
-        return config::G_AsyncPluginWithoutCacheAge_RunAsync;
+        return config::g_async_plugin_without_cache_age_run_async;
 
     return run_async;
 }
 }  // namespace provider::config
 
 // #TODO simplify THIS TRASH, SK!
-std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
-    using namespace std;
-    using DataBlock = vector<char>;
-    XLOG::l.t("To start [{}] sync plugins", Plugins.size());
+std::vector<char> RunSyncPlugins(PluginMap& plugins, int& total, int timeout) {
+    using DataBlock = std::vector<char>;
+    XLOG::l.t("To start [{}] sync plugins", plugins.size());
 
-    vector<future<DataBlock>> results;
+    std::vector<std::future<DataBlock>> results;
     int requested_count = 0;
-    Count = 0;
+    total = 0;
 
-    if (Timeout < 0) Timeout = 1;
-
-    auto tm_to_stop =
-        std::chrono::steady_clock::now() + std::chrono::seconds(Timeout);
+    if (timeout < 0) timeout = 1;
 
     // sync part
-    for (auto& entry_pair : Plugins) {
-        auto& entry_name = entry_pair.first;
+    for (auto& entry_pair : plugins) {
         auto& entry = entry_pair.second;
 
         // check that out plugin is ging to run as async
@@ -1450,14 +1345,15 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
         results.emplace_back(std::async(
             std::launch::async,  // first param
 
-            [](cma::PluginEntry* Entry,
-               int Tout) -> DataBlock {  // lambda
-                if (!Entry) return {};
-                return Entry->getResultsSync(Entry->path().wstring());
+            [](cma::PluginEntry* plugin_entry,
+               int /*timeout*/) -> DataBlock {  // lambda
+                if (plugin_entry == nullptr) return {};
+                return plugin_entry->getResultsSync(
+                    plugin_entry->path().wstring());
             },  // lambda end
 
             &entry,  // lambda parameter
-            Timeout));
+            timeout));
         requested_count++;
     }
 
@@ -1468,7 +1364,7 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
         // auto status = r.wait_until(tm_to_stop);
         // if (status == future_status::ready) {
         auto result = r.get();
-        if (result.size()) {
+        if (!result.empty()) {
             ++delivered_count;
             cma::tools::AddVector(out, result);
         }
@@ -1477,37 +1373,29 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
         //}
     }
 
-    Count = delivered_count;
+    total = delivered_count;
     return out;
 }
 
 void RunDetachedPlugins(PluginMap& plugins_map, int& start_count) {
-    using namespace std;
-    using DataBlock = vector<char>;
-
-    int requested_count = 0;
     start_count = 0;
 
-    DataBlock out;
     // async part
     int count = 0;
     for (auto& entry_pair : plugins_map) {
-        auto& entry_name = entry_pair.first;
         auto& entry = entry_pair.second;
 
         if (!entry.async()) continue;
     }
     XLOG::t.i("Detached started: [{}]", count);
     start_count = count;
-
-    return;
 }
 
 // To get data from async plugins with cache_age=0
 void PickupAsync0data(int timeout, PluginMap& plugins, std::vector<char>& out,
                       std::vector<std::pair<bool, std::string>>& async_0s) {
     timeout = std::max(timeout, 10);
-    if (timeout)
+    if (timeout != 0)
         XLOG::d.i(
             "Picking up [{}] async-0"
             "plugins with timeout [{}]",
@@ -1521,8 +1409,8 @@ void PickupAsync0data(int timeout, PluginMap& plugins, std::vector<char>& out,
         for (auto& plugin : async_0s) {
             if (plugin.first) continue;
 
-            const auto e = GetEntrySafe(plugins, plugin.second);
-            if (e && !e->running()) {
+            const auto* e = GetEntrySafe(plugins, plugin.second);
+            if (e != nullptr && !e->running()) {
                 cma::tools::AddVector(out, e->data());
                 plugin.first = false;
                 async_count++;
@@ -1533,74 +1421,53 @@ void PickupAsync0data(int timeout, PluginMap& plugins, std::vector<char>& out,
     }
 }
 
-std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
-                                  bool StartImmediately) {
-    using namespace std;
-    using DataBlock = vector<char>;
+std::vector<char> RunAsyncPlugins(PluginMap& plugins, int& total,
+                                  bool start_immediately) {
+    total = 0;
 
-    int requested_count = 0;
-    Count = 0;
+    std::vector<char> out;
 
-    DataBlock out;
-    // async part
     int count = 0;
-    // int timeout = 0;
-    // std::vector<std::pair<bool, std::string>> async_0s;
-    for (auto& entry_pair : Plugins) {
-        auto& entry_name = entry_pair.first;
+    for (auto& entry_pair : plugins) {
         auto& entry = entry_pair.second;
 
         if (!entry.async()) continue;
 
-        auto run_async = cma::provider::config::IsRunAsync(entry);
+        auto run_async = provider::config::IsRunAsync(entry);
         if (!run_async) continue;
 
-        auto ret = entry.getResultsAsync(StartImmediately);
-        if (ret.size()) ++count;
-        cma::tools::AddVector(out, ret);
-
-        /*
-                if
-           (provider::config::G_AsyncPluginWithoutCacheAge_RunAsync) {
-           if (entry.cacheAge() == 0) { timeout = std::max(timeout,
-           entry.timeout()); async_0s.emplace_back(false, entry_name);
-                    }
-                }
-        */
+        auto ret = entry.getResultsAsync(start_immediately);
+        if (!ret.empty()) ++count;
+        tools::AddVector(out, ret);
     }
 
-    Count = count;
-    /*
-        if (provider::config::G_AsyncPluginWithoutCacheAge_RunAsync) {
-            PickupAsync0data(timeout, Plugins, out, async_0s);
-        }
-    */
+    total = count;
 
     return out;
 }
 }  // namespace cma
 
 namespace cma {
-std::mutex G_UsersLock;
-std::unordered_map<std::wstring, wtools::InternalUser> G_Users;
+std::mutex g_users_lock;
+std::unordered_map<std::wstring, wtools::InternalUser> g_users;
 
 wtools::InternalUser ObtainInternalUser(std::wstring_view group) {
-    std::lock_guard lk(G_UsersLock);
-    for (auto& iu : G_Users)
+    std::lock_guard lk(g_users_lock);
+    for (auto& iu : g_users)
         if (iu.first == group) return iu.second;
 
     auto iu = wtools::CreateCmaUserInGroup(std::wstring(group));
     if (iu.first.empty()) return {};
 
-    G_Users[std::wstring(group)] = iu;
+    g_users[std::wstring(group)] = iu;
 
     return iu;
 }
 
 void KillAllInternalUsers() {
-    std::lock_guard lk(G_UsersLock);
-    for (auto& iu : G_Users) wtools::RemoveCmaUser(iu.second.first);
-    G_Users.clear();
+    std::lock_guard lk(g_users_lock);
+    for (auto& iu : g_users) wtools::RemoveCmaUser(iu.second.first);
+    g_users.clear();
 }
 
 }  // namespace cma

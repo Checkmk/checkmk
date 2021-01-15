@@ -93,19 +93,18 @@ using PathVector = std::vector<std::filesystem::path>;
 PathVector GatherAllFiles(const PathVector& Folders);
 // Scan one folder and add contents to the dirs and files
 void GatherMatchingFilesAndDirs(
-    const std::filesystem::path& SearchDir,    // c:\windows
-    const std::filesystem::path& DirPattern,   // c:\windows\L*
-    const std::filesystem::path& FilePattern,  // c:\windows\L*\*.log
-    PathVector& FilesFound                     // output
+    const std::filesystem::path& search_dir,    // c:\windows
+    const std::filesystem::path& dir_pattern,   // c:\windows\L*
+    const std::filesystem::path& file_pattern,  // c:\windows\L*\*.log
+    PathVector& files_found                     // output
 );
 
-void FilterPathByExtension(PathVector& Paths, std::vector<std::string> Exts);
-void RemoveDuplicatedNames(PathVector& Paths);
-PathVector SelectPathVectorByPattern(const PathVector& Paths,
-                                     const std::string& Pattern);
-const PathVector FilterPathVector(
-    const PathVector& FoundFiles,
-    const std::vector<cma::cfg::Plugins::ExeUnit>& Units, bool CheckExists);
+void FilterPathByExtension(PathVector& paths,
+                           const std::vector<std::string>& exts);
+void RemoveDuplicatedNames(PathVector& paths);
+PathVector FilterPathVector(
+    const PathVector& found_files,
+    const std::vector<cma::cfg::Plugins::ExeUnit>& units, bool check_exists);
 };  // namespace cma
 
 namespace cma {
@@ -257,9 +256,10 @@ public:
         return false;
     }
     enum class StartMode { job, updater };
-    bool startEx(std::wstring_view Id, std::wstring exec, StartMode start_mode,
-                 wtools::InternalUser internal_user);
-    bool startStd(std::wstring_view Id, std::wstring exec,
+    bool startEx(std::wstring_view Id, const std::wstring& exec,
+                 StartMode start_mode,
+                 const wtools::InternalUser& internal_user);
+    bool startStd(std::wstring_view Id, const std::wstring& exec,
                   StartMode start_mode) {
         return startEx(Id, exec, start_mode, {});
     }
@@ -356,7 +356,7 @@ private:
     void readAndAppend(HANDLE read_handle, std::chrono::milliseconds timeout);
     [[nodiscard]] bool waitForBreakLoop(std::chrono::milliseconds timeout);
     HANDLE stop_event_;
-    bool waitForStop(std::chrono::milliseconds Timeout);
+    bool waitForStop(std::chrono::milliseconds interval);
     wtools::StopWatch sw_;
     // called AFTER process finished!
     void readWhatLeft() {
@@ -436,7 +436,7 @@ enum class HackDataMode { header, line };
 
 // build correct string for patching
 std::string ConstructPatchString(time_t time_now, int cache_age,
-                                 HackDataMode mode) noexcept;
+                                 HackDataMode mode);
 
 // 1. replaces '\r' with '\r\n'
 // 2a. HackDataMode::header :
@@ -447,14 +447,14 @@ std::string ConstructPatchString(time_t time_now, int cache_age,
 // hack every string with patch
 // "string"
 // "patch" + "string"
-bool HackDataWithCacheInfo(std::vector<char>& Out,
-                           const std::vector<char>& OriginalData,
+bool HackDataWithCacheInfo(std::vector<char>& out,
+                           const std::vector<char>& original_data,
                            const std::string& patch, HackDataMode mode);
 
 // cleans \r from string
-inline bool HackPluginDataRemoveCR(std::vector<char>& Out,
-                                   const std::vector<char>& OriginalData) {
-    return HackDataWithCacheInfo(Out, OriginalData, "", HackDataMode::header);
+inline bool HackPluginDataRemoveCR(std::vector<char>& out,
+                                   const std::vector<char>& original_data) {
+    return HackDataWithCacheInfo(out, original_data, "", HackDataMode::header);
 }
 
 class PluginEntry : public cma::cfg::PluginInfo {
@@ -610,7 +610,7 @@ public:
 
     void removeFromExecution() noexcept { path_ = ""; }
 
-    static int threadCount() noexcept { return thread_count_.load(); }
+    static int threadCount() noexcept { return g_tread_count.load(); }
 
     std::wstring cmdLine() const noexcept { return cmd_line_; }
 
@@ -668,7 +668,7 @@ private:
     bool thread_on_ = false;  // get before start thread, released inside thread
     bool data_is_going_old_ = false;  // when plugin finds data obsolete
 
-    static std::atomic<int> thread_count_;
+    static std::atomic<int> g_tread_count;
 
     std::wstring cmd_line_;
 
@@ -691,10 +691,11 @@ TheMiniBox::StartMode GetStartMode(const std::filesystem::path& filepath);
 // #TODO estimate class usage
 using PluginMap = std::unordered_map<std::string, cma::PluginEntry>;
 
-const PluginEntry* GetEntrySafe(const PluginMap& Pm, const std::string& Key);
-PluginEntry* GetEntrySafe(PluginMap& Pm, const std::string& Key);
+const PluginEntry* GetEntrySafe(const PluginMap& plugin_map,
+                                const std::string& key);
+PluginEntry* GetEntrySafe(PluginMap& plugin_map, const std::string& key);
 
-void InsertInPluginMap(PluginMap& Out, const PathVector& FoundFiles);
+void InsertInPluginMap(PluginMap& plugin_map, const PathVector& found_files);
 
 using UnitMap = std::unordered_map<std::string, cma::cfg::Plugins::ExeUnit>;
 
@@ -703,39 +704,36 @@ std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
     const std::vector<std::filesystem::path>& found_files, bool local);
 
 void ApplyEverythingToPluginMap(
-    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-    const std::vector<std::filesystem::path>& files, bool Local);
+    PluginMap& plugin_map, const std::vector<cma::cfg::Plugins::ExeUnit>& units,
+    const std::vector<std::filesystem::path>& found_files, bool local);
 
-void ApplyEverythingToPluginMapDeprecated(
-    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-    const std::vector<std::filesystem::path>& files, bool Local);
-
-void FilterPluginMap(PluginMap& Out, const PathVector& FoundFiles);
+void FilterPluginMap(PluginMap& out_map, const PathVector& found_files);
 
 void ApplyExeUnitToPluginMap(
-    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-    bool Local);
+    PluginMap& out_map, const std::vector<cma::cfg::Plugins::ExeUnit>& units,
+    bool local);
 
-void RemoveDuplicatedPlugins(PluginMap& Out, bool CheckExists);
+void RemoveDuplicatedPlugins(PluginMap& plugin_map, bool check_exists);
 
-void UpdatePluginMap(PluginMap& Out,  // output is here
-                     bool Local, const PathVector& FoundFiles,
-                     const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-                     bool CheckExists = true);
+void UpdatePluginMap(PluginMap& plugin_map,  // output is here
+                     bool local, const PathVector& found_files,
+                     const std::vector<cma::cfg::Plugins::ExeUnit>& units,
+                     bool check_exists = true);
 
-void UpdatePluginMapCmdLine(PluginMap& Out, cma::srv::ServiceProcessor* sp);
+void UpdatePluginMapCmdLine(PluginMap& plugin_map,
+                            cma::srv::ServiceProcessor* sp);
 
 // API call to exec all plugins and get back data and count
-std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout);
-std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
-                                  bool StartImmediately);
+std::vector<char> RunSyncPlugins(PluginMap& plugins, int& total, int timeout);
+std::vector<char> RunAsyncPlugins(PluginMap& plugins, int& total,
+                                  bool start_immediately);
 
 constexpr std::chrono::seconds kRestartInterval{60};
 
 void RunDetachedPlugins(PluginMap& plugins_map, int& start_count);
 namespace provider::config {
-extern const bool G_AsyncPluginWithoutCacheAge_RunAsync;
-extern const bool G_SetLogwatchPosToEnd;
+extern const bool g_async_plugin_without_cache_age_run_async;
+extern const bool g_set_logwatch_pos_to_end;
 
 bool IsRunAsync(const PluginEntry& plugin) noexcept;
 }  // namespace provider::config

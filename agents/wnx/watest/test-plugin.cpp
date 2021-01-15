@@ -1513,10 +1513,12 @@ TEST(PluginTest, AsyncStartSimulation_0) {
         PluginMap pm;  // load from the groups::plugin
         UpdatePluginMap(pm, false, as_vp, exe_units_async_0, false);
         // async_0 means sync
-        EXPECT_EQ(cma::provider::config::G_AsyncPluginWithoutCacheAge_RunAsync,
-                  cma::provider::config::IsRunAsync(pm.at(as_vp_0)));
-        EXPECT_EQ(cma::provider::config::G_AsyncPluginWithoutCacheAge_RunAsync,
-                  cma::provider::config::IsRunAsync(pm.at(as_vp_1)));
+        EXPECT_EQ(
+            cma::provider::config::g_async_plugin_without_cache_age_run_async,
+            cma::provider::config::IsRunAsync(pm.at(as_vp_0)));
+        EXPECT_EQ(
+            cma::provider::config::g_async_plugin_without_cache_age_run_async,
+            cma::provider::config::IsRunAsync(pm.at(as_vp_1)));
 
         UpdatePluginMap(pm, false, as_vp, exe_units_valid_SYNC, false);
         EXPECT_FALSE(cma::provider::config::IsRunAsync(pm.at(as_vp_0)));

@@ -776,7 +776,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                         Transform(
                             TextAscii(
                                 title=_("Tag ID"),
-                                size=16,
+                                size=40,
                                 regex="^[-a-z0-9A-Z_]*$",
                                 regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
                                               "0-9, _ and - are allowed."),
@@ -788,7 +788,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                         TextUnicode(
                             title=_("Title") + "*",
                             allow_empty=False,
-                            size=40,
+                            size=60,
                         ),
                         Foldable(
                             ListChoice(

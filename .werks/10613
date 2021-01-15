@@ -9,3 +9,4 @@ Version: 2.0.0b5
 Date: 1610620676
 
 Applying the service discovery action 'Add missing, remove vanished' can now be restricted to selected services by the use of checkboxes. So far this action could only be performed on all services.
+With this change the page menu 'Actions' was updated. 'Add missing, remove vanished' is now located at the top of the 'Services' actions.

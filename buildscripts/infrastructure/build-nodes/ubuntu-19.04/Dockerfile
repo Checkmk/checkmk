@@ -32,8 +32,6 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     apache2-dev \
     autoconf \
     build-essential \
-    chrpath \
-    curl \
     devscripts \
     dnsutils \
     dpatch \
@@ -41,9 +39,7 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     gawk \
     gettext \
     git-buildpackage \
-    gtk-doc-tools \
-    iputils-ping \
-    joe \
+    curl \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \
@@ -67,7 +63,6 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     libssl-dev \
     libtool \
     libxml2-dev \
-    libxmlsec1-dev \
     openssh-client \
     patch \
     rpcbind \
@@ -76,8 +71,11 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     texinfo \
     tk-dev \
     uuid-dev \
-    valgrind \
+    chrpath \
+    joe \
+    iputils-ping \
     vim \
+    valgrind \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

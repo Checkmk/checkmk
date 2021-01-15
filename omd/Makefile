@@ -32,8 +32,6 @@ PACKAGES := \
     msitools \
     net-snmp \
     apache-omd \
-    lasso \
-    mod_auth_mellon \
     mod_fcgid \
     python3-mod_wsgi \
     check_mk \

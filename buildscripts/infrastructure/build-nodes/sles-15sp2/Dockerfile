@@ -32,7 +32,6 @@ RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
-    chrpath \
     curl \
     flex \
     freeradius-client-devel \
@@ -43,9 +42,7 @@ RUN zypper ref -s \
     git \
     glib2-devel \
     groff \
-    gtk-doc \
     intltool \
-    iputils \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \
@@ -65,9 +62,6 @@ RUN zypper ref -s \
     libuuid-devel \
     libvpx-devel \
     libxml2-devel \
-    libxmlsec1-1 \
-    xmlsec1-devel \
-    xmlsec1-openssl-devel \
     make \
     mariadb-client \
     openldap2-devel \
@@ -87,6 +81,8 @@ RUN zypper ref -s \
     unzip \
     wget \
     which \
+    chrpath \
+    iputils \
     vim \
     && zypper clean -a
 

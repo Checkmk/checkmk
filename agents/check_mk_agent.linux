@@ -6,12 +6,14 @@
 # Remove locale settings to eliminate localized outputs where possible
 # The locale logic here is used to make the Python encoding detection
 # work (see CMK-2778).
-for i in $(locale -a); do
-    if [ "$i" = "C.UTF-8" ] || [ "$i" = "C.utf8" ] || [ "$i" = "C" ]; then
-        export LC_ALL="$i"
-        break
-    fi
-done
+if command -v locale >/dev/null 2>&1; then
+    for i in $(locale -a); do
+        if [ "$i" = "C.UTF-8" ] || [ "$i" = "C.utf8" ] || [ "$i" = "C" ]; then
+            export LC_ALL="$i"
+            break
+        fi
+    done
+fi
 
 export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
 export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}

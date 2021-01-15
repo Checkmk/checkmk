@@ -163,27 +163,66 @@ def site_config_path() -> str:
 g_backup_lock_f: Optional[IO[bytes]] = None
 
 
-# Es gibt ein globales Backup-Lock, das bei modifizierenden Aktionen
-# geholt wird. D.h. es kann Systemweit immer nur ein Backup oder Restore
-# zur Zeit ausgeführt werden.
+def verify_compatible_cma_version() -> None:
+    if not is_cma():
+        return
+
+    with open("/usr/share/cma/version") as f:
+        parts = tuple(map(int, f.read().strip().split(".")))
+
+    if parts[0] == 1 and parts[1] == 4 and parts[2] < 12:
+        raise MKGeneralException(
+            "The Checkmk backup of your version (1.6.0p21 or newer) "
+            "is not compatible with your Checkmk Appliance firmware. Please update your "
+            "appliance to 1.4.12 or newer to make the backup work again.")
+
+
+def global_lock_file_path() -> Path:
+    return Path("/var/lock/mkbackup/mkbackup.lock")
+
+
 def acquire_backup_lock() -> None:
+    """Ensure only one "mkbackup" instance can run on each system at a time.
+
+    Note:
+        Please note that with 1.6.0p21 we have changed the path from
+        /tmp/mkbackup.lock to /var/lock/mkbackup/mkbackup.lock. We had to move
+        the lock file to a dedicated subdirectory without sticky bit to make it
+        possible to write and lock files from different sites. The move from
+        /tmp to /var/lock was just to have the lock file in a more specific
+        place. See also:
+
+        https://forum.checkmk.com/t/backup-schlagt-fehl/21630/7
+        https://unix.stackexchange.com/a/503169
+    """
     global g_backup_lock_f
-    lock_file_path = "/tmp/mkbackup.lock"
-    if not os.path.exists(lock_file_path):
+    lock_file_path = global_lock_file_path()
+
+    # First ensure the base path exists and has correct permissions
+    makedirs(str(lock_file_path.parent), group="omd", mode=0o770)
+
+    # Then create the file (but ensure that the target file always has the
+    # correct permissions.  The current lock implementation assumes the file is
+    # kept after the process frees the lock (terminates). The pure existence of
+    # the lock file is not locking anything. We work with fcntl.flock to realize
+    # the locking.
+    if not lock_file_path.exists():
         try:
-            g_backup_lock_f = tempfile.NamedTemporaryFile(mode="ab+", dir="/tmp", delete=False)
+            g_backup_lock_f = tempfile.NamedTemporaryFile(mode="ab+",
+                                                          dir=str(lock_file_path.parent),
+                                                          delete=False)
             set_permissions(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid, 0o660)
             os.rename(g_backup_lock_f.name, lock_file_path)
         except (IOError, OSError) as e:
             raise MKGeneralException("Failed to open lock file \"%s\": %s" % (lock_file_path, e))
     else:
-        g_backup_lock_f = open(lock_file_path, "ab")
+        g_backup_lock_f = lock_file_path.open("ab")
 
     try:
         fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except IOError as e:
+    except IOError:
         raise MKGeneralException("Failed to get the exclusive backup lock. "
-                                 "Another backup/restore seems to be running (%s)." % e)
+                                 "Another backup/restore seems to be running.")
 
     # Ensure that the lock is not inherited to subprocessess
     try:
@@ -574,6 +613,7 @@ g_backup_id: Optional[str] = None
 
 
 def mode_backup(local_job_id: str, opts: Dict[str, str]) -> None:
+    verify_compatible_cma_version()
     acquire_backup_lock()
     load_job(local_job_id)
     target_ident = g_job_config["target"]
@@ -1425,6 +1465,7 @@ def add_output(s):
 
 
 def mode_restore(target_id: str, backup_id: str, opts: Dict[str, str]) -> None:
+    verify_compatible_cma_version()
     acquire_backup_lock()
 
     global g_target_id, g_backup_id

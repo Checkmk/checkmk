@@ -32,6 +32,7 @@ RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
+    chrpath \
     curl \
     flex \
     freeradius-client-devel \
@@ -42,6 +43,9 @@ RUN zypper ref -s \
     git \
     glib2-devel \
     groff \
+    gtk-doc \
+    iputils \
+    joe \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \
@@ -62,6 +66,9 @@ RUN zypper ref -s \
     libuuid-devel \
     libvpx-devel \
     libxml2-devel \
+    xmlsec1-devel \
+    xmlsec1-openssl-devel \
+    libxmlsec1-1 \
     make \
     mysql \
     openldap2-devel \
@@ -79,13 +86,10 @@ RUN zypper ref -s \
     texinfo \
     tk-devel \
     unzip \
+    valgrind \
+    vim \
     wget \
     which \
-    chrpath \
-    joe \
-    iputils \
-    vim \
-    valgrind \
     && zypper clean -a
 
 # Install our standard tool chain for building

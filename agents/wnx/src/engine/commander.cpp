@@ -15,7 +15,7 @@
 namespace cma::commander {
 
 namespace {
-std::mutex run_command_processor_lock{};
+std::mutex g_run_command_processor_lock{};
 
 }  // namespace
 
@@ -57,12 +57,12 @@ bool RunCommand(std::string_view peer, std::string_view cmd) {
 RunCommandProcessor g_rcp = RunCommand;
 
 RunCommandProcessor ObtainRunCommandProcessor() {
-    std::lock_guard lk(run_command_processor_lock);
+    std::lock_guard lk(g_run_command_processor_lock);
     return g_rcp;
 }
 
 void ChangeRunCommandProcessor(RunCommandProcessor rcp) {
-    std::lock_guard lk(run_command_processor_lock);
+    std::lock_guard lk(g_run_command_processor_lock);
     g_rcp = rcp;
 }
 

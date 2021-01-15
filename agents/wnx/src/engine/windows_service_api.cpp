@@ -1161,6 +1161,8 @@ static void TryCleanOnExit() {
         return;
     }
 
+    fw::RemoveRule(srv::kSrvFirewallRuleName);
+
     auto mode = details::GetCleanDataFolderMode();  // read config
     XLOG::l.i(
         "Clean on exit was requested, trying to remove what we have mode is [{}]",

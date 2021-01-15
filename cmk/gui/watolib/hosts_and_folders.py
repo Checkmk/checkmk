@@ -2925,14 +2925,14 @@ def folders_by_id() -> Dict[str, Type[CREFolder]]:
     return mapping
 
 
-def call_hook_hosts_changed(folder):
+def call_hook_hosts_changed(folder: CREFolder) -> None:
     if hooks.registered("hosts-changed"):
-        hosts = collect_hosts(folder)
+        hosts = _collect_hosts(folder)
         hooks.call("hosts-changed", hosts)
 
     # The same with all hosts!
     if hooks.registered("all-hosts-changed"):
-        hosts = collect_hosts(Folder.root_folder())
+        hosts = _collect_hosts(Folder.root_folder())
         hooks.call("all-hosts-changed", hosts)
 
 
@@ -2943,7 +2943,7 @@ def call_hook_hosts_changed(folder):
 def validate_all_hosts(hostnames, force_all=False):
     if hooks.registered('validate-all-hosts') and (len(hostnames) > 0 or force_all):
         hosts_errors = {}
-        all_hosts = collect_hosts(Folder.root_folder())
+        all_hosts = _collect_hosts(Folder.root_folder())
 
         if force_all:
             hostnames = list(all_hosts.keys())
@@ -2962,12 +2962,12 @@ def validate_all_hosts(hostnames, force_all=False):
 
 
 def collect_all_hosts() -> HostsWithAttributes:
-    return collect_hosts(Folder.root_folder())
+    return _collect_hosts(Folder.root_folder())
 
 
-def collect_hosts(folder) -> HostsWithAttributes:
+def _collect_hosts(folder: CREFolder) -> HostsWithAttributes:
     hosts_attributes = {}
-    for host_name, host in Host.all().items():
+    for host_name, host in folder.all_hosts_recursively().items():
         hosts_attributes[host_name] = host.effective_attributes()
         hosts_attributes[host_name]["path"] = host.folder().path()
         hosts_attributes[host_name]["edit_url"] = host.edit_url()

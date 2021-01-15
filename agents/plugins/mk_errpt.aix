@@ -51,6 +51,6 @@ fi
 
 if [ "$OUT" ]; then
     # output data; if successful, remember most recent
-    echo "$OUT" && echo "$OUT" | head -n1 | sed 's/^C\ //' > "$MK_ERRPT_AIX_STATE"
+    echo "$OUT" && echo "$OUT" | head -n1 | sed 's/^C\ //' | sed 's/\//\\\//g' > "$MK_ERRPT_AIX_STATE"
 fi
 

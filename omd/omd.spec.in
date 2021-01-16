@@ -55,7 +55,7 @@ rm -f $RPM_BUILD_ROOT/etc/systemd/system/omd.service
 # Some distros don't have the sticky bit set on /var/lock. This means we need to
 # pre create that directory for the sites to be able to write it's lock file to
 # to it. Not needed for Ubuntu/Debian.
-install -d -m 0770 -o root -g omd /var/lock/mkbackup
+mkdir /var/lock/mkbackup
 
 %files
 %defattr(-,root,root)
@@ -70,6 +70,7 @@ install -d -m 0770 -o root -g omd /var/lock/mkbackup
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/cmc/icmpsender
 %attr(0750,root,omd) /opt/omd/versions/%{version}/lib/cmc/icmpreceiver
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/cmc/icmpreceiver
+%attr(0770,root,omd) /var/lock/mkbackup
 
 %pre
 groupadd -r omd 2>/dev/null || true

@@ -1,0 +1,12 @@
+Title: tcp_conn_stats: Missing data for datapower devices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610802747
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+The check plugin tcp_conn_stats was not discovered (or got no data) for
+datapower devices accessing the relevant data via SNMP.

@@ -14,6 +14,29 @@ SYS_OBJID_OID = ".1.3.6.1.2.1.1.2"
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
+def test_all_sections_are_subscribed_by_some_plugin():
+    """Test that all registered sections are subscribed to by some plugin
+
+    We have very few sections (one at the time of this writing),
+    that are not subscribed to by any plugin.
+    We can afford to keep track of those.
+    """
+    all_section_names = set(s.name for s in agent_based_register.iter_all_snmp_sections())
+    all_section_names.update(s.name for s in agent_based_register.iter_all_agent_sections())
+
+    subscribed_sections_names = set(
+        agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=(p.name for p in agent_based_register.iter_all_check_plugins()),
+            inventory_plugin_names=(
+                i.name for i in agent_based_register.iter_all_inventory_plugins()),
+        ))
+
+    unsubscribed_sections_names = {str(n) for n in all_section_names - subscribed_sections_names}
+
+    assert unsubscribed_sections_names == {'labels'}
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
 def test_section_detection_uses_sysdescr_or_sysobjid():
     """Make sure the first OID is always either the system description
     or the system object ID. This increases performance massively.

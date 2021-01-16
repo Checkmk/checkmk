@@ -388,8 +388,6 @@ def _get_services_to_fetch(
     services = check_table.get_sorted_service_list(
         host_name, filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED)
 
-    # When check types are specified via command line, enforce them. Otherwise accept all check
-    # plugin names.
     return [
         service for service in services
         if not service_outside_check_period(config_cache, host_name, service.description)
@@ -408,6 +406,8 @@ def _filter_clustered_services(
     def _is_not_of_host(service):
         return host_name != config_cache.host_of_clustered_service(host_name, service.description)
 
+    # When check types are specified via command line, enforce them.
+    # Otherwise start with all check plugin names.
     if run_only_plugin_names is None:
         used_plugins = {s.check_plugin_name for s in services}
     else:

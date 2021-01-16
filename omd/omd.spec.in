@@ -52,6 +52,11 @@ rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 rm -f $RPM_BUILD_ROOT/etc/systemd/system/omd.service
 
+# Some distros don't have the sticky bit set on /var/lock. This means we need to
+# pre create that directory for the sites to be able to write it's lock file to
+# to it. Not needed for Ubuntu/Debian.
+install -d -m 0770 -o root -g omd /var/lock/mkbackup
+
 %files
 %defattr(-,root,root)
 /opt/omd

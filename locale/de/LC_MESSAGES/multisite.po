@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-01-15 15:30+0000\n"
 "Last-Translator: Wontek <wontek.hong@tribe29.com>\n"
@@ -14146,6 +14146,10 @@ msgstr "Erkannte Host-Labels"
 
 msgid "Discovered no service yet."
 msgstr "Es wurde noch kein Service entdeckt."
+
+#, fuzzy
+msgid "Discovery"
+msgstr "Massenerkennung"
 
 msgid "Discovery Output"
 msgstr "Erkennungs-Ausgabe"
@@ -32991,10 +32995,6 @@ msgstr "ausgewählte Services"
 #, fuzzy
 msgid "On selected rules"
 msgstr "Regel %s gelöscht"
-
-#, fuzzy
-msgid "On selected services"
-msgstr "ausgewählte Services"
 
 #, fuzzy
 msgid "On selected sites"
@@ -62521,6 +62521,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "selected services"
+#~ msgid "On selected services"
+#~ msgstr "ausgewählte Services"
 
 #~ msgid "Host Name"
 #~ msgstr "Hostname"

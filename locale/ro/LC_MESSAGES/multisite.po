@@ -13358,6 +13358,10 @@ msgid "Discovered no service yet."
 msgstr ""
 
 #, fuzzy
+msgid "Discovery"
+msgstr "Inventariere in masa"
+
+#, fuzzy
 msgid "Discovery Output"
 msgstr "Inventariere in masa"
 
@@ -31157,10 +31161,6 @@ msgstr "Reguli neaplicate"
 #, fuzzy
 msgid "On selected rules"
 msgstr "Reguli neaplicate"
-
-#, fuzzy
-msgid "On selected services"
-msgstr "Afectat de serviciu"
 
 #, fuzzy
 msgid "On selected sites"
@@ -57288,6 +57288,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "On selected services"
+#~ msgstr "Afectat de serviciu"
 
 #~ msgid "Host Name"
 #~ msgstr "Numele Elementului"

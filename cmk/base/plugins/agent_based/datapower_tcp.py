@@ -62,6 +62,7 @@ def parse_datapower_tcp(string_table: List[StringTable]) -> tcp_connections.TCPC
 
 register.snmp_section(
     name='datapower_tcp',
+    parsed_section_name='tcp_conn_stats',
     parse_function=parse_datapower_tcp,
     fetch=[
         SNMPTree(

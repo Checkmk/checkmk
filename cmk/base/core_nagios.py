@@ -1192,25 +1192,8 @@ def _get_needed_plugin_names(
     legacy_names = (_resolve_legacy_plugin_name(pn) for pn in needed_agent_based_check_plugin_names)
     needed_legacy_check_plugin_names.update(ln for ln in legacy_names if ln is not None)
 
-    # Also include the check plugins of the cluster nodes to be able to load
-    # the autochecks of the nodes
-    # TODO (mo): is this only due to the referenced variables? If so, we can remove this block
-    # once the variables are resolved during cmk-update-config
-    if host_config.is_cluster:
-        nodes = host_config.nodes
-        if nodes is None:
-            raise MKGeneralException("Invalid cluster configuration")
-        for node in nodes:
-            node_table = check_table.get_check_table(node, skip_ignored=False)
-            for check_plugin_name in node_table.needed_check_names():
-                opt_legacy_name = _resolve_legacy_plugin_name(check_plugin_name)
-                if opt_legacy_name is not None:
-                    needed_legacy_check_plugin_names.add(opt_legacy_name)
-                else:
-                    needed_agent_based_check_plugin_names.add(check_plugin_name)
-
-    # inventory plugins get passed parsed data these days. Make sure we load the required sections,
-    # otherwise inventory plugins will crash upon unparsed data.
+    # Inventory plugins get passed parsed data these days.
+    # Load the required sections, or inventory plugins will crash upon unparsed data.
     needed_agent_based_inventory_plugin_names: Set[InventoryPluginName] = set()
     if host_config.do_status_data_inventory:
         for inventory_plugin in agent_based_register.iter_all_inventory_plugins():

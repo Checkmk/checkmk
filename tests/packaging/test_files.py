@@ -94,6 +94,7 @@ def test_files_not_in_version_path(version_path, cmk_version, what):
             "/opt/omd$",
             "/opt/omd/apache$",
             "/opt/omd/sites$",
+            "/var/lock/mkbackup$",
         ] + version_allowed_patterns,
         "deb": [
             "/$",

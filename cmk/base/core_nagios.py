@@ -11,7 +11,7 @@ import py_compile
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, IO, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
 
 from six import ensure_binary, ensure_str
 
@@ -1155,21 +1155,8 @@ def _get_needed_plugin_names(
     host_config: config.HostConfig,
 ) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[InventoryPluginName]]:
     from cmk.base import check_table  # pylint: disable=import-outside-toplevel
-    needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
 
-    # In case the host is monitored as special agent, the check plugin for the special agent needs
-    # to be loaded
-    try:
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
-    except Exception:
-        ipaddress = None
-    for source in sources.make_sources(
-            host_config,
-            ipaddress,
-            mode=Mode.NONE,
-    ):
-        if isinstance(source, sources.programs.SpecialAgentSource):
-            needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
+    needed_legacy_check_plugin_names = {*_plugins_for_special_agents(host_config)}
 
     # Collect the needed check plugin names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:
@@ -1183,13 +1170,8 @@ def _get_needed_plugin_names(
         filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
     )
-
-    for check_plugin_name in needed_agent_based_check_plugin_names:
-        legacy_name = _resolve_legacy_plugin_name(check_plugin_name)
-        if legacy_name is None:
-            continue
-
-        needed_legacy_check_plugin_names.add(legacy_name)
+    legacy_names = (_resolve_legacy_plugin_name(pn) for pn in needed_agent_based_check_plugin_names)
+    needed_legacy_check_plugin_names.update(ln for ln in legacy_names if ln is not None)
 
     # Also include the check plugins of the cluster nodes to be able to load
     # the autochecks of the nodes
@@ -1225,6 +1207,24 @@ def _get_needed_plugin_names(
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
     )
+
+
+def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPluginNameStr]:
+    """determine required special agent plugins
+
+    In case the host is monitored as special agent, the check plugin for the special agent
+    needs to be loaded
+    """
+    try:
+        ipaddress = ip_lookup.lookup_ip_address(host_config)
+    except Exception:
+        ipaddress = None
+
+    yield from (s.special_agent_plugin_file_name for s in sources.make_sources(
+        host_config,
+        ipaddress,
+        mode=Mode.NONE,
+    ) if isinstance(s, sources.programs.SpecialAgentSource))
 
 
 def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> Optional[CheckPluginNameStr]:

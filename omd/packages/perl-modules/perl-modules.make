@@ -1,7 +1,11 @@
 PERL_MODULES := perl-modules
-PERL_MODULES_VERS := $(OMD_VERSION)
+# Use some pseudo version here. Don't use OMD_VERSION (would break the package cache)
+PERL_MODULES_VERS := 1.0
 PERL_MODULES_DIR := $(PERL_MODULES)-$(PERL_MODULES_VERS)
 # Increase this to enforce a recreation of the build cache
+# Note: Because the versions of the individual modules is not reflected in PERL_MODULES_VERS,
+#       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
+#       change.
 PERL_MODULES_BUILD_ID := 1
 
 PERL_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PERL_MODULES_DIR)-build

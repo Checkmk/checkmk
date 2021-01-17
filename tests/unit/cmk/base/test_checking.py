@@ -17,8 +17,6 @@ from cmk.base.api.agent_based.checking_classes import Result, State as state, Me
 @pytest.mark.parametrize(
     "rules,active_timeperiods,expected_result",
     [
-        # Tuple based
-        ((1, 1), ["tp1", "tp2"], (1, 1)),
         (cmk.base.config.TimespecificParamList([(1, 1), (2, 2)]), ["tp1", "tp2"], (1, 1)),
         (cmk.base.config.TimespecificParamList([(1, 1), {
             "tp_default_value": (2, 2),
@@ -44,12 +42,6 @@ from cmk.base.api.agent_based.checking_classes import Result, State as state, Me
             "tp_default_value": (2, 2),
             "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]
         }]), [], (1, 1)),
-        # Dict based
-        ({
-            1: 1
-        }, ["tp1", "tp2"], {
-            1: 1
-        }),
         (cmk.base.config.TimespecificParamList([{
             1: 1
         }]), ["tp1", "tp2"], {
@@ -186,13 +178,15 @@ from cmk.base.api.agent_based.checking_classes import Result, State as state, Me
             (3, 3),
         ]), [], {}),
     ])
-def test_determine_check_parameters(monkeypatch, rules, active_timeperiods, expected_result):
-    monkeypatch.setattr(cmk.base.core, "timeperiod_active",
-                        lambda tp: _check_timeperiod(tp, active_timeperiods))
+def test_time_resolved_check_parameters(monkeypatch, rules, active_timeperiods, expected_result):
+    monkeypatch.setattr(
+        cmk.base.core,
+        "timeperiod_active",
+        lambda tp: _check_timeperiod(tp, active_timeperiods),
+    )
 
-    determined_check_params = cmk.base.checking.legacy_determine_check_params(rules)
-    assert expected_result == determined_check_params, (
-        "Determine params: Expected '%s' but got '%s'" % (expected_result, determined_check_params))
+    resolved_check_params = cmk.base.checking.time_resolved_check_parameters(rules)
+    assert expected_result == resolved_check_params
 
 
 def _check_timeperiod(timeperiod, active_timeperiods):

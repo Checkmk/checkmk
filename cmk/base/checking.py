@@ -497,7 +497,7 @@ def execute_check(
         ipaddress,
         service,
         plugin,
-        lambda: determine_check_params(service.parameters),
+        lambda: final_read_only_check_parameters(service.parameters),
     )
 
     if submit:
@@ -668,7 +668,8 @@ def _execute_check_legacy_mode(
         # Call the actual check function
         item_state.reset_wrapped_counters()
 
-        used_params = legacy_determine_check_params(service.parameters)
+        used_params = (time_resolved_check_parameters(service.parameters) if isinstance(
+            service.parameters, cmk.base.config.TimespecificParamList) else service.parameters)
         raw_result = check_function(service.item, used_params, section_content)
         result = sanitize_check_result(raw_result)
         item_state.raise_counter_wrap()
@@ -711,20 +712,18 @@ def _execute_check_legacy_mode(
     return True
 
 
-def determine_check_params(entries: LegacyCheckParameters) -> Parameters:
-    # TODO (mo): obviously, we do not want to keep legacy_determine_check_params
-    # around in the long run. This needs cleaning up, once we've gotten
-    # rid of tuple parameters.
-    params = legacy_determine_check_params(entries)
+def final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:
+    raw_parameters = (time_resolved_check_parameters(entries) if isinstance(
+        entries, cmk.base.config.TimespecificParamList) else entries)
+    # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
     # wrap_parameters is a no-op for dictionaries.
     # For auto-migrated plugins expecting tuples, they will be
     # unwrapped by a decorator of the original check_function.
-    return Parameters(wrap_parameters(params))
+    return Parameters(wrap_parameters(raw_parameters))
 
 
-def legacy_determine_check_params(entries: LegacyCheckParameters) -> LegacyCheckParameters:
-    if not isinstance(entries, cmk.base.config.TimespecificParamList):
-        return entries
+def time_resolved_check_parameters(
+    entries: cmk.base.config.TimespecificParamList,) -> LegacyCheckParameters:
 
     # Check if first entry is not dict based or if its dict based
     # check if the tp_default_value is not a dict

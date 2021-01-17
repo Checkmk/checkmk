@@ -663,7 +663,7 @@ class AutomationAnalyseServices(Automation):
             if isinstance(parameters, cmk.base.config.TimespecificParamList):
                 effective_parameters: LegacyCheckParameters = {
                     "tp_computed_params": {
-                        "params": cmk.base.checking.legacy_determine_check_params(parameters),
+                        "params": cmk.base.checking.time_resolved_check_parameters(parameters),
                         "computed_at": time.time()
                     }
                 }

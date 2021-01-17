@@ -1899,7 +1899,7 @@ def _preview_params(
     if isinstance(params, config.TimespecificParamList):
         params = {
             "tp_computed_params": {
-                "params": checking.legacy_determine_check_params(params),
+                "params": checking.time_resolved_check_parameters(params),
                 "computed_at": time.time(),
             }
         }

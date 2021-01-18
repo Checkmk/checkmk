@@ -484,7 +484,7 @@ def draw_dashboard(name: DashboardName) -> None:
         visuals.get_context_from_uri_vars(["host", "service"], board["single_infos"]),
         board["context"])
 
-    title = visuals.visual_title('dashboard', board)
+    title = _dashboard_title(board, board_context)
 
     # Distance from top of the screen to the lower border of the heading
     header_height = 104
@@ -565,6 +565,18 @@ cmk.dashboard.register_event_handlers();
         html.javascript('cmk.dashboard.toggle_dashboard_edit()')
 
     html.body_end()  # omit regular footer with status icons, etc.
+
+
+def _dashboard_title(board: DashboardConfig, board_context: VisualContext) -> str:
+    title = visuals.visual_title('dashboard', board)
+
+    # In case we have a site context given replace the $SITE$ macro in the titles.
+    # TODO: This should be a feature of visuals.visual_title, because it may be useful for all types
+    # of visuals. For the moment we only require this feature for dashboards, so it's OK to have it
+    # here.
+    site_filter_vars = board_context.get("site", {})
+    assert isinstance(site_filter_vars, dict)
+    return title.replace("$SITE$", site_filter_vars.get("site", ""))
 
 
 def _get_dashlets(name: DashboardName, board: DashboardConfig) -> List[Dashlet]:

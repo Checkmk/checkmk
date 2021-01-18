@@ -12,7 +12,7 @@ from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.core_helpers.cache import PersistedSections, SectionStore, TRawDataSection
 
-from .type_defs import NO_SELECTION, SectionCacheInfo, SectionNameCollection
+from .type_defs import SectionCacheInfo
 
 THostSections = TypeVar("THostSections", bound="HostSections")
 
@@ -47,25 +47,6 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
             self.sections,
             self.cache_info,
             self.piggybacked_raw_data,
-        )
-
-    def filter(self, selection: SectionNameCollection) -> "HostSections[TRawDataSection]":
-        """Filter for preselected sections"""
-        # This method is on the wrong class.
-        #
-        # The parser should do the filtering (it already does by calling
-        # this method, which is confusing) -- instead, the parser could
-        # either completely ignore (aka not parse) the deselected sections
-        # or filter them in a second step.  This way, we could instantiate
-        # HostSections with the final data.
-        if selection is NO_SELECTION:
-            return self
-        return HostSections(
-            {k: v for k, v in self.sections.items() if k in selection},
-            cache_info={k: v for k, v in self.cache_info.items() if k in selection},
-            piggybacked_raw_data={
-                k: v for k, v in self.piggybacked_raw_data.items() if SectionName(k) in selection
-            },
         )
 
     # TODO: It should be supported that different sources produce equal sections.

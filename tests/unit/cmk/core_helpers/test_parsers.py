@@ -230,6 +230,39 @@ class TestAgentParser:
         }
         assert ahs.piggybacked_raw_data == {}
 
+    def test_section_filtering(self, parser, monkeypatch):
+        monkeypatch.setattr(time, "time", lambda: 1000)
+        raw_data = AgentRawData(b"\n".join((
+            b"<<<<piggyback_header>>>>",
+            b"<<<deselected>>>",
+            b"1st line",
+            b"2nd line",
+            b"<<<selected>>>",
+            b"3rd line",
+            b"4th line",
+            b"<<<<>>>>",
+            b"<<<deselected>>>",
+            b"5th line",
+            b"6th line",
+            b"<<<selected>>>",
+            b"7th line",
+            b"8th line",
+        )))
+
+        ahs = parser.parse(raw_data, selection={SectionName("selected")})
+
+        assert ahs.sections == {
+            SectionName("selected"): [["7th", "line"], ["8th", "line"]],
+        }
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {
+            "piggyback_header": [
+                b"<<<selected:cached(1000,0)>>>",
+                b"3rd line",
+                b"4th line",
+            ]
+        }
+
 
 class TestSectionMarker:
     def test_options_serialize_options(self):

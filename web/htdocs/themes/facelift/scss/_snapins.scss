@@ -52,6 +52,27 @@ table.hostmatrix {
     padding: 0;
     border: 1px solid rgb(18, 58, 74);
     border-spacing: 0;
+
+    &.state0 {
+      border-color: $color-state-success-border;
+    }
+
+    &.state1 {
+      border-color: $color-state-1-border;
+    }
+
+    &.state2 {
+      border-color: $color-state-2-border;
+    }
+
+    &.state3 {
+      border-color: $color-state-3-border;
+    }
+
+    &.statep,
+    &.stated {
+      border-color: $color-state-4-border;
+    }
   }
 }
 

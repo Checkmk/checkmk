@@ -1,0 +1,30 @@
+Title: support case-insensitive hostname matching for multiple host match types
+Class: fix
+Compatible: incomp
+Component: ec
+Date: 1610979268
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Hosts are matched to events in the Event Console using different specification
+methods: hostname, IP address, and host alias. In the event that multiple
+specification methods are used to query events, livestatus queries did not
+return events for hosts if the letter casing was inconsistent. This was caused
+by two mechanisms:
+
+- Preliminary filters that determine whether livestatus queries need to be
+  performed
+- Host matching criteria that returned negative results
+
+This defect becomes evident when the check_mkevents Active Check is used to
+monitor events, and multiple items in the "Match the hosts with" option are
+selected ("Check event state in Event Console" ruleset). In this case, the
+check will return fewer events than are expected.
+
+The livestatus query now supports case-insensitive host/event matching. Please
+be advised that this fix may result in larger volumes of matched events.
+Therefore, we advise users to evaluate the implications of this fix prior to
+installation.

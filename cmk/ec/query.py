@@ -46,6 +46,13 @@ class Query:
         return self.method + " " + self.method_arg
 
 
+def filter_operator_in(a, b):
+    # implemented as a named function, as it is used in a second filter
+    # cmk.ec.main: StatusTableEvents._enumerate
+    # not implemented as regex/IGNORECASE due to performance
+    return a.lower() in (e.lower() for e in b)
+
+
 _filter_operators = {
     "=": (lambda a, b: a == b),
     ">": (lambda a, b: a > b),
@@ -55,7 +62,7 @@ _filter_operators = {
     "~": (lambda a, b: cmk.utils.regex.regex(b).search(a)),
     "=~": (lambda a, b: a.lower() == b.lower()),
     "~~": (lambda a, b: cmk.utils.regex.regex(b.lower()).search(a.lower())),
-    "in": (lambda a, b: a in b),
+    "in": filter_operator_in,
 }
 
 

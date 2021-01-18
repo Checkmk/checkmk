@@ -3801,9 +3801,6 @@ msgstr ""
 msgid "Agent rules"
 msgstr "Editeaza regulile de loguri"
 
-msgid "Agent sections to be executed"
-msgstr ""
-
 #, fuzzy
 msgid "Agent signature keys"
 msgstr "actualizare"
@@ -6806,6 +6803,9 @@ msgstr ""
 msgid ""
 "By default all multiple graphs in emails are displayed floating nearby. You "
 "can enable this option to show the graphs among each other."
+msgstr ""
+
+msgid "By default all of the sections will be executed."
 msgstr ""
 
 msgid "By default crash reports will be sent to our crash reporting server."
@@ -13273,10 +13273,6 @@ msgstr ""
 msgid "Disabled active checks"
 msgstr "<b>dezactivează verificările active</b> pentru"
 
-#, fuzzy
-msgid "Disabled agent sections"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "Disabled agent updates"
 msgstr ""
 
@@ -13300,6 +13296,10 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Disabled legacy services (defined in main.mk)"
 msgstr ""
 
+#, fuzzy
+msgid "Disabled or enabled sections (SNMP)"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "Disabled paths"
 msgstr ""
 
@@ -13308,6 +13308,18 @@ msgstr ""
 
 msgid "Disabled schedule entries are not being executed."
 msgstr ""
+
+#, fuzzy
+msgid "Disabled sections"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Disabled sections (Linux agent)"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Disabled sections (Windows agent)"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Disabled services"
 msgstr ""
@@ -15595,6 +15607,14 @@ msgstr ""
 msgid "Enabled permanently"
 msgstr ""
 
+#, fuzzy
+msgid "Enabled sections"
+msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Enabled sections (Windows agent)"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "Enabled until disabling"
 msgstr ""
 
@@ -16375,19 +16395,11 @@ msgid ""
 "space"
 msgstr ""
 
-#, fuzzy
-msgid "Exclude specific agent sections"
-msgstr "%d setări de Filtrare"
-
 msgid "Exclude the following SIDs (if found)"
 msgstr ""
 
 msgid "Exclude times out of notification period"
 msgstr ""
-
-#, fuzzy
-msgid "Excluded agent sections (Linux)"
-msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Exclusion patterns"
@@ -20768,18 +20780,6 @@ msgid ""
 "you can restrict the monitoring to individual resource groups and resources."
 msgstr ""
 
-msgid ""
-"However, some check plugins process multiple sections and their behavior may "
-"change if one of them is excluded. In such cases, you may want to disable "
-"individual sections, instead of the check plugin itself. Furthermore, SNMP "
-"sections can supersede other SNMP sections in order to prevent duplicate "
-"services. By excluding a section which supersedes another one, the "
-"superseded section might become available. One such use case is the "
-"enforcing of 32-bit network interface counters (section <tt>if</tt>, "
-"superseded by <tt>if64</tt>) in case the 64-bit counters reported by the "
-"device are useless due to broken firmware."
-msgstr ""
-
 msgid "Hub"
 msgstr ""
 
@@ -22493,9 +22493,6 @@ msgid "Include empty pools into the monitoring"
 msgstr ""
 
 msgid "Include full path"
-msgstr ""
-
-msgid "Include or exclude SNMP sections"
 msgstr ""
 
 msgid "Include per-process arguments (security risk!)"
@@ -36978,10 +36975,6 @@ msgid "SNMP rules"
 msgstr "%s regulă %s"
 
 #, fuzzy
-msgid "SNMP section name"
-msgstr "Numele Aplicatiei"
-
-#, fuzzy
 msgid "SNMP settings"
 msgstr "Setari"
 
@@ -37547,7 +37540,7 @@ msgstr "Numele Aplicatiei"
 msgid "Section of files to monitor"
 msgstr ""
 
-msgid "Section(s) specified more than once:"
+msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
 
 msgid "Sections - data to collect"
@@ -37704,6 +37697,9 @@ msgid "Select view"
 msgstr "(selectează directorul)"
 
 msgid "Selected"
+msgstr ""
+
+msgid "Selected sections will not be executed by the agent."
 msgstr ""
 
 msgid "Selection"
@@ -39611,6 +39607,12 @@ msgstr ""
 
 #, python-format
 msgid "Skipped %s: %s"
+msgstr ""
+
+msgid ""
+"Skipping sections reduces CPU load on the monitored host and the amount of "
+"transferred data. However, it may result in the absence of the associated "
+"Checkmk service or services."
 msgstr ""
 
 msgid "Skipping this test (Plugin is not enabled)"
@@ -42652,21 +42654,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The Check_MK Agent for Windows has a number of builtin modules that provide "
-"functionality for various types of checks. Usually all those sections are "
-"being executed, but here you can select which sections should be skipped."
-msgstr ""
-
-msgid ""
-"The Check_MK Agent for Windows has a number of builtin modules that provide "
-"functionality for various types of checks. Usually all those sections are "
-"being executed, but here you can select which sections you want the agent to "
-"compute. Disabling some of the sections will make the agent faster but will "
-"result in less different checks. The most CPU performance is needed by the "
-"Eventlog monitoring and the performance counters."
-msgstr ""
-
-msgid ""
 "The Check_MK Agent supports a feature called Real-Time Checks where it sends "
 "status updates of specific monitoring information more often than the "
 "regular check interval of the host, for example in an interval of 1 second."
@@ -44397,6 +44384,11 @@ msgid ""
 msgstr ""
 
 msgid "The monitoring state that this event will trigger."
+msgstr ""
+
+msgid ""
+"The most CPU performance is needed by the Eventlog monitoring and the "
+"performance counters."
 msgstr ""
 
 #, fuzzy
@@ -46681,15 +46673,38 @@ msgid ""
 msgstr ""
 
 msgid ""
-"This option allows to omit individual sections from being fetched at all. "
-"Disabled sections will not be fetched. As a result, associated Checkmk "
-"services may be entirely missing."
+"This option allows to omit individual sections from being fetched at all. As "
+"a result, associated Checkmk services may be entirely missing. However, some "
+"check plugins process multiple sections and their behavior may change if one "
+"of them is excluded. In such cases, you may want to disable individual "
+"sections, instead of the check plugin itself. Furthermore, SNMP sections can "
+"supersede other SNMP sections in order to prevent duplicate services. By "
+"excluding a section which supersedes another one, the superseded section "
+"might become available. One such use case is the enforcing of 32-bit network "
+"interface counters (section <tt>if</tt>, superseded by <tt>if64</tt>) in "
+"case the 64-bit counters reported by the device are useless due to broken "
+"firmware."
 msgstr ""
 
 msgid ""
-"This option allows to omit specific sections from the Checkmk agent. Checked "
-"options will be excluded in the agent. Omission of a section will result in "
-"the absence of the associated Checkmk service or services."
+"This option allows to select specific sections of the Checkmk agent. By "
+"default all of the sections will be executed. Sections that are not selected "
+"here will be skipped. Skipping sections reduces CPU load on the monitored "
+"host and the amount of transferred data. However, it may result in the "
+"absence of the associated Checkmk service or services. The most CPU "
+"performance is needed by the Eventlog monitoring and the performance "
+"counters. "
+msgstr ""
+
+msgid "This option allows to skip specific sections of the Checkmk agent."
+msgstr ""
+
+msgid ""
+"This option allows to skip specific sections of the Checkmk agent. By "
+"default all of the sections will be executed. Selected sections will not be "
+"executed by the agent. Skipping sections reduces CPU load on the monitored "
+"host and the amount of transferred data. However, it may result in the "
+"absence of the associated Checkmk service or services."
 msgstr ""
 
 #, python-format
@@ -57288,6 +57303,14 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Exclude specific agent sections"
+#~ msgstr "%d setări de Filtrare"
+
+#, fuzzy
+#~ msgid "SNMP section name"
+#~ msgstr "Numele Aplicatiei"
 
 #, fuzzy
 #~ msgid "On selected services"

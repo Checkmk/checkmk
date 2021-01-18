@@ -3996,9 +3996,6 @@ msgstr "Agentenausgabe"
 msgid "Agent rules"
 msgstr "Agentenregeln"
 
-msgid "Agent sections to be executed"
-msgstr "Agentensektionen, die ausgeführt werden sollen"
-
 msgid "Agent signature keys"
 msgstr "Agenten-Signaturschlüssel"
 
@@ -7179,6 +7176,10 @@ msgstr ""
 "Normalerweise werden mehrfach-Graphen in Emails ja nach Platz nebeneinander "
 "oder untereinander dargestellt. Mit dieser Option können Sie eine "
 "Darstellung untereinander erzwingen."
+
+#, fuzzy
+msgid "By default all of the sections will be executed."
+msgstr "Agentensektionen, die ausgeführt werden sollen"
 
 msgid "By default crash reports will be sent to our crash reporting server."
 msgstr ""
@@ -14062,9 +14063,6 @@ msgstr ""
 msgid "Disabled active checks"
 msgstr "Abgeschaltete aktive Checks"
 
-msgid "Disabled agent sections"
-msgstr "Deaktivierte Agent Sektionen"
-
 msgid "Disabled agent updates"
 msgstr "Agentenupdates deaktiviert"
 
@@ -14087,6 +14085,10 @@ msgstr "Deaktivierte Agent Sektionen"
 msgid "Disabled legacy services (defined in main.mk)"
 msgstr "Legacy Services (definiert in der main.mk)"
 
+#, fuzzy
+msgid "Disabled or enabled sections (SNMP)"
+msgstr "Deaktivierte Agent Sektionen"
+
 msgid "Disabled paths"
 msgstr "Deaktivierte Pfade"
 
@@ -14097,6 +14099,18 @@ msgstr ""
 
 msgid "Disabled schedule entries are not being executed."
 msgstr "Deaktivierte Einträge werden nicht ausgeführt."
+
+#, fuzzy
+msgid "Disabled sections"
+msgstr "Deaktivierte Agent Sektionen"
+
+#, fuzzy
+msgid "Disabled sections (Linux agent)"
+msgstr "Deaktivierte Agent Sektionen"
+
+#, fuzzy
+msgid "Disabled sections (Windows agent)"
+msgstr "Deaktivierte Agent Sektionen"
 
 msgid "Disabled services"
 msgstr "Deaktivierte Services"
@@ -16471,6 +16485,14 @@ msgstr "In Zeitraum aktiv"
 msgid "Enabled permanently"
 msgstr "Dauerhaft aktiv"
 
+#, fuzzy
+msgid "Enabled sections"
+msgstr "Replikation aktivieren"
+
+#, fuzzy
+msgid "Enabled sections (Windows agent)"
+msgstr "Anzahl Handles (nur Windows)"
+
 msgid "Enabled until disabling"
 msgstr "Bis zum manuellen Deaktivieren aktiv"
 
@@ -17269,19 +17291,11 @@ msgstr ""
 "Schließe für den <tt>root</tt>-User reservierten Speicher von der Berechnung "
 "des benutzten Speichers aus"
 
-#, fuzzy
-msgid "Exclude specific agent sections"
-msgstr "Älteste Agentensektion"
-
 msgid "Exclude the following SIDs (if found)"
 msgstr "Folgende SIDs auslassen (falls vorhanden)"
 
 msgid "Exclude times out of notification period"
 msgstr "Zeiten außerhalb der Alarmierungsperiode ausschließen"
-
-#, fuzzy
-msgid "Excluded agent sections (Linux)"
-msgstr "Deaktivierte Agent Sektionen"
 
 #, fuzzy
 msgid "Exclusion patterns"
@@ -22002,18 +22016,6 @@ msgstr ""
 "beschränkt, können Sie die Überwachung auf einzelne Ressourcengruppen und "
 "Ressourcen beschränken."
 
-msgid ""
-"However, some check plugins process multiple sections and their behavior may "
-"change if one of them is excluded. In such cases, you may want to disable "
-"individual sections, instead of the check plugin itself. Furthermore, SNMP "
-"sections can supersede other SNMP sections in order to prevent duplicate "
-"services. By excluding a section which supersedes another one, the "
-"superseded section might become available. One such use case is the "
-"enforcing of 32-bit network interface counters (section <tt>if</tt>, "
-"superseded by <tt>if64</tt>) in case the 64-bit counters reported by the "
-"device are useless due to broken firmware."
-msgstr ""
-
 msgid "Hub"
 msgstr "Hub"
 
@@ -24295,9 +24297,6 @@ msgstr "Leere Pools überwachen"
 
 msgid "Include full path"
 msgstr "Vollständigen Prozesspfad verwenden"
-
-msgid "Include or exclude SNMP sections"
-msgstr ""
 
 msgid "Include per-process arguments (security risk!)"
 msgstr "Einbeziehen von pro Prozess Argumenten (Sicherheitsrisiko!)"
@@ -38984,10 +38983,6 @@ msgid "SNMP rules"
 msgstr "Streams"
 
 #, fuzzy
-msgid "SNMP section name"
-msgstr "Sektionsname"
-
-#, fuzzy
 msgid "SNMP settings"
 msgstr "SLA Einstellungen"
 
@@ -39542,7 +39537,7 @@ msgstr "Sektionsname"
 msgid "Section of files to monitor"
 msgstr "Sektion zu überwachender Dateien"
 
-msgid "Section(s) specified more than once:"
+msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
 
 msgid "Sections - data to collect"
@@ -39723,6 +39718,10 @@ msgstr "Ansicht auswählen"
 
 msgid "Selected"
 msgstr "Ausgewählt"
+
+#, fuzzy
+msgid "Selected sections will not be executed by the agent."
+msgstr "Dieser Befehl wird auf dem Zielhost ausgeführt."
 
 msgid "Selection"
 msgstr "Auswahl"
@@ -41670,6 +41669,12 @@ msgstr ""
 #, python-format
 msgid "Skipped %s: %s"
 msgstr "%s ausgelassen: %s"
+
+msgid ""
+"Skipping sections reduces CPU load on the monitored host and the amount of "
+"transferred data. However, it may result in the absence of the associated "
+"Checkmk service or services."
+msgstr ""
 
 msgid "Skipping this test (Plugin is not enabled)"
 msgstr "Diesen Test auslassen (Plugin ist nicht aktiviert)"
@@ -44936,35 +44941,6 @@ msgstr ""
 "- in der Regel eine Minute."
 
 msgid ""
-"The Check_MK Agent for Windows has a number of builtin modules that provide "
-"functionality for various types of checks. Usually all those sections are "
-"being executed, but here you can select which sections should be skipped."
-msgstr ""
-"Der Check_MK-Agent für Windows hat eine Reihe von eingebauten Modulen, "
-"welche Datensektionen für verschiede Check-Plugins bereitstellen. "
-"Normalerweise werden alle diese Module ausgeführt, aber hier können Sie "
-"explizit einstellen, welche davon aufgerufen werden sollen. Das Deaktivieren "
-"von einzelnen Modulen kann den Agent schneller machen, führt aber dann zu "
-"weniger Services. Am meisten CPU benötigen die Module für die Ereignisse "
-"(Eventlog) und die Leistungsindikatoren (Performancecounter)."
-
-msgid ""
-"The Check_MK Agent for Windows has a number of builtin modules that provide "
-"functionality for various types of checks. Usually all those sections are "
-"being executed, but here you can select which sections you want the agent to "
-"compute. Disabling some of the sections will make the agent faster but will "
-"result in less different checks. The most CPU performance is needed by the "
-"Eventlog monitoring and the performance counters."
-msgstr ""
-"Der Check_MK-Agent für Windows hat eine Reihe von eingebauten Modulen, "
-"welche Datensektionen für verschiede Check-Plugins bereitstellen. "
-"Normalerweise werden alle diese Module ausgeführt, aber hier können Sie "
-"explizit einstellen, welche davon aufgerufen werden sollen. Das Deaktivieren "
-"von einzelnen Modulen kann den Agent schneller machen, führt aber dann zu "
-"weniger Services. Am meisten CPU benötigen die Module für die Ereignisse "
-"(Eventlog) und die Leistungsindikatoren (Performancecounter)."
-
-msgid ""
 "The Check_MK Agent supports a feature called Real-Time Checks where it sends "
 "status updates of specific monitoring information more often than the "
 "regular check interval of the host, for example in an interval of 1 second."
@@ -47246,6 +47222,11 @@ msgstr ""
 
 msgid "The monitoring state that this event will trigger."
 msgstr "Überwachungsstatus den das Ereignis übermittelt."
+
+msgid ""
+"The most CPU performance is needed by the Eventlog monitoring and the "
+"performance counters."
+msgstr ""
 
 msgid "The name of the Data Proxy"
 msgstr "Der Name des Datenproxies"
@@ -50151,15 +50132,41 @@ msgstr ""
 "dann frei in ein anderes Paket verpakt oder manuell gelöscht werden."
 
 msgid ""
-"This option allows to omit individual sections from being fetched at all. "
-"Disabled sections will not be fetched. As a result, associated Checkmk "
-"services may be entirely missing."
+"This option allows to omit individual sections from being fetched at all. As "
+"a result, associated Checkmk services may be entirely missing. However, some "
+"check plugins process multiple sections and their behavior may change if one "
+"of them is excluded. In such cases, you may want to disable individual "
+"sections, instead of the check plugin itself. Furthermore, SNMP sections can "
+"supersede other SNMP sections in order to prevent duplicate services. By "
+"excluding a section which supersedes another one, the superseded section "
+"might become available. One such use case is the enforcing of 32-bit network "
+"interface counters (section <tt>if</tt>, superseded by <tt>if64</tt>) in "
+"case the 64-bit counters reported by the device are useless due to broken "
+"firmware."
 msgstr ""
 
 msgid ""
-"This option allows to omit specific sections from the Checkmk agent. Checked "
-"options will be excluded in the agent. Omission of a section will result in "
-"the absence of the associated Checkmk service or services."
+"This option allows to select specific sections of the Checkmk agent. By "
+"default all of the sections will be executed. Sections that are not selected "
+"here will be skipped. Skipping sections reduces CPU load on the monitored "
+"host and the amount of transferred data. However, it may result in the "
+"absence of the associated Checkmk service or services. The most CPU "
+"performance is needed by the Eventlog monitoring and the performance "
+"counters. "
+msgstr ""
+
+#, fuzzy
+msgid "This option allows to skip specific sections of the Checkmk agent."
+msgstr ""
+"Diese Berechtigung erlaubt das Änderung der globalen Einstellungen der Event "
+"Console."
+
+msgid ""
+"This option allows to skip specific sections of the Checkmk agent. By "
+"default all of the sections will be executed. Selected sections will not be "
+"executed by the agent. Skipping sections reduces CPU load on the monitored "
+"host and the amount of transferred data. However, it may result in the "
+"absence of the associated Checkmk service or services."
 msgstr ""
 
 #, python-format
@@ -62523,6 +62530,49 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~| msgid "Oldest agent section"
+#~ msgid "Exclude specific agent sections"
+#~ msgstr "Älteste Agentensektion"
+
+#, fuzzy
+#~| msgid "Section name"
+#~ msgid "SNMP section name"
+#~ msgstr "Sektionsname"
+
+#~ msgid ""
+#~ "The Check_MK Agent for Windows has a number of builtin modules that "
+#~ "provide functionality for various types of checks. Usually all those "
+#~ "sections are being executed, but here you can select which sections "
+#~ "should be skipped."
+#~ msgstr ""
+#~ "Der Check_MK-Agent für Windows hat eine Reihe von eingebauten Modulen, "
+#~ "welche Datensektionen für verschiede Check-Plugins bereitstellen. "
+#~ "Normalerweise werden alle diese Module ausgeführt, aber hier können Sie "
+#~ "explizit einstellen, welche davon aufgerufen werden sollen. Das "
+#~ "Deaktivieren von einzelnen Modulen kann den Agent schneller machen, führt "
+#~ "aber dann zu weniger Services. Am meisten CPU benötigen die Module für "
+#~ "die Ereignisse (Eventlog) und die Leistungsindikatoren "
+#~ "(Performancecounter)."
+
+#~ msgid ""
+#~ "The Check_MK Agent for Windows has a number of builtin modules that "
+#~ "provide functionality for various types of checks. Usually all those "
+#~ "sections are being executed, but here you can select which sections you "
+#~ "want the agent to compute. Disabling some of the sections will make the "
+#~ "agent faster but will result in less different checks. The most CPU "
+#~ "performance is needed by the Eventlog monitoring and the performance "
+#~ "counters."
+#~ msgstr ""
+#~ "Der Check_MK-Agent für Windows hat eine Reihe von eingebauten Modulen, "
+#~ "welche Datensektionen für verschiede Check-Plugins bereitstellen. "
+#~ "Normalerweise werden alle diese Module ausgeführt, aber hier können Sie "
+#~ "explizit einstellen, welche davon aufgerufen werden sollen. Das "
+#~ "Deaktivieren von einzelnen Modulen kann den Agent schneller machen, führt "
+#~ "aber dann zu weniger Services. Am meisten CPU benötigen die Module für "
+#~ "die Ereignisse (Eventlog) und die Leistungsindikatoren "
+#~ "(Performancecounter)."
+
+#, fuzzy
 #~| msgid "selected services"
 #~ msgid "On selected services"
 #~ msgstr "ausgewählte Services"
@@ -65777,13 +65827,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Diese Berechtigung erlaubt den Klassifizierungs-Status eines Ereignisses "
 #~ "zu verändern: z.B. von CRIT nach WARN)."
-
-#~ msgid ""
-#~ "This permission allows to configure the global settings of the event "
-#~ "console."
-#~ msgstr ""
-#~ "Diese Berechtigung erlaubt das Änderung der globalen Einstellungen der "
-#~ "Event Console."
 
 #~ msgid ""
 #~ "This permission gives read access to the Check_MK MKP manager. It allows "

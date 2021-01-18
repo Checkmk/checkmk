@@ -1,7 +1,7 @@
-
-// provides basic api to start and stop service
-// IMPORTANT INFO for DEVs!
-// WMI class is data-driven.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "stdafx.h"
 
@@ -15,7 +15,6 @@
 #include "cfg.h"
 #include "common/cfg_info.h"
 #include "tools/_raii.h"
-#include "tools/_xlog.h"
 
 // controls behavior, we may want in the future,  works with older servers
 // normally always true
@@ -28,19 +27,20 @@ namespace cma::provider {
 // update cache if data ok(not empty)
 std::string WmiCachedDataHelper(std::string& cache_data,
                                 const std::string& wmi_data, char separator) {
-    using namespace wtools;
-    // for older servers
+    // for very old servers
     if (!g_add_wmi_status_column) return wmi_data;
 
     if (!wmi_data.empty()) {
         // return original data with added OK in right column
         cache_data = wmi_data;  // store
-        return WmiPostProcess(wmi_data, StatusColumn::ok, separator);
+        return wtools::WmiPostProcess(wmi_data, wtools::StatusColumn::ok,
+                                      separator);
     }
 
     // we try to return cache with added "timeout" in last column
     if (!cache_data.empty())
-        return WmiPostProcess(cache_data, StatusColumn::timeout, separator);
+        return wtools::WmiPostProcess(cache_data, wtools::StatusColumn::timeout,
+                                      separator);
 
     XLOG::d.t(XLOG_FUNC + " no data to provide, cache is also empty");
     return {};
@@ -143,25 +143,20 @@ NamedStringVector g_section_subs = {
     // end
 };
 
-// This is allowed.
-using namespace std::chrono;
-
 SubSection::Type GetSubSectionType(std::string_view name) noexcept {
-    if (name == kMsExch) return SubSection::Type::full;
-    return SubSection::Type::sub;
+    return name == kMsExch ? SubSection::Type::full : SubSection::Type::sub;
 }
 
 bool IsHeaderless(std::string_view name) noexcept { return name == kMsExch; }
 
-void Wmi::setupByName() noexcept {
-    // setup namespace and object
+void Wmi::setupByName() {
     try {
         auto& x = g_section_objects[uniq_name_];
         name_space_ = x.first;
         object_ = x.second;
     } catch (const std::exception& e) {
         // section not described in data
-        XLOG::l(XLOG::kCritError)(
+        XLOG::l.crit(
             "Invalid Name of the section provider '{}'. Exception: '{}'",
             uniq_name_, e.what());
         object_ = L"";
@@ -169,9 +164,10 @@ void Wmi::setupByName() noexcept {
         return;
     }
 
-    if (IsHeaderless(uniq_name_)) setHeaderless();
+    if (IsHeaderless(uniq_name_)) {
+        setHeaderless();
+    }
 
-    // setup columns if any
     try {
         auto& x = g_section_columns[uniq_name_];
         columns_ = x;
@@ -180,7 +176,6 @@ void Wmi::setupByName() noexcept {
         // we do not care when object not found in the map
     }
 
-    // setup columns if any
     try {
         auto& subs = g_section_subs[uniq_name_];
         auto type = GetSubSectionType(uniq_name_);
@@ -205,44 +200,46 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     const std::wstring& wmi_namespace, const std::wstring& wmi_object,
     const std::vector<std::wstring>& columns_table,
     std::wstring_view separator) {
-    using namespace wtools;
+    using wtools::WmiStatus;
 
-    if (wmi_object.empty() || wmi_namespace.empty())
+    if (wmi_object.empty() || wmi_namespace.empty()) {
         return {"", WmiStatus::bad_param};
+    }
 
-    auto object_name = ToUtf8(wmi_object);
+    auto object_name = wtools::ToUtf8(wmi_object);
     cma::tools::TimeLog tl(object_name);  // start measure
     auto id = [ wmi_namespace, object_name ]() -> auto {
-        return fmt::formatv(R"("{}\{}")",           //
-                            ToUtf8(wmi_namespace),  //
+        return fmt::formatv(R"("{}\{}")",                   //
+                            wtools::ToUtf8(wmi_namespace),  //
                             object_name);
     };
 
     wtools::WmiWrapper wrapper;
     if (!wrapper.open()) {
-        XLOG::l.e(XLOG_FUNC + "Can't open '{}'", id());
+        XLOG::l.e("WMI can't open '{}'", id());
         return {"", WmiStatus::fail_open};
     }
 
     if (!wrapper.connect(wmi_namespace)) {
-        XLOG::l.e(XLOG_FUNC + "Can't connect '{}'", id());
+        XLOG::l.e("WMI can't connect '{}'", id());
         return {"", WmiStatus::fail_connect};
     }
 
     if (!wrapper.impersonate()) {
-        XLOG::l.e(XLOG_FUNC + "Can't impersonate '{}'", id());
+        XLOG::l.e("WMI can't impersonate '{}'", id());
     }
     auto [ret, status] =
         wrapper.queryTable(columns_table, wmi_object, separator);
 
-    tl.writeLog(ret.size());  // fix measure
+    tl.writeLog(ret.size());
 
-    return {ToUtf8(ret), status};
+    return {wtools::ToUtf8(ret), status};
 }
 
 static std::wstring CharToWideString(char ch) {
     std::wstring sep;
     sep += static_cast<wchar_t>(ch);
+
     return sep;
 }
 
@@ -278,7 +275,6 @@ std::string Wmi::makeBody() {
             return {};
         }
 
-        // only normal return
         return WmiCachedDataHelper(cache_, data, separator());
     }
 
@@ -294,11 +290,9 @@ std::string Wmi::makeBody() {
 
 // [+] gtest
 bool Wmi::isAllowedByCurrentConfig() const {
-    using namespace cma::cfg;
-
-    // check Wmi itself
     auto name = getUniqName();
-    bool allowed = groups::global.allowedSection(name);
+
+    auto allowed = cfg::groups::global.allowedSection(name);
     if (!allowed) {
         XLOG::l.t("'{}' is skipped by config", name);
         return false;
@@ -306,14 +300,18 @@ bool Wmi::isAllowedByCurrentConfig() const {
 
     // Wmi itself is allowed, we check conditions
     // 1. without sub section:
-    if (sub_objects_.empty()) return true;
+    if (sub_objects_.empty()) {
+        return true;
+    }
 
     // 2. with sub_section, check situation when parent
     // is allowed, but all sub  DISABLED DIRECTLY
-    for (auto& sub : sub_objects_) {
+    for (const auto& sub : sub_objects_) {
         auto sub_name = sub.getUniqName();
 
-        if (!groups::global.isSectionDisabled(sub_name)) return true;
+        if (!cfg::groups::global.isSectionDisabled(sub_name)) {
+            return true;
+        }
     }
 
     XLOG::l.t("'{}' and subs are skipped by config", name);
@@ -325,14 +323,11 @@ bool Wmi::isAllowedByCurrentConfig() const {
 // ****************************
 
 void SubSection::setupByName() {
-    // setup namespace and object
     try {
         auto& x = g_section_objects[uniq_name_];
         name_space_ = x.first;
         object_ = x.second;
     } catch (const std::exception& e) {
-        // section not described in data
-        // BUT MUST BE, this is developers error
         XLOG::l.crit("Invalid Name of the sub section '{}'. Exception: '{}'",
                      uniq_name_, e.what());
         object_ = L"";
@@ -370,16 +365,14 @@ std::string SubSection::makeBody() {
     }
 }
 
-// force is used for testing and checking
 std::string SubSection::generateContent(Mode mode) {
     // print body
     try {
         auto section_body = makeBody();
-        if (mode == Mode::standard && section_body.empty())
-            return {};  // this may be normal
+        if (mode == Mode::standard && section_body.empty()) {
+            return {};  // this may legal result
+        }
 
-        // add to front of output header
-        // case for the msexch
         switch (type_) {
             case Type::full:
                 return section::MakeHeader(uniq_name_, wmi::kSepChar) +

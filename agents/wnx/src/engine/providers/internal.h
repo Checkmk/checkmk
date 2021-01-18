@@ -156,7 +156,7 @@ private:
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class WmiProviderTest;
-    FRIEND_TEST(WmiProviderTest, WmiAll);
+    FRIEND_TEST(WmiProviderTest, SimulationIntegration);
     FRIEND_TEST(WmiProviderTest, BasicWmi);
     FRIEND_TEST(WmiProviderTest, BasicWmiDefaultsAndError);
 

@@ -438,12 +438,31 @@ def _transform_old_dict_based_dashlets() -> None:
 def page_dashboard() -> None:
     name = html.request.var("name")
     if not name:
-        name = "main"
+        name = _get_default_dashboard_name()
         html.request.set_var("name", name)  # make sure that URL context is always complete
     if name not in get_permitted_dashboards():
         raise MKUserError("name", _('The requested dashboard does not exist.'))
 
     draw_dashboard(name)
+
+
+def _get_default_dashboard_name() -> str:
+    """Return the default dashboard name for the current site
+
+    We separate our users into two groups:
+
+    1. Those WITH the permission "see all hosts / service". Which are mainly administrative users.
+
+    These are starting with the main overview dashboard which either shows a site drill down snapin
+    (in case multiple sites are configured) or the hosts of their site (in case there is only a
+    single site configured).
+
+    2. Those WITHOUT the permission "see all hosts / service". Which are normal users.
+
+    They will see the dashboard that has been built for operators and is built to show only the host
+    and service problems that are relevant for the user.
+    """
+    return "main" if config.user.may("general.see_all") else "problems"
 
 
 def _load_dashboard_with_cloning(permitted_dashboards: Dict[DashboardName, DashboardConfig],

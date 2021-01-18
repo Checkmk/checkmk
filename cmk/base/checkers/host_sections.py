@@ -57,6 +57,45 @@ from .type_defs import NO_SELECTION, PiggybackRawData, SectionCacheInfo, Section
 THostSections = TypeVar("THostSections", bound="HostSections")
 
 
+class PiggybackFilter:
+    @staticmethod
+    def is_piggyback_header(line):
+        return line.startswith(b"<<<<") and line.endswith(b">>>>")
+
+    @staticmethod
+    def is_piggyback_footer(line):
+        return line == b"<<<<>>>>"
+
+    @staticmethod
+    def is_section_footer(line):
+        return line == b"<<<>>>"
+
+    @staticmethod
+    def is_section_header(line):
+        return (line.startswith(b"<<<") and line.endswith(b">>>") and
+                not PiggybackFilter.is_piggyback_header(line) and
+                not PiggybackFilter.is_section_footer(line))
+
+    def __init__(self, selection: SectionNameCollection) -> None:
+        self.selection = selection
+
+    def __call__(self, sections: List[bytes]) -> List[bytes]:
+        if self.selection is NO_SELECTION:
+            return sections
+
+        section: List[bytes] = []
+        selected = True
+        for line in sections:
+            if self.is_section_header(line):
+                section_name = SectionName(line[3:-3].split(b":")[0].decode("utf8"))
+                selected = section_name in self.selection
+
+            if selected:
+                section.append(line)
+
+        return section
+
+
 class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
     """A wrapper class for the host information read by the data sources
 
@@ -97,11 +136,13 @@ class HostSections(Generic[TSectionContent], metaclass=abc.ABCMeta):
         # For now we don't need that, so we keep it simple.
         if selection is NO_SELECTION:
             return self
+        pb_filter = PiggybackFilter(selection)
         return HostSections(
             {k: v for k, v in self.sections.items() if k in selection},
             cache_info={k: v for k, v in self.cache_info.items() if k in selection},
             piggybacked_raw_data={
-                k: v for k, v in self.piggybacked_raw_data.items() if SectionName(k) in selection
+                k: s for k, s in ((k, pb_filter(v))
+                                  for k, v in self.piggybacked_raw_data.items()) if s
             },
         )
 

@@ -2757,6 +2757,20 @@ def page_menu_entries_host_setup(host_name) -> Iterator[PageMenuEntry]:
                 )),
         )
 
+        yield PageMenuEntry(
+            title=_("Rules"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                makeuri_contextless(global_request, [
+                    ("mode", "rule_search"),
+                    ("filled_in", "search"),
+                    ("search_p_ruleset_deprecated", "OFF"),
+                    ("search_p_rule_host_list_USE", "ON"),
+                    ("search_p_rule_host_list", host_name),
+                ],
+                                    filename="wato.py")),
+        )
+
 
 def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:
     """Sort data according to list of sorters."""

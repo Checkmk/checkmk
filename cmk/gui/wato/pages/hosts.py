@@ -395,10 +395,11 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                                                 ("host", host.name())])),
         )
 
-    if mode_name == "object_parameters" and config.user.may('wato.rulesets'):
+    if mode_name == "object_parameters" or mode_name == "edit_host" and config.user.may(
+            'wato.rulesets'):
         yield PageMenuEntry(
             title=_("Rules"),
-            icon_name="search",
+            icon_name="rulesets",
             item=make_simple_link(
                 watolib.folder_preserving_link([
                     ("mode", "rule_search"),

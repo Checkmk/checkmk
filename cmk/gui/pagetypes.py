@@ -1569,9 +1569,8 @@ class OverridableContainer(Overridable, Container):
             yield PageMenuEntry(
                 title=page.title(),
                 icon_name=cls.type_name(),
-                item=make_javascript_link(
-                    "cmk.popup_menu.pagetype_add_to_container(%s, %s);cmk.utils.reload_whole_page();"
-                    % (json.dumps(cls.type_name()), json.dumps(page.name()))),
+                item=make_javascript_link("cmk.popup_menu.pagetype_add_to_container(%s, %s);" %
+                                          (json.dumps(cls.type_name()), json.dumps(page.name()))),
             )
 
     @classmethod

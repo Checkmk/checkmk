@@ -131,6 +131,7 @@ class UpdateConfig:
                                                                 display_options=DisplayOptions(),
                                                                 prefix_logs_with_url=False):
             self._initialize_gui_environment()
+            self._initialize_base_environment()
 
             self._logger.log(VERBOSE, "Updating Checkmk configuration...")
             for step_func, title in self._steps():
@@ -162,6 +163,13 @@ class UpdateConfig:
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
         ]
+
+    def _initialize_base_environment(self):
+        # Failing to load the config here will result in the loss of *all*
+        # services due to an exception thrown by cmk.base.config.service_description
+        # in _parse_autocheck_entry of cmk.base.autochecks.
+        cmk.base.config.load()
+        cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->2.0
     def _update_fs_used_name(self):
@@ -203,11 +211,6 @@ class UpdateConfig:
         cmk.gui.watolib.global_settings.save_global_settings(global_config)
 
     def _rewrite_autochecks(self):
-        # Failing to load the config here will result in the loss of *all*
-        # services due to an exception thrown by cmk.base.config.service_description
-        # in _parse_autocheck_entry of cmk.base.autochecks.
-        cmk.base.config.load()
-        cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
         check_variables = cmk.base.config.get_check_variables()
         failed_hosts: List[str] = []
 

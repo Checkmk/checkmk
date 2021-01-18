@@ -4,22 +4,21 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 /* Styles used for marking up Monitoring data, such as host and
-   service states, Perf-O-Meters und the like */
-
-/* States */
-
-/* Colors of the five possible host and service states
-  CRIT:    rgb(226, 0, 26)
-  UNKNOWN: rgb(247, 152, 2)
-  WARN:    rgb(230, 201, 8)
-  OK:      rgb(65, 166, 42)
-*/
-
-/* TODO: Get rid of important styles throughout this style sheet */
-
-.state {
-  box-shadow: none;
-}
+ * service states, Perf-O-Meters und the like.
+ *
+ * CSS classes for service states:
+ * state0 - OK
+ * state1 - WARN
+ * state2 - CRIT
+ * state3 - UNKN
+ *
+ * CSS classes for host states:
+ * hstate0 - UP
+ * hstate1 - DOWN
+ * hstate2 - UNREACH
+ *
+ * TODO: Get rid of important styles throughout this style sheet
+ */
 
 .stale .state {
   text-shadow: none !important;
@@ -46,29 +45,14 @@ table.data tr.data td.stale.hstate1 {
 
 /* OK/UP */
 .state0,
-.hstate0,
 .state0 a,
 .state0 body.main .popup_menu span,
 body.main .popup_menu .state0 span,
+.hstate0,
 .hstate0 a,
 .hstate0 body.main .popup_menu span,
 body.main .popup_menu .hstate0 span {
   color: $success !important;
-}
-
-/* TODO: Replace class "odd0" with "odd state0" */
-.odd0,
-.even0 {
-  .state0,
-  .hstate0,
-  .state0 a,
-  .state0 body.main .popup_menu span,
-  body.main .popup_menu & .state0 span,
-  .hstate0 a,
-  .hstate0 body.main .popup_menu span,
-  body.main .popup_menu & .hstate0 span {
-    color: $success !important;
-  }
 }
 
 .hstate {
@@ -77,7 +61,6 @@ body.main .popup_menu .hstate0 span {
 
 /* WARN */
 .state1,
-.even1 .state1,
 .state1 a,
 .state1 body.main .popup_menu span,
 body.main .popup_menu .state1 span {
@@ -85,43 +68,28 @@ body.main .popup_menu .state1 span {
   background-color: $color-state-1-background !important;
 }
 
-.odd0 .state1,
-.odd1 .state1 {
-  background-color: $color-state-1-background !important;
-}
-
 /* CRIT/DOWN */
-.state2.state2.state2,
-.even0 .state2,
-.even2 .state2,
-.hstate1,
+.state2,
 .state2 a,
 .state2 body.main .popup_menu span,
 body.main .popup_menu .state2 span,
-.hstate2 a,
-.hstate2 body.main .popup_menu span,
-body.main .popup_menu .hstate2 span {
+.hstate1,
+.hstate1 a,
+.hstate1 body.main .popup_menu span,
+body.main .popup_menu .hstate1 span {
   color: $white !important;
   background-color: $color-state-2-background !important;
 }
 
-.odd0 .state2,
-.odd2 .state2 {
-  color: $white !important;
-  background-color: $color-state-2-background !important;
-}
-
-/* TODO: Check whether these are supposed to be .hstate3 selectors not ...2 */
 /* UNKNOWN / UNREACH */
 .state3,
-.hstate2,
 .state3 a,
 .state3 body.main .popup_menu span,
 body.main .popup_menu .state3 span,
+.hstate2,
 .hstate2 a,
 .hstate2 body.main .popup_menu span,
-body.main .popup_menu .hstate2 span,
-.odd0 .state3 {
+body.main .popup_menu .hstate2 span {
   color: $white !important;
   background-color: $color-state-3-background !important;
 }
@@ -162,7 +130,7 @@ img.pluginurl {
 /* *some* problem */
 .states,
 .hstates {
-  color: rgb(0, 0, 0);
+  color: $black;
   background-image: url("images/someproblem.png");
   background-position: center center;
   background-repeat: repeat;
@@ -383,10 +351,6 @@ tr[class*="odd"] {
 tr[class*="even"] {
   background-color: $even-tr-bg-color;
 
-  &:last-child {
-    border-bottom: none;
-  }
-
   td.state1 a,
   td.state3 a {
     color: $dark-font-color;
@@ -521,8 +485,4 @@ table.data.availability tr.even0 td {
   &.state3 {
     background-color: $lightened-state3-bg-color !important;
   }
-}
-
-div.tile td.hstate0 {
-  color: $dark-font-color;
 }

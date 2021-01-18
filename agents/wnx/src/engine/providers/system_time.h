@@ -1,8 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
-
-//
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 #ifndef system_time_h__
@@ -13,22 +12,18 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 class SystemTime : public Synchronous {
 public:
     SystemTime() : Synchronous(cma::section::kSystemTime) {}
-    SystemTime(const std::string& Name, char Separator)
-        : Synchronous(Name, Separator) {}
+    SystemTime(const std::string& name, char separator)
+        : Synchronous(name, separator) {}
 
 private:
     std::string makeBody() override;
 };
 
-}  // namespace provider
-
-};  // namespace cma
+}  // namespace cma::provider
 
 #endif  // system_time_h__

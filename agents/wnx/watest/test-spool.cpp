@@ -69,7 +69,7 @@ TEST(SectionProviderSpool, FullIntegration) {
                                        "0000\n0000\n\n\n\n\n"));
     ASSERT_TRUE(temp_fs.createDataFile(spool_dir / "99", "123456\n9999\n"));
 
-    tst::EnableSectionsNode(cma::section::kSpool);
+    tst::EnableSectionsNode(cma::section::kSpool, true);
 
     auto ex = spool.generateContent();
     ASSERT_TRUE(!ex.empty());

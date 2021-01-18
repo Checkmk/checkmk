@@ -139,6 +139,7 @@ void SafeCleanTempDir(std::string_view sub_dir) {
     fs::create_directory(t_d / sub_dir);
 }
 
+namespace {
 template <typename T, typename V>
 void RemoveElement(T& Container, const V& Str) {
     Container.erase(std::remove_if(Container.begin(), Container.end(),
@@ -149,24 +150,56 @@ void RemoveElement(T& Container, const V& Str) {
                     Container.end());
 }
 
-void EnableSectionsNode(const std::string_view& Str, bool UpdateGlobal) {
-    using namespace cma::cfg;
-
-    auto enabled = GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-
+template <typename T, typename V>
+bool AddElement(T& container, const V& value) {
     // add section name to internal array if not found
-    if (std::end(enabled) == std::find(enabled.begin(), enabled.end(), Str)) {
-        enabled.emplace_back(Str);
-        PutInternalArray(groups::kGlobal, vars::kSectionsEnabled, enabled);
+    if (std::end(container) ==
+        std::find(container.begin(), container.end(), value)) {
+        container.emplace_back(value);
+        return true;
+    }
+    return false;
+}
+
+enum class SectionMode { enable, disable };
+
+void ChangeSectionMode(std::string_view value, bool update_global,
+                       SectionMode mode) {
+    using cma::cfg::GetInternalArray;
+    using cma::cfg::PutInternalArray;
+    namespace groups = cma::cfg::groups;
+    namespace vars = cma::cfg::vars;
+
+    auto section_add = mode == SectionMode::enable ? vars::kSectionsEnabled
+                                                   : vars::kSectionsDisabled;
+    auto section_del = mode == SectionMode::disable ? vars::kSectionsEnabled
+
+                                                    : vars::kSectionsDisabled;
+    auto add = GetInternalArray(groups::kGlobal, section_add);
+    auto del = GetInternalArray(groups::kGlobal, section_del);
+
+    if (AddElement(add, value)) {
+        PutInternalArray(groups::kGlobal, section_add, add);
     }
 
-    // pattern to remove INternalArray element
-    auto disabled = GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
-    RemoveElement(disabled, Str);
-    PutInternalArray(groups::kGlobal, vars::kSectionsDisabled, disabled);
+    RemoveElement(del, value);
+    PutInternalArray(groups::kGlobal, section_del, del);
 
-    if (UpdateGlobal) groups::global.loadFromMainConfig();
+    if (update_global) {
+        groups::global.loadFromMainConfig();
+    }
 }
+
+}  // namespace
+
+void EnableSectionsNode(std::string_view value, bool update_global) {
+    return ChangeSectionMode(value, update_global, SectionMode::enable);
+}
+
+void DisableSectionsNode(std::string_view value, bool update_global) {
+    return ChangeSectionMode(value, update_global, SectionMode::disable);
+}
+
 std::vector<std::string> ReadFileAsTable(const std::string& Name) {
     std::ifstream in(Name.c_str());
     std::stringstream sstr;

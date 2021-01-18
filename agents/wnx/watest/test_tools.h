@@ -114,7 +114,8 @@ inline std::filesystem::path CreateDirInTemp(std::wstring_view Dir) {
 
 // add Str to enabled sections and remove from disabled
 // optionally updates parameters in Config
-void EnableSectionsNode(const std::string_view& Str, bool UpdateGlobal = true);
+void EnableSectionsNode(std::string_view value, bool update_global);
+void DisableSectionsNode(std::string_view value, bool update_global);
 
 inline void SafeCleanBakeryDir() {
     namespace fs = std::filesystem;

@@ -1,0 +1,20 @@
+Title: Fix and rework user notification option "Send hint to ..."
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1610981798
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+The option "Send hint to message inbox (bottom of sidebar)" on the "Notify
+users" page was non functional in previous 2.0 versions.
+
+This option has now been renamed to "Send hint to user menu". If a
+user notification is triggered with this option, the affected user will get a
+hint in the "User" entry of the main menu. In the user popup menu, a link to
+the user notifications is shown, including the count of new messages. If the
+user clicks on that link, he will get to a new page "User notifications",
+where he can read and delete new messages.

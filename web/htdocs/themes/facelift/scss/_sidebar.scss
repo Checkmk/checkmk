@@ -231,18 +231,6 @@ body.main .popup_menu #side_header > span {
   }
 }
 
-span#msg_label {
-  position: relative;
-  top: -6px;
-  left: -10px;
-  z-index: 15;
-  padding: 1px;
-  font-size: $font-size-global;
-  color: rgb(255, 0, 0);
-  background-color: rgb(255, 255, 255);
-  border-radius: 5px;
-}
-
 /* General layout of snapins */
 body.side div.snapin,
 div.add_snapin div.snapin {
@@ -672,15 +660,6 @@ div.popup_msg {
     display: block;
     float: right;
   }
-}
-
-span#msg_label {
-  position: relative;
-  z-index: 15;
-  padding: 1px;
-  color: rgb(255, 0, 0);
-  background-color: rgb(255, 255, 255);
-  border-radius: 5px;
 }
 
 div.head {

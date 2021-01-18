@@ -94,7 +94,7 @@ def _notify_methods() -> Dict[str, Dict[str, Any]]:
             'handler': notify_gui_msg,
         },
         'gui_hint': {
-            'title': _('Send hint to message inbox (bottom of sidebar)'),
+            'title': _('Send hint to user menu'),
             'handler': notify_gui_msg,
         },
         'mail': {

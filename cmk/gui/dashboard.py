@@ -16,7 +16,6 @@ from cmk.gui.utils.html import HTML
 from cmk.utils.exceptions import MKException
 
 import cmk.gui.pages
-import cmk.gui.notify as notify
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
@@ -1884,12 +1883,6 @@ def ajax_dashlet_pos() -> None:
                             html.request.get_integer_input_mandatory("h"))
     save_all_dashboards()
     html.write('OK %d' % board['mtime'])
-
-
-@cmk.gui.pages.register("ajax_delete_user_notification")
-def ajax_delete_user_notification() -> None:
-    msg_id = html.request.get_str_input_mandatory("id")
-    notify.delete_gui_message(msg_id)
 
 
 #.

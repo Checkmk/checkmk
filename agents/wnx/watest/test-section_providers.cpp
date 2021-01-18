@@ -99,22 +99,21 @@ TEST(SectionProviders, BasicDf) {
     }
 }
 
-TEST(SectionProviders, BasicSystemTime) {
-    using namespace cma::section;
-    using namespace cma::provider;
+TEST(SectionProviders, SystemTime) {
+    auto seconds_since_epoch = tools::SecondsSinceEpoch();
+    srv::SectionProvider<SystemTime> system_time_provider;
+    auto& engine = system_time_provider.getEngine();
 
-    cma::srv::SectionProvider<SystemTime> system_time_provider;
-    EXPECT_EQ(system_time_provider.getEngine().getUniqName(), kSystemTime);
+    EXPECT_EQ(engine.getUniqName(), section::kSystemTime);
 
-    auto& e4 = system_time_provider.getEngine();
-    auto system_time = e4.generateContent(section_name);
-    ASSERT_TRUE(!system_time.empty());
+    auto system_time = engine.generateContent(section_name);
     EXPECT_EQ(system_time.back(), '\n');
-    auto result = cma::tools::SplitString(system_time, "\n");
-    EXPECT_EQ(result.size(), 2);
+
+    auto result = tools::SplitString(system_time, "\n");
+    ASSERT_EQ(result.size(), 2);
     EXPECT_EQ(result[0], "<<<systemtime>>>");
-    auto value = result[1].find_first_not_of("0123456789");
-    EXPECT_EQ(value, std::string::npos);
+    auto value = std::stoll(result[1]);
+    EXPECT_GE(value, seconds_since_epoch);
 }
 
 TEST(SectionProviders, BasicCheckMk) {

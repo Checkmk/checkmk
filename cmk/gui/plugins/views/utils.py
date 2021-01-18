@@ -78,6 +78,7 @@ from cmk.gui.type_defs import (
     Visual,
     VisualLinkSpec,
     SingleInfos,
+    VisualName,
 )
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -1098,7 +1099,7 @@ def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
         raise NotImplementedError(f"Unsupported visual type: {visual_type}")
 
     singlecontext_request_vars = _get_singlecontext_html_vars_from_row(
-        row, infos, visual["single_infos"], link_filters)
+        visual["name"], row, infos, visual["single_infos"], link_filters)
 
     return make_linked_visual_url(visual_type, visual, singlecontext_request_vars, html.mobile)
 
@@ -1118,6 +1119,7 @@ def _get_visual_by_link_spec(link_spec: Optional[VisualLinkSpec]) -> Optional[Vi
 
 
 def _get_singlecontext_html_vars_from_row(
+    visual_name: VisualName,
     row: Row,
     infos: List[str],
     single_infos: SingleInfos,
@@ -1145,6 +1147,13 @@ def _get_singlecontext_html_vars_from_row(
             url_vars.update(visuals.get_filter(dst_key).request_vars_from_row(row).items())
         except KeyError:
             pass
+
+    add_site_hint = visuals.may_add_site_hint(visual_name,
+                                              info_keys=list(visual_info_registry.keys()),
+                                              single_info_keys=single_infos,
+                                              filter_names=list(url_vars.keys()))
+    if add_site_hint and row.get("site"):
+        url_vars["site"] = row["site"]
 
     return url_vars
 
@@ -1178,13 +1187,18 @@ def get_linked_visual_request_vars(visual: Visual,
     for var in visuals.get_single_info_keys(visual["single_infos"]):
         vars_values.append((var, singlecontext_request_vars[var]))
 
-    add_site_hint = visuals.may_add_site_hint(visual["name"],
-                                              info_keys=list(visual_info_registry.keys()),
-                                              single_info_keys=visual["single_infos"],
-                                              filter_names=list(dict(vars_values).keys()))
+    if "site" in singlecontext_request_vars:
+        vars_values.append(("site", singlecontext_request_vars["site"]))
+    else:
+        # site may already be added earlier from the livestatus row
+        add_site_hint = visuals.may_add_site_hint(visual["name"],
+                                                  info_keys=list(visual_info_registry.keys()),
+                                                  single_info_keys=visual["single_infos"],
+                                                  filter_names=list(dict(vars_values).keys()))
 
-    if add_site_hint and html.request.var('site'):
-        vars_values.append(('site', html.request.get_ascii_input_mandatory('site')))
+        if add_site_hint and html.request.var('site'):
+            vars_values.append(('site', html.request.get_ascii_input_mandatory('site')))
+
     return vars_values
 
 

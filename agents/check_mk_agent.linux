@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Make sure that locally installed binaries are found
+PATH=$PATH:/usr/local/bin
+
 export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
 export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
 export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
@@ -21,9 +24,6 @@ fi
 # The package name gets patched for baked agents to either
 # "check-mk-agent" or the name set by the "name of agent packages" rule
 XINETD_SERVICE_NAME=check_mk
-
-# Make sure, locally installed binaries are found
-PATH=$PATH:/usr/local/bin
 
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own
@@ -50,20 +50,28 @@ elif [ -z "$MK_FROM_NODE" ]; then
     exec </dev/null 2>/dev/null
 fi
 
+# Function to replace "if type [somecmd]" idiom
+# 'command -v' tends to be more robust vs 'which' and 'type' based tests
+inpath() {
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 # Remove locale settings to eliminate localized outputs where possible
-# The locale logic here is used to make the Python encoding detection
-# work (see CMK-2778).
-if command -v locale >/dev/null 2>&1; then
-    for i in $(locale -a); do
-        if [ "$i" = "C.UTF-8" ] || [ "$i" = "C.utf8" ] || [ "$i" = "C" ]; then
-            export LC_ALL="$i"
-            break
-        fi
-    done
+# The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+unset -v LANG
+if inpath locale; then
+    case "$(locale -a | paste -sd ' ' -)" in
+        (*'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+        (*'C.utf-8'*) LC_ALL="C.utf-8" ;;
+        (*'c.utf-8'*) LC_ALL="c.utf-8" ;;
+        (*'C'*|*)     LC_ALL="C" ;;
+    esac
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
 fi
 
 read_python3_version() {
-    if command -v python3 >/dev/null 2>&1; then
+    if inpath python3; then
         python3_minor_version="$(python3 -c 'import sys; print(sys.version_info[1])')"
         if [ "$python3_minor_version" -ge 4 ]; then
             echo "$python3_minor_version"
@@ -71,11 +79,11 @@ read_python3_version() {
     fi
 }
 read_python2_version() {
-    if command -v python2 >/dev/null 2>&1; then
+    if inpath python2; then
         python2 -c 'import sys; print(sys.version_info[1])'
         return
     fi
-    if command -v python >/dev/null 2>&1; then
+    if inpath python; then
         python -c 'import sys; print(sys.version_info[1])'
         return
     fi
@@ -98,12 +106,6 @@ else
     unset IS_DOCKERIZED
     unset IS_LXC_CONTAINER
 fi
-
-# Function to replace "if type [somecmd]" idiom
-# 'command -v' tends to be more robust vs 'which' and 'type' based tests
-inpath() {
-    command -v "${1:?No command to test}" >/dev/null 2>&1
-}
 
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
@@ -220,7 +222,6 @@ section_cpu() {
             cat /proc/sys/kernel/threads-max
         fi
     else
-
         if [ -n "$IS_DOCKERIZED" ]; then
             echo '<<<docker_container_cpu>>>'
         else

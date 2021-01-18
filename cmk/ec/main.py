@@ -2557,6 +2557,13 @@ class Query(object):
         return repr("\n".join(self._raw_query))
 
 
+def filter_operator_in(a, b):
+    # implemented as a named function, as it is used in a second filter
+    # StatusTableEvents._enumerate
+    # not implemented as regex/IGNORECASE due to performance
+    return a.lower() in (e.lower() for e in b)
+
+
 class QueryGET(Query):
     _filter_operators = {
         "=": (lambda a, b: a == b),
@@ -2567,7 +2574,7 @@ class QueryGET(Query):
         "~": (lambda a, b: cmk.utils.regex.regex(b).search(a)),
         "=~": (lambda a, b: a.lower() == b.lower()),
         "~~": (lambda a, b: cmk.utils.regex.regex(b.lower()).search(a.lower())),
-        "in": (lambda a, b: a in b),
+        "in": filter_operator_in,
     }
 
     def _from_raw_query(self, status_server):
@@ -2812,7 +2819,7 @@ class StatusTableEvents(StatusTable):
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
-            if query.only_host and event["host"] not in query.only_host:
+            if query.only_host and not filter_operator_in(event["host"], query.only_host):
                 continue
 
             row = []

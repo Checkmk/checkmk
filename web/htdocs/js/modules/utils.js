@@ -380,6 +380,12 @@ export function reload_whole_page(url) {
     }
 }
 
+export function delete_user_notification(msg_id, btn) {
+    ajax.post_url("ajax_delete_user_notification.py", "id=" + msg_id);
+    var row = btn.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+}
+
 //#.
 //#   .-Page Reload--------------------------------------------------------.
 //#   |        ____                    ____      _                 _       |

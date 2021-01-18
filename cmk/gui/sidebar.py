@@ -31,7 +31,6 @@ from cmk.gui.globals import html, request
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
-import cmk.gui.notify as notify
 import cmk.gui.sites as sites
 import cmk.gui.pages
 import cmk.gui.plugins.sidebar
@@ -347,8 +346,9 @@ class SidebarRenderer:
         html.open_body(
             class_=body_classes,
             onload='cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages(%s);' %
-            interval,
-            data_theme=html.get_theme())
+            (json.dumps(interval)),
+            data_theme=html.get_theme(),
+        )
 
     def _show_sidebar(self) -> None:
         if not config.user.may("general.see_sidebar"):
@@ -571,34 +571,6 @@ class SidebarRenderer:
             html.div(_("Sidebar"))
         html.close_div()
 
-    # TODO: Re-add with new UX?
-    #def _sidebar_foot(self, user_config):
-    #    html.icon_button("return void();",
-    #                     _("You have pending messages."),
-    #                     "sidebar_messages",
-    #                     onclick='cmk.sidebar.read_message()',
-    #                     id_='msg_button',
-    #                     style='display:none')
-    #    html.open_div(style="display:none;", id_="messages")
-    #    self.render_messages()
-    #    html.close_div()
-
-    #def render_messages(self):
-    #    for msg in notify.get_gui_messages():
-    #        if 'gui_hint' in msg['methods']:
-    #            html.open_div(id_="message-%s" % msg['id'], class_=["popup_msg"])
-    #            html.a("x",
-    #                   href="javascript:void(0)",
-    #                   class_=["close"],
-    #                   onclick="cmk.sidebar.message_close(\'%s\')" % msg['id'])
-    #            html.write_text(msg['text'].replace('\n', '<br>\n'))
-    #            html.close_div()
-    #        if 'gui_popup' in msg['methods']:
-    #            html.javascript(
-    #                ensure_str(
-    #                    'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
-    #                    (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id'])))
-
 
 def _shortcut_menu_items() -> List[ShortcutMenuItem]:
     return [
@@ -764,25 +736,6 @@ def move_snapin() -> None:
 
     user_config.move_snapin_before(snapin, before_snapin)
     user_config.save()
-
-
-@cmk.gui.pages.register("sidebar_get_messages")
-def ajax_get_messages():
-    # TODO: Readd with new UX?
-    pass
-    #SidebarRenderer().render_messages()
-
-
-@cmk.gui.pages.register("sidebar_message_read")
-def ajax_message_read():
-    html.set_output_format("json")
-    try:
-        notify.delete_gui_message(html.request.var('id'))
-        html.write("OK")
-    except Exception:
-        if config.debug:
-            raise
-        html.write("ERROR")
 
 
 #.

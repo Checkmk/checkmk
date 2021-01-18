@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import (TYPE_CHECKING, Any, Callable, Optional, TypeVar)
 from redis import Redis
+from redis.client import Pipeline
 
 from .exceptions import MKTimeout
 from .paths import omd_root
@@ -13,6 +14,8 @@ from .paths import omd_root
 # See tests/typeshed/redis
 if TYPE_CHECKING:
     RedisDecoded = Redis[str]
+
+QueryData = TypeVar("QueryData")
 
 
 def get_redis_client() -> 'RedisDecoded':
@@ -35,12 +38,12 @@ class DataUnavailableException(Exception):
     pass
 
 
-def query_redis(client,
-                data_key,
-                integrity_callback,
-                update_callback,
-                query_callback,
-                timeout=None):
+def query_redis(client: 'RedisDecoded',
+                data_key: str,
+                integrity_callback: Callable[[], IntegrityCheckResponse],
+                update_callback: Callable[[Pipeline], Any],
+                query_callback: Callable[[], QueryData],
+                timeout: Optional[int] = None) -> QueryData:
     query_lock = client.lock("%s.query_lock" % data_key)
     update_lock = client.lock("%s.update_lock" % data_key)
     try:

@@ -149,7 +149,7 @@ def test_mkevent_check_query_perf(config, event_status, status_server):
     assert duration < 0.2
 
 
-@pytest.mark.parametrize('event, status_socket', [
+@pytest.mark.parametrize('event, status_socket, is_match', [
     (
         {
             'host': 'abc',
@@ -159,6 +159,7 @@ def test_mkevent_check_query_perf(config, event_status, status_server):
         FakeStatusSocket(b'GET events\n'
                          b'Filter: event_host in abc 127.0.0.1\n'
                          b'Filter: event_phase in open ack\n'),
+        True,
     ),
     (
         {
@@ -169,10 +170,39 @@ def test_mkevent_check_query_perf(config, event_status, status_server):
         FakeStatusSocket(b'GET events\n'
                          b'Filter: event_host in abc 127.0.0.1\n'
                          b'Filter: event_phase in open ack\n'),
+        True,
+    ),
+    (
+        {
+            'host': 'ABC',
+            'text': 'not important',
+            'core_host': 'ABC',
+        },
+        FakeStatusSocket(b'GET events\n'
+                         b'Filter: event_host in abc 127.0.0.1\n'
+                         b'Filter: event_phase in open ack\n'),
+        True,
+    ),
+    (
+        {
+            'host': 'ABC1',
+            'text': 'not important',
+            'core_host': 'ABC',
+        },
+        FakeStatusSocket(b'GET events\n'
+                         b'Filter: event_host in abc 127.0.0.1\n'
+                         b'Filter: event_phase in open ack\n'),
+        False,
     ),
 ])
-def test_mkevent_query_filters(event_status, status_server, event, status_socket):
+def test_mkevent_query_filters(
+    event_status,
+    status_server,
+    event,
+    status_socket,
+    is_match,
+):
     event_status.new_event(CMKEventConsole.new_event(event))
     status_server.handle_client(status_socket, True, '127.0.0.1')
     response = status_socket.get_response()
-    assert len(response) == 2
+    assert (len(response) == 2) is is_match

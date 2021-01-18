@@ -50,7 +50,7 @@ import livestatus
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
-from .query import MKClientError, Query, QueryGET
+from .query import MKClientError, Query, QueryGET, filter_operator_in
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
 from .snmp import SNMPTrapEngine
@@ -2613,7 +2613,7 @@ class StatusTableEvents(StatusTable):
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
-            if query.only_host and event["host"] not in query.only_host:
+            if query.only_host and not filter_operator_in(event["host"], query.only_host):
                 continue
 
             row = []

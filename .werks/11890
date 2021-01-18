@@ -1,0 +1,12 @@
+Title: acp_ats_output: Fix discovery of services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610980843
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+From Checkmk 2.0.0i1 to 2.0.0b4 the discovery of this check plugin crashed.

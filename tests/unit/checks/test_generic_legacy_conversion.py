@@ -262,7 +262,6 @@ def test_all_check_variables_present(config_check_variables):
         'allnet_ip_sensoric_temp_default_levels',
         'ap_state_map',
         'ap_unknown',
-        'apc_ats_output_default_levels',
         'apc_default_levels',
         'apc_humidity_default_levels',
         'apc_inrow_airflow_default_levels',

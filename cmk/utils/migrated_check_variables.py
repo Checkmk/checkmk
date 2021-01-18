@@ -20,6 +20,8 @@ icom_ps_volt_default_levels = (13.5, 13.2, 14.1, 14.4)
 
 """
 
+apc_ats_output_default_levels = {"output_voltage_max": (240, 250), "load_perc_max": (85, 95)}
+
 # chrony:
 ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
 

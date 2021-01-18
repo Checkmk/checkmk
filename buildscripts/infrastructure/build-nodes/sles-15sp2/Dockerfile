@@ -5,7 +5,10 @@ ENV PATH="/opt/bin:${PATH}"
 
 ARG ARTIFACT_STORAGE
 
+# Need to install older version of libglib, since base image was updated
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp2 sles15sp2 \
+    && zypper in -f -y \
+    libglib-2_0-0-2.62.5-1.26 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles \

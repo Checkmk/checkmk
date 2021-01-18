@@ -969,7 +969,7 @@ def find_host_services(host_name: str,
     # Also fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
     query = "GET services\n" \
-            "Columns: description check_command metrics host_check_command host_metrics \n"
+            "Columns: description check_command perf_data metrics host_check_command host_metrics \n"
 
     if host_name:
         query += "Filter: host_name = %s\n" % livestatus.lqencode(host_name)
@@ -978,9 +978,11 @@ def find_host_services(host_name: str,
         query += "Filter: service_description = %s\n" % livestatus.lqencode(service_description)
 
     host_check_command, host_metrics = None, None
-    for svc_desc, check_command, metrics, \
+    for svc_desc, check_command, perf_data, rrd_metrics, \
         host_check_command, host_metrics in sites.live().query(query):
-        yield svc_desc, check_command, tuple(metrics)
+        known_metrics = set(perf[0] for perf in parse_perf_data(perf_data, check_command)[0])
+        known_metrics.update(rrd_metrics)
+        yield svc_desc, check_command, tuple(known_metrics)
 
     if host_check_command:
         yield "_HOST_", host_check_command, tuple(host_metrics)

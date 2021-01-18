@@ -23,6 +23,7 @@ import datetime
 import hashlib
 import io
 import ipaddress
+import itertools
 import json
 import logging
 import math
@@ -2682,12 +2683,12 @@ CascadingDropdownChoiceValue = Union[CascadingDropdownChoiceIdent,
 CascadingDropdownCleanChoice = _Tuple[CascadingDropdownChoiceIdent, str, _Optional[ValueSpec]]
 CascadingDropdownShortChoice = _Tuple[CascadingDropdownChoiceIdent, str]
 CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
-CascadingDropdownChoices = Union[List[CascadingDropdownChoice],
-                                 Callable[[], List[CascadingDropdownChoice]]]
+CascadingDropdownChoices = Union[Sequence[CascadingDropdownChoice],
+                                 Callable[[], Sequence[CascadingDropdownChoice]]]
 
 
 def _normalize_choices(
-        choices: List[CascadingDropdownChoice]) -> List[CascadingDropdownCleanChoice]:
+        choices: Sequence[CascadingDropdownChoice]) -> Sequence[CascadingDropdownCleanChoice]:
     return [(c[0], c[1], _sub_valuespec(c)) for c in choices]
 
 
@@ -2730,7 +2731,7 @@ class CascadingDropdown(ValueSpec):
         render: '_Optional[CascadingDropdown.Render]' = None,
         no_elements_text: _Optional[str] = None,
         no_preselect: bool = False,
-        no_preselect_value: _Optional[Any] = None,
+        no_preselect_value: CascadingDropdownChoiceIdent = None,
         no_preselect_title: str = "",
         no_preselect_error: _Optional[str] = None,
         render_sub_vs_page_name: _Optional[str] = None,
@@ -2743,12 +2744,11 @@ class CascadingDropdown(ValueSpec):
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
-        if isinstance(choices, list):
-            self._choices: Union[List[CascadingDropdownCleanChoice], Callable[
-                [], List[CascadingDropdownChoice]]] = _normalize_choices(choices)
+        if callable(choices):
+            self._choices = lambda: _normalize_choices(choices())
         else:
-            # function, store for later
-            self._choices = choices
+            normalized = _normalize_choices(choices)
+            self._choices = lambda: normalized
 
         self._label = label
         self._separator = separator
@@ -2764,6 +2764,8 @@ class CascadingDropdown(ValueSpec):
         self._no_preselect_title = no_preselect_title  # if not preselected
         self._no_preselect_error = no_preselect_error if no_preselect_error is not None else _(
             "Please make a selection")
+        self._preselected = _normalize_choices([(self._no_preselect_value, self._no_preselect_title)
+                                               ]) if self._no_preselect else []
 
         # When given, this ajax page is called to render the input fields of a cascaded valuespec
         # once the user selected this choice in case it was initially hidden.
@@ -2774,18 +2776,8 @@ class CascadingDropdown(ValueSpec):
         return not self._no_preselect and all(
             vs.allow_empty() for _ident, _title, vs in self.choices() if vs is not None)
 
-    def choices(self) -> List[CascadingDropdownCleanChoice]:
-        if isinstance(self._choices, list):
-            result: List[CascadingDropdownCleanChoice] = self._choices
-        else:
-            result = _normalize_choices(self._choices())
-
-        if self._no_preselect:
-            choice: CascadingDropdownCleanChoice = (self._no_preselect_value,
-                                                    self._no_preselect_title, None)
-            result = [choice] + result
-
-        return result
+    def choices(self) -> Sequence[CascadingDropdownCleanChoice]:
+        return list(itertools.chain(self._preselected, self._choices()))
 
     def canonical_value(self) -> CascadingDropdownChoiceValue:
         choices = self.choices()
@@ -4101,7 +4093,7 @@ class Timerange(CascadingDropdown):
                                ]))]
         return choices
 
-    def _get_graph_timeranges(self) -> List[CascadingDropdownCleanChoice]:
+    def _get_graph_timeranges(self) -> Sequence[CascadingDropdownCleanChoice]:
         try:
             return _normalize_choices([(timerange_attrs["duration"], timerange_attrs['title'])
                                        for timerange_attrs in config.graph_timeranges])

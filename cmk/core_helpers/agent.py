@@ -697,7 +697,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             logger=self._logger,
         )
         for line in raw_data.split(b"\n"):
-            parser = parser(line.rstrip(b"\n"))
+            parser = parser(line.rstrip(b"\r"))
 
         return parser
 

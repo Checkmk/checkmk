@@ -388,7 +388,10 @@ export function pagetype_add_to_container(page_type, page_name) {
             // sidebar.
             if (response_body) {
                 var parts = response_body.split("\n");
-                if (parts[1] == "true") utils.reload_whole_page();
+                if (parts[1] == "true") {
+                    if (parts[0]) utils.reload_whole_page(parts[0]);
+                    else utils.reload_whole_page();
+                }
                 if (parts[0]) window.location.href = parts[0];
             }
         },

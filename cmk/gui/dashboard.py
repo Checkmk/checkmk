@@ -911,27 +911,26 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
 def _dashboard_add_views_dashlet_entries(name: DashboardName, board: DashboardConfig,
                                          mode: str) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
-        title=_('Copy existing view'),
-        icon_name="view_copy",
-        item=make_simple_link(
-            'create_view_dashlet.py?name=%s&create=0&back=%s' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
-        is_show_more=True,
-    )
-
-    yield PageMenuEntry(
-        title=_('View'),
+        title=_('New view'),
         icon_name='view',
         item=make_simple_link(
-            'create_view_dashlet.py?name=%s&create=0&back=%s' %
+            'create_view_dashlet.py?name=%s&create=1&back=%s' %
             (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
     )
 
     yield PageMenuEntry(
-        title=_('Link existing view'),
+        title=_('Link to existing view'),
         icon_name='view_link',
         item=make_simple_link(
             'create_link_view_dashlet.py?name=%s&create=0&back=%s' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
+        title=_('Copy of existing view'),
+        icon_name="view_copy",
+        item=make_simple_link(
+            'create_view_dashlet.py?name=%s&create=0&back=%s' %
             (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
     )
 

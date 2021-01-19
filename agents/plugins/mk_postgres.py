@@ -11,6 +11,7 @@ agent without any arguments.
 
 __version__ = "2.1.0i1"
 
+import io
 import subprocess
 import re
 import os
@@ -25,6 +26,16 @@ try:
 except ImportError:
     # We need typing only for testing
     pass
+
+# For Python 3 sys.stdout creates \r\n as newline for Windows.
+# Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
+# If you want to use the old behaviour just use old_stdout.
+if sys.version_info[0] >= 3:
+    new_stdout = io.TextIOWrapper(sys.stdout.buffer,
+                                  newline='\n',
+                                  encoding=sys.stdout.encoding,
+                                  errors=sys.stdout.errors)
+    old_stdout, sys.stdout = sys.stdout, new_stdout
 
 OS = platform.system()
 IS_LINUX = OS == "Linux"
@@ -374,6 +385,7 @@ class PostgresWin(PostgresBase):
                 ["wmic", "process", "get", "processid,commandline",
                  "/format:list"])).split("\r\r\n\r\r\n\r\r\n")
 
+        instance = self.instance.get("name", "")
         out = ""
         for task in taskslist:
             task = task.lstrip().rstrip()
@@ -383,8 +395,8 @@ class PostgresWin(PostgresBase):
             cmd_line = cmd_line.split("CommandLine=")[1]
             PID = PID.split("ProcessId=")[1]
             if any(pat.search(cmd_line) for pat in procs_to_match):
-                out += "%s %s\n" % (PID, cmd_line)
-
+                if task.find(instance) != -1:
+                    out += "%s %s\n" % (PID, cmd_line)
         return out.rstrip()
 
     def get_stats(self):
@@ -668,15 +680,13 @@ class PostgresLinux(PostgresBase):
 
         procs_list = ensure_str(subprocess.check_output(["ps", "h", "-eo",
                                                          "pid:1,command:1"])).split("\n")
+
+        instance = self.instance.get("name", "")
         out = ""
         for proc in procs_list:
-            proc_list = proc.split(" ")
-            if len(proc_list) != 2:
-                continue
-            PID = proc_list[0]
-            joined_cmd_line = " ".join(proc_list[1])
-            if any(pat.search(joined_cmd_line) for pat in procs_to_match):
-                out += "%s %s\n" % (PID, joined_cmd_line)
+            if any(pat.search(proc) for pat in procs_to_match):
+                if proc.find(instance) != -1:
+                    out += proc + "\n"
         return out.rstrip()
 
     def get_query_duration(self):

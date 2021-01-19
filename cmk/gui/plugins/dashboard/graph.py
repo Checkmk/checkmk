@@ -47,8 +47,8 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
-    TextAsciiAutocomplete,
     ValueSpec,
+    autocompleter_registry,
 )
 
 
@@ -57,19 +57,18 @@ def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
     return metric_info.get(metric_id, {}).get("title", metric_id)
 
 
-class GraphTemplate(DropdownChoiceWithHostAndServiceHints):
+@autocompleter_registry.register
+class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all graph templates"""
+    ident = "available_graphs"
     _MARKER_DEPRECATED_CHOICE = "_deprecated_int_value"
 
     def __init__(self, **kwargs: Any):
         kwargs_with_defaults: Mapping[str, Any] = {
-            "css_spec": "graph-selector",
+            "css_spec": ["ajax-vals", "graph-selector", self.ident],
             "hint_label": _("graph"),
             "choices": [(None, _("Select graph"))],
             "title": _("Graph"),
-            "encode_value": False,
-            "sorted": True,
-            "no_preselect": True,
             "help": _(
                 "Select the graph to be displayed by this element. In case the current selection "
                 "displays 'Deprecated choice, please re-select', this element was created before "
@@ -115,10 +114,6 @@ class GraphTemplate(DropdownChoiceWithHostAndServiceHints):
             varprefix,
             self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,
         )
-
-
-class AvailableGraphs(TextAsciiAutocomplete):
-    ident = "available_graphs"
 
     @staticmethod
     def _graph_template_title(graph_template: Mapping) -> str:
@@ -350,7 +345,7 @@ class GraphDashlet(Dashlet):
         yield cls._vs_timerange()
         yield (
             "source",
-            GraphTemplate(),
+            AvailableGraphs(),
         )
         yield cls._vs_graph_render_options()
 

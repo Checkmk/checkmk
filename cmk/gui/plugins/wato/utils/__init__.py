@@ -12,7 +12,7 @@ import abc
 import json
 import re
 import subprocess
-from typing import Callable, List, Mapping, Type, Optional as _Optional, Tuple as _Tuple
+from typing import Callable, List, Mapping, Type, Optional as _Optional, Tuple as _Tuple, Dict, Any
 
 from six import ensure_str
 
@@ -39,8 +39,8 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
     Labels, ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname,
     OptionalDropdownChoice, Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii,
-    TextAsciiAutocomplete, TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp,
-    rule_option_elements, SingleLabel,
+    AjaxDropdownChoice, TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp,
+    rule_option_elements, SingleLabel, autocompleter_registry,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
     ActionResult, WatoMode, mode_registry, mode_url, redirect,
@@ -1097,28 +1097,27 @@ class _CheckTypeMgmtSelection(DualListChoice):
                 for (cn, c) in checks.items()]
 
 
-class ConfigHostname(TextAsciiAutocomplete):
+@autocompleter_registry.register
+class ConfigHostname(AjaxDropdownChoice):
     """Hostname input with dropdown completion
 
     Renders an input field for entering a host name while providing an auto completion dropdown field.
     Fetching the choices from the current WATO config"""
     ident = "config_hostname"
 
-    def __init__(self, **kwargs):
-        super(ConfigHostname, self).__init__(completion_ident=self.ident,
-                                             completion_params={},
-                                             **kwargs)
-
     @classmethod
-    def autocomplete_choices(cls, value, params):
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        all_hosts = watolib.Host.all()
+        all_hosts: Dict[str, watolib.CREHost] = watolib.Host.all()
         match_pattern = re.compile(value, re.IGNORECASE)
-        match_list = []
+        match_list: Choices = []
         for host_name, host_object in all_hosts.items():
             if match_pattern.search(host_name) is not None and host_object.may("read"):
-                match_list.append(tuple((host_name, host_name)))
+                match_list.append((host_name, host_name))
+
+        if not any(x[0] == value for x in match_list):
+            match_list.insert(0, (value, value))  # User is allowed to enter anything they want
 
         return match_list
 

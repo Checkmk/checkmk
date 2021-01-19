@@ -394,10 +394,7 @@ class ModeEditSite(WatoMode):
         ]
 
     def _vs_host(self):
-        return MonitoredHostname(
-            title=_("Host:"),
-            allow_empty=False,
-        )
+        return MonitoredHostname(title=_("Host:"))
 
     def _replication_elements(self):
         return [

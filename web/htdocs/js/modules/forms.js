@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 
 import * as utils from "utils";
 import * as ajax from "ajax";
+import {initialize_autocompleters} from "valuespecs";
 
 export function enable_dynamic_form_elements(container = null) {
     enable_select2_dropdowns(container);
@@ -25,43 +26,7 @@ export function enable_select2_dropdowns(container) {
         dropdownAutoWidth: true,
         minimumResultsForSearch: 5,
     });
-
-    elements = $(container);
-    ajax_call_select2_dropdown_autocomplete(elements, "metric-selector", "monitored_metrics");
-    ajax_call_select2_dropdown_autocomplete(elements, "graph-selector", "available_graphs");
-}
-
-function ajax_call_select2_dropdown_autocomplete(elements, selector_name, autocomplete_name) {
-    // handle selection dropdowns dynamic narrowing
-    elements.find("." + selector_name).each((i, elem) =>
-        $(elem).select2({
-            language: {
-                searching: () =>
-                    "Type to trigger search. In case of performance issues, please narrow down the \
-                    filters.",
-            },
-            width: "style",
-            ajax: {
-                url: "ajax_vs_autocomplete.py",
-                type: "POST",
-                data: term =>
-                    "request=" +
-                    JSON.stringify({
-                        ident: autocomplete_name,
-                        params: {
-                            host: $(`input[name='${elem.id}_hostname_hint']`).val(),
-                            service: $(`input[name='${elem.id}_service_hint']`).val(),
-                        },
-                        value: term.term || "",
-                    }),
-
-                processResults: resp => ({
-                    results: resp.result.choices.map(x => ({id: x[0], text: x[1]})),
-                }),
-                cache: true,
-            },
-        })
-    );
+    initialize_autocompleters(container);
 }
 
 function enable_label_input_fields(container) {

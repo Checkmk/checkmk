@@ -4506,7 +4506,7 @@ multisite_builtin_views['cmk_servers'] = {
                 'colorize_up', 'colorize_down', 'colorize_unreachable', 'colorize_pending',
                 'colorize_downtime'
             ]
-        }), ('dashboards', 'cmk_host'), 'host_addresses'),
+        }), ('dashboards', 'checkmk_host'), 'host_addresses'),
         (('inv_software_os_name', {
             'use_short': True
         }), None, None),
@@ -4526,8 +4526,8 @@ multisite_builtin_views['cmk_servers'] = {
     'sorters': [('sitealias', False), ('host_name', False)],
     'user_sortable': True,
     'title': u'Checkmk servers',
-    "topic": "applications",
-    "sort_index": 50,
+    "topic": "analyze",
+    "sort_index": 6,
 }
 
 
@@ -4603,8 +4603,8 @@ multisite_builtin_views['cmk_sites'] = {
     'sorters': [('sitealias', False), ('host_name', False)],
     'user_sortable': True,
     'title': u'Checkmk sites',
-    "topic": "applications",
-    "sort_index": 60,
+    "topic": "analyze",
+    "sort_index": 7,
 }
 
 multisite_builtin_views['cmk_sites_of_host'] = {

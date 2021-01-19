@@ -72,6 +72,10 @@ make
 |
 |-- lhm/                * future use *
 |
+|-- runtime/            * This files are from Windows KB Update https://www.microsoft.com/en-us/download/details.aspx?id=49091
+|                         Those files are required for some old OS or for Windows Core.
+|                         Should be packaged to the Python installation
+|
 |-- python/
      |
      |-- cpython-3.8.timestamp

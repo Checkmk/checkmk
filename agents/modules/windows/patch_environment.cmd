@@ -6,4 +6,5 @@ if not defined save_dir powershell Write-Host "This script must be called using 
 if not exist %save_dir% powershell Write-Host "`'%save_dir%`' absent" -foreground red && exit /b 4
 cd %save_dir%
 copy /Y ..\..\pyvenv.cfg .venv\pyvenv.cfg
+copy /Y ..\..\runtime\*.dll .venv\Scripts\
 copy /Y ..\..\postinstall.cmd .\postinstall.cmd

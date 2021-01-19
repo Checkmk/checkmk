@@ -28,6 +28,7 @@ del /Q .venv\.project
 rd /Q /S Lib\venv
 rd /Q /S Lib\unittest
 del /Q Lib\turtle.py
+del /Q .venv\Lib\site-packages\PyWin32.chm
 for /f %%i in ('dir /a:d /s /b pipenv*') do rd /s /q %%i
 for /f %%i in ('dir /a:d /s /b virtualenv*') do rd /s /q %%i
 for /f %%i in ('dir /a:d /s /b pip*') do rd /s /q %%i

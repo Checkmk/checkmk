@@ -540,7 +540,8 @@ class JobRenderer:
         html.td(job_status.get("title", _("Background Job")), css="job_title")
 
         # State
-        html.td(job_status["state"], css=cls.get_css_for_jobstate(job_status["state"]))
+        html.td(html.render_span(job_status["state"]),
+                css=cls.get_css_for_jobstate(job_status["state"]))
 
         # Started
         html.td(cmk.utils.render.date_and_time(job_status["started"]), css="job_started")
@@ -573,11 +574,11 @@ class JobRenderer:
     @classmethod
     def get_css_for_jobstate(cls, job_state):
         job_css_map = {
-            background_job.JobStatusStates.INITIALIZED: "job_state job_initialized",
-            background_job.JobStatusStates.RUNNING: "job_state job_running",
-            background_job.JobStatusStates.EXCEPTION: "job_state job_exception",
-            background_job.JobStatusStates.STOPPED: "job_state job_exception",  # same css as exception
-            background_job.JobStatusStates.FINISHED: "job_state job_finished"
+            background_job.JobStatusStates.INITIALIZED: "state statep",
+            background_job.JobStatusStates.RUNNING: "state job_running",
+            background_job.JobStatusStates.EXCEPTION: "state state2",
+            background_job.JobStatusStates.STOPPED: "state state2",  # same css as exception
+            background_job.JobStatusStates.FINISHED: "state state0"
         }
         return job_css_map.get(job_state, "")
 

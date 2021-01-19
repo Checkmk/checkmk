@@ -1277,7 +1277,7 @@ def paint_age(timestamp: Timestamp,
 def paint_nagiosflag(row: Row, field: ColumnName, bold_if_nonzero: bool) -> CellSpec:
     nonzero = row[field] != 0
     return ("badflag" if nonzero == bold_if_nonzero else "goodflag",
-            _("yes") if nonzero else _("no"))
+            html.render_span(_("yes") if nonzero else _("no")))
 
 
 def declare_simple_sorter(name: str, title: str, column: ColumnName, func: SorterFunction) -> None:
@@ -1423,6 +1423,7 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
             mergefunc = worst_host_state
         else:
             mergefunc = lambda a, b: a
+
         mergefuncs.append(mergefunc)
 
     for row in data:

@@ -397,14 +397,14 @@ def paint_service_state_short(row):
         name = short_service_state_name(-1, "")
 
     if is_stale(row):
-        state = str(state) + " stale"
+        state = state + " stale"
 
-    return "state svcstate state%s" % state, name
+    return "state svcstate state%s" % state, html.render_span(name)
 
 
 def paint_host_state_short(row, short=False):
     if row["host_has_been_checked"] == 1:
-        state = row["host_state"]
+        state = str(row["host_state"])
         # A state of 3 is sent by livestatus in cases where no normal state
         # information is avaiable, e.g. for "DOWNTIMESTOPPED (UP)"
         name = short_host_state_name(row["host_state"], "")
@@ -413,12 +413,12 @@ def paint_host_state_short(row, short=False):
         name = _("PEND")
 
     if is_stale(row):
-        state = str(state) + " stale"
+        state = state + " stale"
 
     if short:
         name = name[0]
 
-    return "state hstate hstate%s" % state, name
+    return "state hstate hstate%s" % state, html.render_span(name)
 
 
 @painter_registry.register
@@ -1526,7 +1526,7 @@ class PainterSvcStaleness(Painter):
 
 def paint_is_stale(row):
     if is_stale(row):
-        return "badflag", _('yes')
+        return "badflag", html.render_span(_('yes'))
     return "goodflag", _('no')
 
 
@@ -1730,7 +1730,7 @@ class PainterHostState(Painter):
         return _("Host state")
 
     def short_title(self, cell):
-        return _("state")
+        return _("State")
 
     @property
     def columns(self):
@@ -2329,7 +2329,7 @@ class PainterHostWithState(Painter):
         else:
             state = "p"
         if state != 0:
-            return "state hstate hstate%s" % state, row["host_name"]
+            return "state hstate hstate%s" % state, html.render_span(row["host_name"])
         return "nobr", row["host_name"]
 
 
@@ -2598,7 +2598,7 @@ class PainterHostAddressFamilies(Painter):
 def paint_svc_count(id_, count):
     if count > 0:
         return "count svcstate state%s" % id_, str(count)
-    return "count svcstate statex", "0"
+    return "count svcstate", "0"
 
 
 def paint_host_count(id_, count):
@@ -2608,7 +2608,7 @@ def paint_host_count(id_, count):
         # pending
         return "count hstate hstatep", str(count)
 
-    return "count hstate hstatex", "0"
+    return "count hstate", "0"
 
 
 @painter_registry.register

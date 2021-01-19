@@ -475,6 +475,11 @@ div#dashboard.grid {
   cursor: pointer;
   border-radius: 12px;
 
+  &.max {
+    color: #f00;
+    background-color: #10181d;
+  }
+
   &.grow {
     background-color: #10181d;
   }

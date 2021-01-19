@@ -42,4 +42,4 @@ checks = {'file_sizes': [(u'SQLServer ReviewInSight',
                             [('log_files', 2154496.0, None, None, None, None)]),
                            (0,
                             'Log files used: 642 kB, 30.51%',
-                            [('log_files_used', 657408.0, 90.0, 95.0, None, None)])])]}
+                            [('log_files_used', 657408.0, 1939046.4, 2046771.2, None, None)])])]}

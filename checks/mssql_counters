@@ -573,24 +573,26 @@ def check_mssql_file_sizes(item, params, parsed):
         except (TypeError, ZeroDivisionError):
             log_files_used_perc = None
 
-        warn, crit = params.get("log_files_used", (None, None))
-        if isinstance(crit, float) and log_files_used_perc is not None:
-            log_files_used_value = log_files_used_perc
+        raw_warn, raw_crit = params.get("log_files_used", (None, None))
+        if isinstance(raw_crit, float) and log_files_used_perc is not None:
             readable_f = get_percent_human_readable
-        elif isinstance(warn, int):
-            log_files_used_value = log_files_used
+            warn = log_files_size * raw_warn / 100
+            crit = log_files_size * raw_crit / 100
+        elif isinstance(raw_warn, int):
             readable_f = get_bytes_human_readable
+            warn = raw_warn
+            crit = raw_crit
         else:
             yield 0, infotext, [("log_files_used", log_files_used, warn, crit)]
             continue
 
         state = 0
-        if crit is not None and log_files_used_value >= crit:
+        if crit is not None and log_files_used >= crit:
             state = 2
-        elif warn is not None and log_files_used_value >= warn:
+        elif warn is not None and log_files_used >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (readable_f(warn), readable_f(crit))
+            infotext += " (warn/crit at %s/%s)" % (readable_f(raw_warn), readable_f(raw_crit))
         yield state, infotext, [("log_files_used", log_files_used, warn, crit)]
 
 

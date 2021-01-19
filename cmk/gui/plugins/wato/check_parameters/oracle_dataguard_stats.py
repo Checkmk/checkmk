@@ -34,6 +34,17 @@ def _parameter_valuespec_oracle_dataguard_stats():
                  help=_("The Active Data-Guard Option needs an addional License from Oracle."),
                  default_value=1,
              )),
+            ("mrp_option",
+             Tuple(title=_("State in case Managed Recovery Process (MRP) is started or stopped"),
+                   help=_("The MRP is usally started on each physical "
+                          "standby node. But in some setups this may vary and the process should "
+                          "only be started on specific or random nodes. Here you may define which "
+                          "state a specific node or service should have in case the MRP is started "
+                          "or stopped."),
+                   elements=[
+                       MonitoringState(title=_("State in case MRP is started"), default_value=0),
+                       MonitoringState(title=_("State in case MRP is stopped"), default_value=2),
+                   ])),
             ("primary_broker_state",
              Checkbox(
                  title=_("Check State of Broker on Primary: "),

@@ -43,7 +43,9 @@ follow-up actions. For example, a folder response can have links to resources fo
 deleting and moving the folder. The client does not have to know about the URL structure, it
 just needs to follow the link. In this sense, the API is quasi self-documenting.
 This provision of additional information as a REST-API principle is also called
-[HATEOAS](https://en.wikipedia.org/wiki/HATEOAS).
+[HATEOAS](https://en.wikipedia.org/wiki/HATEOAS). In this context,
+a `rel` specifies the type of relationship of the concerning resource to the resource that generated
+this representation. The rel attribute is only of informational nature for the client.
 
 Objects may have these possible generic link relations:
 

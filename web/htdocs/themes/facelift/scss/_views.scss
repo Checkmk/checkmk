@@ -564,15 +564,6 @@ table.data.single {
         background-color: $invtree-th-bg-color;
       }
     }
-
-    &.odd0,
-    &.even0 {
-      .state,
-      .svcstate:not(.statex),
-      .badflag {
-        padding-left: 16px;
-      }
-    }
   }
 
   > tbody > tr > td,

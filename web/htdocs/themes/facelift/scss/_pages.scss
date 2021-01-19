@@ -541,6 +541,7 @@ table.groupheader {
 
   td {
     text-align: left;
+    white-space: nowrap;
 
     &:last-child {
       width: 100%;
@@ -1464,67 +1465,43 @@ table.data tr.data td.pnpgraph {
   }
 }
 
-td.job_state {
-  font-weight: bold;
-  color: rgb(255, 255, 255);
-  text-align: center;
-  box-shadow: 0.5px 0.5px 2px rgb(0, 0, 0) inset;
-}
-
-table.data > tbody > tr > td.job_state {
-  &.job_finished {
-    color: $grey-6;
-    background-color: $color-state-success-background;
-    box-shadow: none;
+table.data.job_details {
+  th {
+    width: 150px;
   }
 
-  &.job_exception {
-    background-color: $hot-bg-color;
-    box-shadow: none;
+  td.state {
+    text-align: left;
   }
 
-  &.job_running {
-    background-color: $color-state-9-background;
-    box-shadow: none;
-  }
-
-  &.job_initialized {
-    color: $black;
-    background-color: rgb(204, 204, 204);
+  div.log_output {
+    margin: 0;
   }
 }
 
-table.data.job_details > tbody > tr > th {
-  width: 150px;
-}
-
-table.data.job_details div.log_output > pre {
-  margin: 0;
-}
-
-/* Fixed job columns */
-table.data.job_table {
-  td {
-    padding: 0;
+table.data.job_table td {
+  &.job_actions {
+    width: 50px;
   }
 
-  > tbody > tr > td {
-    &.job_actions {
-      width: 50px;
-    }
+  &.state {
+    width: 50px;
+    text-align: left;
+  }
 
-    &.job_state {
-      width: 50px;
-    }
+  &.job_started {
+    width: 160px;
+  }
 
-    &.job_started {
-      width: 160px;
-    }
+  &.job_pid {
+    width: 40px;
+    text-align: right;
+  }
 
-    &.job_pid {
-      width: 40px;
-      text-align: right;
-    }
+  div.info {
+    padding: $wato-info-padding;
+    margin: $wato-info-margin;
+    background-color: $data-container-bg-color;
   }
 }
 

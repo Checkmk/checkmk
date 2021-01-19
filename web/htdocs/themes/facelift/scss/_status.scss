@@ -59,39 +59,55 @@ body.main .popup_menu .hstate0 span {
   white-space: nowrap;
 }
 
+@mixin state-label-mixin {
+  padding: 4px 2px 2px;
+  border-radius: 2px;
+}
+
 /* WARN */
-.state1,
-.state1 a,
-.state1 body.main .popup_menu span,
-body.main .popup_menu .state1 span {
+.state1 span {
+  @include state-label-mixin;
   color: $black !important;
   background-color: $color-state-1-background !important;
 }
 
+.count.state1 {
+  &,
+  a {
+    color: $color-state-1-background !important;
+  }
+}
+
 /* CRIT/DOWN */
-.state2,
-.state2 a,
-.state2 body.main .popup_menu span,
-body.main .popup_menu .state2 span,
-.hstate1,
-.hstate1 a,
-.hstate1 body.main .popup_menu span,
-body.main .popup_menu .hstate1 span {
+.state2 span,
+.hstate1 span {
+  @include state-label-mixin;
   color: $white !important;
   background-color: $color-state-2-background !important;
 }
 
+.count.state2,
+.count.hstate1 {
+  &,
+  a {
+    color: $color-state-2-background !important;
+  }
+}
+
 /* UNKNOWN / UNREACH */
-.state3,
-.state3 a,
-.state3 body.main .popup_menu span,
-body.main .popup_menu .state3 span,
-.hstate2,
-.hstate2 a,
-.hstate2 body.main .popup_menu span,
-body.main .popup_menu .hstate2 span {
+.state3 span,
+.hstate2 span {
+  @include state-label-mixin;
   color: $white !important;
   background-color: $color-state-3-background !important;
+}
+
+.count.state3,
+.count.hstate2 {
+  &,
+  a {
+    color: $color-state-3-background !important;
+  }
 }
 
 /* PENDING / in DOWNTIME */
@@ -99,10 +115,8 @@ body.main .popup_menu .hstate2 span {
 .hstatep,
 .stated,
 .hstated {
-  &,
-  a,
-  body.main .popup_menu span,
-  body.main .popup_menu & span {
+  span {
+    @include state-label-mixin;
     color: $statep-font-color !important;
     background-color: $color-state-4-background !important;
   }
@@ -333,27 +347,28 @@ table.data td.perfometer {
   }
 }
 
-td.statex {
-  /* zero count */
-  color: rgb(204, 204, 204);
-}
-
 /* Row coloring in case of the different states */
 tr[class*="odd"] {
   background-color: $odd-tr-bg-color;
 
-  td.state1 a,
-  td.state3 a {
-    color: $dark-font-color;
+  td:not(.count).state1,
+  td:not(.count).state3 {
+    a,
+    span {
+      color: $dark-font-color;
+    }
   }
 }
 
 tr[class*="even"] {
   background-color: $even-tr-bg-color;
 
-  td.state1 a,
-  td.state3 a {
-    color: $dark-font-color;
+  td:not(.count).state1,
+  td:not(.count).state3 {
+    a,
+    span {
+      color: $dark-font-color;
+    }
   }
 }
 
@@ -392,13 +407,14 @@ table.data {
   }
 }
 
-td.badflag {
+td.badflag span {
+  @include state-label-mixin;
   font-weight: bold;
   background-color: rgb(255, 102, 68);
 }
 
 td.goodflag {
-  color: rgb(0, 136, 0);
+  color: $success !important;
 }
 
 td.icons {
@@ -469,6 +485,8 @@ td.matchgroups span {
   box-shadow: 0 0 1px rgb(136, 136, 136);
 }
 
+table.allhosts,
+table.hostmatrix,
 table.timeline {
   .state0 {
     background-color: $color-state-success-background;

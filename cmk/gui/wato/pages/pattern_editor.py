@@ -256,8 +256,8 @@ class ModePatternEditor(WatoMode):
 
                     cls = ''
                     if match_class == 'match first':
-                        cls = 'svcstate state%d' % logwatch.level_state(state)
-                    table.cell(_('State'), logwatch.level_name(state), css=cls)
+                        cls = 'state%d' % logwatch.level_state(state)
+                    table.cell(_('State'), html.render_span(logwatch.level_name(state)), css=cls)
                     table.cell(_('Pattern'), html.render_tt(pattern))
                     table.cell(_('Comment'), html.render_text(comment))
                     table.cell(_('Matched line'), disp_match_txt)

@@ -1,0 +1,18 @@
+Title: mk_filestats: added file grouping functionality
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1611065102
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+We have added a new functionality to the mk_filestats agent plugin: it is now
+possible to group files within a file group further into subgroups. Subgroups
+can be formed using a regular expression pattern. It is possible to configure
+this functionality via the agent bakery ruleset, "Count, size and age of files
+- mk_filestat".
+If you would like to use this feature, the mk_filestats agent must be
+redeployed to the relevant hosts.

@@ -56,12 +56,17 @@ described by the following four phases:
       Only further process a file, if its age in seconds matches the filter.
       See ``filter_size''.
 3. Grouping
-    Currently every section in the configuration file will result in one
-    group in the produced output (indicated by '[[[output_type group_name]]]',
-    where the group name will be taken from the sections name in the config
-    file.
-    Future versions may provide means to create more than one group per
-    section (grouped by subfolder, for instance).
+    It is possible to group files within a file group further into subgroups
+    using grouping criteria. The supported options are:
+    * ``grouping_regex: regular_expression''
+      Assign a file to a subgroup if its full path matches the given regular
+      expression.
+    A separate service is created for each subgroup, prefixed with its parent
+    group name (i.e. <parent group name> <subgroup name>). The order in which
+    subgroups and corresponding patterns are specified matters: rules are
+    processed in the given order.
+    Files that match the specified subgroups are shown as a separate service
+    and are excluded from the parent file group.
 4. Output
     You can choose from three different ways the output will be aggregated:
     * ``output: file_stats''
@@ -480,7 +485,7 @@ def grouping_multiple_groups(config_section_name, files_iter, grouping_condition
         yield _grouping_construct_group_name(parent_group_name, child_group_name), files
 
 
-def grouping_single_group(config_section_name, files_iter):
+def grouping_single_group(config_section_name, files_iter, _grouping_conditions):
     """create one single group per section"""
     group_name = config_section_name
     yield group_name, files_iter
@@ -639,8 +644,12 @@ def main():
         filtered_files = iter_filtered_files(filters, files_iter)
 
         #3 grouping
-        grouper = grouping_single_group
-        groups = grouper(config_section_name, filtered_files)
+        grouping_conditions = config.get('grouping')
+        if grouping_conditions:
+            grouper = grouping_multiple_groups
+        else:
+            grouper = grouping_single_group
+        groups = grouper(config_section_name, filtered_files, grouping_conditions)
 
         #4 output
         output_aggregator = get_output_aggregator(config)

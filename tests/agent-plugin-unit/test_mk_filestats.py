@@ -317,7 +317,7 @@ def test_grouping_multiple_groups(
         mk_filestats.grouping_multiple_groups(
             section_name,
             files_iter,
-            grouping_conditions,
+            grouping_conditions=grouping_conditions,
         ))
     expected_results_list = sorted(expected_result)
     for results_idx, (section_name, files) in enumerate(results_list):

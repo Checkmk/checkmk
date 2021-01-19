@@ -1,0 +1,14 @@
+Title: Dashboard: Prevent exception when trying to copy view to dashboard
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1611041785
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+When trying to copy a view to a dashboard without selecting a view name, this
+lead to an exception in the resulting dialog. The form is now preventing an
+empty selection.

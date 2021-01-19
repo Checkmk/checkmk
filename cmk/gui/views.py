@@ -1265,8 +1265,10 @@ def page_edit_view():
     )
 
 
-def view_choices(only_with_hidden=False):
-    choices = [("", "")]
+def view_choices(only_with_hidden=False, allow_empty=True):
+    choices = []
+    if allow_empty:
+        choices.append(("", ""))
     for name, view in get_permitted_views().items():
         if not only_with_hidden or view['single_infos']:
             title = format_view_title(name, view)

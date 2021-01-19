@@ -1764,8 +1764,8 @@ class PagetypeTopics(Overridable):
                 "sort_index": 30,
             },
             "analyze": {
-                "title": _('Analyze'),
-                "icon_name": "topic_analyze",
+                "title": _("System"),
+                "icon_name": "topic_checkmk",
                 "description": "",
                 "sort_index": 40,
             },

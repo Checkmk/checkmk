@@ -12,14 +12,14 @@ from cmk.gui.plugins.dashboard import (
     MAX,
 )
 
-builtin_dashboards["main"] = {
+builtin_dashboards["problems"] = {
     "single_infos": [],
     "context": {},
     "mtime": 0,
     "show_title": True,
-    "title": _("Main Overview"),
-    "topic": "overview",
-    "sort_index": 10,
+    "title": _("Problem dashboard"),
+    "topic": "problems",
+    "sort_index": 5,
     "icon": "dashboard",
     "description": _("This dashboard gives you a general overview on the state of your "
                      "monitored devices."),
@@ -179,6 +179,176 @@ builtin_dashboards["main"] = {
     ]
 }
 
+builtin_dashboards["main"] = {
+    'link_from': {},
+    'single_infos': [],
+    'title': 'Main dashboard $SITE$',
+    'topic': 'overview',
+    'sort_index': 12,
+    'is_show_more': True,
+    'description': '',
+    'icon': None,
+    'add_context_to_title': False,
+    'hidden': False,
+    'hidebutton': False,
+    'public': True,
+    'show_title': True,
+    'mandatory_context_filters': [],
+    'dashlets': [{
+        'position': (1, 1),
+        'size': (30, 18),
+        'single_infos': [],
+        'type': 'hoststats',
+        'context': {},
+        'background': True,
+        'show_title': True,
+        'title_format': ['plain'],
+        'link_from': {},
+        'topic': '',
+        'icon': None,
+        'add_context_to_title': True,
+        'sort_index': 99,
+        'is_show_more': False
+    }, {
+        'position': (1, 19),
+        'size': (30, 18),
+        'single_infos': [],
+        'type': 'servicestats',
+        'context': {},
+        'background': True,
+        'show_title': True,
+        'title_format': ['plain'],
+        'link_from': {},
+        'topic': '',
+        'icon': None,
+        'add_context_to_title': True,
+        'sort_index': 99,
+        'is_show_more': False
+    }, {
+        'position': (31, -19),
+        'size': (56, 0),
+        'single_infos': [],
+        'type': 'notifications_bar_chart',
+        'context': {},
+        'background': True,
+        'show_title': True,
+        'title_format': ['plain'],
+        'time_range': 'd0',
+        'time_resolution': 'h',
+        'log_target': 'service',
+        'link_from': {},
+        'topic': '',
+        'icon': None,
+        'add_context_to_title': True,
+        'sort_index': 99,
+        'is_show_more': False
+    }, {
+        'position': (-1, 1),
+        'size': (0, 36),
+        'single_infos': [],
+        'type': 'site_overview',
+        'background': True,
+        'show_title': True,
+        'title_format': ['plain'],
+        'context': {},
+        'link_from': {},
+        'topic': '',
+        'icon': None,
+        'add_context_to_title': True,
+        'sort_index': 99,
+        'is_show_more': False
+    }, {
+        'position': (1, -19),
+        'size': (0, 0),
+        'single_infos': [],
+        'type': 'nodata',
+        'background': True,
+        'show_title': True,
+        'title_format': ['plain'],
+        'text': '1234',
+        'context': {},
+        'link_from': {},
+        'topic': '',
+        'icon': None,
+        'add_context_to_title': True,
+        'sort_index': 99,
+        'is_show_more': False,
+        'title': 'Notifications in last hour'
+    }, {
+        'position': (31, 1),
+        'size': (56, 18),
+        'single_infos': [],
+        'type': 'nodata',
+        'background': True,
+        'show_title': True,
+        'title_format': ['plain'],
+        'text': 'Host state history graph',
+        'context': {},
+        'link_from': {},
+        'topic': '',
+        'icon': None,
+        'add_context_to_title': True,
+        'sort_index': 99,
+        'is_show_more': False,
+        'title': 'Host problems'
+    }, {
+        'position': (31, 19),
+        'size': (56, 18),
+        'single_infos': [],
+        'type': 'nodata',
+        'background': True,
+        'show_title': True,
+        'title_format': ['plain'],
+        'text': 'Service state history graph',
+        'context': {},
+        'link_from': {},
+        'topic': '',
+        'icon': None,
+        'add_context_to_title': True,
+        'sort_index': 99,
+        'is_show_more': False,
+        'title': 'Service problems'
+    }, {
+        'position': (1, -1),
+        'size': (-1, 18),
+        'single_infos': [],
+        'type': 'nodata',
+        'background': True,
+        'show_title': True,
+        'title_format': ['plain'],
+        'text': 'History graph monitored services',
+        'context': {},
+        'link_from': {},
+        'topic': '',
+        'icon': None,
+        'add_context_to_title': True,
+        'sort_index': 99,
+        'is_show_more': False,
+        'title': 'Monitored services'
+    }, {
+        'position': (-1, 37),
+        'size': (0, 0),
+        'single_infos': [],
+        'type': 'nodata',
+        'background': True,
+        'show_title': True,
+        'title_format': ['plain'],
+        'text': 'alert statistics (behive map)',
+        'context': {},
+        'link_from': {},
+        'topic': '',
+        'icon': None,
+        'add_context_to_title': True,
+        'sort_index': 99,
+        'is_show_more': False,
+        'title': 'Alert statistics'
+    }],
+    'mtime': 0,
+    'context': {},
+    'owner': '',
+    'visibility': {},
+}
+
 builtin_dashboards["simple_problems"] = {
     "single_infos": [],
     "context": {},
@@ -289,12 +459,11 @@ builtin_dashboards["simple_problems"] = {
     ]
 }
 
-builtin_dashboards["cmk_overview"] = {
+builtin_dashboards["checkmk"] = {
     "topic": "analyze",
-    "sort_index": 70,
-    'name': 'cmk_overview',
+    "sort_index": 5,
     'hidebutton': False,
-    'title': u'Checkmk overview',
+    'title': 'Checkmk dashboard',
     'description': u'Displays an overview of all Checkmk servers and instances\n',
     'add_context_to_title': False,
     'link_from': {},
@@ -330,7 +499,7 @@ builtin_dashboards["cmk_overview"] = {
     'icon': 'checkmk'
 }
 
-builtin_dashboards['cmk_host'] = {
+builtin_dashboards['checkmk_host'] = {
     'add_context_to_title': True,
     'description': u'Display information relevant for the Checkmk performance\n',
     'link_from': {
@@ -570,7 +739,6 @@ builtin_dashboards['cmk_host'] = {
         'single_infos': ['host'],
         'mustsearch': False
     }],
-    'name': 'cmk_host',
     'topic': 'applications',
     'context': {},
     'mtime': 0,

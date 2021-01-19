@@ -699,14 +699,14 @@ div.snapin textarea,
   height: auto;
   padding: 3px 6px;
   color: $font-color;
-  background-color: $form-element-color;
+  background-color: $inpage-highlight-color;
   background-image: none;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }
 
 span.select2 .select2-selection {
-  background-color: $form-element-color;
+  background-color: $inpage-highlight-color;
 
   &:focus {
     outline: none;
@@ -1613,7 +1613,7 @@ table.data.job_table {
   }
 
   &__tag-text {
-    color: $tag-dropdown-active-color;
+    color: $tag-font-color;
   }
 
   tag,
@@ -1663,7 +1663,7 @@ table.data.job_table {
       margin: 1px;
 
       &--active {
-        color: $tag-dropdown-active-color;
+        color: $tag-font-color;
         background-color: $tag-dropdown-active-bg-color;
         border: $tag-dropdown-active-border;
       }

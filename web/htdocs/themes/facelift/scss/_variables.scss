@@ -80,12 +80,6 @@ $button-border: rgb(217, 217, 217);
 $button-height: 28px;
 
 // -----------------------------------------------------------------------------
-// Forms
-// -----------------------------------------------------------------------------
-
-$form-element-color: $inpage-highlight-color;
-
-// -----------------------------------------------------------------------------
 // General
 // -----------------------------------------------------------------------------
 $theme-border-radius: 4px;
@@ -170,9 +164,8 @@ $tag-opacity: null;
 $tag-discovered-opacity: null;
 $tag-hover-opacity: 0.5;
 
-$tag-input-bg-color: $form-element-color;
-$tag-dropdown-active-color: $success;
-$tag-dropdown-active-bg-color: $form-element-color;
+$tag-input-bg-color: $inpage-highlight-color;
+$tag-dropdown-active-bg-color: $inpage-highlight-color;
 $tag-dropdown-active-border: none;
 
 // -----------------------------------------------------------------------------
@@ -451,7 +444,7 @@ $page-header-height: 58px;
 $popup-shadow-color: rgba(255, 255, 255, 0.2);
 $button-font-color-default: $black;
 $button-inactive-filter: grayscale(100%) brightness(140%);
-$button-bg-color-default: $form-element-color;
+$button-bg-color-default: $inpage-highlight-color;
 $button-bg-color-suggestions: $white;
 $navigation-bg-color: $navbar-color;
 $page-menu-bg-color: $white;

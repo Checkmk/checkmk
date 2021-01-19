@@ -80,12 +80,6 @@ $button-border: rgb(217, 217, 217);
 $button-height: 28px;
 
 // -----------------------------------------------------------------------------
-// Forms
-// -----------------------------------------------------------------------------
-
-$form-element-color: $inpage-highlight-color;
-
-// -----------------------------------------------------------------------------
 // General
 // -----------------------------------------------------------------------------
 $theme-border-radius: 4px;
@@ -170,9 +164,8 @@ $tag-opacity: 0.6;
 $tag-discovered-opacity: 0.7;
 $tag-hover-opacity: 0.8;
 
-$tag-input-bg-color: $form-element-color;
-$tag-dropdown-active-color: $success;
-$tag-dropdown-active-bg-color: $form-element-color;
+$tag-input-bg-color: $inpage-highlight-color;
+$tag-dropdown-active-bg-color: $inpage-highlight-color;
 $tag-dropdown-active-border: none;
 
 // -----------------------------------------------------------------------------

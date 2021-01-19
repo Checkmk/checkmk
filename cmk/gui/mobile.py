@@ -293,7 +293,7 @@ def page_view() -> None:
     view.user_sorters = views.get_user_sorters()
     view.want_checkboxes = views.get_want_checkboxes()
 
-    title = views.view_title(view_spec)
+    title = views.view_title(view.spec, view.context)
     mobile_html_head(title)
 
     # Need to be loaded before processing the painter_options below.
@@ -333,7 +333,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
             else:
                 page = "data"
 
-        title = views.view_title(view_spec)
+        title = views.view_title(self.view.spec, self.view.context)
         navbar = [("data", _("Results"), "grid", 'results_button'),
                   ("filter", _("Filter"), "search", '')]
         if config.user.may("general.act"):

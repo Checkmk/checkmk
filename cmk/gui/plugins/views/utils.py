@@ -1034,8 +1034,8 @@ inventory_displayhints: Dict = {}
 view_is_enabled: Dict = {}
 
 
-def view_title(view_spec: ViewSpec) -> str:
-    return visuals.visual_title('view', view_spec)
+def view_title(view_spec: ViewSpec, context: VisualContext) -> str:
+    return visuals.visual_title('view', view_spec, context)
 
 
 def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Optional[str]]:
@@ -2192,7 +2192,7 @@ def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> B
     # Add service home page
     breadcrumb.append(
         BreadcrumbItem(
-            title=view_title(service_view_spec),
+            title=view_title(service_view_spec, context={}),
             url=makeuri_contextless(
                 request,
                 [("view_name", "service"), ("host", host_name), ("service", service_name)],
@@ -2226,7 +2226,7 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     host_view_spec = permitted_views["host"]
     breadcrumb.append(
         BreadcrumbItem(
-            title=view_title(host_view_spec),
+            title=view_title(host_view_spec, context={}),
             url=makeuri_contextless(
                 request,
                 [("view_name", "host"), ("host", host_name)],

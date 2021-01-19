@@ -729,7 +729,7 @@ def copy_view_into_dashlet(dashlet: DashletConfig,
         dashlet['context'].update(add_context)
 
     # Overwrite the views default title with the context specific title
-    dashlet['title'] = visuals.visual_title('view', view)
+    dashlet['title'] = visuals.visual_title('view', view, dashlet['context'])
     # TODO: Shouldn't we use the self._dashlet_context_vars() here?
     name_part: HTTPVariables = [('view_name', view_name)]
     singlecontext_vars = cast(

@@ -836,6 +836,62 @@ section_omd_core() {
                     waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
             fi
         done
+
+        echo '<<<cmk_site_statistics:sep(59)>>>'
+        for site in *; do
+            if [ -S "/omd/sites/$site/tmp/run/live" ]; then
+                echo "[$site]"
+                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
+GET hosts
+Stats: state = 0
+Stats: scheduled_downtime_depth = 0
+StatsAnd: 2
+Stats: state = 1
+Stats: scheduled_downtime_depth = 0
+StatsAnd: 2
+Stats: state = 2
+Stats: scheduled_downtime_depth = 0
+StatsAnd: 2
+Stats: scheduled_downtime_depth > 0
+Filter: custom_variable_names < _REALNAME
+LimitString
+                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
+GET services
+Stats: state = 0
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state = 0
+Stats: host_has_been_checked = 1
+StatsAnd: 5
+Stats: scheduled_downtime_depth > 0
+Stats: host_scheduled_downtime_depth > 0
+StatsOr: 2
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state != 0
+StatsAnd: 3
+Stats: state = 1
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state = 0
+Stats: host_has_been_checked = 1
+StatsAnd: 5
+Stats: state = 3
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state = 0
+Stats: host_has_been_checked = 1
+StatsAnd: 5
+Stats: state = 2
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state = 0
+Stats: host_has_been_checked = 1
+StatsAnd: 5
+Filter: host_custom_variable_names < _REALNAME
+LimitString
+            fi
+        done
     fi
 }
 

@@ -61,16 +61,6 @@ def ensure_str(s):
     return s
 
 
-#   .--Postgres Base-------------------------------------------------------.
-#   |    ____           _                        ____                      |
-#   |   |  _ \ ___  ___| |_ __ _ _ __ ___  ___  | __ )  __ _ ___  ___      |
-#   |   | |_) / _ \/ __| __/ _` | '__/ _ \/ __| |  _ \ / _` / __|/ _ \     |
-#   |   |  __/ (_) \__ \ || (_| | | |  __/\__ \ | |_) | (_| \__ \  __/     |
-#   |   |_|   \___/|___/\__\__, |_|  \___||___/ |____/ \__,_|___/\___|     |
-#   |                      |___/                                           |
-#   +----------------------------------------------------------------------+
-
-
 class PostgresBase:
     """
     Base class for x-plattform postgres queries
@@ -85,17 +75,15 @@ class PostgresBase:
     _supported_pg_versions = ["12"]
     _agent_prefix = "postgres"
 
-    def __init__(self, db_user, instance=None):
-        # type: (str, Optional[Dict]) -> None
+    def __init__(self, db_user, instance):
+        # type: (str, Dict) -> None
         self.db_user = db_user
-
-        if instance:
-            self.instance = instance
-        else:
-            self.instance = {}
+        self.name = instance["name"]
+        self.pg_user = instance["pg_user"]
+        self.pg_port = instance["pg_port"]
+        self.pg_database = instance["pg_database"]
         self.my_env = os.environ.copy()
-        self.my_env["PGPASSFILE"] = self.instance.get("pg_passfile", "")
-        self.get_pg_env()
+        self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
         self.sep = os.sep
         self.psql, self.bin_path = self.get_psql_and_bin_path()
         self.databases = self.get_databases()
@@ -117,10 +105,6 @@ class PostgresBase:
     @abc.abstractmethod
     def get_psql_and_bin_path(self):
         """This method returns the system specific psql binary and its path"""
-
-    @abc.abstractmethod
-    def get_pg_env(self):
-        """This method tries to get env variables from a .env file"""
 
     @abc.abstractmethod
     def get_instances(self):
@@ -249,10 +233,8 @@ class PostgresBase:
         pg_isready is a utility for checking the connection status of a PostgreSQL database server.
         """
 
-        out = subprocess.check_output([
-            "%s%spg_isready" % (self.bin_path, self.sep), "-p",
-            self.instance.get("pg_port", "5432")
-        ],)
+        out = subprocess.check_output(
+            ["%s%spg_isready" % (self.bin_path, self.sep), "-p", self.pg_port],)
 
         sys.stdout.write("%s\n" % ensure_str(out))
 
@@ -275,11 +257,7 @@ class PostgresBase:
 
         database_text = "\n[databases_start]\n%s\n[databases_end]" % "\n".join(self.databases)
 
-        if self.instance.get("name"):
-            instance = "\n[[[%s]]]" % self.instance["name"]
-        else:
-            instance = ""
-
+        instance = "\n[[[%s]]]" % self.name
         for query in queries:
             out = "<<<%s_%s>>>" % (self._agent_prefix, query.section)
             out += instance
@@ -287,16 +265,6 @@ class PostgresBase:
                 out += database_text
             out += "\n%s" % query.method()
             sys.stdout.write("%s\n" % out)
-
-
-#   .--Postgres Win--------------------------------------------------------.
-#   |     ____           _                       __        ___             |
-#   |    |  _ \ ___  ___| |_ __ _ _ __ ___  ___  \ \      / (_)_ __        |
-#   |    | |_) / _ \/ __| __/ _` | '__/ _ \/ __|  \ \ /\ / /| | '_ \       |
-#   |    |  __/ (_) \__ \ || (_| | | |  __/\__ \   \ V  V / | | | | |      |
-#   |    |_|   \___/|___/\__\__, |_|  \___||___/    \_/\_/  |_|_| |_|      |
-#   |                       |___/                                          |
-#   +----------------------------------------------------------------------+
 
 
 class PostgresWin(PostgresBase):
@@ -309,14 +277,9 @@ class PostgresWin(PostgresBase):
                            mixed_cmd=False):
         # type: (str, str, str, Optional[bool], Optional[bool],Optional[bool]) -> str
         """This method implements the system specific way to call the psql interface"""
-        if self.instance.get("pg_user"):
-            extra_args += " -U %s" % self.instance.get("pg_user")
-
-        if self.instance.get("pg_database"):
-            extra_args += " -d %s" % self.instance.get("pg_database")
-
-        if self.instance.get("pg_port"):
-            extra_args += " -p %s" % self.instance.get("pg_port")
+        extra_args += " -U %s" % self.pg_user
+        extra_args += " -d %s" % self.pg_database
+        extra_args += " -p %s" % self.pg_port
 
         if quiet:
             extra_args += " -q"
@@ -352,25 +315,6 @@ class PostgresWin(PostgresBase):
 
         raise IOError("Could not determine psql bin and its path.")
 
-    def get_pg_env(self):
-        # type: () -> None
-
-        try:
-            env_file = open_wrapper(self.instance.get("env_file", ""))
-            for line in env_file:
-                for key, match_string in (
-                    ("pg_database", '@SET PGDATABASE='),
-                    ("pg_port", '@SET PGPORT='),
-                ):
-                    if match_string in line:
-                        line = line.split("=")[-1]
-                        self.instance[key] = line.strip().rstrip()
-
-        except IOError:
-            LOGGER.debug("No postgres .env file, using fallback values.")
-            self.instance["pg_database"] = "postgres"
-            self.instance["pg_port"] = "5432"
-
     def get_instances(self):
         # type: () -> str
         """Gets all instances"""
@@ -385,7 +329,6 @@ class PostgresWin(PostgresBase):
                 ["wmic", "process", "get", "processid,commandline",
                  "/format:list"])).split("\r\r\n\r\r\n\r\r\n")
 
-        instance = self.instance.get("name", "")
         out = ""
         for task in taskslist:
             task = task.lstrip().rstrip()
@@ -395,7 +338,7 @@ class PostgresWin(PostgresBase):
             cmd_line = cmd_line.split("CommandLine=")[1]
             PID = PID.split("ProcessId=")[1]
             if any(pat.search(cmd_line) for pat in procs_to_match):
-                if task.find(instance) != -1:
+                if task.find(self.name) != -1:
                     out += "%s %s\n" % (PID, cmd_line)
         return out.rstrip()
 
@@ -584,20 +527,7 @@ class PostgresWin(PostgresBase):
         return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
 
 
-#   .--Postgres Linux------------------------------------------------------.
-#   |  ____           _                        _     _                     |
-#   | |  _ \ ___  ___| |_ __ _ _ __ ___  ___  | |   (_)_ __  _   ___  __   |
-#   | | |_) / _ \/ __| __/ _` | '__/ _ \/ __| | |   | | '_ \| | | \ \/ /   |
-#   | |  __/ (_) \__ \ || (_| | | |  __/\__ \ | |___| | | | | |_| |>  <    |
-#   | |_|   \___/|___/\__\__, |_|  \___||___/ |_____|_|_| |_|\__,_/_/\_\   |
-#   |                    |___/                                             |
-#   +----------------------------------------------------------------------+
-
-
 class PostgresLinux(PostgresBase):
-    def __init__(self, db_user, pg_instance=None):
-        super(PostgresLinux, self).__init__(db_user, pg_instance)
-
     def run_sql_as_db_user(self,
                            sql_cmd,
                            extra_args="",
@@ -607,15 +537,9 @@ class PostgresLinux(PostgresBase):
                            mixed_cmd=False):
         # type: (str, str, str, bool, bool, bool) -> str
         base_cmd_list = ["su", "-", self.db_user, "-c", r"""%s -X %s -A -F'%s'%s"""]
-
-        if self.instance.get("pg_user"):
-            extra_args += " -U %s" % self.instance.get("pg_user")
-
-        if self.instance.get("pg_database"):
-            extra_args += " -d %s" % self.instance.get("pg_database")
-
-        if self.instance.get("pg_port"):
-            extra_args += " -p %s" % self.instance.get("pg_port")
+        extra_args += " -U %s" % self.pg_user
+        extra_args += " -d %s" % self.pg_database
+        extra_args += " -p %s" % self.pg_port
 
         if quiet:
             extra_args += " -q"
@@ -628,6 +552,7 @@ class PostgresLinux(PostgresBase):
         if mixed_cmd:
             cmd_to_pipe = subprocess.Popen(["echo", sql_cmd], stdout=subprocess.PIPE)
             base_cmd_list[-1] = base_cmd_list[-1] % (self.psql, extra_args, field_sep, "")
+
             receiving_pipe = subprocess.Popen(base_cmd_list,
                                               stdin=cmd_to_pipe.stdout,
                                               stdout=subprocess.PIPE,
@@ -641,24 +566,6 @@ class PostgresLinux(PostgresBase):
             out = ensure_str(proc.communicate()[0])
 
         return out.rstrip()
-
-    def get_pg_env(self):
-
-        try:
-            env_file = open_wrapper(self.instance.get("env_file", ""))
-            for line in env_file:
-
-                for key, match_string in (("pg_database", 'export PGDATABASE='),
-                                          ("pg_port", 'export PGPORT=')):
-
-                    if match_string in line:
-                        line = line.split("=")[-1]
-                        self.instance[key] = re.sub(re.compile("#.*"), "", line).strip().rstrip()
-
-        except IOError:
-            LOGGER.debug("No postgres .env file, using fallback values.")
-            self.instance["pg_database"] = "postgres"
-            self.instance["pg_port"] = "5432"
 
     def get_psql_and_bin_path(self):
         # type: () -> Tuple[str, str]
@@ -680,12 +587,10 @@ class PostgresLinux(PostgresBase):
 
         procs_list = ensure_str(subprocess.check_output(["ps", "h", "-eo",
                                                          "pid:1,command:1"])).split("\n")
-
-        instance = self.instance.get("name", "")
         out = ""
         for proc in procs_list:
             if any(pat.search(proc) for pat in procs_to_match):
-                if proc.find(instance) != -1:
+                if proc.find(self.name) != -1:
                     out += proc + "\n"
         return out.rstrip()
 
@@ -892,18 +797,8 @@ class PostgresLinux(PostgresBase):
         return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
 
 
-#   .--factory-------------------------------------------------------------.
-#   |                  __            _                                     |
-#   |                 / _| __ _  ___| |_ ___  _ __ _   _                   |
-#   |                | |_ / _` |/ __| __/ _ \| '__| | | |                  |
-#   |                |  _| (_| | (__| || (_) | |  | |_| |                  |
-#   |                |_|  \__,_|\___|\__\___/|_|   \__, |                  |
-#   |                                              |___/                   |
-#   +----------------------------------------------------------------------+
-
-
-def postgres_factory(db_user, pg_instance=None):
-    # type: (str, Optional[Dict[str, str]]) -> PostgresBase
+def postgres_factory(db_user, pg_instance):
+    # type: (str, Dict[str, str]) -> PostgresBase
     if IS_LINUX:
         return PostgresLinux(db_user, pg_instance)
     if IS_WINDOWS:
@@ -911,17 +806,26 @@ def postgres_factory(db_user, pg_instance=None):
     raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
 
 
-#   .--PostgresConfig------------------------------------------------------.
-#   | ____           _                       ____             __ _         |
-#   ||  _ \ ___  ___| |_ __ _ _ __ ___  ___ / ___|___  _ __  / _(_) __ _   |
-#   || |_) / _ \/ __| __/ _` | '__/ _ \/ __| |   / _ \| '_ \| |_| |/ _` |  |
-#   ||  __/ (_) \__ \ || (_| | | |  __/\__ \ |__| (_) | | | |  _| | (_| |  |
-#   ||_|   \___/|___/\__\__, |_|  \___||___/\____\___/|_| |_|_| |_|\__, |  |
-#   |                   |___/                                      |___/   |
-#   +----------------------------------------------------------------------+
+def open_env_file(file_to_open):
+    """Wrapper around built-in open to be able to monkeypatch through all python versions"""
+    return open(file_to_open).readlines()
 
 
-class PostgresConfig:
+def parse_env_file(env_file):
+    pg_port = None  # mandatory in env_file
+    pg_database = "postgres"  # default value
+    for line in open_env_file(env_file):
+        line = line.strip()
+        if 'PGDATABASE=' in line:
+            pg_database = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
+        if 'PGPORT=' in line:
+            pg_port = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
+    if pg_port is None:
+        raise ValueError("PGPORT is not specified in %s" % env_file)
+    return pg_database, pg_port
+
+
+def parse_postgres_cfg(postgres_cfg):
     """
     Parser for Postgres config. x-Plattform compatible.
 
@@ -930,82 +834,35 @@ class PostgresConfig:
     INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass
     INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass
     """
-
-    _cfg_name = "postgres.cfg"
-    _default_win = "c:\\ProgramData\\checkmk\\agent\\config"
-    _default_linux = "/etc/check_mk"
-
-    def __init__(self):
-
-        # Handle OS differences
-        if IS_LINUX:
-            default_path = self._default_linux
-            conf_sep = ":"
-        if IS_WINDOWS:
-            default_path = self._default_win
-            conf_sep = "|"
-
-        self.path_to_config = os.path.join(os.getenv("MK_CONFDIR", default_path), self._cfg_name)
-        self.conf_sep = conf_sep
-
-        self.instances = []  # type: List[Dict[str, str]]
-        self.dbuser = ""
-        self.try_parse_config()
-
-    def try_parse_config(self):
-        try:
-            config = open_wrapper(self.path_to_config)
-            for line in config:
-                if line.startswith("#") or "=" not in line:
-                    continue
-                key, value = line.split("=")
-
-                if key == "DBUSER":
-                    self.dbuser = value.rstrip()
-                if key == "INSTANCE":
-
-                    env_file, pg_user, pg_passfile = value.split(self.conf_sep)
-                    self.instances.append({
-                        "env_file": env_file,
-                        "name": env_file.split(os.sep)[-1].split(".")[0],
-                        "pg_user": pg_user,
-                        "pg_passfile": pg_passfile.rstrip()
-                    })
-
-        except (IOError, TypeError):
-            LOGGER.debug("Config file \"%s\" not found. Continuing with fall back.",
-                         self.path_to_config)
-            self.get_fall_back()
-
-    def get_fall_back(self):
-
-        if IS_WINDOWS:
-            raise NotImplementedError(
-                "Fallback in case of missing cfg file on windows not implemented yet.\n"
-                "Please create a postgres.cfg under %s." % self.path_to_config)
-        if IS_LINUX:
-            for user_id in ("pgsql", "postgres"):
-                try:
-                    proc = subprocess.Popen(["id", user_id],
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
-                    proc.communicate()
-                    if proc.returncode == 0:
-                        self.dbuser = user_id.rstrip()
-                        return
-                except subprocess.CalledProcessError:
-                    pass
-            raise ValueError("Could not determine postgres user!")
-
-
-#   .--parse---------------------------------------------------------------.
-#   |                                                                      |
-#   |                      _ __   __ _ _ __ ___  ___                       |
-#   |                     | '_ \ / _` | '__/ __|/ _ \                      |
-#   |                     | |_) | (_| | |  \__ \  __/                      |
-#   |                     | .__/ \__,_|_|  |___/\___|                      |
-#   |                     |_|                                              |
-#   +----------------------------------------------------------------------+
+    if IS_LINUX:
+        conf_sep = ":"
+    elif IS_WINDOWS:
+        conf_sep = "|"
+    else:
+        raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
+    dbuser = None
+    instances = []
+    for line in postgres_cfg:
+        if line.startswith("#") or "=" not in line:
+            continue
+        line = line.strip()
+        key, value = line.split("=")
+        if key == "DBUSER":
+            dbuser = value.rstrip()
+        if key == "INSTANCE":
+            env_file, pg_user, pg_passfile = value.split(conf_sep)
+            env_file = env_file.strip()
+            pg_database, pg_port = parse_env_file(env_file)
+            instances.append({
+                "name": env_file.split(os.sep)[-1].split(".")[0],
+                "pg_user": pg_user.strip(),
+                "pg_passfile": pg_passfile.strip(),
+                "pg_database": pg_database,
+                "pg_port": pg_port,
+            })
+    if dbuser is None:
+        raise ValueError("DBUSER must be specified in postgres.cfg")
+    return dbuser, instances
 
 
 def parse_arguments(argv):
@@ -1022,19 +879,16 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def open_wrapper(file_to_open):
-    """Wrapper around built-in open to be able to monkeypatch through all python versions"""
-    return open(file_to_open).readlines()
-
-
-#   .--Main----------------------------------------------------------------.
-#   |                        __  __       _                                |
-#   |                       |  \/  | __ _(_)_ __                           |
-#   |                       | |\/| |/ _` | | '_ \                          |
-#   |                       | |  | | (_| | | | | |                         |
-#   |                       |_|  |_|\__,_|_|_| |_|                         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
+def get_postgres_user_linux():
+    for user_id in ("pgsql", "postgres"):
+        try:
+            proc = subprocess.Popen(["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc.communicate()
+            if proc.returncode == 0:
+                return user_id.rstrip()
+        except subprocess.CalledProcessError:
+            pass
+    raise ValueError("Could not determine postgres user!")
 
 
 def main(argv=None):
@@ -1055,22 +909,46 @@ def main(argv=None):
         }.get(opt.verbose, logging.DEBUG),
     )
 
-    config = PostgresConfig()
+    if IS_LINUX:
+        default_path = "/etc/check_mk"
+        fallback_dbuser = get_postgres_user_linux()
+    elif IS_WINDOWS:
+        default_path = "c:\\ProgramData\\checkmk\\agent\\config"
+        fallback_dbuser = "postgres"
+    else:
+        raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
 
-    if not config.instances:
-        my_collector = postgres_factory(config.dbuser)
+    dbuser = fallback_dbuser
+    instances = []
+    try:
+        postgres_cfg_path = os.path.join(os.getenv("MK_CONFDIR", default_path), "postgres.cfg")
+        postgres_cfg = open(postgres_cfg_path).readlines()
+        dbuser, instances = parse_postgres_cfg(postgres_cfg)
+    except Exception:
+        _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging
+        LOGGER.debug("try_parse_config: exception: %s", str(e))
+        LOGGER.debug("Using \"%s\" as default postgres user.", dbuser)
+
+    if not instances:
+        default_postgres_installation_parameters = {
+            # default database name of postgres installation
+            "name": "main" if IS_LINUX else "data",
+            "pg_user": "postgres",
+            "pg_database": "postgres",
+            "pg_port": "5432",
+            # Assumption: if no pg_passfile is specified no password will be required.
+            # If a password is required but no pg_passfile is specified the process will
+            # interactivly prompt for a password.
+            "pg_passfile": "",
+        }
+        instances.append(default_postgres_installation_parameters)
+
+    for instance in instances:
+        my_collector = postgres_factory(dbuser, instance)
         if opt.test_connection:
             my_collector.is_pg_ready()
             sys.exit(0)
         my_collector.execute_all_queries()
-
-    for instance in config.instances:
-        my_collector = postgres_factory(config.dbuser, instance)
-        if opt.test_connection:
-            my_collector.is_pg_ready()
-            sys.exit(0)
-        my_collector.execute_all_queries()
-
     return 0
 
 

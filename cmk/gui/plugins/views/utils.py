@@ -264,11 +264,10 @@ class PainterOptions:
         for name in self._used_option_names:
             vs = self.get_valuespec_of(name)
             forms.section(vs.title())
-            # TODO: Possible improvement for vars which default is specified
-            # by the view: Don't just default to the valuespecs default. Better
-            # use the view default value here to get the user the current view
-            # settings reflected.
-            vs.render_input("po_%s" % name, self.get(name))
+            if name == "refresh":
+                vs.render_input("po_%s" % name, view.spec.get("browser_reload", self.get(name)))
+                continue
+            vs.render_input("po_%s" % name, view.spec.get(name, self.get(name)))
         forms.end()
 
         html.button("_update_painter_options", _("Submit"), "submit")

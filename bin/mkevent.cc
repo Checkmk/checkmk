@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
                 << remote << "'" << std::endl;
             exit(1);
         }
-        fd = socket(AF_INET, SOCK_DGRAM, 0);
+        fd = ::socket(AF_INET, SOCK_DGRAM, 0);
         struct sockaddr_in servaddr;
         bzero(&servaddr, sizeof(servaddr));
         servaddr.sin_family = AF_INET;
@@ -180,9 +180,10 @@ int main(int argc, char **argv) {
             exit(1);
         }
         // TODO(sp) Handle errors and partial writes.
-        if (write(fd, message, strlen(message)) < 0 || write(fd, "\n", 1) < 0) {
+        if (::write(fd, message, strlen(message)) < 0 ||
+            ::write(fd, "\n", 1) < 0) {
         }
     }
-    close(fd);
+    ::close(fd);
     return 0;
 }

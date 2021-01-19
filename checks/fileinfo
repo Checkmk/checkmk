@@ -123,23 +123,33 @@ def parse_fileinfo(info):
     if len(info) < 3:
         return parsed
 
+    file_stat_data_types = {
+        'name': str,
+        'size': int,
+        'time': int,
+        'status': str,
+    }
+
     header = info[2]
-    name_i = header.index('name') if 'name' in header else None
-    size_i = header.index('size') if 'size' in header else None
-    time_i = header.index('time') if 'time' in header else None
-    stat_i = header.index('status') if 'status' in header else None
-
     for row in info[4:]:
-        name = _cast_value(_get_field(row, name_i), str)
-        stat = _cast_value(_get_field(row, stat_i), str)
-        size = _cast_value(_get_field(row, size_i), int)
-        time = _cast_value(_get_field(row, time_i), int)
-
-        if name is None or stat is None:
+        file_stats_dict = dict([(
+            header_stat[0],
+            _cast_value(
+                header_stat[1],
+                file_stat_data_types[header_stat[0]],
+            ),
+        ) for header_stat in zip(header, row)])
+        name = file_stats_dict.get('name')
+        status = file_stats_dict.get('status')
+        if not name or not status:
             continue
-
-        fi = FileinfoItem(name, ('missing' in stat), ('stat failed' in stat), size, time)
-        parsed['files'][fi.name] = fi
+        parsed['files'][name] = FileinfoItem(
+            name,
+            'missing' in status,
+            'stat failed' in status,
+            file_stats_dict.get('size'),
+            file_stats_dict.get('time'),
+        )
 
     return parsed
 

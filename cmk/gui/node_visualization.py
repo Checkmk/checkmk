@@ -65,12 +65,16 @@ class ParentChildTopologyPage(Page):
     def visual_spec(cls):
         return {
             "topic": "overview",
-            "title": _("Network Topology"),
+            "title": _("Network topology"),
             "name": "parent_child_topology",
             "sort_index": 50,
             "is_show_more": False,
             "icon": "network_topology",
             "hidden": False,
+            "single_infos": [],
+            "context": {},
+            "link_from": {},
+            "add_context_to_title": True,
         }
 
     def page(self) -> PageResult:

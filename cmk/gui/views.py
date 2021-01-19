@@ -483,7 +483,7 @@ class View:
                 pagetypes.PagetypeTopics.get_topic(self.spec["topic"]))
             breadcrumb.append(
                 BreadcrumbItem(
-                    title=view_title(self.spec),
+                    title=view_title(self.spec, self.context),
                     url=makeuri_contextless(global_request, request_vars),
                 ))
             return breadcrumb
@@ -516,7 +516,7 @@ class View:
             # All other single host pages are right below the host home page
             breadcrumb.append(
                 BreadcrumbItem(
-                    title=view_title(self.spec),
+                    title=view_title(self.spec, self.context),
                     url=makeuri_contextless(
                         global_request,
                         [("view_name", self.name), ("host", host_name)],
@@ -533,7 +533,7 @@ class View:
         # All other single service pages are right below the host home page
         breadcrumb.append(
             BreadcrumbItem(
-                title=view_title(self.spec),
+                title=view_title(self.spec, self.context),
                 url=makeuri_contextless(
                     global_request,
                     [
@@ -588,11 +588,11 @@ class GUIViewRenderer(ABCViewRenderer):
 
         # Show/Hide the header with page title, MK logo, etc.
         if display_options.enabled(display_options.H):
-            html.body_start(view_title(view_spec))
+            html.body_start(view_title(view_spec, self.view.context))
 
         if display_options.enabled(display_options.T):
             breadcrumb = self.view.breadcrumb()
-            html.top_heading(view_title(view_spec),
+            html.top_heading(view_title(view_spec, self.view.context),
                              breadcrumb,
                              page_menu=self._page_menu(rows, show_filters))
             html.begin_page_content()
@@ -2699,7 +2699,7 @@ def _get_combined_graphs_entry(view: View, info: VisualInfo,
         [
             ("single_infos", ",".join(view.spec["single_infos"])),
             ("datasource", view.datasource.ident),
-            ("view_title", view_title(view.spec)),
+            ("view_title", view_title(view.spec, view.context)),
         ],
         filename="combined_graphs.py",
     )

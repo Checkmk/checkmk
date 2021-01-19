@@ -249,7 +249,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
         av_object = (None, None, html.request.get_unicode_input_mandatory("av_aggr"))
         title += av_object[2]
     else:
-        title += view_title(view.spec)
+        title += view_title(view.spec, view.context)
 
     title += " - " + range_title
 
@@ -761,7 +761,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
     _handle_availability_option_reset()
     avoptions = get_availability_options_from_request("bi")
 
-    title = view_title(view.spec)
+    title = view_title(view.spec, view.context)
     if av_mode == "timeline":
         title = _("Timeline of") + " " + title
     else:

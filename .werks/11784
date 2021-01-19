@@ -1,0 +1,14 @@
+Title: mpre check missing handling for 'U' value in Nagios performance data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611044354
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+Because the value 'U' (for undefined) has not been handled an exception gets
+thrown when processing such a value:
+ ValueError (could not convert string to float: 'U')
+This change will just ignore undefined performance values.

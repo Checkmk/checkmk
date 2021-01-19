@@ -1065,11 +1065,6 @@ class ConfigHostname(TextAsciiAutocomplete):
     Fetching the choices from the current WATO config"""
     ident = "config_hostname"
 
-    def __init__(self, **kwargs):
-        super(ConfigHostname, self).__init__(completion_ident=self.ident,
-                                             completion_params={},
-                                             **kwargs)
-
     @classmethod
     def autocomplete_choices(cls, value, params):
         """Return the matching list of dropdown choices
@@ -1080,6 +1075,9 @@ class ConfigHostname(TextAsciiAutocomplete):
         for host_name, host_object in all_hosts.items():
             if match_pattern.search(host_name) is not None and host_object.may("read"):
                 match_list.append(tuple((host_name, host_name)))
+
+        if not any(x[0] == value for x in match_list):
+            match_list.insert(0, (value, value))  # User is allowed to enter anything they want
 
         return match_list
 

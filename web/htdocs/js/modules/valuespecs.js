@@ -40,6 +40,7 @@ export function list_of_strings_init(divid, split_on_paste, split_separators) {
     var container = document.getElementById(divid);
     var children = container.getElementsByTagName("div");
     var last_input = children[children.length - 1].getElementsByTagName("input")[0];
+    if (!last_input) last_input = children[children.length - 1].getElementsByTagName("select")[0];
     list_of_strings_add_event_handlers(last_input, split_on_paste, split_separators);
 }
 
@@ -49,51 +50,74 @@ function list_of_strings_add_event_handlers(input, split_on_paste, split_separat
             return list_of_strings_extend(this, split_on_paste, split_separators);
         }
     };
+    let new_entries_from_event = e => {
+        // Get pasted data via clipboard API
+        var clipboard_data = e.clipboardData || window.clipboardData;
+        var pasted = clipboard_data.getData("Text");
 
-    input.onfocus = handler_func;
-    input.oninput = handler_func;
+        // When pasting a string, trim separators and then split by the given separators
+        var stripped = pasted.replace(
+            new RegExp("^[" + split_separators + "]+|[" + split_separators + "]+$", "g"),
+            ""
+        );
+        return stripped.split(new RegExp("[" + split_separators + "]+"));
+    };
 
-    if (split_on_paste) {
-        input.onpaste = function (e) {
-            // Get pasted data via clipboard API
-            var clipboard_data = e.clipboardData || window.clipboardData;
-            var pasted = clipboard_data.getData("Text");
+    let setup_new_entries = (anchor, event) => {
+        let entries = new_entries_from_event(event);
+        let last_input = anchor;
+        // Add splitted parts to the input fields
+        entries.forEach((entry, i) => {
+            // Put the first item to the current field
+            if (i != 0) last_input = list_of_strings_add_new_field(last_input);
 
-            if (this.value != "") return true; // The field had a value before: Don't do custom stuff
+            if (last_input.tagName == "INPUT") last_input.value = entry;
+            else set_select2_element(last_input, entry);
+        });
 
-            // When pasting a string, trim separators and then split by the given separators
-            var stripped = pasted.replace(
-                new RegExp("^[" + split_separators + "]+|[" + split_separators + "]+$", "g"),
-                ""
-            );
-            if (stripped == "") return true; // Only separators in clipboard: Don't do custom stuff
-            var splitted = stripped.split(new RegExp("[" + split_separators + "]+"));
+        // Focus the last populated field
+        last_input.focus();
+        // And finally add a new empty field to the end (with attached handlers)
+        list_of_strings_extend(last_input, split_on_paste, split_separators);
 
-            // Add splitted parts to the input fields
-            var last_input = this;
-            for (var i = 0; i < splitted.length; i++) {
-                // Put the first item to the current field
-                if (i != 0) last_input = list_of_strings_add_new_field(last_input);
+        // Stop original data actually being pasted
+        return utils.prevent_default_events(event);
+    };
 
-                last_input.value = splitted[i];
-            }
+    if (input.tagName == "INPUT") {
+        input.onfocus = handler_func;
+        input.oninput = handler_func;
 
-            // Focus the last populated field
-            last_input.focus();
+        if (split_on_paste) {
+            input.onpaste = function (event) {
+                if (this.value != "") return true; // The field had a value before: Don't do custom stuff
+                return setup_new_entries(this, event);
+            };
+        }
+    } else {
+        $(input).on("select2:select", handler_func);
 
-            // And finally add a new empty field to the end (with attached handlers)
-            list_of_strings_extend(last_input, split_on_paste, split_separators);
-
-            // Stop original data actually being pasted
-            return utils.prevent_default_events(e);
-        };
+        if (split_on_paste) {
+            $(input).on("select2:open", ee => {
+                let search_field = $(".select2-search input");
+                search_field.on("paste", event => {
+                    if (search_field.val() != "") return true; // The field had a value before: Don't do custom stuff
+                    return setup_new_entries(input, event.originalEvent);
+                });
+            });
+        }
     }
 }
 
 function list_of_strings_remove_event_handlers(input) {
-    input.oninput = null;
-    input.onfocus = null;
-    input.onpaste = null;
+    if (input.tagName == "INPUT") {
+        input.oninput = null;
+        input.onfocus = null;
+        input.onpaste = null;
+    } else {
+        $(input).off("select2:select");
+        $(input).off("select2:open");
+    }
 }
 
 /* Is called when the last input field in a ListOfString gets focus.
@@ -126,21 +150,24 @@ export function list_of_strings_add_new_field(input) {
         div = div.parentNode;
     var container = div.parentNode;
 
-    var new_div = document.createElement("DIV");
-    new_div.innerHTML = div.innerHTML.replace('"' + old_name + '"', '"' + new_name + '"');
-    // IE7 does not have quotes in innerHTML, trying to workaround this here.
-    new_div.innerHTML = new_div.innerHTML.replace("=" + old_name + " ", "=" + new_name + " ");
-    new_div.innerHTML = new_div.innerHTML.replace("=" + old_name + ">", "=" + new_name + ">");
-    container.appendChild(new_div);
-
-    // In case there was some TextAsciiAutocomplete popup menu cloned, remove it!
-    d3.select(new_div).select("input.text").attr("placeholder", null);
-    var popup_menus = new_div.getElementsByClassName("vs_autocomplete");
-    for (var i = 0; i < popup_menus.length; i++) {
-        popup_menus[i].parentNode.removeChild(popup_menus[i]);
+    let tagtype = input.tagName == "INPUT" ? "input" : "select";
+    let new_div = document.createElement("DIV");
+    if (input.tagName == "INPUT") {
+        new_div.innerHTML = div.innerHTML.replace('"' + old_name + '"', '"' + new_name + '"');
+        // IE7 does not have quotes in innerHTML, trying to workaround this here.
+        new_div.innerHTML = new_div.innerHTML.replace("=" + old_name + " ", "=" + new_name + " ");
+        new_div.innerHTML = new_div.innerHTML.replace("=" + old_name + ">", "=" + new_name + ">");
+    } else {
+        // shallow because select2 ands dynamically some spans with form_elements
+        let new_select = input.cloneNode();
+        new_select.name = new_name;
+        new_select.id = new_name;
+        new_div.appendChild(new_select);
     }
+    container.appendChild(new_div);
+    forms.enable_dynamic_form_elements(container);
 
-    return new_div.getElementsByTagName("input")[0];
+    return new_div.getElementsByTagName(tagtype)[0];
 }
 
 let cascading_sub_valuespec_parameters = {};
@@ -702,6 +729,103 @@ function listofmultiple_disable_selected_options(varprefix) {
             utils.add_class(choice, "disabled");
         }
     }
+}
+
+function set_select2_element(elem, value) {
+    if (!value || value == "null") return;
+    let newval = new Option(value, value, false, true);
+    $(elem).append(newval).trigger("change");
+}
+
+function hook_select2_hint(elem, source_id) {
+    let source_field = $(source_id);
+    set_select2_element(elem, source_field.val()); // page initialization
+    source_field.on("change", () => set_select2_element(elem, source_field.val()));
+}
+
+function select2_ajax_vs_autocomplete(elem, ident, params) {
+    return {
+        url: "ajax_vs_autocomplete.py",
+        type: "POST",
+        data: term =>
+            "request=" +
+            JSON.stringify({
+                ident: ident,
+                params: params(elem),
+                value: term.term || "",
+            }),
+
+        processResults: resp => ({
+            results: resp.result.choices.map(x => ({id: x[0], text: x[1]})),
+        }),
+    };
+}
+
+function select2_vs_autocomplete(elem, ident, params) {
+    $(elem)
+        .select2({
+            width: "style",
+            allowClear: true,
+            placeholder: "",
+            ajax: select2_ajax_vs_autocomplete(elem, ident, params),
+        })
+        .on("select2:open", event => $(".select2-search input").val(elem.value).trigger("input"));
+}
+
+function config_hostname_autocompleter(container) {
+    $(container)
+        .find(".config_hostname")
+        .each((i, elem) => select2_vs_autocomplete(elem, "config_hostname", elem => ({})));
+}
+
+function hostnames_autocompleter(container) {
+    $(container)
+        .find(".monitored_hostname")
+        .each((i, elem) => {
+            select2_vs_autocomplete(elem, "monitored_hostname", elem => ({}));
+            if (elem.id.endsWith("_hostname_hint")) hook_select2_hint(elem, "#context_host_p_host");
+        });
+}
+
+function service_desc_autocompleter(container) {
+    $(container)
+        .find(".monitored_service_description")
+        .each((i, elem) => {
+            select2_vs_autocomplete(elem, "monitored_service_description", elem => {
+                let host_id = elem.id.endsWith("_service_hint")
+                    ? elem.id.slice(0, -13) + "_hostname_hint"
+                    : "context_host_p_host";
+                let val_or_empty = obj => (obj ? obj.value : "");
+
+                return {
+                    host: val_or_empty(document.getElementById(host_id)),
+                };
+            });
+
+            if (elem.id.endsWith("_service_hint"))
+                hook_select2_hint(elem, "#context_service_p_service");
+        });
+}
+
+function metric_name_autocompleter(container) {
+    $(container)
+        .find(".monitored_metrics")
+        .each((i, elem) =>
+            $(elem).select2({
+                width: "style",
+                ajax: select2_ajax_vs_autocomplete(elem, "monitored_metrics", () => ({
+                    host: document.getElementById(`${elem.id}_hostname_hint`).value,
+                    service: document.getElementById(`${elem.id}_service_hint`).value,
+                })),
+            })
+        );
+}
+
+export function initialize_autocompleters(container) {
+    hostnames_autocompleter(container);
+    service_desc_autocompleter(container);
+    metric_name_autocompleter(container);
+    config_hostname_autocompleter(container);
 }
 
 var vs_color_pickers = [];

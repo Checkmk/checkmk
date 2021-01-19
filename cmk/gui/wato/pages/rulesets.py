@@ -1871,7 +1871,7 @@ class VSExplicitConditions(Transform):
             elements=[
                 ListOfStrings(
                     orientation="horizontal",
-                    valuespec=ConfigHostname(size=30, validate=self._validate_list_entry),
+                    valuespec=ConfigHostname(validate=self._validate_list_entry),
                     help=
                     _("Here you can enter a list of explicit host names that the rule should or should "
                       "not apply to. Leave this option disabled if you want the rule to "

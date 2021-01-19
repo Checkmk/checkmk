@@ -10,7 +10,6 @@ import re
 import colorsys
 import random
 import shlex
-import json
 from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union, TypeVar
 
 from six import ensure_binary, ensure_str
@@ -29,8 +28,8 @@ import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.valuespec import DropdownChoice, TextAsciiAutocomplete, MonitoredHostname, MonitoredServiceDescription
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.valuespec import TextAsciiAutocomplete, MonitoredHostname, MonitoredServiceDescription
 import cmk.gui.sites as sites
 
 LegacyPerfometer = Tuple[str, Any]
@@ -996,32 +995,25 @@ def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tu
         yield name, mi.get("title", name.title())
 
 
-class MetricName(DropdownChoice):
-    """Factory of a Dropdown menu from all known metric names"""
+class MetricName(TextAsciiAutocomplete):
+    """Dropdown menu from all known metric names"""
+    ident = "monitored_metrics"
+
     def __init__(self):
         # Customer's metrics from local checks or other custom plugins will now appear as metric
         # options extending the registered metric names on the system. Thus assuming the user
         # only selects from available options we skip the input validation(invalid_choice=None)
         # Since it is not possible anymore on the backend to collect the host & service hints
         super().__init__(title=_("Metric"),
-                         sorted=True,
-                         encode_value=False,
-                         choices=[(None, _("Select metric"))])
-        self._regex = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
-        self._regex_error = _("Metric names must only consist of letters, digits and "
-                              "underscores and they must start with a letter.")
-
-    def from_html_vars(self, varprefix: str) -> Optional[str]:
-        return html.request.var(varprefix)
-
-    def _validate_value(self, value: Optional[str], varprefix: str) -> None:
-        if value is not None and not self._regex.match(ensure_str(value)):
-            raise MKUserError(varprefix, self._regex_error)
+                         label=_("Select metric: "),
+                         choices=[(None, _("Select metric"))],
+                         regex=re.compile('^[a-zA-Z][a-zA-Z0-9_]*$'),
+                         regex_error=_("Metric names must only consist of letters, digits and "
+                                       "underscores and they must start with a letter."))
 
     def render_input(self, varprefix: str, value: str) -> None:
         if self._label:
-            html.write(self._label)
-            html.nbsp()
+            html.write("%s " % self._label)
 
         if value is None:
             clean_choices = self.choices()
@@ -1033,41 +1025,26 @@ class MetricName(DropdownChoice):
                       if metric_id == value), (value, value.title()))
             ]
 
-        html.write(_("Select metric: "))
         html.dropdown(varprefix,
                       self._options_for_html(clean_choices),
                       deflt=self._option_for_html(value),
-                      class_="metric-selector",
+                      class_=["ajax-vals", self.ident],
                       style="width: 250px;",
                       read_only=self._read_only)
 
         vs_host = MonitoredHostname(
             label=_("Filter metric selection by hostname: "),
-            placeholder=_("Hint a hostname"),
-            size=20,
+            choices=[(None, _("Hint a hostname"))],
         )
         html.br()
-        host_varprefix = varprefix + "_hostname_hint"
-        vs_host.render_input(host_varprefix, None)
-        html.javascript("cmk.valuespecs.transfer_context_onchange('context_host_p_host', %s)" %
-                        json.dumps(host_varprefix))
+        vs_host.render_input(varprefix + "_hostname_hint", None)
 
-        completion_js = '(() => ({host: document.getElementsByName(%s)[0].value}))()' % json.dumps(
-            host_varprefix)
-        vs_service = MonitoredServiceDescription(label=_("Filter metric selection by service: "),
-                                                 placeholder=_("Hint a service"),
-                                                 completion_params_js=completion_js,
-                                                 size=20)
-        service_varprefix = varprefix + "_service_hint"
+        vs_service = MonitoredServiceDescription(
+            label=_("Filter metric selection by service: "),
+            choices=[(None, _("Hint a service"))],
+        )
         html.br()
-        vs_service.render_input(service_varprefix, None)
-        html.javascript(
-            "cmk.valuespecs.transfer_context_onchange('context_service_p_service', %s)" %
-            json.dumps(service_varprefix))
-
-
-class MonitoredMetrics(TextAsciiAutocomplete):
-    ident = "monitored_metrics"
+        vs_service.render_input(varprefix + "_service_hint", None)
 
     # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
     @classmethod

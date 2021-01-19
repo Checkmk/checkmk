@@ -1505,8 +1505,9 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
     import cmk.gui.views as views  # pylint: disable=import-outside-toplevel
     vs_view = DropdownChoice(
         title=_('View name'),
-        choices=views.view_choices,
+        choices=lambda: views.view_choices(allow_empty=False),
         sorted=True,
+        no_preselect=True,
     )
 
     dashboard = get_permitted_dashboards()[name]
@@ -1539,7 +1540,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
     html.begin_form('choose_view')
     forms.header(_('Select view'))
     forms.section(vs_view.title())
-    vs_view.render_input('view', '')
+    vs_view.render_input('view', None)
     html.help(vs_view.help())
     forms.end()
 

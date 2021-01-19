@@ -860,3 +860,9 @@ div.dashlet.single_metric {
     }
   }
 }
+
+div.dashlet.nodata {
+  > div.dashlet_inner div.msg {
+    padding: 10px;
+  }
+}

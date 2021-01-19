@@ -34,6 +34,10 @@ class StaticTextDashlet(Dashlet):
         return 100
 
     @classmethod
+    def initial_size(cls):
+        return (30, 18)
+
+    @classmethod
     def vs_parameters(cls):
         return [
             ("text",
@@ -53,21 +57,3 @@ class StaticTextDashlet(Dashlet):
         html.write_text(self._dashlet_spec.get("text", ""))
         html.close_div()
         html.close_div()
-
-    @classmethod
-    def styles(cls):
-        return """
-div.dashlet_inner div.nodata {
-    width: 100%;
-    height: 100%;
-}
-
-div.dashlet_inner.background div.nodata div.msg {
-    color: #000;
-}
-
-div.dashlet_inner div.nodata div.msg {
-    padding: 10px;
-}
-
-}"""

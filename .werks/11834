@@ -1,0 +1,24 @@
+Title: cmk_site_statistics: new check plugin to monitor site statistics
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1611075990
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+This werk introduces the new check plugin <tt>cmk_site_statistics</tt>.
+This plugin monitors the number of hosts and services of Checkmk sites.
+It reports the total number of hosts, the number of hosts which are not
+UP as well as metrics recording the number of hosts which are UP, DOWN,
+in downtime and unreachable. Similarly, for services, the plugin reports
+the total number of services, the number of services which are not OK
+and metrics recording the number of services which are OK, in downtime,
+on down hosts, WARNING, UNKNOWN and CRITICAL.
+
+This check plugin creates one service per Checkmk site. These services
+will be discovered on hosts with one ore more sites which have the
+Checkmk Linux agent installed. The monitoring state of these services is
+always OK and they are not configurable.

@@ -61,7 +61,7 @@ def _add_cookie_auth(check_dict):
     check_dict['security'].append({schema_name: []})
     check_dict['components']['securitySchemes'][schema_name] = {
         'in': 'cookie',
-        'name': f'{config.omd_site()}_auth',
+        'name': f'auth_{config.omd_site()}',
         'type': 'apiKey',
         'description': 'Any user of Checkmk, who has already logged in, and thus got a cookie '
                        'assigned, can use the REST API. Some actions may or may not succeed due '

@@ -1,0 +1,14 @@
+Title: oracle_dataguard_stats: Added option to specify the state if MRP is started
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1611048733
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b6
+
+In some cases it is not sufficient to have the state hard coded in case the
+Managed Recovery Process is started or stopped. With this werk you are able
+to set the states in both cases if the default values are not reflecting
+your requirements.

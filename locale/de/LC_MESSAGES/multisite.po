@@ -12292,6 +12292,9 @@ msgstr "DHCP Statistik (erhaltene Nachrichten)"
 msgid "DHCP statistics (sent messages)"
 msgstr "DHCP Statistik (gesendete Nachrichten)"
 
+msgid "DISTTAG"
+msgstr ""
+
 msgid "DIVA CSM: remaining blank tapes"
 msgstr ""
 
@@ -42221,6 +42224,9 @@ msgstr ""
 msgid "Specify DNS Server"
 msgstr "DNS Server angeben"
 
+msgid "Specify RPM package tags (Linux)"
+msgstr ""
+
 msgid "Specify URL prefix"
 msgstr "URL-Präfix festlegen"
 
@@ -45284,6 +45290,13 @@ msgstr ""
 "<tt>[benutzername]@[suffix]</tt> statt <tt>[benutzername]</tt> eingeben, um "
 "zu spezifizieren, welchem LDAP-Ordner er zugeordnet ist. Benutzer ohne "
 "Namenskonflikt müssen wie üblich nur ihren normalen Benutzernamen angeben."
+
+msgid ""
+"The Linux RPM packages built by the agent bakery are packaged independently "
+"of any Linux distribution. Hence, the <tt>DISTRIBUTION</tt> and <tt>DISTTAG</"
+"tt> tags are left empty within the RPM spec file. Here, you can manually "
+"specify these tags."
+msgstr ""
 
 #, fuzzy
 msgid ""

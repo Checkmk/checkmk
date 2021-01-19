@@ -11550,6 +11550,9 @@ msgstr ""
 msgid "DHCP statistics (sent messages)"
 msgstr ""
 
+msgid "DISTTAG"
+msgstr ""
+
 msgid "DIVA CSM: remaining blank tapes"
 msgstr ""
 
@@ -40087,6 +40090,9 @@ msgstr ""
 msgid "Specify DNS Server"
 msgstr ""
 
+msgid "Specify RPM package tags (Linux)"
+msgstr ""
+
 msgid "Specify URL prefix"
 msgstr ""
 
@@ -42897,6 +42903,13 @@ msgid ""
 "login instead of just the plain <tt>[username]</tt> to tell which LDAP "
 "directory he is assigned to. Users without name conflict just need to "
 "provide their regular username as usual."
+msgstr ""
+
+msgid ""
+"The Linux RPM packages built by the agent bakery are packaged independently "
+"of any Linux distribution. Hence, the <tt>DISTRIBUTION</tt> and <tt>DISTTAG</"
+"tt> tags are left empty within the RPM spec file. Here, you can manually "
+"specify these tags."
 msgstr ""
 
 msgid ""

@@ -71,10 +71,18 @@ def _strip_unit_float(string: str) -> float:
 
 
 def parse_nagios_perfstring(perfinfo: str) -> typing.Optional[LegacyMetricTuple]:
-    if '=' not in perfinfo:
+    try:
+        name, valuetxt = perfinfo.split("=", 1)
+    except ValueError:
         return None
-    name, valuetxt = perfinfo.split("=", 1)
+    if valuetxt.startswith("U"):
+        # Nagios perfstrings can start with a value 'U' to indicate an undefined value
+        # see https://nagios-plugins.org/doc/guidelines.html#AEN200
+        return None
     values = valuetxt.split(";")
+
+    # for the migrator: the code above ^^^^^ should go to a separate function
+
     # perfdata must not contain values with colons. So we split
     # these values and use the upper levels only.
     values = [v.split(':')[-1] for v in values][:5]

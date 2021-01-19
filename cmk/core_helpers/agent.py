@@ -165,6 +165,10 @@ class SectionMarker(NamedTuple):
         return line.strip() == b'<<<>>>'
 
     @classmethod
+    def default(cls, name: SectionName):
+        return cls(name, None, "ascii", True, None, None)
+
+    @classmethod
     def from_headerline(cls, headerline: bytes) -> "SectionMarker":
         def parse_options(elems: Iterable[str]) -> Iterable[Tuple[str, str]]:
             for option in elems:
@@ -649,7 +653,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         host_sections.add_persisted_sections(
             host_sections.sections,
             section_store=self.section_store,
-            fetch_interval=lambda section_name: parser.section_info[section_name].persist,
+            fetch_interval=lambda section_name: parser.section_info.get(
+                section_name, SectionMarker.default(section_name)).persist,
             now=now,
             keep_outdated=self.keep_outdated,
             logger=self._logger,

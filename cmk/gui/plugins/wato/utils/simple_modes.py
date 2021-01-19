@@ -444,19 +444,26 @@ class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
                 "ident",
                 _("You are not allowed to edit this %s.") % self._mode_type.name_singular())
 
-        entries[self._ident] = self._entry
-
         if self._new:
+            entries[self._ident] = self._entry
             self._add_change(
                 action="add",
                 text=_("Added the %s '%s'") % (self._mode_type.name_singular(), self._ident),
                 affected_sites=self._mode_type.affected_sites(self._entry),
             )
         else:
+            current_sites = self._mode_type.affected_sites(self._entry)
+            previous_sites = self._mode_type.affected_sites(entries[self._ident])
+
+            affected_sites = (None if current_sites is None or previous_sites is None else sorted(
+                {*previous_sites, *current_sites}))
+
+            entries[self._ident] = self._entry
+
             self._add_change(
                 action="edit",
                 text=_("Edited the %s '%s'") % (self._mode_type.name_singular(), self._ident),
-                affected_sites=self._mode_type.affected_sites(self._entry),
+                affected_sites=affected_sites,
             )
 
         self._save(entries)

@@ -13,7 +13,9 @@
     "not dead"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "//": "COMMENT: Use the wrapper ./scripts/run-webpack-watch instead of 'npm run watch'",
+    "watch": "webpack --mode development --watch"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# A simple watch mode for js/css files.
+# To play together with a site its etc/apache/conf.d/check_mk.conf has
+# to be adapted. Either use the -w option of omd-vonheute or replace the
+# paths to /omd/sites/* in the lines :
+#
+# Alias /heute/check_mk /omd/sites/heute/share/check_mk/web/htdocs
+# <Directory /omd/sites/heute/share/check_mk/web/htdocs>
+#
+# with the path to web/htdocs of your git (e.g. /home/aa/git/check_mk/web/htdocs).
+# After that 'npm run dev' you can run webpack in watch mode.
+
+# TODO: Add better handling for the ENTERPRISE and MANAGED variables
+WEBPACK_MODE=quick ENTERPRISE=yes MANAGED=no npm run watch

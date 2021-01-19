@@ -3,7 +3,7 @@ Knowledge: doc
 Level: 1
 Component: ec
 Class: fix
-Compatible: incomp
+Compatible: compat
 Edition: cre
 State: unknown
 Version: 1.6.0p21
@@ -26,5 +26,3 @@ check will return fewer events than are expected.
 
 The livestatus query now supports case-insensitive host/event matching. Please
 be advised that this fix may result in larger volumes of matched events.
-Therefore, we advise users to evaluate the implications of this fix prior to
-installation.

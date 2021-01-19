@@ -52,7 +52,7 @@ from cmk.gui.type_defs import Choices, RenderableRecipe, Row
 from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
-    TextAsciiAutocomplete,
+    autocompleter_registry,
 )
 
 LegacyPerfometer = Tuple[str, Any]
@@ -1114,25 +1114,25 @@ def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tu
         yield name, mi.get("title", name.title())
 
 
+@autocompleter_registry.register
 class MetricName(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all known metric names"""
+    ident = "monitored_metrics"
+
     def __init__(self, **kwargs: Any):
         # Customer's metrics from local checks or other custom plugins will now appear as metric
         # options extending the registered metric names on the system. Thus assuming the user
         # only selects from available options we skip the input validation(invalid_choice=None)
         # Since it is not possible anymore on the backend to collect the host & service hints
         kwargs_with_defaults: Mapping[str, Any] = {
-            "css_spec": "metric-selector",
+            "css_spec": ["ajax-vals", "metric-selector", self.ident],
             "hint_label": _("metric"),
             "choices": [(None, _("Select metric"))],
             "title": _("Metric"),
-            "encode_value": False,
-            "sorted": True,
-            "no_preselect": True,
             **kwargs,
         }
         super().__init__(**kwargs_with_defaults)
-        self._regex = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
+        self._regex: re.Pattern = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
         self._regex_error = _("Metric names must only consist of letters, digits and "
                               "underscores and they must start with a letter.")
 
@@ -1149,10 +1149,6 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
                   for metric_id, metric_detail in metric_info.items()
                   if metric_id == value), (value, value.title()))
         ]
-
-
-class MonitoredMetrics(TextAsciiAutocomplete):
-    ident = "monitored_metrics"
 
     # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
     @classmethod

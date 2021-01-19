@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Dict, Final, List, Optional, TYPE_CHECKING
 
@@ -43,10 +45,10 @@ class IPMIFetcher(AgentFetcher):
         self.address: Final = address
         self.username: Final = username
         self.password: Final = password
-        self._command: Optional["ipmi_cmd.Command"] = None
+        self._command: Optional[ipmi_cmd.Command] = None
 
     @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "IPMIFetcher":
+    def _from_json(cls, serialized: Dict[str, Any]) -> IPMIFetcher:
         return cls(
             DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
             **serialized,
@@ -79,6 +81,7 @@ class IPMIFetcher(AgentFetcher):
             self.username,
         )
 
+        # Performance: See header.
         import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
         self._command = ipmi_cmd.Command(
             bmc=self.address,
@@ -128,6 +131,7 @@ class IPMIFetcher(AgentFetcher):
 
         self._logger.debug("Fetching sensor data via UDP from %s:623", self._command.bmc)
 
+        # Performance: See header.
         import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
         try:
             sdr = ipmi_sdr.SDR(self._command)
@@ -196,7 +200,7 @@ class IPMIFetcher(AgentFetcher):
         return any("GPU" in line for line in inventory_entries)
 
     @staticmethod
-    def _parse_sensor_reading(number: int, reading: "ipmi_sdr.SensorReading") -> List[AgentRawData]:
+    def _parse_sensor_reading(number: int, reading: ipmi_sdr.SensorReading) -> List[AgentRawData]:
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]
@@ -223,7 +227,7 @@ class IPMIFetcher(AgentFetcher):
         ]
 
     @staticmethod
-    def _handle_false_positive_warnings(reading: "ipmi_sdr.SensorReading") -> AgentRawData:
+    def _handle_false_positive_warnings(reading: ipmi_sdr.SensorReading) -> AgentRawData:
         """This is a workaround for a pyghmi bug
         (bug report: https://bugs.launchpad.net/pyghmi/+bug/1790120)
 

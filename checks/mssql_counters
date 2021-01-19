@@ -542,15 +542,14 @@ def check_mssql_file_sizes(item, params, parsed):
         if node_name:
             node_info = "[%s] " % node_name
 
-        log_files_size = counters.get("log_file(s)_size_(kb)")
+        log_files_size = counters.get("log_file(s)_size_(kb)") * 1024
         for val_bytes, key, title in [
-            (counters.get("data_file(s)_size_(kb)"), "data_files", "Data files"),
+            (counters.get("data_file(s)_size_(kb)") * 1024, "data_files", "Data files"),
             (log_files_size, "log_files", "Log files total"),
         ]:
             if val_bytes is None:
                 continue
 
-            val_bytes = val_bytes * 1024
             infotext = "%s%s: %s" % (node_info, title, get_bytes_human_readable(val_bytes))
             node_info = ""
 
@@ -566,7 +565,7 @@ def check_mssql_file_sizes(item, params, parsed):
 
             yield state, infotext, [(key, val_bytes, warn, crit)]
 
-        log_files_used = counters.get("log_file(s)_used_size_(kb)")
+        log_files_used = counters.get("log_file(s)_used_size_(kb)") * 1024
         infotext = "Log files used: %s" % get_bytes_human_readable(log_files_used)
         try:
             log_files_used_perc = 100.0 * log_files_used / log_files_size

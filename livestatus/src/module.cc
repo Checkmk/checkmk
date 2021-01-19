@@ -181,7 +181,7 @@ void livestatus_cleanup_after_fork() {
     // wird mit mutexes rumgemacht....
     for (int i = 3; i < g_max_fd_ever; i++) {
         if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode)) {
-            close(i);
+            ::close(i);
         }
     }
 }
@@ -203,7 +203,7 @@ void *main_thread(void *data) {
             }
             break;
         }
-        int cc = accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
+        int cc = ::accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
         if (cc == -1) {
             generic_error ge("cannot accept client connection");
             Warning(logger) << ge;
@@ -251,7 +251,7 @@ void *client_thread(void *data) {
                 OutputBuffer output_buffer(*cc, fl_should_terminate, logger);
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
-            close(*cc);
+            ::close(*cc);
         }
         g_livestatus_active_connections--;
     }
@@ -362,7 +362,7 @@ void terminate_threads() {
             << "waiting for client threads to terminate...";
         fl_client_queue->join();
         while (auto fd = fl_client_queue->try_pop()) {
-            close(*fd);
+            ::close(*fd);
         }
         for (const auto &info : fl_thread_info) {
             if (pthread_join(info.id, nullptr) != 0) {
@@ -381,7 +381,7 @@ void terminate_threads() {
 bool open_unix_socket() {
     struct stat st;
     if (stat(fl_paths._socket.c_str(), &st) == 0) {
-        if (unlink(fl_paths._socket.c_str()) == 0) {
+        if (::unlink(fl_paths._socket.c_str()) == 0) {
             Debug(fl_logger_nagios)
                 << "removed old socket file " << fl_paths._socket;
         } else {
@@ -392,7 +392,7 @@ bool open_unix_socket() {
         }
     }
 
-    g_unix_socket = socket(PF_UNIX, SOCK_STREAM, 0);
+    g_unix_socket = ::socket(PF_UNIX, SOCK_STREAM, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
         generic_error ge("cannot create UNIX socket");
@@ -401,10 +401,10 @@ bool open_unix_socket() {
     }
 
     // Imortant: close on exec -> check plugins must not inherit it!
-    if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) == -1) {
+    if (::fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) == -1) {
         generic_error ge("cannot set close-on-exec bit on socket");
         Alert(fl_logger_nagios) << ge;
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         return false;
     }
 
@@ -415,29 +415,29 @@ bool open_unix_socket() {
     strncpy(sockaddr.sun_path, fl_paths._socket.c_str(),
             sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
-    if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
-             sizeof(sockaddr)) < 0) {
+    if (::bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
+               sizeof(sockaddr)) < 0) {
         generic_error ge("cannot bind UNIX socket to address " +
                          fl_paths._socket);
         Error(fl_logger_nagios) << ge;
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         return false;
     }
 
     // Make writable group members (fchmod didn't do nothing for me. Don't
     // know why!)
-    if (0 != chmod(fl_paths._socket.c_str(), 0660)) {
+    if (0 != ::chmod(fl_paths._socket.c_str(), 0660)) {
         generic_error ge("cannot change file permissions for UNIX socket at " +
                          fl_paths._socket + " to 0660");
         Error(fl_logger_nagios) << ge;
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         return false;
     }
 
-    if (0 != listen(g_unix_socket, 3 /* backlog */)) {
+    if (0 != ::listen(g_unix_socket, 3 /* backlog */)) {
         generic_error ge("cannot listen to UNIX socket at " + fl_paths._socket);
         Error(fl_logger_nagios) << ge;
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         return false;
     }
 
@@ -447,9 +447,9 @@ bool open_unix_socket() {
 }
 
 void close_unix_socket() {
-    unlink(fl_paths._socket.c_str());
+    ::unlink(fl_paths._socket.c_str());
     if (g_unix_socket >= 0) {
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         g_unix_socket = -1;
     }
 }

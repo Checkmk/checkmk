@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
         char *port_str = strtok(nullptr, ":");
         int remote_port = port_str != nullptr ? atoi(port_str) : 6558;
 
-        sock = socket(AF_INET, SOCK_STREAM, 0);
+        sock = ::socket(AF_INET, SOCK_STREAM, 0);
         if (sock == -1) {
             ioError("Cannot create client socket");
         }
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
                 std::string(omd_path) + "/tmp/run/mkeventd/status";
         }
 
-        sock = socket(PF_UNIX, SOCK_STREAM, 0);
+        sock = ::socket(PF_UNIX, SOCK_STREAM, 0);
         if (sock == -1) {
             ioError("Cannot create client socket");
         }
@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
         const char *buffer = query_message.c_str();
         size_t bytes_to_write = query_message.size();
         while (bytes_to_write > 0) {
-            ssize_t bytes_written = write(sock, buffer, bytes_to_write);
+            ssize_t bytes_written = ::write(sock, buffer, bytes_to_write);
             if (bytes_written == -1) {
                 ioError("Cannot send query to event console");
             }
@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
     while (true) {
         char response_chunk[4096];
         memset(response_chunk, 0, sizeof(response_chunk));
-        ssize_t bytes_read = read(sock, response_chunk, sizeof(response_chunk));
+        ssize_t bytes_read = ::read(sock, response_chunk, sizeof(response_chunk));
         if (bytes_read == -1) {
             if (errno != EINTR) {
                 ioError("Error while reading response");
@@ -267,7 +267,7 @@ int main(int argc, char **argv) {
             response_stream << std::string(response_chunk, bytes_read);
         }
     }
-    if (close(sock) == -1) {
+    if (::close(sock) == -1) {
         ioError("Error while closing connection");
     }
 

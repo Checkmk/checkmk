@@ -314,6 +314,8 @@ def make_display_options_dropdown() -> PageMenuDropdown:
 
 
 def make_help_dropdown() -> PageMenuDropdown:
+    title_show_help = _("Show inline help")
+    title_hide_help = _("Hide inline help")
     return PageMenuDropdown(
         name="help",
         title=_("Help"),
@@ -322,9 +324,10 @@ def make_help_dropdown() -> PageMenuDropdown:
                 title=_("Context sensitive help"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Toggle inline help"),
+                        title=title_hide_help if user.show_help else title_show_help,
                         icon_name="help",
-                        item=make_javascript_link("cmk.help.toggle()"),
+                        item=make_javascript_link("cmk.help.toggle(\"%s\", \"%s\")" %
+                                                  (title_show_help, title_hide_help)),
                         name="inline_help",
                         is_enabled=False,
                     )

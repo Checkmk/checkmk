@@ -19,11 +19,13 @@ function is_help_active() {
     return helpdivs.length !== 0 && helpdivs[0].style.display === "block";
 }
 
-export function toggle() {
+export function toggle(title_show, title_hide) {
     if (is_help_active()) {
         switch_help(false);
+        switch_help_text(title_show);
     } else {
         switch_help(true);
+        switch_help_text(title_hide);
     }
 }
 
@@ -53,4 +55,9 @@ function switch_help(how) {
     }
 
     ajax.get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
+}
+
+function switch_help_text(title) {
+    var helpspan = document.getElementById("menu_entry_inline_help").childNodes[0].childNodes[1];
+    helpspan.textContent = title;
 }

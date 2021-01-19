@@ -1,0 +1,14 @@
+Title: Inform remote site when a DCD Connection is moved somewhere else
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1611063900
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+In Checkmk versions 1.6 to 2.0.0b4 the DCD connections where not always correctly synced.
+
+If a DCD connection was moved from one remote site to another via editing the rule,
+the previous remote sites configuration was not updatet.

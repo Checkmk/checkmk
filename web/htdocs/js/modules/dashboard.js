@@ -646,6 +646,7 @@ function toggle_sizer(nr, sizer_id) {
         }
     }
 
+    bring_dashlet_to_front(dashlet_obj);
     rerender_dashlet_controls(dashlet_obj);
     size_dashlets();
     persist_dashlet_pos(nr);
@@ -798,7 +799,7 @@ function drag_dashlet_start(event) {
             h: h,
         };
 
-        edit_visualize(g_dragging, true);
+        bring_dashlet_to_front(g_dragging);
 
         utils.prevent_default_events(event);
         return false;
@@ -868,7 +869,6 @@ function drag_dashlet_stop(event) {
 
     if (!g_dragging) return true;
 
-    edit_visualize(g_dragging, false);
     var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
     g_dragging = false;
     g_drag_start = null;
@@ -925,9 +925,11 @@ function handle_dashlet_post_response(_unused, response_text) {
     }
 }
 
-function edit_visualize(obj, show) {
-    if (show) obj.style.zIndex = 80;
-    else obj.style.zIndex = 1;
+function bring_dashlet_to_front(obj) {
+    document.querySelectorAll("div.dashlet").forEach(function (elem) {
+        elem.style.zIndex = 1;
+    });
+    obj.style.zIndex = 80;
 }
 
 /**
@@ -962,7 +964,7 @@ function resize_dashlet_start(event) {
             h: dashlet_obj.clientHeight,
         };
 
-        edit_visualize(dashlet_obj, true);
+        bring_dashlet_to_front(dashlet_obj);
 
         utils.prevent_default_events(event);
         return false;
@@ -1092,7 +1094,6 @@ function resize_dashlet_stop(event) {
 
     var dashlet_obj = g_resizing.parentNode.parentNode;
     var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
-    edit_visualize(dashlet_obj, false);
     g_resizing = false;
 
     dashlet_resized(nr, dashlet_obj);

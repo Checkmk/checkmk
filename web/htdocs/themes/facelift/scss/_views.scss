@@ -426,10 +426,6 @@ table.boxlayout {
     padding-right: 20px;
   }
 
-  tr > td {
-    vertical-align: top;
-  }
-
   &.graph table.data tr.data {
     background: $boxlayout-tr-bg-color;
   }

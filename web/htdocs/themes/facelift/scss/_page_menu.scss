@@ -350,14 +350,14 @@ div#top_heading {
       form {
         padding: 0;
         margin: 0;
-        background-color: $headline-color;
+        background-color: $inpage-highlight-color;
         border-radius: 2px;
       }
 
       input,
       input:active,
       input:focus {
-        background: transparent;
+        background-color: $inpage-highlight-color;
         border: none;
         box-shadow: none;
         box-sizing: border-box;

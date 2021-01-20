@@ -484,7 +484,7 @@ class Table:
                     self._render_headers(actions_enabled, actions_visible, empty_columns)
                 continue
 
-            oddeven_name = "even" if (nr - 1) % 2 == 0 else "odd"
+            oddeven_name = "even" if nr % 2 == 0 else "odd"
             class_ = ["data", "%s%d" % (oddeven_name, row.state)]
             if row.css:
                 class_.append(row.css)

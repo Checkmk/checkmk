@@ -170,7 +170,7 @@ $tag-dropdown-active-border: none;
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
 
-$primary-link-color: $grey-2;
+$table-secondary-font-color: rgba($font-color, 0.4);
 $secondary-link-color: $grey-2;
 
 $primary-border: 1px solid $grey-7;
@@ -299,8 +299,6 @@ $ac-test-details-td-padding: 4px 5px;
 $groupheader-first-padding-top: 0;
 
 $boxlayout-tr-bg-color: null;
-
-$age-font-color: rgb(150, 150, 150);
 
 $mk-search-results-bg-color: $grey-3;
 $mk-search-results-hover-bg-color: rgb(93, 93, 93);

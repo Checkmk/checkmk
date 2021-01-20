@@ -5,14 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Service status
 
-A service is a property of a certain host that is monitored by Checkmk.
-A service can be almost anything - for example, a file system, a process, a hardware sensor,
-a switchport - but it can also just be a specific metric like CPU usage or RAM usage.
-
 The service status provides the service's "health" information.
+A service (for example, a file system or a process) is a property of a certain host that
+is monitored by Checkmk.
 
 You can find an introduction to services in the
-[Checkmk guide](https://checkmk.com/cms_wato_services.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import json
 

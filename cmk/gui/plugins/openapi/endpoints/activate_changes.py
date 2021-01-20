@@ -8,15 +8,12 @@
 When changes are activated, Checkmk transfers the current configuration status to the ongoing
 monitoring.
 
-Checkmk differentiates between the configuration environment in which you manage the hosts,
-services and settings, and the actual monitoring environment.
-
 Changes in the configuration - adding a new host, for example - will initially have no effect
 on the monitoring. Changes must first be activated, which will bring all changes that you have
 accumulated since the last activation as a "bundle" into the operational monitoring.
 
 You can find an introduction to the configuration of Checkmk including activation of changes in the
-[Checkmk guide](https://checkmk.com/cms_wato.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
 from cmk.gui import watolib

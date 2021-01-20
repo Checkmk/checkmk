@@ -9,7 +9,7 @@ Contact groups are the link between hosts and services on one side and users on 
 Every contact group represents a responsibility for a specific area in the IT landscape.
 
 You can find an introduction to user management including contact groups in the
-[Checkmk guide](https://checkmk.com/cms_wato_user.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_user.html).
 """
 from cmk.gui import watolib
 from cmk.gui.http import Response

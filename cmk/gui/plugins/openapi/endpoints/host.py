@@ -8,7 +8,7 @@
 The host status provides the host's "health" information.
 
 You can find an introduction to basic monitoring principles including host status in the
-[Checkmk guide](https://checkmk.com/cms_monitoring_basics.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/monitoring_basics.html).
 """
 
 import json

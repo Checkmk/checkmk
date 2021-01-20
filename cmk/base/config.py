@@ -783,7 +783,7 @@ def set_use_core_config(use_core_config: bool) -> Iterator[None]:
 
 
 def strip_tags(tagged_hostlist: List[str]) -> List[str]:
-    cache = _config_cache.get_dict("strip_tags")
+    cache = _config_cache.get("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
     try:
@@ -1095,7 +1095,7 @@ def get_final_service_description(hostname: HostName, description: ServiceName) 
         return description
 
     # Sanitize; Remove illegal characters from a service description
-    cache = _config_cache.get_dict("final_service_description")
+    cache = _config_cache.get("final_service_description")
     try:
         new_description = cache[description]
     except KeyError:
@@ -1203,7 +1203,7 @@ def get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.Tra
 
 
 def get_service_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
-    translations_cache = _config_cache.get_dict("service_description_translations")
+    translations_cache = _config_cache.get("service_description_translations")
     if hostname in translations_cache:
         return translations_cache[hostname]
 
@@ -3126,7 +3126,7 @@ class ConfigCache:
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
 
     def _initialize_caches(self) -> None:
-        self.check_table_cache = _config_cache.get_dict("check_tables")
+        self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: Dict[CheckPluginNameStr, str] = {}
 
@@ -3719,7 +3719,7 @@ class ConfigCache:
 
 
 def get_config_cache() -> ConfigCache:
-    config_cache = _config_cache.get_dict("config_cache")
+    config_cache = _config_cache.get("config_cache")
     if not config_cache:
         cache_class = ConfigCache if cmk_version.is_raw_edition() else CEEConfigCache
         config_cache["cache"] = cache_class()

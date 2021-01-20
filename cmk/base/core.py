@@ -148,7 +148,7 @@ def check_timeperiod(timeperiod: TimeperiodName) -> bool:
 
     # Note: This also returns True when the timeperiod is unknown
     #       The following function timeperiod_active handles this differently
-    return _config_cache.get_dict("timeperiods_cache").get(timeperiod, True)
+    return _config_cache.get("timeperiods_cache").get(timeperiod, True)
 
 
 def timeperiod_active(timeperiod: TimeperiodName) -> Optional[bool]:
@@ -160,13 +160,13 @@ def timeperiod_active(timeperiod: TimeperiodName) -> Optional[bool]:
     Raises an exception if e.g. a timeout or connection error appears.
     This way errors can be handled upstream."""
     update_timeperiods_cache()
-    return _config_cache.get_dict("timeperiods_cache").get(timeperiod)
+    return _config_cache.get("timeperiods_cache").get(timeperiod)
 
 
 def update_timeperiods_cache() -> None:
     # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
     # The value is store within the config cache since we need a fresh start on reload
-    tp_cache = _config_cache.get_dict("timeperiods_cache")
+    tp_cache = _config_cache.get("timeperiods_cache")
 
     if not tp_cache:
         response = livestatus.LocalConnection().query("GET timeperiods\nColumns: name in")
@@ -175,7 +175,7 @@ def update_timeperiods_cache() -> None:
 
 
 def cleanup_timeperiod_caches() -> None:
-    _config_cache.get_dict("timeperiods_cache").clear()
+    _config_cache.get("timeperiods_cache").clear()
 
 
 cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)

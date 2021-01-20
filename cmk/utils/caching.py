@@ -24,8 +24,6 @@ class CacheManager:
     def get(self, name: str) -> 'DictCache':
         return self._caches[name]
 
-    get_dict = get
-
     def clear_all(self) -> None:
         for cache in self._caches.values():
             cache.clear()

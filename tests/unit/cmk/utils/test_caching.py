@@ -15,7 +15,7 @@ def test_create_dict_cache():
     mgr = cmk.utils.caching.CacheManager()
 
     assert not mgr.exists("test_dict")
-    cache = mgr.get_dict("test_dict")
+    cache = mgr.get("test_dict")
     assert mgr.exists("test_dict")
 
     assert isinstance(cache, dict)
@@ -25,7 +25,7 @@ def test_create_dict_cache():
 def test_clear_all():
     mgr = cmk.utils.caching.CacheManager()
 
-    cache = mgr.get_dict("test_dict")
+    cache = mgr.get("test_dict")
     assert cache.is_empty()
 
     cache["asd"] = 1
@@ -39,7 +39,7 @@ def test_clear_all():
 def test_populated():
     mgr = cmk.utils.caching.CacheManager()
 
-    cache = mgr.get_dict("test1")
+    cache = mgr.get("test1")
     assert not cache.is_populated()
     cache.set_populated()
     assert cache.is_populated()

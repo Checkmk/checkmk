@@ -109,7 +109,7 @@ def lookup_ip_address(host_config: config.HostConfig,
 
 # Variables needed during the renaming of hosts (see automation.py)
 def cached_dns_lookup(hostname: HostName, family: int, is_no_ip_host: bool) -> Optional[str]:
-    cache = _config_cache.get_dict("cached_dns_lookup")
+    cache = _config_cache.get("cached_dns_lookup")
 
     cache_id = hostname, family
 
@@ -241,9 +241,9 @@ def _get_ip_lookup_cache() -> IPLookupCache:
     """A file based fall-back DNS cache in case resolution fails"""
     if _config_cache.exists("ip_lookup"):
         # Return already created and initialized cache
-        return IPLookupCache(_config_cache.get_dict("ip_lookup"))
+        return IPLookupCache(_config_cache.get("ip_lookup"))
 
-    cache = IPLookupCache(_config_cache.get_dict("ip_lookup"))
+    cache = IPLookupCache(_config_cache.get("ip_lookup"))
     cache.load_persisted()
     return cache
 

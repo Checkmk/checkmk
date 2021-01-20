@@ -311,7 +311,7 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
 def _ip_to_hostname(config_cache: config.ConfigCache,
                     ip: Optional[HostAddress]) -> Optional[HostName]:
     if not _config_cache.exists("ip_to_hostname"):
-        cache = _config_cache.get_dict("ip_to_hostname")
+        cache = _config_cache.get("ip_to_hostname")
 
         for host in config_cache.all_active_realhosts():
             host_config = config_cache.get_host_config(host)
@@ -320,7 +320,7 @@ def _ip_to_hostname(config_cache: config.ConfigCache,
             except Exception:
                 pass
     else:
-        cache = _config_cache.get_dict("ip_to_hostname")
+        cache = _config_cache.get("ip_to_hostname")
 
     return cache.get(ip)
 

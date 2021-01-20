@@ -493,13 +493,6 @@ class ModeRulesetGroup(ABCRulesetMode):
 
         yield _page_menu_entry_predefined_conditions()
 
-        if self._group_name == "agents":
-            yield PageMenuEntry(
-                title=_("Agent Bakery"),
-                icon_name="agents",
-                item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
-            )
-
         yield _page_menu_entry_search_rules(
             self._search_options,
             "rulesets",

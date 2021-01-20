@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include <chrono>
+#include <string_view>
 
 #include "common/wtools.h"
 #include "test_tools.h"
@@ -604,6 +605,28 @@ TEST(Wtools, ExpandString) {
     EXPECT_EQ(L"*Windows_NTWindows_NT*"s,
               ExpandStringWithEnvironment(L"*%OS%%OS%*"));
     EXPECT_EQ(L"%_1_2_a%"s, ExpandStringWithEnvironment(L"%_1_2_a%"));
+}
+
+TEST(Wtools, ToCanonical) {
+    using cma::tools::IsEqual;
+    using namespace std::string_view_literals;
+
+    // Existing environment variable must succeed
+    EXPECT_TRUE(
+        IsEqual(ToCanonical(L"%systemroot%\\servicing\\TrustedInstaller.exe"),
+                L"c:\\windows\\servicing\\TrustedInstaller.exe"));
+
+    // .. should be replaced with correct path
+    EXPECT_TRUE(IsEqual(
+        ToCanonical(L"%systemroot%\\servicing\\..\\TrustedInstaller.exe"),
+        L"c:\\windows\\TrustedInstaller.exe"));
+
+    // Non existing environment variable must  not change
+    auto no_variable{L"%temroot%\\servicing\\TrustedInstaller.exe"sv};
+    EXPECT_EQ(ToCanonical(no_variable), no_variable);
+
+    // Border value
+    EXPECT_TRUE(ToCanonical(L"").empty());
 }
 
 }  // namespace wtools

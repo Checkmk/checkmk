@@ -2719,6 +2719,28 @@ std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
     return result;
 }
 
+std::wstring ToCanonical(std::wstring_view raw_app_name) {
+    namespace fs = std::filesystem;
+    constexpr int buf_size = 16 * 1024 + 1;
+    auto buf = std::make_unique<wchar_t[]>(buf_size);
+    auto expand_size =
+        ::ExpandEnvironmentStringsW(raw_app_name.data(), buf.get(), buf_size);
+
+    std::error_code ec;
+    auto p =
+        fs::weakly_canonical(expand_size > 0 ? buf.get() : raw_app_name, ec);
+
+    if (ec.value() == 0) {
+        return p.wstring();
+    }
+
+    XLOG::l.i(
+        "Path '{}' cannot be canonical: probably based on the environment variables",
+        wtools::ToUtf8(raw_app_name));
+
+    return std::wstring(raw_app_name);
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

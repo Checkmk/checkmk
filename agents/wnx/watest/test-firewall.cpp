@@ -9,38 +9,41 @@
 #include "tools/_misc.h"
 
 namespace cma::fw {
-static std::wstring_view rule_name = L"test_CMK_rule";
-static std::wstring_view rule_name_bad = L"test_CMK_rule_";
-static std::wstring app_name_base =
-    std::wstring(L"%ProgramFiles%") + L"\\checkmk\\service\\check_mk_agent.exe";
-static std::wstring app_name_canonical =
-    cma::tools::win::GetEnv(L"ProgramFiles") +
-    L"\\checkmk\\service\\check_mk_agent.exe";
-static std::wstring app_name_canonical_bad =
-    cma::tools::win::GetEnv(L"ProgramFiles") +
-    L"\\checkmk\\service\\check_mk_agent.exe_";
 
-TEST(Firewall, PolicyTest) {
-    Policy p;
-    ASSERT_TRUE(p.policy_ != nullptr);
-    ASSERT_TRUE(p.rules_ != nullptr);
-    ASSERT_GE(p.getRulesCount(), 10);
+namespace {
+constexpr std::wstring_view rule_name{L"test_CMK_rule"};
+constexpr std::wstring_view rule_name_bad{L"test_CMK_rule_"};
+const std::wstring app_name_base =
+    std::wstring(L"%ProgramFiles%") + L"\\checkmk\\service\\check_mk_agent.exe";
+const std::wstring app_name_canonical =
+    tools::win::GetEnv(L"ProgramFiles") +
+    L"\\checkmk\\service\\check_mk_agent.exe";
+const std::wstring app_name_canonical_bad =
+    tools::win::GetEnv(L"ProgramFiles") +
+    L"\\checkmk\\service\\check_mk_agent.exe_";
+}  // namespace
+
+TEST(Firewall, PolicyCtor) {
+    Policy policy;
+    ASSERT_TRUE(policy.getRules() != nullptr);
+    ASSERT_GE(policy.getRulesCount(), 10);
+    ASSERT_NE(policy.getCurrentProfileTypes(), -1);
 }
 
-class FirewallTest : public ::testing::Test {
+class FirewallFixture : public ::testing::Test {
     void SetUp() override {
         OnStartTest();
         RemoveRule(rule_name);  // to be sure that no rules are
-        RemoveRule(rule_name);  // Microsoft :( same names
+        RemoveRule(rule_name);  // Windows can create many rules with same name
     }
 
     void TearDown() override {
-        // cleanup on failed tests
+        RemoveRule(rule_name);
         RemoveRule(rule_name);
     }
 };
 
-TEST_F(FirewallTest, CreateFindDelete) {
+TEST_F(FirewallFixture, Integration) {
     ASSERT_FALSE(FindRule(rule_name));
     EXPECT_EQ(CountRules(rule_name, L""), 0);
     ASSERT_TRUE(CreateInboundRule(rule_name, app_name_base, 9999));

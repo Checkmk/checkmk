@@ -109,6 +109,16 @@ def _parse_single_row(row, header, file_stat_data_types):
     ) for header_stat in zip(header, row)])
 
 
+def _construct_fileinfo_item(name, status, file_stats_dict, FileinfoItem):
+    return FileinfoItem(
+        name,
+        'missing' in status,
+        'stat failed' in status,
+        file_stats_dict.get('size'),
+        file_stats_dict.get('time'),
+    )
+
+
 def parse_fileinfo(info):
     if not info:
         return {}
@@ -151,12 +161,11 @@ def parse_fileinfo(info):
         status = file_stats_dict.get('status')
         if not name or not status:
             continue
-        parsed['files'][name] = FileinfoItem(
+        parsed['files'][name] = _construct_fileinfo_item(
             name,
-            'missing' in status,
-            'stat failed' in status,
-            file_stats_dict.get('size'),
-            file_stats_dict.get('time'),
+            status,
+            file_stats_dict,
+            FileinfoItem,
         )
 
     return parsed

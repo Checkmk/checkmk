@@ -73,7 +73,7 @@ Examples:
   @cmk.utils.memoize.MemoizeCache
 
 """
-    __slots__ = ["_logger", "_cache", "mem_func"]
+    __slots__ = ["_cache", "mem_func"]
 
     def __init__(self, function: Callable) -> None:
         self.mem_func = function

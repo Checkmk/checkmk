@@ -20,7 +20,7 @@ _g_single_oid_hostname: Optional[HostName] = None
 _g_single_oid_ipaddress: Optional[HostAddress] = None
 _g_single_oid_cache: Optional[Dict[OID, Optional[SNMPDecodedString]]] = None
 # TODO: Move to StoredWalkSNMPBackend?
-_g_walk_cache: Dict[str, List[str]] = {}
+_g_walk_cache: Dict[HostName, List[str]] = {}
 
 
 def initialize_single_oid_cache(snmp_config: SNMPHostConfig, from_disk: bool = False) -> None:
@@ -68,25 +68,16 @@ def _load_single_oid_cache(snmp_config: SNMPHostConfig) -> Dict[OID, Optional[SN
     return store.load_object_from_file(cache_path, default={})
 
 
+def host_cache() -> Dict[HostName, List[str]]:
+    return _g_walk_cache
+
+
 def cleanup_host_caches() -> None:
-    global _g_walk_cache
-    _g_walk_cache = {}
+    host_cache().clear()
     _clear_other_hosts_oid_cache(None)
 
 
 cmk.utils.cleanup.register_cleanup(cleanup_host_caches)
-
-
-def host_cache_contains(name: HostName) -> bool:
-    return name in _g_walk_cache
-
-
-def host_cache_get(name: HostName) -> List[str]:
-    return _g_walk_cache[name]
-
-
-def host_cache_set(name: HostName, contents: List[str]) -> None:
-    _g_walk_cache[name] = contents
 
 
 def _clear_other_hosts_oid_cache(hostname: Optional[str]) -> None:

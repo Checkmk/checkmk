@@ -149,19 +149,26 @@ def parse_fileinfo(info):
         'status': str,
     }
 
-    if ['[[[header]]]'] not in info:
-        # deal with old agents' output:
-        parse_row_func = _parse_single_legacy_row
-        header = None
-        iter_info = iter(info[1:])
-    elif len(info) < 3:
-        return parsed
-    else:
-        parse_row_func = _parse_single_row
-        header = info[2]
-        iter_info = iter(info[4:])
-
+    iter_info = iter(info)
     for row in iter_info:
+        if len(row) == 1:
+            # the validation whether a section is legacy has to be done inside
+            # the loop, because sections might be consolidated, resulting in a
+            # legacy section appended to a current section, or vice versa.
+            # we have seen this when users monitor both SAP HANA and "regular"
+            # files.
+            if row == ['[[[header]]]']:
+                # non-legacy
+                parse_row_func = _parse_single_row
+                header = next(iter_info)
+                continue
+            if row[0].isdigit():
+                # designates a timestamp; if following this there is a header (as above),
+                # the section is not legacy
+                parse_row_func = _parse_single_legacy_row
+                header = None
+                continue
+            continue
         file_stats_dict = parse_row_func(
             row,
             header=header,

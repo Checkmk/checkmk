@@ -74,8 +74,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -998,6 +999,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 _page_menu_dropdown_site_details(self._site_id, self._site, self.name()),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
         )
 
     # TODO: Consolidate with ModeEditGlobals.action()

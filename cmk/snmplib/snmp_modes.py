@@ -11,7 +11,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
-from six import ensure_binary, ensure_str
+from six import ensure_str
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -183,15 +183,13 @@ def do_snmptranslate(walk_filename: str) -> None:
     entries_per_cycle = 500
     translated_lines: List[Tuple[bytes, bytes]] = []
 
-    walk_lines = open(walk_path).readlines()
+    walk_lines = open(walk_path, "rb").readlines()
     console.error("Processing %d lines.\n" % len(walk_lines))
 
     i = 0
     while i < len(walk_lines):
         console.error("\r%d to go...    " % (len(walk_lines) - i))
-        process_lines = walk_lines[i:i + entries_per_cycle]
-        # FIXME: This encoding ping-pong os horrible...
-        translated = translate([ensure_binary(pl) for pl in process_lines])
+        translated = translate(walk_lines[i:i + entries_per_cycle])
         i += len(translated)
         translated_lines += translated
     console.error("\rfinished.                \n")

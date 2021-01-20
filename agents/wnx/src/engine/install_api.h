@@ -12,18 +12,21 @@
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "tools/_tgt.h"
 
 namespace cma {
 
 namespace install {
-enum class UpdateType { exec_normal, exec_quiet };
+bool UseScriptToInstall();
+
 enum class UpdateProcess { execute, skip };
 enum class InstallMode { normal, reinstall };
 InstallMode GetInstallMode();
-std::pair<std::wstring, std::wstring> MakeCommandLine(
-    const std::filesystem::path& msi, UpdateType update_type);
+std::pair<std::wstring, std::wstring> PrepareExecution(
+    const std::filesystem::path& exe, const std::filesystem::path& msi,
+    bool validate_script_exists);
 
 constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
 
@@ -59,14 +62,13 @@ inline const std::wstring GetMsiRegistryPath() {
 }
 };  // namespace registry
 
-// TEST(InstallAuto, TopLevel)
+/// Returns command and success status
 // set StartUpdateProcess to 'skip' to test functionality
 // BackupPath may be empty, normally points out on the install folder
 // DirWithMsi is update dir in ProgramData
-bool CheckForUpdateFile(std::wstring_view msi_name, std::wstring_view msi_dir,
-                        UpdateType update_type,
-                        UpdateProcess start_update_process,
-                        std::wstring_view backup_dir = L"");
+std::pair<std::wstring, bool> CheckForUpdateFile(
+    std::wstring_view msi_name, std::wstring_view msi_dir,
+    UpdateProcess start_update_process, std::wstring_view backup_dir = L"");
 
 std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
 std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);

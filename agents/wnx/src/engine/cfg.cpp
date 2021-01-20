@@ -332,6 +332,11 @@ std::wstring GetRootInstallDir() noexcept {
     return root / dirs::kFileInstallDir;
 }
 
+std::wstring GetRootUtilsDir() noexcept {
+    auto root = GetCfg().getRootDir();
+    return root / dirs::kAgentUtils;
+}
+
 std::wstring GetUserModulesDir() noexcept {
     auto user = GetCfg().getUserDir();
     return user / dirs::kUserModules;

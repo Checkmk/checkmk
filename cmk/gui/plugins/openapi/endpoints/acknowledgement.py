@@ -10,7 +10,7 @@ The acknowledgement of the problem is the indication that the reported issue is 
 somebody is attending to it.
 
 You can find an introduction to the acknowledgement of problems in the
-[Checkmk guide](https://checkmk.com/cms_basics_ackn.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/basics_ackn.html).
 """
 # TODO: List acknowledgments
 # TODO: Acknowledge service problem

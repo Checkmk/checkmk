@@ -5,15 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Hosts
 
-A host is typically a server, a virtual machine (VM), a network device, a measuring device with
-an IP connection (thermometer, hygrometer) or anything else with an IP address which is
-being monitored by Checkmk.
-However, there are also hosts without an IP address, such as Docker containers.
+A host is an object that is monitored by Checkmk, for example, a server or a network device.
+A host belongs to a certain folder, is usually connected to a data source (agent or SNMP) and
+provides one or more services.
 
-A host belongs to a certain folder.
+A cluster host is a special host type containing the nodes the cluster consists of and having
+the services assigned that are provided by the cluster.
 
 You can find an introduction to hosts in the
-[Checkmk guide](https://checkmk.com/cms_wato_hosts.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 import itertools
 import json

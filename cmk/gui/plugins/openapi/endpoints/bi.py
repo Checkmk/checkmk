@@ -7,11 +7,11 @@
 
 BI is used in Checkmk to setup a tree based on the status of hosts and services as branches and to
 extend with higher level nodes summarizing (or aggregating) the status of the contained objects.
-A BI pack defines the complete tree, consisting of BI aggregations.
-Within a BI aggregation a BI rule is used to define the node and its status.
+A BI pack contains the configuration data by means of BI aggregations and BI rules.
+A BI aggregation is a tree of nodes and a BI rule is used to define a node and its status.
 
 You can find an introduction to BI in the
-[Checkmk guide](https://checkmk.com/cms_bi.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/bi.html).
 """
 
 import http

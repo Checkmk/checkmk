@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host groups
 
-Host groups are, besides the folder structure, another way to organize hosts in Checkmk.
-By using a host group you can generate, among others, suitable views.
+Host groups are a way to organize hosts in Checkmk for monitoring.
+By using a host group you can generate suitable views for overview and/or analysis.
 
 You can find an introduction to hosts including host groups in the
-[Checkmk guide](https://checkmk.com/cms_wato_hosts.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 from cmk.gui import watolib
 from cmk.gui.http import Response

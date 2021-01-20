@@ -10,7 +10,7 @@ The root (or main) folder is always existing, other folders can be created manua
 If you build the tree cleverly you can use it to pass on attributes in a meaningful manner.
 
 You can find an introduction to hosts including folders in the
-[Checkmk guide](https://checkmk.com/cms_wato_hosts.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 import urllib.parse
 

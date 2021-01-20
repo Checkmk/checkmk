@@ -9,7 +9,7 @@ A service discovery is the automatic and reliable detection of all services to b
 a host.
 
 You can find an introduction to services including service discovery in the
-[Checkmk guide](https://checkmk.com/cms_wato_services.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import json
 

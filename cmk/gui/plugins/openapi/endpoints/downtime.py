@@ -10,7 +10,7 @@ Hosts and services are handled differently by Checkmk during a downtime, for exa
 notifications are disabled.
 
 You can find an introduction to downtimes in the
-[Checkmk guide](https://checkmk.com/cms_basics_downtimes.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/basics_downtimes.html).
 """
 
 import json

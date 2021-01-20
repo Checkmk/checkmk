@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Passwords
 
-The passwords in question here are those that are stored in the CMK password store and are needed
-to authenticate certain checks, for example, when accessing certain databases.
+Passwords intended for authentification of certain checks can be stored in the Checkmk
+password store. You can use in a rule a password stored in the password store without knowing or
+entering the password.
 """
 
 import json

@@ -3,7 +3,16 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Host tag groups"""
+"""Host tag groups
+
+Host tag groups are, besides the static folder structure, another more flexible way to
+organize hosts in Checkmk for configuration.
+A host tag group is a collection of different host tags, with each host receiving exactly one
+tag from the group.
+
+You can find an introduction to hosts including host tags and host tag groups in the
+[Checkmk guide](hhttps://docs.checkmk.com/latest/en/wato_hosts.html).
+"""
 
 import json
 

@@ -18,36 +18,17 @@ The API is documented in a machine-readable schema and a human-readable format i
 resources, their input and output parameters and the associated value ranges. The API is created
 with the OpenAPI specification 3.x, an API description format especially for REST APIs.
 
-The API documentation created with this specification is displayed to you with ReDoc, a responsive
-Web design for OpenAPI documents.
+The API documentation created with this specification is displayed to you with ReDoc (a
+responsive Web design for an OpenAPI document) or with Swagger UI (an OpenAPI document
+visualization for direct interaction with the API's resources).
 
 
 # Prerequisites
 
+* You know Checkmk and its principles of setup and configuration.
 * You are experienced in using an API, preferably a REST-API.
 * You are familiar with at least one of the applications for which sample code is available.
-* You know Checkmk and its principles of setup and configuration.
-
-
-# Using the API documentation
-
-The API documentation's Web design provides 3 panes.
-
-The left navigation pane is used for orientation, search and quick jump to the exact description of
-the entries in the middle content pane. The table of contents contains one entry for each API endpoint.
-An endpoint uses a URL to refer to the resource that the API provides (e.g., to collect hosts),
-along with the method used to access the resource (e.g., GET to display a host).
-The endpoints are organized in several folders.
-
-The middle content pane contains all information about the definition of a request (with parameters,
-value ranges, default values and descriptions) and the corresponding answers (also with all details).
-The possible answers are displayed in different colors, depending on whether the returned HTTP status
-code signals success or an error.
-
-The right example pane shows the method and URL for the endpoint selected in the content pane,
-followed by several examples of requests: the payload in JSON format (if relevant to the endpoint) and
-code examples, such as cURL, HTTPie, Python Requests, or Python Urllib. Then follow the responses
-according to the HTTP status. All code examples can be copied to the clipboard with the Copy button.
+* It helps if you have already worked with ReDoc and/or Swagger UI.
 
 
 # Responses
@@ -71,8 +52,8 @@ This provision of additional information as a REST-API principle is also called
 
 # Authentication
 
-To use this API from a automated client, a user needs to be set up in Checkmk. Ideally this
-would be an automation-user, with which actions can be performed via the API. For a newly
+To use this API from an automated client, a user needs to be set up in Checkmk. Ideally this
+would be an *automation* user, with which actions can be performed via the API. For a newly
 created site an automation user is already created. You can find it, like other users, in
 Checkmk at *Setup* > *Users*.
 

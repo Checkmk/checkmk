@@ -20,56 +20,28 @@ def test_create_dict_cache():
 
     assert isinstance(cache, dict)
     assert isinstance(cache, cmk.utils.caching.DictCache)
-    assert isinstance(cache, cmk.utils.caching.Cache)
-
-
-def test_create_list_cache():
-    mgr = cmk.utils.caching.CacheManager()
-
-    assert not mgr.exists("test")
-    cache = mgr.get_list("test")
-    assert mgr.exists("test")
-
-    assert isinstance(cache, list)
-    assert isinstance(cache, cmk.utils.caching.ListCache)
-    assert isinstance(cache, cmk.utils.caching.Cache)
 
 
 def test_clear_all():
     mgr = cmk.utils.caching.CacheManager()
 
-    list_cache = mgr.get_list("test_list")
-    assert list_cache.is_empty()
+    cache = mgr.get_dict("test_dict")
+    assert cache.is_empty()
 
-    list_cache.append("123")
-    list_cache += ["1", "2"]
-    assert not list_cache.is_empty()
-
-    dict_cache = mgr.get_dict("test_dict")
-    assert dict_cache.is_empty()
-
-    dict_cache["asd"] = 1
-    dict_cache.update({"a": 1, "b": 3})
-    assert not dict_cache.is_empty()
+    cache["asd"] = 1
+    cache.update({"a": 1, "b": 3})
+    assert not cache.is_empty()
 
     mgr.clear_all()
-    assert list_cache.is_empty()
-    assert dict_cache.is_empty()
+    assert cache.is_empty()
 
 
 def test_populated():
     mgr = cmk.utils.caching.CacheManager()
 
-    cache1 = mgr.get_dict("test1")
-    assert not cache1.is_populated()
-    cache1.set_populated()
-    assert cache1.is_populated()
-    cache1.clear()
-    assert not cache1.is_populated()
-
-    cache2 = mgr.get_list("test2")
-    assert not cache2.is_populated()
-    cache2.set_populated()
-    assert cache2.is_populated()
-    cache2.clear()
-    assert not cache2.is_populated()
+    cache = mgr.get_dict("test1")
+    assert not cache.is_populated()
+    cache.set_populated()
+    assert cache.is_populated()
+    cache.clear()
+    assert not cache.is_populated()

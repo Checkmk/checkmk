@@ -182,10 +182,6 @@ section_labels() {
         LABELS+="{\"cmk/device_type\":\"$DEVICE_TYPE\"}\n"
     fi
 
-    if inpath omd; then
-        LABELS+="{\"cmk/check_mk_server\":\"yes\"}"
-    fi
-
     if [ -n "$LABELS" ]; then
         echo '<<<labels:sep(0)>>>'
         echo -e "$LABELS"

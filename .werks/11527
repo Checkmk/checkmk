@@ -1,0 +1,12 @@
+Title: check_mk: Fix missing info about Checkmk agent version in HW/SW Inventory System and Support Diagnostics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611160268
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+

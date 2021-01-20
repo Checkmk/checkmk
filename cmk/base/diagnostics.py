@@ -420,12 +420,20 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             raise DiagnosticsElementError("No HW/SW inventory tree of '%s' found" %
                                           checkmk_server_name)
 
+        infos = {}
         tree = structured_data.StructuredDataTree().load_from(filepath)
+        attrs = tree.get_sub_attributes(["software", "applications", "check_mk"])
+        if attrs:
+            infos.update(attrs.get_raw_tree())
+
         node = tree.get_sub_container(["software", "applications", "check_mk"])
-        if node is None:
+        if node:
+            infos.update(node.get_raw_tree())
+
+        if not infos:
             raise DiagnosticsElementError(
                 "No HW/SW inventory node 'Software > Applications > Checkmk'")
-        return node.get_raw_tree()
+        return infos
 
 
 #   ---collect exiting files------------------------------------------------

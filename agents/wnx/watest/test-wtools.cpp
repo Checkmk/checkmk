@@ -4,20 +4,10 @@
 #include "pch.h"
 
 #include <chrono>
-#include <filesystem>
-#include <future>
+#include <string_view>
 
-#include "cfg_details.h"
-#include "common/cfg_info.h"
-#include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "common/yaml.h"
-#include "read_file.h"
 #include "test_tools.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-#include "tools/_tgt.h"
-#include "tools/_win.h"
 
 namespace cma::details {
 extern bool g_is_service;
@@ -637,6 +627,28 @@ TEST(Wtools, ExpandString) {
     EXPECT_EQ(L"*Windows_NTWindows_NT*"s,
               ExpandStringWithEnvironment(L"*%OS%%OS%*"));
     EXPECT_EQ(L"%_1_2_a%"s, ExpandStringWithEnvironment(L"%_1_2_a%"));
+}
+
+TEST(Wtools, ToCanonical) {
+    using cma::tools::IsEqual;
+    using namespace std::string_view_literals;
+
+    // Existing environment variable must succeed
+    EXPECT_TRUE(
+        IsEqual(ToCanonical(L"%systemroot%\\servicing\\TrustedInstaller.exe"),
+                L"c:\\windows\\servicing\\TrustedInstaller.exe"));
+
+    // .. should be replaced with correct path
+    EXPECT_TRUE(IsEqual(
+        ToCanonical(L"%systemroot%\\servicing\\..\\TrustedInstaller.exe"),
+        L"c:\\windows\\TrustedInstaller.exe"));
+
+    // Non existing environment variable must  not change
+    auto no_variable{L"%temroot%\\servicing\\TrustedInstaller.exe"sv};
+    EXPECT_EQ(ToCanonical(no_variable), no_variable);
+
+    // Border value
+    EXPECT_TRUE(ToCanonical(L"").empty());
 }
 
 }  // namespace wtools

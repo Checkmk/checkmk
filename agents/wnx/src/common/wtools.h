@@ -570,6 +570,7 @@ inline std::string ToUtf8(const std::string_view src) noexcept {
     return std::string(src);
 }
 
+std::wstring ToCanonical(std::wstring_view raw_app_name);
 // standard Windows converter from Microsoft
 // WINDOWS ONLY
 inline std::wstring ConvertToUTF16(const std::string_view src) noexcept {

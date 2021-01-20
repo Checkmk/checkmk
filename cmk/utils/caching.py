@@ -5,34 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Managing in-memory caches through the execution time of cmk"""
 
-from typing import cast, Type, Dict
+import collections
+from typing import Dict
 
-from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.misc
 
 
 class CacheManager:
     def __init__(self) -> None:
-        self._caches: Dict[str, DictCache] = {}
+        self._caches: Dict[str, DictCache] = collections.defaultdict(DictCache)
 
     def reset(self) -> None:
-        self._caches = {}
+        self._caches.clear()
 
     def exists(self, name: str) -> bool:
         return name in self._caches
 
-    def get(self, name: str, cache_class: Type['DictCache']) -> 'DictCache':
-        try:
-            return self._caches[name]
-        except KeyError:
-            if not issubclass(cache_class, DictCache):
-                raise MKGeneralException("The cache object must be a instance of Cache()")
+    def get(self, name: str) -> 'DictCache':
+        return self._caches[name]
 
-            self._caches[name] = cache_class()
-            return self._caches[name]
-
-    def get_dict(self, name: str) -> 'DictCache':
-        return cast(DictCache, self.get(name, DictCache))
+    get_dict = get
 
     def clear_all(self) -> None:
         for cache in self._caches.values():

@@ -7,7 +7,7 @@
 import errno
 import os
 import socket
-from typing import cast, Dict, List, Optional, Tuple, Union
+from typing import Any, cast, Dict, List, Optional, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -159,14 +159,30 @@ def cached_dns_lookup(hostname: HostName, family: int, is_no_ip_host: bool) -> O
                                      (family, hostname, e))
 
 
-class IPLookupCache(cmk.utils.caching.DictCache):
-    def __init__(self) -> None:
-        super(IPLookupCache, self).__init__()
+class IPLookupCache:
+    def __init__(self, cache: cmk.utils.caching.DictCache) -> None:
+        super().__init__()
+        self._cache = cache
         self.persist_on_update = True
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self._cache)
+
+    def __eq__(self, other: Any) -> bool:
+        return other == self._cache
+
+    def __getitem__(self, key: Any) -> Any:
+        return self._cache[key]
+
+    def __len__(self) -> int:
+        return len(self._cache)
+
+    def get(self, key: Any) -> Optional[Any]:
+        return self._cache.get(key)
 
     def load_persisted(self) -> None:
         try:
-            self.update(_load_ip_lookup_cache(lock=False))
+            self._cache.update(_load_ip_lookup_cache(lock=False))
         except (MKTerminate, MKTimeout):
             # We should be more specific with the exception handler below, then we
             # could drop this special handling here
@@ -197,27 +213,37 @@ class IPLookupCache(cmk.utils.caching.DictCache):
         or the "cmk --update-dns-cache" call that both call update_dns_cache().
         """
         if not self.persist_on_update:
-            self[cache_id] = ipa
+            self._cache[cache_id] = ipa
             return
 
         try:
-            self.update(_load_ip_lookup_cache(lock=True))
-            self[cache_id] = ipa
+            self._cache.update(_load_ip_lookup_cache(lock=True))
+            self._cache[cache_id] = ipa
             self.save_persisted()
         finally:
             store.release_lock(_cache_path())
 
     def save_persisted(self) -> None:
-        store.save_object_to_file(_cache_path(), self, pretty=False)
+        store.save_object_to_file(_cache_path(), self._cache, pretty=False)
+
+    def clear(self) -> None:
+        """Clear the persisted AND in memory cache"""
+        try:
+            os.unlink(_cache_path())
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+        self._cache.clear()
 
 
 def _get_ip_lookup_cache() -> IPLookupCache:
     """A file based fall-back DNS cache in case resolution fails"""
     if _config_cache.exists("ip_lookup"):
         # Return already created and initialized cache
-        return cast(IPLookupCache, _config_cache.get("ip_lookup", IPLookupCache))
+        return IPLookupCache(_config_cache.get_dict("ip_lookup"))
 
-    cache = cast(IPLookupCache, _config_cache.get("ip_lookup", IPLookupCache))
+    cache = IPLookupCache(_config_cache.get_dict("ip_lookup"))
     cache.load_persisted()
     return cache
 
@@ -258,7 +284,7 @@ def update_dns_cache() -> UpdateDNSCacheResult:
     ip_lookup_cache.persist_on_update = False
 
     console.verbose("Cleaning up existing DNS cache...\n")
-    _clear_ip_lookup_cache(ip_lookup_cache)
+    ip_lookup_cache.clear()
 
     console.verbose("Updating DNS cache...\n")
     for hostname, family in _get_dns_cache_lookup_hosts(config_cache):
@@ -284,17 +310,6 @@ def update_dns_cache() -> UpdateDNSCacheResult:
     ip_lookup_cache.save_persisted()
 
     return len(ip_lookup_cache), failed
-
-
-def _clear_ip_lookup_cache(ip_lookup_cache: IPLookupCache) -> None:
-    """Clear the persisted AND in memory cache"""
-    try:
-        os.unlink(_cache_path())
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            raise
-
-    ip_lookup_cache.clear()
 
 
 def _get_dns_cache_lookup_hosts(config_cache: config.ConfigCache) -> List[IPLookupCacheId]:

@@ -39,6 +39,11 @@ def _cache_file():
         p.unlink()
 
 
+def test_repr():
+    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+    assert isinstance(repr(ip_lookup_cache), str)
+
+
 def test_get_ip_lookup_cache_not_existing(_cache_file):
     if _cache_file.exists():
         _cache_file.unlink()
@@ -163,7 +168,7 @@ def test_clear_ip_lookup_cache(_cache_file):
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     assert ip_lookup_cache[("host1", 4)] == "127.0.0.1"
 
-    ip_lookup._clear_ip_lookup_cache(ip_lookup_cache)
+    ip_lookup_cache.clear()
 
     assert len(ip_lookup_cache) == 0
     assert not _cache_file.exists()

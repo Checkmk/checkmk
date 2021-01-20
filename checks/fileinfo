@@ -142,25 +142,6 @@ def parse_fileinfo(info):
 
     FileinfoItem = collections.namedtuple("FileinfoItem", "name missing failed size time")
 
-    # deal with old agents' output:
-    if ['[[[header]]]'] not in info:
-        for row in info[1:]:
-            file_stats_dict = _parse_single_legacy_row(row)
-            name = file_stats_dict.get('name')
-            status = file_stats_dict.get('status')
-            if not name or not status:
-                continue
-            parsed['files'][name] = _construct_fileinfo_item(
-                name,
-                status,
-                file_stats_dict,
-                FileinfoItem,
-            )
-        return parsed
-
-    if len(info) < 3:
-        return parsed
-
     file_stat_data_types = {
         'name': str,
         'size': int,
@@ -168,9 +149,20 @@ def parse_fileinfo(info):
         'status': str,
     }
 
-    header = info[2]
-    for row in info[4:]:
-        file_stats_dict = _parse_single_row(
+    if ['[[[header]]]'] not in info:
+        # deal with old agents' output:
+        parse_row_func = _parse_single_legacy_row
+        header = None
+        iter_info = iter(info[1:])
+    elif len(info) < 3:
+        return parsed
+    else:
+        parse_row_func = _parse_single_row
+        header = info[2]
+        iter_info = iter(info[4:])
+
+    for row in iter_info:
+        file_stats_dict = parse_row_func(
             row,
             header=header,
             file_stat_data_types=file_stat_data_types,

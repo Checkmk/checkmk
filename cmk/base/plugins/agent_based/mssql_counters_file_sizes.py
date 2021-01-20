@@ -69,6 +69,7 @@ def _check_mssql_file_sizes(
             label="Log files used",
             boundaries=(0, None),
         )
+        levels_upper = tuple((l / 100 * log_files_size for l in levels_upper))
     else:
         yield from check_levels(
             log_files_used,

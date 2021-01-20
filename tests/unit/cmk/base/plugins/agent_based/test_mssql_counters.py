@@ -402,7 +402,7 @@ def test_discovery_mssql_counters_file_sizes(section, expected_services):
         Result(state=state.OK, summary='Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Log files used: 4.62%'),
-        Metric('log_files_used', 644096.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
+        Metric('log_files_used', 644096.0, levels=(12555878.4, 13253427.2), boundaries=(0.0, None)),
     ]),
 ])
 def test_check_mssql_counters_file_sizes(item, params, section, expected_results):

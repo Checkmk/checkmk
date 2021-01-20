@@ -188,7 +188,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                 checking=name in checking_sections,
                 disabled=name in disabled_sections,
                 fetch_interval=self.host_config.snmp_fetch_interval(name),
-            ) for name in checking_sections
+            ) for name in (checking_sections | disabled_sections)
         }
 
     def _make_parser(self) -> "SNMPParser":

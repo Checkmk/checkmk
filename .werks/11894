@@ -1,0 +1,12 @@
+Title: "Disabled and enabled sections (SNMP)" not effective
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611130844
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+The settings of the rule "Disabled and enabled sections (SNMP)" have not been
+respected during discovery. This has been fixed.

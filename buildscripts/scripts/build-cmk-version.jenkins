@@ -47,6 +47,7 @@ def BRANCH_VERSION
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
 def UPLOAD_DEST = 'deploy@customer.checkmk.com:/var/downloads/checkmk/'
+def UPLOAD_DEST2 = 'adeploy@rchive.tribe29.com:/var/downloads/checkmk/'
 
 def ARCHIVE_DIR = ''
 def OMD_ENV_VARS = ''
@@ -151,7 +152,7 @@ node(NODE) {
 
             cleanup_source_package(WORKSPACE, FINAL_SOURCE_PACKAGE_PATH)
             test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, CMK_VERS)
-            upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+            upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, UPLOAD_DEST2, CMK_VERS)
         }
     }
 
@@ -190,7 +191,8 @@ node(NODE) {
                             sign_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE)
                             test_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE, CMK_VERS)
                             copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
-                            upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+                            upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, UPLOAD_DEST2, CMK_VERS)
+
                         }
                     }
                 }
@@ -202,7 +204,7 @@ node(NODE) {
     }finally {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
-                create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+                create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, UPLOAD_DEST2, CMK_VERS)
             }
         }
         if (!shall_publish_package(scm, JOB_BASE_NAME)) {
@@ -431,19 +433,28 @@ def clean_venv() {
     sh('rm -rf git/.venv')
 }
 
-def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
+def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, UPLOAD_DEST2, CMK_VERS) {
     stage(NAME + ' upload package') {
         def FILE_BASE = sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
         def ARCHIVE_BASE = sh(script: "dirname ${FILE_BASE}", returnStdout: true).toString().trim()
 
         // Only 'official' builds should end up on the Website
         if (shall_publish_package(scm, JOB_BASE_NAME)) {
+            // Push to Website
             sh """
                 rsync -av --relative \
                     --exclude '*dbgsym*.deb' \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022" \
                     ${ARCHIVE_BASE}/./${CMK_VERS}/${FILE_NAME} \
                     ${UPLOAD_DEST}
+            """
+            // Push to Archives
+            sh """
+                rsync -av --relative \
+                    --exclude '*dbgsym*.deb' \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022" \
+                    ${ARCHIVE_BASE}/./${CMK_VERS}/${FILE_NAME} \
+                    ${UPLOAD_DEST2}
             """
         } else {
             dir(FILE_BASE) {
@@ -455,10 +466,10 @@ def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_P
     }
 }
 
-def create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
+def create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, UPLOAD_DEST2, CMK_VERS) {
     stage("Create and upload file hashes") {
         def HASHES_PATH = ARCHIVE_DIR + "/HASHES"
         sh("cd ${ARCHIVE_DIR} ; sha256sum -- *.{tar.gz,rpm,deb,cma,cmk} | sort -k 2 > ${HASHES_PATH}")
-        upload_package(HASHES_PATH, "HASHES", "hashes", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+        upload_package(HASHES_PATH, "HASHES", "hashes", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, UPLOAD_DEST2, CMK_VERS)
     }
 }

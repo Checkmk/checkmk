@@ -75,7 +75,7 @@ class SiteOverview extends cmk_figures.FigureBase {
 
         let site_boxes = this.svg
             .selectAll("g.main_box")
-            .data(this._data.data.sites)
+            .data(this._data.data)
             .join(enter => enter.append("g").classed("main_box", true));
 
         let centered_translation = "translate(" + entry_width / 2 + "," + entry_height / 2 + ")";

@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, NamedTuple, Dict, Any
+from typing import Optional, NamedTuple, Dict, Any, List
+from livestatus import SiteId
 
 from cmk.gui import config
 import cmk.gui.sites as sites
@@ -32,10 +33,33 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
 
     @classmethod
     def generate_response_data(cls, properties, context, settings):
-        return cls._collect_entries()
+        site_id = context.get("site", {}).get("site")
+        render_mode = "hosts" if site_id else "sites"
+
+        if render_mode == "hosts":
+            assert site_id is not None
+            data = cls._collect_hosts_data(SiteId(site_id))
+        elif render_mode == "sites":
+            data = cls._collect_sites_data()
+        else:
+            raise NotImplementedError()
+
+        return {
+            # TODO: Get the correct dashlet title. This needs to use the general dashlet title
+            # calculation. We somehow have to get the title from
+            # cmk.gui.dashboard._render_dashlet_title.
+            "title": _("Site overview"),
+            "render_mode": render_mode,
+            "plot_definitions": [],
+            "data": data,
+        }
 
     @classmethod
-    def _collect_entries(cls) -> Dict[str, Any]:
+    def _collect_hosts_data(cls, site_id: SiteId) -> List[Dict[str, Any]]:
+        return []
+
+    @classmethod
+    def _collect_sites_data(cls) -> List[Dict[str, Any]]:
         sites.update_site_states_from_dead_sites()
         entries = []
         for site_id, _sitealias in config.sorted_sites():
@@ -69,14 +93,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             demo_entry["site_id"] = "Demo %d" % i
             entries.append(demo_entry)
 
-        return {
-            "plot_definitions": [],
-            "data": {
-                "type": "sites",
-                "title": "ABC",
-                "sites": entries,
-            },
-        }
+        return entries
 
 
 @page_registry.register_page("ajax_site_overview_dashlet_data")

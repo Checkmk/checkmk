@@ -84,18 +84,18 @@ def _get_field(row, index):
 
 
 def _parse_single_legacy_row(row):
-    name = row[0]
-    # endswith("No such file...") is needed to
-    # support the very old solaris perl based version of fileinfo
+    name = _cast_value(row[0], str)
     if not name or name.endswith("No such file or directory"):
+        # endswith("No such file...") is needed to
+        # support the very old solaris perl based version of fileinfo
         return None
-    ambiguous = _cast_value(_get_field(row, 1), str)
-    missing = ambiguous == 'missing'
-    failed = ambiguous in ('not readable', '')
-    size = _cast_value(_get_field(row, 1), int)
-    time = _cast_value(_get_field(row, 2), int)
+    size = _get_field(row, 1)
+    missing = size == 'missing'
+    failed = size in ('not readable', '')
+    if missing or failed:
+        return name, missing, failed, None, None
 
-    return name, missing, failed, size, time
+    return name, missing, failed, _cast_value(size, int), _cast_value(_get_field(row, 2), int)
 
 
 def _parse_single_row(row, header, file_stat_data_types):

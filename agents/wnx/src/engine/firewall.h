@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // engine to install/remove firewall rule
 // namespace cma::fw
@@ -25,8 +26,9 @@
 
 namespace cma::fw {
 
-constexpr std::wstring_view kRuleGroup = L"CheckMK Firewall Control";
-constexpr std::wstring_view kRuleDescription = L"Allow inbound network traffic";
+constexpr std::wstring_view kRuleGroup = L"Checkmk Agent";
+constexpr std::wstring_view kRuleDescription =
+    L"Allow inbound network traffic to the Checkmk Agent";
 
 bool CreateInboundRule(std::wstring_view rule_name, std::wstring_view app_name,
                        int port);

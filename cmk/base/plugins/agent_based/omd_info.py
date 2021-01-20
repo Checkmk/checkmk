@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import register, HostLabel
+from .agent_based_api.v1.type_defs import StringTable, HostLabelGenerator
 
 Section = Dict[str, Dict[str, Dict[str, str]]]
 
@@ -53,7 +53,13 @@ def parse_omd_info(string_table: StringTable) -> Section:
     return section
 
 
+def host_label_omd_info(section: Section) -> HostLabelGenerator:
+    if section.get("sites"):
+        yield HostLabel("cmk/check_mk_server", "yes")
+
+
 register.agent_section(
     name="omd_info",
     parse_function=parse_omd_info,
+    host_label_function=host_label_omd_info,
 )

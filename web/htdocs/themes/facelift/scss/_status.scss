@@ -367,7 +367,7 @@ tr[class*="even"] {
 
 table.data {
   td.age {
-    color: $age-font-color;
+    color: $table-secondary-font-color;
     white-space: nowrap;
 
     &.staletime {

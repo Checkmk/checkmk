@@ -186,7 +186,7 @@ body {
           }
 
           * {
-            color: $primary-link-color;
+            color: $table-secondary-font-color;
           }
         }
       }
@@ -303,11 +303,14 @@ table.data {
   }
 
   th {
-    padding: 0 8px 2px;
+    height: 24px;
+    padding: 0 8px;
     font-size: $font-size-default;
     letter-spacing: $letter-spacing-table;
-    color: $primary-link-color;
+    color: $table-secondary-font-color;
     text-align: left;
+    vertical-align: middle;
+    background-color: $odd-tr-bg-color;
 
     /* Table header links (For sorting) */
     &.sort:hover {
@@ -477,10 +480,6 @@ table.data {
     }
   }
 
-  tr th {
-    vertical-align: baseline;
-  }
-
   tr div.toggle_actions {
     position: relative;
     padding-left: 14px;
@@ -527,7 +526,7 @@ td.wide {
 /* Group header used in table, box and tiled layout */
 table.groupheader {
   width: 100%;
-  padding: 4px 0 4px 8px;
+  padding: 5px 0 5px 8px;
   margin: 0;
   font-size: $font-size-default;
   font-weight: $font-weight-bold;

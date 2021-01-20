@@ -83,7 +83,7 @@ def _get_field(row, index):
         return None
 
 
-def _parse_single_legacy_row(row):
+def _parse_single_legacy_row(row, **kwargs):
     name = _cast_value(row[0], str)
     if not name or name.endswith("No such file or directory"):
         # endswith("No such file...") is needed to
@@ -108,14 +108,14 @@ def _parse_single_legacy_row(row):
     return file_stats_dict
 
 
-def _parse_single_row(row, header, file_stat_data_types):
+def _parse_single_row(row, **kwargs):
     return dict([(
         header_stat[0],
         _cast_value(
             header_stat[1],
-            file_stat_data_types[header_stat[0]],
+            kwargs['file_stat_data_types'][header_stat[0]],
         ),
-    ) for header_stat in zip(header, row)])
+    ) for header_stat in zip(kwargs['header'], row)])
 
 
 def _construct_fileinfo_item(name, status, file_stats_dict, FileinfoItem):
@@ -172,8 +172,8 @@ def parse_fileinfo(info):
     for row in info[4:]:
         file_stats_dict = _parse_single_row(
             row,
-            header,
-            file_stat_data_types,
+            header=header,
+            file_stat_data_types=file_stat_data_types,
         )
         name = file_stats_dict.get('name')
         status = file_stats_dict.get('status')

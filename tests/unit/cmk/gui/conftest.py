@@ -33,6 +33,7 @@ from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request
 from cmk.gui.utils import get_random_string
+from cmk.gui.watolib import search
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
 
@@ -350,3 +351,12 @@ def wsgi_app(monkeypatch):
 @pytest.fixture(scope='function')
 def wsgi_app_debug_off(monkeypatch):
     return _make_webtest(debug=False)
+
+
+@pytest.fixture(scope='function', autouse=True)
+def avoid_search_index_update_background(monkeypatch):
+    monkeypatch.setattr(
+        search,
+        'update_index_background',
+        lambda _change_action_name:...,
+    )

@@ -1,0 +1,16 @@
+Title: Fix closing popup on host deletion
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1611150163
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+If you tried to delete a host on the host property page with the "Delete"
+option within the host dropdown, the confirmation dialog was blocked because
+the dropdown popup was not closed.
+
+The popup is now closed on that action.

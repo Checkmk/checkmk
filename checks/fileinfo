@@ -88,14 +88,24 @@ def _parse_single_legacy_row(row):
     if not name or name.endswith("No such file or directory"):
         # endswith("No such file...") is needed to
         # support the very old solaris perl based version of fileinfo
-        return None
+        return {}
+    file_stats_dict = {
+        'name': name,
+        'size': None,
+        'time': None,
+        'status': 'ok',
+    }
     size = _get_field(row, 1)
-    missing = size == 'missing'
-    failed = size in ('not readable', '')
-    if missing or failed:
-        return name, missing, failed, None, None
+    if size == 'missing':
+        file_stats_dict['status'] = 'missing'
+        return file_stats_dict
+    if size in ('not readable', ''):
+        file_stats_dict['status'] = 'stat failed'
+        return file_stats_dict
 
-    return name, missing, failed, _cast_value(size, int), _cast_value(_get_field(row, 2), int)
+    file_stats_dict['size'] = _cast_value(size, int)
+    file_stats_dict['time'] = _cast_value(_get_field(row, 2), int)
+    return file_stats_dict
 
 
 def _parse_single_row(row, header, file_stat_data_types):
@@ -135,10 +145,17 @@ def parse_fileinfo(info):
     # deal with old agents' output:
     if ['[[[header]]]'] not in info:
         for row in info[1:]:
-            file_stats = _parse_single_legacy_row(row)
-            if not file_stats:
+            file_stats_dict = _parse_single_legacy_row(row)
+            name = file_stats_dict.get('name')
+            status = file_stats_dict.get('status')
+            if not name or not status:
                 continue
-            parsed['files'][file_stats[0]] = FileinfoItem(*file_stats)
+            parsed['files'][name] = _construct_fileinfo_item(
+                name,
+                status,
+                file_stats_dict,
+                FileinfoItem,
+            )
         return parsed
 
     if len(info) < 3:

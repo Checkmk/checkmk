@@ -56,10 +56,11 @@ class SiteOverview extends cmk_figures.FigureBase {
     update_gui() {
         this.resize();
         this.render();
+
+        this.render_title(this._data.title);
     }
 
     render() {
-        this.render_title(this._data.title);
         let width = this.plot_size.width;
         let margin = 5;
 
@@ -69,6 +70,9 @@ class SiteOverview extends cmk_figures.FigureBase {
 
         // TODO: Formel auskobeln
         let hexagon_size = 80;
+        // TODO: The dashlet can be configured to NOT show a title. In this case the render()
+        // method must not apply the header top margin (24px, see FigureBase.render_title)
+        let header_top_margin = 24;
         let entry_height = 100;
         let entry_width = hexagon_size;
         let max_columns = Math.trunc(width / (entry_width + margin));
@@ -123,7 +127,7 @@ class SiteOverview extends cmk_figures.FigureBase {
         site_boxes.transition().attr("transform", (d, idx) => {
             let x = idx === 0 ? 0 : (idx % max_columns) * (entry_width + margin);
             let y = Math.trunc(idx / max_columns) * (entry_height + margin);
-            return "translate(" + x + "," + y + ")";
+            return "translate(" + x + "," + (y + header_top_margin) + ")";
         });
     }
 }

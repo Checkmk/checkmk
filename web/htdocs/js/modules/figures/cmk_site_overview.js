@@ -15,7 +15,7 @@ class SiteOverview extends cmk_figures.FigureBase {
 
     constructor(div_selector, fixed_size = null) {
         super(div_selector, fixed_size);
-        this.margin = {top: 10, right: 10, bottom: 10, left: 10};
+        this.margin = {top: 0, right: 0, bottom: 0, left: 0};
     }
 
     initialize(debug) {
@@ -69,30 +69,108 @@ class SiteOverview extends cmk_figures.FigureBase {
 
     render_sites() {
         let width = this.plot_size.width;
-        let margin = 5;
+        let height = this.plot_size.height;
 
-        // Rough logic for dynamic hexagon sizing:
-        // - Get available space (this.plot_size)
-        // - Get number of sites (this._data.data.length)
-        // - Calculate a good hexagon_size based on the available space and number of sites.
-        //   But limit hexagon_size to the size of the "host/service statistic" hexagons.
-        // - In case hexagon_size < X we set entry_height = hexagon_size and skip rendering the label
-
-        // TODO: Formel auskobeln
-        let hexagon_size = 80;
         // TODO: The dashlet can be configured to NOT show a title. In this case the render()
         // method must not apply the header top margin (24px, see FigureBase.render_title)
-        let header_top_margin = 24;
-        let entry_height = 100;
-        let entry_width = hexagon_size;
-        let max_columns = Math.trunc(width / (entry_width + margin));
+        let header_height = 24;
+        // Effective height of the label (based on styling)
+        let label_height = 11;
+        let label_v_padding = 8;
+        let min_label_width = 60;
 
-        let site_boxes = this.svg
+        // Spacing between dashlet border and box area
+        let canvas_v_padding = 10;
+        let canvas_h_padding = 4;
+        // The area where boxes are rendered to
+        let box_area_top = header_height + canvas_v_padding;
+        let box_area_left = canvas_h_padding;
+        let box_area_width = width - 2 * canvas_h_padding;
+        let box_area_height = height - box_area_top - canvas_v_padding;
+
+        // Must not be larger than the "host/service statistics" hexagons
+        let max_box_width = 114;
+        let box_v_rel_padding = 0.05;
+        let box_h_rel_padding = 0;
+        // Calculating the distance from center to top of hexagon
+        let hexagon_max_radius = max_box_width / 2;
+
+        let num_elements = this._data.data.length;
+
+        if (box_area_width < 20 || box_area_height < 20) {
+            return; // Does not make sense to continue
+        }
+
+        // Calculate number of columns and rows we need to render all elements
+        let num_columns = Math.max(Math.floor(box_area_width / max_box_width), 1);
+
+        // Rough idea of this algorithm: Increase the number of columns, then calculate the number
+        // of rows needed to fit all elements into the box_area. Then calculate the box size based
+        // on the number of columns and available space. Then check whether or not it fits into the
+        // box_are.  In case it does not fit, increase the number of columns (which then may also
+        // decrease the size of the box sizes).
+        let compute_geometry = function (num_columns) {
+            let num_rows = Math.ceil(num_elements / num_columns);
+            // Calculating the distance from center to top of hexagon
+            let box_width = box_area_width / num_columns;
+
+            let hexagon_radius = Math.min(box_width / 2, hexagon_max_radius);
+            hexagon_radius -= hexagon_radius * box_h_rel_padding;
+
+            let necessary_box_height = hexagon_radius * 2 * (1 + box_v_rel_padding);
+
+            let show_label = box_width >= min_label_width;
+            if (show_label) necessary_box_height += label_v_padding * 2 + label_height;
+
+            if (num_columns == 100) {
+                return null;
+            }
+
+            if (necessary_box_height * num_rows > box_area_height) {
+                // With the current number of columns we are not able to render all boxes on the
+                // box_area. Next, try with one more column.
+                return null;
+            }
+
+            let box_height = box_area_height / num_rows;
+            let hexagon_center_top =
+                hexagon_radius * (1 + box_v_rel_padding) + (box_height - necessary_box_height) / 2;
+
+            let label_baseline_top =
+                hexagon_center_top + hexagon_radius + label_height + label_v_padding;
+
+            // Reduce number of columns, trying to balance the rows
+            num_columns = Math.ceil(num_elements / num_rows);
+            box_width = box_area_width / num_columns;
+
+            let hexagon_center_left = box_width / 2;
+            let label_center_left = box_width / 2;
+
+            return {
+                num_columns: num_columns,
+                hexagon_center_top: hexagon_center_top,
+                hexagon_center_left: hexagon_center_left,
+                hexagon_radius: hexagon_radius,
+                box_width: box_width,
+                box_height: box_height,
+                show_label: show_label,
+                label_baseline_top: label_baseline_top,
+                label_center_left: label_center_left,
+            };
+        };
+
+        let geometry = null;
+        while (geometry === null) {
+            geometry = compute_geometry(num_columns++);
+        }
+
+        let boxes = this.svg
             .selectAll("g.main_box")
             .data(this._data.data)
             .join(enter => enter.append("g").classed("main_box", true));
 
-        let centered_translation = "translate(" + entry_width / 2 + "," + entry_height / 2 + ")";
+        let hexagon_center_pos =
+            "translate(" + geometry.hexagon_center_left + "," + geometry.hexagon_center_top + ")";
 
         let handle_click = function (d) {
             location.href = utils.makeuri({site: d.site_id});
@@ -106,50 +184,55 @@ class SiteOverview extends cmk_figures.FigureBase {
             d3.select(this).style("opacity", 1);
         };
 
-        let site_boxes_centered_g = site_boxes
+        let boxes_centered_g = boxes
             .selectAll("g")
             .data(d => [d])
             .join("g")
-            .attr("transform", centered_translation)
+            .attr("transform", hexagon_center_pos)
             .style("cursor", "pointer")
             .on("click", handle_click)
             .on("mouseover", handle_mouseover)
             .on("mouseout", handle_mouseout);
 
-        site_boxes_centered_g
+        boxes_centered_g
             .selectAll("path.outer_line")
             .data(d => [d])
             .join(enter => enter.append("path").classed("outer_line", true))
-            .attr("d", d3.hexbin().hexagon(hexagon_size / 2))
+            .attr("d", d3.hexbin().hexagon(geometry.hexagon_radius))
             .attr("stroke", "#13d389");
 
-        site_boxes_centered_g
+        boxes_centered_g
             .selectAll("path.inner_line")
             .data(d => [d])
             .join(enter => enter.append("path").classed("inner_line", true))
-            .attr("d", d3.hexbin().hexagon(hexagon_size / 4))
+            .attr("d", d3.hexbin().hexagon(geometry.hexagon_radius / 2))
             .attr("fill", "yellow");
 
-        site_boxes
-            .selectAll("text")
-            .data(d => [d.title])
-            .join("text")
-            .text(d => d)
-            .attr("x", function () {
-                return entry_width / 2 - this.getBBox().width / 2;
-            })
-            .attr("y", function () {
-                return entry_height + 4;
-            })
-            .style("cursor", "pointer")
-            .on("click", handle_click)
-            .on("mouseover", handle_mouseover)
-            .on("mouseout", handle_mouseout);
+        if (geometry.show_label) {
+            boxes
+                .selectAll("text")
+                .data(d => [d.title])
+                .join("text")
+                .text(d => d)
+                .attr("x", function () {
+                    return geometry.label_center_left - this.getBBox().width / 2;
+                })
+                .attr("y", function () {
+                    return geometry.label_baseline_top;
+                })
+                .style("cursor", "pointer")
+                .on("click", handle_click)
+                .on("mouseover", handle_mouseover)
+                .on("mouseout", handle_mouseout);
+        } else {
+            boxes.selectAll("text").remove();
+        }
 
-        site_boxes.transition().attr("transform", (d, idx) => {
-            let x = idx === 0 ? 0 : (idx % max_columns) * (entry_width + margin);
-            let y = Math.trunc(idx / max_columns) * (entry_height + margin);
-            return "translate(" + x + "," + (y + header_top_margin) + ")";
+        // Place boxes
+        boxes.transition().attr("transform", (d, idx) => {
+            let x = (idx % geometry.num_columns) * geometry.box_width;
+            let y = Math.trunc(idx / geometry.num_columns) * geometry.box_height;
+            return "translate(" + (x + box_area_left) + "," + (y + box_area_top) + ")";
         });
     }
 }

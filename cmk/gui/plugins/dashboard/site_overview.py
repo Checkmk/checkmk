@@ -86,9 +86,9 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
                     num_hosts=site_status.get("num_hosts"),
                 )._asdict())
 
-        # Debug: Add additional entrie
+        # Debug: Add additional entries
         reference = entries[0]
-        for i in range(10):
+        for i in range(5):
             demo_entry = dict(reference)
             demo_entry["site_id"] = "Demo %d" % i
             entries.append(demo_entry)

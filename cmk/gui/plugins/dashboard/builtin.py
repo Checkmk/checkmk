@@ -244,7 +244,7 @@ builtin_dashboards["main"] = {
         'is_show_more': False
     }, {
         'position': (-1, 1),
-        'size': (0, 36),
+        'size': (0, 0),
         'single_infos': [],
         'type': 'site_overview',
         'background': True,

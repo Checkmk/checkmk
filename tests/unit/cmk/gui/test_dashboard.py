@@ -59,6 +59,7 @@ def test_dashlet_registry_plugins():
     if not cmk_version.is_raw_edition():
         expected_plugins += [
             'custom_graph',
+            'combined_graph',
             'ntop_alerts',
             'ntop_flows',
             'ntop_top_talkers',

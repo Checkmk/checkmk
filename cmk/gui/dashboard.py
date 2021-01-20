@@ -978,6 +978,17 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName, board: DashboardC
             (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
     )
 
+    yield PageMenuEntry(
+        title='Combined Graph',
+        icon_name={
+            'icon': 'graph',
+            'emblem': 'add',  # TODO: Need its own icon
+        },
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=combined_graph' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
 
 def _dashboard_add_metrics_dashlet_entries(name: DashboardName, board: DashboardConfig,
                                            mode: str) -> Iterator[PageMenuEntry]:

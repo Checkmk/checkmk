@@ -111,7 +111,7 @@ def makeuri_contextless_rulespec_group(
 
 
 def make_confirm_link(*, url: str, message: str) -> str:
-    return "javascript:cmk.forms.confirm_link(%s, %s)" % (
+    return "javascript:cmk.forms.confirm_link(%s, %s),cmk.popup_menu.close_popup()" % (
         json.dumps(url),
         json.dumps(escape_text(message)),
     )

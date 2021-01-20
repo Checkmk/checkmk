@@ -74,6 +74,7 @@ big_string_table = [
     ['MSSQL_VEEAMSQL2012:Locks', 'lock_timeouts/sec', 'OibTrackTbl', '0'],
     ['MSSQL_VEEAMSQL2012:Databases', 'data_file(s)_size_(kb)', 'tempdb', '164928'],
     ['MSSQL_VEEAMSQL2012:Databases', 'log_file(s)_size_(kb)', 'tempdb', '13624'],
+    ['MSSQL_VEEAMSQL2012:Databases', 'log_file(s)_used_size_(kb)', 'tempdb', '629'],
     ['MSSQL_VEEAMSQL2012:Databases', 'transactions/sec', 'tempdb', '24410428'],
     ['MSSQL_VEEAMSQL2012:Databases', 'tracked_transactions/sec', 'tempdb', '0'],
     ['MSSQL_VEEAMSQL2012:Databases', 'write_transactions/sec', 'tempdb', '10381607'],
@@ -178,6 +179,7 @@ big_parsed_data = {
     ('MSSQL_VEEAMSQL2012', 'tempdb'): {
         'data_file(s)_size_(kb)': 164928,
         'log_file(s)_size_(kb)': 13624,
+        'log_file(s)_used_size_(kb)': 629,
         'transactions/sec': 24410428,
         'tracked_transactions/sec': 0,
         'write_transactions/sec': 10381607,
@@ -378,11 +380,29 @@ def test_discovery_mssql_counters_file_sizes(section, expected_services):
 
 
 @pytest.mark.parametrize("item,params,section,expected_results", [
-    ("MSSQL_VEEAMSQL2012 tempdb cache_hit_ratio", {}, big_parsed_data, [
+    ("MSSQL_VEEAMSQL2012 tempdb", {}, big_parsed_data, [
         Result(state=state.OK, summary='Data files: 161 MiB'),
         Metric('data_files', 168886272.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
+        Result(state=state.OK, summary='Log files used: 629 B'),
+        Metric('log_files_used', 629.0, boundaries=(0.0, None)),
+    ]),
+    ("MSSQL_VEEAMSQL2012 tempdb", {'log_files_used': (12555878, 13253427),}, big_parsed_data, [
+        Result(state=state.OK, summary='Data files: 161 MiB'),
+        Metric('data_files', 168886272.0, boundaries=(0.0, None)),
+        Result(state=state.OK, summary='Log files total: 13.3 MiB'),
+        Metric('log_files', 13950976.0, boundaries=(0.0, None)),
+        Result(state=state.OK, summary='Log files used: 629 B'),
+        Metric('log_files_used', 629.0, levels=(12555878.0, 13253427.0), boundaries=(0.0, None)),
+    ]),
+    ("MSSQL_VEEAMSQL2012 tempdb", {'log_files_used': (90.0, 95.0),}, big_parsed_data, [
+        Result(state=state.OK, summary='Data files: 161 MiB'),
+        Metric('data_files', 168886272.0, boundaries=(0.0, None)),
+        Result(state=state.OK, summary='Log files total: 13.3 MiB'),
+        Metric('log_files', 13950976.0, boundaries=(0.0, None)),
+        Result(state=state.OK, summary='Log files used: 4.62%'),
+        Metric('log_files_used', 629.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
     ]),
 ])
 def test_check_mssql_counters_file_sizes(item, params, section, expected_results):
@@ -403,6 +423,8 @@ def test_check_mssql_counters_file_sizes(item, params, section, expected_results
         Metric('data_files', 168886272.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='[node1] Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
+        Result(state=state.OK, summary='Log files used: 629 B'),
+        Metric('log_files_used', 629.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_cluster_check_mssql_counters_file_sizes(item, params, section, expected_results):

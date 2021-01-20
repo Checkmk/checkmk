@@ -1,0 +1,15 @@
+Title: fileinfo: SAP HANA files shown as WARN if jointly monitored with other files
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611149112
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+SAP HANA file monitoring returns a WARN status with the error message "File
+stat time failed" if the fileinfo check is configured to also monitor other
+files on the same host. This has been fixed, so that SAP HANA file monitoring
+can be used concurrently with other file monitoring.

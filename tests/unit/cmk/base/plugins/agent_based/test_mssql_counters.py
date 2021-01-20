@@ -385,16 +385,16 @@ def test_discovery_mssql_counters_file_sizes(section, expected_services):
         Metric('data_files', 168886272.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files used: 629 B'),
-        Metric('log_files_used', 629.0, boundaries=(0.0, None)),
+        Result(state=state.OK, summary='Log files used: 629 KiB'),
+        Metric('log_files_used', 644096.0, boundaries=(0.0, None)),
     ]),
     ("MSSQL_VEEAMSQL2012 tempdb", {'log_files_used': (12555878, 13253427),}, big_parsed_data, [
         Result(state=state.OK, summary='Data files: 161 MiB'),
         Metric('data_files', 168886272.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files used: 629 B'),
-        Metric('log_files_used', 629.0, levels=(12555878.0, 13253427.0), boundaries=(0.0, None)),
+        Result(state=state.OK, summary='Log files used: 629 KiB'),
+        Metric('log_files_used', 644096.0, levels=(12555878.0, 13253427.0), boundaries=(0.0, None)),
     ]),
     ("MSSQL_VEEAMSQL2012 tempdb", {'log_files_used': (90.0, 95.0),}, big_parsed_data, [
         Result(state=state.OK, summary='Data files: 161 MiB'),
@@ -402,7 +402,7 @@ def test_discovery_mssql_counters_file_sizes(section, expected_services):
         Result(state=state.OK, summary='Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='Log files used: 4.62%'),
-        Metric('log_files_used', 629.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
+        Metric('log_files_used', 644096.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
     ]),
 ])
 def test_check_mssql_counters_file_sizes(item, params, section, expected_results):
@@ -423,8 +423,8 @@ def test_check_mssql_counters_file_sizes(item, params, section, expected_results
         Metric('data_files', 168886272.0, boundaries=(0.0, None)),
         Result(state=state.OK, summary='[node1] Log files total: 13.3 MiB'),
         Metric('log_files', 13950976.0, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Log files used: 629 B'),
-        Metric('log_files_used', 629.0, boundaries=(0.0, None)),
+        Result(state=state.OK, summary='Log files used: 629 KiB'),
+        Metric('log_files_used', 644096.0, boundaries=(0.0, None)),
     ]),
 ])
 def test_cluster_check_mssql_counters_file_sizes(item, params, section, expected_results):

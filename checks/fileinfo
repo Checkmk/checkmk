@@ -99,6 +99,16 @@ def _parse_backwards_compatible(info):
         yield name, missing, failed, size, time
 
 
+def _parse_single_row(row, header, file_stat_data_types):
+    return dict([(
+        header_stat[0],
+        _cast_value(
+            header_stat[1],
+            file_stat_data_types[header_stat[0]],
+        ),
+    ) for header_stat in zip(header, row)])
+
+
 def parse_fileinfo(info):
     if not info:
         return {}
@@ -132,13 +142,11 @@ def parse_fileinfo(info):
 
     header = info[2]
     for row in info[4:]:
-        file_stats_dict = dict([(
-            header_stat[0],
-            _cast_value(
-                header_stat[1],
-                file_stat_data_types[header_stat[0]],
-            ),
-        ) for header_stat in zip(header, row)])
+        file_stats_dict = _parse_single_row(
+            row,
+            header,
+            file_stat_data_types,
+        )
         name = file_stats_dict.get('name')
         status = file_stats_dict.get('status')
         if not name or not status:

@@ -54,8 +54,8 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
         settings = dashlet_vs_general_settings(
             dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
 
-        properties = cls.vs_parameters().value_from_json(
-            json.loads(html.request.get_str_input_mandatory("properties")))
+        raw_properties = html.request.get_str_input_mandatory("properties")
+        properties = cls.vs_parameters().value_from_json(json.loads(raw_properties))
         context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
         response_data = cls.generate_response_data(properties, context, settings)
         return create_figures_response(response_data)
@@ -133,8 +133,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
 
     def on_resize(self):
         return ("if (typeof %(instance)s != 'undefined') {"
-                "%(instance)s.resize();"
-                "%(instance)s.render();"
+                "%(instance)s.update_gui();"
                 "}") % {
                     "instance": self.instance_name
                 }

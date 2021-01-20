@@ -13,10 +13,7 @@ You can find an introduction to the acknowledgement of problems in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/basics_ackn.html).
 """
 # TODO: List acknowledgments
-# TODO: Acknowledge service problem
 from urllib.parse import unquote
-
-from typing import Tuple, List
 
 from cmk.gui import config, sites, http
 from cmk.gui.plugins.openapi import fields
@@ -107,7 +104,8 @@ def _set_acknowledgement_on_host(
     comment: str,
 ):
     """Acknowledge for a specific host"""
-    host = Query([Hosts.name, Hosts.state], Hosts.name.equals(host_name)).first(connection)
+    host = Query([Hosts.name, Hosts.state], Hosts.name == host_name).fetchone(connection)
+
     if host is None:
         return problem(
             status=404,
@@ -115,20 +113,16 @@ def _set_acknowledgement_on_host(
             detail='It is not currently monitored.',
         )
 
-    if host.state == 0:
-        return problem(status=400,
-                       title=f"Host {host_name} does not have a problem.",
-                       detail="The state is UP.")
-
-    acknowledge_host_problem(
-        sites.live(),
-        host_name,
-        sticky=sticky,
-        notify=notify,
-        persistent=persistent,
-        user=_user_id(),
-        comment=comment,
-    )
+    if host.state > 0:
+        acknowledge_host_problem(
+            connection,
+            host_name,
+            sticky=sticky,
+            notify=notify,
+            persistent=persistent,
+            user=config.user.ident,
+            comment=comment,
+        )
     return http.Response(status=204)
 
 
@@ -140,22 +134,20 @@ def _set_acknowlegement_on_queried_hosts(
     persistent: bool,
     comment: str,
 ):
-    q = Query([Hosts.name, Hosts.state]).filter(tree_to_expr(query, Hosts.__tablename__))
-    hosts = list(q.iterate(connection))
+    q = Query([Hosts.name]).filter(tree_to_expr(query, Hosts.__tablename__))
+    hosts = q.fetchall(connection)
 
     if not hosts:
         return problem(status=404, title="The provided query returned no monitored hosts")
 
     for host in hosts:
-        if host.state == 0:
-            continue
         acknowledge_host_problem(
             connection,
             host.name,
             sticky=sticky,
             notify=notify,
             persistent=persistent,
-            user=_user_id(),
+            user=config.user.ident,
             comment=comment,
         )
 
@@ -177,7 +169,7 @@ def _set_acknowledgement_on_hostgroup(
         sticky=sticky,
         notify=notify,
         persistent=persistent,
-        user=_user_id(),
+        user=config.user.ident,
         comment=comment,
     )
     return http.Response(status=204)
@@ -218,22 +210,37 @@ def set_acknowledgement_on_service_related(params):
             sticky=sticky,
             notify=notify,
             persistent=persistent,
-            user=_user_id(),
+            user=config.user.ident,
             comment=comment,
         )
         return http.Response(status=204)
 
     if acknowledge_type == 'service_by_query':
-        q = Query([Services.host_name, Services.description,
-                   Services.state]).filter(tree_to_expr(body['query'], Services.__tablename__))
-        return _set_acknowledgement_on_queried_services(
-            live,
-            [(row['host_name'], row['description']) for row in q.iterate(live) if row['state'] > 0],
-            sticky=sticky,
-            notify=notify,
-            persistent=persistent,
-            comment=comment,
-        )
+        expr = tree_to_expr(body['query'], Services.__tablename__)
+        q = Query([Services.host_name, Services.description, Services.state]).filter(expr)
+        services = q.fetchall(live)
+        if not services:
+            return problem(
+                status=400,
+                title='No services with problems found.',
+                detail='All queried services are OK.',
+            )
+
+        for service in services:
+            if not service.state:
+                continue
+            acknowledge_service_problem(
+                live,
+                service.host_name,
+                service.description,
+                sticky=sticky,
+                notify=notify,
+                persistent=persistent,
+                user=config.user.ident,
+                comment=comment,
+            )
+
+        return http.Response(status=204)
 
     return problem(status=400,
                    title="Unhandled acknowledge-type.",
@@ -248,22 +255,17 @@ def _set_acknowledgement_for_service(
     persistent: bool,
     comment: str,
 ):
-    q = Query([Services.host_name, Services.description, Services.state]).filter(
-        tree_to_expr({
-            'op': '=',
-            'left': 'services.description',
-            'right': service_description
-        }))
-    services = list(q.iterate(connection))
+    services = Query([Services.host_name, Services.description, Services.state],
+                     Services.description == service_description).fetchall(connection)
 
-    if not len(services):
+    if not services:
         return problem(
             status=404,
             title=f'No services with {service_description!r} were found.',
         )
 
     for service in services:
-        if service.state == 0:
+        if not service.state:
             continue
         acknowledge_service_problem(
             connection,
@@ -272,44 +274,8 @@ def _set_acknowledgement_for_service(
             sticky=sticky,
             notify=notify,
             persistent=persistent,
-            user=_user_id(),
+            user=config.user.ident,
             comment=comment,
         )
 
     return http.Response(status=204)
-
-
-def _set_acknowledgement_on_queried_services(
-    connection,
-    services: List[Tuple[str, str]],
-    sticky: bool,
-    notify: bool,
-    persistent: bool,
-    comment: str,
-):
-    if not len(services):
-        return problem(
-            status=400,
-            title='No services with problems found.',
-            detail='All queried services are OK.',
-        )
-
-    for host_name, service_description in services:
-        acknowledge_service_problem(
-            connection,
-            host_name,
-            service_description,
-            sticky=sticky,
-            notify=notify,
-            persistent=persistent,
-            user=_user_id(),
-            comment=comment,
-        )
-    return http.Response(status=204)
-
-
-# mypy can't know this will work.
-def _user_id() -> str:
-    if config.user.id is None:
-        raise RuntimeError("No user set. Check your setup.")
-    return config.user.id

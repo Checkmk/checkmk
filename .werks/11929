@@ -1,0 +1,14 @@
+Title: Change Inline SNMP Backend back to NetSNMP
+Class: fix
+Compatible: compat
+Component: inline-snmp
+Date: 1611135560
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+Due to performance issues with PySNMP the Inline SNMP Backend now uses
+the NetSNMP implementation again.
+
+The PySNMP will still be available and can be used as experimental Backend.

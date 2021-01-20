@@ -44,7 +44,7 @@ echo "[[[errorlog]]]"
 LINE=$(tail -n1 "$MK_ERRPT_AIX_STATE" 2> /dev/null)
 
 if [ "$LINE" ]; then  # get rid of all lines after that:
-    OUT=$(errpt | awk '/'"$LINE"'/ {exit}; (NR>1) {printf "C %s\n", $0}')
+    OUT=$(errpt | awk -v line="$LINE" '($0 == line) {exit}; ($0 != line) && (NR>1) {printf "C %s\n", $0}')
 else  # LINE is empty -> report all
     OUT=$(errpt | awk '(NR>1) {printf "C %s\n", $0}')
 fi

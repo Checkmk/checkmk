@@ -239,7 +239,7 @@ class IPLookupCache:
 
 def _get_ip_lookup_cache() -> IPLookupCache:
     """A file based fall-back DNS cache in case resolution fails"""
-    if _config_cache.exists("ip_lookup"):
+    if "ip_lookup" in _config_cache:
         # Return already created and initialized cache
         return IPLookupCache(_config_cache.get("ip_lookup"))
 

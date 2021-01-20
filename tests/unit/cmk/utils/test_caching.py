@@ -13,10 +13,11 @@ def test_cache_manager():
 
 def test_create_dict_cache():
     mgr = cmk.utils.caching.CacheManager()
+    key = "test"
 
-    assert not mgr.exists("test_dict")
-    cache = mgr.get("test_dict")
-    assert mgr.exists("test_dict")
+    assert key not in mgr
+    cache = mgr.get(key)
+    assert key in mgr
 
     assert isinstance(cache, dict)
     assert isinstance(cache, cmk.utils.caching.DictCache)

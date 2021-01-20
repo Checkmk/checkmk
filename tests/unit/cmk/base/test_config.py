@@ -1607,7 +1607,7 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
                                       expected_host_class_name):
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
 
-    _config_cache.reset()
+    _config_cache.clear()
 
     ts = Scenario()
     ts.add_host("xyz")

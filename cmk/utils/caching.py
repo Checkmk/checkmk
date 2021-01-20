@@ -15,14 +15,14 @@ class CacheManager:
     def __init__(self) -> None:
         self._caches: Dict[str, DictCache] = collections.defaultdict(DictCache)
 
-    def reset(self) -> None:
-        self._caches.clear()
-
-    def exists(self, name: str) -> bool:
+    def __contains__(self, name: str) -> bool:
         return name in self._caches
 
     def get(self, name: str) -> 'DictCache':
         return self._caches[name]
+
+    def clear(self) -> None:
+        self._caches.clear()
 
     def clear_all(self) -> None:
         for cache in self._caches.values():

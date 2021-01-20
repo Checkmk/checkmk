@@ -24,8 +24,8 @@ def clear_config_caches_ip_lookup(monkeypatch):
     from cmk.utils.caching import (  # pylint: disable=import-outside-toplevel
         config_cache as _config_cache,)
     from cmk.utils.caching import runtime_cache as _runtime_cache
-    _config_cache.reset()
-    _runtime_cache.reset()
+    _config_cache.clear()
+    _runtime_cache.clear()
 
 
 @pytest.fixture()

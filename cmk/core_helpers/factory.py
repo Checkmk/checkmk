@@ -44,10 +44,10 @@ def backend(snmp_config: SNMPHostConfig,
     if use_cache or snmp_config.is_usewalk_host:
         return StoredWalkSNMPBackend(snmp_config, logger)
 
-    if inline and snmp_config.snmp_backend == SNMPBackend.inline_legacy:
+    if inline and snmp_config.snmp_backend == SNMPBackend.inline:
         return inline.InlineSNMPBackend(snmp_config, logger)
 
-    if pysnmp_backend and snmp_config.snmp_backend == SNMPBackend.inline:
+    if pysnmp_backend and snmp_config.snmp_backend == SNMPBackend.pysnmp:
         return pysnmp_backend.PySNMPBackend(snmp_config, logger)
 
     if snmp_config.snmp_backend == SNMPBackend.classic:

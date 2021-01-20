@@ -49,16 +49,16 @@ def test_factory_snmp_backend_classic(snmp_config):
 
 def test_factory_snmp_backend_inline(snmp_config):
     snmp_config = snmp_config._replace(snmp_backend=SNMPBackend.inline)
-    if pysnmp_backend:
-        assert isinstance(factory.backend(snmp_config, logging.getLogger()),
-                          pysnmp_backend.PySNMPBackend)
-
-
-def test_factory_snmp_backend_inline_legacy(snmp_config):
-    snmp_config = snmp_config._replace(snmp_backend=SNMPBackend.inline_legacy)
     if inline:
         assert isinstance(factory.backend(snmp_config, logging.getLogger()),
                           inline.InlineSNMPBackend)
+
+
+def test_factory_snmp_backend_pysnmp(snmp_config):
+    snmp_config = snmp_config._replace(snmp_backend=SNMPBackend.pysnmp)
+    if pysnmp_backend:
+        assert isinstance(factory.backend(snmp_config, logging.getLogger()),
+                          pysnmp_backend.PySNMPBackend)
 
 
 def test_factory_snmp_backend_unknown_backend(snmp_config):

@@ -430,7 +430,7 @@ class ABCTestSNMPFetcher(ABC):
         )
 
     @pytest.fixture
-    def fetcher_inline_legacy(self, file_cache):
+    def fetcher_pysnmp(self, file_cache):
         return SNMPFetcher(
             file_cache,
             sections={},
@@ -452,7 +452,7 @@ class ABCTestSNMPFetcher(ABC):
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
-                snmp_backend=SNMPBackend.inline_legacy
+                snmp_backend=SNMPBackend.pysnmp
                 if not cmk_version.is_raw_edition() else SNMPBackend.classic,
             ),
         )
@@ -474,11 +474,10 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
         assert other.snmp_config.snmp_backend == (
             SNMPBackend.inline if not cmk_version.is_raw_edition() else SNMPBackend.classic)
 
-    def test_fetcher_inline_legacy_backend_deserialization(self, fetcher_inline_legacy):
-        other = type(fetcher_inline_legacy).from_json(json_identity(
-            fetcher_inline_legacy.to_json()))
+    def test_fetcher_pysnmp_backend_deserialization(self, fetcher_pysnmp):
+        other = type(fetcher_pysnmp).from_json(json_identity(fetcher_pysnmp.to_json()))
         assert other.snmp_config.snmp_backend == (
-            SNMPBackend.inline_legacy if not cmk_version.is_raw_edition() else SNMPBackend.classic)
+            SNMPBackend.pysnmp if not cmk_version.is_raw_edition() else SNMPBackend.classic)
 
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))

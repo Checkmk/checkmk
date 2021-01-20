@@ -96,7 +96,7 @@ SNMPDeviceTypes = [
 
 class SNMPBackend(enum.Enum):
     inline = "Inline"
-    inline_legacy = "Inline (legacy)"
+    pysnmp = "PySNMP"
     classic = "Classic"
 
     def serialize(self) -> str:

@@ -77,8 +77,7 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
 
 
 def test_description_with_ipaddress(source, monkeypatch):
-    default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: %s)" % (
-        "Classic" if cmk_version.is_raw_edition() else "Inline")
+    default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
     assert source.description == default
 
 
@@ -97,8 +96,7 @@ class TestSNMPSource_SNMP:
             on_scan_error="raise",
         )
         assert source.description == (
-            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: %s)" %
-            ("Classic" if cmk_version.is_raw_edition() else "Inline"))
+            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
 
 
 class TestSNMPSource_MGMT:
@@ -128,8 +126,7 @@ class TestSNMPSource_MGMT:
         )
         assert source.description == (
             "Management board - SNMP "
-            "(Community: 'public', Bulk walk: no, Port: 161, Backend: %s)" %
-            ("Classic" if cmk_version.is_raw_edition() else "Inline"))
+            "(Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
 
 
 class TestSNMPSummaryResult:

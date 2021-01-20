@@ -1,0 +1,14 @@
+Title: Pattern Analyzer: Fix broken link to edit rules
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1611150709
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+If you want to edit a ruleset in the Pattern Analyzer you would get
+a "Invalid user Input" error.
+The link to edit a rule from Pattern Analyzer was not working
+because the ruleset id was not referenced.

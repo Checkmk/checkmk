@@ -271,6 +271,7 @@ class ModePatternEditor(WatoMode):
                     ("host", self._hostname),
                     ("item", ensure_str(watolib.mk_repr(self._item))),
                     ("rule_folder", folder.path()),
+                    ("rule_id", rule.id),
                 ])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
 

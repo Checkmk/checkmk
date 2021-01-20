@@ -84,31 +84,28 @@ class GraphDashlet(Dashlet):
                          dashlet_id=dashlet_id,
                          dashlet=dashlet)
 
-        context = visuals.get_merged_context(
-            visuals.get_context_from_uri_vars(["host", "service"], self.single_infos()),
-            self._dashlet_spec["context"])
-
-        if any((
-                self.type_name() == 'pnpgraph' and
-            ("host" not in context or "service" not in context),
-                self.type_name() == 'custom_graph' and
-                self._dashlet_spec.get('custom_graph') is None,
-        )):
-            return  # The dashlet is not yet configured
-
-        self._dashlet_spec["_graph_identification"] = self.graph_identification(context)
-
-        graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
-        if not isinstance(graph_recipes, list):
-            return
-        if graph_recipes:
-            self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
-        else:
-            raise MKGeneralException(_("Failed to calculate a graph recipe."))
-
         # New graphs which have been added via "add to visual" option don't have a timerange
         # configured. So we assume the default timerange here by default.
         self._dashlet_spec.setdefault('timerange', '1')
+
+        self._init_exception = None
+        try:
+            self._init_graph()
+        except Exception as exc:
+            # Passes error otherwise exception wont allow to enter dashlet editor
+            self._init_exception = exc
+
+    def _init_graph(self):
+        context = visuals.get_merged_context(
+            visuals.get_context_from_uri_vars(["host", "service"], self.single_infos()),
+            self._dashlet_spec["context"])
+        self._dashlet_spec["_graph_identification"] = self.graph_identification(context)
+
+        graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
+        if isinstance(graph_recipes, list) and graph_recipes:
+            self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
+        else:
+            raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
     @staticmethod
     def _resolve_site(host):
@@ -242,4 +239,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         )
 
     def show(self):
+        if self._init_exception:
+            raise self._init_exception
+
         html.div("", id_="dashlet_graph_%d" % self._dashlet_id)

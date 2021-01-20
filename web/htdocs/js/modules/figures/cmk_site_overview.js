@@ -55,18 +55,28 @@ class SiteOverview extends cmk_figures.FigureBase {
 
     update_gui() {
         this.resize();
-        this.render();
+
+        if (this._data.render_mode == "hosts") {
+            this.render_hosts();
+        } else if (this._data.render_mode == "sites") {
+            this.render_sites();
+        }
 
         this.render_title(this._data.title);
     }
 
-    render() {
+    render_hosts() {}
+
+    render_sites() {
         let width = this.plot_size.width;
         let margin = 5;
 
-        // Plan for dynamic sizing:
-        // TODO: ...
-        // TODO: In case hexagon_size < X we set entry_height = hexagon_size and skip rendering the label
+        // Rough logic for dynamic hexagon sizing:
+        // - Get available space (this.plot_size)
+        // - Get number of sites (this._data.data.length)
+        // - Calculate a good hexagon_size based on the available space and number of sites.
+        //   But limit hexagon_size to the size of the "host/service statistic" hexagons.
+        // - In case hexagon_size < X we set entry_height = hexagon_size and skip rendering the label
 
         // TODO: Formel auskobeln
         let hexagon_size = 80;
@@ -84,15 +94,27 @@ class SiteOverview extends cmk_figures.FigureBase {
 
         let centered_translation = "translate(" + entry_width / 2 + "," + entry_height / 2 + ")";
 
+        let handle_click = function (d) {
+            location.href = utils.makeuri({site: d.site_id});
+        };
+
+        let handle_mouseover = function () {
+            d3.select(this).style("opacity", 0.8);
+        };
+
+        let handle_mouseout = function () {
+            d3.select(this).style("opacity", 1);
+        };
+
         let site_boxes_centered_g = site_boxes
             .selectAll("g")
             .data(d => [d])
             .join("g")
             .attr("transform", centered_translation)
             .style("cursor", "pointer")
-            .on("click", d => {
-                location.href = utils.makeuri({site: d.site_id});
-            });
+            .on("click", handle_click)
+            .on("mouseover", handle_mouseover)
+            .on("mouseout", handle_mouseout);
 
         site_boxes_centered_g
             .selectAll("path.outer_line")
@@ -113,16 +135,16 @@ class SiteOverview extends cmk_figures.FigureBase {
             .data(d => [d.title])
             .join("text")
             .text(d => d)
-            .attr("x", function (d) {
+            .attr("x", function () {
                 return entry_width / 2 - this.getBBox().width / 2;
             })
-            .attr("y", function (d) {
+            .attr("y", function () {
                 return entry_height + 4;
             })
             .style("cursor", "pointer")
-            .on("click", d => {
-                location.href = utils.makeuri({site: d.site_id});
-            });
+            .on("click", handle_click)
+            .on("mouseover", handle_mouseover)
+            .on("mouseout", handle_mouseout);
 
         site_boxes.transition().attr("transform", (d, idx) => {
             let x = idx === 0 ? 0 : (idx % max_columns) * (entry_width + margin);

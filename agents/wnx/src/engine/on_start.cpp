@@ -54,7 +54,6 @@ void LogFolders() {
 }
 
 bool FindAndPrepareWorkingFolders(AppType Type) {
-    using namespace cma::cfg;
     namespace fs = std::filesystem;
 
     switch (Type) {
@@ -118,7 +117,8 @@ void UninstallAlert::set() noexcept {
     }
 
     XLOG::l.i("Requested clean on exit");
-    XLOG::details::LogWindowsEventInfo(9, "Requested Clean On Exit");
+    XLOG::details::LogWindowsEventAlways(XLOG::EventLevel::information, 9,
+                                         "Requested Clean On Exit");
     set_ = true;
 }
 
@@ -155,6 +155,10 @@ bool OnStart(AppType proposed_type, const std::wstring& config_file) {
     auto type = CalcAppType(proposed_type);
 
     auto already_loaded = S_OnStartCalled.exchange(true);
+    if (type == AppType::srv) {
+        XLOG::details::LogWindowsEventAlways(XLOG::EventLevel::information, 35,
+                                             "check_mk_service is loading");
+    }
 
     if (!already_loaded) return OnStartCore(type, config_file);
 

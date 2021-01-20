@@ -175,6 +175,11 @@ void Global::updateLogNames() {
 // used to set values during start
 void Global::setLogFolder(const std::filesystem::path& forced_path) {
     std::unique_lock lk(lock_);
+    if (cma::IsService()) {
+        XLOG::details::LogWindowsEventAlways(
+            XLOG::EventLevel::information, 35,
+            "checkmk service uses log path '{}'", forced_path);
+    }
     if (forced_path.empty()) return;
 
     yaml_log_path_ = CheckAndCreateLogPath(forced_path);

@@ -15,6 +15,9 @@
 #include "tools/_process.h"  // start process
 
 namespace cma::install {
+bool g_use_script_to_install{true};
+
+bool UseScriptToInstall() { return g_use_script_to_install; }
 
 InstallMode G_InstallMode = InstallMode::normal;
 InstallMode GetInstallMode() { return G_InstallMode; }
@@ -215,12 +218,12 @@ bool NeedInstall(const std::filesystem::path& incoming_file,
 }
 
 std::pair<std::wstring, std::wstring> MakeCommandLine(
-    const std::filesystem::path& msi, UpdateType update_type) {
+    const std::filesystem::path& msi) {
     namespace fs = std::filesystem;
     // msiexecs' parameters below are not fixed unfortunately
     // documentation is scarce and method of installation in MK
     // is not a special standard
-    std::wstring command = L" /i " + msi.wstring();
+    std::wstring command = L"/i " + msi.wstring();
 
     std::filesystem::path log_file_name = cma::cfg::GetLogDir();
     std::error_code ec;
@@ -232,25 +235,23 @@ std::pair<std::wstring, std::wstring> MakeCommandLine(
 
     log_file_name /= kMsiLogFileName;
 
-    if (update_type == UpdateType::exec_quiet)  // this is only normal method
-    {
-        command += L" /qn";  // but MS doesn't care at all :)
+    command += L" /qn";  // but MS doesn't care at all :)
 
-        if (GetInstallMode() == InstallMode::reinstall) {
-            // this is REQUIRED when we are REINSTALLING already installed
-            // package
-            command += L" REINSTALL = ALL REINSTALLMODE = amus";
-        }
-
-        command += L" /L*V \"";  // quoting too!
-        command += log_file_name;
-        command += L"\"";
+    if (GetInstallMode() == InstallMode::reinstall) {
+        // this is REQUIRED when we are REINSTALLING already installed
+        // package
+        command += L" REINSTALL = ALL REINSTALLMODE = amus";
     }
+
+    command += L" /L*V ";  // quoting too!
+    command += log_file_name;
+    command += L"";
 
     return {command, log_file_name.wstring()};
 }
 
-static void BackupLogFile(const std::filesystem::path& log_file_name) {
+namespace {
+void BackupLogFile(const std::filesystem::path& log_file_name) {
     namespace fs = std::filesystem;
 
     std::error_code ec;
@@ -267,78 +268,119 @@ static void BackupLogFile(const std::filesystem::path& log_file_name) {
 
     if (!success) XLOG::d("Backing up of msi log failed");
 }
+}  // namespace
+
+std::pair<std::wstring, std::wstring> PrepareExecution(
+    const std::filesystem::path& exe, const std::filesystem::path& msi,
+    bool validate_script_exists) {
+    namespace fs = std::filesystem;
+
+    auto [command_tail, log_file_name] = MakeCommandLine(msi);
+
+    std::wstring command;
+
+    fs::path script_file(cfg::GetRootUtilsDir());
+    script_file /= cfg::files::kExecuteUpdateFile;
+    std::error_code ec;
+
+    // no validate -> new
+    // validate and script is present -> new
+    // validate and script is absent -> old
+    auto required_script_absent =
+        validate_script_exists && !fs::exists(script_file, ec);
+
+    if (UseScriptToInstall() && !required_script_absent) {
+        fs::path script_log(cfg::GetLogDir());
+        script_log /= "execute_script.log";
+
+        command =
+            fmt::format(LR"("{}" "{}" "{}" "{}")",
+                        script_file.wstring(),  // path/to/execute_update.cmd
+                        exe.wstring(),          // path/to/msiexec.exe
+                        command_tail,  // "/i check_mk_agent.msi /qn /L*V log"
+                        script_log.wstring());  // script.log
+    } else {
+        command = exe.wstring() + L" " + command_tail;
+    }
+
+    XLOG::l.i("File '{}' exists\n\tCommand is '{}'", msi,
+              wtools::ToUtf8(command));
+
+    return {command, log_file_name};
+}
 
 // check that update exists and exec it
 // returns true when update found and ready to exec
-bool CheckForUpdateFile(std::wstring_view msi_name, std::wstring_view msi_dir,
-                        UpdateType update_type,
-                        UpdateProcess start_update_process,
-                        std::wstring_view backup_dir) {
+std::pair<std::wstring, bool> CheckForUpdateFile(
+    std::wstring_view msi_name, std::wstring_view msi_dir,
+    UpdateProcess start_update_process, std::wstring_view backup_dir) {
     namespace fs = std::filesystem;
 
     // find path to msiexec, in Windows it is in System32 folder
     const auto exe = cma::cfg::GetMsiExecPath();
-    if (exe.empty()) return false;
+    if (exe.empty()) {
+        return {{}, false};
+    }
 
     // check file existence
     fs::path msi_base{msi_dir};
     msi_base /= msi_name;
     std::error_code ec;
-    if (!fs::exists(msi_base, ec)) return false;  // this is ok
-
-    switch (update_type) {
-        case UpdateType::exec_normal:
-        case UpdateType::exec_quiet:
-            break;
-        default:  // safety, MSVC give us no warning
-            XLOG::l("Invalid Option '{}'", static_cast<int>(update_type));
-            return false;
+    if (!fs::exists(msi_base, ec)) {
+        return {{}, false};
     }
 
-    if (!NeedInstall(msi_base, backup_dir)) return false;
+    if (!NeedInstall(msi_base, backup_dir)) {
+        return {{}, false};
+    }
 
     // Move file to temporary folder
     auto msi_to_install = MakeTempFileNameInTempPath(msi_name);
-    if (msi_to_install.empty()) return false;
+    if (msi_to_install.empty()) {
+        return {{}, false};
+    }
 
     // remove target file
     if (RmFile(msi_to_install)) {
         // actual move
-        if (!MvFile(msi_base, msi_to_install)) return false;
+        if (!MvFile(msi_base, msi_to_install)) {
+            return {{}, false};
+        }
         BackupFile(msi_to_install, backup_dir);
 
     } else {
         // THIS BRANCH TESTED MANUALLY
         XLOG::l.i("Fallback to use random name");
         auto temp_name = GenerateTempFileNameInTempPath(msi_name);
-        if (temp_name.empty()) return false;
-        if (!MvFile(msi_base, temp_name)) return false;
+        if (temp_name.empty()) {
+            return {{}, false};
+        }
+        if (!MvFile(msi_base, temp_name)) {
+            return {{}, false};
+        }
 
         msi_to_install = temp_name;
         BackupFile(msi_to_install, backup_dir);
         XLOG::l.i("Installing '{}'", msi_to_install);
     }
 
-    // Prepare Command
+    try {
+        const auto [command, log_file_name] =
+            PrepareExecution(exe, msi_to_install, true);
 
-    auto [command_tail, log_file_name] =
-        MakeCommandLine(msi_to_install, update_type);
+        BackupLogFile(log_file_name);
 
-    std::wstring command = exe;
-    command += L" ";
-    command += command_tail;
+        if (start_update_process == UpdateProcess::skip) {
+            XLOG::l.i("Actual Updating is disabled");
+            return {command, true};
+        }
 
-    BackupLogFile(log_file_name);
-
-    XLOG::l.i("File '{}' exists\n\tCommand is '{}'", msi_to_install,
-              wtools::ToUtf8(command));
-
-    if (start_update_process == UpdateProcess::skip) {
-        XLOG::l.i("Actual Updating is disabled");
-        return true;
+        return {command, tools::RunStdCommand(command, false, TRUE) != 0};
+    } catch (const std::exception& e) {
+        XLOG::l("Unexpected exception '{}' during attempt to exec update ",
+                e.what());
     }
-
-    return cma::tools::RunStdCommand(command, false, TRUE) != 0;
+    { return {{}, false}; }
 }
 
 /// \brief - checks that post install flag is set by MSI
@@ -369,5 +411,4 @@ bool IsMigrationRequired() {
                                     registry::kMsiMigrationRequired,
                                     registry::kMsiMigrationDefault);
 }
-
 };  // namespace cma::install

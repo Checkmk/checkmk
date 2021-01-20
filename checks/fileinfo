@@ -32,65 +32,134 @@ import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 fileinfo_groups = []
 
 
-def _get_field(row, index, data_type):
+def _cast_value(value, data_type):
+    '''
+    >>> _cast_value('abc', str)
+    'abc'
+
+    >>> _cast_value('1.5', float)
+    1.5
+
+    >>> _cast_value('blah', int)
+    None
+
+    >>> _cast_value(None, str)
+    None
+    '''
     try:
-        return data_type(row[index])
-    except (IndexError, ValueError, TypeError):
+        return data_type(value)
+    except (ValueError, TypeError):
         return None
 
 
-def _parse_backwards_compatible(info):
-    for row in info[1:]:
-        name = row[0]
+def _get_field(row, index):
+    '''
+    >>> _get_field(['monster', 'truck', 'races'], 1)
+    'truck'
+
+    >>> _get_field([], 5)
+    None
+    '''
+    try:
+        return row[index]
+    except IndexError:
+        return None
+
+
+def _parse_single_legacy_row(row, **kwargs):
+    name = _cast_value(row[0], str)
+    if not name or name.endswith("No such file or directory"):
         # endswith("No such file...") is needed to
         # support the very old solaris perl based version of fileinfo
-        if not name or name.endswith("No such file or directory"):
-            continue
-        ambiguous = _get_field(row, 1, str)
-        missing = ambiguous == 'missing'
-        failed = ambiguous in ('not readable', '')
-        size = _get_field(row, 1, int)
-        time = _get_field(row, 2, int)
+        return {}
+    file_stats_dict = {
+        'name': name,
+        'size': None,
+        'time': None,
+        'status': 'ok',
+    }
+    size = _get_field(row, 1)
+    if size == 'missing':
+        file_stats_dict['status'] = 'missing'
+        return file_stats_dict
+    if size in ('not readable', ''):
+        file_stats_dict['status'] = 'stat failed'
+        return file_stats_dict
 
-        yield name, missing, failed, size, time
+    file_stats_dict['size'] = _cast_value(size, int)
+    file_stats_dict['time'] = _cast_value(_get_field(row, 2), int)
+    return file_stats_dict
+
+
+def _parse_single_row(row, **kwargs):
+    return dict([(
+        header_stat[0],
+        _cast_value(
+            header_stat[1],
+            kwargs['file_stat_data_types'][header_stat[0]],
+        ),
+    ) for header_stat in zip(kwargs['header'], row)])
+
+
+def _construct_fileinfo_item(name, status, file_stats_dict, FileinfoItem):
+    return FileinfoItem(
+        name,
+        'missing' in status,
+        'stat failed' in status,
+        file_stats_dict.get('size'),
+        file_stats_dict.get('time'),
+    )
 
 
 def parse_fileinfo(info):
     if not info:
         return {}
-    parsed = {'files': {}}
 
-    parsed['reftime'] = _get_field(info[0], 0, int)
+    parsed = {
+        'reftime': _cast_value(info[0][0], int),
+        'files': {},
+    }
+
+    if len(info) == 1:
+        return parsed
 
     FileinfoItem = collections.namedtuple("FileinfoItem", "name missing failed size time")
 
-    # deal with old agents' output:
-    if len(info) > 1 and _get_field(info[1], 0, str) != '[[[header]]]':
-        for args in _parse_backwards_compatible(info):
-            fi = FileinfoItem(*args)
-            parsed['files'][fi.name] = fi
+    file_stat_data_types = {
+        'name': str,
+        'size': int,
+        'time': int,
+        'status': str,
+    }
+
+    if ['[[[header]]]'] not in info:
+        # deal with old agents' output:
+        parse_row_func = _parse_single_legacy_row
+        header = None
+        iter_info = iter(info[1:])
+    elif len(info) < 3:
         return parsed
+    else:
+        parse_row_func = _parse_single_row
+        header = info[2]
+        iter_info = iter(info[4:])
 
-    if len(info) < 3:
-        return parsed
-
-    header = info[2]
-    name_i = header.index('name') if 'name' in header else None
-    size_i = header.index('size') if 'size' in header else None
-    time_i = header.index('time') if 'time' in header else None
-    stat_i = header.index('status') if 'status' in header else None
-
-    for row in info[4:]:
-        name = _get_field(row, name_i, str)
-        stat = _get_field(row, stat_i, str)
-        size = _get_field(row, size_i, int)
-        time = _get_field(row, time_i, int)
-
-        if name is None or stat is None:
+    for row in iter_info:
+        file_stats_dict = parse_row_func(
+            row,
+            header=header,
+            file_stat_data_types=file_stat_data_types,
+        )
+        name = file_stats_dict.get('name')
+        status = file_stats_dict.get('status')
+        if not name or not status:
             continue
-
-        fi = FileinfoItem(name, ('missing' in stat), ('stat failed' in stat), size, time)
-        parsed['files'][fi.name] = fi
+        parsed['files'][name] = _construct_fileinfo_item(
+            name,
+            status,
+            file_stats_dict,
+            FileinfoItem,
+        )
 
     return parsed
 

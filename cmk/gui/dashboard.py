@@ -1030,6 +1030,14 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName, board: Dashboard
                                            mode: str) -> Iterator[PageMenuEntry]:
 
     yield PageMenuEntry(
+        title='Site overview',
+        icon_name='site_overview',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=site_overview' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+
+    yield PageMenuEntry(
         title='Host Statistics',
         icon_name={
             'icon': 'folder',
@@ -1230,8 +1238,8 @@ def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> Non
     """
     if all((
             dashlet.type_name() not in [
-                'single_metric', 'average_scatterplot', 'gauge', 'barplot', 'average_scatterplot',
-                'alerts_bar_chart', 'notifications_bar_chart'
+                'single_metric', 'average_scatterplot', 'site_overview', 'gauge', 'barplot',
+                'average_scatterplot', 'alerts_bar_chart', 'notifications_bar_chart'
             ],
             title is not None,
             dashlet.show_title(),

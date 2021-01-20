@@ -53,6 +53,7 @@ def test_dashlet_registry_plugins():
         'nodata',
         'single_metric',
         'snapin',
+        'site_overview',
     ]
 
     if not cmk_version.is_raw_edition():

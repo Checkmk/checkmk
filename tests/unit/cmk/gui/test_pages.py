@@ -16,6 +16,7 @@ def test_registered_pages():
     expected_pages = [
         'add_bookmark',
         'ajax_average_scatterplot_data',
+        'ajax_site_overview_dashlet_data',
         'ajax_alerts_bar_chart_dashlet',
         'ajax_bi_rule_preview',
         'ajax_bi_aggregation_preview',

@@ -309,7 +309,7 @@ def _render_manpage_list(titles, manpage_list, path_comp, heading):
     def translate(t):
         return titles.get(t, t)
 
-    html.h2(heading)
+    html.h3(heading)
     with table_element(searchable=False, sortable=False, css="check_catalog") as table:
         for entry in sorted(manpage_list, key=lambda x: x["title"]):
             if not isinstance(entry, dict):

@@ -130,7 +130,10 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
             html.show_message(message)
 
         handle_acknowledgement()
+
+        html.open_div(class_="wato")
         render_werks_table(werk_table_options)
+        html.close_div()
 
         html.footer()
 

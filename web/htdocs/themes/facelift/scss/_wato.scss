@@ -1497,12 +1497,8 @@ table.data.analyze_config td.buttons {
 }
 
 .wato h3 {
-  margin-bottom: 12px;
-  font-size: 14px;
-  font-weight: $font-weight-default;
-  letter-spacing: $letter-spacing-table;
-  color: $wato-h3-font-color;
-  text-transform: uppercase;
+  @include table-header-mixin;
+  margin-bottom: 0;
 }
 
 .wato table.data.job_table {

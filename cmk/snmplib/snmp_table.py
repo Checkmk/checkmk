@@ -197,7 +197,7 @@ def _get_snmpwalk(
 ) -> SNMPRowInfo:
     try:
         rowinfo = walk_cache[fetchoid][1]
-        console.vverbose("Already fetched OID: {fetchoid}\n")
+        console.vverbose(f"Already fetched OID: {fetchoid}\n")
         return rowinfo
     except KeyError:
         pass

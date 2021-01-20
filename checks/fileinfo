@@ -75,14 +75,19 @@ def _parse_backwards_compatible(info):
 def parse_fileinfo(info):
     if not info:
         return {}
-    parsed = {'files': {}}
 
-    parsed['reftime'] = _get_field(info[0], 0, int)
+    parsed = {
+        'reftime': _get_field(info[0], 0, int),
+        'files': {},
+    }
+
+    if len(info) == 1:
+        return parsed
 
     FileinfoItem = collections.namedtuple("FileinfoItem", "name missing failed size time")
 
     # deal with old agents' output:
-    if len(info) > 1 and _get_field(info[1], 0, str) != '[[[header]]]':
+    if ['[[[header]]]'] not in info:
         for args in _parse_backwards_compatible(info):
             fi = FileinfoItem(*args)
             parsed['files'][fi.name] = fi

@@ -10097,6 +10097,10 @@ msgstr ""
 msgid "Copy existing view"
 msgstr "(fără elemente)"
 
+#, fuzzy
+msgid "Copy of existing view"
+msgstr "(fără elemente)"
+
 #, fuzzy, python-format
 msgid "Copy rule: %s"
 msgstr "%s regulă %s"
@@ -10208,6 +10212,10 @@ msgstr ""
 
 #, python-format
 msgid "Could not create package: %s"
+msgstr ""
+
+#, python-format
+msgid "Could not detect type of manpage: %s. Maybe the check is missing "
 msgstr ""
 
 msgid "Could not determine current theme."
@@ -22629,10 +22637,6 @@ msgid ""
 "events state is set to UNKNOWN."
 msgstr ""
 
-#, python-format
-msgid "Individual program call (<a href=\"%s\">Rules</a>)"
-msgstr ""
-
 msgid "Individual program call instead of agent access"
 msgstr ""
 
@@ -25173,6 +25177,10 @@ msgstr ""
 #, fuzzy
 msgid "Link to dashboard"
 msgstr "Adaugă element"
+
+#, fuzzy
+msgid "Link to existing view"
+msgstr "(fără elemente)"
 
 msgid "Link to view"
 msgstr ""
@@ -29289,6 +29297,10 @@ msgstr "Adaugă o nouă mapare"
 
 msgid "New tuning"
 msgstr ""
+
+#, fuzzy
+msgid "New view"
+msgstr "Conexiune Noua"
 
 msgid "Newer events"
 msgstr ""

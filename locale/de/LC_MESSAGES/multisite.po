@@ -4,10 +4,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-01-15 15:30+0000\n"
-"Last-Translator: Wontek <wontek.hong@tribe29.com>\n"
+"PO-Revision-Date: 2021-01-20 09:47+0000\n"
+"Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -609,11 +609,11 @@ msgstr ""
 
 #, python-format
 msgid "%s: Top Application Traffic: Last Day View"
-msgstr ""
+msgstr "%s: Top Anwendungsverkehr: Letzte Tagesansicht"
 
 #, python-format
 msgid "%s: Top Application Traffic: Last Hour View"
-msgstr ""
+msgstr "%s: Top Anwendungsverkehr: Letzte Stundenansicht"
 
 #, fuzzy, python-format
 msgid "%s: Top Local Talkers"
@@ -6424,7 +6424,7 @@ msgid "Bandwidth"
 msgstr "Bandbreite"
 
 msgid "Bank (30 day) month"
-msgstr ""
+msgstr "Vorrat (30 Tage) Monat"
 
 msgid "Bar"
 msgstr "Bar"
@@ -7501,7 +7501,7 @@ msgid "Bytes reclaimed by GC"
 msgstr "von GC zurückgeforderte Bytes"
 
 msgid "Bytes reclaimed by GC rate"
-msgstr ""
+msgstr "Wieder in Anspruch genommene Byte durch die GC Rate"
 
 #, fuzzy
 msgid "Bytes rejected"
@@ -7547,7 +7547,7 @@ msgid "CAs to accept"
 msgstr "Zu akzeptierende CAs"
 
 msgid "CBC-DES"
-msgstr ""
+msgstr "CBC-DES"
 
 msgid "CCMS paths to monitor"
 msgstr "Folgende CCMS-Pfade überwachen:"
@@ -7826,6 +7826,8 @@ msgid ""
 "CURDEPTH_PERC: Percentage (CURDEPTH/MAXDEPTH) of the number of messages "
 "currently on the queue."
 msgstr ""
+"CURDEPTH_PERC: Prozentwert (CURDEPTH/MAXDEPTH) der aktuellen Anzahl an "
+"Nachrichten in der Warteschlange."
 
 #, python-format
 msgid "Cache %s"
@@ -9316,7 +9318,7 @@ msgid "Cisco Stack Switch Status"
 msgstr "Cisco Stack-Switch-Status"
 
 msgid "Cisco UCS C-Series Rack Server LED state"
-msgstr ""
+msgstr "Cisco UCS C-Series Rack Server LED Status"
 
 msgid "Cisco VPN Sessions"
 msgstr "Cisco VPN-Sitzungen"
@@ -9720,7 +9722,7 @@ msgid "Color for the average line"
 msgstr "Schwellwerte für die Tablespace-Grösse"
 
 msgid "Color for the main metric scattered dots"
-msgstr ""
+msgstr "Farbe für die vereinzelten Punkte der Hauptmetrik"
 
 #, fuzzy
 msgid "Color for the median line"
@@ -9730,7 +9732,7 @@ msgid "Color gradient"
 msgstr "Farbverlauf"
 
 msgid "Color metric plot"
-msgstr ""
+msgstr "Farbe Metrik Darstellung"
 
 msgid "Colored Background"
 msgstr "Farbiger Hintergrund"
@@ -9786,7 +9788,7 @@ msgid "Combined graphs"
 msgstr "Kombigraphen"
 
 msgid "Combined white-/blacklist for new and vanished services"
-msgstr ""
+msgstr "Kombinierte White- und Blacklist für neue und verschwundene Services"
 
 msgid ""
 "Combining \"%s\" and \"%1\" style replacements in the sevice description is "
@@ -10618,7 +10620,7 @@ msgid "Consider times where the host is down"
 msgstr "Zeiten berücksichtigen wo der Host unten ist"
 
 msgid "Consolidation function for the [cms_graphing#rrds|RRD] data column"
-msgstr ""
+msgstr "Verbindungsfunktion für die [cms_graphing#rrds|RRD]  Datenreihe"
 
 msgid "Consolidation functions"
 msgstr "Konsolidierungsfunktionen"
@@ -10862,6 +10864,10 @@ msgstr "Kopiere Regeln vom Master"
 msgid "Copy existing view"
 msgstr "Vorhandene Ansicht"
 
+#, fuzzy
+msgid "Copy of existing view"
+msgstr "Vorhandene Ansicht"
+
 #, fuzzy, python-format
 msgid "Copy rule: %s"
 msgstr "Neue Regel: %s"
@@ -10924,16 +10930,16 @@ msgid "Couchbase Node: Cluster status"
 msgstr "Clusterstatus"
 
 msgid "Couchbase Node: Size of couch views"
-msgstr ""
+msgstr "Couchbase Knoten: Größe der Couch Ansichten"
 
 msgid "Couchbase Node: Size of documents"
 msgstr "Couchbase-Knoten: Größe der Dokumente"
 
 msgid "Couchbase Node: Size of spacial views"
-msgstr ""
+msgstr "Couchbase Knoten: Größe der räumlichen Ansichten"
 
 msgid "Couchbase Nodes: Items"
-msgstr ""
+msgstr "Couchbase Knoten: Items"
 
 #, fuzzy
 msgid "Couchbase Operations"
@@ -10944,7 +10950,7 @@ msgid "Couchbase Status"
 msgstr "Apache-Status"
 
 msgid "Couchbase Total Bucket Operations"
-msgstr ""
+msgstr "Couchbase Summe der Bucket Operationen"
 
 #, fuzzy
 msgid "Couchbase Total Node Operations"
@@ -10959,7 +10965,7 @@ msgid "Couchbase vBuckets"
 msgstr "Apache-Status"
 
 msgid "Couchbase: Cache"
-msgstr ""
+msgstr "Couchbase: Cache"
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -10971,8 +10977,14 @@ msgstr ""
 msgid "Could not create package: %s"
 msgstr "Fehler beim Erzeugen des Paketes: %s"
 
-msgid "Could not determine current theme."
+#, python-format
+msgid "Could not detect type of manpage: %s. Maybe the check is missing "
 msgstr ""
+"Typ der Manpage konnte nicht festgestellt werden: %s. Vielleicht fehlt der "
+"dazugehörige Check "
+
+msgid "Could not determine current theme."
+msgstr "Aktuelles Theme konnte nicht festgelegt werden"
 
 #, python-format
 msgid ""
@@ -12104,6 +12116,11 @@ msgid ""
 "\"Customer specific report layout\". In that case such report will use the "
 "layout specified here as its layout for this customer."
 msgstr ""
+"Kunden könnten ein bevorzugtes Report Layout haben. Dieser Wert wird nicht "
+"automatisch das verwendete Report Layout für einen Kunden. Es erlaubt dir "
+"die \"Use setting and pages layout from\" mit der option \"Customer specific "
+"report layout\" zu konfigurieren. In diesem Fall wird der Report das hier "
+"spezifierte Layout als Layout für den Kunden verwenden."
 
 #, fuzzy
 msgid "Customize"
@@ -12241,7 +12258,7 @@ msgid "DDN S2A read prefetch hits"
 msgstr "Prefetchingtreffer"
 
 msgid "DDN S2A read/write wait"
-msgstr ""
+msgstr "DDN S2A Lesen/Schreiben warten"
 
 #, fuzzy
 msgid "DDN S2A throughput"
@@ -12293,10 +12310,10 @@ msgid "DHCP statistics (sent messages)"
 msgstr "DHCP Statistik (gesendete Nachrichten)"
 
 msgid "DISTTAG"
-msgstr ""
+msgstr "DISTTAG"
 
 msgid "DIVA CSM: remaining blank tapes"
-msgstr ""
+msgstr "DIVA CSM: Verbleibende Leerbänder"
 
 msgid "DLSw"
 msgstr "DLSw"
@@ -12372,7 +12389,7 @@ msgid "DR:BD roles and diskstates"
 msgstr "DR:BD Rollen und Zustände"
 
 msgid "DRBD"
-msgstr ""
+msgstr "DRBD"
 
 msgid "DRBD device"
 msgstr "DRBD-Gerät"
@@ -12515,6 +12532,8 @@ msgid ""
 "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "
 "the Switchoverstate on Primary."
 msgstr ""
+"Data-Guards mit dg_broker_start=false benötigen Ignore Brokerstate um den "
+"primären Switchoverstate zu monitoren."
 
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr "Database Availability Group (DAG) (Windows)"
@@ -12719,7 +12738,7 @@ msgid "Decoded traffic"
 msgstr "Netzwerkdaten"
 
 msgid "Dedicated white-/blacklists for new and vanished services"
-msgstr ""
+msgstr "Dedizierte White- und Blacklist für neue und verschwundene Services"
 
 msgid "Deduplication efficiency savings"
 msgstr "Deduplizierung (Leistungsfähigkeit) abgeschlossen"
@@ -12895,11 +12914,15 @@ msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
 msgstr ""
+"Definiere Muster um die Kernel Konfigurationsparameter von der Inventur "
+"auszuschließen."
 
 msgid ""
 "Define patterns for including kernel configuration parameters in the "
 "inventory."
 msgstr ""
+"Definiere Muster um die Kernel Konfigurationsparameter bei der Inventur "
+"einzuschließen."
 
 msgid ""
 "Define textfiles to be monitored. The full path is necessary. Glob pattern "
@@ -12941,6 +12964,9 @@ msgid ""
 "Defines what information to query. You can choose between the instance "
 "state, job states, node states and the job queue."
 msgstr ""
+"Definiert welche Informationen abgefragt werden sollen. Man kann zwischen "
+"dem Instanzstatus, dem Jobstatus, dem Knotenstatus und der Jobwartschlange "
+"wählen."
 
 #, fuzzy
 msgid ""
@@ -13713,7 +13739,7 @@ msgid "Details"
 msgstr "Details"
 
 msgid "Details (Previously named: long output)"
-msgstr ""
+msgstr "Details (vorher benannt: long output)"
 
 msgid "Details about a historical event history entry"
 msgstr "Details über einen Eintrag in der Event-Historie"
@@ -13841,16 +13867,18 @@ msgid "Difference"
 msgstr "Unterschied"
 
 msgid "Difference between the first and last operation in the oplog"
-msgstr ""
+msgstr "Unterschied zwischen der ersten und der letzten Operation des oplogs"
 
 msgid "Difference between the first and last operation in the oplog in seconds"
 msgstr ""
+"Unterschied zwischen der ersten und der letzten Operation des oplogs in "
+"Sekunden"
 
 msgid "Difference on summed up values lower level"
-msgstr ""
+msgstr "Unterschied der summierten Werte und des niedrigeren Levels"
 
 msgid "Difference on summed up values upper level"
-msgstr ""
+msgstr "Unterschied der summierten Werte und des oberen Levels"
 
 #, fuzzy
 msgid "Difference on total number of issues lower level"
@@ -13893,7 +13921,7 @@ msgstr ""
 "Standardberichtzeitraums, Verknüpfung zum Berichteditor."
 
 msgid "Direct access to the setup menu"
-msgstr ""
+msgstr "Direkter Zugriff zum Konfigurationsmenü"
 
 msgid "Direct and buffered I/O operations"
 msgstr "Direkte und gepufferte I/O-Operationen"
@@ -14307,7 +14335,7 @@ msgid "Display GUI notifications sent to users."
 msgstr "Zeige Alarme der Weboberfläche, die an die Benutzer gesendet wurden"
 
 msgid "Display Ntop engaged, past and flow alerts"
-msgstr ""
+msgstr "Zeige Ntop belegte, frühere und aktuelle Warnungen"
 
 #, fuzzy
 msgid "Display Ntop flow information"
@@ -14326,7 +14354,7 @@ msgid "Display VM power state <i>additionally</i> on"
 msgstr "VM-Zustand <i>zusätzlich</i> anzeigen auf"
 
 msgid "Display a message if sites are not connected"
-msgstr ""
+msgstr "Zeige eine Nachricht wenn Sites nicht verbunden sind"
 
 msgid "Display a simple message that the graph is missing"
 msgstr "Einfache Fehlermeldung anzeigen, dass der Graph fehlt"
@@ -14354,6 +14382,10 @@ msgid ""
 "numbers of files within the file group. Please enable this feature only if "
 "it is needed."
 msgstr ""
+"Zeige alle Dateien die einen WARN oder CRIT Status in den Service Details "
+"erreicht haben. Notiz: Das Anzeigen der Dateien führt zu einem "
+"Performanceverlust bei großer Anzahl an Dateien in der Dateigruppe. Dieses "
+"Feature bitte nur aktivieren wenn benötigt."
 
 msgid "Display average"
 msgstr "Durchschnitt anzeigen"
@@ -14432,6 +14464,8 @@ msgid ""
 "Display the time an oracle instance spents inside of the different wait "
 "classes."
 msgstr ""
+"Zeige die Zeit, die eine Oracle Instanz in den verschiedenen wait classes "
+"verbringt."
 
 msgid "Display the tree only below this node"
 msgstr "Baum nur unterhalb dieses Knotens anzeigen"
@@ -14440,6 +14474,9 @@ msgid ""
 "Display this text in the service output. You can skip this field if you only "
 "want to change the monitoring state but not the text produced by the service."
 msgstr ""
+"Zeige diesen Text im Service Output. Man kann dieses Feld überspringen, wenn "
+"man nur den Monitoring Status , aber nicht die Textausgabe des Services, "
+"ändern will."
 
 msgid "Display time left in check output"
 msgstr "Restzeit in Ausgabe des Checks anzeigen"
@@ -14965,7 +15002,7 @@ msgid "Do not use 'aws:' prefix for the values."
 msgstr "Verwenden Sie für die Werte kein 'aws:'-Präfix."
 
 msgid "Do not use Checkmk Python, even if it has been installed"
-msgstr ""
+msgstr "Verwende Checkmk Python nicht, auch wenn es installiert wurde."
 
 msgid "Do not use absolute levels"
 msgstr "Keine absolute Schwellen benutzen"
@@ -15281,7 +15318,7 @@ msgid "Don't change state"
 msgstr "Status nicht ändern"
 
 msgid "Don't escape HTML (Dangerous - please read context help)"
-msgstr ""
+msgstr "HTML nicht escapen (Gefährlich - bitte Kontexthilfe lesen)"
 
 #, fuzzy
 msgid "Don't fill area plot"
@@ -15323,6 +15360,8 @@ msgstr "Keinen benutzerdefinierten Port verwenden"
 
 msgid "Don't show or warn if \"Failed Actions\" are present (default)"
 msgstr ""
+"Zeige es nicht an und warne nicht, wenn \"Failed Actions\" vorhanden sind "
+"(default)."
 
 msgid "Don't use HTTP header authentication"
 msgstr "HTTP-Header-Authentifizierung nicht nutzen"
@@ -15332,7 +15371,7 @@ msgid "Don't use TLS/SSL/Https (unsecure)"
 msgstr "HTML-Code nicht maskieren (unsicher)"
 
 msgid "Don't use a namespace prefix"
-msgstr ""
+msgstr "Verwende keinen Namespace Präfix"
 
 msgid "Don't use custom port"
 msgstr "Keinen benutzerdefinierten Port verwenden"
@@ -15487,7 +15526,7 @@ msgid "Downtimes of service"
 msgstr "Wartungszeiten von Service"
 
 msgid "Draw a status border when service is not OK"
-msgstr ""
+msgstr "Zeichne eine Statusleiste, wenn der Service nicht OK ist"
 
 msgid "Driver"
 msgstr "Treiber"
@@ -15515,7 +15554,7 @@ msgid "Dt."
 msgstr "Dt."
 
 msgid "Dummy"
-msgstr ""
+msgstr "Platzhalter"
 
 #, fuzzy, python-format
 msgid "Dump file: %s"
@@ -15605,7 +15644,7 @@ msgid "Dynamic levels - upper bound"
 msgstr "Dynamische Schwellen (obere Grenze)"
 
 msgid "DynamoDB"
-msgstr ""
+msgstr "DynamoDB"
 
 msgid "E-Mails"
 msgstr "E-Mails"
@@ -24442,10 +24481,6 @@ msgstr ""
 "greift). Zuerst wird das KRITISCH-Muster geprüft, dann WARNUNG und zuletzt "
 "OK. Wenn keines der Muster passt, wird der Zustand auf UNBEKANNT gesetzt. "
 
-#, fuzzy, python-format
-msgid "Individual program call (<a href=\"%s\">Rules</a>)"
-msgstr "Datenquellenprogramm (<a href=\"%s\">Regeln</a>)"
-
 msgid "Individual program call instead of agent access"
 msgstr "Programmaufruf (kein Zugriff auf Agenten)"
 
@@ -27001,6 +27036,10 @@ msgstr "Link-Resets ausgehend"
 #, fuzzy
 msgid "Link to dashboard"
 msgstr "Links zu allen Übersichten"
+
+#, fuzzy
+msgid "Link to existing view"
+msgstr "Vorhandene Ansicht"
 
 #, fuzzy
 msgid "Link to view"
@@ -31087,6 +31126,10 @@ msgstr "Neues Thema hinzufügen"
 
 msgid "New tuning"
 msgstr "Neue Anpassung"
+
+#, fuzzy
+msgid "New view"
+msgstr "Vorschau"
 
 msgid "Newer events"
 msgstr "Neuere Ereignisse"
@@ -62541,6 +62584,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Datasource Program (<a href=\"%s\">Rules</a>)"
+#~ msgid "Individual program call (<a href=\"%s\">Rules</a>)"
+#~ msgstr "Datenquellenprogramm (<a href=\"%s\">Regeln</a>)"
 
 #, fuzzy
 #~| msgid "Oldest agent section"

@@ -151,30 +151,31 @@ class GraphDashlet(Dashlet):
             elements=cls._parameter_elements,
         )
 
+    @staticmethod
+    def _vs_timerange():
+        # TODO: Cleanup: switch to generic Timerange() valuespec!
+        return ("timerange",
+                DropdownChoice(
+                    title=_('Timerange'),
+                    default_value='1',
+                    choices=[
+                        ("0", _("4 Hours")),
+                        ("1", _("25 Hours")),
+                        ("2", _("One Week")),
+                        ("3", _("One Month")),
+                        ("4", _("One Year")),
+                    ],
+                ))
+
     @classmethod
     def _parameter_elements(cls):
-        elements = [
-            # TODO: Cleanup: switch to generic Timerange() valuespec!
-            ("timerange",
-             DropdownChoice(
-                 title=_('Timerange'),
-                 default_value='1',
-                 choices=[
-                     ("0", _("4 Hours")),
-                     ("1", _("25 Hours")),
-                     ("2", _("One Week")),
-                     ("3", _("One Month")),
-                     ("4", _("One Year")),
-                 ],
-             )),
+        return [
+            cls._vs_timerange(),
             ("source", Integer(
                 title=_("Source (n'th graph)"),
                 default_value=1,
                 minvalue=1,
             )),
-        ]
-
-        elements += [
             ("graph_render_options",
              vs_graph_render_options(
                  default_values=default_dashlet_graph_render_options,
@@ -185,8 +186,6 @@ class GraphDashlet(Dashlet):
                  ],
              )),
         ]
-
-        return elements
 
     @classmethod
     def script(cls):

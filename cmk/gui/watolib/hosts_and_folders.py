@@ -1272,7 +1272,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             if what == "folder":
                 if folder.is_same_as(self.parent()):
                     continue  # We are already in that folder
-                if folder.name() in folder.subfolders():
+                if folder in folder.subfolders():
                     continue  # naming conflict
                 if self.is_transitive_parent_of(folder):
                     continue  # we cannot be moved in our child folder

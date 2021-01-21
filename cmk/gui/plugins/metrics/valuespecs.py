@@ -4,21 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
+from typing import List, Optional
+import json
 
+from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     CascadingDropdown,
+    CascadingDropdownChoiceValue,
     Checkbox,
-    GraphColor,
     Dictionary,
     DropdownChoice,
     Float,
     Fontsize,
+    GraphColor,
     ListChoice,
     Transform,
+    Tuple,
+    ValueSpecHelp,
 )
 
+from cmk.gui.plugins.metrics import unit_info, metric_info
 from cmk.gui.plugins.metrics import artwork
 
 
@@ -182,3 +189,59 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
         elements = [x for x in elements if x[0] not in exclude]
 
     return elements
+
+
+class ValuesWithUnits(CascadingDropdown):
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            vs_name: str,
+            metric_vs_name: str,
+            elements: List[str],
+            help: Optional[ValueSpecHelp] = None):
+        super().__init__(choices=self._unit_choices, help=help)
+        self._vs_name = vs_name
+        self._metric_vs_name = metric_vs_name
+        self._elements = elements
+
+    def _unit_vs(self, info):
+        def set_vs(vs, title):
+            if vs.__name__ in ["Float", "Integer"]:
+                return vs(title=title, unit=info["symbol"])
+            return vs(title=title)
+
+        vs = info.get('valuespec') or Float
+
+        return Tuple(elements=[set_vs(vs, elem) for elem in self._elements])
+
+    def _unit_choices(self):
+        return [(name, info.get("description", info["title"]), self._unit_vs(info))
+                for (name, info) in unit_info.items()]
+
+    @staticmethod
+    def resolve_units(request):
+        # This relies on python3.8 dictionaries being always ordered
+        # Otherwise it is not possible to mach the unit name to value
+        # CascadingDropdowns enumerate the options instead of using keys
+        known_units = list(unit_info.keys())
+        required_unit = metric_info.get(request["metric"], {}).get("unit", "")
+
+        try:
+            index = known_units.index(required_unit)
+        except ValueError:
+            index = known_units.index("")
+
+        return {"unit": required_unit, "option_place": index}
+
+    def render_input(self, varprefix: str, value: CascadingDropdownChoiceValue) -> None:
+        super().render_input(varprefix, value)
+        root_prefix = varprefix[:varprefix.find(self._vs_name)]
+        metric_ref_prefix = root_prefix + self._metric_vs_name
+        # This will load an event listener between the unit and the metric valuespec
+        html.javascript("cmk.valuespecs.update_unit_selector(%s, %s)" %
+                        (json.dumps(varprefix), json.dumps(metric_ref_prefix)))
+
+
+@page_registry.register_page("ajax_vs_unit_resolver")
+class PageVsAutocomplete(AjaxPage):
+    def page(self):
+        return ValuesWithUnits.resolve_units(self.webapi_request())

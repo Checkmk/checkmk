@@ -11,14 +11,14 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     DropdownChoice,
-    Float,
     GraphColor,
     Timerange,
-    Tuple,
 )
+
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_metric
+from cmk.gui.plugins.metrics.valuespecs import ValuesWithUnits
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.plugins.metrics.html_render import title_info_elements
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
@@ -72,17 +72,15 @@ class SingleMetricDataGenerator(ABCDataGenerator):
             ("display_range",
              CascadingDropdown(title=_("Display range"),
                                choices=[
-                                   ("infer", _("Infer range from available data and check output")),
+                                   ("infer", _("Automatic")),
                                    ("fixed", _("Fixed range"),
-                                    Tuple(title=_("Fixed range"),
-                                          help=_("Use a fixed range for the Data displayed. This "
-                                                 "value has no scaling. If your metric is in the "
-                                                 "range of MB, you'll need to place 9 zeros for "
-                                                 "display to make sense."),
-                                          elements=[
-                                              Float(title=_("Minimum")),
-                                              Float(title=_("Maximum")),
-                                          ])),
+                                    ValuesWithUnits(
+                                        vs_name="display_range",
+                                        metric_vs_name="metric",
+                                        help=_("Set the range in which data is displayed. "
+                                               "Having selected a metric before auto selects "
+                                               "here the matching unit of the metric."),
+                                        elements=[_("Minimum"), _("Maximum")])),
                                ])),
             ("status_border",
              DropdownChoice(title=_("Status border"),

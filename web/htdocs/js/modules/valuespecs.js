@@ -947,3 +947,24 @@ export function visual_filter_list_reset(varprefix, page_request_vars, page_name
     let reset_button = document.getElementById(varprefix + "_reset");
     reset_button.disabled = true;
 }
+
+export function update_unit_selector(selectbox, metric_prefix) {
+    let change_unit_to_match_metric = metric => {
+        const post_data = "request=" + encodeURIComponent(JSON.stringify({metric: metric}));
+        ajax.call_ajax("ajax_vs_unit_resolver.py", {
+            method: "POST",
+            post_data: post_data,
+            response_handler: (_indata, response) => {
+                let json_data = JSON.parse(response);
+                // Error handling is: If request failed do nothing
+                if (json_data.result_code == 0)
+                    $("#" + selectbox + "_sel")
+                        .val(json_data.result.option_place)
+                        .trigger("change");
+            },
+        });
+    };
+    let metric_selector = $("#" + metric_prefix);
+    change_unit_to_match_metric(metric_selector.val());
+    metric_selector.on("change", event => change_unit_to_match_metric(event.target.value));
+}

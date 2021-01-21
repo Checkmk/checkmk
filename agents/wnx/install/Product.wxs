@@ -330,7 +330,7 @@ just to signal that real build script was not called -->
                       Source="resources\execute_update.cmd"
                       KeyPath="yes"
                       Checksum="yes"
-                      DiskId="2" />
+                      DiskId="1" />
             </Component>
 
     </DirectoryRef>

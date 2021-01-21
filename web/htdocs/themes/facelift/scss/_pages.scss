@@ -522,7 +522,7 @@ td.wide {
 
 @mixin table-header-mixin {
   padding: 5px 0 5px 8px;
-  font-size: $font-size-default;
+  font-size: $font-size-global;
   font-weight: $font-weight-bold;
   background-color: $headline-color;
   border-radius: $theme-border-radius $theme-border-radius 0 0;
@@ -577,6 +577,7 @@ tr.data.group_end {
 tr.groupheader td {
   padding: 0;
   margin: 0;
+  font-size: $font-size-global;
   font-weight: $font-weight-bold;
   color: $font-color;
   background: transparent;

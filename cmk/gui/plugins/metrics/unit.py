@@ -11,6 +11,14 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import (
     unit_info,)
 
+from cmk.gui.valuespec import (
+    Age,
+    Float,
+    Percentage,
+    Integer,
+    Filesize,
+)
+
 # TODO Graphingsystem:
 # - Default-Template: Wenn im Graph kein "range" angegeben ist, aber
 # in der Unit eine "range"-Angabe ist, dann soll diese genommen werden.
@@ -54,6 +62,7 @@ unit_info[""] = {
     "symbol": "",
     "render": lambda v: cmk.utils.render.scientific(v, 2),
     "js_render": "v => cmk.number_format.scientific(v, 2)",
+    "valuespec": Float,
 }
 
 unit_info["count"] = {
@@ -62,6 +71,7 @@ unit_info["count"] = {
     "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, drop_zeroes=True),
     "js_render": "v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)",
     "stepping": "integer",  # for vertical graph labels
+    "valuespec": Integer,
 }
 
 # value ranges from 0.0 ... 100.0
@@ -71,6 +81,7 @@ unit_info["%"] = {
     "symbol": _("%"),
     "render": lambda v: cmk.utils.render.percent(v, scientific_notation=True),
     "js_render": "v => cmk.number_format.percent(v, true)",
+    "valuespec": Percentage,
 }
 
 unit_info["s"] = {
@@ -79,6 +90,7 @@ unit_info["s"] = {
     "symbol": _("s"),
     "render": cmk.utils.render.approx_age,
     "js_render": "cmk.number_format.approx_age",
+    "valuespec": Age,
     "stepping": "time",  # for vertical graph labels
 }
 
@@ -104,6 +116,7 @@ unit_info["bytes"] = {
     "render": cmk.utils.render.fmt_bytes,
     "js_render": "cmk.number_format.fmt_bytes",
     "stepping": "binary",  # for vertical graph labels
+    "valuespec": Filesize,
 }
 
 unit_info["bytes/s"] = {
@@ -112,6 +125,7 @@ unit_info["bytes/s"] = {
     "render": lambda v: cmk.utils.render.fmt_bytes(v) + _("/s"),
     "js_render": "(v) => cmk.number_format.fmt_bytes(v)+'/s'",
     "stepping": "binary",  # for vertical graph labels
+    "valuespec": Filesize,
 }
 
 

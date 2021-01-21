@@ -488,6 +488,12 @@ class Integer(ValueSpec):
     def value_to_text(self, value: int) -> str:
         return self._renderer.format_text(self._render_value(value))
 
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
+
     def validate_datatype(self, value: int, varprefix: str) -> None:
         if isinstance(value, numbers.Integral):
             return
@@ -532,6 +538,12 @@ class Filesize(Integer):
     def value_to_text(self, value: int) -> str:  # type: ignore[override]
         exp, count = self.get_exponent(value)
         return "%s %s" % (count, self._names[exp])
+
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
 
 
 class TextAscii(ValueSpec):

@@ -128,7 +128,8 @@ class GaugeFigure extends cmk_figures.FigureBase {
         const display_range = JSON.parse(config.get("properties")).display_range;
 
         let domain = cmk_figures.adjust_domain(cmk_figures.calculate_domain(data), plot.metrics);
-        if (Array.isArray(display_range) && display_range[0] === "fixed") domain = display_range[1];
+        if (Array.isArray(display_range) && display_range[0] === "fixed")
+            domain = display_range[1][1];
 
         const levels = cmk_figures.make_levels(domain, plot.metrics);
         const formatter = cmk_figures.get_function(plot.js_render);

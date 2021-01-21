@@ -49,6 +49,7 @@ def test_registered_pages():
         'ajax_userdb_sync',
         'ajax_visual_filter_list_get_choice',
         'ajax_vs_autocomplete',
+        'ajax_vs_unit_resolver',
         'ajax_fetch_aggregation_data',
         'ajax_save_bi_template_layout',
         'ajax_save_bi_aggregation_layout',

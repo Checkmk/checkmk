@@ -34,7 +34,12 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import (
+    HTTPRedirect,
+    MKGeneralException,
+    MKAuthException,
+    MKUserError,
+)
 from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
 from cmk.gui.type_defs import (
@@ -985,7 +990,8 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
         if html.request.var("save%d" % nr):
             save_and_go = pagename
 
-    if save_and_go or html.request.var("save") or html.request.var("search"):
+    if save_and_go or html.request.var("save") or html.request.var(
+            "save_and_view") or html.request.var("search"):
         try:
             general_properties = vs_general.from_html_vars('general')
 
@@ -1025,12 +1031,19 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
 
             visual['context'] = process_context_specs(context_specs)
 
-            if html.request.var("save") or save_and_go:
+            if html.request.var("save") or html.request.var("save_and_view") or save_and_go:
                 if save_and_go:
                     back_url = makeuri_contextless(
                         global_request,
                         [(visual_type.ident_attr, visual['name'])],
                         filename=save_and_go + '.py',
+                    )
+
+                if html.request.var("save_and_view"):
+                    back_url = makeuri_contextless(
+                        global_request,
+                        [(visual_type.ident_attr, visual['name'])],
+                        filename=visual_type.show_url,
                     )
 
                 if html.check_transaction():
@@ -1047,7 +1060,8 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
                                                         varstring + visual["name"])
                     save(what, all_visuals, owner_user_id)
 
-                flash(_('Your %s has been saved.') % visual_type.title)
+                if not html.request.var("save_and_view"):
+                    flash(_('Your %s has been saved.') % visual_type.title)
                 html.reload_whole_page(back_url)
                 html.footer()
                 return

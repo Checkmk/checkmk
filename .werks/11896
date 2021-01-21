@@ -1,0 +1,17 @@
+Title: Improve detailed service view
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611219440
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+For auto-migrated check plugins the details view of the service could
+contain lots of empty lines, which looked broken, in particular if the
+check plugin had lots of non-OK results.
+
+The summary output is now repeated in the details, which looks more resonable
+and is in line with the new summary/details concept.

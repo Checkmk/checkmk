@@ -208,24 +208,17 @@ def _create_new_result(
         legacy_text: str,
         legacy_metrics: Union[Tuple, List] = (),
 ) -> Generator[Union[Metric, Result], None, bool]:
-    result_state = State(legacy_state)
 
     if legacy_state or legacy_text:  # skip "Null"-Result
-        if is_details:
-            summary = ""
-            details = legacy_text
-        else:
-            is_details = "\n" in legacy_text
-            summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, "")
         # Bypass the validation of the Result class:
         # Legacy plugins may relie on the fact that once a newline
         # as been in the output, *all* following ouput is sent to
         # the details. That means we have to create Results with
         # details only, which is prohibited by the original Result
         # class.
-        yield Result(state=result_state, summary="Fake")._replace(
-            summary=summary,
-            details=details,
+        yield Result(state=State(legacy_state), summary="Fake")._replace(
+            summary="" if is_details else legacy_text.split("\n", 1)[0],
+            details=legacy_text.strip(),
         )
 
     for metric in legacy_metrics:
@@ -240,7 +233,7 @@ def _create_new_result(
             _get_float(v) for v, _ in itertools.zip_longest(metric[2:], range(4)))
         yield Metric(name, value, levels=(warn, crit), boundaries=(min_, max_))
 
-    return is_details
+    return ("\n" in legacy_text) or is_details
 
 
 def _create_signature_check_function(

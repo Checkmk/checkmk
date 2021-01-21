@@ -898,7 +898,7 @@ def invalidate_my_werkid(wid: int) -> None:
     ids.remove(wid)
     store_werk_ids(ids)
     if not ids:
-        sys.stdout.write("This was your last reserved ID.\n")
+        sys.stdout.write(f"\n{tty_red}This was your last reserved ID.{tty_normal}\n\n")
 
 
 def store_werk_ids(l: List[int]) -> None:

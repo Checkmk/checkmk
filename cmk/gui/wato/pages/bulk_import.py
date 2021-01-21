@@ -338,12 +338,10 @@ class ModeBulkImport(WatoMode):
     def _vs_upload(self):
         return Dictionary(
             elements=[
-                ("file",
-                 UploadOrPasteTextFile(
-                     title=_("Import Hosts"),
-                     file_title=_("CSV File"),
-                     default_mode="upload",
-                 )),
+                ("file", UploadOrPasteTextFile(
+                    title=_("Import Hosts"),
+                    file_title=_("CSV File"),
+                )),
                 ("do_service_detection", Checkbox(title=_("Perform automatic service discovery"),)),
             ],
             render="form",

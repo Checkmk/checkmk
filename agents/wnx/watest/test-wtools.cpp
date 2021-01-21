@@ -26,99 +26,102 @@ extern bool g_is_test;
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
-namespace {
-constexpr std::string_view expected_name =
-    tgt::Is64bit() ? "watest64.exe" : "watest32.exe";
-
-std::wstring GetCurrentProcessPath() {
-    auto current_process_id = ::GetCurrentProcessId();
-    return wtools::GetProcessPath(current_process_id);
-}
-
-void KillTmpProcesses() {
-    // kill process
-    wtools::ScanProcessList([](const PROCESSENTRY32& entry) -> auto {
-        auto fname = wtools::ToUtf8(entry.szExeFile);
-        if (fname == expected_name) {
-            wtools::KillProcess(entry.th32ProcessID);
-        }
-        return true;
-    });
-}
-
-int RunMeAgain(int requested) {
-    KillTmpProcesses();
-
-    std::filesystem::path exe{GetCurrentProcessPath()};
-
-    if (exe.filename().u8string() != expected_name) {
-        return 0;
+class WtoolsKillProcFixture : public ::testing::Test {
+protected:
+    static constexpr std::string_view expectedName() {
+        return tgt::Is64bit() ? "watest64.exe" : "watest32.exe";
     }
 
-    auto cmd = fmt::format("{} wait", exe);
-
-    int count = 0;
-    for (int i = 0; i < requested; i++) {
-        if (cma::tools::RunDetachedCommand(cmd)) {
-            count++;
-        }
+    static std::wstring GetCurrentProcessPath() {
+        auto current_process_id = ::GetCurrentProcessId();
+        return wtools::GetProcessPath(current_process_id);
     }
 
-    return count;
-}
-
-std::tuple<std::wstring, uint32_t> FindExpectedProcess() {
-    uint32_t pid = 0;
-    std::wstring path;
-    ScanProcessList([&path, &pid ](const PROCESSENTRY32& entry) -> auto {
-        auto fname = wtools::ToUtf8(entry.szExeFile);
-        if (fname != expected_name) {
+    static void KillTmpProcesses() {
+        // kill process
+        wtools::ScanProcessList([](const PROCESSENTRY32& entry) -> auto {
+            auto fname = wtools::ToUtf8(entry.szExeFile);
+            if (fname == expectedName()) {
+                wtools::KillProcess(entry.th32ProcessID, 99);
+            }
             return true;
+        });
+    }
+
+    static int RunMeAgain(int requested) {
+        std::filesystem::path exe{GetCurrentProcessPath()};
+
+        if (exe.filename().u8string() != expectedName()) {
+            return 0;
         }
 
-        path = GetProcessPath(entry.th32ProcessID);
-        pid = entry.th32ProcessID;
-        return false;
-    });
+        auto cmd = fmt::format("{} wait", exe);
 
-    return {path, pid};
-}
+        int count = 0;
+        for (int i = 0; i < requested; i++) {
+            if (cma::tools::RunDetachedCommand(cmd)) {
+                count++;
+            }
+        }
 
-}  // namespace
-
-TEST(Wtools, ProcessManagement) {
-    auto started = RunMeAgain(1);
-    ASSERT_EQ(started, 1);
-    ON_OUT_OF_SCOPE(KillTmpProcesses());
-
-    {
-        auto [path, pid] = FindExpectedProcess();
-        EXPECT_TRUE(!path.empty());
-        ASSERT_NE(pid, 0);
-        EXPECT_TRUE(wtools::KillProcess(pid, 1));
+        return count;
     }
 
-    {
-        auto [path, pid] = FindExpectedProcess();
-        EXPECT_TRUE(path.empty());
-        EXPECT_TRUE(pid == 0);
+    static std::tuple<std::wstring, uint32_t> FindExpectedProcess() {
+        uint32_t pid = 0;
+        std::wstring path;
+        ScanProcessList([&path, &pid ](const PROCESSENTRY32& entry) -> auto {
+            auto fname = wtools::ToUtf8(entry.szExeFile);
+            if (fname != WtoolsKillProcFixture::expectedName()) {
+                return true;
+            }
+
+            path = GetProcessPath(entry.th32ProcessID);
+            pid = entry.th32ProcessID;
+            return false;
+        });
+
+        return {path, pid};
     }
+
+    void SetUp() override { RunMeAgain(1); }
+
+    void TearDown() override { KillTmpProcesses(); }
+};
+
+TEST_F(WtoolsKillProcFixture, KillProcByPid) {
+    auto [path, pid] = FindExpectedProcess();
+    EXPECT_TRUE(!path.empty());
+    ASSERT_NE(pid, 0);
+
+    EXPECT_TRUE(wtools::KillProcess(pid, 1));
+
+    auto [path_empty, pid_null] = FindExpectedProcess();
+    EXPECT_TRUE(path_empty.empty());
+    EXPECT_TRUE(pid_null == 0);
+
+    EXPECT_FALSE(wtools::KillProcess(pid, 1));
 }
 
-TEST(Wtools, KillProcsByDir) {
+TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
     namespace fs = std::filesystem;
-    auto started = RunMeAgain(2);
-    ASSERT_EQ(started, 2);
-    ON_OUT_OF_SCOPE(KillTmpProcesses());
+    ASSERT_TRUE(RunMeAgain(1));  // additional process
 
-    auto path = fs::path{GetCurrentProcessPath()};
-    auto killed = KillProcessesByDir(path.parent_path().parent_path());
-    EXPECT_EQ(killed, started);
+    auto cur_proc_path = fs::path{GetCurrentProcessPath()};
+    auto killed = KillProcessesByDir(cur_proc_path.parent_path().parent_path());
+    EXPECT_EQ(killed, 2);
+
+    auto [path, pid] = FindExpectedProcess();
+    EXPECT_TRUE(path.empty());
+    EXPECT_TRUE(pid == 0);
+
+    killed = KillProcessesByDir(cur_proc_path.parent_path().parent_path());
+    EXPECT_EQ(killed, 0);
 }
 
-TEST(Wtools, ScanProcess) {
-    using namespace std::chrono;
-    try {
+class WtoolsKillProcessTreeFixture : public ::testing::Test {
+protected:
+    void SetUp() override {
         std::vector<std::string> names;
 
         wtools::ScanProcessList([&names](const PROCESSENTRY32& entry) -> auto {
@@ -133,77 +136,99 @@ TEST(Wtools, ScanProcess) {
             return true;
         });
         EXPECT_TRUE(!names.empty());
-        for (auto& name : names) cma::tools::StringLower(name);
+        for (auto& name : names) {
+            cma::tools::StringLower(name);
+        }
 
         // check that we do not have own process
         EXPECT_FALSE(cma::tools::find(names, std::string("watest32.exe")));
         EXPECT_FALSE(cma::tools::find(names, std::string("watest64.exe")));
         EXPECT_TRUE(cma::tools::find(names, std::string("svchost.exe")));
+    }
 
-        {
-            tst::YamlLoader w;
-            tst::SafeCleanTempDir();
-            ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    void TearDown() override {}
 
-            namespace fs = std::filesystem;
+    uint32_t startProcessTree() {
+        auto exe_a = temp_dir / "a.cmd";
+        auto exe_b = temp_dir / "b.cmd";
+        auto exe_c = temp_dir / "c.cmd";
 
-            fs::path temp_dir = cma::cfg::GetTempDir();
-            std::error_code ec;
+        tst::ConstructFile(exe_a, "@echo start\n@call " + exe_b.u8string());
+        tst::ConstructFile(exe_b, "@echo start\n@call " + exe_c.u8string());
+        tst::ConstructFile(exe_c, "@echo start\n@powershell Start-Sleep 10000");
+        return cma::tools::RunStdCommand(exe_a.wstring(), false);
+    }
 
-            auto exe_a = temp_dir / "a.cmd";
-            auto exe_b = temp_dir / "b.cmd";
-            auto exe_c = temp_dir / "c.cmd";
+    bool findProcessByPid(uint32_t pid) {
+        bool found = false;
+        wtools::ScanProcessList(
+            [&found, pid ](const PROCESSENTRY32& entry) -> auto {
+                if (entry.th32ProcessID == pid) {
+                    found = true;
+                    EXPECT_FALSE(true) << "bullshit found " << pid << "name is "
+                                       << entry.szExeFile;
+                }
+                return true;
+            });
+        return found;
+    }
 
-            tst::ConstructFile(exe_a, "@echo start\n@call " + exe_b.u8string());
-            tst::ConstructFile(exe_b, "@echo start\n@call " + exe_c.u8string());
-            tst::ConstructFile(exe_c,
-                               "@echo start\n@powershell Start-Sleep 10000");
-            auto proc_id = cma::tools::RunStdCommand(exe_a.wstring(), false);
-            EXPECT_TRUE(proc_id != 0);
-
-            names.clear();
-            bool found = false;
-            std::wstring proc_name;
-            DWORD parent_process_id = 0;
-            wtools::ScanProcessList([
-                proc_id, &proc_name, &found, &names, &parent_process_id
-            ](const PROCESSENTRY32& entry) -> auto {
-                names.push_back(wtools::ToUtf8(entry.szExeFile));
-                if (entry.th32ProcessID == proc_id) {
-                    proc_name = entry.szExeFile;
-                    parent_process_id = entry.th32ParentProcessID;
+    bool findProcessByParentPid(uint32_t pid) {
+        bool found = false;
+        wtools::ScanProcessList(
+            [&found, pid ](const PROCESSENTRY32& entry) -> auto {
+                if (entry.th32ParentProcessID == pid) {
                     found = true;
                 }
                 return true;
             });
-
-            EXPECT_TRUE(found) << "NOT FOUND STARTED PROCESS";
-            EXPECT_TRUE(proc_name == L"cmd.exe");
-            EXPECT_EQ(parent_process_id, ::GetCurrentProcessId());
-
-            // killing
-            KillProcessTree(proc_id);
-            KillProcess(proc_id);
-            cma::tools::sleep(500ms);
-
-            found = false;
-            wtools::ScanProcessList(
-                [&found, proc_id ](const PROCESSENTRY32& entry) -> auto {
-                    if (entry.th32ProcessID == proc_id) {
-                        found = true;
-                        EXPECT_FALSE(true) << "bullshit found " << proc_id;
-
-                        ;
-                    }
-                    return true;
-                });
-            EXPECT_FALSE(found) << "process exists";
-        }
-    } catch (const std::exception& e) {
-        XLOG::l("Error ops '{}'", e.what());
-    } catch (...) {
-        XLOG::l("Error ops");
+        return found;
     }
+
+    static std::tuple<std::wstring, uint32_t> findStartedProcess(
+        uint32_t proc_id) {
+        std::wstring proc_name;
+        DWORD parent_process_id = 0;
+        wtools::ScanProcessList([ proc_id, &proc_name, &parent_process_id ](
+                                    const PROCESSENTRY32& entry) -> auto {
+            if (entry.th32ProcessID == proc_id) {
+                proc_name = entry.szExeFile;
+                parent_process_id = entry.th32ParentProcessID;
+            }
+            return true;
+        });
+
+        return {proc_name, parent_process_id};
+    }
+
+    tst::TempCfgFs temp_fs;
+    std::filesystem::path temp_dir{temp_fs.data()};
+};
+
+TEST_F(WtoolsKillProcessTreeFixture, Integration) {
+    using namespace std::chrono_literals;
+
+    // we start process tree
+    auto proc_id = startProcessTree();
+    EXPECT_TRUE(proc_id != 0);
+    cma::tools::sleep(200ms);
+
+    // we check that process is running
+    auto [proc_name, parent_process_id] = findStartedProcess(proc_id);
+
+    EXPECT_TRUE(proc_name == L"cmd.exe");
+    EXPECT_EQ(parent_process_id, ::GetCurrentProcessId());
+
+    EXPECT_TRUE(findProcessByParentPid(proc_id)) << "child process absent";
+
+    // killing
+    KillProcessTree(proc_id);
+    cma::tools::sleep(300ms);
+    EXPECT_FALSE(findProcessByParentPid(proc_id)) << "child process exists";
+    KillProcess(proc_id, 99);
+    cma::tools::sleep(200ms);
+
+    EXPECT_FALSE(findProcessByPid(proc_id)) << "parent process exists";
 }
 
 TEST(Wtools, ConditionallyConvertLowLevel) {
@@ -543,6 +568,7 @@ TEST(Wtools, UserGroupName) {
 TEST(Wtools, Registry) {
     constexpr std::wstring_view path = LR"(SOFTWARE\checkmk_tst\unit_test)";
     constexpr std::wstring_view name = L"cmk_test";
+    namespace fs = std::filesystem;
 
     // clean
     DeleteRegistryValue(path, name);
@@ -565,12 +591,16 @@ TEST(Wtools, Registry) {
         constexpr std::wstring_view expand_value{
             LR"(%ProgramFiles(x86)%\checkmk\service\)"};
         ASSERT_TRUE(SetRegistryValueExpand(path, name, expand_value));
-        std::filesystem::path in_registry(
-            GetRegistryValue(path, name, expand_value));
-        std::filesystem::path expected(
-            LR"(c:\Program Files (x86)\\checkmk\service\)");
-        EXPECT_TRUE(std::filesystem::equivalent(in_registry.lexically_normal(),
-                                                expected.lexically_normal()));
+        fs::path in_registry(GetRegistryValue(path, name, expand_value));
+        fs::path expected(LR"(c:\Program Files (x86)\checkmk\service\)");
+        auto in_normalized = in_registry.lexically_normal();
+        auto expected_normalized = expected.lexically_normal();
+        if (fs::exists(in_normalized)) {
+            EXPECT_TRUE(fs::equivalent(in_normalized, expected_normalized));
+        } else {
+            EXPECT_TRUE(
+                cma::tools::IsEqual(in_normalized, expected_normalized));
+        }
     }
 
     {

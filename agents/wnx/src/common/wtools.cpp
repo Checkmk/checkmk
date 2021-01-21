@@ -131,7 +131,7 @@ int KillProcessesByDir(const std::filesystem::path& dir) noexcept {
 
         auto shift = p.lexically_relative(dir).u8string();
         if (!shift.empty() && shift[0] != '.') {
-            KillProcess(pid);
+            KillProcess(pid, 99);
             killed_count++;
         }
         return true;  // continue, we want to scan all process in the system
@@ -1981,23 +1981,24 @@ std::wstring GetRegistryValue(std::wstring_view path,
 }
 
 // process terminators
-bool KillProcess(uint32_t ProcessId, int Code) noexcept {
-    HANDLE handle = ::OpenProcess(PROCESS_TERMINATE, FALSE, ProcessId);
-    if (nullptr == handle) {
+bool KillProcess(uint32_t pid, int code) noexcept {
+    auto* handle = ::OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    if (handle == nullptr) {
         if (::GetLastError() == 5) {
-            XLOG::d("Cannot open process for termination ACCESS is DENIED'{}'",
-                    ProcessId);
+            XLOG::d("Can't open process for termination ACCESS is DENIED [{}]",
+                    pid);
         }
-        return true;
+        return false;
     }
     ON_OUT_OF_SCOPE(::CloseHandle(handle));
 
-    if (FALSE == ::TerminateProcess(handle, Code)) {
+    if (::TerminateProcess(handle, code) == FALSE) {
         // - we have no problem(process already dead) - ignore
         // - we have problem: either code is invalid or something wrong
         // with Windows in all cases just report
-        XLOG::d("Cannot terminate process '{}' gracefully, error [{}]",
-                ProcessId, GetLastError());
+        XLOG::d("Cannot terminate process [{}] gracefully, error [{}]", pid,
+                ::GetLastError());
+        return false;
     }
 
     return true;
@@ -2093,24 +2094,26 @@ std::string WmiPostProcess(const std::string& in, StatusColumn status_column,
     return std::accumulate(table.begin(), table.end(), std::string());
 }
 
-// returns false only when something is really bad
+/// returns false on system failure
 // based on ToolHelp api family
 // normally require elevation
 // if op returns false, scan will be stopped(this is only optimization)
 bool ScanProcessList(const std::function<bool(const PROCESSENTRY32&)>& op) {
     auto* snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
-    if (snapshot == nullptr) return false;
+    if (snapshot == nullptr) {
+        return false;
+    }
+
     ON_OUT_OF_SCOPE(::CloseHandle(snapshot));
 
     auto current_process_id = ::GetCurrentProcessId();
-
     // scan...
     PROCESSENTRY32 entry32;
     entry32.dwSize = sizeof(entry32);
     auto result = ::Process32First(snapshot, &entry32);
-    while (result != 0) {
-        if ((entry32.th32ProcessID != current_process_id)) {
-            if (!op(entry32)) return true;  // break on false returned
+    while (result != FALSE) {
+        if (entry32.th32ProcessID != current_process_id && !op(entry32)) {
+            return true;  // break on false returned
         }
         result = ::Process32Next(snapshot, &entry32);
     }
@@ -2170,7 +2173,7 @@ void KillProcessTree(uint32_t ProcessId) {
     do {
         // process.th32ProcessId is the PID.
         if (process.th32ParentProcessID == ProcessId) {
-            KillProcess(process.th32ProcessID);
+            KillProcess(process.th32ProcessID, 99);
         }
 
     } while (Process32Next(snapshot, &process));

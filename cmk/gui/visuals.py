@@ -521,9 +521,7 @@ def page_list(what,
     for title1, items in [(_('Customized'), my_visuals),
                           (_("Owned by other users"), foreign_visuals),
                           (_('Builtin'), builtin_visuals)]:
-        html.open_h3()
-        html.write(title1)
-        html.close_h3()
+        html.h3(title1, class_="table")
 
         with table_element(css='data', limit=None) as table:
 

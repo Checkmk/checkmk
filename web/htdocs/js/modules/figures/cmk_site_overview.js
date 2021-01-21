@@ -21,6 +21,9 @@ class SiteOverview extends cmk_figures.FigureBase {
         cmk_figures.FigureBase.prototype.initialize.call(this, debug);
         this.svg = this._div_selection.append("svg");
         this.plot = this.svg.append("g");
+
+        this._tooltip = this._div_selection.append("div").classed("tooltip", true);
+        this.tooltip_generator = new cmk_figures.FigureTooltip(this._tooltip);
     }
 
     update_data(data) {
@@ -50,6 +53,7 @@ class SiteOverview extends cmk_figures.FigureBase {
         cmk_figures.FigureBase.prototype.resize.call(this);
         this.svg.attr("width", this.figure_size.width);
         this.svg.attr("height", this.figure_size.height);
+        this.tooltip_generator.update_sizes(this.figure_size, this.plot_size);
     }
 
     update_gui() {
@@ -183,10 +187,12 @@ class SiteOverview extends cmk_figures.FigureBase {
 
         let handle_mouseover = function () {
             d3.select(this).style("opacity", 0.8);
+            //d3.select(this.parentNode).selectAll(".tooltip").style("visibility", "visible");
         };
 
         let handle_mouseout = function () {
             d3.select(this).style("opacity", 1);
+            //d3.select(this.parentNode).selectAll(".tooltip").style("visibility", "hidden");
         };
 
         let hexagon_boxes = element_boxes
@@ -198,6 +204,8 @@ class SiteOverview extends cmk_figures.FigureBase {
             .on("click", handle_click)
             .on("mouseover", handle_mouseover)
             .on("mouseout", handle_mouseout);
+
+        let tooltip_generator = this.tooltip_generator;
 
         // Now render all hexagons
         hexagon_boxes.each(function (element) {
@@ -219,7 +227,7 @@ class SiteOverview extends cmk_figures.FigureBase {
 
                 let hexagon = hexagon_box
                     .selectAll("path.hexagon_" + i)
-                    .data([0])
+                    .data([element])
                     .join(enter => enter.append("path").classed("hexagon_" + i, true))
                     .attr("d", d3.hexbin().hexagon(radius * scale))
                     .attr("title", part.title)
@@ -247,6 +255,8 @@ class SiteOverview extends cmk_figures.FigureBase {
             } else {
                 element_boxes.selectAll("text").remove();
             }
+
+            tooltip_generator.add_support(hexagon_box.node());
         });
 
         // Place element_boxes

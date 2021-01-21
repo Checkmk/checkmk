@@ -10,7 +10,7 @@ from livestatus import SiteId
 
 from cmk.gui import config
 import cmk.gui.sites as sites
-from cmk.gui.globals import request
+from cmk.gui.globals import request, html
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import Dictionary
@@ -33,6 +33,7 @@ class Element:
     state: Optional[str]
     total: Part
     parts: List[Part]
+    tooltip: str
 
     def serialize(self):
         serialized = asdict(self)
@@ -92,6 +93,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
                     title=site_spec["alias"],
                     link=link,
                     state=state,
+                    tooltip="",
                     parts=[
                         Part(
                             title="",
@@ -183,15 +185,38 @@ def test_elements():
             parts.append(Part(title=title, color=color, count=count))
             total += count
 
+        total_part = Part(title="Total", color=None, count=total)
+
         elements.append(
             Element(
                 title=site_name,
                 link=makeuri(request, [("site", site_id)]),
                 state=None,
                 parts=parts,
-                total=Part(title="Total", color=None, count=total),
+                total=total_part,
+                tooltip=_render_tooltip(parts, total_part),
             ))
     return elements
+
+
+def _render_tooltip(parts: List[Part], total_part: Part) -> str:
+    with html.plugged():
+        html.open_table()
+        for part in parts:
+            html.open_tr()
+            html.td("", class_="color", style="background-color:%s" % part.color)
+            html.td(part.title, class_="title")
+            html.td(str(part.count), class_="count")
+            html.close_tr()
+
+        html.open_tr()
+        html.td("", class_="color")
+        html.td(total_part.title, class_="title")
+        html.td(str(total_part.count), class_="count")
+        html.close_tr()
+
+        html.close_table()
+        return html.drain()
 
 
 @page_registry.register_page("ajax_site_overview_dashlet_data")

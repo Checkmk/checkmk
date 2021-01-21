@@ -406,6 +406,10 @@ class PageRenderer(Base):
     def _transform_old_spec(cls, spec):
         spec.setdefault("sort_index", 99)
         spec.setdefault("is_show_more", False)
+
+        spec.setdefault("context", {})
+        spec.setdefault("add_context_to_title", False)
+
         return spec
 
     @classmethod

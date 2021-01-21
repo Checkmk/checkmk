@@ -1578,10 +1578,7 @@ def load_check_includes(check_file_path: str, check_context: CheckContext) -> bo
 
 
 def check_include_file_path(include_file_name: str) -> str:
-    local_path = cmk.utils.paths.local_checks_dir / include_file_name
-    if local_path.exists():
-        return str(local_path)
-    return os.path.join(cmk.utils.paths.checks_dir, include_file_name)
+    return str(cmk.utils.paths.local_checks_dir / include_file_name)
 
 
 def cached_includes_of_plugin(check_file_path: str) -> CheckIncludes:

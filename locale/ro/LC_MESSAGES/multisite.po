@@ -3719,9 +3719,6 @@ msgstr ""
 msgid "Agent %s successful"
 msgstr "API accesibil"
 
-msgid "Agent Bakery"
-msgstr ""
-
 msgid "Agent Deployment: Downloaded Agent Hash"
 msgstr ""
 
@@ -7312,6 +7309,10 @@ msgstr ""
 
 msgid "CRITICAL"
 msgstr ""
+
+#, fuzzy
+msgid "CRITICAL services"
+msgstr "servicii"
 
 msgid "CRT/PEM File"
 msgstr ""
@@ -11629,6 +11630,10 @@ msgstr ""
 
 msgid "DOWN"
 msgstr ""
+
+#, fuzzy
+msgid "DOWN hosts"
+msgstr " pentru elementul %s"
 
 msgid "DPI"
 msgstr ""
@@ -19835,6 +19840,10 @@ msgstr "(nici un raport)"
 msgid "Hide infotext"
 msgstr ""
 
+#, fuzzy
+msgid "Hide inline help"
+msgstr "Cluster nou"
+
 msgid "Hide internal folder names in WATO"
 msgstr ""
 
@@ -20652,6 +20661,10 @@ msgstr ""
 
 msgid "Hosts having certain service problems"
 msgstr ""
+
+#, fuzzy
+msgid "Hosts in downtime"
+msgstr "de sus in jos"
 
 #, fuzzy, python-format
 msgid "Hosts in folder: %s"
@@ -30665,6 +30678,14 @@ msgstr ""
 msgid "Number of problem alerts"
 msgstr ""
 
+#, fuzzy
+msgid "Number of problematic hosts"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Number of problematic services"
+msgstr "Numarul maxim de mesaje"
+
 msgid "Number of problems"
 msgstr ""
 
@@ -30905,6 +30926,10 @@ msgstr ""
 
 msgid "OK if standby count is zero or equals active paths."
 msgstr ""
+
+#, fuzzy
+msgid "OK services"
+msgstr "servicii"
 
 msgid "OK/Up"
 msgstr ""
@@ -34190,8 +34215,16 @@ msgstr "Agregare noua"
 msgid "Problem details"
 msgstr "Probleme"
 
+#, fuzzy
+msgid "Problem hosts"
+msgstr "Probleme"
+
 msgid "Problem is acknowledged, but is configured to be periodic"
 msgstr ""
+
+#, fuzzy
+msgid "Problem services"
+msgstr "Probleme"
 
 #, python-format
 msgid "Problem while executing hook function %s in hook %s: %s"
@@ -37402,7 +37435,7 @@ msgstr ""
 msgid "Search index"
 msgstr "Cautare"
 
-msgid "Search index file not found, re-building from scratch"
+msgid "Search index not found, re-building from scratch"
 msgstr ""
 
 msgid "Search index successfully built"
@@ -38334,6 +38367,10 @@ msgstr ""
 msgid "Services grouped by service groups"
 msgstr ""
 
+#, fuzzy
+msgid "Services in downtime"
+msgstr "Numele Elementului"
+
 msgid "Services not being monitored due to configuration."
 msgstr ""
 
@@ -38351,6 +38388,11 @@ msgstr ""
 
 msgid "Services of a service group"
 msgstr ""
+
+# georgem ##############
+#, fuzzy
+msgid "Services of down hosts"
+msgstr "Grup nou"
 
 msgid "Services of host"
 msgstr ""
@@ -39009,6 +39051,10 @@ msgstr ""
 
 msgid "Show information of single"
 msgstr ""
+
+#, fuzzy
+msgid "Show inline help"
+msgstr "Cluster nou"
 
 msgid "Show internal tree paths"
 msgstr ""
@@ -48913,10 +48959,6 @@ msgid "Toggle elements"
 msgstr "Adaugă element"
 
 #, fuzzy
-msgid "Toggle inline help"
-msgstr "Cluster nou"
-
-#, fuzzy
 msgid "Toggle log entries"
 msgstr "Cluster nou"
 
@@ -49239,6 +49281,10 @@ msgid "Total number of failed jobs"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
+msgid "Total number of hosts"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
 msgid "Total number of indexes lower level"
 msgstr "Numarul maxim de mesaje"
 
@@ -49308,6 +49354,10 @@ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Total number of registered hosts"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Total number of services"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
@@ -49744,6 +49794,10 @@ msgstr "Grup nou"
 msgid "UNKNOWN Services of host"
 msgstr ""
 
+#, fuzzy
+msgid "UNKNOWN services"
+msgstr "Grup nou"
+
 msgid "UNR."
 msgstr ""
 
@@ -49755,6 +49809,10 @@ msgstr ""
 
 msgid "UP"
 msgstr ""
+
+#, fuzzy
+msgid "UP hosts"
+msgstr "(fără elemente)"
 
 msgid "UPS Capacity"
 msgstr ""
@@ -50276,6 +50334,10 @@ msgstr "Reguli neaplicate"
 
 msgid "Unreachable"
 msgstr ""
+
+#, fuzzy
+msgid "Unreachable hosts"
+msgstr "Sterge Elementul"
 
 msgid "Unreclaimable memory"
 msgstr ""
@@ -52544,6 +52606,10 @@ msgstr ""
 
 msgid "WARNING"
 msgstr ""
+
+#, fuzzy
+msgid "WARNING services"
+msgstr "servicii"
 
 msgid ""
 "WARNING: This Event Console is currently running as a replication slave. The "
@@ -57956,10 +58022,6 @@ msgstr ""
 #~ msgstr "Sterge Elementul"
 
 #, fuzzy
-#~ msgid "Directly reachable hosts"
-#~ msgstr "Sterge Elementul"
-
-#, fuzzy
 #~ msgid "Disable all personal notifications"
 #~ msgstr "Dezactiveaza Notificarile"
 
@@ -59009,10 +59071,6 @@ msgstr ""
 #~ msgstr "Statusul Serverului"
 
 #, fuzzy
-#~ msgid "Service in downtime"
-#~ msgstr "Numele Elementului"
-
-#, fuzzy
 #~ msgid "Service in notification period"
 #~ msgstr "trimite notificare"
 
@@ -59045,11 +59103,6 @@ msgstr ""
 # georgem ##############
 #, fuzzy
 #~ msgid "Services by group"
-#~ msgstr "Grup nou"
-
-# georgem ##############
-#, fuzzy
-#~ msgid "Services of this host"
 #~ msgstr "Grup nou"
 
 #, fuzzy
@@ -60454,10 +60507,6 @@ msgstr ""
 #~ msgstr "Agregare noua"
 
 #, fuzzy
-#~ msgid "Problem hosts"
-#~ msgstr "Probleme"
-
-#, fuzzy
 #~ msgid "RAID Groups"
 #~ msgstr "Grupuri RAID"
 
@@ -60743,10 +60792,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Title:"
 #~ msgstr "(fără titlu)"
-
-#, fuzzy
-#~ msgid "Total number of leases"
-#~ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 #~ msgid "Translated hostname"

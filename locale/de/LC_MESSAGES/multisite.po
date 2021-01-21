@@ -4,10 +4,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-01-20 09:47+0000\n"
-"Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
+"PO-Revision-Date: 2021-01-21 07:00+0000\n"
+"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -3917,9 +3917,6 @@ msgstr "Agent %s, läuft derzeit im <a href=\"%s\">Hintergrund</a>."
 msgid "Agent %s successful"
 msgstr "Agent %s erfolgreich"
 
-msgid "Agent Bakery"
-msgstr "Agentenbäckerei"
-
 msgid "Agent Deployment: Downloaded Agent Hash"
 msgstr "Agenten-Updates: Hash heruntergeladener Agent"
 
@@ -5397,13 +5394,11 @@ msgstr "Service dem folgenden Host zuweisen"
 msgid "Assign services to the following cluster:"
 msgstr "Services zu folgendem Cluster zuordnen:"
 
-#, fuzzy
 msgid "Assign this object to a specific customer."
-msgstr "Eine spezifische Liste von Benutzern."
+msgstr "Ordne dieses Objekt einem bestimmten Kunden zu."
 
-#, fuzzy
 msgid "Assign to group"
-msgstr "Aggregationsgruppe"
+msgstr "Ordne einer Gruppe zu"
 
 msgid "Assign to the affected hosts"
 msgstr "Betroffene Hosts zuordnen"
@@ -5532,15 +5527,14 @@ msgstr "In der Mitte der Seite"
 msgid "At the end of every month at day"
 msgstr "Am Ende jedes Monats bei Tag"
 
-#, fuzzy
 msgid ""
 "At the time the report was created not all Checkmk sites were reachable. So "
 "some of the report's data is probably missing. The following sites had "
 "problems: "
 msgstr ""
-"Während der Report erzugt wurde, waren nicht alle Instanzen erreichbar. "
-"Eventuell ist der Report unvollständig, da Daten von diesen Instanzen fehlen "
-"können. Folgende Instanzen hatten Probleme: "
+"Zum Zeitpunkt der Erstellung des Berichts waren nicht alle Checkmk-Seiten "
+"erreichbar. Wahrscheinlich ist der Bericht unvollständig. Folgende Seiten "
+"hatten Probleme: "
 
 msgid "Att."
 msgstr "Att."
@@ -5569,17 +5563,17 @@ msgstr "Atto Fibrebridge FC port"
 msgid "Attribute"
 msgstr "Attribut"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Attribute \"%s\" of user \"%s\" can not be changed, because it is locked by "
 "the user connection."
 msgstr ""
-"Passwortänderung nicht möglich (es ist durch den user connector gesperrt). "
+"Attribut \"%s\" des Benutzers \"%s\" kann nicht geändert werden, weil es "
+"durch die Benutzerverbindung gesperrt ist."
 
 msgid "Attribute Sync Plugins"
 msgstr "Sync-Plugins für Attribute"
 
-#, fuzzy
 msgid "Attribute sync plugins"
 msgstr "Sync-Plugins für Attribute"
 
@@ -5685,9 +5679,8 @@ msgstr "Berechtigte Instanzen"
 msgid "Auto - adjust to actual values"
 msgstr "Auto - an tatsächliche Werte anpassen"
 
-#, fuzzy
 msgid "Auto Restart on Crash"
-msgstr "Autostart-Dienste"
+msgstr "Automatischer Neustart bei Absturz"
 
 msgid "Auto close off"
 msgstr "Auto-Close aus"
@@ -5752,9 +5745,9 @@ msgstr "Automatische Rückfall"
 msgid "Automatic page reload"
 msgstr "Seite automatisch aktualisieren"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Automatic page reload in %d seconds."
-msgstr "Seite automatisch aktualisieren"
+msgstr "Seite wird in %d Sekunden neu geladen."
 
 msgid "Automatic refresh"
 msgstr "Automatische Aktualisierung"
@@ -5818,9 +5811,8 @@ msgstr "Automatisierungsgeheimnis"
 msgid "Automation URL:"
 msgstr "Automations-URL:"
 
-#, fuzzy
 msgid "Automation User for connection to central site"
-msgstr "Optionales Timeout für Verbindungen zu servicenow einstellen"
+msgstr "Automatisierungsbenutzer für Verbindung zur zentralen Seite"
 
 msgid "Automation Username"
 msgstr "Automatisierung Benutzername"
@@ -5909,9 +5901,8 @@ msgstr "Verfügbare physische Prozessoren im gemeinsamen Pool"
 msgid "Available snapins"
 msgstr "Verfügbare Elemente"
 
-#, fuzzy
 msgid "Available temp space"
-msgstr "Verfügbare Reserven"
+msgstr "Verfügbarer temporärer Speicher"
 
 msgid "Available till"
 msgstr "Verfügbar bis"
@@ -5919,9 +5910,8 @@ msgstr "Verfügbar bis"
 msgid "Average"
 msgstr "Durchschnitt"
 
-#, fuzzy
 msgid "Average Checkmk latency"
-msgstr "Durchschnittliche Check-Latenz"
+msgstr "Durchschnittliche Checkmk-Latenz"
 
 msgid "Average Holding Time For Incoming Messages"
 msgstr "Durchschnittliche Haltedauer eingehender Nachrichten"
@@ -5938,9 +5928,8 @@ msgstr "Durchschnittliche Verzögerung in Ausgangswarteschlange"
 msgid "Average check latency"
 msgstr "Durchschnittliche Check-Latenz"
 
-#, fuzzy
 msgid "Average consumption"
-msgstr "USV Stromverbrauch"
+msgstr "Mittlerer Verbrauch"
 
 msgid "Average disk I/O-queue length"
 msgstr "Durchschnittliche Länge Disk I/O-Queue"
@@ -5957,9 +5946,8 @@ msgstr "Durchschnittliche Länge der Schreib-Warteschlange"
 msgid "Average document count growth"
 msgstr "Durchschnittliches Wachstum der Dokumentenanzahl"
 
-#, fuzzy
 msgid "Average document size"
-msgstr "Durchschnittliche Request-Größe"
+msgstr "Durchschnittliche Dokumentengröße"
 
 msgid "Average end to end wait time"
 msgstr "Durchschnittliche Ende-zu-Ende Wartezeit"
@@ -5970,9 +5958,8 @@ msgstr ""
 "Durchschnittliche End-to-End-Latenzzeit erfolgreicher Anfragen an einen "
 "Speicherdienst"
 
-#, fuzzy
 msgid "Average fetcher latency"
-msgstr "Durchschnittliche Check-Latenz"
+msgstr "Durchschnittliche Fetcher-Latenz"
 
 msgid "Average flush time"
 msgstr "Durchschnittliche Flush-Zeit"
@@ -5989,43 +5976,30 @@ msgstr "Durchschnittliche Latenz von Anfragen vom Typ Client"
 msgid "Average latency for store requests"
 msgstr "urchschnittliche Latenz von Storage-Anfragen"
 
-#, fuzzy
 msgid "Average latency of successful GetItem requests"
-msgstr ""
-"Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher "
-"GetItem-Anfragen"
+msgstr "Durchschnittliche Latenz erfolgreicher GetItem-Anfragen"
 
-#, fuzzy
 msgid "Average latency of successful PutItem requests"
-msgstr ""
-"Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher "
-"PutItem-Anfragen"
+msgstr "Durchschnittliche Latenz erfolgreicher PutItem-Anfragen"
 
-#, fuzzy
 msgid "Average latency of successful Query requests"
-msgstr ""
-"Obere Schwellwerte für die durchschnittliche Latenzzeit erfolgreicher Query-"
-"Anfragen"
+msgstr "Durchschnittliche Latenz erfolgreicher Query-Anfragen"
 
 msgid "Average latency used by Azure Storage to process a successful request"
 msgstr ""
 "Durchschnittliche Latenzzeit, von Azure Storage für eine erfolgreiche Anfrage"
 
-#, fuzzy
 msgid "Average message count lower levels"
-msgstr "Untere Schwellwerte für Container im Zustand paused"
+msgstr "Untere Schwellwerte für die durchschnittliche Anzahl an Meldungen"
 
-#, fuzzy
 msgid "Average message count upper levels"
-msgstr "Obere Schwellwerte für pausierte Container"
+msgstr "Obere Schwellwerte für die durchschnittliche Anzahl an Meldungen"
 
-#, fuzzy
 msgid "Average number of messages"
-msgstr "Maximale Anzahl von Meldungen"
+msgstr "Durchschnittliche Anzahl an Meldungen"
 
-#, fuzzy
 msgid "Average pending tasks delta"
-msgstr "Anzahl ausstehender Aufgaben"
+msgstr "Durchschnittliches Delta anstehender Aufgaben"
 
 msgid "Average processor speed"
 msgstr "Durchschnittliche Prozessor Gescwindigkeit"
@@ -6048,20 +6022,17 @@ msgstr "Durchschnittliche Resident-Größe pro Prozess"
 msgid "Average response time"
 msgstr "Durchschnittliche Antwortzeit"
 
-#, fuzzy
 msgid "Average round-trip response time to this node"
-msgstr "Durchschnittliche Antwortzeit in Milisekunden"
+msgstr "Durchschnittliche Paketumlaufzeit zu diesem Knoten"
 
 msgid "Average roundtrip time in ms"
 msgstr "Durchschnittliche Antwortzeit in Milisekunden"
 
-#, fuzzy
 msgid "Average scatterplot"
-msgstr "Durchschnittsintervall"
+msgstr "Streudiagramm der Durschnitte"
 
-#, fuzzy
 msgid "Average size growth"
-msgstr "Zunahme der Speicherauslastung"
+msgstr "Durschnittliches Größenwachstum"
 
 msgid "Average slave sync time"
 msgstr "Durchschnittliche Slave-Synczeit"
@@ -6076,25 +6047,21 @@ msgstr ""
 "Durchschnittliche CPU-Auslastung über den angegebenen Zeitraum, bevor die "
 "Schwellenwerte angewendet werden."
 
-#, fuzzy
 msgid "Average usage"
-msgstr "Durchschnittswerte"
+msgstr "Durschnittliche Nutzung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Average utilization core %d"
-msgstr "Auslastung Kern %d"
+msgstr "Durschnittliche Auslastung Kern %d"
 
-#, fuzzy
 msgid "Average utilization per core"
-msgstr "Gesamtauslastung"
+msgstr "Durschschnittliche Auslastung pro Kern"
 
-#, fuzzy
 msgid "Average value"
-msgstr "Durchschnittswerte"
+msgstr "Durchschnittswert"
 
-#, fuzzy
 msgid "Average value of the following numeric field: "
-msgstr "Wenn aktiviert, wird die folgende Metrik angezeigt"
+msgstr "Durschnittswert des folgenden numerischen Feldes: "
 
 msgid "Average values"
 msgstr "Durchschnittswerte"
@@ -6111,39 +6078,32 @@ msgstr "Durchschnittliche virtuelle Größe pro Prozess"
 msgid "Average write request size"
 msgstr "Größe der durchschnittlichen Schreibanfrage"
 
-#, fuzzy
 msgid "Averaged values lower level"
-msgstr "Untere Schwellwerte für Container im Zustand paused"
+msgstr "Untere Schwellwerte der gemittelten Werte"
 
-#, fuzzy
 msgid "Averaged values upper level"
-msgstr "Obere Schwellwerte für pausierte Container"
+msgstr "Obere Schwellwerte der gemittelten Werte"
 
 msgid "Averaging"
 msgstr "Durchschnittsbildung"
 
-#, fuzzy
 msgid "Averaging for single cores"
-msgstr "Schwellen für die einzelne Kerne"
+msgstr "Mittelung für einzelne Kerne"
 
 msgid "Averaging for total CPU utilization"
 msgstr "Mittelung der gesamte CPU-Auslastung"
 
-#, fuzzy
 msgid "Avg. rate of allowed requests"
-msgstr "Obere Schwellwerte für den prozentualen Anteil zugelassener Anfragen"
+msgstr "Durchschnittliche Rate an erlaubten Anfragen"
 
-#, fuzzy
 msgid "Avg. rate of blocked requests"
-msgstr "Obere Schwellwerte für den prozentualen Anteil blockierter Anfragen"
+msgstr "Durschnittliche Rate an blockierten Anfragen"
 
-#, fuzzy
 msgid "Avg. request rate"
-msgstr "Anfragerate"
+msgstr "Durschnittliche Anfragenrate"
 
-#, fuzzy
 msgid "Azure AD Connect"
-msgstr "Verbindungsaufbau"
+msgstr "Azure AD Connect"
 
 msgid "Azure Agent Info"
 msgstr "Azure Agent Info"
@@ -6193,9 +6153,8 @@ msgstr "BBcredit-Zero"
 msgid "BI"
 msgstr "BI"
 
-#, fuzzy
 msgid "BI - Checkmk Business Intelligence"
-msgstr "BI - Check_MK Business Intelligence"
+msgstr "BI - Checkmk Business-Intelligence"
 
 msgid "BI Aggregation"
 msgstr "BI-Aggregation"
@@ -6234,9 +6193,8 @@ msgstr "BI Hostnamens Aggregationen"
 msgid "BI Pack Properties"
 msgstr "BI Paketeingenschaften"
 
-#, fuzzy
 msgid "BI Packs"
-msgstr "Neues BI-Paket"
+msgstr "BI-Pakete"
 
 msgid "BI Visualization"
 msgstr "BI Visualisierung"
@@ -6244,9 +6202,8 @@ msgstr "BI Visualisierung"
 msgid "BI compilation"
 msgstr "BI-Kompilierung"
 
-#, fuzzy
 msgid "BI configuration"
-msgstr "Konfiguration"
+msgstr "BI-Konfiguration"
 
 msgid "BI host details"
 msgstr "BI Hostdetails"
@@ -6264,9 +6221,8 @@ msgstr "BI-Regeln %s aus BI-Paket '%s'"
 msgid "BI service details"
 msgstr "BI Servicedetails"
 
-#, fuzzy
 msgid "BI visualization"
-msgstr "BI Visualisierung"
+msgstr "BI-Visualisierung"
 
 msgid "BIOS"
 msgstr "BIOS"
@@ -6339,16 +6295,14 @@ msgstr "Backplane"
 msgid "Backplanes"
 msgstr "Backplanes"
 
-#, fuzzy
 msgid "Backup conditions"
-msgstr "%d Bedingungen"
+msgstr "Backup-Bedingungen"
 
 msgid "Backup configured"
 msgstr "Datensicherung konfiguriert"
 
-#, fuzzy
 msgid "Backup encryption keys"
-msgstr "Statusverschlüsselung"
+msgstr "Backup-Kodierungschlüssel"
 
 msgid "Backup job"
 msgstr "Sicherungs-Job"
@@ -6371,9 +6325,8 @@ msgstr "Sicherungsdauer"
 msgid "Backup-ID"
 msgstr "Sicherungs-ID"
 
-#, fuzzy
 msgid "Backups"
-msgstr "Sicherung"
+msgstr "Backups"
 
 msgid "Bad Requests Received"
 msgstr "Ungültige Anfragen empfangen"
@@ -6381,13 +6334,11 @@ msgstr "Ungültige Anfragen empfangen"
 msgid "Bake agents"
 msgstr "Agenten backen"
 
-#, fuzzy
 msgid "Bake and sign"
-msgstr "Agenten backen"
+msgstr "Backen und signieren"
 
-#, fuzzy
 msgid "Bake and sign agents"
-msgstr "Gebackene Agenten"
+msgstr "Backe und signiere Agenten"
 
 msgid "Baked agents"
 msgstr "Gebackene Agenten"
@@ -6413,9 +6364,8 @@ msgstr "Balancierte Kästen"
 msgid "Ballooned memory"
 msgstr "Ballooned-Speicher"
 
-#, fuzzy
 msgid "Ballooned memory usage"
-msgstr "Ballooned-Speicher"
+msgstr "Nutzung ballooned memory"
 
 msgid "Band"
 msgstr "Band"
@@ -6483,11 +6433,9 @@ msgstr "Basiert auf Rolle"
 msgid "Basic Layout"
 msgstr "Grundlayout"
 
-#, fuzzy
 msgid "Basic authentication"
-msgstr "HTTP Basic Authentication"
+msgstr "Basis-Authentifizierung"
 
-#, fuzzy
 msgid "Basic properties"
 msgstr "Grundlegende Eigenschaften"
 
@@ -6512,9 +6460,8 @@ msgstr "Batteriestrom"
 msgid "Battery temperature"
 msgstr "Batterietemperatur"
 
-#, fuzzy
 msgid "Battery time remaining"
-msgstr "Verbleibende Lebenszeit"
+msgstr "Verbleibende Betriebsdauer der Batterie"
 
 msgid "Beamer lamp operation time"
 msgstr "Betriebszeit der Beamerlampe"
@@ -6534,9 +6481,8 @@ msgstr "Anleitung für Anfänger: Ordner anlegen"
 msgid "Beginner's guide: Host folder structures"
 msgstr "Anleitung für Anfänger: Hostordner Strukturen"
 
-#, fuzzy
 msgid "Below this folder"
-msgstr "Lösche Ordner"
+msgstr "Unter diesem Ordner"
 
 msgid "Best - take best of all node states"
 msgstr "den besten Zustand aller Nodes verwenden"
@@ -6548,13 +6494,11 @@ msgstr "Bester Status"
 msgid "Best state, %d nodes, restrict to %s"
 msgstr "Bester Status, %d Knoten, auf %s begrenzen"
 
-#, fuzzy
 msgid "Biggest input buffer lower level"
-msgstr "Untere Schwellwerte für Container"
+msgstr "Untere Schwellwerte für den größten Eingabepuffer"
 
-#, fuzzy
 msgid "Biggest input buffer upper level"
-msgstr "Obere Schwellwerte für Container"
+msgstr "Obere Schwellwerte für den größten Eingabepuffer"
 
 msgid "Bike"
 msgstr "Rad"
@@ -6568,20 +6512,17 @@ msgstr "Ausführbare Programme"
 msgid "Bind DN"
 msgstr "Bind DN"
 
-#, fuzzy
 msgid "Bind credentials"
-msgstr "LDAP Anmeldedaten"
+msgstr "Anmeldedaten anbinden"
 
-#, fuzzy
 msgid "Bind password"
 msgstr "Passwort anbinden"
 
 msgid "Bind to source address"
 msgstr "Quell-IP-Adresse setzen"
 
-#, fuzzy
 msgid "Bit map updates"
-msgstr "Automatische Updates"
+msgstr "Aktualisierungen der Bitmap"
 
 msgid "Bits"
 msgstr "Bits"
@@ -6650,9 +6591,8 @@ msgstr "Ende des E-Mail Texts für Servicealarme"
 msgid "Bold"
 msgstr "Fett"
 
-#, fuzzy
 msgid "Bonding interfaces"
-msgstr "Name der Bonding-Schnittstelle"
+msgstr "Bonding-Schnittstelle"
 
 msgid "Bookmark list"
 msgstr "Lesezeichenliste"
@@ -6697,13 +6637,11 @@ msgstr "Helligkeit"
 msgid "Brightness Levels"
 msgstr "Helligkeitsschwellwerte"
 
-#, fuzzy
 msgid "Broad-/Multicast"
-msgstr "an alle"
+msgstr "Broad-/Multicast"
 
-#, fuzzy
 msgid "Broadcast packet rates"
-msgstr "Broadcastpakete"
+msgstr "Rate an Broadcast-Paketen"
 
 msgid "Broadcast packets"
 msgstr "Broadcastpakete"
@@ -6720,9 +6658,8 @@ msgstr "Brocade optische Signale"
 msgid "Brocade SFPs"
 msgstr "Brocade SFPs"
 
-#, fuzzy
 msgid "Brocade port discovery"
-msgstr "Serviceerkennung von Brocade-Ports"
+msgstr "Serviceerkennung für Brocade-Ports"
 
 msgid "Broken"
 msgstr "Gebrochen"
@@ -7799,6 +7736,10 @@ msgstr "CRIT bei"
 
 msgid "CRITICAL"
 msgstr "KRITISCH"
+
+#, fuzzy
+msgid "CRITICAL services"
+msgstr "KRIT Service von Host"
 
 msgid "CRT/PEM File"
 msgstr "CRT/PEM-Datei"
@@ -12382,6 +12323,10 @@ msgstr "Erfolgreiche DNS-Anworten"
 msgid "DOWN"
 msgstr "DOWN"
 
+#, fuzzy
+msgid "DOWN hosts"
+msgstr "Andere Hosts"
+
 msgid "DPI"
 msgstr "DPI"
 
@@ -15653,7 +15598,7 @@ msgid "E.Type"
 msgstr "B.Typ"
 
 msgid "E.g. 'project = my_project and result = \"waiting for something\"'"
-msgstr ""
+msgstr "z.B. 'project = my_project and result = \"waiting for something\"'"
 
 #, fuzzy
 msgid "EMC Data Domain MTree state"
@@ -15756,7 +15701,7 @@ msgid "Each attribute may be specified only once."
 msgstr "Jedes Attribut darf nur einmal angegeben werden."
 
 msgid "Each metric must be unique for a service"
-msgstr ""
+msgstr "Jede Metrik für einen Service muss eindeutig sein"
 
 msgid ""
 "Each new message runs through this list of rules. As soon as a regular "
@@ -16331,10 +16276,10 @@ msgid "Enable  (accept encrypted and unencrypted data)"
 msgstr "Erlauben (Verschlüsselte und Unverschlüsselte Daten annehmen)"
 
 msgid "Enable 'Run As <b>Local Group</b>' for scripts"
-msgstr ""
+msgstr "Aktiviere 'Run As <b>Local Group</b>' für Skripte"
 
 msgid "Enable 'Run As <b>User</b>' for scripts"
-msgstr ""
+msgstr "Aktiviere 'Run As <b>User</b>' für Skripte"
 
 msgid "Enable Caching"
 msgstr "Caching Aktivieren"
@@ -16461,7 +16406,7 @@ msgid "Enable row shading"
 msgstr "Zeilenschattierung einschalten"
 
 msgid "Enable separate fetcher and checker helpers"
-msgstr ""
+msgstr "Aktiviere getrennte Fetcher und Checker Helper"
 
 msgid "Enable service notifications"
 msgstr "Servicealarme ein"
@@ -16750,12 +16695,17 @@ msgstr "Benutzername der Instanz"
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
+"Den Exitcode als 10 stellige, kleingeschriebenen Hexwert eingeben, z.B.  "
+"0x00000000."
 
 msgid ""
 "Enter the full name of the project here. You can find the name in Jira "
 "within \"Projects\" - \"View all projects\" - column: \"Project\". This "
 "field is case insensitive"
 msgstr ""
+"Hier den kompletten Projektnamen eingeben. Man kann diesen in Jira in "
+"\"Projekte\" - \"Alle Projekte anzeigen\" - Spalte: \"Projekt\" finden. "
+"Diese Feld ist case sensetiv."
 
 msgid ""
 "Enter the host names of the cluster nodes. These hosts must be present in "
@@ -16768,6 +16718,8 @@ msgid ""
 "Enter the name of the sensor. In single mode, this can be read off from the "
 "service descriptions of the services 'IPMI Sensor ...'."
 msgstr ""
+"Gib den Namen des Sensors ein. Im Single Mode kann dieser aus den Service "
+"Beschreibungen der Services 'IPMI Sensor...' gelesen werden."
 
 msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
@@ -16785,6 +16737,7 @@ msgstr ""
 
 msgid "Enter the workflow name for the project here. E.g. \"in progress\"."
 msgstr ""
+"Gib den Name des Arbeitprozess für das Projekt ein. z.B. \"in progress\"."
 
 #, fuzzy
 msgid "Enter user name"
@@ -16812,7 +16765,7 @@ msgid "Entersekt HTTP EMR Errors"
 msgstr "HTTP Fehler"
 
 msgid "Entersekt HTTP Ecert Errors"
-msgstr ""
+msgstr "Entersekt HTTP Ecert Fehler"
 
 #, fuzzy
 msgid "Entersekt Soap Service Errors"
@@ -16837,7 +16790,7 @@ msgid "Entry"
 msgstr "Eintrag"
 
 msgid "Episode 1: Installing Checkmk and monitoring Linux"
-msgstr ""
+msgstr "Episode 1: Checkmk installieren und Linux monitoren"
 
 #, fuzzy
 msgid "Episode 3: Monitoring Windows"
@@ -17677,7 +17630,7 @@ msgid "Extend downtimes by..."
 msgstr "Wartungszeit verlängern um..."
 
 msgid "Extend the Checkmk GUI with your custom icons"
-msgstr ""
+msgstr "Erweitere die Checkmk GUI mit eigenen benutzerdefinierten Icons."
 
 msgid "Extended perfdata"
 msgstr "Erweiterte Performancedaten"
@@ -18038,6 +17991,10 @@ msgid ""
 "<br>Please download it manually and upload it in the <a href=\"https://"
 "customer.checkmk.com\">Checkmk user portal<a> or send it to sales@tribe29.com"
 msgstr ""
+"Fehler, der Lizenzbericht konnte nicht an den Checkmk Lizenzserver "
+"übermittelt werden '%s'. <br>Bitte laden Sie diesen manuell herunter und "
+"laden ihn im <a href=\"https://customer.checkmk.com\">Checkmk User Portal<a> "
+"hoch oder senden ihn an sales@tribe29.com"
 
 #, python-format
 msgid "Failed to synchronize with site: %s"
@@ -21096,6 +21053,10 @@ msgstr "Im Report verbergen"
 msgid "Hide infotext"
 msgstr "Infotext verstecken"
 
+#, fuzzy
+msgid "Hide inline help"
+msgstr "Schalten Sie die Hilfetexte ein."
+
 msgid "Hide internal folder names in WATO"
 msgstr "Interne Ordnernamen in WATO verstecken"
 
@@ -21907,6 +21868,10 @@ msgstr "Hosts gruppiert durch Host-Gruppen"
 
 msgid "Hosts having certain service problems"
 msgstr "Hosts mit Serviceproblemen"
+
+#, fuzzy
+msgid "Hosts in downtime"
+msgstr "Host in Wartungszeit"
 
 #, fuzzy, python-format
 msgid "Hosts in folder: %s"
@@ -32542,6 +32507,14 @@ msgstr "Anzahl von Tests pro Sprung"
 msgid "Number of problem alerts"
 msgstr "Anzahl von Problemalarmen"
 
+#, fuzzy
+msgid "Number of problematic hosts"
+msgstr "Anzahl von Probleme"
+
+#, fuzzy
+msgid "Number of problematic services"
+msgstr "Anzahl von Problemalarmen"
+
 msgid "Number of problems"
 msgstr "Anzahl von Probleme"
 
@@ -32770,6 +32743,10 @@ msgstr "OK-Bereich"
 
 msgid "OK if standby count is zero or equals active paths."
 msgstr "OK wenn keine Anzahl Standby-Pfade 0 oder gleich der aktiven Pfade"
+
+#, fuzzy
+msgid "OK services"
+msgstr "Services"
 
 msgid "OK/Up"
 msgstr "OK/Up"
@@ -36238,8 +36215,16 @@ msgstr "Problem Aggregationen"
 msgid "Problem details"
 msgstr "Problem Details"
 
+#, fuzzy
+msgid "Problem hosts"
+msgstr "Problem-Hosts"
+
 msgid "Problem is acknowledged, but is configured to be periodic"
 msgstr "Das Problem ist bestätigt, periodische Benachrichtigungen sind aktiv"
+
+#, fuzzy
+msgid "Problem services"
+msgstr "Veraltete Services"
 
 #, python-format
 msgid "Problem while executing hook function %s in hook %s: %s"
@@ -39438,7 +39423,7 @@ msgstr "In diesem Ordner suchen"
 msgid "Search index"
 msgstr "Suche in %s"
 
-msgid "Search index file not found, re-building from scratch"
+msgid "Search index not found, re-building from scratch"
 msgstr ""
 
 #, fuzzy
@@ -40352,6 +40337,10 @@ msgstr "Services gruppiert nach Hostgruppen"
 msgid "Services grouped by service groups"
 msgstr "Services gruppiert nach Service-Gruppen"
 
+#, fuzzy
+msgid "Services in downtime"
+msgstr "Service in Wartungszeit"
+
 msgid "Services not being monitored due to configuration."
 msgstr "Services die aufgrund der Konfiguration nicht überwacht werden."
 
@@ -40369,6 +40358,10 @@ msgstr "Services von Instanz"
 
 msgid "Services of a service group"
 msgstr "Services einer Servicegruppe"
+
+#, fuzzy
+msgid "Services of down hosts"
+msgstr "Services von Host"
 
 msgid "Services of host"
 msgstr "Services von Host"
@@ -41079,6 +41072,10 @@ msgstr "Informationen von einem einzigen %s zeigen"
 
 msgid "Show information of single"
 msgstr "Informationen zeigen von einzelnem"
+
+#, fuzzy
+msgid "Show inline help"
+msgstr "Schalten Sie die Hilfetexte ein."
 
 msgid "Show internal tree paths"
 msgstr "Zeige interne Baumpfade"
@@ -53185,10 +53182,6 @@ msgstr "Checkboxen verstecken"
 msgid "Toggle elements"
 msgstr "Namen umschalten"
 
-#, fuzzy
-msgid "Toggle inline help"
-msgstr "Schalten Sie die Hilfetexte ein."
-
 msgid "Toggle log entries"
 msgstr "Log-Einträge umschalten"
 
@@ -53510,6 +53503,10 @@ msgid "Total number of failed jobs"
 msgstr "Gesamtzahl fehlgeschlagener Aufträge"
 
 #, fuzzy
+msgid "Total number of hosts"
+msgstr "Gesamtzahl Aufträge"
+
+#, fuzzy
 msgid "Total number of indexes lower level"
 msgstr "Gesamtzahl von Modems"
 
@@ -53577,6 +53574,10 @@ msgstr "Gesamtzahl von Bändern"
 
 msgid "Total number of registered hosts"
 msgstr "Gesamtzahl registrierter Hosts"
+
+#, fuzzy
+msgid "Total number of services"
+msgstr "Anzahl von Services"
 
 #, fuzzy
 msgid "Total number of stream rules lower level"
@@ -54003,6 +54004,10 @@ msgstr "UNKNOWN Services von"
 msgid "UNKNOWN Services of host"
 msgstr "UNKNOWN Services von"
 
+#, fuzzy
+msgid "UNKNOWN services"
+msgstr "UNKNOWN Services von"
+
 msgid "UNR."
 msgstr "UNR."
 
@@ -54014,6 +54019,10 @@ msgstr "UNREACHABLE"
 
 msgid "UP"
 msgstr "UP"
+
+#, fuzzy
+msgid "UP hosts"
+msgstr "Hosts"
 
 msgid "UPS Capacity"
 msgstr "USV-Kapazität"
@@ -54573,6 +54582,10 @@ msgid "Unpackaged files"
 msgstr "Unpaketierte Dateien"
 
 msgid "Unreachable"
+msgstr "Nicht erreichbar"
+
+#, fuzzy
+msgid "Unreachable hosts"
 msgstr "Nicht erreichbar"
 
 msgid "Unreclaimable memory"
@@ -56966,6 +56979,10 @@ msgstr "WARN/CRIT"
 
 msgid "WARNING"
 msgstr "WARNUNG"
+
+#, fuzzy
+msgid "WARNING services"
+msgstr "Webservices"
 
 msgid ""
 "WARNING: This Event Console is currently running as a replication slave. The "
@@ -62585,6 +62602,9 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
+#~ msgid "Agent Bakery"
+#~ msgstr "Agentenbäckerei"
+
 #, fuzzy
 #~| msgid "Datasource Program (<a href=\"%s\">Rules</a>)"
 #~ msgid "Individual program call (<a href=\"%s\">Rules</a>)"
@@ -63532,10 +63552,6 @@ msgstr ""
 
 #~ msgid "CPU utilization of routing engine."
 #~ msgstr "CPU-Auslastung der Routing Engine"
-
-#, fuzzy
-#~ msgid "CRIT Services"
-#~ msgstr "KRIT Service von Host"
 
 #~ msgid "CSV data export"
 #~ msgstr "Datenexport als CSV"
@@ -65489,9 +65505,6 @@ msgstr ""
 #~ msgid "Service hard states"
 #~ msgstr "Service Status (hart)"
 
-#~ msgid "Service in downtime"
-#~ msgstr "Service in Wartungszeit"
-
 #~ msgid "Service in notification period"
 #~ msgstr "Service in Alarmierungsperiode"
 
@@ -66070,10 +66083,6 @@ msgstr ""
 #~ msgid "Timeperiods"
 #~ msgstr "Zeitperioden"
 
-#, fuzzy
-#~ msgid "UNKNOWN Services"
-#~ msgstr "UNKNOWN Services von"
-
 #~ msgid "URL to this frame"
 #~ msgstr "URL auf diesen Frame"
 
@@ -66237,10 +66246,6 @@ msgstr ""
 
 #~ msgid "View permitted maps"
 #~ msgstr "Erlaubte Karten anzeigen"
-
-#, fuzzy
-#~ msgid "WARN Services"
-#~ msgstr "Webservices"
 
 #~ msgid "WATO"
 #~ msgstr "WATO"

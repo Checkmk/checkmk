@@ -1844,7 +1844,7 @@ def _save_pre_17_site_globals_on_slave_site(tarcontent: bytes) -> None:
 
 def create_distributed_wato_files(base_dir: Path, site_id: SiteId, is_remote: bool) -> None:
     _create_distributed_wato_file_for_base(base_dir, site_id, is_remote)
-    _create_distributed_wato_file_for_dcd(base_dir)
+    _create_distributed_wato_file_for_dcd(base_dir, is_remote)
 
 
 def _create_distributed_wato_file_for_base(base_dir: Path, site_id: SiteId,
@@ -1859,8 +1859,8 @@ def _create_distributed_wato_file_for_base(base_dir: Path, site_id: SiteId,
     store.save_file(base_dir.joinpath("etc/check_mk/conf.d/distributed_wato.mk"), output)
 
 
-def _create_distributed_wato_file_for_dcd(base_dir: Path) -> None:
-    if cmk_version.is_raw_edition():
+def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> None:
+    if cmk_version.is_raw_edition() or not is_remote:
         return
 
     with base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk").open(mode="w",

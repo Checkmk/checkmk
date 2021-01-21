@@ -1,0 +1,12 @@
+Title: Missing DCD connections
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1611235843
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+For some distributed setups the master site was unable to see all DCD connections.

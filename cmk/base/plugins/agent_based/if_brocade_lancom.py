@@ -13,6 +13,7 @@ from .agent_based_api.v1 import (
     contains,
     register,
     SNMPTree,
+    OIDEnd,
 )
 from .utils import if64, interfaces
 
@@ -30,21 +31,76 @@ IF64_BASE_TREE = SNMPTree(
 )
 
 
+def _map_ports(ethernet_ports_assignment: StringByteTable) -> Mapping[str, str]:
+    """Create physical to virtual ports map
+
+    Lancom defines a mapping from physical to virtual ports
+    at LCOS-MIB::lcsStatusEthernetPortsPortsEntry (.1.3.6.1.4.1.2356.11.1.51.1.1)
+    >>> _map_ports([
+    ...     ['2', '0'],
+    ...     ['3', '512'],
+    ...     ['4', '2'],
+    ...     ['5', '3'],
+    ...     ['17', '4'],
+    ...     ['18', '5'],
+    ... ])
+    {'ETH-1': 'LAN-1', 'ETH-2': 'DSL-1', 'ETH-3': 'LAN-3', 'ETH-4': 'LAN-4', 'WAN-1': 'LAN-5', 'WAN-2': 'LAN-6'}
+    """
+    # lcsStatusEthernetPortsPortsEntryPort
+    physical_port = {
+        "1": "uplink",
+        "2": "ETH-1",
+        "3": "ETH-2",
+        "4": "ETH-3",
+        "5": "ETH-4",
+        "16": "WAN",
+        "17": "WAN-1",
+        "18": "WAN-2",
+        "32": "SFP-1",
+    }
+    # lcsStatusEthernetPortsPortsEntryAssignment
+    virtual_port = {
+        "0": "LAN-1",
+        "1": "LAN-2",
+        "2": "LAN-3",
+        "3": "LAN-4",
+        "4": "LAN-5",
+        "5": "LAN-6",
+        "512": "DSL-1",
+        "513": "DSL-2",
+        "514": "DSL-3",
+        "515": "DSL-4",
+        "516": "DSL-5",
+    }
+    return {
+        physical_port.get(str(e[0]), "unknown"): virtual_port.get(str(e[1]), "unknown")
+        for e in ethernet_ports_assignment
+    }
+
+
 def _fix_line(
     line: StringByteLine,
     description: str,
     name_map: Mapping[str, str],
+    port_map: Mapping[str, str],
 ) -> StringByteLine:
     """This function changes contents of @line which each only apply to Lancom or Brocade
     routers. Since we have to split off @description anyway we apply both changes in
-    one place rather than in dedicated locations."""
+    one place rather than in dedicated locations.
+    """
     index, name_raw, type_str, speed, *rest = line
     name = str(name_raw)
     return [
         index,
-        (  # augment name - applies to Lancom routers only
-            f"{name} Logical {name_map.get(name, '')}"  #
-            if description.startswith("Logical Network") else name).strip(),
+        # augment name - applies to Lancom routers only
+        "".join((
+            name,
+            (f" Logical {name_map.get(name, '')}"
+             if description.startswith('Logical Network') else ''),
+            (f" maps to {port_map.get(name, '')}" if name in port_map else
+             f" belongs to {', '.join(k for k, v in port_map.items() if v == name )}"
+             if name in port_map.values() else ""),
+        )),
         type_str,
         if64.fix_if_64_highspeed(str(speed)),  # apllies to Brocade routers only
         *rest,
@@ -54,6 +110,7 @@ def _fix_line(
 def parse_if_brocade_lancom(
     if_table: StringByteTable,
     name_map: Mapping[str, str],
+    port_map: Mapping[str, str],
     ignore_descriptions: Iterable[str],
 ) -> interfaces.Section:
     """
@@ -64,12 +121,13 @@ def parse_if_brocade_lancom(
     ...        '10', '11', '12', '13', 'eth1', [0, 12, 206, 149, 55, 128], 'Logical Network'],
     ...     ],
     ...     {'eth0': 'LAN'},
+    ...     {},
     ...     {'Local'}):
     ...   print(result.descr, result.alias, result.speed)
     eth0 Logical LAN eth1 30000000
     """
     return if64.generic_parse_if64([[
-        _fix_line(line, description, name_map)
+        _fix_line(line, description, name_map, port_map)
         for *line, description in if_table
         if isinstance(description, str)
         if not any(description.startswith(d) for d in ignore_descriptions)
@@ -80,15 +138,17 @@ def parse_if_brocade(string_table: StringByteTable) -> interfaces.Section:
     return parse_if_brocade_lancom(
         if_table=string_table,
         name_map={},
+        port_map={},
         ignore_descriptions={"Point-2-Point"},
     )
 
 
 def parse_if_lancom(string_table: List[StringByteTable]) -> interfaces.Section:
-    if_table, ssid_table = string_table
+    if_table, ssid_table, port_mapping = string_table
     return parse_if_brocade_lancom(
         if_table,
         name_map={str(ssid_line[0]): str(ssid_line[1]) for ssid_line in ssid_table},
+        port_map=_map_ports(port_mapping),
         ignore_descriptions={"P2P", "Point-2-Point"},
     )
 
@@ -115,6 +175,14 @@ register.snmp_section(
             oids=[
                 "1",  # lcsStatusWlanNetworksEntryIfc
                 "3",  # lcsStatusWlanNetworksEntryNetworkName
+            ],
+        ),
+        # Lancom LCOS-MIB::lcsStatusEthernetPortsPortsEntry
+        SNMPTree(
+            base=".1.3.6.1.4.1.2356.11.1.51.1.1",
+            oids=[
+                OIDEnd(),
+                "7",  # lcsStatusEthernetPortsPortsEntryAssignment
             ],
         ),
     ],

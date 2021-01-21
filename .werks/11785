@@ -1,0 +1,13 @@
+Title: Show device mapping for Lancom routers
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1611143917
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b7
+
+Lancom routers may map physical to logical devices which has not been taken
+into account when checking Lancom network interfaces.
+This change will add this mapping information to the check output.

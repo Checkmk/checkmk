@@ -768,10 +768,6 @@ table.views {
 
 /* Availability */
 table.data.availability {
-  width: 100%;
-  border: $availability-data-table-border;
-  box-shadow: $availability-data-table-box-shadow;
-
   td.number {
     width: 60px;
   }
@@ -781,23 +777,11 @@ table.data.availability {
   }
 
   tr.summary td {
-    padding-top: 1px;
-    padding-bottom: 1px;
     font-weight: bold;
-    border-top: 1px solid $color-table-border;
-    border-bottom-style: none;
   }
 
   tr.odd0 td.number.stats {
     opacity: 0.5;
-  }
-
-  td {
-    border-color: $color-table-border !important;
-  }
-
-  th {
-    background: $availability-data-th-bg-color;
   }
 }
 

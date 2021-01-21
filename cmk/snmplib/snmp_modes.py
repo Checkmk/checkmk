@@ -53,9 +53,9 @@ def get_single_oid(oid: str,
         oid = '.' + oid
 
     # TODO: Use generic cache mechanism
-    if snmp_cache.is_in_single_oid_cache(oid):
+    if oid in snmp_cache.single_oid_cache():
         console.vverbose("       Using cached OID %s: " % oid)
-        cached_value = snmp_cache.get_oid_from_single_oid_cache(oid)
+        cached_value = snmp_cache.single_oid_cache()[oid]
         console.vverbose("%s%s%r%s\n" % (tty.bold, tty.green, cached_value, tty.normal))
         return cached_value
 
@@ -86,7 +86,7 @@ def get_single_oid(oid: str,
     else:
         decoded_value = value
 
-    snmp_cache.set_single_oid_cache(oid, decoded_value)
+    snmp_cache.single_oid_cache()[oid] = decoded_value
     return decoded_value
 
 

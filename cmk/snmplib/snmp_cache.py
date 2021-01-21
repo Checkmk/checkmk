@@ -47,25 +47,15 @@ def write_single_oid_cache(snmp_config: SNMPHostConfig) -> None:
     store.save_object_to_file(cache_path, _g_single_oid_cache, pretty=False)
 
 
-def set_single_oid_cache(oid: OID, value: Optional[SNMPDecodedString]) -> None:
-    assert _g_single_oid_cache is not None
-    _g_single_oid_cache[oid] = value
-
-
-def is_in_single_oid_cache(oid: OID) -> bool:
-    assert _g_single_oid_cache is not None
-    return oid in _g_single_oid_cache
-
-
-def get_oid_from_single_oid_cache(oid: OID) -> Optional[SNMPDecodedString]:
-    assert _g_single_oid_cache is not None
-    return _g_single_oid_cache.get(oid)
-
-
 def _load_single_oid_cache(snmp_config: SNMPHostConfig) -> Dict[OID, Optional[SNMPDecodedString]]:
     cache_path = "%s/%s.%s" % (cmk.utils.paths.snmp_scan_cache_dir, snmp_config.hostname,
                                snmp_config.ipaddress)
     return store.load_object_from_file(cache_path, default={})
+
+
+def single_oid_cache() -> Dict[OID, Optional[SNMPDecodedString]]:
+    assert _g_single_oid_cache is not None
+    return _g_single_oid_cache
 
 
 def host_cache() -> Dict[HostName, List[str]]:

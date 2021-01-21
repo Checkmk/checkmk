@@ -103,8 +103,8 @@ def _fake_description_object() -> None:
         OID_SYS_DESCR,
         OID_SYS_OBJ,
     )
-    snmp_cache.set_single_oid_cache(OID_SYS_DESCR, "")
-    snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
+    snmp_cache.single_oid_cache()[OID_SYS_DESCR] = ""
+    snmp_cache.single_oid_cache()[OID_SYS_OBJ] = ""
 
 
 def _find_sections(

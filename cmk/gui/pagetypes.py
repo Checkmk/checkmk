@@ -1057,9 +1057,7 @@ class Overridable(Base):
             if not instances:
                 continue
 
-            html.open_h3()
-            html.write(title)
-            html.close_h3()
+            html.h3(title, class_="table")
 
             if what != "builtin":
                 html.begin_form("bulk_delete", method="POST")

@@ -31,6 +31,19 @@ h3 {
   font-weight: normal;
 }
 
+@mixin table-header-mixin {
+  padding: 5px 0 5px 8px;
+  font-size: $font-size-global;
+  font-weight: $font-weight-bold;
+  background-color: $headline-color;
+  border-radius: $theme-border-radius $theme-border-radius 0 0;
+}
+
+h3.table {
+  @include table-header-mixin;
+  margin-bottom: 0;
+}
+
 /*-------------------------------------------------------------------------.
 |                                       _                                  |
 |                       _ __ ___   __ _(_)_ __                             |
@@ -518,14 +531,6 @@ td.narrow {
 
 td.wide {
   width: 100%;
-}
-
-@mixin table-header-mixin {
-  padding: 5px 0 5px 8px;
-  font-size: $font-size-global;
-  font-weight: $font-weight-bold;
-  background-color: $headline-color;
-  border-radius: $theme-border-radius $theme-border-radius 0 0;
 }
 
 /* Group header used in table, box and tiled layout */

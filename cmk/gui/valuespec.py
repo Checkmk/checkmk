@@ -5495,16 +5495,17 @@ class UploadOrPasteTextFile(Alternative):
                             cols=80,
                             rows="auto"),
         ]
-
-        if kwargs.pop("default_mode", "text") == "upload":
-            kwargs["match"] = lambda *args: 0
-        else:
-            kwargs["match"] = lambda *args: 1
+        kwargs["match"] = lambda val: 0 if isinstance(val, tuple) else 1
 
         super().__init__(**kwargs)
 
-    def from_html_vars(self, varprefix) -> str:
+    def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
+        # We validate the value here, because we want to validate the user input,
+        # that will be lost after the following transformation to str.
+        # After that, the validate_value() function will always validate the
+        # TextAreaUnicode case when called.
+        super()._validate_value(value, varprefix)
         if isinstance(value, tuple):
             # We are only interested in the file content here. Get it from FileUpload value.
             return value[2].decode("utf-8")

@@ -678,7 +678,9 @@ class PackedConfigGenerator:
             "ipaddresses": filter_hostname_in_dict,
             "ipv6addresses": filter_hostname_in_dict,
             "explicit_snmp_communities": filter_hostname_in_dict,
-            "hosttags": filter_hostname_in_dict
+            "hosttags": filter_hostname_in_dict,  # unknown key, might be typo or legacy option
+            "host_tags": filter_hostname_in_dict,
+            "host_paths": filter_hostname_in_dict
         }
 
         #

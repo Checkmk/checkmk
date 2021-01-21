@@ -22,7 +22,7 @@ from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 @dataclass
 class Part:
     title: str
-    color: str
+    color: Optional[str]
     count: int
 
 
@@ -111,7 +111,87 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
                     ),
                 ))
 
-        return elements
+        return elements + test_elements()
+
+
+def test_elements():
+    test_sites = [
+        (
+            "Hamburg",
+            "ham",
+            (
+                240,  # critical hosts
+                111,  # hosts with unknowns
+                100,  # hosts with warnings
+                50,  # hosts in downtime
+                12335,  # OK
+            )),
+        ("München", "muc", (
+            0,
+            1,
+            5,
+            0,
+            100,
+        )),
+        ("Darmstadt", "dar", (
+            305,
+            10,
+            4445,
+            0,
+            108908,
+        )),
+        ("Berlin", "ber", (
+            0,
+            4500,
+            0,
+            6000,
+            3101101,
+        )),
+        ("Essen", "ess", (
+            40024,
+            23,
+            99299,
+            60,
+            2498284,
+        )),
+        ("Gutstadt", "gut", (
+            0,
+            0,
+            0,
+            0,
+            668868,
+        )),
+        ("Schlechtstadt", "sch", (
+            548284,
+            0,
+            0,
+            0,
+            0,
+        )),
+    ]
+    elements = []
+    for site_name, site_id, states in test_sites:
+        parts = []
+        total = 0
+        for title, color, count in zip([
+                "Critical hosts",
+                "Hosts with unknowns",
+                "Hosts with warnings",
+                "Hosts in downtime",
+                "OK/UP",
+        ], ["#FF0000", "#FF8000", "#FFFF00", "#3030F0", "#00FF00"], states):
+            parts.append(Part(title=title, color=color, count=count))
+            total += count
+
+        elements.append(
+            Element(
+                title=site_name,
+                link=makeuri(request, [("site", site_id)]),
+                state=None,
+                parts=parts,
+                total=Part(title="Total", color=None, count=total),
+            ))
+    return elements
 
 
 @page_registry.register_page("ajax_site_overview_dashlet_data")

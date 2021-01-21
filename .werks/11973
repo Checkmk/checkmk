@@ -1,0 +1,17 @@
+Title: Be more precise if include files are missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611239982
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+Checkmk no longer ships '*.include' files in the 'checks/' directory
+(see <a href="https://checkmk.com/de/werk/11118">Werk #11118</a>).
+In case you have MKPs installed that need them (but do not include
+them themselves) you must either update your MKP or provide the
+required files in the 'local' folder hierarchy.
+
+The error message now reports the correct path where to put the file.

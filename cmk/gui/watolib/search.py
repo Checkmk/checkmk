@@ -7,7 +7,9 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import partial
 from itertools import chain
+from time import sleep
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -421,15 +423,38 @@ def build_index() -> None:
     IndexBuilder(match_item_generator_registry).build_full_index()
 
 
-def _build_index_background(job_interface: BackgroundProcessInterface) -> None:
+def _build_index_background(
+    job_interface: BackgroundProcessInterface,
+    n_attempts_redis_connection: int = 1,
+) -> None:
+    sleep_time = 5
+    n_attempts = 0
     job_interface.send_progress_update(_("Building of search index started"))
-    build_index()
+    while True:
+        try:
+            n_attempts += 1
+            build_index()
+            break
+        except redis.ConnectionError:
+            job_interface.send_progress_update(
+                _(f"Connection attempt {n_attempts} / {n_attempts_redis_connection} to Redis failed"
+                 ))
+            if n_attempts == n_attempts_redis_connection:
+                job_interface.send_result_message(
+                    _("Maximum number of allowed connection attempts reached, terminating"))
+                raise
+            job_interface.send_progress_update(_(f"Will wait for {sleep_time} seconds and retry"))
+            sleep(sleep_time)
     job_interface.send_result_message(_("Search index successfully built"))
 
 
-def build_index_background() -> None:
+def build_index_background(n_attempts_redis_connection: int = 1) -> None:
     build_job = SearchIndexBackgroundJob()
-    build_job.set_function(_build_index_background)
+    build_job.set_function(
+        partial(
+            _build_index_background,
+            n_attempts_redis_connection=n_attempts_redis_connection,
+        ))
     try:
         build_job.start()
     except BackgroundJobAlreadyRunning:
@@ -490,7 +515,9 @@ class SampleConfigGeneratorSearchIndex(SampleConfigGenerator):
         return 70
 
     def generate(self) -> None:
-        build_index()
+        # it is possible that Redis is not yet up and running, therefore we explicitly allow
+        # multiple connection attempts
+        build_index_background(n_attempts_redis_connection=5)
 
 
 match_item_generator_registry = MatchItemGeneratorRegistry()

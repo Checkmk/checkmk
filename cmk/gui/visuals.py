@@ -10,7 +10,18 @@ import sys
 import traceback
 import json
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 from livestatus import SiteId, LivestatusTestingError
 
@@ -36,6 +47,7 @@ from cmk.gui.type_defs import (
     VisualTypeName,
 )
 from cmk.gui.valuespec import (
+    CascadingDropdown,
     Dictionary,
     DualListChoice,
     ValueSpec,
@@ -51,6 +63,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListOfMultipleChoiceGroup,
     GroupedListOfMultipleChoices,
+    Transform,
 )
 
 import cmk.gui.config as config
@@ -645,25 +658,21 @@ def page_create_visual(what, info_keys, next_url=None):
 
     html.open_p()
     html.write(
-        _('Depending on the choosen datasource a %s can list <i>multiple</i> or <i>single</i> objects. '
-          'For example the <i>services</i> datasource can be used to simply create a list '
+        _('Depending on the chosen datasource, a %s can list <i>multiple</i> or <i>single</i> objects. '
+          'For example, the <i>services</i> datasource can be used to simply create a list '
           'of <i>multiple</i> services, a list of <i>multiple</i> services of a <i>single</i> host or even '
           'a list of services with the same name on <i>multiple</i> hosts. When you just want to '
-          'create a list of objects, you do not need to make any selection in this dialog. '
-          'If you like to create a view for one specific object of a specific type, select the '
-          'object type below and continue.') % what_s)
+          'create a list of objects, simply continue with the default choice (no restrictions). '
+          'Alternatively, you have the option to restrict to a single host or to choose the type '
+          'of objects you want to restrict to manually.') % what_s)
     html.close_p()
 
     if html.request.var('save') and html.check_transaction():
         try:
             single_infos = vs_infos.from_html_vars('single_infos')
             vs_infos.validate_value(single_infos, 'single_infos')
-
-            if not next_url:
-                next_url = 'edit_' + what_s + '.py?mode=create&single_infos=%s' % ','.join(
-                    single_infos)
-            else:
-                next_url += '&single_infos=%s' % ','.join(single_infos)
+            next_url = (next_url or 'edit_' + what_s +
+                        '.py?mode=create') + '&single_infos=%s' % ','.join(single_infos)
             raise HTTPRedirect(next_url)
         except MKUserError as e:
             html.user_error(e)
@@ -1685,15 +1694,68 @@ class VisualFilter(ValueSpec):
                 html.request.set_var(varname, var_value)
 
 
-def SingleInfoSelection(info_keys: List[InfoName]) -> DualListChoice:
-    infos = [visual_info_registry[key]() for key in info_keys]
-    choices = [(i.ident, _('Show information of a single %s') % i.title)
-               for i in sorted(infos, key=lambda inf: (inf.sort_index, inf.title))]
+def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:
+    if not restrictions:
+        choice_name = "no_restriction"
+    elif restrictions == ["host"]:
+        choice_name = "single_host"
+    else:
+        choice_name = "manual_selection"
+    return choice_name, restrictions
 
-    return DualListChoice(
-        title=_('Specific objects'),
-        choices=choices,
-        rows=10,
+
+def _single_info_selection_back(name_and_restrictions: Tuple[str, Sequence[str]]) -> Sequence[str]:
+    return name_and_restrictions[1]
+
+
+def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
+    infos = [visual_info_registry[key]() for key in info_keys]
+    manual_choices = [(i.ident, _('Show information of a single %s') % i.title)
+                      for i in sorted(infos, key=lambda inf: (inf.sort_index, inf.title))]
+
+    cascading_dropdown_choices: List[Tuple[str, str, ValueSpec]] = [
+        (
+            "no_restriction",
+            _("No restrictions to specific objects"),
+            FixedValue(
+                [],
+                totext="",
+            ),
+        ),
+    ]
+
+    if any(manual_choice[0] == "host" for manual_choice in manual_choices):
+        cascading_dropdown_choices.append((
+            "single_host",
+            _("Restrict to a single host"),
+            FixedValue(
+                ["host"],
+                totext="",
+            ),
+        ),)
+
+    cascading_dropdown_choices.append((
+        "manual_selection",
+        _("Configure restrictions manually"),
+        DualListChoice(
+            title=_('Specific objects'),
+            choices=manual_choices,
+            rows=10,
+            allow_empty=False,
+        ),
+    ),)
+
+    # We need these transformations because the code which further processes the user input to this
+    # valuespec expects a list of strings (since this was once the DualListChoice now located under
+    # "manual_selection").
+    return Transform(
+        CascadingDropdown(
+            cascading_dropdown_choices,
+            title=_('Specific objects'),
+            sorted=False,
+        ),
+        back=_single_info_selection_back,
+        forth=_single_info_selection_forth,
     )
 
 

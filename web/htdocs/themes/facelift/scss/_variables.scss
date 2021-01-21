@@ -286,10 +286,6 @@ $input-hover-bg-color: rgb(237, 236, 235);
 $data-th-sort-hover-bg-color: inherit;
 
 $wato-h3-margin-bottom: null;
-$wato-data-th-bg-color: transparent;
-$wato-data-table-border: null;
-$wato-data-table-border-bottom: null;
-$wato-data-table-box-shadow: null;
 
 $wato-info-margin: null;
 $wato-info-padding: null;
@@ -335,10 +331,6 @@ $hostdown-bg-color: rgb(0, 102, 170);
 $lightened-hostdown-bg-color: lighten($hostdown-bg-color, 10%);
 
 $nform-vlof-border-color: $color-table-border;
-
-$timelineevents-data-table-border: $wato-data-table-border;
-$timelineevents-data-th-bg-color: $wato-data-th-bg-color;
-$timelineevents-data-table-box-shadow: $wato-data-table-box-shadow;
 
 $duallist-control-a-hover-bg-color: $wato-a-hover-bg-color;
 
@@ -398,9 +390,7 @@ $minority-font-color: null;
 $button-spacer-color: rgb(180, 180, 180);
 
 $timeline-hilite-border: null;
-$timetable-hilite-filter: brightness(90%);
-$timetable-hilite-even-bg-color: null;
-$timetable-hilite-odd-bg-color: null;
+$timetable-hilite-bg-color: darken($bg-color, 15%);
 
 $pnp-graph-img-border-color: $color-table-border;
 $graph-hover-popup-font-color: $font-color;

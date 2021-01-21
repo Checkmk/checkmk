@@ -469,6 +469,24 @@ td.matchgroups span {
   box-shadow: 0 0 1px rgb(136, 136, 136);
 }
 
+table.timeline {
+  .state0 {
+    background-color: $color-state-success-background;
+  }
+
+  .state1 {
+    background-color: $color-state-1-background;
+  }
+
+  .state2 {
+    background-color: $color-state-2-background;
+  }
+
+  .state3 {
+    background-color: $color-state-3-background;
+  }
+}
+
 table.data.availability tr.even0 td {
   &.state0 {
     background-color: $lightened-state0-bg-color !important;

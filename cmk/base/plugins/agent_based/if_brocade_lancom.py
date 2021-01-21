@@ -4,116 +4,120 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List
+from typing import Iterable, List, Union, Mapping
+
+from .agent_based_api.v1.type_defs import StringByteTable
 from .agent_based_api.v1 import (
     all_of,
     any_of,
     contains,
     register,
     SNMPTree,
-    type_defs,
 )
 from .utils import if64, interfaces
 
-SNMP_TREES = [
-    SNMPTree(
-        base=if64.BASE_OID,
-        oids=if64.END_OIDS[:1] + [
-            "31.1.1.1.1",  # 1 ifName (brocade and lancom have no useful information in ifDescr)
-        ] + if64.END_OIDS[2:3] + [
-            "31.1.1.1.15",  # 3 ifHighSpeed, 1000 means 1Gbit
-        ] + if64.END_OIDS[4:-1] + [
-            "2.2.1.2",  # -1 ifDescr, used in order to ignore some logical NICs
-        ],
-    ),
-    SNMPTree(
-        base=".1.3.6.1.4.1.2356.11.1.3.56.1",
-        oids=[
-            "1",
-            "3",
-        ],
-    ),
-]
+StringByteLine = List[Union[str, List[int]]]
+
+IF64_BASE_TREE = SNMPTree(
+    base=if64.BASE_OID,
+    oids=if64.END_OIDS[:1] + [
+        "31.1.1.1.1",  #  1 ifName (brocade and lancom have no useful information in ifDescr)
+    ] + if64.END_OIDS[2:3] + [
+        "31.1.1.1.15",  # 3 ifHighSpeed, 1000 means 1Gbit
+    ] + if64.END_OIDS[4:-1] + [
+        "2.2.1.2",  #    -1 ifDescr, used in order to ignore some logical NICs
+    ],
+)
+
+
+def _fix_line(
+    line: StringByteLine,
+    description: str,
+    name_map: Mapping[str, str],
+) -> StringByteLine:
+    """This function changes contents of @line which each only apply to Lancom or Brocade
+    routers. Since we have to split off @description anyway we apply both changes in
+    one place rather than in dedicated locations."""
+    index, name_raw, type_str, speed, *rest = line
+    name = str(name_raw)
+    return [
+        index,
+        (  # augment name - applies to Lancom routers only
+            f"{name} Logical {name_map.get(name, '')}"  #
+            if description.startswith("Logical Network") else name).strip(),
+        type_str,
+        if64.fix_if_64_highspeed(str(speed)),  # apllies to Brocade routers only
+        *rest,
+    ]
 
 
 def parse_if_brocade_lancom(
-    string_table: List[type_defs.StringByteTable],
-    descriptions_to_ignore: Iterable[str],
+    if_table: StringByteTable,
+    name_map: Mapping[str, str],
+    ignore_descriptions: Iterable[str],
 ) -> interfaces.Section:
     """
-    >>> from pprint import pprint
-    >>> pprint(parse_if_brocade_lancom([
-    ... [['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
-    ...   '12', '13', 'eth0', [0, 12, 206, 149, 55, 128], 'description']],
-    ... [['a', 'b']]],
-    ... []))
-    [Interface(index='1', descr='eth0', alias='eth0', type='2', speed=30000000, oper_status='1', in_octets=1, in_ucast=2, in_mcast=3, in_bcast=4, in_discards=5, in_errors=6, out_octets=7, out_ucast=8, out_mcast=9, out_bcast=10, out_discards=11, out_errors=12, out_qlen=13, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=8)]
-    >>> pprint(parse_if_brocade_lancom([
-    ... [['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
-    ...   '12', '13', 'eth0', [0, 12, 206, 149, 55, 128], 'description']],
-    ... [['a', 'b']]],
-    ... ['descr']))
-    []
-    >>> pprint(parse_if_brocade_lancom([
-    ... [['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
-    ...   '12', '13', 'eth0', [0, 12, 206, 149, 55, 128], 'Logical Network'],
-    ...  ['2', 'eth1', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
-    ...   '12', '13', 'eth1', [0, 12, 206, 149, 55, 128], 'Logical Network']],
-    ... [['eth0', 'migration-fun']]],
-    ... ['descr']))
-    [Interface(index='1', descr='eth0 Logical migration-fun', alias='eth0', type='2', speed=30000000, oper_status='1', in_octets=1, in_ucast=2, in_mcast=3, in_bcast=4, in_discards=5, in_errors=6, out_octets=7, out_ucast=8, out_mcast=9, out_bcast=10, out_discards=11, out_errors=12, out_qlen=13, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=8),
-     Interface(index='2', descr='eth1 Logical', alias='eth1', type='2', speed=30000000, oper_status='1', in_octets=1, in_ucast=2, in_mcast=3, in_bcast=4, in_discards=5, in_errors=6, out_octets=7, out_ucast=8, out_mcast=9, out_bcast=10, out_discards=11, out_errors=12, out_qlen=13, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=8)]
+    >>> for result in parse_if_brocade_lancom([
+    ...       ['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    ...        '10', '11', '12', '13', 'eth0', [0, 12, 206, 149, 55, 128], 'Local0'],
+    ...       ['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    ...        '10', '11', '12', '13', 'eth1', [0, 12, 206, 149, 55, 128], 'Logical Network'],
+    ...     ],
+    ...     {'eth0': 'LAN'},
+    ...     {'Local'}):
+    ...   print(result.descr, result.alias, result.speed)
+    eth0 Logical LAN eth1 30000000
     """
-
-    if_table, ssid_table = string_table
-    ssid_dict = {str(ssid_line[0]): str(ssid_line[1]) for ssid_line in ssid_table}
-    new_info = []
-
-    for line in if_table:
-        description = str(line[-1])
-        if any(
-                description.startswith(descr_to_ignore)
-                for descr_to_ignore in descriptions_to_ignore):
-            continue
-
-        name = str(line[1])
-        if description.startswith("Logical Network"):
-            ssid = ssid_dict.get(name)
-            name += " Logical" + (" " + ssid if ssid else "")
-
-        line[1] = name.strip()
-        line[3] = if64.fix_if_64_highspeed(str(line[3]))
-        new_info.append(line[:-1])
-
-    return if64.generic_parse_if64([new_info])
+    return if64.generic_parse_if64([[
+        _fix_line(line, description, name_map)
+        for *line, description in if_table
+        if isinstance(description, str)
+        if not any(description.startswith(d) for d in ignore_descriptions)
+    ]])
 
 
-def parse_if_brocade(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
+def parse_if_brocade(string_table: StringByteTable) -> interfaces.Section:
     return parse_if_brocade_lancom(
-        string_table,
-        ["Point-2-Point"],
+        if_table=string_table,
+        name_map={},
+        ignore_descriptions={"Point-2-Point"},
     )
 
 
-def parse_if_lancom(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
+def parse_if_lancom(string_table: List[StringByteTable]) -> interfaces.Section:
+    if_table, ssid_table = string_table
     return parse_if_brocade_lancom(
-        string_table,
-        ["P2P", "Point-2-Point"],
+        if_table,
+        name_map={str(ssid_line[0]): str(ssid_line[1]) for ssid_line in ssid_table},
+        ignore_descriptions={"P2P", "Point-2-Point"},
     )
 
 
 register.snmp_section(
     name="if_brocade",
     parse_function=parse_if_brocade,
-    fetch=SNMP_TREES,
-    detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "Brocade VDX Switch"), if64.HAS_ifHCInOctets),
+    fetch=IF64_BASE_TREE,
+    detect=all_of(
+        contains(".1.3.6.1.2.1.1.1.0", "Brocade VDX Switch"),
+        if64.HAS_ifHCInOctets,
+    ),
     supersedes=['if', 'if64'],
 )
 
 register.snmp_section(
     name="if_lancom",
     parse_function=parse_if_lancom,
-    fetch=SNMP_TREES,
+    fetch=[
+        IF64_BASE_TREE,
+        # Lancom LCOS-MIB::lcsStatusWlanNetworksEntry
+        SNMPTree(
+            base=".1.3.6.1.4.1.2356.11.1.3.56.1",
+            oids=[
+                "1",  # lcsStatusWlanNetworksEntryIfc
+                "3",  # lcsStatusWlanNetworksEntryNetworkName
+            ],
+        ),
+    ],
     detect=any_of(
         any_of(
             *(contains(".1.3.6.1.2.1.1.1.0", name) for name in ("LANCOM", "ELSA", "T-Systems")),),

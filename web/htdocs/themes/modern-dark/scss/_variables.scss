@@ -286,10 +286,6 @@ $input-hover-bg-color: null;
 $data-th-sort-hover-bg-color: null;
 
 $wato-h3-margin-bottom: 4px;
-$wato-data-th-bg-color: $grey-6;
-$wato-data-table-border: 10px solid $grey-6;
-$wato-data-table-border-bottom: none;
-$wato-data-table-box-shadow: 0 0 0 1px rgb(33, 33, 33);
 
 $wato-info-margin: 0;
 $wato-info-padding: 10px 0 10px 10px;
@@ -335,10 +331,6 @@ $hostdown-bg-color: rgb(0, 102, 170);
 $lightened-hostdown-bg-color: lighten($hostdown-bg-color, 10%);
 
 $nform-vlof-border-color: rgb(60, 60, 60);
-
-$timelineevents-data-table-border: $wato-data-table-border;
-$timelineevents-data-th-bg-color: $wato-data-th-bg-color;
-$timelineevents-data-table-box-shadow: $wato-data-table-box-shadow;
 
 $duallist-control-a-hover-bg-color: $wato-a-hover-bg-color;
 
@@ -397,10 +389,8 @@ $minority-font-color: $grey-7;
 
 $button-spacer-color: rgb(90, 90, 90);
 
-$timeline-hilite-border: 2px solid rgb(220, 220, 220) !important;
-$timetable-hilite-filter: null;
-$timetable-hilite-even-bg-color: lighten($bg-color, 15%);
-$timetable-hilite-odd-bg-color: lighten($grey-7, 15%);
+$timeline-hilite-border: 2px solid rgb(220, 220, 220);
+$timetable-hilite-bg-color: lighten($bg-color, 15%);
 
 $pnp-graph-img-border-color: rgb(240, 240, 240);
 $graph-hover-popup-font-color: $font-color;

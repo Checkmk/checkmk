@@ -873,16 +873,17 @@ div.dashlet.nodata {
 }
 
 div.site_overview {
-  div.tooltip {
-    td.title {
-      padding-left: 4px;
-    }
+  g.element_box:hover {
+    opacity: 0.8;
+  }
 
+  div.tooltip {
     td.color {
       width: 10px;
     }
 
     td.count {
+      padding-left: 4px;
       text-align: right;
     }
   }

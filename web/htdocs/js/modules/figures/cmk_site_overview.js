@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import * as utils from "utils";
 import * as cmk_figures from "cmk_figures";
 
 // Used for rapid protoyping, bypassing webpack
@@ -169,7 +170,7 @@ class SiteOverview extends cmk_figures.FigureBase {
 
         let largest_element_count = 0;
         for (const element of this._data.data) {
-            if (element.total.count > largest_element_count)
+            if (element.type != "icon_element" && element.total.count > largest_element_count)
                 largest_element_count = element.total.count;
         }
 
@@ -181,18 +182,10 @@ class SiteOverview extends cmk_figures.FigureBase {
         let hexagon_center_pos =
             "translate(" + geometry.hexagon_center_left + "," + geometry.hexagon_center_top + ")";
 
-        let handle_click = function (d) {
-            location.href = d.link;
-        };
-
-        let handle_mouseover = function () {
-            d3.select(this).style("opacity", 0.8);
-            //d3.select(this.parentNode).selectAll(".tooltip").style("visibility", "visible");
-        };
-
-        let handle_mouseout = function () {
-            d3.select(this).style("opacity", 1);
-            //d3.select(this.parentNode).selectAll(".tooltip").style("visibility", "hidden");
+        let handle_click = function (element) {
+            if (element.type != "icon_element") {
+                location.href = utils.makeuri(element.url_add_vars);
+            }
         };
 
         let hexagon_boxes = element_boxes
@@ -201,9 +194,7 @@ class SiteOverview extends cmk_figures.FigureBase {
             .join("g")
             .attr("transform", hexagon_center_pos)
             .style("cursor", "pointer")
-            .on("click", handle_click)
-            .on("mouseover", handle_mouseover)
-            .on("mouseout", handle_mouseout);
+            .on("click", handle_click);
 
         let tooltip_generator = this.tooltip_generator;
 
@@ -211,29 +202,58 @@ class SiteOverview extends cmk_figures.FigureBase {
         hexagon_boxes.each(function (element) {
             let hexagon_box = d3.select(this);
 
-            // The scale is controlled by the total count of an element compared to the largest
-            // element
-            let scale = Math.max(0.5, Math.pow(element.total.count / largest_element_count, 0.3));
-
-            // Now render the parts of an element (cubical sizing)
-            let sum = element.total.count;
-            for (let i = 0; i < element.parts.length; i++) {
-                let part = element.parts[element.parts.length - 1 - i];
-
-                let radius =
-                    (Math.pow(sum, 0.33) / Math.pow(element.total.count, 0.33)) *
-                    geometry.hexagon_radius;
-                sum -= part.count;
-
-                let hexagon = hexagon_box
-                    .selectAll("path.hexagon_" + i)
+            if (element.type == "icon_element") {
+                // Special handling for IconElement (displaying down / disabled sites)
+                hexagon_box
+                    .selectAll("path.hexagon_0")
                     .data([element])
-                    .join(enter => enter.append("path").classed("hexagon_" + i, true))
-                    .attr("d", d3.hexbin().hexagon(radius * scale))
-                    .attr("title", part.title)
-                    .attr("fill", part.color);
+                    .join(enter => enter.append("path").classed("hexagon_0", true))
+                    .attr("d", d3.hexbin().hexagon(geometry.hexagon_radius * 0.5))
+                    .attr("title", element.title)
+                    .classed(element.css_class, true)
+                    .attr("fill", "#ffffff30");
 
-                if (i == 0) hexagon.attr("stroke", "#13d389");
+                // TODO: Enable once we have our icons
+                //hexagon_box
+                //    .selectAll("path.hexagon_icon")
+                //    .data([element])
+                //    .join(enter => enter.append("image").classed("hexagon_icon", true))
+                //    .attr(
+                //        "xlink:href",
+                //        "themes/modern-dark/images/icon_" + element.css_class + ".svg"
+                //    )
+                //    .attr("width", 24)
+                //    .attr("height", 24)
+                //    .attr("x", -12)
+                //    .attr("y", -12);
+            } else {
+                // The scale is controlled by the total count of an element compared to the largest
+                // element
+                let scale = Math.max(
+                    0.5,
+                    Math.pow(element.total.count / largest_element_count, 0.3)
+                );
+
+                // Now render the parts of an element (cubical sizing)
+                let sum = element.total.count;
+                for (let i = 0; i < element.parts.length; i++) {
+                    let part = element.parts[element.parts.length - 1 - i];
+
+                    let radius =
+                        (Math.pow(sum, 0.33) / Math.pow(element.total.count, 0.33)) *
+                        geometry.hexagon_radius;
+                    sum -= part.count;
+
+                    let hexagon = hexagon_box
+                        .selectAll("path.hexagon_" + i)
+                        .data([element])
+                        .join(enter => enter.append("path").classed("hexagon_" + i, true))
+                        .attr("d", d3.hexbin().hexagon(radius * scale))
+                        .attr("title", part.title)
+                        .attr("fill", part.color);
+
+                    if (i == 0) hexagon.attr("stroke", "#13d389");
+                }
             }
 
             if (geometry.show_label) {
@@ -249,9 +269,7 @@ class SiteOverview extends cmk_figures.FigureBase {
                         return geometry.label_baseline_top;
                     })
                     .style("cursor", "pointer")
-                    .on("click", handle_click)
-                    .on("mouseover", handle_mouseover)
-                    .on("mouseout", handle_mouseout);
+                    .on("click", handle_click);
             } else {
                 element_boxes.selectAll("text").remove();
             }

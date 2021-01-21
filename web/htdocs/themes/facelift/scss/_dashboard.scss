@@ -871,3 +871,19 @@ div.dashlet.nodata {
     padding: 10px;
   }
 }
+
+div.site_overview {
+  div.tooltip {
+    td.title {
+      padding-left: 4px;
+    }
+
+    td.color {
+      width: 10px;
+    }
+
+    td.count {
+      text-align: right;
+    }
+  }
+}

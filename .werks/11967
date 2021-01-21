@@ -1,0 +1,13 @@
+Title: REST API: fixing password get endpoint
+Class: fix
+Compatible: compat
+Component: core
+Date: 1611227723
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+In the previous version, the user was not able to retrieve a, through WATO, created password
+using the API endpoint. This werk now fixes this problem.

@@ -100,7 +100,7 @@ class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
 
 
 class IndexBuilder:
-    _KEY_INDEX_BUILT = "si.index_built"
+    _KEY_INDEX_BUILT = "si:index_built"
 
     def __init__(self, registry: MatchItemGeneratorRegistry) -> None:
         self._registry = registry
@@ -117,13 +117,13 @@ class IndexBuilder:
         localization_dependent_generators = []
 
         with self._redis_client.pipeline() as pipeline:
-            prefix_li = "si.li"
+            prefix_li = "si:li"
             for match_item_generator in names_and_generators:
                 if match_item_generator.is_localization_dependent:
                     localization_dependent_generators.append(match_item_generator)
                     continue
                 pipeline.sadd(
-                    f"{prefix_li}.categories",
+                    f"{prefix_li}:categories",
                     match_item_generator.name,
                 )
                 self._add_match_items_to_redis(
@@ -132,13 +132,13 @@ class IndexBuilder:
                     prefix_li,
                 )
 
-            prefix_ld = "si.ld"
+            prefix_ld = "si:ld"
             for language, language_name in self._all_languages.items():
                 localize(language)
-                prefix_language = f"{prefix_ld}.{language_name}"
+                prefix_language = f"{prefix_ld}:{language_name}"
                 for match_item_generator in localization_dependent_generators:
                     pipeline.sadd(
-                        f"{prefix_ld}.categories",
+                        f"{prefix_ld}:categories",
                         match_item_generator.name,
                     )
                     self._add_match_items_to_redis(
@@ -155,8 +155,8 @@ class IndexBuilder:
         redis_pipeline: redis.client.Pipeline,
         redis_prefix: str,
     ) -> None:
-        prefix = f"{redis_prefix}.{match_item_generator.name}"
-        key_match_texts = f"{prefix}.match_texts"
+        prefix = f"{redis_prefix}:{match_item_generator.name}"
+        key_match_texts = f"{prefix}:match_texts"
         redis_pipeline.delete(key_match_texts)
         for idx, match_item in enumerate(match_item_generator.generate_match_items()):
             redis_pipeline.hset(
@@ -165,7 +165,7 @@ class IndexBuilder:
                 value=idx,
             )
             redis_pipeline.hset(  # type: ignore[call-arg]  # no idea why this is necessary...
-                f"{prefix}.{idx}",
+                f"{prefix}:{idx}",
                 mapping={
                     "title": match_item.title,
                     "topic": match_item.topic,
@@ -305,14 +305,14 @@ class IndexSearcher:
 
         self._search_redis(
             query_preprocessed,
-            "si.li.categories",
-            "si.li",
+            "si:li:categories",
+            "si:li",
             results,
         )
         self._search_redis(
             query_preprocessed,
-            "si.ld.categories",
-            f"si.ld.{self._current_language}",
+            "si:ld:categories",
+            f"si:ld:{self._current_language}",
             results,
         )
 
@@ -329,15 +329,15 @@ class IndexSearcher:
             if not self._may_see_category(category):
                 continue
 
-            prefix_category = f"{key_prefix_match_items}.{category}"
+            prefix_category = f"{key_prefix_match_items}:{category}"
             permissions_check = self._may_see_item_func.get(category, lambda _: True)
 
             for _matched_text, idx_matched_item in self._redis_client.hscan_iter(
-                    f"{prefix_category}.match_texts",
+                    f"{prefix_category}:match_texts",
                     match=query,
             ):
                 match_item_dict = self._redis_client.hgetall(
-                    f"{prefix_category}.{idx_matched_item}")
+                    f"{prefix_category}:{idx_matched_item}")
 
                 if not permissions_check(match_item_dict["url"]):
                     continue

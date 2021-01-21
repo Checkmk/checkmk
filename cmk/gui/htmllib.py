@@ -2258,8 +2258,9 @@ class html(ABCHTMLGenerator):
 
         # Do not enable select2 for select fields that allow multiple
         # selections like the dual list choice valuespec
-        css_classes: List[Optional[str]] = ["select2-enable"]
-        if "multiple" in attrs or (isinstance(class_, list) and "ajax-vals" in class_):
+        if "multiple" not in attrs:
+            css_classes: List[Optional[str]] = ["select2-enable"]
+        else:
             css_classes = []
 
         if isinstance(class_, list):

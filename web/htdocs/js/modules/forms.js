@@ -10,7 +10,6 @@ import Swal from "sweetalert2";
 
 import * as utils from "utils";
 import * as ajax from "ajax";
-import {initialize_autocompleters} from "valuespecs";
 
 export function enable_dynamic_form_elements(container = null) {
     enable_select2_dropdowns(container);
@@ -28,7 +27,37 @@ export function enable_select2_dropdowns(container) {
         dropdownAutoWidth: true,
         minimumResultsForSearch: 5,
     });
-    initialize_autocompleters(container);
+
+    // handle metric selection dropdowns dynamic narrowing
+    elements = $(container)
+        .find(".metric-selector")
+        .each((i, elem) =>
+            $(elem).select2({
+                language: {
+                    searching: () => "Type to trigger search",
+                },
+                width: "style",
+                ajax: {
+                    url: "ajax_vs_autocomplete.py",
+                    type: "POST",
+                    data: term =>
+                        "request=" +
+                        JSON.stringify({
+                            ident: "monitored_metrics",
+                            params: {
+                                host: $(`input[name='${elem.id}_hostname_hint']`).val(),
+                                service: $(`input[name='${elem.id}_service_hint']`).val(),
+                            },
+                            value: term.term || "",
+                        }),
+
+                    processResults: resp => ({
+                        results: resp.result.choices.map(x => ({id: x[0], text: x[1]})),
+                    }),
+                    cache: true,
+                },
+            })
+        );
 }
 
 function enable_label_input_fields(container) {

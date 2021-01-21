@@ -1028,6 +1028,164 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     )
 
 
+class TextAsciiAutocomplete(TextAscii):
+    ident = ""
+
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        completion_ident: str,
+        completion_params: Dict[str, Any],
+        completion_params_js: str = "",
+        # TextAscii
+        label: _Optional[str] = None,
+        size: Union[int, str] = 40,
+        try_max_width: bool = False,
+        cssclass: str = "text",
+        strip: bool = True,
+        attrencode: bool = True,
+        allow_empty: bool = True,
+        empty_text: str = "",
+        read_only: bool = False,
+        forbidden_chars: str = "",
+        regex: Union[None, str, Pattern[str]] = None,
+        regex_error: _Optional[str] = None,
+        minlen: _Optional[int] = None,
+        onkeyup: _Optional[str] = None,
+        hidden: bool = False,
+        placeholder: _Optional[str] = None,
+        # From ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: Any = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc] = None,
+    ):
+        onkeyup = "cmk.valuespecs.autocomplete(this, %s, %s, %s)" % (
+            json.dumps(completion_ident),
+            completion_params_js or json.dumps(completion_params),
+            json.dumps(onkeyup),
+        )
+        super().__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            attrencode=attrencode,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            onkeyup=onkeyup,
+            autocomplete=False,
+            hidden=hidden,
+            placeholder=placeholder,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+
+    @classmethod
+    def idents(cls) -> 'Dict[str, Type[TextAsciiAutocomplete]]':
+        idents = {}
+        for type_class in cls.__subclasses__():
+            idents[type_class.ident] = type_class
+        return idents
+
+    @classmethod
+    def ajax_handler(cls, request) -> Choices:
+        ident = request["ident"]
+        if not ident:
+            raise MKUserError("ident", _("You need to set the \"%s\" parameter.") % "ident")
+
+        if ident not in cls.idents():
+            raise MKUserError("ident", _("Invalid ident: %s") % ident)
+
+        params = request.get("params")
+        if params is None:
+            raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "params")
+
+        value = request.get("value")
+        if value is None:
+            raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "value")
+
+        result_data = cls.idents()[ident].autocomplete_choices(value, params)
+
+        # Check for correct result_data format
+        assert isinstance(result_data, list)
+        if result_data:
+            assert isinstance(result_data[0], (list, tuple))
+            assert len(result_data[0]) == 2
+
+        return result_data
+
+    #@abc.abstractclassmethod
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        raise NotImplementedError()
+
+
+# TODO: Cleanup kwargs
+class MonitoredHostname(TextAsciiAutocomplete):
+    """Hostname input with dropdown completion
+
+    Renders an input field for entering a host name while providing an auto completion dropdown field.
+    Fetching the choices from the current live config via livestatus"""
+    ident = "monitored_hostname"
+
+    def __init__(self, **kwargs):
+        super().__init__(completion_ident=self.ident, completion_params={}, **kwargs)
+
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        """Return the matching list of dropdown choices
+        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+        query = ("GET hosts\n"
+                 "Cache: reload\n"
+                 "Columns: host_name\n"
+                 "Filter: host_name ~~ %s" % livestatus.lqencode(value))
+
+        return [(h, h) for h in sorted(sites.live().query_column_unique(query))]
+
+
+class MonitoredServiceDescription(TextAsciiAutocomplete):
+    """Unfiltered Service Descriptions for input with dropdown completion
+
+    Renders an input field for entering a service description while providing an auto completion dropdown field.
+    Fetching the choices from the current live config via livestatus"""
+    ident = "monitored_service_description"
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault(
+            'completion_params_js',
+            '(() => ({host: document.getElementsByName("context_host_p_host")[0].value}))()')
+        super().__init__(completion_ident=self.ident, completion_params={}, **kwargs)
+
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        """Return the matching list of dropdown choices
+        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+        query = ("GET services\n"
+                 "Cache: reload\n"
+                 "Columns: service_description\n"
+                 "Filter: service_description ~~ %s\n" % livestatus.lqencode(value))
+
+        if params.get("host"):
+            query += "Filter: host_name = %s\n" % livestatus.lqencode(params['host'])
+
+        return [(h, h) for h in sorted(sites.live().query_column_unique(query))]
+
+
+@page_registry.register_page("ajax_vs_autocomplete")
+class PageVsAutocomplete(AjaxPage):
+    def page(self):
+        # TODO: Move ajax_handler to this class? Should we also move the autocomplete_choices()?
+        return {"choices": TextAsciiAutocomplete.ajax_handler(self.webapi_request())}
+
+
 def Hostname(  # pylint: disable=redefined-builtin
     # TextAscii
     allow_empty=False,
@@ -2495,174 +2653,6 @@ class DropdownChoice(ValueSpec):
 
     def _value_is_invalid(self, value: DropdownChoiceValue) -> bool:
         return all(value != val for val, _title in self.choices())
-
-
-class TextAsciiAutocomplete(DropdownChoice):
-    ident = ""
-
-    def __init__(  # pylint: disable=redefined-builtin
-        self,
-        regex: Union[None, str, Pattern[str]] = None,
-        regex_error: _Optional[str] = None,
-        # DropdownChoice
-        label: _Optional[str] = None,
-        choices: _Optional[DropdownChoices] = None,
-        # From ValueSpec
-        title: _Optional[str] = None,
-        help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
-    ):
-        super().__init__(
-            label=label,
-            choices=choices or [],
-            encode_value=False,  # because JS picks & passes the values on same page
-            title=title,
-            help=help,
-            default_value=default_value,
-            validate=validate,
-        )
-
-        if isinstance(regex, str):
-            self._regex: _Optional[Pattern[str]] = re.compile(regex)
-        else:
-            self._regex = regex
-        self._regex_error = regex_error if regex_error is not None else \
-            _("Your input does not match the required format.")
-
-    @classmethod
-    def idents(cls) -> 'Dict[str, Type[TextAsciiAutocomplete]]':
-        idents = {}
-        for type_class in cls.__subclasses__():
-            idents[type_class.ident] = type_class
-        return idents
-
-    def from_html_vars(self, varprefix: str) -> str:
-        return html.request.get_str_input_mandatory(varprefix, "")
-
-    def validate_datatype(self, value: str, varprefix: str) -> None:
-        if not isinstance(value, str):
-            raise MKUserError(
-                varprefix,
-                _("The value must be of type str, but it has type %s") % _type_name(value))
-
-    def _validate_value(self, value: str, varprefix: str) -> None:
-        if value and self._regex and not self._regex.match(ensure_str(value)):
-            raise MKUserError(varprefix, self._regex_error)
-
-    def render_input(self, varprefix: str, value) -> None:
-        if self._label:
-            html.write("%s " % self._label)
-
-        clean_choices = [(value, value)] if value else self.choices()
-
-        html.dropdown(varprefix,
-                      self._options_for_html(clean_choices),
-                      deflt=self._option_for_html(value),
-                      onchange=self._on_change,
-                      ordered=self._sorted,
-                      style="width: 250px;",
-                      class_=["ajax-vals", self.ident],
-                      read_only=self._read_only)
-
-    @classmethod
-    def ajax_handler(cls, request) -> Choices:
-        ident = request["ident"]
-        if not ident:
-            raise MKUserError("ident", _("You need to set the \"%s\" parameter.") % "ident")
-
-        if ident not in cls.idents():
-            raise MKUserError("ident", _("Invalid ident: %s") % ident)
-
-        params = request.get("params")
-        if params is None:
-            raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "params")
-
-        value = request.get("value")
-        if value is None:
-            raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "value")
-
-        result_data = cls.idents()[ident].autocomplete_choices(value, params)
-
-        # Check for correct result_data format
-        assert isinstance(result_data, list)
-        if result_data:
-            assert isinstance(result_data[0], (list, tuple))
-            assert len(result_data[0]) == 2
-
-        return result_data
-
-    #@abc.abstractclassmethod
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        raise NotImplementedError()
-
-
-# TODO: Cleanup kwargs
-class MonitoredHostname(TextAsciiAutocomplete):
-    """Hostname input with dropdown completion
-
-    Renders an input field for entering a host name while providing an auto completion dropdown field.
-    Fetching the choices from the current live config via livestatus"""
-    ident = "monitored_hostname"
-
-    def __init__(self, **kwargs):
-        super().__init__(regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME),
-                         regex_error=_(
-                             "Please enter a valid hostname or IPv4 address. "
-                             "Only letters, digits, dash, underscore and dot are allowed."),
-                         **kwargs)
-
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        query = ("GET hosts\n"
-                 "Cache: reload\n"
-                 "Columns: host_name\n"
-                 "Filter: host_name ~~ %s" % livestatus.lqencode(value))
-
-        choices = sorted(sites.live().query_column_unique(query))
-        if value not in choices:
-            choices.insert(0, value)  # User is allowed to enter anything they want
-
-        return [(h, h) for h in choices]
-
-
-class MonitoredServiceDescription(TextAsciiAutocomplete):
-    """Unfiltered Service Descriptions for input with dropdown completion
-
-    Renders an input field for entering a service description while providing an auto completion dropdown field.
-    Fetching the choices from the current live config via livestatus"""
-    ident = "monitored_service_description"
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        query = ("GET services\n"
-                 "Cache: reload\n"
-                 "Columns: service_description\n"
-                 "Filter: service_description ~~ %s\n" % livestatus.lqencode(value))
-
-        if params.get("host"):
-            query += "Filter: host_name = %s\n" % livestatus.lqencode(params['host'])
-
-        choices = sorted(sites.live().query_column_unique(query))
-        if value not in choices:
-            choices.insert(0, value)  # User is allowed to enter anything they want
-
-        return [(h, h) for h in choices]
-
-
-@page_registry.register_page("ajax_vs_autocomplete")
-class PageVsAutocomplete(AjaxPage):
-    def page(self):
-        # TODO: Move ajax_handler to this class? Should we also move the autocomplete_choices()?
-        return {"choices": TextAsciiAutocomplete.ajax_handler(self.webapi_request())}
 
 
 # TODO: Rename to ServiceState() or something like this

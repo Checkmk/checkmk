@@ -85,18 +85,20 @@ class FilterText(Filter):
 
     def display(self) -> None:
         current_value = self._current_value()
-        column = self.link_columns[0]
 
-        if column in ["host_name", "service_description"]:
-            input_type = "monitored_hostname" if column == "host_name" else "monitored_service_description"
-            choices = [(current_value, current_value)] if current_value else []
-            html.dropdown(self.htmlvars[0],
-                          choices,
-                          current_value,
-                          style="width: 250px;",
-                          class_=["ajax-vals", input_type])
-        else:
-            html.text_input(self.htmlvars[0], current_value, self.negateable and 'neg' or '')
+        onkeyup: Optional[str] = None
+        if self.link_columns == ["host_name"]:
+            onkeyup = "cmk.valuespecs.autocomplete(this, \"monitored_hostname\", {}, \"\")"
+        if self.link_columns == ["service_description"]:
+            onkeyup = "cmk.valuespecs.autocomplete(this, \"monitored_service_description\", {}, \"\")"
+
+        autocomplete = "off" if onkeyup else None
+
+        html.text_input(self.htmlvars[0],
+                        current_value,
+                        self.negateable and 'neg' or '',
+                        autocomplete=autocomplete,
+                        onkeyup=onkeyup)
 
         if self.negateable:
             html.open_nobr()

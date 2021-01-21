@@ -4,26 +4,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, NamedTuple, Dict, Any, List
+from typing import Optional, List
+from dataclasses import dataclass, asdict
 from livestatus import SiteId
 
 from cmk.gui import config
 import cmk.gui.sites as sites
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import Dictionary
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
 from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 
-SiteEntry = NamedTuple("SiteEntry", [
-    ("site_id", str),
-    ("state", Optional[str]),
-    ("link", Optional[str]),
-    ("title", str),
-    ("num_hosts", Optional[int]),
-])
+
+@dataclass
+class Part:
+    title: str
+    color: str
+    count: int
+
+
+@dataclass
+class Element:
+    title: str
+    link: Optional[str]
+    state: Optional[str]
+    total: Part
+    parts: List[Part]
+
+    def serialize(self):
+        serialized = asdict(self)
+        serialized["total"] = asdict(self.total)
+        serialized["parts"] = [asdict(p) for p in self.parts]
+        return serialized
 
 
 class SiteOverviewDashletDataGenerator(ABCDataGenerator):
@@ -38,9 +53,9 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
 
         if render_mode == "hosts":
             assert site_id is not None
-            data = cls._collect_hosts_data(SiteId(site_id))
+            elements = cls._collect_hosts_data(SiteId(site_id))
         elif render_mode == "sites":
-            data = cls._collect_sites_data()
+            elements = cls._collect_sites_data()
         else:
             raise NotImplementedError()
 
@@ -51,17 +66,17 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             "title": _("Site overview"),
             "render_mode": render_mode,
             "plot_definitions": [],
-            "data": data,
+            "data": [e.serialize() for e in elements],
         }
 
     @classmethod
-    def _collect_hosts_data(cls, site_id: SiteId) -> List[Dict[str, Any]]:
+    def _collect_hosts_data(cls, site_id: SiteId) -> List[Element]:
         return []
 
     @classmethod
-    def _collect_sites_data(cls) -> List[Dict[str, Any]]:
+    def _collect_sites_data(cls) -> List[Element]:
         sites.update_site_states_from_dead_sites()
-        entries = []
+        elements = []
         for site_id, _sitealias in config.sorted_sites():
             site_spec = config.site(site_id)
             site_status = sites.states().get(site_id, sites.SiteStatus({}))
@@ -69,31 +84,34 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             if state is None or state == "disabled":
                 link = None
             else:
-                link = makeuri_contextless(
-                    request,
-                    [
-                        ("name", "main_single_site"),
-                        ("site", site_id),
-                    ],
-                    filename="dashboard.py",
-                )
-            entries.append(
-                SiteEntry(
-                    site_id=site_id,
-                    state=state,
-                    link=link,
+                link = makeuri(request, [
+                    ("site", site_id),
+                ])
+            elements.append(
+                Element(
                     title=site_spec["alias"],
-                    num_hosts=site_status.get("num_hosts"),
-                )._asdict())
+                    link=link,
+                    state=state,
+                    parts=[
+                        Part(
+                            title="",
+                            count=0,
+                            color="",
+                        ),
+                        Part(
+                            title="",
+                            count=0,
+                            color="",
+                        ),
+                    ],
+                    total=Part(
+                        title=_("Total"),
+                        count=0,
+                        color="",
+                    ),
+                ))
 
-        # Debug: Add additional entries
-        reference = entries[0]
-        for i in range(5):
-            demo_entry = dict(reference)
-            demo_entry["site_id"] = "Demo %d" % i
-            entries.append(demo_entry)
-
-        return entries
+        return elements
 
 
 @page_registry.register_page("ajax_site_overview_dashlet_data")

@@ -1,6 +1,5 @@
 import * as d3 from "d3";
 import * as cmk_figures from "cmk_figures";
-import * as utils from "utils";
 
 // Used for rapid protoyping, bypassing webpack
 // var cmk_figures = cmk.figures; /* eslint-disable-line no-undef */
@@ -173,7 +172,7 @@ class SiteOverview extends cmk_figures.FigureBase {
             "translate(" + geometry.hexagon_center_left + "," + geometry.hexagon_center_top + ")";
 
         let handle_click = function (d) {
-            location.href = utils.makeuri({site: d.site_id});
+            location.href = d.link;
         };
 
         let handle_mouseover = function () {

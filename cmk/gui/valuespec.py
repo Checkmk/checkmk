@@ -6153,7 +6153,7 @@ class CAorCAChain(UploadOrPasteTextFile):
             raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
 
     def analyse_cert(self, value):
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, value.encode("utf-8"))
+        cert = crypto.load_certificate(crypto.FILETYPE_PEM, ensure_binary(value))
         titles = {
             "C": _("Country"),
             "ST": _("State or Province Name"),

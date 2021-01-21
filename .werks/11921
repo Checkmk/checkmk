@@ -1,0 +1,11 @@
+Title: Fix title of sla columns in view configuration
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1611243244
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+

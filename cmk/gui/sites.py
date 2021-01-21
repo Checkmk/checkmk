@@ -21,6 +21,7 @@ from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
+from cmk.gui.i18n import _
 from cmk.gui.globals import g, request
 from cmk.gui.config import LoggedInUser
 from cmk.gui.log import logger
@@ -246,6 +247,18 @@ _STATUS_NAMES = {
     2: "unreach",
     3: "waiting",
 }
+
+
+def site_state_titles() -> Dict[str, str]:
+    return {
+        "online": _("This site is online."),
+        "disabled": _("The connection to this site has been disabled."),
+        "down": _("This site is currently down."),
+        "unreach": _("This site is currently not reachable."),
+        "dead": _("This site is not responding."),
+        "waiting": _("The status of this site has not yet been determined."),
+        "missing": _("This site does not exist."),
+    }
 
 
 def _set_initial_site_states(enabled_sites, disabled_sites):

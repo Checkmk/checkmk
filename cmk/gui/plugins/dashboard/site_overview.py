@@ -4,15 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, List
+from typing import Optional, List, NamedTuple, Dict
 from dataclasses import dataclass, asdict
-from livestatus import SiteId
+from livestatus import SiteId, LivestatusResponse
 
 from cmk.gui import config
 import cmk.gui.sites as sites
-from cmk.gui.globals import request, html
+from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import Dictionary
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry
@@ -27,19 +26,46 @@ class Part:
 
 
 @dataclass
-class Element:
+class ABCElement:
     title: str
-    link: Optional[str]
-    state: Optional[str]
-    total: Part
-    parts: List[Part]
     tooltip: str
 
     def serialize(self):
+        raise NotImplementedError()
+
+
+@dataclass
+class Element(ABCElement):
+    """Renders a regularly available site"""
+    url_add_vars: Dict[str, str]
+    total: Part
+    parts: List[Part]
+
+    def serialize(self):
         serialized = asdict(self)
+        serialized["type"] = "element"
         serialized["total"] = asdict(self.total)
         serialized["parts"] = [asdict(p) for p in self.parts]
         return serialized
+
+
+@dataclass
+class IconElement(ABCElement):
+    """A hexagon containing an icon representing e.g. disabled or down sites"""
+    css_class: str
+
+    def serialize(self):
+        serialized = asdict(self)
+        serialized["type"] = "icon_element"
+        return serialized
+
+
+class SiteStats(NamedTuple):
+    hosts_in_downtime: int
+    hosts_down_or_have_critical: int
+    hosts_unreachable_or_have_unknown: int
+    hosts_up_and_have_warning: int
+    hosts_up_without_problem: int
 
 
 class SiteOverviewDashletDataGenerator(ABCDataGenerator):
@@ -71,152 +97,228 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
         }
 
     @classmethod
-    def _collect_hosts_data(cls, site_id: SiteId) -> List[Element]:
+    def _collect_hosts_data(cls, site_id: SiteId) -> List[ABCElement]:
         return []
 
     @classmethod
-    def _collect_sites_data(cls) -> List[Element]:
+    def _collect_sites_data(cls) -> List[ABCElement]:
         sites.update_site_states_from_dead_sites()
-        elements = []
+
+        site_states = sites.states()
+        site_state_titles = sites.site_state_titles()
+        site_stats = cls._get_site_stats()
+
+        elements: List[ABCElement] = []
         for site_id, _sitealias in config.sorted_sites():
             site_spec = config.site(site_id)
-            site_status = sites.states().get(site_id, sites.SiteStatus({}))
+            site_status = site_states.get(site_id, sites.SiteStatus({}))
             state: Optional[str] = site_status.get("state")
-            if state is None or state == "disabled":
-                link = None
-            else:
-                link = makeuri(request, [
-                    ("site", site_id),
-                ])
+
+            if state is None:
+                state = "missing"
+
+            if state != "online":
+                elements.append(
+                    IconElement(
+                        title=site_spec["alias"],
+                        css_class="site_%s" % state,
+                        tooltip=site_state_titles[state],
+                    ))
+                continue
+
+            stats = site_stats[site_id]
+            parts = []
+            total = 0
+            for title, color, count in [
+                (_("hosts are down or have critical services"), "#ff0000",
+                 stats.hosts_down_or_have_critical),
+                (_("hosts are unreachable or have unknown services"), "#ff8800",
+                 stats.hosts_unreachable_or_have_unknown),
+                (_("hosts are up but have services in warning state"), "#ffff00",
+                 stats.hosts_up_and_have_warning),
+                (_("hosts are in scheduled downtime"), "#00aaff", stats.hosts_in_downtime),
+                (_("hosts are up and have no service problems"), "#13d38910",
+                 stats.hosts_up_without_problem),
+            ]:
+                parts.append(Part(title=title, color=color, count=count))
+                total += count
+
+            total_part = Part(title=_("Total number of hosts"), color=None, count=total)
+
             elements.append(
                 Element(
                     title=site_spec["alias"],
-                    link=link,
-                    state=state,
-                    tooltip="",
-                    parts=[
-                        Part(
-                            title="",
-                            count=0,
-                            color="",
-                        ),
-                        Part(
-                            title="",
-                            count=0,
-                            color="",
-                        ),
-                    ],
-                    total=Part(
-                        title=_("Total"),
-                        count=0,
-                        color="",
-                    ),
+                    url_add_vars={
+                        "site": site_id,
+                    },
+                    parts=parts,
+                    total=total_part,
+                    tooltip=cls._render_tooltip(parts, total_part),
                 ))
 
-        return elements + test_elements()
+        return elements + cls._test_elements()
 
+    @classmethod
+    def _get_site_stats(cls) -> Dict[SiteId, SiteStats]:
+        try:
+            sites.live().set_prepend_site(True)
+            rows: LivestatusResponse = sites.live().query(cls._site_stats_query())
+        finally:
+            sites.live().set_prepend_site(False)
 
-def test_elements():
-    test_sites = [
-        (
-            "Hamburg",
-            "ham",
+        return {row[0]: SiteStats(*row[1:]) for row in rows}
+
+    @classmethod
+    def _site_stats_query(cls) -> str:
+        return "\n".join([
+            "GET hosts",
+
+            # downtime
+            "Stats: scheduled_downtime_depth > 0",
+
+            # Down/Crit
+            "Stats: state = 1",
+            "Stats: worst_service_state = 2",
+            "StatsOr: 2",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 2",
+
+            # unreachable/unknown
+            "Stats: state = 2",
+            "Stats: worst_service_state != 2",
+            "StatsAnd: 2",
+            "Stats: state = 0",
+            "Stats: worst_service_state = 3",
+            "StatsAnd: 2",
+            "StatsOr:2",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 2",
+
+            # Warn
+            "Stats: state = 0",
+            "Stats: worst_service_state = 1",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 3",
+
+            # OK/UP
+            "Stats: state = 0",
+            "Stats: worst_service_state = 0",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 3",
+        ])
+
+    @classmethod
+    def _test_elements(cls):
+        test_sites = [
             (
-                240,  # critical hosts
-                111,  # hosts with unknowns
-                100,  # hosts with warnings
-                50,  # hosts in downtime
-                12335,  # OK
+                "Hamburg",
+                "ham",
+                (
+                    240,  # critical hosts
+                    111,  # hosts with unknowns
+                    100,  # hosts with warnings
+                    50,  # hosts in downtime
+                    12335,  # OK
+                )),
+            ("München", "muc", (
+                0,
+                1,
+                5,
+                0,
+                100,
             )),
-        ("München", "muc", (
-            0,
-            1,
-            5,
-            0,
-            100,
-        )),
-        ("Darmstadt", "dar", (
-            305,
-            10,
-            4445,
-            0,
-            108908,
-        )),
-        ("Berlin", "ber", (
-            0,
-            4500,
-            0,
-            6000,
-            3101101,
-        )),
-        ("Essen", "ess", (
-            40024,
-            23,
-            99299,
-            60,
-            2498284,
-        )),
-        ("Gutstadt", "gut", (
-            0,
-            0,
-            0,
-            0,
-            668868,
-        )),
-        ("Schlechtstadt", "sch", (
-            548284,
-            0,
-            0,
-            0,
-            0,
-        )),
-    ]
-    elements = []
-    for site_name, site_id, states in test_sites:
-        parts = []
-        total = 0
-        for title, color, count in zip([
-                "Critical hosts",
-                "Hosts with unknowns",
-                "Hosts with warnings",
-                "Hosts in downtime",
-                "OK/UP",
-        ], ["#ff0000", "#ff8800", "#ffff00", "#00aaff", "#13d38910"], states):
-            parts.append(Part(title=title, color=color, count=count))
-            total += count
+            ("Darmstadt", "dar", (
+                305,
+                10,
+                4445,
+                0,
+                108908,
+            )),
+            ("Berlin", "ber", (
+                0,
+                4500,
+                0,
+                6000,
+                3101101,
+            )),
+            ("Essen", "ess", (
+                40024,
+                23,
+                99299,
+                60,
+                2498284,
+            )),
+            ("Gutstadt", "gut", (
+                0,
+                0,
+                0,
+                0,
+                668868,
+            )),
+            ("Schlechtstadt", "sch", (
+                548284,
+                0,
+                0,
+                0,
+                0,
+            )),
+        ]
+        elements: List[ABCElement] = []
+        for site_name, site_id, states in test_sites:
+            parts = []
+            total = 0
+            for title, color, count in zip([
+                    "Critical hosts",
+                    "Hosts with unknowns",
+                    "Hosts with warnings",
+                    "Hosts in downtime",
+                    "OK/UP",
+            ], ["#ff0000", "#ff8800", "#ffff00", "#00aaff", "#13d38910"], states):
+                parts.append(Part(title=title, color=color, count=count))
+                total += count
 
-        total_part = Part(title="Total", color=None, count=total)
+            total_part = Part(title="Total", color=None, count=total)
 
-        elements.append(
-            Element(
-                title=site_name,
-                link=makeuri(request, [("site", site_id)]),
-                state=None,
-                parts=parts,
-                total=total_part,
-                tooltip=_render_tooltip(parts, total_part),
-            ))
-    return elements
+            elements.append(
+                Element(
+                    title=site_name,
+                    url_add_vars={
+                        "site": site_id,
+                    },
+                    parts=parts,
+                    total=total_part,
+                    tooltip=cls._render_tooltip(parts, total_part),
+                ))
 
+        for state, tooltip in sorted(sites.site_state_titles().items()):
+            elements.append(
+                IconElement(
+                    title="Site: %s" % state,
+                    css_class="site_%s" % state,
+                    tooltip=tooltip,
+                ))
 
-def _render_tooltip(parts: List[Part], total_part: Part) -> str:
-    with html.plugged():
-        html.open_table()
-        for part in parts:
+        return elements
+
+    @classmethod
+    def _render_tooltip(cls, parts: List[Part], total_part: Part) -> str:
+        with html.plugged():
+            html.open_table()
+            for part in parts:
+                html.open_tr()
+                html.td("", class_="color", style="background-color:%s" % part.color)
+                html.td(str(part.count), class_="count")
+                html.td(part.title, class_="title")
+                html.close_tr()
+
             html.open_tr()
-            html.td("", class_="color", style="background-color:%s" % part.color)
-            html.td(part.title, class_="title")
-            html.td(str(part.count), class_="count")
+            html.td("", class_="color")
+            html.td(str(total_part.count), class_="count")
+            html.td(total_part.title, class_="title")
             html.close_tr()
 
-        html.open_tr()
-        html.td("", class_="color")
-        html.td(total_part.title, class_="title")
-        html.td(str(total_part.count), class_="count")
-        html.close_tr()
-
-        html.close_table()
-        return html.drain()
+            html.close_table()
+            return html.drain()
 
 
 @page_registry.register_page("ajax_site_overview_dashlet_data")

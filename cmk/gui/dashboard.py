@@ -94,7 +94,11 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
     DashletId,
 )
-from cmk.gui.plugins.metrics.html_render import title_info_elements, render_title_elements
+from cmk.gui.plugins.metrics.html_render import (
+    title_info_elements,
+    render_title_elements,
+    default_dashlet_graph_render_options,
+)
 from cmk.gui.node_visualization import get_topology_view_and_filters
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -181,6 +185,17 @@ class VisualTypeDashboards(VisualType):
                 parameters = {
                     "custom_graph": specification[1],
                 }
+            elif specification[0] == "combined":
+                add_type = "combined_graph"
+                parameters = copy.deepcopy(specification[1])
+                parameters["graph_render_options"] = default_dashlet_graph_render_options
+                context = parameters.pop("context", {})
+                single_infos = specification[1]["single_infos"]
+                if "host" in single_infos:
+                    context["host"] = {"host": context.get("host")}
+                if "service" in single_infos:
+                    context["service"] = {"service": context.get("service")}
+                parameters["single_infos"] = []
 
             else:
                 raise MKGeneralException(

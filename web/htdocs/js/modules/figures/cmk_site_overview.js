@@ -163,10 +163,16 @@ class SiteOverview extends cmk_figures.FigureBase {
             geometry = compute_geometry(num_columns++);
         }
 
-        let boxes = this.svg
-            .selectAll("g.main_box")
+        let largest_element_count = 0;
+        for (const element of this._data.data) {
+            if (element.total.count > largest_element_count)
+                largest_element_count = element.total.count;
+        }
+
+        let element_boxes = this.svg
+            .selectAll("g.element_box")
             .data(this._data.data)
-            .join(enter => enter.append("g").classed("main_box", true));
+            .join(enter => enter.append("g").classed("element_box", true));
 
         let hexagon_center_pos =
             "translate(" + geometry.hexagon_center_left + "," + geometry.hexagon_center_top + ")";
@@ -183,7 +189,7 @@ class SiteOverview extends cmk_figures.FigureBase {
             d3.select(this).style("opacity", 1);
         };
 
-        let boxes_centered_g = boxes
+        let hexagon_boxes = element_boxes
             .selectAll("g")
             .data(d => [d])
             .join("g")
@@ -193,42 +199,58 @@ class SiteOverview extends cmk_figures.FigureBase {
             .on("mouseover", handle_mouseover)
             .on("mouseout", handle_mouseout);
 
-        boxes_centered_g
-            .selectAll("path.outer_line")
-            .data(d => [d])
-            .join(enter => enter.append("path").classed("outer_line", true))
-            .attr("d", d3.hexbin().hexagon(geometry.hexagon_radius))
-            .attr("stroke", "#13d389");
+        // Now render all hexagons
+        hexagon_boxes.each(function (element) {
+            let hexagon_box = d3.select(this);
 
-        boxes_centered_g
-            .selectAll("path.inner_line")
-            .data(d => [d])
-            .join(enter => enter.append("path").classed("inner_line", true))
-            .attr("d", d3.hexbin().hexagon(geometry.hexagon_radius / 2))
-            .attr("fill", "yellow");
+            // The scale is controlled by the total count of an element compared to the largest
+            // element
+            let scale = Math.max(0.5, Math.pow(element.total.count / largest_element_count, 0.3));
 
-        if (geometry.show_label) {
-            boxes
-                .selectAll("text")
-                .data(d => [d.title])
-                .join("text")
-                .text(d => d)
-                .attr("x", function () {
-                    return geometry.label_center_left - this.getBBox().width / 2;
-                })
-                .attr("y", function () {
-                    return geometry.label_baseline_top;
-                })
-                .style("cursor", "pointer")
-                .on("click", handle_click)
-                .on("mouseover", handle_mouseover)
-                .on("mouseout", handle_mouseout);
-        } else {
-            boxes.selectAll("text").remove();
-        }
+            // Now render the parts of an element (cubical sizing)
+            let sum = element.total.count;
+            for (let i = 0; i < element.parts.length; i++) {
+                let part = element.parts[element.parts.length - 1 - i];
 
-        // Place boxes
-        boxes.transition().attr("transform", (d, idx) => {
+                let radius =
+                    (Math.pow(sum, 0.33) / Math.pow(element.total.count, 0.33)) *
+                    geometry.hexagon_radius;
+                sum -= part.count;
+
+                let hexagon = hexagon_box
+                    .selectAll("path.hexagon_" + i)
+                    .data([0])
+                    .join(enter => enter.append("path").classed("hexagon_" + i, true))
+                    .attr("d", d3.hexbin().hexagon(radius * scale))
+                    .attr("title", part.title)
+                    .attr("fill", part.color);
+
+                if (i == 0) hexagon.attr("stroke", "#13d389");
+            }
+
+            if (geometry.show_label) {
+                element_boxes
+                    .selectAll("text")
+                    .data(element => [element.title])
+                    .join("text")
+                    .text(element => element)
+                    .attr("x", function () {
+                        return geometry.label_center_left - this.getBBox().width / 2;
+                    })
+                    .attr("y", function () {
+                        return geometry.label_baseline_top;
+                    })
+                    .style("cursor", "pointer")
+                    .on("click", handle_click)
+                    .on("mouseover", handle_mouseover)
+                    .on("mouseout", handle_mouseout);
+            } else {
+                element_boxes.selectAll("text").remove();
+            }
+        });
+
+        // Place element_boxes
+        element_boxes.transition().attr("transform", (d, idx) => {
             let x = (idx % geometry.num_columns) * geometry.box_width;
             let y = Math.trunc(idx / geometry.num_columns) * geometry.box_height;
             return "translate(" + (x + box_area_left) + "," + (y + box_area_top) + ")";

@@ -179,7 +179,7 @@ def test_elements():
                 "Hosts with warnings",
                 "Hosts in downtime",
                 "OK/UP",
-        ], ["#FF0000", "#FF8000", "#FFFF00", "#3030F0", "#00FF00"], states):
+        ], ["#ff0000", "#ff8800", "#ffff00", "#00aaff", "#13d38910"], states):
             parts.append(Part(title=title, color=color, count=count))
             total += count
 

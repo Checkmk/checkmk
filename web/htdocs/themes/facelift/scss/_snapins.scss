@@ -54,6 +54,7 @@ table.hostmatrix {
     border-spacing: 0;
 
     &.state0 {
+      background-color: $color-state-success-background;
       border-color: $color-state-success-border;
     }
 
@@ -74,20 +75,6 @@ table.hostmatrix {
       border-color: $color-state-4-border;
     }
   }
-}
-
-.hostmatrix td.state1 a,
-/* TODO: Reproduce these two html elements */
-.hostmatrix td.state1 body.main .popup_menu span,
-body.main .popup_menu .hostmatrix td.state1 span {
-  background-color: $yellow;
-}
-
-.hostmatrix td.state0 a,
-/* TODO: Reproduce these two html elements */
-.hostmatrix td.state0 body.main .popup_menu span,
-body.main .popup_menu .hostmatrix td.state0 span {
-  background-color: $color-nuance-12;
 }
 
 /*

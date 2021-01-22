@@ -8,9 +8,12 @@ from typing import Optional, List, NamedTuple, Dict
 from dataclasses import dataclass, asdict
 from livestatus import SiteId, LivestatusResponse
 
+from cmk.utils.type_defs import HostName
+
 from cmk.gui import config
 import cmk.gui.sites as sites
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary
 from cmk.gui.pages import page_registry, AjaxPage
@@ -44,6 +47,21 @@ class Element(ABCElement):
     def serialize(self):
         serialized = asdict(self)
         serialized["type"] = "element"
+        serialized["total"] = asdict(self.total)
+        serialized["parts"] = [asdict(p) for p in self.parts]
+        return serialized
+
+
+@dataclass
+class HostElement(ABCElement):
+    """Renders a regularly available site"""
+    link: str
+    total: Part
+    parts: List[Part]
+
+    def serialize(self):
+        serialized = asdict(self)
+        serialized["type"] = "host_element"
         serialized["total"] = asdict(self.total)
         serialized["parts"] = [asdict(p) for p in self.parts]
         return serialized
@@ -98,7 +116,96 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
 
     @classmethod
     def _collect_hosts_data(cls, site_id: SiteId) -> List[ABCElement]:
-        return []
+        elements: List[ABCElement] = []
+
+        for host_name, host_stats in sorted(cls._get_host_stats(site_id).items(),
+                                            key=lambda h: h[0]):
+            parts = []
+            total = 0
+            for title, color, count in [
+                (_("hosts are down or have critical services"), "#ff0000",
+                 host_stats.hosts_down_or_have_critical),
+                (_("hosts are unreachable or have unknown services"), "#ff8800",
+                 host_stats.hosts_unreachable_or_have_unknown),
+                (_("hosts are up but have services in warning state"), "#ffff00",
+                 host_stats.hosts_up_and_have_warning),
+                (_("hosts are in scheduled downtime"), "#00aaff", host_stats.hosts_in_downtime),
+                (_("hosts are up and have no service problems"), "#13d38910",
+                 host_stats.hosts_up_without_problem),
+            ]:
+                parts.append(Part(title=title, color=color, count=count))
+                total += count
+
+            total_part = Part(title=_("Total number of services"), color=None, count=total)
+
+            elements.append(
+                HostElement(
+                    title=host_name,
+                    link=makeuri_contextless(
+                        request,
+                        [
+                            ("host", host_name),
+                            ("site", str(site_id)),
+                            ("view_name", "host"),
+                        ],
+                        filename="view.py",
+                    ),
+                    parts=parts,
+                    total=total_part,
+                    tooltip=cls._render_tooltip(parts, total_part),
+                ))
+
+        return elements
+
+    @classmethod
+    def _get_host_stats(cls, site_id: SiteId) -> Dict[HostName, SiteStats]:
+        try:
+            sites.live().set_only_sites([site_id])
+            rows: LivestatusResponse = sites.live().query(cls._host_stats_query())
+        finally:
+            sites.live().set_only_sites(None)
+
+        return {row[0]: SiteStats(*row[1:]) for row in rows}
+
+    @classmethod
+    def _host_stats_query(cls) -> str:
+        return "\n".join([
+            "GET hosts",
+            "Columns: host_name",
+
+            # downtime
+            "Stats: scheduled_downtime_depth > 0",
+
+            # Down/Crit
+            "Stats: state = 1",
+            "Stats: worst_service_state = 2",
+            "StatsOr: 2",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 2",
+
+            # unreachable/unknown
+            "Stats: state = 2",
+            "Stats: worst_service_state != 2",
+            "StatsAnd: 2",
+            "Stats: state = 0",
+            "Stats: worst_service_state = 3",
+            "StatsAnd: 2",
+            "StatsOr:2",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 2",
+
+            # Warn
+            "Stats: state = 0",
+            "Stats: worst_service_state = 1",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 3",
+
+            # OK/UP
+            "Stats: state = 0",
+            "Stats: worst_service_state = 0",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 3",
+        ])
 
     @classmethod
     def _collect_sites_data(cls) -> List[ABCElement]:

@@ -61,7 +61,9 @@ class SiteOverview extends cmk_figures.FigureBase {
         this.render_title(this._data.title);
     }
 
-    render_hosts() {}
+    render_hosts() {
+        this.render_sites();
+    }
 
     render_sites() {
         let element_boxes = this.svg
@@ -90,7 +92,9 @@ class SiteOverview extends cmk_figures.FigureBase {
         let tooltip_generator = this.tooltip_generator;
 
         let handle_click = function (element) {
-            if (element.type != "icon_element") {
+            if (element.type == "host_element") {
+                location.href = element.link;
+            } else if (element.type != "icon_element") {
                 location.href = utils.makeuri(element.url_add_vars);
             }
         };

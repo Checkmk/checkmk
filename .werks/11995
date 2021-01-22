@@ -1,0 +1,12 @@
+Title: Availablity: GUI crash if timeline is displayed in table
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1611328433
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+The GUI crashed with the exception "Internal error: Tuple or struct_time argument required"
+when the user chose to "Show timeline of each object directly in table".

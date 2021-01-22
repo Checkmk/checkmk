@@ -42,6 +42,11 @@ Matcher = Callable[[EventRule, EventContext], Optional[str]]
 logger = logging.getLogger('cmk.base.events')
 
 
+def _send_reply_ready():
+    sys.stdout.write("*")
+    sys.stdout.flush()
+
+
 def event_keepalive(event_function: Callable,
                     call_every_loop: Optional[Callable] = None,
                     loop_interval: Optional[int] = None,
@@ -52,8 +57,7 @@ def event_keepalive(event_function: Callable,
     # not after a config-reload-restart (see below)
     if os.getenv("CMK_EVENT_RESTART") != "1":
         logger.info("Starting in keepalive mode with PID %d", os.getpid())
-        sys.stdout.write("*")
-        sys.stdout.flush()
+        _send_reply_ready()
     else:
         logger.info("We are back after a restart.")
 
@@ -115,8 +119,7 @@ def event_keepalive(event_function: Callable,
                     logger.exception("ERROR:")
 
                 # Signal that we are ready for the next event
-                sys.stdout.write("*")
-                sys.stdout.flush()
+                _send_reply_ready()
 
         # Fix vor Python 2.4:
         except SystemExit as e:

@@ -547,6 +547,23 @@ form.confirm {
 /* Warnings embedded in tables without margins and padding, those are
    just needed for body */
 
+h2,
+h3 {
+  margin-bottom: $wato-h3-margin-bottom;
+
+  + div.info,
+  + div.success {
+    padding: $wato-info-padding;
+    padding-top: 10px;
+    margin-top: 0;
+    background-color: $data-container-bg-color;
+  }
+
+  + div.success {
+    margin-bottom: 0; // don't leave a spacing between the directly following table
+  }
+}
+
 td div.warning,
 td > div.error {
   padding: 5px 10px;

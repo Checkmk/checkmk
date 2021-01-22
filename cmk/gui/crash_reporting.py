@@ -391,7 +391,7 @@ class PageCrash(ABCCrashReportPage):
         details.setdefault("mail", user.get("mail"))
 
     def _show_crash_report(self, info):
-        html.h2(_("Crash Report"))
+        html.h3(_("Crash Report"), class_="table")
         html.open_table(class_=["data", "crash_report"])
 
         _crash_row(_("Exception"),
@@ -476,7 +476,7 @@ class ReportRendererGeneric(ABCReportRenderer):
         if not crash_info["details"]:
             return
 
-        html.h2(_("Details"))
+        html.h3(_("Details"), class_="table")
         html.p(
             _("No detail renderer for crash of type '%s' available. Details structure is:") %
             crash_info["crash_type"])
@@ -537,7 +537,7 @@ class ReportRendererCheck(ABCReportRenderer):
 
         details = info["details"]
 
-        html.h2(_("Details"))
+        html.h3(_("Details"), class_="table")
         html.open_table(class_="data")
 
         _crash_row(_("Host"), details["host"], odd=False, legend=True)
@@ -575,7 +575,7 @@ class ReportRendererGUI(ABCReportRenderer):
     def show_details(self, crash_info, row):
         details = crash_info["details"]
 
-        html.h2(_("Details"))
+        html.h3(_("Details"), class_="table")
         html.open_table(class_="data")
 
         _crash_row(_("Page"), details["page"], odd=False, legend=True)
@@ -619,7 +619,7 @@ def format_params(params):
 
 
 def _show_output_box(title, content):
-    html.h3(title)
+    html.h3(title, class_="table")
     html.open_div(class_="log_output")
     html.write(escaping.escape_attribute(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
     html.close_div()

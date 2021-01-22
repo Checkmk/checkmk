@@ -419,21 +419,17 @@ class IndexSearcher:
         )
 
 
-def build_index() -> None:
-    IndexBuilder(match_item_generator_registry).build_full_index()
-
-
 def _build_index_background(
     job_interface: BackgroundProcessInterface,
     n_attempts_redis_connection: int = 1,
+    sleep_time: int = 5,
 ) -> None:
-    sleep_time = 5
     n_attempts = 0
     job_interface.send_progress_update(_("Building of search index started"))
     while True:
         try:
             n_attempts += 1
-            build_index()
+            IndexBuilder(match_item_generator_registry).build_full_index()
             break
         except redis.ConnectionError:
             job_interface.send_progress_update(
@@ -448,12 +444,16 @@ def _build_index_background(
     job_interface.send_result_message(_("Search index successfully built"))
 
 
-def build_index_background(n_attempts_redis_connection: int = 1) -> None:
+def build_index_background(
+    n_attempts_redis_connection: int = 1,
+    sleep_time: int = 5,
+) -> None:
     build_job = SearchIndexBackgroundJob()
     build_job.set_function(
         partial(
             _build_index_background,
             n_attempts_redis_connection=n_attempts_redis_connection,
+            sleep_time=sleep_time,
         ))
     try:
         build_job.start()

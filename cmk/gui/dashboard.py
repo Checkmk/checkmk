@@ -108,7 +108,6 @@ loaded_with_language: Union[None, bool, str] = False
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
 
-screen_margin = 12  # Distance from the left border of the main-frame to the dashboard area
 dashlet_padding = 26, 4, 4, 4, 4  # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 raster = 10  # Raster the dashlet coords are measured in (px)
 
@@ -521,13 +520,9 @@ def draw_dashboard(name: DashboardName) -> None:
 
     title = visuals.visual_title('dashboard', board, board_context)
 
-    # Distance from top of the screen to the lower border of the heading
-    header_height = 104
-
     if not board.get('show_title'):
         # Remove the whole header line
         html.set_render_headfoot(False)
-        header_height = 0
 
     # In case we have a dashboard / dashlet that requires context information that is not available
     # yet, display a message to the user to insert the missing information.
@@ -578,8 +573,6 @@ def draw_dashboard(name: DashboardName) -> None:
         "MAX": MAX,
         "GROW": GROW,
         "grid_size": raster,
-        "header_height": header_height,
-        "screen_margin": screen_margin,
         "dashlet_padding": dashlet_padding,
         "dashlet_min_size": Dashlet.minimum_size,
         "refresh_dashlets": _get_refresh_dashlets(dashlets),

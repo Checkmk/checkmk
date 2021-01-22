@@ -336,12 +336,14 @@ export function calculate_dashboard() {
     if (g_dashboard_resizer !== null) return; // another resize is processed
     g_dashboard_resizer = true;
 
-    g_dashboard_top = dashboard_properties.header_height;
-    g_dashboard_left = dashboard_properties.screen_margin;
-    g_dashboard_width = utils.page_width() - dashboard_properties.screen_margin;
-    g_dashboard_height = utils.page_height() - dashboard_properties.header_height;
-
     var oDash = document.getElementById("dashboard");
+    let dashboard_rect = oDash.getBoundingClientRect();
+
+    g_dashboard_top = dashboard_rect.top;
+    g_dashboard_left = dashboard_rect.left;
+    g_dashboard_width = utils.page_width() - g_dashboard_left;
+    g_dashboard_height = utils.page_height() - g_dashboard_top;
+
     oDash.style.width = g_dashboard_width + "px";
     oDash.style.height = g_dashboard_height + "px";
 

@@ -852,9 +852,6 @@ fi
 
 # Check status of OMD sites and Check_MK Notification spooler
 if inpath omd; then
-    echo '<<<labels:sep(0)>>>'
-    echo '{"cmk/check_mk_server": "yes"}'
-
     run_cached -s omd_status 60 "omd status --bare --auto || true"
     echo '<<<mknotifyd:sep(0)>>>'
     date +%s

@@ -1,0 +1,13 @@
+Title: omd_info: only create host label 'cmk/check_mk_server:yes' if sites are present
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p21
+Date: 1611149246
+
+Previously, the host label 'cmk/check_mk_server:yes' was set whenever `omd` was in the path.
+This a bit too general. We now only set the label, if at least one site is present.

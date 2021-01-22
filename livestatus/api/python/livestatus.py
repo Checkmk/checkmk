@@ -692,11 +692,11 @@ class MultiSiteConnection(Helpers):
         if len(disabled_sites) > 0:
             status_sitenames = set()
             for sitename, site in sites.items():
-                try:
-                    s, h = site.get("status_host", [])
-                except ValueError:
+                status_host = site.get("status_host")
+                if status_host is None:
                     continue
 
+                s, h = status_host
                 status_sitenames.add(s)
 
             for sitename in status_sitenames:

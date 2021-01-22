@@ -143,6 +143,12 @@ export function register_on_close_handler(popup_id, handler) {
     on_close[popup_id] = handler;
 }
 
+var on_toggle_suggestions = null;
+
+export function register_on_toggle_suggestions_handler(handler) {
+    on_toggle_suggestions = handler;
+}
+
 export function toggle_suggestions() {
     var oPageMenuBar = document.getElementById("page_menu_bar");
     var open;
@@ -154,6 +160,11 @@ export function toggle_suggestions() {
         open = "off";
     }
     foldable_container.persist_tree_state("suggestions", "all", open);
+
+    // Call registered hook
+    if (on_toggle_suggestions !== null) {
+        on_toggle_suggestions();
+    }
 }
 
 export function form_submit(form_name, button_name) {

@@ -63,9 +63,9 @@ def test_get_ip_lookup_cache_invalid_syntax(_cache_file):
 
 
 def test_get_ip_lookup_cache_existing(_cache_file):
-    cache_id1 = "host1", 4
+    cache_id1 = "host1", socket.AF_INET
     with _cache_file.open(mode="w", encoding="utf-8") as f:
-        f.write(u"%r" % {cache_id1: "1"})
+        f.write(u"%r" % {ip_lookup.serialize_cache_id(cache_id1): "1"})
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
 
@@ -73,7 +73,7 @@ def test_get_ip_lookup_cache_existing(_cache_file):
 
 
 def test_update_ip_lookup_cache_empty_file(_cache_file):
-    cache_id = "host1", 4
+    cache_id = "host1", socket.AF_INET
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     ip_lookup_cache.update_cache(cache_id, "127.0.0.1")
 
@@ -85,8 +85,8 @@ def test_update_ip_lookup_cache_empty_file(_cache_file):
 
 
 def test_update_ip_lookup_cache_extend_existing_file(_cache_file):
-    cache_id1 = "host1", 4
-    cache_id2 = "host2", 4
+    cache_id1 = "host1", socket.AF_INET
+    cache_id2 = "host2", socket.AF_INET
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     ip_lookup_cache.update_cache(cache_id1, "127.0.0.1")
@@ -98,11 +98,14 @@ def test_update_ip_lookup_cache_extend_existing_file(_cache_file):
 
 
 def test_update_ip_lookup_cache_update_existing_entry(_cache_file):
-    cache_id1 = "host1", 4
-    cache_id2 = "host2", 4
+    cache_id1 = "host1", socket.AF_INET
+    cache_id2 = "host2", socket.AF_INET
 
     with _cache_file.open(mode="w", encoding="utf-8") as f:
-        f.write(u"%r" % {cache_id1: "1", cache_id2: "2"})
+        f.write(u"%r" % {
+            ip_lookup.serialize_cache_id(cache_id1): "1",
+            ip_lookup.serialize_cache_id(cache_id2): "2",
+        })
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     ip_lookup_cache.update_cache(cache_id1, "127.0.0.1")
@@ -113,7 +116,7 @@ def test_update_ip_lookup_cache_update_existing_entry(_cache_file):
 
 
 def test_ip_lookup_cache_update_without_persistence(_cache_file):
-    cache_id1 = "host1", 4
+    cache_id1 = "host1", socket.AF_INET
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     ip_lookup_cache.persist_on_update = False
@@ -124,8 +127,8 @@ def test_ip_lookup_cache_update_without_persistence(_cache_file):
 
 
 def test_load_legacy_lookup_cache(_cache_file):
-    cache_id1 = "host1", 4
-    cache_id2 = "host2", 4
+    cache_id1 = "host1", socket.AF_INET
+    cache_id2 = "host2", socket.AF_INET
 
     with _cache_file.open("w", encoding="utf-8") as f:
         f.write(u"%r" % {"host1": "127.0.0.1", "host2": "127.0.0.2"})
@@ -157,16 +160,16 @@ def test_update_dns_cache(monkeypatch, _cache_file):
 
     # Check persisted data
     cache = ip_lookup._load_ip_lookup_cache(lock=False)
-    assert cache[("blub", 4)] == "127.0.0.13"
-    assert ("dual", 6) not in cache
+    assert cache[("blub", socket.AF_INET)] == "127.0.0.13"
+    assert ("dual", socket.AF_INET6) not in cache
 
 
 def test_clear_ip_lookup_cache(_cache_file):
     with _cache_file.open(mode="w", encoding="utf-8") as f:
-        f.write(u"%r" % {("host1", 4): "127.0.0.1"})
+        f.write(u"%r" % {ip_lookup.serialize_cache_id(("host1", socket.AF_INET)): "127.0.0.1"})
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    assert ip_lookup_cache[("host1", 4)] == "127.0.0.1"
+    assert ip_lookup_cache[("host1", socket.AF_INET)] == "127.0.0.1"
 
     ip_lookup_cache.clear()
 
@@ -228,16 +231,16 @@ def test_lookup_mgmt_board_ip_address_dual_host(monkeypatch, hostname, result_ad
 
 
 @pytest.mark.parametrize("tags, family", [
-    ({}, 4),
+    ({}, socket.AF_INET),
     ({
         "address_family": "ip-v4-only",
-    }, 4),
+    }, socket.AF_INET),
     ({
         "address_family": "ip-v6-only",
-    }, 6),
+    }, socket.AF_INET6),
     ({
         "address_family": "ip-v4v6",
-    }, 4),
+    }, socket.AF_INET),
 ])
 def test_lookup_mgmt_board_ip_address_unresolveable(monkeypatch, tags, family):
     hostname = "unresolveable-hostname"

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
 import time
 from typing import Optional
 
@@ -48,7 +49,7 @@ def dump_host(hostname: HostName) -> None:
         try:
             secondary = _ip_address_for_dump_host(
                 host_config,
-                family=4 if host_config.is_ipv6_primary else 6,
+                family=socket.AF_INET if host_config.is_ipv6_primary else socket.AF_INET6,
             )
         except Exception:
             secondary = "X.X.X.X"
@@ -132,7 +133,11 @@ def _evaluate_params(params: LegacyCheckParameters) -> str:
         time.time()), current_params)
 
 
-def _ip_address_for_dump_host(host_config: config.HostConfig, *, family: int) -> Optional[str]:
+def _ip_address_for_dump_host(
+    host_config: config.HostConfig,
+    *,
+    family: socket.AddressFamily,
+) -> Optional[str]:
     if host_config.is_cluster:
         try:
             return ip_lookup.lookup_ip_address(host_config, family=family)

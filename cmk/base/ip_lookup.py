@@ -19,13 +19,23 @@ from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.base.config as config
 
-IPLookupCacheId = Tuple[HostName, int]
+IPLookupCacheId = Tuple[HostName, socket.AddressFamily]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
 UpdateDNSCacheResult = Tuple[int, List[HostName]]
 
 _fake_dns: Optional[HostAddress] = None
 _enforce_localhost = False
+
+
+def deserialize_cache_id(serialized: Tuple[HostName, int]) -> Tuple[HostName, socket.AddressFamily]:
+    # 4 and 6 are legacy values.
+    return serialized[0], {4: socket.AF_INET, 6: socket.AF_INET6}[serialized[1]]
+
+
+def serialize_cache_id(cache_id: Tuple[HostName, socket.AddressFamily]) -> Tuple[HostName, int]:
+    # 4, 6 for legacy.
+    return cache_id[0], {socket.AF_INET: 4, socket.AF_INET6: 6}[cache_id[1]]
 
 
 def enforce_fake_dns(address: HostAddress) -> None:
@@ -39,11 +49,11 @@ def enforce_localhost() -> None:
 
 
 def lookup_ipv4_address(host_config: config.HostConfig) -> Optional[HostAddress]:
-    return lookup_ip_address(host_config, family=4)
+    return lookup_ip_address(host_config, family=socket.AddressFamily.AF_INET)
 
 
 def lookup_ipv6_address(host_config: config.HostConfig) -> Optional[HostAddress]:
-    return lookup_ip_address(host_config, family=6)
+    return lookup_ip_address(host_config, family=socket.AddressFamily.AF_INET6)
 
 
 def lookup_mgmt_board_ip_address(host_config: config.HostConfig) -> Optional[HostAddress]:
@@ -66,7 +76,7 @@ def lookup_mgmt_board_ip_address(host_config: config.HostConfig) -> Optional[Hos
 def lookup_ip_address(
     host_config: config.HostConfig,
     *,
-    family: int,
+    family: socket.AddressFamily,
     for_mgmt_board: bool = False,
 ) -> Optional[HostAddress]:
     # Quick hack, where all IP addresses are faked (--fake-dns)
@@ -79,7 +89,7 @@ def lookup_ip_address(
     # Honor simulation mode und usewalk hosts. Never contact the network.
     if config.simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
                                                         host_config.is_snmp_host):
-        if family == 4:
+        if family is socket.AddressFamily.AF_INET:
             return "127.0.0.1"
 
         return "::1"
@@ -93,10 +103,8 @@ def lookup_ip_address(
         # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
         # here.
         ipa = host_config.management_address
-
-    elif family == 4:
+    elif family is socket.AddressFamily.AF_INET:
         ipa = config.ipaddresses.get(hostname)
-
     else:
         ipa = config.ipv6addresses.get(hostname)
 
@@ -112,7 +120,12 @@ def lookup_ip_address(
 
 
 # Variables needed during the renaming of hosts (see automation.py)
-def cached_dns_lookup(hostname: HostName, *, family: int, is_no_ip_host: bool) -> Optional[str]:
+def cached_dns_lookup(
+    hostname: HostName,
+    *,
+    family: socket.AddressFamily,
+    is_no_ip_host: bool,
+) -> Optional[str]:
     cache = _config_cache.get("cached_dns_lookup")
 
     cache_id = hostname, family
@@ -136,8 +149,7 @@ def cached_dns_lookup(hostname: HostName, *, family: int, is_no_ip_host: bool) -
 
     # Now do the actual DNS lookup
     try:
-        ipa = socket.getaddrinfo(hostname, None, family == 4 and socket.AF_INET or
-                                 socket.AF_INET6)[0][4][0]
+        ipa = socket.getaddrinfo(hostname, None, family)[0][4][0]
 
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
@@ -159,8 +171,11 @@ def cached_dns_lookup(hostname: HostName, *, family: int, is_no_ip_host: bool) -
             cache[cache_id] = cached_ip
             return cached_ip
         cache[cache_id] = None
-        raise MKIPAddressLookupError("Failed to lookup IPv%d address of %s via DNS: %s" %
-                                     (family, hostname, e))
+        raise MKIPAddressLookupError("Failed to lookup %s address of %s via DNS: %s" % (
+            family.name,
+            hostname,
+            e,
+        ))
 
 
 class IPLookupCache:
@@ -228,7 +243,11 @@ class IPLookupCache:
             store.release_lock(_cache_path())
 
     def save_persisted(self) -> None:
-        store.save_object_to_file(_cache_path(), self._cache, pretty=False)
+        store.save_object_to_file(
+            _cache_path(),
+            {serialize_cache_id(k): v for k, v in self._cache.items()},
+            pretty=False,
+        )
 
     def clear(self) -> None:
         """Clear the persisted AND in memory cache"""
@@ -265,13 +284,13 @@ def _convert_legacy_ip_lookup_cache(
 
     # New version has (hostname, ip family) as key
     if isinstance(list(cache)[0], tuple):
-        return cast(NewIPLookupCache, cache)
+        return {deserialize_cache_id(cast(IPLookupCacheId, k)): v for k, v in cache.items()}
 
     cache = cast(LegacyIPLookupCache, cache)
 
     new_cache: NewIPLookupCache = {}
     for key, val in cache.items():
-        new_cache[(key, 4)] = val
+        new_cache[(key, socket.AF_INET)] = val
     return new_cache
 
 
@@ -322,9 +341,9 @@ def _get_dns_cache_lookup_hosts(config_cache: config.ConfigCache) -> List[IPLook
         host_config = config_cache.get_host_config(hostname)
 
         if host_config.is_ipv4_host:
-            hosts.append((hostname, 4))
+            hosts.append((hostname, socket.AF_INET))
 
         if host_config.is_ipv6_host:
-            hosts.append((hostname, 6))
+            hosts.append((hostname, socket.AF_INET6))
 
     return hosts

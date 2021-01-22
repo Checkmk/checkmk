@@ -14,6 +14,7 @@ import numbers
 import os
 import pickle
 import py_compile
+import socket
 import struct
 import sys
 from collections import Counter, OrderedDict
@@ -2301,9 +2302,8 @@ class HostConfig:
             self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6")
 
     @property
-    def default_address_family(self) -> int:
-        # TODO(ml): Return a `socket.AddressFamily` instead of an `int`.
-        return 6 if self.is_ipv6_primary else 4
+    def default_address_family(self) -> socket.AddressFamily:
+        return socket.AF_INET6 if self.is_ipv6_primary else socket.AF_INET
 
     @staticmethod
     def make_snmp_config(hostname: HostName, address: HostAddress) -> SNMPHostConfig:
@@ -3673,7 +3673,8 @@ class ConfigCache:
         hostname: HostName,
         source_type: SourceType,
         service_descr: Optional[ServiceName],
-        lookup_ip_address: Callable[[HostConfig, NamedArg(int, "family")], Optional[HostAddress]],
+        lookup_ip_address: Callable[
+            [HostConfig, NamedArg(socket.AddressFamily, "family")], Optional[HostAddress]],
     ) -> Optional[List[HostKey]]:
         """Returns the node keys if a service is clustered, otherwise 'None' in order to
         decide whether we collect section content of the host or the nodes.

@@ -1693,9 +1693,8 @@ class EditDashletPage(Page):
 
         # Check disjoint option on known valuespecs
         if isinstance(vs_type, Dictionary):
-            settings_elements = set(el[0] for el in vs_general._elements)
-            pe = vs_type._elements() if callable(vs_type._elements) else vs_type._elements
-            properties_elements = set(el[0] for el in pe)
+            settings_elements = set(el[0] for el in vs_general._get_elements())
+            properties_elements = set(el[0] for el in vs_type._get_elements())
             assert settings_elements.isdisjoint(
                 properties_elements), "Dashlet settings and properties have a shared option name"
 

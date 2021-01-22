@@ -35,9 +35,25 @@ import socket
 import time
 import uuid
 import urllib.parse
-from typing import (Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set,
-                    SupportsFloat, Tuple as _Tuple, Type, TypeVar, Union, Sequence, NamedTuple,
-                    Protocol)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional as _Optional,
+    Pattern,
+    Protocol,
+    Sequence,
+    Set,
+    SupportsFloat,
+    Tuple as _Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
@@ -4666,14 +4682,16 @@ class Tuple(ValueSpec):
 
 
 DictionaryEntry = _Tuple[str, ValueSpec]
-DictionaryElements = Union[List[DictionaryEntry], Callable[[], List[DictionaryEntry]]]
+DictionaryElements = Iterable[DictionaryEntry]
+DictionaryElementsThunk = Callable[[], DictionaryElements]
+DictionaryElementsRaw = Union[DictionaryElements, DictionaryElementsThunk]
 
 
 class Dictionary(ValueSpec):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements: DictionaryElements,
+        elements: DictionaryElementsRaw,
         empty_text: _Optional[str] = None,
         default_text: _Optional[str] = None,
         optional_keys: Union[bool, List[str]] = True,
@@ -4696,7 +4714,11 @@ class Dictionary(ValueSpec):
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
-        self._elements = elements
+        if callable(elements):
+            self._elements = elements
+        else:
+            const_elements = list(elements)
+            self._elements = lambda: const_elements
         self._empty_text = empty_text if empty_text is not None else _("(no parameters)")
 
         # Optionally a text can be specified to be shown by value_to_text()
@@ -4730,12 +4752,8 @@ class Dictionary(ValueSpec):
             return self._migrate(value)
         return value
 
-    def _get_elements(self):
-        if callable(self._elements):
-            return self._elements()
-        if isinstance(self._elements, list):
-            return self._elements
-        return []
+    def _get_elements(self) -> DictionaryElements:
+        yield from self._elements()
 
     def render_input_as_form(self, varprefix, value):
         self._render_input(varprefix, value, "form")
@@ -4774,6 +4792,7 @@ class Dictionary(ValueSpec):
                     visible = param in value
                 label = vs.title()
                 if two_columns:
+                    assert isinstance(label, str)
                     label += ":"
                     colon_printed = True
                 html.checkbox(checkbox_varname,
@@ -4888,9 +4907,9 @@ class Dictionary(ValueSpec):
             html.close_div()
 
     def set_focus(self, varprefix):
-        elements = self._get_elements()
-        if elements:
-            elements[0][1].set_focus(varprefix + "_p_" + elements[0][0])
+        first_element = next(iter(self._get_elements()), None)
+        if first_element:
+            first_element[1].set_focus(varprefix + "_p_" + first_element[0])
 
     def canonical_value(self):
         return {

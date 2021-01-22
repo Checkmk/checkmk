@@ -152,7 +152,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
                     ),
                     parts=parts,
                     total=total_part,
-                    tooltip=cls._render_tooltip(parts, total_part),
+                    tooltip=cls._render_tooltip(host_name, parts, total_part),
                 ))
 
         return elements
@@ -260,7 +260,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
                     },
                     parts=parts,
                     total=total_part,
-                    tooltip=cls._render_tooltip(parts, total_part),
+                    tooltip=cls._render_tooltip(site_spec["alias"], parts, total_part),
                 ))
 
         return elements + cls._test_elements()
@@ -394,7 +394,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
                     },
                     parts=parts,
                     total=total_part,
-                    tooltip=cls._render_tooltip(parts, total_part),
+                    tooltip=cls._render_tooltip(site_name, parts, total_part),
                 ))
 
         for state, tooltip in sorted(sites.site_state_titles().items()):
@@ -408,8 +408,9 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
         return elements
 
     @classmethod
-    def _render_tooltip(cls, parts: List[Part], total_part: Part) -> str:
+    def _render_tooltip(cls, title: str, parts: List[Part], total_part: Part) -> str:
         with html.plugged():
+            html.h3(title)
             html.open_table()
             for part in parts:
                 html.open_tr()

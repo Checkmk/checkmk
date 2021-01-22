@@ -593,10 +593,18 @@ def get_parsed_item_data(check_function: Callable) -> Callable:
     In case of parsed not being a dict the decorator returns 3
     (unknown state) with a wrong usage message.
     In case of item not existing as a key in parsed or parsed[item]
-    not existing the decorator gives an empty return leading to
+    evaluating to False the decorator gives an empty return leading to
     cmk.base returning 3 (unknown state) with an item not found message
     (see cmk/base/checking.py).
+
+    WATCH OUT:
+    This will not work if valid item data evaluates to False (such as a
+    sensor reading that is 0.0, for example).
     """
+    # ^- However: It's been like this for a while and some plugins rely on this
+    # behaviour. Since this function has no counterpart in the new check API,
+    # we leave it as it is.
+
     @functools.wraps(check_function)
     def wrapped_check_function(item: str, params: Any, parsed: Any) -> Any:
         # TODO

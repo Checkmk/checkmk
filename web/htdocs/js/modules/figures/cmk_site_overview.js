@@ -186,8 +186,22 @@ class SiteOverview extends cmk_figures.FigureBase {
             .data(element => (geometry.show_label ? [element.title] : []))
             .join("text")
             .attr("text-anchor", "middle")
-            .text(element => element)
-            .attr("y", geometry.hexagon_radius + 15);
+            .text(title => title)
+            .attr("y", geometry.hexagon_radius + 15)
+            .classed("label", true)
+            .each(function (title) {
+                // Limit label lengths to not be wider than the hexagons
+                let label = d3.select(this);
+                let text_len = label.node().getComputedTextLength();
+                while (text_len > geometry.box_width && title.length > 0) {
+                    title = title.slice(0, -1);
+                    label.text(title + "…");
+                    text_len = label.node().getComputedTextLength();
+                }
+
+                // reposition after truncating
+                label.attr("x", geometry.label_center_left - label.node().getBBox().width / 2);
+            });
     }
 
     _render_inner_hexagons(selection, outer_radius) {
@@ -244,6 +258,7 @@ class SiteOverview extends cmk_figures.FigureBase {
         // Effective height of the label (based on styling)
         let label_height = 11;
         let label_v_padding = 8;
+        // In case this minimum width is reached, hide the label
         let min_label_width = 60;
 
         // Spacing between dashlet border and box area

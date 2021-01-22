@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple as _Tuple, Optional
+from typing import List, Optional, Tuple as _Tuple
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -150,17 +150,21 @@ class SingleMetricDataGenerator(ABCDataGenerator):
 
         # Historic values are always added as plot_type area
         if properties["time_range"] != "current":
+            time_range_params = properties["time_range"][1]
             for row_id, metric, row in metrics:
-                color = metric.get('color', "#008EFF") if properties.get(
-                    "color", "default") == "default" else properties.get('color', "#008EFF")
+                chosen_color = time_range_params["color"]
+                color = metric.get(
+                    'color',
+                    "#008EFF",
+                ) if chosen_color == "default" else chosen_color
                 plot_definition = {
                     "label": row['host_name'],
                     "id": row_id,
                     "plot_type": "area",
                     "use_tags": [row_id],
                     "color": color,
-                    "fill": properties.get("fill", True),
-                    "opacity": 0.1 if properties.get('fill', True) is True else 0
+                    "fill": time_range_params["fill"],
+                    "opacity": 0.1 if time_range_params["fill"] else 0
                 }
                 plot_definitions.append(plot_definition)
 
@@ -293,19 +297,32 @@ class BarplotDashlet(ABCFigureDashlet):
 
 
 class SingleMetricStyledDataGenerator(SingleMetricDataGenerator):
-    @classmethod
-    def _vs_elements(cls):
-        vs_el = super()._vs_elements()
-        vs_el.extend([("fill",
-                       DropdownChoice(choices=[
-                           (False, _("Don't fill area plot")),
-                           (True, _("Fill area plot")),
-                       ],
-                                      default_value=True,
-                                      title=_("Fill area plot when displaying historic values"))),
-                      ("color", GraphColor(title=_("Color metric plot"), default_value="default"))])
-
-        return vs_el
+    @staticmethod
+    def _time_range_historic_dict_elements() -> DictionaryElements:
+        yield from super(
+            SingleMetricStyledDataGenerator,
+            SingleMetricStyledDataGenerator,
+        )._time_range_historic_dict_elements()
+        yield from (
+            (
+                "fill",
+                DropdownChoice(
+                    choices=[
+                        (False, _("Line")),
+                        (True, _("Area")),
+                    ],
+                    default_value=True,
+                    title=_("Style"),
+                ),
+            ),
+            (
+                "color",
+                GraphColor(
+                    title=_("Color"),
+                    default_value="default",
+                ),
+            ),
+        )
 
 
 @dashlet_registry.register

@@ -70,7 +70,7 @@ static ReleasedResource<Folder> CreateFolder(IShellDispatch *dispatch,
     auto hResult = dispatch->NameSpace(variantDir, &folder);
 
     if (!SUCCEEDED(hResult)) {
-        XLOG::l("Error during NameSpace 1 /unzip/ {:X}", hResult);
+        XLOG::l("Error during NameSpace 1 /unzip/ {:#X}", hResult);
         return nullptr;
     }
 
@@ -147,13 +147,15 @@ std::vector<std::wstring> List(std::wstring_view file_src) {
 
     auto from_file = CreateFolder(dispatch.get(), src);
     if (from_file == nullptr) {
-        XLOG::l("Error during NameSpace 1 /unzip/");
+        XLOG::l("Error during NameSpace 1 /unzip/. The file is '{}'",
+                wtools::ToUtf8(file_src));
         return {};
     }
 
     auto fi = GetFolderItems(from_file.get());
     if (fi == nullptr) {
-        XLOG::l("Failed to get folder items /unzip/");
+        XLOG::l("Failed to get folder items /unzip/. The file is '{}'",
+                wtools::ToUtf8(file_src));
         return {};
     }
 
@@ -195,21 +197,23 @@ bool Extract(std::wstring_view file_src, std::wstring_view dir_dest) {
 
     auto from_file = CreateFolder(dispatch.get(), src);  // in
     if (from_file == nullptr) {
-        XLOG::l("Error finding from file /unzip/");
+        XLOG::l("Error finding from file /unzip/. The file is '{}'",
+                wtools::ToUtf8(file_src));
         return false;
     }
 
     // files & folders
     auto file_items = GetFolderItems(from_file.get());
     if (file_items == nullptr) {
-        XLOG::l("Failed to get folder items /unzip/");
+        XLOG::l("Failed to get folder items /unzip/. The file is '{}'",
+                wtools::ToUtf8(file_src));
         return false;
     }
 
     auto hres = UnzipExec(to_folder.get(), file_items.get());
 
     if (hres != S_OK) {
-        XLOG::l("Error during copy here /unzip/ {:X}", hres);
+        XLOG::l("Error during copy here /unzip/ {:#X}", hres);
         return false;
     }
 

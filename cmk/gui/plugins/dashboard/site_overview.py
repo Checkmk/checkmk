@@ -56,14 +56,15 @@ class Element(ABCElement):
 class HostElement(ABCElement):
     """Renders a regularly available site"""
     link: str
-    total: Part
-    parts: List[Part]
+    host_color: str
+    service_color: str
+    has_host_problem: bool
+    num_services: int
+    num_problems: int
 
     def serialize(self):
         serialized = asdict(self)
         serialized["type"] = "host_element"
-        serialized["total"] = asdict(self.total)
-        serialized["parts"] = [asdict(p) for p in self.parts]
         return serialized
 
 
@@ -84,6 +85,15 @@ class SiteStats(NamedTuple):
     hosts_unreachable_or_have_unknown: int
     hosts_up_and_have_warning: int
     hosts_up_without_problem: int
+
+
+class HostStats(NamedTuple):
+    scheduled_downtime_depth: int
+    state: int
+    num_services: int
+    num_services_crit: int
+    num_services_unknown: int
+    num_services_warn: int
 
 
 class SiteOverviewDashletDataGenerator(ABCDataGenerator):
@@ -120,23 +130,6 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
 
         for host_name, host_stats in sorted(cls._get_host_stats(site_id).items(),
                                             key=lambda h: h[0]):
-            parts = []
-            total = 0
-            for title, color, count in [
-                (_("hosts are down or have critical services"), "#ff0000",
-                 host_stats.hosts_down_or_have_critical),
-                (_("hosts are unreachable or have unknown services"), "#ff8800",
-                 host_stats.hosts_unreachable_or_have_unknown),
-                (_("hosts are up but have services in warning state"), "#ffff00",
-                 host_stats.hosts_up_and_have_warning),
-                (_("hosts are in scheduled downtime"), "#00aaff", host_stats.hosts_in_downtime),
-                (_("hosts are up and have no service problems"), "#13d38910",
-                 host_stats.hosts_up_without_problem),
-            ]:
-                parts.append(Part(title=title, color=color, count=count))
-                total += count
-
-            total_part = Part(title=_("Total number of services"), color=None, count=total)
 
             elements.append(
                 HostElement(
@@ -150,61 +143,61 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
                         ],
                         filename="view.py",
                     ),
-                    parts=parts,
-                    total=total_part,
-                    tooltip=cls._render_tooltip(host_name, parts, total_part),
+                    host_color=cls._host_color(host_stats),
+                    service_color=cls._service_color(host_stats),
+                    has_host_problem=(host_stats.state != 0 or
+                                      host_stats.scheduled_downtime_depth > 0),
+                    num_services=host_stats.num_services,
+                    num_problems=(host_stats.num_services_crit + host_stats.num_services_unknown +
+                                  host_stats.num_services_warn),
+                    tooltip=str(html.render_h3(host_name)),
                 ))
 
         return elements
 
     @classmethod
-    def _get_host_stats(cls, site_id: SiteId) -> Dict[HostName, SiteStats]:
+    def _host_color(cls, host_stats: HostStats) -> str:
+        color = {
+            2: "#ff0000",
+            3: "#ff8800",
+            1: "#ffff00",
+            0: "#13d38910",
+        }[host_stats.state]
+        if host_stats.scheduled_downtime_depth > 0:
+            color = "#00aaff"
+        return color
+
+    @classmethod
+    def _service_color(cls, host_stats: HostStats) -> str:
+        if host_stats.num_services_crit > 0:
+            return "#ff0000"
+        if host_stats.num_services_unknown > 0:
+            return "#ff8800"
+        if host_stats.num_services_warn > 0:
+            return "#ffff00"
+        return "#13d38910"
+
+    @classmethod
+    def _get_host_stats(cls, site_id: SiteId) -> Dict[HostName, HostStats]:
         try:
             sites.live().set_only_sites([site_id])
             rows: LivestatusResponse = sites.live().query(cls._host_stats_query())
         finally:
             sites.live().set_only_sites(None)
 
-        return {row[0]: SiteStats(*row[1:]) for row in rows}
+        return {row[0]: HostStats(*row[1:]) for row in rows}
 
     @classmethod
     def _host_stats_query(cls) -> str:
         return "\n".join([
             "GET hosts",
-            "Columns: host_name",
-
-            # downtime
-            "Stats: scheduled_downtime_depth > 0",
-
-            # Down/Crit
-            "Stats: state = 1",
-            "Stats: worst_service_state = 2",
-            "StatsOr: 2",
-            "Stats: scheduled_downtime_depth = 0",
-            "StatsAnd: 2",
-
-            # unreachable/unknown
-            "Stats: state = 2",
-            "Stats: worst_service_state != 2",
-            "StatsAnd: 2",
-            "Stats: state = 0",
-            "Stats: worst_service_state = 3",
-            "StatsAnd: 2",
-            "StatsOr:2",
-            "Stats: scheduled_downtime_depth = 0",
-            "StatsAnd: 2",
-
-            # Warn
-            "Stats: state = 0",
-            "Stats: worst_service_state = 1",
-            "Stats: scheduled_downtime_depth = 0",
-            "StatsAnd: 3",
-
-            # OK/UP
-            "Stats: state = 0",
-            "Stats: worst_service_state = 0",
-            "Stats: scheduled_downtime_depth = 0",
-            "StatsAnd: 3",
+            "Columns: name",
+            "Columns: scheduled_downtime_depth",
+            "Columns: state",
+            "Columns: num_services",
+            "Columns: num_services_crit",
+            "Columns: num_services_unknown",
+            "Columns: num_services_warn",
         ])
 
     @classmethod

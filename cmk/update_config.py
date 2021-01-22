@@ -661,9 +661,13 @@ class UpdateConfig:
     def _create_search_index(self):
         """Rebuild and store the search index used by the seach field in the Setup menu.
 
-        This is necessary for example if a new Rulespec was added by an MKP.
+        This is necessary for example if a new Rulespec was added by an MKP. We do this in the
+        background and try to connect to Redis for up to 10 minutes.
         """
-        cmk.gui.watolib.search.build_index()
+        cmk.gui.watolib.search.build_index_background(
+            n_attempts_redis_connection=30,
+            sleep_time=20,
+        )
 
     def _rewrite_bi_configuration(self):
         """Convert the bi configuration to the new (REST API compatible) format"""

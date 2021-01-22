@@ -412,7 +412,7 @@ class Jobs(BackupEntityCollection):
         self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
 
     def show_list(self, editable=True):
-        html.h2(_("Jobs"))
+        html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
 
             for job_ident, job in sorted(self.objects.items()):

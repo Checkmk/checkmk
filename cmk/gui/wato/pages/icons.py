@@ -64,7 +64,7 @@ class ModeIcons(WatoMode):
 
     def _vs_upload(self):
         return Dictionary(
-            title=_('Icon'),
+            title=_('Upload icon'),
             optional_keys=False,
             render="form",
             elements=[
@@ -131,7 +131,6 @@ class ModeIcons(WatoMode):
             raise MKUserError(None, _('Unable to upload icon: %s') % e)
 
     def page(self) -> None:
-        html.h3(_("Upload Icon"))
         html.p(
             _("Here you can add icons, for example to use them in bookmarks or "
               "in custom actions of views. Allowed are single PNG image files "

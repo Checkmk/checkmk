@@ -88,11 +88,12 @@ def show_log_list():
         if all_logs_empty:
             continue  # Logfile vanished
 
-        html.h2(
-            html.render_a(host_name, href=makeuri(
-                request,
-                [('site', site), ('host', host_name)],
-            )))
+        html.h3(html.render_a(host_name,
+                              href=makeuri(
+                                  request,
+                                  [('site', site), ('host', host_name)],
+                              )),
+                class_="table")
         list_logs(site, host_name, logs)
     html.footer()
 

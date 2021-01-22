@@ -1841,7 +1841,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         facilities = dict(_deref(cmk.gui.mkeventd.syslog_facilities))
 
         # Show content of the rule package
-        with table_element(css="ruleset", limit=None, sortable=False) as table:
+        with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
             for nr, rule in enumerate(self._rules):
                 if rule in found_rules:

@@ -580,6 +580,29 @@ div#page_menu_popups {
   }
 }
 
+/* Dashboard editor specific styling */
+body.dashboard {
+  div#page_menu_popups .confirm_container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    // Important needed to override swal2 internal definition
+    background-color: rgba(0, 0, 0, 0.2) !important; // sass-lint:disable-line no-important
+
+    .confirm_popup {
+      flex-grow: 0;
+      margin: auto;
+    }
+
+    .confirm_content {
+      width: max-content;
+      min-width: 300px;
+    }
+  }
+}
+
 /* Filter popup specific styling */
 div#page_menu_popups div.side_popup {
   position: fixed;

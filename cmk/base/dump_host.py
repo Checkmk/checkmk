@@ -125,7 +125,7 @@ def dump_host(hostname: HostName) -> None:
 
 def _evaluate_params(params: LegacyCheckParameters) -> str:
     if not isinstance(params, cmk.base.config.TimespecificParamList):
-        return "%r" % (params,)
+        return repr(params)
 
     current_params = checking.legacy_determine_check_params(params)
     return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(

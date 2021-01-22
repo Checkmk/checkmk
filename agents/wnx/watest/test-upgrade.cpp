@@ -636,8 +636,8 @@ void SimulateWatoInstall(const std::filesystem::path& lwa,
     std::error_code ec;
     fs::create_directory(pd_dir / dirs::kBakery, ec);
     ASSERT_EQ(ec.value(), 0);
-    tst::ConstructFile(bakery_yaml, "11");
-    tst::ConstructFile(user_yaml, "0");
+    tst::CreateTextFile(bakery_yaml, "11");
+    tst::CreateTextFile(user_yaml, "0");
 }
 
 TEST(UpgradeTest, UserIniWatoAgent) {

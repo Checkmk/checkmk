@@ -490,7 +490,7 @@ protected:
         auto table = details::AllDirTable();
         auto table_removed = details::RemovableDirTable();
         for (auto& n : table) {
-            tst::ConstructFile(pd / n / "1.tmp", wtools::ToUtf8(n));
+            tst::CreateTextFile(pd / n / "1.tmp", wtools::ToUtf8(n));
         }
 
         user_folders_count_ = table.size() - table_removed.size();
@@ -580,8 +580,8 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     }
 
     auto [target_yml_example, ignore_it_again] = cap::GetExampleYmlNames();
-    tst::ConstructFile(target_yml_example, "aaa");
-    tst::ConstructFile(pd / files::kUserYmlFile, "aaa");
+    tst::CreateTextFile(target_yml_example, "aaa");
+    tst::CreateTextFile(pd / files::kUserYmlFile, "aaa");
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::smart));
     for (auto& f : files) {
@@ -598,8 +598,8 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     details::CreateTree(pd);
 
     // different user and example yml
-    tst::ConstructFile(target_yml_example, "aaa");
-    tst::ConstructFile(pd / files::kUserYmlFile, "aaabb");
+    tst::CreateTextFile(target_yml_example, "aaa");
+    tst::CreateTextFile(pd / files::kUserYmlFile, "aaabb");
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::smart));
 

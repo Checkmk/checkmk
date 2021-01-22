@@ -10,6 +10,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
+    DictionaryElements,
     DropdownChoice,
     GraphColor,
     Timerange,
@@ -27,7 +28,6 @@ from cmk.gui.plugins.views.painters import paint_service_state_short
 
 
 class SingleMetricDataGenerator(ABCDataGenerator):
-    """Data generator for a scatterplot with average lines"""
     @classmethod
     def vs_parameters(cls):
         return Dictionary(title=_("Properties"),
@@ -35,40 +35,58 @@ class SingleMetricDataGenerator(ABCDataGenerator):
                           optional_keys=False,
                           elements=cls._vs_elements())
 
+    @staticmethod
+    def _time_range_historic_dict_elements() -> DictionaryElements:
+        return [
+            (
+                'window',
+                Timerange(
+                    title=_("Time range to consider"),
+                    default_value="d0",
+                    allow_empty=True,
+                ),
+            ),
+            (
+                "rrd_consolidation",
+                DropdownChoice(
+                    choices=[
+                        ("average", _("Average")),
+                        ("min", _("Minimum")),
+                        ("max", _("Maximum")),
+                    ],
+                    default_value="max",
+                    title="RRD consolidation",
+                    help=_("Consolidation function for the [cms_graphing#rrds|RRD] data column"),
+                ),
+            ),
+        ]
+
     @classmethod
     def _vs_elements(cls):
         return [
             ("metric", MetricName()),  # MetricChoice would be nicer, but we use the context filters
-            ("time_range",
-             CascadingDropdown(
-                 title=_("Timerange"),
-                 orientation="horizontal",
-                 choices=[
-                     ("current", _("Only show current value")),
-                     ("range", _("Show historic values"),
-                      Dictionary(
-                          optional_keys=False,
-                          elements=[
-                              ('window',
-                               Timerange(title=_("Time range to consider"),
-                                         default_value="d0",
-                                         allow_empty=True)),
-                              ("rrd_consolidation",
-                               DropdownChoice(
-                                   choices=[
-                                       ("average", _("Average")),
-                                       ("min", _("Minimum")),
-                                       ("max", _("Maximum")),
-                                   ],
-                                   default_value="max",
-                                   title="RRD consolidation",
-                                   help=
-                                   _("Consolidation function for the [cms_graphing#rrds|RRD] data column"
-                                    ),
-                               )),
-                          ])),
-                 ],
-                 default_value="current")),
+            (
+                "time_range",
+                CascadingDropdown(
+                    title=_("Timerange"),
+                    orientation="horizontal",
+                    choices=[
+                        (
+                            "current",
+                            _("Only show current value"),
+                        ),
+                        (
+                            "range",
+                            _("Show historic values"),
+                            Dictionary(
+                                optional_keys=False,
+                                elements=cls._time_range_historic_dict_elements(),
+                            ),
+                        ),
+                    ],
+                    default_value="current",
+                ),
+            ),
             ("display_range",
              CascadingDropdown(title=_("Display range"),
                                choices=[

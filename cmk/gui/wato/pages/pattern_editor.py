@@ -268,7 +268,6 @@ class ModePatternEditor(WatoMode):
                     ("mode", "edit_rule"),
                     ("varname", "logwatch_rules"),
                     ("rulenr", rulenr),
-                    ("host", self._hostname),
                     ("item", ensure_str(watolib.mk_repr(self._item))),
                     ("rule_folder", folder.path()),
                     ("rule_id", rule.id),

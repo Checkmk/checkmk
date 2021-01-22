@@ -841,8 +841,8 @@ div.varname {
   pointer-events: none;
 }
 
-.wato h2.pending_changes_header {
-  span {
+.wato .pending_changes_header {
+  #row_info {
     float: right;
     padding-right: $spacing;
     font-size: $font-size-global;

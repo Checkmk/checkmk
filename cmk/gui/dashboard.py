@@ -586,6 +586,7 @@ def draw_dashboard(name: DashboardName) -> None:
 cmk.dashboard.set_dashboard_properties(%s);
 cmk.dashboard.calculate_dashboard();
 window.onresize = function () { cmk.dashboard.calculate_dashboard(); }
+cmk.page_menu.register_on_toggle_suggestions_handler(cmk.dashboard.calculate_dashboard);
 cmk.dashboard.execute_dashboard_scheduler(1);
 cmk.dashboard.register_event_handlers();
     """ % json.dumps(dashboard_properties))

@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-01-21 07:00+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
+"PO-Revision-Date: 2021-01-21 22:39+0000\n"
+"Last-Translator: Ulrich Bschorer <ulrich.bschorer@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -10168,6 +10168,9 @@ msgstr ""
 "Konfiguriere reguläre Ausdrücke die auf den Anfang von Service-Namen zu-"
 "treffen. Präfix <tt>!</tt> um den Service <i>auszuschließen</i>."
 
+msgid "Configure restrictions manually"
+msgstr ""
+
 msgid ""
 "Configure that possible actions that can be performed when a rule triggers "
 "and also manually by a user."
@@ -10442,6 +10445,12 @@ msgstr "Verbindung"
 
 msgid "Connection ID"
 msgstr "Verbindungs-ID"
+
+#, python-brace-format
+msgid ""
+"Connection attempt {n_attempts} / {n_attempts_redis_connection} to Redis "
+"failed"
+msgstr ""
 
 msgid "Connection dropped late"
 msgstr "Verbindung spät fallen gelassen"
@@ -13277,16 +13286,16 @@ msgstr "Nachrichten löschen"
 msgid "Demonstration"
 msgstr "Demonstration"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Depending on the choosen datasource a %s can list <i>multiple</i> or "
-"<i>single</i> objects. For example the <i>services</i> datasource can be "
+"Depending on the chosen datasource, a %s can list <i>multiple</i> or "
+"<i>single</i> objects. For example, the <i>services</i> datasource can be "
 "used to simply create a list of <i>multiple</i> services, a list of "
 "<i>multiple</i> services of a <i>single</i> host or even a list of services "
 "with the same name on <i>multiple</i> hosts. When you just want to create a "
-"list of objects, you do not need to make any selection in this dialog. If "
-"you like to create a view for one specific object of a specific type, select "
-"the object type below and continue."
+"list of objects, simply continue with the default choice (no restrictions). "
+"Alternatively, you have the option to restrict to a single host or to choose "
+"the type of objects you want to restrict to manually."
 msgstr ""
 "In Abhängigkeit von der gewählten Datenquelle kann ein %s <i>mehrere</i> "
 "oder nur <i>ein</i> Objekt betreffen. Zum Beispiel kann die Datenquelle "
@@ -14482,6 +14491,9 @@ msgstr "Alle Aggregate einer bestimmten Gruppe anzeigen."
 #, fuzzy
 msgid "Displays an introduction and Checkmk logo."
 msgstr "Zeigt eine Einführung und das Check_MK-Logo."
+
+msgid "Displays either sites and states or hosts and states of a site"
+msgstr ""
 
 msgid "Displays entries from the logfile of the monitoring core."
 msgstr "Zeigt Einträge aus der Logdatei des Monitoringkerns."
@@ -16780,8 +16792,10 @@ msgstr "Kontingent"
 msgid "Entity"
 msgstr "Entität"
 
+#, fuzzy
 msgid "Entity level used to create Checkmk piggyback hosts"
 msgstr ""
+"Entitätsebene, die zum Erstellen von Checkmk Piggyback Hosts verwendet wird"
 
 msgid "Entries"
 msgstr "Einträge"
@@ -16885,9 +16899,12 @@ msgstr "Lokal aktiviert"
 
 msgid "Escape HTML in host output(Dangerous to deactivate - read help)"
 msgstr ""
+"Escape HTML in der Host-Ausgabe (Gefährlich zum Deaktivieren - Hilfe lesen)"
 
 msgid "Escape HTML in service output (Dangerous to deactivate - read help)"
 msgstr ""
+"Escape HTML in der Service-Ausgabe (Gefährlich zum Deaktivieren - Hilfe "
+"lesen)"
 
 #, python-format
 msgid "Escaping is <a href=\"%s\">enabled globally</a>"
@@ -17187,7 +17204,7 @@ msgid "Example Configurations"
 msgstr "Verteiltes Monitoring"
 
 msgid "Example PromQL query: up{job=\"node_exporter\"}"
-msgstr ""
+msgstr "Beispiel PromQL Abfrage: up{job=\"node_exporter\"}"
 
 #, fuzzy
 msgid "Example configuration for systemd"
@@ -17200,7 +17217,7 @@ msgid "Examples"
 msgstr "Beispiele"
 
 msgid "Exc."
-msgstr ""
+msgstr "Exc."
 
 msgid "Exception"
 msgstr "Ausnahme"
@@ -17666,12 +17683,14 @@ msgid "Extractors"
 msgstr "Zeichen"
 
 msgid "Extracts DB-Time performance data into a separate service"
-msgstr ""
+msgstr "Extrahiere die DB-Zeit Performancedaten in ein separates Gerät"
 
 msgid ""
 "Extracts SGA performance data into a separate service and additionally "
 "displays PGA performance data"
 msgstr ""
+"Extrahiere die SGA Performancedaten in einen separaten Service und zeige die "
+"PG Performancedaten zusätzlich an"
 
 msgid "Extremes only"
 msgstr "Nur Extreme"
@@ -17931,6 +17950,11 @@ msgid ""
 "this by opening the rule for editing and save the rule again without "
 "modification."
 msgstr ""
+"Die Regel #%d des Regelsatzes \"%s\" im Ordner \"%s\" konnte nicht "
+"verarbeitet werden. Der Wert einer Regel ist nicht mit der aktuellen "
+"Regelspezifikation kompatibel. Sie können versuchen, dies zu beheben, indem "
+"Sie die Regel zur Bearbeitung öffnen und die Regel ohne Änderung erneut "
+"speichern."
 
 #, python-format
 msgid "Failed to process your MIB file (%s): %s"
@@ -18189,7 +18213,7 @@ msgid "Fibrechannel Interfaces"
 msgstr "Fibrechannel-Schnittstellen"
 
 msgid "Field"
-msgstr ""
+msgstr "Feld"
 
 #, fuzzy
 msgid "Field Name: "
@@ -18356,10 +18380,10 @@ msgid "Filesystems usage"
 msgstr "Dateisystembenutzung"
 
 msgid "Fill area plot"
-msgstr ""
+msgstr "Flächengrafik ausfüllen"
 
 msgid "Fill area plot when displaying historic values"
-msgstr ""
+msgstr "Flächengrafik ausfüllen beim Anzeigen von historischen Werten"
 
 msgid "Filter"
 msgstr "Filter"
@@ -18419,7 +18443,7 @@ msgid "Filter hosts"
 msgstr "Fehlerhafte Hosts"
 
 msgid "Filter metric selection by hostname: "
-msgstr ""
+msgstr "Auswahl der Metrik nach Hostnamen filtern: "
 
 #, fuzzy
 msgid "Filter metric selection by service: "
@@ -18872,6 +18896,9 @@ msgid ""
 "helper processes for interpreting and evaluating the information gathered by "
 "the fetcher helpers."
 msgstr ""
+"Für die Durchführung von Checkmk-basierten Checks hält der Microcore einen "
+"Pool von spezialisierten Hilfsprozessen vor, welche die von den "
+"Abfragehelfern gesammelten Informationen interpretieren und auswerten."
 
 msgid ""
 "For sake of optimal performance Check_MK Micro Core keeps all current state "
@@ -18936,11 +18963,16 @@ msgid ""
 "retrieve information about. Piggyback hosts for the respective entities will "
 "be created."
 msgstr ""
+"Wählen Sie für Ihren Kubernetes-Cluster aus, für welche Entitätsebenen Sie "
+"Informationen abrufen möchten. Es werden Piggyback Hosts für die jeweiligen "
+"Entitäten erstellt."
 
 msgid ""
 "For your respective kernel select the hardware or OS entity you would like "
 "to retrieve information about."
 msgstr ""
+"Wählen Sie für Ihren Kernel die Hardware Entität oder die Betriebssystem "
+"Entität, über die Sie Informationen abrufen möchten."
 
 msgid "Forbid to see the whole tree"
 msgstr "Verbiete, den ganzen Baum zu sehen"
@@ -19007,7 +19039,7 @@ msgid "Forecast Model Configuration"
 msgstr "Konfiguration des Vorhersagemodells"
 
 msgid "Forecast Trend (Slow)"
-msgstr ""
+msgstr "Vorhersage Trend (langsam)"
 
 #, fuzzy
 msgid "Forecast graphs"
@@ -19066,7 +19098,7 @@ msgid "Fortinet FortiSandbox Queue Length"
 msgstr "Länge der Fortinet FortiSandbox Wartenschlange"
 
 msgid "Forum"
-msgstr ""
+msgstr "Forum"
 
 msgid "Forward Messages to Event Console"
 msgstr "Leite Logwatch Ereignisse an Eventkonsole weiter"
@@ -19260,7 +19292,7 @@ msgid "From %s until %s (%s) %s"
 msgstr "Von %s bis %s (%s) %s"
 
 msgid "From 0 to Monitoring in <10min"
-msgstr ""
+msgstr "In weniger als 10 Minuten mit Vollgas zum Monitoring"
 
 msgid "From Start"
 msgstr "Von Anfang an"
@@ -19364,7 +19396,7 @@ msgid "GByte/s"
 msgstr "GB/Sek."
 
 msgid "GC runs"
-msgstr ""
+msgstr "GC Durchführungen"
 
 #, fuzzy
 msgid "GC runs rate"
@@ -19417,7 +19449,7 @@ msgid "Gathered node information"
 msgstr "Gesammelte Node Informationen"
 
 msgid "Gauge"
-msgstr ""
+msgstr "Messgerät"
 
 msgid "Gbit/s"
 msgstr "Gbit/s"
@@ -19649,7 +19681,7 @@ msgid "Graph is disabled"
 msgstr "NSCA ist deaktiviert"
 
 msgid "Graph is visible"
-msgstr ""
+msgstr "Graph ist sichtbar"
 
 msgid "Graph layout"
 msgstr "Graphenlayout"
@@ -19666,6 +19698,9 @@ msgid ""
 "Graph specification '%s' is insuficient for Dashboard. Please save your "
 "graph as a custom graph first, then add that one to the dashboard."
 msgstr ""
+"Die Spezifikation des Graph '%s' ist unzureichend für das Dashboard. Bitte "
+"speichern Sie Ihren Graphen zuerst als benutzerdefinierten Graphen und fügen "
+"Sie diesen dann zum Dashboard hinzu."
 
 msgid "Graph template"
 msgstr "Graphschablone"
@@ -19714,7 +19749,7 @@ msgid "Graphs for all Services with a certain description"
 msgstr "Graph aller Services mit einer bestimmten Beschreibung"
 
 msgid "Graphs for averaged single-core utilizations"
-msgstr ""
+msgstr "Graphen für gemittelte Single-Core-Auslastungen"
 
 msgid "Graphs for individual cores"
 msgstr "Graphen für einzelnen Kerne"
@@ -19727,7 +19762,7 @@ msgid "Graylog"
 msgstr "einem beliebigen Knoten"
 
 msgid "Graylog JVM"
-msgstr ""
+msgstr "Graylog JVM"
 
 #, fuzzy
 msgid "Graylog cluster elasticsearch statistics"
@@ -19766,7 +19801,7 @@ msgid "Graylog nodes"
 msgstr "einem beliebigen Knoten"
 
 msgid "Graylog sidecars"
-msgstr ""
+msgstr "Graylog Sidecars"
 
 #, fuzzy
 msgid "Graylog sources"
@@ -19847,10 +19882,10 @@ msgid "Grouping of services in table views"
 msgstr "Gruppierung von Services in Tabellenansichten"
 
 msgid "Grouping pattern applies to mount point only"
-msgstr ""
+msgstr "Das Gruppierungsmuster gilt nur für Einhängepunkt"
 
 msgid "Grouping pattern applies to volume name and mount point"
-msgstr ""
+msgstr "Das Gruppierungsmuster gilt für das Volume und den Einhängepunkt"
 
 msgid "Groups"
 msgstr "Gruppen"
@@ -19921,10 +19956,10 @@ msgid "HPE StoreOnce"
 msgstr "Prüfe HPE StoreOnce"
 
 msgid "HPE StoreOnce via REST API 4.x"
-msgstr ""
+msgstr "HPE StoreOnce via REST API 4.x"
 
 msgid "HR: Used memory via SNMP"
-msgstr ""
+msgstr "HR: Verwendeter Speicher via SNMP"
 
 msgid "HTML output"
 msgstr "HTML-Ausgabe"
@@ -20004,7 +20039,7 @@ msgid "HTTP requests per second"
 msgstr "HTTP-Anfragen pro Sekunde"
 
 msgid "HTTP, TCP, Email, ..."
-msgstr ""
+msgstr "HTTP, TCP, Email, ..."
 
 msgid "HTTPS"
 msgstr "HTTPS"
@@ -20328,6 +20363,12 @@ msgid ""
 "80x80 px. Custom actions have to be defined in the global settings and can "
 "be used in the custom icons rules of hosts and services."
 msgstr ""
+"Hier können Sie Symbole hinzufügen, um sie z. B. in Lesezeichen oder in "
+"benutzerdefinierten Aktionen von Ansichten zu verwenden. Erlaubt sind "
+"einzelne PNG-Bilddateien mit einer maximalen Größe von 80x80 Pixeln. "
+"Benutzerdefinierte Aktionen müssen in den globalen Einstellungen definiert "
+"werden und können in den Regeln für benutzerdefinierte Symbole von Hosts und "
+"Services verwendet werden."
 
 msgid ""
 "Here you can choose the cluster behaviour. The best state of all nodes is "
@@ -20469,6 +20510,9 @@ msgid ""
 "Here you can configure which services are displayed depending on their "
 "state. This is a filter at display level not query level."
 msgstr ""
+"Hier können Sie konfigurieren, welche Dienste abhängig von ihrem Zustand "
+"angezeigt werden. Dies ist ein Filter auf Anzeigeebene, nicht auf "
+"Abfrageebene."
 
 msgid ""
 "Here you can configured the credentials to be used. Keep in mind that the "
@@ -20485,6 +20529,12 @@ msgid ""
 "the check becomes CRITICAL. If you happen to define the same exit code "
 "multiple times the first entry will be used."
 msgstr ""
+"Hier können Sie ein Mapping zwischen möglichen Exit-Codes und Service-"
+"Zuständen definieren. Wenn kein Mapping definiert ist, wird der Check "
+"CRITICAL, wenn der Exit-Code ungleich 0 ist. Wenn ein Exit-Code auftritt, "
+"der in dieser Abbildung nicht definiert ist, wird die Prüfung CRITICAL. Wenn "
+"Sie zufällig denselben Exit-Code mehrfach definieren, wird der erste Eintrag "
+"verwendet."
 
 msgid ""
 "Here you can define an upper limit for the run duration of last execution of "
@@ -20611,12 +20661,18 @@ msgid ""
 "internal limit of Jira is 1000 results. If you want to ignore any limit, set "
 "-1 here. Default is 50."
 msgstr ""
+"Hier können Sie festlegen, wie viele Suchergebnisse verarbeitet werden "
+"sollen. Das maximale interne Limit von Jira liegt bei 1000 Ergebnissen. Wenn "
+"Sie ein Limit ignorieren wollen, setzen Sie hier -1. Standard ist 50."
 
 msgid ""
 "Here you can define, what search result should be used. You can show the "
 "number of search results (count) or the summed up or average values of a "
 "given numeric field."
 msgstr ""
+"Hier können Sie festlegen, welches Suchergebnis verwendet werden soll. Sie "
+"können die Anzahl der Suchergebnisse oder die aufsummierten/"
+"durchschnittlichen Werte eines bestimmten numerischen Feldes anzeigen."
 
 msgid ""
 "Here you can deploy a plugin for monitoring the quarantine queue, tasks and "
@@ -20681,6 +20737,9 @@ msgid ""
 "Here you can impose various levels the results reported by the mk_filstats "
 "plugin. Note that those levels only concern about a single file."
 msgstr ""
+"Hier können Sie den vom Plugin mk_filstats gemeldeten Ergebnissen "
+"verschiedene Schwellwerte einrichten. Beachten Sie, dass sich diese "
+"Schwellwerte nur auf eine einzelne Datei beziehen."
 
 msgid ""
 "Here you can make sure that all of your Check_MK agents are running one "
@@ -20705,6 +20764,11 @@ msgid ""
 "update. This list will be used by the agent updater to verify HTTPS "
 "connections to Checkmk sites."
 msgstr ""
+"Hier können Sie CA- oder selbstsignierte Zertifikate angeben, die bei der "
+"Registrierung oder Aktualisierung zusammen mit der URL der Gegenstelle an "
+"den kontaktierenden Agent-Updater gesendet werden. Diese Liste wird vom "
+"Agent-Updater verwendet, um HTTPS-Verbindungen zu Checkmk-Sites zu "
+"verifizieren."
 
 msgid ""
 "Here you can see a list of all deprecated rulesets (which are not used by "
@@ -20755,11 +20819,15 @@ msgid ""
 "Here you can set different warn/crit levels regarding the available cooling  "
 "capacity."
 msgstr ""
+"Hier können Sie unterschiedliche warn/crit Schwellwerte für die verfügbare "
+"Kühlleistung festlegen."
 
 msgid ""
 "Here you can set different warn/crit levels regarding the free cooling  "
 "positions."
 msgstr ""
+"Hier können Sie unterschiedliche warn/crit Schwellwerte für die freien "
+"Kühlplätze festlegen."
 
 msgid ""
 "Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
@@ -20780,6 +20848,8 @@ msgid ""
 "Here you can set host labels that automatically get created when discovering "
 "the services."
 msgstr ""
+"Hier können Sie Host-Labels festlegen, die beim Erkennen der Dienste "
+"automatisch erstellt werden."
 
 #, fuzzy
 msgid "Here you can set levels for the ORACLE Performance metrics."
@@ -20789,6 +20859,8 @@ msgid ""
 "Here you can set levels on failures in the timerange specified in the "
 "datasource (default: 30m)."
 msgstr ""
+"Hier können Schwellwerte für Ausfälle in dem angegebenen Zeitbereich der "
+"Datenquelle eingestellt werden (Standard: 30m)."
 
 msgid "Here you can set levels on the CPU utilization on single cores"
 msgstr ""
@@ -20899,6 +20971,8 @@ msgid ""
 "Here you can specify explicit piggybacked host names or regex patterns to "
 "match specific piggybacked host names."
 msgstr ""
+"Hier können explizite Piggyback Hostnamen oder Regex-Muster für die "
+"Übereinstimmung mit bestimmten Piggyback Hostnamen angeben werden."
 
 msgid ""
 "Here you can specify levels for different policies which overrule the levels "
@@ -20957,7 +21031,7 @@ msgstr ""
 "fünf Hosts spätestens nach einem konfgurierten Updateintervall erscheinen."
 
 msgid "Here you need to insert the original file or pathname"
-msgstr ""
+msgstr "Hier muss die ursprüngliche Datei oder der Pfadnamen eingefügt werden"
 
 msgid ""
 "Here you see hosts that have registered for updates but have no available "
@@ -20984,6 +21058,14 @@ msgid ""
 "from the main directory. Within a directory, the order of the rules matters, "
 "i.e., rules further below in the list are overwritten by rules further up."
 msgstr ""
+"Hier können Sie Bedingungen für die Anwendung dieser Regel definieren. Diese "
+"Bedingungen werden pro Schnittstelle ausgewertet. Beim Erkennen einer "
+"Schnittstelle findet checkmk zunächst alle Regeln, deren Bedingungen auf "
+"diese Schnittstelle passen. Anschließend werden diese Regeln "
+"zusammengeführt, wobei Regeln aus Unterverzeichnissen die Regeln aus dem "
+"Hauptverzeichnis überschreiben. Innerhalb eines Verzeichnisses spielt die "
+"Reihenfolge der Regeln eine Rolle, d. h. Regeln weiter unten in der Liste "
+"werden von Regeln weiter oben überschrieben."
 
 #, python-format
 msgid ""
@@ -20994,6 +21076,15 @@ msgid ""
 "be kept as the summary, then.<br><br>The following exit codes/monitoring "
 "states/summaries are specified as default:<br>%s"
 msgstr ""
+"Hier können Sie festlegen, wie Checkmk den Exit-Code eines Tasks in einen "
+"Monitoring-Zustand übersetzt. Dadurch wird die vom Checkmk-Plugin verwendete "
+"Standardzuordnung überschrieben. Sie können sich auch dafür entscheiden, die "
+"Standardzuordnung nur teilweise zu überschreiben, indem Sie nur den neuen "
+"Monitoring-Zustand angeben. Der Standardtext wird dann als Zusammenfassung "
+"beibehalten.<br><br>Die folgenden Exit-Codes/Monitoring-Zustände/"
+"Zusammenfassungen werden als Standard angegeben:<br>%s\n"
+"\n"
+"Übersetzt mit www.DeepL.com/Translator (kostenlose Version)"
 
 msgid "Hidden"
 msgstr "Versteckt"
@@ -21094,7 +21185,7 @@ msgid "High"
 msgstr "Hoch"
 
 msgid "High (with escalation)"
-msgstr ""
+msgstr "Hoch (mit Eskalation)"
 
 msgid "High alerts"
 msgstr "Hohe Warnmeldungen"
@@ -21110,7 +21201,7 @@ msgid "High: Push notification alerts bypass quiet hours"
 msgstr "Hoch: Alarme umgehen die definierten Ruhezeiten"
 
 msgid "Highly automated"
-msgstr ""
+msgstr "Hochgradig automatisiert"
 
 #, fuzzy
 msgid "Hint a hostname"
@@ -21287,7 +21378,7 @@ msgid "Host Group of Pending"
 msgstr "Hostgruppen-Name"
 
 msgid "Host Group of Unreachable Hosts"
-msgstr ""
+msgstr "Host-Gruppe der nicht erreichbaren Hosts"
 
 #, fuzzy
 msgid "Host Group of Up Hosts"
@@ -21916,6 +22007,7 @@ msgstr "Zu erzeugende Hosts in jedem Ordner"
 
 msgid "Hosts using a specific SNMP Backend (Enterprise Edition only)"
 msgstr ""
+"Hosts, die ein bestimmtes SNMP-Backend verwenden (nur Enterprise Edition)"
 
 msgid ""
 "Hosts where this tag group is explicitely set and that are effected by the "
@@ -22055,7 +22147,7 @@ msgstr ""
 "Feuchtigkeitsschwellwerte für Geräte mit einem einzelnen Feuchtigkeitssensor."
 
 msgid "Hundred thousands of hosts"
-msgstr ""
+msgstr "Hunderttausende von Hosts"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-V Server: Zustand von VMs"
@@ -22088,7 +22180,7 @@ msgid "I/O-wait"
 msgstr "I/O-wait"
 
 msgid "IBM MQ"
-msgstr ""
+msgstr "IBM MQ"
 
 #, fuzzy
 msgid "IBM MQ (Linux)"
@@ -22107,7 +22199,7 @@ msgid "IBM MQ Plugin"
 msgstr "Plugin"
 
 msgid "IBM MQ Queues"
-msgstr ""
+msgstr "IBM MQ Warteschlangen"
 
 msgid "IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps"
 msgstr "IBM SVC / Storwize V3700 / V7000: Status und Benutzung von MDisksGrps"
@@ -22338,6 +22430,8 @@ msgid ""
 "IPPROCS: The number of applications that are currently connected to the "
 "queue to get messages from the queue."
 msgstr ""
+"IPPROCS: Die Anzahl der Anwendungen, die derzeit mit der Warteschlange "
+"verbunden sind, um Nachrichten aus der Warteschlange zu erhalten."
 
 msgid "IPv4"
 msgstr "IPv4"
@@ -22451,6 +22545,13 @@ msgid ""
 "overwrite the default service state. This will help you to reduce above "
 "warnings during the update process of your Checkmk sites and agents."
 msgstr ""
+"Wenn eine Checkmk-Site auf eine neuere Version aktualisiert wird, die "
+"Agenten einiger Hosts aber nicht, dann kann in den Details des <i>Check_MK</"
+"i>-Services die Warnung <i>Unerwartet erlaubte IP-Bereiche</i> angezeigt "
+"werden und der Service-Zustand ändert sich auf <i>WARN</i> (standardmäßig)."
+"<br>Mit dieser Einstellung können Sie den Standardzustand des Service "
+"überschreiben. Dies hilft Ihnen, die Warnungen während des Update-Prozesses "
+"Ihrer Checkmk-Sites und -Agenten zu reduzieren."
 
 msgid ""
 "If a cluster uses multiple namespaces you need to activate this option. "
@@ -22458,6 +22559,11 @@ msgid ""
 "of their namespace. This makes Kubernetes resources in different namespaces "
 "that have the same name distinguishable, but results in longer hostnames."
 msgstr ""
+"Wenn ein Cluster mehrere Namespaces verwendet, müssen Sie diese Option "
+"aktivieren. Hosts für Kubernetes-Objekte in Namespaces werden dann mit dem "
+"Namen ihres Namespaces vorangestellt. Dies macht Kubernetes-Ressourcen in "
+"verschiedenen Namespaces, die denselben Namen haben, unterscheidbar, führt "
+"aber zu längeren Hostnamen."
 
 msgid ""
 "If a matching message appears with this text, then events created by this "
@@ -22507,6 +22613,11 @@ msgid ""
 "of the <b>Check_MK</b> service of these piggybacked hosts can be specified "
 "for this period."
 msgstr ""
+"Wenn ein Quell-Host für seine Piggyback-Hosts gar keine Daten oder für "
+"einzelne Piggyback-Hosts keine Daten sendet, kann ein Zeitraum festgelegt "
+"werden, um veraltete Piggyback-Host-Dateien/Daten innerhalb dieses Zeitraums "
+"als gültig zu behandeln. Außerdem kann der Status des <b>Check_MK</b>-"
+"Services dieser Piggyback-Hosts für diesen Zeitraum angegeben werden."
 
 msgid ""
 "If a user lacks this permission then he/she can see only those events that "
@@ -22519,6 +22630,8 @@ msgid ""
 "If activated, any \"Failed Action\" entry will be shown in the main check "
 "and the check will go to the WARN state."
 msgstr ""
+"Wenn aktiviert, wird jeder \"Fehlgeschlagene Aktion\"-Eintrag im Hauptcheck "
+"angezeigt und der Check geht in den Zustand WARN über."
 
 msgid ""
 "If active the check will not only notify about un-monitored services, it "
@@ -22548,7 +22661,7 @@ msgstr ""
 "Check-Ergebnisse einschleusen kann."
 
 msgid "If agent_hash is omitted, hostname needs to be given."
-msgstr ""
+msgstr "Wenn agent_hash weggelassen wird, muss der Hostname angegeben werden."
 
 msgid "If available, the following metric will be shown"
 msgstr "Wenn aktiviert, wird die folgende Metrik angezeigt"
@@ -22945,6 +23058,9 @@ msgid ""
 "If this option is selected, the resources being monitored are stored during "
 "discovery. The service will go to a warning state, if they change."
 msgstr ""
+"Wenn diese Option ausgewählt ist, werden die überwachten Ressourcen während "
+"der Erkennung gespeichert. Der Service geht in einen Warnzustand über, wenn "
+"sie sich ändern."
 
 msgid ""
 "If this option is set to a non-zero number, then Check_MK keeps the last "
@@ -22995,12 +23111,21 @@ msgid ""
 "levels to check if the last minute's delta is X percent higher than the "
 "average delta."
 msgstr ""
+"Wenn dieser Parameter gesetzt ist, wird die Anzahl der Deltas des Dokuments "
+"der letzten Minute mit dem Delta der durchschnittlichen X Minuten "
+"verglichen. Sie können WARN- oder CRIT-Stufen einstellen, um zu prüfen, ob "
+"das Delta der letzten Minute um X Prozent höher ist als das "
+"durchschnittliche Delta."
 
 msgid ""
 "If this parameter is set, the size delta of the last minute will be compared "
 "to the delta of the average X minutes. You can set WARN or CRIT levels to "
 "check if the last minute's delta is X percent higher than the average delta."
 msgstr ""
+"Wenn dieser Parameter gesetzt ist, wird das Delta der Größe der letzten "
+"Minute mit dem Delta der durchschnittlichen X Minuten verglichen. Sie können "
+"WARN- oder CRIT-Stufen einstellen, um zu prüfen, ob das Delta der letzten "
+"Minute um X Prozent höher ist als das durchschnittliche Delta."
 
 #, fuzzy
 msgid ""
@@ -23145,6 +23270,10 @@ msgid ""
 "the timeframe in which failures should be covered. The check will output the "
 "total number of failures and the number of failures in this given timeframe."
 msgstr ""
+"Wenn Sie sich für die Abfrage nach fehlgeschlagenen Indexoperationen "
+"entscheiden, verwenden Sie diese Option, um den Zeitrahmen festzulegen, in "
+"dem Fehler erfasst werden sollen. Die Prüfung gibt die Gesamtzahl der "
+"Ausfälle und die Anzahl der Ausfälle in diesem angegebenen Zeitrahmen aus."
 
 msgid ""
 "If you disable a connection, then no data of this site will be shown in the "
@@ -23165,6 +23294,10 @@ msgid ""
 "creation with a regular expression. Important: This concerns the hosts to be "
 "created and not the hosts you have set up to monitor e.g. AWS."
 msgstr ""
+"Wenn Sie nicht alle Hosts automatisch erstellen möchten, können Sie die "
+"Erstellung mit einem regulären Ausdruck einschränken. Wichtig: Dies betrifft "
+"die anzulegenden Hosts und nicht die Hosts, die Sie zur Überwachung "
+"eingerichtet haben, z. B. AWS."
 
 msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
@@ -23331,6 +23464,9 @@ msgid ""
 "If you have an european account, please set the domain of your opsgenie. "
 "Specify an absolute URL like https://api.eu.opsgenie.com."
 msgstr ""
+"Wenn Sie ein europäisches Konto haben, stellen Sie bitte die Domain von "
+"Ihrem opsgenie ein. Geben Sie eine absolute URL wie https://api.eu.opsgenie."
+"com an."
 
 msgid ""
 "If you have one or more Graphite/InfluxDB connections defined, the values of "
@@ -23796,7 +23932,7 @@ msgid "Import Hosts"
 msgstr "Hosts importieren"
 
 msgid "Import hosts via CSV file"
-msgstr ""
+msgstr "Hosts über CSV-Datei importieren"
 
 msgid "Import iCalendar"
 msgstr "iCalendar importieren"
@@ -23829,7 +23965,7 @@ msgid "Impose limits on the size of the database"
 msgstr "Limits für Größe der Datenbank setzen"
 
 msgid "Imprint"
-msgstr ""
+msgstr "Impressum"
 
 msgid "In"
 msgstr "Eingehend"
@@ -23936,6 +24072,12 @@ msgid ""
 "connections\", the agent updater will ignore the update URL provided by the "
 "agent bakery."
 msgstr ""
+"Bei \"Registrierung und Fallback\" verwendet der Agenten-Updater diese "
+"Informationen nur bei der Registrierung und verlässt sich danach auf die von "
+"der Agentenbäckerei bereitgestellte Update-URL. Wenn die Verbindung "
+"fehlschlägt, verwendet der Agenten-Updater diese Informationen zusätzlich "
+"als Fallback. Bei \"Für alle Verbindungen verwenden\" ignoriert der Agenten-"
+"Updater die von der Agenten-Bäckerei bereitgestellte Update-URL."
 
 msgid "In case of an error"
 msgstr "Im Falle eines Fehlers"
@@ -24205,6 +24347,12 @@ msgid ""
 "can enforce to show more, so that the round button with the three dots is "
 "not shown at all."
 msgstr ""
+"An einigen Stellen, wie z.B. im Hauptmenü, teilt Checkmk Funktionen, Filter, "
+"Eingabefelder usw. in zwei Kategorien ein, die mehr oder weniger Einträge "
+"anzeigen. Mit dieser Option können Sie einen Standardmodus für nicht "
+"besuchte Menüs festlegen. Alternativ können Sie auch erzwingen, dass mehr "
+"angezeigt wird, so dass die runde Schaltfläche mit den drei Punkten gar "
+"nicht angezeigt wird."
 
 msgid ""
 "In some rare cases the unit that is signalled by the sensor is wrong and e."
@@ -24410,7 +24558,7 @@ msgid "Index absolute levels"
 msgstr "Absolute Schellen für den Index"
 
 msgid "Index failure in the defined timerange upper levels"
-msgstr ""
+msgstr "Indexfehler in den definierten Obergrenzen des Zeitbereichs"
 
 msgid "Index hitratio"
 msgstr "Index-Hitrate"
@@ -24505,7 +24653,7 @@ msgid "Ingresses"
 msgstr "In Bearbeitung"
 
 msgid "Inherit from report time range (Reporting only)"
-msgstr ""
+msgstr "Vererben vom Zeitbereich des Berichts (nur Reporting)"
 
 msgid "Inherited from "
 msgstr "Geerbt von "
@@ -24629,16 +24777,17 @@ msgstr "Installationsdatum"
 
 msgid "Install Python automatically when configured plugins need it"
 msgstr ""
+"Python automatisch installieren, wenn konfigurierte Plugins es benötigen"
 
 msgid "Install Python runtime environment"
-msgstr ""
+msgstr "Python-Laufzeitumgebung installieren"
 
 #, fuzzy
 msgid "Install and activate systemd service"
 msgstr "Status während aktiver Systemereignisse"
 
 msgid "Install and activate xinetd service"
-msgstr ""
+msgstr "Installieren und aktivieren des xinetd-Service"
 
 #, fuzzy
 msgid "Install this package"
@@ -24734,6 +24883,11 @@ msgid ""
 "\". The rulesets have the additional advantage that the configured value is "
 "accessible in the notification context."
 msgstr ""
+"Anstatt diese Option global zu deaktivieren, wird dringend empfohlen, das "
+"Escaping selektiv für einzelne Hosts und Services mit den Regelsätzen "
+"\"Escape HTML in Host-Ausgabe\" und \"Escape HTML in Service-Ausgabe\" zu "
+"deaktivieren. Die Regelsätze haben den zusätzlichen Vorteil, dass der "
+"konfigurierte Wert im Alarmierungskontext zugänglich ist."
 
 msgid ""
 "Instead of using the regular logwatch check all lines received by logwatch "
@@ -24745,18 +24899,20 @@ msgstr ""
 "kann für jeden Host in einer separaten Regel konfiguriert werden."
 
 msgid "Integrate Nagios plugins"
-msgstr ""
+msgstr "Nagios-Plugins einbinden"
 
 msgid ""
 "Integrate [cms_active_checks#mrpe|custom nagios plugins] into the monitoring "
 "as active checks."
 msgstr ""
+"Integrieren Sie [cms_active_checks#mrpe|custom nagios plugins] als aktive "
+"Checks in das Monitoring."
 
 msgid "Integrate platforms using special agents, e.g. SAP R/3"
-msgstr ""
+msgstr "Integration von Plattformen mit speziellen Agenten, z.B. SAP R/3"
 
 msgid "Integrate with VM, cloud or container platforms"
-msgstr ""
+msgstr "Integration mit VM-, Cloud- oder Container-Plattformen"
 
 msgid "Integration Key"
 msgstr "Integrationsschlüssel"
@@ -25050,7 +25206,7 @@ msgstr "Ungültiger Hostname"
 
 #, python-format
 msgid "Invalid host or network address. IPv4: %s, IPv6: %s"
-msgstr ""
+msgstr "Ungültige Host- oder Netzwerkadresse. IPv4: %s, IPv6: %s"
 
 msgid "Invalid ident"
 msgstr "Ungültiger Schlüssel"
@@ -25224,7 +25380,7 @@ msgstr "Ungültiger Wert für ACK Parameter."
 
 #, python-format
 msgid "Invalid value in column %d (%s) of row %d: %s"
-msgstr ""
+msgstr "Ungültiger Wert in Spalte %d (%s) der Zeile %d: %s"
 
 #, python-format
 msgid "Invalid value, must be '%r' but is '%r'"
@@ -25296,7 +25452,7 @@ msgid "Ipmisensors"
 msgstr "IMPI-Sensoren"
 
 msgid "Ipmitool"
-msgstr ""
+msgstr "Ipmitool"
 
 msgid "Iptables filter configuration"
 msgstr "Iptables Filterkonfiguration"
@@ -25347,7 +25503,7 @@ msgstr ""
 "Wird verwendet, um anzugeben, auf welche Domäne sich der Alert bezieht."
 
 msgid "Is-Home state (Netapp only)"
-msgstr ""
+msgstr "Is-Home-Status (nur Netapp)"
 
 msgid "Issue type ID"
 msgstr "Problem Typ ID"
@@ -25478,19 +25634,19 @@ msgstr "Item suffix"
 
 #, python-brace-format
 msgid "Item {diff_path} with value {val_t1} removed."
-msgstr ""
+msgstr "Element {diff_path} mit Wert {val_t1} entfernt."
 
 #, python-brace-format
 msgid "Item {diff_path} with value {val_t2} added."
-msgstr ""
+msgstr "Element {diff_path} mit Wert {val_t2} hinzugefügt."
 
 #, python-brace-format
 msgid "Item {val_t1} removed."
-msgstr ""
+msgstr "Element {val_t1} entfernt."
 
 #, python-brace-format
 msgid "Item {val_t2} added."
-msgstr ""
+msgstr "Element {val_t2} hinzugefügt."
 
 #, fuzzy
 msgid "Items"
@@ -25552,7 +25708,7 @@ msgid "Jenkins instance to query."
 msgstr "Abzufragende Splunk Instanz"
 
 msgid "Jenkins jobs"
-msgstr ""
+msgstr "Jenkins Jobs"
 
 #, fuzzy
 msgid "Jenkins jobs and builds"
@@ -25615,7 +25771,7 @@ msgid "Job name"
 msgstr "Jobname"
 
 msgid "Job score"
-msgstr ""
+msgstr "Job-Bewertung"
 
 #, fuzzy
 msgid "Job state"
@@ -25647,7 +25803,7 @@ msgid "July"
 msgstr "Juli"
 
 msgid "Jumbo Chunks"
-msgstr ""
+msgstr "Jumbo Chunks"
 
 msgid "Jump one phase back"
 msgstr "Eine Phase zurückspringen"
@@ -25687,10 +25843,13 @@ msgstr "Kaspersky Anti-Virus (Linux)"
 msgid "Kaspersky Anti-Virus Time Settings"
 msgstr "Kaspersky Anti-Virus: Zeiteinstellungen"
 
+#, fuzzy
 msgid ""
 "Keep hosts while piggyback source sends piggyback data only for other hosts "
 "for"
 msgstr ""
+"Hosts beibehalten, während die Piggyback-Quelle Piggyback-Daten nur für "
+"andere Hosts sendet für"
 
 #, fuzzy, python-format
 msgid ""
@@ -25765,16 +25924,16 @@ msgid "Keyfile"
 msgstr "Schlüsseldatei"
 
 msgid "Keys"
-msgstr ""
+msgstr "Schlüssel"
 
 msgid "Keys for backups"
 msgstr "Sicherungsschlüssel"
 
 msgid "Keyword"
-msgstr ""
+msgstr "Stichwort"
 
 msgid "KiB out of sync"
-msgstr ""
+msgstr "KiB nicht synchronisiert"
 
 #, fuzzy
 msgid "Kube state metrics"
@@ -26071,7 +26230,7 @@ msgid "Last known details"
 msgstr "Job-Details"
 
 msgid "Last known summary"
-msgstr ""
+msgstr "Letzte bekannte Zusammenfassung"
 
 msgid "Last month"
 msgstr "Letzter Monat"
@@ -26159,7 +26318,7 @@ msgstr ""
 "übernommen werden."
 
 msgid "Learn something about what changed at Checkmk."
-msgstr ""
+msgstr "Erfahren Sie etwas darüber, was sich bei Checkmk geändert hat."
 
 #, fuzzy
 msgid "Leave layout mode"
@@ -26230,7 +26389,7 @@ msgid "Length of output queue"
 msgstr "Länge der Outputqueue"
 
 msgid "Let Checkmk do the work for you"
-msgstr ""
+msgstr "Lassen Sie Checkmk die Arbeit für Sie erledigen"
 
 msgid "Let through notifications counting from this number"
 msgstr "Alarme ab dieser Anzahl durchlassen"
@@ -26285,7 +26444,7 @@ msgid "Levels Latency Check"
 msgstr "Durchschnittliche Warteschlangenlatenz"
 
 msgid "Levels Latency Checkmk"
-msgstr ""
+msgstr "Latenzschwellwerte Checkmk"
 
 #, fuzzy
 msgid "Levels Latency Fetcher"
@@ -26742,6 +26901,8 @@ msgid ""
 "Levels on the total bandwidth will act the same way as they do for in/out "
 "bandwidth."
 msgstr ""
+"Die Schwellwerte für die Gesamtbandbreite verhalten sich genauso wie für die "
+"In/Out-Bandbreite."
 
 #, fuzzy
 msgid "Levels on time offset"
@@ -26771,7 +26932,7 @@ msgid "Levels over an extended time period on total CPU utilization"
 msgstr "Schwellwerte über eine längere Zeit für der gesamten CPU-Auslastung"
 
 msgid "Libelle Business Shadow"
-msgstr ""
+msgstr "Libelle Business Shadow"
 
 msgid "Libraries"
 msgstr "Bibliotheken"
@@ -27070,7 +27231,7 @@ msgid "Linux-User:"
 msgstr "Linux-Benutzer:"
 
 msgid "List"
-msgstr ""
+msgstr "Liste"
 
 #, fuzzy
 msgid ""
@@ -27108,11 +27269,15 @@ msgid ""
 "List of installed, unpacked, optional files below $OMD_ROOT/local. This also "
 "includes information about installed MKPs."
 msgstr ""
+"Liste der installierten, entpackten, optionalen Dateien unterhalb von "
+"$OMD_ROOT/local. Dazu gehören auch Informationen über installierte MKPs."
 
 msgid ""
 "List of installed, unpacked, optional files below OMD_ROOT/local. This also "
 "includes information about installed MKPs."
 msgstr ""
+"Liste der installierten, entpackten, optionalen Dateien unterhalb von "
+"OMD_ROOT/local. Dazu gehören auch Informationen über installierte MKPs."
 
 msgid "List of patterns to exclude"
 msgstr "Auszuschließende Muster"
@@ -27317,7 +27482,7 @@ msgid "Local Authentication Data"
 msgstr "Lokale Anmeldungsdaten"
 
 msgid "Local Client - Remote Server"
-msgstr ""
+msgstr "Lokaler Client - Entfernter Server"
 
 msgid "Local DNS resolving (Linux, Unix)"
 msgstr "Lokale DNS-Auflösung (Linux, Unix)"
@@ -27341,13 +27506,13 @@ msgid "Local Only"
 msgstr "Lokale Datei"
 
 msgid "Local Server - Remote Client"
-msgstr ""
+msgstr "Lokaler Server - Entfernter Client"
 
 msgid "Local Variables"
 msgstr "Lokale Variablen"
 
 msgid "Local checks in Checkmk clusters"
-msgstr ""
+msgstr "Lokale Checks in Checkmk-Clustern"
 
 #, fuzzy
 msgid "Local count requests"
@@ -27486,7 +27651,7 @@ msgstr "Logdateien"
 
 #, python-format
 msgid "Log files ('*.log' or '*.state') from var/log: %s"
-msgstr ""
+msgstr "Log-Dateien ('*.log' oder '*.state') aus var/log: %s"
 
 #, fuzzy, python-format
 msgid "Log files of host %s"
@@ -27595,6 +27760,7 @@ msgstr "Logdatei: Status von Host/Service beim Loggen"
 
 msgid "Log: state type (DEPRECATED: Use \"state information\")"
 msgstr ""
+"Protokoll: Zustandstyp (DEPRECATED: \"Zustandsinformationen\" verwenden)"
 
 msgid "Logentry class"
 msgstr "Logdateieintrags-Klasse"
@@ -27731,7 +27897,7 @@ msgid "Logout"
 msgstr "Abmelden"
 
 msgid "Logs"
-msgstr ""
+msgstr "Logs"
 
 msgid "Logswitches"
 msgstr "Logswitches"
@@ -27808,7 +27974,7 @@ msgid "Low (without escalation"
 msgstr "Phasen ohne Synchronisation"
 
 msgid "Low watermark"
-msgstr ""
+msgstr "Niedriger Wasserstand"
 
 msgid "Low: No sound/vibration but show popup"
 msgstr "Niedrig: kein Klang oder Vibration, aber Popup zeigen"
@@ -27983,7 +28149,7 @@ msgid "MByte/s"
 msgstr "MByte/Sek."
 
 msgid "MD5 (MD5-96)"
-msgstr ""
+msgstr "MD5 (MD5-96)"
 
 msgid "MDisks"
 msgstr "MDisks"
@@ -28068,6 +28234,7 @@ msgstr "MS Office 365 Servicepläne"
 
 msgid "MSGAGE: The age, in seconds, of the oldest message on the queue."
 msgstr ""
+"MSGAGE: Das Alter der ältesten Nachricht in der Warteschlange in Sekunden."
 
 msgid "MSSQL"
 msgstr "MSSQL"
@@ -28180,6 +28347,8 @@ msgid ""
 "Macro names must start with \"CUSTOMER_\" prefix and consist of capitalized "
 "letters, digits or underscores."
 msgstr ""
+"Makronamen müssen mit dem Präfix \"CUSTOMER_\" beginnen und aus "
+"Großbuchstaben, Ziffern oder Unterstrichen bestehen."
 
 #, python-format
 msgid "Made rule pack %s available for MKP export"
@@ -28265,6 +28434,10 @@ msgstr "Hauptmenü"
 
 msgid "Main Overview"
 msgstr "Hauptübersicht"
+
+#, fuzzy
+msgid "Main dashboard"
+msgstr "Übersicht bearbeiten"
 
 msgid "Main directory"
 msgstr "Hauptverzeichnis"
@@ -28390,7 +28563,7 @@ msgid "Manage Hard- and software inventory related rulesets"
 msgstr "Das vollständige Hardware- und Softwareinventar eines Hosts"
 
 msgid "Manage Windows firewall rules for Checkmk agent"
-msgstr ""
+msgstr "Verwalten von Windows-Firewall-Regeln für den Checkmk-Agenten"
 
 #, fuzzy
 msgid "Manage and create Checkmk extension packages (MKPs)."
@@ -28561,6 +28734,8 @@ msgstr "Systemd Zustände auf Überwachungszustände abbilden"
 msgid ""
 "Map the operational state (<tt>ifOperStatus</tt>) to a monitoring state."
 msgstr ""
+"Bildet den Betriebszustand (<tt>ifOperStatus</tt>) auf einen "
+"Monitoringzustand ab."
 
 msgid "Mapped data"
 msgstr "Gemappte Daten"
@@ -28608,7 +28783,7 @@ msgid "Match Groups"
 msgstr "Matchgruppen"
 
 msgid "Match admin states (SNMP with 64-bit counters only)"
-msgstr ""
+msgstr "Admin-Zustände abgleichen (nur SNMP mit 64-Bit-Zählern)"
 
 msgid "Match all control groups"
 msgstr "Alle Kontrollgruppen auswählen"
@@ -28945,7 +29120,7 @@ msgid "Maximum PGA used for auto workareas"
 msgstr "Maximale Anzahl von Threads"
 
 msgid "Maximum PGA used for manual workareas"
-msgstr ""
+msgstr "Maximal verwendete PGA für manuelle Arbeitsbereiche"
 
 msgid "Maximum Rate of Accepted Packets"
 msgstr "Maximale Rate für akzeptierte Pakete"
@@ -28993,7 +29168,7 @@ msgid "Maximum allowed uptime"
 msgstr "Maximal erlaubte Uptime"
 
 msgid "Maximum amount of non-operational access points"
-msgstr ""
+msgstr "Maximale Anzahl von nicht-operativen Zugangspunkten"
 
 msgid "Maximum bulk size"
 msgstr "Maximale Anzahl von Alarmen"
@@ -29078,6 +29253,10 @@ msgstr "Maximale Meldungen pro Speicher-Intervall"
 
 msgid "Maximum number of RPC requests per second"
 msgstr "Maxmale Anzahl von RPCs pro Sekunde"
+
+#, fuzzy
+msgid "Maximum number of allowed connection attempts reached, terminating"
+msgstr "Maximale Anzahl von Check-Versuchen für Service"
 
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
@@ -29188,6 +29367,8 @@ msgid ""
 "Maximum report inheritance of 10 templates reached. There could be a cycle "
 "in the imports of the report. %s"
 msgstr ""
+"Maximale Vererbungstiefe des Berichts von 10 Vorlagen erreicht. Es könnte "
+"ein Zyklus bei den Importen des Berichts vorliegen. %s"
 
 msgid "Maximum run duration for last execution"
 msgstr "Maximale Laufzeit der letzten Ausführung"
@@ -29450,7 +29631,7 @@ msgid "Memory usage of Fortigate devices (fortigate_memory)"
 msgstr "Hauptspeichernutzung von Geräten mit Modulen"
 
 msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
-msgstr ""
+msgstr "Speichernutzung von Fortigate-Geräten (fortigate_memory_base)"
 
 #, fuzzy
 msgid "Memory used"
@@ -29595,6 +29776,9 @@ msgid ""
 "aggregations and filtering are only available with the Checkmk Enterprise "
 "Editions"
 msgstr ""
+"Metrische Transformationen und Kombinationen wie Forecasts-Berechnungen, "
+"Aggregationen und Filterungen sind nur mit den Checkmk Enterprise Editions "
+"verfügbar"
 
 msgid "Metrics"
 msgstr "Metriken"
@@ -29773,6 +29957,8 @@ msgid ""
 "Missing context information: %s. You can either add this as a fixed setting, "
 "or call the with the missing HTTP variables."
 msgstr ""
+"Fehlende Kontextinformationen: %s. Sie können dies entweder als feste "
+"Einstellung hinzufügen, oder den mit den fehlenden HTTP-Variablen aufrufen."
 
 #, fuzzy
 msgid "Missing host name"
@@ -29952,7 +30138,7 @@ msgid "Modify display options"
 msgstr "Anzeigeoptionen verändern"
 
 msgid "Modify: Check VM Status (off: keep default)"
-msgstr ""
+msgstr "Ändern: VM-Status prüfen (aus: Standard beibehalten)"
 
 msgid "Module"
 msgstr "Modul"
@@ -30059,6 +30245,9 @@ msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
 "results in a service for each project with the number of issues per workflow."
 msgstr ""
+"Überwachen Sie die Anzahl der Issues für bestimmte Projekte und deren "
+"Workflows. Daraus ergibt sich für jedes Projekt ein Dienst mit der Anzahl "
+"der Issues pro Workflow."
 
 msgid "Monitor the performance of the Event Console"
 msgstr "Leistung der Event Console monitoren"
@@ -30881,7 +31070,7 @@ msgid "Netapp port discovery"
 msgstr "Serviceerkennung von Brocade-Ports"
 
 msgid "Netapp power supply unit discovery"
-msgstr ""
+msgstr "Erkennung der Netapp-Stromversorgung"
 
 msgid "Netapp systemtime"
 msgstr "NetApp-Systemzeit"
@@ -30971,6 +31160,9 @@ msgstr "Angabe des Netzwerkes"
 msgid "Network statistics"
 msgstr "Knoten Statistiken"
 
+msgid "Network topology"
+msgstr "Netzwerktopologie"
+
 #, python-format
 msgid "Network topology of site %s"
 msgstr "Netzwerktopologie der Site %s"
@@ -30999,7 +31191,7 @@ msgid "Never executed"
 msgstr "Noch nicht ausgeführt"
 
 msgid "Never install Python with the agent"
-msgstr ""
+msgstr "Python niemals mit dem Agenten installieren"
 
 msgid "Never logged in"
 msgstr "Noch nie angemeldet."
@@ -31254,6 +31446,8 @@ msgstr "Keine Datenquelle definiert."
 msgid ""
 "No detail renderer for crash of type '%s' available. Details structure is:"
 msgstr ""
+"Kein Detail-Renderer für Crash vom Typ '%s' vorhanden. Detaillierte Struktur "
+"ist:"
 
 msgid "No discovery information available. Please perform a full scan."
 msgstr ""
@@ -31279,6 +31473,9 @@ msgid ""
 "No fresh discovery information available. Using latest cached information. "
 "Please perform a full scan in case you want to discover the current state."
 msgstr ""
+"Keine neuen Erkennungsinformationen verfügbar. Verwendung der letzten "
+"zwischengespeicherten Informationen. Bitte führen Sie einen vollständigen "
+"Scan durch, wenn Sie den aktuellen Status ermitteln möchten."
 
 #, python-format
 msgid "No graph available: %s"
@@ -31377,6 +31574,10 @@ msgstr "Es gibt keinen Bericht mit dem Namen '%s'."
 msgid "No response from update thread"
 msgstr "Keine Antwort vom Update-Thread"
 
+#, fuzzy
+msgid "No restrictions to specific objects"
+msgstr "Nicht begrenzt auf das Anzeigen eines bestimmten Objektes"
+
 msgid "No roles assigned."
 msgstr "Keine Rollen zugewiesen."
 
@@ -31389,6 +31590,8 @@ msgstr "Keine Regeln gefunden."
 msgid ""
 "No ruleset <b>State in case of restricted address missmatch</b> is configured"
 msgstr ""
+"Kein Regelsatz <b>Zustand bei eingeschränkter Adressübereinstimmung</b> ist "
+"konfiguriert"
 
 msgid "No scan has been started yet."
 msgstr "Bisher wurde noch kein Scan gestartet."
@@ -31404,7 +31607,7 @@ msgid "No search"
 msgstr "Host-Suche"
 
 msgid "No search, specify list of arguments"
-msgstr ""
+msgstr "Keine Suche, Liste der Argumente angeben"
 
 msgid "No service level is set in event"
 msgstr "Im Event ist kein Servicelevel eingetragen"
@@ -31861,6 +32064,14 @@ msgid ""
 "sections</a>. Note that this will lead to an increase in SNMP traffic of "
 "approximately 5%."
 msgstr ""
+"Hinweis: Der Admin-Status ist im Allgemeinen nur für die 64-Bit-SNMP-"
+"Schnittstellenprüfung verfügbar. Außerdem müssen Sie Checkmk speziell so "
+"konfigurieren, dass diese Information abgeholt wird, sonst hat die "
+"Verwendung dieser Option keine Wirkung. Damit Checkmk den Admin-Status "
+"abholt, aktivieren Sie den Abschnitt <tt>if64adm</tt> über die Regel <a "
+"href='wato.py?mode=edit_ruleset&varname=snmp_exclude_sections'>SNMP-"
+"Abschnitte ein- oder ausschließen</a>. Beachten Sie, dass dies zu einer "
+"Erhöhung des SNMP-Verkehrs um ca. 5 % führen wird."
 
 msgid ""
 "Note: This rule still works. However, we encourage to use the generic 'Text "
@@ -31992,6 +32203,8 @@ msgid ""
 "Notification priority (This will override the priority configured in the "
 "alert source)"
 msgstr ""
+"Benachrichtigungspriorität (Damit wird die in der Alarmquelle konfigurierte "
+"Priorität außer Kraft gesetzt)"
 
 msgid "Notification rule"
 msgstr "Alarmierungsregel"
@@ -32093,7 +32306,7 @@ msgid "Nr."
 msgstr "Nr."
 
 msgid "Ntop"
-msgstr ""
+msgstr "Ntop"
 
 #, fuzzy
 msgid "Ntop host"
@@ -32127,8 +32340,9 @@ msgstr "Name des Peers"
 msgid "Ntop: Alerts"
 msgstr "Alarme"
 
+#, fuzzy
 msgid "Ntopng"
-msgstr ""
+msgstr "Ntopng"
 
 #, fuzzy
 msgid "Ntopng Connection Parameters"
@@ -32149,8 +32363,9 @@ msgstr ""
 msgid "Number of Active Sessions"
 msgstr "Anzahl von aktiven Sitzungen"
 
+#, fuzzy
 msgid "Number of Checkmk checkers is less than number of CPUs"
-msgstr ""
+msgstr "Anzahl der Checkmk-Checker ist kleiner als die Anzahl der CPUs"
 
 #, fuzzy
 msgid "Number of Chunks"
@@ -32704,7 +32919,7 @@ msgid "Nutanix Prism Alerts"
 msgstr "Nutanix Prism"
 
 msgid "Nvidia"
-msgstr ""
+msgstr "Nvidia"
 
 msgid "O"
 msgstr "O"
@@ -32785,6 +33000,8 @@ msgid ""
 "OPPROCS: The number of applications that are currently connected to the "
 "queue to put messages on the queue."
 msgstr ""
+"OPPROCS: Die Anzahl der Anwendungen, die derzeit mit der Warteschlange "
+"verbunden sind, um Nachrichten in die Warteschlange zu stellen."
 
 #, python-format
 msgid "ORACLE %s"
@@ -32798,9 +33015,9 @@ msgstr "ORACLE %s"
 msgid "ORACLE %s wait class"
 msgstr "ORACLE %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid "ORACLE %s wait class (FG)"
-msgstr ""
+msgstr "ORACLE %s Warteklasse (FG)"
 
 msgid "ORACLE DB time statistics"
 msgstr "ORACLE DB Zeitstatistik"
@@ -32809,17 +33026,17 @@ msgid "ORACLE Databases (Linux, Solaris, AIX)"
 msgstr "ORACLE Datenbanken (Linux, Solaris, AIX)"
 
 msgid "ORACLE IOSTAT Bytes"
-msgstr ""
+msgstr "ORACLE IOSTAT Bytes"
 
 #, fuzzy
 msgid "ORACLE IOSTAT IOs"
 msgstr "ORACLE %s"
 
 msgid "ORACLE IOSTAT Total Bytes"
-msgstr ""
+msgstr "ORACLE IOSTAT Total Bytes"
 
 msgid "ORACLE IOSTAT Total IOs"
-msgstr ""
+msgstr "ORACLE IOSTAT Total IOs"
 
 #, fuzzy
 msgid "ORACLE Memory"
@@ -32895,6 +33112,8 @@ msgid ""
 "OS, Checkmk version and edition, Time, Core, Python version and paths, "
 "Architecture"
 msgstr ""
+"OS, Checkmk-Version und -Edition, Zeit, Core, Python-Version und -Pfade, "
+"Architektur"
 
 msgid "OSDs epoch levels and average"
 msgstr "Schwellwerte und Durchschnitt für Abschnitte bzgl. OSDs"
@@ -33063,6 +33282,10 @@ msgid ""
 "this a GUI view. Please edit your view and choose another time range for "
 "your metric history painter to fix this issue."
 msgstr ""
+"Ein Zeitbereich des Metric History Painters ist so eingestellt, dass er vom "
+"Bericht geerbt wird, obwohl dies eine GUI-Ansicht ist. Bitte bearbeiten Sie "
+"Ihre Ansicht und wählen Sie einen anderen Zeitbereich für Ihren Metric "
+"History Painter, um dieses Problem zu beheben."
 
 msgid "One Month"
 msgstr "1 Monat"
@@ -33097,10 +33320,10 @@ msgid "One service per sensor"
 msgstr "Nicht in Serviceperiode"
 
 msgid "One-Way Broadcast/Multicast"
-msgstr ""
+msgstr "Einweg Broadcast/Multicast"
 
 msgid "One-Way Non-Multicast/Non-Broadcast"
-msgstr ""
+msgstr "Einweg Non-Multicast/Non-Broadcast"
 
 msgid "Ongoing shard info requests"
 msgstr "Laufende Shard-Informationsanfragen"
@@ -33249,7 +33472,7 @@ msgid "Only query the following SIDs (if found)"
 msgstr "Nur folgende SIDs abfragen (falls gefunden)"
 
 msgid "Only queues explicitly listed here will be monitored."
-msgstr ""
+msgstr "Es werden nur die hier explizit aufgeführten Warteschlangen überwacht."
 
 msgid ""
 "Only rename hostnames whose names <i>begin</i> with the regular expression "
@@ -33432,12 +33655,18 @@ msgid ""
 "one service (summary) or each unit gets allocated to one individual service "
 "(single)."
 msgstr ""
+"Option, mit der festgelegt werden kann, ob alle Lüftereinheiten in einem "
+"Service gruppiert werden (Zusammenfassung) oder jede Einheit einem einzelnen "
+"Service zugewiesen wird (einzeln)."
 
 msgid ""
 "Option which allows to specify whether all power supply units will be "
 "grouped into one service (summary) or each unit gets allocated one "
 "individual service (single)."
 msgstr ""
+"Option, mit der festgelegt werden kann, ob alle Netzteile zu einem Service "
+"gruppiert werden (Zusammenfassung) oder jedes Gerät einen individuellen "
+"Service zugewiesen bekommt (einzeln)."
 
 msgid "Optional DNS server you want to use for the lookup"
 msgstr "Optionaler DNS Server für Abfragen"
@@ -33479,6 +33708,9 @@ msgid ""
 "Optionally provide protocol, server and site for agent registration and/or "
 "updates. If not entered here, you can provide it on registration."
 msgstr ""
+"Geben Sie optional Protokoll, Server und Standort für die "
+"Agentenregistrierung und/oder Updates an. Wenn Sie diese Daten hier nicht "
+"eingeben, können Sie sie bei der Registrierung angeben."
 
 msgid "Options"
 msgstr "Optionen"
@@ -33648,7 +33880,7 @@ msgstr "Integration in die Seitenleiste"
 
 #, python-format
 msgid "Other keywords for this rule: %s"
-msgstr ""
+msgstr "Andere Schlüsselwörter für diese Regel: %s"
 
 msgid "Other latency"
 msgstr "Andere Latenz"
@@ -33876,7 +34108,7 @@ msgid "Overprovisioned"
 msgstr "Überprovisioniert"
 
 msgid "Override cache times configured by other rules"
-msgstr ""
+msgstr "Überschreibe Cache-Zeiten, die von anderen Regeln konfiguriert werden"
 
 msgid "Override check state based on channel state"
 msgstr "Check-Status durch den Kanalstatus überschreiben"
@@ -34050,7 +34282,7 @@ msgid "Pack ID"
 msgstr "Paket-ID"
 
 msgid "Pack all files: High, Medium, Low sensitivity"
-msgstr ""
+msgstr "Packen Sie alle Dateien: Hohe, mittlere, niedrige Empfindlichkeit"
 
 #, fuzzy
 msgid "Pack only Low sensitivity files"
@@ -34587,6 +34819,7 @@ msgstr ""
 "nicht stimmen sollten (z.B. wegen einer abweichenden Softwareversion), dann "
 "können Sie diese hier manuell anpassen."
 
+#, fuzzy
 msgid ""
 "Per default, Checkmk tries to map the underlying Checkmk host to the Node "
 "Exporter host which contains either the Checkmk hostname, host address or "
@@ -34597,6 +34830,15 @@ msgid ""
 "the underlying Checkmk host. This can be used if the default options do not "
 "apply to your setup."
 msgstr ""
+"Standardmäßig versucht Checkmk, den zugrundeliegenden Checkmk-Host auf den "
+"Node Exporter-Host abzubilden, der entweder den Checkmk-Hostnamen, die Host-"
+"Adresse oder \"localhost\" in seiner Endpunktadresse enthält. Die erstellten "
+"Dienste des gemappten Node Exporters werden dem Checkmk-Host zugewiesen. Ein "
+"Piggyback-Host für jeden Node-Exporter-Host wird erstellt, wenn keine der "
+"Optionen gültig ist. Diese Option ermöglicht es Ihnen, einen Ihrer Node-"
+"Exporter-Hosts explizit auf den zugrunde liegenden Checkmk-Host zuzuordnen. "
+"Dies kann verwendet werden, wenn die Standardoptionen nicht auf Ihre "
+"Einrichtung zutreffen."
 
 #, fuzzy
 msgid "Per entry"
@@ -34757,6 +34999,9 @@ msgid ""
 "range. Percentile applied to a group of metrics is calculated at each time "
 "step."
 msgstr ""
+"Das Perzentil für eine einzelne Metrik wird über den angezeigten Zeitbereich "
+"berechnet. Das auf eine Gruppe von Metriken angewandte Perzentil wird bei "
+"jedem Zeitschritt berechnet."
 
 msgid "Percentile within the timerange"
 msgstr "Perzentil innerhalb des Zeitbereichs"
@@ -35285,6 +35530,8 @@ msgid ""
 "Please configure at least either the discovery of single interfaces or the "
 "grouping"
 msgstr ""
+"Bitte konfigurieren Sie mindestens entweder die Erkennung von einzelnen "
+"Schnittstellen oder die Gruppierung"
 
 msgid "Please configure proper bind credentials."
 msgstr ""
@@ -35333,6 +35580,8 @@ msgstr ""
 msgid ""
 "Please enter a 10-digit, lower case hex value, e.g. 0x00000000 or 0x8004131f."
 msgstr ""
+"Bitte geben Sie einen 10-stelligen, klein geschriebenen Hex-Wert ein, z. B. "
+"0x00000000 oder 0x8004131f."
 
 msgid "Please enter a filename."
 msgstr "Bitte Dateinamen eingeben."
@@ -35440,6 +35689,9 @@ msgid ""
 "at your system and can differ from our definitions. In this case use the "
 "option below."
 msgstr ""
+"Bitte beachten Sie, dass die Zuordnung zum numerischen ServiceNow-Zustand "
+"bei Ihrem System geändert sein kann und von unseren Definitionen abweichen "
+"kann. Verwenden Sie in diesem Fall die unten stehende Option."
 
 msgid ""
 "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "
@@ -36211,6 +36463,10 @@ msgstr "Problem-Hosts"
 #, fuzzy
 msgid "Problem aggregations"
 msgstr "Problem Aggregationen"
+
+#, fuzzy
+msgid "Problem dashboard"
+msgstr "Übersicht"
 
 msgid "Problem details"
 msgstr "Problem Details"
@@ -38269,6 +38525,10 @@ msgstr "Das Ressourcenmerkmal"
 
 msgid "Restrict the length of the lines"
 msgstr "Länge der Zeilen begrenzen"
+
+#, fuzzy
+msgid "Restrict to a single host"
+msgstr "Das Ressourcenmerkmal"
 
 #, fuzzy
 msgid "Restrict to check attempt"
@@ -41600,6 +41860,10 @@ msgstr "Instanzverwaltung"
 
 msgid "Site name"
 msgstr "Instanzname"
+
+#, fuzzy
+msgid "Site overview"
+msgstr "Hauptübersicht"
 
 msgid "Site restore"
 msgstr "Wiederherstellung der Instanz"
@@ -46155,6 +46419,10 @@ msgstr ""
 msgid "The connection %r does not exist"
 msgstr "The connection %r does not exist"
 
+#, fuzzy
+msgid "The connection to this site has been disabled."
+msgstr "Die Verbindung zum LDAP-Server wird nicht gehalten."
+
 msgid ""
 "The contact information must not contain one of the characters <tt>;</tt> "
 "<tt>'</tt> <tt>|</tt> or <tt>$</tt>"
@@ -48324,6 +48592,10 @@ msgstr ""
 #, fuzzy
 msgid "The state of the job is ignored by default."
 msgstr "Der Zustand des Jobs wird normalerweise ignoriert."
+
+#, fuzzy
+msgid "The status of this site has not yet been determined."
+msgstr "Dieses Modul wurde noch nicht implementiert."
 
 msgid "The stored report you are trying to delete does not exist."
 msgstr "Der gespeicherte Bericht, den Sie löschen möchten, existiert nicht."
@@ -52243,8 +52515,20 @@ msgstr "Diese Instanz existiert nicht."
 msgid "This site is %s"
 msgstr "Diese Instanz ist %s"
 
+#, fuzzy
+msgid "This site is currently down."
+msgstr "Host ist im Moment in Ausfallszeit"
+
+#, fuzzy
+msgid "This site is currently not reachable."
+msgstr "Dieser Host wird aktuell nicht überwacht"
+
 msgid "This site is not a distributed WATO site."
 msgstr "Diese Instanz ist keine verteilte WATO-Instanz."
+
+#, fuzzy
+msgid "This site is not responding."
+msgstr "Diese Instanz existiert nicht."
 
 #, fuzzy
 msgid ""
@@ -52256,6 +52540,10 @@ msgstr ""
 
 msgid "This site is not update and needs a replication. Start it now."
 msgstr "Instanz ist nicht aktuell und sollte repliziert werden. Jetzt starten."
+
+#, fuzzy
+msgid "This site is online."
+msgstr "Diese Instanz ist %s"
 
 msgid "This site is up-to-date."
 msgstr "Instanz ist aktuell."
@@ -55335,7 +55623,7 @@ msgid "Use IPMItool"
 msgstr "IPMItool verwenden"
 
 #, fuzzy
-msgid "Use Inline SNMP (PySNMP) Backend"
+msgid "Use Inline SNMP (PySNMP) Backend (experimental)"
 msgstr "Eingebautes SNMP verwenden"
 
 #, fuzzy
@@ -55343,7 +55631,7 @@ msgid "Use Inline SNMP (deprecated)"
 msgstr "Eingebautes SNMP verwenden"
 
 #, fuzzy
-msgid "Use Inline SNMP (legacy) Backend"
+msgid "Use Inline SNMP Backend"
 msgstr "Eingebautes SNMP verwenden"
 
 msgid ""
@@ -58584,6 +58872,10 @@ msgstr ""
 "Erzeugt Child-Nodes, die den Status von Services betreffen. Hosts und "
 "zugehörige Services werden weiter unten spezifiziert."
 
+#, python-brace-format
+msgid "Will wait for {sleep_time} seconds and retry"
+msgstr ""
+
 msgid "Windows"
 msgstr "Windows"
 
@@ -61498,6 +61790,25 @@ msgstr ""
 msgid "hosts"
 msgstr "Hosts"
 
+#, fuzzy
+msgid "hosts are down or have critical services"
+msgstr "Listet alle Wartungszeiten für Services  auf."
+
+#, fuzzy
+msgid "hosts are in scheduled downtime"
+msgstr "Der Host war in einer Wartungszeit"
+
+msgid "hosts are unreachable or have unknown services"
+msgstr ""
+
+#, fuzzy
+msgid "hosts are up and have no service problems"
+msgstr "Hosts mit Serviceproblemen"
+
+#, fuzzy
+msgid "hosts are up but have services in warning state"
+msgstr "Service in Status WARN gewechselt"
+
 msgid "hour"
 msgstr "Stunde"
 
@@ -62601,6 +62912,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Use Inline SNMP"
+#~ msgid "Use Inline SNMP (legacy) Backend"
+#~ msgstr "Eingebautes SNMP verwenden"
 
 #~ msgid "Agent Bakery"
 #~ msgstr "Agentenbäckerei"
@@ -64953,9 +65269,6 @@ msgstr ""
 
 #~ msgid "Network interface port types to discover"
 #~ msgstr "Netzwerkschnittstellen Port-Typen, die überwacht werden sollen"
-
-#~ msgid "Network topology"
-#~ msgstr "Netzwerktopologie"
 
 #~ msgid "New Aggregation"
 #~ msgstr "Neue Aggregation"
@@ -68457,9 +68770,6 @@ msgstr ""
 
 #~ msgid "Signature Keys"
 #~ msgstr "Signaturschlüssel"
-
-#~ msgid "The connection to the LDAP server is not persisted."
-#~ msgstr "Die Verbindung zum LDAP-Server wird nicht gehalten."
 
 #~ msgid "enable profile mode"
 #~ msgstr "aktiviere Profil-Modus"

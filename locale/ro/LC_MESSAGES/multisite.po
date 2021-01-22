@@ -9511,6 +9511,9 @@ msgid ""
 "service."
 msgstr ""
 
+msgid "Configure restrictions manually"
+msgstr ""
+
 msgid ""
 "Configure that possible actions that can be performed when a rule triggers "
 "and also manually by a user."
@@ -9726,6 +9729,12 @@ msgstr ""
 #, fuzzy
 msgid "Connection ID"
 msgstr "Conexiuni Active"
+
+#, python-brace-format
+msgid ""
+"Connection attempt {n_attempts} / {n_attempts_redis_connection} to Redis "
+"failed"
+msgstr ""
 
 #, fuzzy
 msgid "Connection dropped late"
@@ -12568,14 +12577,14 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Depending on the choosen datasource a %s can list <i>multiple</i> or "
-"<i>single</i> objects. For example the <i>services</i> datasource can be "
+"Depending on the chosen datasource, a %s can list <i>multiple</i> or "
+"<i>single</i> objects. For example, the <i>services</i> datasource can be "
 "used to simply create a list of <i>multiple</i> services, a list of "
 "<i>multiple</i> services of a <i>single</i> host or even a list of services "
 "with the same name on <i>multiple</i> hosts. When you just want to create a "
-"list of objects, you do not need to make any selection in this dialog. If "
-"you like to create a view for one specific object of a specific type, select "
-"the object type below and continue."
+"list of objects, simply continue with the default choice (no restrictions). "
+"Alternatively, you have the option to restrict to a single host or to choose "
+"the type of objects you want to restrict to manually."
 msgstr ""
 
 msgid ""
@@ -13718,6 +13727,9 @@ msgid "Displays all aggregations of a certain group."
 msgstr ""
 
 msgid "Displays an introduction and Checkmk logo."
+msgstr ""
+
+msgid "Displays either sites and states or hosts and states of a site"
 msgstr ""
 
 msgid "Displays entries from the logfile of the monitoring core."
@@ -26435,6 +26447,10 @@ msgstr ""
 msgid "Main Overview"
 msgstr ""
 
+#, fuzzy
+msgid "Main dashboard"
+msgstr "Adaugă element"
+
 msgid "Main directory"
 msgstr ""
 
@@ -27270,6 +27286,10 @@ msgstr ""
 #, fuzzy
 msgid "Maximum number of RPC requests per second"
 msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Maximum number of allowed connection attempts reached, terminating"
+msgstr "Numarul maxim de incercari de verificare pentru serviciu"
 
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
@@ -29177,6 +29197,10 @@ msgstr ""
 msgid "Network statistics"
 msgstr " Se potriveste grupurilor: %s"
 
+#, fuzzy
+msgid "Network topology"
+msgstr "Adresă"
+
 #, python-format
 msgid "Network topology of site %s"
 msgstr ""
@@ -29593,6 +29617,9 @@ msgid "No report defined with the name '%s'."
 msgstr ""
 
 msgid "No response from update thread"
+msgstr ""
+
+msgid "No restrictions to specific objects"
 msgstr ""
 
 msgid "No roles assigned."
@@ -34212,6 +34239,10 @@ msgid "Problem aggregations"
 msgstr "Agregare noua"
 
 #, fuzzy
+msgid "Problem dashboard"
+msgstr "Probleme"
+
+#, fuzzy
 msgid "Problem details"
 msgstr "Probleme"
 
@@ -36273,6 +36304,10 @@ msgstr "Tagul Aplicatiei in syslog"
 
 msgid "Restrict the length of the lines"
 msgstr ""
+
+#, fuzzy
+msgid "Restrict to a single host"
+msgstr "Tagul Aplicatiei in syslog"
 
 msgid "Restrict to check attempt"
 msgstr ""
@@ -39558,6 +39593,10 @@ msgstr ""
 #, fuzzy
 msgid "Site name"
 msgstr "Nume nou"
+
+#, fuzzy
+msgid "Site overview"
+msgstr "Privire de ansamblu"
 
 msgid "Site restore"
 msgstr ""
@@ -43559,6 +43598,10 @@ msgstr ""
 msgid "The connection %r does not exist"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
+#, fuzzy
+msgid "The connection to this site has been disabled."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 msgid ""
 "The contact information must not contain one of the characters <tt>;</tt> "
 "<tt>'</tt> <tt>|</tt> or <tt>$</tt>"
@@ -45312,6 +45355,9 @@ msgid ""
 msgstr ""
 
 msgid "The state of the job is ignored by default."
+msgstr ""
+
+msgid "The status of this site has not yet been determined."
 msgstr ""
 
 #, fuzzy
@@ -48166,8 +48212,20 @@ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 msgid "This site is %s"
 msgstr ""
 
+#, fuzzy
+msgid "This site is currently down."
+msgstr "<b>șterge toți timpii morți programați</b> pentru "
+
+#, fuzzy
+msgid "This site is currently not reachable."
+msgstr "<b>șterge toți timpii morți programați</b> pentru "
+
 msgid "This site is not a distributed WATO site."
 msgstr ""
+
+#, fuzzy
+msgid "This site is not responding."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid ""
 "This site is not the central site nor a replication remote site. You cannot "
@@ -48176,6 +48234,10 @@ msgstr ""
 
 msgid "This site is not update and needs a replication. Start it now."
 msgstr ""
+
+#, fuzzy
+msgid "This site is online."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "This site is up-to-date."
 msgstr ""
@@ -51111,13 +51173,13 @@ msgstr ""
 msgid "Use IPMItool"
 msgstr ""
 
-msgid "Use Inline SNMP (PySNMP) Backend"
+msgid "Use Inline SNMP (PySNMP) Backend (experimental)"
 msgstr ""
 
 msgid "Use Inline SNMP (deprecated)"
 msgstr ""
 
-msgid "Use Inline SNMP (legacy) Backend"
+msgid "Use Inline SNMP Backend"
 msgstr ""
 
 msgid ""
@@ -53816,6 +53878,10 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr ""
 
+#, python-brace-format
+msgid "Will wait for {sleep_time} seconds and retry"
+msgstr ""
+
 msgid "Windows"
 msgstr ""
 
@@ -56269,6 +56335,23 @@ msgstr ""
 msgid "hosts"
 msgstr ""
 
+msgid "hosts are down or have critical services"
+msgstr ""
+
+#, fuzzy
+msgid "hosts are in scheduled downtime"
+msgstr "<b>șterge toți timpii morți programați</b> pentru "
+
+msgid "hosts are unreachable or have unknown services"
+msgstr ""
+
+#, fuzzy
+msgid "hosts are up and have no service problems"
+msgstr "Adaugă Excepție"
+
+msgid "hosts are up but have services in warning state"
+msgstr ""
+
 msgid "hour"
 msgstr ""
 
@@ -58592,10 +58675,6 @@ msgstr ""
 #~ msgstr "Starea porturilor pentru inventariere"
 
 #, fuzzy
-#~ msgid "Network topology"
-#~ msgstr "Adresă"
-
-#, fuzzy
 #~ msgid "New Aggregation"
 #~ msgstr "Agregare noua"
 
@@ -60726,10 +60805,6 @@ msgstr ""
 #~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
-#~ msgid "The connection to the LDAP server is not persisted."
-#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
-#, fuzzy
 #~ msgid "The last 31 days"
 #~ msgstr " în %d zile"
 
@@ -60755,10 +60830,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "This aggregation is currently in a scheduled downtime"
-#~ msgstr "<b>șterge toți timpii morți programați</b> pentru "
-
-#, fuzzy
-#~ msgid "This element is currently in a scheduled downtime"
 #~ msgstr "<b>șterge toți timpii morți programați</b> pentru "
 
 #, fuzzy

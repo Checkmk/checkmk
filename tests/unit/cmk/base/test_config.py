@@ -1716,7 +1716,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch):
         'cluster.test',
         SourceType.HOST,
         'Test Service',
-        lambda host_config: "dummy.test.ip.%s" % host_config.hostname[4],
+        lambda host_config, *, family: "dummy.test.ip.%s" % host_config.hostname[4],
     ) == [
         HostKey('node1.test', "dummy.test.ip.1", SourceType.HOST),
         HostKey('node2.test', "dummy.test.ip.2", SourceType.HOST),
@@ -1725,14 +1725,14 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch):
         'cluster.test',
         SourceType.HOST,
         'Test Unclustered',
-        lambda _x: "dummy.test.ip.0",
+        lambda _x, *, family: "dummy.test.ip.0",
     ) == []
     # regardless of config: descr == None -> return None
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         None,
-        lambda _x: "dummy.test.ip.0",
+        lambda _x, *, family: "dummy.test.ip.0",
     ) is None
 
 

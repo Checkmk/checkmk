@@ -343,7 +343,10 @@ def do_discovery(
         host_config = config_cache.get_host_config(hostname)
         section.section_begin(hostname)
         try:
-            ipaddress = ip_lookup.lookup_ip_address(host_config)
+            ipaddress = ip_lookup.lookup_ip_address(
+                host_config,
+                family=host_config.default_address_family,
+            )
             nodes = sources.make_nodes(
                 config_cache,
                 host_config,
@@ -534,7 +537,10 @@ def discover_on_host(
         if host_config.is_cluster:
             ipaddress = None
         else:
-            ipaddress = ip_lookup.lookup_ip_address(host_config)
+            ipaddress = ip_lookup.lookup_ip_address(
+                host_config,
+                family=host_config.default_address_family,
+            )
 
         nodes = sources.make_nodes(
             config_cache,
@@ -722,7 +728,10 @@ def check_discovery(
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
     if ipaddress is None and not host_config.is_cluster:
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        ipaddress = ip_lookup.lookup_ip_address(
+            host_config,
+            family=host_config.default_address_family,
+        )
 
     mode = (Mode.DISCOVERY if params['inventory_check_do_scan'] else Mode.CACHED_DISCOVERY)
 
@@ -1696,7 +1705,7 @@ def _get_cluster_services(
         node_config = config_cache.get_host_config(node)
         services, host_label_discovery_result = _get_discovered_services(
             node,
-            ip_lookup.lookup_ip_address(node_config),
+            ip_lookup.lookup_ip_address(node_config, family=node_config.default_address_family),
             parsed_sections_broker,
             discovery_parameters,
         )
@@ -1758,7 +1767,10 @@ def get_check_preview(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)
 
-    ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_config)
+    ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(
+        host_config,
+        family=host_config.default_address_family,
+    )
     discovery_parameters = DiscoveryParameters(
         on_error=on_error,
         load_labels=False,

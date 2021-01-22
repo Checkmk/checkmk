@@ -402,7 +402,10 @@ def mode_dump_agent(hostname: HostName) -> None:
         if host_config.is_cluster:
             raise MKBailOut("Can not be used with cluster hosts")
 
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        ipaddress = ip_lookup.lookup_ip_address(
+            host_config,
+            family=host_config.default_address_family,
+        )
 
         output = []
         # Show errors of problematic data sources
@@ -875,7 +878,10 @@ def mode_snmpwalk(options: Dict, hostnames: List[str]) -> None:
 
     for hostname in hostnames:
         host_config = config_cache.get_host_config(hostname)
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        ipaddress = ip_lookup.lookup_ip_address(
+            host_config,
+            family=host_config.default_address_family,
+        )
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
@@ -944,7 +950,10 @@ def mode_snmpget(args: List[str]) -> None:
     assert hostnames
     for hostname in hostnames:
         host_config = config_cache.get_host_config(hostname)
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        ipaddress = ip_lookup.lookup_ip_address(
+            host_config,
+            family=host_config.default_address_family,
+        )
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 

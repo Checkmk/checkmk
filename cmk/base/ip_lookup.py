@@ -39,16 +39,20 @@ def enforce_localhost() -> None:
 
 
 def lookup_ipv4_address(host_config: config.HostConfig) -> Optional[HostAddress]:
-    return lookup_ip_address(host_config, 4)
+    return lookup_ip_address(host_config, family=4)
 
 
 def lookup_ipv6_address(host_config: config.HostConfig) -> Optional[HostAddress]:
-    return lookup_ip_address(host_config, 6)
+    return lookup_ip_address(host_config, family=6)
 
 
 def lookup_mgmt_board_ip_address(host_config: config.HostConfig) -> Optional[HostAddress]:
     try:
-        return lookup_ip_address(host_config, for_mgmt_board=True)
+        return lookup_ip_address(
+            host_config,
+            family=host_config.default_address_family,
+            for_mgmt_board=True,
+        )
     except MKIPAddressLookupError:
         return None
 
@@ -59,18 +63,18 @@ def lookup_mgmt_board_ip_address(host_config: config.HostConfig) -> Optional[Hos
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
-def lookup_ip_address(host_config: config.HostConfig,
-                      family: Optional[int] = None,
-                      for_mgmt_board: bool = False) -> Optional[HostAddress]:
+def lookup_ip_address(
+    host_config: config.HostConfig,
+    *,
+    family: int,
+    for_mgmt_board: bool = False,
+) -> Optional[HostAddress]:
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
 
     if config.fake_dns:
         return config.fake_dns
-
-    if family is None:  # choose primary family
-        family = 6 if host_config.is_ipv6_primary else 4
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
     if config.simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
@@ -104,11 +108,11 @@ def lookup_ip_address(host_config: config.HostConfig,
     if host_config.is_dyndns_host:
         return hostname
 
-    return cached_dns_lookup(hostname, family, host_config.is_no_ip_host)
+    return cached_dns_lookup(hostname, family=family, is_no_ip_host=host_config.is_no_ip_host)
 
 
 # Variables needed during the renaming of hosts (see automation.py)
-def cached_dns_lookup(hostname: HostName, family: int, is_no_ip_host: bool) -> Optional[str]:
+def cached_dns_lookup(hostname: HostName, *, family: int, is_no_ip_host: bool) -> Optional[str]:
     cache = _config_cache.get("cached_dns_lookup")
 
     cache_id = hostname, family
@@ -291,7 +295,7 @@ def update_dns_cache() -> UpdateDNSCacheResult:
         host_config = config_cache.get_host_config(hostname)
         console.verbose("%s (IPv%d)..." % (hostname, family))
         try:
-            ip = lookup_ip_address(host_config, family)
+            ip = lookup_ip_address(host_config, family=family)
             console.verbose("%s\n" % ip)
 
         except (MKTerminate, MKTimeout):

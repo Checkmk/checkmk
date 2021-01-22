@@ -1216,7 +1216,10 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
     needs to be loaded
     """
     try:
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        ipaddress = ip_lookup.lookup_ip_address(
+            host_config,
+            family=host_config.default_address_family,
+        )
     except Exception:
         ipaddress = None
 

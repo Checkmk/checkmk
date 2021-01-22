@@ -55,7 +55,7 @@ def source_fixture(scenario, hostname, ipaddress, mode):
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
-    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
+    def fake_lookup_ip_address(host_config, *, family, for_mgmt_board=True):
         raise MKIPAddressLookupError("Failed to ...")
 
     Scenario().add_host(hostname).apply(monkeypatch)

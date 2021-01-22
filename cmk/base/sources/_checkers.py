@@ -327,7 +327,10 @@ def _make_piggyback_nodes(
     nodes = []
     for hostname in host_config.nodes:
         node_config = config_cache.get_host_config(hostname)
-        ipaddress = ip_lookup.lookup_ip_address(node_config)
+        ipaddress = ip_lookup.lookup_ip_address(
+            node_config,
+            family=node_config.default_address_family,
+        )
         sources = make_sources(
             HostConfig.make_host_config(hostname),
             ipaddress,

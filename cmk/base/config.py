@@ -39,6 +39,7 @@ from typing import (
     Final,
 )
 
+from mypy_extensions import NamedArg
 from six import ensure_str
 
 import cmk.utils
@@ -2299,6 +2300,11 @@ class HostConfig:
         self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) or (
             self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6")
 
+    @property
+    def default_address_family(self) -> int:
+        # TODO(ml): Return a `socket.AddressFamily` instead of an `int`.
+        return 6 if self.is_ipv6_primary else 4
+
     @staticmethod
     def make_snmp_config(hostname: HostName, address: HostAddress) -> SNMPHostConfig:
         return get_config_cache().get_host_config(hostname).snmp_config(address)
@@ -3667,7 +3673,7 @@ class ConfigCache:
         hostname: HostName,
         source_type: SourceType,
         service_descr: Optional[ServiceName],
-        lookup_ip_address: Callable[[HostConfig], Optional[HostAddress]],
+        lookup_ip_address: Callable[[HostConfig, NamedArg(int, "family")], Optional[HostAddress]],
     ) -> Optional[List[HostKey]]:
         """Returns the node keys if a service is clustered, otherwise 'None' in order to
         decide whether we collect section content of the host or the nodes.
@@ -3691,7 +3697,10 @@ class ConfigCache:
         return [
             HostKey(
                 nodename,
-                lookup_ip_address(self.get_host_config(nodename)),
+                lookup_ip_address(
+                    self.get_host_config(nodename),
+                    family=self.get_host_config(nodename).default_address_family,
+                ),
                 source_type,
             )
             for nodename in nodes

@@ -219,7 +219,7 @@ def _do_active_inventory_for(
             safe_to_write=True,
         )
 
-    ipaddress = ip_lookup.lookup_ip_address(host_config)
+    ipaddress = ip_lookup.lookup_ip_address(host_config, family=host_config.default_address_family)
     config_cache = config.get_config_cache()
 
     parsed_sections_broker, source_results = _fetch_parsed_sections_broker_for_inv(

@@ -49,7 +49,7 @@ def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
     hostname = "testhost"
     ipaddress = "127.0.0.1"
 
-    def fake_lookup_ip_address(host_config, family=None, for_mgmt_board=True):
+    def fake_lookup_ip_address(host_config, *, family, for_mgmt_board=True):
         return ipaddress
 
     Scenario().add_host(hostname).apply(monkeypatch)

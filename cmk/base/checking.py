@@ -146,7 +146,10 @@ def do_check(
         # address is unknown). When called as non keepalive ipaddress may be None or
         # is already an address (2nd argument)
         if ipaddress is None and not host_config.is_cluster:
-            ipaddress = ip_lookup.lookup_ip_address(host_config)
+            ipaddress = ip_lookup.lookup_ip_address(
+                host_config,
+                family=host_config.default_address_family,
+            )
 
         # When monitoring Checkmk clusters, the cluster nodes are responsible for fetching all
         # information from the monitored host and cache the result for the cluster checks to be

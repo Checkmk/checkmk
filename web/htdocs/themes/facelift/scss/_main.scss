@@ -419,8 +419,29 @@ b.treeangle.title {
   }
 }
 
+div.foldable_wrapper {
+  background-color: $headline-color;
+  border-radius: $theme-border-radius $theme-border-radius 0 0;
+
+  &:not(:last-of-type) {
+    margin-bottom: 2 * $spacing;
+  }
+
+  img.treeangle {
+    margin-left: $spacing;
+  }
+
+  h3 {
+    padding-left: 5px;
+  }
+
+  ul.treeangle {
+    margin: 0;
+  }
+}
+
 img.treeangle + .treeangle.title {
-  display: inline-block;
+  margin: 0;
 }
 
 ul.treeangle {

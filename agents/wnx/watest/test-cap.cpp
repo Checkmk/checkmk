@@ -25,8 +25,8 @@ TEST(CapTest, CheckAreFilesSame) {
     // source without target
     std::string name = "a.txt";
     {
-        tst::ConstructFile(file1 / name, "abcde0");
-        tst::ConstructFile(file2 / name, "abcde1");
+        tst::CreateTextFile(file1 / name, "abcde0");
+        tst::CreateTextFile(file2 / name, "abcde1");
         EXPECT_FALSE(cma::tools::AreFilesSame(file1 / name, file2 / name));
         EXPECT_TRUE(NeedReinstall(file2 / name, file1 / name));
     }
@@ -49,7 +49,7 @@ TEST(CapTest, Reinstall) {
 
     // absent source
     {
-        tst::ConstructFile(target / name, "a");
+        tst::CreateTextFile(target / name, "a");
         EXPECT_FALSE(NeedReinstall(target / name, source / name));
     }
 
@@ -57,27 +57,27 @@ TEST(CapTest, Reinstall) {
     tst::CreateInOut();
     // source without target
     {
-        tst::ConstructFile(source / name, "a");
+        tst::CreateTextFile(source / name, "a");
         EXPECT_TRUE(NeedReinstall(target / name, source / name));
     }
 
     // target is newer than source
     {
-        tst::ConstructFile(target / name, "a");
+        tst::CreateTextFile(target / name, "a");
         EXPECT_FALSE(NeedReinstall(target / name, source / name));
     }
 
     // source is newer than target
     {
         cma::tools::sleep(100);
-        tst::ConstructFile(source / name, "a");
+        tst::CreateTextFile(source / name, "a");
         EXPECT_TRUE(NeedReinstall(target / name, source / name));
     }
 
     // source is older than target, but content is not the same
     {
         cma::tools::sleep(100);
-        tst::ConstructFile(source / name, "b");
+        tst::CreateTextFile(source / name, "b");
         EXPECT_TRUE(NeedReinstall(source / name, target / name));
     }
 
@@ -115,7 +115,7 @@ TEST(CapTest, InstallFileAsCopy) {
 
     // absent source
     {
-        tst::ConstructFile(target_file, "1");
+        tst::CreateTextFile(target_file, "1");
         EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
                                       source.wstring(), Mode::normal));  //
         ASSERT_FALSE(fs::exists(target_file, ec)) << "must be removed";
@@ -123,7 +123,7 @@ TEST(CapTest, InstallFileAsCopy) {
 
     // target presented
     {
-        tst::ConstructFile(source_file, "2");
+        tst::CreateTextFile(source_file, "2");
         EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
                                       source.wstring(), Mode::normal));  //
         EXPECT_TRUE(fs::exists(target_file, ec)) << "must be presented";
@@ -309,8 +309,8 @@ TEST(CapTest, InstallCap) {
 
     // absent source
     {
-        tst::ConstructFile(plugin1, "1");
-        tst::ConstructFile(plugin2, "2");
+        tst::CreateTextFile(plugin1, "1");
+        tst::CreateTextFile(plugin2, "2");
         fs::copy_file(cap_base, cap_out, ec);
         EXPECT_TRUE(ReinstallCaps(cap_out, cap_in));  //
         EXPECT_FALSE(fs::exists(cap_out, ec)) << "file must be deleted";

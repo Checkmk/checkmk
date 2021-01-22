@@ -143,9 +143,10 @@ protected:
         auto exe_b = temp_dir / "b.cmd";
         auto exe_c = temp_dir / "c.cmd";
 
-        tst::ConstructFile(exe_a, "@echo start\n@call " + exe_b.u8string());
-        tst::ConstructFile(exe_b, "@echo start\n@call " + exe_c.u8string());
-        tst::ConstructFile(exe_c, "@echo start\n@powershell Start-Sleep 10000");
+        tst::CreateTextFile(exe_a, "@echo start\n@call " + exe_b.u8string());
+        tst::CreateTextFile(exe_b, "@echo start\n@call " + exe_c.u8string());
+        tst::CreateTextFile(exe_c,
+                            "@echo start\n@powershell Start-Sleep 10000");
         return cma::tools::RunStdCommand(exe_a.wstring(), false);
     }
 
@@ -222,27 +223,21 @@ TEST_F(WtoolsKillProcessTreeFixture, Integration) {
 }
 
 TEST(Wtools, ConditionallyConvertLowLevel) {
-    {
-        std::vector<uint8_t> v = {0xFE, 0xFE};
-        EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v));
-    }
-    {
-        std::vector<uint8_t> v = {0xFE, 0xFE, 0, 0};
-        EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v));
-    }
-    {
-        std::vector<uint8_t> v = {0xFF, 0xFE, 0, 0};
-        EXPECT_TRUE(wtools::IsVectorMarkedAsUTF16(v));
-    }
+    std::vector<uint8_t> v1{0xFE, 0xFE};
+    EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v1));
 
-    {
-        std::string v = "aa";
-        auto data = v.data();
-        data[2] = 1;  // simulate random data instead of the ending null
-        AddSafetyEndingNull(v);
-        data = v.data();
-        EXPECT_TRUE(data[2] == 0);
-    }
+    std::vector<uint8_t> v2{0xFE, 0xFE, 0, 0};
+    EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v2));
+
+    std::vector<uint8_t> v3{0xFF, 0xFE, 0, 0};
+    EXPECT_TRUE(wtools::IsVectorMarkedAsUTF16(v3));
+
+    std::string v = "aa";
+    auto data = v.data();
+    data[2] = 1;  // simulate random data instead of the ending null
+    AddSafetyEndingNull(v);
+    data = v.data();
+    EXPECT_TRUE(data[2] == '\0');
 }
 
 TEST(Wtools, ConditionallyConvert) {
@@ -455,27 +450,25 @@ TEST(Wtools, SimplePipeBase) {
     EXPECT_EQ(pipe.getWrite(), nullptr);
 }
 
-TEST(Wtools, PerfIndex) {
-    auto index = wtools::perf::FindPerfIndexInRegistry(L"Zuxxx");
-    EXPECT_FALSE(index);
+TEST(Wtools, FindPerfIndexInRegistry) {
+    auto index = perf::FindPerfIndexInRegistry(L"Zuxxx");
+    EXPECT_FALSE(index.has_value());
 
-    index = wtools::perf::FindPerfIndexInRegistry(L"Terminal Services");
-    ASSERT_TRUE(index);
+    index = perf::FindPerfIndexInRegistry(L"Terminal Services");
+    ASSERT_TRUE(index.has_value());
 
-    int i = index.value();
-    EXPECT_TRUE(cma::tools::find(TsValues, i));
+    auto f = std::ranges::find(TsValues, index.value());
+    EXPECT_NE(f, TsValues.end());
 
-    index = wtools::perf::FindPerfIndexInRegistry(L"Memory");
-    ASSERT_TRUE(index);
+    index = perf::FindPerfIndexInRegistry(L"Memory");
+    ASSERT_TRUE(index.has_value());
     EXPECT_EQ(index, 4);
 }
 TEST(Wtools, GetArgv) {
-    namespace fs = std::filesystem;
-
-    fs::path val{GetArgv(0)};
+    std::filesystem::path val{GetArgv(0)};
     EXPECT_TRUE(cma::tools::IsEqual(val.extension().wstring(), L".exe"));
-    fs::path val1{GetArgv(10)};
-    EXPECT_TRUE(val1.empty());
+
+    EXPECT_TRUE(GetArgv(10).empty());
 }
 
 TEST(Wtools, MemSize) {
@@ -495,6 +488,7 @@ TEST(Wtools, Acl) {
     auto stat = info.output();
     XLOG::l.i("\n{}", stat);
     EXPECT_TRUE(!stat.empty());
+
     {
         wtools::ACLInfo info_temp("c:\\windows\\temp\\check_mk_agent.msi");
         auto ret = info_temp.query();
@@ -508,7 +502,7 @@ TEST(Wtools, Acl) {
     }
 }
 
-TEST(Wtools, LineEnding) {
+TEST(Wtools, PatchFileLineEnding) {
     constexpr std::string_view to_write{"a\nb\r\nc\nd\n\n"};
     constexpr std::string_view expected{"a\r\nb\r\r\nc\r\nd\r\n\r\n"};
 
@@ -583,7 +577,7 @@ TEST(Wtools, Registry) {
     }
 }
 
-TEST(Wtools, Win32) {
+TEST(Wtools, IsGoodHandleApi) {
     ASSERT_EQ(InvalidHandle(), INVALID_HANDLE_VALUE);
     EXPECT_TRUE(IsInvalidHandle(INVALID_HANDLE_VALUE));
     char c[10] = "aaa";
@@ -600,7 +594,7 @@ TEST(Wtools, Win32) {
     EXPECT_FALSE(IsBadHandle(reinterpret_cast<HANDLE>(4)));
 }
 
-TEST(Wtools, ExpandString) {
+TEST(Wtools, ExpandStringWithEnvironment) {
     using namespace std::string_literals;
     EXPECT_EQ(L"*Windows_NTWindows_NT*"s,
               ExpandStringWithEnvironment(L"*%OS%%OS%*"));

@@ -5,6 +5,7 @@
 
 #include "test_tools.h"
 
+#include <filesystem>
 #include <random>
 #include <string>
 #include <string_view>
@@ -13,6 +14,7 @@
 #include "cfg.h"
 #include "corecrt_terminate.h"  // for terminate
 #include "exception"            // for terminate
+#include "fmt/format.h"
 #include "on_start.h"
 #include "tools/_misc.h"
 #include "tools/_tgt.h"          // for IsDebug
@@ -20,38 +22,37 @@
 #include "yaml-cpp/node/emit.h"  // for operator<<
 #include "yaml-cpp/node/node.h"  // for Node
 
-namespace tst {
+namespace fs = std::filesystem;
 
-class TestEnv : public testing::Environment {
+namespace tst {
+class TestEnvironment : public ::testing::Environment {
 public:
-    ~TestEnv() override = default;
+    static constexpr std::string_view temp_test_prefix_{"tmp_watest_"};
+    virtual ~TestEnvironment() = default;
 
     void SetUp() override {
-        namespace fs = std::filesystem;
-        using namespace std::string_literals;
-        fs::path path{cma::tools::win::GetTempFolder()};
-        path /= "checkmk_"s + std::to_string(::GetCurrentProcessId());
-        fs::create_directories(path);
-        path_ = path;
+        auto folder_name =
+            fmt::format("{}{}", temp_test_prefix_, ::GetCurrentProcessId());
+        temp_dir_ = fs::temp_directory_path() / folder_name;
+        fs::create_directories(temp_dir_);
     }
 
     void TearDown() override {
-        namespace fs = std::filesystem;
-        std::error_code ec;
-        fs::remove_all(path_, ec);
+        if (temp_dir_.u8string().find(temp_test_prefix_))
+            fs::remove_all(temp_dir_);
     }
 
-    [[nodiscard]] std::filesystem::path getTempPath() const { return path_; }
+    [[nodiscard]] fs::path getTempDir() const noexcept { return temp_dir_; }
 
 private:
-    std::filesystem::path path_;
+    fs::path temp_dir_;
 };
 
-testing::Environment* const g_env =
-    testing::AddGlobalTestEnvironment(new TestEnv);
+::testing::Environment* const g_env =
+    ::testing::AddGlobalTestEnvironment(new TestEnvironment);
 
-std::filesystem::path GetTempDir() {
-    return dynamic_cast<TestEnv*>(g_env)->getTempPath();
+fs::path GetTempDir() {
+    return dynamic_cast<TestEnvironment*>(g_env)->getTempDir();
 }
 
 const std::filesystem::path G_ProjectPath = PROJECT_DIR;
@@ -211,7 +212,7 @@ std::vector<std::string> ReadFileAsTable(const std::string& Name) {
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name) {
     namespace fs = std::filesystem;
     // Find Temporary Folder
-    fs::path temp_folder{cma::tools::win::GetTempFolder()};
+    fs::path temp_folder{GetTempDir()};
     std::error_code ec;
     if (!fs::exists(temp_folder, ec)) {
         XLOG::l("Updating is NOT possible, temporary folder not found [{}]",

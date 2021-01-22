@@ -255,11 +255,11 @@ int RunMe(const std::wstring& PeerName,  // assigned by caller
                            uint32_t Code, const std::vector<char>& Data) {
         auto data = wtools::ConditionallyConvertFromUTF16(Data);
         XLOG::d("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+                wtools::ToUtf8(CmdLine), Pid, Code, data.data());
 
         CoreCarrier::FireLogX(PeerName, Port,
                               "Process [{}]\t Pid [{}]\t Code [{}]",
-                              wtools::ConvertToUTF8(CmdLine), Pid, Code);
+                              wtools::ToUtf8(CmdLine), Pid, Code);
 
         cma::tools::AddVector(accu, data);
         count++;

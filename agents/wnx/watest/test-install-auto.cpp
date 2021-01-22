@@ -30,7 +30,7 @@ TEST(InstallAuto, FileControlIntegration) {
     EXPECT_NO_THROW(BackupFile(path, out));
     EXPECT_FALSE(NeedInstall(path, out));
 
-    tst::ConstructFile(path, "-----\n");
+    tst::CreateTextFile(path, "-----\n");
 
     // check for presence
     std::error_code ec;
@@ -46,7 +46,7 @@ TEST(InstallAuto, FileControlIntegration) {
 
     EXPECT_TRUE(RmFile(path));
     EXPECT_FALSE(MvFile(path, out / name)) << "file should be removed";
-    tst::ConstructFile(path, "-----\n");
+    tst::CreateTextFile(path, "-----\n");
     EXPECT_TRUE(MvFile(path, out / name)) << "move has to success";
 
     EXPECT_NO_THROW(BackupFile(path, out));
@@ -54,7 +54,7 @@ TEST(InstallAuto, FileControlIntegration) {
     EXPECT_TRUE(fs::exists(path, ec));
 
     EXPECT_FALSE(NeedInstall(path, out));
-    tst::ConstructFile(path, "-----\n");
+    tst::CreateTextFile(path, "-----\n");
     EXPECT_TRUE(NeedInstall(path, out));
     BackupFile(path, out);
     EXPECT_FALSE(NeedInstall(path, out));
@@ -140,7 +140,7 @@ TEST(InstallAuto, CheckForUpdateFileIntegration) {
 
     {
         auto path = in / name;
-        tst::ConstructFile(path, "-----\n");
+        tst::CreateTextFile(path, "-----\n");
         auto [command, result] = CheckForUpdateFile(
             name, in.wstring(), UpdateProcess::skip, out.wstring());
         EXPECT_TRUE(result);
@@ -153,7 +153,7 @@ TEST(InstallAuto, CheckForUpdateFileIntegration) {
     }
     {
         auto path = in / name;
-        tst::ConstructFile(path, "-----\n");
+        tst::CreateTextFile(path, "-----\n");
 
         ASSERT_TRUE(temp_fs.createRootFile(
             fs::path(cfg::dirs::kAgentUtils) / cfg::files::kExecuteUpdateFile,

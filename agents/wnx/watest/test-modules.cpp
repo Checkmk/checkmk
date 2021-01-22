@@ -331,13 +331,13 @@ TEST_F(ModuleCommanderTest, PrepareToWork) {
     ASSERT_TRUE(m.loadFrom(YAML::Load(test_1)));
     ASSERT_TRUE(m.name() == "zz" && m.exec() == L"zz.exe {}");
     EXPECT_FALSE(m.prepareToWork(backup_dir, modules_dir));
-    tst::ConstructFile(backup_dir / (m.name() + kExtension.data()), "zip");
+    tst::CreateTextFile(backup_dir / (m.name() + kExtension.data()), "zip");
     EXPECT_FALSE(m.prepareToWork(backup_dir, modules_dir));
     EXPECT_EQ(m.zip(), backup_dir / "zz.zip");
     EXPECT_TRUE(m.buildCommandLine("x.t").empty());
 
     fs::create_directories(modules_dir / m.name());
-    tst::ConstructFile(modules_dir / m.name() / "zz.exe", "exe");
+    tst::CreateTextFile(modules_dir / m.name() / "zz.exe", "exe");
     EXPECT_TRUE(m.prepareToWork(backup_dir, modules_dir));
     EXPECT_EQ(m.bin(), modules_dir / m.name() / "zz.exe");
     auto expected_location = std::filesystem::path{GetUserDir()} / m.dir();
@@ -385,8 +385,8 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
         ASSERT_TRUE(m.zip().empty());
     }
 
-    tst::ConstructFile(backup_dir / (mc.modules_[0].name() + kExtension.data()),
-                       "zip");
+    tst::CreateTextFile(
+        backup_dir / (mc.modules_[0].name() + kExtension.data()), "zip");
     mc.prepareToWork();
     {
         ASSERT_TRUE(mc.modules_[0].bin().empty());
@@ -396,7 +396,7 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
     }
 
     fs::create_directories(modules_dir / mc.modules_[0].name());
-    tst::ConstructFile(modules_dir / mc.modules_[0].name() / "zz.exe", "exe");
+    tst::CreateTextFile(modules_dir / mc.modules_[0].name() / "zz.exe", "exe");
     mc.prepareToWork();
     {
         ASSERT_FALSE(mc.modules_[0].bin().empty());
@@ -426,7 +426,7 @@ TEST_F(ModuleCommanderTest, LowLevelFs) {
     ASSERT_TRUE(fs::exists(backup_dir));
 
     auto mod_file = user / "to_backup";
-    tst::ConstructFile(mod_file, "11");
+    tst::CreateTextFile(mod_file, "11");
 
     auto backup_file = backup_dir / "to_backup";
     ASSERT_FALSE(fs::exists(backup_file));
@@ -443,7 +443,7 @@ TEST_F(ModuleCommanderTest, LowLevelFs) {
     ModuleCommander::PrepareCleanTargetDir(mod_dir);
     ASSERT_TRUE(fs::exists(mod_dir));
     auto dummy_file = mod_dir / "t.txt";
-    tst::ConstructFile(dummy_file, "aaaaa");
+    tst::CreateTextFile(dummy_file, "aaaaa");
     ASSERT_TRUE(fs::exists(dummy_file));
     ModuleCommander::PrepareCleanTargetDir(mod_dir);
     ASSERT_TRUE(fs::exists(mod_dir));
@@ -474,21 +474,21 @@ TEST_F(ModuleCommanderTest, FindModules) {
     mc.readConfig(node);
     ASSERT_EQ(mc.findModuleFiles(root), 0);
     EXPECT_TRUE(mc.files_.empty());
-    tst::ConstructFile(install / "not_module", "z");
+    tst::CreateTextFile(install / "not_module", "z");
     ASSERT_EQ(mc.findModuleFiles(root), 0);
-    tst::ConstructFile(install / ("null_module_module"s + kExtension.data()),
-                       "");
+    tst::CreateTextFile(install / ("null_module_module"s + kExtension.data()),
+                        "");
     ASSERT_EQ(mc.findModuleFiles(root), 0);
 
     EXPECT_EQ(mc.getExtensions(),
               std::vector<std::string>({".test"s, ".test2"s, "test3.tt"s}));
 
-    tst::ConstructFile(install / ("real_module_module"s + kExtension.data()),
-                       "zip");
+    tst::CreateTextFile(install / ("real_module_module"s + kExtension.data()),
+                        "zip");
     ASSERT_EQ(mc.findModuleFiles(root), 1);
 
-    tst::ConstructFile(install / ("real_module_module2"s + kExtension.data()),
-                       "zip");
+    tst::CreateTextFile(install / ("real_module_module2"s + kExtension.data()),
+                        "zip");
     ASSERT_EQ(mc.findModuleFiles(root), 2);
 
     // check that name are correctly found in modules list
@@ -585,7 +585,7 @@ TEST_F(ModuleCommanderTest, InstallModules) {
     bad_module.name_ = "zzzz";
     bad_module.dir_ = "moduleS\\zzzz";
     ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
-    tst::ConstructFile(root / dirs::kFileInstallDir / "zzzz.zip", "");
+    tst::CreateTextFile(root / dirs::kFileInstallDir / "zzzz.zip", "");
     ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal))
         << "empty file should return false";
 
@@ -593,8 +593,8 @@ TEST_F(ModuleCommanderTest, InstallModules) {
                                        user / dirs::kUserModules))
         << "if file absent returns false";
 
-    tst::ConstructFile(root / dirs::kFileInstallDir / "zzzz.zip",
-                       "OKYYYYSSD");  // not null file should fail
+    tst::CreateTextFile(root / dirs::kFileInstallDir / "zzzz.zip",
+                        "OKYYYYSSD");  // not null file should fail
     ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
 
     ASSERT_TRUE(
@@ -651,7 +651,7 @@ TEST_F(ModuleCommanderTest, InstallModules) {
     ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
 
     // Simulate install of the empty file(as packaged)
-    tst::ConstructFile(root / dirs::kFileInstallDir / tst::zip_to_test, "");
+    tst::CreateTextFile(root / dirs::kFileInstallDir / tst::zip_to_test, "");
     mc.installModules(root, user, InstallMode::normal);
     ASSERT_TRUE(!fs::exists(target_folder));
     ASSERT_TRUE(!fs::exists(backup_file));

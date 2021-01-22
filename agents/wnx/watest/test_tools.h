@@ -25,6 +25,9 @@ namespace tst {
 std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root);
 std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root);
 
+///  from the TestEnvironment
+[[nodiscard]] std::filesystem::path GetTempDir();
+
 class YamlLoader {
 public:
     YamlLoader() {
@@ -40,47 +43,36 @@ public:
     ~YamlLoader() { OnStart(cma::AppType::test); }
 };
 
-inline void ConstructFile(std::filesystem::path Path,
-                          std::string_view Content) {
-    std::ofstream ofs(Path);
-
-    ofs << Content;
-}
-
 void SafeCleanTempDir();
 void SafeCleanTempDir(std::string_view sub_dir);
 
-inline auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
-                          const std::string YamlName) {
-    auto ini_file = Lwa / (YamlName + ".ini");
-    ConstructFile(Lwa / ini_file, Content);
-    return ini_file;
+inline void CreateTextFile(const std::filesystem::path& path,
+                           std::string_view content) {
+    std::ofstream ofs(path);
+
+    ofs << content;
 }
 
-inline std::filesystem::path CreateWorkFile(const std::filesystem::path& Name,
-                                            const std::string& Text) {
-    namespace fs = std::filesystem;
-
-    auto path = Name;
-
-    std::ofstream ofs(path.u8string(), std::ios::binary);
-
-    if (!ofs) {
-        XLOG::l("Can't open file '{}' error {}", path, GetLastError());
-        return {};
-    }
-
-    ofs << Text << "\n";
-    return path;
-}
-
-inline void CreateBinaryFile(const std::filesystem::path& name,
+inline void CreateBinaryFile(const std::filesystem::path& path,
                              std::string_view data) {
-    std::ofstream ofs(name.u8string(), std::ios::binary);
+    std::ofstream ofs(path, std::ios::binary);
+
     ofs.write(data.data(), data.size());
 }
 
-std::filesystem::path GetTempDir();
+inline std::filesystem::path CreateIniFile(
+    const std::filesystem::path& lwa_path, const std::string content,
+    const std::string yaml_name) {
+    auto ini_file = lwa_path / (yaml_name + ".ini");
+    CreateTextFile(lwa_path / ini_file, content);
+    return ini_file;
+}
+
+inline std::filesystem::path CreateWorkFile(const std::filesystem::path& path,
+                                            const std::string& content) {
+    CreateBinaryFile(path, content + "\n");
+    return path;
+}
 
 inline std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
     namespace fs = std::filesystem;

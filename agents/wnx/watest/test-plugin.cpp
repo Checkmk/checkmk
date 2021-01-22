@@ -2484,7 +2484,7 @@ TEST(PluginTest, CheckRules) {
         fs::path root = tst::very_temp;
         std::error_code ec;
         fs::create_directory(root, ec);
-        tst::ConstructFile(root / cma::cfg::files::kDefaultMainConfig,
+        tst::CreateTextFile(root / cma::cfg::files::kDefaultMainConfig,
                            s_user_config);
         cma::tools::win::WithEnv we(std::wstring(kTemporaryRoot),
                                     root.wstring());

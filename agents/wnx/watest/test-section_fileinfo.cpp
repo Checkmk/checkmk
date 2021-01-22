@@ -277,7 +277,7 @@ TEST(FileInfoTest, CheckDriveLetter) {
     std::tuple<fs::path, std::string_view> data[] = {{a / "a1.txt", "a1"},
                                                      {a / "a2.txt", "a2"}};
 
-    for (const auto& [path, content] : data) tst::ConstructFile(path, content);
+    for (const auto& [path, content] : data) tst::CreateTextFile(path, content);
 
     auto cfg = cma::cfg::GetLoadedConfig();
     auto fileinfo_node = cfg[groups::kFileInfo];
@@ -336,7 +336,7 @@ TEST(FileInfoTest, CheckOutput) {
                                                      {b / "b3.txt", "b3"},
                                                      {a / "a2.cmd", "a2"}};
 
-    for (const auto& [path, content] : data) tst::ConstructFile(path, content);
+    for (const auto& [path, content] : data) tst::CreateTextFile(path, content);
 
     auto cfg = cma::cfg::GetLoadedConfig();
     auto fileinfo_node = cfg[groups::kFileInfo];

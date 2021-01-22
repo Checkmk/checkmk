@@ -1742,11 +1742,13 @@ def layout_timeline_choords(time_range):
 
     broken = list(time.localtime(from_time))
     while True:
+        was_dst = bool(broken[8])
         # TODO: this modifies `broken` in place. Stopit.
-        next_choord = find_next_choord(broken, scale)
-        if next_choord >= until_time:
+        next_ordinate = find_next_choord(broken, scale)
+        next_ordinate += _fix_dst_change(was_dst=was_dst, is_dst=bool(broken[8]))
+        if next_ordinate >= until_time:
             break
-        position = (next_choord - from_time) / float(duration)  # ranges from 0.0 to 1.0
+        position = (next_ordinate - from_time) / float(duration)  # ranges from 0.0 to 1.0
         yield position, render(_structify(broken))
 
 
@@ -1793,7 +1795,6 @@ def find_next_choord(broken: List[int], scale):
     # 7: day of year
     # 8: isdst (0 or 1)
     broken[4:6] = [0, 0]  # always set min/sec to 00:00
-    old_dst = broken[8]
 
     if scale == "hours":
         epoch = time.mktime(_structify(broken))
@@ -1834,13 +1835,12 @@ def find_next_choord(broken: List[int], scale):
             broken[0] += 1
         epoch = time.mktime(_structify(broken))
 
-    dst = broken[8]
-    if old_dst == 1 and dst == 0:
-        epoch += 3600
-    elif old_dst == 0 and dst == 1:
-        epoch -= 3600
-
     return epoch
+
+
+# TODO: make this a decorator once the arguments/side effects are cleaned up
+def _fix_dst_change(*, was_dst: bool, is_dst: bool) -> int:
+    return (was_dst - is_dst) * 3600
 
 
 #.

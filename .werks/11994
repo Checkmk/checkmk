@@ -1,0 +1,12 @@
+Title: aruba_cpu_util: UNKNOWN state if cpu utilization is zero
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611308739
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

@@ -298,6 +298,7 @@ class Table:
 
         if self.title:
             if self.options["foldable"]:
+                html.open_div(class_="foldable_wrapper")
                 html.begin_foldable_container(treename="table",
                                               id_=self.id,
                                               isopen=True,
@@ -350,6 +351,7 @@ class Table:
 
         if self.title and self.options["foldable"]:
             html.end_foldable_container()
+            html.close_div()
 
         return
 

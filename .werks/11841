@@ -1,0 +1,16 @@
+Title: Windows agent's Python module supports now Windows Server 2012 and Windows 8
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1611310700
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+Older versions of the Windows may have no support for Visual Studio 2015 runtime, 
+which is mandatory for the Python module.
+
+With this release the Python module of Windows agent is distributed together with 
+the above mentioned runtime thus resolving the problem.

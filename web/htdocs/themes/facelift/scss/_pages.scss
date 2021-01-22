@@ -643,43 +643,29 @@ img.icon.reloading {
 }
 
 /* Table with captions on the left side. Used e.g. for man pages and werks */
-table.data.headerleft {
-  border-spacing: 0;
-
+table.data.headerleft tr {
   th {
-    text-align: left;
+    background-color: inherit; // use odd/even instead of th color
   }
 
-  tbody tr th,
-  tbody tr td {
-    &:nth-child(odd),
-    &:nth-child(even) {
-      padding: 5px 16px;
-      vertical-align: top;
-      background: $bg-color-secondary;
-      border-top: 1px solid $color-table-border;
-      border-bottom: $table-headerleft-border-bottom;
-      border-left: 1px solid $color-table-border;
-      border-radius: 0;
-    }
+  th,
+  td {
+    padding: 5px $spacing;
+    vertical-align: top;
   }
 
-  tbody tr th {
-    text-transform: none;
-    border-right: none;
+  td.nowiki p {
+    margin: 0;
+  }
+}
+
+table.data.headerleft > tbody {
+  & > tr:nth-child(even) {
+    background-color: $even-tr-bg-color;
   }
 
-  tbody tr td {
-    border-right: 1px solid $color-table-border;
-
-    &.nowiki p {
-      margin: 0;
-    }
-  }
-
-  tbody tr:last-of-type td,
-  tbody tr:last-of-type th {
-    border-bottom: 1px solid $color-table-border;
+  & > tr:nth-child(odd) {
+    background-color: $odd-tr-bg-color;
   }
 }
 

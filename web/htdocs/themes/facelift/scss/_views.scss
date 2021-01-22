@@ -1082,12 +1082,9 @@ table.data tr.data td.if_state {
 
 /* #TODO: Reproduce all .sla elements */
 table.data.headerleft.sla {
-  margin-bottom: 20px;
-
   th {
     width: 130px;
     padding: 4px 5px;
-    text-align: left;
 
     &.sla_state {
       width: 30px;
@@ -1220,15 +1217,12 @@ table.data.headerleft.sla {
           padding-left: 0;
           margin: 0;
           vertical-align: baseline;
-          border: none;
-          box-shadow: none;
 
           &.title {
             display: table-cell;
             width: 280px;
             font-weight: $font-weight-bold;
             color: $font-color;
-            background: transparent;
           }
 
           table {
@@ -1298,7 +1292,6 @@ table.data tr.ac_test_details td {
   }
 }
 
-td.sla_spec table td,
 td.agent_config table.rulesets table td,
 td.agent_config table.rulesets table td.title,
 table.data tr.ac_test_details table td,
@@ -1320,7 +1313,6 @@ table.data tr.notification_context table th {
   text-align: left;
 }
 
-td.sla_spec table td,
 td.agent_config table.rulesets table td,
 table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
@@ -1328,7 +1320,6 @@ td.rule_conditions table td {
   background-color: $bg-color;
 }
 
-td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th,
 td.rule_conditions table td.title {

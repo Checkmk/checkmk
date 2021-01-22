@@ -1743,9 +1743,9 @@ def layout_timeline_choords(time_range):
     broken = list(time.localtime(from_time))
     while True:
         was_dst = bool(broken[8])
-        # TODO: this modifies `broken` in place. Stopit.
-        next_ordinate = find_next_choord(broken, scale)
-        next_ordinate += _fix_dst_change(was_dst=was_dst, is_dst=bool(broken[8]))
+        broken = find_next_choord(broken, scale)
+        next_ordinate = time.mktime(_structify(broken)) + _fix_dst_change(was_dst=was_dst,
+                                                                          is_dst=bool(broken[8]))
         if next_ordinate >= until_time:
             break
         position = (next_ordinate - from_time) / float(duration)  # ranges from 0.0 to 1.0
@@ -1799,43 +1799,41 @@ def find_next_choord(broken: List[int], scale):
     if scale == "hours":
         epoch = time.mktime(_structify(broken))
         epoch += 3600
-        broken[:] = list(time.localtime(epoch))
+        return list(time.localtime(epoch))
 
-    elif scale == "2hours":
+    if scale == "2hours":
         broken[3] = int(broken[3] / 2) * 2
         epoch = time.mktime(_structify(broken))
         epoch += 2 * 3600
-        broken[:] = list(time.localtime(epoch))
+        return list(time.localtime(epoch))
 
-    elif scale == "6hours":
+    if scale == "6hours":
         broken[3] = int(broken[3] / 6) * 6
         epoch = time.mktime(_structify(broken))
         epoch += 6 * 3600
-        broken[:] = list(time.localtime(epoch))
+        return list(time.localtime(epoch))
 
-    elif scale == "days":
+    if scale == "days":
         broken[3] = 0
         epoch = time.mktime(_structify(broken))
         epoch += 24 * 3600
-        broken[:] = list(time.localtime(epoch))
+        return list(time.localtime(epoch))
 
-    elif scale == "weeks":
+    if scale == "weeks":
         broken[3] = 0
         at_00 = int(time.mktime(_structify(broken)))
         at_monday = at_00 - 86400 * broken[6]
         epoch = at_monday + 7 * 86400
-        broken[:] = list(time.localtime(epoch))
+        return list(time.localtime(epoch))
 
-    else:  # scale == "months":
-        broken[3] = 0
-        broken[2] = 0
-        broken[1] += 1
-        if broken[1] > 12:
-            broken[1] = 1
-            broken[0] += 1
-        epoch = time.mktime(_structify(broken))
-
-    return epoch
+    # scale == "months":
+    broken[3] = 0
+    broken[2] = 0
+    broken[1] += 1
+    if broken[1] > 12:
+        broken[1] = 1
+        broken[0] += 1
+    return broken
 
 
 # TODO: make this a decorator once the arguments/side effects are cleaned up

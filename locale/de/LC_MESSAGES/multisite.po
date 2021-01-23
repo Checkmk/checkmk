@@ -9718,6 +9718,10 @@ msgstr "Spalten"
 msgid "Com. buf. max/total"
 msgstr "Bef. buf. max/gesamt"
 
+#, fuzzy
+msgid "Combined Graph"
+msgstr "Kombigraph"
+
 msgid "Combined graph"
 msgstr "Kombigraph"
 
@@ -14459,6 +14463,10 @@ msgstr "Zeigt den Performancegraph eines Hosts oder Services"
 #, fuzzy
 msgid "Displays a bar chart for host and service notifications."
 msgstr "Anfang des E-Mail-Texts für Host-/Servicealarme"
+
+#, fuzzy
+msgid "Displays a combined graph"
+msgstr "Bei Kombigraphen nutzen"
 
 msgid "Displays a custom graph designed with the graph designer."
 msgstr ""

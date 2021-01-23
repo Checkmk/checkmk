@@ -9107,6 +9107,10 @@ msgstr ""
 msgid "Com. buf. max/total"
 msgstr ""
 
+#, fuzzy
+msgid "Combined Graph"
+msgstr "Atribute personalizate"
+
 msgid "Combined graph"
 msgstr ""
 
@@ -13700,6 +13704,9 @@ msgstr "<b>setează manual rezultatele verificării la %s</b> pentru"
 #, fuzzy
 msgid "Displays a bar chart for host and service notifications."
 msgstr "trimite notificare"
+
+msgid "Displays a combined graph"
+msgstr ""
 
 msgid "Displays a custom graph designed with the graph designer."
 msgstr ""

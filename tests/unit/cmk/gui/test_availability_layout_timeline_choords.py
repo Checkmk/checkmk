@@ -103,10 +103,9 @@ def test_layout_timeline_choords_months_scale():
     time_range = (TEST_REFERENCE_TIME - 128.234 * DAYS, TEST_REFERENCE_TIME + 32 * DAYS)
 
     assert list(layout_timeline_choords(time_range)) == [
-        (0.05086727327948887, 'December 2019'),
-        (0.2443343277123821, 'January 2020'),
-        (0.4378013821452753, 'February 2020'),
-        (0.6187866911308851, 'March 2020'),
-        (0.8122537455637784, 'April 2020'),
-        (0.9994799272730298, 'May 2020'),
+        (0.057108146003130585, 'December 2019'),
+        (0.2505752004360238, 'January 2020'),
+        (0.444042254868917, 'February 2020'),
+        (0.6250275638545268, 'March 2020'),
+        (0.8184946182874201, 'April 2020'),
     ]

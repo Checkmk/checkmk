@@ -189,15 +189,18 @@ section_labels() {
 }
 
 section_mem() {
-    if [ -z "$IS_DOCKERIZED" ]; then
-        echo '<<<mem>>>'
-        grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
-    else
+    if [ -n "$IS_DOCKERIZED" ]; then
         echo '<<<docker_container_mem>>>'
         cat /sys/fs/cgroup/memory/memory.stat
         echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
         echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
         grep -F 'MemTotal:' /proc/meminfo
+    elif [ -n "$IS_LXC_CONTAINER" ]; then
+        echo '<<<mem>>>'
+        grep -E -v '^Swap:|^Mem:|total:|^Vmalloc|^Committed' </proc/meminfo
+    else
+        echo '<<<mem>>>'
+        grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
     fi
 }
 

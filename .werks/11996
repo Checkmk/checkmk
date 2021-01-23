@@ -1,0 +1,12 @@
+Title: mem: remove pointless metrics for LXC containers
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611432442
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+The metrics "Committed" and "Largest VM Alloc" are useless for LXC containers, so
+they are filtered out in the agent.

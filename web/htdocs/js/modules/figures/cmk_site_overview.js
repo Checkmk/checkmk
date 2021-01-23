@@ -9,61 +9,144 @@ class SiteOverview extends cmk_figures.FigureBase {
 
     constructor(div_selector, fixed_size = null) {
         super(div_selector, fixed_size);
-        this.margin = {top: 0, right: 0, bottom: 0, left: 0};
+        this.margin = {top: 50, right: 50, bottom: 50, left: 50};
+
+        // Debugging/demo stuff
+        this._test_filter = false;
+        this._use_canvas_for_hosts = true;
     }
 
     initialize(debug) {
         cmk_figures.FigureBase.prototype.initialize.call(this, debug);
-        this.svg = this._div_selection.append("svg");
+
+        if (this._test_filter) this.add_filter();
+
+        // Canvas, used as background for plot area
+        // Does not process any pointer events
+        this.canvas = this._div_selection
+            .selectAll("canvas")
+            .data([null])
+            .join("canvas")
+            .style("pointer-events", "none")
+            .style("position", "absolute")
+            .style("top", this.margin.top + "px")
+            .style("left", this.margin.left + "px")
+            .style("bottom", this.margin.bottom + "px")
+            .style("right", this.margin.right + "px");
+
+        // Quadtree is used in canvas mode to find elements within given position
+        this._quadtree = d3
+            .quadtree()
+            .x(d => d.x)
+            .y(d => d.y);
+
+        this.svg = this._div_selection
+            .append("svg")
+            .style("position", "absolute")
+            .style("top", "0px")
+            .style("left", "0px")
+            .on("mousemove", () => this._update_quadtree_svg());
+
+        let left = this.margin.left;
+        let top = this.margin.top;
+        this.plot = this.svg
+            .append("g")
+            .attr("transform", `translate(${left}, ${top})`)
+            .append("svg")
+            .classed("viewbox", true)
+            .append("g")
+            .classed("plot", true);
+
+        //this._zoomable_modes = ["hosts", "sites"];
+        this._zoomable_modes = ["hosts"];
+        this._last_zoom = d3.zoomIdentity;
 
         this._tooltip = this._div_selection.append("div").classed("tooltip", true);
         this.tooltip_generator = new cmk_figures.FigureTooltip(this._tooltip);
     }
 
+    add_filter() {
+        // Simple text filter using the title dimension
+        let hostname_filter = this._crossfilter.dimension(d => d.title);
+        this._div_selection
+            .append("input")
+            .attr("type", "text")
+            .classed("msg_filter", true)
+            .on("input", () => {
+                let target = d3.select(d3.event.target);
+                let filter = target.property("value");
+                hostname_filter.filter(d => {
+                    return d.toLowerCase().includes(filter.toLowerCase());
+                });
+                this._hexagon_content = this._compute_hosts();
+                this._render_hexagon_content(this._hexagon_content);
+            });
+    }
+
     update_data(data) {
-        // Data format (based on cmk_figures general data format)
-        // {"data" :
-        //   [
-        //    {
-        //      "name": "munich",
-        //      "values"
-        //      "count_warning": 22,
-        //      "count_critical": 22,
-        //      "count_in_downtime": 22,
-        //    }
-        //   ],
-        //  "plot_definitions" : [
-        //    {
-        //    }
-        //   ]
-        // }
         cmk_figures.FigureBase.prototype.update_data.call(this, data);
         this._crossfilter.remove(() => true);
-        for (let i = 0; i < 4; i++) {
-            this._crossfilter.add(this._data.data);
+
+        if (this._data.render_mode == "hosts") {
+            for (let i = 0; i < 200; i++) {
+                // Create new data instead of references
+                let demo_host = JSON.parse(JSON.stringify(this._data.data[0]));
+                demo_host.tooltip = "Demo host" + i;
+                demo_host.title += i;
+                this._crossfilter.add([demo_host]);
+            }
         }
+        this._crossfilter.add(this._data.data);
     }
 
     resize() {
         cmk_figures.FigureBase.prototype.resize.call(this);
-        this.svg.attr("width", this.figure_size.width);
-        this.svg.attr("height", this.figure_size.height);
+        this.svg.attr("width", this.figure_size.width).attr("height", this.figure_size.height);
+        this.plot.attr("width", this.plot_size.width).attr("height", this.plot_size.height);
+
         this.tooltip_generator.update_sizes(this.figure_size, this.plot_size);
+        this.svg
+            .select("svg.viewbox")
+            .attr("width", this.plot_size.width)
+            .attr("height", this.plot_size.height);
+
+        this.svg.call(
+            d3
+                .zoom()
+                .extent([
+                    [0, 0],
+                    [this.plot_size.width, this.plot_size.height],
+                ])
+                .scaleExtent([1, 14])
+                .translateExtent([
+                    [0, 0],
+                    [this.plot_size.width, this.plot_size.height],
+                ])
+                .on("zoom", () => {
+                    let zoom_enabled = this._zoomable_modes.indexOf(this._data.render_mode) != -1;
+                    this._last_zoom = zoom_enabled ? d3.event.transform : d3.zoomIdentity;
+                    this.plot.attr("transform", this._last_zoom);
+                    if (this._use_canvas_for_hosts)
+                        this._render_hexagon_content(this._hexagon_content);
+                    this.tooltip_generator.update_position();
+                })
+        );
     }
 
     update_gui() {
         this.resize();
 
-        let element_boxes = this.svg
-            .selectAll("g.element_box")
-            .data(this._crossfilter.all())
-            .join(enter => enter.append("g").classed("element_box", true));
-
+        // Compute data: Geometry and element positions -> _hexagon_content
+        this._hexagon_content = null;
         if (this._data.render_mode == "hosts") {
-            this.render_hosts(element_boxes);
+            this._hexagon_content = this._compute_hosts();
         } else if (this._data.render_mode == "sites") {
-            this.render_sites(element_boxes);
+            this._hexagon_content = this._compute_sites();
         }
+
+        // Render data
+        if (this._hexagon_content === null) this.plot.selectAll("*").remove();
+        else this._render_hexagon_content(this._hexagon_content);
 
         this.render_title(this._data.title);
     }
@@ -102,6 +185,10 @@ class SiteOverview extends cmk_figures.FigureBase {
     _compute_box_area(plot_size) {
         // TODO: The dashlet can be configured to NOT show a title. In this case the render()
         // method must not apply the header top margin (24px, see FigureBase.render_title)
+
+        // TODO:
+        // Die Hexagons werden jetzt innerhalb des Plots gerendert, dieser ist mit translate schon verschoben
+        // Die header_height sollte hier also ueberhaupt nicht verwendet werden
         let header_height = 24;
 
         // Spacing between dashlet border and box area
@@ -118,100 +205,184 @@ class SiteOverview extends cmk_figures.FigureBase {
         };
     }
 
-    render_hosts(element_boxes) {
-        let elements = this._crossfilter.all();
+    _compute_hosts() {
+        let data = this._crossfilter.allFiltered();
         let geometry = this._compute_host_geometry(
-            elements.length,
+            data.length,
             this._compute_box_area(this.plot_size)
         );
-        console.log(geometry);
 
-        this._render_host_hexagons(element_boxes, geometry);
+        return {
+            geometry: geometry,
+            elements: this._compute_host_elements(geometry, data),
+        };
+    }
 
-        // Place element_boxes
-        element_boxes.transition().attr("transform", (d, idx) => {
+    _render_hexagon_content(hexagon_content) {
+        if (this._data.render_mode == "hosts") {
+            if (this._use_canvas_for_hosts) this._render_host_hexagons_as_canvas(hexagon_content);
+            else this._render_host_hexagons_as_svg(hexagon_content);
+        } else {
+            this._render_sites(hexagon_content);
+        }
+    }
+
+    _compute_host_elements(geometry, elements) {
+        const hexbin = d3.hexbin();
+        let outer_hexagon_path = hexbin.hexagon(geometry.radius);
+        elements.forEach((d, idx) => {
+            // Compute coordinates
             let x = ((idx % geometry.num_columns) + 0.5) * geometry.box_width;
 
             // shift to right (Every second line to the right)
             if (Math.floor(idx / geometry.num_columns) % 2 == 1) {
                 x += geometry.box_width / 2;
             }
-
             let y = Math.trunc(idx / geometry.num_columns) * geometry.box_height;
             y += geometry.hexagon_height / 2;
+            d.x = x + geometry.box_area.left;
+            d.y = y + geometry.box_area.top;
 
-            return (
-                "translate(" +
-                (x + geometry.box_area.left) +
-                "," +
-                (y + geometry.box_area.top) +
-                ")"
-            );
-        });
-    }
+            // Compute required hexagons
+            let tooltip = d.tooltip;
+            d.hexagon_config = [
+                {
+                    id: "outer_hexagon",
+                    path: outer_hexagon_path,
+                    color: d.has_host_problem ? d.host_color : d.service_color,
+                    tooltip: tooltip,
+                },
+            ];
 
-    _render_host_hexagons(element_boxes, geometry) {
-        let tooltip_generator = this.tooltip_generator;
-
-        let handle_click = function (element) {
-            location.href = element.link;
-        };
-
-        let hexagon_boxes = element_boxes
-            .selectAll("g")
-            .data(elements => [elements])
-            .join("g")
-            .style("cursor", "pointer")
-            .on("click", handle_click);
-
-        hexagon_boxes.each(function (element) {
-            let hexagon_box = d3.select(this);
-
-            let hexagon = hexagon_box
-                .selectAll("path.hexagon_0")
-                .data([element])
-                .join(enter => enter.append("path").classed("hexagon_0", true))
-                .attr("d", d3.hexbin().hexagon(geometry.radius));
-
-            let color;
-            let paint_core = !element.has_host_problem;
-            if (element.has_host_problem) {
-                color = element.host_color;
-            } else {
-                color = element.service_color;
-            }
-
-            hexagon.attr("fill", color);
-
-            if (paint_core) {
+            if (!d.has_host_problem) {
                 // Center is reserved for displaying the host state
                 let mid_radius = 0.7;
-                let badness = element.num_problems / element.num_services;
+                let badness = d.num_problems / d.num_services;
+                badness = 0;
                 let goodness = 1.0 - badness;
                 let radius_factor = Math.pow((1.0 - mid_radius) * goodness + mid_radius, 2);
-                let core_radius = geometry.radius * radius_factor;
-
-                let hexagon = hexagon_box
-                    .selectAll("path.hexagon_core")
-                    .data([element])
-                    .join(enter => enter.append("path").classed("hexagon_core", true))
-                    .attr("d", d3.hexbin().hexagon(core_radius))
-                    .attr("fill", "#1f3334");
-
-                if (core_radius == geometry.radius) hexagon.attr("stroke", "#13d389");
+                radius_factor *= Math.random();
+                d.hexagon_config.push({
+                    id: "inner_hexagon",
+                    path: hexbin.hexagon(geometry.radius * radius_factor),
+                    color: "#1f3334",
+                    tooltip: tooltip,
+                });
             }
+        });
+        return elements;
+    }
 
-            tooltip_generator.add_support(hexagon_box.node());
+    _render_host_hexagons_as_svg(hexagon_content, transition_duration = 250) {
+        let elements = hexagon_content.elements;
+        // Prepare Box
+        let hexagon_boxes = this.plot.selectAll("g.element_box").data(elements, d => {
+            return d.title;
+        });
+
+        hexagon_boxes = hexagon_boxes.join(enter =>
+            enter
+                .append("g")
+                .classed("element_box", true)
+                .style("cursor", "pointer")
+                .on("click", d => {
+                    location.href = d.link;
+                })
+                .each((d, idx, nodes) => {
+                    console.log("create");
+                    this.tooltip_generator.add_support(nodes[idx]);
+                })
+        );
+
+        // render all hexagons
+        hexagon_boxes
+            .selectAll("path.hexagon")
+            .data(
+                d => d.hexagon_config,
+                d => d.id
+            )
+            .join(enter => enter.append("path").classed("hexagon", true))
+            .attr("d", d => d.path)
+            .attr("fill", d => d.color);
+
+        // move boxes
+        hexagon_boxes
+            .transition()
+            .duration(transition_duration)
+            .attr("transform", d => {
+                return `translate(${d.x}, ${d.y})`;
+            });
+    }
+
+    _render_host_hexagons_as_canvas(hexagon_content) {
+        let elements = hexagon_content.elements;
+
+        this.canvas.attr("width", this.plot_size.width).attr("height", this.plot_size.height);
+
+        let ctx = this.canvas.node().getContext("2d");
+        ctx.scale(this._last_zoom.k, this._last_zoom.k);
+
+        // Quadtree: Used for coordinate lookup
+        this._quadtree = d3
+            .quadtree()
+            .x(d => d.x)
+            .y(d => d.y);
+        this._quadtree.addAll(elements);
+
+        elements.forEach(element => {
+            ctx.save();
+            let trans_x = element.x + this._last_zoom.x / this._last_zoom.k;
+            let trans_y = element.y + this._last_zoom.y / this._last_zoom.k;
+            if (trans_x < -40 || trans_x > this.plot_size.width + 40) return;
+            if (trans_y < -40 || trans_y > this.plot_size.height + 40) return;
+
+            ctx.translate(trans_x, trans_y);
+            element.hexagon_config.forEach(hexagon => {
+                ctx.fillStyle = hexagon.color;
+                let p = new Path2D(hexagon.path);
+                ctx.fill(p);
+            });
+            ctx.restore();
         });
     }
 
-    render_sites(element_boxes) {
+    _update_quadtree_svg() {
+        if (this._quadtree.size() == 0) return;
+        let x = d3.event.layerX - this.margin.left;
+        let y = d3.event.layerY - this.margin.top;
+        let host = this._quadtree.find(
+            (x - this._last_zoom.x) / this._last_zoom.k,
+            (y - this._last_zoom.y) / this._last_zoom.k,
+            this._hexagon_content.geometry.radius
+        );
+
+        let reduced_content = {geometry: this._hexagon_content.geometry};
+        reduced_content.elements = host ? [host] : [];
+        this._render_host_hexagons_as_svg(reduced_content, 0);
+        this.plot.selectAll("path.hexagon").attr("stroke", "yellow").attr("stroke-width", 3);
+    }
+
+    _compute_sites() {
         let geometry = this._compute_site_geometry();
+        return {
+            geometry: geometry,
+            elements: [], // Elements coordinates are currently computed within the render function
+        };
+    }
+
+    _render_sites(hexagon_content) {
+        let geometry = hexagon_content.geometry;
+
+        let element_boxes = this.plot
+            .selectAll("g.element_box")
+            .data(this._crossfilter.all())
+            .join(enter => enter.append("g").classed("element_box", true));
+
         this._render_site_hexagons(element_boxes, geometry);
 
-        // Place element_boxes
         element_boxes.transition().attr("transform", (d, idx) => {
             let x = (idx % geometry.num_columns) * geometry.box_width;
+            // Place element_boxes
             let y = Math.trunc(idx / geometry.num_columns) * geometry.box_height;
             return (
                 "translate(" +
@@ -224,8 +395,6 @@ class SiteOverview extends cmk_figures.FigureBase {
     }
 
     _render_site_hexagons(element_boxes, geometry) {
-        let tooltip_generator = this.tooltip_generator;
-
         let handle_click = function (element) {
             if (element.type == "host_element") {
                 location.href = element.link;
@@ -256,8 +425,8 @@ class SiteOverview extends cmk_figures.FigureBase {
         }
 
         // Now render all hexagons
-        hexagon_boxes.each(function (element) {
-            let hexagon_box = d3.select(this);
+        hexagon_boxes.each((element, idx, nodes) => {
+            let hexagon_box = d3.select(nodes[idx]);
 
             if (element.type == "icon_element") {
                 // Special handling for IconElement (displaying down / disabled sites)
@@ -312,7 +481,7 @@ class SiteOverview extends cmk_figures.FigureBase {
                     if (i == 0) hexagon.attr("stroke", "#13d389");
                 }
             }
-            tooltip_generator.add_support(hexagon_box.node());
+            this.tooltip_generator.add_support(hexagon_box.node());
         });
 
         // Text centered below the hexagon
@@ -334,53 +503,11 @@ class SiteOverview extends cmk_figures.FigureBase {
                     text_len = label.node().getComputedTextLength();
                 }
 
+                // TODO: warum reposition? der text hat doch einen text-anchor middle
+                //       habs erstmal auskommentiert
                 // reposition after truncating
-                label.attr("x", geometry.label_center_left - label.node().getBBox().width / 2);
+                //                label.attr("x", geometry.label_center_left - label.node().getBBox().width / 2);
             });
-    }
-
-    _render_inner_hexagons(selection, outer_radius) {
-        // Nur als Beispiel, kann wieder raus
-
-        let data = this._crossfilter.all();
-        // Daten vorbereiten
-        data.forEach(entry => {
-            // Hier werden jeweils 4 innen Hexagons angelegt
-            let inner_config = [];
-            inner_config.push({
-                name: "crit",
-                radius: outer_radius * 0.7,
-                color: "red",
-            });
-            inner_config.push({
-                name: "warn",
-                radius: outer_radius * 0.4,
-                color: "yellow",
-            });
-            inner_config.push({
-                name: "downtime",
-                radius: outer_radius * 0.2,
-                color: "blue",
-            });
-            inner_config.push({
-                name: "ok",
-                radius: outer_radius * 0.1,
-                color: "green",
-            });
-            entry.inner_config = inner_config;
-        });
-
-        // Daten rendern
-        selection
-            .selectAll("path.inner")
-            .data(
-                d => d.inner_config,
-                d => d.name
-            )
-            .join("path")
-            .classed("inner", true)
-            .attr("d", d => d3.hexbin().hexagon(d.radius))
-            .attr("fill", d => d.color);
     }
 
     _compute_site_geometry() {
@@ -400,7 +527,7 @@ class SiteOverview extends cmk_figures.FigureBase {
         // Calculating the distance from center to top of hexagon
         let hexagon_max_radius = max_box_width / 2;
 
-        let num_elements = this._data.data.length;
+        let num_elements = this._crossfilter.allFiltered().length;
 
         if (box_area.width < 20 || box_area.height < 20) {
             return; // Does not make sense to continue

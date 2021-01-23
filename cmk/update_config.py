@@ -18,6 +18,7 @@ import argparse
 import logging
 import copy
 import subprocess
+import time
 import ast
 import gzip
 
@@ -375,6 +376,8 @@ class UpdateConfig:
                     inventory_plugin_names=all_inventory_plugin_names,
                 ))
             sections_to_disable = all_snmp_section_names - still_needed_sections_names
+            if not sections_to_disable:
+                continue
 
             new_rule = cmk.gui.watolib.rulesets.Rule(rule.folder, snmp_exclude_sections_ruleset)
             new_rule.from_config(rule.to_config())
@@ -383,6 +386,10 @@ class UpdateConfig:
                 'sections_disabled': sorted(str(s) for s in sections_to_disable),
                 'sections_enabled': [],
             }
+            new_rule.rule_options["comment"] = (
+                '%s - Checkmk: automatically converted during upgrade from rule '
+                '"Disabled checks". Please review if these rules can be deleted.') % time.strftime(
+                    "%Y-%m-%d %H:%M", time.localtime())
             snmp_exclude_sections_ruleset.append_rule(folder, new_rule)
 
         all_rulesets.set(snmp_exclude_sections_ruleset.name, snmp_exclude_sections_ruleset)

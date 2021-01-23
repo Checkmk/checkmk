@@ -544,6 +544,8 @@ export class FigureTooltip {
     }
 
     update_position() {
+        if (!this.active()) return;
+
         let ev = "sourceEvent" in d3.event ? d3.event.sourceEvent : d3.event;
         let tooltip_size = {
             width: this._tooltip.node().offsetWidth,
@@ -579,6 +581,10 @@ export class FigureTooltip {
             .on("mouseover", () => this._mouseover())
             .on("mouseleave", () => this._mouseleave())
             .on("mousemove", () => this._mousemove());
+    }
+
+    active() {
+        return this._tooltip.style("opacity") == 1;
     }
 
     _mouseover() {

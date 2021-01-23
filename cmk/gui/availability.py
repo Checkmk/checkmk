@@ -6,6 +6,7 @@
 
 import time
 import os
+import functools
 
 from typing import Callable, Set, Dict, Any, Union, List, NamedTuple, Tuple as _Tuple, Optional as _Optional
 from six import ensure_str
@@ -1721,13 +1722,10 @@ def layout_timeline_choords(time_range):
 
     ordinate = time.localtime(from_time)
     while True:
-        was_dst = bool(ordinate.tm_isdst)
         ordinate = increment(ordinate)
-        next_timestamp = time.mktime(ordinate) + _fix_dst_change(was_dst=was_dst,
-                                                                 is_dst=bool(ordinate.tm_isdst))
-        if next_timestamp >= until_time:
-            break
-        position = (next_timestamp - from_time) / float(duration)  # ranges from 0.0 to 1.0
+        position = (time.mktime(ordinate) - from_time) / float(duration)  # ranges from 0.0 to 1.0
+        if position >= 1.0:
+            return
         yield position, render(ordinate)
 
 
@@ -1785,33 +1783,49 @@ def _make_struct(year: int, month: int, day: int, hour: int, *, offset: int) -> 
     return time.localtime(time.mktime((year, month, day, hour, 0, 0, 0, 0, 0)) + offset)
 
 
+def _fix_dst_change(
+    incrementor: Callable[[time.struct_time], time.struct_time],
+) -> Callable[[time.struct_time], time.struct_time]:
+    """Fix up one hour offset in case the incrementor crosses the DST switch"""
+    @functools.wraps(incrementor)
+    def wrapped(intime: time.struct_time) -> time.struct_time:
+        outtime = incrementor(intime)
+        if intime.tm_isdst == outtime.tm_isdst:
+            return outtime
+        shift = (intime.tm_isdst - outtime.tm_isdst) * 3600
+        return time.localtime(time.mktime(outtime) + shift)
+
+    return wrapped
+
+
+@_fix_dst_change
 def _increment_hour(tst: time.struct_time) -> time.struct_time:
     return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, tst.tm_hour, offset=3600)
 
 
+@_fix_dst_change
 def _increment_2hours(tst: time.struct_time) -> time.struct_time:
     return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, tst.tm_hour // 2 * 2, offset=7200)
 
 
+@_fix_dst_change
 def _increment_6hours(tst: time.struct_time) -> time.struct_time:
     return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, tst.tm_hour // 6 * 6, offset=6 * 3600)
 
 
+@_fix_dst_change
 def _increment_day(tst: time.struct_time) -> time.struct_time:
     return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, 0, offset=24 * 3600)
 
 
+@_fix_dst_change
 def _increment_week(tst: time.struct_time) -> time.struct_time:
     return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, 0, offset=86400 * (7 - tst.tm_wday))
 
 
+@_fix_dst_change
 def _increment_month(tst: time.struct_time) -> time.struct_time:
     return _make_struct(tst.tm_year + (tst.tm_mon == 12), (tst.tm_mon % 12) + 1, 1, 0, offset=0)
-
-
-# TODO: make this a decorator once the arguments/side effects are cleaned up
-def _fix_dst_change(*, was_dst: bool, is_dst: bool) -> int:
-    return (was_dst - is_dst) * 3600
 
 
 #.

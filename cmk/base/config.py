@@ -1142,6 +1142,33 @@ def _checktype_ignored_for_host(
     return False
 
 
+def resolve_service_dependencies(
+    *,
+    host_name: HostName,
+    services: Sequence[cmk.base.check_utils.Service],
+) -> Sequence[cmk.base.check_utils.Service]:
+    if is_cmc():
+        return services
+
+    unresolved = [(s, set(service_depends_on(host_name, s.description))) for s in services]
+
+    resolved: List[cmk.base.check_utils.Service] = []
+    while unresolved:
+        resolved_descriptions = {service.description for service in resolved}
+        newly_resolved = [
+            service for service, dependencies in unresolved if dependencies <= resolved_descriptions
+        ]
+        if not newly_resolved:
+            problems = ', '.join(
+                f"{s.description!r} ({s.check_plugin_name} / {s.item})" for s, _ in unresolved)
+            raise MKGeneralException(f"Cyclic service dependency of host {host_name}: {problems}")
+
+        unresolved = [(s, d) for s, d in unresolved if s not in newly_resolved]
+        resolved.extend(newly_resolved)
+
+    return resolved
+
+
 # TODO: Make this use the generic "rulesets" functions
 # a) This function has never been configurable via WATO (see https://mathias-kettner.de/checkmk_service_dependencies.html)
 # b) It only affects the Nagios core - CMC does not implement service dependencies

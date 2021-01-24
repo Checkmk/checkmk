@@ -388,8 +388,13 @@ def _get_services_to_fetch(
     clusters the nodes have to fetch the information for the checking phase of the clustered
     services.
     """
-    services = check_table.get_sorted_service_list(
+    host_check_table = check_table.get_check_table(
         host_name, filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED)
+
+    services = config.resolve_service_dependencies(
+        host_name=host_name,
+        services=sorted(host_check_table.values(), key=lambda s: s.description),
+    )
 
     return [
         service for service in services

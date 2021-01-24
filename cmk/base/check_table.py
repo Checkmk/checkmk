@@ -10,8 +10,7 @@ from contextlib import suppress
 import enum
 
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -25,7 +24,6 @@ class FilterMode(enum.Enum):
     INCLUDE_CLUSTERED = enum.auto()
 
 
-# TODO: Make this a helper object of HostConfig?
 class HostCheckTable(Mapping[ServiceID, Service]):
     def __init__(
         self,
@@ -223,46 +221,9 @@ def get_check_table(
         skip_autochecks=skip_autochecks,
         skip_ignored=skip_ignored,
         filter_mode=filter_mode,
-    ),)
+    ))
 
     if cache_key:
         config_cache.check_table_cache[cache_key] = host_check_table
 
     return host_check_table
-
-
-def get_sorted_service_list(
-    hostname: HostName,
-    *,
-    filter_mode: FilterMode = FilterMode.NONE,
-    skip_ignored: bool = True,
-) -> List[Service]:
-
-    sorted_services_unresolved = sorted(
-        get_check_table(hostname, filter_mode=filter_mode, skip_ignored=skip_ignored).values(),
-        key=lambda service: service.description,
-    )
-
-    if config.is_cmc():
-        return sorted_services_unresolved
-
-    unresolved = [(service, set(config.service_depends_on(hostname, service.description)))
-                  for service in sorted_services_unresolved]
-
-    resolved: List[Service] = []
-    while unresolved:
-        resolved_descriptions = {service.description for service in resolved}
-        newly_resolved = [
-            service for service, dependencies in unresolved if dependencies <= resolved_descriptions
-        ]
-        if not newly_resolved:
-            problems = [
-                "%r (%s / %s)" % (s.description, s.check_plugin_name, s.item) for s, _ in unresolved
-            ]
-            raise MKGeneralException("Cyclic service dependency of host %s. Problematic are: %s" %
-                                     (hostname, ", ".join(problems)))
-
-        unresolved = [(s, d) for s, d in unresolved if s not in newly_resolved]
-        resolved.extend(newly_resolved)
-
-    return resolved

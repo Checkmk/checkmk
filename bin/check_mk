@@ -45,11 +45,12 @@ logger = logging.getLogger("cmk.base")
 
 cmk.base.utils.register_sigint_handler()
 
+help_function = modes.get("help").handler_function
+
 try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
 except getopt.GetoptError as err:
     console.error("ERROR: %s\n\n" % err)
-    help_function = modes.get("help").handler_function
     if help_function is None:
         raise TypeError()
     help_function()
@@ -65,6 +66,12 @@ try:
         if modes.exists(o):
             mode_name, mode_args = o, a
             break
+
+    if mode_name is None and mode_args is None:
+        if help_function is None:
+            raise TypeError()
+        help_function()
+        sys.exit(0)
 
     # At least in case the config is needed, the checks are needed too, because
     # the configuration may refer to check config variable names.

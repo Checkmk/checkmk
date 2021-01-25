@@ -54,6 +54,7 @@ def test_dashlet_registry_plugins():
         'single_metric',
         'snapin',
         'site_overview',
+        'alert_statistics',
     ]
 
     if not cmk_version.is_raw_edition():

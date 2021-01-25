@@ -38,7 +38,7 @@ class ABCElement:
 
 
 @dataclass
-class Element(ABCElement):
+class SiteElement(ABCElement):
     """Renders a regularly available site"""
     url_add_vars: Dict[str, str]
     total: Part
@@ -246,7 +246,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             total_part = Part(title=_("Total number of hosts"), color=None, count=total)
 
             elements.append(
-                Element(
+                SiteElement(
                     title=site_spec["alias"],
                     url_add_vars={
                         "site": site_id,
@@ -380,7 +380,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             total_part = Part(title="Total", color=None, count=total)
 
             elements.append(
-                Element(
+                SiteElement(
                     title=site_name,
                     url_add_vars={
                         "site": site_id,

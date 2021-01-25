@@ -89,9 +89,15 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             persisted_section_dir=persisted_section_dir,
         )
         self.selected_sections = selected_sections
-        # HostAddress is not optional for SNMP, see comment under
-        # `_Builder._initialize_snmp_based()`
-        assert self.ipaddress is not None
+        if self.ipaddress is None:
+            # snmp_config.ipaddress is not Optional.
+            #
+            # At least classic SNMP enforces that there is an address set,
+            # Inline-SNMP has some lookup logic for some reason. We need
+            # to find out whether or not we can really have None here.
+            # Looks like it could be the case for cluster hosts which
+            # don't have an IP address set.
+            raise TypeError(self.ipaddress)
         self.snmp_config = (
             # Because of crap inheritance.
             self.host_config.snmp_config(self.ipaddress)
@@ -107,6 +113,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         mode: Mode,
         selected_sections: SectionNameCollection,
     ) -> "SNMPSource":
+        assert ipaddress is not None
         return cls(
             hostname,
             ipaddress,
@@ -121,11 +128,13 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
     def management_board(
         cls,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
         mode: Mode,
         selected_sections: SectionNameCollection,
     ) -> "SNMPSource":
+        if ipaddress is None:
+            raise TypeError(ipaddress)
         return cls(
             hostname,
             ipaddress,

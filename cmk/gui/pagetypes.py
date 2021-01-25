@@ -87,6 +87,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.main_menu import mega_menu_registry
 
+from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 SubPagesSpec = _Optional[List[Tuple[str, str, str]]]
@@ -232,14 +233,10 @@ class Base:
     # sub class.
     @classmethod
     def default_name(cls) -> str:
-        stem = cls.type_name()
-        nr = 1
-        used_instance_names = [instance.name() for instance in cls.__instances.values()]
-        while True:
-            name = "%s_%d" % (stem, nr)
-            if name not in used_instance_names:
-                return name
-            nr += 1
+        return unique_default_name_suggestion(
+            cls.type_name(),
+            (instance.name() for instance in cls.__instances.values()),
+        )
 
     @classmethod
     def default_topic(cls) -> str:

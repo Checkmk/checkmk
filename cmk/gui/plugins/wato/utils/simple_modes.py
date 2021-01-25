@@ -44,6 +44,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
 from cmk.gui.utils.flashed_messages import flash
 
@@ -409,14 +410,10 @@ class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
         return elements
 
     def _default_id(self) -> str:
-        template = self._mode_type.name_singular()
-        nr = 1
-        used_connection_names = list(self._store.load_for_reading().keys())
-        while True:
-            name = "%s_%d" % (template, nr)
-            if name not in used_connection_names:
-                return name
-            nr += 1
+        return unique_default_name_suggestion(
+            self._mode_type.name_singular(),
+            self._store.load_for_reading().keys(),
+        )
 
     def _vs_optional_keys(self):
         return []

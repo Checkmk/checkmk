@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import * as utils from "utils";
 import * as cmk_figures from "cmk_figures";
 
-class SiteOverview extends cmk_figures.FigureBase {
+export class SiteOverview extends cmk_figures.FigureBase {
     static ident() {
         return "site_overview";
     }
@@ -138,7 +138,7 @@ class SiteOverview extends cmk_figures.FigureBase {
 
         // Compute data: Geometry and element positions -> _hexagon_content
         this._hexagon_content = null;
-        if (this._data.render_mode == "hosts") {
+        if (this._data.render_mode == "hosts" || this._data.render_mode == "alert_statistics") {
             this._hexagon_content = this._compute_hosts();
         } else if (this._data.render_mode == "sites") {
             this._hexagon_content = this._compute_sites();
@@ -220,8 +220,13 @@ class SiteOverview extends cmk_figures.FigureBase {
 
     _render_hexagon_content(hexagon_content) {
         if (this._data.render_mode == "hosts") {
-            if (this._use_canvas_for_hosts) this._render_host_hexagons_as_canvas(hexagon_content);
-            else this._render_host_hexagons_as_svg(hexagon_content);
+            if (this._use_canvas_for_hosts) {
+                this._render_host_hexagons_as_canvas(hexagon_content);
+            } else {
+                this._render_host_hexagons_as_svg(hexagon_content);
+            }
+        } else if (this._data.render_mode == "alert_statistics") {
+            this._render_host_hexagons_as_svg(hexagon_content);
         } else {
             this._render_sites(hexagon_content);
         }
@@ -243,31 +248,48 @@ class SiteOverview extends cmk_figures.FigureBase {
             d.x = x + geometry.box_area.left;
             d.y = y + geometry.box_area.top;
 
-            // Compute required hexagons
-            let tooltip = d.tooltip;
-            d.hexagon_config = [
-                {
-                    id: "outer_hexagon",
-                    path: outer_hexagon_path,
-                    color: d.has_host_problem ? d.host_color : d.service_color,
-                    tooltip: tooltip,
-                },
-            ];
+            if (this._data.render_mode == "hosts") {
+                // Compute required hexagons
+                let tooltip = d.tooltip;
+                d.hexagon_config = [
+                    {
+                        id: "outer_hexagon",
+                        path: outer_hexagon_path,
+                        color: d.has_host_problem ? d.host_color : d.service_color,
+                        tooltip: tooltip,
+                    },
+                ];
 
-            if (!d.has_host_problem) {
-                // Center is reserved for displaying the host state
-                let mid_radius = 0.7;
-                let badness = d.num_problems / d.num_services;
-                badness = 0;
-                let goodness = 1.0 - badness;
-                let radius_factor = Math.pow((1.0 - mid_radius) * goodness + mid_radius, 2);
-                radius_factor *= Math.random();
-                d.hexagon_config.push({
-                    id: "inner_hexagon",
-                    path: hexbin.hexagon(geometry.radius * radius_factor),
-                    color: "#1f3334",
-                    tooltip: tooltip,
-                });
+                if (!d.has_host_problem) {
+                    // Center is reserved for displaying the host state
+                    let mid_radius = 0.7;
+                    let badness = d.num_problems / d.num_services;
+                    badness = 0;
+                    let goodness = 1.0 - badness;
+                    let radius_factor = Math.pow((1.0 - mid_radius) * goodness + mid_radius, 2);
+                    radius_factor *= Math.random();
+                    d.hexagon_config.push({
+                        id: "inner_hexagon",
+                        path: hexbin.hexagon(geometry.radius * radius_factor),
+                        color: "#1f3334",
+                        tooltip: tooltip,
+                    });
+                }
+            } else if (this._data.render_mode == "alert_statistics") {
+                const colors = d3
+                    .scaleLinear()
+                    .domain([0, this._data.upper_bound])
+                    .range(["#b1d2e8", "#083775"]);
+                d.hexagon_config = [
+                    {
+                        id: "outer_hexagon",
+                        path: outer_hexagon_path,
+                        color: colors(d.num_problems),
+                        tooltip: d.tooltip,
+                    },
+                ];
+            } else {
+                console.log("Unhandled render mode: " + this._data.render_mode);
             }
         });
         return elements;
@@ -289,7 +311,6 @@ class SiteOverview extends cmk_figures.FigureBase {
                     location.href = d.link;
                 })
                 .each((d, idx, nodes) => {
-                    console.log("create");
                     this.tooltip_generator.add_support(nodes[idx]);
                 })
         );
@@ -359,7 +380,7 @@ class SiteOverview extends cmk_figures.FigureBase {
         let reduced_content = {geometry: this._hexagon_content.geometry};
         reduced_content.elements = host ? [host] : [];
         this._render_host_hexagons_as_svg(reduced_content, 0);
-        this.plot.selectAll("path.hexagon").attr("stroke", "yellow").attr("stroke-width", 3);
+        this.plot.selectAll("path.hexagon").attr("fill", "rgba(0, 0, 0, 0.2)");
     }
 
     _compute_sites() {

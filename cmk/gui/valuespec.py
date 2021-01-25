@@ -508,7 +508,7 @@ class Integer(ValueSpec):
         return value
 
     def value_from_json(self, json_value):
-        return json_value
+        return int(json_value)
 
     def validate_datatype(self, value: int, varprefix: str) -> None:
         if isinstance(value, numbers.Integral):

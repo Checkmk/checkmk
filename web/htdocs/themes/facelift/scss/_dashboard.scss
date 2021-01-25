@@ -872,7 +872,8 @@ div.dashlet.nodata {
   }
 }
 
-div.site_overview {
+div.site_overview,
+div.alert_statistics {
   g.element_box:hover {
     opacity: 0.8;
   }

@@ -1047,6 +1047,13 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName, board: Dashboard
     )
 
     yield PageMenuEntry(
+        title='Alert statistics',
+        icon_name='statistic',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=alert_statistics' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
+    yield PageMenuEntry(
         title='Host Statistics',
         icon_name={
             'icon': 'folder',
@@ -1245,10 +1252,18 @@ def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> Non
     div there is an inner div containing the actual dashlet content. This content
     is updated later using the dashboard_dashlet.py ajax call.
     """
+    # TODO: Cleanup this explicit listing of dashlet types. Replace with isinstance check
     if all((
             dashlet.type_name() not in [
-                'single_metric', 'average_scatterplot', 'site_overview', 'gauge', 'barplot',
-                'average_scatterplot', 'alerts_bar_chart', 'notifications_bar_chart'
+                'single_metric',
+                'average_scatterplot',
+                'site_overview',
+                'gauge',
+                'barplot',
+                'average_scatterplot',
+                'alerts_bar_chart',
+                'notifications_bar_chart',
+                'alert_statistics',
             ],
             title is not None,
             dashlet.show_title(),

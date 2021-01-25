@@ -1,0 +1,14 @@
+Title: logwatch: Fix hiding of context
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1611564938
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+The button "Hide context" had no effect.
+
+From now on the context will be hidden as expected.

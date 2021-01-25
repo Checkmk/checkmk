@@ -418,7 +418,9 @@ class ModeTimeperiodImportICal(WatoMode):
         filename, _ty, content = ical['file']
 
         try:
-            data = self._parse_ical(content, ical['horizon'])
+            # TODO(ml): If we could open the file in text mode, we would not
+            #           need to `decode()` here.
+            data = self._parse_ical(content.decode("utf-8"), ical['horizon'])
         except Exception as e:
             if config.debug:
                 raise
@@ -470,7 +472,7 @@ class ModeTimeperiodImportICal(WatoMode):
     #   http://tools.ietf.org/html/rfc5545
     # TODO: Let's use some sort of standard module in the future. Maybe we can then also handle
     # times instead of only full day events.
-    def _parse_ical(self, ical_blob, horizon=10):
+    def _parse_ical(self, ical_blob: str, horizon=10):
         ical: Dict[str, Any] = {'raw_events': []}
 
         def get_params(key: str) -> Dict[str, str]:

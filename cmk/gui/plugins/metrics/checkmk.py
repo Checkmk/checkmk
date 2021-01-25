@@ -289,61 +289,61 @@ register_omd_apache_metrics()
 metric_info["cmk_hosts_up"] = {
     "title": _("UP hosts"),
     "unit": "count",
-    "color": "26/a",
+    "color": "#13d389",
 }
 
 metric_info["cmk_hosts_down"] = {
     "title": _("DOWN hosts"),
     "unit": "count",
-    "color": "14/a",
+    "color": "#e85555",
 }
 
 metric_info["cmk_hosts_unreachable"] = {
     "title": _("Unreachable hosts"),
     "unit": "count",
-    "color": "51/a",
+    "color": "#fcb97b",
 }
 
 metric_info["cmk_hosts_in_downtime"] = {
     "title": _("Hosts in downtime"),
     "unit": "count",
-    "color": "42/a",
+    "color": "#888888",
 }
 
 metric_info["cmk_services_ok"] = {
     "title": _("OK services"),
     "unit": "count",
-    "color": "26/a",
+    "color": "#13d389",
 }
 
 metric_info["cmk_services_in_downtime"] = {
     "title": _("Services in downtime"),
     "unit": "count",
-    "color": "42/a",
+    "color": "#888888",
 }
 
 metric_info["cmk_services_on_down_hosts"] = {
     "title": _("Services of down hosts"),
     "unit": "count",
-    "color": "11/a",
+    "color": "11/b",
 }
 
 metric_info["cmk_services_warning"] = {
     "title": _("WARNING services"),
     "unit": "count",
-    "color": "23/a",
+    "color": "#ffd703",
 }
 
 metric_info["cmk_services_unknown"] = {
     "title": _("UNKNOWN services"),
     "unit": "count",
-    "color": "51/a",
+    "color": "#fcb97b",
 }
 
 metric_info["cmk_services_critical"] = {
     "title": _("CRITICAL services"),
     "unit": "count",
-    "color": "14/a",
+    "color": "#e85555",
 }
 
 #.
@@ -523,58 +523,72 @@ graph_info["inbound_and_outbound_messages"] = {
 
 graph_info["cmk_hosts_total"] = {
     "title": _("Total number of hosts"),
-    "metrics": [
-        (
-            "cmk_hosts_up",
-            "stack",
-        ),
-        (
-            "cmk_hosts_down,cmk_hosts_unreachable,cmk_hosts_in_downtime,+,+#ff8800",
-            "stack",
-            _("Problem hosts"),
-        ),
-        (
-            "cmk_hosts_up,cmk_hosts_down,cmk_hosts_unreachable,cmk_hosts_in_downtime,+,+,+#000000",
-            "line",
-            _("Total"),
-        ),
-    ],
+    "metrics": [(
+        "cmk_hosts_up,"
+        "cmk_hosts_down,"
+        "cmk_hosts_unreachable,"
+        "cmk_hosts_in_downtime,"
+        "+,+,+#0485d1",
+        "stack",
+        _("Total"),
+    ),],
 }
 
 graph_info["cmk_hosts_not_up"] = {
     "title": _("Number of problematic hosts"),
-    "metrics": [(
-        "cmk_hosts_down,cmk_hosts_unreachable,cmk_hosts_in_downtime,+,+#ff8800",
-        "stack",
-        _("Problem hosts"),
-    ),],
-}
-
-graph_info["cmk_services_total"] = {
-    "title": _("Total number of services"),
     "metrics": [
         (
-            "cmk_services_ok",
+            "cmk_hosts_down",
             "stack",
         ),
         (
-            "cmk_services_in_downtime,cmk_services_on_down_hosts,cmk_services_warning,cmk_services_unknown,cmk_services_critical,+,+,+,+#ff8800",
+            "cmk_hosts_unreachable",
             "stack",
-            _("Problem services"),
         ),
         (
-            "cmk_services_ok,cmk_services_in_downtime,cmk_services_on_down_hosts,cmk_services_warning,cmk_services_unknown,cmk_services_critical,+,+,+,+,+#000000",
-            "line",
-            _("Total"),
+            "cmk_hosts_in_downtime",
+            "stack",
         ),
     ],
 }
 
+graph_info["cmk_services_total"] = {
+    "title": _("Total number of services"),
+    "metrics": [(
+        "cmk_services_ok,"
+        "cmk_services_in_downtime,"
+        "cmk_services_on_down_hosts,"
+        "cmk_services_warning,"
+        "cmk_services_unknown,"
+        "cmk_services_critical,"
+        "+,+,+,+,+#0485d1",
+        "stack",
+        _("Total"),
+    ),],
+}
+
 graph_info["cmk_services_not_ok"] = {
     "title": _("Number of problematic services"),
-    "metrics": [(
-        "cmk_services_in_downtime,cmk_services_on_down_hosts,cmk_services_warning,cmk_services_unknown,cmk_services_critical,+,+,+,+#ff8800",
-        "stack",
-        _("Problem services"),
-    ),],
+    "metrics": [
+        (
+            "cmk_services_in_downtime",
+            "stack",
+        ),
+        (
+            "cmk_services_on_down_hosts",
+            "stack",
+        ),
+        (
+            "cmk_services_warning",
+            "stack",
+        ),
+        (
+            "cmk_services_unknown",
+            "stack",
+        ),
+        (
+            "cmk_services_critical",
+            "stack",
+        ),
+    ],
 }

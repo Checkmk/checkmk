@@ -678,10 +678,14 @@ class ActivateChangesManager(ActivateChanges):
                                               site_id)
 
     def _load_activation_info(self, activation_id):
-        if not os.path.exists(self._info_path(activation_id)):
-            raise MKUserError(None, "Unknown activation process")
+        info_path = self._info_path(activation_id)
+        if not os.path.exists(info_path):
+            raise MKUserError(
+                None,
+                f"Unknown activation process: {info_path!r} not found",
+            )
 
-        return store.load_object_from_file(self._info_path(activation_id), {})
+        return store.load_object_from_file(info_path, {})
 
     def _save_activation(self):
         store.makedirs(os.path.dirname(self._info_path(self._activation_id)))

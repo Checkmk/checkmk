@@ -581,6 +581,10 @@ def draw_dashboard(name: DashboardName) -> None:
         "dashboard_name": name,
         "dashboard_mtime": board['mtime'],
         "dashlets": _get_dashlet_coords(dashlets),
+        "slim_editor_thresholds": {
+            "width": 28,
+            "height": 14,
+        },
     }
 
     html.javascript("""

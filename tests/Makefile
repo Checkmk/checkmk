@@ -129,6 +129,7 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	esac ; \
 	TEST_PATH="$(realpath agent-plugin-unit)$$SUFFIX" ; \
 	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
+	echo "Docker image: $$IMAGE_HASH" && \
 	docker run \
 	    $(DOCKER_ADDOPTS) \
 	    -e "PYTEST_ADDOPTS" \

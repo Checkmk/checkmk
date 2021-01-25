@@ -304,7 +304,7 @@ div.dashlet.edit {
     width: 100%;
     height: 100%;
     cursor: auto;
-    background-color: rgba(50, 80, 90, 0.3);
+    background-color: rgba($dashlet-inner-bg-color, 0.8);
     border: 1px dashed #4e5d69;
 
     &:hover {
@@ -312,18 +312,18 @@ div.dashlet.edit {
     }
   }
 
-  .editor {
+  div.centered_controls {
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
     width: 3 * ($dashlet-editor-icon-size + 8px);
-    height: $dashlet-editor-icon-size;
+    height: 3 * $dashlet-editor-icon-size;
     margin: auto;
     text-align: center;
 
-    a {
+    .editor a {
       display: inline-block;
       width: $dashlet-editor-icon-size;
       height: $dashlet-editor-icon-size;
@@ -349,6 +349,10 @@ div.dashlet.edit {
         background-image: url("images/dashlet_delete.svg");
       }
     }
+  }
+
+  &:not(.resizable) div.centered_controls {
+    height: $dashlet-editor-icon-size;
   }
 
   /* position anchors */
@@ -386,9 +390,11 @@ div.dashlet.edit {
         border-top: $dashlet-anchor-on-size solid $success;
         border-right: $dashlet-anchor-on-size solid transparent;
 
-        & div {
-          top: -$dashlet-anchor-size;
-          left: $dashlet-anchor-size;
+        div {
+          &.anchor_label {
+            top: -$dashlet-anchor-size;
+            left: $dashlet-anchor-size;
+          }
 
           &.drag_image {
             top: -$dashlet-anchor-size - $spacing;
@@ -408,9 +414,11 @@ div.dashlet.edit {
         border-top: $dashlet-anchor-on-size solid $success;
         border-left: $dashlet-anchor-on-size solid transparent;
 
-        & div {
-          top: -$dashlet-anchor-size;
-          right: $dashlet-anchor-size;
+        div {
+          &.anchor_label {
+            top: -$dashlet-anchor-size;
+            right: $dashlet-anchor-size;
+          }
 
           &.drag_image {
             top: -$dashlet-anchor-size - $spacing;
@@ -430,8 +438,10 @@ div.dashlet.edit {
         border-bottom: $dashlet-anchor-on-size solid $success;
         border-left: $dashlet-anchor-on-size solid transparent;
 
-        & div {
-          right: $dashlet-anchor-size;
+        div {
+          &.anchor_label {
+            right: $dashlet-anchor-size;
+          }
 
           &.drag_image {
             right: 3px;
@@ -451,14 +461,56 @@ div.dashlet.edit {
         border-right: $dashlet-anchor-on-size solid transparent;
         border-bottom: $dashlet-anchor-on-size solid $success;
 
-        & div {
-          left: $dashlet-anchor-size;
+        div {
+          &.anchor_label {
+            left: $dashlet-anchor-size;
+          }
 
           &.drag_image {
             bottom: -$dashlet-anchor-size - $spacing;
             left: 3px;
           }
         }
+      }
+    }
+  }
+
+  div.slim_controls {
+    div.resize_image {
+      visibility: hidden;
+    }
+
+    div.drag_image {
+      visibility: hidden;
+    }
+
+    div.anchor_label {
+      visibility: hidden;
+    }
+
+    .anchor {
+      &.anchor0,
+      &.anchor0.on {
+        border-top-width: $dashlet-anchor-size-slim;
+        border-right-width: $dashlet-anchor-size-slim;
+      }
+
+      &.anchor1,
+      &.anchor1.on {
+        border-top-width: $dashlet-anchor-size-slim;
+        border-left-width: $dashlet-anchor-size-slim;
+      }
+
+      &.anchor2,
+      &.anchor2.on {
+        border-bottom-width: $dashlet-anchor-size-slim;
+        border-left-width: $dashlet-anchor-size-slim;
+      }
+
+      &.anchor3,
+      &.anchor3.on {
+        border-right-width: $dashlet-anchor-size-slim;
+        border-bottom-width: $dashlet-anchor-size-slim;
       }
     }
   }
@@ -469,11 +521,16 @@ div#dashboard.grid {
 }
 
 .sizer {
-  position: absolute;
+  position: relative;
+  right: 0;
+  left: 0;
+  width: 100%;
   padding: 2px 6px;
+  margin: 4px auto;
   text-align: center;
   cursor: pointer;
   border-radius: 12px;
+  box-sizing: border-box;
 
   &.max {
     color: #f00;
@@ -481,46 +538,13 @@ div#dashboard.grid {
   }
 
   &.grow {
+    color: $white;
     background-color: #10181d;
   }
 
   &.abs {
     color: #172127;
     background-color: #13d389;
-  }
-}
-
-.sizer0 {
-  top: 0;
-  bottom: 0;
-  height: 1.5em;
-  margin: auto;
-
-  &.anchor0,
-  &.anchor3 {
-    right: 27px;
-  }
-
-  &.anchor1,
-  &.anchor2 {
-    left: 27px;
-  }
-}
-
-.sizer1 {
-  right: 0;
-  left: 0;
-  width: 90px;
-  margin: auto;
-
-  &.anchor0,
-  &.anchor1 {
-    bottom: 27px;
-  }
-
-  &.anchor2,
-  &.anchor3 {
-    top: 27;
   }
 }
 
@@ -558,12 +582,17 @@ div#dashboard.grid {
     cursor: w-resize;
 
     &.circle_handle {
-      width: 16px;
-      height: 32px;
-      border-radius: 0 32px 32px 0;
+      width: $dashlet-resize-handle-height;
+      height: $dashlet-resize-handle-width;
+      border-radius: 0 $dashlet-resize-handle-width $dashlet-resize-handle-width 0;
 
       .resize_image {
         transform: rotate(90deg);
+      }
+
+      div.slim_controls & {
+        width: $dashlet-resize-handle-height-slim;
+        height: $dashlet-resize-handle-width-slim;
       }
     }
   }
@@ -573,12 +602,17 @@ div#dashboard.grid {
     cursor: e-resize;
 
     &.circle_handle {
-      width: 16px;
-      height: 32px;
-      border-radius: 32px 0 0 32px;
+      width: $dashlet-resize-handle-height;
+      height: $dashlet-resize-handle-width;
+      border-radius: $dashlet-resize-handle-width 0 0 $dashlet-resize-handle-width;
 
       .resize_image {
         transform: rotate(-90deg);
+      }
+
+      div.slim_controls & {
+        width: $dashlet-resize-handle-height-slim;
+        height: $dashlet-resize-handle-width-slim;
       }
     }
   }
@@ -599,12 +633,17 @@ div#dashboard.grid {
     cursor: n-resize;
 
     &.circle_handle {
-      width: 32px;
-      height: 16px;
-      border-radius: 0 0 32px 32px;
+      width: $dashlet-resize-handle-width;
+      height: $dashlet-resize-handle-height;
+      border-radius: 0 0 $dashlet-resize-handle-width $dashlet-resize-handle-width;
 
       .resize_image {
         transform: rotate(180deg);
+      }
+
+      div.slim_controls & {
+        width: $dashlet-resize-handle-width-slim;
+        height: $dashlet-resize-handle-height-slim;
       }
     }
   }
@@ -614,9 +653,14 @@ div#dashboard.grid {
     cursor: s-resize;
 
     &.circle_handle {
-      width: 32px;
-      height: 16px;
-      border-radius: 32px 32px 0 0;
+      width: $dashlet-resize-handle-width;
+      height: $dashlet-resize-handle-height;
+      border-radius: $dashlet-resize-handle-width $dashlet-resize-handle-width 0 0;
+
+      div.slim_controls & {
+        width: $dashlet-resize-handle-width-slim;
+        height: $dashlet-resize-handle-height-slim;
+      }
     }
   }
 }

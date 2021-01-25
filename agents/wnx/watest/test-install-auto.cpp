@@ -11,15 +11,14 @@
 #include "service_processor.h"
 #include "test_tools.h"
 
+namespace fs = std::filesystem;
+
 namespace cma::install {
 
 TEST(InstallAuto, FileControlIntegration) {
-    namespace fs = std::filesystem;
-    cma::OnStart(cma::AppType::test);
-
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    auto [in, out] = tst::CreateInOut();
+    tst::TempDirPair dirs{test_info_->name()};
+    auto in = dirs.in();
+    auto out = dirs.out();
     // artificial file creation
     const auto name = L"test.dat";
     auto path = in / name;
@@ -63,49 +62,125 @@ TEST(InstallAuto, FileControlIntegration) {
 TEST(InstallAuto, GlobalSettings) {
     EXPECT_EQ(GetInstallMode(), InstallMode::normal);
 }
-TEST(InstallAuto, PrepareExecution) {
-    namespace fs = std::filesystem;
 
-    fs::path script_log_file(cfg::GetLogDir());
-    script_log_file /= "execute_script.log";
+class InstallAutoPrepareFixture : public ::testing::Test {
+public:
+    static void SetUpTestSuite() {
+        script_log_file_ = cfg::GetLogDir();
+        script_log_file_ /= "execute_script.log";
+        temp_script_dir_ =
+            fmt::format(L"\\cmk_update_agent_{}\\", ::GetCurrentProcessId());
 
-    fs::path script_file(cfg::GetRootUtilsDir());
-    script_file /= cfg::files::kExecuteUpdateFile;
+        eu_ = std::make_unique<ExecuteUpdate>();
+        eu_->prepare(L"msi exec", L"x x x", false);
+        msi_log_file_ = eu_->getLogFileName();
+        temp_script_file_ = eu_->getTempScriptFile();
+        expected_cmd_line_ =
+            fmt::format(LR"("{}" "msi exec" "/i x x x /qn /L*V {}" "{}")",
+                        temp_script_file_.wstring(), msi_log_file_,
+                        script_log_file_.wstring());
+    }
 
-    auto [command, msi_log_file] =
-        PrepareExecution(L"msi exec", L"x x x", false);
-    auto expected_cmd_line = fmt::format(
-        LR"("{}" "msi exec" "/i x x x /qn /L*V {}" "{}")",
-        script_file.wstring(), msi_log_file, script_log_file.wstring());
-    EXPECT_EQ(command, expected_cmd_line);
+    // ***************************************************
+    // NOTE: inline makes our life a bit easier.
+    // Attention: We must use unique_ptr, because constructing during EXE init
+    // will fail.
+    // ***************************************************
+    static inline std::unique_ptr<ExecuteUpdate> eu_;
+    static inline std::filesystem::path script_log_file_;
+    static inline std::wstring temp_script_dir_;
+    static inline std::wstring msi_log_file_;
+    static inline std::filesystem::path temp_script_file_;
+    static inline std::wstring expected_cmd_line_;
+};
 
-    EXPECT_EQ(fs::path(msi_log_file).filename().u8string(), kMsiLogFileName);
+TEST_F(InstallAutoPrepareFixture, TempScriptFile) {
+    // temp script should be located in temp script dir
+    EXPECT_TRUE(temp_script_file_.wstring().find(temp_script_dir_) !=
+                std::string::npos);
+
+    // temp script name is predefined
+    EXPECT_EQ(temp_script_file_.filename(),
+              fs::path(cfg::files::kExecuteUpdateFile));
+}
+
+TEST_F(InstallAutoPrepareFixture, MsiLogPath) {
+    // msi log file name is predefined
+    EXPECT_EQ(fs::path(msi_log_file_).filename(), fs::path(kMsiLogFileName));
+}
+
+TEST_F(InstallAutoPrepareFixture, GetCommand) {
+    EXPECT_EQ(eu_->getCommand(), expected_cmd_line_);
+}
+
+class InstallAutoSimulationFixture : public testing::Test {
+protected:
+    static void SetUpTestSuite() {
+        fs_ = std::make_unique<tst::TempCfgFs>();
+        eu_ = std::make_unique<ExecuteUpdate>();
+        ASSERT_TRUE(fs_->loadConfig(tst::GetFabricYml()));
+        eu_->prepare(L"msi", L"x x x", true);
+
+        tst::CreateWorkFile(eu_->getLogFileName(), "This is log");
+
+        fs::create_directories(fs_->root() / cfg::dirs::kAgentUtils);
+        tst::CreateWorkFile(fs_->root() / cfg::dirs::kAgentUtils /
+                                cfg::files::kExecuteUpdateFile,
+                            "This is  script");
+    }
+
+    static void TearDownTestSuite() {}
+
+    // ***************************************************
+    // NOTE: inline makes our life a bit easier.
+    // Attention: We must use unique_ptr, because constructing during EXE init
+    // will fail.
+    // ***************************************************
+    static inline std::unique_ptr<tst::TempCfgFs> fs_;
+    static inline std::unique_ptr<ExecuteUpdate> eu_;
+};
+
+TEST_F(InstallAutoSimulationFixture, BackupLogIntegration) {
+    fs::path log_bak_file{eu_->getLogFileName()};
+    log_bak_file.replace_extension(".log.bak");
+
+    // perform backup of the log action
+    eu_->backupLog();
+
+    // expected copy of log
+    EXPECT_TRUE(fs::exists(log_bak_file));
+}
+
+TEST_F(InstallAutoSimulationFixture, CopyScriptToTempIntegration) {
+    eu_->copyScriptToTemp();
+    EXPECT_TRUE(fs::exists(eu_->getTempScriptFile()));
 }
 
 extern bool g_use_script_to_install;
 TEST(InstallAuto, PrepareExecutionLegacy) {
-    namespace fs = std::filesystem;
     g_use_script_to_install = false;
     ON_OUT_OF_SCOPE(g_use_script_to_install = true);
 
     EXPECT_EQ(GetInstallMode(), InstallMode::normal);
 
-    auto [command, msi_log_file] =
-        PrepareExecution(L"msi-exec", L"xx.msi", false);
-    EXPECT_EQ(command,
-              fmt::format(LR"(msi-exec /i xx.msi /qn /L*V {})", msi_log_file));
+    ExecuteUpdate eu;
+    eu.prepare(L"msi-exec", L"xx.msi", false);
+    EXPECT_EQ(eu.getCommand(), fmt::format(LR"(msi-exec /i xx.msi /qn /L*V {})",
+                                           eu.getLogFileName()));
 
-    EXPECT_EQ(fs::path(msi_log_file).filename().u8string(), kMsiLogFileName);
+    EXPECT_EQ(fs::path(eu.getLogFileName()).filename(),
+              fs::path(kMsiLogFileName));
 }
 
 TEST(InstallAuto, PrepareExecutionFallback) {
-    namespace fs = std::filesystem;
     ASSERT_TRUE(g_use_script_to_install);
 
     EXPECT_EQ(GetInstallMode(), InstallMode::normal);
 
-    auto [command, msi_log_file] =
-        PrepareExecution(L"msi-exec", L"xx.msi", true);
+    ExecuteUpdate eu;
+    eu.prepare(L"msi-exec", L"xx.msi", true);
+    auto msi_log_file = eu.getLogFileName();
+    auto command = eu.getCommand();
     EXPECT_EQ(command,
               fmt::format(LR"(msi-exec /i xx.msi /qn /L*V {})", msi_log_file));
 

@@ -1,3 +1,4 @@
+@rem Installation script.
 @echo off
 if "%3" == "" echo "Usage: execute_update msi_exec "command line" own_log_file" && exit /b 1
 rem Prepare variable

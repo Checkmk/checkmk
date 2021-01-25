@@ -250,11 +250,11 @@ std::pair<std::wstring, std::wstring> MakeCommandLine(
     return {command, log_file_name.wstring()};
 }
 
-namespace {
-void BackupLogFile(const std::filesystem::path& log_file_name) {
+void ExecuteUpdate::backupLog() const {
     namespace fs = std::filesystem;
 
     std::error_code ec;
+    fs::path log_file_name{log_file_name_};
 
     if (!fs::exists(log_file_name, ec)) return;
 
@@ -266,47 +266,71 @@ void BackupLogFile(const std::filesystem::path& log_file_name) {
 
     auto success = MvFile(log_file_name, log_bak_file_name);
 
-    if (!success) XLOG::d("Backing up of msi log failed");
+    if (!success) {
+        XLOG::d("Backing up of msi log failed");
+    }
 }
-}  // namespace
 
-std::pair<std::wstring, std::wstring> PrepareExecution(
-    const std::filesystem::path& exe, const std::filesystem::path& msi,
-    bool validate_script_exists) {
+void ExecuteUpdate::determineFilePaths() {
+    namespace fs = std::filesystem;
+
+    base_script_file_ = cfg::GetRootUtilsDir();
+    base_script_file_ /= cfg::files::kExecuteUpdateFile;
+
+    temp_script_file_ =
+        fs::temp_directory_path() /
+        fmt::format("cmk_update_agent_{}", ::GetCurrentProcessId()) /
+        cfg::files::kExecuteUpdateFile;
+}
+
+bool ExecuteUpdate::copyScriptToTemp() const {
+    namespace fs = std::filesystem;
+
+    try {
+        fs::create_directories(temp_script_file_.parent_path());
+        fs::copy_file(base_script_file_, temp_script_file_,
+                      fs::copy_options::overwrite_existing);
+        return fs::exists(temp_script_file_);
+    } catch (const fs::filesystem_error& e) {
+        XLOG::l("Failure in copyScriptToTemp '{}' f1= '{}' f2= '{}'", e.what(),
+                e.path1(), e.path2());
+    }
+
+    return false;
+}
+
+void ExecuteUpdate::prepare(const std::filesystem::path& exe,
+                            const std::filesystem::path& msi,
+                            bool validate_script_exists) {
     namespace fs = std::filesystem;
 
     auto [command_tail, log_file_name] = MakeCommandLine(msi);
+    log_file_name_ = log_file_name;
 
-    std::wstring command;
-
-    fs::path script_file(cfg::GetRootUtilsDir());
-    script_file /= cfg::files::kExecuteUpdateFile;
     std::error_code ec;
 
     // no validate -> new
     // validate and script is present -> new
     // validate and script is absent -> old
     auto required_script_absent =
-        validate_script_exists && !fs::exists(script_file, ec);
+        validate_script_exists && !fs::exists(base_script_file_, ec);
 
     if (UseScriptToInstall() && !required_script_absent) {
         fs::path script_log(cfg::GetLogDir());
         script_log /= "execute_script.log";
 
-        command =
-            fmt::format(LR"("{}" "{}" "{}" "{}")",
-                        script_file.wstring(),  // path/to/execute_update.cmd
-                        exe.wstring(),          // path/to/msiexec.exe
-                        command_tail,  // "/i check_mk_agent.msi /qn /L*V log"
-                        script_log.wstring());  // script.log
+        command_ = fmt::format(
+            LR"("{}" "{}" "{}" "{}")",
+            temp_script_file_.wstring(),  // path/to/execute_update.cmd
+            exe.wstring(),                // path/to/msiexec.exe
+            command_tail,           // "/i check_mk_agent.msi /qn /L*V log"
+            script_log.wstring());  // script.log
     } else {
-        command = exe.wstring() + L" " + command_tail;
+        command_ = exe.wstring() + L" " + command_tail;
     }
 
     XLOG::l.i("File '{}' exists\n\tCommand is '{}'", msi,
-              wtools::ToUtf8(command));
-
-    return {command, log_file_name};
+              wtools::ToUtf8(command_));
 }
 
 // check that update exists and exec it
@@ -365,16 +389,21 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
     }
 
     try {
-        const auto [command, log_file_name] =
-            PrepareExecution(exe, msi_to_install, true);
-
-        BackupLogFile(log_file_name);
+        ExecuteUpdate eu;
+        eu.prepare(exe, msi_to_install, true);
+        eu.backupLog();
 
         if (start_update_process == UpdateProcess::skip) {
             XLOG::l.i("Actual Updating is disabled");
-            return {command, true};
+            return {eu.getCommand(), true};
         }
 
+        if (!eu.copyScriptToTemp()) {
+            XLOG::l("Can't copy script to temp");
+            return {{}, false};
+        }
+
+        auto command = eu.getCommand();
         return {command, tools::RunStdCommand(command, false, TRUE) != 0};
     } catch (const std::exception& e) {
         XLOG::l("Unexpected exception '{}' during attempt to exec update ",

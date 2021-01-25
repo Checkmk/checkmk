@@ -528,7 +528,7 @@ class ModeTimeperiodImportICal(WatoMode):
                 elif key == 'SUMMARY':
                     event['name'] = val
 
-        def next_occurrence(start, now, freq):
+        def next_occurrence(start, now, freq) -> time.struct_time:
             # convert struct_time to list to be able to modify it,
             # then set it to the next occurence
             t = start[:]
@@ -544,11 +544,12 @@ class ModeTimeperiodImportICal(WatoMode):
                     t[1] = now[1] + 1
             else:
                 raise Exception('The frequency "%s" is currently not supported' % freq)
-            return t
+            return time.struct_time(t)
 
-        def resolve_multiple_days(event, cur_start_time):
+        def resolve_multiple_days(event, cur_start_time: time.struct_time):
+            end = time.struct_time(event["end"])
             if time.strftime('%Y-%m-%d', cur_start_time) \
-                == time.strftime('%Y-%m-%d', event["end"]):
+                == time.strftime('%Y-%m-%d', end):
                 # Simple case: a single day event
                 return [{
                     'name': event['name'],
@@ -557,7 +558,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
             # Resolve multiple days
             resolved, cur_timestamp, day = [], time.mktime(cur_start_time), 1
-            while cur_timestamp < time.mktime(event["end"]):
+            while cur_timestamp < time.mktime(end):
                 resolved.append({
                     "name": "%s %s" % (event["name"], _(" (day %d)") % day),
                     "date": time.strftime("%Y-%m-%d", time.localtime(cur_timestamp)),
@@ -567,12 +568,13 @@ class ModeTimeperiodImportICal(WatoMode):
 
             return resolved
 
+        # TODO(ml): We should just use datetime to manipulate the time instead
+        #           of messing around with lists and tuples.
         # Now resolve recurring events starting from 01.01 of current year
         # Non-recurring events are simply copied
         resolved = []
-        now = list(time.strptime(str(time.localtime().tm_year - 1), "%Y"))
-        last = now[:]
-        last[0] += horizon + 1  # update year to horizon
+        now = time.strptime(str(time.localtime().tm_year - 1), "%Y")
+        last = time.struct_time((horizon + 1, *now[1:]))
         for event in ical['raw_events']:
             if 'recurrence' in event and event['start'] < now:
                 rule = event['recurrence']
@@ -582,7 +584,7 @@ class ModeTimeperiodImportICal(WatoMode):
                     cur = next_occurrence(event['start'], cur, freq)
                     resolved += resolve_multiple_days(event, cur)
             else:
-                resolved += resolve_multiple_days(event, event["start"])
+                resolved += resolve_multiple_days(event, time.struct_time(event["start"]))
 
         ical['events'] = sorted(resolved)
 

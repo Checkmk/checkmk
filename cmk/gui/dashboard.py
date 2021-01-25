@@ -475,10 +475,9 @@ def _get_default_dashboard_name() -> str:
     They will see the dashboard that has been built for operators and is built to show only the host
     and service problems that are relevant for the user.
     """
-    return "main"
-    #if cmk_version.is_raw_edition():
-    #    return "main"  # problems = main in raw edition
-    #return "main" if config.user.may("general.see_all") else "problems"
+    if cmk_version.is_raw_edition():
+        return "main"  # problems = main in raw edition
+    return "main" if config.user.may("general.see_all") else "problems"
 
 
 def _load_dashboard_with_cloning(permitted_dashboards: Dict[DashboardName, DashboardConfig],

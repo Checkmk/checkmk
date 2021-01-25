@@ -20,7 +20,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         super(div_selector, fixed_size);
         this._subplots = [];
         this._subplots_by_id = {};
-        this.margin = {top: 28, right: 10, bottom: 30, left: 50};
+        this.margin = {top: 28, right: 10, bottom: 30, left: 65};
         this._legend_dimension = this._crossfilter.dimension(d => d.tag);
     }
 
@@ -405,6 +405,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         );
         x.attr("transform", "translate(0," + this.plot_size.height + ")");
 
+        let render_function = this._get_y_scale_render_function();
         let y = this.g
             .selectAll("g.y_axis")
             .data([null])
@@ -412,11 +413,20 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             .classed("y_axis", true)
             .classed("axis", true);
         this.transition(y).call(
-            d3.axisLeft(this.scale_y).tickFormat(d => {
-                if (d > 999) return d3.format(".2s")(d);
-                return d3.format(",")(d);
-            })
+            d3
+                .axisLeft(this.scale_y)
+                .tickFormat(d => render_function(d))
+                .ticks(Math.min(Math.floor(this.plot_size.height / 16), 6))
         );
+    }
+
+    _get_y_scale_render_function() {
+        let render_function = cmk_figures.get_function(
+            "v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)"
+        );
+        if (this._data.plot_definitions.length > 0 && this._data.plot_definitions[0].js_render)
+            render_function = cmk_figures.get_function(this._data.plot_definitions[0].js_render);
+        return render_function;
     }
 
     render_grid() {

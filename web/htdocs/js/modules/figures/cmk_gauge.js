@@ -159,8 +159,9 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .text(d => d.from + " -> " + d.to);
 
         const last_value = data[data.length - 1];
+        const clamp = value => Math.min(Math.max(value, domain[0]), domain[1]);
         const color = levels.length
-            ? levels.find(element => last_value.value < element.to).color
+            ? levels.find(element => clamp(last_value.value) <= element.to).color
             : "#3CC2FF";
 
         this._render_text(
@@ -173,7 +174,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
         // gauge bar
         this.plot
             .selectAll("path.value")
-            .data([{value: last_value.value, color}])
+            .data([{value: clamp(last_value.value), color}])
             .join(enter => enter.append("path").classed("value", true))
             .attr("fill", d => d.color)
             .attr("opacity", 0.9)
@@ -187,7 +188,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
                     .endAngle(d => scale_x(d.value))
             );
 
-        this._render_histogram(domain, data);
+        if (data.lenght > 10) this._render_histogram(domain, data);
     }
 
     _render_histogram(domain, data) {

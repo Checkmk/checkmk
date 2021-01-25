@@ -9,7 +9,7 @@ class SiteOverview extends cmk_figures.FigureBase {
 
     constructor(div_selector, fixed_size = null) {
         super(div_selector, fixed_size);
-        this.margin = {top: 50, right: 50, bottom: 50, left: 50};
+        this.margin = {top: 0, right: 0, bottom: 0, left: 0};
 
         // Debugging/demo stuff
         this._test_filter = false;

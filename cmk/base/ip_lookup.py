@@ -153,7 +153,7 @@ def cached_dns_lookup(
 
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
-            console.verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
+            console.verbose("Updating %s DNS cache for %s: %s\n" % (family, hostname, ipa))
             ip_lookup_cache.update_cache(cache_id, ipa)
 
         cache[cache_id] = ipa  # Update in-memory-cache

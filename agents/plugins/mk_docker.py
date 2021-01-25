@@ -24,16 +24,17 @@ __version__ = "2.0.0b5"
 # N O T E:
 # docker is available for python versions from 2.6 / 3.3
 
+import argparse
 import configparser
+import functools
+import json
+import logging
+import multiprocessing
 import os
+import pathlib
+import struct
 import sys
 import time
-import json
-import struct
-import argparse
-import functools
-import multiprocessing
-import logging
 
 try:
     from typing import Dict, Union, Tuple
@@ -176,6 +177,79 @@ def report_exception_to_server(exc, location):
     sec.write()
 
 
+class ParallelDfCall:
+    """handle parallel calls of super().df()
+
+    The Docker API will only allow one super().df() call at a time.
+    This leads to problems when the plugin is executed multiple times
+    in parallel.
+    """
+    def __init__(self, call):
+        self._call = call
+        self._vardir = pathlib.Path(os.getenv('MK_VARDIR', ''))
+        self._spool_file = self._vardir / "mk_docker_df.spool"
+        self._tmp_file_templ = "mk_docker_df.tmp.%s"
+        self._my_tmp_file = self._vardir / (self._tmp_file_templ % os.getpid())
+
+    def __call__(self):
+        try:
+            self._my_tmp_file.touch()
+            data = self._new_df_result()
+        except docker.errors.APIError as exc:
+            LOGGER.debug("df API call failed: %s", exc)
+            data = self._spool_df_result()
+        else:
+            # the API call succeeded, no need for any tmp files
+            for file_ in self._iter_tmp_files():
+                self._unlink(file_)
+        finally:
+            # what ever happens: remove my tmp file
+            self._unlink(self._my_tmp_file)
+
+        return data
+
+    def _new_df_result(self):
+        data = self._call()
+        self._write_df_result(data)
+        return data
+
+    def _iter_tmp_files(self):
+        return self._vardir.glob(self._tmp_file_templ % '*')
+
+    @staticmethod
+    def _unlink(file_):
+        try:
+            file_.unlink()
+        except FileNotFoundError:
+            pass
+
+    def _spool_df_result(self):
+        # check every 0.1 seconds
+        tick = 0.1
+        # if the df command takes more than 60 seconds, you probably want to
+        # execute the plugin asynchronously. This should cover a majority of cases.
+        timeout = 60
+        for _ in range(int(timeout / tick)):
+            time.sleep(tick)
+            if not any(self._iter_tmp_files()):
+                break
+
+        return self._read_df_result()
+
+    def _write_df_result(self, data):
+        with self._my_tmp_file.open('w') as file_:
+            file_.write(json.dumps(data))
+        self._my_tmp_file.rename(self._spool_file)
+
+    def _read_df_result(self):
+        """read from the spool file
+
+        Don't handle FileNotFound - the plugin can deal with it, and it's easier to debug.
+        """
+        with self._spool_file.open() as file_:
+            return json.loads(file_.read())
+
+
 class MKDockerClient(docker.DockerClient):
     '''a docker.DockerClient that caches containers and node info'''
     API_VERSION = "auto"
@@ -194,6 +268,11 @@ class MKDockerClient(docker.DockerClient):
         self._container_stats = {}
         self._device_map = None
         self.node_info = self.info()
+
+        self._df_caller = ParallelDfCall(call=super(MKDockerClient, self).df)
+
+    def df(self):
+        return self._df_caller()
 
     def device_map(self):
         with self._DEVICE_MAP_LOCK:

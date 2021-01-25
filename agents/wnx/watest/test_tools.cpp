@@ -55,6 +55,23 @@ fs::path GetTempDir() {
     return dynamic_cast<TestEnvironment*>(g_env)->getTempDir();
 }
 
+TempDirPair::TempDirPair(const std::string& case_name) {
+    path_ = GetTempDir() / case_name;
+    in_ = path_ / "in";
+    out_ = path_ / "out";
+    fs::create_directories(path_);
+    fs::create_directories(in_);
+    fs::create_directories(out_);
+}
+
+TempDirPair::~TempDirPair() {
+    try {
+        fs::remove_all(path_);
+    } catch (const std::filesystem::filesystem_error& e) {
+        XLOG::l("Failure deleting '{}' exception '{}'", path_, e.what());
+    }
+}
+
 const std::filesystem::path G_ProjectPath = PROJECT_DIR;
 const std::filesystem::path G_SolutionPath = SOLUTION_DIR;
 const std::filesystem::path G_TestPath =

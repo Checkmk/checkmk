@@ -74,6 +74,25 @@ inline std::filesystem::path CreateWorkFile(const std::filesystem::path& path,
     return path;
 }
 
+// Storage for temporary in out dir
+class TempDirPair {
+public:
+    TempDirPair(const std::string& case_name);
+    TempDirPair(const TempDirPair&) = delete;
+    TempDirPair(TempDirPair&&) = delete;
+    TempDirPair& operator=(const TempDirPair&) = delete;
+    TempDirPair& operator=(TempDirPair&&) = delete;
+
+    ~TempDirPair();
+    std::filesystem::path in() const noexcept { return in_; }
+    std::filesystem::path out() const noexcept { return out_; }
+
+private:
+    std::filesystem::path path_;
+    std::filesystem::path in_;
+    std::filesystem::path out_;
+};
+
 inline std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
     namespace fs = std::filesystem;
     fs::path temp_dir = cma::cfg::GetTempDir();

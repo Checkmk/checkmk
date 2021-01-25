@@ -16,6 +16,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Literal,
     Optional,
     Sequence,
     Set,
@@ -97,6 +98,7 @@ from cmk.gui.plugins.visuals.utils import (
     filter_registry,
 )
 
+from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 # Needed for legacy (pre 1.6) plugins
@@ -789,8 +791,8 @@ def render_context_specs(visual, context_specs):
         spec.render_input(ident, value)
 
 
-def page_edit_visual(what,
-                     all_visuals,
+def page_edit_visual(what: Literal["dashboards", "views", "reports"],
+                     all_visuals: Dict[Any, Dict[str, Any]],
                      custom_field_handler=None,
                      create_handler=None,
                      load_handler=None,
@@ -815,7 +817,7 @@ def page_edit_visual(what,
         cloneuser = html.request.var("load_user")
         if cloneuser is not None:
             mode = 'clone'
-            visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), None))
+            visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), {}))
             if not visual:
                 raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type.title)
 
@@ -838,9 +840,9 @@ def page_edit_visual(what,
         else:
             user_id_str = html.request.get_unicode_input("owner", config.user.id)
             owner_user_id = None if user_id_str is None else UserId(user_id_str)
-            visual = all_visuals.get((owner_user_id, visualname))
+            visual = all_visuals.get((owner_user_id, visualname), {})
             if not visual:
-                visual = all_visuals.get(('', visualname))  # load builtin visual
+                visual = all_visuals.get(('', visualname), {})  # load builtin visual
                 mode = 'clone'
                 if not visual:
                     raise MKUserError(None,
@@ -930,7 +932,11 @@ def page_edit_visual(what,
                  regex_error=_(
                      'The name of the view may only contain letters, digits and underscores.'),
                  size=50,
-                 allow_empty=False)),
+                 allow_empty=False,
+                 default_value=unique_default_name_suggestion(
+                     what[:-1],
+                     (visual["name"] for visual in all_visuals.values()),
+                 ))),
             ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
             ('description',
              TextAreaUnicode(

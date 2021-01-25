@@ -388,8 +388,13 @@ class Nested(_fields.Nested, UniqueFields):
 
         Setting the `many` param will turn this into a list:
 
+            >>> import pytest
+            >>> from marshmallow import ValidationError
+
             >>> class Bulk(Schema):
-            ...      entries = Nested(Service, many=True, uniqueItems=True)
+            ...      entries = Nested(Service,
+            ...                       many=True, uniqueItems=True,
+            ...                       required=False, missing=lambda: [])
 
             >>> entries = [
             ...     {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
@@ -397,16 +402,29 @@ class Nested(_fields.Nested, UniqueFields):
             ...     {'host': 'host', 'description': 'CPU load'}
             ... ]
 
-            >>> import pytest
-            >>> from marshmallow import ValidationError
             >>> with pytest.raises(ValidationError) as exc:
             ...     Bulk().load({'entries': entries})
             >>> exc.value.messages
             {'entries': ["Duplicate entry found at entry #2: \
 {'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
 
+            >>> schema = Bulk()
+            >>> assert schema.fields['entries'].missing is not _fields.missing_
+            >>> schema.load({})
+            {'entries': []}
+
     """
+
+    # NOTE:
+    # Sometimes, when using `missing` fields, a broken OpenAPI spec may be the result.
+    # In this situation, it should be sufficient to replace the `missing` parameter with
+    # a `lambda` which returns the same object, as callables are ignored by apispec.
+
     def _deserialize(self, value, attr, data, partial=None, **kwargs):
+        self._validate_missing(value)
+        if value is _fields.missing_:
+            _miss = self.missing
+            value = _miss() if callable(_miss) else _miss
         value = super()._deserialize(value, attr, data)
         if self.many and self.metadata.get('uniqueItems'):
             self._verify_unique_schema_entries(value, self.schema.fields)

@@ -95,8 +95,8 @@ def _host_results(host_stats: HostStatistics) -> CheckResult:
         state=State.OK,
         summary=f"Problem hosts: {n_hosts_not_up}",
         details="\n".join((
-            f"UP hosts: {host_stats.up}",
-            f"DOWN hosts: {host_stats.down}",
+            f"Hosts in state UP: {host_stats.up}",
+            f"Hosts in state DOWN: {host_stats.down}",
             f"Unreachable hosts: {host_stats.unreachable}",
             f"Hosts in downtime: {host_stats.in_downtime}",
         )),
@@ -115,11 +115,12 @@ def _service_results(service_stats: ServiceStatistics) -> CheckResult:
         state=State.OK,
         summary=f"Problem services: {n_services_not_ok}",
         details="\n".join((
+            f"Services in state OK: {service_stats.ok}",
             f"Services in downtime: {service_stats.in_downtime}",
             f"Services of down hosts: {service_stats.on_down_hosts}",
-            f"WARNING services: {service_stats.warning}",
-            f"UNKNOWN services: {service_stats.unknown}",
-            f"CRITICAL services: {service_stats.critical}",
+            f"Services in state WARNING: {service_stats.warning}",
+            f"Services in state UNKNOWN: {service_stats.unknown}",
+            f"Services in state CRITICAL: {service_stats.critical}",
         )),
     )
 

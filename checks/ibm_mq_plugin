@@ -44,7 +44,7 @@ def check_ibm_mq_plugin(_no_item, params, parsed):
         return
 
     actual_version = parsed.get("version")
-    yield ibm_mq_check_version(actual_version, params, "Agent version")
+    yield ibm_mq_check_version(actual_version, params, "Plugin version")
     yield check_tool("dspmq", parsed)
     yield check_tool("runmqsc", parsed)
 

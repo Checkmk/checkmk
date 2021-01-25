@@ -1,0 +1,15 @@
+Title: ibm_mq: Various bugfixes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611650426
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b5
+
+The ibm_mq plugins had various bugs from Checkmk version 2.0.0b1 to 2.0.0b5.
+In particlar, the check plugin ibm_mq_queues would not run at all.
+The check plugin is now compatible with python3.
+

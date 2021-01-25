@@ -284,7 +284,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                         continue
 
                     trusted_cas.update(self._get_certificates_from_file(cert_file_path))
-                except IOError:
+                except (IOError, PermissionError):
                     logger.exception("Error reading certificates from %s", cert_file_path)
 
                     # This error is shown to the user as warning message during "activate changes".

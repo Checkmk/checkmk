@@ -21,6 +21,7 @@ import subprocess
 import time
 import ast
 import gzip
+import multiprocessing
 
 from werkzeug.test import create_environ
 
@@ -736,11 +737,16 @@ class UpdateConfig:
                     if not f.name.endswith(".gz") and not f.name.startswith(".")
                 ]
 
-        py2_files: List[str] = [str(f) for f in filepaths if self._needs_to_be_converted(f)]
+        with multiprocessing.Pool(min(15, multiprocessing.cpu_count())) as pool:
+            py2_files = [str(x) for x in pool.map(self._needs_to_be_converted, filepaths) if x]
+
+        self._logger.log(VERBOSE, "Finished checking for corrupt files")
 
         if not py2_files:
             self._create_donefile(done_file)
             return
+
+        self._logger.log(VERBOSE, "Found %i files: %s" % (len(py2_files), py2_files))
 
         returncode = self._fix_with_2to3(py2_files)
 
@@ -779,17 +785,17 @@ class UpdateConfig:
         self._logger.log(VERBOSE, "Finished.")
         return p.returncode
 
-    def _needs_to_be_converted(self, filepath: Path):
+    def _needs_to_be_converted(self, filepath: Path) -> Optional[Path]:
         with filepath.open(encoding="utf-8") as f:
             # Try to evaluate data with ast.literal_eval
             try:
                 data = f.read()
                 self._logger.debug("Evaluating %r" % str(filepath))
                 ast.literal_eval(data)
-                return False
             except SyntaxError:
                 self._logger.log(VERBOSE, "Found corrupt file %r" % str(filepath))
-                return True
+                return filepath
+        return None
 
     def _find_files_recursively(self, files: List[Path], path: Path):
         for f in path.iterdir():

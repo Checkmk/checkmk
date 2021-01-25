@@ -1,0 +1,16 @@
+Title: Fix archive event button in events view
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1611589788
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+If you tried to archive an event in the view "Events" with the icon button
+"Archive this event", an error message "No rows selected" was shown.
+
+A workaround was, to use the "Archive Event" button in the "Commands" dropdown
+but from now on the icon button will find the rows to archive.

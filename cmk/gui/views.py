@@ -608,7 +608,7 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if html.request.has_var("_row_id") and html.do_actions():
-                rows = filter_selected_rows(view_spec, rows, [html.request.has_var("_row_id")])
+                rows = filter_selected_rows(view_spec, rows, [html.request.var("_row_id")])
 
             # If we are currently within an action (confirming or executing), then
             # we display only the selected rows (if checkbox mode is active)

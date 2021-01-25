@@ -113,19 +113,22 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
                 "id": "id_scatter",
                 "color": metric_color,
                 "label": _("%s by host") % metric_name,
-                "use_tags": ["scatter"]
+                "use_tags": ["scatter"],
+                "js_render": metric['unit'].get("js_render"),
             }, {
                 "plot_type": "line",
                 "id": "id_mean",
                 "color": avg_color,
                 "label": _("Mean %s") % metric_name,
-                "use_tags": ["line_mean"]
+                "use_tags": ["line_mean"],
+                "js_render": metric['unit'].get("js_render"),
             }, {
                 "plot_type": "line",
                 "id": "id_median",
                 "color": median_color,
                 "label": _("Median %s") % metric_name,
-                "use_tags": ["line_median"]
+                "use_tags": ["line_median"],
+                "js_render": metric['unit'].get("js_render"),
             }],
             "data": elements
         }

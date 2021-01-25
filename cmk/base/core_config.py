@@ -700,7 +700,7 @@ def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config
             if addr is not None:
                 node_ips_4.append(addr)
             else:
-                node_ips_4.append(fallback_ip_for(node_config, family))
+                node_ips_4.append(fallback_ip_for(family))
 
     node_ips_6 = []
     if host_config.is_ipv6_host:
@@ -711,7 +711,7 @@ def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config
             if addr is not None:
                 node_ips_6.append(addr)
             else:
-                node_ips_6.append(fallback_ip_for(node_config, family))
+                node_ips_6.append(fallback_ip_for(family))
 
     node_ips = node_ips_6 if host_config.is_ipv6_primary else node_ips_4
 
@@ -790,7 +790,7 @@ def ip_address_of(host_config: config.HostConfig, family: socket.AddressFamily) 
         if not _ignore_ip_lookup_failures:
             warning("Cannot lookup IP address of '%s' (%s). "
                     "The host will not be monitored correctly." % (host_config.hostname, e))
-        return fallback_ip_for(host_config, family)
+        return fallback_ip_for(family)
 
 
 def ignore_ip_lookup_failures() -> None:
@@ -802,11 +802,11 @@ def failed_ip_lookups() -> List[HostName]:
     return _failed_ip_lookups
 
 
-def fallback_ip_for(host_config: HostConfig, family: socket.AddressFamily) -> str:
-    if family is socket.AF_INET:
-        return "0.0.0.0"
-
-    return "::"
+def fallback_ip_for(family: socket.AddressFamily) -> str:
+    return {
+        socket.AF_INET: "0.0.0.0",
+        socket.AF_INET6: "::",
+    }.get(family, "::")
 
 
 def get_host_macros_from_attributes(hostname: HostName, attrs: ObjectAttributes) -> ObjectMacros:

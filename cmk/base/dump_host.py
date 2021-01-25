@@ -147,4 +147,4 @@ def _ip_address_for_dump_host(
     try:
         return ip_lookup.lookup_ip_address(host_config, family=family)
     except Exception:
-        return core_config.fallback_ip_for(host_config, family)
+        return core_config.fallback_ip_for(family)

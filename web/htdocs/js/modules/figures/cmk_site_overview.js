@@ -439,19 +439,18 @@ class SiteOverview extends cmk_figures.FigureBase {
                     .classed(element.css_class, true)
                     .attr("fill", "#ffffff30");
 
-                // TODO: Enable once we have our icons
-                //hexagon_box
-                //    .selectAll("path.hexagon_icon")
-                //    .data([element])
-                //    .join(enter => enter.append("image").classed("hexagon_icon", true))
-                //    .attr(
-                //        "xlink:href",
-                //        "themes/modern-dark/images/icon_" + element.css_class + ".svg"
-                //    )
-                //    .attr("width", 24)
-                //    .attr("height", 24)
-                //    .attr("x", -12)
-                //    .attr("y", -12);
+                hexagon_box
+                    .selectAll("path.hexagon_icon")
+                    .data([element])
+                    .join(enter => enter.append("image").classed("hexagon_icon", true))
+                    .attr(
+                        "xlink:href",
+                        "themes/modern-dark/images/icon_" + element.css_class + ".svg"
+                    )
+                    .attr("width", 24)
+                    .attr("height", 24)
+                    .attr("x", -12)
+                    .attr("y", -12);
             } else {
                 // The scale is controlled by the total count of an element compared to the largest
                 // element

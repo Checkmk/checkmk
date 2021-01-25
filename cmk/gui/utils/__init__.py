@@ -13,7 +13,15 @@ import uuid
 import marshal
 import itertools
 from pathlib import Path
-from typing import Optional, Union, Any, List, Dict, Tuple
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 import urllib.parse
 
 from six import ensure_str
@@ -195,3 +203,13 @@ def validate_regex(value: str, varname: Optional[str]) -> None:
     if re.search(lookahead_pattern, value):
         raise MKUserError(
             varname, _('Your search statement is not valid. You can not use a lookahead here.'))
+
+
+def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> str:
+    used_names_set = set(used_names)
+    nr = 1
+    while True:
+        suggestion = f"{template}_{nr}"
+        if suggestion not in used_names_set:
+            return suggestion
+        nr += 1

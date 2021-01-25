@@ -70,7 +70,7 @@ check_tool() {
 load_config
 
 echo "<<<ibm_mq_plugin:sep(58)>>>"
-echo "version: 1.6.0"
+echo "version: $VERSION"
 check_tool dspmq
 check_tool runmqsc
 

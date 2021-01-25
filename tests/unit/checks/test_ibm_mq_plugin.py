@@ -40,7 +40,7 @@ runmqsc: Not executable
             'runmqsc': 'OK',
         },
         [
-            (0, 'Agent version: 2.0.4'),
+            (0, 'Plugin version: 2.0.4'),
             (0, 'dspmq: OK'),
             (0, 'runmqsc: OK'),
         ],
@@ -54,7 +54,7 @@ runmqsc: Not executable
             'runmqsc': 'Not found',
         },
         [
-            (0, 'Agent version: 2.0.4'),
+            (0, 'Plugin version: 2.0.4'),
             (0, 'dspmq: OK'),
             (2, 'runmqsc: Not found'),
         ],
@@ -67,7 +67,7 @@ runmqsc: Not executable
             'runmqsc': 'Not found',
         },
         [
-            (0, 'Agent version: 2.0.4'),
+            (0, 'Plugin version: 2.0.4'),
             (3, 'dspmq: No agent info'),
             (2, 'runmqsc: Not found'),
         ],
@@ -81,7 +81,7 @@ runmqsc: Not executable
             'runmqsc': 'Not found',
         },
         [
-            (2, 'Agent version: 2.0.4 (should be at least 2.1)'),
+            (2, 'Plugin version: 2.0.4 (should be at least 2.1)'),
             (0, 'dspmq: OK'),
             (2, 'runmqsc: Not found'),
         ],

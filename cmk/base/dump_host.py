@@ -18,7 +18,6 @@ import cmk.base.check_table as check_table
 import cmk.base.sources as sources
 import cmk.base.checking as checking
 import cmk.base.config as config
-import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 from cmk.base.check_utils import LegacyCheckParameters
@@ -147,4 +146,4 @@ def _ip_address_for_dump_host(
     try:
         return ip_lookup.lookup_ip_address(host_config, family=family)
     except Exception:
-        return core_config.fallback_ip_for(family)
+        return ip_lookup.fallback_ip_for(family)

@@ -28,6 +28,13 @@ _fake_dns: Optional[HostAddress] = None
 _enforce_localhost = False
 
 
+def fallback_ip_for(family: socket.AddressFamily) -> str:
+    return {
+        socket.AF_INET: "0.0.0.0",
+        socket.AF_INET6: "::",
+    }.get(family, "::")
+
+
 def deserialize_cache_id(serialized: Tuple[HostName, int]) -> Tuple[HostName, socket.AddressFamily]:
     # 4 and 6 are legacy values.
     return serialized[0], {4: socket.AF_INET, 6: socket.AF_INET6}[serialized[1]]
@@ -89,10 +96,7 @@ def lookup_ip_address(
     # Honor simulation mode und usewalk hosts. Never contact the network.
     if config.simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
                                                         host_config.is_snmp_host):
-        if family is socket.AddressFamily.AF_INET:
-            return "127.0.0.1"
-
-        return "::1"
+        return fallback_ip_for(family)
 
     hostname = host_config.hostname
 

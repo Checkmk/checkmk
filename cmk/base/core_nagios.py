@@ -204,7 +204,7 @@ def _create_nagios_host_spec(cfg: NagiosConfig, config_cache: ConfigCache, hostn
     host_spec = {
         "host_name": hostname,
         "use": config.cluster_template if host_config.is_cluster else config.host_template,
-        "address": ip if ip else core_config.fallback_ip_for(host_config.default_address_family),
+        "address": ip if ip else ip_lookup.fallback_ip_for(host_config.default_address_family),
         "alias": attrs["alias"],
     }
 

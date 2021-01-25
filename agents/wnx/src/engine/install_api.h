@@ -24,9 +24,31 @@ bool UseScriptToInstall();
 enum class UpdateProcess { execute, skip };
 enum class InstallMode { normal, reinstall };
 InstallMode GetInstallMode();
-std::pair<std::wstring, std::wstring> PrepareExecution(
-    const std::filesystem::path& exe, const std::filesystem::path& msi,
-    bool validate_script_exists);
+
+class ExecuteUpdate {
+public:
+    ExecuteUpdate() { determineFilePaths(); }
+    void prepare(const std::filesystem::path& exe,
+                 const std::filesystem::path& msi, bool validate_script_exists);
+
+    bool copyScriptToTemp() const;
+    void backupLog() const;
+
+    std::wstring getCommand() const noexcept { return command_; }
+    std::wstring getLogFileName() const noexcept { return log_file_name_; }
+
+    std::filesystem::path getTempScriptFile() const noexcept {
+        return temp_script_file_;
+    }
+
+private:
+    void determineFilePaths();
+
+    std::wstring command_;
+    std::wstring log_file_name_;
+    std::filesystem::path base_script_file_;
+    std::filesystem::path temp_script_file_;
+};
 
 constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
 

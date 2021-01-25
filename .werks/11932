@@ -1,0 +1,13 @@
+Title: Logwatch: Logfile patterns not working as intended
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611569483
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+The reclassification of logfile entries with the respective
+logfile patterns was not working.
+This is was caused by a escaping problem.

@@ -17,7 +17,7 @@ Version 1
 """
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.utils.regex import regex, escape_regex_chars  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.regex import regex  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,

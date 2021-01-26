@@ -51,9 +51,10 @@ def check_mem_linux(_no_item, params, section):
     # See which ones we actually need.
 
     # SReclaimable is not available for older kernels
+    # SwapCached may be missing if swap is disabled, see crash 9d22dcb4-5260-11eb-8458-0b95bfca1bb1
     # Compute memory used by caches, that can be considered "free"
     section["Caches"] = section["Cached"] + section["Buffers"] \
-                      + section["SwapCached"] + section.get("SReclaimable", 0)
+                      + section.get("SwapCached", 0) + section.get("SReclaimable", 0)
 
     section["MemUsed"] = section["MemTotal"] - section["MemFree"] - section["Caches"]
     section["SwapUsed"] = section["SwapTotal"] - section["SwapFree"]

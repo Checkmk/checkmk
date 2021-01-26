@@ -22,12 +22,13 @@ from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
 )
-Section = Dict[str, Tuple[str, str]]
-OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 
-# note: directly migrated from infoblox.include - it's likely that the object id check is sufficient
-DETECT_INFOBLOX = any_of(contains(".1.3.6.1.2.1.1.1.0", "infoblox"),
-                         startswith(OID_sysObjectID, ".1.3.6.1.4.1.7779.1."))
+Section = Dict[str, Tuple[str, str]]
+
+DETECT_INFOBLOX = any_of(
+    contains(".1.3.6.1.2.1.1.1", "infoblox"),
+    startswith(".1.3.6.1.2.1.1.2", ".1.3.6.1.4.1.7779.1."),
+)
 
 SERVICE_ID = {
     "1": "dhcp",

@@ -217,7 +217,10 @@ private:
 bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op);
 
 // standard process terminator
-bool KillProcess(uint32_t process_id, int exit_code = -1) noexcept;
+bool KillProcessUnsafe(uint32_t process_id, int exit_code = -1) noexcept;
+
+bool KillProcessSafe(uint32_t process_id, std::wstring_view process_name,
+                     int exit_code);
 
 // process terminator
 // used to kill OpenHardwareMonitor

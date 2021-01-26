@@ -185,7 +185,7 @@ public:
 
             if (KillWhatLeft) {
                 for (auto pid : waiting_processes) {
-                    wtools::KillProcess(pid, -1);
+                    wtools::KillProcessUnsafe(pid, -1);
                     XLOG::d("Process [{}] killed",
                             pid);  // abnormal situation
                 }

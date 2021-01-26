@@ -72,7 +72,8 @@ void AppRunner::kill(bool kill_tree) {
             // normally only updater here, be careful
             if (false) {
                 KillProcessTree(proc_id);
-                auto success = KillProcess(proc_id);
+                auto success =
+                    KillProcessSafe(proc_id, L"cmk-update-agent.exe", -1);
                 XLOG::d.i("Process [{}] '{}' had been {}", proc_id,
                           wtools::ConvertToUTF8(cmd_line_),
                           success ? "killed SUCCESSFULLY" : "FAILED to kill");
@@ -86,7 +87,7 @@ void AppRunner::kill(bool kill_tree) {
     }
 
     if (exit_code_ == STILL_ACTIVE) {
-        auto success = KillProcess(proc_id, -1);
+        auto success = KillProcessUnsafe(proc_id, -1);
         if (!success)
             XLOG::l("Failed kill {} status {}", proc_id, GetLastError());
     }
@@ -1835,7 +1836,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
 }
 
 // process terminators
-bool KillProcess(uint32_t ProcessId, int Code) noexcept {
+bool KillProcessUnsafe(uint32_t ProcessId, int Code) noexcept {
     auto handle = OpenProcess(PROCESS_TERMINATE, FALSE, ProcessId);
     if (nullptr == handle) {
         if (GetLastError() == 5) {
@@ -1852,6 +1853,58 @@ bool KillProcess(uint32_t ProcessId, int Code) noexcept {
         // with Windows in all cases just report
         XLOG::d("Cannot terminate process '{}' gracefully, error [{}]",
                 ProcessId, GetLastError());
+    }
+
+    return true;
+}
+
+bool KillProcessSafe(uint32_t process_id, std::wstring_view process_name,
+                     int exit_code) {
+    if (process_id < 128 || process_name.empty()) {
+        XLOG::d("Cannot kill process '{}' [{}] - bad parameters",
+                wtools::ConvertToUTF8(process_name), process_id);
+        return false;
+    }
+    auto handle = ::OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION,
+                                FALSE, process_id);
+    if (nullptr == handle) {
+        if (GetLastError() == 5) {
+            XLOG::d(
+                "Cannot open process '{}' [{}]  for termination ACCESS is DENIED ",
+                wtools::ConvertToUTF8(process_name), process_id);
+        }
+        return false;
+    }
+    ON_OUT_OF_SCOPE(::CloseHandle(handle));
+
+    char buf[512];
+    auto name_length = GetProcessImageFileNameA(handle, buf, sizeof(buf) - 1);
+    if (name_length == 0) {
+        XLOG::l("Impossible to kill '{}' [{}], error [{}] getting name",
+                wtools::ConvertToUTF8(process_name), process_id,
+                ::GetLastError());
+        return false;
+    }
+    std::filesystem::path p{buf};
+    auto image_name = p.filename().wstring();
+    _wcslwr(image_name.data());
+    auto expected_name = std::wstring(process_name);
+    _wcslwr(expected_name.data());
+
+    if (image_name != expected_name) {
+        XLOG::l("Impossible to kill '{}' [{}], real name '{}'",
+                wtools::ConvertToUTF8(process_name), process_id, buf);
+        return false;
+    }
+
+    if (FALSE == TerminateProcess(handle, exit_code)) {
+        // - we have no problem(process already dead) - ignore
+        // - we have problem: either code is invalid or something wrong
+        // with Windows in all cases just report
+        XLOG::d("Cannot terminate process '{}' [{}] gracefully, error [{}]",
+                wtools::ConvertToUTF8(process_name), process_id,
+                GetLastError());
+        return false;
     }
 
     return true;
@@ -1989,7 +2042,7 @@ bool KillProcessFully(const std::wstring& process_name,
 
     for (auto proc_id : processes_to_kill) {
         KillProcessTree(proc_id);
-        KillProcess(proc_id, exit_code);
+        KillProcessUnsafe(proc_id, exit_code);
     }
 
     return true;
@@ -2026,7 +2079,7 @@ void KillProcessTree(uint32_t ProcessId) {
     do {
         // process.th32ProcessId is the PID.
         if (process.th32ParentProcessID == ProcessId) {
-            KillProcess(process.th32ProcessID);
+            KillProcessUnsafe(process.th32ProcessID);
         }
 
     } while (Process32Next(snapshot, &process));

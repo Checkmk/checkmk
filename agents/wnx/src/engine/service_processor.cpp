@@ -780,8 +780,8 @@ bool TheMiniProcess::stop() {
             wtools::KillProcessTree(pid);
         }
 
-        wtools::KillProcess(pid);
         XLOG::l.t("Killing process [{}] '{}'", pid, name);
+        wtools::KillProcessUnsafe(pid);
         return true;
     }
 

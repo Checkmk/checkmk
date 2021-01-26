@@ -18,6 +18,18 @@
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
+TEST(Wtools, KillProcessSafeIntegration) {
+    EXPECT_FALSE(KillProcessSafe(127, L"power.exe", -1));
+    EXPECT_FALSE(KillProcessSafe(512, L"", -1));
+    std::wstring cmd{L"powershell.exe Start-Sleep 10000"};
+    auto proc_id = cma::tools::RunStdCommand(cmd, false);
+    EXPECT_FALSE(KillProcessSafe(proc_id, L"power.exe", -1));
+    EXPECT_FALSE(
+        KillProcessSafe(::GetCurrentProcessId(), L"powershell.exe", -1));
+    EXPECT_TRUE(KillProcessSafe(proc_id, L"PowerShell.exe", -1));
+    EXPECT_FALSE(KillProcessSafe(proc_id, L"PowerShell.exe", -1));
+}
+
 TEST(Wtools, ScanProcess) {
     using namespace std::chrono;
     try {
@@ -85,7 +97,7 @@ TEST(Wtools, ScanProcess) {
 
             // killing
             KillProcessTree(proc_id);
-            KillProcess(proc_id);
+            KillProcessUnsafe(proc_id);
             cma::tools::sleep(500ms);
 
             found = false;

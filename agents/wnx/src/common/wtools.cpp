@@ -70,10 +70,16 @@ void AppRunner::kill(bool kill_tree) {
             process_handle_ = nullptr;
         } else {
             // normally only updater here, be careful
-            KillProcessTree(proc_id);
-            auto success = KillProcess(proc_id);
-            XLOG::d.i("Process [{}] had been {}", proc_id,
-                      success ? "killed SUCCESSFULLY" : "FAILED to kill");
+            if (false) {
+                KillProcessTree(proc_id);
+                auto success = KillProcess(proc_id);
+                XLOG::d.i("Process [{}] '{}' had been {}", proc_id,
+                          wtools::ConvertToUTF8(cmd_line_),
+                          success ? "killed SUCCESSFULLY" : "FAILED to kill");
+            } else {
+                XLOG::l.i("Killing of updater [{}]  is disabled '{}'", proc_id,
+                          wtools::ConvertToUTF8(cmd_line_));
+            }
         }
 
         return;

@@ -82,9 +82,8 @@ def new_state(rc, s):
     raise HostResult((rc, s))
 
 
-def output_check_result(rc, s):
-    stxt = ['OK', 'WARN', 'CRIT', 'UNKN'][rc]
-    sys.stdout.write('%s - %s\n' % (stxt, s))
+def output_check_result(s):
+    sys.stdout.write('%s\n' % s)
 
 
 def get_base_url(ssl, host, port):
@@ -379,5 +378,5 @@ def main(args=None):
 
 if __name__ == "__main__":
     exitcode, info = main()
-    output_check_result(exitcode, info)
+    output_check_result(info)
     sys.exit(exitcode)

@@ -194,8 +194,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
 
 def bail_out(exit_code: int, output: str) -> NoReturn:
-    state_txt = ["OK", "WARN", "CRIT", "UNKNOWN"][exit_code]
-    sys.stdout.write("%s - %s\n" % (state_txt, output))
+    sys.stdout.write("%s\n" % output)
     sys.exit(exit_code)
 
 

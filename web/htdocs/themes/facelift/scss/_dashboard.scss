@@ -941,6 +941,10 @@ div.alert_statistics {
     }
   }
 
+  g.element_box.host_element path.hexagon.ok {
+    stroke: #404a55;
+  }
+
   path.icon_element {
     fill: #262f38;
     stroke-dasharray: 3, 3;

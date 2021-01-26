@@ -161,7 +161,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             2: "#ff0000",
             3: "#ff8800",
             1: "#ffff00",
-            0: "#13d38910",
+            0: "#262f38",
         }[host_stats.state]
         if host_stats.scheduled_downtime_depth > 0:
             color = "#00aaff"
@@ -175,7 +175,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             return "#ff8800"
         if host_stats.num_services_warn > 0:
             return "#ffff00"
-        return "#13d38910"
+        return "#262f38"
 
     @classmethod
     def _get_host_stats(cls, site_id: SiteId) -> Dict[HostName, HostStats]:

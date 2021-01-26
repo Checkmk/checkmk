@@ -561,9 +561,9 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
             if (anchor_id == i) {
                 anchor.className += " on";
                 anchor.title = "Currently growing from here";
-                const drag_image = document.createElement("div");
-                drag_image.className = "drag_image";
-                anchor.appendChild(drag_image);
+                const anchor_image = document.createElement("div");
+                anchor_image.className = "anchor_image";
+                anchor.appendChild(anchor_image);
                 const helper = document.createElement("div");
                 utils.add_class(helper, "anchor_label");
                 helper.innerHTML = "Anchor";

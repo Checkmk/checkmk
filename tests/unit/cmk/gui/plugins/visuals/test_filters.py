@@ -1105,5 +1105,5 @@ def _set_expected_queries(filt_ident, live):
 
     if filt_ident in ["host_check_command", "check_command"]:
         live.expect_query(
-            'GET commands\nCache: reload\nColumns: name\n'
+            'GET commands\nCache: reload\nColumns: name\nColumnHeaders: off'
         )

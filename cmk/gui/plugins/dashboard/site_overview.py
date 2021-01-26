@@ -24,7 +24,7 @@ from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 @dataclass
 class Part:
     title: str
-    color: Optional[str]
+    css_class: str
     count: int
 
 
@@ -229,21 +229,21 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             stats = site_stats[site_id]
             parts = []
             total = 0
-            for title, color, count in [
-                (_("hosts are down or have critical services"), "#ff0000",
+            for title, css_class, count in [
+                (_("hosts are down or have critical services"), "critical",
                  stats.hosts_down_or_have_critical),
-                (_("hosts are unreachable or have unknown services"), "#ff8800",
+                (_("hosts are unreachable or have unknown services"), "unknown",
                  stats.hosts_unreachable_or_have_unknown),
-                (_("hosts are up but have services in warning state"), "#ffff00",
+                (_("hosts are up but have services in warning state"), "warning",
                  stats.hosts_up_and_have_warning),
-                (_("hosts are in scheduled downtime"), "#00aaff", stats.hosts_in_downtime),
-                (_("hosts are up and have no service problems"), "#13d38910",
+                (_("hosts are in scheduled downtime"), "downtime", stats.hosts_in_downtime),
+                (_("hosts are up and have no service problems"), "ok",
                  stats.hosts_up_without_problem),
             ]:
-                parts.append(Part(title=title, color=color, count=count))
+                parts.append(Part(title=title, css_class=css_class, count=count))
                 total += count
 
-            total_part = Part(title=_("Total number of hosts"), color=None, count=total)
+            total_part = Part(title=_("Total number of hosts"), css_class="", count=total)
 
             elements.append(
                 SiteElement(
@@ -368,17 +368,17 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
         for site_name, site_id, states in test_sites:
             parts = []
             total = 0
-            for title, color, count in zip([
+            for title, css_class, count in zip([
                     "Critical hosts",
                     "Hosts with unknowns",
                     "Hosts with warnings",
                     "Hosts in downtime",
                     "OK/UP",
-            ], ["#ff0000", "#ff8800", "#ffff00", "#00aaff", "#13d38910"], states):
-                parts.append(Part(title=title, color=color, count=count))
+            ], ["critical", "unknown", "warning", "downtime", "ok"], states):
+                parts.append(Part(title=title, css_class=css_class, count=count))
                 total += count
 
-            total_part = Part(title="Total", color=None, count=total)
+            total_part = Part(title="Total", css_class="", count=total)
 
             elements.append(
                 SiteElement(
@@ -408,7 +408,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             html.open_table()
             for part in parts:
                 html.open_tr()
-                html.td("", class_="color", style="background-color:%s" % part.color)
+                html.td("", class_=["color", part.css_class])
                 html.td(str(part.count), class_="count")
                 html.td(part.title, class_="title")
                 html.close_tr()

@@ -457,8 +457,8 @@ export class SiteOverview extends cmk_figures.FigureBase {
                     .join(enter => enter.append("path").classed("hexagon_0", true))
                     .attr("d", d3.hexbin().hexagon(geometry.hexagon_radius * 0.5))
                     .attr("title", element.title)
-                    .classed(element.css_class, true)
-                    .attr("fill", "#ffffff30");
+                    .classed("icon_element", true)
+                    .classed(element.css_class, true);
 
                 hexagon_box
                     .selectAll("path.hexagon_icon")
@@ -490,15 +490,14 @@ export class SiteOverview extends cmk_figures.FigureBase {
                         geometry.hexagon_radius;
                     sum -= part.count;
 
-                    let hexagon = hexagon_box
+                    hexagon_box
                         .selectAll("path.hexagon_" + i)
                         .data([element])
                         .join(enter => enter.append("path").classed("hexagon_" + i, true))
                         .attr("d", d3.hexbin().hexagon(radius * scale))
                         .attr("title", part.title)
-                        .attr("fill", part.color);
-
-                    if (i == 0) hexagon.attr("stroke", "#13d389");
+                        .classed("site_element", true)
+                        .classed(part.css_class, true);
                 }
             }
             this.tooltip_generator.add_support(hexagon_box.node());

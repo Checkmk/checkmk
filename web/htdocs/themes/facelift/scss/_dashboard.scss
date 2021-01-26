@@ -887,11 +887,63 @@ div.alert_statistics {
 
     td.color {
       width: 10px;
+
+      &.critical {
+        background-color: #f00;
+      }
+
+      &.unknown {
+        background-color: #f80;
+      }
+
+      &.warning {
+        background-color: #ff0;
+      }
+
+      &.downtime {
+        background-color: #0af;
+      }
+
+      &.ok {
+        background-color: #262f38;
+      }
     }
 
     td.count {
       padding-left: 4px;
       text-align: right;
     }
+  }
+
+  path.hexagon_0.site_element {
+    stroke: #404a55;
+  }
+
+  path.site_element {
+    &.critical {
+      fill: #f00;
+    }
+
+    &.unknown {
+      fill: #f80;
+    }
+
+    &.warning {
+      fill: #ff0;
+    }
+
+    &.downtime {
+      fill: #0af;
+    }
+
+    &.ok {
+      fill: #262f38;
+    }
+  }
+
+  path.icon_element {
+    fill: #262f38;
+    stroke-dasharray: 3, 3;
+    stroke: #404a55;
   }
 }

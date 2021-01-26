@@ -87,15 +87,15 @@ export class SiteOverview extends cmk_figures.FigureBase {
         cmk_figures.FigureBase.prototype.update_data.call(this, data);
         this._crossfilter.remove(() => true);
 
-        if (this._data.render_mode == "hosts") {
-            for (let i = 0; i < 200; i++) {
-                // Create new data instead of references
-                let demo_host = JSON.parse(JSON.stringify(this._data.data[0]));
-                demo_host.tooltip = "Demo host" + i;
-                demo_host.title += i;
-                this._crossfilter.add([demo_host]);
-            }
-        }
+        //if (this._data.render_mode == "hosts") {
+        //    for (let i = 0; i < 200; i++) {
+        //        // Create new data instead of references
+        //        let demo_host = JSON.parse(JSON.stringify(this._data.data[0]));
+        //        demo_host.tooltip = "Demo host" + i;
+        //        demo_host.title += i;
+        //        this._crossfilter.add([demo_host]);
+        //    }
+        //}
         this._crossfilter.add(this._data.data);
     }
 

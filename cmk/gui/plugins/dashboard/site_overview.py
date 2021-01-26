@@ -256,7 +256,8 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
                     tooltip=cls._render_tooltip(site_spec["alias"], parts, total_part),
                 ))
 
-        return elements + cls._test_elements()
+        #return elements + cls._test_elements()
+        return elements
 
     @classmethod
     def _get_site_stats(cls) -> Dict[SiteId, SiteStats]:

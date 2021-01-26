@@ -371,11 +371,11 @@ div.dashlet.edit {
       background-color: $success;
       border-radius: 12px;
 
-      &.drag_image {
+      &.anchor_image {
         width: 15px;
         height: 15px;
         padding: 0;
-        background-image: url("images/dashlet_drag.svg");
+        background-image: url("images/dashlet_anchor.svg");
         background-repeat: no-repeat;
       }
     }
@@ -396,7 +396,7 @@ div.dashlet.edit {
             left: $dashlet-anchor-size;
           }
 
-          &.drag_image {
+          &.anchor_image {
             top: -$dashlet-anchor-size - $spacing;
             left: 3px;
           }
@@ -420,7 +420,7 @@ div.dashlet.edit {
             right: $dashlet-anchor-size;
           }
 
-          &.drag_image {
+          &.anchor_image {
             top: -$dashlet-anchor-size - $spacing;
             right: 3px;
           }
@@ -443,7 +443,7 @@ div.dashlet.edit {
             right: $dashlet-anchor-size;
           }
 
-          &.drag_image {
+          &.anchor_image {
             right: 3px;
             bottom: -$dashlet-anchor-size - $spacing;
           }
@@ -466,7 +466,7 @@ div.dashlet.edit {
             left: $dashlet-anchor-size;
           }
 
-          &.drag_image {
+          &.anchor_image {
             bottom: -$dashlet-anchor-size - $spacing;
             left: 3px;
           }
@@ -480,7 +480,7 @@ div.dashlet.edit {
       visibility: hidden;
     }
 
-    div.drag_image {
+    div.anchor_image {
       visibility: hidden;
     }
 

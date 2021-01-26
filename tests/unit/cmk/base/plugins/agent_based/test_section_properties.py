@@ -72,7 +72,6 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
         'if',
         'if64',
         'if64adm',
-        'infoblox_osinfo',
         'inv_if',
         'openbsd_sensors',
         'printer_alerts',

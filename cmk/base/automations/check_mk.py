@@ -1154,7 +1154,7 @@ class AutomationDiagHost(Automation):
             if isinstance(source, checkers.programs.DSProgramSource) and cmd:
                 source = source.ds(
                     source.hostname,
-                    source.ipaddress,
+                    ipaddress,
                     mode=source.mode,
                     template=cmd,
                 )

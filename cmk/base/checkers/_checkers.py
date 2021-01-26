@@ -21,6 +21,7 @@ from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 from cmk.fetchers.protocol import FetcherMessage
 
 import cmk.base.config as config
+import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
@@ -51,6 +52,10 @@ class _Builder:
         self._host_config = host_config
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
+        self._fallback_ip = core_config.fallback_ip_for(
+            self._host_config,
+            6 if self._host_config.is_ipv6_primary else 4,
+        )
         self._mode = mode
         self._selected_sections = selected_sections
         self._elems: Dict[str, Source] = {}
@@ -166,7 +171,7 @@ class _Builder:
         if datasource_program is not None:
             return DSProgramSource(
                 self._hostname,
-                self._ipaddress,
+                self._ipaddress or self._fallback_ip,
                 mode=self._mode,
                 main_data_source=main_data_source,
                 template=datasource_program,
@@ -183,7 +188,7 @@ class _Builder:
         return [
             SpecialAgentSource(
                 self._hostname,
-                self._ipaddress,
+                self._ipaddress or self._fallback_ip,
                 mode=self._mode,
                 special_agent_id=agentname,
                 params=params,

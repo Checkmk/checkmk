@@ -52,6 +52,7 @@ class _Builder:
         self._host_config = host_config
         self._hostname = host_config.hostname
         self._ipaddress = ipaddress
+        self._fallback_ip = ip_lookup.fallback_ip_for(self._host_config.default_address_family)
         self._mode = mode
         self._selected_sections = selected_sections
         self._on_scan_error = on_scan_error
@@ -170,7 +171,7 @@ class _Builder:
         if datasource_program is not None:
             return DSProgramSource(
                 self._hostname,
-                self._ipaddress,
+                self._ipaddress or self._fallback_ip,
                 mode=self._mode,
                 main_data_source=main_data_source,
                 template=datasource_program,
@@ -187,7 +188,7 @@ class _Builder:
         return [
             SpecialAgentSource(
                 self._hostname,
-                self._ipaddress,
+                self._ipaddress or self._fallback_ip,
                 mode=self._mode,
                 special_agent_id=agentname,
                 params=params,

@@ -10,7 +10,7 @@ import mimetypes
 import os
 import re
 import urllib.parse
-from typing import Any, Callable, Dict, Optional, Tuple, Type, List
+from typing import Any, Callable, Dict, Optional, Tuple, Type, List, Literal
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
@@ -27,6 +27,7 @@ from cmk.gui.config import omd_site
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
 from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data
+from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
 from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
@@ -42,6 +43,7 @@ EXCEPTION_STATUS: Dict[Type[Exception], int] = {
     MKAuthException: 401,
 }
 
+SpecExtension = Literal['json', 'yaml']
 WSGIEnvironment = Dict[str, Any]
 
 
@@ -197,11 +199,12 @@ def get_url(environ: WSGIEnvironment) -> str:
 @functools.lru_cache(maxsize=512)
 def serve_spec(
     site: str,
+    target: EndpointTarget,
     url: str,
     content_type: str,
     serializer: Callable[[Dict[str, Any]], str],
 ) -> Response:
-    data = generate_data()
+    data = generate_data(target=target)
     data.setdefault('servers', [])
     data['servers'].append({
         'url': url,
@@ -226,21 +229,25 @@ class ServeSwaggerUI:
     def _url(self, environ: WSGIEnvironment):
         return '/'.join(get_url(environ).split("/")[:-1])
 
-    def serve_json(self, environ: WSGIEnvironment, start_response):
-        return serve_spec(
-            site=self._site(environ),
-            url=self._url(environ),
-            content_type='application/json',
-            serializer=json.dumps,
-        )(environ, start_response)
+    def serve_spec(self, target: EndpointTarget, extension: SpecExtension):
+        def _serve(environ: WSGIEnvironment, start_response):
+            serializers = {
+                'yaml': dict_to_yaml,
+                'json': json.dumps,
+            }
+            content_types = {
+                'json': 'application/json',
+                'yaml': 'application/x-yaml; charset=utf-8'
+            }
+            return serve_spec(
+                site=self._site(environ),
+                target=target,
+                url=self._url(environ),
+                content_type=content_types[extension],
+                serializer=serializers[extension],
+            )(environ, start_response)
 
-    def serve_yaml(self, environ: WSGIEnvironment, start_response):
-        return serve_spec(
-            site=self._site(environ),
-            url=self._url(environ),
-            content_type='application/x-yaml; charset=utf-8',
-            serializer=dict_to_yaml,
-        )(environ, start_response)
+        return _serve
 
     def _relative_path(self, environ: WSGIEnvironment):
         path_info = environ['PATH_INFO']
@@ -254,11 +261,11 @@ class ServeSwaggerUI:
 
     def _serve_file(self, environ, start_response):
         current_url = get_url(environ)
+        yaml_filename = "openapi-swagger-ui.yaml"
         if current_url.endswith("/ui/"):
-            yaml_file = current_url[:-4] + "/openapi.yaml"
-        else:
-            yaml_file = current_url + "/openapi.yaml"
+            current_url = current_url[:-4]
 
+        yaml_file = f"{current_url}/{yaml_filename}"
         file_path = swagger_ui_3_path + self._relative_path(environ)
 
         if not os.path.exists(file_path):
@@ -308,8 +315,12 @@ class CheckmkRESTAPI:
                 [
                     Rule("/ui/", endpoint=swagger_ui),
                     Rule("/ui/<path:path>", endpoint=swagger_ui),
-                    Rule("/openapi.yaml", endpoint=swagger_ui.serve_yaml),
-                    Rule("/openapi.json", endpoint=swagger_ui.serve_json),
+                    Rule("/openapi-swagger-ui.yaml",
+                         endpoint=swagger_ui.serve_spec('swagger-ui', 'yaml')),
+                    Rule("/openapi-swagger-ui.json",
+                         endpoint=swagger_ui.serve_spec('swagger-ui', 'json')),
+                    Rule("/openapi-doc.yaml", endpoint=swagger_ui.serve_spec('doc', 'yaml')),
+                    Rule("/openapi-doc.json", endpoint=swagger_ui.serve_spec('doc', 'json')),
                     *rules,
                 ],
             ),

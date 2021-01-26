@@ -6348,7 +6348,8 @@ def test_view_page(wsgi_app, with_user, mock_livestatus):
         "host_is_flapping host_labels host_modified_attributes_list host_name host_notes_url_expanded "
         "host_notifications_enabled host_num_services_crit host_num_services_ok "
         "host_num_services_pending host_num_services_unknown host_num_services_warn host_perf_data "
-        "host_pnpgraph_present host_scheduled_downtime_depth host_staleness host_state"
+        "host_pnpgraph_present host_scheduled_downtime_depth host_staleness host_state\n"
+        "Limit: 1001"
     )
     live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     with live():

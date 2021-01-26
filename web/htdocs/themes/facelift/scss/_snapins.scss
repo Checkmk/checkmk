@@ -273,10 +273,14 @@ div.speedometer {
   position: relative;
   top: 0;
   left: 0;
-  height: 223px;
+  height: 170px;
 }
 
-img#speedometerbg,
+img#speedometerbg {
+  width: 260px;
+  height: auto;
+}
+
 canvas#speedometer {
   position: absolute;
   top: 0;

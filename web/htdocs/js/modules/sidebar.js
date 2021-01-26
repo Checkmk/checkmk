@@ -963,17 +963,17 @@ function show_speed(percentage) {
 
     if (percentage > 100.0) percentage = 100.0;
 
-    const orig_x = 116;
+    const orig_x = 124;
     const orig_y = 181;
-    const angle_0 = 232.0;
-    const angle_100 = 307.0;
+    const angle_0 = 226.0;
+    const angle_100 = 314.0;
     const angle = angle_0 + ((angle_100 - angle_0) * percentage) / 100.0;
     const angle_rad = (angle / 360.0) * Math.PI * 2;
     const length = 120;
     const end_x = orig_x + Math.cos(angle_rad) * length;
     const end_y = orig_y + Math.sin(angle_rad) * length;
 
-    context.clearRect(0, 0, 228, 136);
+    context.clearRect(0, 0, 228, 146);
     context.beginPath();
     context.moveTo(orig_x, orig_y);
     context.lineTo(end_x, end_y);
@@ -981,7 +981,10 @@ function show_speed(percentage) {
     context.shadowOffsetX = 2;
     context.shadowOffsetY = 2;
     context.shadowBlur = 2;
-    context.strokeStyle = "#000000";
+    if (percentage < 80.0) context.strokeStyle = "#FF3232";
+    else if (percentage < 95.0) context.strokeStyle = "#FFFE44";
+    else context.strokeStyle = "#13D389";
+    context.lineWidth = 3;
     context.stroke();
 }
 

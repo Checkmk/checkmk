@@ -10,7 +10,6 @@ from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
-import cmk.utils.defines as defines
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKSNMPError, MKIPAddressLookupError
 from cmk.utils.log import console
 
@@ -60,8 +59,7 @@ def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
                 status = max(status, exit_spec.get("exception", 3))
 
             # Produce the service check result output
-            output_txt = "%s - %s" % (defines.short_service_state_name(status),
-                                      ", ".join(infotexts))
+            output_txt = ", ".join(infotexts)
             if perfdata:
                 output_txt += " | %s" % " ".join(perfdata)
             if long_infotexts:

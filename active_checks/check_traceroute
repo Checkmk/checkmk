@@ -73,13 +73,11 @@ def parse_exception(exc):
     return str(exc)
 
 
-def output_check_result(rc, s, perfdata):
-    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    output = '%s - %s' % (stxt, s)
+def output_check_result(s, perfdata):
     if perfdata:
         perfdata_output_entries = ['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata]
-        output += ' | %s' % " ".join(perfdata_output_entries)
-    sys.stdout.write('%s\n' % output)
+        s += ' | %s' % " ".join(perfdata_output_entries)
+    sys.stdout.write('%s\n' % s)
 
 
 def option_to_state(c):
@@ -128,12 +126,7 @@ def check_traceroute(lines, routes):
             state = max(state, s)
             missing_routers.append("%s(%s)" % (route, "!" * s))
 
-    info_text = "%s - %d hops, missing routers: %s, bad routers: %s" % (
-        {
-            0: "OK",
-            1: "WARN",
-            2: "CRIT"
-        }[state],
+    info_text = "%d hops, missing routers: %s, bad routers: %s" % (
         hops,
         missing_routers and ", ".join(missing_routers) or "none",
         bad_routers and ", ".join(bad_routers) or "none",
@@ -256,5 +249,5 @@ def main(args=None):
 
 if __name__ == "__main__":
     exitcode, info, perf = main()
-    output_check_result(exitcode, info, perf)
+    output_check_result(info, perf)
     sys.exit(exitcode)

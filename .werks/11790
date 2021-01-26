@@ -1,0 +1,25 @@
+Title: Remove state text in the "Status detail"
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1612287992
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b6
+
+This change is only incompatible if you match for the state
+(OK, WARN, ...) in the "Status detail" of the service output.
+
+Previously, the "Status detail" ("Summary" in version 2.0.0) of
+a service started with the state followed by the output of the
+service. The service "CPU utilization" may e.g. have the output:
+
+OK - Total CPU: 4.17%
+
+The state is now ommitted, i.e. the output becomes:
+
+Total CPU: 4.17%
+
+If you match for the state in the "Status detail", you now have
+to use the filter "Service states" instead.

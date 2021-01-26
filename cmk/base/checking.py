@@ -34,7 +34,6 @@ from typing import (
 from six import ensure_binary, ensure_str
 
 import cmk.utils.debug
-import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
@@ -994,11 +993,6 @@ def _submit_check_result(
     show_perfdata: bool,
 ) -> None:
     state, infotext, perfdata = result
-
-    if not (infotext.startswith("OK -") or infotext.startswith("WARN -") or
-            infotext.startswith("CRIT -") or infotext.startswith("UNKNOWN -")):
-        infotext = defines.short_service_state_name(state) + " - " + infotext
-
     # make sure that plugin output does not contain a vertical bar. If that is the
     # case then replace it with a Uniocode "Light vertical bar"
     if isinstance(infotext, str):

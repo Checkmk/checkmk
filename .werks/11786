@@ -1,0 +1,15 @@
+Title: proxmox_ve_disk_usage: use same metrics and summary as df checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1611654095
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b6
+
+proxmox_ve_disk_usage summary and metrics have been very sparse, not including
+FS size or percentage of usage.
+This changes makes the check output look like other df based checks including
+{{fs_used}}, {{fs_size}} and {{fs_used_percent}} metrics, as well as a summary
+in form of {{50.00% used (1.10 TB of 2.20 TB)}}.

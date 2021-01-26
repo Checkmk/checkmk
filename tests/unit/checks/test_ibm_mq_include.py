@@ -4,15 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=no-self-use
+
 import os
 from typing import Any, Dict
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.base.check_api import MKCounterWrapped
-
-from cmk.base.check_legacy_includes.ibm_mq import *
+from cmk.base.check_legacy_includes.ibm_mq import (
+    ibm_mq_check_version,
+    parse_runmqsc_display_output,
+    is_ibm_mq_service_vanished,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -79,7 +83,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "QUEUE")  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        parsed = parse_runmqsc_display_output(section, "QUEUE")
         assert 2 + 2 == len(parsed)
 
         assert parsed['FOO.BAR']['STATUS'] == 'ENDED UNEXPECTEDLY'
@@ -141,7 +145,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "QUEUE")  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        parsed = parse_runmqsc_display_output(section, "QUEUE")
         assert "QM.ONE:MY.QUEUE" in parsed
         assert "QM.TWO:MY.QUEUE" in parsed
         assert len(parsed["QM.ONE:MY.QUEUE"]) == 16
@@ -170,7 +174,7 @@ No commands have a syntax error.
 All valid MQSC commands were processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "QUEUE")  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        parsed = parse_runmqsc_display_output(section, "QUEUE")
         attrs = parsed['MY.TEST:MY.QUEUE']
         assert attrs['IPPROCS'] == '2'
         assert attrs['MSGAGE'] == ''
@@ -190,7 +194,7 @@ No commands have a syntax error.
 One valid MQSC command could not be processed.
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "CHANNEL")  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        parsed = parse_runmqsc_display_output(section, "CHANNEL")
         assert 'MY.TEST:HERE.TO.THERE.TWO' in parsed
         assert 'STATUS' not in parsed['MY.TEST:HERE.TO.THERE.TWO']
 
@@ -227,7 +231,7 @@ AMQ8417I: Display Channel Status details.
    STATUS(RUNNING)                         SUBSTATE(MQGET)
 """
         section = parse_info(lines, chr(10))
-        parsed = parse_runmqsc_display_output(section, "CHANNEL")  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        parsed = parse_runmqsc_display_output(section, "CHANNEL")
 
         attrs = parsed['MY.TEST']
         assert attrs['STATUS'] == 'RUNNING'
@@ -251,7 +255,7 @@ class TestServiceVanished:
                 'CURDEPTH': '0'
             },
         }
-        assert is_ibm_mq_service_vanished('QM1:QUEUE1', parsed) is False  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        assert is_ibm_mq_service_vanished('QM1:QUEUE1', parsed) is False
 
     def test_vanished_for_running_qmgr(self):
         parsed = {
@@ -262,44 +266,44 @@ class TestServiceVanished:
                 'CURDEPTH': '0'
             },
         }
-        assert is_ibm_mq_service_vanished('QM1:VANISHED', parsed) is True  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        assert is_ibm_mq_service_vanished('QM1:VANISHED', parsed) is True
 
     def test_stale_for_not_running_qmgr(self):
         parsed = {'QM1': {'STATUS': 'ENDED NORMALLY'}}
         with pytest.raises(MKCounterWrapped, match=r"^Stale because .* ENDED NORMALLY"):
-            is_ibm_mq_service_vanished('QM1:QUEUE1', parsed)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            is_ibm_mq_service_vanished('QM1:QUEUE1', parsed)
 
 
 class TestCheckVersion:
     def test_specific(self):
         params = {'version': ('specific', '2.1.0')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')
         expected = (0, 'MyLabel: 2.1.0')
         assert expected == actual
 
         params = {'version': ('specific', '2.0')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')
         expected = (2, 'MyLabel: 2.1.0 (should be 2.0)')
         assert expected == actual
 
     def test_at_least(self):
         params = {'version': ('at_least', '2.0')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')
         expected = (0, 'MyLabel: 2.1.0')
         assert expected == actual
 
         params = {'version': ('at_least', '2.2')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')
         expected = (2, 'MyLabel: 2.1.0 (should be at least 2.2)')
         assert expected == actual
 
         params = {'version': ('at_least', '0.1.0')}
-        actual = ibm_mq_check_version('1.0.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        actual = ibm_mq_check_version('1.0.0', params, 'MyLabel')
         expected = (0, 'MyLabel: 1.0.0')
         assert expected == actual
 
         params = {'version': ('at_least', '8.0.0.1')}
-        actual = ibm_mq_check_version('9.0.0.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        actual = ibm_mq_check_version('9.0.0.0', params, 'MyLabel')
         expected = (0, 'MyLabel: 9.0.0.0')
         assert expected == actual
 
@@ -307,23 +311,23 @@ class TestCheckVersion:
         const_error = "Only characters 0-9 and . are allowed for a version."
 
         params = {'version': ('specific', '2.a')}
-        actual = ibm_mq_check_version('2.1.0', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        expected = (3, "Can not compare 2.1.0 and 2.a. " + const_error)
-        assert expected == actual
+        state, text = ibm_mq_check_version('2.1.0', params, 'MyLabel')
+        assert state == 3
+        assert text.startswith("Cannot compare 2.1.0 and 2.a.")
 
         params = {'version': ('specific', '2.2')}
-        actual = ibm_mq_check_version('2.x', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        expected = (3, "Can not compare 2.x and 2.2. " + const_error)
-        assert expected == actual
+        state, text = ibm_mq_check_version('2.x', params, 'MyLabel')
+        assert state == 3
+        assert text.startswith("Cannot compare 2.x and 2.2.")
 
     def test_unparseable_without_wato_rule(self):
         params: Dict[str, Any] = {}
-        actual = ibm_mq_check_version('2.x', params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        actual = ibm_mq_check_version('2.x', params, 'MyLabel')
         expected = (0, "MyLabel: 2.x")
         assert expected == actual
 
     def test_no_version(self):
         params: Dict[str, Any] = {}
-        actual = ibm_mq_check_version(None, params, 'MyLabel')  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        actual = ibm_mq_check_version(None, params, 'MyLabel')
         expected = (3, "MyLabel: None (no agent info)")
         assert expected == actual

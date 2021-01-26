@@ -289,6 +289,10 @@ export function get_url_param(name, url) {
 export function makeuri(addvars, url, filename) {
     url = typeof url === "undefined" ? window.location.href : url;
 
+    // First cleanup some trailing characters that would confuse the
+    // following logic
+    url = url.replace(/[#?]+$/g, "");
+
     var tmp = url.split("?");
     var base = typeof filename === "undefined" ? tmp[0] : filename;
     if (tmp.length > 1) {

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 from testlib import Check  # type: ignore[import]
 import pytest  # type: ignore
 from cmk.base.check_api import MKCounterWrapped
@@ -13,20 +13,6 @@ from test_ibm_mq_include import parse_info
 pytestmark = pytest.mark.checks
 
 CHECK_NAME = "ibm_mq_channels"
-
-factory_settings = {}
-factory_settings["ibm_mq_channels_default_levels"] = {
-    'status': {
-        'INACTIVE': 0,
-        'INITIALIZING': 0,
-        'BINDING': 0,
-        'STARTING': 0,
-        'RUNNING': 0,
-        'RETRYING': 1,
-        'STOPPING': 0,
-        'STOPPED': 2,
-    }
-}
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
@@ -47,16 +33,22 @@ AMQ8414: Display Channel details.
    XMITQ( )
 AMQ8417: Display Channel Status details.
    CHANNEL(HERE.TO.THERE.TWO)              CHLTYPE(SDR)
+   COMPRATE(0,0)                           COMPTIME(0,0)
    CONNAME(55.888.222.333(1414),22,333.444.555(1414))
+   EXITTIME(0,0)                           MONCHL(OFF)
    CURRENT                                 RQMNAME( )
    STATUS(RETRYING)                        SUBSTATE( )
-   XMITQ(HERE.TO.THERE.TWO.XMIT)
+   XBATCHSZ(0,0)                           XMITQ(HERE.TO.THERE.TWO.XMIT)
+   XQTIME(0,1)
 AMQ8417: Display Channel Status details.
    CHANNEL(HERE.TO.THERE.ONE)              CHLTYPE(SDR)
+   COMPRATE(0,0)                           COMPTIME(0,0)
    CONNAME(62.240.197.243(1414),62.240.197.244(1414))
+   EXITTIME(0,0)                           MONCHL(OFF)
    CURRENT                                 RQMNAME( )
-   STATUS(RETRYING)                        SUBSTATE( )
-   XMITQ(HERE.TO.THERE.ONE.XMIT)
+   STATUS(RETRYING)                        SUBSTATE(MQGET)
+   XBATCHSZ(0,0)                           XMITQ(HERE.TO.THERE.TWO.XMIT)
+   XQTIME(0,1)
 5 MQSC commands read.
 No commands have a syntax error.
 All valid MQSC commands were processed.
@@ -74,11 +66,13 @@ All valid MQSC commands were processed.
     assert attrs['CHLTYPE'] == 'SDR'
     assert attrs['STATUS'] == 'RETRYING'
     assert attrs['CONNAME'] == '55.888.222.333(1414),22,333.444.555(1414)'
+    assert attrs['MONCHL'] == 'OFF'
 
     attrs = parsed['MY.TEST:HERE.TO.THERE.TWO']
     assert attrs['CHLTYPE'] == 'SDR'
     assert attrs['STATUS'] == 'RETRYING'
     assert attrs['CONNAME'] == '55.888.222.333(1414),22,333.444.555(1414)'
+    assert attrs['MONCHL'] == 'OFF'
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
@@ -138,7 +132,7 @@ def test_discovery_qmgr_not_included():
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_check():
     check = Check(CHECK_NAME)
-    params = factory_settings['ibm_mq_channels_default_levels']
+    params: Dict[str, Any] = {}
     parsed = {
         'QM1': {
             'STATUS': 'RUNNING'
@@ -174,12 +168,12 @@ def test_check():
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_no_xmit_queue_defined():
     """
-    Happened on queue manager MQSWISSFPMP1 and channel LXFPMS.TO.RESA. It
+    Happened on queue manager MQZZZPPPP and channel FOO.TO.RESA. It
     is a misconfiguration on the queue manager, but the monitoring should
     not choke on this.
     """
     check = Check(CHECK_NAME)
-    params = factory_settings['ibm_mq_channels_default_levels']
+    params: Dict[str, Any] = {}
     parsed = {
         'QM1': {
             'STATUS': 'RUNNING'
@@ -196,11 +190,11 @@ def test_no_xmit_queue_defined():
         'QM1:CHAN3': {
             'CHLTYPE': 'SVRCONN'
         },
-        'MQSWISSFPMP1:LXFPMS.TO.RESA': {
+        'MQZZZPPPP:FOO.TO.RESA': {
             'CHLTYPE': 'SDR'
         },
     }
-    actual = list(check.run_check('MQSWISSFPMP1:LXFPMS.TO.RESA', params, parsed))
+    actual = list(check.run_check('MQZZZPPPP:FOO.TO.RESA', params, parsed))
     expected: List[Tuple[int, str, List[Any]]] = [(0, u'Status: INACTIVE, Type: SDR', [])]
     assert actual == expected
 
@@ -208,7 +202,7 @@ def test_no_xmit_queue_defined():
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_stale_service_for_not_running_qmgr():
     check = Check(CHECK_NAME)
-    params = factory_settings['ibm_mq_channels_default_levels']
+    params: Dict[str, Any] = {}
     parsed = {'QM1': {'STATUS': 'ENDED NORMALLY'}}
     with pytest.raises(MKCounterWrapped, match=r"Stale because queue manager ENDED NORMALLY"):
         list(check.run_check('QM1:CHAN2', params, parsed))
@@ -217,7 +211,7 @@ def test_stale_service_for_not_running_qmgr():
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_vanished_service_for_running_qmgr():
     check = Check(CHECK_NAME)
-    params = factory_settings['ibm_mq_channels_default_levels']
+    params: Dict[str, Any] = {}
     parsed = {
         'QM1': {
             'STATUS': 'RUNNING'
@@ -228,3 +222,38 @@ def test_vanished_service_for_running_qmgr():
     }
     actual = list(check.run_check('QM1:VANISHED', params, parsed))
     assert len(actual) == 0
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_status_wato_override():
+    check = Check(CHECK_NAME)
+    parsed = {
+        'QM1': {
+            'STATUS': 'RUNNING'
+        },
+        'QM1:CHAN1': {
+            'CHLTYPE': 'SVRCONN',
+            'STATUS': 'STOPPED'
+        },
+    }
+
+    # Factory defaults
+    params: Dict[str, Any] = {}
+    actual = list(check.run_check('QM1:CHAN1', params, parsed))
+    expected: List[Tuple[int, str, List[Any]]] = [(2, u'Status: STOPPED, Type: SVRCONN', [])]
+    assert actual == expected
+
+    # Override factory defaults
+    params = {"mapped_states": [("stopped", 1)]}
+    actual = list(check.run_check('QM1:CHAN1', params, parsed))
+    expected = [(1, u'Status: STOPPED, Type: SVRCONN', [])]
+    assert actual == expected
+
+    # Override-does-not-match configuration
+    params = {
+        'mapped_states': [('retrying', 1)],
+        'mapped_states_default': 3,
+    }
+    actual = list(check.run_check('QM1:CHAN1', params, parsed))
+    expected = [(3, u'Status: STOPPED, Type: SVRCONN', [])]
+    assert actual == expected

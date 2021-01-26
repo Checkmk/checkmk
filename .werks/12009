@@ -1,0 +1,15 @@
+Title: ibm_mq: Extend functionality and fix crash in WATO rule
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1611746897
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b6
+
+The rules that have been created from checkmk 2.0.0i1 to 2.0.0b5 will not work any more.
+The criticality for the version mismatch rule can be configured in WATO.
+Status mappings can be reconfigured individually per device state.
+The default values for the following states have been changed:
+ENDED PREEMPTIVELY, ENDED PRE-EMPTIVELY, NOT AVAILABLE, STATUS NOT AVAILABLE

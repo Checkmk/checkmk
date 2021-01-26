@@ -67,7 +67,7 @@ try:
             mode_name, mode_args = o, a
             break
 
-    if not opts:
+    if not opts and not args:
         if help_function is None:
             raise TypeError()
         help_function()

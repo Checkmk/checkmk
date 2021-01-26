@@ -33,7 +33,7 @@ class Speedometer(SidebarSnapin):
     def show(self):
         html.open_div(class_="speedometer")
         html.img(html.theme_url("images/speedometer.png"), id_="speedometerbg")
-        html.canvas('', width="228", height="136", id_="speedometer")
+        html.canvas('', width="228", height="146", id_="speedometer")
         html.close_div()
 
         html.javascript("cmk.sidebar.speedometer_show_speed(0, 0, 0);")

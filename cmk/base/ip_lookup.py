@@ -176,7 +176,10 @@ def cached_dns_lookup(
             return cached_ip
         cache[cache_id] = None
         raise MKIPAddressLookupError("Failed to lookup %s address of %s via DNS: %s" % (
-            family.name,
+            {
+                socket.AF_INET: "IPv4",
+                socket.AF_INET6: "IPv6"
+            }[family],
             hostname,
             e,
         ))

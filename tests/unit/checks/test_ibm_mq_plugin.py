@@ -74,7 +74,7 @@ runmqsc: Not executable
         id="tool_not_in_agent",
     ),
     pytest.param(
-        {'version': ('at_least', '2.1')},
+        {'version': (('at_least', '2.1'), 2)},
         {
             'version': '2.0.4',
             'dspmq': 'OK',

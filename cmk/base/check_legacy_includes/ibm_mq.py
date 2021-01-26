@@ -98,7 +98,7 @@ def ibm_mq_check_version(actual_version, params, label):
     """
         >>> ibm_mq_check_version(
         ...    "2.0.0b4",
-        ...     {"version": ("at_least", "2.0.0p2")},
+        ...     {"version": (("at_least", "2.0.0p2"), 2)},
         ...     "Doc test",
         ... )
         (2, 'Doc test: 2.0.0b4 (should be at least 2.0.0p2)')
@@ -118,8 +118,7 @@ def ibm_mq_check_version(actual_version, params, label):
         return 3, info + " (no agent info)"
     if "version" not in params:
         return 0, info
-
-    comp_type, expected_version = params["version"]
+    (comp_type, expected_version), state = params["version"]
     try:
         parts_actual = tokenize(actual_version)
         parts_expected = tokenize(expected_version)
@@ -130,7 +129,7 @@ def ibm_mq_check_version(actual_version, params, label):
         )
 
     if comp_type == "at_least" and parts_actual < parts_expected:
-        return 2, info + " (should be at least %s)" % expected_version
+        return state, info + " (should be at least %s)" % expected_version
     if comp_type == "specific" and parts_actual != parts_expected:
-        return 2, info + " (should be %s)" % expected_version
+        return state, info + " (should be %s)" % expected_version
     return 0, info

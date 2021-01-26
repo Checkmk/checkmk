@@ -628,8 +628,6 @@ def test_all_check_variables_present(config_check_variables):
         'hwg_temp_defaultlevels',
         'hyperv_vms_default_levels',
         'ibm_imm_fan_default_levels',
-        'ibm_mq_channels_default_levels',
-        'ibm_mq_managers_default_levels',
         'ibm_mq_queues_default_levels',
         'ibm_storage_ts_fault_nagios_map',
         'ibm_storage_ts_status_nagios_map',

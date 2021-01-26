@@ -110,14 +110,16 @@ def test_check():
             'MSGAGE': '2201',
             'IPPROCS': '5',
             'OPPROCS': '0',
+            'QTIME': ',',
         }
     }
     actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
-    expected = [(0, 'Queue depth: 1400 (0.7%)', [('messages_in_queue', 1400, 1500, 2000, 0, 200000)
-                                                ]),
-                (0, 'Oldest message: 36 m', [('age_oldest', 2201, None, None)]),
-                (1, 'Open input handles: 5 (warn/crit at 4/8)', [('reading', 5, 4, 8)]),
-                (0, 'Open output handles: 0', [('writing', 0, None, None)])]
+    expected = [
+        (0, 'Queue depth: 1400 (0.7%)', [('messages_in_queue', 1400, 1500, 2000, 0, 200000)]),
+        (0, 'Oldest message: 36 m', [('age_oldest', 2201, None, None)]),
+        (1, 'Open input handles: 5 (warn/crit at 4/8)', [('reading', 5, 4, 8)]),
+        (0, 'Open output handles: 0', [('writing', 0, None, None)]),
+    ]
     assert actual == expected
 
 

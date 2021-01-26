@@ -9336,10 +9336,6 @@ msgstr ""
 msgid "Computation options"
 msgstr "Opțiuni adiționale"
 
-#, fuzzy
-msgid "Computation plugin information"
-msgstr "Informații Adiționale"
-
 #, python-format
 msgid "Computation result: %s - %s"
 msgstr ""
@@ -20136,10 +20132,6 @@ msgstr ""
 
 msgid "Host Properties"
 msgstr ""
-
-#, fuzzy
-msgid "Host Selection"
-msgstr "de sus in jos"
 
 msgid "Host Statistics"
 msgstr ""
@@ -50567,9 +50559,6 @@ msgstr ""
 msgid "Upload CRT/PEM File"
 msgstr ""
 
-msgid "Upload Icon"
-msgstr ""
-
 msgid "Upload MIB file"
 msgstr ""
 
@@ -50587,6 +50576,9 @@ msgid "Upload custom logo"
 msgstr ""
 
 msgid "Upload extension package"
+msgstr ""
+
+msgid "Upload icon"
 msgstr ""
 
 msgid "Upload key"
@@ -56778,6 +56770,10 @@ msgstr "Parola"
 msgid "ntopng Username"
 msgstr "Adaugă instanță NGINX"
 
+#, fuzzy
+msgid "ntopng is not configured. Please configure it under global settings."
+msgstr "Acces la modulul <i>Setări Globale</i>"
+
 msgid "ntopng username to aquire data for"
 msgstr ""
 
@@ -57484,6 +57480,14 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Computation plugin information"
+#~ msgstr "Informații Adiționale"
+
+#, fuzzy
+#~ msgid "Host Selection"
+#~ msgstr "de sus in jos"
 
 #, fuzzy
 #~ msgid "Exclude specific agent sections"

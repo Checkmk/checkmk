@@ -9966,9 +9966,6 @@ msgstr "Berechnungs Typ"
 msgid "Computation options"
 msgstr "Berechnungs Typ"
 
-msgid "Computation plugin information"
-msgstr "Berechnungs Plugin Information"
-
 #, python-format
 msgid "Computation result: %s - %s"
 msgstr "Berechnungsergebnis: %s - %s"
@@ -21423,9 +21420,6 @@ msgstr "Hostprobleme (unbehandelt)"
 
 msgid "Host Properties"
 msgstr "Hosteigenschaften"
-
-msgid "Host Selection"
-msgstr "Hostauswahl"
 
 msgid "Host Statistics"
 msgstr "Hoststatistik"
@@ -55038,9 +55032,6 @@ msgstr "Laden Sie Erweiterungspakete hoch und installieren Sie diese"
 msgid "Upload CRT/PEM File"
 msgstr "CRT/PEM-Datei hochladen"
 
-msgid "Upload Icon"
-msgstr "Symbol hochladen"
-
 msgid "Upload MIB file"
 msgstr "MIB-Datei hochladen"
 
@@ -55059,6 +55050,10 @@ msgstr "Angepasstes Logo hochladen"
 
 msgid "Upload extension package"
 msgstr "Laden Sie Erweiterungspakete hoch"
+
+#, fuzzy
+msgid "Upload icon"
+msgstr "Symbol hochladen"
 
 #, fuzzy
 msgid "Upload key"
@@ -62224,6 +62219,10 @@ msgstr "Admin"
 msgid "ntopng Username"
 msgstr "Automatisierung Benutzername"
 
+#, fuzzy
+msgid "ntopng is not configured. Please configure it under global settings."
+msgstr "Diese Einstellung wurde in den Globalen Einstellungen gesetzt."
+
 msgid "ntopng username to aquire data for"
 msgstr "ntopng Benutzername für den Daten geholt werden sollen"
 
@@ -62920,6 +62919,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "Computation plugin information"
+#~ msgstr "Berechnungs Plugin Information"
+
+#~ msgid "Host Selection"
+#~ msgstr "Hostauswahl"
 
 #, fuzzy
 #~| msgid "Use Inline SNMP"

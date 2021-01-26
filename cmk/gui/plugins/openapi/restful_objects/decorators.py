@@ -44,6 +44,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     RawParameter,
     ResponseType,
     SchemaParameter,
+    EndpointTarget,
 )
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
@@ -178,6 +179,7 @@ class Endpoint:
         status_descriptions: Optional[Dict[int, str]] = None,
         options: Optional[Dict[str, str]] = None,
         tag_group: Literal['Monitoring', 'Setup'] = 'Setup',
+        blacklist_in: Optional[Sequence[EndpointTarget]] = None,
         func: Optional[FunctionType] = None,
         operation_id: Optional[str] = None,
         wrapped: Optional[Any] = None,
@@ -197,6 +199,8 @@ class Endpoint:
         self.status_descriptions = status_descriptions if status_descriptions is not None else {}
         self.options: Dict[str, str] = options if options is not None else {}
         self.tag_group = tag_group
+        self.blacklist_in: List[EndpointTarget] = list(
+            blacklist_in) if blacklist_in is not None else []
         self.func = func
         self.operation_id = operation_id
         self.wrapped = wrapped

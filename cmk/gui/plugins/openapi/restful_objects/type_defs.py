@@ -177,6 +177,9 @@ SchemaClass = Type[Schema]
 SchemaInstanceOrClass = Union[Schema, SchemaClass]
 OpenAPISchemaType = Literal['string', 'array', 'object', 'boolean', 'integer', 'number']
 
+# Used to blacklist some endpoints in certain locations
+EndpointTarget = Literal['swagger-ui', 'doc', 'debug']
+
 
 def translate_to_openapi_keys(
     name: str,

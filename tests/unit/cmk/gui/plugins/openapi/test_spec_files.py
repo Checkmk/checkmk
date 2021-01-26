@@ -10,12 +10,14 @@ from openapi_spec_validator import validate_spec  # type: ignore[import]
 
 
 def test_yaml_file(wsgi_app):
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/0/openapi.yaml", status=200)
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/0/openapi-swagger-ui.yaml", status=200)
+    assert resp.content_type.startswith('application/x-yaml')
     data = yaml.safe_load(resp.body)
     validate_spec(data)
 
 
 def test_json_file(wsgi_app):
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/0/openapi.json", status=200)
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/0/openapi-doc.json", status=200)
+    assert resp.content_type.startswith('application/json')
     data = json.loads(resp.body)
     validate_spec(data)

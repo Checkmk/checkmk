@@ -72,17 +72,17 @@ class DashletStats(Dashlet, metaclass=abc.ABCMeta):
             query += entry[3]
         query += self._filter() + filter_headers
 
-        if only_sites:
-            try:
-                sites.live().set_only_sites(only_sites)
-                result: List[int] = sites.live().query_row(query)
-            finally:
-                sites.live().set_only_sites()
-        else:
-            try:
+        try:
+            if only_sites:
+                try:
+                    sites.live().set_only_sites(only_sites)
+                    result: List[int] = sites.live().query_row(query)
+                finally:
+                    sites.live().set_only_sites()
+            else:
                 result = sites.live().query_summed_stats(query)
-            except MKLivestatusNotFoundError:
-                result = []
+        except MKLivestatusNotFoundError:
+            result = []
 
         pies = list(zip(table, result))
         total = sum([x[1] for x in pies])

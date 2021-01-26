@@ -1980,7 +1980,7 @@ multisite_builtin_views.update({
         'column_headers': 'pergroup',
         'datasource': 'services',
         'description': _('All problems of services not currently in a downtime.'),
-        'group_painters': [('service_state', None)],
+        'group_painters': [],
         'hard_filters': ['in_downtime'],
         'hard_filtervars': [
             ('is_in_downtime', '0'),

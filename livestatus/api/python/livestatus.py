@@ -307,6 +307,7 @@ class SingleSiteConnection(Helpers):
 
     def __init__(self,
                  socketurl: str,
+                 site_name: Optional[str] = None,
                  persist: bool = False,
                  allow_cache: bool = False,
                  tls: bool = False,
@@ -315,6 +316,7 @@ class SingleSiteConnection(Helpers):
         """Create a new connection to a MK Livestatus socket"""
         super(SingleSiteConnection, self).__init__()
         self.prepend_site = False
+        self.site_name = site_name
         self.auth_users: Dict[str, UserId] = {}
         # never filled, just to have the same API as MultiSiteConnection (TODO: Cleanup)
         self.deadsites: Dict[SiteId, DeadSite] = {}
@@ -360,7 +362,7 @@ class SingleSiteConnection(Helpers):
 
         self.successful_persistence = False
         family, address = self._parse_socket_url(self.socketurl)
-        self.socket = self._create_socket(family)
+        self.socket = self._create_socket(family, self.site_name)
 
         # If a timeout is set, then we retry after a failure with mild
         # a binary backoff.
@@ -422,7 +424,17 @@ class SingleSiteConnection(Helpers):
         raise MKLivestatusConfigError("Invalid livestatus URL '%s'. "
                                       "Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url)
 
-    def _create_socket(self, family: socket.AddressFamily) -> socket.socket:
+    # NOTE:
+    # The site_name parameter is here to be able to create a mocked socket in the testing
+    # framework which fakes the correct site connection. It is never used at runtime here, but
+    # will break a lot of tests if removed.
+    # Its optional because some parts of the code instantiate a SingleSiteConnection directly
+    # without being able to pass a site_name parameter.
+    def _create_socket(
+        self,
+        family: socket.AddressFamily,
+        site_name: Optional[SiteId] = None,
+    ) -> socket.socket:
         """Creates the Livestatus client socket
 
         It ensures that either a TLS secured socket or a plain text socket
@@ -792,7 +804,7 @@ class MultiSiteConnection(Helpers):
                     }
 
     def connect_to_site(self,
-                        sitename: SiteId,
+                        site_name: SiteId,
                         site: SiteConfiguration,
                         temporary: bool = False) -> SingleSiteConnection:
         """Helper function for connecting to a site"""
@@ -802,6 +814,7 @@ class MultiSiteConnection(Helpers):
 
         connection = SingleSiteConnection(
             socketurl=url,
+            site_name=site_name,
             persist=persist,
             allow_cache=site.get("cache", False),
             tls=tls_type != "plain_text",
@@ -1011,7 +1024,8 @@ class LocalConnection(SingleSiteConnection):
         if not omd_root:
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context.")
-        SingleSiteConnection.__init__(self, "unix:" + omd_root + "/tmp/run/live", *args, **kwargs)
+        SingleSiteConnection.__init__(self, "unix:" + omd_root + "/tmp/run/live", 'local', *args,
+                                      **kwargs)
 
 
 def _combine_query(query: str, headers: Union[str, List[str]]):

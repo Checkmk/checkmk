@@ -487,7 +487,7 @@ program_start num_hosts num_services'
             data = data[:-2]
         self._lookup_next_query(data.decode('utf-8'))
 
-    def create_socket(self, family):
+    def create_socket(self, family, site_name):
         return self.socket
 
     def set_prepend_site(self, prepend_site: bool) -> None:

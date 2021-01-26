@@ -136,14 +136,12 @@ def test_livestatus_ipv6_connection():
     ("xyz:bla", None),
 ])
 def test_single_site_connection_socketurl(socket_url, result, monkeypatch):
-    live = livestatus.SingleSiteConnection(socket_url)
-
     if result is None:
         with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus"):
-            live._parse_socket_url(socket_url)
+            livestatus._parse_socket_url(socket_url)
         return
 
-    assert live._parse_socket_url(socket_url) == result
+    assert livestatus._parse_socket_url(socket_url) == result
 
 
 @pytest.mark.parametrize("tls", [True, False])

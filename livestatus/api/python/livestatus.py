@@ -298,6 +298,47 @@ DeadSite = Dict[str, Union[str, int, Exception, SiteConfiguration]]
 #   '----------------------------------------------------------------------'
 
 
+def _parse_socket_url(url: str) -> Tuple[socket.AddressFamily, Union[str, tuple]]:
+    """Parses a Livestatus socket URL to address family and address
+
+    Examples:
+
+        >>> _parse_socket_url('unix:/tmp/sock')
+        (<AddressFamily.AF_UNIX: 1>, '/tmp/sock')
+
+        >>> _parse_socket_url('tcp:192.168.0.1:8080')
+        (<AddressFamily.AF_INET: 2>, ('192.168.0.1', 8080))
+
+        >>> _parse_socket_url('tcp6:::1:8080')
+        (<AddressFamily.AF_INET6: 10>, ('::1', 8080))
+
+        >>> _parse_socket_url('Hallo Welt!')
+        Traceback (most recent call last):
+        ...
+        livestatus.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. Must begin with \
+'tcp:', 'tcp6:' or 'unix:'
+
+    """
+    if ':' in url:
+        family_txt, url = url.split(":", 1)
+        if family_txt == "unix":
+            return socket.AF_UNIX, url
+
+        if family_txt in ["tcp", "tcp6"]:
+            try:
+                host, port_txt = url.rsplit(":", 1)
+                port = int(port_txt)
+            except ValueError:
+                raise MKLivestatusConfigError(
+                    "Invalid livestatus tcp URL '%s'. "
+                    "Correct example is 'tcp:somehost:6557' or 'tcp6:somehost:6557'" % url)
+            address_family = socket.AF_INET if family_txt == "tcp" else socket.AF_INET6
+            return address_family, (host, port)
+
+    raise MKLivestatusConfigError("Invalid livestatus URL '%s'. "
+                                  "Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url)
+
+
 class SingleSiteConnection(Helpers):
 
     # So we only collect in a specific thread, and not in all of them. We also use
@@ -361,7 +402,7 @@ class SingleSiteConnection(Helpers):
             return
 
         self.successful_persistence = False
-        family, address = self._parse_socket_url(self.socketurl)
+        family, address = _parse_socket_url(self.socketurl)
         self.socket = self._create_socket(family, self.site_name)
 
         # If a timeout is set, then we retry after a failure with mild
@@ -403,26 +444,6 @@ class SingleSiteConnection(Helpers):
 
         if self.persist:
             persistent_connections[self.socketurl] = self.socket
-
-    def _parse_socket_url(self, url: str) -> Tuple[socket.AddressFamily, Union[str, tuple]]:
-        """Parses a Livestatus socket URL to address family and address"""
-        family_txt, url = url.split(":", 1)
-        if family_txt == "unix":
-            return socket.AF_UNIX, url
-
-        if family_txt in ["tcp", "tcp6"]:
-            try:
-                host, port_txt = url.rsplit(":", 1)
-                port = int(port_txt)
-            except ValueError:
-                raise MKLivestatusConfigError(
-                    "Invalid livestatus tcp URL '%s'. "
-                    "Correct example is 'tcp:somehost:6557' or 'tcp6:somehost:6557'" % url)
-            address_family = socket.AF_INET if family_txt == "tcp" else socket.AF_INET6
-            return address_family, (host, port)
-
-        raise MKLivestatusConfigError("Invalid livestatus URL '%s'. "
-                                      "Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url)
 
     # NOTE:
     # The site_name parameter is here to be able to create a mocked socket in the testing

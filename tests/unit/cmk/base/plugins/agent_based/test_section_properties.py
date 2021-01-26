@@ -80,8 +80,6 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
         'printer_pages',
         'printer_supply',
         'pse_poe',
-        'qnap_fans',
-        'qnap_hdd_temp',
         'quantum_storage_status',
         'snmp_extended_info',
         'snmp_quantum_storage_info',

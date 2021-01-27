@@ -51,7 +51,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
         'dell_hw_info',
         'emerson_stat',
         'emerson_temp',
-        'etherbox',
+        'etherbox',  # see check plugin for details
         'fast_lta_headunit',
         'fast_lta_silent_cubes',
         'fast_lta_volumes',

@@ -33,13 +33,22 @@ from .type_defs import Mode
 
 
 class IPMIFetcher(AgentFetcher):
+    """Fetch IPMI data using `pyghmi`.
+
+    Note:
+        The arguments `address`, `username`, and `password` are used
+        to instantiate the `pyghmi.ipmi.command.Command` where every
+        argument is defaulted.  We therefore make them optional
+        here as well.
+
+    """
     def __init__(
         self,
         file_cache: DefaultAgentFileCache,
         *,
-        address: HostAddress,
-        username: str,
-        password: str,
+        address: HostAddress,  # Could actually be HostName as well.
+        username: Optional[str],
+        password: Optional[str],
     ) -> None:
         super().__init__(file_cache, logging.getLogger("cmk.helper.ipmi"))
         self.address: Final = address
@@ -77,8 +86,8 @@ class IPMIFetcher(AgentFetcher):
     def open(self) -> None:
         self._logger.debug(
             "Connecting to %s:623 (User: %s, Privlevel: 2)",
-            self.address,
-            self.username,
+            self.address or "local",
+            self.username or "no user",
         )
 
         # Performance: See header.

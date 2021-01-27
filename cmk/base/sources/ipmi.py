@@ -36,9 +36,17 @@ class IPMISource(AgentSource):
             id_="mgmt_ipmi",
             main_data_source=False,
         )
-        self.credentials: Final[IPMICredentials] = cast(
-            IPMICredentials,
-            HostConfig.make_host_config(hostname).management_credentials)
+        self.credentials: Final[IPMICredentials] = self.get_ipmi_credentials(
+            HostConfig.make_host_config(hostname))
+
+    @staticmethod
+    def get_ipmi_credentials(host_config: HostConfig) -> IPMICredentials:
+        credentials = host_config.management_credentials
+        if credentials is None:
+            return {}
+        # The cast is required because host_config.management_credentials
+        # has type `Union[None, str, Tuple[str, ...], Dict[str, str]]`
+        return cast(IPMICredentials, credentials)
 
     def _make_file_cache(self) -> DefaultAgentFileCache:
         return DefaultAgentFileCacheFactory(
@@ -48,17 +56,14 @@ class IPMISource(AgentSource):
         ).make()
 
     def _make_fetcher(self) -> IPMIFetcher:
-        if not self.credentials:
-            raise MKAgentError("Missing credentials")
-
         if self.ipaddress is None:
             raise MKAgentError("Missing IP address")
 
         return IPMIFetcher(
             self._make_file_cache(),
             address=self.ipaddress,
-            username=self.credentials["username"],
-            password=self.credentials["password"],
+            username=self.credentials.get("username"),
+            password=self.credentials.get("password"),
         )
 
     def _make_summarizer(self) -> IPMISummarizer:

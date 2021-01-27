@@ -467,15 +467,10 @@ class SidebarRenderer:
 
         show_more = snapin_instance.has_show_more_items()
         may_configure = config.user.may("general.configure_sidebar")
-        if show_more or may_configure:
-            html.open_div(class_="snapin_buttons")
 
-            if may_configure:
-                # Icon for mini/maximizing
-                html.span("",
-                          class_="minisnapin",
-                          title=_("Toggle this snapin"),
-                          onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
+        if show_more or may_configure:
+
+            html.open_div(class_="snapin_buttons")
 
             if show_more:
                 html.open_span(class_="moresnapin")
@@ -504,6 +499,13 @@ class SidebarRenderer:
                 "onmouseout": "this.style.cursor='auto'"
             }
         html.b(snapin_class.title(), class_=["heading"], **toggle_actions)
+
+        if may_configure:
+            # Icon for mini/maximizing
+            html.span("",
+                      class_="minisnapin",
+                      title=_("Toggle this snapin"),
+                      onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
 
         # End of header
         html.close_div()

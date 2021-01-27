@@ -75,7 +75,7 @@ module.exports = {
                     {
                         loader: "sass-loader",
                         options: {
-                            prependData:
+                            additionalData:
                                 "$ENTERPRISE: " +
                                 process.env.ENTERPRISE +
                                 ";\n" +

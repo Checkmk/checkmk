@@ -131,13 +131,31 @@ class GaugeFigure extends cmk_figures.FigureBase {
         if (Array.isArray(display_range) && display_range[0] === "fixed")
             domain = display_range[1][1];
 
+        domain.sort(); // Safeguards against negative number ordering or bad order. Display and clamp need good order
+
         const levels = cmk_figures.make_levels(domain, plot.metrics);
         const formatter = cmk_figures.get_function(plot.js_render);
 
         this._render_gauge_range_labels(domain, formatter);
 
+        const last_value = data[data.length - 1];
+        const clamp = value => Math.min(Math.max(value, domain[0]), domain[1]);
+        const color = levels.length
+            ? levels.find(element => clamp(last_value.value) <= element.to).color
+            : "#3CC2FF";
+
+        this._render_text(
+            {
+                formatted_value: formatter(last_value.value),
+                url: last_value.url,
+            },
+            color
+        );
+
+        if (domain[0] === domain[1]) return;
         const limit = (7 * Math.PI) / 12;
         const scale_x = d3.scaleLinear().domain(domain).range([-limit, limit]);
+        // Thresholds indicator stripe
         this.plot
             .selectAll("path.level")
             .data(levels)
@@ -157,20 +175,6 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .data(d => [d])
             .join("title")
             .text(d => d.from + " -> " + d.to);
-
-        const last_value = data[data.length - 1];
-        const clamp = value => Math.min(Math.max(value, domain[0]), domain[1]);
-        const color = levels.length
-            ? levels.find(element => clamp(last_value.value) <= element.to).color
-            : "#3CC2FF";
-
-        this._render_text(
-            {
-                formatted_value: formatter(last_value.value),
-                url: last_value.url,
-            },
-            color
-        );
         // gauge bar
         this.plot
             .selectAll("path.value")

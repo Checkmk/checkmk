@@ -123,7 +123,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
             "service_state", "service_has_been_checked"
         ]
         metric_columns = []
-        if properties["time_range"] != "current":
+        if properties.get("time_range") == "range":
             params = properties["time_range"][1]
 
             from_time, until_time = map(int, Timerange().compute_range(params['window'])[0])
@@ -154,7 +154,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
             return {"style": css_classes, "msg": _("Status: ") + status_name, "draw": draw_status}
 
         # Historic values are always added as plot_type area
-        if properties["time_range"] != "current":
+        if properties.get("time_range") == "range":
             time_range_params = properties["time_range"][1]
             for row_id, metric, row in metrics:
                 chosen_color = time_range_params["color"]
@@ -277,7 +277,7 @@ class BarplotDashlet(ABCFigureDashlet):
 
     @classmethod
     def data_generator(cls):
-        return SingleMetricDataGenerator()
+        return SingleMetricDataGenerator(exclude_properties=["display_range", "time_range"])
 
     @classmethod
     def description(cls):

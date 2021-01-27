@@ -17,13 +17,12 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.plugins.dashboard import dashlet_registry
+from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
 from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_metric
 from cmk.gui.plugins.metrics.valuespecs import ValuesWithUnits
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.plugins.metrics.html_render import title_info_elements
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
-from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 from cmk.gui.plugins.views.painters import paint_service_state_short
 
 

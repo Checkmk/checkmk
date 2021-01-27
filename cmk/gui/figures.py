@@ -3,21 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Basic functions for cmk_figures"""
 
-# Basic functions for cmk_figures
+from typing import Dict, Any
 
-import abc
-import json
-from typing import cast, Type, Dict, Any
-
-import cmk.gui.visuals as visuals
-from cmk.gui.valuespec import ValueSpec
-from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_vs_general_settings, dashlet_registry
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.exceptions import (
-    MKUserError,)
 FigureResponse = Dict[str, Any]
 
 
@@ -29,139 +18,6 @@ def create_figures_response(data, context=None) -> FigureResponse:
     if context:
         response["context"] = context
     return response
-
-
-class ABCDataGenerator(metaclass=abc.ABCMeta):
-    @classmethod
-    @abc.abstractmethod
-    def vs_parameters(cls):
-        raise NotImplementedError()
-
-    @classmethod
-    @abc.abstractmethod
-    def generate_response_data(cls, properties, context, settings):
-        raise NotImplementedError()
-
-    @classmethod
-    def generate_response_from_request(cls):
-        settings = json.loads(html.request.get_str_input_mandatory("settings"))
-
-        try:
-            dashlet_type = cast(Dashlet, dashlet_registry[settings.get("type")])
-        except KeyError:
-            raise MKUserError("type", _('The requested dashlet type does not exist.'))
-
-        settings = dashlet_vs_general_settings(
-            dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
-
-        raw_properties = html.request.get_str_input_mandatory("properties")
-        properties = cls.vs_parameters().value_from_json(json.loads(raw_properties))
-        context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
-        response_data = cls.generate_response_data(properties, context, settings)
-        return create_figures_response(response_data)
-
-
-def dashlet_http_variables(dashlet: Dashlet) -> HTTPVariables:
-    vs_general_settings = dashlet_vs_general_settings(dashlet, dashlet.single_infos())
-    dashlet_settings = vs_general_settings.value_to_json(dashlet._dashlet_spec)
-    dashlet_params = dashlet.vs_parameters()
-    assert isinstance(dashlet_params, ValueSpec)  # help mypy
-    dashlet_properties = dashlet_params.value_to_json(dashlet._dashlet_spec)
-
-    context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(["host", "service"], dashlet.single_infos()),
-        dashlet._dashlet_spec["context"])
-
-    args: HTTPVariables = []
-    args.append(("settings", json.dumps(dashlet_settings)))
-    args.append(("context", json.dumps(context)))
-    args.append(("properties", json.dumps(dashlet_properties)))
-
-    return args
-
-
-class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
-    """ Base class for cmk_figures based graphs
-        Only contains the dashlet spec, the data generation is handled in the
-        DataGenerator classes, to split visualization and data
-    """
-    @classmethod
-    def type_name(cls):
-        return "figure_dashlet"
-
-    @classmethod
-    def sort_index(cls):
-        return 95
-
-    @classmethod
-    def initial_refresh_interval(cls):
-        return False
-
-    @classmethod
-    def initial_size(cls):
-        return (56, 40)
-
-    @classmethod
-    def infos(cls):
-        return ["host", "service"]
-
-    @classmethod
-    def single_infos(cls):
-        return []
-
-    @classmethod
-    def has_context(cls):
-        return True
-
-    @property
-    def instance_name(self):
-        # Note: This introduces the restriction one graph type per dashlet
-        return "%s_%s" % (self.type_name(), self._dashlet_id)
-
-    @classmethod
-    def vs_parameters(cls):
-        return cls.data_generator().vs_parameters()
-
-    @classmethod
-    @abc.abstractmethod
-    def data_generator(cls) -> Type[ABCDataGenerator]:
-        raise NotImplementedError()
-
-    @property
-    def update_interval(self) -> int:
-        return 60
-
-    def on_resize(self):
-        return ("if (typeof %(instance)s != 'undefined') {"
-                "%(instance)s.update_gui();"
-                "}") % {
-                    "instance": self.instance_name
-                }
-
-    def js_dashlet(self, fetch_url: str):
-        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
-        html.div("", id_=div_id)
-
-        args = dashlet_http_variables(self)
-        body = html.urlencode_vars(args)
-
-        html.javascript(
-            """
-            let %(type_name)s_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("%(type_name)s");
-            let %(instance_name)s = new %(type_name)s_class_%(dashlet_id)d(%(div_selector)s);
-            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
-            %(instance_name)s.initialize();
-            %(instance_name)s.scheduler.set_update_interval(%(update)d);
-            %(instance_name)s.scheduler.enable();
-            """ % {
-                "type_name": self.type_name(),
-                "dashlet_id": self._dashlet_id,
-                "instance_name": self.instance_name,
-                "div_selector": json.dumps("#%s" % div_id),
-                "url": json.dumps(fetch_url),
-                "body": json.dumps(body),
-                "update": self.update_interval,
-            })
 
 
 class TableFigureDataCreator:

@@ -17,11 +17,10 @@ from cmk.gui.valuespec import (
     Timerange,
 )
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.plugins.dashboard import dashlet_registry
+from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
 from cmk.gui.plugins.dashboard.utils import site_query
 from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
 from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns, merge_multicol
-from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
 from cmk.gui.plugins.metrics.utils import get_metric_info
 
 

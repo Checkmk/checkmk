@@ -17,8 +17,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.plugins.dashboard import dashlet_registry
-from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
+from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
 
 
 @dataclass

@@ -13,7 +13,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Timerange,
 )
-from cmk.gui.figures import ABCDataGenerator
+from cmk.gui.plugins.dashboard import ABCDataGenerator
 
 
 class BarChartDataGenerator(ABCDataGenerator):

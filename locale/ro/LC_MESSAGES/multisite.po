@@ -9060,9 +9060,6 @@ msgstr ""
 msgid "Color gradient"
 msgstr ""
 
-msgid "Color metric plot"
-msgstr ""
-
 msgid "Colored Background"
 msgstr ""
 
@@ -13738,6 +13735,10 @@ msgstr ""
 msgid "Displays entries from the logfile of the monitoring core."
 msgstr ""
 
+#, fuzzy
+msgid "Displays hosts and services producing the most notifications"
+msgstr "trimite notificare"
+
 msgid "Displays statistics about host states as globe and a table."
 msgstr ""
 
@@ -14485,10 +14486,6 @@ msgstr ""
 
 msgid "Don't escape HTML (Dangerous - please read context help)"
 msgstr ""
-
-#, fuzzy
-msgid "Don't fill area plot"
-msgstr "catre port:"
 
 msgid "Don't forget the instance: instance:dbname"
 msgstr ""
@@ -17481,13 +17478,6 @@ msgstr ""
 #, fuzzy
 msgid "Filesystems usage"
 msgstr "Spațiu liber exact"
-
-#, fuzzy
-msgid "Fill area plot"
-msgstr "catre port:"
-
-msgid "Fill area plot when displaying historic values"
-msgstr ""
 
 msgid "Filter"
 msgstr ""
@@ -22678,9 +22668,6 @@ msgstr "Reguli neaplicate"
 msgid "Infections"
 msgstr "Conexiuni Active"
 
-msgid "Infer range from available data and check output"
-msgstr ""
-
 msgid "Info"
 msgstr ""
 
@@ -25052,6 +25039,10 @@ msgstr "Numarul maxim de mesaje"
 #, fuzzy
 msgid "Limit number of processed search results"
 msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Limit objects"
+msgstr "Numarul maxim de conexiuni"
 
 msgid "Limit of meta data"
 msgstr ""
@@ -34245,16 +34236,8 @@ msgstr "Probleme"
 msgid "Problem details"
 msgstr "Probleme"
 
-#, fuzzy
-msgid "Problem hosts"
-msgstr "Probleme"
-
 msgid "Problem is acknowledged, but is configured to be periodic"
 msgstr ""
-
-#, fuzzy
-msgid "Problem services"
-msgstr "Probleme"
 
 #, python-format
 msgid "Problem while executing hook function %s in hook %s: %s"
@@ -34274,6 +34257,10 @@ msgstr ""
 
 msgid "Problems (unhandled)"
 msgstr ""
+
+#, fuzzy
+msgid "Problems in total"
+msgstr "Probleme"
 
 msgid "Problems of host"
 msgstr ""
@@ -35529,12 +35516,6 @@ msgid "Relative levels"
 msgstr "Liber Exact"
 
 msgid "Relative levels of active sessions."
-msgstr ""
-
-msgid "Relative to maximum of all shown services"
-msgstr ""
-
-msgid "Relative to population maximum"
 msgstr ""
 
 msgid "Relay Log Size"
@@ -37657,8 +37638,8 @@ msgid "Security name"
 msgstr ""
 
 msgid ""
-"See 'Queue status attributes' in IBM manual (https://www.ibm.com/support/"
-"knowledgecenter/en/SSFKSJ_9.1.0/com.ibm.mq.explorer.doc/e_status_queue.htm) "
+"See 'Queue status attributes' in IBM manual(https://www.ibm.com/support/"
+"knowledgecenter/en/SSFKSJ_9.2.0/com.ibm.mq.explorer.doc/e_status_queue.html) "
 "for detailed explanations of these parameters."
 msgstr ""
 
@@ -38720,6 +38701,16 @@ msgstr ""
 msgid ""
 "Set the monitoring state of tasks which are not enabled (for example because "
 "they were disabled after being discovered)."
+msgstr ""
+
+msgid ""
+"Set the range in which data is displayed. Having selected a metric before "
+"auto selects here the matching unit of the metric."
+msgstr ""
+
+msgid ""
+"Set the thresholds in which data is highlighted. Having selected a metric "
+"before auto selects here the matching unit of the metric."
 msgstr ""
 
 msgid "Set the width"
@@ -45567,13 +45558,6 @@ msgid "The type of the timestamp must be int or float, but is %s"
 msgstr ""
 
 msgid ""
-"The unprocessed, untyped, unit-less value of the metric as stored in the RRD "
-"file. This means:<ul><li>If your metric is measured in percent then 80 "
-"implies 80%</li><li>If your metric is in bytes, then use 1024 for 1 KB</li></"
-"ul>"
-msgstr ""
-
-msgid ""
 "The used and free levels for the memory on UNIX systems take into account "
 "the currently used memory (RAM or Swap) by all processes and sets this in "
 "relation to the total RAM of the system. This means that the memory usage "
@@ -49058,6 +49042,14 @@ msgstr ""
 msgid "Top Talkers"
 msgstr ""
 
+#, fuzzy
+msgid "Top alerters"
+msgstr "Dezactiveaza Notificarile"
+
+#, python-format
+msgid "Top alerters - %s"
+msgstr ""
+
 msgid "Top of page handling"
 msgstr ""
 
@@ -51251,12 +51243,6 @@ msgstr ""
 msgid "Use a custom check plugin..."
 msgstr ""
 
-msgid ""
-"Use a fixed range for the Data displayed. This value has no scaling. If your "
-"metric is in the range of MB, you'll need to place 9 zeros for display to "
-"make sense."
-msgstr ""
-
 msgid "Use a namespace prefix"
 msgstr ""
 
@@ -51999,12 +51985,6 @@ msgstr "trimite notificare"
 #, fuzzy
 msgid "Using predefined condition"
 msgstr "Adaugă Condiție"
-
-#, python-format
-msgid ""
-"Using the maximum value of the column as 100% color the cells. This gives "
-"insight on how close are host to each other."
-msgstr ""
 
 #, python-format
 msgid ""
@@ -57179,9 +57159,6 @@ msgstr ""
 msgid "specify manually ->"
 msgstr ""
 
-msgid "state"
-msgstr ""
-
 #, fuzzy
 msgid "status entries"
 msgstr "Cluster nou"
@@ -57480,6 +57457,24 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "to port:"
+#~ msgid "Don't fill area plot"
+#~ msgstr "catre port:"
+
+#, fuzzy
+#~| msgid "to port:"
+#~ msgid "Fill area plot"
+#~ msgstr "catre port:"
+
+#, fuzzy
+#~ msgid "Problem hosts"
+#~ msgstr "Probleme"
+
+#, fuzzy
+#~ msgid "Problem services"
+#~ msgstr "Probleme"
 
 #, fuzzy
 #~ msgid "Computation plugin information"

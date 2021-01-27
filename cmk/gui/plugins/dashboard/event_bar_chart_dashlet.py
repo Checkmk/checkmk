@@ -14,9 +14,9 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.visuals import get_filter_headers
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.plugins.dashboard import dashlet_registry
+from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
+from cmk.gui.plugins.dashboard.utils import dashlet_http_variables
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarBarChartDataGenerator
-from cmk.gui.figures import ABCFigureDashlet, dashlet_http_variables
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.utils.urls import makeuri_contextless
@@ -79,7 +79,7 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
                 return sites.live().query(query)
             except MKTimeout:
                 raise
-            except Exception as _e:
+            except Exception:
                 raise MKGeneralException(_("The query returned no data."))
 
     @classmethod
@@ -91,8 +91,8 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
         # TODO: Can this be simplified by passing a list as argument to html.render_table()?
         tooltip = html.render_table(
             html.render_tr(html.render_td(_("From:")) + html.render_td(from_time_str)) +
-            html.render_tr(html.render_td(_("To:")) + html.render_td(to_time_str)) + \
-            html.render_tr(html.render_td("%ss:" % properties["log_target"].capitalize()) +
+            html.render_tr(html.render_td(_("To:")) + html.render_td(to_time_str)) + html.render_tr(
+                html.render_td("%ss:" % properties["log_target"].capitalize()) +
                 html.render_td(time_frame["value"])))
 
         args: HTTPVariables = []

@@ -40,6 +40,7 @@ from typing import (
     Callable,
     Dict,
     Generic,
+    Final,
     Iterable,
     List,
     NamedTuple,
@@ -85,6 +86,7 @@ from cmk.gui.utils.labels import (
     label_help_text,
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.http import UploadedFile
 from cmk.gui.type_defs import Choices, GroupedChoices, ChoiceGroup
 from cmk.gui.view_utils import render_labels
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
@@ -5423,30 +5425,30 @@ class PasswordSpec(Password):
 
 
 class FileUpload(ValueSpec):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._allow_empty = kwargs.get('allow_empty', False)
-        self._allowed_extensions = kwargs.get('allowed_extensions')
-        self._allow_empty_content = kwargs.get('allow_empty_content', True)
+        self._allow_empty: Final[bool] = kwargs.get('allow_empty', False)
+        self._allowed_extensions: Final[_Optional[Iterable[str]]] = kwargs.get('allowed_extensions')
+        self._allow_empty_content: Final[bool] = kwargs.get('allow_empty_content', True)
 
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def canonical_value(self):
+    def canonical_value(self) -> _Optional[bytes]:
         if self._allow_empty:
             return None
-        return ''
+        return b''
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: _Optional[UploadedFile], varprefix: str) -> None:
         if not value:
             raise MKUserError(varprefix, _('Please select a file.'))
 
         file_name, _mime_type, content = value
 
-        if not self._allow_empty and (content == '' or file_name == ''):
+        if not self._allow_empty and (content == b'' or file_name == ''):
             raise MKUserError(varprefix, _('Please select a file.'))
 
-        if not self._allow_empty_content and len(content) == 0:
+        if not self._allow_empty_content and not content:
             raise MKUserError(varprefix,
                               _('The selected file is empty. Please select a non-empty file.'))
         if self._allowed_extensions is not None:
@@ -5461,20 +5463,25 @@ class FileUpload(ValueSpec):
                     _("Invalid file name extension. Allowed are: %s") %
                     ", ".join(self._allowed_extensions))
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: bytes) -> None:
         html.upload_file(varprefix)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> UploadedFile:
         return html.request.uploaded_file(varprefix)
 
 
 class ImageUpload(FileUpload):
-    def __init__(self, max_size=None, show_current_image=False, **kwargs):
-        self._max_size = max_size
-        self._show_current_image = show_current_image
+    def __init__(
+        self,
+        max_size: _Optional[_Tuple[int, int]] = None,
+        show_current_image: bool = False,
+        **kwargs,
+    ) -> None:
+        self._max_size: Final = max_size
+        self._show_current_image: Final = show_current_image
         super().__init__(**kwargs)
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: bytes) -> None:
         if self._show_current_image and value:
             html.open_table()
             html.open_tr()
@@ -5493,7 +5500,7 @@ class ImageUpload(FileUpload):
         else:
             super().render_input(varprefix, value)
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: _Optional[UploadedFile], varprefix: str) -> None:
         if not value:
             raise MKUserError(varprefix, _('Please choose a PNG image.'))
 

@@ -382,7 +382,7 @@ class Dashlet(metaclass=abc.ABCMeta):
         return globals()[urlfunc]()
 
 
-def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
+def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[str]):
     return Dictionary(
         title=_('General Settings'),
         render='form',
@@ -390,8 +390,8 @@ def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
         elements=[
             ('type',
              FixedValue(
-                 dashlet.type_name(),
-                 totext=dashlet.title(),
+                 dashlet_type.type_name(),
+                 totext=dashlet_type.title(),
                  title=_('Dashlet Type'),
              )),
             visuals.single_infos_spec(single_infos),
@@ -500,7 +500,7 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
         settings = json.loads(html.request.get_str_input_mandatory("settings"))
 
         try:
-            dashlet_type = cast(Dashlet, dashlet_registry[settings.get("type")])
+            dashlet_type = dashlet_registry[settings.get("type")]
         except KeyError:
             raise MKUserError("type", _('The requested dashlet type does not exist.'))
 
@@ -515,7 +515,7 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
 
 
 def dashlet_http_variables(dashlet: Dashlet) -> HTTPVariables:
-    vs_general_settings = dashlet_vs_general_settings(dashlet, dashlet.single_infos())
+    vs_general_settings = dashlet_vs_general_settings(dashlet.__class__, dashlet.single_infos())
     dashlet_settings = vs_general_settings.value_to_json(dashlet._dashlet_spec)
     dashlet_params = dashlet.vs_parameters()
     assert isinstance(dashlet_params, ValueSpec)  # help mypy

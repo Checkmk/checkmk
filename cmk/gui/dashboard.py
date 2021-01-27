@@ -7,7 +7,7 @@
 import time
 import copy
 import json
-from typing import cast, Set, Dict, Optional, Tuple, Type, List, Union, Callable, Iterator
+from typing import Set, Dict, Optional, Tuple, Type, List, Union, Callable, Iterator
 
 from six import ensure_str
 
@@ -1621,12 +1621,12 @@ class EditDashletPage(Page):
             title = _('Add Dashlet')
 
             try:
-                dashlet_type = cast(Dashlet, dashlet_registry[type_name])
+                dashlet_type = dashlet_registry[type_name]
             except KeyError:
                 raise MKUserError("type", _('The requested dashlet type does not exist.'))
 
             # Initial configuration
-            dashlet_spec = {
+            dashlet_spec: DashletConfig = {
                 'position': dashlet_type.initial_position(),
                 'size': dashlet_type.initial_size(),
                 'single_infos': dashlet_type.single_infos(),
@@ -1660,9 +1660,9 @@ class EditDashletPage(Page):
             except IndexError:
                 raise MKUserError("id", _('The dashlet does not exist.'))
 
-            type_name = cast(str, dashlet_spec['type'])
-            dashlet_type = cast(Dashlet, dashlet_registry[type_name])
-            single_infos = cast(List[str], dashlet_spec['single_infos'])
+            type_name = dashlet_spec['type']
+            dashlet_type = dashlet_registry[type_name]
+            single_infos = dashlet_spec['single_infos']
 
         breadcrumb = _dashlet_editor_breadcrumb(self._board, self._dashboard, title)
         html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))

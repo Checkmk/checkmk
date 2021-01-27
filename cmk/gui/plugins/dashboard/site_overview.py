@@ -102,12 +102,17 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
 
     @classmethod
     def generate_response_data(cls, properties, context, settings):
-        site_id = context.get("site", {}).get("site")
+        if config.is_single_local_site():
+            site_id: Optional[SiteId] = config.omd_site()
+        else:
+            site_filter = context.get("site", {}).get("site")
+            site_id = SiteId(site_filter) if site_filter else None
+
         render_mode = "hosts" if site_id else "sites"
 
         if render_mode == "hosts":
             assert site_id is not None
-            elements = cls._collect_hosts_data(SiteId(site_id))
+            elements = cls._collect_hosts_data(site_id)
         elif render_mode == "sites":
             elements = cls._collect_sites_data()
         else:

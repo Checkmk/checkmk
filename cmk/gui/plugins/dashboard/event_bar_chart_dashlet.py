@@ -17,7 +17,7 @@ from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.dashboard.utils import dashlet_http_variables
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarBarChartDataGenerator
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
-from cmk.gui.valuespec import Dictionary, DropdownChoice
+from cmk.gui.valuespec import Dictionary, DropdownChoice, CascadingDropdown
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -49,7 +49,15 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
             title=_("Properties"),
             render="form",
             optional_keys=[],
-            elements=super().bar_chart_vs_components() + [
+            elements=[
+                ("render_mode",
+                 CascadingDropdown(choices=[
+                     ("bar_chart", _("Bar chart"),
+                      Dictionary(
+                          elements=self.bar_chart_vs_components(),
+                          optional_keys=[],
+                      )),
+                 ])),
                 ("log_target",
                  DropdownChoice(
                      title=_("Host or service %ss" % self.log_type()),
@@ -60,11 +68,26 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
                      ],
                      default_value="both",
                  )),
-            ])
+            ],
+        )
 
     @classmethod
+    def generate_response_data(cls, properties, context, settings):
+        """Toggle between the data of the different render modes"""
+        # TODO: Would be better to have independent data generators for the various render modes,
+        # but that is not possible with the current mechanic. Once we spread the toggling of render
+        # modes, we should restructure this.
+        if properties["render_mode"][0] == "bar_chart":
+            return super().generate_response_data(properties, context, settings)
+        raise NotImplementedError()
+
+    # TODO: Possible performance optimization: We only need to count events. Especially in case of
+    # render_mode != "bar_char" we only need a single number. This could improve the performance of
+    # the dashlets signifcantly.
+    @classmethod
     def _get_data(cls, properties, context):
-        time_range = cls._int_time_range_from_rangespec(properties["time_range"])
+        mode_properties = properties["render_mode"][1]
+        time_range = cls._int_time_range_from_rangespec(mode_properties["time_range"])
         filter_headers, only_sites = get_filter_headers("log", cls.filter_infos(), context)
 
         if properties["log_target"] != "both":
@@ -92,7 +115,8 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
 
     @classmethod
     def _forge_tooltip_and_url(cls, time_frame, properties, context):
-        time_range = cls._int_time_range_from_rangespec(properties["time_range"])
+        mode_properties = properties["render_mode"][1]
+        time_range = cls._int_time_range_from_rangespec(mode_properties["time_range"])
         ending_timestamp = min(time_frame["ending_timestamp"], time_range[1])
         from_time_str = date_and_time(time_frame["timestamp"])
         to_time_str = date_and_time(ending_timestamp)

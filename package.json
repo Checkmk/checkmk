@@ -51,7 +51,7 @@
     "webpack-fix-style-only-entries": "^0.3.1"
   },
   "dependencies": {
-    "@yaireo/tagify": "2.16.0",
+    "@yaireo/tagify": "3.22.1",
     "core-js": "^3.6.4",
     "crossfilter2": "^1.5.2",
     "d3": "^5.15.0",

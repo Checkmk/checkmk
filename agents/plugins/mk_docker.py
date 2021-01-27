@@ -64,14 +64,16 @@ except ImportError:
     sys.stdout.write('<<<docker_node_info:sep(124)>>>\n'
                      '@docker_version_info|{}\n'
                      '{"Critical": "Error: mk_docker requires the docker library.'
-                     ' Please install it on the monitored system (pip install docker)."}\n')
+                     ' Please install it on the monitored system (%s install docker)."}\n' %
+                     ('pip3' if sys.version_info.major == 3 else 'pip'))
     sys.exit(1)
 
 if int(docker.__version__.split('.')[0]) < 2:
     sys.stdout.write('<<<docker_node_info:sep(124)>>>\n'
                      '@docker_version_info|{}\n'
                      '{"Critical": "Error: mk_docker requires the docker library >= 2.0.0.'
-                     ' Please install it on the monitored system (pip install docker)."}\n')
+                     ' Please install it on the monitored system (%s install docker)."}\n' %
+                     ('pip3' if sys.version_info.major == 3 else 'pip'))
     sys.exit(1)
 
 DEBUG = "--debug" in sys.argv[1:]

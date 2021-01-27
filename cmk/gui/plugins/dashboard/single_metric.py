@@ -209,7 +209,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
 @page_registry.register_page("single_metric_data")
 class SingleMetricPage(AjaxPage):
     def page(self):
-        return SingleMetricStyledDataGenerator.generate_response_from_request()
+        return SingleMetricStyledDataGenerator().generate_response_from_request()
 
 
 #   .--Gauge---------------------------------------------------------------.
@@ -239,7 +239,7 @@ class GaugeDashlet(ABCFigureDashlet):
 
     @classmethod
     def data_generator(cls):
-        return SingleMetricDataGenerator
+        return SingleMetricDataGenerator()
 
     @classmethod
     def single_infos(cls):
@@ -271,7 +271,7 @@ class BarplotDashlet(ABCFigureDashlet):
 
     @classmethod
     def data_generator(cls):
-        return SingleMetricDataGenerator
+        return SingleMetricDataGenerator()
 
     @classmethod
     def description(cls):
@@ -342,7 +342,7 @@ class SingleMetricDashlet(ABCFigureDashlet):
 
     @classmethod
     def data_generator(cls):
-        return SingleMetricStyledDataGenerator
+        return SingleMetricStyledDataGenerator()
 
     @classmethod
     def description(cls):

@@ -243,7 +243,7 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
 
     @classmethod
     def data_generator(cls):
-        return AverageScatterplotDataGenerator
+        return AverageScatterplotDataGenerator()
 
     def show(self):
         self.js_dashlet("ajax_average_scatterplot_data.py")
@@ -252,4 +252,4 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
 @page_registry.register_page("ajax_average_scatterplot_data")
 class AverageScatterplotDataPage(AjaxPage):
     def page(self):
-        return AverageScatterplotDataGenerator.generate_response_from_request()
+        return AverageScatterplotDataGenerator().generate_response_from_request()

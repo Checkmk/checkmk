@@ -430,7 +430,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
 @page_registry.register_page("ajax_site_overview_dashlet_data")
 class SitesDashletData(AjaxPage):
     def page(self):
-        return SiteOverviewDashletDataGenerator.generate_response_from_request()
+        return SiteOverviewDashletDataGenerator().generate_response_from_request()
 
 
 @dashlet_registry.register
@@ -449,7 +449,7 @@ class SiteOverviewDashlet(ABCFigureDashlet):
 
     @classmethod
     def data_generator(cls):
-        return SiteOverviewDashletDataGenerator
+        return SiteOverviewDashletDataGenerator()
 
     @classmethod
     def single_infos(cls):

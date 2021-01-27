@@ -92,7 +92,7 @@ from cmk.gui.plugins.dashboard.utils import (builtin_dashboards, GROW, MAX, dash
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
-    DashletId,
+    DashletId, ABCFigureDashlet,
 )
 from cmk.gui.plugins.metrics.html_render import (
     title_info_elements,
@@ -1256,19 +1256,8 @@ def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> Non
     div there is an inner div containing the actual dashlet content. This content
     is updated later using the dashboard_dashlet.py ajax call.
     """
-    # TODO: Cleanup this explicit listing of dashlet types. Replace with isinstance check
     if all((
-            dashlet.type_name() not in [
-                'single_metric',
-                'average_scatterplot',
-                'site_overview',
-                'gauge',
-                'barplot',
-                'average_scatterplot',
-                'alerts_bar_chart',
-                'notifications_bar_chart',
-                'alert_statistics',
-            ],
+            not isinstance(dashlet, ABCFigureDashlet),
             title is not None,
             dashlet.show_title(),
     )):

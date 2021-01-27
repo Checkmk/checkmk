@@ -774,10 +774,8 @@ bool TheMiniProcess::stop() {
         }
 
         if (wtools::kProcessTreeKillAllowed) {
-            // normally we do not kill tree, because plugin may run something
-            // important still, this is a rather business decision and may be
-            // changed at any moment
-            wtools::KillProcessTree(pid);
+            // we do not kill tree, this is dangerous on older OS's
+            wtools::KillProcessTreeUnsafe(pid);
         }
 
         XLOG::l.t("Killing process [{}] '{}'", pid, name);

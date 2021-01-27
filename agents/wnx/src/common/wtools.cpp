@@ -72,9 +72,10 @@ void AppRunner::kill() {
     }
 
     // normally only updater here, be careful
-    if (false) {
-        KillProcessTree(proc_id);
-        auto success = KillProcessSafe(proc_id, L"cmk-update-agent.exe", -1);
+    if (true) {
+        constexpr std::wstring_view updater_name{L"cmk-update-agent.exe"};
+        KillProcessTreeSafe(proc_id, updater_name);
+        auto success = KillProcessSafe(proc_id, updater_name, -1);
         XLOG::d.i("Process [{}] '{}' had been {}", proc_id,
                   wtools::ConvertToUTF8(cmd_line_),
                   success ? "killed SUCCESSFULLY" : "FAILED to kill");
@@ -1876,29 +1877,34 @@ bool KillProcessSafe(uint32_t process_id, std::wstring_view process_name,
                 ::GetLastError());
         return false;
     }
-    std::filesystem::path p{buf};
-    auto image_name = p.filename().wstring();
-    _wcslwr(image_name.data());
-    auto expected_name = std::wstring(process_name);
-    _wcslwr(expected_name.data());
+    try {
+        std::filesystem::path p{buf};
+        auto image_name = p.filename().wstring();
+        _wcslwr(image_name.data());
+        auto expected_name = std::wstring(process_name);
+        _wcslwr(expected_name.data());
 
-    if (image_name != expected_name) {
-        XLOG::l("Impossible to kill '{}' [{}], real name '{}'",
-                wtools::ConvertToUTF8(process_name), process_id, buf);
+        if (image_name != expected_name) {
+            XLOG::l("Impossible to kill '{}' [{}], real name '{}'",
+                    wtools::ConvertToUTF8(process_name), process_id, buf);
+            return false;
+        }
+
+        if (FALSE == TerminateProcess(handle, exit_code)) {
+            // - we have no problem(process already dead) - ignore
+            // - we have problem: either code is invalid or something wrong
+            // with Windows in all cases just report
+            XLOG::d("Cannot terminate process '{}' [{}] gracefully, error [{}]",
+                    wtools::ConvertToUTF8(process_name), process_id,
+                    GetLastError());
+            return false;
+        }
+
+        return true;
+    } catch (const std::exception& /*e*/) {
+        // this process can't be terminated(impossible to check image name)
         return false;
     }
-
-    if (FALSE == TerminateProcess(handle, exit_code)) {
-        // - we have no problem(process already dead) - ignore
-        // - we have problem: either code is invalid or something wrong
-        // with Windows in all cases just report
-        XLOG::d("Cannot terminate process '{}' [{}] gracefully, error [{}]",
-                wtools::ConvertToUTF8(process_name), process_id,
-                GetLastError());
-        return false;
-    }
-
-    return true;
 }
 
 // process terminator
@@ -2032,7 +2038,7 @@ bool KillProcessFully(const std::wstring& process_name,
         });
 
     for (auto proc_id : processes_to_kill) {
-        KillProcessTree(proc_id);
+        KillProcessTreeUnsafe(proc_id);
         KillProcessUnsafe(proc_id, exit_code);
     }
 
@@ -2056,7 +2062,7 @@ int FindProcess(std::wstring_view process_name) noexcept {
     return count;
 }
 
-void KillProcessTree(uint32_t ProcessId) {
+void KillProcessTreeUnsafe(uint32_t ProcessId) {
     // snapshot
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     ON_OUT_OF_SCOPE(CloseHandle(snapshot));
@@ -2074,6 +2080,26 @@ void KillProcessTree(uint32_t ProcessId) {
         }
 
     } while (Process32Next(snapshot, &process));
+}
+
+size_t KillProcessTreeSafe(uint32_t process_id,
+                           std::wstring_view expected_name) {
+    HANDLE snapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    ON_OUT_OF_SCOPE(::CloseHandle(snapshot));
+
+    PROCESSENTRY32 process;
+    ZeroMemory(&process, sizeof(process));
+    process.dwSize = sizeof(process);
+    Process32First(snapshot, &process);
+    size_t count = 0;
+    do {
+        if (process.th32ParentProcessID == process_id &&
+            KillProcessSafe(process.th32ProcessID, expected_name, -1)) {
+            count++;
+        }
+
+    } while (Process32Next(snapshot, &process));
+    return count;
 }
 
 std::wstring GetArgv(uint32_t index) noexcept {

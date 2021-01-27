@@ -15,10 +15,11 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "yaml-cpp/yaml.h"
+using namespace std::chrono_literals;
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
-TEST(Wtools, KillProcessSafeIntegration) {
+TEST(WtoolsKillSafe, ProcessIntegration) {
     EXPECT_FALSE(KillProcessSafe(127, L"power.exe", -1));
     EXPECT_FALSE(KillProcessSafe(512, L"", -1));
     std::wstring cmd{L"powershell.exe Start-Sleep 10000"};
@@ -28,6 +29,49 @@ TEST(Wtools, KillProcessSafeIntegration) {
         KillProcessSafe(::GetCurrentProcessId(), L"powershell.exe", -1));
     EXPECT_TRUE(KillProcessSafe(proc_id, L"PowerShell.exe", -1));
     EXPECT_FALSE(KillProcessSafe(proc_id, L"PowerShell.exe", -1));
+}
+
+TEST(WtoolsKillSafe, KillAllIntegration_Long) {
+    wtools::ScanProcessList([](const PROCESSENTRY32& entry) -> auto {
+        EXPECT_EQ(
+            KillProcessTreeSafe(entry.th32ProcessID, L"cmk-agent-updater.exe"),
+            0);
+        EXPECT_FALSE(
+            KillProcessSafe(entry.th32ProcessID, L"cmk-agent-updater.exe", -1));
+        return true;
+    });
+}
+
+namespace {
+std::pair<uint32_t, std::wstring> RunSelfWithParam(std::wstring_view param) {
+    auto exe = wtools::GetArgv(0);
+    // fork creates child process
+    std::wstring cmd{fmt::format(L"\"{}\" {}", exe, param)};
+    auto proc_id = cma::tools::RunStdCommand(cmd, false);
+    auto name = std::filesystem::path(exe).filename().wstring();
+    cma::tools::sleep(500ms);
+    return {proc_id, name};
+}
+}  // namespace
+TEST(WtoolsKillSafe, TreeExistsIntegration) {
+    auto [proc_id, name] = RunSelfWithParam(L"fork");
+
+    EXPECT_EQ(KillProcessTreeSafe(proc_id, name), 1);
+    EXPECT_TRUE(KillProcessSafe(proc_id, name, -1));
+}
+
+TEST(WtoolsKillSafe, TreeExistsReverseIntegration) {
+    auto [proc_id, name] = RunSelfWithParam(L"fork");
+
+    EXPECT_TRUE(KillProcessSafe(proc_id, name, -1));
+    EXPECT_EQ(KillProcessTreeSafe(proc_id, name), 1);
+}
+
+TEST(WtoolsKillSafe, TreeIsAbsentIntegration) {
+    auto [proc_id, name] = RunSelfWithParam(L"wait20");
+
+    EXPECT_EQ(KillProcessTreeSafe(proc_id, name), 0);
+    EXPECT_TRUE(KillProcessSafe(proc_id, name, -1));
 }
 
 TEST(Wtools, ScanProcess) {
@@ -96,7 +140,7 @@ TEST(Wtools, ScanProcess) {
             EXPECT_EQ(parent_process_id, ::GetCurrentProcessId());
 
             // killing
-            KillProcessTree(proc_id);
+            KillProcessTreeUnsafe(proc_id);
             KillProcessUnsafe(proc_id);
             cma::tools::sleep(500ms);
 

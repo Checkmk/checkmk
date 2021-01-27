@@ -236,8 +236,12 @@ int FindProcess(std::wstring_view process_name) noexcept;
 
 constexpr bool kProcessTreeKillAllowed = false;
 
-// WIN32 described method of killing process tree
-void KillProcessTree(uint32_t ProcessId);
+/// This function is extremely dangerous on older OSes and actually doesn't used
+void KillProcessTreeUnsafe(uint32_t ProcessId);
+
+// Kills forks: cmk-update-agent.exe, for example
+size_t KillProcessTreeSafe(uint32_t process_id,
+                           std::wstring_view expected_name);
 
 class AppRunner {
 public:

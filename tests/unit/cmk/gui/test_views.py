@@ -6289,13 +6289,8 @@ def test_get_inventory_display_hint():
     assert isinstance(hint, dict)
 
 
-def test_view_page(wsgi_app, with_user, mock_livestatus):
-    username, password = with_user
-    login = wsgi_app.get('/NO_SITE/check_mk/login.py')
-    login.form['_username'] = username
-    login.form['_password'] = password
-    resp = login.form.submit('_login', index=1)
-    assert "Invalid credentials." not in resp.text
+def test_view_page(logged_in_wsgi_app, mock_livestatus):
+    wsgi_app = logged_in_wsgi_app
 
     def _prepend(prefix, dict_):
         d = {}

@@ -99,8 +99,9 @@ class BarChartDataGenerator(ABCDataGenerator):
         """Return a list of dicts where each dict represents a time frame with
         respect to the given time range and resolution. All non-time values are
         set to an initial value (0 / "" / [])."""
-        time_range = cls._int_time_range_from_rangespec(properties["time_range"])
-        basic_timestep = cls._timestep_from_resolution(properties["time_resolution"])
+        mode_properties = properties["render_mode"][1]
+        time_range = cls._int_time_range_from_rangespec(mode_properties["time_range"])
+        basic_timestep = cls._timestep_from_resolution(mode_properties["time_resolution"])
         timestamps = cls._forge_timestamps(time_range, basic_timestep)
         bar_elements = []
         for i, timestamp in enumerate(timestamps):
@@ -181,7 +182,8 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
 
     @classmethod
     def _get_grouping_indices(cls, bar_elements, properties):
-        timestep = cls._timestep_from_resolution(properties["time_resolution"])
+        mode_properties = properties["render_mode"][1]
+        timestep = cls._timestep_from_resolution(mode_properties["time_resolution"])
         start_new_group = cls._get_start_new_group_function(timestep)
         grouping_indices = []
         tmp_start_index = 0
@@ -208,7 +210,8 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
         # Add barbar elements
         response = cls._create_barbar_chart_config(bar_chart_config, properties, context)
 
-        if properties["time_resolution"] == "h":
+        mode_properties = properties["render_mode"][1]
+        if mode_properties["time_resolution"] == "h":
             per_string = {"bar": "hour", "barbar": "12 hours"}
         else:
             per_string = {"bar": "day", "barbar": "week"}

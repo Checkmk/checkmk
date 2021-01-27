@@ -590,8 +590,8 @@ class ModeEditUser(WatoMode):
     def _page_menu_entries_this_user(self) -> Iterator[PageMenuEntry]:
         if self._rbn_enabled and not self._is_new_user:
             yield PageMenuEntry(
-                title=_("Notifications"),
-                icon_name="notifications",
+                title=_("Notification rules"),
+                icon_name="topic_events",
                 item=make_simple_link(
                     watolib.folder_preserving_link([("mode", "user_notifications"),
                                                     ("user", self._user_id)])),

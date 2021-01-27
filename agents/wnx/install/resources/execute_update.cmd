@@ -22,7 +22,7 @@ echo finished >> %log_file%
 
 rem validate result
 sc query | find /i "checkmkservice" >> %log_file%
-if "%errorlevel%" == "0" echo "[+] Installed successfully" >> %log_file% && exit /b 0
+if "%errorlevel%" == "0" echo "[+] Installed successfully" >> %log_file% && goto start_service_and_exit
 rem failure!
 echo "[-] Installation failed. Pause & Retry..." >> %log_file%
 powershell Start-Sleep 5
@@ -34,7 +34,7 @@ echo finished >> %log_file%
 
 rem validate result
 sc query | find /i "checkmkservice" >> %log_file%
-if "%errorlevel%" == "0" echo "[+] Installed successfully" >> %log_file% && exit /b 0
+if "%errorlevel%" == "0" echo "[+] Installed successfully" >> %log_file% && goto start_service_and_exit
 rem failure!
 echo "[-] Installation failed. Pause & Retry..." >> %log_file%
 powershell Start-Sleep 5
@@ -46,6 +46,12 @@ echo finished >> %log_file%
 
 rem validate result
 sc query | find /i "checkmkservice" >> %log_file%
-if "%errorlevel%" == "0" echo "[+] Service is presented" >> %log_file% && exit /b 0
-echo "[-] Service is not installed" >> %log_file% && exit /b 3
+if "%errorlevel%" == "0" echo "[+] Service is presented" >> %log_file% && goto start_service_and_exit
+echo "[-] Service is not installed" >> %log_file% 
+
+
+:start_service_and_exit
+echo "starting service for safety" >> %log_file%
+net start checkmkservice >> %log_file%
+exit /b 0
 

@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from six import ensure_str
 from typing import (
     Iterable,
     Mapping,
@@ -62,14 +61,11 @@ def encode_labels_for_tagify(labels: Labels) -> Iterable[Mapping[str, str]]:
 def encode_labels_for_http(labels: Labels) -> str:
     """The result can be used in building URLs
     >>> encode_labels_for_http([])
-    ''
+    '[]'
     >>> encode_labels_for_http({"key": "value", "x": "y"}.items())
     '[{"value": "key:value"}, {"value": "x:y"}]'
     """
-    # tagify outputs a warning for value of "[]" right now
-    # see: https://github.com/yairEO/tagify/pull/275
-    encoded_labels = encode_labels_for_tagify(labels)
-    return ensure_str(json.dumps(encoded_labels)) if encoded_labels else ""
+    return json.dumps(encode_labels_for_tagify(labels))
 
 
 def label_help_text() -> str:

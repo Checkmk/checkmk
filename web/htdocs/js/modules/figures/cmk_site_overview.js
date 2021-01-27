@@ -11,6 +11,8 @@ export class SiteOverview extends cmk_figures.FigureBase {
         super(div_selector, fixed_size);
         this.margin = {top: 0, right: 0, bottom: 0, left: 0};
 
+        this._max_box_width = 114;
+
         // Debugging/demo stuff
         this._test_filter = false;
         this._use_canvas_for_hosts = false;
@@ -165,6 +167,12 @@ export class SiteOverview extends cmk_figures.FigureBase {
             } else {
                 box_width = box_area.width / num_columns;
             }
+
+            if (box_width > this._max_box_width) {
+                box_width = this._max_box_width;
+                num_columns = Math.max(Math.floor(box_area.width / this._max_box_width), 1);
+            }
+
             let num_rows = Math.ceil(num_elements / num_columns);
             let box_height = (box_width * Math.sqrt(3)) / 2;
             let necessary_total_height = box_height * (num_rows + 1 / 3);
@@ -553,11 +561,10 @@ export class SiteOverview extends cmk_figures.FigureBase {
         let box_area = this._compute_box_area(this.plot_size);
 
         // Must not be larger than the "host/service statistics" hexagons
-        let max_box_width = 114;
         let box_v_rel_padding = 0.05;
         let box_h_rel_padding = 0;
         // Calculating the distance from center to top of hexagon
-        let hexagon_max_radius = max_box_width / 2;
+        let hexagon_max_radius = this._max_box_width / 2;
 
         let num_elements = this._crossfilter.allFiltered().length;
 
@@ -566,7 +573,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
         }
 
         // Calculate number of columns and rows we need to render all elements
-        let num_columns = Math.max(Math.floor(box_area.width / max_box_width), 1);
+        let num_columns = Math.max(Math.floor(box_area.width / this._max_box_width), 1);
 
         // Rough idea of this algorithm: Increase the number of columns, then calculate the number
         // of rows needed to fit all elements into the box_area. Then calculate the box size based

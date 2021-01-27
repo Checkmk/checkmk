@@ -271,11 +271,21 @@ div.snapin {
       font-weight: $font-weight-bold;
       line-height: 16px;
       letter-spacing: $letter-spacing-table;
-      border-bottom: 1px solid $snapin-heading-border-color;
     }
 
     &.closed span.minisnapin {
       background-image: url("images/icon_maxisnapin.png");
+    }
+
+    span.minisnapin {
+      position: absolute;
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      margin-left: 6px;
+      line-height: 0;
+      cursor: pointer;
+      background: no-repeat center / 100% url("images/icon_minisnapin.png");
     }
   }
 
@@ -295,41 +305,34 @@ div.snapin {
     display: inline-block;
     width: 16px; /* FIXME: get rid of the animation that uses 4 images */
     margin-right: 4px;
+    vertical-align: middle;
 
     img {
       width: 16px;
       height: 16px;
+      padding: 0;
     }
   }
 
   span.closesnapin {
     display: inline-block;
     width: 16px;
+    vertical-align: middle;
 
     img {
       width: 16px;
       height: 16px;
-      padding: 0;
-      margin-top: -8px; /* HACK to align the button */
+      padding-bottom: 3px; /* HACK to perfectly align the button */
     }
-  }
-
-  span.minisnapin {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
-    line-height: 0;
-    cursor: pointer;
-    background: no-repeat center / 100% url("images/icon_minisnapin.png");
   }
 
   div.content {
     top: 64px;
     width: 100%;
-    padding: $spacing 0 0;
+    padding: $spacing 0;
     color: $font-color-sidebar;
     box-sizing: border-box;
+    border-bottom: 1px solid $snapin-heading-border-color;
   }
 
   select {

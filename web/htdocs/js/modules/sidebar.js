@@ -486,10 +486,7 @@ function remove_snapin(id) {
 
 export function toggle_sidebar_snapin(oH2, url) {
     // oH2 is a <b> if it is the snapin title otherwise it is the minimize button.
-    let childs =
-        oH2.tagName == "B"
-            ? oH2.parentNode.parentNode.childNodes
-            : oH2.parentNode.parentNode.parentNode.childNodes;
+    let childs = oH2.parentNode.parentNode.childNodes;
 
     let oContent, oHead;
     for (const i in childs) {

@@ -52,9 +52,6 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
         'emerson_stat',
         'emerson_temp',
         'etherbox',  # see check plugin for details
-        'fast_lta_headunit',
-        'fast_lta_silent_cubes',
-        'fast_lta_volumes',
         'hp_proliant_cpu',
         'hp_proliant_da_cntlr',
         'hp_proliant_da_phydrv',

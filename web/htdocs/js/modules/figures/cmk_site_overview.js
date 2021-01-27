@@ -281,7 +281,6 @@ export class SiteOverview extends cmk_figures.FigureBase {
                     badness = 0;
                     let goodness = 1.0 - badness;
                     let radius_factor = Math.pow((1.0 - mid_radius) * goodness + mid_radius, 2);
-                    radius_factor *= Math.random();
                     d.hexagon_config.push({
                         id: "inner_hexagon",
                         path: hexbin.hexagon(geometry.radius * radius_factor),

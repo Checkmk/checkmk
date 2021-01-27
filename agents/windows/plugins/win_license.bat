@@ -1,4 +1,4 @@
-set VERSION="2.0.0b5"
+set VERSION="2.0.0b6"
 @echo off
 REM ***
 REM * plugin to gather and output Windows activation status

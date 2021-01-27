@@ -1,4 +1,4 @@
-﻿$VERSION = "2.0.0b5"
+﻿$VERSION = "2.0.0b6"
 ####
 ## Hyper-V VM state
 ####

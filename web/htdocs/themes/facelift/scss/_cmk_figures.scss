@@ -259,10 +259,12 @@ div.cmk_figure {
   }
 
   g.title rect {
-    fill: $dashlet-inner-bg-color;
+    font-size: $font-size-default;
+    fill: $dashlet-body-bg-color;
 
     &.highlighted {
       fill: $headline-color;
+      stroke: $color-table-border;
     }
   }
 }

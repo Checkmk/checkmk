@@ -467,9 +467,9 @@ export class FigureBase {
             .data(d => [d])
             .join("rect")
             .attr("x", 0)
-            .attr("y", 0)
+            .attr("y", 0.5)
             .attr("width", this.figure_size.width)
-            .attr("height", 24)
+            .attr("height", 22)
             .classed(highlight_container ? "highlighted" : "", true);
 
         title_component
@@ -477,9 +477,8 @@ export class FigureBase {
             .data(d => [d])
             .join("text")
             .text(d => d)
-            .attr("y", 18)
+            .attr("y", 16)
             .attr("x", this.figure_size.width / 2)
-            .style("font-size", "12px")
             .attr("text-anchor", "middle");
     }
 }

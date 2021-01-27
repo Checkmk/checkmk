@@ -24,10 +24,10 @@
   "author": "",
   "license": "GPL-2.0",
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.9.0",
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
     "autoprefixer": "^9.7.5",
-    "babel-loader": "^8.1.0",
+    "babel-loader": "^8.2.2",
     "css-loader": "^3.4.2",
     "eslint": "^7.18.0",
     "eslint-config-prettier": "^7.2.0",
@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "@yaireo/tagify": "3.22.1",
-    "core-js": "^3.6.4",
+    "core-js": "^3.8.3",
     "crossfilter2": "^1.5.2",
     "d3": "^5.15.0",
     "d3-flextree": "^2.1.1",

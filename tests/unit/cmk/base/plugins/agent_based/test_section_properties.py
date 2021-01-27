@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import defaultdict
+
 import pytest  # type: ignore[import]
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -38,57 +40,75 @@ def test_all_sections_are_subscribed_by_some_plugin():
 
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_section_detection_uses_sysdescr_or_sysobjid():
-    """Make sure the first OID is always either the system description
-    or the system object ID. This increases performance massively.
+    """Make sure the first OID is the system description or the system object ID
+
+    Checking the system description or the system object ID first increases performance
+    massively, because we can reduce the number of devices for which the subsequent OIDs
+    are fetched, based on an OID information we fetch anyway.
+
+    You should really have an exceptionally good reason to add something here.
+
+    The known exeptions cannot easily be fixed, because introducing a too strict
+    criterion is an incompatible change.
+    In most of the cases I was unable to spot the identifying feature of the system
+    description.
     """
 
-    known_exceptions = {
-        # you should really have an exceptionally good reason to add something here.
-        'dell_compellent_controller',
-        'dell_compellent_disks',
-        'dell_compellent_enclosure',
-        'dell_compellent_folder',
-        'dell_hw_info',
-        'emerson_stat',
-        'emerson_temp',
-        'etherbox',  # see check plugin for details
-        'hp_proliant_cpu',
-        'hp_proliant_da_cntlr',
-        'hp_proliant_da_phydrv',
-        'hp_proliant_fans',
-        'hp_proliant_mem',
-        'hp_proliant_power',
-        'hp_proliant_psu',
-        'hp_proliant_raid',
-        'hp_proliant_systeminfo',
-        'hp_proliant_temp',
-        'hp_sts_drvbox',
-        'hr_cpu',
-        'hr_fs',
-        'hr_ps',
-        'if',
-        'if64',
-        'if64adm',
-        'inv_if',
-        'openbsd_sensors',
-        'printer_alerts',
-        'printer_input',
-        'printer_output',
-        'printer_pages',
-        'printer_supply',
-        'pse_poe',
-        'quantum_storage_status',
-        'snmp_extended_info',
-        'snmp_quantum_storage_info',
-    }
+    allowed_oids = (SYS_DESCR_OID, SYS_OBJID_OID)
+    unconditionally_fetched_oids = defaultdict(set)
 
     for section in agent_based_register.iter_all_snmp_sections():
         for (first_checked_oid, *_rest1), *_rest2 in (  #
                 criterion for criterion in section.detect_spec if criterion  #
         ):
-            assert (  #
-                first_checked_oid.rstrip('.0') in (SYS_DESCR_OID, SYS_OBJID_OID)  #
-            ) is (str(section.name) not in known_exceptions)
+            first_checked_oid = first_checked_oid.rstrip('.0')
+            if first_checked_oid not in allowed_oids:
+                unconditionally_fetched_oids[first_checked_oid].add(str(section.name))
+
+    assert sorted((k, sorted(v)) for k, v in unconditionally_fetched_oids.items()) == [
+        ('.1.3.6.1.2.1.105.1.3.1.1.*', ['pse_poe']),
+        ('.1.3.6.1.2.1.2.1', ['inv_if']),
+        ('.1.3.6.1.2.1.2.2.1.*', ['if']),
+        ('.1.3.6.1.2.1.25.1.1', ['hr_cpu', 'hr_fs', 'hr_ps']),
+        ('.1.3.6.1.2.1.31.1.1.1.6.*', ['if64', 'if64adm']),
+        ('.1.3.6.1.2.1.43.10.2.1.4.1.1', ['printer_pages']),
+        ('.1.3.6.1.2.1.43.11.1.1.6.1.1', [
+            'printer_alerts',
+            'printer_input',
+            'printer_output',
+            'printer_supply',
+        ]),
+        ('.1.3.6.1.2.1.47.1.1.1.1.*', ['snmp_extended_info']),
+        ('.1.3.6.1.4.1.14848.2.1.1.1', ['etherbox']),
+        ('.1.3.6.1.4.1.2036.2.1.1.4', ['snmp_quantum_storage_info']),
+        ('.1.3.6.1.4.1.2036.2.1.1.7', ['quantum_storage_status']),
+        ('.1.3.6.1.4.1.232.2.2.4.2', [
+            'hp_proliant_cpu',
+            'hp_proliant_da_cntlr',
+            'hp_proliant_da_phydrv',
+            'hp_proliant_fans',
+            'hp_proliant_mem',
+            'hp_proliant_power',
+            'hp_proliant_psu',
+            'hp_proliant_raid',
+            'hp_proliant_systeminfo',
+            'hp_proliant_temp',
+            'hp_sts_drvbox',
+        ]),
+        ('.1.3.6.1.4.1.30155.2.1.1', ['openbsd_sensors']),
+        ('.1.3.6.1.4.1.6302.2.1.1.1', ['emerson_stat', 'emerson_temp']),
+        ('.1.3.6.1.4.1.674.10892.5.1.1.1', ['dell_hw_info']),
+        ('.1.3.6.1.4.1.674.11000.2000.500.1.2.1', [
+            'dell_compellent_controller',
+            'dell_compellent_disks',
+            'dell_compellent_enclosure',
+            'dell_compellent_folder',
+        ]),
+    ], """
+    If you've made it here, you have added a case to the known exeptions above.
+    Even worse: You may have added an OID to the list of OIDs that are fetched
+    from *all SNMP devices* known to the Checkmk site. Please reconsider!
+    """
 
 
 @pytest.mark.usefixtures("config_load_all_checks")

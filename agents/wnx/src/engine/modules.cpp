@@ -22,6 +22,7 @@
 #include "zip.h"
 
 using namespace std::literals;
+namespace fs = std::filesystem;
 
 namespace cma::cfg::modules {
 
@@ -32,6 +33,19 @@ void Module::reset() noexcept {
     dir_.clear();
     zip_.clear();
     bin_.clear();
+}
+
+void Module::runPostInstall() {
+    fs::path work_dir = cfg::GetUserDir();
+    work_dir /= dir();
+    auto script_path = work_dir / post_install_script_name;
+    std::error_code ec;
+    if (fs::exists(script_path, ec)) {
+        auto success =
+            tools::RunCommandAndWait(script_path.wstring(), work_dir.wstring());
+        XLOG::l.i("The command '{}' is {}", script_path,
+                  success ? "successful" : "failed");
+    }
 }
 
 std::filesystem::path Module::findZip(
@@ -97,10 +111,20 @@ bool Module::prepareToWork(const std::filesystem::path &backup_dir,
 
     // Find Zip
     zip_ = findZip(backup_dir);
-    if (zip_.empty()) return false;
+    if (zip_.empty()) {
+        XLOG::d("Module '{}' has no zip in backup dir '{}'", name(),
+                backup_dir);
+        return false;
+    }
 
     bin_ = findBin(modules_dir);
-    if (bin_.empty()) return false;
+    if (bin_.empty()) {
+        XLOG::d("Module '{}' has no bin in modules dir '{}'", name(),
+                modules_dir);
+        return false;
+    }
+
+    runPostInstall();
 
     XLOG::l.i("Module '{}' is prepared to work with bin '{}'", name(),
               bin_.u8string());
@@ -499,7 +523,8 @@ bool ModuleCommander::InstallModule(const Module &mod,
                                     const std::filesystem::path &user,
                                     InstallMode mode) {
     namespace fs = std::filesystem;
-    using namespace cma::tools;
+
+    XLOG::l.i("Install module {}", mod.name());
 
     auto backup_file = GetModBackup(user) / mod.name();
     backup_file += kExtension.data();
@@ -516,7 +541,8 @@ bool ModuleCommander::InstallModule(const Module &mod,
         return false;
     }
 
-    if (AreFilesSame(backup_file, module_file) && mode == InstallMode::normal) {
+    if (tools::AreFilesSame(backup_file, module_file) &&
+        mode == InstallMode::normal) {
         XLOG::l.i(
             "Installation of the module '{}' is not required, module file '{}'is same",
             mod.name(), module_file.u8string());
@@ -527,28 +553,42 @@ bool ModuleCommander::InstallModule(const Module &mod,
 
     auto uninstalled = UninstallModuleZip(backup_file, GetModInstall(user));
 
-    if (!BackupModule(module_file, backup_file)) return false;
+    if (!BackupModule(module_file, backup_file)) {
+        XLOG::l("Can't backup module '{}': file '{}', bakcup '{}'", mod.name(),
+                module_file, backup_file);
+        return false;
+    }
 
     fs::path default_dir = GetModInstall(user) / mod.name();  // default
     fs::path actual_dir = user / mod.dir();
-    if (!PrepareCleanTargetDir(default_dir)) return false;
+    if (!PrepareCleanTargetDir(default_dir)) {
+        return false;
+    }
 
     if (!fs::equivalent(default_dir, actual_dir, ec)) {
+        XLOG::l.i("Default dir '{}' differs from actual '{}'", default_dir,
+                  actual_dir);
         // establish symbolic link
         CreateFileForTargetDir(default_dir, actual_dir);
     }
 
-    auto ret = zip::Extract(backup_file.wstring(), actual_dir.wstring());
+    auto ret = tools::zip::Extract(backup_file.wstring(), actual_dir.wstring());
     if (ret) {
         fs::path postinstall{actual_dir};
-        postinstall /= "postinstall.cmd";
-        if (!fs::exists(module_file, ec)) return true;
+        postinstall /= post_install_script_name;
 
-        cma::tools::RunCommandAndWait(postinstall.wstring(),
-                                      actual_dir.wstring());
+        if (!fs::exists(postinstall, ec)) {
+            XLOG::l.i("The module '{}' is absent", postinstall);
+            return true;
+        }
+        auto success = tools::RunCommandAndWait(postinstall.wstring(),
+                                                actual_dir.wstring());
+        XLOG::l.i("The command '{}' is {}", postinstall,
+                  success ? "successful" : "failed");
 
         return true;
     }
+
     XLOG::l("Extraction failed: removing backup file '{}' and default dir '{}'",
             backup_file.u8string(), default_dir.u8string());
     fs::remove(backup_file, ec);
@@ -560,7 +600,6 @@ bool ModuleCommander::InstallModule(const Module &mod,
 void ModuleCommander::installModules(const std::filesystem::path &root,
                                      const std::filesystem::path &user,
                                      InstallMode mode) const {
-    namespace fs = std::filesystem;
     auto mod_root = GetModInstall(user);
     auto mod_backup = GetModBackup(user);
     if (!CreateDir(mod_root)) return;

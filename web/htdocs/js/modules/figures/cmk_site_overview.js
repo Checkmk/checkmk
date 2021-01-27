@@ -294,13 +294,13 @@ export class SiteOverview extends cmk_figures.FigureBase {
                 const colors = d3
                     .scaleLinear()
                     .domain([0, this._data.upper_bound])
-                    .range(["#b1d2e8", "#083775"]);
+                    .range(["#b1d2e880", "#08377580"]);
                 d.hexagon_config = [
                     {
                         id: "outer_hexagon",
                         path: outer_hexagon_path,
                         color: colors(d.num_problems),
-                        css_class: "",
+                        css_class: "alert_element",
                         tooltip: d.tooltip,
                     },
                 ];

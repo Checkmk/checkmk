@@ -27,12 +27,14 @@ from cmk.gui.plugins.views.painters import paint_service_state_short
 
 
 class SingleMetricDataGenerator(ABCDataGenerator):
-    @classmethod
-    def vs_parameters(cls):
+    def __init__(self, exclude_properties: Optional[List[str]] = None):
+        self._exclude_properties = exclude_properties
+
+    def vs_parameters(self):
         return Dictionary(title=_("Properties"),
                           render="form",
                           optional_keys=False,
-                          elements=cls._vs_elements())
+                          elements=self._vs_elements())
 
     @staticmethod
     def _time_range_historic_dict_elements() -> DictionaryElements:
@@ -60,9 +62,8 @@ class SingleMetricDataGenerator(ABCDataGenerator):
             ),
         ]
 
-    @classmethod
-    def _vs_elements(cls):
-        return [
+    def _vs_elements(self):
+        elements = [
             ("metric", MetricName()),  # MetricChoice would be nicer, but we use the context filters
             (
                 "time_range",
@@ -79,7 +80,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
                             _("Show historic values"),
                             Dictionary(
                                 optional_keys=False,
-                                elements=cls._time_range_historic_dict_elements(),
+                                elements=self._time_range_historic_dict_elements(),
                             ),
                         ),
                     ],
@@ -108,6 +109,11 @@ class SingleMetricDataGenerator(ABCDataGenerator):
                             ],
                             default_value="not_ok")),
         ]
+
+        if self._exclude_properties:
+            elements = [x for x in elements if x[0] not in self._exclude_properties]
+
+        return elements
 
     @classmethod
     @site_query
@@ -342,7 +348,7 @@ class SingleMetricDashlet(ABCFigureDashlet):
 
     @classmethod
     def data_generator(cls):
-        return SingleMetricStyledDataGenerator()
+        return SingleMetricStyledDataGenerator(exclude_properties=["display_range"])
 
     @classmethod
     def description(cls):
@@ -351,13 +357,6 @@ class SingleMetricDashlet(ABCFigureDashlet):
     @classmethod
     def single_infos(cls):
         return ["service", "host"]
-
-    def on_resize(self):
-        return ("if (typeof %(instance)s != 'undefined') {"
-                "%(instance)s.update_gui();"
-                "}") % {
-                    "instance": self.instance_name
-                }
 
     def show(self):
         self.js_dashlet("single_metric_data.py")

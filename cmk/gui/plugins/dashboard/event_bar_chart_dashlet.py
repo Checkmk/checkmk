@@ -43,19 +43,18 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
     def filter_infos(cls):
         return ["host", "service"]
 
-    @classmethod
-    def vs_parameters(cls):
+    def vs_parameters(self):
         # Specifies the properties for this data generator
         return Dictionary(
             title=_("Properties"),
             render="form",
             optional_keys=[],
-            elements=super(ABCEventBarChartDataGenerator, cls).bar_chart_vs_components() +
+            elements=super(ABCEventBarChartDataGenerator, self).bar_chart_vs_components() +
             [("log_target",
               DropdownChoice(
-                  title=_("Host or service %ss" % cls.log_type()),
-                  choices=[("host", _("Show %ss for hosts" % cls.log_type())),
-                           ("service", _("Show %ss for services" % cls.log_type()))],
+                  title=_("Host or service %ss" % self.log_type()),
+                  choices=[("host", _("Show %ss for hosts" % self.log_type())),
+                           ("service", _("Show %ss for services" % self.log_type()))],
                   default_value="service",
               ))])
 

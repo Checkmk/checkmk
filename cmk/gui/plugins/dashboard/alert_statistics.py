@@ -48,8 +48,7 @@ class AlertStats(NamedTuple):
 
 
 class AlertStatisticsDashletDataGenerator(ABCDataGenerator):
-    @classmethod
-    def vs_parameters(cls):
+    def vs_parameters(self):
         return Dictionary(
             title=_("Properties"),
             render="form",

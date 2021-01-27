@@ -48,8 +48,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
 
         return " / ".join(txt for txt in title)
 
-    @classmethod
-    def vs_parameters(cls):
+    def vs_parameters(self):
         return Dictionary(title=_("Properties"),
                           render="form",
                           optional_keys=[],

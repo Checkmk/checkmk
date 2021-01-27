@@ -488,9 +488,7 @@ dashlet_registry = DashletRegistry()
 
 
 class ABCDataGenerator(metaclass=abc.ABCMeta):
-    @classmethod
-    @abc.abstractmethod
-    def vs_parameters(cls):
+    def vs_parameters(self):
         raise NotImplementedError()
 
     @classmethod
@@ -498,8 +496,7 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
     def generate_response_data(cls, properties, context, settings):
         raise NotImplementedError()
 
-    @classmethod
-    def generate_response_from_request(cls):
+    def generate_response_from_request(self):
         settings = json.loads(html.request.get_str_input_mandatory("settings"))
 
         try:
@@ -511,9 +508,9 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
             dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
 
         raw_properties = html.request.get_str_input_mandatory("properties")
-        properties = cls.vs_parameters().value_from_json(json.loads(raw_properties))
+        properties = self.vs_parameters().value_from_json(json.loads(raw_properties))
         context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
-        response_data = cls.generate_response_data(properties, context, settings)
+        response_data = self.generate_response_data(properties, context, settings)
         return create_figures_response(response_data)
 
 
@@ -580,7 +577,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def data_generator(cls) -> Type[ABCDataGenerator]:
+    def data_generator(cls) -> ABCDataGenerator:
         raise NotImplementedError()
 
     @property

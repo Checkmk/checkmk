@@ -203,7 +203,7 @@ class AlertStatisticsDashletDataGenerator(ABCDataGenerator):
 @page_registry.register_page("ajax_alert_statistics_dashlet_data")
 class AjaxAlertStatisticsDashletData(AjaxPage):
     def page(self):
-        return AlertStatisticsDashletDataGenerator.generate_response_from_request()
+        return AlertStatisticsDashletDataGenerator().generate_response_from_request()
 
 
 @dashlet_registry.register
@@ -222,7 +222,7 @@ class AlertStatisticsDashlet(ABCFigureDashlet):
 
     @classmethod
     def data_generator(cls):
-        return AlertStatisticsDashletDataGenerator
+        return AlertStatisticsDashletDataGenerator()
 
     @classmethod
     def single_infos(cls):

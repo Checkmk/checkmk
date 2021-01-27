@@ -135,9 +135,9 @@ def _config_load_all_checks():
     assert len(config.check_info) > 1000  # sanitiy check
 
 
+#  @pytest.mark.usesfixture('config_load_all_checks')  <-- won't work!
 @pytest.fixture(name='config_load_all_inventory_plugins', scope="session")
-@pytest.mark.usesfixture('config_load_all_checks')
-def _config_load_all_inventory_plugins():
+def _config_load_all_inventory_plugins(config_load_all_checks):
     # Local import to have faster pytest initialization
     import cmk.base.api.agent_based.register.inventory_plugins_legacy as inventory_legacy  # pylint: disable=bad-option-value,import-outside-toplevel
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=bad-option-value,import-outside-toplevel

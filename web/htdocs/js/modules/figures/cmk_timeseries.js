@@ -405,7 +405,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         );
         x.attr("transform", "translate(0," + this.plot_size.height + ")");
 
-        let render_function = this._get_y_scale_render_function();
+        let render_function = this.get_scale_render_function();
         let y = this.g
             .selectAll("g.y_axis")
             .data([null])
@@ -418,15 +418,6 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
                 .tickFormat(d => render_function(d))
                 .ticks(Math.min(Math.floor(this.plot_size.height / 16), 6))
         );
-    }
-
-    _get_y_scale_render_function() {
-        let render_function = cmk_figures.get_function(
-            "v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)"
-        );
-        if (this._data.plot_definitions.length > 0 && this._data.plot_definitions[0].js_render)
-            render_function = cmk_figures.get_function(this._data.plot_definitions[0].js_render);
-        return render_function;
     }
 
     render_grid() {

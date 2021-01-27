@@ -481,6 +481,15 @@ export class FigureBase {
             .attr("x", this.figure_size.width / 2)
             .attr("text-anchor", "middle");
     }
+
+    get_scale_render_function() {
+        let render_function = get_function(
+            "v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)"
+        );
+        if (this._data.plot_definitions.length > 0 && this._data.plot_definitions[0].js_render)
+            render_function = get_function(this._data.plot_definitions[0].js_render);
+        return render_function;
+    }
 }
 
 export function calculate_domain(data) {

@@ -76,7 +76,6 @@ class BarplotFigure extends cmk_figures.FigureBase {
 
     update_gui() {
         let data = this._data;
-        this.render_title(data.title);
         this._update_plot_definitions(data.plot_definitions || []);
         if (data.plot_definitions.length == 0) return;
         this._crossfilter.remove(() => true);
@@ -89,6 +88,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
         this._time_dimension.filter(d => d == this._time_dimension.top(1)[0].timestamp);
 
         this.resize();
+        this.render_title(data.title);
         this.scale_y.domain(this._plot_definitions.map(d => d.label));
         this.plot
             .selectAll("g.y_axis")
@@ -102,14 +102,16 @@ class BarplotFigure extends cmk_figures.FigureBase {
         const domain = [0, d3.max(points, d => d.value) * 1.2];
         this.scale_x.domain(domain);
         this._tag_dimension.filterAll();
+
+        let render_function = this.get_scale_render_function();
         this.plot
             .selectAll("g.x_axis")
             .classed("axis", true)
             .call(
-                d3.axisTop(this.scale_x).tickFormat(d => {
-                    if (d > 999) return d3.format(".2s")(d);
-                    return d3.format(",")(d);
-                })
+                d3
+                    .axisTop(this.scale_x)
+                    .tickFormat(d => render_function(d))
+                    .ticks(Math.min(Math.floor(this.plot_size.width / 65), 6))
             );
 
         this.render_grid();

@@ -254,7 +254,7 @@ public:
     AppRunner& operator=(AppRunner&&) = delete;
 
     ~AppRunner() {
-        kill(true);
+        kill();
         stdio_.shutdown();
         stderr_.shutdown();
     }
@@ -265,7 +265,7 @@ public:
     // returns process id
     uint32_t goExecAsUpdater(std::wstring_view CommandLine) noexcept;
 
-    void kill(bool kill_tree);
+    void kill();
 
     const auto getCmdLine() const { return cmd_line_; }
     const auto processId() const { return process_id_.load(); }

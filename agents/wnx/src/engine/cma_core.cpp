@@ -822,7 +822,7 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
         auto us_time = sw_.stop();  // get time asap
         LogProcessStatus(false, us_time, pi);
 
-        process_->kill(true);
+        process_->kill();
         return false;
     }
 
@@ -884,7 +884,7 @@ bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
         auto us_time = sw_.stop();  // get time asap
         LogProcessStatus(false, us_time, pi);
 
-        process_->kill(true);
+        process_->kill();
 
         return false;
     }
@@ -929,7 +929,7 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
 
     if (process_->getData().empty()) {
         failed_ = timeout < kGrane;
-        process_->kill(true);
+        process_->kill();
         XLOG::l("Process '{}' [{}] is killed", proc_name, process_id);
         return false;
     }

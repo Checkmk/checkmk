@@ -48,7 +48,7 @@ void AppRunner::cleanResources() noexcept {
 }
 
 // #TODO test this(directly not tested)
-void AppRunner::kill(bool kill_tree) {
+void AppRunner::kill() {
     auto proc_id = process_id_.exchange(0);
     if (proc_id == 0) {
         XLOG::d(
@@ -56,40 +56,31 @@ void AppRunner::kill(bool kill_tree) {
         return;
     }
 
-    if (kill_tree) {
-        if (job_handle_) {
-            // this is normal case but with job
-            TerminateJobObject(job_handle_, 0);
+    if (job_handle_) {
+        // this is normal case but with job
+        TerminateJobObject(job_handle_, 0);
 
-            // job:
-            CloseHandle(job_handle_);
-            job_handle_ = nullptr;
+        // job:
+        CloseHandle(job_handle_);
+        job_handle_ = nullptr;
 
-            // process:
-            CloseHandle(process_handle_);  // must
-            process_handle_ = nullptr;
-        } else {
-            // normally only updater here, be careful
-            if (false) {
-                KillProcessTree(proc_id);
-                auto success =
-                    KillProcessSafe(proc_id, L"cmk-update-agent.exe", -1);
-                XLOG::d.i("Process [{}] '{}' had been {}", proc_id,
-                          wtools::ConvertToUTF8(cmd_line_),
-                          success ? "killed SUCCESSFULLY" : "FAILED to kill");
-            } else {
-                XLOG::l.i("Killing of updater [{}]  is disabled '{}'", proc_id,
-                          wtools::ConvertToUTF8(cmd_line_));
-            }
-        }
+        // process:
+        CloseHandle(process_handle_);  // must
+        process_handle_ = nullptr;
 
         return;
     }
 
-    if (exit_code_ == STILL_ACTIVE) {
-        auto success = KillProcessUnsafe(proc_id, -1);
-        if (!success)
-            XLOG::l("Failed kill {} status {}", proc_id, GetLastError());
+    // normally only updater here, be careful
+    if (false) {
+        KillProcessTree(proc_id);
+        auto success = KillProcessSafe(proc_id, L"cmk-update-agent.exe", -1);
+        XLOG::d.i("Process [{}] '{}' had been {}", proc_id,
+                  wtools::ConvertToUTF8(cmd_line_),
+                  success ? "killed SUCCESSFULLY" : "FAILED to kill");
+    } else {
+        XLOG::l.i("Killing of updater [{}]  is disabled '{}'", proc_id,
+                  wtools::ConvertToUTF8(cmd_line_));
     }
 }
 

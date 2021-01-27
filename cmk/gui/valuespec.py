@@ -1189,7 +1189,8 @@ class MonitoredServiceDescription(TextAsciiAutocomplete):
     def __init__(self, **kwargs):
         kwargs.setdefault(
             'completion_params_js',
-            '(() => ({host: document.getElementsByName("context_host_p_host")[0].value}))()')
+            '(() => {let host_elem=document.getElementsByName("context_host_p_host"); return host_elem.length?{host:host_elem[0].value}:{}})()'
+        )
         super().__init__(completion_ident=self.ident, completion_params={}, **kwargs)
 
     @classmethod

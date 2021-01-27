@@ -23,3 +23,12 @@ x time_build_release.ps1
 
 To unit-test and measure time:
 x time_unit_tests.ps1
+
+## Installation
+run windows.setup.cmd
+This is *MANDATORY* step to build code
+
+## Build of frozen binaries
+make frozen_binaries
+or
+make clean

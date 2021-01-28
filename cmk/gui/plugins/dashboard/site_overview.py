@@ -96,7 +96,7 @@ class HostStats(NamedTuple):
 
 
 class SiteOverviewDashletDataGenerator(ABCDataGenerator):
-    def vs_parameters(self):
+    def vs_parameters(self) -> Dictionary:
         return Dictionary(title=_("Properties"), render="form", optional_keys=False, elements=[])
 
     @classmethod

@@ -43,7 +43,7 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
     def filter_infos(cls):
         return ["host", "service"]
 
-    def vs_parameters(self):
+    def vs_parameters(self) -> Dictionary:
         # Specifies the properties for this data generator
         return Dictionary(
             title=_("Properties"),

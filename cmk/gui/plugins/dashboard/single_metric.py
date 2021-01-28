@@ -30,7 +30,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
     def __init__(self, exclude_properties: Optional[List[str]] = None):
         self._exclude_properties = exclude_properties
 
-    def vs_parameters(self):
+    def vs_parameters(self) -> Dictionary:
         return Dictionary(title=_("Properties"),
                           render="form",
                           optional_keys=False,

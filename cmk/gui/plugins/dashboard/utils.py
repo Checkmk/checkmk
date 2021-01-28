@@ -504,8 +504,8 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
         except KeyError:
             raise MKUserError("type", _('The requested dashlet type does not exist.'))
 
-        settings = dashlet_vs_general_settings(
-            dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
+        vs_general_settings = dashlet_vs_general_settings(dashlet_type, dashlet_type.single_infos())
+        settings = vs_general_settings.value_from_json(settings)
 
         raw_properties = html.request.get_str_input_mandatory("properties")
         properties = self.vs_parameters().value_from_json(json.loads(raw_properties))
@@ -518,7 +518,7 @@ def dashlet_http_variables(dashlet: Dashlet) -> HTTPVariables:
     vs_general_settings = dashlet_vs_general_settings(dashlet.__class__, dashlet.single_infos())
     dashlet_settings = vs_general_settings.value_to_json(dashlet._dashlet_spec)
     dashlet_params = dashlet.vs_parameters()
-    assert isinstance(dashlet_params, ValueSpec)  # help mypy
+    assert isinstance(dashlet_params, Dictionary)  # help mypy
     dashlet_properties = dashlet_params.value_to_json(dashlet._dashlet_spec)
 
     context = visuals.get_merged_context(

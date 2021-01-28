@@ -24,7 +24,21 @@ class BarChartDataGenerator(ABCDataGenerator):
     def generate_response_data(cls, properties, context, settings):
         data_rows = cls._get_data(properties, context)
         bar_elements = cls._create_bar_elements(data_rows, properties, context)
-        return cls._create_bar_chart_config(bar_elements, properties, context, settings)
+        response = cls._create_bar_chart_config(bar_elements, properties, context, settings)
+
+        mode_properties = properties["render_mode"][1]
+        per_string = _("hour") if mode_properties["time_resolution"] == "h" else _("day")
+        return {
+            "title": response["title"],
+            "plot_definitions": [{
+                "plot_type": "bar",
+                "css_classes": ["bar_chart"],
+                "id": "id_bar",
+                "label": _("%s per %s") % (response["title"], per_string),
+                "use_tags": ["bar"]
+            }],
+            "data": response["elements"],
+        }
 
     @classmethod
     def _get_data(cls, properties, context):
@@ -209,13 +223,11 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
                                  cls).generate_response_data(properties, context, settings)
         # Add barbar elements
         response = cls._create_barbar_chart_config(bar_chart_config, properties, context)
-
         mode_properties = properties["render_mode"][1]
         if mode_properties["time_resolution"] == "h":
             per_string = {"bar": "hour", "barbar": "12 hours"}
         else:
             per_string = {"bar": "day", "barbar": "week"}
-
         new_response = {
             "title": response["title"],
             "plot_definitions": [{

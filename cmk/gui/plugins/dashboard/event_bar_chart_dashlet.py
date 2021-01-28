@@ -16,7 +16,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.visuals import get_filter_headers
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
-from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarBarChartDataGenerator
+from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarChartDataGenerator
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import (Dictionary, DropdownChoice, CascadingDropdown, Timerange)
 from cmk.gui.utils.urls import makeuri_contextless
@@ -30,7 +30,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 #   |      |____/ \__,_|___/\___|  \____|_|\__,_|___/___/\___||___/        |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
+class ABCEventBarChartDataGenerator(BarChartDataGenerator):
     """ Generates the data for host/service alert/notifications bar charts """
     @classmethod
     def log_type(cls):

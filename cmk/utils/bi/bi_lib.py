@@ -117,7 +117,7 @@ BIHostSpec = NamedTuple("BIHostSpec", [
 ])
 BINeededHosts = Set[BIHostSpec]
 
-BIServiceWithFullState = NamedTuple("BIServiceFullState", [
+BIServiceWithFullState = NamedTuple("BIServiceWithFullState", [
     ("state", Optional[ServiceState]),
     ("has_been_checked", bool),
     ("plugin_output", ServiceDetails),
@@ -128,7 +128,7 @@ BIServiceWithFullState = NamedTuple("BIServiceFullState", [
     ("acknowledged", bool),
     ("in_service_period", bool),
 ])
-BIHostStatusInfoRow = NamedTuple("BIStatusInfoRow", [
+BIHostStatusInfoRow = NamedTuple("BIHostStatusInfoRow", [
     ("state", Optional[HostState]),
     ("has_been_checked", bool),
     ("hard_state", Optional[HostState]),

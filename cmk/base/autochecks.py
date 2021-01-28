@@ -34,8 +34,7 @@ GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
 
-ServiceWithNodes = NamedTuple("ServiceWithNodesInfo", [("service", Service),
-                                                       ("nodes", List[HostName])])
+ServiceWithNodes = NamedTuple("ServiceWithNodes", [("service", Service), ("nodes", List[HostName])])
 
 
 class AutochecksManager:

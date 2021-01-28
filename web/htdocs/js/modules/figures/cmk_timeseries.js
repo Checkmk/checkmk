@@ -1145,7 +1145,7 @@ class SingleValuePlot extends SubPlot {
         const levels = cmk_figures.make_levels(domain, plot.metrics);
 
         const formatter = cmk_figures.get_function(plot.js_render);
-        const last_value = this.transformed_data.find(element => element);
+        const last_value = this.transformed_data.find(element => element.last_value);
         const plot_size = this._renderer.plot_size;
         const color = levels.length
             ? levels.find(element => last_value.value < element.to).color

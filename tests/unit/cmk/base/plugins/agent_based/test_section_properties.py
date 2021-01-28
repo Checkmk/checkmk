@@ -10,10 +10,6 @@ import pytest  # type: ignore[import]
 
 import cmk.base.api.agent_based.register as agent_based_register
 
-SYS_DESCR_OID = ".1.3.6.1.2.1.1.1"
-
-SYS_OBJID_OID = ".1.3.6.1.2.1.1.2"
-
 
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_all_sections_are_subscribed_by_some_plugin():
@@ -54,35 +50,31 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
     description.
     """
 
-    allowed_oids = (SYS_DESCR_OID, SYS_OBJID_OID)
-    unconditionally_fetched_oids = defaultdict(set)
+    allowed_oids = {
+        ".1.3.6.1.2.1.1.1",  # system description
+        ".1.3.6.1.2.1.1.1.0",
+        ".1.3.6.1.2.1.1.2",  # system object ID
+        ".1.3.6.1.2.1.1.2.0",
+    }
 
-    for section in agent_based_register.iter_all_snmp_sections():
-        for (first_checked_oid, *_rest1), *_rest2 in (  #
-                criterion for criterion in section.detect_spec if criterion  #
-        ):
-            first_checked_oid = first_checked_oid.rstrip('.0')
-            if first_checked_oid not in allowed_oids:
-                unconditionally_fetched_oids[first_checked_oid].add(str(section.name))
-
-    assert sorted((k, sorted(v)) for k, v in unconditionally_fetched_oids.items()) == [
-        ('.1.3.6.1.2.1.105.1.3.1.1.*', ['pse_poe']),
-        ('.1.3.6.1.2.1.2.1', ['inv_if']),
-        ('.1.3.6.1.2.1.2.2.1.*', ['if']),
-        ('.1.3.6.1.2.1.25.1.1', ['hr_cpu', 'hr_fs', 'hr_ps']),
-        ('.1.3.6.1.2.1.31.1.1.1.6.*', ['if64', 'if64adm']),
-        ('.1.3.6.1.2.1.43.10.2.1.4.1.1', ['printer_pages']),
-        ('.1.3.6.1.2.1.43.11.1.1.6.1.1', [
+    known_exceptions = {
+        '.1.3.6.1.2.1.105.1.3.1.1.*': {'pse_poe'},
+        '.1.3.6.1.2.1.2.1.0': {'inv_if'},
+        '.1.3.6.1.2.1.2.2.1.*': {'if'},
+        '.1.3.6.1.2.1.25.1.1.0': {'hr_cpu', 'hr_fs', 'hr_ps'},
+        '.1.3.6.1.2.1.31.1.1.1.6.*': {'if64', 'if64adm'},
+        '.1.3.6.1.2.1.43.10.2.1.4.1.1': {'printer_pages'},
+        '.1.3.6.1.2.1.43.11.1.1.6.1.1': {
             'printer_alerts',
             'printer_input',
             'printer_output',
             'printer_supply',
-        ]),
-        ('.1.3.6.1.2.1.47.1.1.1.1.*', ['snmp_extended_info']),
-        ('.1.3.6.1.4.1.14848.2.1.1.1', ['etherbox']),
-        ('.1.3.6.1.4.1.2036.2.1.1.4', ['snmp_quantum_storage_info']),
-        ('.1.3.6.1.4.1.2036.2.1.1.7', ['quantum_storage_status']),
-        ('.1.3.6.1.4.1.232.2.2.4.2', [
+        },
+        '.1.3.6.1.2.1.47.1.1.1.1.*': {'snmp_extended_info'},
+        '.1.3.6.1.4.1.14848.2.1.1.1.0': {'etherbox'},
+        '.1.3.6.1.4.1.2036.2.1.1.4.0': {'snmp_quantum_storage_info'},
+        '.1.3.6.1.4.1.2036.2.1.1.7.0': {'quantum_storage_status'},
+        '.1.3.6.1.4.1.232.2.2.4.2.0': {
             'hp_proliant_cpu',
             'hp_proliant_da_cntlr',
             'hp_proliant_da_phydrv',
@@ -94,21 +86,31 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
             'hp_proliant_systeminfo',
             'hp_proliant_temp',
             'hp_sts_drvbox',
-        ]),
-        ('.1.3.6.1.4.1.30155.2.1.1', ['openbsd_sensors']),
-        ('.1.3.6.1.4.1.6302.2.1.1.1', ['emerson_stat', 'emerson_temp']),
-        ('.1.3.6.1.4.1.674.10892.5.1.1.1', ['dell_hw_info']),
-        ('.1.3.6.1.4.1.674.11000.2000.500.1.2.1', [
+        },
+        '.1.3.6.1.4.1.30155.2.1.1.0': {'openbsd_sensors'},
+        '.1.3.6.1.4.1.6302.2.1.1.1.0': {'emerson_stat', 'emerson_temp'},
+        '.1.3.6.1.4.1.674.10892.5.1.1.1.0': {'dell_hw_info'},
+        '.1.3.6.1.4.1.674.11000.2000.500.1.2.1.0': {
             'dell_compellent_controller',
             'dell_compellent_disks',
             'dell_compellent_enclosure',
             'dell_compellent_folder',
-        ]),
-    ], """
-    If you've made it here, you have added a case to the known exeptions above.
-    Even worse: You may have added an OID to the list of OIDs that are fetched
-    from *all SNMP devices* known to the Checkmk site. Please reconsider!
-    """
+        },
+    }
+
+    for section in agent_based_register.iter_all_snmp_sections():
+        for (first_checked_oid, *_rest1), *_rest2 in (  #
+                criterion for criterion in section.detect_spec if criterion  #
+        ):
+            if first_checked_oid in allowed_oids:
+                continue
+            assert str(section.name) in known_exceptions.get(first_checked_oid, ()), f"""
+            If you've made it here, you have added a case to the known exeptions above.
+            Even worse: You may have added an OID to the list of OIDs that are fetched
+            from *all SNMP devices* known to the Checkmk site. Please reconsider!
+
+            First OID fetched by {section.name}: {first_checked_oid}
+            """
 
 
 @pytest.mark.usefixtures("config_load_all_checks")

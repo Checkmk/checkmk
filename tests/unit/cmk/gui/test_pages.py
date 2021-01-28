@@ -21,6 +21,8 @@ def test_registered_pages():
         'ajax_alerts_bar_chart_dashlet_data',
         'ajax_notifications_bar_chart_dashlet_data',
         'ajax_single_metric_dashlet_data',
+        'ajax_gauge_dashlet_data',
+        'ajax_barplot_dashlet_data',
         'ajax_bi_rule_preview',
         'ajax_bi_aggregation_preview',
         'ajax_cascading_render_painer_parameters',

@@ -1575,6 +1575,7 @@ multisite_builtin_views["inv_host_history"] = {
     'hidebutton': False,
     'public': True,
     'hidden': True,
+    'is_show_more': True,
     'link_from': {
         'single_infos': ['host'],
         'has_inventory_tree_history': '.',

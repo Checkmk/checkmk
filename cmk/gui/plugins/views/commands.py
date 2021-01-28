@@ -409,6 +409,10 @@ class CommandFakeCheckResult(Command):
     def group(self):
         return CommandGroupFakeCheck
 
+    @property
+    def is_show_more(self):
+        return True
+
     def render(self, what):
         html.open_table()
 
@@ -516,6 +520,10 @@ class CommandCustomNotification(Command):
     @property
     def tables(self):
         return ["host", "service"]
+
+    @property
+    def is_show_more(self):
+        return True
 
     def render(self, what):
         html.open_div(class_="group")

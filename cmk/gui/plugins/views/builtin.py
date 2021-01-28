@@ -2353,6 +2353,7 @@ multisite_builtin_views.update({
         ],
         'title': _('Historic downtimes of host'),
         "topic": "history",
+        "is_show_more": True,
     },
     'svcevents': {
         'browser_reload': 0,

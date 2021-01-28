@@ -1,0 +1,11 @@
+title: Fortinet FortiGate High Availability Information
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check displays the HA System mode, the priority, the Schedule
+ and the group id and Name of the FortiGate System
+
+discovery:
+ One check per host will be created.

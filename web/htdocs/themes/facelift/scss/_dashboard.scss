@@ -275,6 +275,11 @@ body.main.dashlet {
       div.simplebar-track {
         background-color: $dashlet-body-bg-color;
       }
+
+      div.simplebar-content {
+        /* Do not overlap right border of rightmost column */
+        margin-right: 11px;
+      }
     }
   }
 }

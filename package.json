@@ -63,7 +63,7 @@
     "jquery": "^3.5.0",
     "select2": "^4.0.13",
     "simplebar": "^5.2.0",
-    "sweetalert2": "^9.10.7",
+    "sweetalert2": "^10.13.3",
     "whatwg-fetch": "^3.0.0"
   }
 }

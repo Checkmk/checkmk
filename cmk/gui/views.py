@@ -2633,12 +2633,14 @@ def _collect_linked_visuals_of_type(type_name: str, view: View, rows: Rows,
 def _make_page_menu_entry_for_visual(visual_type: VisualType, visual: Visual,
                                      singlecontext_request_vars: Dict[str, str],
                                      mobile: bool) -> PageMenuEntry:
-    return PageMenuEntry(title=visual["title"],
-                         icon_name=visual.get("icon") or "trans",
-                         item=make_simple_link(
-                             make_linked_visual_url(visual_type, visual, singlecontext_request_vars,
-                                                    mobile)),
-                         name="cb_" + visual["name"])
+    return PageMenuEntry(
+        title=visual["title"],
+        icon_name=visual.get("icon") or "trans",
+        item=make_simple_link(
+            make_linked_visual_url(visual_type, visual, singlecontext_request_vars, mobile)),
+        name="cb_" + visual["name"],
+        is_show_more=visual.get("is_show_more", False),
+    )
 
 
 def _get_availability_entry(view: View, info: VisualInfo,

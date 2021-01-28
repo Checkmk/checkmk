@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-01-27 16:36+0000\n"
 "Last-Translator: Marcus Aßhauer <marcus.asshauer@gmail.com>\n"
@@ -6259,9 +6259,6 @@ msgstr "Hintergrund-Prozess"
 msgid "Background Job %s already running"
 msgstr "Hintergrundjob %s läuft bereits"
 
-msgid "Background color"
-msgstr "Hintergrundfarbe"
-
 msgid "Background job"
 msgstr "Hintergrund-Job"
 
@@ -8123,9 +8120,6 @@ msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
 #, python-format
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kann Datei \"%s\" nicht schreiben: %s"
-
-msgid "Canvas color"
-msgstr "Graphhintergrundfarbe"
 
 msgid "Capacity"
 msgstr "Kapazität"
@@ -14497,7 +14491,8 @@ msgid "Displays an introduction and Checkmk logo."
 msgstr "Zeigt eine Einführung und das Check_MK-Logo."
 
 msgid "Displays either sites and states or hosts and states of a site"
-msgstr "Zeige entweder Instanzen und Status oder Hosts und Status einer Instanz"
+msgstr ""
+"Zeige entweder Instanzen und Status oder Hosts und Status einer Instanz"
 
 msgid "Displays entries from the logfile of the monitoring core."
 msgstr "Zeigt Einträge aus der Logdatei des Monitoringkerns."
@@ -19049,9 +19044,6 @@ msgstr "Vorhersage bis"
 #, fuzzy
 msgid "Forecast model parametrization"
 msgstr "Parametrisierung des Vorhersagemodells"
-
-msgid "Foreground color"
-msgstr "Vordergrundfarbe"
 
 msgid "Form (Cookie) based"
 msgstr "Formular (mit Cookies)"
@@ -31536,6 +31528,10 @@ msgstr "Keine passenden Hosts gefunden."
 msgid "No matching hosts/services."
 msgstr "Keine passenden Hosts/Services gefunden."
 
+#, fuzzy
+msgid "No matching metrics found"
+msgstr "Keine passenden Werks gefunden."
+
 msgid "No metrics in this graph yet."
 msgstr "Der Graph enthält noch keine Metriken."
 
@@ -35544,10 +35540,10 @@ msgid ""
 "\">Escape HTML in service output</a> or <a href=\"%s\">Escape HTML in host "
 "output</a> instead of <a href=\"%s\">disabling escaping globally</a>"
 msgstr ""
-"Bitte ziehen Sie in Erwägung, die Host- oder Service-Regelsätze <a href=\"%"
-"s\">Escape HTML in der Service-Ausgabe</a> oder <a href=\"%s\">HTML in der "
-"Host-Ausgabe ausblenden</a> zu konfigurieren, anstatt <a href=\"%s\""
-">Escaping global zu deaktivieren</a>"
+"Bitte ziehen Sie in Erwägung, die Host- oder Service-Regelsätze <a href=\"%s"
+"\">Escape HTML in der Service-Ausgabe</a> oder <a href=\"%s\">HTML in der "
+"Host-Ausgabe ausblenden</a> zu konfigurieren, anstatt <a href=\"%s"
+"\">Escaping global zu deaktivieren</a>"
 
 msgid "Please define at least one aggregation group"
 msgstr "Bitte mindestens ein Merkmal angeben"
@@ -57780,8 +57776,8 @@ msgid ""
 "our <a href=\"https://checkmk.com/\" target=\"_blank\">user manual</a>."
 msgstr ""
 "Willkommen bei Checkmk. Falls Sie mehr über Checkmk erfahren möchten, sehen "
-"Sie sich bitte unser <a href=\"https://checkmk.com/\" target=\"_blank\""
-">Benutzerhandbuch</a> an."
+"Sie sich bitte unser <a href=\"https://checkmk.com/\" target=\"_blank"
+"\">Benutzerhandbuch</a> an."
 
 msgid "Werk"
 msgstr "Werk"
@@ -62938,6 +62934,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "Background color"
+#~ msgstr "Hintergrundfarbe"
+
+#~ msgid "Canvas color"
+#~ msgstr "Graphhintergrundfarbe"
+
+#~ msgid "Foreground color"
+#~ msgstr "Vordergrundfarbe"
 
 #~ msgid "Color metric plot"
 #~ msgstr "Farbe Metrik Darstellung"

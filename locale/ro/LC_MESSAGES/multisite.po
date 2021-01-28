@@ -6004,9 +6004,6 @@ msgstr ""
 msgid "Background Job %s already running"
 msgstr ""
 
-msgid "Background color"
-msgstr ""
-
 msgid "Background job"
 msgstr ""
 
@@ -7647,9 +7644,6 @@ msgstr ""
 
 #, python-format
 msgid "Cannot write file \"%s\": %s"
-msgstr ""
-
-msgid "Canvas color"
 msgstr ""
 
 #, fuzzy
@@ -18058,9 +18052,6 @@ msgstr ""
 #, fuzzy
 msgid "Forecast model parametrization"
 msgstr "Activare Configurare"
-
-msgid "Foreground color"
-msgstr ""
 
 msgid "Form (Cookie) based"
 msgstr ""
@@ -29576,6 +29567,10 @@ msgstr ""
 
 msgid "No matching hosts/services."
 msgstr ""
+
+#, fuzzy
+msgid "No matching metrics found"
+msgstr " pe siteul de monitorizare: "
 
 msgid "No metrics in this graph yet."
 msgstr ""

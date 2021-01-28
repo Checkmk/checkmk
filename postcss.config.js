@@ -4,7 +4,9 @@
 
 module.exports = {
   plugins: [
-      require('autoprefixer'),
-      require('postcss-clean')
-    ]
+    require('autoprefixer'),
+    require('cssnano')({
+          preset: 'default',
+    }),
+  ]
 }

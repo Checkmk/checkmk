@@ -16,7 +16,6 @@ from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary
-from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
 from cmk.gui.plugins.dashboard.site_overview import (
     ABCElement,)
@@ -48,24 +47,6 @@ class AlertStats(NamedTuple):
 
 
 class AlertStatisticsDashletDataGenerator(ABCDataGenerator):
-    def vs_parameters(self) -> Dictionary:
-        return Dictionary(
-            title=_("Properties"),
-            render="form",
-            optional_keys=["limit_objects"],
-            elements=[
-                ("time_range", Timerange(
-                    title=_("Time range"),
-                    default_value=90000,
-                )),
-                ("limit_objects", Integer(
-                    title=_("Limit objects"),
-                    default_value=100,
-                    minvalue=1,
-                )),
-            ],
-        )
-
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         site_id = context.get("site", {}).get("site")
@@ -199,12 +180,6 @@ class AlertStatisticsDashletDataGenerator(ABCDataGenerator):
         ])
 
 
-@page_registry.register_page("ajax_alert_statistics_dashlet_data")
-class AjaxAlertStatisticsDashletData(AjaxPage):
-    def page(self):
-        return AlertStatisticsDashletDataGenerator().generate_response_from_request()
-
-
 @dashlet_registry.register
 class AlertStatisticsDashlet(ABCFigureDashlet):
     @classmethod
@@ -220,9 +195,31 @@ class AlertStatisticsDashlet(ABCFigureDashlet):
         return _("Displays hosts and services producing the most notifications")
 
     @classmethod
-    def data_generator(cls):
-        return AlertStatisticsDashletDataGenerator()
-
-    @classmethod
     def single_infos(cls):
         return []
+
+    @classmethod
+    def vs_parameters(cls) -> Dictionary:
+        return Dictionary(title=_("Properties"),
+                          render="form",
+                          optional_keys=["limit_objects"],
+                          elements=[
+                              ("time_range", Timerange(
+                                  title=_("Time range"),
+                                  default_value=90000,
+                              )),
+                              ("limit_objects",
+                               Integer(
+                                   title=_("Limit objects"),
+                                   default_value=100,
+                                   minvalue=1,
+                               )),
+                          ])
+
+    @staticmethod
+    def generate_response_data(properties, context, settings):
+        return AlertStatisticsDashletDataGenerator.generate_response_data(
+            properties, context, settings)
+
+    def show(self):
+        self.js_dashlet(figure_type_name=self.type_name(), fetch_url="ajax_figure_dashlet_data.py")

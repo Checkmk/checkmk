@@ -291,19 +291,18 @@ canvas#speedometer {
  * Tactical overview snapin
  */
 div#snapin_tactical_overview {
-  /* remove the border-spacing of the first and last element */
-  width: calc(100% + 2 * #{$spacing});
+  width: 100%;
 }
 
 table.tacticaloverview {
-  width: 100%;
   /* remove the border-spacing of the first and last element */
+  width: calc(100% + 2 * #{$spacing});
   margin: 0 (-$spacing);
   border-collapse: separate;
   border-spacing: $spacing 0;
 
   th {
-    font-size: $font-size-small;
+    font-size: 9px;
     font-weight: normal;
     line-height: 1.6;
     letter-spacing: 0;

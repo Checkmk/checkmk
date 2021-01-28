@@ -726,7 +726,9 @@ export function metric_value_component(selection, value, attr, style) {
         .data([value])
         .join("a")
         .classed("single_value", true)
-        .attr("xlink:href", d => d.url || "");
+        .each(d => {
+            if (d.url) d3.select(this).attr("xlink:href", d => d.url);
+        });
     let text = link
         .selectAll("text")
         .data(d => [d])

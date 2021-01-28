@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+import livestatus
 from livestatus import lqencode
 
 from cmk.utils.render import date_and_time
@@ -16,7 +18,7 @@ from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarBarChartDataGenerator
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
-from cmk.gui.valuespec import Dictionary, DropdownChoice, CascadingDropdown
+from cmk.gui.valuespec import (Dictionary, DropdownChoice, CascadingDropdown, Timerange)
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -56,6 +58,16 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
                           elements=self.bar_chart_vs_components(),
                           optional_keys=[],
                       )),
+                     ("simple_number", _("Number of notifications as text"),
+                      Dictionary(
+                          elements=[
+                              ("time_range", Timerange(
+                                  title=_("Time range"),
+                                  default_value='d0',
+                              )),
+                          ],
+                          optional_keys=[],
+                      )),
                  ])),
                 ("log_target",
                  DropdownChoice(
@@ -78,22 +90,40 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
         # modes, we should restructure this.
         if properties["render_mode"][0] == "bar_chart":
             return super().generate_response_data(properties, context, settings)
+        if properties["render_mode"][0] == "simple_number":
+            return cls._generate_simple_number_response_data(properties, context, settings)
         raise NotImplementedError()
 
-    # TODO: Possible performance optimization: We only need to count events. Especially in case of
-    # render_mode != "bar_char" we only need a single number. This could improve the performance of
-    # the dashlets signifcantly.
+    @classmethod
+    def _generate_simple_number_response_data(cls, properties, context, settings):
+        """Needs to produce a data structure that is understood by the "single_metric" figure
+        instance we initiate in the show() method """
+        return {
+            "title": cls.bar_chart_title(properties, context, settings),
+            "plot_definitions": [{
+                "label": "",
+                "id": "number",
+                "plot_type": "single_value",
+                "use_tags": ["number"],
+                "js_render": None,
+                "metrics": {
+                    "warn": None,
+                    "crit": None,
+                    "min": None,
+                    "max": None,
+                }
+            }],
+            "data": cls._get_simple_number_data(properties, context),
+        }
+
+    # TODO: Possible performance optimization: We only need to count events. Changing this to Stats
+    # queries could improve the performance of the dashlet
     @classmethod
     def _get_data(cls, properties, context):
         mode_properties = properties["render_mode"][1]
         time_range = cls._int_time_range_from_rangespec(mode_properties["time_range"])
         filter_headers, only_sites = get_filter_headers("log", cls.filter_infos(), context)
-
-        if properties["log_target"] != "both":
-            object_type_filter = ("Filter: log_type ~ %s .*\n" %
-                                  lqencode(properties["log_target"].upper()))
-        else:
-            object_type_filter = ""
+        object_type_filter = cls._get_object_type_filter(properties)
 
         query = ("GET log\n"
                  "Columns: log_state host_name service_description log_type log_time\n"
@@ -111,6 +141,42 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
                 raise
             except Exception:
                 raise MKGeneralException(_("The query returned no data."))
+
+    @classmethod
+    def _get_simple_number_data(cls, properties, context):
+        return [{
+            "tag": "number",
+            "timestamp": int(time.time()),
+            "value": count,
+        } for label, count in zip([_("Total")], cls._fetch_simple_number_data(properties, context))]
+
+    @classmethod
+    def _fetch_simple_number_data(cls, properties, context):
+        mode_properties = properties["render_mode"][1]
+        time_range = cls._int_time_range_from_rangespec(mode_properties["time_range"])
+        filter_headers, only_sites = get_filter_headers("log", cls.filter_infos(), context)
+        object_type_filter = cls._get_object_type_filter(properties)
+
+        query = ("GET log\n"
+                 "Stats: log_type != "
+                 "Filter: class = %d\n"
+                 "Filter: log_time >= %f\n"
+                 "Filter: log_time <= %f\n"
+                 "%s"
+                 "%s" % (cls.log_class(), time_range[0], time_range[1], object_type_filter,
+                         lqencode(filter_headers)))
+
+        with sites.only_sites(only_sites):
+            try:
+                return sites.live().query_summed_stats(query)
+            except livestatus.MKLivestatusNotFoundError:
+                raise MKGeneralException(_("The query returned no data."))
+
+    @classmethod
+    def _get_object_type_filter(cls, properties) -> str:
+        if properties["log_target"] != "both":
+            return "Filter: log_type ~ %s .*\n" % lqencode(properties["log_target"].upper())
+        return ""
 
     @classmethod
     def _forge_tooltip_and_url(cls, time_frame, properties, context):
@@ -161,7 +227,12 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
         raise NotImplementedError()
 
     def show(self):
-        self.js_dashlet(figure_type_name="timeseries")
+        if self._dashlet_spec["render_mode"][0] == "bar_chart":
+            self.js_dashlet(figure_type_name="timeseries")
+        elif self._dashlet_spec["render_mode"][0] == "simple_number":
+            self.js_dashlet(figure_type_name="single_metric")
+        else:
+            raise NotImplementedError()
 
 
 #   .--Notifications-------------------------------------------------------.

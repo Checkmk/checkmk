@@ -396,7 +396,9 @@ class SidebarRenderer:
             if item.permission_name and not config.user.may(item.permission_name):
                 continue
 
-            html.open_a(href=item.url, target=item.target_name)
+            html.open_a(href=item.url,
+                        target=item.target_name,
+                        class_="min" if config.user.get_attribute("nav_hide_icons_title") else None)
             html.icon(item.icon_name)
             html.div(item.title)
             html.close_a()

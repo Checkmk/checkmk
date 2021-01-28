@@ -90,6 +90,15 @@ body.side {
       &:visited {
         color: $font-color-sidebar;
       }
+
+      &.min {
+        font-size: 0;
+
+        img {
+          width: 24px;
+          height: 24px;
+        }
+      }
     }
 
     img {

@@ -929,7 +929,7 @@ def create_data_for_single_metric(cls, properties, context):
         series = merge_multicol(d_row, columns, properties)
         site = d_row['site']
         host = d_row["host_name"]
-        svc_url = makeuri(
+        svc_url = makeuri_contextless(
             request,
             [("view_name", "service"), ("site", site), ("host", host),
              ("service", d_row['service_description'])],

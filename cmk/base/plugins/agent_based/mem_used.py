@@ -62,7 +62,7 @@ def _get_total_usage(
     return totalused, "Total (%s)" % " + ".join(details)
 
 
-def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckResult:
+def check_mem_used(params: Mapping, section: Mapping[str, int]) -> CheckResult:
     # we have used a parse function that creates bytes, but this function
     # still expects kB:
     meminfo = {k: v / 1024.0 for k, v in section.items()}

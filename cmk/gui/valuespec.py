@@ -5539,15 +5539,18 @@ class UploadOrPasteTextFile(Alternative):
         super().__init__(**kwargs)
 
     def from_html_vars(self, varprefix: str) -> str:
-        value = super().from_html_vars(varprefix)
+        value: Final[UploadedFile] = super().from_html_vars(varprefix)
         # We validate the value here, because we want to validate the user input,
         # that will be lost after the following transformation to str.
         # After that, the validate_value() function will always validate the
         # TextAreaUnicode case when called.
         super()._validate_value(value, varprefix)
         if isinstance(value, tuple):
-            # We are only interested in the file content here. Get it from FileUpload value.
-            return value[2].decode("utf-8")
+            try:
+                # We are only interested in the file content here. Get it from FileUpload value.
+                return value[2].decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise MKUserError(varprefix, _("Please choose a file to upload.")) from exc
         return value
 
 

@@ -20,9 +20,9 @@ from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
 from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_metric
 from cmk.gui.plugins.metrics.valuespecs import ValuesWithUnits
-from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
+from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.metrics.html_render import title_info_elements
-from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
+from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns
 from cmk.gui.plugins.views.painters import paint_service_state_short
 
 
@@ -125,14 +125,10 @@ class SingleMetricDataGenerator(ABCDataGenerator):
         metric_columns = []
         if properties.get("time_range") == "range":
             params = properties["time_range"][1]
-
             from_time, until_time = map(int, Timerange().compute_range(params['window'])[0])
-            data_range = "%s:%s:%s" % (from_time, until_time, 60)
-            _metrics: List[_Tuple[str, Optional[str], float]] = [
-                (name, None, scale)
-                for name, scale in reverse_translate_metric_name(properties["metric"])
-            ]
-            metric_columns = list(rrd_columns(_metrics, params["rrd_consolidation"], data_range))
+            metric_columns = metric_in_all_rrd_columns(properties["metric"],
+                                                       params["rrd_consolidation"], from_time,
+                                                       until_time)
 
         return cmc_cols + metric_columns
 

@@ -252,10 +252,10 @@ class BICompiler:
             self._redis_client = get_redis_client()
         return self._redis_client
 
-    def is_part_of_aggregation(self, host_name, service_description):
+    def is_part_of_aggregation(self, host_name, service_description) -> bool:
         self._check_redis_lookup_integrity()
-        self._get_redis_client().exists("bi:aggregation_lookup:%s:%s" %
-                                        (host_name, service_description))
+        return bool(self._get_redis_client().exists("bi:aggregation_lookup:%s:%s" %
+                                                    (host_name, service_description)))
 
     def _check_redis_lookup_integrity(self):
         client = self._get_redis_client()

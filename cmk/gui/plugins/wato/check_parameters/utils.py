@@ -50,6 +50,7 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
     if what == "used":
         title = _("used space")
         course = _("above")
+
     else:
         title = _("free space")
         course = _("below")
@@ -57,19 +58,35 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
     vs_subgroup: List[ValueSpec] = [
         Tuple(title=_("Percentage %s") % title,
               elements=[
-                  Percentage(title=_("Warning if %s") % course, unit="%", minvalue=0.0),
-                  Percentage(title=_("Critical if %s") % course, unit="%", minvalue=0.0),
+                  Percentage(
+                      title=_("Warning if %s") % course,
+                      unit="%",
+                      minvalue=0.0 if what == "used" else 0.0001,
+                  ),
+                  Percentage(
+                      title=_("Critical if %s") % course,
+                      unit="%",
+                      minvalue=0.0 if what == "used" else 0.0001,
+                  ),
               ]),
         Tuple(title=_("Absolute %s") % title,
               elements=[
-                  Integer(title=_("Warning if %s") % course, unit=_("MB"), minvalue=0),
-                  Integer(title=_("Critical if %s") % course, unit=_("MB"), minvalue=0),
+                  Integer(
+                      title=_("Warning if %s") % course,
+                      unit=_("MB"),
+                      minvalue=0 if what == "used" else 1,
+                  ),
+                  Integer(
+                      title=_("Critical if %s") % course,
+                      unit=_("MB"),
+                      minvalue=0 if what == "used" else 1,
+                  ),
               ])
     ]
 
     def validate_dynamic_levels(value, varprefix):
         if [v for v in value if v[0] < 0]:
-            raise MKUserError(varprefix, _("You need to specify levels " "of at least 0 bytes."))
+            raise MKUserError(varprefix, _("You need to specify levels of at least 0 bytes."))
 
     return Alternative(
         title=_("Levels for %s %s") % (name, title),

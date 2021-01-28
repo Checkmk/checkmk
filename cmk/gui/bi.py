@@ -65,7 +65,7 @@ permission_registry.register(
 def is_part_of_aggregation(host, service):
     if BIAggregationPacks.get_num_enabled_aggregations() == 0:
         return False
-    return get_cached_bi_manager().compiler.is_part_of_aggregation(host, service)
+    return get_cached_bi_compiler().is_part_of_aggregation(host, service)
 
 
 def get_aggregation_group_trees():
@@ -949,6 +949,13 @@ def get_cached_bi_manager() -> BIManager:
     if "bi_manager" not in g:
         g.bi_manager = BIManager()
     return g.bi_manager
+
+
+def get_cached_bi_compiler() -> BICompiler:
+    if "bi_compiler" not in g:
+        sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+        g.bi_compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
+    return g.bi_compiler
 
 
 def bi_livestatus_query(query: str,

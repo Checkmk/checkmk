@@ -212,12 +212,6 @@ class SingleMetricDataGenerator(ABCDataGenerator):
         return response
 
 
-@page_registry.register_page("ajax_single_metric_dashlet_data")
-class SingleMetricPage(AjaxPage):
-    def page(self):
-        return SingleMetricStyledDataGenerator().generate_response_from_request()
-
-
 #   .--Gauge---------------------------------------------------------------.
 #   |                     ____                                             |
 #   |                    / ___| __ _ _   _  __ _  ___                      |
@@ -252,6 +246,12 @@ class GaugeDashlet(ABCFigureDashlet):
         return ["service", "host"]
 
 
+@page_registry.register_page("ajax_gauge_dashlet_data")
+class GaugePage(AjaxPage):
+    def page(self):
+        return SingleMetricStyledDataGenerator().generate_response_from_request()
+
+
 #   .--Bar Plot------------------------------------------------------------.
 #   |                ____               ____  _       _                    |
 #   |               | __ )  __ _ _ __  |  _ \| | ___ | |_                  |
@@ -283,6 +283,12 @@ class BarplotDashlet(ABCFigureDashlet):
     @classmethod
     def single_infos(cls):
         return ["service"]
+
+
+@page_registry.register_page("ajax_barplot_dashlet_data")
+class BarplotPage(AjaxPage):
+    def page(self):
+        return SingleMetricStyledDataGenerator().generate_response_from_request()
 
 
 #   .--Single Graph--------------------------------------------------------.
@@ -351,3 +357,9 @@ class SingleMetricDashlet(ABCFigureDashlet):
     @classmethod
     def single_infos(cls):
         return ["service", "host"]
+
+
+@page_registry.register_page("ajax_single_metric_dashlet_data")
+class SingleMetricPage(AjaxPage):
+    def page(self):
+        return SingleMetricStyledDataGenerator().generate_response_from_request()

@@ -1,0 +1,10 @@
+title: Fortinet FortiSandbox Software Info
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check displays the name and the version of Software which is installed on a Fortinet Sandbox.	
+
+discovery:
+ One check per Software will be created.

@@ -951,6 +951,7 @@ def create_data_for_single_metric(cls, properties, context):
         # Live value
         data.append({
             "tag": row_id,
+            "last_value": True,
             "timestamp": int(time.time()),
             "value": metric['value'],
             "label": host,

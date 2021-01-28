@@ -148,6 +148,7 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
             "tag": "number",
             "timestamp": int(time.time()),
             "value": count,
+            "last_value": True,
         } for label, count in zip([_("Total")], cls._fetch_simple_number_data(properties, context))]
 
     @classmethod

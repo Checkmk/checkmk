@@ -352,7 +352,8 @@ export class FigureBase {
             },
         })
             .then(json_data => this._process_api_response(json_data))
-            .catch(() => {
+            .catch(e => {
+                console.error(e);
                 this._show_error_info("Error fetching data");
                 this.remove_loading_image();
             });

@@ -40,6 +40,7 @@ import cmk.gui.utils as utils
 import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 import cmk.gui.weblib as weblib
+from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.globals import display_options, g, html
@@ -2517,6 +2518,11 @@ def _get_context_page_menu_topics(view: View, info: VisualInfo, is_single_info: 
 
     for visual_type, visual in sorted(dropdown_visuals,
                                       key=lambda i: (i[1]["sort_index"], i[1]["title"])):
+
+        if visual.get("topic") == "bi" and not is_part_of_aggregation(
+                singlecontext_request_vars.get("host"), singlecontext_request_vars.get("service")):
+            continue
+
         try:
             topic = topics[visual["topic"]]
         except KeyError:

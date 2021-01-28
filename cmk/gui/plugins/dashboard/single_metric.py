@@ -212,7 +212,7 @@ class SingleMetricDataGenerator(ABCDataGenerator):
         return response
 
 
-@page_registry.register_page("single_metric_data")
+@page_registry.register_page("ajax_single_metric_dashlet_data")
 class SingleMetricPage(AjaxPage):
     def page(self):
         return SingleMetricStyledDataGenerator().generate_response_from_request()
@@ -251,9 +251,6 @@ class GaugeDashlet(ABCFigureDashlet):
     def single_infos(cls):
         return ["service", "host"]
 
-    def show(self):
-        self.js_dashlet("single_metric_data.py")
-
 
 #   .--Bar Plot------------------------------------------------------------.
 #   |                ____               ____  _       _                    |
@@ -286,9 +283,6 @@ class BarplotDashlet(ABCFigureDashlet):
     @classmethod
     def single_infos(cls):
         return ["service"]
-
-    def show(self):
-        self.js_dashlet("single_metric_data.py")
 
 
 #   .--Single Graph--------------------------------------------------------.
@@ -357,6 +351,3 @@ class SingleMetricDashlet(ABCFigureDashlet):
     @classmethod
     def single_infos(cls):
         return ["service", "host"]
-
-    def show(self):
-        self.js_dashlet("single_metric_data.py")

@@ -226,6 +226,3 @@ class AlertStatisticsDashlet(ABCFigureDashlet):
     @classmethod
     def single_infos(cls):
         return []
-
-    def show(self):
-        self.js_dashlet("ajax_alert_statistics_dashlet_data.py")

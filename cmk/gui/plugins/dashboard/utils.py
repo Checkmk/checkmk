@@ -514,25 +514,6 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
         return create_figures_response(response_data)
 
 
-def dashlet_http_variables(dashlet: Dashlet) -> HTTPVariables:
-    vs_general_settings = dashlet_vs_general_settings(dashlet.__class__, dashlet.single_infos())
-    dashlet_settings = vs_general_settings.value_to_json(dashlet._dashlet_spec)
-    dashlet_params = dashlet.vs_parameters()
-    assert isinstance(dashlet_params, Dictionary)  # help mypy
-    dashlet_properties = dashlet_params.value_to_json(dashlet._dashlet_spec)
-
-    context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(["host", "service"], dashlet.single_infos()),
-        dashlet._dashlet_spec["context"])
-
-    args: HTTPVariables = []
-    args.append(("settings", json.dumps(dashlet_settings)))
-    args.append(("context", json.dumps(context)))
-    args.append(("properties", json.dumps(dashlet_properties)))
-
-    return args
-
-
 class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
     """ Base class for cmk_figures based graphs
         Only contains the dashlet spec, the data generation is handled in the
@@ -591,30 +572,53 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
                     "instance": self.instance_name
                 }
 
-    def js_dashlet(self, fetch_url: str):
+    def show(self) -> None:
+        self.js_dashlet(figure_type_name=self.type_name())
+
+    def js_dashlet(self, figure_type_name: str) -> None:
+        fetch_url = "ajax_%s_dashlet_data.py" % self.type_name()
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
         html.div("", id_=div_id)
 
-        args = dashlet_http_variables(self)
-        body = html.urlencode_vars(args)
+        # TODO: Would be good to align this scheme with AjaxPage.webapi_request()
+        # (a single HTTP variable "request=<json-body>".
+        post_body = html.urlencode_vars(self._dashlet_http_variables())
 
         html.javascript(
             """
-            let %(type_name)s_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("%(type_name)s");
-            let %(instance_name)s = new %(type_name)s_class_%(dashlet_id)d(%(div_selector)s);
+            let figure_%(dashlet_id)d = cmk.figures.figure_registry.get_figure(%(type_name)s);
+            let %(instance_name)s = new figure_%(dashlet_id)d(%(div_selector)s);
             %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
             %(instance_name)s.initialize();
             %(instance_name)s.scheduler.set_update_interval(%(update)d);
             %(instance_name)s.scheduler.enable();
             """ % {
-                "type_name": self.type_name(),
+                "type_name": json.dumps(figure_type_name),
                 "dashlet_id": self._dashlet_id,
                 "instance_name": self.instance_name,
                 "div_selector": json.dumps("#%s" % div_id),
                 "url": json.dumps(fetch_url),
-                "body": json.dumps(body),
+                "body": json.dumps(post_body),
                 "update": self.update_interval,
             })
+
+    def _dashlet_http_variables(self) -> HTTPVariables:
+        vs_general_settings = dashlet_vs_general_settings(self.__class__, self.single_infos())
+        dashlet_settings = vs_general_settings.value_to_json(self._dashlet_spec)
+        dashlet_params = self.vs_parameters()
+        assert isinstance(dashlet_params, Dictionary)  # help mypy
+        dashlet_properties = dashlet_params.value_to_json(self._dashlet_spec)
+
+        context = visuals.get_merged_context(
+            visuals.get_context_from_uri_vars(["host", "service"], self.single_infos()),
+            self._dashlet_spec["context"])
+
+        args: HTTPVariables = []
+        args.append(("settings", json.dumps(dashlet_settings)))
+        args.append(("context", json.dumps(context)))
+        args.append(("properties", json.dumps(dashlet_properties)))
+
+        return args
 
 
 # TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?

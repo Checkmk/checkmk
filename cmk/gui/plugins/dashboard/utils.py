@@ -18,6 +18,7 @@ from cmk.gui.type_defs import HTTPVariables, VisualContext
 
 import cmk.gui.sites as sites
 
+from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.figures import create_figures_response
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
@@ -29,6 +30,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
     DictionaryEntry,
+    DictionaryElements,
     Dictionary,
     DropdownChoice,
     FixedValue,
@@ -514,6 +516,27 @@ class ABCDataGenerator(metaclass=abc.ABCMeta):
         return create_figures_response(response_data)
 
 
+# TODO: goal is to delete DataGenerator before this
+@page_registry.register_page("ajax_figure_dashlet_data")
+class FigureDashletPage(AjaxPage):
+    def page(self):
+        settings = json.loads(html.request.get_str_input_mandatory("settings"))
+
+        try:
+            dashlet_type = cast(Type[ABCFigureDashlet], dashlet_registry[settings.get("type")])
+        except KeyError:
+            raise MKUserError("type", _('The requested dashlet type does not exist.'))
+
+        settings = dashlet_vs_general_settings(
+            dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
+
+        raw_properties = html.request.get_str_input_mandatory("properties")
+        properties = dashlet_type.vs_parameters().value_from_json(json.loads(raw_properties))
+        context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
+        response_data = dashlet_type.generate_response_data(properties, context, settings)
+        return create_figures_response(response_data)
+
+
 class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
     """ Base class for cmk_figures based graphs
         Only contains the dashlet spec, the data generation is handled in the
@@ -553,12 +576,18 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         return "%s_%s" % (self.type_name(), self._dashlet_id)
 
     @classmethod
-    def vs_parameters(cls):
-        return cls.data_generator().vs_parameters()
+    def vs_parameters(cls) -> Dictionary:
+        return Dictionary(title=_("Properties"),
+                          render="form",
+                          optional_keys=False,
+                          elements=cls._vs_elements())
 
-    @classmethod
-    @abc.abstractmethod
-    def data_generator(cls) -> ABCDataGenerator:
+    @staticmethod
+    def _vs_elements() -> DictionaryElements:
+        return []
+
+    @staticmethod
+    def generate_response_data(properties, context, settings):
         raise NotImplementedError()
 
     @property
@@ -575,8 +604,10 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
     def show(self) -> None:
         self.js_dashlet(figure_type_name=self.type_name())
 
-    def js_dashlet(self, figure_type_name: str) -> None:
-        fetch_url = "ajax_%s_dashlet_data.py" % self.type_name()
+    # TODO: fetch_url is compatibility layer, drop when all figure dashlets request the same point
+    def js_dashlet(self, figure_type_name: str, fetch_url: Optional[str] = None) -> None:
+        if fetch_url is None:
+            fetch_url = "ajax_%s_dashlet_data.py" % self.type_name()
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
         html.div("", id_=div_id)
 
@@ -885,34 +916,39 @@ def copy_view_into_dashlet(dashlet: DashletConfig,
     dashlet['mustsearch'] = False
 
 
+def service_table_query(properties, context, column_generator):
+    filter_headers, only_sites = visuals.get_filter_headers("log", ["host", "service"], context)
+    columns = column_generator(properties, context)
+
+    query = ("GET services\n"
+             "Columns: %(cols)s\n"
+             "%(filter)s" % {
+                 "cols": " ".join(columns),
+                 "filter": filter_headers,
+             })
+
+    with sites.only_sites(only_sites), sites.prepend_site():
+        try:
+            rows = sites.live().query(query)
+        except MKTimeout:
+            raise
+        except Exception:
+            raise MKGeneralException(_("The query returned no data."))
+
+    return ['site'] + columns, rows
+
+
+# TODO: delete after migration
 class site_query:
     def __init__(self, f):
         self.f = f
 
     def __call__(self, cls, properties, context):
-        filter_headers, only_sites = visuals.get_filter_headers("log", ["host", "service"], context)
-        columns = self.f(cls, properties, context)
-
-        query = ("GET services\n"
-                 "Columns: %(cols)s\n"
-                 "%(filter)s" % {
-                     "cols": " ".join(columns),
-                     "filter": filter_headers,
-                 })
-
-        with sites.only_sites(only_sites), sites.prepend_site():
-            try:
-                rows = sites.live().query(query)
-            except MKTimeout:
-                raise
-            except Exception:
-                raise MKGeneralException(_("The query returned no data."))
-
-        return ['site'] + columns, rows
+        return service_table_query(properties, context, lambda *x: self.f(cls, *x))
 
 
-def create_data_for_single_metric(cls, properties, context):
-    columns, data_rows = cls._get_data(properties, context)
+def create_data_for_single_metric(properties, context, column_generator):
+    columns, data_rows = service_table_query(properties, context, column_generator)
 
     data = []
     used_metrics = []

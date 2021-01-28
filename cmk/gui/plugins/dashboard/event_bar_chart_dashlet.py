@@ -262,6 +262,10 @@ class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
     def data_generator(cls) -> 'NotificationsBarChartDataGenerator':
         return NotificationsBarChartDataGenerator()
 
+    @classmethod  # temporary
+    def vs_parameters(cls) -> Dictionary:
+        return NotificationsBarChartDataGenerator().vs_parameters()
+
 
 class NotificationsBarChartDataGenerator(ABCEventBarChartDataGenerator):
     @classmethod
@@ -314,6 +318,10 @@ class AlertsBarChartDashlet(ABCEventBarChartDashlet):
     @classmethod
     def data_generator(cls) -> 'AlertBarChartDataGenerator':
         return AlertBarChartDataGenerator()
+
+    @classmethod  # temporary
+    def vs_parameters(cls) -> Dictionary:
+        return AlertBarChartDataGenerator().vs_parameters()
 
 
 class AlertBarChartDataGenerator(ABCEventBarChartDataGenerator):

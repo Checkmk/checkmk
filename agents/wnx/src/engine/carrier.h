@@ -169,7 +169,11 @@ public:
     bool sendCommand(std::string_view peer_name, std::string_view command);
     void shutdownCommunication();
 
-    // Helper API #TODO gtest
+    // Accessors
+    std::string getName() const noexcept { return carrier_name_; }
+    std::string getAddress() const noexcept { return carrier_address_; }
+
+    // Helper API
     static inline bool FireSend(
         const std::wstring& PeerName,  // assigned by caller
         const std::wstring& Port,      // standard format
@@ -258,12 +262,6 @@ private:
                        const std::string& PeerName, uint64_t Marker,
                        const void* Data, size_t Length)>
         data_sender_ = nullptr;
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class CarrierTest;
-    FRIEND_TEST(CarrierTest, Mail);
-    FRIEND_TEST(CarrierTest, EstablishShutdown);
-#endif
 };
 void InformByMailSlot(std::string_view mail_slot, std::string_view cmd);
 

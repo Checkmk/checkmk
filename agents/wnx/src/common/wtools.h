@@ -41,6 +41,36 @@
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
 
+inline void* ProcessHeapAlloc(size_t size) {
+    return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+}
+
+inline void ProcessHeapFree(void* data) {
+    if (data != nullptr) {
+        ::HeapFree(::GetProcessHeap(), 0, data);
+    }
+}
+
+enum class SecurityLevel { standard, admin };
+
+// RAII class to keep MS Windows Security Descriptor temporary
+class SecurityAttributeKeeper {
+public:
+    SecurityAttributeKeeper(SecurityLevel sl);
+    ~SecurityAttributeKeeper();
+
+    const SECURITY_ATTRIBUTES* get() const { return sa_; }
+    SECURITY_ATTRIBUTES* get() { return sa_; }
+
+private:
+    bool allocAll(SecurityLevel sl);
+    void cleanupAll();
+    // below are allocated using ProcessHeapAlloc values
+    SECURITY_DESCRIPTOR* sd_{nullptr};
+    SECURITY_ATTRIBUTES* sa_{nullptr};
+    ACL* acl_{nullptr};
+};
+
 // this is functor to kill any pointer allocated with ::LocalAlloc
 // usually this pointer comes from Windows API
 template <typename T>

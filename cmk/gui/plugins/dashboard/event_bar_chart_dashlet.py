@@ -49,28 +49,38 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
             title=_("Properties"),
             render="form",
             optional_keys=[],
-            elements=super(ABCEventBarChartDataGenerator, self).bar_chart_vs_components() +
-            [("log_target",
-              DropdownChoice(
-                  title=_("Host or service %ss" % self.log_type()),
-                  choices=[("host", _("Show %ss for hosts" % self.log_type())),
-                           ("service", _("Show %ss for services" % self.log_type()))],
-                  default_value="service",
-              ))])
+            elements=super().bar_chart_vs_components() + [
+                ("log_target",
+                 DropdownChoice(
+                     title=_("Host or service %ss" % self.log_type()),
+                     choices=[
+                         ("both", _("Show %ss for hosts and services" % self.log_type())),
+                         ("host", _("Show %ss for hosts" % self.log_type())),
+                         ("service", _("Show %ss for services" % self.log_type())),
+                     ],
+                     default_value="both",
+                 )),
+            ])
 
     @classmethod
     def _get_data(cls, properties, context):
         time_range = cls._int_time_range_from_rangespec(properties["time_range"])
         filter_headers, only_sites = get_filter_headers("log", cls.filter_infos(), context)
 
+        if properties["log_target"] != "both":
+            object_type_filter = ("Filter: log_type ~ %s .*\n" %
+                                  lqencode(properties["log_target"].upper()))
+        else:
+            object_type_filter = ""
+
         query = ("GET log\n"
                  "Columns: log_state host_name service_description log_type log_time\n"
                  "Filter: class = %d\n"
                  "Filter: log_time >= %f\n"
                  "Filter: log_time <= %f\n"
-                 "Filter: log_type ~ %s .*\n"
-                 "%s" % (cls.log_class(), time_range[0], time_range[1],
-                         lqencode(properties["log_target"].upper()), lqencode(filter_headers)))
+                 "%s"
+                 "%s" % (cls.log_class(), time_range[0], time_range[1], object_type_filter,
+                         lqencode(filter_headers)))
 
         with sites.only_sites(only_sites):
             try:
@@ -108,7 +118,7 @@ class ABCEventBarChartDataGenerator(BarBarChartDataGenerator):
             args.append(("logst_h0", "on"))
             args.append(("logst_h1", "on"))
             args.append(("logst_h2", "on"))
-        else:
+        elif properties["log_target"] == "service":
             args.append(("logst_s0", "on"))
             args.append(("logst_s1", "on"))
             args.append(("logst_s2", "on"))
@@ -195,6 +205,7 @@ class NotificationsBarChartDataGenerator(ABCEventBarChartDataGenerator):
     @classmethod
     def default_bar_chart_title(cls, properties, context):
         log_target_to_title = {
+            "both": _("Host and service"),
             "host": _("Host"),
             "service": _("Service"),
         }
@@ -247,6 +258,7 @@ class AlertBarChartDataGenerator(ABCEventBarChartDataGenerator):
     @classmethod
     def default_bar_chart_title(cls, properties, context):
         log_target_to_title = {
+            "both": _("Host and service"),
             "host": _("Host"),
             "service": _("Service"),
         }

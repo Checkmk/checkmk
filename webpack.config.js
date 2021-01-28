@@ -63,11 +63,13 @@ module.exports = {
                         options: {
                             url: false,
                             importLoaders: 2,
+                            esModule: false,
+                            sourceMap: false,
                         },
                     },
                     // 2. Some postprocessing of CSS definitions (see postcss.config.js)
                     // - add browser vendor prefixes https://github.com/postcss/autoprefixer
-                    // - minifies CSS with https://github.com/jakubpawlowicz/clean-css
+                    // - minifies CSS with https://github.com/cssnano/cssnano
                     {
                         loader: "postcss-loader",
                     },

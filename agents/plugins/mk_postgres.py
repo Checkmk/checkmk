@@ -241,7 +241,7 @@ class PostgresBase:
     def execute_all_queries(self):
         """Executes all queries and writes the output formatted to stdout"""
 
-        query_template = namedtuple("query", ["method", "section", "has_db_text"])
+        query_template = namedtuple("query_template", ["method", "section", "has_db_text"])
         queries = [
             query_template(self.get_instances, "instances", False),
             query_template(self.get_sessions, "sessions", False),

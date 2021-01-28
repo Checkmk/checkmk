@@ -389,7 +389,7 @@ CheckmkAutomationRequest = NamedTuple("CheckmkAutomationRequest", [
     ("timeout", Optional[int]),
 ])
 
-CheckmkAutomationGetStatusResponse = NamedTuple("CheckmkAutomationGetStatusResponsee", [
+CheckmkAutomationGetStatusResponse = NamedTuple("CheckmkAutomationGetStatusResponse", [
     ("job_status", Dict[str, Any]),
     ("result", Any),
 ])

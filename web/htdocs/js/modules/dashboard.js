@@ -414,19 +414,19 @@ export function toggle_dashboard_edit(edit_text, display_text) {
 
     if (edit_text && display_text) {
         const title = g_editing ? edit_text : display_text;
-        toggle_suggestion.lastChild.textContent = title;
+        if (toggle_suggestion) toggle_suggestion.lastChild.textContent = title;
         toggle_shortcut.title = title;
         toggle_entry.firstChild.lastChild.textContent = title;
     }
 
     if (g_editing) {
         const icon_disable = "themes/" + utils.get_theme() + "/images/emblem_disable.svg";
-        toggle_suggestion.querySelector("img.emblem").src = icon_disable;
+        if (toggle_suggestion) toggle_suggestion.querySelector("img.emblem").src = icon_disable;
         toggle_shortcut.querySelector("img.emblem").src = icon_disable;
         toggle_entry.querySelector("img.emblem").src = icon_disable;
     } else {
         const icon_trans = "themes/facelift/images/emblem_trans.svg";
-        toggle_suggestion.querySelector("img.emblem").src = icon_trans;
+        if (toggle_suggestion) toggle_suggestion.querySelector("img.emblem").src = icon_trans;
         toggle_shortcut.querySelector("img.emblem").src = icon_trans;
         toggle_entry.querySelector("img.emblem").src = icon_trans;
     }

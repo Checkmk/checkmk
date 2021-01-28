@@ -85,7 +85,8 @@ module.exports = {
                             sassOptions: {
                                 // Hand over build options from webpack to SASS
                                 includePaths: ["node_modules"],
-                                // See https://github.com/sass/node-sass/blob/master/README.md#options
+                                // dart-sass supports "expanded" and "compressed":
+                                // https://github.com/sass/dart-sass#javascript-api
                                 outputStyle: "expanded",
                                 precision: 10,
                             },

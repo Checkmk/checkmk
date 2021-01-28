@@ -192,7 +192,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
                     .endAngle(d => scale_x(d.value))
             );
 
-        if (data.lenght > 10) this._render_histogram(domain, data);
+        if (data.length > 10) this._render_histogram(domain, data);
     }
 
     _render_histogram(domain, data) {

@@ -240,6 +240,10 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
     def data_generator(cls):
         return AverageScatterplotDataGenerator()
 
+    @classmethod  # temporary
+    def vs_parameters(cls) -> Dictionary:
+        return AverageScatterplotDataGenerator().vs_parameters()
+
 
 @page_registry.register_page("ajax_average_scatterplot_dashlet_data")
 class AverageScatterplotDataPage(AjaxPage):

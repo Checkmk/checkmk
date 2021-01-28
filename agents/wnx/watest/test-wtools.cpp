@@ -623,4 +623,13 @@ TEST(Wtools, ToCanonical) {
     EXPECT_TRUE(ToCanonical(L"").empty());
 }
 
+TEST(PlayerTest, Pipe) {
+    auto p = std::make_unique<wtools::SimplePipe>();
+    EXPECT_EQ(p->getRead(), nullptr);
+    EXPECT_EQ(p->getWrite(), nullptr);
+    p->create();
+    EXPECT_NE(p->getRead(), nullptr);
+    EXPECT_NE(p->getWrite(), nullptr);
+}
+
 }  // namespace wtools

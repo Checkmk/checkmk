@@ -86,7 +86,8 @@ TEST(ServiceProcessorTest, StartStopExe) {
     ON_OUT_OF_SCOPE(delete processor;);
 
     cma::MailSlot mailbox(kServiceMailSlot, 0);
-    mailbox.ConstructThread(SystemMailboxCallback, 20, processor);
+    mailbox.ConstructThread(SystemMailboxCallback, 20, processor,
+                            wtools::SecurityLevel::admin);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
     using namespace cma::carrier;
     processor->internal_port_ =

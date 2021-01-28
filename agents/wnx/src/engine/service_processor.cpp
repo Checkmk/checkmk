@@ -599,7 +599,10 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
     try {
         // start and stop for mailbox thread
-        mailbox.ConstructThread(SystemMailboxCallback, 20, this);
+        mailbox.ConstructThread(SystemMailboxCallback, 20, this,
+                                cma::IsService()
+                                    ? wtools::SecurityLevel::admin
+                                    : wtools::SecurityLevel::standard);
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
         // preparation if any

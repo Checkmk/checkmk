@@ -9,12 +9,12 @@ from .agent_based_api.v1 import (
     Attributes,
     register,
     SNMPTree,
-    startswith,
 )
 from .agent_based_api.v1.type_defs import (
     InventoryResult,
     StringTable,
 )
+from .utils.fortinet import DETECT_FORTIGATE
 
 Section = Mapping[str, str]
 
@@ -60,7 +60,7 @@ register.snmp_section(
             '7',  # fgHaGroupName
         ],
     ),
-    detect=startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.12356.101.1.'),
+    detect=DETECT_FORTIGATE,
 )
 
 

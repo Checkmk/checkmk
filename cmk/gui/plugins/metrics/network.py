@@ -1529,6 +1529,18 @@ metric_info["fortiauthenticator_fails_5min"] = {
     "color": "42/a",
 }
 
+metric_info["fortigate_detection_rate"] = {
+    "title": _("Detection rate"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
+metric_info["fortigate_blocking_rate"] = {
+    "title": _("Blocking rate"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

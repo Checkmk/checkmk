@@ -1,0 +1,15 @@
+Title: Fix missing link to associated host or service BI aggregation
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1611841370
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+The host and service icons did not show links to the associated BI aggregation.
+
+The entry "BI aggregations containing this.." is now shown correctly, if a
+corresponding aggregation is available.

@@ -221,7 +221,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             if (domains) all_domains.push(domains);
         });
         this._x_domain = [d3.min(all_domains, d => d.x[0]), d3.max(all_domains, d => d.x[1])];
-        this._y_domain = [d3.min(all_domains, d => d.y[0]), d3.max(all_domains, d => d.y[1])];
+        this._y_domain = [d3.min(all_domains, d => d.y[0]), d3.max(all_domains, d => d.y[1] * 1.1)];
         this.orig_scale_x.domain(this._x_domain);
         this.orig_scale_y.domain(this._y_domain);
     }

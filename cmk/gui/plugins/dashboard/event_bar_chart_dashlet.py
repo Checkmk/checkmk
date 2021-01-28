@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from livestatus import lqencode
+
 from cmk.utils.render import date_and_time
 from cmk.gui.type_defs import HTTPVariables
 import cmk.gui.sites as sites
@@ -14,7 +14,6 @@ from cmk.gui.globals import html, request
 from cmk.gui.visuals import get_filter_headers
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
-from cmk.gui.plugins.dashboard.utils import dashlet_http_variables
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarBarChartDataGenerator
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import Dictionary, DropdownChoice, CascadingDropdown
@@ -162,31 +161,7 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
         raise NotImplementedError()
 
     def show(self):
-        args = dashlet_http_variables(self)
-        args.append(("log_type", self.data_generator().log_type()))
-        body = html.urlencode_vars(args)
-
-        fetch_url = "ajax_%s_dashlet.py" % self.type_name()
-        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
-
-        html.div("", id_=div_id)
-        html.javascript(
-            """
-            let bar_chart_class_%(dashlet_id)d = cmk.figures.figure_registry.get_figure("timeseries");
-            let %(instance_name)s = new bar_chart_class_%(dashlet_id)d(%(div_selector)s);
-            %(instance_name)s.lock_zoom_y = true;
-            %(instance_name)s.initialize();
-            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
-            %(instance_name)s.scheduler.set_update_interval(%(update)d);
-            %(instance_name)s.scheduler.enable();
-            """ % {
-                "dashlet_id": self._dashlet_id,
-                "instance_name": self.instance_name,
-                "div_selector": json.dumps("#%s" % div_id),
-                "url": json.dumps(fetch_url),
-                "body": json.dumps(body),
-                "update": self.update_interval,
-            })
+        self.js_dashlet(figure_type_name="timeseries")
 
 
 #   .--Notifications-------------------------------------------------------.
@@ -236,7 +211,7 @@ class NotificationsBarChartDataGenerator(ABCEventBarChartDataGenerator):
         return _("%s notifications") % log_target_to_title[properties["log_target"]]
 
 
-@page_registry.register_page("ajax_notifications_bar_chart_dashlet")
+@page_registry.register_page("ajax_notifications_bar_chart_dashlet_data")
 class NotificationsDataPage(AjaxPage):
     def page(self):
         return NotificationsBarChartDataGenerator().generate_response_from_request()
@@ -289,7 +264,7 @@ class AlertBarChartDataGenerator(ABCEventBarChartDataGenerator):
         return _("%s alerts") % log_target_to_title[properties["log_target"]]
 
 
-@page_registry.register_page("ajax_alerts_bar_chart_dashlet")
+@page_registry.register_page("ajax_alerts_bar_chart_dashlet_data")
 class AlertsDataPage(AjaxPage):
     def page(self):
         return AlertBarChartDataGenerator().generate_response_from_request()

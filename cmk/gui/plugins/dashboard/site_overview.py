@@ -453,6 +453,3 @@ class SiteOverviewDashlet(ABCFigureDashlet):
     @classmethod
     def single_infos(cls):
         return []
-
-    def show(self):
-        self.js_dashlet("ajax_site_overview_dashlet_data.py")

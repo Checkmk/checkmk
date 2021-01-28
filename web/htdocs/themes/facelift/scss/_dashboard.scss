@@ -226,6 +226,10 @@ body.main.dashlet {
   background-color: $dashlet-body-bg-color;
   box-sizing: border-box;
 
+  div#row_info {
+    display: none;
+  }
+
   table.data.table {
     padding: 0 8px;
 

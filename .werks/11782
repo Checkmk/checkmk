@@ -1,0 +1,14 @@
+Title: ups_out_load check and discovery crash on empty values for load and voltage
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p21
+Date: 1609155015
+
+Empty SNMP values for load or values would result in an unhandled exception
+{{ValueError (invalid literal for int() with base 10: '')}}.
+This fix checks for empty values first before taking them as numeric values.

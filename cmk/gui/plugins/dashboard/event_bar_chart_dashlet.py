@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List
 import time
 import livestatus
 from livestatus import lqencode
@@ -14,7 +15,6 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.visuals import get_filter_headers
-from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarChartDataGenerator
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
@@ -32,13 +32,9 @@ from cmk.gui.utils.urls import makeuri_contextless
 #   +----------------------------------------------------------------------+
 class ABCEventBarChartDataGenerator(BarChartDataGenerator):
     """ Generates the data for host/service alert/notifications bar charts """
-    @classmethod
-    def log_type(cls):
-        raise NotImplementedError()
-
-    @classmethod
-    def log_class(cls):
-        raise NotImplementedError()
+    def __init__(self, log_type, log_class):
+        self.log_type = log_type
+        self.log_class = log_class
 
     @classmethod
     def filter_infos(cls):
@@ -71,19 +67,18 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
                  ])),
                 ("log_target",
                  DropdownChoice(
-                     title=_("Host or service %ss" % self.log_type()),
+                     title=_("Host or service %ss" % self.log_type),
                      choices=[
-                         ("both", _("Show %ss for hosts and services" % self.log_type())),
-                         ("host", _("Show %ss for hosts" % self.log_type())),
-                         ("service", _("Show %ss for services" % self.log_type())),
+                         ("both", _("Show %ss for hosts and services" % self.log_type)),
+                         ("host", _("Show %ss for hosts" % self.log_type)),
+                         ("service", _("Show %ss for services" % self.log_type)),
                      ],
                      default_value="both",
                  )),
             ],
         )
 
-    @classmethod
-    def generate_response_data(cls, properties, context, settings):
+    def generate_response_data(self, properties, context, settings):
         """Toggle between the data of the different render modes"""
         # TODO: Would be better to have independent data generators for the various render modes,
         # but that is not possible with the current mechanic. Once we spread the toggling of render
@@ -91,15 +86,13 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
         if properties["render_mode"][0] == "bar_chart":
             return super().generate_response_data(properties, context, settings)
         if properties["render_mode"][0] == "simple_number":
-            return cls._generate_simple_number_response_data(properties, context, settings)
+            return self._generate_simple_number_response_data(properties, context, settings)
         raise NotImplementedError()
 
-    @classmethod
-    def _generate_simple_number_response_data(cls, properties, context, settings):
+    def _generate_simple_number_response_data(self, properties, context, settings):
         """Needs to produce a data structure that is understood by the "single_metric" figure
         instance we initiate in the show() method """
         return {
-            "title": cls.bar_chart_title(properties, context, settings),
             "plot_definitions": [{
                 "label": "",
                 "id": "number",
@@ -112,17 +105,16 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
                     "max": None,
                 }
             }],
-            "data": cls._get_simple_number_data(properties, context),
+            "data": self._get_simple_number_data(properties, context),
         }
 
     # TODO: Possible performance optimization: We only need to count events. Changing this to Stats
     # queries could improve the performance of the dashlet
-    @classmethod
-    def _get_data(cls, properties, context):
+    def _get_data(self, properties, context):
         mode_properties = properties["render_mode"][1]
-        time_range = cls._int_time_range_from_rangespec(mode_properties["time_range"])
-        filter_headers, only_sites = get_filter_headers("log", cls.filter_infos(), context)
-        object_type_filter = cls._get_object_type_filter(properties)
+        time_range = self._int_time_range_from_rangespec(mode_properties["time_range"])
+        filter_headers, only_sites = get_filter_headers("log", self.filter_infos(), context)
+        object_type_filter = self._get_object_type_filter(properties)
 
         query = ("GET log\n"
                  "Columns: log_state host_name service_description log_type log_time\n"
@@ -130,7 +122,7 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
                  "Filter: log_time >= %f\n"
                  "Filter: log_time <= %f\n"
                  "%s"
-                 "%s" % (cls.log_class(), time_range[0], time_range[1], object_type_filter,
+                 "%s" % (self.log_class, time_range[0], time_range[1], object_type_filter,
                          lqencode(filter_headers)))
 
         with sites.only_sites(only_sites):
@@ -141,21 +133,20 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
             except Exception:
                 raise MKGeneralException(_("The query returned no data."))
 
-    @classmethod
-    def _get_simple_number_data(cls, properties, context):
+    def _get_simple_number_data(self, properties, context):
         return [{
             "tag": "number",
             "timestamp": int(time.time()),
             "value": count,
             "last_value": True,
-        } for label, count in zip([_("Total")], cls._fetch_simple_number_data(properties, context))]
+        } for label, count in zip([_("Total")], self._fetch_simple_number_data(properties, context))
+               ]
 
-    @classmethod
-    def _fetch_simple_number_data(cls, properties, context):
+    def _fetch_simple_number_data(self, properties, context):
         mode_properties = properties["render_mode"][1]
-        time_range = cls._int_time_range_from_rangespec(mode_properties["time_range"])
-        filter_headers, only_sites = get_filter_headers("log", cls.filter_infos(), context)
-        object_type_filter = cls._get_object_type_filter(properties)
+        time_range = self._int_time_range_from_rangespec(mode_properties["time_range"])
+        filter_headers, only_sites = get_filter_headers("log", self.filter_infos(), context)
+        object_type_filter = self._get_object_type_filter(properties)
 
         query = ("GET log\n"
                  "Stats: log_type != "
@@ -163,7 +154,7 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
                  "Filter: log_time >= %f\n"
                  "Filter: log_time <= %f\n"
                  "%s"
-                 "%s" % (cls.log_class(), time_range[0], time_range[1], object_type_filter,
+                 "%s" % (self.log_class, time_range[0], time_range[1], object_type_filter,
                          lqencode(filter_headers)))
 
         with sites.only_sites(only_sites):
@@ -178,10 +169,9 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
             return "Filter: log_type ~ %s .*\n" % lqencode(properties["log_target"].upper())
         return ""
 
-    @classmethod
-    def _forge_tooltip_and_url(cls, time_frame, properties, context):
+    def _forge_tooltip_and_url(self, time_frame, properties, context):
         mode_properties = properties["render_mode"][1]
-        time_range = cls._int_time_range_from_rangespec(mode_properties["time_range"])
+        time_range = self._int_time_range_from_rangespec(mode_properties["time_range"])
         ending_timestamp = min(time_frame["ending_timestamp"], time_range[1])
         from_time_str = date_and_time(time_frame["timestamp"])
         to_time_str = date_and_time(ending_timestamp)
@@ -200,7 +190,7 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
         args.append(("logtime_from_range", "unix"))
         args.append(("logtime_until", str(ending_timestamp)))
         args.append(("logtime_until_range", "unix"))
-        args.append(("logclass%d" % cls.log_class(), "on"))
+        args.append(("logclass%d" % self.log_class, "on"))
 
         # Target filters
         if properties["log_target"] == "host":
@@ -221,16 +211,34 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
         return tooltip, makeuri_contextless(request, args, filename="view.py")
 
 
-class ABCEventBarChartDashlet(ABCFigureDashlet):
-    @classmethod
-    def data_generator(cls) -> ABCEventBarChartDataGenerator:
-        raise NotImplementedError()
+def default_bar_chart_title(log_target, name):
+    log_target_to_title = {
+        "both": _("Host and service"),
+        "host": _("Host"),
+        "service": _("Service"),
+    }
 
+    return _("%s %s") % (log_target_to_title[log_target], name)
+
+
+def bar_chart_title(properties, context, settings) -> str:
+    title: List[str] = []
+    if settings.get("show_title", True):
+        if "plain" in settings.get("title_format", ["plain"]):
+            chart_name = settings['type'].split("_")[0]
+            title.append(
+                settings.get("title") or
+                default_bar_chart_title(properties['log_target'], chart_name))
+    return " / ".join(txt for txt in title)
+
+
+class ABCEventBarChartDashlet(ABCFigureDashlet):
     def show(self):
         if self._dashlet_spec["render_mode"][0] == "bar_chart":
-            self.js_dashlet(figure_type_name="timeseries")
+            self.js_dashlet(figure_type_name="timeseries", fetch_url="ajax_figure_dashlet_data.py")
         elif self._dashlet_spec["render_mode"][0] == "simple_number":
-            self.js_dashlet(figure_type_name="single_metric")
+            self.js_dashlet(figure_type_name="single_metric",
+                            fetch_url="ajax_figure_dashlet_data.py")
         else:
             raise NotImplementedError()
 
@@ -246,6 +254,9 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
 @dashlet_registry.register
 class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
     """Dashlet that displays a bar chart for host and service notifications"""
+    log_type = "notification"
+    log_class = 3
+
     @classmethod
     def type_name(cls):
         return "notifications_bar_chart"
@@ -258,38 +269,16 @@ class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
     def description(cls):
         return _("Displays a bar chart for host and service notifications.")
 
-    @classmethod
-    def data_generator(cls) -> 'NotificationsBarChartDataGenerator':
-        return NotificationsBarChartDataGenerator()
-
     @classmethod  # temporary
     def vs_parameters(cls) -> Dictionary:
-        return NotificationsBarChartDataGenerator().vs_parameters()
+        return ABCEventBarChartDataGenerator(cls.log_type, cls.log_class).vs_parameters()
 
-
-class NotificationsBarChartDataGenerator(ABCEventBarChartDataGenerator):
-    @classmethod
-    def log_type(cls):
-        return "notification"
-
-    @classmethod
-    def log_class(cls):
-        return 3
-
-    @classmethod
-    def default_bar_chart_title(cls, properties, context):
-        log_target_to_title = {
-            "both": _("Host and service"),
-            "host": _("Host"),
-            "service": _("Service"),
-        }
-        return _("%s notifications") % log_target_to_title[properties["log_target"]]
-
-
-@page_registry.register_page("ajax_notifications_bar_chart_dashlet_data")
-class NotificationsDataPage(AjaxPage):
-    def page(self):
-        return NotificationsBarChartDataGenerator().generate_response_from_request()
+    @staticmethod
+    def generate_response_data(properties, context, settings):
+        response = ABCEventBarChartDataGenerator("notification", 3).generate_response_data(
+            properties, context, settings)
+        response['title'] = bar_chart_title(properties, context, settings)
+        return response
 
 
 #   .--Alerts--------------------------------------------------------------.
@@ -303,6 +292,9 @@ class NotificationsDataPage(AjaxPage):
 @dashlet_registry.register
 class AlertsBarChartDashlet(ABCEventBarChartDashlet):
     """Dashlet that displays a bar chart for host and service alerts"""
+    log_type = "alert"
+    log_class = 1
+
     @classmethod
     def type_name(cls):
         return "alerts_bar_chart"
@@ -315,35 +307,13 @@ class AlertsBarChartDashlet(ABCEventBarChartDashlet):
     def description(cls):
         return _("Displays a bar chart for host and service alerts.")
 
-    @classmethod
-    def data_generator(cls) -> 'AlertBarChartDataGenerator':
-        return AlertBarChartDataGenerator()
-
     @classmethod  # temporary
     def vs_parameters(cls) -> Dictionary:
-        return AlertBarChartDataGenerator().vs_parameters()
+        return ABCEventBarChartDataGenerator(cls.log_type, cls.log_class).vs_parameters()
 
-
-class AlertBarChartDataGenerator(ABCEventBarChartDataGenerator):
-    @classmethod
-    def log_type(cls):
-        return "alert"
-
-    @classmethod
-    def log_class(cls):
-        return 1
-
-    @classmethod
-    def default_bar_chart_title(cls, properties, context):
-        log_target_to_title = {
-            "both": _("Host and service"),
-            "host": _("Host"),
-            "service": _("Service"),
-        }
-        return _("%s alerts") % log_target_to_title[properties["log_target"]]
-
-
-@page_registry.register_page("ajax_alerts_bar_chart_dashlet_data")
-class AlertsDataPage(AjaxPage):
-    def page(self):
-        return AlertBarChartDataGenerator().generate_response_from_request()
+    @staticmethod
+    def generate_response_data(properties, context, settings):
+        response = ABCEventBarChartDataGenerator("alert", 1).generate_response_data(
+            properties, context, settings)
+        response['title'] = bar_chart_title(properties, context, settings)
+        return response

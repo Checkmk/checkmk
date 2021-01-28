@@ -139,15 +139,9 @@ class PageMenuEntry:
     is_show_more: bool = False
     is_list_entry: bool = True
     is_shortcut: bool = False
-    is_suggested: bool = False
+    is_suggested: bool = True
     shortcut_title: Optional[str] = None
     css_classes: CSSSpec = None
-
-    def __post_init__(self):
-        # Enforce all shortcuts to be suggested links. The user can then toggle all entries between
-        # the suggested button format and the smaller shortcut buttons.
-        if self.is_shortcut and self.name not in ["toggle_suggestions"]:
-            self.is_suggested = True
 
 
 @dataclass
@@ -240,6 +234,8 @@ class PageMenu:
                 icon_name="suggestion",
                 item=make_javascript_link("cmk.page_menu.toggle_suggestions()"),
                 name="toggle_suggestions",
+                is_shortcut=True,
+                is_suggested=False,
             )
 
         yield from shortcuts

@@ -4,6 +4,7 @@ export class TabsBar {
     constructor(div_selector) {
         this._div_selector = div_selector;
         this._div_selection = d3.select(this._div_selector);
+        this._div_selection.datum(this);
         this._div_selection.classed("cmk_tab", true);
         this._tabs_by_id = {};
         this._tabs_list = [];

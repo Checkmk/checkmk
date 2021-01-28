@@ -15,8 +15,6 @@ import cmk.gui.sites as sites
 from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary
-from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
 
 
@@ -96,9 +94,6 @@ class HostStats(NamedTuple):
 
 
 class SiteOverviewDashletDataGenerator(ABCDataGenerator):
-    def vs_parameters(self) -> Dictionary:
-        return Dictionary(title=_("Properties"), render="form", optional_keys=False, elements=[])
-
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         if config.is_single_local_site():
@@ -426,12 +421,6 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             return html.drain()
 
 
-@page_registry.register_page("ajax_site_overview_dashlet_data")
-class SitesDashletData(AjaxPage):
-    def page(self):
-        return SiteOverviewDashletDataGenerator().generate_response_from_request()
-
-
 @dashlet_registry.register
 class SiteOverviewDashlet(ABCFigureDashlet):
     @classmethod
@@ -447,9 +436,17 @@ class SiteOverviewDashlet(ABCFigureDashlet):
         return _("Displays either sites and states or hosts and states of a site")
 
     @classmethod
-    def data_generator(cls):
-        return SiteOverviewDashletDataGenerator()
-
-    @classmethod
     def single_infos(cls):
         return []
+
+    @staticmethod
+    def _vs_elements():
+        return []
+
+    @staticmethod
+    def generate_response_data(properties, context, settings):
+        return SiteOverviewDashletDataGenerator.generate_response_data(
+            properties, context, settings)
+
+    def show(self):
+        self.js_dashlet(figure_type_name=self.type_name(), fetch_url="ajax_figure_dashlet_data.py")

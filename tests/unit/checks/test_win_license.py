@@ -102,7 +102,7 @@ def test_parse_win_license(capture, result):
     assert result == check.run_parse(splitter(capture))
 
 
-check_ref = namedtuple('result', ['parameters', 'check_output'])
+check_ref = namedtuple('check_ref', ['parameters', 'check_output'])
 
 
 @pytest.mark.parametrize(

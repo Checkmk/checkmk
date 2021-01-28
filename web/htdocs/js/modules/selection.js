@@ -255,7 +255,7 @@ function update_row_selection_information() {
 // container are highlighted.
 // It is also possible to give an array of DOM elements as parameter to toggle
 // all checkboxes below these objects.
-export function toggle_all_rows(obj) {
+export function toggle_all_rows(obj, name_select, name_deselect) {
     var checkboxes = get_all_checkboxes(obj || document);
 
     var all_selected = true;
@@ -270,8 +270,18 @@ export function toggle_all_rows(obj) {
     }
 
     // Toggle the state
-    if (all_selected) remove_selected_rows(checkboxes);
-    else select_all_rows(checkboxes, some_failed && none_selected);
+    const span = document.getElementById("menu_entry_checkbox_selection").childNodes[0].lastChild;
+    if (all_selected) {
+        remove_selected_rows(checkboxes);
+        if (name_select) {
+            span.textContent = name_select;
+        }
+    } else {
+        select_all_rows(checkboxes, some_failed && none_selected);
+        if (name_deselect) {
+            span.textContent = name_deselect;
+        }
+    }
 }
 
 function remove_selected_rows(elems) {

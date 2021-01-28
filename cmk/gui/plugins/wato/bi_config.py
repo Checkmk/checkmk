@@ -617,7 +617,7 @@ class ModeBIRules(ABCBIMode):
                                 ),
                             ],
                         ),
-                        make_checkbox_selection_topic(),
+                        make_checkbox_selection_topic("bi"),
                     ],
                 ),
                 PageMenuDropdown(
@@ -1804,7 +1804,7 @@ class BIModeAggregations(ABCBIMode):
                                 ),
                             ],
                         ),
-                        make_checkbox_selection_topic(),
+                        make_checkbox_selection_topic("bi"),
                     ],
                 ),
                 PageMenuDropdown(

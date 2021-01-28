@@ -27,6 +27,7 @@ from cmk.gui.type_defs import CSSSpec, Icon
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
 from cmk.gui.config import user
 import cmk.gui.escaping as escaping
+import cmk.gui.weblib as weblib
 
 
 def enable_page_menu_entry(name: str):
@@ -370,14 +371,19 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
-def make_checkbox_selection_topic(is_enabled: bool = True) -> PageMenuTopic:
+def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
+    name_selected = _("Select all checkboxes")
+    name_deselected = _("Deselect all checkboxes")
+    is_selected = user.get_rowselection(weblib.selection_id(), selection_key)
     return PageMenuTopic(
         title=_("Selection"),
         entries=[
             PageMenuEntry(
-                title=_("Toggle checkboxes"),
+                name="checkbox_selection",
+                title=name_deselected if is_selected else name_selected,
                 icon_name="checkbox",
-                item=make_javascript_link("cmk.selection.toggle_all_rows();"),
+                item=make_javascript_link("cmk.selection.toggle_all_rows(this.form, %s, %s);" %
+                                          (json.dumps(name_selected), json.dumps(name_deselected))),
                 is_enabled=is_enabled,
             ),
         ],

@@ -1,0 +1,18 @@
+Title: Stabilize the Windows agent updater
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1611835749
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+In some cases for various reasons the agent updater of the  Windows agent 
+can't update the agent. There are two possible outcomes: The agent is not 
+updated at all or the agent is even uninstalled.
+
+Since this release, the Agent controls whether the update was successful 
+and on failure will retry update. The additional information is stored in 
+the file <tt>%ProgramData%\checkmk\agent\log\update.log</tt>

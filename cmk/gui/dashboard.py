@@ -881,6 +881,7 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         item=make_javascript_link('cmk.dashboard.toggle_dashboard_edit("%s", "%s")' %
                                   (edit_text, display_text)),
         is_shortcut=True,
+        is_suggested=False,
         name="toggle_edit",
     )
 
@@ -920,6 +921,7 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                                                              "ajax_initial_dashboard_filters")),
                               name="filters",
                               is_shortcut=True,
+                              is_suggested=False,
                           ),
                       ]))
 

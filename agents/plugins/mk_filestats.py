@@ -402,20 +402,20 @@ def iter_filtered_files(file_filters, iterator):
 
 def parse_grouping_config(
     config,
-    section_name,
+    raw_config_section_name,
     options,
     subgroups_delimiter,
 ):
-    group_name, parent_group_name = section_name.split(subgroups_delimiter, 1)
+    child_group_name, parent_group_name = raw_config_section_name.split(subgroups_delimiter, 1)
 
     for option in options:
         if option.startswith('grouping_'):
             grouping_type = option.split('_', 1)[1]
-            grouping_rule = config.get(section_name, option)
+            grouping_rule = config.get(raw_config_section_name, option)
 
-    LOGGER.info('found subgroup: %s', section_name)
+    LOGGER.info('found subgroup: %s', raw_config_section_name)
     return parent_group_name, (
-        group_name,
+        child_group_name,
         {
             'type': grouping_type,
             'rule': grouping_rule,
@@ -423,9 +423,10 @@ def parse_grouping_config(
     )
 
 
-def grouping_single_group(section_name, files_iter):
+def grouping_single_group(config_section_name, files_iter):
     """create one single group per section"""
-    yield section_name, files_iter
+    group_name = config_section_name
+    yield group_name, files_iter
 
 
 #.
@@ -538,28 +539,32 @@ def iter_config_section_dicts(cfg_file=None):
     LOGGER.info("read configration file(s): %r", files_read)
 
     parsed_config = {}
-    for section_name in config.sections():
-        options = config.options(section_name)
-        subgroups_delimiter = config.get(section_name, 'subgroups_delimiter')
-        if subgroups_delimiter not in section_name:
-            parsed_config[section_name] = {k: config.get(section_name, k) for k in options}
+    for raw_cfg_section_name in config.sections():
+        options = config.options(raw_cfg_section_name)
+        subgroups_delimiter = config.get(raw_cfg_section_name, 'subgroups_delimiter')
+        if subgroups_delimiter not in raw_cfg_section_name:
+            consolidated_cfg_section_name = raw_cfg_section_name
+            parsed_config[consolidated_cfg_section_name] = {
+                k: config.get(raw_cfg_section_name, k) for k in options
+            }
             continue
         parent_group_name, parsed_grouping_config = parse_grouping_config(
             config,
-            section_name,
+            raw_cfg_section_name,
             options,
             subgroups_delimiter,
         )
+        consolidated_cfg_section_name = parent_group_name
         # TODO: The below suppressions are due to the fact that typing the parsed config properly
         # requires a more sophisticated type (perhaps a class) and a bigger refactoring to validate
         # the options and dispatch immediately after parsing is complete.
-        parsed_config[parent_group_name].setdefault(
+        parsed_config[consolidated_cfg_section_name].setdefault(
             'grouping',
             [],  # type: ignore[arg-type]
         ).append(parsed_grouping_config)  # type: ignore[attr-defined]
 
-    for section_name, parsed_option in parsed_config.items():
-        yield section_name, parsed_option
+    for consolidated_cfg_section_name, parsed_option in parsed_config.items():
+        yield consolidated_cfg_section_name, parsed_option
 
 
 def main():
@@ -567,7 +572,7 @@ def main():
     args = parse_arguments()
 
     sys.stdout.write('<<<filestats:sep(0)>>>\n')
-    for section_name, config in iter_config_section_dicts(args['cfg_file']):
+    for config_section_name, config in iter_config_section_dicts(args['cfg_file']):
 
         #1 input
         files_iter = get_file_iterator(config)
@@ -578,7 +583,7 @@ def main():
 
         #3 grouping
         grouper = grouping_single_group
-        groups = grouper(section_name, filtered_files)
+        groups = grouper(config_section_name, filtered_files)
 
         #4 output
         output_aggregator = get_output_aggregator(config)

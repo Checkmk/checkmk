@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, List
 import numpy as np  # type: ignore[import]
 
 from cmk.utils.render import date_and_time
@@ -19,8 +19,8 @@ from cmk.gui.valuespec import (
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
 from cmk.gui.plugins.dashboard.utils import site_query
-from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
-from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns, merge_multicol
+from cmk.gui.plugins.metrics.utils import MetricName
+from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns, merge_multicol
 from cmk.gui.plugins.metrics.utils import get_metric_info
 
 
@@ -83,14 +83,10 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
         ]
 
         from_time, until_time = map(int, Timerange().compute_range(properties['time_range'])[0])
-        data_range = "%s:%s:%s" % (from_time, until_time, 60)
-        _metrics: List[Tuple[str, Optional[str], float]] = [
-            (name, None, scale)
-            for name, scale in reverse_translate_metric_name(properties['metric'])
-        ]
-        metric_colums = list(rrd_columns(_metrics, 'max', data_range))
+        metric_columns = metric_in_all_rrd_columns(properties["metric"], 'max', from_time,
+                                                   until_time)
 
-        return cmc_cols + metric_colums
+        return cmc_cols + metric_columns
 
     @classmethod
     def _create_scatterplot_config(cls, elements, properties, context, settings):

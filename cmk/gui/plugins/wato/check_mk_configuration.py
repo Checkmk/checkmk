@@ -1577,7 +1577,7 @@ class ConfigVariableActivateChangesConcurrency(ConfigVariable):
             help=
             _("Specifies the maximum number of parallel running site activate changes processes. "
               "Each site activation is handled in a separate apache process. If your configuration setup includes "
-              "lots of sites, but your RAM is limited, you should reduce the maximum number of concurrent site updates."
+              "lots of sites, but your RAM is limited, you should reduce the maximum number of concurrent site updates. "
               "Note: The hardcoded minimum is set to 5."))
 
 

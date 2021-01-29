@@ -1,0 +1,19 @@
+Title: Views: Views are now asking for missing contexts just like dashboards
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612001914
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.0.0b6
+
+When a view that requires a context (e.g. as host name) is opened without
+a "host" HTTP request variable, the view only showed an error message and
+stopped rendering the view. The user then had to add the missing context
+information to the view configuration or to the URL variables.
+
+From now on, the view is still displaying a warning message like "Unable to
+render this view, because we miss some required context information (host).
+Please update the form on the right to make this view render.", but also
+displaying the filter form asking the user to provide the missing context.

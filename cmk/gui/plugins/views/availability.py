@@ -308,6 +308,15 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
     if html.has_user_errors():
         html.final_javascript("cmk.page_menu.open_popup('avoptions');")
 
+    missing_single_infos = view.missing_single_infos
+    if missing_single_infos:
+        raise MKUserError(
+            None,
+            _("Unable to render this availability view, because we miss some required context "
+              "information (%s). Please update the filters on the source view or add the "
+              "missing HTTP request variables to your request") %
+            ", ".join(sorted(missing_single_infos)))
+
     html.write(confirmation_html_code)
 
     if not html.has_user_errors():

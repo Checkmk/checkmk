@@ -6,7 +6,7 @@
 
 from typing import Dict, List, Mapping, Sequence
 
-StringTable = List[List[str]]
+from ..agent_based_api.v1.type_defs import StringTable
 
 Section = Mapping[str, Sequence[Mapping[str, str]]]
 

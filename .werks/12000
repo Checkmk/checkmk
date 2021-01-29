@@ -1,0 +1,12 @@
+Title: FJDARY checks: Most plugins crashed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611931209
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+In Checkmk 2.0.0i1 to 2.0.0b5 most FJDARY check plugins crashed with the
+exception "check_migration_wrapper() missing 1 required positional argument: 'item'".

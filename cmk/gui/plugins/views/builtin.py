@@ -2816,10 +2816,10 @@ multisite_builtin_views.update({
         'painters': [
             ('host', 'hostsvcevents'),
             ('service_description', 'svcevents'),
+            ('alert_stats_problem', None),
             ('alert_stats_crit', None),
             ('alert_stats_unknown', None),
             ('alert_stats_warn', None),
-            ('alert_stats_problem', None),
         ],
         'play_sounds': False,
         'public': False,

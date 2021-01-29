@@ -9,10 +9,7 @@ import time
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    DropdownChoice,
-    Timerange,
-)
+from cmk.gui.valuespec import Timerange
 from cmk.gui.plugins.dashboard import ABCDataGenerator
 
 
@@ -40,21 +37,6 @@ class BarChartDataGenerator(ABCDataGenerator):
 
     def _get_data(self, properties, context):
         raise NotImplementedError()
-
-    def bar_chart_vs_components(self):
-        # Specifies the properties for this data generator
-        return [
-            ("time_range", Timerange(
-                title=_("Time range"),
-                default_value='d0',
-            )),
-            ("time_resolution",
-             DropdownChoice(
-                 title=_("Time resolution"),
-                 choices=[("h", _("Show per hour")), ("d", _("Show per day"))],
-                 default_value="h",
-             )),
-        ]
 
     def _create_bar_chart_config(self, bar_elements, properties, context, settings):
         return {"elements": bar_elements}

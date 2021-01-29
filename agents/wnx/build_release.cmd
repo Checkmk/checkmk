@@ -162,5 +162,6 @@ popd
 @rem Additional Phase: post processing/build special modules using make
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
 
-!make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && exit /b 36
+@rem BUILDING of frozen binaries is disabled, we do not have support from CI. And this support is not plnned
+@rem !make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && exit /b 36
 

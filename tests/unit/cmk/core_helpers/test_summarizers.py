@@ -11,7 +11,7 @@ from cmk.utils.piggyback import PiggybackRawDataInfo
 from cmk.utils.type_defs import AgentRawData, ExitSpec
 
 import cmk.core_helpers.piggyback
-from cmk.core_helpers.agent import AgentHostSections, AgentSummarizer
+from cmk.core_helpers.agent import AgentHostSections, AgentSummarizer, AgentSummarizerDefault
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 from cmk.core_helpers.type_defs import Mode
 
@@ -44,6 +44,177 @@ class TestAgentSummarizer:
 
     def test_summarize_MKTimeout_exception(self, summarizer, mode):
         assert summarizer.summarize_failure(MKTimeout(), mode=mode) == (2, "(!!)", [])
+
+
+class TestAgentSummarizerDefault_AllModes:
+    @pytest.fixture
+    def summarizer(self):
+        return AgentSummarizerDefault(
+            ExitSpec(),
+            is_cluster=False,
+            agent_min_version=0,
+            agent_target_version=None,
+            only_from=None,
+        )
+
+    @pytest.fixture(params=Mode)
+    def mode(self, request):
+        return request.param
+
+    def test_missing_section(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(None, mode=mode) == (
+            0,
+            "Version: unknown, OS: unknown",
+            [],
+        )
+
+    def test_random_section(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [["some_random", "data"], ["that_does", "nothing"]],
+            mode=mode,
+        ) == (
+            0,
+            "Version: unknown, OS: unknown",
+            [],
+        )
+
+    def test_clear_version_and_os(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [["version:"], ["agentos:"]],
+            mode=mode,
+        ) == (
+            0,
+            "",
+            [],
+        )
+
+    def test_set_version_and_os(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [["version:", "42"], ["agentos:", "BeOS", "or", "Haiku", "OS"]],
+            mode=mode,
+        ) == (
+            0,
+            "Version: 42, OS: BeOS or Haiku OS",
+            [],
+        )
+
+
+class TestAgentSummarizerDefault_OnlyFrom:
+    @pytest.fixture
+    def summarizer(self):
+        return AgentSummarizerDefault(
+            ExitSpec(),
+            is_cluster=False,
+            agent_min_version=0,
+            agent_target_version=None,
+            only_from=["deep_space"],
+        )
+
+    @pytest.fixture
+    def mode(self):
+        # Only Mode.CHECKING triggers check_only_from
+        return Mode.CHECKING
+
+    def test_allowed(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["onlyfrom:", "deep_space"],
+            ],
+            mode=mode,
+        ) == (0, "Allowed IP ranges: deep_space", [])
+
+    def test_exceeding(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["onlyfrom:", "deep_space somewhere_else"],
+            ],
+            mode=mode,
+        ) == (1, "Unexpected allowed IP ranges (exceeding: somewhere_else)(!)", [])
+
+    def test_exceeding_missing(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["onlyfrom:", "somewhere_else"],
+            ],
+            mode=mode,
+        ) == (
+            1,
+            "Unexpected allowed IP ranges (exceeding: somewhere_else, missing: deep_space)(!)",
+            [],
+        )
+
+
+class TestAgentSummarizerDefault_CheckVersion:
+    # TODO(ml): This is incomplete.
+    @pytest.fixture
+    def summarizer(self, request):
+        return AgentSummarizerDefault(
+            ExitSpec(),
+            is_cluster=False,
+            agent_min_version=0,
+            agent_target_version=request.param,
+            only_from=None,
+        )
+
+    @pytest.fixture
+    def mode(self):
+        # Only Mode.CHECKING triggers check_version
+        return Mode.CHECKING
+
+    @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
+    def test_match(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "42"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == (0, 'Version: 42', [])
+
+    @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
+    def test_mismatch(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "69"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == (1, 'Version: 69, unexpected agent version 69 (should be 42)(!)', [])
+
+    @pytest.mark.parametrize(
+        "summarizer",
+        [
+            # This type of AgentTargetVersion does not seem to be handled at all.
+            ("at_least", "0"),
+            ("at_least", "333"),
+            ("at_least", "random value"),
+        ],
+        indirect=True,
+    )
+    def test_at_least_str_success(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "69"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == (0, 'Version: 69', [])
+
+    @pytest.mark.parametrize("summarizer", [("at_least", {})], indirect=True)
+    def test_at_least_dict_empty(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "69"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == (0, 'Version: 69', [])
 
 
 class TestPiggybackSummarizer:

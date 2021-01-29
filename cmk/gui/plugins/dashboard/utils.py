@@ -489,34 +489,6 @@ class DashletRegistry(cmk.utils.plugin_registry.Registry[Type[Dashlet]]):
 dashlet_registry = DashletRegistry()
 
 
-class ABCDataGenerator(metaclass=abc.ABCMeta):
-    def vs_parameters(self):
-        raise NotImplementedError()
-
-    @classmethod
-    @abc.abstractmethod
-    def generate_response_data(cls, properties, context, settings):
-        raise NotImplementedError()
-
-    def generate_response_from_request(self):
-        settings = json.loads(html.request.get_str_input_mandatory("settings"))
-
-        try:
-            dashlet_type = dashlet_registry[settings.get("type")]
-        except KeyError:
-            raise MKUserError("type", _('The requested dashlet type does not exist.'))
-
-        vs_general_settings = dashlet_vs_general_settings(dashlet_type, dashlet_type.single_infos())
-        settings = vs_general_settings.value_from_json(settings)
-
-        raw_properties = html.request.get_str_input_mandatory("properties")
-        properties = self.vs_parameters().value_from_json(json.loads(raw_properties))
-        context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
-        response_data = self.generate_response_data(properties, context, settings)
-        return create_figures_response(response_data)
-
-
-# TODO: goal is to delete DataGenerator before this
 @page_registry.register_page("ajax_figure_dashlet_data")
 class FigureDashletPage(AjaxPage):
     def page(self):
@@ -604,10 +576,8 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
     def show(self) -> None:
         self.js_dashlet(figure_type_name=self.type_name())
 
-    # TODO: fetch_url is compatibility layer, drop when all figure dashlets request the same point
-    def js_dashlet(self, figure_type_name: str, fetch_url: Optional[str] = None) -> None:
-        if fetch_url is None:
-            fetch_url = "ajax_%s_dashlet_data.py" % self.type_name()
+    def js_dashlet(self, figure_type_name: str) -> None:
+        fetch_url = "ajax_figure_dashlet_data.py"
         div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
         html.div("", id_=div_id)
 

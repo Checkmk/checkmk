@@ -228,6 +228,3 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
             ("median_color",
              GraphColor(title=_("Color for the median line"), default_value="default")),
         ]
-
-    def show(self):
-        self.js_dashlet(figure_type_name=self.type_name(), fetch_url="ajax_figure_dashlet_data.py")

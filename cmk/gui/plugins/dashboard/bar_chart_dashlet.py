@@ -4,16 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 import time
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Timerange
-from cmk.gui.plugins.dashboard import ABCDataGenerator
 
 
-class BarChartDataGenerator(ABCDataGenerator):
+class BarChartDataGenerator:
     """Contains code to generate the data for a barchart dashlet
        The dashlet logic/visualization is specified in ABCFigureDashlet
     """

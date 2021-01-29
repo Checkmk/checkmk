@@ -1,0 +1,11 @@
+Title: lnx_distro: Update Checkmk appliance vendor and version field
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1611906118
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+

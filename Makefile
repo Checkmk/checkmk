@@ -365,6 +365,11 @@ mrproper:
 
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
+	curl -O https://bootstrap.pypa.io/2.7/get-pip.py
+	sudo python2 get-pip.py
+	rm get-pip.py
+	python2 -m pip install --upgrade pip
+
 	sudo apt-get install \
 	    aptitude \
 	    autoconf \
@@ -389,17 +394,18 @@ setup:
 	    pngcrush \
 	    valgrind \
 	    direnv \
-	    python-pip \
+	    python2 \
+	    python2-dev \
 	    chrpath \
 	    enchant \
 	    ksh \
 	    p7zip-full
 	sudo -H pip install -U pipenv
-	$(MAKE) -C web setup
+	$(MAKE) -C web setup #  broken in 1.6
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
 	$(MAKE) -C docker setup
-	$(MAKE) -C locale setup
+	$(MAKE) -C locale setup  #  broken in 1.6
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n

@@ -30,9 +30,6 @@
 #include "tools/_xlog.h"     // trace and log
 #include "wtools.h"
 
-// to be moved outside
-namespace wtools {}  // namespace wtools
-
 namespace cma {
 class MailSlot;
 
@@ -44,20 +41,21 @@ constexpr const char* const kMailSlotLogFileName = "cmk_mail.log";
 
 inline bool IsMailApiTraced() { return true; }
 
-// #TODO gtest
 inline const std::string GetMailApiLog() {
-    using namespace cma::tools;
     namespace fs = std::filesystem;
 
     if (kUsePublicProfileLog) {
-        fs::path path = win::GetSomeSystemFolder(FOLDERID_Public);
-        if (!path.empty()) return (path / kMailSlotLogFileName).u8string();
+        fs::path path{tools::win::GetSomeSystemFolder(FOLDERID_Public)};
+        if (!path.empty()) {
+            return (path / kMailSlotLogFileName).u8string();
+        }
     }
 
-    fs::path win_path = win::GetSomeSystemFolder(FOLDERID_Windows);
+    fs::path win_path = tools::win::GetSomeSystemFolder(FOLDERID_Windows);
 
-    if (!win_path.empty())
+    if (!win_path.empty()) {
         return (win_path / "Logs" / kMailSlotLogFileName).u8string();
+    }
 
     return {};
 }

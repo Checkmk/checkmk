@@ -12,13 +12,15 @@ def parse_postgres_dbs(info):
     dbs = {}
     inst_name = ""
     lines = iter(info)
-    try:
-        while True:
-            line = next(lines)
-            if line[0].startswith("[[[") and line[0].endswith("]]]"):
-                inst_name = "%s/" % line[0][3:-3].upper()
 
-            elif line[0] == "[databases_start]":
+    for name, *content in lines:
+
+        if name.startswith("[[[") and name.endswith("]]]"):
+            inst_name = "%s/" % name[3:-3].upper()
+            continue
+
+        if name == "[databases_start]":
+            try:
                 while True:
                     line = next(lines)
                     if line[0] == "[databases_end]":
@@ -26,13 +28,13 @@ def parse_postgres_dbs(info):
                         break
                     else:
                         dbs["%s%s" % (inst_name, line[0])] = []
-                continue
+            except StopIteration:
+                return dbs
 
-            else:
-                if "%s%s" % (inst_name, line[0]) in dbs:  # Templates are ignored
-                    dbs["%s%s" % (inst_name, line[0])].append(dict(zip(headers, line[1:])))
+            continue
 
-    except StopIteration:
-        pass
+        item = f"{inst_name}{name}"
+        if item in dbs:  # Templates are ignored
+            dbs[item].append(dict(zip(headers, content)))
 
     return dbs

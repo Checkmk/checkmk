@@ -99,7 +99,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
-    SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackend)
+    SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackendEnum)
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -2533,7 +2533,7 @@ class HostConfig:
             return None
         return entries[0]
 
-    def _get_snmp_backend(self) -> SNMPBackend:
+    def _get_snmp_backend(self) -> SNMPBackendEnum:
         has_netsnmp = "netsnmp" in sys.modules
         has_pysnmp = "pysnmp" in sys.modules
         with_inline_snmp = has_netsnmp and not cmk_version.is_raw_edition()
@@ -2545,18 +2545,18 @@ class HostConfig:
             # If more backends are configured for this host take the first one
             host_backend = host_backend_config[0]
             if with_pysnmp and host_backend == "pysnmp":
-                return SNMPBackend.pysnmp
+                return SNMPBackendEnum.PYSNMP
             if with_inline_snmp and host_backend == "inline":
-                return SNMPBackend.inline
+                return SNMPBackendEnum.INLINE
             if host_backend == "classic":
-                return SNMPBackend.classic
+                return SNMPBackendEnum.CLASSIC
             raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend)
 
         if with_pysnmp and snmp_backend_default == "pysnmp":
-            return SNMPBackend.pysnmp
+            return SNMPBackendEnum.PYSNMP
         if with_inline_snmp and snmp_backend_default == "inline":
-            return SNMPBackend.inline
-        return SNMPBackend.classic
+            return SNMPBackendEnum.INLINE
+        return SNMPBackendEnum.CLASSIC
 
     def _is_cluster(self) -> bool:
         """Checks whether or not the given host is a cluster host

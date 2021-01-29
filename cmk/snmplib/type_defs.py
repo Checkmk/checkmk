@@ -94,16 +94,16 @@ SNMPDeviceTypes = [
 ]
 
 
-class SNMPBackend(enum.Enum):
-    inline = "Inline"
-    pysnmp = "PySNMP"
-    classic = "Classic"
+class SNMPBackendEnum(enum.Enum):
+    INLINE = "Inline"
+    PYSNMP = "PySNMP"
+    CLASSIC = "Classic"
 
     def serialize(self) -> str:
         return self.name
 
     @classmethod
-    def deserialize(cls, name: str) -> "SNMPBackend":
+    def deserialize(cls, name: str) -> "SNMPBackendEnum":
         return cls[name]
 
 
@@ -140,7 +140,7 @@ class SNMPHostConfig(
             ("snmpv3_contexts", list),
             ("character_encoding", Optional[str]),
             ("is_usewalk_host", bool),
-            ("snmp_backend", SNMPBackend),
+            ("snmp_backend", SNMPBackendEnum),
         ])):
     @property
     def is_snmpv3_host(self) -> bool:
@@ -177,7 +177,7 @@ class SNMPHostConfig(
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPHostConfig":
-        serialized["snmp_backend"] = SNMPBackend.deserialize(serialized["snmp_backend"])
+        serialized["snmp_backend"] = SNMPBackendEnum.deserialize(serialized["snmp_backend"])
         return cls(**serialized)
 
 

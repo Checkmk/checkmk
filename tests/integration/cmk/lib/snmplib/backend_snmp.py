@@ -12,7 +12,7 @@ from cmk.snmplib.type_defs import (
     SNMPHostConfig,
     SNMPRawValue,
     SNMPRowInfo,
-    SNMPBackend,
+    SNMPBackendEnum,
 )
 from typing import List, Tuple, Optional, Type
 
@@ -222,7 +222,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -238,7 +238,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -261,7 +261,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
     ]
 
@@ -282,7 +282,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
             is_ipv6_primary=True,
@@ -298,7 +298,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
             is_ipv6_primary=True,
@@ -321,7 +321,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
     ]
 
@@ -345,7 +345,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -366,7 +366,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
     ]
 
@@ -387,7 +387,7 @@ def _create_configs_oidranges():
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -403,7 +403,7 @@ def _create_configs_oidranges():
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -419,7 +419,7 @@ def _create_configs_oidranges():
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -435,6 +435,6 @@ def _create_configs_oidranges():
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
-            snmp_backend=SNMPBackend.classic,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
     ]

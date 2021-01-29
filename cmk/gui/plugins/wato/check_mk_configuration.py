@@ -18,7 +18,7 @@ from cmk.gui.exceptions import MKUserError, MKConfigError
 from cmk.gui.i18n import _
 from cmk.gui.globals import request
 
-from cmk.snmplib.type_defs import SNMPBackend  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.valuespec import (
     Age,
@@ -2459,22 +2459,22 @@ def transform_snmp_backend_default_forth(backend):
     # During 2.0.0 Beta you could configure inline_legacy as backend thats why
     # we need to accept this as value aswell.
     if backend in [True, "inline", "inline_legacy"]:
-        return SNMPBackend.inline
+        return SNMPBackendEnum.INLINE
     if backend == "pysnmp":
-        return SNMPBackend.pysnmp
+        return SNMPBackendEnum.PYSNMP
     if backend in [False, "classic"]:
-        return SNMPBackend.classic
-    raise MKConfigError("SNMPBackend %r not implemented" % backend)
+        return SNMPBackendEnum.CLASSIC
+    raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
 def transform_snmp_backend_back(backend):
-    if backend == SNMPBackend.pysnmp:
+    if backend == SNMPBackendEnum.PYSNMP:
         return "pysnmp"
-    if backend == SNMPBackend.classic:
+    if backend == SNMPBackendEnum.CLASSIC:
         return "classic"
-    if backend == SNMPBackend.inline:
+    if backend == SNMPBackendEnum.INLINE:
         return "inline"
-    raise MKConfigError("SNMPBackend %r not implemented" % backend)
+    raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
 @config_variable_registry.register
@@ -2493,9 +2493,9 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
             DropdownChoice(
                 title=_("Choose SNMP Backend (Enterprise Edition only)"),
                 choices=[
-                    (SNMPBackend.classic, _("Use Classic SNMP Backend")),
-                    (SNMPBackend.inline, _("Use Inline SNMP Backend")),
-                    (SNMPBackend.pysnmp, _("Use Inline SNMP (PySNMP) Backend (experimental)")),
+                    (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
+                    (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
+                    (SNMPBackendEnum.PYSNMP, _("Use Inline SNMP (PySNMP) Backend (experimental)")),
                 ],
                 help=
                 _("By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
@@ -4468,12 +4468,12 @@ def transform_snmp_backend_hosts_forth(backend):
     # During 2.0.0 Beta you could configure inline_legacy backend thats why
     # we need to accept this as value aswell.
     if backend in [False, "inline", "inline_legacy"]:
-        return SNMPBackend.inline
+        return SNMPBackendEnum.INLINE
     if backend == "pysnmp":
-        return SNMPBackend.pysnmp
+        return SNMPBackendEnum.PYSNMP
     if backend in [True, "classic"]:
-        return SNMPBackend.classic
-    raise MKConfigError("SNMPBackend %r not implemented" % backend)
+        return SNMPBackendEnum.CLASSIC
+    raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
 def _valuespec_snmp_backend():
@@ -4481,9 +4481,9 @@ def _valuespec_snmp_backend():
         DropdownChoice(
             title=_("Choose SNMP Backend"),
             choices=[
-                (SNMPBackend.inline, _("Use Inline SNMP Backend")),
-                (SNMPBackend.pysnmp, _("Use Inline SNMP (PySNMP) Backend (experimental)")),
-                (SNMPBackend.classic, _("Use Classic Backend")),
+                (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
+                (SNMPBackendEnum.PYSNMP, _("Use Inline SNMP (PySNMP) Backend (experimental)")),
+                (SNMPBackendEnum.CLASSIC, _("Use Classic Backend")),
             ],
         ),
         forth=transform_snmp_backend_hosts_forth,

@@ -16,7 +16,7 @@ from cmk.snmplib.type_defs import (
     BackendOIDSpec,
     BackendSNMPTree,
     SNMPHostConfig,
-    SNMPBackend,
+    SNMPBackendEnum,
     SpecialColumn,
 )
 
@@ -36,7 +36,7 @@ SNMPConfig = SNMPHostConfig(
     snmpv3_contexts=[],
     character_encoding="ascii",
     is_usewalk_host=False,
-    snmp_backend=SNMPBackend.classic,
+    snmp_backend=SNMPBackendEnum.CLASSIC,
 )
 
 

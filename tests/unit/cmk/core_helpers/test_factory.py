@@ -7,7 +7,7 @@
 import pytest
 import logging
 
-from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig
+from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
 import cmk.core_helpers.factory as factory
 
@@ -39,7 +39,7 @@ def fixture_snmp_config():
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=False,
-        snmp_backend=SNMPBackend.classic,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
     )
 
 
@@ -48,14 +48,14 @@ def test_factory_snmp_backend_classic(snmp_config):
 
 
 def test_factory_snmp_backend_inline(snmp_config):
-    snmp_config = snmp_config._replace(snmp_backend=SNMPBackend.inline)
+    snmp_config = snmp_config._replace(snmp_backend=SNMPBackendEnum.INLINE)
     if inline:
         assert isinstance(factory.backend(snmp_config, logging.getLogger()),
                           inline.InlineSNMPBackend)
 
 
 def test_factory_snmp_backend_pysnmp(snmp_config):
-    snmp_config = snmp_config._replace(snmp_backend=SNMPBackend.pysnmp)
+    snmp_config = snmp_config._replace(snmp_backend=SNMPBackendEnum.PYSNMP)
     if pysnmp_backend:
         assert isinstance(factory.backend(snmp_config, logging.getLogger()),
                           pysnmp_backend.PySNMPBackend)

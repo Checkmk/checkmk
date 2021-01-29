@@ -15,7 +15,7 @@ from cmk.snmplib.type_defs import (
     BackendSNMPTree,
     BackendOIDSpec,
     SpecialColumn,
-    SNMPBackend,
+    SNMPBackendEnum,
 )
 
 INFO_TREE = BackendSNMPTree(
@@ -75,7 +75,7 @@ def test_get_simple_snmp_table_not_resolvable(backend):
     backend.config = backend.config.update(ipaddress="bla.local")
 
     # TODO: Unify different error messages
-    if backend.config.snmp_backend == SNMPBackend.inline:
+    if backend.config.snmp_backend == SNMPBackendEnum.INLINE:
         exc_match = "Failed to initiate SNMP"
     else:
         exc_match = "Unknown host"
@@ -96,7 +96,7 @@ def test_get_simple_snmp_table_wrong_credentials(backend):
     backend.config = backend.config.update(credentials="dingdong")
 
     # TODO: Unify different error messages
-    if backend.config.snmp_backend == SNMPBackend.inline:
+    if backend.config.snmp_backend == SNMPBackendEnum.INLINE:
         exc_match = "SNMP query timed out"
     else:
         exc_match = "Timeout: No Response from"

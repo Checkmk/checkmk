@@ -18,7 +18,7 @@ from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig, SNMPBackendEnum
+from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPBackendEnum
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -166,7 +166,7 @@ SNMPConfig = SNMPHostConfig(
 
 
 # Adapted from `test_snmplib_snmp_table`.
-class SNMPTestBackend(ABCSNMPBackend):
+class SNMPTestBackend(SNMPBackend):
     def get(self, oid, context_name=None):
         raise NotImplementedError("get")
 

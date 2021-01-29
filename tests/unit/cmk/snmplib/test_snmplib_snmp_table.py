@@ -12,7 +12,7 @@ from cmk.utils.log import logger
 from cmk.utils.type_defs import SectionName
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import (
-    ABCSNMPBackend,
+    SNMPBackend,
     BackendOIDSpec,
     BackendSNMPTree,
     SNMPHostConfig,
@@ -40,7 +40,7 @@ SNMPConfig = SNMPHostConfig(
 )
 
 
-class SNMPTestBackend(ABCSNMPBackend):
+class SNMPTestBackend(SNMPBackend):
     def get(self, oid, context_name=None):
         pass
 

@@ -7,7 +7,7 @@
 from typing import Optional
 import logging
 
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig, SNMPBackendEnum
+from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPBackendEnum
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 try:
@@ -37,7 +37,7 @@ def get_force_stored_walks() -> bool:
 def backend(snmp_config: SNMPHostConfig,
             logger: logging.Logger,
             *,
-            use_cache: Optional[bool] = None) -> ABCSNMPBackend:
+            use_cache: Optional[bool] = None) -> SNMPBackend:
     if use_cache is None:
         use_cache = get_force_stored_walks()
 

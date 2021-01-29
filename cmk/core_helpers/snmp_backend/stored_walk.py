@@ -16,14 +16,14 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import ABCSNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib.type_defs import SNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
 __all__ = ["StoredWalkSNMPBackend"]
 
 
-class StoredWalkSNMPBackend(ABCSNMPBackend):
+class StoredWalkSNMPBackend(SNMPBackend):
     def get(self,
             oid: OID,
             context_name: Optional[SNMPContextName] = None) -> Optional[SNMPRawValue]:

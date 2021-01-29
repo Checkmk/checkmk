@@ -7,7 +7,7 @@
 import logging
 import pytest  # type: ignore[import]
 from cmk.snmplib.type_defs import (
-    ABCSNMPBackend,
+    SNMPBackend,
     OID,
     SNMPHostConfig,
     SNMPRawValue,
@@ -159,7 +159,7 @@ def _create_results_snmpbackend_get(
     )
 
 
-def _create_result_for_backend_get(backend: Type[ABCSNMPBackend], oid: OID,
+def _create_result_for_backend_get(backend: Type[SNMPBackend], oid: OID,
                                    config: SNMPHostConfig) -> Optional[SNMPRawValue]:
     return backend(config, logger).get(oid,
                                        context_name="public" if config.is_ipv6_primary and
@@ -183,7 +183,7 @@ def _create_results_snmpbackend_walk(oid, configs, check_plugin_name=None, table
     )
 
 
-def _create_result_for_backend_walk(backend: Type[ABCSNMPBackend], oid: OID, config: SNMPHostConfig,
+def _create_result_for_backend_walk(backend: Type[SNMPBackend], oid: OID, config: SNMPHostConfig,
                                     check_plugin_name, table_base_oid) -> SNMPRowInfo:
     return backend(config, logger).walk(oid,
                                         check_plugin_name,

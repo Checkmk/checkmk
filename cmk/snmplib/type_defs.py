@@ -181,9 +181,9 @@ class SNMPHostConfig(
         return cls(**serialized)
 
 
-class ABCSNMPBackend(metaclass=abc.ABCMeta):
+class SNMPBackend(metaclass=abc.ABCMeta):
     def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger) -> None:
-        super(ABCSNMPBackend, self).__init__()
+        super(SNMPBackend, self).__init__()
         self._logger = logger
         self.config = snmp_config
 

@@ -26,7 +26,7 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import HostName, SectionName
 
 from .type_defs import (
-    ABCSNMPBackend,
+    SNMPBackend,
     OID,
     SNMPDecodedValues,
     SNMPHostConfig,
@@ -50,7 +50,7 @@ def get_snmp_table(
     section_name: Optional[SectionName],
     tree: BackendSNMPTree,
     walk_cache: WalkCache,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> SNMPTable:
     table_data = _get_snmp_table(
         section_name=section_name,
@@ -67,7 +67,7 @@ def _get_snmp_table(
     section_name: Optional[SectionName],
     tree: BackendSNMPTree,
     walk_cache: WalkCache,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> SNMPTable:
 
     index_column = -1
@@ -193,7 +193,7 @@ def _get_snmpwalk(
     *,
     walk_cache: WalkCache,
     save_walk_cache: bool,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> SNMPRowInfo:
     try:
         rowinfo = walk_cache[fetchoid][1]
@@ -212,7 +212,7 @@ def _perform_snmpwalk(
     base_oid: str,
     fetchoid: OID,
     *,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> SNMPRowInfo:
     added_oids: Set[OID] = set([])
     rowinfo: SNMPRowInfo = []

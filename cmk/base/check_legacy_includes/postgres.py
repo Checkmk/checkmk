@@ -4,13 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+from typing import Dict, List, Mapping, Sequence
+
+StringTable = List[List[str]]
+
+Section = Mapping[str, Sequence[Mapping[str, str]]]
 
 
-def parse_postgres_dbs(info):
-    dbs = {}
+def parse_dbs(string_table: StringTable) -> Section:
+    dbs: Dict[str, List[Mapping[str, str]]] = {}
     inst_name = ""
-    lines = iter(info)
+    lines = iter(string_table)
 
     for name, *content in lines:
 

@@ -16,6 +16,7 @@
 from typing import List, Dict, Type, Sequence, Optional, Any
 from marshmallow import fields
 
+from cmk.utils.macros import MacroMapping
 from cmk.utils.bi.bi_lib import (
     bi_aggregation_function_registry,
     BIParams,
@@ -24,7 +25,6 @@ from cmk.utils.bi.bi_lib import (
     ReqString,
     ABCBICompiledNode,
     get_schema_default_config,
-    MacroMappings,
     create_nested_schema,
     create_nested_schema_for_class,
     ABCWithSchema,
@@ -100,7 +100,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         if self.computation_options.disabled:
             return []
 
-        mapped_rule_arguments: MacroMappings = dict(
+        mapped_rule_arguments: MacroMapping = dict(
             zip(["$%s$" % x for x in self._params.arguments], extern_arguments))
 
         action_results = []
@@ -113,7 +113,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         return [self._generate_rule_branch(action_results, mapped_rule_arguments)]
 
     def _generate_rule_branch(self, nodes: List[ABCBICompiledNode],
-                              macros: MacroMappings) -> ABCBICompiledNode:
+                              macros: MacroMapping) -> ABCBICompiledNode:
         required_hosts = set()
         for node in nodes:
             required_hosts.update(node.required_hosts)

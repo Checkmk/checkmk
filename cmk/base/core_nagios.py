@@ -21,6 +21,7 @@ import cmk.utils.store as store
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
@@ -213,10 +214,19 @@ def _create_nagios_host_spec(cfg: NagiosConfig, config_cache: ConfigCache, hostn
 
     def host_check_via_service_status(service: ServiceName) -> CoreCommand:
         command = "check-mk-host-custom-%d" % (len(cfg.hostcheck_commands_to_define) + 1)
-        cfg.hostcheck_commands_to_define.append(
-            (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
-             (host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname),
-              host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
+        service_with_hostname = replace_macros_in_str(
+            service,
+            {'$HOSTNAME$': host_config.hostname},
+        )
+        cfg.hostcheck_commands_to_define.append((
+            command,
+            'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' % (
+                host_config.hostname,
+                service_with_hostname,
+                host_config.hostname,
+                service_with_hostname,
+            ),
+        ),)
         return command
 
     def host_check_via_custom_check(command_name: CoreCommandName,

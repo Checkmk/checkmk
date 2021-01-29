@@ -48,6 +48,7 @@ from six import ensure_str
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.macros import replace_macros_in_str
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -678,15 +679,7 @@ class LDAPUserConnector(UserConnector):
 
     # Returns the given distinguished name template with replaced vars
     def _replace_macros(self, tmpl):
-        dn = tmpl
-
-        for key, val in [('$OMD_SITE$', config.omd_site())]:
-            if val:
-                dn = dn.replace(key, val)
-            else:
-                dn = dn.replace(key, '')
-
-        return dn
+        return replace_macros_in_str(tmpl, {'$OMD_SITE$': config.omd_site() or ''})
 
     def _sanitize_user_id(self, user_id):
         if self._config.get('lower_user_ids', False):

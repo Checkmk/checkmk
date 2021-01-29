@@ -40,10 +40,13 @@ ReqString = partial(String, required=True)
 ReqNested = partial(Nested, required=True)
 ReqBoolean = partial(Boolean, required=True)
 
-MacroMappings = Dict[str, str]
 SearchResult = Dict[str, str]
 
 import cmk.utils.plugin_registry as plugin_registry
+from cmk.utils.macros import (
+    MacroMapping,
+    replace_macros_in_str,
+)
 from cmk.utils.bi.type_defs import (
     ActionConfig,
     ComputationConfigDict,
@@ -283,30 +286,30 @@ class BIParamsSchema(Schema):
 T = TypeVar("T", str, dict, list)
 
 
-def replace_macros(pattern: T, macros: MacroMappings) -> T:
+def replace_macros(pattern: T, macros: MacroMapping) -> T:
     if isinstance(pattern, str):
-        return replace_macros_in_string(pattern, macros)
+        return replace_macros_in_str(pattern, macros)
     if isinstance(pattern, list):
         return replace_macros_in_list(pattern, macros)
     if isinstance(pattern, dict):
         return replace_macros_in_dict(pattern, macros)
 
 
-def replace_macros_in_list(elements: List[str], macros: MacroMappings) -> List[str]:
+def replace_macros_in_list(elements: List[str], macros: MacroMapping) -> List[str]:
     new_list: List[str] = []
     for element in elements:
         new_list.append(replace_macros(element, macros))
     return new_list
 
 
-def replace_macros_in_dict(old_dict: Dict[str, str], macros: MacroMappings) -> Dict[str, str]:
+def replace_macros_in_dict(old_dict: Dict[str, str], macros: MacroMapping) -> Dict[str, str]:
     new_dict: Dict[str, str] = {}
     for key, value in old_dict.items():
         new_dict[replace_macros(key, macros)] = replace_macros(value, macros)
     return new_dict
 
 
-def replace_macros_in_string(pattern: str, macros: MacroMappings) -> str:
+def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
     for macro, replacement in macros.items():
         pattern = pattern.replace(macro, replacement)
     return pattern
@@ -462,7 +465,7 @@ class ABCBISearch(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         raise NotImplementedError()
 
 

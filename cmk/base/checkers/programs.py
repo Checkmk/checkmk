@@ -10,6 +10,7 @@ from typing import Dict, Optional
 from six import ensure_str
 
 import cmk.utils.paths
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 from cmk.fetchers import FetcherType, ProgramFetcher
@@ -156,7 +157,13 @@ class DSProgramSource(ProgramSource):
         ipaddress: HostAddress,
     ) -> str:
         # Make "legacy" translation. The users should use the $...$ macros in future
-        return cmd.replace("<IP>", ipaddress or "").replace("<HOST>", hostname)
+        return replace_macros_in_str(
+            cmd,
+            {
+                "<IP>": ipaddress or "",
+                "<HOST>": hostname,
+            },
+        )
 
     @staticmethod
     def _translate_host_macros(cmd: str, host_config: config.HostConfig) -> str:

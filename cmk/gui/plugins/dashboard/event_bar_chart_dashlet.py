@@ -40,44 +40,6 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
     def filter_infos(cls):
         return ["host", "service"]
 
-    def vs_parameters(self) -> Dictionary:
-        # Specifies the properties for this data generator
-        return Dictionary(
-            title=_("Properties"),
-            render="form",
-            optional_keys=[],
-            elements=[
-                ("render_mode",
-                 CascadingDropdown(choices=[
-                     ("bar_chart", _("Bar chart"),
-                      Dictionary(
-                          elements=self.bar_chart_vs_components(),
-                          optional_keys=[],
-                      )),
-                     ("simple_number", _("Number of notifications as text"),
-                      Dictionary(
-                          elements=[
-                              ("time_range", Timerange(
-                                  title=_("Time range"),
-                                  default_value='d0',
-                              )),
-                          ],
-                          optional_keys=[],
-                      )),
-                 ])),
-                ("log_target",
-                 DropdownChoice(
-                     title=_("Host or service %ss" % self.log_type),
-                     choices=[
-                         ("both", _("Show %ss for hosts and services" % self.log_type)),
-                         ("host", _("Show %ss for hosts" % self.log_type)),
-                         ("service", _("Show %ss for services" % self.log_type)),
-                     ],
-                     default_value="both",
-                 )),
-            ],
-        )
-
     def generate_response_data(self, properties, context, settings):
         """Toggle between the data of the different render modes"""
         # TODO: Would be better to have independent data generators for the various render modes,
@@ -232,15 +194,67 @@ def bar_chart_title(properties, context, settings) -> str:
     return " / ".join(txt for txt in title)
 
 
+def bar_chart_vs_time_components():
+    return [
+        ("time_range", Timerange(
+            title=_("Time range"),
+            default_value='d0',
+        )),
+        ("time_resolution",
+         DropdownChoice(
+             title=_("Time resolution"),
+             choices=[("h", _("Show per hour")), ("d", _("Show per day"))],
+             default_value="h",
+         )),
+    ]
+
+
 class ABCEventBarChartDashlet(ABCFigureDashlet):
+    log_type = ""
+    log_class = 0
+
+    @classmethod
+    def _vs_elements(cls):
+        return [
+            ("render_mode",
+             CascadingDropdown(choices=[
+                 ("bar_chart", _("Bar chart"),
+                  Dictionary(
+                      elements=bar_chart_vs_time_components(),
+                      optional_keys=[],
+                  )),
+                 ("simple_number", _("Number of notifications as text"),
+                  Dictionary(
+                      elements=[
+                          ("time_range", Timerange(
+                              title=_("Time range"),
+                              default_value='d0',
+                          )),
+                      ],
+                      optional_keys=[],
+                  )),
+             ])),
+            ("log_target",
+             DropdownChoice(
+                 title=_("Host or service %ss" % cls.log_type),
+                 choices=[
+                     ("both", _("Show %ss for hosts and services" % cls.log_type)),
+                     ("host", _("Show %ss for hosts" % cls.log_type)),
+                     ("service", _("Show %ss for services" % cls.log_type)),
+                 ],
+                 default_value="both",
+             )),
+        ]
+
     def show(self):
-        if self._dashlet_spec["render_mode"][0] == "bar_chart":
-            self.js_dashlet(figure_type_name="timeseries", fetch_url="ajax_figure_dashlet_data.py")
-        elif self._dashlet_spec["render_mode"][0] == "simple_number":
-            self.js_dashlet(figure_type_name="single_metric",
-                            fetch_url="ajax_figure_dashlet_data.py")
+        render_type = self._dashlet_spec["render_mode"][0]
+        if render_type == "bar_chart":
+            figure_type_name = "timeseries"
+        elif render_type == "simple_number":
+            figure_type_name = "single_metric"
         else:
             raise NotImplementedError()
+        self.js_dashlet(figure_type_name=figure_type_name, fetch_url="ajax_figure_dashlet_data.py")
 
 
 #   .--Notifications-------------------------------------------------------.
@@ -269,12 +283,9 @@ class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
     def description(cls):
         return _("Displays a bar chart for host and service notifications.")
 
-    @classmethod  # temporary
-    def vs_parameters(cls) -> Dictionary:
-        return ABCEventBarChartDataGenerator(cls.log_type, cls.log_class).vs_parameters()
-
     @staticmethod
     def generate_response_data(properties, context, settings):
+
         response = ABCEventBarChartDataGenerator("notification", 3).generate_response_data(
             properties, context, settings)
         response['title'] = bar_chart_title(properties, context, settings)
@@ -306,10 +317,6 @@ class AlertsBarChartDashlet(ABCEventBarChartDashlet):
     @classmethod
     def description(cls):
         return _("Displays a bar chart for host and service alerts.")
-
-    @classmethod  # temporary
-    def vs_parameters(cls) -> Dictionary:
-        return ABCEventBarChartDataGenerator(cls.log_type, cls.log_class).vs_parameters()
 
     @staticmethod
     def generate_response_data(properties, context, settings):

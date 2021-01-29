@@ -432,6 +432,11 @@ class Nested(_fields.Nested, UniqueFields):
         return value
 
 
+# NOTE
+# All these non-capturing match groups are there to properly distinguish the alternatives.
+FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9]+)+)|[0-9a-fA-F]{32})"
+
+
 class FolderField(String):
     """This field represents a WATO Folder.
 
@@ -443,13 +448,47 @@ class FolderField(String):
 
     def __init__(
         self,
-        pattern: str = "/|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}",
         **kwargs,
     ):
-        super().__init__(pattern=pattern, **kwargs)
+        super().__init__(pattern=FOLDER_PATTERN, **kwargs)
+
+    @classmethod
+    def _normalize_folder(cls, folder_id):
+        r"""
+
+        Args:
+            folder_id:
+        Examples:
+
+            >>> FolderField._normalize_folder("\\")
+            '/'
+
+            >>> FolderField._normalize_folder("/foo/bar")
+            '/foo/bar'
+
+            >>> FolderField._normalize_folder("\\foo\\bar")
+            '/foo/bar'
+
+            >>> FolderField._normalize_folder("~foo~bar")
+            '/foo/bar'
+
+        Returns:
+
+        """
+        prev = folder_id
+        separators = ['\\', '~']
+        while True:
+            for sep in separators:
+                folder_id = folder_id.replace(sep, "/")
+            if prev == folder_id:
+                break
+            prev = folder_id
+        return folder_id
 
     @classmethod
     def load_folder(cls, folder_id: str) -> watolib.CREFolder:
+        folder_id = cls._normalize_folder(folder_id)
+
         def _ishexdigit(hex_string: str) -> bool:
             try:
                 int(hex_string, 16)
@@ -648,4 +687,6 @@ __all__ = [
     'Time',
     'Field',
     'ExprSchema',
+    'FolderField',
+    'FOLDER_PATTERN',
 ]

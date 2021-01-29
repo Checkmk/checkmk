@@ -1,0 +1,16 @@
+Title: Fix rule search for hosts in folders
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1611926437
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+If you used the "Rules" link in the dropdown "Host" for hosts that exist in a
+folder, the rule search result just showed rulesets configured from this folder
+upwards.
+
+The search results are now created up from the main directory.

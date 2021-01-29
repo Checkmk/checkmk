@@ -938,15 +938,6 @@ def service_table_query(properties, context, column_generator):
     return ['site'] + columns, rows
 
 
-# TODO: delete after migration
-class site_query:
-    def __init__(self, f):
-        self.f = f
-
-    def __call__(self, cls, properties, context):
-        return service_table_query(properties, context, lambda *x: self.f(cls, *x))
-
-
 def create_data_for_single_metric(properties, context, column_generator):
     columns, data_rows = service_table_query(properties, context, column_generator)
 

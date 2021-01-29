@@ -25,42 +25,43 @@ from cmk.base.check_legacy_includes import postgres
 # ...
 
 
-def inventory_postgres_query_duration(parsed):
-    for entry in parsed:
-        yield entry, {}
+def discover_postgres_query_duration(section: postgres.Section):
+    for item in section:
+        yield item, {}
 
 
-def check_postgres_query_duration(item, _no_params, parsed):
-    if item not in parsed:
+def check_postgres_query_duration(item: str, _no_params, section: postgres.Section):
+    data = section.get(item)
+    if data is None:
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
         raise MKCounterWrapped("Login into database failed")
 
-    longest_time = -1
-    longest_info = None
-    for element in parsed[item]:
-        if int(element["seconds"]) > longest_time:
-            longest_info = element
-            longest_time = int(element["seconds"])
+    if not data:
+        yield 0, "No queries running"
+        return
 
-    if longest_info:
-        yield 0, "Longest query is %s seconds" % longest_info["seconds"]
-        if longest_info["usename"]:
-            yield 0, "Username: %s" % longest_info["usename"]
-        if longest_info["client_addr"]:
-            yield 0, "Client: %s" % longest_info["client_addr"]
-        if longest_info["state"].lower() != "active":
-            yield 0, "Query state: %s" % longest_info["state"]
-        yield 0, "PID: %s, Query: %s" % (longest_info["pid"], longest_info["current_query"])
+    query = max(data, key=lambda q: int(q["seconds"]))
 
-    else:
-        yield 0, "No query is running"
+    yield 0, f"Longest query: {query['seconds']} seconds"
+
+    if query["usename"]:
+        yield 0, f"Username: {query['usename']}"
+
+    if query["client_addr"]:
+        yield 0, f"Client: {query['client_addr']}"
+
+    if query["state"].lower() != "active":
+        yield 0, f"Query state: {query['state']}"
+
+    yield 0, f"PID: {query['pid']}"
+    yield 0, f"Query: {query['current_query']}"
 
 
 check_info['postgres_query_duration'] = {
     "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_query_duration,
-    "inventory_function": inventory_postgres_query_duration,
+    "inventory_function": discover_postgres_query_duration,
     "service_description": "PostgreSQL Query Duration %s",
 }

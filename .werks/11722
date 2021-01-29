@@ -1,0 +1,22 @@
+Title: Bug occuring on xinetd reload on agent update
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1611917530
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+On (automatic) agent update on Linux, the update process includes the reload of
+the xinetd process, if running. This is done by the DEB maintainer scripts or
+RPM scriptlets, respectively.
+
+There are some rare situations (e.g., LCX containers with a running xinetd) that lead
+to a falsely detected xinetd process on the host system. In that case, the update
+process would crash on trying to reload xinetd.
+
+This behavior is mitigated with this werk, by only detecting running xinetd processes
+that run under root (uid 0).
+

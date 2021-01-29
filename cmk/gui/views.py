@@ -123,6 +123,7 @@ if cmk_version.is_managed_edition():
 
 from cmk.gui.type_defs import (
     ColumnName,
+    FilterName,
     FilterHeaders,
     HTTPVariables,
     InfoName,
@@ -473,7 +474,7 @@ class View:
         """
 
         # View without special hierarchy
-        if "host" not in self.spec['single_infos']:
+        if "host" not in self.spec['single_infos'] or "host" in self.missing_single_infos:
             request_vars: HTTPVariables = [("view_name", self.name)]
             request_vars += list(
                 visuals.get_singlecontext_html_vars(self.context,
@@ -547,6 +548,31 @@ class View:
 
         return breadcrumb
 
+    @property
+    def missing_single_infos(self) -> Set[FilterName]:
+        """Return the missing single infos a view requires"""
+        missing_single_infos = visuals.get_missing_single_infos(self.spec["single_infos"],
+                                                                self.context)
+
+        # Special hack for the situation where hostgroup views link to host views: The host view uses
+        # the datasource "hosts" which does not have the "hostgroup" info, but is configured to have a
+        # single_info "hostgroup". To make this possible there exists a feature in
+        # (ABCDataSource.link_filters, views._patch_view_context) which is a very specific hack. Have a
+        # look at the description there.  We workaround the issue here by allowing this specific
+        # situation but validating all others.
+        #
+        # The more correct approach would be to find a way which allows filters of different datasources
+        # to have equal names. But this would need a bigger refactoring of the filter mechanic. One
+        # day...
+        if (self.spec["datasource"] in ["hosts", "services"] and
+                missing_single_infos == {'hostgroup'} and "opthostgroup" in self.context):
+            return set()
+        if (self.spec["datasource"] == "services" and missing_single_infos == {"servicegroup"} and
+                "optservicegroup" in self.context):
+            return set()
+
+        return missing_single_infos
+
 
 class ABCViewRenderer(metaclass=abc.ABCMeta):
     def __init__(self, view: View) -> None:
@@ -615,7 +641,7 @@ class GUIViewRenderer(ABCViewRenderer):
         layout = self.view.layout
 
         # Display the filter form on page rendering in some cases
-        if self._should_show_filter_form(view_spec):
+        if self._should_show_filter_form():
             html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
 
         # Actions
@@ -662,7 +688,15 @@ class GUIViewRenderer(ABCViewRenderer):
         if display_options.enabled(display_options.R):
             html.open_div(id_="data_container")
 
-        if not has_done_actions:
+        missing_single_infos = self.view.missing_single_infos
+        if missing_single_infos:
+            html.show_warning(
+                _("Unable to render this view, "
+                  "because we miss some required context information (%s). Please update the "
+                  "form on the right to make this view render.") %
+                ", ".join(sorted(missing_single_infos)))
+
+        if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")
             if display_options.enabled(display_options.W):
                 if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
@@ -716,7 +750,7 @@ class GUIViewRenderer(ABCViewRenderer):
         if display_options.enabled(display_options.H):
             html.body_end()
 
-    def _should_show_filter_form(self, view_spec: ViewSpec) -> bool:
+    def _should_show_filter_form(self) -> bool:
         """Whether or not the filter form should be displayed on page load
 
         a) In case the user toggled the popup in the frontend, always enforce that property
@@ -726,15 +760,21 @@ class GUIViewRenderer(ABCViewRenderer):
 
         c) Show after submitting the filter form. The user probably wants to update the filters
         after first filtering.
+
+        d) In case there are single info filters missing
         """
+
         show_form = html.request.get_integer_input("_show_filter_form")
         if show_form is not None:
             return show_form == 1
 
-        if view_spec.get("mustsearch"):
+        if self.view.spec.get("mustsearch"):
             return True
 
         if html.request.get_ascii_input("filled_in") == "filter":
+            return True
+
+        if self.view.missing_single_infos:
             return True
 
         return False
@@ -1907,6 +1947,16 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
 def get_row_count(view: View) -> int:
     """Returns the number of rows shown by a view"""
     all_active_filters = _get_view_filters(view)
+
+    # Check that all needed information for configured single contexts are available
+    missing_single_infos = view.missing_single_infos
+    if missing_single_infos:
+        raise MKUserError(
+            None,
+            _("Missing context information: %s. You can either add this as a fixed "
+              "setting, or call the with the missing HTTP variables.") %
+            (", ".join(missing_single_infos)))
+
     # This must not modify the request variables of the view currently being processed. It would be
     # ideal to not deal with the global request variables data structure at all, but that would
     # first need a rewrite of the visual filter processing.
@@ -1924,9 +1974,6 @@ def _get_view_filters(view: View) -> List[Filter]:
     # a) single context vars of the view are enforced
     # b) multi context vars can be overwritten by existing HTML vars
     visuals.add_context_to_uri_vars(view.spec["context"], view.spec["single_infos"])
-
-    # Check that all needed information for configured single contexts are available
-    visuals.verify_single_infos(view.spec, view.context)
 
     return _get_all_active_filters(view)
 
@@ -2411,7 +2458,7 @@ def _get_ntop_page_menu_dropdown(view, host_address):
 
 
 def _get_ntop_page_menu_topics(view, host_address):
-    if "host" not in view.spec['single_infos']:
+    if "host" not in view.spec['single_infos'] or "host" in view.missing_single_infos:
         return []
 
     host_name = html.request.get_ascii_input_mandatory("host")
@@ -2759,7 +2806,7 @@ def _dropdown_matches_datasource(info_name: InfoName, datasource: ABCDataSource)
 
 
 def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:
-    if "host" not in view.spec['single_infos']:
+    if "host" not in view.spec['single_infos'] or "host" in view.missing_single_infos:
         return []
 
     if not config.wato_enabled:

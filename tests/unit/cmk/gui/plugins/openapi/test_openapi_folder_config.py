@@ -5,7 +5,56 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import re
 import uuid
+
+import pytest
+
+from cmk.gui.plugins.openapi.fields import FolderField, FOLDER_PATTERN
+from cmk.gui.plugins.openapi.utils import BaseSchema
+
+
+@pytest.mark.parametrize(
+    "given, expected",
+    [
+        ('%%%%', False),
+        ('root', False),
+        ('/', True),
+        ('/foo', True),
+        ('/foo/bar', True),
+        ('//', False),
+        ('///', False),
+        ('\\', True),
+        ('\\foo', True),
+        ('\\foo\\bar', True),
+        ('\\\\', False),
+        ('\\\\\\', False),
+        ('~', True),
+        ('~foo', True),
+        ('~foo~bar', True),
+        ('~~', False),
+        ('~~~', False),
+        # This really should be false, but it is tricky to implement. Skipped for now.
+        # ('/foo~bar\\baz', False),
+        ('0123456789ABCDEF0123456789ABCDEF', True),
+        ('0123456789ABCDEF0123456789ABCDEFG', False),
+        ('0123456789abcdef0123456789abcdef', True),
+        ('0123456789abcdef0123456789abcdefg', False),
+    ])
+def test_folder_regexp(given, expected):
+    regexp = re.compile(f"(?:^{FOLDER_PATTERN})$")
+    match = regexp.findall(given)
+    assert bool(match) == expected, match
+
+
+def test_folder_schema(register_builtin_html):
+    class FolderSchema(BaseSchema):
+        folder = FolderField(required=True)
+
+    schema = FolderSchema()
+    assert schema.load({'folder': '/'})['folder']
+    assert schema.load({'folder': '\\'})['folder']
+    assert schema.load({'folder': '~'})['folder']
 
 
 def test_openapi_folder_validation(wsgi_app, with_automation_user):
@@ -52,7 +101,7 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     resp = new_folder = wsgi_app.call_method(
         'post',
         "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        params='{"name": "new_folder", "title": "foo", "parent": "~"}',
         status=200,
         content_type='application/json',
     )
@@ -60,7 +109,7 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     wsgi_app.call_method(
         'post',
         "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
-        params='{"name": "sub_folder", "title": "foo", "parent": "/new_folder"}',
+        params=r'{"name": "sub_folder", "title": "foo", "parent": "~new_folder"}',
         status=200,
         content_type='application/json',
     )
@@ -105,7 +154,7 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                          base=base,
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
-                         params=json.dumps({"destination": '/'}),
+                         params=json.dumps({"destination": '~'}),
                          content_type='application/json')
 
     # Check that unknown folders also give a 400
@@ -123,7 +172,7 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                          base=base,
                          status=400,
                          headers={'If-Match': other_folder.headers['ETag']},
-                         params=json.dumps({"destination": '/other_folder'}),
+                         params=json.dumps({"destination": '~other_folder'}),
                          content_type='application/json')
 
     # Check that moving into it's own subfolder is not possible.
@@ -140,7 +189,7 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                          base=base,
                          status=200,
                          headers={'If-Match': resp.headers['ETag']},
-                         params=json.dumps({"destination": '/other_folder'}),
+                         params=json.dumps({"destination": '\\other_folder'}),
                          content_type='application/json')
 
     # Delete all folders.

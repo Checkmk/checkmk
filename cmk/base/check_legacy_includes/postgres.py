@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-# pylint: disable=no-else-break
 
 
 def parse_postgres_dbs(info):
@@ -20,16 +19,11 @@ def parse_postgres_dbs(info):
             continue
 
         if name == "[databases_start]":
-            try:
-                while True:
-                    line = next(lines)
-                    if line[0] == "[databases_end]":
-                        headers = next(lines)[1:]
-                        break
-                    else:
-                        dbs["%s%s" % (inst_name, line[0])] = []
-            except StopIteration:
-                return dbs
+            for name_inner, *_rest in lines:
+                if name_inner == "[databases_end]":
+                    headers = next(lines)[1:]
+                    break
+                dbs[f"{inst_name}{name_inner}"] = []
 
             continue
 

@@ -33,6 +33,7 @@ from six import ensure_str
 import livestatus
 import cmk.utils.debug
 import cmk.utils.log as log
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
     find_wato_folder,
     notification_message,
@@ -2084,13 +2085,11 @@ def substitute_context(template: str, context: PluginContext) -> str:
         >>> substitute_context("abc $A$ $B$ $C$", {"A": "A", "B": "B"})
         'abc A B '
     """
-    # First replace all known variables
-    for varname, value in context.items():
-        template = template.replace('$' + varname + '$', value)
-
-    # Remove the rest of the variables and make them empty
-    template = re.sub(r"\$[A-Z]+\$", "", template)
-    return template
+    return re.sub(
+        r"\$[A-Z]+\$",
+        "",
+        replace_macros_in_str(template, {f"${k}$": v for k, v in context.items()}),
+    )
 
 
 #.

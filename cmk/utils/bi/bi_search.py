@@ -9,10 +9,10 @@ from typing import List, Dict, Type, Any, Union, Set
 from marshmallow import validate, fields
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
+from cmk.utils.macros import MacroMapping
 from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.type_defs import HostName
 from cmk.utils.bi.bi_lib import (
-    MacroMappings,
     replace_macros,
     bi_search_registry,
     ABCBISearch,
@@ -89,7 +89,7 @@ class BIEmptySearch(ABCBISearch):
     def schema(cls) -> Type["BIEmptySearchSchema"]:
         return BIEmptySearchSchema
 
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         return [{}]
 
 
@@ -122,7 +122,7 @@ class BIHostSearch(ABCBISearch):
         self.conditions = search_config["conditions"]
         self.refer_to = search_config["refer_to"]
 
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: List[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
 
@@ -246,7 +246,7 @@ class BIServiceSearch(ABCBISearch):
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
 
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: List[BIServiceSearchMatch] = bi_searcher.search_services(new_conditions)
         search_results = []
@@ -291,7 +291,7 @@ class BIFixedArgumentsSearch(ABCBISearch):
         super().__init__(search_config)
         self.arguments = search_config["arguments"]
 
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         results: List[Dict] = []
         new_vars = replace_macros(self.arguments, macros)
         for argument in new_vars:

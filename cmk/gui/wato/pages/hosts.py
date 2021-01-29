@@ -28,6 +28,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_form_submit_link,
     make_simple_form_page_menu,
+    makeuri_contextless,
 )
 
 from cmk.gui.plugins.wato.utils import (
@@ -401,13 +402,17 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             title=_("Rules"),
             icon_name="rulesets",
             item=make_simple_link(
-                watolib.folder_preserving_link([
-                    ("mode", "rule_search"),
-                    ("filled_in", "search"),
-                    ("search_p_ruleset_deprecated", "OFF"),
-                    ("search_p_rule_host_list_USE", "ON"),
-                    ("search_p_rule_host_list", host.name()),
-                ],)),
+                makeuri_contextless(
+                    html.request,
+                    [
+                        ("mode", "rule_search"),
+                        ("filled_in", "search"),
+                        ("search_p_ruleset_deprecated", "OFF"),
+                        ("search_p_rule_host_list_USE", "ON"),
+                        ("search_p_rule_host_list", host.name()),
+                    ],
+                    filename="wato.py",
+                )),
         )
 
     yield make_host_status_link(host_name=host.name(), view_name="hoststatus")

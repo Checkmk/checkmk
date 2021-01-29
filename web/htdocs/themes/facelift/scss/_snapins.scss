@@ -104,10 +104,21 @@ div.snapin table.master_control {
   td {
     div.toggle_switch {
       float: right;
-      background-color: $bg-color;
-
       a {
         font-weight: $font-weight-bold;
+        text-transform: lowercase;
+      }
+
+      &.on a {
+        background-color: $toggle-switch-on-bg-color;
+        border: $toggle-switch-on-border;
+        color: $toggle-switch-font-color-on;
+      }
+
+      &.off a {
+        background-color: $toggle-switch-off-bg-color-sidebar;
+        border: $toggle-switch-off-border;
+        color: $toggle-switch-font-color-off;
       }
     }
 

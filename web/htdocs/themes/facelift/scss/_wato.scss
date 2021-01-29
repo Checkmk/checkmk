@@ -762,10 +762,10 @@ div.varname {
   td.simple a.modified,
   td.simple div.toggle_switch_container.modified,
   td.content a.modified > table {
-    padding: 1px 4px 2px;
+    padding: 2px 4px;
     margin-left: -4px;
     border: 1px solid $globalvars-modified-border-color;
-    border-radius: 5px;
+    border-radius: $spacing;
     box-shadow: $globalvars-modified-box-shadow;
   }
 
@@ -776,7 +776,8 @@ div.varname {
   }
 
   td.simple div.toggle_switch_container {
-    width: 56px;
+    width: $toggle-switch-width;
+    height: $toggle-switch-height;
   }
 
   /* TODO: Reproduce this html class "vs_dict_text" */

@@ -213,11 +213,7 @@ input.button.hot {
 
 /* on/off toggle button */
 .toggle_switch {
-  width: 56px;
-  height: 22px;
-  padding: 2px;
   background: $bg-color;
-  border: 1px solid $color-table-border;
   border-radius: 11px;
   box-shadow: none;
   box-sizing: border-box;
@@ -231,6 +227,7 @@ input.button.hot {
   .wato div.globalvars & a,
   .wato div.globalvars & body.main .popup_menu span,
   body.main .popup_menu .wato div.globalvars & {
+    width: $toggle-switch-width;
     height: $toggle-switch-height;
     font-size: 8px;
     font-weight: $font-weight-bold;
@@ -246,7 +243,7 @@ input.button.hot {
   .wato div.globalvars & a {
     display: block;
     width: 30px;
-    color: $toggle-switch-font-color;
+    color: $toggle-switch-font-color-on;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
@@ -255,17 +252,20 @@ input.button.hot {
   &.on {
     a,
     .wato div.globalvars & a {
-      float: right;
+      float: left;
       background-color: $toggle-switch-on-bg-color;
       border: $toggle-switch-on-border;
+      color: $toggle-switch-font-color-on;
     }
   }
 
   &.off {
     a,
     .wato div.globalvars & a {
+      float: left;
       background-color: $toggle-switch-off-bg-color;
       border: $toggle-switch-off-border;
+      color: $toggle-switch-font-color-off;
     }
   }
 

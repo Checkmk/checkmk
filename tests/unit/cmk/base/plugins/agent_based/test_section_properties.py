@@ -63,11 +63,11 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
         '.1.3.6.1.2.1.2.2.1.*': {'if'},
         '.1.3.6.1.2.1.25.1.1.0': {'hr_cpu', 'hr_fs', 'hr_ps'},
         '.1.3.6.1.2.1.31.1.1.1.6.*': {'if64', 'if64adm'},
-        '.1.3.6.1.2.1.43.10.2.1.4.1.1': {'printer_pages'},
-        '.1.3.6.1.2.1.43.11.1.1.6.1.1': {
+        '.1.3.6.1.2.1.43.*': {
             'printer_alerts',
             'printer_input',
             'printer_output',
+            'printer_pages',
             'printer_supply',
         },
         '.1.3.6.1.2.1.47.1.1.1.1.*': {'snmp_extended_info'},

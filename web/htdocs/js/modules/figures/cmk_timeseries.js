@@ -1144,7 +1144,7 @@ class SingleValuePlot extends SubPlot {
         );
         const levels = cmk_figures.make_levels(domain, plot.metrics);
 
-        const formatter = cmk_figures.get_function(plot.js_render);
+        const formatter = cmk_figures.plot_render_function(plot);
         const last_value = this.transformed_data.find(element => element.last_value);
         const plot_size = this._renderer.plot_size;
         const color = levels.length
@@ -1153,7 +1153,7 @@ class SingleValuePlot extends SubPlot {
         const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
 
         const value = cmk_figures.split_unit({
-            formatted_value: formatter ? formatter(last_value.value) : "" + last_value.value,
+            formatted_value: formatter(last_value.value),
             url: last_value.url,
         });
         cmk_figures.metric_value_component(

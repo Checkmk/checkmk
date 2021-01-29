@@ -105,7 +105,6 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
                 "id": "number",
                 "plot_type": "single_value",
                 "use_tags": ["number"],
-                "js_render": None,
                 "metrics": {
                     "warn": None,
                     "crit": None,

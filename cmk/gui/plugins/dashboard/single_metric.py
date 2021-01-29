@@ -203,9 +203,6 @@ class SingleMetricDashlet(ABCFigureDashlet):
     def single_infos(cls):
         return ["service", "host"]
 
-    def show(self):
-        self.js_dashlet(figure_type_name=self.type_name(), fetch_url="ajax_figure_dashlet_data.py")
-
 
 #   .--Gauge---------------------------------------------------------------.
 #   |                     ____                                             |

@@ -254,7 +254,7 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
             figure_type_name = "single_metric"
         else:
             raise NotImplementedError()
-        self.js_dashlet(figure_type_name=figure_type_name, fetch_url="ajax_figure_dashlet_data.py")
+        self.js_dashlet(figure_type_name=figure_type_name)
 
 
 #   .--Notifications-------------------------------------------------------.

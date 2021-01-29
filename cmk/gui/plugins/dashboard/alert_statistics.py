@@ -16,7 +16,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary
-from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
+from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.dashboard.site_overview import (
     ABCElement,)
 
@@ -46,7 +46,7 @@ class AlertStats(NamedTuple):
     num_problems: int
 
 
-class AlertStatisticsDashletDataGenerator(ABCDataGenerator):
+class AlertStatisticsDashletDataGenerator:
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         site_id = context.get("site", {}).get("site")
@@ -220,6 +220,3 @@ class AlertStatisticsDashlet(ABCFigureDashlet):
     def generate_response_data(properties, context, settings):
         return AlertStatisticsDashletDataGenerator.generate_response_data(
             properties, context, settings)
-
-    def show(self):
-        self.js_dashlet(figure_type_name=self.type_name(), fetch_url="ajax_figure_dashlet_data.py")

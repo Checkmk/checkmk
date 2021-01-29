@@ -15,7 +15,7 @@ import cmk.gui.sites as sites
 from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
+from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 
 
 @dataclass
@@ -93,7 +93,7 @@ class HostStats(NamedTuple):
     num_services_warn: int
 
 
-class SiteOverviewDashletDataGenerator(ABCDataGenerator):
+class SiteOverviewDashletDataGenerator:
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         if config.is_single_local_site():
@@ -447,6 +447,3 @@ class SiteOverviewDashlet(ABCFigureDashlet):
     def generate_response_data(properties, context, settings):
         return SiteOverviewDashletDataGenerator.generate_response_data(
             properties, context, settings)
-
-    def show(self):
-        self.js_dashlet(figure_type_name=self.type_name(), fetch_url="ajax_figure_dashlet_data.py")

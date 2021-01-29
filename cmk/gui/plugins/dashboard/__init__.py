@@ -18,7 +18,7 @@ from cmk.utils.plugin_loader import load_plugins
 
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     builtin_dashboards, dashlet_types, dashlet_registry, IFrameDashlet, Dashlet, GROW, MAX,
-    ABCDataGenerator, ABCFigureDashlet,
+    ABCFigureDashlet,
 )
 
 #.

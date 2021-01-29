@@ -12,19 +12,18 @@ from cmk.utils.render import date_and_time
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
-    Dictionary,
+    DictionaryElements,
     GraphColor,
     Timerange,
 )
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet, ABCDataGenerator
-from cmk.gui.plugins.dashboard.utils import site_query
+from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
+from cmk.gui.plugins.dashboard.utils import service_table_query
 from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns, merge_multicol
 from cmk.gui.plugins.metrics.utils import get_metric_info
 
 
-class AverageScatterplotDataGenerator(ABCDataGenerator):
+class AverageScatterplotDataGenerator:
     """Data generator for a scatterplot with average lines"""
     @classmethod
     def figure_title(cls, properties, context, settings) -> str:
@@ -48,35 +47,8 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
 
         return " / ".join(txt for txt in title)
 
-    def vs_parameters(self) -> Dictionary:
-        return Dictionary(title=_("Properties"),
-                          render="form",
-                          optional_keys=[],
-                          elements=[
-                              ("metric", MetricName()),
-                              ("time_range", Timerange(
-                                  title=_("Time range"),
-                                  default_value='d0',
-                              )),
-                              ("metric_color",
-                               GraphColor(title=_("Color for the main metric scattered dots"),
-                                          default_value="default")),
-                              ("avg_color",
-                               GraphColor(title=_("Color for the average line"),
-                                          default_value="default")),
-                              ("median_color",
-                               GraphColor(title=_("Color for the median line"),
-                                          default_value="default")),
-                          ])
-
-    @classmethod
-    def int_time_range_from_rangespec(cls, rangespec):
-        time_range, _range_title = Timerange().compute_range(rangespec)
-        return [int(t) for t in time_range]
-
-    @classmethod
-    @site_query
-    def _get_data(cls, properties, context):
+    @staticmethod
+    def required_columns(properties, context):
         cmc_cols = [
             'host_name', 'host_state', 'service_description', 'service_state',
             'service_check_command', 'service_metrics', 'service_perf_data'
@@ -150,7 +122,7 @@ class AverageScatterplotDataGenerator(ABCDataGenerator):
 
     @classmethod
     def _create_scatter_elements(cls, properties, context):
-        columns, data_rows = cls._get_data(properties, context)  # type: ignore[call-arg]
+        columns, data_rows = service_table_query(properties, context, cls.required_columns)
         elements = []
 
         metric_name = get_metric_info(properties["metric"], 0)[0]["title"]
@@ -236,16 +208,26 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
     def description(cls):
         return _("Displays a scatterplot and average lines for for a selected type of service.")
 
-    @classmethod
-    def data_generator(cls):
-        return AverageScatterplotDataGenerator()
+    @staticmethod
+    def generate_response_data(properties, context, settings):
+        return AverageScatterplotDataGenerator.generate_response_data(properties, context, settings)
 
-    @classmethod  # temporary
-    def vs_parameters(cls) -> Dictionary:
-        return AverageScatterplotDataGenerator().vs_parameters()
+    @staticmethod
+    def _vs_elements() -> DictionaryElements:
+        return [
+            ("metric", MetricName()),
+            ("time_range", Timerange(
+                title=_("Time range"),
+                default_value='d0',
+            )),
+            ("metric_color",
+             GraphColor(title=_("Color for the main metric scattered dots"),
+                        default_value="default")),
+            ("avg_color", GraphColor(title=_("Color for the average line"),
+                                     default_value="default")),
+            ("median_color",
+             GraphColor(title=_("Color for the median line"), default_value="default")),
+        ]
 
-
-@page_registry.register_page("ajax_average_scatterplot_dashlet_data")
-class AverageScatterplotDataPage(AjaxPage):
-    def page(self):
-        return AverageScatterplotDataGenerator().generate_response_from_request()
+    def show(self):
+        self.js_dashlet(figure_type_name=self.type_name(), fetch_url="ajax_figure_dashlet_data.py")

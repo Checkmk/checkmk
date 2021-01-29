@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
+from cmk.gui import config
 from cmk.gui.plugins.views.utils import (
     SorterSpec,
+    replace_action_url_macros,
     _parse_url_sorters,
     _encode_sorter_url,
 )
@@ -24,3 +26,43 @@ def test_url_sorters_parse_encode(url, sorters):
     sorters = [SorterSpec(*s) for s in sorters]
     assert _parse_url_sorters(url) == sorters
     assert _encode_sorter_url(sorters) == url
+
+
+@pytest.mark.parametrize(
+    "url, what, row, result",
+    [
+        (
+            "$HOSTNAME$_$HOSTADDRESS$_$USER_ID$_$HOSTNAME_URL_ENCODED$",
+            "host",
+            {
+                "host_name": "host",
+                "host_address": "1.2.3",
+            },
+            "host_1.2.3_user_host",
+        ),
+        (
+            "$SERVICEDESC$",
+            "service",
+            {
+                "host_name": "host",
+                "host_address": "1.2.3",
+                "service_description": "service",
+            },
+            "service",
+        ),
+    ],
+)
+def test_replace_action_url_macros(
+    monkeypatch,
+    module_wide_request_context,
+    url,
+    what,
+    row,
+    result,
+):
+    monkeypatch.setattr(
+        config.user,
+        "id",
+        "user",
+    )
+    assert replace_action_url_macros(url, what, row) == result

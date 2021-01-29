@@ -2078,6 +2078,12 @@ def raw_context_from_env() -> EventContext:
 
 
 def substitute_context(template: str, context: PluginContext) -> str:
+    """
+    Replace all known variables with values and all unknown variables with empty strings
+    Example:
+        >>> substitute_context("abc $A$ $B$ $C$", {"A": "A", "B": "B"})
+        'abc A B '
+    """
     # First replace all known variables
     for varname, value in context.items():
         template = template.replace('$' + varname + '$', value)

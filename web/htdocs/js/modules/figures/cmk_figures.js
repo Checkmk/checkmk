@@ -484,12 +484,9 @@ export class FigureBase {
     }
 
     get_scale_render_function() {
-        let render_function = get_function(
-            "v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)"
-        );
-        if (this._data.plot_definitions.length > 0 && this._data.plot_definitions[0].js_render)
-            render_function = get_function(this._data.plot_definitions[0].js_render);
-        return render_function;
+        if (this._data.plot_definitions.length > 0)
+            return plot_render_function(this._data.plot_definitions[0]);
+        return plot_render_function({});
     }
 }
 
@@ -718,6 +715,11 @@ export function split_unit(recipe) {
 
 export function get_function(render_string) {
     return Function(`"use strict"; return ${render_string}`)();
+}
+
+export function plot_render_function(plot) {
+    if (plot.js_render) return get_function(plot.js_render);
+    return get_function("v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)");
 }
 
 export function metric_value_component(selection, value, attr, style) {

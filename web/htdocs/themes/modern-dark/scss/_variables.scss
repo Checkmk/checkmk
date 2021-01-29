@@ -188,12 +188,15 @@ $checkbox-shadow: $grey-3;
 $checkbox-checked-color: $primary-font-color;
 $checkbox-checked-bg-color: $grey-3;
 
-$toggle-switch-on-bg-color: rgb(20, 118, 20);
-$toggle-switch-on-border: 1px solid rgb(40, 60, 40);
-$toggle-switch-off-bg-color: rgb(164, 0, 0);
-$toggle-switch-off-border: 1px solid rgb(70, 40, 40);
-$toggle-switch-font-color: $font-color;
-$toggle-switch-height: 15px;
+$toggle-switch-on-bg-color: rgb(19, 211, 137);
+$toggle-switch-on-border: null;
+$toggle-switch-off-bg-color: rgb(38, 47, 56);
+$toggle-switch-off-bg-color-sidebar: $toggle-switch-off-bg-color;
+$toggle-switch-off-border: null;
+$toggle-switch-font-color-on: $black;
+$toggle-switch-font-color-off: rgba($white, 0.4);
+$toggle-switch-height: 14px;
+$toggle-switch-width: 30px;
 $toggle-switch-font-weight: 400;
 
 $toggle-button-off-border: 1px solid $grey-7;

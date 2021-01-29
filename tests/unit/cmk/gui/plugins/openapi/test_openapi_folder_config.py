@@ -67,13 +67,14 @@ def test_openapi_folders(wsgi_app, with_automation_user):
 
     base = '/NO_SITE/check_mk/api/v0'
 
-    # First test without the proper ETag, fails with 412 (precondition failed)
+    # First test without an ETag, fails with 428 (precondition required)
     wsgi_app.follow_link(resp,
                          '.../update',
                          base=base,
-                         status=412,
+                         status=428,
                          params='{"title": "foobar"}',
                          content_type='application/json')
+    # First test without the proper ETag, fails with 412 (precondition failed)
     wsgi_app.follow_link(resp,
                          '.../update',
                          base=base,

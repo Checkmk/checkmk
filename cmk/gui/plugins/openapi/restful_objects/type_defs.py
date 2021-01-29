@@ -293,6 +293,8 @@ ResponseType = TypedDict(
         "204": PathItem,
         "301": PathItem,
         "302": PathItem,
+        "412": PathItem,
+        "428": PathItem,
     },
     total=False,
 )

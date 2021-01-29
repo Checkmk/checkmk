@@ -6,6 +6,7 @@
 import hashlib
 import json
 import re
+from http import HTTPStatus
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import quote
 
@@ -143,11 +144,19 @@ def require_etag(etag: ETags) -> None:
         etag: An Werkzeug ETag instance to compare the global request instance to.
 
     Raises:
-        ProblemException: When ETag doesn't match.
+        ProblemException: When If-Match missing or ETag doesn't match.
     """
+    # TODO: Make configurable in WATO config
+    etags_required = True
+    if not request.if_match:
+        if not etags_required:
+            return
+        raise ProblemException(HTTPStatus.PRECONDITION_REQUIRED, "Precondition required",
+                               "If-Match header required for this operation. See documentation.")
+
     if request.if_match.as_set() != etag.as_set():
         raise ProblemException(
-            412,
+            HTTPStatus.PRECONDITION_FAILED,
             "Precondition failed",
             "ETag didn't match. Probable cause: Object changed by another user.",
         )

@@ -404,6 +404,17 @@ class Endpoint:
                 'headers': headers,
             }
 
+        if self.etag in ('input', 'both'):
+            responses['412'] = {
+                'description': self.status_descriptions.get(
+                    412, "Precondition failed: The value of the If-Match header doesn't match"
+                    "the object's ETag.")
+            }
+            responses['428'] = {
+                'description': self.status_descriptions.get(
+                    428, 'Precondition required: The required If-Match header is missing.')
+            }
+
         if self.will_do_redirects:
             responses['302'] = {
                 'description': self.status_descriptions.get(

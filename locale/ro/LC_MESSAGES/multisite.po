@@ -4486,6 +4486,10 @@ msgid "Allowed admin states:"
 msgstr " Puterea de transmisie operațională"
 
 #, fuzzy
+msgid "Allowed agent access via IP address"
+msgstr "Acces prin TCP"
+
+#, fuzzy
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "Acces prin TCP"
 
@@ -6131,6 +6135,9 @@ msgid "Bank (30 day) month"
 msgstr ""
 
 msgid "Bar"
+msgstr ""
+
+msgid "Bar chart"
 msgstr ""
 
 msgid "Bar graphics representing the state history"
@@ -7874,6 +7881,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Channel"
+msgstr "Nici o schimbare"
+
+#, fuzzy
+msgid "Channel state"
 msgstr "Nici o schimbare"
 
 #, fuzzy
@@ -20161,6 +20172,10 @@ msgid "Host and Service Events"
 msgstr ""
 
 #, fuzzy
+msgid "Host and service"
+msgstr "sesiuni"
+
+#, fuzzy
 msgid "Host and service configuration rule"
 msgstr "Adaugp o noua configurație de utilizator"
 
@@ -21688,6 +21703,38 @@ msgstr ""
 msgid ""
 "If you do not specify a name here, then the TCP port number will be used as "
 "an instance name."
+msgstr ""
+
+msgid ""
+"If you do not use this parameter, the following factory\n"
+"             defaults apply:<br>\n"
+"                INACTIVE: OK<br>\n"
+"                INITIALIZING: OK<br>\n"
+"                BINDING: OK<br>\n"
+"                STARTING: OK<br>\n"
+"                RUNNING: OK<br>\n"
+"                RETRYING: WARN<br>\n"
+"                STOPPING: OK<br>\n"
+"                STOPPED: CRIT<br>\n"
+"             "
+msgstr ""
+
+msgid ""
+"If you do not use this parameter, the following factory\n"
+"             defaults apply:<br>\n"
+"                STARTING: OK<br>\n"
+"                RUNNING: OK<br>\n"
+"                RUNNING AS STANDBY: OK<br>\n"
+"                RUNNING ELSEWHERE: OK<br>\n"
+"                QUIESCING: OK<br>\n"
+"                ENDING IMMEDIATELY: OK<br>\n"
+"                ENDING PRE-EMPTIVELY: OK<br>\n"
+"                ENDED NORMALLY: OK<br>\n"
+"                ENDED IMMEDIATELY: OK<br>\n"
+"                ENDED UNEXPECTEDLY: CRIT<br>\n"
+"                ENDED PRE-EMPTIVELY: WARN<br>\n"
+"                STATUS NOT AVAILABLE: OK<br>\n"
+"             "
 msgstr ""
 
 msgid ""
@@ -26658,6 +26705,10 @@ msgstr ""
 msgid "Map auto shrink status"
 msgstr ""
 
+#, fuzzy
+msgid "Map channel state to service state"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Map data relating to VMs"
 msgstr ""
 
@@ -26683,6 +26734,10 @@ msgstr "ASM - Starea generală al instanței"
 
 msgid "Map manager state"
 msgstr ""
+
+#, fuzzy
+msgid "Map manager state to service state"
+msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 msgid "Map mount point names"
@@ -30657,6 +30712,10 @@ msgstr ""
 msgid "Number of nodes scheduled with up-to-date pods"
 msgstr ""
 
+#, fuzzy
+msgid "Number of notifications as text"
+msgstr "Numarul maxim de conexiuni"
+
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr ""
 
@@ -32035,9 +32094,6 @@ msgstr ""
 msgid "Override check state based on last build result"
 msgstr ""
 
-msgid "Override check state based on queue manager state"
-msgstr ""
-
 msgid "Override unit of sensor"
 msgstr ""
 
@@ -32707,7 +32763,7 @@ msgid ""
 "Exporter host which contains either the Checkmk hostname, host address or "
 "\"localhost\" in its endpoint address. The created services of the mapped "
 "Node Exporter will be assigned to the Checkmk host. A piggyback host for "
-"each Node Exporter host will be created if none of the options are valid."
+"each Node Exporter host will be created if none of the options are valid. "
 "This option allows you to explicitly map one of your Node Exporter hosts to "
 "the underlying Checkmk host. This can be used if the default options do not "
 "apply to your setup."
@@ -34694,6 +34750,10 @@ msgstr "Nume nou"
 
 msgid "Queue length"
 msgstr ""
+
+#, fuzzy
+msgid "Queue manager state"
+msgstr "Nume nou"
 
 #, fuzzy
 msgid "Queue name"
@@ -37201,6 +37261,10 @@ msgstr ""
 msgid "Save"
 msgstr "Salveaza"
 
+#, fuzzy, python-format
+msgid "Save & go to %s"
+msgstr "Salveaza si mergi la"
+
 #, fuzzy
 msgid "Save & go to connection tests"
 msgstr "Salveaza &amp; mergi la Servicii"
@@ -37214,16 +37278,16 @@ msgid "Save & go to host properties"
 msgstr "Salveaza &amp; mergi la Servicii"
 
 #, fuzzy
+msgid "Save & go to list"
+msgstr "Salveaza si mergi la"
+
+#, fuzzy
 msgid "Save & go to service configuration"
 msgstr "Salveaza configuratia manuala a verificarilor"
 
 #, fuzzy
 msgid "Save & test"
 msgstr "Salveaza si Testeaza"
-
-#, fuzzy
-msgid "Save and go to list"
-msgstr "Salveaza si mergi la"
 
 #, fuzzy
 msgid "Save filters & go to designer"
@@ -38308,6 +38372,9 @@ msgstr ""
 msgid "Service state age"
 msgstr ""
 
+msgid "Service state if no map rule matches"
+msgstr ""
+
 msgid "Service state percentage"
 msgstr ""
 
@@ -38908,6 +38975,10 @@ msgstr "Arata in masa"
 #, fuzzy, python-format
 msgid "Show %ss for hosts"
 msgstr " pentru hostul %s"
+
+#, fuzzy, python-format
+msgid "Show %ss for hosts and services"
+msgstr "serviciu"
 
 #, fuzzy, python-format
 msgid "Show %ss for services"
@@ -40123,17 +40194,17 @@ msgstr ""
 
 msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
-"This is e.g. useful if you use the ip-address or the hostname as base "
-"address but require some additional prefix to make the correctAPI call. Use "
-"the custom URL option if you need to specify a more complex API url"
+"This is e.g. useful if you use the ip address or the hostname as base "
+"address but require some additional prefix to make the correct API call. Use "
+"the custom URL option if you need to specify a more complex API url."
 msgstr ""
 
 msgid ""
-"Specifies an url path prefix which is appended to the path in calls to the "
-"API. This is e.g. useful if you use the ip-address or the hostname as base "
-"address and require to specify a path url in order to make the correct API "
-"calls. Do not prepend/append your custom path with \"/\". Use the custom URL "
-"option if you need to specify a more complex API url"
+"Specifies an URL path suffix which is appended to the path in calls to the "
+"API. This is e.g. useful if you use the ip address or the hostname as base "
+"address and require to specify a path URL in order to make the correct API "
+"calls. Do not prepend or append your custom path with \"/\". Use the custom "
+"URL option if you need to specify a more complex API URL"
 msgstr ""
 
 msgid ""
@@ -40154,7 +40225,7 @@ msgid ""
 "Specifies the maximum number of parallel running site activate changes "
 "processes. Each site activation is handled in a separate apache process. If "
 "your configuration setup includes lots of sites, but your RAM is limited, "
-"you should reduce the maximum number of concurrent site updates.Note: The "
+"you should reduce the maximum number of concurrent site updates. Note: The "
 "hardcoded minimum is set to 5."
 msgstr ""
 
@@ -40339,7 +40410,7 @@ msgstr ""
 
 msgid ""
 "Specify the host to which the resulting service will be assigned to. The "
-"host should be configured to allow Piggyback data"
+"host should be configured to allow Piggyback data."
 msgstr ""
 
 msgid "Specify the hostname or IP address of the PLC to communicate with."
@@ -42791,8 +42862,9 @@ msgid ""
 "because it increases the the amount of context switches."
 msgstr ""
 
+#, python-format
 msgid ""
-"The Checkmk agent does not listen on it's own for incoming network "
+"The Checkmk agent does not listen on its own for incoming network "
 "connections on Linux systems. By default it makes use of so called super "
 "servers, which are listening on the network and dispatch incoming requests "
 "to applications like the Checkmk agent. Baked agent packages come with "
@@ -42802,7 +42874,7 @@ msgid ""
 "the agent via SSH.\n"
 "Please note: The configured/determined service configuration will only get "
 "activated if the super server is compatible to a possibly configured IP "
-"restriction ruleset. See ruleset \"Allowed agent access via IP address\"."
+"restriction ruleset. See ruleset \"%s\"."
 msgstr ""
 
 msgid "The Checkmk agent is queried via the ESX datasource program"
@@ -53117,73 +53189,10 @@ msgstr ""
 msgid "Wh"
 msgstr ""
 
-msgid "When BINDING"
-msgstr ""
-
-msgid "When ENDED IMMEDIATELY"
-msgstr ""
-
-msgid "When ENDED NORMALLY"
-msgstr ""
-
-msgid "When ENDED PRE-EMPTIVELY"
-msgstr ""
-
-msgid "When ENDED PREEMPTIVELY"
-msgstr ""
-
-msgid "When ENDING IMMEDIATELY"
-msgstr ""
-
-msgid "When ENDING PRE-EMPTIVELY"
-msgstr ""
-
-msgid "When ENDING PREEMPTIVELY"
-msgstr ""
-
-msgid "When INACTIVE"
-msgstr ""
-
-msgid "When INITIALIZING"
-msgstr ""
-
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
 "being displayed and various debug information in other places is also "
 "available."
-msgstr ""
-
-msgid "When NOT AVAILABLE"
-msgstr ""
-
-msgid "When QUIESCING"
-msgstr ""
-
-msgid "When RETRYING"
-msgstr ""
-
-msgid "When RUNNING"
-msgstr ""
-
-msgid "When RUNNING AS STANDBY"
-msgstr ""
-
-msgid "When RUNNING ELSEWHERE"
-msgstr ""
-
-msgid "When STARTING"
-msgstr ""
-
-msgid "When STATUS NOT AVAILABLE"
-msgstr ""
-
-msgid "When STOPPED"
-msgstr ""
-
-msgid "When STOPPING"
-msgstr ""
-
-msgid "When UNEXPECTEDLY"
 msgstr ""
 
 msgid ""

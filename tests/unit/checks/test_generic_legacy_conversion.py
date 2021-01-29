@@ -2431,7 +2431,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'postgres_connections',
         'postgres_instances',
         'postgres_locks',
-        'postgres_query_duration',
         'postgres_sessions',
         'postgres_stat_database',
         'postgres_stat_database.size',

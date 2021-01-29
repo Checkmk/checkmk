@@ -88,12 +88,12 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
         },
         '.1.3.6.1.4.1.30155.2.1.1.0': {'openbsd_sensors'},
         '.1.3.6.1.4.1.6302.2.1.1.1.0': {'emerson_stat', 'emerson_temp'},
-        '.1.3.6.1.4.1.674.10892.5.1.1.1.0': {'dell_hw_info'},
-        '.1.3.6.1.4.1.674.11000.2000.500.1.2.1.0': {
+        '.1.3.6.1.4.1.674.*': {
             'dell_compellent_controller',
             'dell_compellent_disks',
             'dell_compellent_enclosure',
             'dell_compellent_folder',
+            'dell_hw_info',
         },
     }
 

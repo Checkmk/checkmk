@@ -153,6 +153,13 @@ def _config_load_all_inventory_plugins(config_load_all_checks):
 
 
 @pytest.fixture(scope="session")
+def registered_check_plugins(config_load_all_checks):
+    # Local import to have faster pytest initialization
+    from cmk.base.api.agent_based import register  # pylint: disable=bad-option-value,import-outside-toplevel
+    return {p.name: p for p in register.iter_all_check_plugins()}
+
+
+@pytest.fixture(scope="session")
 def config_check_info(config_load_all_checks):
     # Local import to have faster pytest initialization
     import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel

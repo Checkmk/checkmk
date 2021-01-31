@@ -186,6 +186,8 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("registered_check_plugins"
+                        )  # make sure this fixture is computed. TODO: clean this up!
 @pytest.mark.parametrize("hostname, expected_result", [
     ("mgmt-board-ipmi", [(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X")]),
     ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),

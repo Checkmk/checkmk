@@ -132,24 +132,18 @@ class GaugeFigure extends cmk_figures.FigureBase {
             domain = display_range[1][1];
 
         domain.sort(); // Safeguards against negative number ordering or bad order. Display and clamp need good order
-
-        const levels = cmk_figures.make_levels(domain, plot.metrics);
-        const formatter = cmk_figures.get_function(plot.js_render);
+        const formatter = cmk_figures.plot_render_function(plot);
 
         this._render_gauge_range_labels(domain, formatter);
 
         const last_value = data[data.length - 1];
-        const clamp = value => Math.min(Math.max(value, domain[0]), domain[1]);
-        const color = levels.length
-            ? levels.find(element => clamp(last_value.value) <= element.to).color
-            : "#3CC2FF";
+        const value = cmk_figures.renderable_value(last_value, domain, plot);
 
-        this._render_text(
-            {
-                formatted_value: formatter(last_value.value),
-                url: last_value.url,
-            },
-            color
+        cmk_figures.metric_value_component(
+            this.plot,
+            value,
+            {x: 0, y: -this._radius / 5},
+            {font_size: this._radius / 3.5, color: value.color}
         );
 
         if (domain[0] === domain[1]) return;
@@ -158,7 +152,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
         // Thresholds indicator stripe
         this.plot
             .selectAll("path.level")
-            .data(levels)
+            .data(cmk_figures.make_levels(domain, plot.metrics))
             .join(enter => enter.append("path").classed("level", true))
             .attr("fill", d => d.color)
             .attr("opacity", 0.9)
@@ -178,7 +172,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
         // gauge bar
         this.plot
             .selectAll("path.value")
-            .data([{value: clamp(last_value.value), color}])
+            .data([{value: cmk_figures.clamp(last_value.value, domain), color: value.color}])
             .join(enter => enter.append("path").classed("value", true))
             .attr("fill", d => d.color)
             .attr("opacity", 0.9)
@@ -238,15 +232,6 @@ class GaugeFigure extends cmk_figures.FigureBase {
                 title += " -> " + d.x1.toPrecision(3);
                 return title;
             });
-    }
-
-    _render_text(value, color) {
-        cmk_figures.metric_value_component(
-            this.plot,
-            cmk_figures.split_unit(value),
-            {x: 0, y: -this._radius / 5},
-            {font_size: this._radius / 3.5, color: color}
-        );
     }
 }
 

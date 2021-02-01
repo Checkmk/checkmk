@@ -83,6 +83,17 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
 
         return {"style": css_classes, "msg": _("Status: ") + status_name, "draw": draw_status}
 
+    def metric_state_color(metric):
+        warn = metric["scalar"].get("warn")
+        crit = metric["scalar"].get("crit")
+        if warn is not None and crit is not None:
+            if metric['value'] >= crit:
+                return "#FF3232"
+            if metric['value'] >= warn:
+                return "#FFFE44"
+            return "#13D389"
+        return "#3CC2FF"
+
     # Historic values are always added as plot_type area
     if properties.get("time_range", "current")[0] == "range":
         time_range_params = properties["time_range"][1]
@@ -92,16 +103,21 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
                 'color',
                 "#008EFF",
             ) if chosen_color == "default" else chosen_color
-            fill = time_range_params.get("fill", "line")
+            plot_type = time_range_params.get("style", "line")
             plot_definition = {
                 "label": row['host_name'],
                 "id": row_id,
-                "plot_type": "area",
+                "plot_type": plot_type,
                 "use_tags": [row_id],
                 "color": color,
-                "fill": fill,
-                "opacity": 0.1 if fill else 0
+                "opacity": 0.1 if plot_type == "area" else 1
             }
+            if plot_type == "area":
+                plot_definition["style"] = "with_topline"
+            if properties.get("metric_status_display") == "background":
+                plot_definition["color"] = metric_state_color(metric)
+                plot_definition["opacity"] = 0.4 if plot_type == "area" else 1
+
             plot_definitions.append(plot_definition)
 
     # The current/last value definition also gets the metric levels
@@ -122,6 +138,8 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
         }
         if "color" in metric:
             plot_definition["color"] = metric["color"]
+        if "metric_status_display" in properties:
+            plot_definition["metric_status_display"] = properties["metric_status_display"]
 
         plot_definitions.append(plot_definition)
 
@@ -150,12 +168,12 @@ def _time_range_historic_dict_elements(with_elements) -> DictionaryElements:
     )
 
     if "with_graph" in with_elements:
-        yield "fill", DropdownChoice(
+        yield "style", DropdownChoice(
             choices=[
-                (False, _("Line")),
-                (True, _("Area")),
+                ("line", _("Line")),
+                ("area", _("Area")),
             ],
-            default_value=True,
+            default_value="area",
             title=_("Style"),
         )
         yield "color", GraphColor(
@@ -209,6 +227,14 @@ def _vs_elements(with_elements) -> DictionaryElements:
                 # ("infer", _("Automatic")), # For future logic
             ],
             default_value="fixed")
+
+    if "metric_status_display" in with_elements:
+        yield "metric_status_display", DropdownChoice(
+            title=_("Metric Status"),
+            choices=[(None, _("Metric value is displayed in neutral color")),
+                     ("text", _("Metric state is colored in its value")),
+                     ("background", _("Metric status is colored on the dashlet background"))],
+        )
 
     if "status_border" in with_elements:
         yield "status_border", DropdownChoice(
@@ -326,7 +352,7 @@ class SingleGraphDashlet(SingleMetricDashlet):
 
     @staticmethod
     def _vs_elements():
-        return _vs_elements(["time_range", "with_graph", "status_border"])
+        return _vs_elements(["time_range", "with_graph", "status_border", "metric_status_display"])
 
     @staticmethod
     def get_additional_title_macros() -> Iterable[str]:

@@ -7,6 +7,7 @@
 from typing import List, Optional, Tuple as _Tuple
 
 from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -169,18 +170,27 @@ def _vs_elements(with_elements) -> DictionaryElements:
         )
 
     if "display_range" in with_elements:
+
+        def validate_range(value, varprefix):
+            _min, _max = value
+            if _min >= _max:
+                raise MKUserError(varprefix,
+                                  _("Display range: Minimum must be strictly less than maximum"))
+
         yield "display_range", CascadingDropdown(
             title=_("Display range"),
             choices=[
-                ("infer", _("Automatic")),
                 ("fixed", _("Fixed range"),
                  ValuesWithUnits(vs_name="display_range",
                                  metric_vs_name="metric",
                                  help=_("Set the range in which data is displayed. "
                                         "Having selected a metric before auto selects "
                                         "here the matching unit of the metric."),
-                                 elements=[_("Minimum"), _("Maximum")])),
-            ])
+                                 elements=[_("Minimum"), _("Maximum")],
+                                 validate_value_elemets=validate_range)),
+                # ("infer", _("Automatic")), # For future logic
+            ],
+            default_value="fixed")
 
     if "status_border" in with_elements:
         yield "status_border", DropdownChoice(

@@ -22,6 +22,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
     ValueSpecHelp,
+    ValueSpecValidateFunc,
 )
 
 from cmk.gui.plugins.metrics import unit_info, metric_info
@@ -181,11 +182,13 @@ class ValuesWithUnits(CascadingDropdown):
             vs_name: str,
             metric_vs_name: str,
             elements: List[str],
+            validate_value_elemets: Optional[ValueSpecValidateFunc] = None,
             help: Optional[ValueSpecHelp] = None):
         super().__init__(choices=self._unit_choices, help=help)
         self._vs_name = vs_name
         self._metric_vs_name = metric_vs_name
         self._elements = elements
+        self._validate_value_elements = validate_value_elemets
 
     def _unit_vs(self, info):
         def set_vs(vs, title):
@@ -195,7 +198,8 @@ class ValuesWithUnits(CascadingDropdown):
 
         vs = info.get('valuespec') or Float
 
-        return Tuple(elements=[set_vs(vs, elem) for elem in self._elements])
+        return Tuple(elements=[set_vs(vs, elem) for elem in self._elements],
+                     validate=self._validate_value_elements)
 
     def _unit_choices(self):
         return [(name, info.get("description", info["title"]), self._unit_vs(info))

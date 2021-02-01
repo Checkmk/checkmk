@@ -22,6 +22,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     declare_permission,
 )
+from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
 
@@ -181,6 +182,14 @@ def page_clear():
         acknowledge_failed_notifications(acktime)
 
         if config.user.authorized_login_sites():
+            watolib.init_wato_datastructures(with_wato_lock=True)
+
+            title = _('Replicate user profile')
+            breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+            html.header(title, breadcrumb)
+
+            for message in get_flashed_messages():
+                html.show_message(message)
             # This local import is needed for the moment
             import cmk.gui.wato.user_profile  # pylint: disable=redefined-outer-name
             cmk.gui.wato.user_profile.user_profile_async_replication_page(back_url=prev_url)

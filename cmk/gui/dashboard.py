@@ -95,11 +95,11 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
 )
 from cmk.gui.plugins.metrics.html_render import (
     title_info_elements,
-    render_title_elements,
     default_dashlet_graph_render_options,
 )
 from cmk.gui.node_visualization import get_topology_view_and_filters
 
+from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 loaded_with_language: Union[None, bool, str] = False
@@ -691,7 +691,7 @@ def _render_dashlet_title(dashlet: Dashlet) -> Union[str, HTML]:
         title_elements.extend(
             title_info_elements(dashlet._dashlet_spec["_graph_identification"][1], title_format))
 
-    return render_title_elements(title_elements)
+    return text_with_links_to_user_translated_html(title_elements)
 
 
 def _render_dashlet_content(board: DashboardConfig, dashlet: Dashlet, is_update: bool,

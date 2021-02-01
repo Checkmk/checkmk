@@ -78,9 +78,11 @@ class MainMenuRenderer:
         return content
 
     def _get_main_menu_items(self) -> List[MainMenuItem]:
-        # TODO: Add permissions? For example WATO is not allowed for all users
         items: List[MainMenuItem] = []
         for menu in sorted(mega_menu_registry.values(), key=lambda g: g.sort_index):
+            if not menu.topics():
+                continue  # Hide e.g. Setup menu when user is not permitted to see a single topic
+
             items.append(
                 MainMenuItem(
                     name=menu.name,

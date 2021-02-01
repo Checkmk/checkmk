@@ -32,6 +32,7 @@ from cmk.gui.plugins.metrics.identification import graph_identification_types
 
 from cmk.gui.utils.popups import MethodAjax
 
+from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri_contextless
 
 RenderOutput = Union[HTML, str]
@@ -145,22 +146,13 @@ def graph_ajax_context(graph_artwork, graph_data_range, graph_render_options):
     }
 
 
-def render_title_elements(elements, *, plain_text: bool = False) -> Union[str, HTML]:
-    def _wrap_link(txt, url):
-        title: Union[str, HTML] = _u(txt)
-        if not plain_text and url:
-            title = html.render_a(title, href=url)
-        return title
-
-    link: Union[str, HTML] = " / " if plain_text else HTML(" / ")
-    return link.join(_wrap_link(txt, url) for txt, url in elements if txt)
+def render_title_elements_plain(elements: Iterable[str]) -> str:
+    return " / ".join(_u(txt) for txt in elements if txt)
 
 
 def render_plain_graph_title(graph_artwork, graph_render_options) -> str:
-    title = render_title_elements(_render_graph_title_elements(graph_artwork, graph_render_options),
-                                  plain_text=True)
-    assert isinstance(title, str)
-    return title
+    return render_title_elements_plain(
+        element[0] for element in _render_graph_title_elements(graph_artwork, graph_render_options))
 
 
 def _render_graph_title_elements(graph_artwork, graph_render_options):
@@ -242,7 +234,10 @@ def _get_alias_of_host(site, host_name):
 
 
 def render_html_graph_title(graph_artwork, graph_render_options):
-    title = render_title_elements(_render_graph_title_elements(graph_artwork, graph_render_options))
+    title = text_with_links_to_user_translated_html(
+        _render_graph_title_elements(graph_artwork, graph_render_options),
+        separator=" / ",
+    )
     if title:
         return html.render_div(
             title,

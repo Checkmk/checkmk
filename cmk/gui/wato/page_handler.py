@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import inspect
-from typing import List, Tuple, Type
+from typing import List, Tuple, Type, Optional
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -93,7 +93,7 @@ def page_handler() -> None:
         _wato_page_handler(current_mode, mode_permissions, mode_class)
 
 
-def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName],
+def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[PermissionName]],
                        mode_class: Type[WatoMode]) -> None:
     try:
         init_wato_datastructures(with_wato_lock=not html.is_transaction())
@@ -179,7 +179,8 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
     wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 
-def _get_mode_permission_and_class(mode_name: str) -> Tuple[List[PermissionName], Type[WatoMode]]:
+def _get_mode_permission_and_class(
+        mode_name: str) -> Tuple[Optional[List[PermissionName]], Type[WatoMode]]:
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
 

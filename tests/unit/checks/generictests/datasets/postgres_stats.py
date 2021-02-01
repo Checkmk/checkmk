@@ -20,17 +20,48 @@ mock_item_state = {
 freeze_time = '2019-01-12 00:00:00'
 
 
-info = [[u'[databases_start]'],
-        [u'postgres'],
-        [u'adwebconnect'],
-        [u'[databases_end]'],
-        [u'datname', u'sname', u'tname', u'vtime', u'atime'],
-        [u'postgres', u'pg_catalog', u'pg_statistic', u'-1', u'-1'],
-        [u'adwebconnect', u'public', u'serveraktion', u'1488881726', u'1488881726'],
-        [u'adwebconnect', u'pg_catalog', u'pg_statistic', u'1488882719', u'-1'],
-        [u'adwebconnect', u'public', u'auftrag', u'1489001316', u'1489001316'],
-        [u'adwebconnect', u'public', u'anrede', u'-1', u'-1'],
-        [u'adwebconnect', u'public', u'auftrag_mediadaten', u'-1', u'']]
+parsed = {
+    'adwebconnect': [
+        {
+            'atime': '1488881726',
+            'sname': 'public',
+            'tname': 'serveraktion',
+            'vtime': '1488881726',
+        },
+        {
+            'atime': '-1',
+            'sname': 'pg_catalog',
+            'tname': 'pg_statistic',
+            'vtime': '1488882719',
+        },
+        {
+            'atime': '1489001316',
+            'sname': 'public',
+            'tname': 'auftrag',
+            'vtime': '1489001316',
+        },
+        {
+            'atime': '-1',
+            'sname': 'public',
+            'tname': 'anrede',
+            'vtime': '-1',
+        },
+        {
+            'atime': '',
+            'sname': 'public',
+            'tname': 'auftrag_mediadaten',
+            'vtime': '-1',
+        },
+    ],
+    'postgres': [
+        {
+            'atime': '-1',
+            'sname': 'pg_catalog',
+            'tname': 'pg_statistic',
+            'vtime': '-1',
+        },
+    ],
+}
 
 
 discovery = {'': [(u'ANALYZE adwebconnect', {}),

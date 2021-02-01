@@ -95,7 +95,6 @@ bool CoreCarrier::sendData(const std::string& PeerName, uint64_t Marker,
 }
 
 // BASE API
-// gtest [+]
 bool CoreCarrier::sendLog(const std::string& PeerName, const void* Data,
                           size_t Length) {
     std::lock_guard lk(lock_);

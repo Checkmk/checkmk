@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <strstream>
 #include <thread>
 
@@ -41,7 +42,7 @@ constexpr const char* const kMailSlotLogFileName = "cmk_mail.log";
 
 inline bool IsMailApiTraced() { return true; }
 
-inline const std::string GetMailApiLog() {
+inline std::string GetMailApiLog() {
     namespace fs = std::filesystem;
 
     if (kUsePublicProfileLog) {
@@ -95,8 +96,8 @@ public:
 
 public:
     // convert slot name into fully qualified global object
-    static std::string BuildMailSlotName(const char* slot_name, int id,
-                                         const char* pc_name) {
+    static std::string BuildMailSlotName(std::string_view slot_name, int id,
+                                         std::string_view pc_name) {
         std::string name = "\\\\";
         name += pc_name;
         name += "\\mailslot\\Global\\";  // this work. ok. don't touch.
@@ -105,16 +106,16 @@ public:
         name += std::to_string(id);  // session id or something unique
         return name;
     }
-    MailSlot(const char* name, int id, const char* pc_name) {
+    MailSlot(std::string_view name, int id, std::string_view pc_name) {
         name_ = BuildMailSlotName(name, id, pc_name);
     }
 
-    MailSlot(const char* name, int id) {
+    MailSlot(std::string_view name, int id) {
         name_ = BuildMailSlotName(name, id, ".");
     }
 
     // with prepared mail slot
-    explicit MailSlot(const char* name) : name_(name) {}
+    explicit MailSlot(std::string_view name) : name_(name) {}
 
     ~MailSlot() { Close(); }
 

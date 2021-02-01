@@ -2821,7 +2821,7 @@ ACL* CombineSidsIntoACl(SidStore& first, SidStore& second) {
 
 }  // namespace
 
-ACL* BuildSDAcl() {
+ACL* BuildStandardAcl() {
     SidStore everyone;
     SidStore owner;
 
@@ -2832,7 +2832,7 @@ ACL* BuildSDAcl() {
     return CombineSidsIntoACl(everyone, owner);
 }
 
-ACL* BuildAdminSDAcl() {
+ACL* BuildAdminAcl() {
     SidStore admin;
     SidStore owner;
 
@@ -2858,10 +2858,10 @@ bool SecurityAttributeKeeper::allocAll(SecurityLevel sl) {
     // Descriptor, we should keep it safe
     switch (sl) {
         case SecurityLevel::standard:
-            acl_ = BuildAdminSDAcl();
+            acl_ = BuildStandardAcl();
             break;
         case SecurityLevel::admin:
-            acl_ = BuildAdminSDAcl();
+            acl_ = BuildAdminAcl();
             break;
     }
 
@@ -2892,6 +2892,9 @@ void SecurityAttributeKeeper::cleanupAll() {
 }
 
 #if 0
+/// <summary>
+///  The code below is a reference code from MSDN
+/// </summary>
 ACL* BuildAdminSDAcls {
     DWORD dwRes, dwDisposition;
     PSID pEveryoneSID = NULL, pAdminSID = NULL;
@@ -3013,9 +3016,9 @@ inline SOCKET RemoveSocketInheritance(SOCKET OldSocket) {
 // This is BAD method, still we have no other choice
 //
 SOCKET WSASocketW_Hook(int af, int type, int protocol,
-                       LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g,
-                       DWORD dwFlags) {
-    auto handle = ::WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
+                       LPWSAPROTOCOL_INFOW protocol_info, GROUP g,
+                       DWORD flags) {
+    auto handle = ::WSASocketW(af, type, protocol, protocol_info, g, flags);
     if (handle == INVALID_SOCKET) {
         XLOG::l.bp("Error on socket creation {}", GetLastError());
         return handle;

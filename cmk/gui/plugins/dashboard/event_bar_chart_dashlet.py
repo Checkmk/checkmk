@@ -111,7 +111,7 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
         object_type_filter = self._get_object_type_filter(properties)
 
         query = ("GET log\n"
-                 "Stats: log_type != "
+                 "Stats: log_type != \n"
                  "Filter: class = %d\n"
                  "Filter: log_time >= %f\n"
                  "Filter: log_time <= %f\n"

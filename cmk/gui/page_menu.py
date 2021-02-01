@@ -143,6 +143,7 @@ class PageMenuEntry:
     is_suggested: bool = True
     shortcut_title: Optional[str] = None
     css_classes: CSSSpec = None
+    disabled_tooltip: Optional[str] = None
 
 
 @dataclass
@@ -327,6 +328,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                                                   (title_show_help, title_hide_help)),
                         name="inline_help",
                         is_enabled=False,
+                        disabled_tooltip=_("This page does not provide an inline help."),
                     )
                 ],
             ),
@@ -550,7 +552,11 @@ class PageMenuRenderer:
             "entry",
         ] + self._get_entry_css_classes(entry)
 
-        html.open_div(class_=classes, id_="menu_entry_%s" % entry.name if entry.name else None)
+        html.open_div(
+            class_=classes,
+            id_="menu_entry_%s" % entry.name if entry.name else None,
+            title=entry.disabled_tooltip if not entry.is_enabled else None,
+        )
         DropdownEntryRenderer().show(entry)
         html.close_div()
 

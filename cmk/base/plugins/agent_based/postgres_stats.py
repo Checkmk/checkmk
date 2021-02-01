@@ -6,6 +6,17 @@
 
 import time
 
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResults,
+    get_value_store,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
+
 from cmk.base.plugins.agent_based.utils import postgres
 
 # <<<postgres_stats>>>
@@ -23,31 +34,36 @@ from cmk.base.plugins.agent_based.utils import postgres
 
 def discover_postgres_stats(section):
     for item in section:
-        yield f"VACUUM {item}", {}
-        yield f"ANALYZE {item}", {}
+        yield Service(item=f"VACUUM {item}")
+        yield Service(item=f"ANALYZE {item}")
 
 
-def _check_never_checked(text, never_checked, params, now):
+def _check_never_checked(text, never_checked, params, value_store, now):
     state_key = "last-time-all-checked"
+
     if not never_checked:
-        set_item_state(state_key, now)
-        yield 0, "No never checked tables"
+        value_store[state_key] = now
+        yield Result(state=State.OK, summary="No never checked tables")
         return
 
     count = len(never_checked)
-    cutoff_hint = " (first 5 shown)" if count > 5 else ""
-    yield 0, f"{count} tables were never {text}: {' / '.join(never_checked[:5])}{cutoff_hint}"
+    cutoff_hint = " (first 3 shown)" if count > 3 else ""
+    yield Result(
+        state=State.OK,
+        summary=f"{count} tables were never {text}: {' / '.join(never_checked[:3])}{cutoff_hint}",
+        details=f"{count} tables were never {text}: {' / '.join(never_checked)}",
+    )
 
-    last_ts = get_item_state(state_key)
+    last_ts = value_store.get(state_key)
     if last_ts is None:
-        set_item_state(state_key, now)
+        value_store[state_key] = now
         return
-    yield check_levels(
+
+    yield from check_levels(
         now - last_ts,
-        None,
-        params.get("never_analyze_vacuum"),
-        human_readable_func=get_age_human_readable,
-        infoname=f"Never {text} tables for",
+        levels_upper=params.get("never_analyze_vacuum"),
+        render_func=render.timespan,
+        label=f"Never {text} tables for",
     )
 
 
@@ -56,11 +72,12 @@ def check_postgres_stats(item, params, section):
         item=item,
         params=params,
         section=section,
+        value_store=get_value_store(),
         now=time.time(),
     )
 
 
-def _check_postgres_stats(*, item, params, section, now):
+def _check_postgres_stats(*, item, params, section, value_store, now):
     item_type, database = item.split(" ", 1)
     data = section.get(database)
 
@@ -68,7 +85,8 @@ def _check_postgres_stats(*, item, params, section, now):
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Login into database failed")
+        yield IgnoreResults("Login into database failed")
+        return
 
     stats_field = f"{item_type[0].lower()}time"
     text = f"{item_type.lower().strip('e')}ed"
@@ -81,27 +99,29 @@ def _check_postgres_stats(*, item, params, section, now):
 
     if oldest_element:
         oldest_time, oldest_name = oldest_element
-        yield 0, f"Table: {oldest_name}"
-        yield check_levels(
+        yield Result(state=State.OK, summary=f"Table: {oldest_name}")
+        yield from check_levels(
             now - oldest_time,
-            None,
-            params.get(f"last_{item_type.lower()}"),
-            human_readable_func=get_age_human_readable,
-            infoname=f"Not {text} for",
+            levels_upper=params.get(f"last_{item_type.lower()}"),
+            render_func=render.timespan,
+            label=f"Not {text} for",
         )
 
-    yield from _check_never_checked(text, never_checked, params, now)
+    yield from _check_never_checked(text, never_checked, params, value_store, now)
 
 
-check_info['postgres_stats'] = {
-    "parse_function": postgres.parse_dbs,
-    "service_description": "PostgreSQL %s",
-    "inventory_function": discover_postgres_stats,
-    "check_function": check_postgres_stats,
-    "group": "postgres_maintenance",
-    "default_levels_variable": "postgres_stats_default_levels",
-}
+register.agent_section(
+    name='postgres_stats',
+    parse_function=postgres.parse_dbs,
+)
 
-factory_settings["postgres_stats_default_levels"] = {
-    "never_analyze_vacuum": (0, 1000 * 365 * 24 * 3600),
-}
+register.check_plugin(
+    name='postgres_stats',
+    service_name="PostgreSQL %s",
+    discovery_function=discover_postgres_stats,
+    check_function=check_postgres_stats,
+    check_ruleset_name="postgres_maintenance",
+    check_default_parameters={
+        "never_analyze_vacuum": (0, 1000 * 365 * 24 * 3600),
+    },
+)

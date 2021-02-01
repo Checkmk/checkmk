@@ -208,8 +208,6 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
 
     update_gui() {
         this.update_domains();
-        // Create an empty legend before rendering, reserves y-space
-        this.render_legend();
         this.resize();
         this.render();
     }
@@ -296,7 +294,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
     render_legend() {
         this._legend.style("display", this._subplots.length > 0 ? null : "none");
 
-        if (this._subplots.length == 0) return;
+        if (this._subplots.length <= 1) return;
 
         let items = this._legend
             .selectAll(".legend_item")

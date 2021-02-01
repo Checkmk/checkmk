@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+
 from cmk.base.plugins.agent_based.utils import postgres
 
 # <<<postgres_stats>>>
@@ -18,93 +20,87 @@ from cmk.base.plugins.agent_based.utils import postgres
 # postgres;pg_catalog;pg_authid;-1;-1
 # postgres;pg_catalog;pg_attribute;-1;-1
 
-factory_settings["postgres_stats_default_levels"] = {
-    "never_analyze_vacuum": (0, 1000 * 365 * 24 * 3600),
-}
 
-
-def inventory_postgres_stats(parsed):
-    for db in parsed:
-        yield "VACUUM %s" % db, {}
-        yield "ANALYZE %s" % db, {}
+def discover_postgres_stats(section):
+    for item in section:
+        yield f"VACUUM {item}", {}
+        yield f"ANALYZE {item}", {}
 
 
 def _check_never_checked(item, text, never_checked, params, now):
-    key = "postgres_stats.%s" % item
     if not never_checked:
-        set_item_state(key, now)
+        set_item_state(item, now)
         yield 0, "No never checked tables"
         return
 
     count = len(never_checked)
-    infotext = "%d tables were never %s: %s%s" % (count, text, "/".join(
-        never_checked[:5]), " (first 5 shown)" if count > 5 else "")
-    yield 0, infotext
+    cutoff_hint = " (first 5 shown)" if count > 5 else ""
+    yield 0, f"{count} tables were never {text}: {' / '.join(never_checked[:5])}{cutoff_hint}"
 
-    last_ts = get_item_state(key)
+    last_ts = get_item_state(item)
     if last_ts is None:
-        set_item_state(key, now)
+        set_item_state(item, now)
         return
     yield check_levels(
         now - last_ts,
         None,
         params.get("never_analyze_vacuum"),
         human_readable_func=get_age_human_readable,
-        infoname='Unhandled tables for',
+        infoname=f"Never {text} tables for",
     )
 
 
-def check_postgres_stats(item, params, parsed):
-    item_type, database = item.split(" ", 1)
+def check_postgres_stats(item, params, section):
+    yield from _check_postgres_stats(
+        item=item,
+        params=params,
+        section=section,
+        now=time.time(),
+    )
 
-    if database not in parsed:
+
+def _check_postgres_stats(*, item, params, section, now):
+    item_type, database = item.split(" ", 1)
+    data = section.get(database)
+
+    if data is None:
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
         raise MKCounterWrapped("Login into database failed")
 
-    if item_type.startswith("VACUUM"):
-        stats_field, paramskey, text = "vtime", "vacuum", "vacuumed"
-    else:
-        stats_field, paramskey, text = "atime", "analyse", "analyzed"
+    stats_field = f"{item_type[0].lower()}time"
+    text = f"{item_type.lower().strip('e')}ed"
 
-    # namespace,  tablename, last_vacuum,  last_analyze
-    # ['public', 'my_table', '1424352356', '1424352356'],
-    oldest_element = None
-    never_checked = []
-    for line in parsed[database]:
-        # Tables with metadata are ignored
-        if line["sname"] == "pg_catalog":
-            continue
+    times_and_names = [(int(table[stats_field]) if table[stats_field] else -1, table["tname"])
+                       for table in data
+                       if table["sname"] != "pg_catalog"]
+    oldest_element = min(((t, n) for t, n in times_and_names if t != -1), default=None)
+    never_checked = [n for t, n in times_and_names if t == -1]
 
-        value = line[stats_field]
-        if value in ("-1", ""):
-            never_checked.append(line["tname"])
-            continue
-
-        last_time = int(value)
-        if not oldest_element or last_time < int(oldest_element[stats_field]):
-            oldest_element = line
-
-    now = time.time()
     if oldest_element:
-        yield 0, "Table: %s" % oldest_element["tname"]
-        oldest_age = now - int(oldest_element[stats_field])
-        yield check_levels(oldest_age,
-                           None,
-                           params.get("last_%s" % paramskey),
-                           human_readable_func=get_age_human_readable,
-                           infoname='Time since last %s' % paramskey)
+        oldest_time, oldest_name = oldest_element
+        yield 0, f"Table: {oldest_name}"
+        yield check_levels(
+            now - oldest_time,
+            None,
+            params.get(f"last_{item_type.lower()}"),
+            human_readable_func=get_age_human_readable,
+            infoname=f"Not {text} for",
+        )
 
-    for subresult in _check_never_checked(item, text, never_checked, params, now):
-        yield subresult
+    yield from _check_never_checked(item, text, never_checked, params, now)
 
 
 check_info['postgres_stats'] = {
     "parse_function": postgres.parse_dbs,
-    "check_function": check_postgres_stats,
-    "inventory_function": inventory_postgres_stats,
     "service_description": "PostgreSQL %s",
+    "inventory_function": discover_postgres_stats,
+    "check_function": check_postgres_stats,
     "group": "postgres_maintenance",
     "default_levels_variable": "postgres_stats_default_levels",
+}
+
+factory_settings["postgres_stats_default_levels"] = {
+    "never_analyze_vacuum": (0, 1000 * 365 * 24 * 3600),
 }

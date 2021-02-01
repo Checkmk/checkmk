@@ -20,7 +20,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionObject,
     DomainObject,
     DomainType,
-    EndpointName,
+    LinkRelation,
     HTTPMethod,
     LinkType,
     ObjectProperty,
@@ -32,7 +32,7 @@ from cmk.gui.plugins.openapi.utils import ProblemException
 
 
 def link_rel(
-    rel: EndpointName,
+    rel: LinkRelation,
     href: str,
     method: HTTPMethod = 'get',
     content_type: str = 'application/json',
@@ -662,7 +662,7 @@ def collection_object(domain_type: DomainType,
 
 def link_endpoint(
     module_name: str,
-    rel: EndpointName,
+    rel: LinkRelation,
     parameters: Dict[str, str],
 ) -> LinkType:
     """Link to a specific endpoint by name.

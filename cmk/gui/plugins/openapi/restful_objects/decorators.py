@@ -34,7 +34,7 @@ from cmk.gui.plugins.openapi.restful_objects.specification import (
     SPEC,)
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    EndpointName,
+    LinkRelation,
     ETagBehaviour,
     HTTPMethod,
     OpenAPIParameter,
@@ -165,7 +165,7 @@ class Endpoint:
     def __init__(
         self,
         path: str,
-        name: EndpointName,
+        link_relation: LinkRelation,
         method: HTTPMethod = 'get',
         content_type: str = 'application/json',
         output_empty: bool = False,
@@ -185,7 +185,7 @@ class Endpoint:
         wrapped: Optional[Any] = None,
     ):
         self.path = path
-        self.name = name
+        self.link_relation = link_relation
         self.method = method
         self.content_type = content_type
         self.output_empty = output_empty

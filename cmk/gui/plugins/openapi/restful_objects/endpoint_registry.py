@@ -21,7 +21,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     EndpointKey,
     ParameterKey,
     EndpointEntry,
-    EndpointName,
+    LinkRelation,
     OpenAPIParameter,
 )
 
@@ -37,7 +37,7 @@ class EndpointRegistry:
         ...      method = 'get'
         ...      path = '/foo/d41d8cd98f/{hostname}'
         ...      func = lambda: None
-        ...      name = '.../update'
+        ...      link_relation = '.../update'
         ...
 
         >>> reg = EndpointRegistry()
@@ -60,7 +60,7 @@ class EndpointRegistry:
         ...      method = 'get'
         ...      path = '/foo'
         ...      func = lambda: None
-        ...      name = '.../update'
+        ...      link_relation = '.../update'
 
         >>> reg = EndpointRegistry()
         >>> reg.add_endpoint(EndpointWithoutParams,
@@ -77,7 +77,7 @@ class EndpointRegistry:
     def lookup(
         self,
         module_name: str,
-        rel: EndpointName,
+        rel: LinkRelation,
         parameter_values: Dict[str, str],
     ) -> EndpointEntry:
         """Look up an endpoint definition
@@ -149,7 +149,7 @@ class EndpointRegistry:
                 _param_names.add(_param_name)
             return tuple(sorted(_param_names))
 
-        endpoint_key = (module_name, endpoint.name)
+        endpoint_key = (module_name, endpoint.link_relation)
         parameter_key = _param_key(endpoint.path, parameters)
         endpoint_entry = self._endpoints.setdefault(endpoint_key, {})
         if parameter_key in endpoint_entry:
@@ -160,7 +160,7 @@ class EndpointRegistry:
             'endpoint': endpoint,
             'href': endpoint.path,  # legacy
             'method': endpoint.method,  # legacy
-            'rel': endpoint.name,  # legacy
+            'rel': endpoint.link_relation,  # legacy
             'parameters': parameters,
         }
 

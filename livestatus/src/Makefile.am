@@ -132,7 +132,6 @@ liblivestatus_a_SOURCES = \
         ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \
-        LogEntryStringColumn.cc \
         Logfile.cc \
         Logger.cc \
         LogwatchListColumn.cc \

@@ -18,7 +18,6 @@
 #include "IntLambdaColumn.h"
 #include "LogCache.h"
 #include "LogEntry.h"
-#include "LogEntryStringColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
@@ -104,8 +103,9 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
         "state_type", "The type of the state (varies on different log classes)",
         offsets_entry, [](const LogEntry &r) { return r._state_type; }));
-    addColumn(std::make_unique<LogEntryStringColumn>(
-        "state_info", "Additional information about the state", offsets_entry));
+    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+        "state_info", "Additional information about the state", offsets_entry,
+        [](const LogEntry &r) { return r.state_info(); }));
     addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
         "attempt", "The number of the check attempt", offsets_entry,
         [](const LogEntry &r) { return r._attempt; }));

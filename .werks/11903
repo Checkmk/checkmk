@@ -1,0 +1,12 @@
+Title: Fix crash in hearbeat CRM general
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612172375
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Fix cases where the Heartbeat CRM would crash with
+<tt>TypeError (%d format: a number is required, not NoneType)<\tt>

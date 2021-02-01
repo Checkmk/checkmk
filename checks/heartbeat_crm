@@ -197,7 +197,7 @@ def check_heartbeat_crm(_no_item, params, info):
         status = 2
 
     # Check for number of nodes when enabled
-    if params['num_nodes'] is not None:
+    if params['num_nodes'] is not None and numNodes is not None:
         if numNodes == params['num_nodes']:
             output += 'Nodes: %d, ' % numNodes
         else:
@@ -205,7 +205,7 @@ def check_heartbeat_crm(_no_item, params, info):
             status = 2
 
     # Check for number of resources when enabled
-    if params['num_resources'] is not None:
+    if params['num_resources'] is not None and numResources is not None:
         if numResources == params['num_resources']:
             output += 'Resources: %d, ' % numResources
         else:

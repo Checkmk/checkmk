@@ -1,0 +1,14 @@
+Title: API: addition of list agents endpoint which previously return a 500 error
+Class: feature
+Compatible: compat
+Component: core
+Date: 1612186821
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+In the previous version, the REST API returned a 500 error when the collections
+agent endpoint was called. This werk now implements this endpoint and returns
+a collection object with the corresponding agent hashes.

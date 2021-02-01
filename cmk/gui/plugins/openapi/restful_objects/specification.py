@@ -36,11 +36,7 @@ visualization for direct interaction with the API's resources).
 As specified by the `Content-Type` of `application/json`, the response payload is serialized with
 JSON and encoded in UTF-8.
 
-All responses are well-formed according to the
-[Restful-Objects standard](https://en.wikipedia.org/wiki/Restful_Objects).
-There are a limited number of key concepts in the standard (e.g. object, action, collection, etc.)
-which enables the use of this API without having to understand the details of the implementation of
-each endpoint.
+# Link relations
 
 Every response comes with a collection of `links` to inform the API client on possible
 follow-up actions. For example, a folder response can have links to resources for updating,
@@ -49,6 +45,29 @@ just needs to follow the link. In this sense, the API is quasi self-documenting.
 This provision of additional information as a REST-API principle is also called
 [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS).
 
+Objects may have these possible generic link relations:
+
+ * self - The API location of the current object
+ * help - Documentation for the currently requested endpoint
+ * collection - The API location for a list of object of the current objects' type
+ * edit - The API location to update the current object
+ * edit-form - The GUI location to edit the current object
+ * delete - The API location to delete the current object
+
+Members of collections have also:
+
+ * item - The API location of a member of the current collection
+
+Please note that these (except for self) are completely optional and may or may not be available on
+certain endpoints. More specialized link relations are also available:
+
+ * invoke - The API location to invoke an action
+ * start - The API location to start a long running process, which the current object represents
+ * cancel - The API location to abort the long running process, which the current object represents
+ * download - The URL to download the object described by the current endpoint
+ * move - The API location to move the current object to another destination
+
+Endpoint specific link relations are also possible.
 
 # Authentication
 

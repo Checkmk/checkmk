@@ -123,7 +123,7 @@ RestfulEndpointName = Literal[
     ".../version",
 ]  # yapf: disable
 
-EndpointName = Union[CmkEndpointName, RestfulEndpointName]
+LinkRelation = Union[CmkEndpointName, RestfulEndpointName]
 
 HTTPMethod = Literal["get", "put", "post", "delete"]
 
@@ -352,11 +352,11 @@ EndpointEntry = TypedDict(
         'endpoint': Any,
         'href': str,
         'method': HTTPMethod,
-        'rel': EndpointName,
+        'rel': LinkRelation,
         'parameters': Sequence[OpenAPIParameter],
     },
     total=True,
 )
 
-EndpointKey = Tuple[str, EndpointName]
+EndpointKey = Tuple[str, LinkRelation]
 ParameterKey = Tuple[str, ...]

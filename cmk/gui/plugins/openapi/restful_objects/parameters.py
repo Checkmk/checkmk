@@ -49,6 +49,7 @@ ETAG_IF_MATCH_HEADER = {
             'The ETag of the object to be modified. This value comes from the ETag HTTP header '
             'whenever the object is displayed. To update this object the currently stored ETag '
             'needs to be the same as the one sent.'),
+        pattern='[0-9a-fA-F]{32}',
         example='a20ceacf346041dc',
     ),
 }

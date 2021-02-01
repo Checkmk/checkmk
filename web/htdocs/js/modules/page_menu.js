@@ -57,6 +57,10 @@ export function enable_menu_entry(id, enabled) {
     var oEntry = document.getElementById("menu_entry_" + id);
     utils.change_class(oEntry, from, to);
 
+    if (enabled && oEntry.getAttribute("title")) {
+        oEntry.removeAttribute("title");
+    }
+
     var oShortCut = document.getElementById("menu_shortcut_" + id);
     if (oShortCut) utils.change_class(oShortCut, from, to);
 

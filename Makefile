@@ -409,6 +409,7 @@ setup:
 	    clang-tidy-10 \
 	    clang-tools-10 \
 	    clangd-10 \
+	    curl \
 	    libclang-10-dev \
 	    libclang-common-10-dev \
 	    libclang1-10 \

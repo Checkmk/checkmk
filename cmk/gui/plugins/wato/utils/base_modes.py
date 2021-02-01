@@ -33,7 +33,7 @@ class WatoMode(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def permissions(cls) -> List[PermissionName]:
+    def permissions(cls) -> Optional[List[PermissionName]]:
         """permissions = None -> every user can use this mode, permissions
         are checked by the mode itself. Otherwise the user needs at
         least wato.use and - if he makes actions - wato.edit. Plus wato.*

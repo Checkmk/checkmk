@@ -954,7 +954,7 @@ permission_registry.register(
         title=_l("Monitoring Agents"),
         description=_l("Download the default Check_MK monitoring agents for Linux, "
                        "Windows and other operating systems."),
-        defaults=config.builtin_role_ids,
+        defaults=["admin", "user"],
     ))
 
 permission_registry.register(

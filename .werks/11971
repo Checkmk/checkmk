@@ -1,0 +1,14 @@
+Title: API: extension of downtime endpoints functionality
+Class: feature
+Compatible: compat
+Component: core
+Date: 1612190072
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+This werk introduces some changes to the downtime endpoints. The delete downtime
+endpoint's params option is renamed to 'by_id' and the params type now offers
+the option to select delete downtimes by their hostname and/or service descriptions.

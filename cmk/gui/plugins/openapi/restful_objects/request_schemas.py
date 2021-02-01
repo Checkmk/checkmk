@@ -806,6 +806,14 @@ SERVICE_DURATION = fields.Integer(
     missing=0,
 )
 
+INCLUDE_ALL_SERVICES = fields.Bool(
+    description=
+    "If set, downtimes for all services associated with the given host will be scheduled.",
+    required=False,
+    missing=False,
+    example=True,
+)
+
 
 class CreateHostDowntime(CreateDowntimeBase):
     host_name = MONITORED_HOST
@@ -882,7 +890,7 @@ class DeleteDowntimeBase(BaseSchema):
     )
 
 
-class DeleteParamDowntime(DeleteDowntimeBase):
+class DeleteDowntimeById(DeleteDowntimeBase):
     downtime_id = fields.String(
         description='The id of the downtime',
         example='54',
@@ -890,7 +898,21 @@ class DeleteParamDowntime(DeleteDowntimeBase):
     )
 
 
-class DeleteQueryDowntime(DeleteDowntimeBase):
+class DeleteDowntimeByName(DeleteDowntimeBase):
+    hostname = fields.String(
+        required=True,
+        description="If set alone, then all downtimes of the host will be removed.",
+        example="example.com")
+    services = fields.List(
+        SERVICE_DESCRIPTION_FIELD,
+        description="If set, the downtimes of the listed services of the specified host will be "
+        "removed. If a service has multiple downtimes then all will be removed",
+        required=False,
+        example=["CPU load", "Memory"],
+    )
+
+
+class DeleteDowntimeByQuery(DeleteDowntimeBase):
     query = QUERY
 
 
@@ -898,8 +920,9 @@ class DeleteDowntime(OneOfSchema):
     type_field = 'delete_type'
     type_field_remove = False
     type_schemas = {
-        'params': DeleteParamDowntime,
-        'query': DeleteQueryDowntime,
+        'by_id': DeleteDowntimeById,
+        'params': DeleteDowntimeByName,
+        'query': DeleteDowntimeByQuery,
     }
 
 

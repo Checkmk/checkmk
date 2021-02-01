@@ -1,0 +1,13 @@
+Title: Fix crash in ESX Inventory
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612166822
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+The format of the data was changed in WERK 8143, which could possibly
+result in crashes.

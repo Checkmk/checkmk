@@ -793,9 +793,13 @@ class GUIViewRenderer(ABCViewRenderer):
 
         if rows:
             host_address = rows[0].get("host_address")
-            if config.is_ntop_configured() and host_address is not None and get_cache(
-            ).is_ntop_host(host_address):
-                page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
+            if config.is_ntop_configured():
+                ntop_connection = config.get_ntop_connection()
+                assert ntop_connection
+                ntop_instance = ntop_connection["hostaddress"]
+                if host_address is not None and get_cache().is_instance_up(
+                        ntop_instance) and get_cache().is_ntop_host(host_address):
+                    page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
 
         menu = PageMenu(
             dropdowns=page_menu_dropdowns,

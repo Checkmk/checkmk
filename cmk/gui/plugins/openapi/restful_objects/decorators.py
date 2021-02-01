@@ -12,7 +12,7 @@ which then has to be dumped into the checkmk.yaml file.
 import functools
 import hashlib
 from types import FunctionType
-from typing import Any, Dict, List, Optional, Sequence, Set, Type, Union, Tuple, Literal
+from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -22,30 +22,29 @@ from werkzeug.utils import import_string
 
 from cmk.gui.globals import request
 from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
+from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
     ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
 )
-from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_schema, to_openapi
+from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_openapi, to_schema
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
-from cmk.gui.plugins.openapi.restful_objects.specification import (
-    SPEC,)
-from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    LinkRelation,
+    EndpointTarget,
     ETagBehaviour,
     HTTPMethod,
+    LinkRelation,
+    LocationType,
     OpenAPIParameter,
     OpenAPITag,
     OperationSpecType,
-    LocationType,
     RawParameter,
     ResponseType,
     SchemaParameter,
-    EndpointTarget,
 )
+from cmk.gui.plugins.openapi.utils import problem
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
 

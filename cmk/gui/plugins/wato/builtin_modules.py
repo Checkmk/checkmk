@@ -407,7 +407,7 @@ class MainModuleCheckPlugins(ABCMainModule):
 
     @property
     def permission(self):
-        return None
+        return "check_plugins"
 
     @property
     def description(self):

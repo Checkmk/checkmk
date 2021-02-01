@@ -63,7 +63,7 @@ class ModeCheckPlugins(WatoMode):
 
     @classmethod
     def permissions(cls) -> Optional[List[PermissionName]]:
-        return []
+        return ["check_plugins"]
 
     def _from_vars(self):
         self._manpages = _get_check_catalog(only_path=())
@@ -108,7 +108,7 @@ class ModeCheckPluginSearch(WatoMode):
 
     @classmethod
     def permissions(cls) -> Optional[List[PermissionName]]:
-        return []
+        return ["check_plugins"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
@@ -180,7 +180,7 @@ class ModeCheckPluginTopic(WatoMode):
 
     @classmethod
     def permissions(cls) -> Optional[List[PermissionName]]:
-        return []
+        return ["check_plugins"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
@@ -396,7 +396,7 @@ class ModeCheckManPage(WatoMode):
 
     @classmethod
     def permissions(cls) -> Optional[List[PermissionName]]:
-        return []
+        return ["check_plugins"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:

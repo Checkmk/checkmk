@@ -289,11 +289,12 @@ PathItem = TypedDict(
 ResponseType = TypedDict(
     "ResponseType",
     {
-        "default": PathItem,
         "200": PathItem,
         "204": PathItem,
         "301": PathItem,
         "302": PathItem,
+        "400": PathItem,
+        "404": PathItem,
         "412": PathItem,
         "428": PathItem,
     },

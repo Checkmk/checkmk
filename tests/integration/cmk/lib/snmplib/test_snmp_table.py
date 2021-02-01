@@ -143,7 +143,11 @@ def test_get_simple_snmp_table_fills_cache(backend):
         backend=backend,
     )
 
-    assert sorted(walk_cache) == [".1.3.6.1.2.1.1.1.0" ".1.3.6.1.2.1.1.2.0" ".1.3.6.1.2.1.1.5.0"]
+    assert sorted(walk_cache) == [
+        ".1.3.6.1.2.1.1.1.0",
+        ".1.3.6.1.2.1.1.2.0",
+        ".1.3.6.1.2.1.1.5.0",
+    ]
 
 
 def test_get_simple_snmp_table(backend):

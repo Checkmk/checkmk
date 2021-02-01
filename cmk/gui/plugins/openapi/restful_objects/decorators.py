@@ -98,6 +98,17 @@ def coalesce_schemas(
     return rv
 
 
+def _problem_response(description):
+    return {
+        'description': description,
+        'content': {
+            'application/problem+json': {
+                'schema': ApiError,
+            }
+        }
+    }
+
+
 class Endpoint:
     """Mark the function as a REST-API endpoint.
 
@@ -386,7 +397,10 @@ class Endpoint:
             del etag_header['in']
             headers[etag_header.pop('name')] = etag_header
 
-        responses: ResponseType = {}
+        responses: ResponseType = {
+            '400': _problem_response('Bad request: Parameter or validation failure'),
+            '404': _problem_response('Not found: The requested object has not been found.'),
+        }
 
         # We don't(!) support any endpoint without an output schema.
         # Just define one!
@@ -405,15 +419,13 @@ class Endpoint:
             }
 
         if self.etag in ('input', 'both'):
-            responses['412'] = {
-                'description': self.status_descriptions.get(
-                    412, "Precondition failed: The value of the If-Match header doesn't match"
-                    "the object's ETag.")
-            }
-            responses['428'] = {
-                'description': self.status_descriptions.get(
-                    428, 'Precondition required: The required If-Match header is missing.')
-            }
+            responses['412'] = _problem_response(
+                self.status_descriptions.get(
+                    412, "Precondition failed: The value of the If-Match header doesn't match the "
+                    "object's ETag."))
+            responses['428'] = _problem_response(
+                self.status_descriptions.get(
+                    428, 'Precondition required: The required If-Match header is missing.'))
 
         if self.will_do_redirects:
             responses['302'] = {
@@ -448,16 +460,6 @@ class Endpoint:
             'operationId': self.operation_id,
             'tags': [docstring_name],
             'description': '',
-            'responses': {
-                'default': {
-                    'description': 'Any unsuccessful or unexpected result.',
-                    'content': {
-                        'application/problem+json': {
-                            'schema': ApiError,
-                        }
-                    }
-                }
-            },
         }
 
         header_params: List[RawParameter] = []
@@ -475,7 +477,7 @@ class Endpoint:
             ('path', path_params),
         ])
 
-        operation_spec['responses'].update(responses)
+        operation_spec['responses'] = responses
 
         if self.request_schema is not None:
             operation_spec['requestBody'] = {

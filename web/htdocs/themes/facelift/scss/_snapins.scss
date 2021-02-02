@@ -34,11 +34,11 @@ div.bookmark {
  * Host matrix snapin
  */
 table.hostmatrix {
-  border-spacing: 0;
+  border-spacing: 5px 2px;
+  margin-left: -5px;
 
   tr {
     padding: 0;
-    border-spacing: 0;
   }
 
   a {
@@ -49,9 +49,7 @@ table.hostmatrix {
   }
 
   td {
-    padding: 0;
-    border: 1px solid rgb(18, 58, 74);
-    border-spacing: 0;
+    border-radius: 4px;
 
     &.state0 {
       background-color: $color-state-success-background;

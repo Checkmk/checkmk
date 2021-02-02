@@ -17,6 +17,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Mapping,
     NamedTuple,
     Optional,
     Pattern,
@@ -83,8 +84,8 @@ from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import (
     DiscoveredHostLabels,
-    DiscoveredHostLabelsDict,
     DiscoveredServiceLabels,
+    HostLabel,
     ServiceLabel,
 )
 
@@ -1099,23 +1100,24 @@ def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
 def _analyse_host_labels(
     *,
     host_name: HostName,
-    discovered_host_labels: DiscoveredHostLabels,
-    existing_host_labels: DiscoveredHostLabels,
+    discovered_host_labels: Sequence[HostLabel],
+    existing_host_labels: Sequence[HostLabel],
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[DiscoveredHostLabels, Counter[SectionName]]:
 
     section.section_step("Analyse discovered host labels")
 
-    old_labels_set = {x.label for x in existing_host_labels.to_list()}
-    new_labels_set = {x.label for x in discovered_host_labels.to_list()}
+    old_labels_set = {x.label for x in existing_host_labels}
+    new_labels_set = {x.label for x in discovered_host_labels}
 
     new_host_labels_per_plugin: Counter[SectionName] = Counter()
     # TODO: drop the unnecessary creation of DiscoveredHostLabels objects
-    return_host_labels = DiscoveredHostLabels.from_dict(existing_host_labels.to_dict())
-    for label in discovered_host_labels.values():
+    return_host_labels = DiscoveredHostLabels(*existing_host_labels)
+    for label in discovered_host_labels:
         if label.label in old_labels_set:
             continue
         return_host_labels.add_label(label)
+        assert label.plugin_name
         new_host_labels_per_plugin[label.plugin_name] += 1
 
     if discovery_parameters.save_labels:
@@ -1151,13 +1153,13 @@ def _load_existing_host_labels(
     *,
     host_name: HostName,
     discovery_parameters: DiscoveryParameters,
-) -> DiscoveredHostLabels:
+) -> Sequence[HostLabel]:
     # Take over old items if -I is selected
     if not discovery_parameters.load_labels:
-        return DiscoveredHostLabels()
+        return []
 
     raw_label_dict = DiscoveredHostLabelsStore(host_name).load()
-    return DiscoveredHostLabels.from_dict(raw_label_dict)
+    return [HostLabel.from_dict(name, value) for name, value in raw_label_dict.items()]
 
 
 def _discover_host_labels(
@@ -1166,22 +1168,24 @@ def _discover_host_labels(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> DiscoveredHostLabels:
+) -> Sequence[HostLabel]:
 
     section.section_step("Discover host labels of section plugins")
 
-    discovered_host_labels = _discover_host_labels_for_source_type(
-        host_key=HostKey(host_name, ipaddress, SourceType.HOST),
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-    )
-    discovered_host_labels += _discover_host_labels_for_source_type(
-        host_key=HostKey(host_name, ipaddress, SourceType.MANAGEMENT),
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-    )
-
-    return discovered_host_labels
+    # make names unique
+    labels_by_name = {
+        **_discover_host_labels_for_source_type(
+            host_key=HostKey(host_name, ipaddress, SourceType.HOST),
+            parsed_sections_broker=parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
+        ),
+        **_discover_host_labels_for_source_type(
+            host_key=HostKey(host_name, ipaddress, SourceType.MANAGEMENT),
+            parsed_sections_broker=parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
+        ),
+    }
+    return list(labels_by_name.values())
 
 
 def _discover_host_labels_for_source_type(
@@ -1189,14 +1193,14 @@ def _discover_host_labels_for_source_type(
     host_key: sources.host_sections.HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> DiscoveredHostLabels:
+) -> Mapping[str, HostLabel]:
 
     try:
         host_data = parsed_sections_broker[host_key]
     except KeyError:
-        return DiscoveredHostLabels()
+        return {}
 
-    discovered_host_labels: DiscoveredHostLabelsDict = {}
+    host_labels = {}
     try:
         # We do *not* process all available raw sections. Instead we see which *parsed*
         # sections would result from them, and then process those.
@@ -1225,10 +1229,11 @@ def _discover_host_labels_for_source_type(
             try:
                 for label in section_plugin.host_label_function(**kwargs):
                     console.vverbose(f"  {label.name}: {label.value} ({section_plugin.name})\n")
-                    discovered_host_labels[label.name] = {
-                        "plugin_name": str(section_plugin.name),
-                        "value": label.value,
-                    }
+                    host_labels[label.name] = HostLabel(
+                        label.name,
+                        label.value,
+                        section_plugin.name,
+                    )
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as exc:
@@ -1241,7 +1246,7 @@ def _discover_host_labels_for_source_type(
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
-    return DiscoveredHostLabels.from_dict(discovered_host_labels)
+    return host_labels
 
 
 # snmp_info.include sets a couple of host labels for device type but should not
@@ -1696,7 +1701,7 @@ def _get_cluster_services(
         )
 
     cluster_items: ServicesTable = {}
-    cluster_host_labels = DiscoveredHostLabels()
+    nodes_host_labels: Dict[str, HostLabel] = {}
     config_cache = config.get_config_cache()
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
@@ -1709,7 +1714,10 @@ def _get_cluster_services(
             parsed_sections_broker,
             discovery_parameters,
         )
-        cluster_host_labels.update(host_label_discovery_result.labels)
+
+        # keep the latest for every label.name
+        nodes_host_labels.update(host_label_discovery_result.labels)
+
         for check_source, discovered_service, found_on_nodes in services.values():
             if host_config.hostname != config_cache.host_of_clustered_service(
                     node, discovered_service.description):
@@ -1747,7 +1755,7 @@ def _get_cluster_services(
 
     cluster_host_labels, cluster_labels_per_plugin = _analyse_host_labels(
         host_name=host_config.hostname,
-        discovered_host_labels=cluster_host_labels,
+        discovered_host_labels=list(nodes_host_labels.values()),
         existing_host_labels=_load_existing_host_labels(
             host_name=host_config.hostname,
             discovery_parameters=discovery_parameters,

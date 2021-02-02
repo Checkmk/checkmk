@@ -288,6 +288,10 @@ def test_label_validation(cls):
 ])
 def test_analyse_host_labels(discovered_host_labels_dir, existing_labels, new_labels,
                              expected_labels, load_labels):
+    def make_host_labels(raw_data):
+        # discovered host labels always have a plugin name
+        return [HostLabel(n, n, SectionName("moo")) for n, v in raw_data]
+
     config.get_config_cache().initialize()
 
     discovery_parameters = DiscoveryParameters(
@@ -299,11 +303,11 @@ def test_analyse_host_labels(discovered_host_labels_dir, existing_labels, new_la
 
     new_host_labels, _host_labels_per_plugin = _analyse_host_labels(
         host_name="testhost",
-        discovered_host_labels=DiscoveredHostLabels(*[HostLabel(*x) for x in new_labels]),
-        existing_host_labels=(DiscoveredHostLabels(*[HostLabel(*x) for x in existing_labels])
-                              if discovery_parameters.load_labels else DiscoveredHostLabels()),
+        discovered_host_labels=make_host_labels(new_labels),
+        existing_host_labels=make_host_labels(existing_labels)
+        if discovery_parameters.load_labels else [],
         discovery_parameters=discovery_parameters,
     )
 
-    labels_expected = DiscoveredHostLabels(*[HostLabel(*x) for x in expected_labels])
+    labels_expected = DiscoveredHostLabels(*make_host_labels(expected_labels))
     assert new_host_labels.to_dict() == labels_expected.to_dict()

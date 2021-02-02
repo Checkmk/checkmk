@@ -4,20 +4,32 @@
 
 const path = require("path");
 const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
+const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require("webpack");
 
 module.exports = {
     mode: "production",
     devtool: "source-map",
+    optimization: {
+        minimize: true,
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: {
+                    format: {
+                        comments: false,
+                    },
+                },
+                extractComments: false,
+            }),
+        ],
+    },
     entry: {
         main: "./web/htdocs/js/index.js",
         mobile: "./web/htdocs/js/mobile.js",
         side: "./web/htdocs/js/side_index.js",
-        themes: [
-            "./web/htdocs/themes/facelift/theme.scss",
-            "./web/htdocs/themes/facelift/cma_facelift.scss",
-            "./web/htdocs/themes/modern-dark/theme.scss",
-        ],
+        facelift: "./web/htdocs/themes/facelift/theme.scss",
+        modern_dark: "./web/htdocs/themes/modern-dark/theme.scss",
+        cma: "./web/htdocs/themes/facelift/cma_facelift.scss",
     },
     output: {
         path: path.resolve(__dirname, "web/htdocs/js"),

@@ -184,8 +184,8 @@ OPTIONS: ReDocSpec = {
         },
     },
     'externalDocs': {
-        'description': 'The Checkmk Handbook',
-        'url': 'https://checkmk.com/cms.html',
+        'description': 'User guide',
+        'url': 'https://docs.checkmk.com/master',
     },
     'x-logo': {
         'url': 'https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png',

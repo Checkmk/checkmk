@@ -64,7 +64,7 @@ The data delivered by the kubelet API and the Prometheus adapter augments
 the basic monitoring of Kubernetes via Check_MK. Therefore, as a first step
 the setup of the basic monitoring is necessary. A detailled description of
 the setup can be found here
-<https://mathias-kettner.de/cms_monitoring_kubernetes.html>
+<https://docs.checkmk.com/master/en/monitoring_kubernetes.html>
 
 
 

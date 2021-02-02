@@ -920,7 +920,7 @@ def make_reducer_func(line: str) -> ReduceFunc:
     Returns:
 
     """
-    # As described in https://checkmk.de/cms_livestatus_references.html#stats
+    # As described in https://docs.checkmk.com/master/en/livestatus_references.html#stats
     aggregators: Dict[str, ReduceFunc] = {
         'avg': statistics.mean,
         'sum': sum,

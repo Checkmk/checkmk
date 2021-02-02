@@ -78,7 +78,7 @@ class RulespecGroupActiveChecks(RulespecGroup):
 
     @property
     def help(self):
-        return _("Rules to add [cms_active_checks|network services] like HTTP and TCP to the "
+        return _("Rules to add [active_checks|network services] like HTTP and TCP to the "
                  "monitoring. The services are provided by so called active checks that allow "
                  "you to monitor network services directly from the outside.")
 

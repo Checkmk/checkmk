@@ -8,7 +8,7 @@ Plugin API
 
 This is the plugin API reference from Checkmk. This can help you to get exact
 information about the API. If you want to know how to use the API, please have
-a look at the articles about extending Checkmk in our `official guide <https://checkmk.com/cms.html>`_.
+a look at the articles about extending Checkmk in our `user guide <https://docs.checkmk.com/master>`_.
 
 .. toctree::
    :caption: Base

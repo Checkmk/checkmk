@@ -135,8 +135,8 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
             items=[
                 TopicMenuItem(
                     name="manual",
-                    title=_("Manual"),
-                    url="https://checkmk.com/cms.html",
+                    title=_("User guide"),
+                    url="https://docs.checkmk.com",
                     target="_blank",
                     sort_index=30,
                     icon=None,  # TODO(CMK-5773): add an icon

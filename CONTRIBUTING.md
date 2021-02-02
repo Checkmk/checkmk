@@ -253,7 +253,7 @@ to execute the tests for you, but that takes several minutes for each try.
 
 ## Guidelines for coding check plug-ins
 
-Respect the [Guidelines for coding check plug-ins](https://checkmk.com/cms_dev_guidelines.html).
+Respect the [Guidelines for coding check plug-ins](https://docs.checkmk.com/master/en/dev_guidelines.html).
 
 ## Commit messages
 

@@ -1295,7 +1295,8 @@ function render_graph_hover_popup(graph, event, popup_data) {
 
 function remove_all_graph_hover_popups() {
     for (const menu of document.getElementsByClassName("hover_menu")) {
-        if (utils.has_class(menu.parentNode, "graph_container")) {
+        const graph_container = menu.getElementsByClassName("graph_container");
+        if (graph_container) {
             hover.hide();
         }
     }

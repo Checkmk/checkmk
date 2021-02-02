@@ -13,6 +13,7 @@ from livestatus import (
     SiteId,
     SiteConfiguration,
     SiteConfigurations,
+    lqencode,
 )
 
 from cmk.utils.version import is_managed_edition
@@ -75,6 +76,28 @@ def all_groups(what: str) -> List[Tuple[str, str]]:
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
     return sorted([(name, alias or name) for name, alias in dict(groups).items()],
                   key=lambda e: e[1].lower())
+
+
+# TODO: this too does not really belong here...
+def get_alias_of_host(site: Optional[SiteId], host_name: str) -> str:
+    query = ("GET hosts\n"
+             "Cache: reload\n"
+             "Columns: alias\n"
+             "Filter: name = %s" % lqencode(host_name))
+
+    with only_sites(site):
+        try:
+            return live().query_value(query)
+        except Exception as e:
+            logger.warning(
+                "Could not determine alias of host %s on site %s: %s",
+                host_name,
+                site,
+                e,
+            )
+            if config.debug:
+                raise
+            return host_name
 
 
 #.

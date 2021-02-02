@@ -14,11 +14,12 @@ import livestatus
 
 import cmk.utils.render
 
-from cmk.gui import sites, escaping
+from cmk.gui import escaping
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import html, request as global_request
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.sites import get_alias_of_host
 
 from cmk.gui.i18n import _u, _
 
@@ -190,7 +191,7 @@ def title_info_elements(spec_info, title_format) -> Iterable[Tuple[str, str]]:
         yield spec_info["host_name"], host_url
 
     if "add_host_alias" in title_format:
-        host_alias = _get_alias_of_host(spec_info["site"], spec_info["host_name"])
+        host_alias = get_alias_of_host(spec_info["site"], spec_info["host_name"])
         host_url = makeuri_contextless(
             global_request,
             [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
@@ -214,23 +215,6 @@ def title_info_elements(spec_info, title_format) -> Iterable[Tuple[str, str]]:
 
     if "add_metric_name" in title_format:
         yield spec_info["metric"], ""
-
-
-def _get_alias_of_host(site, host_name):
-    query = ("GET hosts\n"
-             "Cache: reload\n"
-             "Columns: alias\n"
-             "Filter: name = %s" % livestatus.lqencode(host_name))
-
-    with sites.only_sites(site):
-        try:
-            return sites.live().query_value(query)
-        except Exception as e:
-            logger.warning("Could not determine alias of host %s on site %s: %s", host_name, site,
-                           e)
-            if config.debug:
-                raise
-            return host_name
 
 
 def render_html_graph_title(graph_artwork, graph_render_options):

@@ -11,6 +11,7 @@ which then has to be dumped into the checkmk.yaml file.
 """
 import functools
 import hashlib
+import http.client
 from types import FunctionType
 from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union
 
@@ -43,6 +44,8 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     RawParameter,
     ResponseType,
     SchemaParameter,
+    StatusCodeInt,
+    PathItem,
 )
 from cmk.gui.plugins.openapi.utils import problem
 
@@ -97,15 +100,16 @@ def coalesce_schemas(
     return rv
 
 
-def _problem_response(description):
-    return {
+def _path_item(description, content=None, headers=None) -> PathItem:
+    if content is None:
+        content = {'application/problem+json': {'schema': ApiError,}}
+    response: PathItem = {
         'description': description,
-        'content': {
-            'application/problem+json': {
-                'schema': ApiError,
-            }
-        }
+        'content': content,
     }
+    if headers:
+        response['headers'] = headers
+    return response
 
 
 class Endpoint:
@@ -164,10 +168,6 @@ class Endpoint:
             with the 'ETag' response header. When set to 'both', it will act as if set to
             'input' and 'output' at the same time.
 
-        will_do_redirects:
-            This endpoint can also emit a 302 response (moved temporarily) code. Setting this to
-            true will add this to the specification and documentation. Defaults to False.
-
         **options:
             Various keys which will be directly applied to the OpenAPI operation object.
 
@@ -185,11 +185,11 @@ class Endpoint:
         query_params: Optional[Sequence[RawParameter]] = None,
         header_params: Optional[Sequence[RawParameter]] = None,
         etag: Optional[ETagBehaviour] = None,
-        will_do_redirects: bool = False,
         status_descriptions: Optional[Dict[int, str]] = None,
         options: Optional[Dict[str, str]] = None,
         tag_group: Literal['Monitoring', 'Setup'] = 'Setup',
         blacklist_in: Optional[Sequence[EndpointTarget]] = None,
+        additional_status_codes: Optional[Sequence[StatusCodeInt]] = None,
         func: Optional[FunctionType] = None,
         operation_id: Optional[str] = None,
         wrapped: Optional[Any] = None,
@@ -205,15 +205,19 @@ class Endpoint:
         self.query_params = query_params
         self.header_params = header_params
         self.etag = etag
-        self.will_do_redirects = will_do_redirects
         self.status_descriptions = status_descriptions if status_descriptions is not None else {}
         self.options: Dict[str, str] = options if options is not None else {}
         self.tag_group = tag_group
-        self.blacklist_in: List[EndpointTarget] = list(
-            blacklist_in) if blacklist_in is not None else []
+        self.blacklist_in: List[EndpointTarget] = self._list(blacklist_in)
+        self.additional_status_codes = self._list(additional_status_codes)
         self.func = func
         self.operation_id = operation_id
         self.wrapped = wrapped
+
+        self._expected_status_codes = self.additional_status_codes.copy()
+
+    def _list(self, sequence):
+        return list(sequence) if sequence is not None else []
 
     def __call__(self, func):
         """This is the real decorator.
@@ -342,6 +346,12 @@ class Endpoint:
             # it on the response instance. This is somewhat problematic because it's not
             # expected behaviour and not a valid interface of Response. Needs refactoring.
             response = self.func(param)
+
+            if response.status_code not in self._expected_status_codes:
+                return problem(status=500,
+                               title=f"Unexpected status code returned: {response.status_code}",
+                               detail=f"Endpoint {self.operation_id}")
+
             if hasattr(response, 'original_data') and response_schema:
                 try:
                     response_schema().load(response.original_data)
@@ -396,54 +406,53 @@ class Endpoint:
             del etag_header['in']
             headers[etag_header.pop('name')] = etag_header
 
-        responses: ResponseType = {
-            '400': _problem_response('Bad request: Parameter or validation failure'),
-            '404': _problem_response('Not found: The requested object has not been found.'),
-        }
+        responses: ResponseType = {}
+        # NOTE: These would have been better in a loop, but mypy is too dumb for that.
+        if self.path_params:
+            self._expected_status_codes.append(http.client.NOT_FOUND)
+            responses['404'] = _path_item('Not found: The requested object has not been found.')
+
+        if 409 in self._expected_status_codes:
+            responses['409'] = _path_item(
+                'Conflict: The request is in conflict with the stored resource')
+
+        if 302 in self._expected_status_codes:
+            responses['302'] = _path_item(
+                'Found: Either the resource has moved or has not yet '
+                'completed. Please see this resource for further information.')
+
+        if self.method in ("put", "post"):
+            self._expected_status_codes.append(400)
+            responses['400'] = _path_item('Bad request: Parameter or validation failure')
 
         # We don't(!) support any endpoint without an output schema.
         # Just define one!
         if self.response_schema is not None:
-            responses['200'] = {
-                'content': {
+            self._expected_status_codes.append(200)
+            responses['200'] = _path_item(
+                'The operation was done successfully.' if self.method != 'get' else '',
+                content={
                     self.content_type: {
                         'schema': self.response_schema
                     },
                 },
-                'description': self.status_descriptions.get(
-                    200,
-                    'The operation was done successfully.' if self.method != 'get' else '',
-                ),
-                'headers': headers,
-            }
+                headers=headers,
+            )
 
         if self.etag in ('input', 'both'):
-            responses['412'] = _problem_response(
-                self.status_descriptions.get(
-                    412, "Precondition failed: The value of the If-Match header doesn't match the "
-                    "object's ETag."))
-            responses['428'] = _problem_response(
-                self.status_descriptions.get(
-                    428, 'Precondition required: The required If-Match header is missing.'))
-
-        if self.will_do_redirects:
-            responses['302'] = {
-                'description': self.status_descriptions.get(
-                    302,
-                    'Either the resource has moved or has not yet completed. Please see this '
-                    'resource for further information.',
-                )
-            }
+            self._expected_status_codes.append(412)
+            self._expected_status_codes.append(428)
+            responses['412'] = _path_item(
+                "Precondition failed: The value of the If-Match header doesn't match the "
+                "object's ETag.")
+            responses['428'] = _path_item(
+                'Precondition required: The required If-Match header is missing.')
 
         # Actually, iff you don't want to give out anything, then we don't need a schema.
         if self.output_empty:
-            responses['204'] = {
-                'description': self.status_descriptions.get(
-                    204,
-                    'Operation done successfully. No further output.',
-                ),
-                'headers': headers,
-            }
+            self._expected_status_codes.append(204)
+            responses['204'] = _path_item('Operation done successfully. No further output.',
+                                          headers=headers)
 
         docstring_name = _docstring_name(module_obj.__doc__)
         tag_obj: OpenAPITag = {
@@ -475,6 +484,10 @@ class Endpoint:
             ('query', query_params),
             ('path', path_params),
         ])
+
+        for code, _item in responses.items():
+            if int(code) in self.status_descriptions:
+                _item['description'] = self.status_descriptions[int(code)]  # type: ignore[index]
 
         operation_spec['responses'] = responses
 

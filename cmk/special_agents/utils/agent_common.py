@@ -24,11 +24,58 @@ import argparse
 import json
 import sys
 import logging
+from requests.packages import urllib3
 
 import cmk.utils.password_store
 
 
-class SectionWriter:
+class SectionManager:
+    def __init__(self) -> None:
+        self._data: List[str] = []
+
+    def __enter__(self) -> "SectionManager":
+        return self
+
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+        self.flush()
+
+    def append(self, data: Any) -> None:
+        if isinstance(data, GeneratorType):
+            for l in data:
+                self.writeline(l)
+        else:
+            self.writeline(data)
+
+    def append_json(self, data: Any) -> None:
+        if isinstance(data, GeneratorType):
+            for l in data:
+                self.writeline(json.dumps(l, sort_keys=True))
+        else:
+            self.writeline(json.dumps(data, sort_keys=True))
+
+    def flush(self) -> None:
+        for d in self._data:
+            sys.stdout.write(str(d))
+            sys.stdout.write("\n")
+        self._data.clear()
+        sys.stdout.flush()
+
+    def writeline(self, line: Any):
+        sys.stdout.write(str(line))
+        sys.stdout.write("\n")
+
+
+class PiggybackSection(SectionManager):
+    def __init__(self, hostname: str) -> None:
+        super().__init__()
+        self.append(f"<<<<{hostname}>>>>")
+
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+        self.append("<<<<>>>>")
+        super().__exit__(*args, **kwargs)
+
+
+class SectionWriter(SectionManager):
     """
     >>> with SectionWriter("foo") as writer:
     ...   writer.append("str")
@@ -43,31 +90,9 @@ class SectionWriter:
     "a"
     "b"
     """
-    def __init__(self, section_name: str) -> None:
-        self._data: List[str] = []
-        self.append("<<<%s:sep(0)>>>" % section_name)
-
-    def __enter__(self) -> "SectionWriter":
-        return self
-
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
-        self.flush()
-
-    def append(self, data: Any) -> None:
-        self._data += list(data) if isinstance(data, GeneratorType) else [data]
-
-    def append_json(self, data: Any) -> None:
-        if isinstance(data, GeneratorType):
-            self.append(json.dumps(e) for e in data)
-        else:
-            self.append(json.dumps(data))
-
-    def flush(self) -> None:
-        for d in self._data:
-            sys.stdout.write(d)
-            sys.stdout.write("\n")
-        sys.stdout.flush()
-        self._data.clear()
+    def __init__(self, section_name: str, separator: Optional[str] = '\0') -> None:
+        super().__init__()
+        self.append(f"<<<{section_name}{f':sep({ord(separator)})' if separator else ''}>>>")
 
 
 def _special_agent_main_core(
@@ -85,6 +110,15 @@ def _special_agent_main_core(
             1: logging.INFO,
             2: logging.DEBUG
         }.get(args.verbose, logging.DEBUG),
+    )
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
+    logging.getLogger("vcr").setLevel(logging.WARN)
+    logging.info("running file %s", __file__)
+    logging.info(
+        "using Python interpreter v%s at %s",
+        ".".join(map(str, sys.version_info)),
+        sys.executable,
     )
 
     logging.debug("args: %r", args.__dict__)

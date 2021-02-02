@@ -4,84 +4,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-Checkmk Proxmox VE special agent
-
-Domain    | Element                       | Check
-----------+-------------------------------+---------------------------------------------------------
-Proxmox   |                               |
-          | Proxmox Version               | --- checked for each node
-          | Configured, Backup            | --- checked for each vm proxmox_ve_cluster_backup_status
-          | log-cutoff-weeks              |
-          |                               |
-----------+-------------------------------+---------------------------------------------------------
-Nodes []  |                               |
-          | Proxmox Version               | proxmox_ve_node_info
-          | Subscription                  | proxmox_ve_node_info
-          | Status: "active"/"inactive"   | proxmox_ve_node_info
-          | lxc: []                       | proxmox_ve_node_info
-          | qemu: []                      | proxmox_ve_node_info
-          |                               |
-          | Uptime                        | uptime (existing)
-          |                               |
-          | disk usage   (%/max)          | proxmox_ve_disk_usage
-          | mem usage    (%/max)          | proxmox_ve_mem_usage
-          |                               |
-          | # backup                      | todo: summary status for VMs configured on this node
-          | # snapshots                   | todo: summary status for VMs configured on this node
-          | # replication                 | ---
-          |                               |
-----------+-------------------------------+---------------------------------------------------------
-VMs []    |                               |
-          | vmid: int                     | proxmox_ve_vm_info
-          | type: lxc/qemu                | proxmox_ve_vm_info
-          | node: host                    | proxmox_ve_vm_info (vllt. konfigurierbare überprüfung?)
-          | status: running/not running   | proxmox_ve_vm_info
-          |                               |
-          | disk usage                    | [x] proxmox_ve_disk_usage / only lxc
-          | mem usage                     | [x] proxmox_ve_mem_usage
-
-          | Backed up                     | [x] proxmox_ve_vm_backup_status
-          |     When / crit / warn        | [x]
-          |     Failure as warning        | [x]
-          |     Bandwidth                 | [?]
-          |                               |
-          | # replication                 | todo: ähnlich wie backup
-          | # snapshots                   | todo: warn about snapshots > 1 day / more than N
-          |                               |
-----------+-------------------------------+---------------------------------------------------------
-"""
-
-# Todo:
-# - Replication Status VMs & Container, Gesamtstatus + piggybacked
+Checkmk Proxmox VE special agent, currently reporting the following
+information about VMs and nodes:
+- backup (success, start, duration, volume, bandwidth)
+- disk usage
+- node info
+- mem usage
+- not yet: replication Status VMs & Container, Gesamtstatus + piggybacked
+- not yet: backup summary
+- not yet: snapshot_status
+- not yet: snapshot_summary
 
 # Read:
 # - https://pve.proxmox.com/wiki/Proxmox_VE_API
 # - https://pve.proxmox.com/pve-docs/api-viewer/
 # - https://pve.proxmox.com/pve-docs/api-viewer/apidoc.js
 # - https://pypi.org/project/proxmoxer/
+"""
 
-import sys
-import json
-import argparse
 import logging
 import re
 from pathlib import Path
 from datetime import datetime, timedelta
-from contextlib import contextmanager
-from typing import Any, List, Dict, Union, Optional, Tuple, Sequence, Generator
+from typing import Any, List, Dict, Union, Optional, Tuple, Sequence
 
 import requests
-from requests.packages import urllib3
 
-import cmk.utils.password_store
 from cmk.utils.paths import tmp_dir
-
-from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.utils.agent_common import (
+    special_agent_main,
+    SectionWriter,
+    PiggybackSection,
+)
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.utils.misc import to_bytes, JsonCachedData
 
 LOGGER = logging.getLogger("agent_proxmox_ve")
 
 ListOrDict = Union[List[Dict[str, Any]], Dict[str, Any]]
-Args = argparse.Namespace
 TaskInfo = Dict[str, Any]
 BackupInfo = Dict[str, Any]
 LogData = Sequence[Dict[str, Any]]  # [{"d": int, "t": str}, {}, ..]
@@ -89,15 +49,13 @@ LogData = Sequence[Dict[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox_ve"
 
 
-def parse_arguments(argv: Sequence[str]) -> Args:
+def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     """parse command line arguments and return argument object"""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
+    parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("--timeout", "-t", type=int, default=20, help="API call timeout")
     parser.add_argument("--port", type=int, default=8006, help="IPv4 port to connect to")
     parser.add_argument("--username", "-u", type=str, help="username for connection")
     parser.add_argument("--password", "-p", type=str, help="password for connection")
-    parser.add_argument("--verbose", "-v", action="count", default=0)
     # TODO: warn if log-cutoff-weeks is shorter than actual log length or
     #       shorter than configured check
     parser.add_argument(
@@ -107,7 +65,6 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         help="Fetch logs N weeks back in time",
     )
     parser.add_argument("--no-cert-check", action="store_true")
-    parser.add_argument("--debug", action="store_true", help="Keep some exceptions unhandled")
     parser.add_argument("hostname", help="Name of the Proxmox VE instance to query.")
     return parser.parse_args(argv)
 
@@ -149,6 +106,8 @@ class BackupTask:
     def _to_lines(lines_with_numbers: LogData) -> Sequence[str]:
         """ Gets list of dict containing a line number an a line [{"n": int, "t": str}*]
         Returns List of lines only"""
+        # this has been true all the time and is left here for documentation
+        # assert all((int(elem["n"]) - 1 == i) for i, elem in enumerate(lines_with_numbers))
         return tuple(  #
             line  #
             for elem in lines_with_numbers  #
@@ -169,15 +128,42 @@ class BackupTask:
     ) -> Tuple[Dict[str, BackupInfo], List[Tuple[int, str]]]:
         log_line_pattern = {
             key: re.compile(pat, flags=re.IGNORECASE) for key, pat in (
-                ("start_job", r"^INFO: starting new backup job: vzdump (.*)"),
-                ("start_vm", r"^INFO: Starting Backup of VM (\d+).*"),
-                ("started_time", r"^INFO: Backup started at (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"),
-                ("finish_vm", r"^INFO: Finished Backup of VM (\d+) \((\d{2}:\d{2}:\d{2})\).*"),
-                ("error_vm", r"^ERROR: Backup of VM (\d+) failed - (.*)$"),
-                ("create_archive", r"^INFO: creating(?: vzdump)? archive '(.*)'"),
-                ("bytes_written", r"^INFO: Total bytes written: (\d+) \(.*, (.*)\/s\)"),
-                ("transferred", r"^INFO: transferred (\d+) MB in (\d+) seconds \(.*\)"),
-                ("archive_size", r"^INFO: archive file size: (.*)"),
+                # not yet used - might be interesting for consistency
+                # ("start_job", r"^INFO: starting new backup job: vzdump (.*)"),
+
+                # those for pattern must exist for every VM
+                (
+                    "start_vm",
+                    r"^INFO: Starting Backup of VM (\d+).*",
+                ),
+                (
+                    "started_time",
+                    r"^INFO: Backup started at (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})",
+                ),
+                (
+                    "finish_vm",
+                    r"^INFO: Finished Backup of VM (\d+) \((\d{2}:\d{2}:\d{2})\).*",
+                ),
+                (
+                    "error_vm",
+                    r"^ERROR: Backup of VM (\d+) failed - (.*)$",
+                ),
+                (
+                    "create_archive",
+                    r"^INFO: creating(?: vzdump)? archive '(.*)'",
+                ),
+                (
+                    "bytes_written",
+                    r"^INFO: Total bytes written: (\d+) \(.*, (.*)\/s\)",
+                ),
+                (
+                    "transferred",
+                    r"^INFO: transferred (\d+) MB in (\d+) seconds \(.*\)",
+                ),
+                (
+                    "archive_size",
+                    r"^INFO: archive file size: (.*)",
+                ),
             )
         }
         result: Dict[str, BackupInfo] = {}
@@ -198,6 +184,10 @@ class BackupTask:
             if match:
                 return match[0]
             return None
+
+        def duration_from_string(string: str) -> int:
+            duration_dt = datetime.strptime(string, "%H:%M:%S")
+            return duration_dt.hour * 3600 + duration_dt.minute * 60 + duration_dt.second
 
         for linenr, line in enumerate(logs):
             try:
@@ -226,10 +216,7 @@ class BackupTask:
                             (stop_vmid, current_vmid),
                         )
                     if "transfer_time" not in current_dataset:
-                        duration_dt = datetime.strptime(duration_str, "%H:%M:%S")
-                        current_dataset["transfer_time"] = (duration_dt.hour * 3600 +
-                                                            duration_dt.minute * 60 +
-                                                            duration_dt.second)
+                        current_dataset["transfer_time"] = duration_from_string(duration_str)
                     missing_keys = {
                         key for key in
                         {"transfer_time", "archive_name", "archive_size", "started_time"}
@@ -322,64 +309,46 @@ class BackupTask:
         return result, errors
 
 
-@contextmanager
-def JsonCachedData(filename: str) -> Generator[Dict[str, Any], None, None]:
-    """Store JSON-serializable data on filesystem and provide it if available"""
-    LogCacheFilePath.mkdir(parents=True, exist_ok=True)
-    cache_file = LogCacheFilePath / filename
-    try:
-        with cache_file.open() as crfile:
-            cache = json.load(crfile)
-    except (FileNotFoundError, json.JSONDecodeError):
-        cache = {}
-    try:
-        yield cache
-    finally:
-        LOGGER.info("Write cache file: %r", str(cache_file.absolute()))
-        with cache_file.open(mode="w") as cwfile:
-            json.dump(cache, cwfile)
-
-
 def fetch_backup_data(args: Args, session: "ProxmoxVeAPI",
                       nodes: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     """Since the Proxmox API does not provide us with information about past backups we read the
     information we need from log entries created for each backup process"""
     # Fetching log files is by far the most time consuming process issued by the ProxmoxVE agent.
     # Since logs have a unique UPID we can safely cache them
-    with JsonCachedData("upid.log.cache.json") as cache:
-        cutoff_date = int((datetime.now() - timedelta(weeks=args.log_cutoff_weeks)).timestamp())
-        # throw away older logs
-        for upid in tuple((key for key, (date, _) in cache.items() if date < cutoff_date)):
-            LOGGER.debug("erase log cache for %r", upid)
-            del cache[upid]
+    cutoff_date = int((datetime.now() - timedelta(weeks=args.log_cutoff_weeks)).timestamp())
+    with JsonCachedData(LogCacheFilePath / args.hostname / "upid.log.cache.json",
+                        cutoff_condition=lambda k, v: v[0] < cutoff_date) as cached:
+
+        def fetch_backup_log(task, node):
+            """Make a call to session.get_tree() to get a log only if it's not cached
+            Note: this is just a closure to make the call below less complicated - it could
+            also be part of the generator"""
+            # todo: specify type, date in request
+            return cached(
+                task["upid"],
+                lambda t=task, n=node: (
+                    t["starttime"],
+                    session.get_tree({"nodes": {
+                        n["node"]: {
+                            "tasks": {
+                                t["upid"]: {
+                                    "log": []
+                                }
+                            }
+                        }
+                    }})["nodes"][n["node"]]["tasks"][t["upid"]]["log"],
+                ))
 
         # todo: check vmid, typefilter source
         #       https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/tasks
         backup_tasks = (
-            BackupTask(
-                task,
-                cache[task["upid"]][1] if task["upid"] in cache else cache.setdefault(
-                    task["upid"],
-                    (
-                        task["starttime"],
-                        session.get_tree({
-                            "nodes": {
-                                node["node"]: {
-                                    "tasks": {
-                                        task["upid"]: {
-                                            "log": [
-                                                # todo: specify type, date in request
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        })["nodes"][node["node"]]["tasks"][task["upid"]]["log"]))[1],
-                strict=args.debug)
+            BackupTask(task, backup_log, strict=args.debug)
             for node in nodes
             for task in node["tasks"]
-            if (task["type"] == "vzdump" and int(task["starttime"]) >= cutoff_date))
+            if (task["type"] == "vzdump" and int(task["starttime"]) >= cutoff_date)  #
+            for _timestamp, backup_log in (fetch_backup_log(task, node),))
 
+        # keep the indentation - otherwise caching will not work (backup_tasks is a generator)
         backup_data: Dict[str, BackupInfo] = {}
         for task in backup_tasks:
             LOGGER.info("%s", task)
@@ -392,52 +361,8 @@ def fetch_backup_data(args: Args, session: "ProxmoxVeAPI",
         return backup_data
 
 
-def to_bytes(string: str) -> int:
-    """Turn a string containing a byte-size with units like (MiB, ..) into an int
-    containing the size in bytes
-
-    >>> to_bytes("123")
-    123
-    >>> to_bytes("123KiB")
-    125952
-    >>> to_bytes("123 KiB")
-    125952
-    >>> to_bytes("123KB")
-    125952
-    >>> to_bytes("123 MiB")
-    128974848
-    >>> to_bytes("123 GiB")
-    132070244352
-    >>> to_bytes("123.5 GiB")
-    132607115264
-    """
-    return round(  #
-        (float(string[:-3]) * (1 << 10)) if string.endswith("KiB") else
-        (float(string[:-2]) * (1 << 10)) if string.endswith("KB") else
-        (float(string[:-3]) * (1 << 20)) if string.endswith("MiB") else
-        (float(string[:-2]) * (1 << 20)) if string.endswith("MB") else
-        (float(string[:-3]) * (1 << 30)) if string.endswith("GiB") else
-        (float(string[:-2]) * (1 << 30)) if string.endswith("GB") else  #
-        float(string))
-
-
-def write_agent_output(args: argparse.Namespace) -> None:
+def agent_proxmox_ve_main(args: Args) -> None:
     """Fetches and writes selected information formatted as agent output to stdout"""
-    def write_piggyback_sections(host: str, sections: Sequence[Dict[str, Any]]) -> None:
-        print("<<<<%s>>>>" % host)
-        write_sections(sections)
-        print("<<<<>>>>")
-
-    def write_sections(sections: Sequence[Dict[str, Any]]) -> None:
-        def write_section(name: str, data: Any, skip: bool = False, jsonify: bool = True) -> None:
-            if skip:
-                return
-            print(("<<<%s:sep(0)>>>" if jsonify else "<<<%s>>>") % name)
-            print(json.dumps(data, sort_keys=True) if jsonify else data)
-
-        for section in sections:
-            write_section(**section)
-
     with ProxmoxVeAPI(
             host=args.hostname,
             port=args.port,
@@ -492,102 +417,64 @@ def write_agent_output(args: argparse.Namespace) -> None:
     LOGGER.info("Write agent output..")
     for node in data["nodes"]:
         assert node["type"] == "node"
-        write_piggyback_sections(
-            host=node["node"],
-            sections=[
-                {
-                    "name": "proxmox_ve_node_info",
-                    "data": {
-                        "status": node["status"],
-                        "lxc": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
-                        "qemu": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
-                        "proxmox_ve_version": node["version"],
-                        "subscription": {
-                            key: value for key, value in node["subscription"].items() if key in {
-                                "status",
-                                "checktime",
-                                "key",
-                                "level",
-                                "nextduedate",
-                                "productname",
-                                "regdate",
-                            }
-                        },
+        with PiggybackSection(node["node"]):
+            with SectionWriter("proxmox_ve_node_info") as writer:
+                writer.append_json({
+                    "status": node["status"],
+                    "lxc": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
+                    "qemu": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
+                    "proxmox_ve_version": node["version"],
+                    "subscription": {
+                        key: value for key, value in node["subscription"].items() if key in {
+                            "status",
+                            "checktime",
+                            "key",
+                            "level",
+                            "nextduedate",
+                            "productname",
+                            "regdate",
+                        }
                     },
-                },
-                {
-                    "name": "proxmox_ve_disk_usage",
-                    "data": {
-                        "disk": node["disk"],
-                        "max_disk": node["maxdisk"],
-                    },
-                },
-                {
-                    "name": "proxmox_ve_mem_usage",
-                    "data": {
-                        "mem": node["mem"],
-                        "max_mem": node["maxmem"],
-                    },
-                },
-                {
-                    "name": "uptime",
-                    "data": node["uptime"],
-                    # don't write json since we use generic check plugin
-                    "jsonify": False,
-                },
-                # {  # Todo
-                #     "name": "proxmox_ve_backup_summary",
-                # },
-                # {  # Todo
-                #     "name": "proxmox_ve_snapshot_summary",
-                # },
-            ],
-        )
+                })
+            with SectionWriter("proxmox_ve_disk_usage") as writer:
+                writer.append_json({
+                    "disk": node["disk"],
+                    "max_disk": node["maxdisk"],
+                })
+            with SectionWriter("proxmox_ve_mem_usage") as writer:
+                writer.append_json({
+                    "mem": node["mem"],
+                    "max_mem": node["maxmem"],
+                })
+            with SectionWriter("uptime", separator=None) as writer:
+                writer.append(node["uptime"])
 
     for vmid, vm in all_vms.items():
-        write_piggyback_sections(
-            host=vm["name"],
-            sections=[
-                {
-                    "name": "proxmox_ve_vm_info",
-                    "data": {
-                        "vmid": vmid,
-                        "node": vm["node"],
-                        "type": vm["type"],
-                        "status": vm["status"],
-                        "name": vm["name"],
-                    },
-                },
-                {
-                    "name": "proxmox_ve_disk_usage",
-                    "data": {
+        with PiggybackSection(vm["name"]):
+            with SectionWriter("proxmox_ve_vm_info") as writer:
+                writer.append_json({
+                    "vmid": vmid,
+                    "node": vm["node"],
+                    "type": vm["type"],
+                    "status": vm["status"],
+                    "name": vm["name"],
+                })
+            if vm["type"] != "qemu":
+                with SectionWriter("proxmox_ve_disk_usage") as writer:
+                    writer.append_json({
                         "disk": vm["disk"],
                         "max_disk": vm["maxdisk"],
-                    },
-                    "skip": vm["type"] == "qemu",
-                },
-                {
-                    "name": "proxmox_ve_mem_usage",
-                    "data": {
-                        "mem": vm["mem"],
-                        "max_mem": vm["maxmem"],
-                    },
-                },
-                {
-                    "name": "proxmox_ve_vm_backup_status",
-                    "data": {
-                        # todo: info about erroneous backups
-                        "last_backup": logged_backup_data.get(vmid),
-                    },
-                },
-                # {  # Todo
-                #     "name": "proxmox_ve_vm_replication_status",
-                # },
-                # {  # Todo
-                #     "name": "proxmox_ve_vm_snapshot_status",
-                # },
-            ],
-        )
+                    })
+            with SectionWriter("proxmox_ve_mem_usage") as writer:
+                writer.append_json({
+                    "mem": vm["mem"],
+                    "max_mem": vm["maxmem"],
+                })
+            with SectionWriter("proxmox_ve_vm_backup_status") as writer:
+                writer.append_json({
+                    # todo: info about erroneous backups
+                    "last_backup": logged_backup_data.get(vmid),
+                })
 
 
 class ProxmoxVeSession:
@@ -601,7 +488,7 @@ class ProxmoxVeSession:
             timeout: int,
             verify_ssl: bool,
         ) -> None:
-            super(ProxmoxVeSession.HTTPAuth, self).__init__()
+            super().__init__()
             ticket_url = base_url + "api2/json/access/ticket"
             response = (requests.post(url=ticket_url,
                                       verify=verify_ssl,
@@ -785,43 +672,10 @@ class ProxmoxVeAPI:
         return rec_get_tree(None, requested_structure, [])
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
-    """read arguments, configure application and run command specified on command line"""
-    if argv is None:
-        cmk.utils.password_store.replace_passwords()
-        argv = sys.argv[1:]
-
-    args = parse_arguments(argv)
-
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
-    logging.basicConfig(
-        format="%(levelname)s %(asctime)s %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        level={
-            0: logging.WARN,
-            1: logging.INFO,
-            2: logging.DEBUG
-        }.get(args.verbose, logging.DEBUG),
-    )
-    logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
-    logging.getLogger("vcr").setLevel(logging.WARN)
-    LOGGER.info("running file %s", __file__)
-    LOGGER.info(
-        "using Python interpreter v%s at %s",
-        ".".join(str(e) for e in sys.version_info),
-        sys.executable,
-    )
-
-    try:
-        write_agent_output(args)
-    except Exception as exc:
-        if args.debug:
-            raise
-        sys.stderr.write(repr(exc))
-        return -1
-
-    return 0
+def main() -> None:
+    """Main entry point to be used """
+    special_agent_main(parse_arguments, agent_proxmox_ve_main)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

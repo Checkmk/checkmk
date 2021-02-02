@@ -312,7 +312,8 @@ def delete(params):
 def bulk_delete(params):
     """Bulk delete hosts"""
     # TODO: require etag checking (409 Response)
-    for host_name in params['entries']:
+    body = params['body']
+    for host_name in body['entries']:
         host = watolib.Host.host(host_name)
         host.folder().delete_hosts([host.name()])
     return Response(status=204)

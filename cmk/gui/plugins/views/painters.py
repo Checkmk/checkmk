@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional, Dict, Any
 import abc
 from fnmatch import fnmatch
 import os
@@ -62,6 +63,7 @@ from cmk.gui.plugins.views import (
     render_labels,
     get_labels,
     get_label_sources,
+    Cell,
 )
 
 from cmk.gui.plugins.views.graphs import (
@@ -1611,28 +1613,29 @@ class PainterServiceCustomVariables(Painter):
 
 
 class ABCPainterCustomVariable(Painter, metaclass=abc.ABCMeta):
-    def title(self, cell):
-        return self._dynamic_title
+    def title(self, cell: Cell) -> str:
+        return self._dynamic_title(cell.painter_parameters())
 
-    def short_title(self, cell):
-        return self._dynamic_title
+    def short_title(self, cell: Cell) -> str:
+        return self._dynamic_title(cell.painter_parameters())
 
-    def _dynamic_title(self, params=None):
+    def _dynamic_title(self, params: Optional[Dict[str, Any]] = None) -> str:
         if params is None:
             # Happens in view editor when adding a painter
             return self._default_title
 
         try:
-            return config.custom_service_attributes[params["ident"]]["title"]
+            attributes = dict(self._custom_attribute_choices())
+            return attributes[params["ident"]]
         except KeyError:
             return self._default_title
 
     @abc.abstractproperty
-    def _default_title(self):
+    def _default_title(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def _object_type(self):
+    def _object_type(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod

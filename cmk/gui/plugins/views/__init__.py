@@ -33,6 +33,7 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     paint_age, PainterOptions, paint_host_list, paint_nagiosflag, paint_stalified,
     render_cache_info, replace_action_url_macros, row_id, transform_action_url, url_to_visual,
     view_is_enabled, view_title, query_livestatus, exporter_registry, Exporter, VisualLinkSpec,
+    Cell,
 )
 
 #.

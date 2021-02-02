@@ -102,7 +102,8 @@ def delete(params):
 def bulk_delete(params):
     """Bulk delete host groups"""
     # TODO: etag implementation
-    entries = params['entries']
+    body = params['body']
+    entries = body['entries']
     for group_name in entries:
         message = "host group %s was not found" % group_name
         _group = fetch_group(

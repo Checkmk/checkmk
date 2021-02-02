@@ -30,6 +30,12 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         content_type='application/json',
     )
 
+    _ = wsgi_app.call_method(
+        'get',
+        base + "/domain-types/%s_group_config/collections/all" % (group_type,),
+        status=200,
+    )
+
     resp = wsgi_app.follow_link(
         resp,
         'self',

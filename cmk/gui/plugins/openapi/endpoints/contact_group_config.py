@@ -74,9 +74,11 @@ def bulk_create(params):
           response_schema=response_schemas.DomainObjectCollection)
 def list_group(params):
     """Show all contact groups"""
-    return constructors.serve_json(
-        serialize_group_list('contact_group_config',
-                             list(load_contact_group_information().values())),)
+    collection = [{
+        "id": k,
+        "alias": v["alias"]
+    } for k, v in load_contact_group_information().items()]
+    return constructors.serve_json(serialize_group_list('contact_group_config', collection),)
 
 
 @Endpoint(

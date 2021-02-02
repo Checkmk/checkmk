@@ -1,0 +1,14 @@
+Title: API: fixing the list group endpoints for host_group, contact_group and service_group
+Class: fix
+Compatible: compat
+Component: core
+Date: 1612253498
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+In the previous version, the list group endpoints for host_group,
+contact_group and service_group returned a 500 error when called.
+This werk fixes this behaviour.

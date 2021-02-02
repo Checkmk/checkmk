@@ -20,11 +20,14 @@ from pathlib import Path
 import pprint
 import sys
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Generator, Callable
+from contextlib import contextmanager
 
 import requests
 
 import cmk.utils.store as store
+
+LOG = logging.getLogger(__name__)
 
 
 class AgentJSON:
@@ -261,3 +264,79 @@ def vcrtrace(**vcr_init_kwargs):
 def get_seconds_since_midnight(current_time) -> float:
     midnight = datetime.datetime.combine(current_time.date(), datetime.datetime.min.time())
     return (current_time - midnight).total_seconds()
+
+
+def to_bytes(string: str) -> int:
+    """Turn a string containing a byte-size with units like (MiB, ..) into an int
+    containing the size in bytes
+
+    >>> to_bytes("123")
+    123
+    >>> to_bytes("123KiB")
+    125952
+    >>> to_bytes("123 KiB")
+    125952
+    >>> to_bytes("123KB")
+    125952
+    >>> to_bytes("123 MiB")
+    128974848
+    >>> to_bytes("123 GiB")
+    132070244352
+    >>> to_bytes("123.5 GiB")
+    132607115264
+    """
+    return round(  #
+        (float(string[:-3]) * (1 << 10)) if string.endswith("KiB") else
+        (float(string[:-2]) * (1 << 10)) if string.endswith("KB") else
+        (float(string[:-3]) * (1 << 20)) if string.endswith("MiB") else
+        (float(string[:-2]) * (1 << 20)) if string.endswith("MB") else
+        (float(string[:-3]) * (1 << 30)) if string.endswith("GiB") else
+        (float(string[:-2]) * (1 << 30)) if string.endswith("GB") else  #
+        float(string))
+
+
+@contextmanager
+def JsonCachedData(
+    cache_file: Path,
+    cutoff_condition: Callable[[str, Any], bool],
+) -> Generator[Callable[[str, Any], Any], None, None]:
+    """Store JSON-serializable data on filesystem and provide it if available"""
+    cache_file.parents[0].mkdir(parents=True, exist_ok=True)
+    try:
+        with cache_file.open() as crfile:
+            cache = json.load(crfile)
+        LOG.debug("Cache: loaded %d elements", len(cache))
+    except (FileNotFoundError, json.JSONDecodeError):
+        LOG.warning("Cache: could not find file - start a new one")
+        cache = {}
+
+    dirty = False
+    if cutoff_condition:
+        # note: this must not be a generator - otherwise we modify a dict while iterating it
+        for key in [k for k, data in cache.items() if cutoff_condition(k, data)]:
+            dirty = True
+            LOG.debug("Cache: erase log cache for %r", key)
+            del cache[key]
+
+    def setdefault(key: str, value_fn: Callable[[], Any]) -> Any:
+        nonlocal dirty
+        if key in cache:
+            return cache[key]
+        dirty = True
+        LOG.debug("Cache: %r not found - fetch it", key)
+        return cache.setdefault(key, value_fn())
+
+    try:
+        yield setdefault
+    finally:
+        if dirty:
+            LOG.debug("Cache: write file: %r", str(cache_file.absolute()))
+            with cache_file.open(mode="w") as cwfile:
+                json.dump(cache, cwfile, indent=2)
+
+
+if __name__ == "__main__":
+    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
+    # Just run this file from your IDE and dive into the code.
+    import pytest
+    assert not pytest.main(["--doctest-modules", __file__])

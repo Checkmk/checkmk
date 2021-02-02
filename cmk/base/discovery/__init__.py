@@ -459,9 +459,8 @@ def _do_discovery_for(
     section.section_success("%s, %s" % (
         f"Found {len(service_result.new)} services"
         if service_result.new else "Found no%s services" % (" new" if only_new else ""),
-        ("%d host labels" % sum(host_label_discovery_result.per_plugin.values()))
-        if host_label_discovery_result.per_plugin else "no%s host labels" %
-        (" new" if only_new else ""),
+        f"{len(host_label_discovery_result.new)} host labels"
+        if host_label_discovery_result.new else "no%s host labels" % (" new" if only_new else ""),
     ))
 
 
@@ -599,8 +598,8 @@ def discover_on_host(
 
     else:
         if mode != "remove":
-            result.self_new_host_labels = sum(host_label_discovery_result.per_plugin.values())
-            result.self_total_host_labels = len(host_label_discovery_result.labels)
+            result.self_new_host_labels = len(host_label_discovery_result.new)
+            result.self_total_host_labels = len(host_label_discovery_result.present)
 
     result.self_total = result.self_new + result.self_kept
     return result
@@ -777,9 +776,8 @@ def check_discovery(
         params,
     )
 
-    if host_label_discovery_result.per_plugin:
-        infotexts.append("%d new host labels" %
-                         sum(host_label_discovery_result.per_plugin.values()))
+    if host_label_discovery_result.new:
+        infotexts.append(f"{len(host_label_discovery_result.new)} new host labels")
         status = cmk.base.utils.worst_service_state(status,
                                                     params.get("severity_new_host_label", 1))
 
@@ -1094,27 +1092,25 @@ def _analyse_host_labels(
     discovered_host_labels: Sequence[HostLabel],
     existing_host_labels: Sequence[HostLabel],
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[DiscoveredHostLabels, Counter[SectionName]]:
+) -> QualifiedDiscovery[HostLabel]:
 
     section.section_step("Analyse discovered host labels")
 
-    old_labels_set = {x.label for x in existing_host_labels}
-    new_labels_set = {x.label for x in discovered_host_labels}
-
-    new_host_labels_per_plugin: Counter[SectionName] = Counter()
-    # TODO: drop the unnecessary creation of DiscoveredHostLabels objects
-    return_host_labels = DiscoveredHostLabels(*existing_host_labels)
-    for label in discovered_host_labels:
-        if label.label in old_labels_set:
-            continue
-        return_host_labels.add_label(label)
-        assert label.plugin_name
-        new_host_labels_per_plugin[label.plugin_name] += 1
+    host_labels = QualifiedDiscovery(
+        preexisting=existing_host_labels,
+        current=discovered_host_labels,
+        key=lambda hl: hl.label,
+    )
 
     if discovery_parameters.save_labels:
-        DiscoveredHostLabelsStore(host_name).save(return_host_labels.to_dict())
+        DiscoveredHostLabelsStore(host_name).save({
+            # TODO (mo): According to unit tests, this is what was done prior to refactoring.
+            # Im not sure this is desired. If it is, it should be explained.
+            **{l.name: l.to_dict() for l in host_labels.vanished},
+            **{l.name: l.to_dict() for l in host_labels.present},
+        })
 
-    if new_labels_set - old_labels_set:
+    if host_labels.new:
         # Some check plugins like 'df' may discover services based on host labels.
         # A rule may look like:
         # [{
@@ -1137,7 +1133,7 @@ def _analyse_host_labels(
         # to find new services, eg. in 'inventory_df'. Thus we have to clear these caches.
         config.get_config_cache().ruleset_matcher.ruleset_optimizer.clear_caches()
 
-    return return_host_labels, new_host_labels_per_plugin
+    return host_labels
 
 
 def _load_existing_host_labels(
@@ -1345,10 +1341,10 @@ def _discover_host_labels_and_services(
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
     run_only_plugin_names: Optional[Set[CheckPluginName]],
-) -> Tuple[List[Service], HostLabelDiscoveryResult]:
+) -> Tuple[List[Service], QualifiedDiscovery[HostLabel]]:
     """Discovers host labels and services per real host or node"""
 
-    host_labels, host_labels_per_plugin = _analyse_host_labels(
+    host_labels = _analyse_host_labels(
         host_name=host_name,
         discovered_host_labels=_discover_host_labels(
             host_name=host_name,
@@ -1371,10 +1367,7 @@ def _discover_host_labels_and_services(
         run_only_plugin_names=run_only_plugin_names,
     )
 
-    return discovered_services, HostLabelDiscoveryResult(
-        labels=host_labels,
-        per_plugin=host_labels_per_plugin,
-    )
+    return discovered_services, host_labels
 
 
 # Create a table of autodiscovered services of a host. Do not save
@@ -1532,7 +1525,7 @@ def _get_host_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesByTransition, HostLabelDiscoveryResult]:
+) -> Tuple[ServicesByTransition, QualifiedDiscovery[HostLabel]]:
 
     if host_config.is_cluster:
         services, host_label_discovery_result = _get_cluster_services(
@@ -1560,7 +1553,7 @@ def _get_node_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
+) -> Tuple[ServicesTable, QualifiedDiscovery[HostLabel]]:
 
     host_name = host_config.hostname
     service_result, host_label_discovery_result = _get_discovered_services(
@@ -1612,7 +1605,7 @@ def _get_discovered_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[QualifiedDiscovery[Service], HostLabelDiscoveryResult]:
+) -> Tuple[QualifiedDiscovery[Service], QualifiedDiscovery[HostLabel]]:
 
     # Handle discovered services -> "new"
     discovered_services, host_label_discovery_result = _discover_host_labels_and_services(
@@ -1704,12 +1697,9 @@ def _get_cluster_services(
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
+) -> Tuple[ServicesTable, QualifiedDiscovery[HostLabel]]:
     if not host_config.nodes:
-        return {}, HostLabelDiscoveryResult(
-            labels=DiscoveredHostLabels(),
-            per_plugin=Counter(),
-        )
+        return {}, QualifiedDiscovery.empty()
 
     cluster_items: ServicesTable = {}
     nodes_host_labels: Dict[str, HostLabel] = {}
@@ -1727,7 +1717,12 @@ def _get_cluster_services(
         )
 
         # keep the latest for every label.name
-        nodes_host_labels.update(host_label_discovery_result.labels)
+        nodes_host_labels.update({
+            # TODO (mo): According to unit tests, this is what was done prior to refactoring.
+            # Im not sure this is desired. If it is, it should be explained.
+            **{l.name: l for l in host_label_discovery_result.vanished},
+            **{l.name: l for l in host_label_discovery_result.present},
+        })
 
         for check_source, service in itertools.chain(
             (("vanished", s) for s in services.vanished),
@@ -1745,7 +1740,7 @@ def _get_cluster_services(
                     existing_entry=cluster_items.get(service.id()),
                 ))
 
-    cluster_host_labels, cluster_labels_per_plugin = _analyse_host_labels(
+    cluster_host_labels = _analyse_host_labels(
         host_name=host_config.hostname,
         discovered_host_labels=list(nodes_host_labels.values()),
         existing_host_labels=_load_existing_host_labels(
@@ -1754,10 +1749,8 @@ def _get_cluster_services(
         ),
         discovery_parameters=discovery_parameters,
     )
-    return cluster_items, HostLabelDiscoveryResult(
-        labels=cluster_host_labels,
-        per_plugin=cluster_labels_per_plugin,
-    )
+
+    return cluster_items, cluster_host_labels
 
 
 def _cluster_service_entry(
@@ -1897,7 +1890,13 @@ def get_check_preview(
                 found_on_nodes,
             ))
 
-    return table, host_label_discovery_result.labels
+    return table, DiscoveredHostLabels(
+        *{
+            # TODO (mo): According to unit tests, this is what was done prior to refactoring.
+            # Im not sure this is desired. If it is, it should be explained.
+            **{l.name: l for l in host_label_discovery_result.vanished},
+            **{l.name: l for l in host_label_discovery_result.present},
+        }.values())
 
 
 def _preview_check_source(

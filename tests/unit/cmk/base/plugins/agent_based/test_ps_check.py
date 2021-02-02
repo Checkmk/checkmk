@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel

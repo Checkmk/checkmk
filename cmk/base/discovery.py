@@ -130,7 +130,7 @@ DiscoveryParameters = NamedTuple("DiscoveryParameters", [
 
 HostLabelDiscoveryResult = NamedTuple("HostLabelDiscoveryResult", [
     ("labels", DiscoveredHostLabels),
-    ("per_plugin", Counter[str]),
+    ("per_plugin", Counter[SectionName]),
 ])
 
 #   .--Helpers-------------------------------------------------------------.
@@ -1134,14 +1134,14 @@ def _analyse_host_labels(
     discovered_host_labels: DiscoveredHostLabels,
     existing_host_labels: DiscoveredHostLabels,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[DiscoveredHostLabels, Counter[str]]:
+) -> Tuple[DiscoveredHostLabels, Counter[SectionName]]:
 
     section.section_step("Analyse discovered host labels")
 
     old_labels_set = {x.label for x in existing_host_labels.to_list()}
     new_labels_set = {x.label for x in discovered_host_labels.to_list()}
 
-    new_host_labels_per_plugin: Counter[str] = Counter()
+    new_host_labels_per_plugin: Counter[SectionName] = Counter()
     # TODO: drop the unnecessary creation of DiscoveredHostLabels objects
     return_host_labels = DiscoveredHostLabels.from_dict(existing_host_labels.to_dict())
     for label in discovered_host_labels.values():

@@ -14,27 +14,20 @@
 #include "IntColumn.h"
 #include "contact_fwd.h"
 class ColumnOffsets;
-class MonitoringCore;
 class Row;
 
 class ServiceSpecialIntColumn : public IntColumn {
 public:
-#ifndef CMC
-    enum class Type{real_hard_state, pnp_graph_present};
-#else
     enum class Type { real_hard_state };
-#endif
 
     ServiceSpecialIntColumn(const std::string &name,
                             const std::string &description,
-                            const ColumnOffsets &offsets, MonitoringCore *mc,
-                            Type ssic_type)
-        : IntColumn(name, description, offsets), _mc(mc), _type(ssic_type) {}
+                            const ColumnOffsets &offsets, Type ssic_type)
+        : IntColumn(name, description, offsets), _type(ssic_type) {}
 
     int32_t getValue(Row row, const contact *auth_user) const override;
 
 private:
-    MonitoringCore *_mc;
     const Type _type;
 };
 

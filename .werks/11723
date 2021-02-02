@@ -1,0 +1,18 @@
+Title: winperf_if: Deployment of agent plugin "Network interfaces on Windows"
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1612262652
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+This is a regression since Checkmk 2.0.0i1.
+
+Recently, it was not possible to bake agents with the agent rule
+"Network interfaces on Windows" set to deploy the powershell version of the plugin.
+The cause was a wrong reference to it's filename in the corresponding bakery plugin.
+
+This is fixed now.

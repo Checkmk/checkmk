@@ -397,7 +397,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         ServiceSpecialIntColumn::Type::pnp_graph_present));
     table->addColumn(std::make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
-        offsets, ServiceSpecialDoubleColumn::Type::staleness));
+        offsets));
 
     // columns of type double
     table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(

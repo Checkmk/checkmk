@@ -696,8 +696,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
 
     table->addColumn(std::make_unique<HostSpecialDoubleColumn>(
-        prefix + "staleness", "Staleness indicator for this host", offsets,
-        HostSpecialDoubleColumn::Type::staleness));
+        prefix + "staleness", "Staleness indicator for this host", offsets));
 
     table->addColumn(std::make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",

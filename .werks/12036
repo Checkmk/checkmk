@@ -1,0 +1,13 @@
+Title: Fix host/service view export containing icons
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612281323
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Views containing icons could not be exported using
+<tt>output_format=[json|json_export]</tt>.

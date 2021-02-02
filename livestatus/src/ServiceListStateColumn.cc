@@ -48,7 +48,7 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
                        static_cast<ServiceState>(state->_current_state),
                        static_cast<ServiceState>(state->_last_hard_state),
                        state->_has_been_checked,
-                       state->_acknowledged ||
+                       state->getAcknowledged() ||
                            state->_scheduled_downtime_depth > 0,
                        result);
             }

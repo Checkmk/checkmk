@@ -312,6 +312,7 @@ div.snapin {
 
   span.moresnapin {
     display: inline-block;
+    height: 16px;
     width: 16px; /* FIXME: get rid of the animation that uses 4 images */
     margin-right: 4px;
     vertical-align: middle;
@@ -326,12 +327,13 @@ div.snapin {
   span.closesnapin {
     display: inline-block;
     width: 16px;
+    height: 16px;
     vertical-align: middle;
 
     img {
       width: 16px;
       height: 16px;
-      padding-bottom: 3px; /* HACK to perfectly align the button */
+      padding: 0;
     }
   }
 

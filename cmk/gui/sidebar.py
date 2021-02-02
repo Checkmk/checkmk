@@ -8,6 +8,7 @@
 import copy
 import traceback
 import json
+import textwrap
 from enum import Enum
 from typing import (
     Any,
@@ -500,7 +501,9 @@ class SidebarRenderer:
                 "onmouseover": "this.style.cursor='pointer'",
                 "onmouseout": "this.style.cursor='auto'"
             }
-        html.b(snapin_class.title(), class_=["heading"], **toggle_actions)
+        html.b(textwrap.shorten(snapin_class.title(), width=27, placeholder="..."),
+               class_=["heading"],
+               **toggle_actions)
 
         if may_configure:
             # Icon for mini/maximizing

@@ -270,6 +270,10 @@ def to_bytes(string: str) -> int:
     """Turn a string containing a byte-size with units like (MiB, ..) into an int
     containing the size in bytes
 
+    >>> to_bytes("123B")
+    123
+    >>> to_bytes("123 B")
+    123
     >>> to_bytes("123")
     123
     >>> to_bytes("123KiB")
@@ -277,7 +281,7 @@ def to_bytes(string: str) -> int:
     >>> to_bytes("123 KiB")
     125952
     >>> to_bytes("123KB")
-    125952
+    123000
     >>> to_bytes("123 MiB")
     128974848
     >>> to_bytes("123 GiB")
@@ -287,11 +291,14 @@ def to_bytes(string: str) -> int:
     """
     return round(  #
         (float(string[:-3]) * (1 << 10)) if string.endswith("KiB") else
-        (float(string[:-2]) * (1 << 10)) if string.endswith("KB") else
+        (float(string[:-2]) * (10**3)) if string.endswith("KB") else
         (float(string[:-3]) * (1 << 20)) if string.endswith("MiB") else
-        (float(string[:-2]) * (1 << 20)) if string.endswith("MB") else
+        (float(string[:-2]) * (10**6)) if string.endswith("MB") else
         (float(string[:-3]) * (1 << 30)) if string.endswith("GiB") else
-        (float(string[:-2]) * (1 << 30)) if string.endswith("GB") else  #
+        (float(string[:-2]) * (10**9)) if string.endswith("GB") else
+        (float(string[:-3]) * (1 << 40)) if string.endswith("TiB") else
+        (float(string[:-2]) * (10**12)) if string.endswith("TB") else  #
+        float(string[:-1]) if string.endswith("B") else  #
         float(string))
 
 

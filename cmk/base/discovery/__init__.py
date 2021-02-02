@@ -5,11 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import signal
 import socket
 import time
 from enum import Enum
-from types import FrameType
 from typing import (
     Any,
     Callable,
@@ -20,7 +18,6 @@ from typing import (
     Iterator,
     List,
     NamedTuple,
-    NoReturn,
     Optional,
     Pattern,
     Sequence,
@@ -39,7 +36,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
-from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
@@ -91,8 +88,7 @@ from cmk.base.discovered_labels import (
     ServiceLabel,
 )
 
-# Run the discovery queued by check_discovery() - if any
-_marked_host_discovery_timeout = 120
+from .utils import TimeLimitFilter
 
 ServicesTable = Dict[ServiceID, Tuple[str, Service, List[HostName]]]
 ServicesByTransition = Dict[str, List[ServiceWithNodes]]
@@ -898,24 +894,6 @@ def _set_rediscovery_flag(host_name: HostName) -> None:
     touch(discovery_filename)
 
 
-class DiscoveryTimeout(MKException):
-    pass
-
-
-def _handle_discovery_timeout(signum: int, stack_frame: Optional[FrameType]) -> NoReturn:
-    raise DiscoveryTimeout()
-
-
-def _set_discovery_timeout() -> None:
-    signal.signal(signal.SIGALRM, _handle_discovery_timeout)
-    # Add an additional 10 seconds as grace period
-    signal.alarm(_marked_host_discovery_timeout + 10)
-
-
-def _clear_discovery_timeout() -> None:
-    signal.alarm(0)
-
-
 def _get_autodiscovery_dir() -> str:
     return cmk.utils.paths.var_dir + '/autodiscovery'
 
@@ -931,8 +909,6 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
 
     config_cache = config.get_config_cache()
 
-    now_ts = time.time()
-    end_time_ts = now_ts + _marked_host_discovery_timeout  # don't run for more than 2 minutes
     oldest_queued = _queue_age()
     hosts = os.listdir(autodiscovery_dir)
     if not hosts:
@@ -941,10 +917,10 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
     # Fetch host state information from livestatus
     host_states = _fetch_host_states()
     activation_required = False
+    rediscovery_reference_time = time.time()
 
-    try:
-        _set_discovery_timeout()
-        for host_name in hosts:
+    with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
+        for host_name in time_limited(hosts):
             host_config = config_cache.get_host_config(host_name)
 
             if not _discover_marked_host_exists(config_cache, host_name):
@@ -954,18 +930,9 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
             if host_states and host_states.get(host_name) != 0:
                 continue
 
-            if _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
+            if _discover_marked_host(config_cache, host_config, rediscovery_reference_time,
+                                     oldest_queued):
                 activation_required = True
-
-            if time.time() > end_time_ts:
-                console.verbose(
-                    "  Timeout of %d seconds reached. Lets do the remaining hosts next time." %
-                    _marked_host_discovery_timeout)
-                break
-    except DiscoveryTimeout:
-        pass
-    finally:
-        _clear_discovery_timeout()
 
     if activation_required:
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
@@ -1109,6 +1076,7 @@ def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
         if start_time <= now <= end_time:
             return "we are currently in a disallowed time of day"
 
+    # we could check this earlier. No need to to it for every host.
     if now_ts - oldest_queued < rediscovery_parameters["group_time"]:
         return "last activation is too recent"
 

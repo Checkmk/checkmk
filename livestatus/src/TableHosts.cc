@@ -37,7 +37,6 @@
 #include "HostListColumn.h"
 #include "HostRRDColumn.h"
 #include "HostSpecialDoubleColumn.h"
-#include "HostSpecialIntColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
@@ -653,10 +652,16 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets_services, table->core(),
         ServiceListStateColumn::Type::num_hard_unknown));
 
-    table->addColumn(std::make_unique<HostSpecialIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
-        offsets, HostSpecialIntColumn::Type::real_hard_state));
+        offsets, [](const host &hst) {
+            if (hst.current_state == HOST_UP) {
+                return 0;
+            }
+            return hst.state_type == HARD_STATE ? hst.current_state
+                                                : hst.last_hard_state;
+        }));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",

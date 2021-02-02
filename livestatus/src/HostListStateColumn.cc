@@ -25,9 +25,7 @@ int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
                 const auto *state = hst->state();
                 update(auth_user, static_cast<HostState>(state->_current_state),
                        state->_has_been_checked, &hst->_services,
-                       state->getAcknowledged() ||
-                           state->_scheduled_downtime_depth > 0,
-                       result);
+                       state->getAcknowledged() || hst->inDowntime(), result);
             }
         }
     }

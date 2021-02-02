@@ -53,6 +53,7 @@
 #include "TimeLambdaColumn.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
+#include "mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
@@ -655,17 +656,20 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
-        offsets, table->core(), HostSpecialIntColumn::Type::real_hard_state));
+        offsets, HostSpecialIntColumn::Type::real_hard_state));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
         offsets, [mc](const host &hst) {
             return pnpgraph_present(mc, hst.name, dummy_service_description());
         }));
-    table->addColumn(std::make_unique<HostSpecialIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
-        offsets, table->core(), HostSpecialIntColumn::Type::mk_inventory_last));
+        offsets, [mc](const host &hst) {
+            return static_cast<int32_t>(
+                mk_inventory_last(mc->mkInventoryPath() / hst.name));
+        }));
 
     table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "mk_inventory",

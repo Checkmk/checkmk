@@ -5,11 +5,7 @@
 
 #include "HostSpecialIntColumn.h"
 
-#include <filesystem>
-
-#include "MonitoringCore.h"
 #include "Row.h"
-#include "mk_inventory.h"
 
 #ifdef CMC
 #include "Host.h"
@@ -36,9 +32,6 @@ int32_t HostSpecialIntColumn::getValue(Row row,
                            ? state->_current_state
                            : state->_last_hard_state;
             }
-            case Type::mk_inventory_last:
-                return static_cast<int32_t>(mk_inventory_last(
-                    _mc->mkInventoryPath() / object->host()->name()));
         }
     }
 #else
@@ -50,9 +43,6 @@ int32_t HostSpecialIntColumn::getValue(Row row,
                 }
                 return hst->state_type == HARD_STATE ? hst->current_state
                                                      : hst->last_hard_state;
-            case Type::mk_inventory_last:
-                return static_cast<int32_t>(
-                    mk_inventory_last(_mc->mkInventoryPath() / hst->name));
         }
     }
 #endif

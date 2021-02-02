@@ -504,9 +504,15 @@ div.spacertop {
  */
 #snapin_wato_foldertree {
   select {
+    width: $theme-snapin-width;
     margin-bottom: 10px;
     clear: both;
     box-sizing: border-box;
+    background-image: url(images/select_arrow.png);
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
   }
 }
 

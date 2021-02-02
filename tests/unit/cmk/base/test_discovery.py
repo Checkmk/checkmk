@@ -1499,10 +1499,10 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
 
     with cmk_debug_enabled():
         discovered_services, _host_label_discovery_result = discovery._discover_host_labels_and_services(
-            scenario.hostname,
-            scenario.ipaddress,
-            scenario.parsed_sections_broker,
-            discovery_parameters,
+            host_name=scenario.hostname,
+            ipaddress=scenario.ipaddress,
+            parsed_sections_broker=scenario.parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
             run_only_plugin_names=None,
         )
 
@@ -1520,10 +1520,10 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
 
     with cmk_debug_enabled():
         _discovered_services, host_label_discovery_result = discovery._discover_host_labels_and_services(
-            scenario.hostname,
-            scenario.ipaddress,
-            scenario.parsed_sections_broker,
-            discovery_parameters,
+            host_name=scenario.hostname,
+            ipaddress=scenario.ipaddress,
+            parsed_sections_broker=scenario.parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
             run_only_plugin_names={CheckPluginName('df')},
         )
 

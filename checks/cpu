@@ -21,12 +21,14 @@ from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcar
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-cpuload_default_levels = (5.0, 10.0)
+factory_settings["cpu_loads_default_levels"] = {
+    "levels": (5.0, 10.0),
+}
 
 
 def inventory_cpu_load(section):
     if section:
-        return [(None, "cpuload_default_levels")]
+        yield None, {}
 
 
 def check_cpu_load(item, params, section):
@@ -42,6 +44,7 @@ check_info["cpu.loads"] = {
     "service_description": "CPU load",
     "has_perfdata": True,
     "group": "cpu_load",
+    "default_levels_variable": "cpu_loads_default_levels",
 }
 
 #.

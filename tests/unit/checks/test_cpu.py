@@ -10,7 +10,13 @@ def test_cpu_loads_predictive(mocker):
     # absolute values are tested via generic tests
     mocker.patch("cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2)))
     check_cpu = Check("cpu.loads")
-    params = {'period': 'minute', 'horizon': 1, 'levels_upper': ('absolute', (2.0, 4.0))}
+    params = {
+        'levels': {
+            'period': 'minute',
+            'horizon': 1,
+            'levels_upper': ('absolute', (2.0, 4.0))
+        }
+    }
     section = Section(load=(0.5, 1.0, 1.5), num_cpus=4, num_threads=123)
     result = check_cpu.run_check(None, params, section)
 

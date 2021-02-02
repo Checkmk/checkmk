@@ -13,20 +13,31 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersOperatingSystem,
 )
 
+from cmk.gui.valuespec import (Transform, Dictionary)
+
 
 def _parameter_valuespec_cpu_load():
-    return Levels(
-        help=_("The CPU load of a system is the number of processes currently being "
-               "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
-               "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
-               "5 or 15 minutes. The following levels will be applied on the average "
-               "load. On Linux system the 15-minute average load is used when applying "
-               "those levels. The configured levels are multiplied with the number of "
-               "CPUs, so you should configure the levels based on the value you want to "
-               "be warned \"per CPU\"."),
-        unit="per core",
-        default_difference=(2.0, 4.0),
-        default_levels=(5.0, 10.0),
+    return Transform(
+        Dictionary(
+            elements=[(
+                "levels",
+                Levels(
+                    help=_(
+                        "The CPU load of a system is the number of processes currently being "
+                        "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
+                        "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
+                        "5 or 15 minutes. The following levels will be applied on the average "
+                        "load. On Linux system the 15-minute average load is used when applying "
+                        "those levels. The configured levels are multiplied with the number of "
+                        "CPUs, so you should configure the levels based on the value you want to "
+                        "be warned \"per CPU\"."),
+                    unit="per core",
+                    default_difference=(2.0, 4.0),
+                    default_levels=(5.0, 10.0),
+                ))],
+            optional_keys=False,
+        ),
+        forth=lambda params: params if isinstance(params, dict) else {'levels': params},
     )
 
 

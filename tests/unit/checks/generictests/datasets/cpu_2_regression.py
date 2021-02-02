@@ -15,14 +15,16 @@ checkname = 'cpu'
 parsed = parse_cpu([[u'0.88', u'0.83', u'0.87', u'2/1748', u'21050', u'8'], [u'124069']])
 
 discovery = {
-    'loads': [(None, 'cpuload_default_levels')],
+    'loads': [(None, {})],
     'threads': [(None, {})],
 }
 
 checks = {
     'loads': [(
         None,
-        (5.0, 10.0),
+        {
+            'levels': (5.0, 10.0)
+        },
         [(
             0,
             '15 min load: 0.87 at 8 cores (0.11 per core)',

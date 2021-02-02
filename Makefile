@@ -615,5 +615,5 @@ Pipfile.lock: Pipfile
 # top-level Makefile's dependencies must be updated.  It does not
 # need to depend on %MAKEFILE% because GNU make will always make sure
 # %MAKEFILE% is updated before considering the am--refresh target.
-am--refresh:
-	@:
+am--refresh: config.status
+	./config.status

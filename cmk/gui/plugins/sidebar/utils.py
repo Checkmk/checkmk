@@ -37,7 +37,7 @@ from cmk.gui.type_defs import (
 CustomSnapins = Any
 
 # Constants to be used in snapins
-snapin_width = 230
+snapin_width = 240
 
 search_plugins: List = []
 

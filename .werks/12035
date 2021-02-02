@@ -1,0 +1,13 @@
+Title: Fix custom host/service attribute painters
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612256156
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+The host and service custom attribute painters were not able to render their
+title correctly. Not in the lists of available painters and not when viewing
+the views.

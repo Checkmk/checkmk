@@ -118,7 +118,8 @@ def delete(params):
           output_empty=True)
 def bulk_delete(params):
     """Bulk delete contact groups"""
-    entries = params['entries']
+    body = params['body']
+    entries = body['entries']
     for group_name in entries:
         _group = fetch_group(
             group_name,

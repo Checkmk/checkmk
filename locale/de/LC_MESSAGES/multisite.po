@@ -377,6 +377,10 @@ msgid "%s"
 msgstr "%s"
 
 #, python-format
+msgid "%s %s"
+msgstr ""
+
+#, python-format
 msgid "%s (Customer missing)"
 msgstr "%s (Kunde fehlt)"
 
@@ -437,10 +441,6 @@ msgstr "%s-Anfragen"
 #, python-format
 msgid "%s Retrieve created dump file"
 msgstr "%s erstellte Dump-Datei laden"
-
-#, python-format
-msgid "%s alerts"
-msgstr "%s Alarme"
 
 #, python-format
 msgid "%s by host"
@@ -530,10 +530,6 @@ msgid "%s not monitored by one of the explicitly selected sites."
 msgstr "%s wird durch keine der explizit ausgewählten Instanzen überwacht."
 
 #, python-format
-msgid "%s notifications"
-msgstr "%s Benachrichtigungen"
-
-#, python-format
 msgid "%s of %s"
 msgstr "%s von %s"
 
@@ -552,10 +548,6 @@ msgstr "%s Operationen"
 #, python-format
 msgid "%s other %s"
 msgstr "%s andere %s"
-
-#, python-format
-msgid "%s per %s"
-msgstr "%s pro %s"
 
 #, python-format
 msgid "%s per Second"
@@ -2284,6 +2276,9 @@ msgstr "API Schlüssel aus dem Passwortspeicher"
 
 msgid "API key/token"
 msgstr "API-Schlüssel/-Token"
+
+msgid "APIs"
+msgstr ""
 
 msgid "APT Updates"
 msgstr "APT-Updates"
@@ -8263,6 +8258,10 @@ msgid "Change infotext in check output"
 msgstr "Infotext in der Ausgabe des Checks ändern"
 
 #, fuzzy
+msgid "Change log"
+msgstr "Änderungen vor:"
+
+#, fuzzy
 msgid "Change password"
 msgstr "Passwort ändern"
 
@@ -13662,6 +13661,10 @@ msgstr "Beschreibung ohne Typprefix"
 msgid "Descriptions"
 msgstr "Beschreibungen"
 
+#, fuzzy
+msgid "Deselect all checkboxes"
+msgstr "Checkboxen verstecken"
+
 msgid "Design This Graph"
 msgstr "Diesen Graph gestalten"
 
@@ -14397,6 +14400,9 @@ msgstr "Nur eine Zusammenfassung der Transaktionslogs anzeigen"
 #, fuzzy
 msgid "Display range"
 msgstr "Durchschnitt anzeigen"
+
+msgid "Display range: Minimum must be strictly less than maximum"
+msgstr ""
 
 #, fuzzy
 msgid "Display sidecar details on"
@@ -17674,14 +17680,14 @@ msgid "Extents"
 msgstr "Ereignisse"
 
 #, fuzzy
+msgid "External"
+msgstr "intern"
+
+#, fuzzy
 msgid "External ID (optional)"
 msgstr "Kommentar (optional)"
 
 msgid "External command"
-msgstr "Externes Kommando"
-
-#, fuzzy
-msgid "External links"
 msgstr "Externes Kommando"
 
 #, fuzzy
@@ -25042,10 +25048,6 @@ msgstr ""
 "Interner Fehler: %s\n"
 "%s"
 
-#, fuzzy
-msgid "Internal links"
-msgstr "Interner Name"
-
 msgid "Interpretation of Config Sync Status"
 msgstr "Interpratation des Konfigurationssynchronisationsstatus"
 
@@ -26370,9 +26372,6 @@ msgstr ""
 "com/knowledge-base/victorops-restendpoint-integration/\" target=\"_blank"
 "\">hier</a><br />Diese URL kann auch aus dem Passwortspeicher von Check_MK "
 "übernommen werden."
-
-msgid "Learn something about what changed at Checkmk."
-msgstr "Erfahren Sie etwas darüber, was sich bei Checkmk geändert hat."
 
 #, fuzzy
 msgid "Leave layout mode"
@@ -36031,7 +36030,7 @@ msgid "Plugin"
 msgstr "Plugin"
 
 #, fuzzy
-msgid "Plugin API documentation"
+msgid "Plugin API reference"
 msgstr "Plugin Argumente"
 
 msgid "Plugin Arguments"
@@ -40001,6 +40000,10 @@ msgstr "Datenquelle auswählen"
 
 msgid "Select a timeperiod"
 msgstr "Zeitperiode auswählen"
+
+#, fuzzy
+msgid "Select all checkboxes"
+msgstr "Checkboxen verstecken"
 
 msgid "Select an Icon"
 msgstr "Wählen Sie ein Symbol aus"
@@ -44956,10 +44959,6 @@ msgstr "Tablespaces"
 
 msgid "Tabloid"
 msgstr "Tabloid"
-
-#, fuzzy
-msgid "Tactical overview"
-msgstr "Gesamtübersicht"
 
 #, fuzzy
 msgid "Tag"
@@ -51060,6 +51059,10 @@ msgstr ""
 "(Endung <tt>.ics</tt>) erzeugen. Ein üblicher Zweck ist das importieren von "
 "Feiertagskalendern. Daher werden nur Ganztagestermine importiert."
 
+#, fuzzy
+msgid "This page does not provide an inline help."
+msgstr "Dieses Paket enthält noch keine Regeln."
+
 msgid "This page does not support cluster hosts."
 msgstr "Diese Ansicht unterstützt keine Cluster-Hosts."
 
@@ -53750,10 +53753,6 @@ msgid "Today"
 msgstr "Heute"
 
 #, fuzzy
-msgid "Toggle checkboxes"
-msgstr "Checkboxen verstecken"
-
-#, fuzzy
 msgid "Toggle elements"
 msgstr "Namen umschalten"
 
@@ -54896,8 +54895,32 @@ msgstr ""
 
 #, python-format
 msgid ""
+"Unable to render this availability view, because we miss some required "
+"context information (%s). Please update the filters on the source view or "
+"add the missing HTTP request variables to your request"
+msgstr ""
+
+#, python-format
+msgid ""
 "Unable to render this dashlet, because we miss some required context "
 "information (%s). Please update the form on the right to make this dashlet "
+"render."
+msgstr ""
+
+#, fuzzy, python-format
+msgid ""
+"Unable to render this dashlet, because we miss some required context "
+"information (%s). You can either add this as a fixed setting to either the "
+"report scheduler, report or report element or call the report creation with "
+"the missing HTTP variables."
+msgstr ""
+"Fehlende Kontextinformationen: %s. Sie können dies entweder als feste "
+"Einstellung hinzufügen, oder den mit den fehlenden HTTP-Variablen aufrufen."
+
+#, python-format
+msgid ""
+"Unable to render this view, because we miss some required context "
+"information (%s). Please update the form on the right to make this view "
 "render."
 msgstr ""
 
@@ -62563,6 +62586,10 @@ msgstr "anstehend"
 msgid "pending connections"
 msgstr "ausstehende Verbindungen"
 
+#, fuzzy, python-format
+msgid "per %s"
+msgstr "%s pro %s"
+
 msgid "per second"
 msgstr "pro Sekunde"
 
@@ -63129,6 +63156,35 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "%s alerts"
+#~ msgstr "%s Alarme"
+
+#~ msgid "%s notifications"
+#~ msgstr "%s Benachrichtigungen"
+
+#, fuzzy
+#~| msgid "External command"
+#~ msgid "External links"
+#~ msgstr "Externes Kommando"
+
+#, fuzzy
+#~| msgid "Internal name"
+#~ msgid "Internal links"
+#~ msgstr "Interner Name"
+
+#~ msgid "Learn something about what changed at Checkmk."
+#~ msgstr "Erfahren Sie etwas darüber, was sich bei Checkmk geändert hat."
+
+#, fuzzy
+#~| msgid "Plugin Arguments"
+#~ msgid "Plugin API documentation"
+#~ msgstr "Plugin Argumente"
+
+#, fuzzy
+#~| msgid "Tactical Overview"
+#~ msgid "Tactical overview"
+#~ msgstr "Gesamtübersicht"
 
 #, fuzzy
 #~| msgid "Override check state based on channel state"
@@ -64243,9 +64299,6 @@ msgstr ""
 
 #~ msgid "Capacity Management"
 #~ msgstr "Kapazitätenverwaltung"
-
-#~ msgid "Change ago:"
-#~ msgstr "Änderungen vor:"
 
 #~ msgid "Change event state"
 #~ msgstr "Ändere Ereignisstatus"

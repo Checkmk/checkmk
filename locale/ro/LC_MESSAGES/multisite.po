@@ -373,6 +373,10 @@ msgid "%s"
 msgstr ""
 
 #, python-format
+msgid "%s %s"
+msgstr ""
+
+#, python-format
 msgid "%s (Customer missing)"
 msgstr ""
 
@@ -430,10 +434,6 @@ msgstr "cereri"
 #, python-format
 msgid "%s Retrieve created dump file"
 msgstr ""
-
-#, fuzzy, python-format
-msgid "%s alerts"
-msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy, python-format
 msgid "%s by host"
@@ -521,10 +521,6 @@ msgid "%s not monitored by one of the explicitly selected sites."
 msgstr ""
 
 #, fuzzy, python-format
-msgid "%s notifications"
-msgstr "trimite notificare"
-
-#, fuzzy, python-format
 msgid "%s of %s"
 msgstr "% din Flash"
 
@@ -543,10 +539,6 @@ msgstr "Optiuni tabel"
 #, fuzzy, python-format
 msgid "%s other %s"
 msgstr "% din Flash"
-
-#, fuzzy, python-format
-msgid "%s per %s"
-msgstr " secunde "
 
 #, fuzzy, python-format
 msgid "%s per Second"
@@ -1959,6 +1951,9 @@ msgstr ""
 #, fuzzy
 msgid "API key/token"
 msgstr "API accesibil"
+
+msgid "APIs"
+msgstr ""
 
 msgid "APT Updates"
 msgstr ""
@@ -7794,6 +7789,10 @@ msgid "Change infotext in check output"
 msgstr ""
 
 #, fuzzy
+msgid "Change log"
+msgstr "%d schimbări"
+
+#, fuzzy
 msgid "Change password"
 msgstr "Parola"
 
@@ -12912,6 +12911,10 @@ msgstr ""
 msgid "Descriptions"
 msgstr "foloseste descrierea"
 
+#, fuzzy
+msgid "Deselect all checkboxes"
+msgstr "Verificări active"
+
 msgid "Design This Graph"
 msgstr ""
 
@@ -13640,6 +13643,9 @@ msgstr ""
 #, fuzzy
 msgid "Display range"
 msgstr "% / gamă"
+
+msgid "Display range: Minimum must be strictly less than maximum"
+msgstr ""
 
 #, fuzzy
 msgid "Display sidecar details on"
@@ -16787,13 +16793,14 @@ msgstr ""
 msgid "Extents"
 msgstr "Adaugă Conținut"
 
+#, fuzzy
+msgid "External"
+msgstr "Adaugă Conținut"
+
 msgid "External ID (optional)"
 msgstr ""
 
 msgid "External command"
-msgstr ""
-
-msgid "External links"
 msgstr ""
 
 msgid "Extra bytes read/written"
@@ -23067,10 +23074,6 @@ msgid ""
 "%s"
 msgstr ""
 
-#, fuzzy
-msgid "Internal links"
-msgstr "Nume nou"
-
 msgid "Interpretation of Config Sync Status"
 msgstr ""
 
@@ -24353,9 +24356,6 @@ msgid ""
 "Learn how to setup a REST endpoint <a href=\"https://help.victorops.com/"
 "knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</"
 "a><br />This URL can also be collected from the Password Store from Check_MK."
-msgstr ""
-
-msgid "Learn something about what changed at Checkmk."
 msgstr ""
 
 #, fuzzy
@@ -33798,7 +33798,7 @@ msgstr ""
 msgid "Plugin"
 msgstr ""
 
-msgid "Plugin API documentation"
+msgid "Plugin API reference"
 msgstr ""
 
 msgid "Plugin Arguments"
@@ -37736,6 +37736,10 @@ msgstr ""
 #, fuzzy
 msgid "Select a timeperiod"
 msgstr "Perioada de timp Noua"
+
+#, fuzzy
+msgid "Select all checkboxes"
+msgstr "Verificări active"
 
 msgid "Select an Icon"
 msgstr ""
@@ -42387,10 +42391,6 @@ msgstr ""
 
 msgid "Tabloid"
 msgstr ""
-
-#, fuzzy
-msgid "Tactical overview"
-msgstr "Privire de ansamblu"
 
 #, fuzzy
 msgid "Tag"
@@ -47061,6 +47061,10 @@ msgid ""
 "appointments are handled by this import."
 msgstr ""
 
+#, fuzzy
+msgid "This page does not provide an inline help."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 msgid "This page does not support cluster hosts."
 msgstr ""
 
@@ -49063,10 +49067,6 @@ msgid "Today"
 msgstr ""
 
 #, fuzzy
-msgid "Toggle checkboxes"
-msgstr "Verificări active"
-
-#, fuzzy
 msgid "Toggle elements"
 msgstr "Adaugă element"
 
@@ -50190,8 +50190,30 @@ msgstr ""
 
 #, python-format
 msgid ""
+"Unable to render this availability view, because we miss some required "
+"context information (%s). Please update the filters on the source view or "
+"add the missing HTTP request variables to your request"
+msgstr ""
+
+#, python-format
+msgid ""
 "Unable to render this dashlet, because we miss some required context "
 "information (%s). Please update the form on the right to make this dashlet "
+"render."
+msgstr ""
+
+#, python-format
+msgid ""
+"Unable to render this dashlet, because we miss some required context "
+"information (%s). You can either add this as a fixed setting to either the "
+"report scheduler, report or report element or call the report creation with "
+"the missing HTTP variables."
+msgstr ""
+
+#, python-format
+msgid ""
+"Unable to render this view, because we miss some required context "
+"information (%s). Please update the form on the right to make this view "
 "render."
 msgstr ""
 
@@ -56886,6 +56908,10 @@ msgstr ""
 msgid "pending connections"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "per %s"
+msgstr " secunde "
+
 #, fuzzy
 msgid "per second"
 msgstr " secunde "
@@ -57463,6 +57489,22 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "%s alerts"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "%s notifications"
+#~ msgstr "trimite notificare"
+
+#, fuzzy
+#~ msgid "Internal links"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Tactical overview"
+#~ msgstr "Privire de ansamblu"
+
+#, fuzzy
 #~| msgid "to port:"
 #~ msgid "Don't fill area plot"
 #~ msgstr "catre port:"
@@ -57859,10 +57901,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Cannot reschedule check: %s"
 #~ msgstr "<b>reprogramează o verificare imediată"
-
-#, fuzzy
-#~ msgid "Change ago:"
-#~ msgstr "%d schimbări"
 
 #, fuzzy
 #~ msgid "Change event state"

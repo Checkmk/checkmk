@@ -1,0 +1,14 @@
+Title: proxmox_ve: use powers of 10 for KB, MB, GB, TB instead of powers of 2
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612261389
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+Converting size information from backup logs had been using powers of 2 for
+both IEC and non-IEC units (so kB was 1024, instead of 1000, ..).
+IEC units will still use powers of 2 while non-IEC units will now use powers
+of 10 instead.

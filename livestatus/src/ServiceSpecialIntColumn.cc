@@ -15,13 +15,11 @@
 #include "cmc.h"
 #else
 #include "nagios.h"
-#include "pnp4nagios.h"
 #endif
 
 int32_t ServiceSpecialIntColumn::getValue(
     Row row, const contact * /* auth_user */) const {
 #ifdef CMC
-    (void)_mc;
     if (const auto *const object = columnData<Object>(row)) {
         switch (_type) {
             case Type::real_hard_state: {
@@ -44,9 +42,6 @@ int32_t ServiceSpecialIntColumn::getValue(
                 }
                 return svc->state_type == HARD_STATE ? svc->current_state
                                                      : svc->last_hard_state;
-            case Type::pnp_graph_present:
-                return pnpgraph_present(_mc, svc->host_ptr->name,
-                                        svc->description);
         }
     }
 #endif

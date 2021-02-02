@@ -50,6 +50,7 @@
 #include "TimeperiodsCache.h"
 #include "auth.h"
 #include "nagios.h"
+#include "pnp4nagios.h"
 
 extern service *service_list;
 extern TimeperiodsCache *g_timeperiods_cache;
@@ -388,13 +389,13 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the service (eliminates a problem in hard_state)",
-        offsets, table->core(),
-        ServiceSpecialIntColumn::Type::real_hard_state));
-    table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
+        offsets, ServiceSpecialIntColumn::Type::real_hard_state));
+    table->addColumn(std::make_unique<IntLambdaColumn<service>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
-        offsets, table->core(),
-        ServiceSpecialIntColumn::Type::pnp_graph_present));
+        offsets, [mc](const service &svc) {
+            return pnpgraph_present(mc, svc.host_ptr->name, svc.description);
+        }));
     table->addColumn(std::make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
         offsets));

@@ -656,10 +656,12 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
         offsets, table->core(), HostSpecialIntColumn::Type::real_hard_state));
-    table->addColumn(std::make_unique<HostSpecialIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
-        offsets, table->core(), HostSpecialIntColumn::Type::pnp_graph_present));
+        offsets, [mc](const host &hst) {
+            return pnpgraph_present(mc, hst.name, dummy_service_description());
+        }));
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",

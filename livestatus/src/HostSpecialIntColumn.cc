@@ -20,7 +20,6 @@
 #include "cmc.h"
 #else
 #include "nagios.h"
-#include "pnp4nagios.h"
 #endif
 
 int32_t HostSpecialIntColumn::getValue(Row row,
@@ -51,9 +50,6 @@ int32_t HostSpecialIntColumn::getValue(Row row,
                 }
                 return hst->state_type == HARD_STATE ? hst->current_state
                                                      : hst->last_hard_state;
-            case Type::pnp_graph_present:
-                return pnpgraph_present(_mc, hst->name,
-                                        dummy_service_description());
             case Type::mk_inventory_last:
                 return static_cast<int32_t>(
                     mk_inventory_last(_mc->mkInventoryPath() / hst->name));

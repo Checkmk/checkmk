@@ -116,10 +116,6 @@ class BarplotFigure extends cmk_figures.FigureBase {
 
         this.render_grid();
         this._render_values(domain);
-
-        let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
-        if (!plot) return;
-        cmk_figures.state_component(this, plot.svc_state);
     }
 
     _render_values(domain) {

@@ -845,8 +845,8 @@ def _filter_active_hosts(config_cache: 'ConfigCache',
 
     return [
         hostname for hostname in hostlist
-        if (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts)) and
-        _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
+        if _host_is_member_of_site(config_cache, hostname, distributed_wato_site) and
+        (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts))
     ]
 
 

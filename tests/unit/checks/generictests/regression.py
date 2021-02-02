@@ -193,8 +193,7 @@ def _get_out_filename(datasetfile, inplace):
 
     return out_name.replace('.py', '_regression.py')
 
-@pytest.mark.usefixtures("config_load_all_checks")
-def test_main(config_check_info, datasetfile, inplace):
+def test_main(fix_plugin_legacy, datasetfile, inplace):
     """Script to create test datasets.
 
     This is a script. But we need the py.test environment, so it comes in the
@@ -214,6 +213,6 @@ def test_main(config_check_info, datasetfile, inplace):
 
     regression = WritableDataset(vars(input_data))
 
-    generictests.run(config_check_info, regression, write=True)
+    generictests.run(fix_plugin_legacy.check_info, regression, write=True)
 
     regression.write(_get_out_filename(datasetfile, inplace))

@@ -62,8 +62,8 @@ def test_deprecated_api_features(deprecated_pattern):
     )
 
 
-def test_includes_are_deprecated(config_check_info):
-    for name, check_info in config_check_info.items():
+def test_includes_are_deprecated(fix_plugin_legacy):
+    for name, check_info in fix_plugin_legacy.check_info.items():
         assert not check_info.get("includes"), f"Plugin {name}: includes are deprecated!"
 
 

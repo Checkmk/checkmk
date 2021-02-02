@@ -8,25 +8,22 @@ from collections import defaultdict
 
 import pytest  # type: ignore[import]
 
-import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base.api.agent_based.register import get_relevant_raw_sections
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
-def test_all_sections_are_subscribed_by_some_plugin():
+def test_all_sections_are_subscribed_by_some_plugin(fix_register):
     """Test that all registered sections are subscribed to by some plugin
 
     We have very few sections (one at the time of this writing),
     that are not subscribed to by any plugin.
     We can afford to keep track of those.
     """
-    all_section_names = set(s.name for s in agent_based_register.iter_all_snmp_sections())
-    all_section_names.update(s.name for s in agent_based_register.iter_all_agent_sections())
+    all_section_names = set(fix_register.snmp_sections) | set(fix_register.agent_sections)
 
     subscribed_sections_names = set(
-        agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=(p.name for p in agent_based_register.iter_all_check_plugins()),
-            inventory_plugin_names=(
-                i.name for i in agent_based_register.iter_all_inventory_plugins()),
+        get_relevant_raw_sections(
+            check_plugin_names=fix_register.check_plugins,
+            inventory_plugin_names=fix_register.inventory_plugins,
         ))
 
     unsubscribed_sections_names = {str(n) for n in all_section_names - subscribed_sections_names}
@@ -34,8 +31,7 @@ def test_all_sections_are_subscribed_by_some_plugin():
     assert unsubscribed_sections_names == {'labels'}
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
-def test_section_detection_uses_sysdescr_or_sysobjid():
+def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
     """Make sure the first OID is the system description or the system object ID
 
     Checking the system description or the system object ID first increases performance
@@ -96,7 +92,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
         },
     }
 
-    for section in agent_based_register.iter_all_snmp_sections():
+    for section in fix_register.snmp_sections.values():
         for (first_checked_oid, *_rest1), *_rest2 in (  #
                 criterion for criterion in section.detect_spec if criterion  #
         ):
@@ -111,8 +107,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
             """
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
-def test_section_parse_function_does_something():
+def test_section_parse_function_does_something(fix_register):
     """We make sure that the parse function is not trivial
 
     To ease the learning curve when developing check plugins
@@ -284,10 +279,10 @@ def test_section_parse_function_does_something():
         'winperf',
     }
 
-    for snmp_section in agent_based_register.iter_all_snmp_sections():
-        assert (str(snmp_section.name) not in legacy_exceptions_for_easier_migration) is (
+    for name, snmp_section in fix_register.snmp_sections.items():
+        assert (str(name) not in legacy_exceptions_for_easier_migration) is (
             snmp_section.parse_function.__code__.co_code != noop_code)
 
-    for agent_section in agent_based_register.iter_all_agent_sections():
-        assert (str(agent_section.name) not in legacy_exceptions_for_easier_migration) is (
+    for name, agent_section in fix_register.agent_sections.items():
+        assert (str(name) not in legacy_exceptions_for_easier_migration) is (
             agent_section.parse_function.__code__.co_code != noop_code)

@@ -340,7 +340,6 @@ discovered_wmi_cpuload_result = [(None, None)]
     ('wmi_cpuload', info_wmi_cpuload_8, discovered_wmi_cpuload_result),
     ('dotnet_clrmemory', [[u'WMItimeout']], []),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_wmi_cpu_load_discovery(check_name, info, expected):
     check = Check(check_name)
     discovery_result = DiscoveryResult(check.run_discovery(check.run_parse(info)))
@@ -352,7 +351,6 @@ def test_wmi_cpu_load_discovery(check_name, info, expected):
     ('wmi_webservices', info_wmi_timeout, None),
     ('wmi_cpuload', info_subsection_wmi_timeout, None),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_wmi_cpuload_timeout_exceptions(check_name, info, expected):
     check = Check(check_name)
     with pytest.raises(MKCounterWrapped):

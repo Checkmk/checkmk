@@ -16,7 +16,6 @@ pytestmark = pytest.mark.checks
         "port": 80
     }], ["-p", 80, "-I", "$HOSTADDRESS$"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_form_submit_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_form_submit")

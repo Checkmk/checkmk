@@ -36,7 +36,6 @@ pytestmark = pytest.mark.checks
         'horizon': 90
     }),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_get_conn_rate_params(config, result):
     check = Check("f5_bigip_conns")
     assert check.context["get_conn_rate_params"](config) == result
@@ -54,7 +53,6 @@ def test_get_conn_rate_params(config, result):
     "connections per second is setup in predictive levels. Please use the given "
     "lower bound specified in the maximum connections, or set maximum "
     "connections to use fixed levels."))])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_get_conn_rate_params_exception(config, exception_msg):
     check = Check("f5_bigip_conns")
     with pytest.raises(ValueError, match=exception_msg):

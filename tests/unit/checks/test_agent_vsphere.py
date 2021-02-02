@@ -43,7 +43,6 @@ pytestmark = pytest.mark.checks
         "--spaces", "cut", "--vm_piggyname", "alias", "--no-cert-check", "address"
     ]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_vsphere_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_vsphere')

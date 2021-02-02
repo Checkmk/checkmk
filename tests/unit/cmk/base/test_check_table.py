@@ -27,7 +27,7 @@ from cmk.base.check_utils import Service
 
 # TODO: This misses a lot of cases
 # - different get_check_table arguments
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize(
     "hostname,expected_result",
     [
@@ -185,9 +185,7 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
     assert check_table.get_check_table(hostname) == expected_result
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
-@pytest.mark.usefixtures("registered_check_plugins"
-                        )  # make sure this fixture is computed. TODO: clean this up!
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("hostname, expected_result", [
     ("mgmt-board-ipmi", [(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X")]),
     ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),
@@ -232,7 +230,7 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
 
 
 # verify static check outcome, including timespecific params
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize(
     "hostname,expected_result",
     [

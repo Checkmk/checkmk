@@ -17,7 +17,6 @@ pytestmark = pytest.mark.checks
 # ##### hp_msa_volume (health) #########
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_health_parse_yields_with_volume_name_as_items():
     info = [["volume", "1", "volume-name", "Foo"]]
     expected_yield = {'Foo': {'volume-name': 'Foo'}}
@@ -26,7 +25,6 @@ def test_health_parse_yields_with_volume_name_as_items():
     assert parse_result == expected_yield
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_health_parse_yields_volume_name_as_items_despite_of_durable_id():
     info = [["volume", "1", "durable-id", "Foo 1"], ["volume", "1", "volume-name", "Bar 1"],
             ["volume", "1", "any-key-1", "abc"], ["volume-statistics", "1", "volume-name", "Bar 1"],
@@ -41,7 +39,6 @@ def test_health_parse_yields_volume_name_as_items_despite_of_durable_id():
     assert parsed_items == expected_items
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_health_discovery_forwards_info():
     info = [["volume", "1", "volume-name", "Foo"]]
     check = Check("hp_msa_volume")
@@ -49,7 +46,6 @@ def test_health_discovery_forwards_info():
     assert discovery_result == [(info[0], None)]
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_health_check_accepts_volume_name_and_durable_id_as_item():
     item_1st = "VMFS_01"
     item_2nd = "V4"
@@ -79,7 +75,6 @@ def test_health_check_accepts_volume_name_and_durable_id_as_item():
 # ##### hp_msa_volume.df ######
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_df_discovery_yields_volume_name_as_item():
     parsed = {'Foo': {'durable-id': 'Bar'}}
     expected_yield: Tuple[str, Dict[Any, Any]] = ('Foo', {})
@@ -88,7 +83,6 @@ def test_df_discovery_yields_volume_name_as_item():
         assert item == expected_yield
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_df_check():
     item_1st = 'VMFS_01'
     params = {'flex_levels': 'irrelevant'}
@@ -126,7 +120,6 @@ def test_df_check():
 # #### hp_msa_io.io  #####
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_io_discovery_yields_summary():
     parsed = {'Foo': {'durable-id': 'Bar'}}
     expected_yield = ('SUMMARY', 'diskstat_default_levels')
@@ -135,7 +128,6 @@ def test_io_discovery_yields_summary():
         assert item == expected_yield
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_io_check():
     item_1st = 'VMFS_01'
     params = {'flex_levels': 'irrelevant'}

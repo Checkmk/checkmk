@@ -26,7 +26,6 @@ pytestmark = pytest.mark.checks
         'user': 'username'
     }, ["--address=host", "--user=username", "--password=password", "--no-cert-check"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_storeonce_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_storeonce')

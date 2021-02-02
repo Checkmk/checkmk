@@ -15,7 +15,6 @@ pytestmark = pytest.mark.checks
 CHECK_NAME = "ibm_mq_managers"
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_parse():
     lines = """\
 QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT PERMITTED) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.6) HA() DRROLE()
@@ -48,7 +47,6 @@ QMNAME(THE.CRASHED.ONE)                                   STATUS(ENDED UNEXPECTE
     assert 'INSTANCES' not in attrs
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_single_instance_running():
     lines = """\
 QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT PERMITTED) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(8.0.0.6)
@@ -73,7 +71,6 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
     assert expected == actual
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_rdqm():
     lines = """\
 QMNAME(THE.RDQM.ONE)                                      STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT PERMITTED) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(9.1.0.4) HA(REPLICATED) DRROLE()
@@ -99,7 +96,6 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
     assert expected == actual
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ended_preemtively():
     lines = """\
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
@@ -130,7 +126,6 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
     assert expected == actual
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_status_wato_override():
     lines = """\
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
@@ -173,7 +168,6 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
     assert expected == actual
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_version_mismatch():
     lines = """\
 QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)

@@ -23,7 +23,6 @@ _broken_info = [
 @pytest.mark.parametrize('info', [
     _broken_info,
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_oracle_intance_uptime_discovery(info):
     main_check = Check('oracle_instance')
     check = Check('oracle_instance.uptime')
@@ -33,7 +32,6 @@ def test_oracle_intance_uptime_discovery(info):
 @pytest.mark.parametrize('info', [
     _broken_info,
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_oracle_instance_uptime_check_error(info):
     main_check = Check('oracle_instance')
     check = Check('oracle_instance.uptime')

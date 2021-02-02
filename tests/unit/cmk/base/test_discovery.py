@@ -804,7 +804,7 @@ def test__get_service_filters_lists(parameters, new_whitelist, new_blacklist, va
     assert service_filters.vanished is not None
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test__find_candidates():
     broker = ParsedSectionsBroker()
 
@@ -942,7 +942,7 @@ _expected_host_labels = {
 }
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test_do_discovery(monkeypatch):
     ts = Scenario().add_host("test-host", ipaddress="127.0.0.1")
     ts.fake_standard_linux_agent_output("test-host")
@@ -1490,7 +1490,7 @@ _discovery_test_cases = [
 ]
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__discover_host_labels_and_services_on_realhost(realhost_scenario, discovery_test_case):
     scenario = realhost_scenario
@@ -1511,7 +1511,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
     assert services == discovery_test_case.expected_services
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_test_case):
     scenario = realhost_scenario
@@ -1535,7 +1535,7 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
         scenario.hostname).load() == discovery_test_case.on_realhost.expected_stored_labels
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discovery_test_case):
     scenario = cluster_scenario
@@ -1555,7 +1555,7 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discove
     assert services == discovery_test_case.expected_services
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_test_case):
     scenario = cluster_scenario

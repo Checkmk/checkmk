@@ -90,7 +90,6 @@ pytestmark = pytest.mark.checks
                                     [('humidity', 75.0, None, None, 0, 100)])),
               ]),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ra32e_sensors_inputs(info, discoveries_expected, checks_expected):
     ra32e_sensors_checks = [
         'ra32e_sensors', 'ra32e_sensors.humidity', 'ra32e_sensors.voltage', 'ra32e_sensors.power'

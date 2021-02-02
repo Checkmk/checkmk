@@ -99,7 +99,6 @@ info_recreate = [[
         ],
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_k8s_replicas(info, expected):
     check = Check("k8s_replicas")
     parsed = parse_json(info)
@@ -115,7 +114,6 @@ def test_k8s_replicas(info, expected):
     (1, 4, 6),
     ('25%', 10, 14),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_surge_levels(max_surge, total, expected):
     check = Check('k8s_replicas')
     crit = check.context['parse_k8s_surge'](max_surge, total)
@@ -126,7 +124,6 @@ def test_surge_levels(max_surge, total, expected):
     (2, 5, 3),
     ('25%', 10, 7),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_unavailability_levels(max_unavailable, total, expected):
     check = Check('k8s_replicas')
     crit_lower = check.context['parse_k8s_unavailability'](max_unavailable, total)

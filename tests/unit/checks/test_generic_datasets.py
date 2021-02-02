@@ -41,8 +41,8 @@ def fixture_mock_time():
         yield
 
 
-@pytest.mark.usefixtures("mock_time", "config_load_all_checks")
+@pytest.mark.usefixtures("mock_time")
 @pytest.mark.parametrize("datasetname", generictests.DATASET_NAMES)
-def test_dataset(datasetname, config_check_info):
+def test_dataset(datasetname, fix_plugin_legacy):
     dataset = import_module("generictests.datasets.%s" % datasetname)
-    generictests.run(config_check_info, dataset)
+    generictests.run(fix_plugin_legacy.check_info, dataset)

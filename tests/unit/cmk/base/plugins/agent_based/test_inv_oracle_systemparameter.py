@@ -36,7 +36,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
         ),
     ]),
 ])
-@pytest.mark.usefixtures("config_load_all_inventory_plugins")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test_inv_oracle_systemparameter(info, expected):
     plugin = agent_based_register.get_inventory_plugin(
         InventoryPluginName('oracle_systemparameter'))

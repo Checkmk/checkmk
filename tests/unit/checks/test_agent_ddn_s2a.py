@@ -19,7 +19,6 @@ from testlib import SpecialAgent  # type: ignore[import]
         'port': 8090
     }, ['address', '8090', 'user', 'test']),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ddn_s2a(params, result):
     agent = SpecialAgent("agent_ddn_s2a")
     arguments = agent.argument_func(params, "host", "address")

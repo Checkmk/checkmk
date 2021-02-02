@@ -21,7 +21,6 @@ pytestmark = pytest.mark.checks
         "--segment_display_brightness", "5"
     ]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_tinkerforge_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_tinkerforge')

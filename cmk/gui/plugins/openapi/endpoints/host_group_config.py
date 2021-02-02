@@ -75,8 +75,8 @@ def bulk_create(params):
           response_schema=response_schemas.DomainObjectCollection)
 def list_groups(params):
     """Show all host groups"""
-    return constructors.serve_json(
-        serialize_group_list('service_group_config', list(load_host_group_information().values())))
+    collection = [{"id": k, "alias": v["alias"]} for k, v in load_host_group_information().items()]
+    return constructors.serve_json(serialize_group_list('host_group_config', collection))
 
 
 @Endpoint(constructors.object_href('host_group_config', '{name}'),

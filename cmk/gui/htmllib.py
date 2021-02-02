@@ -2422,29 +2422,30 @@ class html(ABCHTMLGenerator):
 
         self.open_div(class_=["foldable", "open" if isopen else "closed"])
 
-        if not icon:
-            self.img(id_=img_id,
-                     class_=["treeangle", "open" if isopen else "closed"],
-                     src="themes/%s/images/tree_closed.png" % (self._theme),
-                     onclick=onclick)
         if isinstance(title, HTML):  # custom HTML code
-            if icon:
-                self.img(class_=["treeangle", "title"],
-                         src="themes/%s/images/icon_%s.png" % (self._theme, icon),
-                         onclick=onclick)
             self.write_text(title)
-            if indent != "form":
-                self.br()
+
         else:
             self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
-            if icon:
-                self.img(class_=["treeangle", "title"],
-                         src="themes/%s/images/icon_%s.png" % (self._theme, icon))
+
             if title_url:
                 self.a(title, href=title_url, target=title_target)
             else:
                 self.write_text(title)
             self.close_b()
+
+        if icon:
+            self.img(id_=img_id,
+                     class_=["treeangle", "title", "open" if isopen else "closed"],
+                     src="themes/%s/images/icon_%s.png" % (self._theme, icon),
+                     onclick=onclick)
+        else:
+            self.img(id_=img_id,
+                     class_=["treeangle", "open" if isopen else "closed"],
+                     src="themes/%s/images/tree_closed.png" % (self._theme),
+                     onclick=onclick)
+
+        if indent != "form" or not isinstance(title, HTML):
             self.br()
 
         indent_style = "padding-left: %dpx; " % (indent is True and 15 or 0)

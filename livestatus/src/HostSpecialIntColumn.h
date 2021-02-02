@@ -19,7 +19,11 @@ class Row;
 
 class HostSpecialIntColumn : public IntColumn {
 public:
-    enum class Type { real_hard_state, pnp_graph_present, mk_inventory_last };
+#ifndef CMC
+    enum class Type{real_hard_state, pnp_graph_present, mk_inventory_last};
+#else
+    enum class Type { real_hard_state, mk_inventory_last };
+#endif
 
     HostSpecialIntColumn(const std::string &name,
                          const std::string &description,

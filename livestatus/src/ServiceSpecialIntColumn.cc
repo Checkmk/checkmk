@@ -33,8 +33,6 @@ int32_t ServiceSpecialIntColumn::getValue(
                            ? state->_current_state
                            : state->_last_hard_state;
             }
-            case Type::pnp_graph_present:
-                return object->rrdInfo().names.empty() ? 0 : 1;
         }
     }
 #else

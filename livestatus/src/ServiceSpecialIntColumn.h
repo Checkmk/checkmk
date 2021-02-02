@@ -19,7 +19,11 @@ class Row;
 
 class ServiceSpecialIntColumn : public IntColumn {
 public:
-    enum class Type { real_hard_state, pnp_graph_present };
+#ifndef CMC
+    enum class Type{real_hard_state, pnp_graph_present};
+#else
+    enum class Type { real_hard_state };
+#endif
 
     ServiceSpecialIntColumn(const std::string &name,
                             const std::string &description,

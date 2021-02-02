@@ -16,17 +16,12 @@ class Row;
 
 class ServiceSpecialDoubleColumn : public DoubleColumn {
 public:
-    enum class Type { staleness };
-
     ServiceSpecialDoubleColumn(const std::string& name,
                                const std::string& description,
-                               const ColumnOffsets& offsets, Type ssdc_type)
-        : DoubleColumn(name, description, offsets), _type(ssdc_type) {}
+                               const ColumnOffsets& offsets)
+        : DoubleColumn(name, description, offsets) {}
 
     [[nodiscard]] double getValue(Row row) const override;
-
-private:
-    const Type _type;
 };
 
 #endif  // ServiceSpecialDoubleColumn_h

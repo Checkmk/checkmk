@@ -26,21 +26,14 @@ using namespace std::chrono_literals;
 double HostSpecialDoubleColumn::getValue(Row row) const {
 #ifdef CMC
     if (const auto *object = columnData<Object>(row)) {
-        switch (_type) {
-            case Type::staleness:
-                return staleness(object);
-        }
+        return staleness(object);
     }
 #else
     if (const auto *hst = columnData<host>(row)) {
-        switch (_type) {
-            case Type::staleness: {
-                extern int interval_length;
-                return static_cast<double>(time(nullptr) - hst->last_check) /
-                       ((hst->check_interval == 0 ? 1 : hst->check_interval) *
-                        interval_length);
-            }
-        }
+        extern int interval_length;
+        return static_cast<double>(time(nullptr) - hst->last_check) /
+               ((hst->check_interval == 0 ? 1 : hst->check_interval) *
+                interval_length);
     }
 #endif
     return 0;

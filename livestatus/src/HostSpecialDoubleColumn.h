@@ -20,21 +20,16 @@ class Object;
 
 class HostSpecialDoubleColumn : public DoubleColumn {
 public:
-    enum class Type { staleness };
-
     HostSpecialDoubleColumn(const std::string& name,
                             const std::string& description,
-                            const ColumnOffsets& offsets, Type hsdc_type)
-        : DoubleColumn(name, description, offsets), _type(hsdc_type) {}
+                            const ColumnOffsets& offsets)
+        : DoubleColumn(name, description, offsets) {}
 
     [[nodiscard]] double getValue(Row row) const override;
 
 #ifdef CMC
     static double staleness(const Object* object);
 #endif
-
-private:
-    const Type _type;
 };
 
 #endif  // HostSpecialDoubleColumn_h

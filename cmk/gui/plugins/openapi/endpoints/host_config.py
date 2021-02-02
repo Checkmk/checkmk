@@ -225,6 +225,7 @@ def bulk_update_hosts(params):
           method='put',
           path_params=[HOST_NAME],
           etag='both',
+          additional_status_codes=[404, 409],
           request_schema=request_schemas.RenameHost,
           response_schema=response_schemas.DomainObject)
 def rename_host(params):
@@ -256,6 +257,7 @@ def rename_host(params):
           method='post',
           path_params=[HOST_NAME],
           etag='both',
+          additional_status_codes=[404],
           request_schema=request_schemas.MoveHost,
           response_schema=response_schemas.DomainObject)
 def move(params):

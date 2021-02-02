@@ -51,7 +51,7 @@ def test_openapi_activate_changes(
         resp = wsgi_app.call_method(
             'post',
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
-            status=301,
+            status=302,
             params='{"redirect": true}',
             content_type='application/json',
         )

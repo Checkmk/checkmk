@@ -47,7 +47,7 @@ ACTIVATION_ID = {
               302: ("The activation is still running. Redirecting to the "
                     "'Wait for completion' endpoint."),
           },
-          will_do_redirects=True,
+          additional_status_codes=[302],
           request_schema=request_schemas.ActivateChanges,
           response_schema=response_schemas.DomainObject)
 def activate_changes(params):
@@ -58,7 +58,7 @@ def activate_changes(params):
         activation_id = watolib.activate_changes_start(sites)
     if body['redirect']:
         wait_for = _completion_link(activation_id)
-        response = Response(status=301)
+        response = Response(status=302)
         response.location = wait_for['href']
         return response
 
@@ -94,7 +94,7 @@ def _serve_activation_run(activation_id, is_running=False):
           'cmk/wait-for-completion',
           method='get',
           path_params=[ACTIVATION_ID],
-          will_do_redirects=True,
+          additional_status_codes=[302],
           output_empty=True)
 def activate_changes_state(params):
     """Wait for activation completion
@@ -107,7 +107,7 @@ def activate_changes_state(params):
     manager.load_activation(activation_id)
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
     if not done:
-        response = Response(status=301)
+        response = Response(status=302)
         response.location = request.url
         return response
 

@@ -48,6 +48,7 @@ SERVICE_DESCRIPTION = {
           'cmk/create',
           method='post',
           tag_group='Monitoring',
+          additional_status_codes=[404],
           request_schema=request_schemas.AcknowledgeHostRelatedProblem,
           output_empty=True)
 def set_acknowledgement_related_to_host(params):

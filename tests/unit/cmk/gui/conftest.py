@@ -388,3 +388,4 @@ def with_host(module_wide_request_context, with_user_login, suppress_automation_
 @pytest.fixture(autouse=True)
 def mock__add_extensions_for_license_usage(monkeypatch):
     monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)
+

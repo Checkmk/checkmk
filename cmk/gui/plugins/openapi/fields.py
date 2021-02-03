@@ -23,6 +23,10 @@ from cmk.gui.plugins.openapi.livestatus_helpers.types import Table, Column
 from cmk.gui.plugins.openapi.utils import BaseSchema
 from cmk.gui.plugins.webapi import validate_host_attributes
 from cmk.utils.exceptions import MKException
+import cmk.utils.version as version
+
+if version.is_managed_edition():
+    from cmk.gui.cme import managed
 
 
 class String(_fields.String):
@@ -888,6 +892,60 @@ class SiteField(_fields.String):
     def _validate(self, value):
         if value not in config.allsites().keys():
             raise self.make_error("unknown_site", site=value)
+
+
+def customer_field(**kw):
+    if version.is_managed_edition():
+        return _CustomerField(**kw)
+    return None
+
+
+class _CustomerField(_fields.String):
+    """A field representing a customer"""
+    default_error_messages = {
+        'invalid_global': 'Invalid customer: global',
+        'should_exist': 'Customer missing: {customer!r}',
+        'should_not_exist': 'Customer {customer!r} already exists.',
+    }
+
+    def __init__(
+        self,
+        example='provider',
+        description="By specifying a customer, you configure on which sites the user object will be "
+        "available. 'global' will make the object available on all sites.",
+        required=True,
+        validate=None,
+        allow_global=True,
+        should_exist: bool = True,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        self._allow_global = allow_global
+        super().__init__(
+            example=example,
+            description=description,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+        if value == "global":
+            value = managed.SCOPE_GLOBAL
+
+        if not self._allow_global and value is None:
+            raise self.make_error("invalid_global")
+
+        included = value in managed.customer_collection()
+        if self._should_exist and not included:
+            raise self.make_error("should_exist", host_name=value)
+        if not self._should_exist and included:
+            raise self.make_error("should_not_exist", host_name=value)
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data, **kwargs)
+        return None if value == "global" else value
 
 
 Boolean = _fields.Boolean

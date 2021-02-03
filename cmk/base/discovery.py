@@ -441,31 +441,11 @@ def _do_discovery_for(
         run_only_plugin_names=run_only_plugin_names,
     )
 
-    # There are four ways of how to merge existing and new discovered checks:
-    # 1. -II without --checks=
-    #        check_plugin_names is empty, only_new is False
-    #    --> complete drop old services, only use new ones
-    # 2. -II with --checks=
-    #    --> drop old services of that types
-    #        check_plugin_names is not empty, only_new is False
-    # 3. -I
-    #    --> just add new services
-    #        only_new is True
-    # 4. -I --only-host-labels
-    #    --> only discover new host labels
-
-    if not run_only_plugin_names and not only_new:
-        existing_services: List[Service] = []
-    else:
-        existing_services = autochecks.parse_autochecks_file(host_name, config.service_description)
-
-    new_services: List[Service] = []
-    # Take over old items if -I is selected or if -II is selected with
-    # --checks= and the check type is not one of the listed ones
-    for existing_service in existing_services:
-        if only_new or (run_only_plugin_names and
-                        existing_service.check_plugin_name not in run_only_plugin_names):
-            new_services.append(existing_service)
+    new_services = _load_existing_services(
+        host_name=host_name,
+        only_new=only_new,
+        run_only_plugin_names=run_only_plugin_names,
+    )
 
     services_per_plugin: Counter[CheckPluginName] = Counter()
     for discovered_service in discovered_services:
@@ -491,6 +471,38 @@ def _do_discovery_for(
         messages.append("no%s host labels" % (only_new and " new" or ""))
 
     section.section_success(", ".join(messages))
+
+
+def _load_existing_services(
+    *,
+    host_name: HostName,
+    only_new: bool,
+    run_only_plugin_names: Optional[Set[CheckPluginName]],
+) -> List[Service]:
+    # There are four ways of how to merge existing and new discovered checks:
+    # 1. -II without --checks=
+    #        check_plugin_names is empty, only_new is False
+    #    --> complete drop old services, only use new ones
+    # 2. -II with --checks=
+    #    --> drop old services of that types
+    #        check_plugin_names is not empty, only_new is False
+    # 3. -I
+    #    --> just add new services
+    #        only_new is True
+    # 4. -I --only-host-labels
+    #    --> only discover new host labels
+    if not run_only_plugin_names and not only_new:
+        return []
+
+    autocheck_services = autochecks.parse_autochecks_file(host_name, config.service_description)
+
+    # Take over old items if -I is selected ...
+    if only_new:
+        return autocheck_services
+
+    # ... or if -II is selected with --plugins= and the check type is not one of the listed ones
+    assert run_only_plugin_names
+    return [s for s in autocheck_services if s.check_plugin_name not in run_only_plugin_names]
 
 
 # determine changed services on host.

@@ -365,11 +365,6 @@ mrproper:
 
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
-	curl -O https://bootstrap.pypa.io/2.7/get-pip.py
-	sudo python2 get-pip.py
-	rm get-pip.py
-	python2 -m pip install --upgrade pip
-
 	sudo apt-get install \
 	    aptitude \
 	    autoconf \
@@ -400,6 +395,10 @@ setup:
 	    enchant \
 	    ksh \
 	    p7zip-full
+	curl -O https://bootstrap.pypa.io/2.7/get-pip.py
+	sudo python2 get-pip.py
+	rm get-pip.py
+	python2 -m pip install --upgrade pip
 	sudo -H pip install -U pipenv
 	$(MAKE) -C web setup #  broken in 1.6
 	$(MAKE) -C omd setup

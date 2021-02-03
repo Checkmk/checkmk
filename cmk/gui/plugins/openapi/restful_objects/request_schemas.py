@@ -243,7 +243,15 @@ EXISTING_SERVICE_GROUP_NAME = Group(
 )
 
 
-class InputHostGroup(BaseSchema):
+class InputGroup(BaseSchema):
+    customer = fields.customer_field(
+        required=True,
+        should_exist=True,
+        allow_global=True,
+    )
+
+
+class InputHostGroup(InputGroup):
     """Creating a host group"""
     name = GROUP_NAME_FIELD
     alias = fields.String(example="Windows Servers")
@@ -267,7 +275,11 @@ class UpdateGroup(BaseSchema):
         description="The alias of the group",
         required=True,
     )
-    customer = fields.customer_field(required=False, should_exist=True)
+    customer = fields.customer_field(
+        required=False,
+        should_exist=True,
+        allow_global=True,
+    )
 
 
 class UpdateHostGroup(BaseSchema):
@@ -287,7 +299,7 @@ class BulkUpdateHostGroup(BaseSchema):
                           }])
 
 
-class InputContactGroup(BaseSchema):
+class InputContactGroup(InputGroup):
     """Creating a contact group"""
     name = fields.String(required=True, example="OnCall")
     alias = fields.String(example="Not on Sundays.")
@@ -329,7 +341,7 @@ class BulkUpdateContactGroup(BaseSchema):
                           }])
 
 
-class InputServiceGroup(BaseSchema):
+class InputServiceGroup(InputGroup):
     """Creating a service group"""
     name = GROUP_NAME_FIELD
     alias = fields.String(example="Environment Sensors")
@@ -359,7 +371,6 @@ class BulkUpdateServiceGroup(BaseSchema):
                           example=[{
                               'name': 'windows',
                               'attributes': {
-                                  'name': 'windows updated',
                                   'alias': 'Windows Servers',
                               },
                           }])

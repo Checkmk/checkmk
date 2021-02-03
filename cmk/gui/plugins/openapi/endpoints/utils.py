@@ -14,6 +14,7 @@ from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
 from cmk.gui.plugins.openapi.restful_objects import constructors
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib.groups import edit_group, GroupType
+from cmk.utils import version
 
 from cmk.utils.version import is_managed_edition
 if is_managed_edition():
@@ -72,6 +73,13 @@ def serialize_group(name: GroupName) -> Any:
     def _serializer(group):
         # type: (Dict[str, str]) -> Any
         ident = group['id']
+        extensions = {}
+        if "customer" in group:
+            customer_id = group["customer"]
+            extensions["customer"] = "global" if customer_id is None else customer_id
+        elif is_managed_edition():
+            extensions["customer"] = managed.default_customer_id()
+
         return constructors.domain_object(
             domain_type=name,
             identifier=ident,
@@ -84,7 +92,7 @@ def serialize_group(name: GroupName) -> Any:
                     base=constructors.object_href(name, ident),
                 ),
             },
-            extensions={},
+            extensions=extensions,
         )
 
     return _serializer
@@ -94,7 +102,9 @@ def update_groups(group_type: GroupType, entries: List[Dict[str, Any]]):
     groups = []
     for details in entries:
         name = details['name']
-        edit_group(name, group_type, details['attributes'])
+        group_details = details['attributes']
+        updated_details = updated_group_details(name, group_type, group_details)
+        edit_group(name, group_type, updated_details)
         groups.append(name)
 
     return fetch_specific_groups(groups, group_type)
@@ -120,16 +130,19 @@ def verify_group_exist(group_type: str, name):
     return name in specific_existing_groups
 
 
-def load_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Optional[str]]:
+def prepare_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     specific_existing_groups = load_group_information()[group_type]
-    group_details = {}
+    groups: Dict[str, Dict[str, Any]] = {}
     already_existing = []
     for details in entries:
         name = details['name']
         if name in specific_existing_groups:
             already_existing.append(name)
             continue
-        group_details[name] = details.get('alias')
+        group_details = {'alias': details['alias']}
+        if version.is_managed_edition():
+            group_details = update_customer_info(group_details, details['customer'])
+        groups[name] = group_details
 
     if already_existing:
         raise ProblemException(
@@ -139,7 +152,7 @@ def load_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Opt
             f"The following {group_type} group names already exist: {', '.join(already_existing)}",
         )
 
-    return group_details
+    return groups
 
 
 def fetch_group(
@@ -237,3 +250,32 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
 
     attributes["customer"] = customer_id
     return attributes
+
+
+def group_edit_details(body):
+    group_details = {k: v for k, v in body.items() if k != "customer"}
+
+    if version.is_managed_edition() and "customer" in body:
+        group_details = update_customer_info(group_details, body["customer"])
+    return group_details
+
+
+def updated_group_details(name, group_type, changed_details):
+    """Updates the group details without saving
+
+    Args:
+        name:
+            str representing the id of the group
+        group_type:
+            str representing the group type
+        changed_details:
+            dict containing the attributes which should be changed from the current group
+
+    Returns:
+        the to-be-saved dict with the changed attributes
+
+    """
+    group = fetch_group(name, group_type)
+    changed_details = group_edit_details(changed_details)
+    group.update(changed_details)
+    return group

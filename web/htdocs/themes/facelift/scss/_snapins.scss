@@ -678,6 +678,11 @@ table.cmc_stats {
     text-align: center;
   }
 
+  div {
+    font-size: $font-size-small;
+    color: $footnote-link-color;
+  }
+
   div.timerange {
     margin-bottom: 10px;
     color: $font-color;
@@ -707,6 +712,7 @@ table.cmc_stats {
     float: left;
     margin-top: 3px;
     margin-bottom: 5px;
+    background-image: url(images/select_arrow.png);
   }
 }
 

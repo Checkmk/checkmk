@@ -271,7 +271,8 @@ $wato-a-border: 1px solid rgb(33, 33, 33);
 
 $wato-subtitle-color: $grey-2;
 
-$footnote-link-color: $font-color;
+$footnote-link-color: rgba($white, 0.4);
+$footnote-bg-color: rgb(38, 47, 56);
 
 $table-data-single-padding: 2px 0;
 $td-single-left-padding: 2px 36px 2px 16px;

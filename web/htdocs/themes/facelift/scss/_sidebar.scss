@@ -432,14 +432,16 @@ div.snapin {
   /* The right-aligned link at the bottom of some snapins like the "views" snapin. */
   div.footnotelink {
     margin-top: 0;
-    text-align: right;
+    text-align: left;
 
     a {
-      border-radius: 5px;
+      border-radius: $spacing;
     }
 
     a:hover {
+      /* TODO: create a better hover effect */
       text-decoration: none;
+      opacity: 0.5;
     }
   }
 
@@ -508,26 +510,24 @@ div.snapin div.footnotelink a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin div.footnotelink body.main .popup_menu span.link,
 body.main .popup_menu div.snapin div.footnotelink span.link {
-  padding: 0;
-  margin-right: 16px;
-  margin-left: 0;
+  padding: 3px 7px 1px;
+  margin: 5px 10px 0 0;
   font-size: $font-size-small;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
   color: $footnote-link-color;
-  text-transform: uppercase;
-  background: transparent;
+  background: $footnote-bg-color;
   border: none;
   box-shadow: none;
 }
 
-div.snapin div.footnotelink a.link::before,
+//div.snapin div.footnotelink a.link::before,
 /* TODO: Reproduce these two html elements */
-div.snapin div.footnotelink body.main .popup_menu span.link::before,
+/*div.snapin div.footnotelink body.main .popup_menu span.link::before,
 body.main .popup_menu div.snapin div.footnotelink span.link::before {
   margin-right: 8px;
   content: "···";
-}
+}*/
 
 /* TODO: Reproduce this html element */
 div#snapinDragIndicator {

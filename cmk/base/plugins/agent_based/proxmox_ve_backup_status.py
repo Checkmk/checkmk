@@ -25,11 +25,19 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 
 class BackupData(TypedDict, total=False):
+    """Define names and types for all _potential_ details of backups.
+    These details are redundant and only partially available. The magic will be done in the check"""
+    started_time: datetime
+    total_duration: float
+    bytes_written_size: int
+    bytes_written_bandwidth: float
+    transfer_size: int
+    transfer_time: float
     archive_name: str
     archive_size: int
-    transfer_size: int
-    started_time: datetime
-    transfer_time: float
+    upload_amount: int
+    upload_total: int
+    upload_time: float
     error: str
 
 
@@ -39,16 +47,28 @@ Section = Mapping[str, BackupData]
 def parse_proxmox_ve_vm_backup_status(string_table: StringTable) -> Section:
     result = BackupData()
     backup_data = json.loads(string_table[0][0])['last_backup'] or {}
+    if 'started_time' in backup_data:
+        result['started_time'] = datetime.strptime(backup_data['started_time'], "%Y-%m-%d %H:%M:%S")
+    if 'total_duration' in backup_data:
+        result['total_duration'] = int(backup_data['total_duration'])
+    if 'bytes_written_size' in backup_data:
+        result['bytes_written_size'] = int(backup_data['bytes_written_size'])
+    if 'bytes_written_bandwidth' in backup_data:
+        result['bytes_written_bandwidth'] = float(backup_data['bytes_written_bandwidth'])
+    if 'transfer_size' in backup_data:
+        result['transfer_size'] = int(backup_data['transfer_size'])
+    if 'transfer_time' in backup_data:
+        result['transfer_time'] = float(backup_data['transfer_time'])
     if 'archive_name' in backup_data:
         result['archive_name'] = str(backup_data['archive_name'])
     if 'archive_size' in backup_data:
         result['archive_size'] = int(backup_data['archive_size'])
-    if 'transfer_size' in backup_data:
-        result['transfer_size'] = int(backup_data['transfer_size'])
-    if 'started_time' in backup_data:
-        result['started_time'] = datetime.strptime(backup_data['started_time'], "%Y-%m-%d %H:%M:%S")
-    if 'transfer_time' in backup_data:
-        result['transfer_time'] = int(backup_data['transfer_time'])
+    if 'upload_amount' in backup_data:
+        result['upload_amount'] = int(backup_data['upload_amount'])
+    if 'upload_total' in backup_data:
+        result['upload_total'] = int(backup_data['upload_total'])
+    if 'upload_time' in backup_data:
+        result['upload_time'] = float(backup_data['upload_time'])
     if 'error' in backup_data:
         result['error'] = str(backup_data['error'])
     return {'last_backup': result}
@@ -69,17 +89,23 @@ def check_proxmox_ve_vm_backup_status(
     ...     datetime.strptime("2020-12-07 21:28:02", '%Y-%m-%d %H:%M:%S'),
     ...     {'age_levels_upper': (93600, 180000)},
     ...     parse_proxmox_ve_vm_backup_status([[
-    ...       '{"last_backup": {'
-    ...       '  "archive_name": "/some/where/vzdump-qemu-109-2020_12_06-21_28_02.vma.zst",'
-    ...       '  "archive_size": 1099511627776,'
-    ...       '  "started_time": "2020-12-06 21:28:02",'
-    ...       '  "transfer_time": 100}}']])):
+    ...     '  {"last_backup": {'
+    ...     '     "started_time": "2020-12-06 21:28:02",'
+    ...     '     "total_duration": 140,'
+    ...     '     "archive_name": "/tmp/vzdump-qemu-109-2020_12_06-21_28_02.vma.zst",'
+    ...     '     "upload_amount": 10995116277,'
+    ...     '     "upload_total": 1099511627776,'
+    ...     '     "upload_time": 120'
+    ...     '  }}'
+    ...     ]])):
     ...   print(result)
     Result(state=<State.OK: 0>, summary='Age: 1 day 0 hours')
     Metric('age', 86400.0, levels=(93600.0, 180000.0), boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Time: 2020-12-06 21:28:02')
-    Result(state=<State.OK: 0>, summary='Size: 1.00 TiB')
-    Result(state=<State.OK: 0>, summary='Bandwidth: 11.0 GB/s')
+    Result(state=<State.OK: 0>, summary='Duration: 2 minutes 20 seconds')
+    Result(state=<State.OK: 0>, summary='Name: /tmp/vzdump-qemu-109-2020_12_06-21_28_02.vma.zst')
+    Result(state=<State.OK: 0>, summary='Dedup rate: 100.00')
+    Result(state=<State.OK: 0>, summary='Bandwidth: 91.6 MB/s')
     """
     age_levels_upper = params.get("age_levels_upper")
     last_backup = section.get("last_backup")
@@ -94,8 +120,8 @@ def check_proxmox_ve_vm_backup_status(
         )
         return
 
-    # Proxmox VE logs only provide time stamps w/o time zone so we have to hope the Proxmox VE node
-    # is located close to us
+    # Proxmox VE backup logs only provide time stamps without time zone so we have to hope
+    # the Proxmox VE node is located close to us
     started_time = last_backup.get("started_time")
     if started_time:
         yield from check_levels(
@@ -106,14 +132,33 @@ def check_proxmox_ve_vm_backup_status(
             label="Age",
             boundaries=(0, None),
         )
-    yield Result(state=State.OK, summary=f"Time: {last_backup.get('started_time')}")
-    yield Result(state=State.OK, summary=f"Size: {render.bytes(last_backup['archive_size'])}")
-
-    transfer_size = last_backup.get("transfer_size", last_backup.get("archive_size", 0))
     yield Result(
         state=State.OK,
-        summary=f"Bandwidth: {render.iobandwidth(transfer_size / last_backup['transfer_time'])}",
+        summary=f"Time: {last_backup.get('started_time')}",
     )
+    yield Result(
+        state=State.OK,
+        summary=f"Duration: {render.timespan(last_backup['total_duration'])}",
+    )
+
+    if 'archive_name' in last_backup:
+        yield Result(state=State.OK, summary=f"Name: {last_backup['archive_name']}")
+    if 'archive_size' in last_backup:
+        yield Result(state=State.OK, summary=f"Size: {render.bytes(last_backup['archive_size'])}")
+
+    if all(k in last_backup for k in {'bytes_written_size', 'bytes_written_bandwidth'}):
+        bandwidth = last_backup['bytes_written_bandwidth']
+    elif all(k in last_backup for k in {'transfer_size', 'transfer_time'}):
+        bandwidth = last_backup['transfer_size'] / last_backup['transfer_time']
+    elif all(k in last_backup for k in {'upload_amount', 'upload_total', 'upload_time'}):
+        bandwidth = last_backup['upload_amount'] / last_backup['upload_time']
+        yield Result(
+            state=State.OK,
+            summary=f"Dedup rate: {last_backup['upload_total'] / last_backup['upload_amount']:.2f}")
+    else:
+        return
+
+    yield Result(state=State.OK, summary=f"Bandwidth: {render.iobandwidth(bandwidth)}")
 
 
 register.agent_section(

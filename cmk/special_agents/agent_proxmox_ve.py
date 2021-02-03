@@ -129,7 +129,10 @@ class BackupTask:
         log_line_pattern = {
             key: re.compile(pat, flags=re.IGNORECASE) for key, pat in (
                 # not yet used - might be interesting for consistency
-                # ("start_job", r"^INFO: starting new backup job: vzdump (.*)"),
+                # (
+                #     "start_job",
+                #     r"^INFO: starting new backup job: vzdump (.*)",
+                # ),
 
                 # those for pattern must exist for every VM
                 (
@@ -158,7 +161,11 @@ class BackupTask:
                 ),
                 (
                     "transferred",
-                    r"^INFO: transferred (\d+) MB in (\d+) seconds \(.*\)",
+                    r"^INFO: transferred (.*) in (\d+) seconds \(.*\)$",
+                ),
+                (
+                    "uploaded",
+                    r"^INFO: (.*): had to upload (.*) of (.*) in (.*)s, average speed (.*)/s",
                 ),
                 (
                     "archive_size",
@@ -166,6 +173,13 @@ class BackupTask:
                 ),
             )
         }
+        required_keys = (
+            {'started_time', 'total_duration', 'bytes_written_bandwidth', 'bytes_written_size'},
+            {'started_time', 'total_duration', 'transfer_size', 'transfer_time'},
+            {'started_time', 'total_duration', 'upload_amount', 'upload_time', 'upload_total'},
+        )
+
+        #required_keys = {"transfer_time", "archive_name", "archive_size", "started_time"}
         result: Dict[str, BackupInfo] = {}
         current_vmid = ""
         current_dataset: BackupInfo = {}
@@ -215,18 +229,14 @@ class BackupTask:
                             "Found end of VM %r while another VM %r was active" %
                             (stop_vmid, current_vmid),
                         )
-                    if "transfer_time" not in current_dataset:
-                        current_dataset["transfer_time"] = duration_from_string(duration_str)
-                    missing_keys = {
-                        key for key in
-                        {"transfer_time", "archive_name", "archive_size", "started_time"}
-                        if key not in current_dataset
-                    }
-                    if missing_keys:
+                    current_dataset["total_duration"] = duration_from_string(duration_str)
+
+                    # complain if there are missing keys for any satisfying combination of keys
+                    if all(r - set(current_dataset.keys()) for r in required_keys):
                         raise BackupTask.LogParseWarning(
                             linenr,
-                            "End of VM %r while still information is missing (missing: %r)" %
-                            (current_vmid, missing_keys),
+                            "End of VM %r while still information is missing (we have: %r)" %
+                            (current_vmid, set(current_dataset.keys())),
                         )
                     result[current_vmid] = current_dataset
                     current_vmid = ""
@@ -259,22 +269,20 @@ class BackupTask:
 
                 bytes_written = extract_tuple(line, "bytes_written", 2)
                 if bytes_written:
-                    vm_size = int(bytes_written[0])
-                    bandw = to_bytes(bytes_written[1])
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr, "Found bandwidth information while no VM was active")
-                    current_dataset["transfer_size"] = vm_size
-                    current_dataset["transfer_time"] = round(vm_size / bandw) if bandw > 0 else 0
+                    current_dataset["bytes_written_size"] = int(bytes_written[0])
+                    current_dataset["bytes_written_bandwidth"] = to_bytes(bytes_written[1])
                     continue
 
                 transferred = extract_tuple(line, "transferred", 2)
                 if transferred:
-                    transfer_size_mb, transfer_time = transferred
+                    transfer_size, transfer_time = transferred
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr, "Found bandwidth information while no VM was active")
-                    current_dataset["transfer_size"] = int(transfer_size_mb) * (1 << 20)
+                    current_dataset["transfer_size"] = to_bytes(transfer_size)
                     current_dataset["transfer_time"] = int(transfer_time)
                     continue
 
@@ -294,6 +302,17 @@ class BackupTask:
                         raise BackupTask.LogParseWarning(
                             linenr, "Found archive size information without active VM")
                     current_dataset["archive_size"] = to_bytes(archive_size)
+                    continue
+
+                uploaded = extract_tuple(line, "uploaded", 5)
+                if uploaded:
+                    _, upload_amount, upload_total, upload_time, _ = uploaded
+                    if not current_vmid:
+                        raise BackupTask.LogParseWarning(
+                            linenr, "Found upload information while no VM was active")
+                    current_dataset["upload_amount"] = to_bytes(upload_amount)
+                    current_dataset["upload_total"] = to_bytes(upload_total)
+                    current_dataset["upload_time"] = float(upload_time)
                     continue
 
             except BackupTask.LogParseWarning as exc:

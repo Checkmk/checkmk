@@ -285,10 +285,7 @@ def test_label_validation(cls):
 ])
 def test_analyse_host_labels(discovered_host_labels_dir, existing_labels, new_labels,
                              expected_labels, load_labels):
-    hostname = "testhost"
     config.get_config_cache().initialize()
-    store = DiscoveredHostLabelsStore(hostname)
-    store.save(DiscoveredHostLabels(*[HostLabel(*x) for x in existing_labels]).to_dict())
 
     discovery_parameters = DiscoveryParameters(
         on_error="raise",
@@ -298,8 +295,10 @@ def test_analyse_host_labels(discovered_host_labels_dir, existing_labels, new_la
     )
 
     new_host_labels, _host_labels_per_plugin = _analyse_host_labels(
-        host_name=hostname,
+        host_name="testhost",
         discovered_host_labels=DiscoveredHostLabels(*[HostLabel(*x) for x in new_labels]),
+        existing_host_labels=(DiscoveredHostLabels(*[HostLabel(*x) for x in existing_labels])
+                              if discovery_parameters.load_labels else DiscoveredHostLabels()),
         discovery_parameters=discovery_parameters,
     )
 

@@ -1120,22 +1120,18 @@ def _analyse_host_labels(
     *,
     host_name: HostName,
     discovered_host_labels: DiscoveredHostLabels,
+    existing_host_labels: DiscoveredHostLabels,
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[DiscoveredHostLabels, Counter[str]]:
 
-    section.section_step("Perform host label discovery")
+    section.section_step("Analyse discovered host labels")
 
-    # Take over old items if -I is selected
-    if discovery_parameters.load_labels:
-        return_host_labels = DiscoveredHostLabels.from_dict(
-            DiscoveredHostLabelsStore(host_name).load())
-    else:
-        return_host_labels = DiscoveredHostLabels()
-
-    old_labels_set = {x.label for x in return_host_labels.to_list()}
+    old_labels_set = {x.label for x in existing_host_labels.to_list()}
     new_labels_set = {x.label for x in discovered_host_labels.to_list()}
 
     new_host_labels_per_plugin: Counter[str] = Counter()
+    # TODO: drop the unnecessary creation of DiscoveredHostLabels objects
+    return_host_labels = DiscoveredHostLabels.from_dict(existing_host_labels.to_dict())
     for label in discovered_host_labels.values():
         if label.label in old_labels_set:
             continue
@@ -1169,6 +1165,19 @@ def _analyse_host_labels(
         config.get_config_cache().ruleset_matcher.ruleset_optimizer.clear_caches()
 
     return return_host_labels, new_host_labels_per_plugin
+
+
+def _load_existing_host_labels(
+    *,
+    host_name: HostName,
+    discovery_parameters: DiscoveryParameters,
+) -> DiscoveredHostLabels:
+    # Take over old items if -I is selected
+    if not discovery_parameters.load_labels:
+        return DiscoveredHostLabels()
+
+    raw_label_dict = DiscoveredHostLabelsStore(host_name).load()
+    return DiscoveredHostLabels.from_dict(raw_label_dict)
 
 
 def _discover_host_labels(
@@ -1363,16 +1372,18 @@ def _discover_host_labels_and_services(
 ) -> Tuple[List[Service], HostLabelDiscoveryResult]:
     """Discovers host labels and services per real host or node"""
 
-    discovered_host_labels = _discover_host_labels(
-        host_name=host_name,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-    )
-
     host_labels, host_labels_per_plugin = _analyse_host_labels(
         host_name=host_name,
-        discovered_host_labels=discovered_host_labels,
+        discovered_host_labels=_discover_host_labels(
+            host_name=host_name,
+            ipaddress=ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
+        ),
+        existing_host_labels=_load_existing_host_labels(
+            host_name=host_name,
+            discovery_parameters=discovery_parameters,
+        ),
         discovery_parameters=discovery_parameters,
     )
 
@@ -1757,6 +1768,10 @@ def _get_cluster_services(
     cluster_host_labels, cluster_labels_per_plugin = _analyse_host_labels(
         host_name=host_config.hostname,
         discovered_host_labels=cluster_host_labels,
+        existing_host_labels=_load_existing_host_labels(
+            host_name=host_config.hostname,
+            discovery_parameters=discovery_parameters,
+        ),
         discovery_parameters=discovery_parameters,
     )
     return cluster_items, HostLabelDiscoveryResult(

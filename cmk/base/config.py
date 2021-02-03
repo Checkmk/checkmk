@@ -2775,12 +2775,11 @@ class HostConfig:
                 if not values:
                     continue
 
-            if key[0] == "_":
-                key = key.upper()
-
             if values[0] is not None:
                 attrs[key] = values[0]
 
+        # Convert _keys to uppercase. Affects explicit and rule based keys
+        attrs = {key.upper() if key[0] == "_" else key: value for key, value in attrs.items()}
         return attrs
 
     @property

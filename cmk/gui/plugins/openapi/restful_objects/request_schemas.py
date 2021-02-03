@@ -1238,6 +1238,13 @@ class CreateUser(BaseSchema):
         example="Mathias Kettner",
         attribute="alias",
     )
+    customer = fields.customer_field(
+        required=True,
+        should_exist=True,
+        allow_global=True,
+        description="By specifying a customer, you configure on which sites the user object will be available. " \
+                    "'global' will make the object available on all sites.",
+    )
     auth_option = fields.Nested(
         AuthOption,
         required=False,
@@ -1326,6 +1333,10 @@ class UpdateUser(BaseSchema):
         description="The alias or full name of the user",
         example="Mathias Kettner",
         attribute="alias",
+    )
+    customer = fields.customer_field(
+        required=False,
+        should_exist=True,
     )
     auth_option = fields.Nested(
         AuthUpdateOption,

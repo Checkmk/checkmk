@@ -16,10 +16,7 @@ def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypat
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    user_detail = {
-        'username': 'user',
-        'fullname': 'User Name',
-    }
+    user_detail = {'username': 'user', 'fullname': 'User Name'}
 
     base = "/NO_SITE/check_mk/api/v0"
     with freeze_time("2010-02-01 08:00:00"):
@@ -58,7 +55,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
         'fullname': 'User Name',
         'auth_option': {
             "auth_type": 'password',
-            'password': 'password'
+            'password': 'password',
         }
     }
 
@@ -186,7 +183,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
 
     collection_resp = wsgi_app.call_method(
         'get',
-        base + f"/domain-types/user_config/collections/all",
+        base + "/domain-types/user_config/collections/all",
         status=200,
     )
     assert len(collection_resp.json_body["value"]) == 2
@@ -202,7 +199,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
 
     resp = wsgi_app.call_method(
         'get',
-        base + f"/domain-types/user_config/collections/all",
+        base + "/domain-types/user_config/collections/all",
         status=200,
     )
     assert len(resp.json_body["value"]) == 1
@@ -317,6 +314,41 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
         'num_failed_logins': 0,
         'last_pw_change': 1265011200,  # no change in time from previous edit
         'enforce_pw_change': True
+    }
+
+
+def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypatch):
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+    monkeypatch.setattr("cmk.utils.version.is_managed_edition", lambda: True)
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    user_detail = {
+        'username': 'user',
+        'fullname': 'User Name',
+    }
+
+    base = "/NO_SITE/check_mk/api/v0"
+    with freeze_time("2010-02-01 08:00:00"):
+        resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/user_config/collections/all",
+            params=json.dumps(user_detail),
+            status=200,
+            content_type='application/json',
+        )
+    assert resp.json_body["extensions"]["attributes"] == {
+        'alias': 'User Name',
+        'contactgroups': [],
+        'disable_notifications': {},
+        'email': '',
+        'enforce_pw_change': False,
+        'fallback_contact': False,
+        'locked': False,
+        'pager': '',
+        'roles': [],
+        'user_scheme_serial': 0
     }
 
 

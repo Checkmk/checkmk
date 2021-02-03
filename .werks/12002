@@ -1,0 +1,14 @@
+Title: missing `cisco_asa_svc_default_levels` execption during cmk-udpate-config
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612344933
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+From Checkmk 2.0.0i1 to 2.0.0b5 the cmk-udpate-config command complained about
+a missing name `cisco_asa_svc_default_levels` execption during cmk-udpate-config.
+

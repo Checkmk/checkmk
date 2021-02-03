@@ -8,9 +8,7 @@
 #include "Row.h"
 
 #ifdef CMC
-#include "Metric.h"
 #include "Object.h"
-#include "RRDInfo.h"
 #include "State.h"
 #include "cmc.h"
 #else

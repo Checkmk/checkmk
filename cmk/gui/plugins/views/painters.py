@@ -12,7 +12,7 @@ import time
 import io
 
 import cmk.utils.paths
-import cmk.utils.render
+from cmk.utils.render import approx_age
 import cmk.utils.man_pages as man_pages
 from cmk.utils.defines import short_service_state_name, short_host_state_name
 
@@ -1022,7 +1022,7 @@ class PainterSvcCheckLatency(Painter):
         return ['service_latency']
 
     def render(self, row, cell):
-        return ("", cmk.utils.render.approx_age(row["service_latency"]))
+        return ("", approx_age(row["service_latency"]))
 
 
 @painter_registry.register
@@ -1042,7 +1042,7 @@ class PainterSvcCheckDuration(Painter):
         return ['service_execution_time']
 
     def render(self, row, cell):
-        return ("", cmk.utils.render.approx_age(row["service_execution_time"]))
+        return ("", approx_age(row["service_execution_time"]))
 
 
 @painter_registry.register
@@ -1082,7 +1082,7 @@ class PainterSvcNormalInterval(Painter):
         return ['service_check_interval']
 
     def render(self, row, cell):
-        return ("number", cmk.utils.render.approx_age(row["service_check_interval"] * 60.0))
+        return ("number", approx_age(row["service_check_interval"] * 60.0))
 
 
 @painter_registry.register
@@ -1102,7 +1102,7 @@ class PainterSvcRetryInterval(Painter):
         return ['service_retry_interval']
 
     def render(self, row, cell):
-        return ("number", cmk.utils.render.approx_age(row["service_retry_interval"] * 60.0))
+        return ("number", approx_age(row["service_retry_interval"] * 60.0))
 
 
 @painter_registry.register
@@ -1124,8 +1124,8 @@ class PainterSvcCheckInterval(Painter):
     def render(self, row, cell):
         return (
             None,
-            "%s / %s" % (cmk.utils.render.approx_age(row["service_check_interval"] * 60.0),
-                         cmk.utils.render.approx_age(row["service_retry_interval"] * 60.0)),
+            "%s / %s" % (approx_age(row["service_check_interval"] * 60.0),
+                         approx_age(row["service_retry_interval"] * 60.0)),
         )
 
 
@@ -2000,7 +2000,7 @@ class PainterHostCheckLatency(Painter):
         return ['host_latency']
 
     def render(self, row, cell):
-        return ("", cmk.utils.render.approx_age(row["host_latency"]))
+        return ("", approx_age(row["host_latency"]))
 
 
 @painter_registry.register
@@ -2020,7 +2020,7 @@ class PainterHostCheckDuration(Painter):
         return ['host_execution_time']
 
     def render(self, row, cell):
-        return ("", cmk.utils.render.approx_age(row["host_execution_time"]))
+        return ("", approx_age(row["host_execution_time"]))
 
 
 @painter_registry.register
@@ -2060,7 +2060,7 @@ class PainterHostNormalInterval(Painter):
         return ['host_check_interval']
 
     def render(self, row, cell):
-        return (None, cmk.utils.render.approx_age(row["host_check_interval"] * 60.0))
+        return (None, approx_age(row["host_check_interval"] * 60.0))
 
 
 @painter_registry.register
@@ -2080,7 +2080,7 @@ class PainterHostRetryInterval(Painter):
         return ['host_retry_interval']
 
     def render(self, row, cell):
-        return (None, cmk.utils.render.approx_age(row["host_retry_interval"] * 60.0))
+        return (None, approx_age(row["host_retry_interval"] * 60.0))
 
 
 @painter_registry.register
@@ -2102,8 +2102,8 @@ class PainterHostCheckInterval(Painter):
     def render(self, row, cell):
         return (
             None,
-            "%s / %s" % (cmk.utils.render.approx_age(row["host_check_interval"] * 60.0),
-                         cmk.utils.render.approx_age(row["host_retry_interval"] * 60.0)),
+            "%s / %s" % (approx_age(
+                row["host_check_interval"] * 60.0), approx_age(row["host_retry_interval"] * 60.0)),
         )
 
 

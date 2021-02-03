@@ -491,6 +491,12 @@ def grouping_single_group(config_section_name, files_iter, _grouping_conditions)
     yield group_name, files_iter
 
 
+def get_grouper(grouping_conditions):
+    if grouping_conditions:
+        return grouping_multiple_groups
+    return grouping_single_group
+
+
 #.
 #   .--Output--------------------------------------------------------------.
 #   |                    ___        _               _                      |
@@ -645,10 +651,7 @@ def main():
 
         #3 grouping
         grouping_conditions = config.get('grouping')
-        if grouping_conditions:
-            grouper = grouping_multiple_groups
-        else:
-            grouper = grouping_single_group
+        grouper = get_grouper(grouping_conditions)
         groups = grouper(config_section_name, filtered_files, grouping_conditions)
 
         #4 output

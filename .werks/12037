@@ -1,0 +1,14 @@
+Title: Fix dynamic configuration executing only phase 1 in some distributed setups
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1612349476
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Since werk #11972 (2.0.0b5) some dynamic configuration connections in
+distributed setups were only executing phase 1 of the dynamic configuration.
+As a result the connections were not creating new hosts anymore.

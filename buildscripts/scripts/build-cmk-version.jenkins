@@ -221,7 +221,7 @@ node(NODE) {
     }finally {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
-                create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, UPLOAD_DEST2, CMK_VERS)
+                create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
             }
         }
         if (shall_publish_package(scm, JOB_BASE_NAME)) {

@@ -18,6 +18,14 @@
 
 using minutes_d = std::chrono::duration<double, std::ratio<60>>;
 
+namespace mk {
+#if __cplusplus > 201703L
+using days = std::chrono::days;
+#else
+using days = std::chrono::duration<int64_t, std::ratio<86400>>;
+#endif
+}  // namespace mk
+
 inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
     return std::chrono::duration_cast<
                std::chrono::duration<double, std::milli>>(

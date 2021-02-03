@@ -2448,15 +2448,18 @@ class HostConfig:
         """Returns the parents of a host configured via ruleset "parents"
 
         Use only those parents which are defined and active in all_hosts"""
-        used_parents = []
+        parent_candidates = set()
+
+        # Parent by explicit matching
+        explicit_parents = self._explicit_host_attributes.get("parents")
+        if explicit_parents:
+            parent_candidates.update(explicit_parents.split(","))
 
         # Respect the ancient parents ruleset. This can not be configured via WATO and should be removed one day
         for parent_names in self._config_cache.host_extra_conf(self.hostname, parents):
-            for parent_name in parent_names.split(","):
-                if parent_name in self._config_cache.all_active_realhosts():
-                    used_parents.append(parent_name)
+            parent_candidates.update(parent_names.split(","))
 
-        return used_parents
+        return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
 
     def snmp_config(self, ipaddress: HostAddress) -> SNMPHostConfig:
         return SNMPHostConfig(
@@ -2744,13 +2747,14 @@ class HostConfig:
                 values = [attrs[key]]
             else:
                 values = self._config_cache.host_extra_conf(self.hostname, ruleset)
+                if not values:
+                    continue
 
-            if values:
-                if key[0] == "_":
-                    key = key.upper()
+            if key[0] == "_":
+                key = key.upper()
 
-                if values[0] is not None:
-                    attrs[key] = values[0]
+            if values[0] is not None:
+                attrs[key] = values[0]
 
         return attrs
 

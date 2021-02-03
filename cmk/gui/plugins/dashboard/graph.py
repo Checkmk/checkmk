@@ -6,6 +6,10 @@
 
 import json
 import livestatus
+from typing import (
+    Iterable,
+    Optional,
+)
 
 import cmk.gui.visuals as visuals
 import cmk.gui.sites as sites
@@ -28,10 +32,12 @@ from cmk.gui.plugins.dashboard.utils import (
     DashboardName,
     DashletConfig,
     DashletId,
+    macro_mapping_from_context,
 )
 
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options, resolve_graph_recipe
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
+from cmk.utils.macros import MacroMapping
 
 
 @dashlet_registry.register
@@ -243,3 +249,24 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             raise self._init_exception
 
         html.div("", id_="dashlet_graph_%d" % self._dashlet_id)
+
+    def _get_macro_mapping(self, title: str) -> MacroMapping:
+        context = self.context
+        site = self._get_site_from_dashlet_spec()
+        if site:
+            context["site"] = site
+        macro_mapping = macro_mapping_from_context(
+            context,
+            self.single_infos(),
+            self.display_title(),
+        )
+        macro_mapping["$GRAPH_TITLE$"] = self._dashlet_spec["_graph_title"]
+        return macro_mapping
+
+    def _get_site_from_dashlet_spec(self) -> Optional[str]:
+        return self.dashlet_spec["_graph_identification"][1].get("site")
+
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield "$SITE$"
+        yield "$GRAPH_TITLE$ " + _("(default title of the graph)")

@@ -8,7 +8,16 @@ import copy
 import time
 import json
 import traceback
-from typing import NamedTuple, Optional, Tuple, List, Union, Iterable
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import livestatus
 
@@ -822,13 +831,12 @@ def _graph_title_height_ex(graph_render_options):
     return 1  # ex
 
 
-default_dashlet_graph_render_options = {
+default_dashlet_graph_render_options: Mapping[str, Any] = {
     "font_size": 8,
     "show_graph_time": False,
     "show_margin": False,
     "show_legend": False,
     "show_title": False,
-    "title_format": ["plain", "add_host_name", "add_service_description"],
     "show_controls": False,
     "resizable": False,
     "show_time_range_previews": False,
@@ -836,7 +844,7 @@ default_dashlet_graph_render_options = {
 
 
 def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options):
-    graph_render_options = default_dashlet_graph_render_options.copy()
+    graph_render_options = {**default_dashlet_graph_render_options}
     graph_render_options = artwork.add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)
 

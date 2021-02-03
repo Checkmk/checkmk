@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import MutableMapping
 
-MacroMapping = Mapping[str, str]
+MacroMapping = MutableMapping[str, str]
 
 
 def replace_macros_in_str(string: str, macro_mapping: MacroMapping) -> str:

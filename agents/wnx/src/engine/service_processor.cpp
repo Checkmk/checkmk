@@ -3,6 +3,7 @@
 
 #include "service_processor.h"
 
+#include <fcntl.h>
 #include <sensapi.h>
 #include <shlobj_core.h>
 
@@ -421,6 +422,7 @@ void ServiceProcessor::sendDebugData() {
     auto started = startProviders(tp.value(), "");
     auto block = getAnswer(started);
     block.emplace_back('\0');  // yes, we need this for printf
+    _setmode(_fileno(stdout), _O_BINARY);
     auto count = printf("%s", block.data());
     if (count != block.size() - 1) {
         XLOG::l("Binary data at offset [{}]", count);

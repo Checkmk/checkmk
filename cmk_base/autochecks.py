@@ -472,27 +472,27 @@ def remove_autochecks_of(host_config):
     removed = 0
     if host_config.nodes:
         for node_name in host_config.nodes:
-            removed += _remove_autochecks_of_host(node_name, remove_clustered_autochecks=True)
+            removed += _remove_autochecks_of_host(node_name, remove_hostname=host_config.hostname)
     else:
         removed += _remove_autochecks_of_host(host_config.hostname,
-                                              remove_clustered_autochecks=False)
+                                              remove_hostname=host_config.hostname)
 
     return removed
 
 
-def _remove_autochecks_of_host(hostname, remove_clustered_autochecks):
-    # type: (str, bool) -> int
+def _remove_autochecks_of_host(hostname, remove_hostname):
+    # type: (str, str) -> int
     removed = 0
     new_items = []  # type: List[DiscoveredService]
     config_cache = config.get_config_cache()
 
     old_items = parse_autochecks_file(hostname)
     for existing_service in old_items:
-        is_on_cluster_host = hostname != config_cache.host_of_clustered_service(
+        target_host = config_cache.host_of_clustered_service(
             hostname,
             existing_service.description,
         )
-        if is_on_cluster_host == remove_clustered_autochecks:
+        if target_host == remove_hostname:
             removed += 1
         else:
             new_items.append(existing_service)

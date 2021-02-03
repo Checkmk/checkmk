@@ -322,7 +322,7 @@ try {
                 stage('Upload artifacts') {
                     // Only 'official' builds should end up on the Website
                     if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
-                        def UPLOAD_DEST = 'deploy@archive.checkmk.com:/var/downloads/checkmk'
+                        def UPLOAD_DEST = 'deploy@archive.tribe29.com:/var/downloads/checkmk'
                         sh """
                             cd ${ARCHIVE_DIR}
                             rsync -av \

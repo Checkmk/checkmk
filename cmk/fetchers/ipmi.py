@@ -7,7 +7,10 @@
 import logging
 from typing import Any, Dict, Final, List, Optional, TYPE_CHECKING
 
+from pyghmi.exceptions import IpmiException  # type: ignore[import]
+
 if TYPE_CHECKING:
+    # The remaining pyghmi imports are expensive (60 ms for all of them together).
     import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
     import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 
@@ -79,13 +82,17 @@ class IPMIFetcher(AgentFetcher):
             self.username or "no user",
         )
 
+        # Performance: See header.
         import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
-        self._command = ipmi_cmd.Command(
-            bmc=self.address,
-            userid=self.username,
-            password=self.password,
-            privlevel=2,
-        )
+        try:
+            self._command = ipmi_cmd.Command(
+                bmc=self.address,
+                userid=self.username,
+                password=self.password,
+                privlevel=2,
+            )
+        except IpmiException as exc:
+            raise MKFetcherError("IPMI connection failed") from exc
 
     def close(self) -> None:
         if self._command is None:

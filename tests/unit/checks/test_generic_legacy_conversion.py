@@ -361,6 +361,7 @@ def test_all_check_variables_present(config_check_variables):
         'checkpoint_vsx_default_levels',
         'cisco_asa_failover_default_levels',
         'cisco_asa_state_names',
+        'cisco_asa_svc_default_levels',
         'cisco_cpu_default_levels',
         'cisco_cpu_multiitem_default_levels',
         'cisco_fan_state_mapping',

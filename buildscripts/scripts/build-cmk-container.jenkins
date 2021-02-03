@@ -27,7 +27,7 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
-def UPLOAD_DEST = 'deploy@archive.checkmk.com:/var/downloads/checkmk/'
+def UPLOAD_DEST = 'deploy@archive.tribe29.com:/var/downloads/checkmk/'
 
 // Workaround to build arbitrary version: Copy the CMK package to /bauwelt/download/
 def ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS

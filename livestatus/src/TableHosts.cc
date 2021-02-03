@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <ctime>
 #include <filesystem>
 #include <iterator>
 #include <memory>
@@ -36,7 +37,6 @@
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
 #include "HostRRDColumn.h"
-#include "HostSpecialDoubleColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
@@ -706,8 +706,14 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return std::filesystem::path{args};
         }));
 
-    table->addColumn(std::make_unique<HostSpecialDoubleColumn>(
-        prefix + "staleness", "Staleness indicator for this host", offsets));
+    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+        prefix + "staleness", "Staleness indicator for this host", offsets,
+        [](const host &hst) {
+            extern int interval_length;
+            return static_cast<double>(time(nullptr) - hst.last_check) /
+                   ((hst.check_interval == 0 ? 1 : hst.check_interval) *
+                    interval_length);
+        }));
 
     table->addColumn(std::make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",

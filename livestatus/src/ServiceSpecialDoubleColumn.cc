@@ -5,24 +5,13 @@
 
 #include "ServiceSpecialDoubleColumn.h"
 
-#include "Row.h"
-
-#ifdef CMC
-#include "HostSpecialDoubleColumn.h"
-class Object;
-#else
 #include <cstring>
 #include <ctime>
 
+#include "Row.h"
 #include "nagios.h"
-#endif
 
 double ServiceSpecialDoubleColumn::getValue(Row row) const {
-#ifdef CMC
-    if (const auto *object = columnData<Object>(row)) {
-        return HostSpecialDoubleColumn::staleness(object);
-    }
-#else
     if (const auto *svc = columnData<service>(row)) {
         extern int interval_length;
         auto check_result_age =
@@ -55,6 +44,5 @@ double ServiceSpecialDoubleColumn::getValue(Row row) const {
         // check_interval
         return check_result_age / interval_length;
     }
-#endif
     return 0;
 }

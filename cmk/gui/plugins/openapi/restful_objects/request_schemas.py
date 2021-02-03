@@ -6,12 +6,11 @@
 import urllib.parse
 import json
 
-import cmk.gui.valuespec as valuespec
-
 from marshmallow import ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib, config
+from cmk.gui import config
+from cmk.gui.plugins.openapi.fields import HostField
 from cmk.utils.defines import weekday_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi import fields
@@ -21,7 +20,6 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_service_downtime,
     schedule_servicegroup_service_downtime,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
 from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
 from cmk.gui.userdb import load_users
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
@@ -41,49 +39,6 @@ class InputAttribute(BaseSchema):
     value = fields.String(required=True)
 
 
-class Hostname(fields.String):
-    """A field representing a hostname.
-
-    """
-    default_error_messages = {
-        'should_exist': 'Host missing: {host_name!r}',
-        'should_not_exist': 'Host {host_name!r} already exists.',
-        'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
-    }
-
-    def __init__(
-        self,
-        example='example.com',
-        pattern=HOST_NAME_REGEXP,
-        required=True,
-        validate=None,
-        should_exist: bool = True,
-        **kwargs,
-    ):
-        self._should_exist = should_exist
-        super().__init__(
-            example=example,
-            pattern=pattern,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    def _validate(self, value):
-        super()._validate(value)
-
-        host = watolib.Host.host(value)
-        if self._should_exist and not host:
-            self.fail("should_exist", host_name=value)
-        elif not self._should_exist and host:
-            self.fail("should_not_exist", host_name=value)
-
-        try:
-            valuespec.Hostname().validate_value(value, self.name)
-        except MKUserError as e:
-            self.fail("invalid_name", host_name=value, invalid_reason=str(e))
-
-
 QUERY = fields.Nested(
     fields.ExprSchema,
     description=("An query expression in nested dictionary form. If you want to "
@@ -100,16 +55,17 @@ QUERY = fields.Nested(
     required=False,
 )
 
-EXISTING_HOST_NAME = Hostname(
+EXISTING_HOST_NAME = HostField(
     description="The hostname or IP address itself.",
     required=True,
     should_exist=True,
 )
 
-MONITORED_HOST = fields.String(
+MONITORED_HOST = fields.HostField(
     description="The hostname or IP address itself.",
     example='example.com',
-    pattern=HOST_NAME_REGEXP,
+    should_exist=True,
+    should_be_monitored=True,
     required=True,
 )
 
@@ -154,7 +110,7 @@ SERVICEGROUP_NAME = fields.String(
 
 
 class CreateClusterHost(BaseSchema):
-    host_name = Hostname(
+    host_name = HostField(
         description="The hostname of the cluster host.",
         required=True,
         should_exist=False,
@@ -183,7 +139,7 @@ class UpdateNodes(BaseSchema):
 
 
 class CreateHost(BaseSchema):
-    host_name = Hostname(
+    host_name = HostField(
         description="The hostname or IP address of the host to be created.",
         required=True,
         should_exist=False,
@@ -261,7 +217,7 @@ class BulkUpdateHost(BaseSchema):
 
 
 class RenameHost(BaseSchema):
-    new_name = Hostname(
+    new_name = HostField(
         description="The new name of the existing host.",
         required=True,
         should_exist=False,

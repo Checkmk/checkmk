@@ -7,12 +7,18 @@ import json
 
 from cmk.gui.plugins.openapi import fields
 
-HOST_NAME_REGEXP = '[-0-9a-zA-Z_.]+'
 HOST_NAME = {
-    'host_name': fields.String(
+    'host_name': fields.HostField(
         description="A hostname.",
-        example='example.com',
-        pattern=HOST_NAME_REGEXP,
+        should_exist=True,
+    )
+}
+
+OPTIONAL_HOST_NAME = {
+    'host_name': fields.HostField(
+        description="A hostname.",
+        should_exist=True,
+        required=False,
     )
 }
 

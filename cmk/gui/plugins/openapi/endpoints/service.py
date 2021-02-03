@@ -25,7 +25,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
 
 PARAMETERS = [{
     'site': fields.String(description="Restrict the query to this particular site."),
@@ -79,7 +79,7 @@ def _list_host_services(param):
     constructors.collection_href('service'),
     '.../collection',
     method='get',
-    query_params=[HOST_NAME, *PARAMETERS],
+    query_params=[OPTIONAL_HOST_NAME, *PARAMETERS],
     tag_group='Monitoring',
     response_schema=response_schemas.DomainObjectCollection,
 )

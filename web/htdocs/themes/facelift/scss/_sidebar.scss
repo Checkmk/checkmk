@@ -465,12 +465,9 @@ div.snapin {
   /* state bullets at problem host or all hosts snapin */
   div.statebullet {
     float: left;
-    width: 10px;
-    height: 10px;
-    margin-right: 6px;
-    margin-left: 0;
-    border: 1px solid rgb(18, 58, 74);
-    box-shadow: 0 0 1px rgb(18, 58, 74);
+    width: 5px;
+    height: 5px;
+    border-radius: 5px;
   }
 }
 

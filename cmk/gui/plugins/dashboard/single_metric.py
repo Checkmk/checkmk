@@ -4,7 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Tuple as _Tuple
+from typing import (
+    Any,
+    Iterable,
+    Mapping,
+)
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -17,25 +21,39 @@ from cmk.gui.valuespec import (
     Timerange,
 )
 
-from cmk.gui.plugins.dashboard.utils import create_data_for_single_metric
+from cmk.gui.plugins.dashboard.utils import (
+    create_data_for_single_metric,
+    macro_mapping_from_context,
+    render_title_with_macros_string,
+)
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.metrics.valuespecs import ValuesWithUnits
 from cmk.gui.plugins.metrics.utils import MetricName
-from cmk.gui.plugins.metrics.html_render import title_info_elements
 from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns
 from cmk.gui.plugins.views.painters import paint_service_state_short
 
 
-def dashlet_title(settings, metrics):
-    title: List[_Tuple[str, Optional[str]]] = []
-    title_format = settings.get("title_format", ["plain"])
-
-    if settings.get("show_title", True) and metrics:
-        if settings.get("title") and "plain" in title_format:
-            title.append((settings.get("title"), ""))
-        title.extend(title_info_elements(metrics[0][2], [f for f in title_format if f != "plain"]))
-
-    return " / ".join(txt for txt, _ in title)
+def dashlet_title(
+    settings: Mapping[str, Any],
+    metric_specs: Mapping[str, Any],
+) -> str:
+    if not settings.get("show_title", True):
+        return ""
+    title = settings.get("title", "")
+    return render_title_with_macros_string(
+        title,
+        macro_mapping_from_context(
+            {
+                context_key: metric_specs[metrics_key] for metrics_key, context_key in (
+                    ("host_name", "host"),
+                    ("service_description", "service"),
+                    ("site", "site"),
+                ) if metrics_key in metric_specs
+            },
+            settings["single_infos"],
+            title,
+        ),
+    )
 
 
 def required_columns(properties, context):
@@ -110,7 +128,7 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
     return {
         "plot_definitions": plot_definitions,
         "data": data,
-        "title": dashlet_title(settings, metrics)
+        "title": dashlet_title(settings, metrics[0][2] if metrics else {})
     }
 
 
@@ -243,6 +261,10 @@ class GaugeDashlet(SingleMetricDashlet):
     def _vs_elements():
         return _vs_elements(["time_range", "display_range", "status_border"])
 
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield "$SITE$"
+
 
 #   .--Bar Plot------------------------------------------------------------.
 #   |                ____               ____  _       _                    |
@@ -305,3 +327,7 @@ class SingleGraphDashlet(SingleMetricDashlet):
     @staticmethod
     def _vs_elements():
         return _vs_elements(["time_range", "with_graph", "status_border"])
+
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield "$SITE$"

@@ -5,27 +5,49 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for module internals and the plugins"""
 
-import time
 import abc
-import json
 import copy
-from typing import Set, Optional, Any, Dict, Union, Tuple, List, Callable, cast, Type
+import json
+import time
 import urllib.parse
+from itertools import chain
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import cmk.utils.plugin_registry
+from cmk.utils.macros import (
+    MacroMapping,
+    replace_macros_in_str,
+)
 from cmk.utils.type_defs import UserId
-from cmk.gui.type_defs import HTTPVariables, VisualContext
+from cmk.gui.type_defs import (
+    HTTPVariables,
+    SingleInfos,
+    VisualContext,
+)
 
 import cmk.gui.sites as sites
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.figures import create_figures_response
 import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKGeneralException, MKTimeout, MKUserError
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import g, html, request
+from cmk.gui.sites import get_alias_of_host
 from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
@@ -44,8 +66,7 @@ from cmk.gui.plugins.views.utils import (
 )
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
-from cmk.gui.plugins.metrics.valuespecs import vs_title_infos, transform_graph_render_options
-from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
+from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import (
@@ -53,6 +74,8 @@ from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
 )
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 DashboardName = str
@@ -76,6 +99,38 @@ dashlet_types: Dict[str, DashletType] = {}
 # Declare constants to be used in the definitions of the dashboards
 GROW = 0
 MAX = -1
+
+
+def macro_mapping_from_context(
+    context: VisualContext,
+    single_infos: SingleInfos,
+    title: str,
+) -> MacroMapping:
+    macro_mapping = {
+        macro: str(context[key]) for macro, key in (
+            ("$HOST_NAME$", "host"),
+            ("$SERVICE_DESCRIPTION$", "service"),
+        ) if key in context and key in single_infos
+    }
+
+    only_sites = visuals.get_only_sites_from_context(context)
+    if only_sites and len(only_sites) == 1:
+        macro_mapping["$SITE$"] = only_sites[0]
+
+    if "$HOST_ALIAS$" in title and "$HOST_NAME$" in macro_mapping:
+        macro_mapping["$HOST_ALIAS$"] = get_alias_of_host(
+            macro_mapping.get("$SITE$"),
+            macro_mapping["$HOST_NAME$"],
+        )
+
+    return macro_mapping
+
+
+def render_title_with_macros_string(
+    title: str,
+    macro_mapping: MacroMapping,
+):
+    return replace_macros_in_str(_u(title), macro_mapping)
 
 
 class Dashlet(metaclass=abc.ABCMeta):
@@ -238,6 +293,23 @@ class Dashlet(metaclass=abc.ABCMeta):
     def display_title(self) -> str:
         return self._dashlet_spec.get("title", self.title())
 
+    def _get_macro_mapping(self, title: str) -> MacroMapping:
+        if self.has_context():
+            return macro_mapping_from_context(self.context, self.single_infos(), title)
+        return {}
+
+    def render_title_html(self) -> HTML:
+        title = self.display_title()
+        return text_with_links_to_user_translated_html([
+            (
+                replace_macros_in_str(
+                    title,
+                    self._get_macro_mapping(title),
+                ),
+                self.title_url(),
+            ),
+        ],)
+
     def show_title(self) -> bool:
         return self._dashlet_spec.get("show_title", True)
 
@@ -383,6 +455,32 @@ class Dashlet(metaclass=abc.ABCMeta):
 
         return globals()[urlfunc]()
 
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield from []
+
+
+def _get_title_macros_from_single_infos(single_infos: SingleInfos) -> Iterable[str]:
+    single_info_to_macros = {
+        "host": ("$HOST_NAME$", "$HOST_ALIAS$"),
+        "service": ("$SERVICE_DESCRIPTION$",),
+    }
+    for single_info in sorted(single_infos):
+        yield from single_info_to_macros.get(single_info, [])
+
+
+def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
+    available_macros = list(
+        chain(
+            _get_title_macros_from_single_infos(dashlet_type.single_infos()),
+            dashlet_type.get_additional_title_macros(),
+        ))
+    if not available_macros:
+        return ""
+    macros_as_list = f"<ul>{''.join(f'<li><tt>{macro}</tt></li>' for macro in available_macros)}</ul>"
+    return _("You can use the following macros to fill in the corresponding information:%s"
+            ) % macros_as_list
+
 
 def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[str]):
     return Dictionary(
@@ -418,13 +516,15 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
             ('title',
              TextUnicode(
                  title=_('Custom Title') + '<sup>*</sup>',
-                 help=_('Most dashlets have a hard coded static title and some are aware of '
-                        'its content and set the title dynamically, like the view snapin, which '
-                        'displays the title of the view. If you like to use any other title, '
-                        'set it here.'),
-                 size=50,
+                 help=" ".join((
+                     _('Most dashlets have a hard coded static title and some are aware of its '
+                       'content and set the title dynamically, like the view snapin, which '
+                       'displays the title of the view. If you like to use any other title, set it '
+                       'here.'),
+                     _title_help_text_for_macros(dashlet_type),
+                 )).rstrip(),
+                 size=75,
              )),
-            ("title_format", vs_title_infos()),
             ('title_url',
              TextUnicode(
                  title=_('Link of Title'),
@@ -699,21 +799,15 @@ def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
                 "show_legend": dashlet_spec.pop("show_legend", False),
                 "show_service": dashlet_spec.pop("show_service", True),
             }
-        # -> 2.0.0i1
-        dashlet_spec["graph_render_options"].setdefault(
-            "title_format", default_dashlet_graph_render_options["title_format"])
+        # -> 2.0.0b6
         transform_graph_render_options(dashlet_spec["graph_render_options"])
-        title_format = dashlet_spec["graph_render_options"].pop("title_format")
-        dashlet_spec.setdefault(
-            "title_format", title_format or dashlet_spec["graph_render_options"]["title_format"])
         dashlet_spec["graph_render_options"].pop("show_title", None)
+        # title_format is not used in Dashlets (Custom tiltle instead, field 'title')
+        dashlet_spec["graph_render_options"].pop("title_format", None)
 
     if dashlet_spec["type"] == "network_topology":
         # -> 2.0.0i Removed network topology dashlet type
         transform_topology_dashlet(dashlet_spec)
-
-    # -> 2.0.0i1 All dashlets have new mandatory title_format
-    dashlet_spec.setdefault("title_format", ['plain'])
 
     return dashlet_spec
 

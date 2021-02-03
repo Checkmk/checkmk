@@ -82,24 +82,29 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.plugins.dashboard.utils import (builtin_dashboards, GROW, MAX, dashlet_types,
-                                             dashlet_registry, Dashlet, get_all_dashboards,
-                                             save_all_dashboards, get_permitted_dashboards,
-                                             copy_view_into_dashlet, dashboard_breadcrumb,
-                                             dashlet_vs_general_settings)
+from cmk.gui.plugins.dashboard.utils import (
+    GROW,
+    MAX,
+    Dashlet,
+    copy_view_into_dashlet,
+    builtin_dashboards,
+    dashboard_breadcrumb,
+    dashlet_types,
+    dashlet_registry,
+    dashlet_vs_general_settings,
+    get_all_dashboards,
+    get_permitted_dashboards,
+    save_all_dashboards,
+)
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
     DashletId, ABCFigureDashlet,
 )
-from cmk.gui.plugins.metrics.html_render import (
-    title_info_elements,
-    default_dashlet_graph_render_options,
-)
+from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.node_visualization import get_topology_view_and_filters
 
-from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 loaded_with_language: Union[None, bool, str] = False
@@ -670,28 +675,13 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
                           "form on the right to make this dashlet render.") %
                         ", ".join(sorted(missing_single_infos)))))
 
-        title = _render_dashlet_title(dashlet)
+        title = dashlet.render_title_html()
         content = _render_dashlet_content(board, dashlet, is_update=False, mtime=board["mtime"])
 
     except Exception as e:
         content = render_dashlet_exception_content(dashlet, e)
 
     return title, content
-
-
-def _render_dashlet_title(dashlet: Dashlet) -> Union[str, HTML]:
-    title = dashlet.display_title()
-    title_elements = []
-    title_format = dashlet._dashlet_spec.get("title_format", ["plain"])
-
-    if dashlet.show_title() and title and "plain" in title_format:
-        title_elements.append((title, dashlet.title_url()))
-
-    if dashlet.type_name() == "pnpgraph" and dashlet._dashlet_spec.get("_graph_identification"):
-        title_elements.extend(
-            title_info_elements(dashlet._dashlet_spec["_graph_identification"][1], title_format))
-
-    return text_with_links_to_user_translated_html(title_elements)
 
 
 def _render_dashlet_content(board: DashboardConfig, dashlet: Dashlet, is_update: bool,

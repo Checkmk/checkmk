@@ -50,7 +50,7 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def BRANCH_VERSION
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
-def UPLOAD_DEST = 'deploy@customer.checkmk.com:/var/downloads/checkmk/'
+def UPLOAD_DEST = 'deploy@archive.tribe29.com:/var/downloads/checkmk/'
 
 def ARCHIVE_DIR = ''
 if (shall_publish_package(scm, JOB_BASE_NAME)) {

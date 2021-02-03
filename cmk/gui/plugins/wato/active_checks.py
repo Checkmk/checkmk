@@ -639,7 +639,7 @@ def _valuespec_active_checks_sql():
                     # which would then be turned into a string.
                     # Just make all this a string
                     forth=lambda old_val: [
-                        elem.decode() if isinstance(elem, bytes) else str(elem)
+                        elem.decode(encoding="utf-8") if isinstance(elem, str) else elem
                         for elem in ((old_val[-1] if isinstance(old_val, tuple) else old_val),)
                     ][0],
                 )),

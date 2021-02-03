@@ -11,20 +11,6 @@
 def inv_esx_systeminfo(parsed):
     node = inv_tree("software.os.")
 
-    def parse_flat(parsed):
-        mapping = {}
-        for line in parsed:
-            mapping[line[0]] = " ".join(line[1:])
-        return mapping
-
-    if isinstance(parsed, list):
-        # `parsed` may actually look like:
-        # [[u'vendor', u'VMWare,' u'Inc.],
-        #  [u'name', u'VMWare', u'ESXi'],
-        #  ...
-        # ]
-        parsed = parse_flat(parsed)
-
     node["vendor"] = parsed.get("vendor", "")
     node["name"] = parsed.get("name", "")
     node["version"] = parsed.get("version", "")

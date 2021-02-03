@@ -19,7 +19,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     name = _random_string(10)
     alias = _random_string(10)
 
-    group = {'name': name, 'alias': alias}
+    group = {'name': name, 'alias': alias, 'customer': 'provider'}
 
     base = "/NO_SITE/check_mk/api/v0"
     resp = wsgi_app.call_method(
@@ -80,7 +80,11 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    groups = [{'name': _random_string(10), 'alias': _random_string(10)} for _i in range(2)]
+    groups = [{
+        'name': _random_string(10),
+        'alias': _random_string(10),
+        'customer': 'provider'
+    } for _i in range(2)]
 
     base = "/NO_SITE/check_mk/api/v0"
     resp = wsgi_app.call_method(
@@ -91,6 +95,13 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         content_type='application/json',
     )
     assert len(resp.json['value']) == 2
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
+        status=200,
+    )
+    assert resp.json_body['extensions']['customer'] == 'provider'
 
     _resp = wsgi_app.call_method(
         'post',
@@ -104,6 +115,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         'name': group['name'],
         'attributes': {
             'alias': group['alias'],
+            'customer': 'global'
         },
     } for group in groups]
 
@@ -115,6 +127,35 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         content_type='application/json',
     )
 
+    resp = wsgi_app.call_method(
+        'get',
+        base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
+        status=200,
+    )
+    assert resp.json_body['extensions']['customer'] == 'global'
+
+    partial_update_groups = [{
+        'name': group['name'],
+        'attributes': {
+            'alias': f"{group['alias']} partial",
+        },
+    } for group in groups]
+
+    _resp = wsgi_app.call_method(
+        'put',
+        base + "/domain-types/%s_group_config/actions/bulk-update/invoke" % (group_type,),
+        params=json.dumps({'entries': partial_update_groups}),
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
+        status=200,
+    )
+    assert resp.json_body['extensions']['customer'] == 'global'
+
     _resp = wsgi_app.call_method(
         'delete',
         base + "/domain-types/%s_group_config/actions/bulk-delete/invoke" % (group_type,),
@@ -122,6 +163,58 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         status=204,
         content_type='application/json',
     )
+
+
+@pytest.mark.parametrize("group_type", ['host', 'contact', 'service'])
+def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    name = _random_string(10)
+    alias = _random_string(10)
+
+    group = {'name': name, 'alias': alias, 'customer': 'global'}
+
+    base = "/NO_SITE/check_mk/api/v0"
+    _resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/%s_group_config/collections/all" % (group_type,),
+        params=json.dumps(group),
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + f"/objects/{group_type}_group_config/{name}",
+        status=200,
+    )
+    assert resp.json_body["extensions"]["customer"] == 'global'
+
+    resp = wsgi_app.call_method(
+        'put',
+        base + f"/objects/{group_type}_group_config/{name}",
+        headers={'If-Match': resp.headers['ETag']},
+        params=json.dumps({
+            "alias": f"{alias}+",
+        }),
+        status=200,
+        content_type='application/json',
+    )
+    assert resp.json_body["extensions"]["customer"] == "global"
+
+    resp = wsgi_app.call_method(
+        'put',
+        base + f"/objects/{group_type}_group_config/{name}",
+        headers={'If-Match': resp.headers['ETag']},
+        params=json.dumps({
+            "alias": alias,
+            'customer': 'provider'
+        }),
+        status=200,
+        content_type='application/json',
+    )
+    assert resp.json_body["extensions"]["customer"] == "provider"
 
 
 def _random_string(size):

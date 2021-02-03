@@ -17,10 +17,12 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     serve_group,
     serialize_group,
     serialize_group_list,
-    load_groups,
+    prepare_groups,
     fetch_group,
     fetch_specific_groups,
     update_groups,
+    update_customer_info,
+    updated_group_details,
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -30,6 +32,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.groups import edit_group, add_group, load_contact_group_information
+from cmk.utils import version
 
 
 @Endpoint(constructors.collection_href('contact_group_config'),
@@ -42,8 +45,10 @@ def create(params):
     """Create a contact group"""
     body = params['body']
     name = body['name']
-    alias = body.get('alias')
-    add_group(name, 'contact', {'alias': alias})
+    group_details = {"alias": body.get("alias")}
+    if version.is_managed_edition():
+        group_details = update_customer_info(group_details, body["customer"])
+    add_group(name, 'contact', group_details)
     group = fetch_group(name, "contact")
     return serve_group(group, serialize_group('contact_group_config'))
 
@@ -57,11 +62,11 @@ def bulk_create(params):
     """Bulk create host groups"""
     body = params['body']
     entries = body['entries']
-    contact_group_details = load_groups("contact", entries)
+    contact_group_details = prepare_groups("contact", entries)
 
     contact_group_names = []
-    for group_name, group_alias in contact_group_details.items():
-        add_group(group_name, 'contact', {'alias': group_alias})
+    for group_name, group_details in contact_group_details.items():
+        add_group(group_name, 'contact', group_details)
         contact_group_names.append(group_name)
 
     contact_groups = fetch_specific_groups(contact_group_names, "contact")
@@ -143,7 +148,7 @@ def update(params):
     name = params['name']
     group = fetch_group(name, "contact")
     constructors.require_etag(constructors.etag_of_dict(group))
-    edit_group(name, 'contact', params['body'])
+    edit_group(name, 'contact', updated_group_details(name, 'contact', params['body']))
     group = fetch_group(name, "contact")
     return serve_group(group, serialize_group('contact_group_config'))
 

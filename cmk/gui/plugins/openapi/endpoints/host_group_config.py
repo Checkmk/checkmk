@@ -19,8 +19,10 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     serialize_group_list,
     fetch_group,
     fetch_specific_groups,
-    load_groups,
+    prepare_groups,
     update_groups,
+    update_customer_info,
+    updated_group_details,
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -31,6 +33,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.groups import load_host_group_information
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.groups import edit_group, add_group
+from cmk.utils import version
 
 
 @Endpoint(constructors.collection_href('host_group_config'),
@@ -43,8 +46,10 @@ def create(params):
     """Create a host group"""
     body = params['body']
     name = body['name']
-    alias = body.get('alias')
-    add_group(name, 'host', {'alias': alias})
+    group_details = {"alias": body.get("alias")}
+    if version.is_managed_edition():
+        group_details = update_customer_info(group_details, body["customer"])
+    add_group(name, 'host', group_details)
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group('host_group_config'))
 
@@ -58,11 +63,11 @@ def bulk_create(params):
     """Bulk create host groups"""
     body = params['body']
     entries = body['entries']
-    host_group_details = load_groups('host', entries)
+    host_group_details = prepare_groups('host', entries)
 
     host_group_names = []
-    for group_name, group_alias in host_group_details.items():
-        add_group(group_name, 'host', {'alias': group_alias})
+    for group_name, group_details in host_group_details.items():
+        add_group(group_name, 'host', group_details)
         host_group_names.append(group_name)
 
     host_groups = fetch_specific_groups(host_group_names, "host")
@@ -129,7 +134,7 @@ def update(params):
     name = params['name']
     group = fetch_group(name, "host")
     constructors.require_etag(constructors.etag_of_dict(group))
-    edit_group(name, 'host', params['body'])
+    edit_group(name, 'host', updated_group_details(name, 'host', params['body']))
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group('host_group_config'))
 

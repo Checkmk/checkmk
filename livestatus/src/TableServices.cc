@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <cstring>
+#include <ctime>
 #include <filesystem>
 #include <iterator>
 #include <memory>
@@ -40,7 +42,6 @@
 #include "ServiceContactsColumn.h"
 #include "ServiceGroupsColumn.h"
 #include "ServiceRRDColumn.h"
-#include "ServiceSpecialDoubleColumn.h"
 #include "ServiceSpecialIntColumn.h"
 #include "StringLambdaColumn.h"
 #include "StringPerfdataColumn.h"
@@ -54,6 +55,39 @@
 
 extern service *service_list;
 extern TimeperiodsCache *g_timeperiods_cache;
+
+// TODO(ml): Here we use `static` instead of an anonymous namespace because
+// of the `extern` declaration.  We should find something better.
+static double staleness(const service &svc) {
+    extern int interval_length;
+    auto check_result_age = static_cast<double>(time(nullptr) - svc.last_check);
+    if (svc.check_interval != 0) {
+        return check_result_age / (svc.check_interval * interval_length);
+    }
+
+    // check_mk PASSIVE CHECK without check interval uses the check
+    // interval of its check-mk service
+    bool is_cmk_passive =
+        strncmp(svc.check_command_ptr->name, "check_mk-", 9) == 0;
+    if (is_cmk_passive) {
+        host *host = svc.host_ptr;
+        for (servicesmember *svc_member = host->services; svc_member != nullptr;
+             svc_member = svc_member->next) {
+            service *tmp_svc = svc_member->service_ptr;
+            if (strncmp(tmp_svc->check_command_ptr->name, "check-mk", 8) == 0) {
+                return check_result_age / ((tmp_svc->check_interval == 0
+                                                ? 1
+                                                : tmp_svc->check_interval) *
+                                           interval_length);
+            }
+        }
+        // Shouldn't happen! We always expect a check-mk service
+        return 1;
+    }
+    // Other non-cmk passive and active checks without
+    // check_interval
+    return check_result_age / interval_length;
+}
 
 TableServices::TableServices(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{}, true);
@@ -396,11 +430,11 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets, [mc](const service &svc) {
             return pnpgraph_present(mc, svc.host_ptr->name, svc.description);
         }));
-    table->addColumn(std::make_unique<ServiceSpecialDoubleColumn>(
-        prefix + "staleness", "The staleness indicator for this service",
-        offsets));
 
     // columns of type double
+    table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
+        prefix + "staleness", "The staleness indicator for this service",
+        offsets, [](const service &r) { return staleness(r); }));
     table->addColumn(std::make_unique<DoubleLambdaColumn<service>>(
         prefix + "check_interval",
         "Number of basic interval lengths between two scheduled checks of the service",

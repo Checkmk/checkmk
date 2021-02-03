@@ -46,7 +46,8 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def BRANCH_VERSION
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
-def UPLOAD_DEST = 'deploy@archive.tribe29.com:/var/downloads/checkmk/'
+def UPLOAD_URL = 'deploy@archive.tribe29.com'
+def UPLOAD_DEST = "${UPLOAD_URL}:/var/downloads/checkmk/"
 
 def ARCHIVE_DIR = ''
 def OMD_ENV_VARS = ''
@@ -223,7 +224,9 @@ node(NODE) {
                 create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, UPLOAD_DEST2, CMK_VERS)
             }
         }
-        if (!shall_publish_package(scm, JOB_BASE_NAME)) {
+        if (shall_publish_package(scm, JOB_BASE_NAME)) {
+            deploy_to_website(UPLOAD_URL, CMK_VERS)
+        } else {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(BUILD_IMAGE_NAME).inside(DOCKER_BASE_ARGS + " -v /tmp:/tmp") {
                     sh("rm -rf ${ARCHIVE_DIR}")
@@ -462,5 +465,14 @@ def create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, 
             UPLOAD_DEST: UPLOAD_DEST,
             SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
         )
+    }
+}
+
+deploy_to_website(UPLOAD_URL, CMK_VERS) {
+    stage("Deploy to Website") {
+        sh """
+            ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52023 ${UPLOAD_URL} \
+                ln -s /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
+        """
     }
 }

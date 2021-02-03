@@ -101,7 +101,12 @@ venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
 	
 $(PYTHON_MODULE): venv ## zipping venv
 	@powershell Write-Host "+Target $@" -foreground white
-	@cd $(PYTHON_SAVE_DIR) && 7z a -r -tzip -y -stl -mmt4 ..\$(PYTHON_MODULE_NAME) *.*
+	@rem CAB mode
+	@powershell Write-Host "*CAB*" -foreground white
+	@call python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save
+	@rem ZIP mode - legacy, may be need to testing 
+	@rem powershell Write-Host "*ZIP*" -foreground white
+	@rem call python_to_zip.cmd $(PYTHON_SAVE_DIR) ..\$(PYTHON_MODULE_NAME)
 
 $(ARTEFACT_MODULE): $(PYTHON_MODULE) ## copy to artefacts
 	@powershell Write-Host "+Target $@" -foreground white

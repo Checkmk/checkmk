@@ -161,6 +161,7 @@ inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
 }
 
 constexpr std::string_view zip_to_test = "unzip_test.zip";
+constexpr std::string_view cab_to_test = "uncab_test.zip";  // cab! file
 
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name);
 std::wstring GenerateRandomFileName() noexcept;

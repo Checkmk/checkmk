@@ -17,6 +17,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
+from cmk.gui.plugins.openapi.endpoints.utils import update_customer_info, complement_customer
 
 import cmk.gui.userdb as userdb
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
@@ -102,6 +103,7 @@ def create_user(params):
     for attr, value in body.items():
         if attr in (
                 "username",
+                "customer",
                 "contact_options",
                 "auth_option",
                 "idle_options",
@@ -109,6 +111,9 @@ def create_user(params):
         ):
             continue
         user_attrs[attr] = value
+
+    if "customer" in body:
+        user_attrs = update_customer_info(user_attrs, body["customer"], remove_provider=True)
 
     user_attrs.update(body["contact_options"])
     auth_details = _parse_auth_options(body["auth_option"], enforce_pw_change=True)
@@ -165,6 +170,7 @@ def edit_user(params):
 
     for attr, value in body.items():
         if attr in (
+                "customer",
                 "contact_options",
                 "auth_option",
                 "idle_options",
@@ -172,6 +178,9 @@ def edit_user(params):
         ):
             continue
         user_attrs[attr] = value
+
+    if "customer" in body:
+        user_attrs = update_customer_info(user_attrs, body["customer"], remove_provider=True)
 
     auth_options = body['auth_option']
     if auth_options.get("auth_type") == "remove":
@@ -214,7 +223,7 @@ def edit_user(params):
 def serve_user(user_id):
     response = Response()
     user_attributes = user_config_attributes(user_id)
-    response.set_data(json.dumps(serialize_user(user_id, user_attributes)))
+    response.set_data(json.dumps(serialize_user(user_id, complement_customer(user_attributes))))
     response.set_content_type('application/json')
     response.headers.add('ETag', constructors.etag_of_dict(user_attributes).to_header())
     return response

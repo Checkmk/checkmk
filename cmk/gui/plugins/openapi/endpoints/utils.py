@@ -15,6 +15,10 @@ from cmk.gui.plugins.openapi.restful_objects import constructors
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib.groups import edit_group, GroupType
 
+from cmk.utils.version import is_managed_edition
+if is_managed_edition():
+    import cmk.gui.cme.managed as managed
+
 
 GroupName = Literal[
     'host_group_config',
@@ -22,6 +26,18 @@ GroupName = Literal[
     'service_group_config',
     'agent'
 ]  # yapf: disable
+
+
+def complement_customer(details):
+    if not is_managed_edition():
+        return details
+
+    if "customer" in details:
+        customer_id = details["customer"]
+        details["customer"] = "global" if managed.is_global(customer_id) else customer_id
+    else:  # special case where customer is set to customer_default_id which results in no-entry
+        details["customer"] = managed.default_customer_id()
+    return details
 
 
 def serve_group(group, serializer):
@@ -200,3 +216,24 @@ def may_fail(
             title="The operation has failed.",
             detail=_get_message(exc),
         ) from exc
+
+
+def update_customer_info(attributes, customer_id, remove_provider=False):
+    """Update the attributes with the correct customer_id
+
+    Args:
+        attributes:
+            the attributes of the to save/edit instance
+        customer_id:
+            the internal customer id
+        remove_provider:
+            Bool which decides if the customer entry should be removed if set to the customer_default_id
+
+    """
+    # None is a valid customer_id used for 'Global' configuration
+    if remove_provider and customer_id == managed.default_customer_id():
+        attributes.pop("customer", None)
+        return attributes
+
+    attributes["customer"] = customer_id
+    return attributes

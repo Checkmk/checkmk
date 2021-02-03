@@ -9,14 +9,22 @@ import random
 import string
 from freezegun import freeze_time
 
+from cmk.gui.plugins.openapi.endpoints.user_config import user_config_attributes
+from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
+from cmk.gui.watolib.users import edit_users
 
-def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypatch):
+
+def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
                         lambda: True)
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    user_detail = {'username': 'user', 'fullname': 'User Name'}
+    user_detail = {
+        'username': 'user',
+        'fullname': 'User Name',
+        'customer': 'global',
+    }
 
     base = "/NO_SITE/check_mk/api/v0"
     with freeze_time("2010-02-01 08:00:00"):
@@ -29,6 +37,48 @@ def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypat
         )
     assert resp.json_body["extensions"]["attributes"] == {
         'alias': 'User Name',
+        'customer': 'global',
+        'contactgroups': [],
+        'disable_notifications': {},
+        'email': '',
+        'enforce_pw_change': False,
+        'fallback_contact': False,
+        'locked': False,
+        'pager': '',
+        'roles': [],
+        'user_scheme_serial': 0
+    }
+
+    resp = wsgi_app.call_method(
+        'put',
+        base + "/objects/user_config/user",
+        params=json.dumps({"customer": "provider"}),
+        status=200,
+        content_type='application/json',
+    )
+    assert resp.json_body["extensions"]["attributes"]["customer"] == "provider"
+
+
+def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypatch):
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    user_detail = {'username': 'user', 'fullname': 'User Name', 'customer': 'provider'}
+
+    base = "/NO_SITE/check_mk/api/v0"
+    with freeze_time("2010-02-01 08:00:00"):
+        resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/user_config/collections/all",
+            params=json.dumps(user_detail),
+            status=200,
+            content_type='application/json',
+        )
+    assert resp.json_body["extensions"]["attributes"] == {
+        'alias': 'User Name',
+        'customer': 'provider',
         'contactgroups': [],
         'disable_notifications': {},
         'email': '',
@@ -53,6 +103,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
     user_detail = {
         'username': 'user',
         'fullname': 'User Name',
+        'customer': 'provider',
         'auth_option': {
             "auth_type": 'password',
             'password': 'password',
@@ -70,6 +121,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
         )
     assert resp.json_body["extensions"]["attributes"] == {
         'alias': 'User Name',
+        'customer': 'provider',
         'email': '',
         'pager': '',
         'contactgroups': [],
@@ -105,6 +157,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
         )
     assert resp.json_body["extensions"]["attributes"] == {
         'alias': 'User Name',
+        'customer': 'provider',
         'email': '',
         'pager': '',
         'contactgroups': [],
@@ -138,6 +191,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
     user_detail = {
         'username': name,
         'fullname': alias,
+        'customer': 'provider',
         'auth_option': {
             "auth_type": "password",
             "password": "hello"
@@ -164,6 +218,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
 
     assert resp.json_body["extensions"]["attributes"] == {
         'alias': 'KPECYCq79E',
+        'customer': 'provider',
         'pager': '',
         'contactgroups': [],
         'email': '',
@@ -220,6 +275,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
     user_detail = {
         'username': name,
         'fullname': alias,
+        'customer': 'provider',
         'roles': ["user"],
         "auth_option": {
             "auth_type": "password",
@@ -238,6 +294,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
         )
     assert resp.json_body["extensions"]["attributes"] == {
         'alias': 'Foo Bar',
+        'customer': 'provider',
         'email': '',
         'pager': '',
         'contactgroups': [],
@@ -270,6 +327,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
         )
     assert resp.json_body["extensions"]["attributes"] == {
         'alias': 'Foo Bar',
+        'customer': 'provider',
         'email': '',
         'pager': '',
         'contactgroups': [],
@@ -302,6 +360,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
         )
     assert resp.json_body["extensions"]["attributes"] == {
         'alias': 'Foo Bar',
+        'customer': 'provider',
         'email': '',
         'pager': '',
         'contactgroups': [],
@@ -327,6 +386,7 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
     user_detail = {
         'username': 'user',
         'fullname': 'User Name',
+        'customer': 'global',
     }
 
     base = "/NO_SITE/check_mk/api/v0"
@@ -340,6 +400,7 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
         )
     assert resp.json_body["extensions"]["attributes"] == {
         'alias': 'User Name',
+        'customer': 'global',
         'contactgroups': [],
         'disable_notifications': {},
         'email': '',
@@ -350,6 +411,41 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
         'roles': [],
         'user_scheme_serial': 0
     }
+
+
+def test_managed_global_internal(wsgi_app, with_automation_user, monkeypatch):
+    # this test uses the internal mechanics of the user endpoint
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    edit_users({
+        'user': {
+            'attributes': {
+                'ui_theme': None,
+                'ui_sidebar_position': None,
+                'nav_hide_icons_title': None,
+                'icons_per_item': None,
+                'show_mode': None,
+                'start_url': None,
+                'force_authuser': False,
+                'enforce_pw_change': False,
+                'alias': 'User Name',
+                'locked': False,
+                'pager': '',
+                'roles': [],
+                'contactgroups': [],
+                'customer': None,  # None represents global internally
+                'email': '',
+                'fallback_contact': False,
+                'disable_notifications': {}
+            },
+            'is_new_user': True
+        }
+    })
+    user_endpoint_attrs = complement_customer(user_config_attributes("user"))
+    assert user_endpoint_attrs["customer"] == "global"
 
 
 def _random_string(size):

@@ -29,7 +29,11 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, SERVICE_DESCRIPTION, QUERY
+from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    OPTIONAL_HOST_NAME,
+    QUERY,
+    SERVICE_DESCRIPTION,
+)
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.utils import BaseSchema
 
@@ -159,7 +163,7 @@ def create_service_related_downtime(params):
           method='get',
           tag_group='Monitoring',
           query_params=[
-              HOST_NAME,
+              OPTIONAL_HOST_NAME,
               SERVICE_DESCRIPTION,
               DowntimeParameter,
           ],

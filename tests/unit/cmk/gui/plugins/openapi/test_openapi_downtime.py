@@ -13,6 +13,7 @@ def test_openapi_list_all_downtimes(
     with_automation_user,
     suppress_automation_calls,
     mock_livestatus,
+    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
@@ -68,6 +69,7 @@ def test_openapi_schedule_host_downtime(
     wsgi_app,
     with_automation_user,
     mock_livestatus,
+    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
@@ -133,6 +135,7 @@ def test_openapi_schedule_service_downtime(
     wsgi_app,
     with_automation_user,
     mock_livestatus,
+    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user

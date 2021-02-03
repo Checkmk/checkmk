@@ -12,7 +12,8 @@ from typing import Any, Optional, Tuple, Callable
 from marshmallow import fields as _fields, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib
+from cmk.gui import watolib, valuespec as valuespec
+from cmk.gui.exceptions import MKUserError
 
 from cmk.gui.plugins.openapi.utils import BaseSchema
 from cmk.utils.exceptions import MKException
@@ -656,6 +657,57 @@ class LiveStatusColumn(String):
         return value
 
 
+HOST_NAME_REGEXP = '[-0-9a-zA-Z_.]+'
+
+
+class HostField(String):
+    """A field representing a hostname.
+
+    """
+    default_error_messages = {
+        'should_exist': 'Host not found: {host_name!r}',
+        'should_not_exist': 'Host {host_name!r} already exists.',
+        'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
+    }
+
+    def __init__(
+        self,
+        example='example.com',
+        pattern=HOST_NAME_REGEXP,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        should_be_monitored: Optional[bool] = None,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        self._should_be_monitored = should_be_monitored
+        super().__init__(
+            example=example,
+            pattern=pattern,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        try:
+            valuespec.Hostname().validate_value(value, self.name)
+        except MKUserError as e:
+            self.fail("invalid_name", host_name=value, invalid_reason=str(e))
+
+        host = watolib.Host.host(value)
+        if self._should_exist and not host:
+            self.fail("should_exist", host_name=value)
+        elif not self._should_exist and host:
+            self.fail("should_not_exist", host_name=value)
+
+        if self._should_be_monitored is not None:
+            pass
+
+
 Boolean = _fields.Boolean
 Decimal = _fields.Decimal
 DateTime = _fields.DateTime
@@ -688,5 +740,6 @@ __all__ = [
     'Field',
     'ExprSchema',
     'FolderField',
+    'HostField',
     'FOLDER_PATTERN',
 ]

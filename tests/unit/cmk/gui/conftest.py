@@ -33,7 +33,7 @@ from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request
 from cmk.gui.utils import get_random_string
-from cmk.gui.watolib import search
+from cmk.gui.watolib import search, hosts_and_folders
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
 
@@ -372,3 +372,13 @@ def logged_in_wsgi_app(wsgi_app, with_user):
     resp = login.form.submit('_login', index=1)
     assert "Invalid credentials." not in resp.text
     return wsgi_app
+
+
+@pytest.fixture(scope='function')
+def with_host(module_wide_request_context, with_user_login, suppress_automation_calls):
+    hostnames = ["heute", "example.com"]
+    hosts_and_folders.CREFolder.root_folder().create_hosts([
+        (hostname, {}, []) for hostname in hostnames
+    ])
+    yield hostnames
+    hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)

@@ -778,6 +778,12 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     # 5 but we need to stick to user friendly time sections - that
     # might even not be equal in size (like months!)
     num_t_labels = int((width - 7) / label_size)
+    if not num_t_labels:
+        return {
+            "labels": [],
+            "range": (start_time - step, end_time + step),
+            "title": add_step_to_title(title_label, step),
+        }
     label_distance_at_least = max(label_distance_at_least, time_range / num_t_labels)
 
     # Get a distribution function. The function is called with start_time end

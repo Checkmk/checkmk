@@ -792,6 +792,10 @@ def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
         if 'host' not in dashlet_spec['single_infos']:
             dashlet_spec['single_infos'].append('host')
 
+        # The service context has to be set, otherwise the pnpgraph dashlet would
+        # complain about missing context information when displaying host graphs.
+        dashlet_spec["context"].setdefault("service", "_HOST_")
+
     if dashlet_spec['type'] in ['pnpgraph', 'custom_graph']:
         # -> 1.5.0i2
         if "graph_render_options" not in dashlet_spec:

@@ -27,7 +27,7 @@
 #include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
-#include "DoubleLambdaColumn.h"
+#include "DoubleColumn.h"
 #include "DowntimeColumn.h"
 #include "DynamicColumn.h"
 #include "DynamicFileColumn.h"
@@ -424,45 +424,45 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         })));
 
     // columns of type double
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "check_interval",
         "Number of basic interval lengths between two scheduled checks of the host",
         offsets, [](const host &r) { return r.check_interval; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a soft error",
         offsets, [](const host &r) { return r.retry_interval; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "notification_interval",
         "Interval of periodic notification or 0 if its off", offsets,
         [](const host &r) { return r.notification_interval; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "first_notification_delay",
         "Delay before the first notification", offsets,
         [](const host &r) { return r.first_notification_delay; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
         offsets, [](const host &r) { return r.low_flap_threshold; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "high_flap_threshold", "High threshold of flap detection",
         offsets, [](const host &r) { return r.high_flap_threshold; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "x_3d", "3D-Coordinates: X", offsets,
         [](const host &r) { return r.x_3d; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "y_3d", "3D-Coordinates: Y", offsets,
         [](const host &r) { return r.y_3d; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "z_3d", "3D-Coordinates: Z", offsets,
         [](const host &r) { return r.z_3d; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
         offsets, [](const host &r) { return r.latency; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "execution_time", "Time the host check needed for execution",
         offsets, [](const host &r) { return r.execution_time; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "percent_state_change", "Percent state change", offsets,
         [](const host &r) { return r.percent_state_change; }));
 
@@ -706,7 +706,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return std::filesystem::path{args};
         }));
 
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "staleness", "Staleness indicator for this host", offsets,
         [](const host &hst) {
             extern int interval_length;

@@ -27,6 +27,7 @@ def agent_siemens_plc_arguments(params, hostname, ipaddress):
                     v.append(str(part))
             dev_args += ";%s" % ",".join(v)
 
+        args.append('--hostspec')
         args.append(dev_args)
 
     return args

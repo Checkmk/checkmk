@@ -1,0 +1,15 @@
+Title: Fix indicator for unacknowledged incompatible werks
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612448340
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+There was no indicator for unacknowledged incompatible werks in version 2.0.
+The number of appropriate werks is now shown in the help menu section of the
+mega menu. Furthermore, the popup of the help menu will show a link to the
+change log.

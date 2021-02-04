@@ -620,6 +620,9 @@ export function execute_sidebar_scheduler() {
         const timestamp = Date.parse(new Date()) / 1000;
         if (timestamp % g_sidebar_notify_interval == 0) {
             update_messages();
+            if (g_may_ack) {
+                update_unack_incomp_werks();
+            }
         }
     }
 
@@ -1008,34 +1011,22 @@ function move_needle(from_perc, to_perc) {
 
 // integer representing interval in seconds or <null> when disabled.
 var g_sidebar_notify_interval;
+var g_may_ack = false;
 
-export function init_messages(interval) {
+export function init_messages_and_werks(interval, may_ack) {
     g_sidebar_notify_interval = interval;
-    create_message_ids();
-
+    create_initial_ids("user", "messages", "user_notify.py");
     // Are there pending messages? Render the initial state of
     // trigger button
     update_messages();
-}
 
-function create_message_ids() {
-    const mega_menu_user_div = document.getElementById("popup_trigger_mega_menu_user").firstChild;
-    const user_div = mega_menu_user_div.childNodes[2];
+    g_may_ack = may_ack;
+    if (!may_ack) {
+        return;
+    }
 
-    const l = document.createElement("span");
-    l.setAttribute("id", "msg_label");
-    l.style.display = "none";
-    mega_menu_user_div.insertBefore(l, user_div);
-
-    // Also update popup content
-    const info_line_span = document.getElementById("info_line_user");
-    const user_messages = document.createElement("span");
-    user_messages.setAttribute("id", "user_messages");
-    const a = document.createElement("a");
-    a.href = "index.py?start_url=user_notify.py";
-    a.setAttribute("id", "user_msg_link");
-    user_messages.append(a);
-    info_line_span.insertAdjacentElement("beforebegin", user_messages);
+    create_initial_ids("help_links", "werks", "version.py");
+    update_unack_incomp_werks();
 }
 
 function handle_update_messages(_data, response_text) {
@@ -1060,7 +1051,7 @@ function update_messages() {
 }
 
 export function update_message_trigger(msg_text, msg_count) {
-    let l = document.getElementById("msg_label");
+    let l = document.getElementById("messages_label");
     if (msg_count === 0) {
         l.style.display = "none";
         return;
@@ -1069,7 +1060,7 @@ export function update_message_trigger(msg_text, msg_count) {
     l.innerText = msg_count.toString();
     l.style.display = "inline";
 
-    let user_messages = document.getElementById("user_msg_link");
+    let user_messages = document.getElementById("messages_link_to");
     let text_content = msg_count + " " + msg_text;
     user_messages.textContent = text_content;
 }
@@ -1079,6 +1070,58 @@ function mark_message_read(msg_id, msg_text, msg_count) {
 
     // Update the button state
     update_message_trigger(msg_text, msg_count);
+}
+
+function handle_update_unack_incomp_werks(_data, response_text) {
+    const response = JSON.parse(response_text);
+    if (response.result_code !== 0) {
+        return;
+    }
+    const result = response.result;
+    update_werks_trigger(result.count, result.text, result.tooltip);
+}
+
+function update_unack_incomp_werks() {
+    // retrieve number of unacknowledged incompatible werks
+    ajax.call_ajax("ajax_sidebar_get_unack_incomp_werks.py", {
+        response_handler: handle_update_unack_incomp_werks,
+    });
+}
+
+export function update_werks_trigger(werks_count, text, tooltip) {
+    let l = document.getElementById("werks_label");
+    if (werks_count === 0) {
+        l.style.display = "none";
+        return;
+    }
+
+    l.innerText = werks_count.toString();
+    l.style.display = "inline";
+
+    let werks_link = document.getElementById("werks_link_to");
+    werks_link.textContent = text;
+    werks_link.setAttribute("title", tooltip.toString());
+}
+
+function create_initial_ids(menu, what, start_url) {
+    const mega_menu_help_div = document.getElementById("popup_trigger_mega_menu_" + menu)
+        .firstChild;
+    const help_div = mega_menu_help_div.childNodes[2];
+
+    const l = document.createElement("span");
+    l.setAttribute("id", what + "_label");
+    l.style.display = "none";
+    mega_menu_help_div.insertBefore(l, help_div);
+
+    // Also update popup content
+    const info_line_span = document.getElementById("info_line_" + menu);
+    const span = document.createElement("span");
+    span.setAttribute("id", what + "_link");
+    const a = document.createElement("a");
+    a.href = "index.py?start_url=" + start_url;
+    a.setAttribute("id", what + "_link_to");
+    span.append(a);
+    info_line_span.insertAdjacentElement("beforebegin", span);
 }
 
 /************************************************

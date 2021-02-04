@@ -988,6 +988,9 @@ inventory_displayhints.update({
     },
     ".software.kernel_config:*.parameter": {"title": _("Parameter")},
     ".software.kernel_config:*.value": {"title": _("Value")},
+    ".software.applications.fortinet.fortisandbox:": {"title": _("FortiSandbox Software")},
+    ".software.applications.fortinet.fortisandbox:*.name": {"title": _("Name")},
+    ".software.applications.fortinet.fortisandbox:*.version": {"title": _("Version")},
 }
 )
 

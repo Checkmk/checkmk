@@ -9,12 +9,12 @@ from .agent_based_api.v1 import (
     Attributes,
     register,
     SNMPTree,
-    equals,
 )
 from .agent_based_api.v1.type_defs import (
     InventoryResult,
     StringTable,
 )
+from .utils.fortinet import DETECT_FORTISANDBOX
 
 Section = Sequence[str]
 
@@ -36,7 +36,7 @@ register.snmp_section(
             '1',  # fsaSysVersion
         ],
     ),
-    detect=equals('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.12356.118.1.30006'),
+    detect=DETECT_FORTISANDBOX,
 )
 
 

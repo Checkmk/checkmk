@@ -692,11 +692,7 @@ class SingleMetricFigure extends TimeseriesFigure {
     }
 
     render_legend() {}
-    render_grid() {
-        // another definition aside single_value means there is historic data
-        if (this._data.plot_definitions.length > 1) super.render_grid();
-    }
-
+    render_grid() {}
     render_axis() {}
 }
 

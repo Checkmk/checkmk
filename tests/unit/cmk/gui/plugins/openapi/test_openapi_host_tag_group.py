@@ -66,7 +66,7 @@ def test_openapi_host_tag_group(wsgi_app, with_automation_user, suppress_automat
     _resp = wsgi_app.call_method(
         'get',
         base + "/objects/host_tag_group/foo",
-        status=400,
+        status=404,
     )
 
 

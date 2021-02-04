@@ -174,9 +174,13 @@ class VisualTypeDashboards(VisualType):
             #                         'graph_index': 0, 'host_name': 'server123'}])
             specification = parameters["definition"]["specification"]
             if specification[0] == "template":
-                context = {"host": specification[1]["host_name"]}
-                if specification[1].get("service_description") != "_HOST_":
-                    context["service"] = specification[1]["service_description"]
+                context = {
+                    "host": specification[1]["host_name"],
+                    # The service context has to be set, even for host graphs. Otherwise the
+                    # pnpgraph dashlet would complain about missing context information when
+                    # displaying host graphs.
+                    "service": specification[1]["service_description"],
+                }
                 parameters = {"source": specification[1]["graph_index"] + 1}
 
             elif specification[0] == "custom":

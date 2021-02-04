@@ -17,13 +17,20 @@ from cmk.gui.plugins.dashboard import utils
                 'show_legend': True,
                 'show_service': True,
                 'single_infos': [],
+                'context': {
+                    "host": "abc",
+                },
             },
             {
                 'graph_render_options': {
                     'show_legend': True
                 },
                 'single_infos': ['service', 'host'],
-                'type': 'pnpgraph'
+                'type': 'pnpgraph',
+                'context': {
+                    'host': 'abc',
+                    'service': '_HOST_',
+                },
             },
             id="->1.5.0i2->2.0.0b6 pnpgraph",
         ),
@@ -36,13 +43,20 @@ from cmk.gui.plugins.dashboard import utils
                     'title_format': 'plain',
                 },
                 'single_infos': ['host', 'service'],
+                'context': {
+                    "host": "abc",
+                },
             },
             {
                 'graph_render_options': {
                     'show_legend': False,
                 },
                 'single_infos': ['host', 'service'],
-                'type': 'pnpgraph'
+                'type': 'pnpgraph',
+                'context': {
+                    'host': 'abc',
+                    'service': '_HOST_',
+                },
             },
             id="1.6.0->2.0.0b6 pnpgraph",
         ),

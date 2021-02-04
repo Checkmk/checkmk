@@ -253,7 +253,7 @@ class BackupTask:
                             (error_vmid, current_vmid),
                         )
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
-                    result[current_vmid] = {"error": error_msg}
+                    result[current_vmid] = {**current_dataset, **{"error": error_msg}}
                     current_vmid = ""
                     continue
 
@@ -373,7 +373,7 @@ def fetch_backup_data(args: Args, session: "ProxmoxVeAPI",
             LOGGER.info("%s", task)
             LOGGER.debug("%r", task.backup_data)
             for vmid, bdata in task.backup_data.items():
-                if vmid in backup_data:
+                if vmid in backup_data and backup_data[vmid]['started_time'] > bdata['started_time']:
                     continue
                 backup_data[vmid] = bdata
 

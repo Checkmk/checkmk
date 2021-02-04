@@ -1,0 +1,13 @@
+Title: Service state flapping due to incorrectly ordered backup log list
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612459450
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+The list of backups found for a given VM had not been sorted by time leading
+to differnt backup events taken for age computation.
+Now the most recent backup log is taken, thus removing the state flapping.

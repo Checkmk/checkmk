@@ -89,6 +89,16 @@ def check_ibm_mq_queues(item, params, parsed):
         cnt = data["OPPROCS"]
         yield ibm_mq_procs(cnt, 'Open output handles', 'opprocs', 'writing', params)
 
+    if "QTIME" in data:
+        qtimes = data["QTIME"]
+        tuple_value = regex(r"^([0-9]*),[\s]*([0-9]*)$")
+        qtimes_match = tuple_value.match(qtimes)
+        if qtimes_match:
+            qtime_short = qtimes_match.group(1)
+            qtime_long = qtimes_match.group(2)
+            yield ibm_mq_get_qtime(qtime_short, 'Qtime short', 'qtime_short')
+            yield ibm_mq_get_qtime(qtime_long, 'Qtime long', 'qtime_long')
+
 
 def ibm_mq_depth(cur_depth, max_depth, params):
     if cur_depth:
@@ -154,7 +164,7 @@ def ibm_mq_last_age(mq_date, mq_time, agent_timestamp, label, key, params):
     input_time = dateutil.parser.parse(mq_datetime, default=agent_timestamp)
     age = (agent_timestamp - input_time).total_seconds()
     return check_levels(age,
-                        None,
+                        key,
                         params.get(key),
                         human_readable_func=get_age_human_readable,
                         infoname=label)
@@ -173,6 +183,18 @@ def ibm_mq_procs(cnt, label, levels_key, metric, params):
                         scale=1,
                         human_readable_func=int,
                         infoname=label)
+
+
+def ibm_mq_get_qtime(qtime, label, key):
+    if not qtime or qtime == '999999999':
+        time_in_seconds = 0
+        info_value = "n/a"
+    else:
+        time_in_seconds = int(qtime)/1000000
+        info_value = get_age_human_readable(time_in_seconds)
+    infotext = "%s: %s" % (label, info_value)
+    perfdata = [(key, time_in_seconds, None, None)]
+    return (0, infotext, perfdata)
 
 
 check_info["ibm_mq_queues"] = {

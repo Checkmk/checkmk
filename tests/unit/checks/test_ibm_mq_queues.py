@@ -119,6 +119,8 @@ def test_check():
         (0, 'Oldest message: 36 m', [('age_oldest', 2201, None, None)]),
         (1, 'Open input handles: 5 (warn/crit at 4/8)', [('reading', 5, 4, 8)]),
         (0, 'Open output handles: 0', [('writing', 0, None, None)]),
+        (0, 'Qtime short: n/a', [('qtime_short', 0, None, None)]),
+        (0, 'Qtime long: n/a', [('qtime_long', 0, None, None)]),
     ]
     assert actual == expected
 
@@ -354,7 +356,8 @@ def test_lget_ok_no_params():
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "11.19.05")
     params: Dict[str, Any] = {}
-    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: 60 m', [])
+    expected: Tuple[int, str,
+                    List[Tuple]] = (0, 'Last get: 60 m', [('lgetage', 3600.0, None, None)])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -372,7 +375,8 @@ def test_lget_ok():
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: 10.0 s', [])
+    expected: Tuple[int, str,
+                    List[Tuple]] = (0, 'Last get: 10.0 s', [('lgetage', 10.0, 1800.0, 3600.0)])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -381,7 +385,8 @@ def test_lget_warn():
     lget = ("2018-04-19", "09.49.14")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (1, 'Last get: 30 m (warn/crit at 30 m/60 m)', [])
+    expected: Tuple[int, str, List[Tuple]] = (1, 'Last get: 30 m (warn/crit at 30 m/60 m)',
+                                              [('lgetage', 1801.0, 1800.0, 3600.0)])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -399,7 +404,8 @@ def test_lget_crit():
     lget = ("2018-04-19", "09.19.14")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (2, 'Last get: 60 m (warn/crit at 30 m/60 m)', [])
+    expected: Tuple[int, str, List[Tuple]] = (2, 'Last get: 60 m (warn/crit at 30 m/60 m)',
+                                              [('lgetage', 3601.0, 1800.0, 3600.0)])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -519,3 +525,57 @@ def assert_procs(opprocs, params, expected):
     }
     actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
     assert expected == actual[1]
+
+
+#
+# QTIME
+#
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_qtime_no_values():
+    params: Dict[str, Any] = {}
+    qtime = ','
+    expected = [
+        (0, 'Qtime short: n/a', [('qtime_short', 0, None, None)]),
+        (0, 'Qtime long: n/a', [('qtime_long', 0, None, None)]),
+    ]
+    assert_qtime(qtime, params, expected)
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_qtime_only_short():
+    params: Dict[str, Any] = {}
+    qtime = '300000000,'
+    expected = [
+        (0, 'Qtime short: 5 m', [('qtime_short', 300.0, None, None)]),
+        (0, 'Qtime long: n/a', [('qtime_long', 0, None, None)]),
+    ]
+    assert_qtime(qtime, params, expected)
+
+
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_qtime_both():
+    params: Dict[str, Any] = {}
+    qtime = '300000000,420000000'
+    expected = [
+        (0, 'Qtime short: 5 m', [('qtime_short', 300.0, None, None)]),
+        (0, 'Qtime long: 7 m', [('qtime_long', 420.0, None, None)]),
+    ]
+    assert_qtime(qtime, params, expected)
+
+
+def assert_qtime(qtime, params, expected):
+    check = Check(CHECK_NAME)
+    parsed = {
+        'QM1': {
+            'STATUS': 'RUNNING'
+        },
+        'QM1:MY.QUEUE': {
+            'CURDEPTH': 0,
+            'MAXDEPTH': 5000,
+            'QTIME': qtime,
+        }
+    }
+    actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
+    assert expected == actual[1:]

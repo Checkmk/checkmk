@@ -114,7 +114,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             };
         this.figure_size = new_size;
         if (this._title) {
-            this.margin.top = 10 + 24; // 24 from UX project
+            this.margin.top = 24; // 24 from UX project
         }
         this.plot_size = {
             width: new_size.width - this.margin.left - this.margin.right,
@@ -677,7 +677,7 @@ class SingleMetricFigure extends TimeseriesFigure {
 
     constructor(div_selector, fixed_size = null) {
         super(div_selector, fixed_size);
-        this.margin = {top: 10, right: 10, bottom: 10, left: 10};
+        this.margin = {top: 0, right: 0, bottom: 0, left: 0};
     }
 
     initialize() {

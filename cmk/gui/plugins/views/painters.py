@@ -168,7 +168,7 @@ class PainterOptionMatrixOmitUniform(PainterOption):
 
 
 # This helper function returns the value of the given custom var
-def paint_custom_var(what, key, row, choices=None):
+def _paint_custom_var(what, key, row, choices=None):
     if choices is None:
         choices = []
 
@@ -187,13 +187,13 @@ def paint_custom_var(what, key, row, choices=None):
     return key, ""
 
 
-def paint_future_time(timestamp):
+def _paint_future_time(timestamp):
     if timestamp <= 0:
         return "", "-"
     return paint_age(timestamp, True, 0, what='future')
 
 
-def paint_day(timestamp):
+def _paint_day(timestamp):
     return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
 
 
@@ -202,7 +202,7 @@ def paint_day(timestamp):
 # register own icon "handlers".
 # what: either "host" or "service"
 # row: the data row of the host or service
-def paint_icons(what, row):
+def _paint_icons(what, row):
     # EC: In case of unrelated events also skip rendering this painter. All the icons
     # that display a host state are useless in this case. Maybe we make this decision
     # individually for the single icons one day.
@@ -267,7 +267,7 @@ class PainterServiceIcons(Painter):
         return ("",)  # Do not account for in grouping
 
     def render(self, row, cell):
-        return paint_icons("service", row)
+        return _paint_icons("service", row)
 
 
 @painter_registry.register
@@ -294,7 +294,7 @@ class PainterHostIcons(Painter):
         return ("",)  # Do not account for in grouping
 
     def render(self, row, cell):
-        return paint_icons("host", row)
+        return _paint_icons("host", row)
 
 
 #.
@@ -404,7 +404,7 @@ def paint_service_state_short(row):
     return "state svcstate state%s" % state, html.render_span(name)
 
 
-def paint_host_state_short(row, short=False):
+def _paint_host_state_short(row, short=False):
     if row["host_has_been_checked"] == 1:
         state = str(row["host_state"])
         # A state of 3 is sent by livestatus in cases where no normal state
@@ -793,7 +793,7 @@ class PainterSvcStateAge(Painter):
                          60 * 10)
 
 
-def paint_checked(what, row):
+def _paint_checked(what, row):
     age = row[what + "_last_check"]
     if what == "service":
         cached_at = row["service_cached_at"]
@@ -827,7 +827,7 @@ class PainterSvcCheckAge(Painter):
         return ['ts_format', 'ts_date']
 
     def render(self, row, cell):
-        return paint_checked("service", row)
+        return _paint_checked("service", row)
 
 
 @painter_registry.register
@@ -873,7 +873,7 @@ class PainterSvcNextCheck(Painter):
         return ['service_next_check']
 
     def render(self, row, cell):
-        return paint_future_time(row["service_next_check"])
+        return _paint_future_time(row["service_next_check"])
 
 
 @painter_registry.register
@@ -913,10 +913,10 @@ class PainterSvcNextNotification(Painter):
         return ['service_next_notification']
 
     def render(self, row, cell):
-        return paint_future_time(row["service_next_notification"])
+        return _paint_future_time(row["service_next_notification"])
 
 
-def paint_notification_postponement_reason(what, row):
+def _paint_notification_postponement_reason(what, row):
     # Needs to be in sync with the possible reasons. Can not be translated otherwise.
     reasons = {
         "delayed notification": _("Delay notification"),
@@ -958,7 +958,7 @@ class PainterSvcNotificationPostponementReason(Painter):
         return ['service_notification_postponement_reason']
 
     def render(self, row, cell):
-        return paint_notification_postponement_reason("service", row)
+        return _paint_notification_postponement_reason("service", row)
 
 
 @painter_registry.register
@@ -1394,7 +1394,7 @@ class PainterCheckManpage(Painter):
                               .replace("&lt;br&gt;", "<br>")
 
 
-def paint_comments(prefix, row):
+def _paint_comments(prefix, row):
     comments = row[prefix + "comments_with_info"]
     text = ", ".join(
         ["<i>%s</i>: %s" % (a, escaping.escape_attribute(c)) for _id, a, c in comments])
@@ -1418,7 +1418,7 @@ class PainterSvcComments(Painter):
         return ['service_comments_with_info']
 
     def render(self, row, cell):
-        return paint_comments("service_", row)
+        return _paint_comments("service_", row)
 
 
 @painter_registry.register
@@ -1452,7 +1452,7 @@ def notes_matching_pattern_entries(dirs, item):
     return matching
 
 
-def paint_custom_notes(what, row):
+def _paint_custom_notes(what, row):
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
@@ -1503,7 +1503,7 @@ class PainterSvcCustomNotes(Painter):
         return ['host_name', 'host_address', 'service_description', 'service_plugin_output']
 
     def render(self, row, cell):
-        return paint_custom_notes("service", row)
+        return _paint_custom_notes("service", row)
 
 
 @painter_registry.register
@@ -1526,7 +1526,7 @@ class PainterSvcStaleness(Painter):
         return ('', '%0.2f' % row.get('service_staleness', 0))
 
 
-def paint_is_stale(row):
+def _paint_is_stale(row):
     if is_stale(row):
         return "badflag", html.render_span(_('yes'))
     return "goodflag", _('no')
@@ -1553,7 +1553,7 @@ class PainterSvcIsStale(Painter):
         return 'svc_staleness'
 
     def render(self, row, cell):
-        return paint_is_stale(row)
+        return _paint_is_stale(row)
 
 
 @painter_registry.register
@@ -1577,10 +1577,10 @@ class PainterSvcServicelevel(Painter):
         return 'servicelevel'
 
     def render(self, row, cell):
-        return paint_custom_var('service', 'EC_SL', row, config.mkeventd_service_levels)
+        return _paint_custom_var('service', 'EC_SL', row, config.mkeventd_service_levels)
 
 
-def paint_custom_vars(what, row, blacklist=None):
+def _paint_custom_vars(what, row, blacklist=None):
     if blacklist is None:
         blacklist = []
 
@@ -1609,7 +1609,7 @@ class PainterServiceCustomVariables(Painter):
         return tuple(row["service_custom_variables"].items())
 
     def render(self, row, cell):
-        return paint_custom_vars('service', row)
+        return _paint_custom_vars('service', row)
 
 
 class ABCPainterCustomVariable(Painter, metaclass=abc.ABCMeta):
@@ -1657,7 +1657,7 @@ class ABCPainterCustomVariable(Painter, metaclass=abc.ABCMeta):
 
     def render(self, row, cell):
         params = cell.painter_parameters()
-        return paint_custom_var(self._object_type, params["ident"].upper(), row)
+        return _paint_custom_var(self._object_type, params["ident"].upper(), row)
 
 
 @painter_registry.register
@@ -1744,7 +1744,7 @@ class PainterHostState(Painter):
         return 'hoststate'
 
     def render(self, row, cell):
-        return paint_host_state_short(row)
+        return _paint_host_state_short(row)
 
 
 @painter_registry.register
@@ -1768,7 +1768,7 @@ class PainterHostStateOnechar(Painter):
         return 'hoststate'
 
     def render(self, row, cell):
-        return paint_host_state_short(row, short=True)
+        return _paint_host_state_short(row, short=True)
 
 
 @painter_registry.register
@@ -1896,7 +1896,7 @@ class PainterHostCheckAge(Painter):
         return ['ts_format', 'ts_date']
 
     def render(self, row, cell):
-        return paint_checked("host", row)
+        return _paint_checked("host", row)
 
 
 @painter_registry.register
@@ -1916,7 +1916,7 @@ class PainterHostNextCheck(Painter):
         return ['host_next_check']
 
     def render(self, row, cell):
-        return paint_future_time(row["host_next_check"])
+        return _paint_future_time(row["host_next_check"])
 
 
 @painter_registry.register
@@ -1936,7 +1936,7 @@ class PainterHostNextNotification(Painter):
         return ['host_next_notification']
 
     def render(self, row, cell):
-        return paint_future_time(row["host_next_notification"])
+        return _paint_future_time(row["host_next_notification"])
 
 
 @painter_registry.register
@@ -1956,7 +1956,7 @@ class PainterHostNotificationPostponementReason(Painter):
         return ['host_notification_postponement_reason']
 
     def render(self, row, cell):
-        return paint_notification_postponement_reason("host", row)
+        return _paint_notification_postponement_reason("host", row)
 
 
 @painter_registry.register
@@ -2460,7 +2460,7 @@ class PainterHostIpv4Address(Painter):
         return ['host_custom_variable_names', 'host_custom_variable_values']
 
     def render(self, row, cell):
-        return paint_custom_var('host', 'ADDRESS_4', row)
+        return _paint_custom_var('host', 'ADDRESS_4', row)
 
 
 @painter_registry.register
@@ -2480,7 +2480,7 @@ class PainterHostIpv6Address(Painter):
         return ['host_custom_variable_names', 'host_custom_variable_values']
 
     def render(self, row, cell):
-        return paint_custom_var('host', 'ADDRESS_6', row)
+        return _paint_custom_var('host', 'ADDRESS_6', row)
 
 
 @painter_registry.register
@@ -2564,7 +2564,7 @@ class PainterHostAddressFamily(Painter):
         return ['host_custom_variable_names', 'host_custom_variable_values']
 
     def render(self, row, cell):
-        return paint_custom_var('host', 'ADDRESS_FAMILY', row)
+        return _paint_custom_var('host', 'ADDRESS_FAMILY', row)
 
 
 @painter_registry.register
@@ -2756,7 +2756,7 @@ class PainterNumServicesPending(Painter):
         return paint_svc_count("p", row["host_num_services_pending"])
 
 
-def paint_service_list(row, columnname):
+def _paint_service_list(row, columnname):
     def sort_key(entry):
         if columnname.startswith("servicegroup"):
             return entry[0].lower(), entry[1].lower()
@@ -2834,7 +2834,7 @@ class PainterHostServices(Painter):
 
         row['host_services_with_state_filtered'] = filtered_services
 
-        return paint_service_list(row, "host_services_with_state_filtered")
+        return _paint_service_list(row, "host_services_with_state_filtered")
 
 
 @painter_registry.register
@@ -2964,7 +2964,7 @@ class PainterHostCustomNotes(Painter):
         return ['host_name', 'host_address', 'host_plugin_output']
 
     def render(self, row, cell):
-        return paint_custom_notes("hosts", row)
+        return _paint_custom_notes("hosts", row)
 
 
 @painter_registry.register
@@ -2984,7 +2984,7 @@ class PainterHostComments(Painter):
         return ['host_comments_with_info']
 
     def render(self, row, cell):
-        return paint_comments("host_", row)
+        return _paint_comments("host_", row)
 
 
 @painter_registry.register
@@ -3068,7 +3068,7 @@ class PainterHostIsStale(Painter):
         return 'svc_staleness'
 
     def render(self, row, cell):
-        return paint_is_stale(row)
+        return _paint_is_stale(row)
 
 
 @painter_registry.register
@@ -3092,7 +3092,7 @@ class PainterHostServicelevel(Painter):
         return 'servicelevel'
 
     def render(self, row, cell):
-        return paint_custom_var('host', 'EC_SL', row, config.mkeventd_service_levels)
+        return _paint_custom_var('host', 'EC_SL', row, config.mkeventd_service_levels)
 
 
 @painter_registry.register
@@ -3112,7 +3112,7 @@ class PainterHostCustomVariables(Painter):
         return tuple(row["host_custom_variables"].items())
 
     def render(self, row, cell):
-        return paint_custom_vars('host', row, [
+        return _paint_custom_vars('host', row, [
             'FILENAME',
             'TAGS',
             'ADDRESS_4',
@@ -3124,7 +3124,7 @@ class PainterHostCustomVariables(Painter):
         ])
 
 
-def paint_discovery_output(field, row):
+def _paint_discovery_output(field, row):
     value = row[field]
     if field == "discovery_state":
         ruleset_url = "wato.py?mode=edit_ruleset&varname=ignored_services"
@@ -3163,7 +3163,7 @@ class PainterServiceDiscoveryState(Painter):
         return ['discovery_state']
 
     def render(self, row, cell):
-        return paint_discovery_output("discovery_state", row)
+        return _paint_discovery_output("discovery_state", row)
 
 
 @painter_registry.register
@@ -3183,7 +3183,7 @@ class PainterServiceDiscoveryCheck(Painter):
         return ['discovery_state', 'discovery_check', 'discovery_service']
 
     def render(self, row, cell):
-        return paint_discovery_output("discovery_check", row)
+        return _paint_discovery_output("discovery_check", row)
 
 
 @painter_registry.register
@@ -3203,7 +3203,7 @@ class PainterServiceDiscoveryService(Painter):
         return ['discovery_state', 'discovery_check', 'discovery_service']
 
     def render(self, row, cell):
-        return paint_discovery_output("discovery_service", row)
+        return _paint_discovery_output("discovery_service", row)
 
 
 #    _   _           _
@@ -3507,7 +3507,7 @@ class PainterSgServices(Painter):
         return ['servicegroup_members_with_state']
 
     def render(self, row, cell):
-        return paint_service_list(row, "servicegroup_members_with_state")
+        return _paint_service_list(row, "servicegroup_members_with_state")
 
 
 @painter_registry.register
@@ -4542,10 +4542,10 @@ class PainterLogDate(Painter):
         return ['log_time']
 
     def group_by(self, row):
-        return paint_day(row["log_time"])[1]
+        return _paint_day(row["log_time"])[1]
 
     def render(self, row, cell):
-        return paint_day(row["log_time"])
+        return _paint_day(row["log_time"])
 
 
 @painter_registry.register
@@ -4576,7 +4576,7 @@ class PainterLogState(Painter):
                 "service_has_been_checked": 1,
                 "service_state": state
             })
-        return paint_host_state_short({"host_has_been_checked": 1, "host_state": state})
+        return _paint_host_state_short({"host_has_been_checked": 1, "host_state": state})
 
 
 # Alert statistics

@@ -310,22 +310,24 @@ def show_file(site, host_name, file_name):
 
     html.open_div(id_="logwatch")
     for log in log_chunks:
-        html.open_div(class_=["chunk"])
-        html.open_table(class_=["section"])
+        html.open_table(class_="groupheader")
         html.open_tr()
         html.td(form_level(log['level']), class_=form_level(log['level']))
         html.td(form_datetime(log['datetime']), class_="date")
         html.close_tr()
         html.close_table()
 
+        html.open_table(class_=["section"])
         for line in log['lines']:
-            html.open_p(class_=line['class'])
+            html.open_tr(class_=line['class'])
+            html.open_td(class_='lines')
             html.icon_button(analyse_url(site, host_name, int_filename, line['line']),
                              _("Analyze this line"), "analyze")
             html.write_text(line['line'].replace(" ", "&nbsp;").replace("\1", "<br>"))
-            html.close_p()
+            html.close_td()
+            html.close_tr()
 
-        html.close_div()
+        html.close_table()
 
     html.close_div()
     html.footer()

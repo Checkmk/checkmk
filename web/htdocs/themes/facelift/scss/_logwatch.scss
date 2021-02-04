@@ -7,15 +7,95 @@
 
 #logwatch {
   margin-top: 6px;
-  color: rgb(0, 0, 0);
 
-  div.chunk {
+  table.section {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: $color-table-background;
     padding: 3px;
     margin-bottom: 11px;
-    background-color: rgb(255, 255, 255);
-    border-color: rgb(187, 187, 187) rgb(85, 85, 85) rgb(34, 34, 34) rgb(187, 187, 187);
-    border-style: solid;
-    border-width: 1px;
+  }
+
+  td.WARN,
+  td.CRIT,
+  td.OK {
+    width: 40px;
+    padding: 2px 5px;
+    margin-left: 5px;
+    font-weight: $font-weight-bold;
+    text-align: center;
+    font-size: $font-size-global;
+    border-radius: $theme-border-radius;
+  }
+
+  td.WARN {
+    background-color: $warning;
+    color: $black;
+  }
+
+  td.CRIT {
+    background-color: $danger;
+    color: $white;
+  }
+
+  td.OK {
+    background-color: none;
+    color: $success;
+  }
+
+  td.date {
+    padding-left: 6px;
+    font-weight: $font-weight-default;
+    color: $grey-2;
+    font-size: $font-size-small;
+  }
+
+  td.lines {
+    color: $logwatch-text-color;
+    padding: 1.6px 0 4px 12px;
+    margin: 0;
+    font-size: $font-size-global;
+    text-indent: -8px;
+    border: none;
+
+    img {
+      margin-right: 2px;
+    }
+  }
+
+  tr:nth-child(odd) {
+    &.context {
+      background-color: $table-highlight-color;
+      td.lines {
+        color: $logwatch-text-color-2;
+      }
+    }
+    &.OK {
+      background-color: $color-state-success-background;
+    }
+    &.WARN {
+      background-color: $color-state-1-background;
+    }
+    &.CRIT {
+      background-color: $color-state-2-background;
+    }
+  }
+  tr:nth-child(even) {
+    &.context {
+      background-color: $color-table-background;
+      td.lines {
+        color: $logwatch-text-color-2;
+      }
+    }
+    &.OK {
+      background-color: $lightened-state0-bg-color;
+    }
+    &.WARN {
+      background-color: $lightened-state1-bg-color;
+    }
+    &.CRIT {
+      background-color: $lightened-state2-bg-color;
+    }
   }
 
   a {
@@ -40,77 +120,6 @@
       border-width: 2px;
       border-radius: 6px;
     }
-  }
-
-  p {
-    padding: 1.6px 0 4px 12px;
-    margin: 0;
-    font-family: courier, monospace;
-    font-size: 13px;
-    text-indent: -8px;
-    word-wrap: break-word; /* IE */
-    white-space: pre-wrap; /* CSS3 */
-    white-space: -moz-pre-wrap; /* Firefox */
-    white-space: -pre-wrap; /* Opera <7 */
-    white-space: -o-pre-wrap; /* Opera 7 */
-    background-color: rgb(221, 221, 221);
-    border-right: 1px solid rgb(136, 136, 136);
-    border-left: 1px solid rgb(136, 136, 136);
-
-    img {
-      margin-right: 2px;
-    }
-  }
-
-  .WARN {
-    background-color: rgb(255, 255, 136);
-    border-bottom: 1px solid rgb(204, 204, 0);
-  }
-
-  .CRIT {
-    background-color: rgb(255, 136, 136);
-    border-bottom: 1px solid rgb(204, 0, 0);
-  }
-
-  .OK {
-    background-color: rgb(0, 187, 51);
-    border-bottom: 1px solid rgb(0, 204, 0);
-  }
-
-  td.WARN,
-  td.CRIT,
-  td.OK {
-    width: 60px;
-    padding: 0 3px;
-    margin: 0;
-    font-weight: bold;
-    text-align: center;
-    border: 1px solid rgb(0, 0, 0);
-  }
-
-  td.WARN {
-    background-color: rgb(255, 255, 0);
-  }
-
-  td.CRIT {
-    color: rgb(255, 255, 255);
-    background-color: rgb(255, 0, 0);
-  }
-
-  td.OK {
-    color: rgb(255, 255, 255);
-    background-color: rgb(0, 187, 51);
-  }
-
-  table.section {
-    width: 100%;
-    margin: 0 0 4.8px;
-  }
-
-  .date {
-    padding-left: 6px;
-    font-weight: normal;
-    color: rgb(102, 102, 102);
   }
 
   /* TODO: Reproduce these three td.button elements */

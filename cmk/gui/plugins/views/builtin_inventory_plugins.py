@@ -991,6 +991,9 @@ inventory_displayhints.update({
     ".software.applications.fortinet.fortisandbox:": {"title": _("FortiSandbox Software")},
     ".software.applications.fortinet.fortisandbox:*.name": {"title": _("Name")},
     ".software.applications.fortinet.fortisandbox:*.version": {"title": _("Version")},
+    ".software.applications.fortinet.fortigate_high_availability.": {
+        "title": _("FortiGate HighAvailability"),
+    },
 }
 )
 

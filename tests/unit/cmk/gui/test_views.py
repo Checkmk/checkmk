@@ -6115,6 +6115,7 @@ def test_registered_display_hints():
     '.software.applications.docker.num_containers_total',
     '.software.applications.docker.num_images',
     '.software.applications.docker.version',
+    '.software.applications.fortinet.fortigate_high_availability.',
     '.software.applications.fortinet.fortisandbox:',
     '.software.applications.fortinet.fortisandbox:*.name',
     '.software.applications.fortinet.fortisandbox:*.version',

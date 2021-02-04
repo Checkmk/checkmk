@@ -169,7 +169,9 @@ std::wstring GenerateRandomFileName() noexcept;
 /// \brief RAII class to change folder structure in the config
 class TempCfgFs {
 public:
-    TempCfgFs();
+    enum class Mode { standard, no_io };
+    TempCfgFs() : TempCfgFs(Mode::standard) {}
+    TempCfgFs(Mode mode);
 
     TempCfgFs(const TempCfgFs&) = delete;
     TempCfgFs(TempCfgFs&&) = delete;
@@ -179,6 +181,8 @@ public:
     ~TempCfgFs();
 
     [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
+
+    [[nodiscard]] bool loadContent(std::string_view config);
 
     [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
                                       const std::string& content) const;
@@ -200,10 +204,12 @@ private:
     std::filesystem::path root_;
     std::filesystem::path data_;
     std::filesystem::path base_;
+    Mode mode_;
 };
 
 const extern std::filesystem::path G_SolutionPath;
 std::filesystem::path GetFabricYml();
+std::string GetFabricYmlContent();
 
 }  // namespace tst
 #endif  // test_tools_h__

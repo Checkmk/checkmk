@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <stack>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "cfg.h"
@@ -243,6 +244,11 @@ public:
     bool pushFolders(const std::filesystem::path& root,
                      const std::filesystem::path& data);
 
+    // TODO (sk): move to tests
+    /// \brief Used in tests only( to prevent the tree from changing )
+    bool pushFoldersNoIo(const std::filesystem::path& root,
+                         const std::filesystem::path& data);
+
     // TODO (sk): move to tests only( to prevent the tree from changing )
     /// \brief Used in tests only to prevent context
     bool popFolders();
@@ -395,6 +401,7 @@ public:
 
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path& file);
+    bool loadDirect(std::string_view text);
 
     uint64_t uniqId() const noexcept { return g_uniq_id; }
 

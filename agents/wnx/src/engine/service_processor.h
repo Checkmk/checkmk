@@ -573,12 +573,13 @@ private:
         ServiceProcessor* Proc,           // host
         const std::wstring& SegmentName,  // identifies exe
         int Timeout,                      // for exe
-        const std::wstring& CommandLine) {
+        const std::wstring& CommandLine, const std::wstring& LogFile) {
         return std::async(
             Async ? std::launch::async : std::launch::deferred,
-            [this, ExeName](const AnswerId Tp, ServiceProcessor* Proc,
-                            const std::wstring& SegmentName, int Timeout,
-                            const std::wstring& CommandLine) {
+            [this, ExeName, LogFile](const AnswerId Tp, ServiceProcessor* Proc,
+                                     const std::wstring& SegmentName,
+                                     int Timeout,
+                                     const std::wstring& CommandLine) {
                 XLOG::l.i("Exec {} for {} started", wtools::ToUtf8(ExeName),
                           wtools::ToUtf8(SegmentName));
 
@@ -597,8 +598,9 @@ private:
                 // make command line
                 auto port = wtools::ConvertToUTF16(Proc->getInternalPort());
                 auto cmd_line =
-                    fmt::format(L"\"{}\" -runonce {} {} id:{} timeout:{} {}",
-                                full_path,    // exe
+                    fmt::format(L"\"{}\" -runonce {}{} {} id:{} timeout:{} {}",
+                                full_path,  // exe
+                                LogFile.empty() ? L"" : L"@" + LogFile + L" ",
                                 SegmentName,  // name of peer
                                 port,         // port to communicate
                                 Tp.time_since_epoch().count(),  // answer id
@@ -617,6 +619,16 @@ private:
         );
     }
 
+    std::future<bool> kickExe(
+        bool Async,  // controlled from the config
+        const std::wstring ExeName, const AnswerId Tp,
+        ServiceProcessor* Proc,           // host
+        const std::wstring& SegmentName,  // identifies exe
+        int Timeout,                      // for exe
+        const std::wstring& CommandLine) {
+        return kickExe(Async, ExeName, Tp, Proc, SegmentName, Timeout,
+                       CommandLine, {});
+    }
 #if 0
     SectionProviderText txt_provider_{"Text", "<<<IAMSECTIONTOO>>>"};
     SectionProviderFile file_provider_{

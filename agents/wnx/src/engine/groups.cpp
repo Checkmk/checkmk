@@ -226,6 +226,12 @@ void WinPerf::loadFromMainConfig() {
         timeout_ = GetVal(groups::kWinPerf, vars::kWinPerfTimeout,
                           cma::cfg::kDefaultWinPerfTimeout);
 
+        fork_ = GetVal(groups::kWinPerf, vars::kWinPerfFork,
+                       cma::cfg::kDefaultWinPerfFork);
+
+        trace_ = GetVal(groups::kWinPerf, vars::kWinPerfTrace,
+                        cma::cfg::kDefaultWinPerfTrace);
+
         enabled_in_cfg_ =
             GetVal(groups::kWinPerf, vars::kEnabled, exist_in_cfg_);
         auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);

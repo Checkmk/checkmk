@@ -96,14 +96,16 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
 
     # Historic values are always added as plot_type area
     if properties.get("time_range", "current")[0] == "range":
-        time_range_params = properties["time_range"][1]
         for row_id, metric, row in metrics:
-            chosen_color = time_range_params.get("color", "default")
-            color = metric.get(
-                'color',
-                "#008EFF",
-            ) if chosen_color == "default" else chosen_color
-            plot_type = time_range_params.get("style", "line")
+            # Fix style for 2.0 release
+            # time_range_params = properties["time_range"][1]
+            # chosen_color = time_range_params.get("color", "default")
+            # color = metric.get(
+            # 'color',
+            # "#008EFF",
+            # ) if chosen_color == "default" else chosen_color
+            plot_type = "area"
+            color = "#008EFF"
             plot_definition = {
                 "label": row['host_name'],
                 "id": row_id,
@@ -167,7 +169,7 @@ def _time_range_historic_dict_elements(with_elements) -> DictionaryElements:
         help=_("Consolidation function for the [cms_graphing#rrds|RRD] data column"),
     )
 
-    if "with_graph" in with_elements:
+    if "with_graph_styling" in with_elements:
         yield "style", DropdownChoice(
             choices=[
                 ("line", _("Line")),
@@ -352,7 +354,7 @@ class SingleGraphDashlet(SingleMetricDashlet):
 
     @staticmethod
     def _vs_elements():
-        return _vs_elements(["time_range", "with_graph", "status_border", "metric_status_display"])
+        return _vs_elements(["time_range", "status_border", "metric_status_display"])
 
     @staticmethod
     def get_additional_title_macros() -> Iterable[str]:

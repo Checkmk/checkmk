@@ -13,7 +13,7 @@
 
 DoubleFilter::DoubleFilter(Kind kind, const DoubleColumn &column,
                            RelationalOperator relOp, const std::string &value)
-    : ColumnFilter(kind, column, relOp, value)
+    : ColumnFilter(kind, column.name(), relOp, value)
     , _column(column)
     , _ref_value(atof(value.c_str())) {}
 

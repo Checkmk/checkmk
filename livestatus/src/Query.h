@@ -57,7 +57,7 @@ public:
 
     std::unique_ptr<Filter> partialFilter(
         const std::string &message,
-        std::function<bool(const Column &)> predicate) const;
+        std::function<bool(const std::string &)> predicate) const;
     std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
     std::optional<int32_t> greatestLowerBoundFor(

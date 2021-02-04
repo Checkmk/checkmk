@@ -12,7 +12,7 @@
 
 IntFilter::IntFilter(Kind kind, const IntColumn &column,
                      RelationalOperator relOp, const std::string &value)
-    : ColumnFilter(kind, column, relOp, value)
+    : ColumnFilter(kind, column.name(), relOp, value)
     , _column(column)
     , _ref_value(atoi(value.c_str())) {}
 

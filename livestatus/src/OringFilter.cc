@@ -41,7 +41,7 @@ bool OringFilter::accepts(Row row, const contact *auth_user,
 }
 
 std::unique_ptr<Filter> OringFilter::partialFilter(
-    std::function<bool(const Column &)> predicate) const {
+    std::function<bool(const std::string &)> predicate) const {
     Filters filters;
     std::transform(
         _subfilters.cbegin(), _subfilters.cend(), std::back_inserter(filters),

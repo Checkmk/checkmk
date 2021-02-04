@@ -268,10 +268,10 @@ private:
 std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
     const Query &query) {
     return query.partialFilter(
-        "current host/service columns", [](const Column &column) {
-            return mk::starts_with(column.name(), "current_") ||
-                   mk::starts_with(column.name(), "host_") ||
-                   mk::starts_with(column.name(), "service_");
+        "current host/service columns", [](const std::string &columnName) {
+            return mk::starts_with(columnName, "current_") ||
+                   mk::starts_with(columnName, "host_") ||
+                   mk::starts_with(columnName, "service_");
         });
 }
 

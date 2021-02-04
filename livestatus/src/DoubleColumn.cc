@@ -25,5 +25,6 @@ std::unique_ptr<Filter> DoubleColumn::createFilter(
 
 std::unique_ptr<Aggregator> DoubleColumn::createAggregator(
     AggregationFactory factory) const {
-    return std::make_unique<DoubleAggregator>(factory, this);
+    return std::make_unique<DoubleAggregator>(
+        factory, [this](Row row) { return this->getValue(row); });
 }

@@ -304,11 +304,14 @@ def render_tree_folder(tree_id, folder, js_func):
                           onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
 
     if not is_leaf:
-        html.begin_foldable_container(tree_id,
-                                      "/" + folder[".path"],
-                                      False,
-                                      HTML(title),
-                                      icon="foldable_sidebar")
+        html.begin_foldable_container(
+            tree_id,
+            "/" + folder[".path"],
+            False,
+            HTML(title),
+            icon="foldable_sidebar",
+            padding=6,
+        )
         for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
             render_tree_folder(tree_id, subfolder, js_func)
         html.end_foldable_container()

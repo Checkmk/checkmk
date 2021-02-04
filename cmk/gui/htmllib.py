@@ -2414,7 +2414,8 @@ class html(ABCHTMLGenerator):
                                  icon: Optional[str] = None,
                                  fetch_url: Optional[str] = None,
                                  title_url: Optional[str] = None,
-                                 title_target: Optional[str] = None) -> bool:
+                                 title_target: Optional[str] = None,
+                                 padding: int = 15) -> bool:
         isopen = config.user.get_tree_state(treename, id_, isopen)
         onclick = self.foldable_container_onclick(treename, id_, fetch_url)
         img_id = self.foldable_container_img_id(treename, id_)
@@ -2448,7 +2449,7 @@ class html(ABCHTMLGenerator):
         if indent != "form" or not isinstance(title, HTML):
             self.br()
 
-        indent_style = "padding-left: %dpx; " % (indent is True and 15 or 0)
+        indent_style = "padding-left: %dpx; " % (padding if indent else 0)
         if indent == "form":
             self.close_td()
             self.close_tr()

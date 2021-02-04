@@ -369,6 +369,11 @@ div.snapin {
     &.iconlink img:not(.emblem) {
       margin-right: 5px;
     }
+
+    &.iconlink img {
+      width: 10px;
+      height: 12px;
+    }
   }
 
   ul {

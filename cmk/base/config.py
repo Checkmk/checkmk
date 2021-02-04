@@ -1375,8 +1375,8 @@ _all_checks_loaded = False
 service_rule_groups = {"temperature"}
 
 
-def discovery_max_cachefile_age(use_caches: bool) -> int:
-    return inventory_max_cachefile_age if use_caches else 0
+def discovery_max_cachefile_age() -> int:
+    return inventory_max_cachefile_age
 
 
 #.

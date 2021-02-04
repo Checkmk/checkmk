@@ -19,7 +19,13 @@ CMK_VERSION="2.0.0b6"
 # - Explicitly skip certain Queue Managers, e.g:
 #     SKIP_QM="FAULTY TOWER"
 #
-# Daniel Steinmann, Swisscom, December 2017
+#
+# Necessary IBM MQ rights, in case script does not run as mqm user:
+#
+#     set authrec objtype(QMGR) principal('cmkagent') authadd(DSP,INQ)
+#     set authrec profile(**) objtype(QUEUE) principal('cmkagent') authadd(DSP)
+#     set authrec profile(**) objtype(CHANNEL) principal('cmkagent') authadd(DSP)
+#     set authrec profile(**) objtype(CLNTCONN) principal('cmkagent') authadd(DSP)
 #
 
 load_config() {
@@ -89,7 +95,7 @@ EOF
         echo "$dspmqline NOW($now)"
         runmqsc -e "$QM" <<EOF
 display qlocal(*) maxdepth maxmsgl crdate crtime altdate alttime monq
-display qstatus(*) monitor
+display qstatus(*) monitor ipprocs opprocs
 EOF
     fi
 done

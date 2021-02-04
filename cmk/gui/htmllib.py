@@ -2533,10 +2533,35 @@ class html(ABCHTMLGenerator):
         )
 
         if isinstance(icon, dict) and icon["emblem"] is not None:
-            emblem_path = self.detect_icon_path(icon["emblem"], prefix="emblem")
-            return self.render_span(icon_element + self.render_img(emblem_path, class_="emblem"),
-                                    class_="emblem")
+            return self.render_emblem(icon["emblem"], title, id_, icon_element)
+
         return icon_element
+
+    def render_emblem(
+        self,
+        emblem: str,
+        title: Optional[str],
+        id_: Optional[str],
+        icon_element: Optional[HTML] = None,
+    ) -> HTML:
+        """ Render emblem to corresponding icon (icon_element in function call)
+        or render emblem itself as icon image, used e.g. in view options."""
+
+        emblem_path = self.detect_icon_path(emblem, prefix="emblem")
+        if not icon_element:
+            return self._render_start_tag(
+                'img',
+                close_tag=True,
+                title=title,
+                id_=id_,
+                class_="icon",
+                src=emblem_path,
+            )
+
+        return self.render_span(
+            icon_element + self.render_img(emblem_path, class_="emblem"),
+            class_="emblem",
+        )
 
     def detect_icon_path(self, icon_name: str, prefix: str) -> str:
         """Detect from which place an icon shall be used and return it's path relative to htdocs/

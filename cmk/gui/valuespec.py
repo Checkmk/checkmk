@@ -5867,10 +5867,13 @@ class IconSelector(ValueSpec):
     def _render_icon(self, icon, onclick='', title='', id_=''):
         if not icon:
             icon = self._empty_img
-        if id_.endswith('_emblem_img'):
-            icon = {'icon': 'empty', 'emblem': icon}
 
-        icon_tag = html.render_icon(icon, title=title, id_=id_)
+        if id_.endswith('_emblem_img'):
+            icon_tag = html.render_emblem(icon, title=title, id_=id_)
+            html.write_text(" + ")
+        else:
+            icon_tag = html.render_icon(icon, title=title, id_=id_)
+
         if onclick:
             icon_tag = html.render_a(icon_tag, href="javascript:void(0)", onclick=onclick)
 
@@ -5900,7 +5903,9 @@ class IconSelector(ValueSpec):
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var=True)
 
         if value:
-            content = self._render_icon(value, '', _('Choose another Icon'), id_=varprefix + '_img')
+            is_emblem = varprefix.endswith("emblem")
+            selection_text = _('Choose another %s') % ("Emblem" if is_emblem else "Icon")
+            content = self._render_icon(value, '', selection_text, id_=varprefix + "_img")
         else:
             content = _('Select an Icon')
 

@@ -493,9 +493,6 @@ export function iconselector_select(event, varprefix, value) {
 
     // Set the new choosen icon in the valuespecs image
     let img = document.getElementById(varprefix + "_img");
-    if (varprefix.match(/_emblem$/)) {
-        img = img.nextSibling;
-    }
     img.src = src_img.src;
 
     popup_menu.close_popup();

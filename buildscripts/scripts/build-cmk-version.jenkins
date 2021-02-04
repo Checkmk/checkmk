@@ -225,7 +225,11 @@ node(NODE) {
             }
         }
         if (shall_publish_package(scm, JOB_BASE_NAME)) {
-            deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH)
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
+                    deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH)
+                }
+            }
         } else {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(BUILD_IMAGE_NAME).inside(DOCKER_BASE_ARGS + " -v /tmp:/tmp") {

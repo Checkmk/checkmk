@@ -15,6 +15,7 @@ from typing import cast
 
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.passwords import (
     save_password,
@@ -31,6 +32,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
     constructors,
 )
+from cmk.utils import version
 
 
 @Endpoint(constructors.collection_href('password'),
@@ -43,8 +45,14 @@ def create_password(params):
     """Create a password"""
     body = params['body']
     ident = body['ident']
-    password_details = cast(Password,
-                            {k: v for k, v in body.items() if k not in ("ident", "owned_by")})
+    password_details = cast(
+        Password, {k: v for k, v in body.items() if k not in (
+            "ident",
+            "owned_by",
+            "customer",
+        )})
+    if version.is_managed_edition():
+        password_details = update_customer_info(password_details, body['customer'])
     password_details["owned_by"] = None if body['owned_by'] == "admin" else body['owned_by']
     save_password(ident, password_details, new_password=True)
     return _serve_password(ident, load_password(ident))
@@ -123,7 +131,7 @@ def list_passwords(params):
 
 def _serve_password(ident, password_details):
     response = Response()
-    response.set_data(json.dumps(serialize_password(ident, password_details)))
+    response.set_data(json.dumps(serialize_password(ident, complement_customer(password_details))))
     response.set_content_type('application/json')
     response.headers.add('ETag', constructors.etag_of_dict(password_details).to_header())
     return response
@@ -142,11 +150,14 @@ def serialize_password(ident, details):
                                           )
                                       },
                                       extensions={
-                                          key: details[key] for key in details if key in (
+                                          k: v
+                                          for k, v in complement_customer(details).items()
+                                          if k in (
                                               "comment",
                                               "docu_url",
                                               "password",
                                               "owned_by",
                                               "shared_with",
+                                              "customer",
                                           )
                                       })

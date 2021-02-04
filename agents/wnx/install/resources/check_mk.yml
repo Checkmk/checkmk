@@ -138,6 +138,12 @@ winperf:
 
     # default value,  do not change it if do not know what are you douing
     exe: agent
+
+    # no - nothing(default), yes output trace to the log/winperf.log
+    trace: no
+
+    # yes - separate process for winnperf to prevent ahndle leaking, no - locally
+    fork: yes
     
     # changes only section name winperf_******
     prefix: winperf

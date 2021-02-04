@@ -176,6 +176,14 @@ winperf:
     # changes only section name winperf_******
     # prefix: winperf
 
+    # no - nothing(default), yes output trace to the log/winperf.log
+    #trace: no
+
+    # yes - separate process for winnperf to prevent ahndle leaking, no - locally
+    #fork: yes
+    
+
+
     # default value,  increase for heavy loaded machine
     # timeout: 10
     

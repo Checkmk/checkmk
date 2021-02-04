@@ -15,6 +15,7 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
     CascadingDropdown,
+    CascadingDropdownChoice,
     Dictionary,
     DictionaryElements,
     DropdownChoice,
@@ -119,7 +120,8 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
                 "plot_type": plot_type,
                 "use_tags": [row_id],
                 "color": color,
-                "opacity": 0.1 if plot_type == "area" else 1
+                "opacity": 0.1 if plot_type == "area" else 1,
+                "js_render": metric['unit'].get("js_render"),
             }
             if plot_type == "area":
                 plot_definition["style"] = "with_topline"
@@ -222,20 +224,24 @@ def _vs_elements(with_elements) -> DictionaryElements:
                 raise MKUserError(varprefix,
                                   _("Display range: Minimum must be strictly less than maximum"))
 
+        fix_range: CascadingDropdownChoice = (
+            "fixed", _("Fixed range"),
+            ValuesWithUnits(vs_name="display_range",
+                            metric_vs_name="metric",
+                            help=_("Set the range in which data is displayed. "
+                                   "Having selected a metric before auto selects "
+                                   "here the matching unit of the metric."),
+                            elements=[_("Minimum"), _("Maximum")],
+                            validate_value_elemets=validate_range))
+        auto_range: CascadingDropdownChoice = ("automatic",
+                                               _("Automatically adjusted to available data"))
+
+        choices = [fix_range] + ([auto_range] if "automatic_range" in with_elements else [])
+
         yield "display_range", CascadingDropdown(
             title=_("Display range"),
-            choices=[
-                ("fixed", _("Fixed range"),
-                 ValuesWithUnits(vs_name="display_range",
-                                 metric_vs_name="metric",
-                                 help=_("Set the range in which data is displayed. "
-                                        "Having selected a metric before auto selects "
-                                        "here the matching unit of the metric."),
-                                 elements=[_("Minimum"), _("Maximum")],
-                                 validate_value_elemets=validate_range)),
-                # ("infer", _("Automatic")), # For future logic
-            ],
-            default_value="fixed")
+            choices=choices,
+            default_value="automatic" if "automatic_range" in with_elements else "fixed")
 
     if "metric_status_display" in with_elements:
         yield "metric_status_display", DropdownChoice(
@@ -370,7 +376,10 @@ class SingleGraphDashlet(SingleMetricDashlet):
 
     @staticmethod
     def _vs_elements():
-        return _vs_elements(["time_range", "status_border", "metric_status_display"])
+        return _vs_elements([
+            "time_range", "display_range", "automatic_range", "status_border",
+            "metric_status_display"
+        ])
 
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:

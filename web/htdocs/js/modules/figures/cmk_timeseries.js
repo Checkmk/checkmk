@@ -691,9 +691,48 @@ class SingleMetricFigure extends TimeseriesFigure {
         this._current_zoom = d3.zoomIdentity;
     }
 
+    update_domains() {
+        TimeseriesFigure.prototype.update_domains.call(this);
+        const config = new URLSearchParams(this._post_body);
+        const display_range = JSON.parse(config.get("properties")).display_range;
+        // display_range could be null, or [str, [int, int]]
+        if (Array.isArray(display_range) && display_range[0] === "fixed") {
+            this._y_domain = display_range[1][1];
+            this.orig_scale_y.domain(this._y_domain);
+        }
+    }
+
     render_legend() {}
     render_grid() {}
-    render_axis() {}
+    render_axis() {
+        if (this._subplots.filter(d => d.definition.plot_type == "area").length == 0) return;
+
+        let render_function = this.get_scale_render_function();
+        let domain = this._y_domain;
+
+        let domain_labels = [
+            {
+                value: render_function(domain[0]),
+                y: this.plot_size.height - 7,
+                x: 5,
+            },
+            {
+                value: render_function(domain[1]),
+                y: 15,
+                x: 5,
+            },
+        ];
+
+        this.g
+            .selectAll("text.range")
+            .data(domain_labels)
+            .join("text")
+            .classed("range", true)
+            .text(d => d.value)
+            .style("font-size", "10pt")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y);
+    }
 }
 
 cmk_figures.figure_registry.register(SingleMetricFigure);

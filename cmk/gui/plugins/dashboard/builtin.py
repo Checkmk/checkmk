@@ -478,8 +478,7 @@ builtin_dashboards['checkmk_host'] = {
     }, {
         'add_context_to_title': True,
         'context': {
-            'host': u'heute',
-            'service': u'Disk IO SUMMARY'
+            'service': u'Disk IO SUMMARY',
         },
         'background': True,
         'link_from': {},

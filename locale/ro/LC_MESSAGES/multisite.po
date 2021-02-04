@@ -49123,9 +49123,6 @@ msgstr ""
 msgid "Topic"
 msgstr ""
 
-msgid "Topic:"
-msgstr ""
-
 msgid "Topics"
 msgstr ""
 
@@ -52539,9 +52536,6 @@ msgstr "Activare Schimbări!"
 msgid "View the rule based parameters of this host"
 msgstr ""
 
-msgid "View:"
-msgstr ""
-
 msgid "Views"
 msgstr ""
 
@@ -54726,6 +54720,11 @@ msgstr ""
 msgid ""
 "You can not configure site specific global settings in non distributed "
 "setups."
+msgstr ""
+
+msgid ""
+"You can not connect remote sites named <tt>[central_site]_bi</tt>. You will "
+"have to rename your remote site to be able to connect it with this site."
 msgstr ""
 
 #, fuzzy

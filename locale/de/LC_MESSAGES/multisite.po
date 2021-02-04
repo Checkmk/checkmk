@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-01-30 07:00+0000\n"
+"PO-Revision-Date: 2021-02-04 07:00+0000\n"
 "Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -378,7 +378,7 @@ msgstr "%s"
 
 #, python-format
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #, python-format
 msgid "%s (Customer missing)"
@@ -2278,7 +2278,7 @@ msgid "API key/token"
 msgstr "API-Schlüssel/-Token"
 
 msgid "APIs"
-msgstr ""
+msgstr "APIs"
 
 msgid "APT Updates"
 msgstr "APT-Updates"
@@ -14403,6 +14403,7 @@ msgstr "Durchschnitt anzeigen"
 
 msgid "Display range: Minimum must be strictly less than maximum"
 msgstr ""
+"Anzeigebereich: Minimum muss grundsätzlich weniger sein als das Maximum"
 
 #, fuzzy
 msgid "Display sidecar details on"
@@ -33134,7 +33135,7 @@ msgid "ORACLE Total waited (FG)"
 msgstr "ORACLE Gesamte Wartezeit (FG)"
 
 msgid "ORACLE Wait Class (FG lines are downside)"
-msgstr ""
+msgstr "ORACLE Wait Class (FG Zeilen sind von Nachteil)"
 
 msgid "ORACLE buffer pool statistics"
 msgstr "ORACLE Bufferpool Statisik"
@@ -46828,6 +46829,8 @@ msgid ""
 "The defined levels will only apply if the metric label matches the one "
 "specified in the custom Prometheus service."
 msgstr ""
+"Die festgelegten Levels werden nur angewandt wenn das  Metriklabel dem im "
+"benutzerdefinierten Prometheus Service entspricht."
 
 msgid ""
 "The description is optional and can be used for explanations or documentation"
@@ -46842,6 +46845,8 @@ msgid ""
 "The details including start date, end date and sizing are part of your "
 "subscription and can be found in your contract."
 msgstr ""
+"Die Details wie Startdatum, Enddatum und Größenbestimmung sind Teil der "
+"Subskription und können im Vertrag gefunden werden."
 
 #, python-format
 msgid "The directory %s does not exist or is not a directory."
@@ -49179,12 +49184,14 @@ msgstr ""
 "Der Benutzername, der für den Zugriff auf die Jira-API verwendet werden soll."
 
 msgid "The username that should be used for accessing the RabbitMQ API."
-msgstr ""
+msgstr "Der Benutzername der zum Zugriff auf die RabbitMQ API verwendet wird."
 
 msgid ""
 "The username that should be used for accessing the jenkins API. Has to have "
 "read permissions at least."
 msgstr ""
+"Der Benutzername der zum Zugriff auf die Jenkins API verwendet wird. Muss "
+"mindestens Lesezugriff haben."
 
 msgid "The username used to connect to the database"
 msgstr "Der Benutzername für die Verbindung zur Datenbank"
@@ -49288,6 +49295,8 @@ msgid ""
 "The view is only visible to you. You can not share it, because you don't "
 "have the permission to share it."
 msgstr ""
+"Diese Ansicht ist nur für dich sichtbar. Du kannst sie nicht teilen, weil du "
+"keine Rechte zum Teilen hast."
 
 msgid ""
 "The volume levels will never fall below these values, when using the magic "
@@ -49312,6 +49321,9 @@ msgid ""
 "There are changes to activate, but no site can be activated (The sites %s "
 "have changes, but may be offline or not logged in)."
 msgstr ""
+"Es sind Changes zum Aktivieren vorhanden, aber keine Site kann aktiviert "
+"werden (Die Sites %s haben Änderungen, aber sind offline oder nicht "
+"eingeloggt)."
 
 #, fuzzy
 msgid "There are no configured rules in this aggregation pack"
@@ -49543,6 +49555,8 @@ msgid ""
 "These macros can be used in reports by surrounding the namespaced macro name "
 "in dollar signs. E.g. $CUSTOMER_MACRO$"
 msgstr ""
+"Diese Makros können in Reports verwenden werden, indem sie mit Dollarzeichen "
+"umschließt. z.B. $CUSTOMER_MACRO$"
 
 msgid ""
 "These services are being discovered but have been disabled by creating a "
@@ -50123,6 +50137,7 @@ msgstr ""
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
+"Der Check gibt CRIT zurück wenn die Verbindung zur Remote Site fehlschlägt."
 
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
@@ -50137,6 +50152,19 @@ msgid ""
 "agents. Thus it's a security issue and should not be disabled or set to "
 "<b>OK</b> permanently."
 msgstr ""
+"Dieser Check gibt CRIT zurück wenn der Parameter <b> State in case of "
+"restricted address missmatch</b> in der Regelkette <b>Status of the Checkmk "
+"services</b> konfiguriert ist und sich vom Standardstatus <b>WARN</b> "
+"unterscheidet.  Mit den Einstellungen oben kann der Standard Servicestatus "
+"überschrieben werden. Dies kann helfen die oben genannten Warnungen während "
+"dem Update Prozess der Checkmk Sites und Agenten zu reduzieren. Wir "
+"empfehlen diese Option nur für betroffene Hosts zu verwenden wenn Agenten "
+"älter als Checkmk 2.0 gemonitored werden. Nachdem diese upgedatet sind "
+"sollte diese Einstellung wieder auf Werkeinstellung zurückgesetzt werden. "
+"Hintergrund:  Mit IP Zugriffslisten kann kontrolliert werden welche Server "
+"mit den Agenten kommunizieren können. Deswegen ist es eine "
+"Sicherheitsproblem und sollte nicht deaktiviert oder permanent auf <b>OK</b> "
+"gesetzt werden."
 
 msgid ""
 "This check tests the connection to a TCP port. It uses <tt>check_tcp</tt> "
@@ -50693,6 +50721,8 @@ msgstr "Name des überwachten Zählers"
 
 msgid "This name corresponds to the single file name to be monitored."
 msgstr ""
+"Dieser Name korrespondiert mit dem Namen einer einzigen Datei, welche "
+"überwacht werden soll."
 
 msgid "This name is already being used by another timeperiod."
 msgstr "Diese Bezeichnung wird bereits verwendet."
@@ -50939,6 +50969,8 @@ msgid ""
 "This option is only used in case you have disabled \"Use separate fetchers "
 "and checkers\"."
 msgstr ""
+"Diese Option wird nur verwendet, wenn \"Use seperate fetchers and checkers\" "
+"deaktiviert ist."
 
 msgid ""
 "This option lets Check_MK add the string \"ISL\" to the service description "
@@ -53807,9 +53839,6 @@ msgstr "Verhalten beim Seitenanfang"
 
 msgid "Topic"
 msgstr "Thema"
-
-msgid "Topic:"
-msgstr "Thema:"
 
 #, fuzzy
 msgid "Topics"
@@ -57375,9 +57404,6 @@ msgstr "Aktiviere offene Änderungen"
 msgid "View the rule based parameters of this host"
 msgstr "Regelbasierte Einstellungen dieses Hosts ansehen"
 
-msgid "View:"
-msgstr "Ansicht:"
-
 msgid "Views"
 msgstr "Ansichten"
 
@@ -60167,6 +60193,11 @@ msgid ""
 msgstr ""
 "Sie können Instanzspezifische globale Konfigurationsvariablen in nicht "
 "verteilten Umgebungen nicht konfigurieren."
+
+msgid ""
+"You can not connect remote sites named <tt>[central_site]_bi</tt>. You will "
+"have to rename your remote site to be able to connect it with this site."
+msgstr ""
 
 msgid "You can not delete the connection to the local site."
 msgstr "Die Verbindung zur lokalen Instanz kann nicht gelöscht werden"
@@ -63156,6 +63187,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "Topic:"
+#~ msgstr "Thema:"
+
+#~ msgid "View:"
+#~ msgstr "Ansicht:"
 
 #~ msgid "%s alerts"
 #~ msgstr "%s Alarme"

@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-VERSION="2.1.0i1"
-# conditions defined in the file COPYING, which is part of this source code package.
+CMK_VERSION="2.1.0i1"
 
 #
 # Collects monitoring information of all IBM MQ Queue Managers.
@@ -70,7 +70,7 @@ check_tool() {
 load_config
 
 echo "<<<ibm_mq_plugin:sep(58)>>>"
-echo "version: $VERSION"
+echo "version: $CMK_VERSION"
 check_tool dspmq
 check_tool runmqsc
 

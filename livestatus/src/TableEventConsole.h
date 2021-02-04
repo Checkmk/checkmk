@@ -20,7 +20,7 @@
 #include "nagios.h"
 class ColumnOffsets;
 template <class T>
-class DoubleLambdaColumn;
+class DoubleColumn;
 template <class T>
 class ListLambdaColumn;
 template <class T>
@@ -45,7 +45,7 @@ public:
     static std::unique_ptr<IntLambdaColumn<ECRow>> makeIntColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<DoubleLambdaColumn<ECRow>> makeDoubleColumn(
+    static std::unique_ptr<DoubleColumn<ECRow>> makeDoubleColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
     static std::unique_ptr<TimeLambdaColumn<ECRow>> makeTimeColumn(

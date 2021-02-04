@@ -13,7 +13,6 @@ from .agent_based_api.v1 import (
     SNMPTree,
     Service,
     check_levels,
-    equals,
     register,
 )
 from .agent_based_api.v1.type_defs import (
@@ -21,6 +20,7 @@ from .agent_based_api.v1.type_defs import (
     CheckResult,
     StringTable,
 )
+from .utils.fortinet import DETECT_FORTIAUTHENTICATOR
 
 Section = Mapping[str, int]
 
@@ -63,7 +63,7 @@ def check_fortiauthenticator_auth_fail(
 register.snmp_section(
     name="fortiauthenticator_auth_fail",
     parse_function=parse_fortiauthenticator_auth_fail,
-    detect=equals('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.8072.3.2.10'),
+    detect=DETECT_FORTIAUTHENTICATOR,
     fetch=[
         SNMPTree(
             base='.1.3.6.1.4.1.12356.113.1.202',

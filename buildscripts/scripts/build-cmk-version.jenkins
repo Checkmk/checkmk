@@ -471,7 +471,7 @@ def create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, 
 def deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH) {
     stage("Deploy to Website") {
         sh """
-            ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52023 ${UPLOAD_URL} \
+            ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022 ${UPLOAD_URL} \
                 ln -s /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
         """
     }

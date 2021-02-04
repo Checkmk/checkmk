@@ -20,7 +20,6 @@
 
 #include "Filter.h"
 #include "contact_fwd.h"
-class Column;
 class Row;
 
 class AndingFilter : public Filter {
@@ -31,7 +30,7 @@ public:
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> partialFilter(
-        std::function<bool(const Column &)> predicate) const override;
+        std::function<bool(const std::string &)> predicate) const override;
     [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
     [[nodiscard]] std::optional<int32_t> greatestLowerBoundFor(

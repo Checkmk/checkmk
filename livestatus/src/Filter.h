@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "contact_fwd.h"
-class Column;
 class Filter;
 class Row;
 
@@ -37,7 +36,7 @@ public:
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
     virtual std::unique_ptr<Filter> partialFilter(
-        std::function<bool(const Column &)> predicate) const = 0;
+        std::function<bool(const std::string &)> predicate) const = 0;
 
     // TODO(sp) We might be able to unify all the methods below if we make the
     // underlying lattice structure explicit, i.e. provide a set type and

@@ -561,14 +561,14 @@ def test_inventory_verbose(execute):
 def test_inventory_as_check_unknown_host(execute):
     p = execute(["cmk", "--inventory-as-check", "xyz."])
     assert p.returncode == 2
-    assert p.stdout.startswith("CRIT - Failed to lookup IPv4 address of")
+    assert p.stdout.startswith("Failed to lookup IPv4 address of")
     assert p.stderr == ''
 
 
 def test_inventory_as_check(execute):
     p = execute(["cmk", "--inventory-as-check", "modes-test-host"])
     assert p.returncode == 0
-    assert re.match(r"OK - Found \d+ inventory entries", p.stdout)
+    assert re.match(r"Found \d+ inventory entries", p.stdout)
     assert p.stderr == ''
 
 
@@ -619,14 +619,14 @@ def test_inventory_as_check(execute):
 def test_check_discovery_host(execute):
     p = execute(["cmk", "--check-discovery", "xyz."])
     assert p.returncode == 2
-    assert p.stdout.startswith("CRIT - Failed to lookup IPv4 address")
+    assert p.stdout.startswith("Failed to lookup IPv4 address")
     assert p.stderr == ''
 
 
 def test_check_discovery(execute):
     p = execute(["cmk", "--check-discovery", "modes-test-host"])
     assert p.returncode == 0
-    assert p.stdout.startswith("OK - ")
+    assert p.stdout.startswith("no unmonitored services found")
     assert p.stderr == ''
 
 
@@ -657,7 +657,7 @@ def test_check(execute):
     for opt in opts:
         p = execute(["cmk"] + opt + ["modes-test-host"])
         assert p.returncode == 0
-        assert p.stdout.startswith("OK - [agent] Version:")
+        assert p.stdout.startswith("[agent] Version:")
 
 
 def test_check_verbose_perfdata(execute):
@@ -665,7 +665,7 @@ def test_check_verbose_perfdata(execute):
     assert p.returncode == 0
     assert "Temperature Zone 0" in p.stdout
     assert "temp=32.4;" in p.stdout
-    assert "OK - [agent] Version:" in p.stdout
+    assert "[agent] Version:" in p.stdout
 
 
 def test_check_verbose_only_check(execute):
@@ -673,7 +673,7 @@ def test_check_verbose_only_check(execute):
     assert p.returncode == 0
     assert "Temperature Zone 0" in p.stdout
     assert "Interface 2" not in p.stdout
-    assert "OK - [agent] Version:" in p.stdout
+    assert "[agent] Version:" in p.stdout
 
 
 #.

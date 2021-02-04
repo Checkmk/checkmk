@@ -233,7 +233,7 @@ node(NODE) {
             }
         }
         if (shall_publish_package(scm, JOB_BASE_NAME)) {
-            deploy_to_website(UPLOAD_URL, CMK_VERS)
+            deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH)
         } else {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(BUILD_IMAGE_NAME).inside(DOCKER_BASE_ARGS + " -v /tmp:/tmp") {
@@ -476,7 +476,7 @@ def create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, 
     }
 }
 
-def deploy_to_website(UPLOAD_URL, CMK_VERS) {
+def deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH) {
     stage("Deploy to Website") {
         sh """
             ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52023 ${UPLOAD_URL} \

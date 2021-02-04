@@ -160,8 +160,8 @@ class GaugeFigure extends cmk_figures.FigureBase {
                 "d",
                 d3
                     .arc()
-                    .innerRadius(this._radius * 0.75)
-                    .outerRadius(this._radius * 0.76)
+                    .innerRadius(this._radius * 0.71)
+                    .outerRadius(this._radius * 0.73)
                     .startAngle(d => scale_x(d.from))
                     .endAngle(d => scale_x(d.to))
             )
@@ -180,7 +180,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
                 "d",
                 d3
                     .arc()
-                    .innerRadius(this._radius * 0.77)
+                    .innerRadius(this._radius * 0.75)
                     .outerRadius(this._radius * 0.85)
                     .startAngle(d => -limit)
                     .endAngle(d => scale_x(d.value))
@@ -190,7 +190,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
     }
 
     _render_histogram(domain, data) {
-        let num_bins = 20;
+        let num_bins = 40;
         const x = d3.scaleLinear().domain([0, num_bins]).range(domain);
         const bins = d3
             .histogram()
@@ -199,19 +199,19 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .domain(x.range())(data);
 
         let record_count = data.length;
-        const innerRadius = this._radius * 0.85;
+        const innerRadius = this._radius * 0.87;
         const bin_scale = d3
             .scaleLinear()
             .domain([0, d3.max(bins, d => d.length)])
             .range([innerRadius, this._radius]);
         const limit = (7 * Math.PI) / 12;
         const angle_between_bins = (2 * limit) / bins.length;
+        const bin_spacing = angle_between_bins * 0.05;
         this.plot
             .selectAll("path.bin")
             .data(bins)
             .join(enter => enter.append("path").classed("bin", true))
             .attr("fill", "#0F62AF")
-            .attr("stroke", d => (d.length > 0 ? "black" : null))
             .attr(
                 "d",
                 d3
@@ -219,7 +219,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
                     .innerRadius(innerRadius)
                     .outerRadius(d => bin_scale(d.length) + (d.length > 0 ? 2 : 0))
                     .startAngle((d, idx) => -limit + idx * angle_between_bins)
-                    .endAngle((d, idx) => -limit + (idx + 1) * angle_between_bins)
+                    .endAngle((d, idx) => -limit + (idx + 1) * angle_between_bins - bin_spacing)
             )
             .selectAll("title")
             .data(d => [d])

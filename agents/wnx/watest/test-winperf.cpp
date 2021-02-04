@@ -44,17 +44,18 @@ auto GetIndexOfTS() {
     return key_index;
 }
 
-TEST(WinPerfTest, GetPerformanceFrequency) {
+TEST(WinPerf, GetPerformanceFrequency) {
     auto pf = cfg::GetPerformanceFrequency();
     EXPECT_EQ(cfg::details::g_registered_performance_freq, pf);
 }
 
-TEST(WinPerfTest, ValidateFabricConfig) {
+TEST(WinPerf, ValidateFabricConfig) {
     namespace groups = cma::cfg::groups;
     namespace vars = cma::cfg::vars;
-    using namespace cma::tools;
-    tst::TempCfgFs temp_fs;
-    ASSERT_TRUE(temp_fs.loadConfig(tst::GetFabricYml()));
+    tst::TempCfgFs temp_fs(tst::TempCfgFs::Mode::no_io);
+    ASSERT_TRUE(temp_fs.loadContent(tst::GetFabricYmlContent()));
+
+    auto cmd_line = cfg::groups::winperf.buildCmdLine();
     auto cfg = cma::cfg::GetLoadedConfig();
 
     auto winperf_node = cfg[groups::kWinPerf];
@@ -65,6 +66,12 @@ TEST(WinPerfTest, ValidateFabricConfig) {
     auto cfg_timeout = wp_group[vars::kWinPerfTimeout].as<int>(1234567);
     ASSERT_NE(cfg_timeout, 1234567);
     EXPECT_EQ(groups::winperf.timeout(), cfg_timeout);
+
+    EXPECT_TRUE(wp_group[vars::kWinPerfFork].as<bool>(false));
+    EXPECT_TRUE(groups::winperf.isFork());
+
+    EXPECT_FALSE(wp_group[vars::kWinPerfTrace].as<bool>(true));
+    EXPECT_FALSE(groups::winperf.isTrace());
 
     auto cfg_prefix =
         wp_group[vars::kWinPerfPrefixName].as<std::string>("1234567");
@@ -86,8 +93,8 @@ TEST(WinPerfTest, ValidateFabricConfig) {
     for (const auto& counter : counters) {
         std::pair<std::string, std::string> counter_low(counter.first,
                                                         counter.second);
-        StringLower(counter_low.first);
-        StringLower(counter_low.second);
+        tools::StringLower(counter_low.first);
+        tools::StringLower(counter_low.second);
         auto found = cma::tools::find(base_counters, counter_low);
         if (found) found_count++;
     }
@@ -95,7 +102,18 @@ TEST(WinPerfTest, ValidateFabricConfig) {
     EXPECT_EQ(found_count, 3) << "not correct counter list in the yml";
 }
 
-TEST(WinPerfTest, MakeWinPerfStamp) {
+TEST(WinPerf, BuildCommandLine) {
+    tst::TempCfgFs temp_fs(tst::TempCfgFs::Mode::no_io);
+    auto cmd_line = cfg::groups::winperf.buildCmdLine();
+    EXPECT_TRUE(cmd_line.empty()) << cmd_line;
+
+    ASSERT_TRUE(temp_fs.loadContent(tst::GetFabricYmlContent()));
+    cmd_line = cfg::groups::winperf.buildCmdLine();
+    EXPECT_EQ(cmd_line, L"234:phydisk 510:if 238:processor")
+        << "validate fabric yaml";
+}
+
+TEST(WinPerf, MakeWinPerfStamp) {
     auto x = details::MakeWinPerfStamp(0);
     ASSERT_TRUE(!x.empty());
 
@@ -108,13 +126,13 @@ TEST(WinPerfTest, MakeWinPerfStamp) {
     EXPECT_TRUE(value > 1000);
 }
 
-TEST(WinPerfTest, MakeWinPerfHeader) {
+TEST(WinPerf, MakeWinPerfHeader) {
     auto x = details::MakeWinPerfHeader(L"wp", L"zzz");
     EXPECT_EQ(x, "<<<wp_zzz>>>\n");
     x = details::MakeWinPerfHeader(L"www", L"");
     EXPECT_EQ(x, "<<<www_>>>\n");
 }
-TEST(WinPerfTest, MakeBodyForTS) {
+TEST(WinPerf, MakeBodyForTSIntegration) {
     auto ts_index = GetIndexOfTS();
     ASSERT_TRUE(ValidIndexOfTs(ts_index)) << "not supported index " << ts_index;
 
@@ -144,14 +162,14 @@ TEST(WinPerfTest, MakeBodyForTS) {
     }
 }
 
-TEST(WinPerfTest, InvalidCounter) {
+TEST(WinPerf, InvalidCounter) {
     auto name = L"ifxz";
     auto index = L"12345510";
     auto x = BuildWinPerfSection(L"winp", name, index);
     EXPECT_TRUE(x.empty());
 }
 
-TEST(WinPerfTest, IfCounter) {
+TEST(WinPerf, IfCounter) {
     using namespace std::string_literals;
     auto x = BuildWinPerfSection(L"winp", L"if", L"510");
     ASSERT_TRUE(!x.empty());
@@ -177,7 +195,7 @@ TEST(WinPerfTest, IfCounter) {
     EXPECT_EQ(stamp_counter, cma::cfg::GetPerformanceFrequency());
 }
 
-TEST(WinPerfTest, TcpConnCounter) {
+TEST(WinPerf, TcpConnCounter) {
     auto x = BuildWinPerfSection(L"winperf", L"tcp_conn", L"638");
     ASSERT_TRUE(!x.empty());
 
@@ -185,7 +203,7 @@ TEST(WinPerfTest, TcpConnCounter) {
     ASSERT_TRUE(table.size() > 3);
 }
 
-TEST(WinPerfTest, PhyDiskCounter) {
+TEST(WinPerf, PhyDiskCounter) {
     auto x = BuildWinPerfSection(L"winperf", L"phydisk", L"234");
     ASSERT_TRUE(!x.empty());
 
@@ -193,7 +211,7 @@ TEST(WinPerfTest, PhyDiskCounter) {
     ASSERT_TRUE(table.size() > 3);
 }
 
-TEST(WinPerfTest, TsCounter) {
+TEST(WinPerf, TsCounter) {
     using namespace std::string_view_literals;
     auto index_iofts = GetIndexOfTS();
     ASSERT_TRUE(ValidIndexOfTs(index_iofts))  // windows 10 latest

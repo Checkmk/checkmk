@@ -1306,6 +1306,19 @@ bool ConfigInfo::pushFolders(const std::filesystem::path& root,
     return true;
 }
 
+bool ConfigInfo::pushFoldersNoIo(const std::filesystem::path& root,
+                                 const std::filesystem::path& data) {
+    std::lock_guard lk(lock_);
+    if (folders_stack_.size() >= kMaxFoldersStackSize) {
+        XLOG::l("Folders Stack is overflown, max size is [{}]",
+                kMaxFoldersStackSize);
+        return false;
+    }
+    folders_stack_.push(folders_);
+    folders_.setRoot({}, root.wstring());
+    return true;
+}
+
 bool ConfigInfo::popFolders() {
     std::lock_guard lk(lock_);
     if (folders_stack_.empty()) {
@@ -1797,6 +1810,23 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
     root_yaml_time_ = fs::last_write_time(file);
     user_yaml_path_.clear();
     user_yaml_time_ = decltype(user_yaml_time_)::min();
+    bakery_yaml_path_.clear();
+    aggregated_ = false;
+    ok_ = true;
+    g_uniq_id++;
+    return true;
+}
+
+bool ConfigInfo::loadDirect(std::string_view text) {
+    auto new_yaml = YAML::Load(std::string{text});
+    if (0 == new_yaml.size()) return false;
+
+    std::lock_guard lk(lock_);
+    yaml_ = new_yaml;
+
+    // setting up paths  to the other files
+    user_yaml_path_.clear();
+    user_yaml_path_.clear();
     bakery_yaml_path_.clear();
     aggregated_ = false;
     ok_ = true;

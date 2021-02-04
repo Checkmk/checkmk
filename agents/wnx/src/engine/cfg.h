@@ -810,6 +810,16 @@ public:
         return timeout_;
     }
 
+    auto isFork() const {
+        std::lock_guard lk(lock_);
+        return fork_;
+    }
+
+    auto isTrace() const {
+        std::lock_guard lk(lock_);
+        return trace_;
+    }
+
     // gtest [+]
     std::wstring buildCmdLine() const;
 
@@ -821,6 +831,8 @@ private:
     std::string exe_name_;
     std::string prefix_;
     int timeout_;
+    bool fork_{true};
+    bool trace_{false};
 };
 
 /*

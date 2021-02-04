@@ -414,17 +414,17 @@ def remove_autochecks_file(hostname: HostName) -> None:
         pass
 
 
-def remove_autochecks_of_host(hostname: HostName, host_of_clustered_service: HostOfClusteredService,
-                              service_description: GetServiceDescription,
-                              remove_clustered_autochecks: bool) -> int:
+def remove_autochecks_of_host(hostname: HostName, remove_hostname: HostName,
+                              host_of_clustered_service: HostOfClusteredService,
+                              service_description: GetServiceDescription) -> int:
     removed = 0
     new_items: List[Service] = []
     for existing_service in parse_autochecks_file(hostname, service_description):
-        is_on_cluster_host = hostname != host_of_clustered_service(
+        target_host = host_of_clustered_service(
             hostname,
             existing_service.description,
         )
-        if is_on_cluster_host == remove_clustered_autochecks:
+        if target_host == remove_hostname:
             removed += 1
         else:
             new_items.append(existing_service)

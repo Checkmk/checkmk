@@ -11,22 +11,23 @@ from typing import NamedTuple, List, Optional, Union
 
 import cmk.gui.config as config
 import cmk.gui.notify as notify
-from cmk.gui.pages import page_registry, AjaxPage, register
-from cmk.gui.i18n import _, ungettext
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.utils.popups import MethodInline
+from cmk.gui.i18n import _, ungettext
+from cmk.gui.main_menu import (
+    mega_menu_registry,
+    any_show_more_items,
+)
+from cmk.gui.pages import page_registry, AjaxPage, register
 from cmk.gui.type_defs import (
     Icon,
     MegaMenu,
     TopicMenuTopic,
     TopicMenuItem,
 )
-
-from cmk.gui.main_menu import (
-    mega_menu_registry,
-    any_show_more_items,
-)
+from cmk.gui.utils.popups import MethodInline
+from cmk.gui.werks import num_unacknowledged_incompatible_werks, may_acknowledge
 
 MainMenuItem = NamedTuple("MainMenuItem", [
     ("name", str),
@@ -137,6 +138,23 @@ class ModeAjaxSidebarGetMessages(AjaxPage):
                 "text": ungettext("message", "messages", hint_msg),
                 "count": hint_msg,
             },
+        }
+
+
+@page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")
+class ModeAjaxSidebarGetUnackIncompWerks(AjaxPage):
+    def page(self):
+        if not may_acknowledge():
+            raise MKAuthException(_("You are not allowed to acknowlegde werks"))
+
+        num_unacknowledged_werks = num_unacknowledged_incompatible_werks()
+        tooltip_text = ungettext("%d unacknowledged incompatible werk",
+                                 "%d unacknowledged incompatible werks", num_unacknowledged_werks)
+
+        return {
+            "count": num_unacknowledged_werks,
+            "text": _("%d open incompatible werks") % num_unacknowledged_werks,
+            "tooltip": tooltip_text,
         }
 
 

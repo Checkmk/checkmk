@@ -40,6 +40,7 @@ def test_registered_pages():
         'ajax_set_foldertree',
         'ajax_set_rowselection',
         'ajax_sidebar_position',
+        'ajax_sidebar_get_unack_incomp_werks',
         'ajax_start_activation',
         'ajax_switch_help',
         'ajax_ui_theme',

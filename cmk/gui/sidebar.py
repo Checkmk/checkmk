@@ -47,6 +47,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.werks import may_acknowledge
 
 if TYPE_CHECKING:
     from cmk.gui.utils.html import HTML
@@ -345,8 +346,9 @@ class SidebarRenderer:
         interval = config.sidebar_notify_interval if config.sidebar_notify_interval is not None else "null"
         html.open_body(
             class_=body_classes,
-            onload='cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages(%s);' %
-            (json.dumps(interval)),
+            onload=
+            'cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages_and_werks(%s, %s); '
+            % (json.dumps(interval), json.dumps(bool(may_acknowledge()))),
             data_theme=html.get_theme(),
         )
 

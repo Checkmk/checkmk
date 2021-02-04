@@ -1369,7 +1369,7 @@ def get_filter_headers(table, infos, context):
     return filter_headers, get_only_sites_from_context(context)
 
 
-def get_only_sites_from_context(context: dict) -> Optional[List[SiteId]]:
+def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]]:
     """Gather possible existing "only sites" information from context
 
       We need to deal with
@@ -1399,17 +1399,18 @@ def get_only_sites_from_context(context: dict) -> Optional[List[SiteId]]:
         only_sites = context["sites"]
         if isinstance(only_sites, dict):
             only_sites = only_sites["sites"]
-        only_sites = [SiteId(site) for site in only_sites.strip().split("|") if site]
-        return only_sites if only_sites else None
+        only_sites_list = [SiteId(site) for site in only_sites.strip().split("|") if site]
+        return only_sites_list if only_sites_list else None
 
     for var in ["site", "siteopt"]:
         if var in context:
-            if isinstance(context[var], dict):
-                site_name = context[var].get("site")
+            value = context[var]
+            if isinstance(value, dict):
+                site_name = value.get("site")
                 if site_name:
                     return [SiteId(site_name)]
                 return None
-            return [SiteId(context[var])]
+            return [SiteId(value)]
 
     return None
 

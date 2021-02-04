@@ -30,7 +30,7 @@ from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.metrics.valuespecs import ValuesWithUnits
 from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns
-from cmk.gui.plugins.views.painters import paint_service_state_short
+from cmk.gui.plugins.views.painters import service_state_short
 
 
 def dashlet_title(
@@ -76,7 +76,7 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
     plot_definitions = []
 
     def svc_map(row):
-        css_classes, status_name = paint_service_state_short(row)
+        css_classes, status_name = service_state_short(row)
         draw_status = properties.get("status_border", "not_ok")
         if draw_status == "not_ok" and css_classes.endswith("state0"):
             draw_status = False

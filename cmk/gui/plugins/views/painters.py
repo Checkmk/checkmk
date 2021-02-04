@@ -390,17 +390,16 @@ class PainterSitealias(Painter):
 #   '----------------------------------------------------------------------'
 
 
-def paint_service_state_short(row):
+def service_state_short(row):
     if row["service_has_been_checked"] == 1:
-        state = str(row["service_state"])
-        name = short_service_state_name(row["service_state"], "")
-    else:
-        state = "p"
-        name = short_service_state_name(-1, "")
+        return str(row["service_state"]), short_service_state_name(row["service_state"], "")
+    return "p", short_service_state_name(-1, "")
 
+
+def _paint_service_state_short(row):
+    state, name = service_state_short(row)
     if is_stale(row):
         state = state + " stale"
-
     return "state svcstate state%s" % state, html.render_span(name)
 
 
@@ -444,7 +443,7 @@ class PainterServiceState(Painter):
         return 'svcstate'
 
     def render(self, row, cell):
-        return paint_service_state_short(row)
+        return _paint_service_state_short(row)
 
 
 @painter_registry.register
@@ -4572,7 +4571,7 @@ class PainterLogState(Painter):
         if row["log_service_description"] \
            or row["log_type"].endswith("NOTIFICATION RESULT") \
            or row["log_type"].endswith("NOTIFICATION PROGRESS"):
-            return paint_service_state_short({
+            return _paint_service_state_short({
                 "service_has_been_checked": 1,
                 "service_state": state
             })

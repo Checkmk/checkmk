@@ -21,6 +21,7 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
             "owner": "admin",
             "password": "tt",
             "shared": ["all"],
+            "customer": "global"
         }),
         status=200,
         content_type='application/json',
@@ -49,6 +50,7 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
         'password': 'tt',
         'owned_by': None,
         'shared_with': ['all'],
+        'customer': 'global',
     }
 
 
@@ -67,6 +69,7 @@ def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automat
             "owner": "admin",
             "password": "tt",
             "shared": [],
+            "customer": 'provider'
         }),
         status=200,
         content_type='application/json',
@@ -77,6 +80,43 @@ def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automat
         base + "/objects/password/test",
         status=200,
     )
+
+
+def test_openapi_password_customer(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/password/collections/all",
+        params=json.dumps({
+            "ident": "test",
+            "title": "Checkmk",
+            "owner": "admin",
+            "password": "tt",
+            "shared": [],
+            "customer": "provider",
+        }),
+        status=200,
+        content_type='application/json',
+    )
+    assert resp.json_body["extensions"]["customer"] == "provider"
+
+    _resp = wsgi_app.call_method('put',
+                                 base + "/objects/password/test",
+                                 params=json.dumps({
+                                     "customer": "global",
+                                 }),
+                                 content_type='application/json')
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/password/test",
+        status=200,
+    )
+    assert resp.json_body["extensions"]["customer"] == "global"
 
 
 def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automation_calls):
@@ -94,6 +134,7 @@ def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automa
             "owner": "admin",
             "password": "tt",
             "shared": ["all"],
+            "customer": "global",
         }),
         status=200,
         content_type='application/json',

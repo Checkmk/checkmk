@@ -1022,6 +1022,11 @@ class InputPassword(BaseSchema):
         attribute="shared_with",
         missing=list,
     )
+    customer = fields.customer_field(
+        required=True,
+        should_exist=True,
+        allow_global=True,
+    )
 
 
 class UpdatePassword(BaseSchema):
@@ -1058,15 +1063,23 @@ class UpdatePassword(BaseSchema):
         required=False,
         attribute="owned_by")
 
-    shared = fields.List(PasswordShare(
-        example="all",
-        description=
-        "By default only the members of the owner contact group are permitted to use a a configured password. It is possible to share a password with other groups of users to make them able to use a password in checks.",
-    ),
-                         example=["all"],
-                         description="The list of members to share the password with",
-                         required=False,
-                         attribute="shared_with")
+    shared = fields.List(
+        PasswordShare(
+            example="all",
+            description=
+            "By default only the members of the owner contact group are permitted to use a a configured password. "
+            "It is possible to share a password with other groups of users to make them able to use a password in checks.",
+        ),
+        example=["all"],
+        description="The list of members to share the password with",
+        required=False,
+        attribute="shared_with",
+    )
+    customer = fields.customer_field(
+        required=False,
+        should_exist=True,
+        allow_global=True,
+    )
 
 
 class Username(fields.String):

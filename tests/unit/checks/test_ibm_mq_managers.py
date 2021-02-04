@@ -91,7 +91,7 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
         (0, u'Status: RUNNING'),
         (0, u'Version: 9.1.0.4'),
         (0, u'Installation: /opt/mqm (Installation1), Default: NO'),
-        (0, u'Single-Instance: sb008877=ACTIVE'),
+        (0, u'High availability: replicated, Instance: sb008877'),
     ]
     assert expected == actual
 

@@ -1,0 +1,14 @@
+Title: ibm_mq_queues: Display Qtime and improve metrics
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1612768131
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The service now displays "Qtime short" and "Qtime long"
+
+We also combine metrics frequently used together into one graph,
+and use same metric key name as IBM MQ uses.

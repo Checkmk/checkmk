@@ -112,10 +112,12 @@ def test_check():
     }
     actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
     expected = [
-        (0, 'Queue depth: 1400 (0.7%)', [('messages_in_queue', 1400, 1500, 2000, 0, 200000)]),
-        (0, 'Oldest message: 36 m', [('age_oldest', 2201, None, None)]),
-        (1, 'Open input handles: 5 (warn/crit at 4/8)', [('reading', 5, 4, 8)]),
-        (0, 'Open output handles: 0', [('writing', 0, None, None)]),
+        (0, 'Queue depth: 1400 (0.7%)', [('curdepth', 1400, 1500, 2000, 0, 200000)]),
+        (0, 'Oldest message: 36 m', [('msgage', 2201, None, None)]),
+        (1, 'Open input handles: 5 (warn/crit at 4/8)', [('ipprocs', 5, 4, 8)]),
+        (0, 'Open output handles: 0', [('opprocs', 0, None, None)]),
+        (0, 'Qtime short: n/a', [('qtime_short', 0, None, None)]),
+        (0, 'Qtime long: n/a', [('qtime_long', 0, None, None)]),
     ]
     assert actual == expected
 
@@ -149,89 +151,89 @@ def test_vanished_service_for_running_qmgr():
 def test_depth_no_params():
     params: Dict[str, Any] = {}
     curdepth, maxdepth = 0, 5000
-    expected = (0, 'Queue depth: 0', [('messages_in_queue', 0, None, None, 0, 5000)])
+    expected = (0, 'Queue depth: 0', [('curdepth', 0, None, None, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_with_percentage():
     params: Dict[str, Any] = {}
     curdepth, maxdepth = 50, 5000
-    expected = (0, 'Queue depth: 50 (1.0%)', [('messages_in_queue', 50, None, None, 0, 5000)])
+    expected = (0, 'Queue depth: 50 (1.0%)', [('curdepth', 50, None, None, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_no_max_depth():
     params: Dict[str, Any] = {}
     curdepth, maxdepth = 50, None
-    expected = (0, 'Queue depth: 50', [('messages_in_queue', 50, None, None, 0, None)])
+    expected = (0, 'Queue depth: 50', [('curdepth', 50, None, None, 0, None)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_param_ok():
     params = {'curdepth': (100, 500)}
     curdepth, maxdepth = 50, 5000
-    expected = (0, 'Queue depth: 50 (1.0%)', [('messages_in_queue', 50, 100, 500, 0, 5000)])
+    expected = (0, 'Queue depth: 50 (1.0%)', [('curdepth', 50, 100, 500, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_param_warn():
     params = {'curdepth': (100, 500)}
     curdepth, maxdepth = 100, 5000
-    expected = (1, 'Queue depth: 100 (2.0%) (warn/crit at 100/500)', [('messages_in_queue', 100,
-                                                                       100, 500, 0, 5000)])
+    expected = (1, 'Queue depth: 100 (2.0%) (warn/crit at 100/500)', [('curdepth', 100, 100, 500, 0,
+                                                                       5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_param_crit():
     params = {'curdepth': (100, 500)}
     curdepth, maxdepth = 500, 5000
-    expected = (2, 'Queue depth: 500 (10.0%) (warn/crit at 100/500)', [('messages_in_queue', 500,
-                                                                        100, 500, 0, 5000)])
+    expected = (2, 'Queue depth: 500 (10.0%) (warn/crit at 100/500)', [('curdepth', 500, 100, 500,
+                                                                        0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_param_percentage_ok():
     params = {'curdepth_perc': (80.0, 90.0)}
     curdepth, maxdepth = 50, 5000
-    expected = (0, 'Queue depth: 50 (1.0%)', [('messages_in_queue', 50, None, None, 0, 5000)])
+    expected = (0, 'Queue depth: 50 (1.0%)', [('curdepth', 50, None, None, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_param_percentage_warn():
     params = {'curdepth_perc': (80.0, 90.0)}
     curdepth, maxdepth = 4000, 5000
-    expected = (1, 'Queue depth: 4000 (80.0%) (warn/crit at 80.0%/90.0%)',
-                [('messages_in_queue', 4000, None, None, 0, 5000)])
+    expected = (1, 'Queue depth: 4000 (80.0%) (warn/crit at 80.0%/90.0%)', [('curdepth', 4000, None,
+                                                                             None, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_param_percentage_error():
     params = {'curdepth_perc': (80.0, 90.0)}
     curdepth, maxdepth = 4900, 5000
-    expected = (2, 'Queue depth: 4900 (98.0%) (warn/crit at 80.0%/90.0%)',
-                [('messages_in_queue', 4900, None, None, 0, 5000)])
+    expected = (2, 'Queue depth: 4900 (98.0%) (warn/crit at 80.0%/90.0%)', [('curdepth', 4900, None,
+                                                                             None, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_param_percentage_ignored_in_wato():
     params = {'curdepth_perc': (None, None)}
     curdepth, maxdepth = 4900, 5000
-    expected = (0, 'Queue depth: 4900 (98.0%)', [('messages_in_queue', 4900, None, None, 0, 5000)])
+    expected = (0, 'Queue depth: 4900 (98.0%)', [('curdepth', 4900, None, None, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_param_both_ok():
     params = {'curdepth': (100, 500), 'curdepth_perc': (80.0, 90.0)}
     curdepth, maxdepth = 50, 5000
-    expected = (0, 'Queue depth: 50 (1.0%)', [('messages_in_queue', 50, 100, 500, 0, 5000)])
+    expected = (0, 'Queue depth: 50 (1.0%)', [('curdepth', 50, 100, 500, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_param_one_of_them_warn():
     params = {'curdepth': (100, 500), 'curdepth_perc': (80.0, 90.0)}
     curdepth, maxdepth = 100, 5000
-    expected = (1, 'Queue depth: 100 (2.0%) (warn/crit at 100/500)', [('messages_in_queue', 100,
-                                                                       100, 500, 0, 5000)])
+    expected = (1, 'Queue depth: 100 (2.0%) (warn/crit at 100/500)', [('curdepth', 100, 100, 500, 0,
+                                                                       5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
@@ -239,7 +241,7 @@ def test_depth_param_one_warn_one_crit():
     params = {'curdepth': (100, 4950), 'curdepth_perc': (80.0, 90.0)}
     curdepth, maxdepth = 4900, 5000
     expected = (2, 'Queue depth: 4900 (98.0%) (warn/crit at 100/4950 and 80.0%/90.0%)',
-                [('messages_in_queue', 4900, 100, 4950, 0, 5000)])
+                [('curdepth', 4900, 100, 4950, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
@@ -269,7 +271,7 @@ def assert_depth(curdepth, maxdepth, params, expected):
 def test_age_no_params():
     params: Dict[str, Any] = {}
     msgage = 1800
-    expected = (0, 'Oldest message: 30 m', [('age_oldest', 1800, None, None)])
+    expected = (0, 'Oldest message: 30 m', [('msgage', 1800, None, None)])
     assert_age(msgage, params, expected)
 
 
@@ -283,23 +285,21 @@ def test_age_no_msgage():
 def test_age_ok():
     params = {'msgage': (1800, 3600)}
     msgage = 1200
-    expected = (0, 'Oldest message: 20 m', [('age_oldest', 1200, 1800, 3600)])
+    expected = (0, 'Oldest message: 20 m', [('msgage', 1200, 1800, 3600)])
     assert_age(msgage, params, expected)
 
 
 def test_age_warn():
     params = {'msgage': (1800, 3600)}
     msgage = 1801
-    expected = (1, 'Oldest message: 30 m (warn/crit at 30 m/60 m)', [('age_oldest', 1801, 1800,
-                                                                      3600)])
+    expected = (1, 'Oldest message: 30 m (warn/crit at 30 m/60 m)', [('msgage', 1801, 1800, 3600)])
     assert_age(msgage, params, expected)
 
 
 def test_age_crit():
     params = {'msgage': (1800, 3600)}
     msgage = 3601
-    expected = (2, 'Oldest message: 60 m (warn/crit at 30 m/60 m)', [('age_oldest', 3601, 1800,
-                                                                      3600)])
+    expected = (2, 'Oldest message: 60 m (warn/crit at 30 m/60 m)', [('msgage', 3601, 1800, 3600)])
     assert_age(msgage, params, expected)
 
 
@@ -403,7 +403,7 @@ def assert_last_get_age(lget, now, params, expected):
 def test_procs_no_params():
     params: Dict[str, Any] = {}
     opprocs = 3
-    expected = (0, 'Open output handles: 3', [('writing', 3, None, None)])
+    expected = (0, 'Open output handles: 3', [('opprocs', 3, None, None)])
     assert_procs(opprocs, params, expected)
 
 
@@ -411,23 +411,23 @@ def test_procs_upper():
     params = {'opprocs': {'upper': (10, 20)}}
 
     opprocs = 3
-    expected = (0, 'Open output handles: 3', [('writing', 3, 10, 20)])
+    expected = (0, 'Open output handles: 3', [('opprocs', 3, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 10
-    expected = (1, 'Open output handles: 10 (warn/crit at 10/20)', [('writing', 10, 10, 20)])
+    expected = (1, 'Open output handles: 10 (warn/crit at 10/20)', [('opprocs', 10, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 11
-    expected = (1, 'Open output handles: 11 (warn/crit at 10/20)', [('writing', 11, 10, 20)])
+    expected = (1, 'Open output handles: 11 (warn/crit at 10/20)', [('opprocs', 11, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 20
-    expected = (2, 'Open output handles: 20 (warn/crit at 10/20)', [('writing', 20, 10, 20)])
+    expected = (2, 'Open output handles: 20 (warn/crit at 10/20)', [('opprocs', 20, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 21
-    expected = (2, 'Open output handles: 21 (warn/crit at 10/20)', [('writing', 21, 10, 20)])
+    expected = (2, 'Open output handles: 21 (warn/crit at 10/20)', [('opprocs', 21, 10, 20)])
     assert_procs(opprocs, params, expected)
 
 
@@ -435,19 +435,19 @@ def test_procs_lower():
     params = {'opprocs': {'lower': (3, 1)}}
 
     opprocs = 3
-    expected = (0, 'Open output handles: 3', [('writing', 3, None, None)])
+    expected = (0, 'Open output handles: 3', [('opprocs', 3, None, None)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 2
-    expected = (1, 'Open output handles: 2 (warn/crit below 3/1)', [('writing', 2, None, None)])
+    expected = (1, 'Open output handles: 2 (warn/crit below 3/1)', [('opprocs', 2, None, None)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 1
-    expected = (1, 'Open output handles: 1 (warn/crit below 3/1)', [('writing', 1, None, None)])
+    expected = (1, 'Open output handles: 1 (warn/crit below 3/1)', [('opprocs', 1, None, None)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 0
-    expected = (2, 'Open output handles: 0 (warn/crit below 3/1)', [('writing', 0, None, None)])
+    expected = (2, 'Open output handles: 0 (warn/crit below 3/1)', [('opprocs', 0, None, None)])
     assert_procs(opprocs, params, expected)
 
 
@@ -460,15 +460,15 @@ def test_procs_lower_and_upper():
     }
 
     opprocs = 1
-    expected = (1, 'Open output handles: 1 (warn/crit below 3/1)', [('writing', 1, 10, 20)])
+    expected = (1, 'Open output handles: 1 (warn/crit below 3/1)', [('opprocs', 1, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 0
-    expected = (2, 'Open output handles: 0 (warn/crit below 3/1)', [('writing', 0, 10, 20)])
+    expected = (2, 'Open output handles: 0 (warn/crit below 3/1)', [('opprocs', 0, 10, 20)])
     assert_procs(opprocs, params, expected)
 
     opprocs = 21
-    expected = (2, 'Open output handles: 21 (warn/crit at 10/20)', [('writing', 21, 10, 20)])
+    expected = (2, 'Open output handles: 21 (warn/crit at 10/20)', [('opprocs', 21, 10, 20)])
     assert_procs(opprocs, params, expected)
 
 
@@ -486,3 +486,54 @@ def assert_procs(opprocs, params, expected):
     }
     actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
     assert expected == actual[1]
+
+
+#
+# QTIME
+#
+
+
+def test_qtime_no_values():
+    params: Dict[str, Any] = {}
+    qtime = ','
+    expected = [
+        (0, 'Qtime short: n/a', [('qtime_short', 0, None, None)]),
+        (0, 'Qtime long: n/a', [('qtime_long', 0, None, None)]),
+    ]
+    assert_qtime(qtime, params, expected)
+
+
+def test_qtime_only_short():
+    params: Dict[str, Any] = {}
+    qtime = '300000000,'
+    expected = [
+        (0, 'Qtime short: 5 m', [('qtime_short', 300.0, None, None)]),
+        (0, 'Qtime long: n/a', [('qtime_long', 0, None, None)]),
+    ]
+    assert_qtime(qtime, params, expected)
+
+
+def test_qtime_both():
+    params: Dict[str, Any] = {}
+    qtime = '300000000,420000000'
+    expected = [
+        (0, 'Qtime short: 5 m', [('qtime_short', 300.0, None, None)]),
+        (0, 'Qtime long: 7 m', [('qtime_long', 420.0, None, None)]),
+    ]
+    assert_qtime(qtime, params, expected)
+
+
+def assert_qtime(qtime, params, expected):
+    check = Check(CHECK_NAME)
+    parsed = {
+        'QM1': {
+            'STATUS': 'RUNNING'
+        },
+        'QM1:MY.QUEUE': {
+            'CURDEPTH': 0,
+            'MAXDEPTH': 5000,
+            'QTIME': qtime,
+        }
+    }
+    actual = list(check.run_check('QM1:MY.QUEUE', params, parsed))
+    assert expected == actual[1:]

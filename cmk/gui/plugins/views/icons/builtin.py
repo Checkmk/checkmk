@@ -409,7 +409,7 @@ class PerfgraphIcon(Icon):
             onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s);" % (
                 json.dumps(row['site']),
                 json.dumps(row["host_name"]),
-                json.dumps(row.get('service_description', '_HOST_')),
+                json.dumps(row['service_description'] if what == "service" else '_HOST_'),
             ))
 
     def _graph_icon_link(self, row, what):

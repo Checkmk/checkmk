@@ -42,7 +42,6 @@
 #include "ServiceContactsColumn.h"
 #include "ServiceGroupsColumn.h"
 #include "ServiceRRDColumn.h"
-#include "ServiceSpecialIntColumn.h"
 #include "StringLambdaColumn.h"
 #include "StringPerfdataColumn.h"
 #include "StringUtils.h"
@@ -420,10 +419,16 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         "A list of all modified attributes", offsets.add([](Row r) {
             return &r.rawData<service>()->modified_attributes;
         })));
-    table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<service>>(
         prefix + "hard_state",
         "The effective hard state of the service (eliminates a problem in hard_state)",
-        offsets, ServiceSpecialIntColumn::Type::real_hard_state));
+        offsets, [](const service &svc) {
+            if (svc.current_state == STATE_OK) {
+                return 0;
+            }
+            return svc.state_type == HARD_STATE ? svc.current_state
+                                                : svc.last_hard_state;
+        }));
     table->addColumn(std::make_unique<IntLambdaColumn<service>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",

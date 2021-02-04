@@ -4,6 +4,7 @@
 #include "service_processor.h"
 
 #include <fcntl.h>
+#include <io.h>
 #include <sensapi.h>
 #include <shlobj_core.h>
 

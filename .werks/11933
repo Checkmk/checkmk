@@ -1,0 +1,14 @@
+Title: Rename Versioning variables in agent plugins
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1612442349
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+Versioning variables used to be called: *VERSION*
+Now they are called: *CMK_VERSION*
+The only exception to that are Python plugins the versioning
+variable is still called: __version__

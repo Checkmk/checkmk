@@ -8,7 +8,6 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -29,7 +28,7 @@ public:
     [[nodiscard]] RelationalOperator oper() const { return _relOp; }
     [[nodiscard]] std::string value() const { return _value; }
     std::unique_ptr<Filter> partialFilter(
-        std::function<bool(const std::string &)> predicate) const override;
+        columnNamePredicate predicate) const override;
     [[nodiscard]] bool is_tautology() const override;
     [[nodiscard]] bool is_contradiction() const override;
     [[nodiscard]] Filters disjuncts() const override;

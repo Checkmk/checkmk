@@ -23,6 +23,7 @@ class Filter;
 class Row;
 
 using Filters = std::vector<std::unique_ptr<Filter>>;
+using columnNamePredicate = std::function<bool(const std::string &)>;
 
 /// A propositional formula over column value relations, kept in negation normal
 /// form.
@@ -36,7 +37,7 @@ public:
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
     virtual std::unique_ptr<Filter> partialFilter(
-        std::function<bool(const std::string &)> predicate) const = 0;
+        columnNamePredicate predicate) const = 0;
 
     // TODO(sp) We might be able to unify all the methods below if we make the
     // underlying lattice structure explicit, i.e. provide a set type and

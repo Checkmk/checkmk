@@ -305,10 +305,33 @@ class Endpoint:
         @functools.wraps(self.func)
         def _validating_wrapper(param):
             # TODO: Better error messages, pointing to the location where variables are missing
+
+            def _format_fields(_messages: Union[List, Dict]) -> str:
+                if isinstance(_messages, list):
+                    return ', '.join(_messages)
+                if isinstance(_messages, dict):
+                    return ', '.join(_messages.keys())
+                return ''
+
+            def _problem(exc_, status_code=400):
+                if isinstance(exc_.messages, dict):
+                    messages = exc_.messages
+                else:
+                    messages = {'exc': exc_.messages}
+                return problem(
+                    status=status_code,
+                    title=http.client.responses[status_code],
+                    detail=f"These fields have problems: {_format_fields(exc_.messages)}",
+                    ext=messages,
+                )
+
             try:
                 if path_schema:
                     param.update(path_schema().load(param))
+            except ValidationError as exc:
+                return _problem(exc, status_code=404)
 
+            try:
                 if query_schema:
                     param.update(query_schema().load(request.args))
 
@@ -319,24 +342,7 @@ class Endpoint:
                     body = request_schema().load(request.json or {})
                     param['body'] = body
             except ValidationError as exc:
-
-                def _format_fields(_messages: Union[List, Dict]) -> str:
-                    if isinstance(_messages, list):
-                        return ', '.join(_messages)
-                    if isinstance(_messages, dict):
-                        return ', '.join(_messages.keys())
-                    return ''
-
-                if isinstance(exc.messages, dict):
-                    messages = exc.messages
-                else:
-                    messages = {'exc': exc.messages}
-                return problem(
-                    status=400,
-                    title="Bad request.",
-                    detail=f"These fields have problems: {_format_fields(exc.messages)}",
-                    ext=messages,
-                )
+                return _problem(exc, status_code=400)
 
             # make pylint happy
             assert callable(self.func)

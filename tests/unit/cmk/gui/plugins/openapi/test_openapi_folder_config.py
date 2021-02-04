@@ -210,5 +210,5 @@ def test_openapi_missing_folder(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder_config/asdf" + uuid.uuid4().hex,
-                        status=400)
+                        status=404)
     assert 'title' in resp.json

@@ -34,7 +34,7 @@ from cmk.utils.paths import tmp_dir
 from cmk.special_agents.utils.agent_common import (
     special_agent_main,
     SectionWriter,
-    PiggybackSection,
+    ConditionalPiggybackSection,
 )
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 from cmk.special_agents.utils.misc import to_bytes, JsonCachedData
@@ -436,7 +436,8 @@ def agent_proxmox_ve_main(args: Args) -> None:
     LOGGER.info("Write agent output..")
     for node in data["nodes"]:
         assert node["type"] == "node"
-        with PiggybackSection(node["node"]):
+        piggyback_host = None if args.hostname.startswith(node["node"] + ".") else node["node"]
+        with ConditionalPiggybackSection(piggyback_host):
             with SectionWriter("proxmox_ve_node_info") as writer:
                 writer.append_json({
                     "status": node["status"],
@@ -469,7 +470,7 @@ def agent_proxmox_ve_main(args: Args) -> None:
                 writer.append(node["uptime"])
 
     for vmid, vm in all_vms.items():
-        with PiggybackSection(vm["name"]):
+        with ConditionalPiggybackSection(vm["name"]):
             with SectionWriter("proxmox_ve_vm_info") as writer:
                 writer.append_json({
                     "vmid": vmid,

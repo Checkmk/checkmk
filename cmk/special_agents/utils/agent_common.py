@@ -65,13 +65,28 @@ class SectionManager:
         sys.stdout.write("\n")
 
 
-class PiggybackSection(SectionManager):
-    def __init__(self, hostname: str) -> None:
+class ConditionalPiggybackSection(SectionManager):
+    """Exception-Safely open and close a piggyback section
+    In order to avoid clumsy conststructs it's possible to omend the piggyback sections by
+    letting @hostname be falsish
+    >>> with ConditionalPiggybackSection("horst"):
+    ...     print("foo: bar")
+    <<<<horst>>>>
+    foo: bar
+    <<<<>>>>
+    >>> with ConditionalPiggybackSection(None):
+    ...     print("foo: bar")
+    foo: bar
+    """
+    def __init__(self, hostname: Optional[str]) -> None:
         super().__init__()
-        self.append(f"<<<<{hostname}>>>>")
+        self.set_piggyback = bool(hostname)
+        if self.set_piggyback:
+            self.append(f"<<<<{hostname}>>>>")
 
     def __exit__(self, *args: Any, **kwargs: Any) -> None:
-        self.append("<<<<>>>>")
+        if self.set_piggyback:
+            self.append("<<<<>>>>")
         super().__exit__(*args, **kwargs)
 
 

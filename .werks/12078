@@ -1,0 +1,13 @@
+Title: Proxmox VE: Don't piggyback a node if it's the contacted host.
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612518571
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+Up to now all sections for Proxmox VE nodes and VMs had been piggybacked
+which resulted in a missing Checkmk Service.
+Now the contacted node won't be piggybacked any more.

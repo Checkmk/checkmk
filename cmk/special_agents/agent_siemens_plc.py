@@ -64,7 +64,14 @@ def parse_spec(hostspec):
 'rack': 0, \
 'slot': 2, \
 'port': 102, \
-'values': [(('merker', None), (5, 3), 'bit', 'flag', 'Filterturm_Sammelstoerung_Telefon')]\
+'values': [{\
+'area_name': 'merker', \
+'db_number': None, \
+'byte': 5, \
+'bit': 3, \
+'datatype': 'bit', \
+'valuetype': 'flag', \
+'ident': 'Filterturm_Sammelstoerung_Telefon'}]\
 }
     '''
     parts = hostspec.split(';')
@@ -77,22 +84,37 @@ def parse_spec(hostspec):
 
         if ':' in p[0]:
             area_name, db_number = p[0].split(':')
-            area: Tuple[str, Optional[int]] = (area_name, int(db_number))
+            db_number = int(db_number)
         elif p[0] in ["merker", "input", "output", "counter", "timer"]:
-            area = (p[0], None)
+            area_name, db_number = p[0], None
         else:
-            area = ("db", int(p[0]))
+            area_name, db_number = "db", int(p[0])
+        value = {
+            'area_name': area_name,
+            'db_number': db_number,
+        }
 
-        byte, bit = map(int, p[1].split('.'))
+        byte, bit = map(int, p[1].split('.'))  # address
+        value.update({
+            'byte': byte,
+            'bit': bit,
+        })
 
         if ':' in p[2]:
             typename, size_str = p[2].split(':')
             datatype: Union[Tuple[str, int], str] = (typename, int(size_str))
         else:
             datatype = p[2]
+        value.update({
+            'datatype': datatype,
+        })
 
-        # area, address, datatype, valuetype, ident
-        values.append((area, (byte, bit), datatype, p[3], p[4]))
+        value.update({
+            'valuetype': p[3],
+            'ident': p[4],
+        })
+
+        values.append(value)
 
     return {
         'host_name': parts[0],
@@ -161,15 +183,18 @@ def _addresses_from_device(device):
     addresses: Dict = {}
     start_address = None
     end_address = None
-    # the pylint warning below will be refactored out later
-    for area, (byte, bit), datatype, valuetype, ident in device['values']:  # pylint: disable=unused-variable
+    for device_value in device['values']:
+        datatype = device_value['datatype']
         if isinstance(datatype, tuple):
             size: Optional[int] = datatype[1]
         else:
             size = DATATYPES[datatype][0]
+
+        area = device_value['area_name'], device_value['db_number']
         addresses.setdefault(area, [None, None])
         start_address, end_address = addresses[area]
 
+        byte = device_value['byte']
         if start_address is None or byte < start_address:
             addresses[area][0] = byte
 
@@ -183,20 +208,23 @@ def _addresses_from_device(device):
 
 def _cast_values(device, addresses, data):
     values = []
-    for (area_name, db_number), (byte, bit), datatype, valuetype, ident in device['values']:
+    for device_value in device['values']:
+        datatype = device_value['datatype']
         if isinstance(datatype, tuple):
             typename, size = datatype
             parse_func = DATATYPES[typename][1]
         else:
             size, parse_func = DATATYPES[datatype]
 
+        area_name = device_value['area_name']
+        db_number = device_value['db_number']
         # the pylint warning below will be refactored out later
         start, end = addresses[(area_name, db_number)]  # pylint: disable=unused-variable
         fetched_data = data[(area_name, db_number)]
 
-        value = parse_func(fetched_data, byte - start, size, bit)
+        value = parse_func(fetched_data, device_value['byte'] - start, size, device_value['bit'])
 
-        values.append((valuetype, ident, value))
+        values.append((device_value['valuetype'], device_value['ident'], value))
 
     return values
 

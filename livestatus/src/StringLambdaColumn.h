@@ -63,7 +63,8 @@ struct StringLambdaColumn<T>::PerfData : StringLambdaColumn {
     using StringLambdaColumn<T>::StringLambdaColumn;
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override {
-        return std::make_unique<PerfdataAggregator>(factory, this);
+        return std::make_unique<PerfdataAggregator>(
+            factory, [this](Row row) { return this->getValue(row); });
     }
 };
 

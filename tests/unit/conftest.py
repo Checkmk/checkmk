@@ -227,7 +227,7 @@ def prevent_livestatus_connect(monkeypatch):
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""
     monkeypatch.setattr(
-        livestatus.SingleSiteConnection, "_create_socket", lambda s, f: pytest.fail(
+        livestatus.SingleSiteConnection, "_create_socket", lambda *_: pytest.fail(
             "The test tried to use a livestatus connection. This will result in connect timeouts. "
             "Use mock_livestatus for mocking away the livestatus API"))
 

@@ -106,6 +106,7 @@ def macro_mapping_from_context(
     single_infos: SingleInfos,
     title: str,
     default_title: str,
+    **additional_macros: str,
 ) -> MacroMapping:
     macro_mapping = {"$DEFAULT_TITLE$": default_title}
     macro_mapping.update({
@@ -125,6 +126,8 @@ def macro_mapping_from_context(
             macro_mapping["$HOST_NAME$"],
         )
 
+    macro_mapping.update(additional_macros)
+
     return macro_mapping
 
 
@@ -133,6 +136,7 @@ def render_title_with_macros_string(
     single_infos: SingleInfos,
     title: str,
     default_title: str,
+    **additional_macros: str,
 ):
     return replace_macros_in_str(
         _u(title),
@@ -141,6 +145,7 @@ def render_title_with_macros_string(
             single_infos,
             title,
             default_title,
+            **additional_macros,
         ),
     )
 
@@ -473,8 +478,8 @@ class Dashlet(metaclass=abc.ABCMeta):
 
         return globals()[urlfunc]()
 
-    @staticmethod
-    def get_additional_title_macros() -> Iterable[str]:
+    @classmethod
+    def get_additional_title_macros(cls) -> Iterable[str]:
         yield from []
 
 

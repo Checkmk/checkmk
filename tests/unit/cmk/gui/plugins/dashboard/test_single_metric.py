@@ -9,7 +9,7 @@ from cmk.gui.plugins.dashboard.single_metric import dashlet_title
 
 
 @pytest.mark.parametrize(
-    "settings, metric_specs, result",
+    "settings, metric, result",
     [
         pytest.param(
             {
@@ -17,7 +17,7 @@ from cmk.gui.plugins.dashboard.single_metric import dashlet_title
                 "title": "title",
                 "single_infos": ["host", "service"],
             },
-            {},
+            ("", {}, {}),
             "",
             id="no show title",
         ),
@@ -26,25 +26,31 @@ from cmk.gui.plugins.dashboard.single_metric import dashlet_title
                 "show_title": True,
                 "single_infos": ["host", "service"],
             },
-            {},
+            ("", {}, {}),
             "",
             id="no set title",
         ),
         pytest.param(
             {
                 "show_title": True,
-                "title": "$SITE$ - $HOST_NAME$ - $SERVICE_DESCRIPTION$",
+                "title": "$SITE$ - $HOST_NAME$ - $SERVICE_DESCRIPTION$ - $METRIC_NAME$",
                 "single_infos": ["host", "service"],
             },
-            {
-                "site": "site",
-                "host_name": "host",
-                "service_description": "service_description",
-            },
-            "site - host - service_description",
+            (
+                "",
+                {
+                    "title": "I/O throughput"
+                },
+                {
+                    "site": "site",
+                    "host_name": "host",
+                    "service_description": "service_description",
+                },
+            ),
+            "site - host - service_description - I/O throughput",
             id="set title and macros",
         ),
     ],
 )
-def test_dashlet_title(settings, metric_specs, result):
-    assert dashlet_title(settings, metric_specs) == result
+def test_dashlet_title(settings, metric, result):
+    assert dashlet_title(settings, metric) == result

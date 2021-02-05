@@ -8,6 +8,7 @@ from typing import (
     Any,
     Iterable,
     Mapping,
+    Tuple,
 )
 
 from cmk.gui.i18n import _
@@ -34,22 +35,27 @@ from cmk.gui.plugins.views.painters import service_state_short
 
 def dashlet_title(
     settings: Mapping[str, Any],
-    metric_specs: Mapping[str, Any],
+    metric: Tuple[str, Mapping[str, Any], Mapping[str, Any]],
 ) -> str:
     if not settings.get("show_title", True):
         return ""
     default_title = SingleMetricDashlet.default_display_title()
+    _unused, metric_specs, metric_context = metric
+    metric_name = metric_specs.get("title")
     return render_title_with_macros_string(
         {
-            context_key: metric_specs[metrics_key] for metrics_key, context_key in (
+            context_key: metric_context[metrics_key] for metrics_key, context_key in (
                 ("host_name", "host"),
                 ("service_description", "service"),
                 ("site", "site"),
-            ) if metrics_key in metric_specs
+            ) if metrics_key in metric_context
         },
         settings["single_infos"],
         settings.get("title", default_title),
         default_title,
+        **({
+            "$METRIC_NAME$": metric_name
+        } if metric_name else {}),
     )
 
 
@@ -145,7 +151,7 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
     return {
         "plot_definitions": plot_definitions,
         "data": data,
-        "title": dashlet_title(settings, metrics[0][2] if metrics else {})
+        "title": dashlet_title(settings, metrics[0] if metrics else ("", {}, {}))
     }
 
 
@@ -260,6 +266,10 @@ class SingleMetricDashlet(ABCFigureDashlet):
     def default_display_title() -> str:
         return ""
 
+    @classmethod
+    def get_additional_title_macros(cls) -> Iterable[str]:
+        yield "$METRIC_NAME$"
+
 
 #   .--Gauge---------------------------------------------------------------.
 #   |                     ____                                             |
@@ -290,8 +300,9 @@ class GaugeDashlet(SingleMetricDashlet):
     def _vs_elements():
         return _vs_elements(["time_range", "display_range", "status_border"])
 
-    @staticmethod
-    def get_additional_title_macros() -> Iterable[str]:
+    @classmethod
+    def get_additional_title_macros(cls) -> Iterable[str]:
+        yield from super().get_additional_title_macros()
         yield "$SITE$"
 
 
@@ -357,6 +368,7 @@ class SingleGraphDashlet(SingleMetricDashlet):
     def _vs_elements():
         return _vs_elements(["time_range", "status_border", "metric_status_display"])
 
-    @staticmethod
-    def get_additional_title_macros() -> Iterable[str]:
+    @classmethod
+    def get_additional_title_macros(cls) -> Iterable[str]:
+        yield from super().get_additional_title_macros()
         yield "$SITE$"

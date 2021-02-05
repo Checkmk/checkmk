@@ -265,6 +265,6 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
     def _get_site_from_dashlet_spec(self) -> Optional[str]:
         return self.dashlet_spec["_graph_identification"][1].get("site")
 
-    @staticmethod
-    def get_additional_title_macros() -> Iterable[str]:
+    @classmethod
+    def get_additional_title_macros(cls) -> Iterable[str]:
         yield "$SITE$"

@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
+from typing import (
+    Dict,
+    Iterable,
+)
 import numpy as np  # type: ignore[import]
 
 from cmk.utils.render import date_and_time
@@ -29,7 +32,7 @@ from cmk.gui.plugins.metrics.utils import get_metric_info
 class AverageScatterplotDataGenerator:
     """Data generator for a scatterplot with average lines"""
     @classmethod
-    def figure_title(cls, properties, context, settings) -> str:
+    def figure_title(cls, properties, context, settings, metric_name: str) -> str:
         if not settings.get("show_title", False):
             return ""
         default_title = AverageScatterplotDashlet.default_display_title()
@@ -38,6 +41,7 @@ class AverageScatterplotDataGenerator:
             settings["single_infos"],
             settings.get("title", default_title),
             default_title,
+            **{"$METRIC_NAME$": metric_name},
         )
 
     @staticmethod
@@ -66,7 +70,7 @@ class AverageScatterplotDataGenerator:
             "median_color", "default") == "default" else properties['median_color']
 
         return {
-            "title": cls.figure_title(properties, context, settings),
+            "title": cls.figure_title(properties, context, settings, metric_name),
             "plot_definitions": [{
                 "plot_type": "scatterplot",
                 "id": "id_scatter",
@@ -225,3 +229,7 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
     @staticmethod
     def default_display_title() -> str:
         return ""
+
+    @classmethod
+    def get_additional_title_macros(cls) -> Iterable[str]:
+        yield "$METRIC_NAME$"

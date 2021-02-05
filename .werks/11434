@@ -1,0 +1,14 @@
+Title: WATO pages with host links: Fixed recently introduced performance problem
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1612532414
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p21
+
+Version p19 tried to speed up some WATO pages showing tables with lots of host links.
+This fix backfired and slowed down the system even more.
+This commit fixes the broken fix.
+Especially rule listings with many host conditions should now be displayed much faster.

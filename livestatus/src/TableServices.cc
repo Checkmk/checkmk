@@ -25,7 +25,6 @@
 #include "CommentColumn.h"
 #include "ContactGroupsColumn.h"
 #include "CustomVarsDictColumn.h"
-#include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
 #include "DoubleColumn.h"
@@ -51,6 +50,8 @@
 #include "auth.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
+
+using namespace std::string_literals;
 
 extern service *service_list;
 extern TimeperiodsCache *g_timeperiods_cache;
@@ -177,10 +178,18 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets, [](const service &r) {
             return r.check_period == nullptr ? "" : r.check_period;
         }));
-    table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "service_period",
         "The name of the service period of the service",
-        offsets_custom_variables, table->core(), "SERVICE_PERIOD"));
+        offsets_custom_variables, [mc](const service &p) {
+            auto attrs =
+                mc->customAttributes(&p, AttributeKind::custom_variables);
+            auto it = attrs.find("SERVICE_PERIOD");
+            if (it != attrs.end()) {
+                return it->second;
+            }
+            return ""s;
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<service>>(
         prefix + "notes", "Optional notes about the service", offsets,
         [](const service &r) { return r.notes == nullptr ? "" : r.notes; }));

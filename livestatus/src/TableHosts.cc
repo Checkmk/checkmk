@@ -24,7 +24,6 @@
 #include "CommentColumn.h"
 #include "ContactGroupsColumn.h"
 #include "CustomVarsDictColumn.h"
-#include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
 #include "DoubleColumn.h"
@@ -55,6 +54,8 @@
 #include "mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
+
+using namespace std::string_literals;
 
 extern host *host_list;
 extern TimeperiodsCache *g_timeperiods_cache;
@@ -137,9 +138,17 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, [](const host &r) {
             return r.check_period == nullptr ? "" : r.check_period;
         }));
-    table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "service_period", "The name of the service period of the host",
-        offsets_custom_variables, table->core(), "SERVICE_PERIOD"));
+        offsets_custom_variables, [mc](const host &p) {
+            auto attrs =
+                mc->customAttributes(&p, AttributeKind::custom_variables);
+            auto it = attrs.find("SERVICE_PERIOD");
+            if (it != attrs.end()) {
+                return it->second;
+            }
+            return ""s;
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "notes", "Optional notes for this host", offsets,
         [](const host &r) { return r.notes == nullptr ? "" : r.notes; }));
@@ -567,9 +576,17 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     // Livestatus this will probably be configurable so access to further custom
     // variable can be added, such that those variables are presented like
     // ordinary Nagios columns.
-    table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
         prefix + "filename", "The value of the custom variable FILENAME",
-        offsets_custom_variables, table->core(), "FILENAME"));
+        offsets_custom_variables, [mc](const host &p) {
+            auto attrs =
+                mc->customAttributes(&p, AttributeKind::custom_variables);
+            auto it = attrs.find("FILENAME");
+            if (it != attrs.end()) {
+                return it->second;
+            }
+            return ""s;
+        }));
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",

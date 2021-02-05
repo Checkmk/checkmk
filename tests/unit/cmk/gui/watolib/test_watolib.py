@@ -147,6 +147,7 @@ def test_registered_configvars():
         'selection_livetime',
         'service_view_grouping',
         'show_livestatus_errors',
+        'show_mode',
         'sidebar_notify_interval',
         'sidebar_update_interval',
         'simulation_mode',

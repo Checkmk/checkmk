@@ -197,6 +197,9 @@ custom_style_sheet = None
 # UI theme to use
 ui_theme = "modern-dark"
 
+# Show mode to use
+show_mode = "default_show_less"
+
 # URL for start page in main frame (welcome page)
 start_url = "dashboard.py"
 

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.utils as utils
-from cmk.gui.config import theme_choices
+from cmk.gui.config import theme_choices, show_mode_choices
 from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
@@ -239,18 +239,25 @@ class UIBasicAdvancedToggle(UserAttribute):
         return "interface"
 
     def valuespec(self):
-        return DropdownChoice(
+        return Alternative(
             title=_("Show more / Show less"),
+            orientation="horizontal",
             help=_("In some places like e.g. the main menu Checkmk divides "
                    "features, filters, input fields etc. in two categories, showing "
                    "more or less entries. With this option you can set a default "
                    "mode for unvisited menus. Alternatively, you can enforce to "
                    "show more, so that the round button with the three dots is not "
                    "shown at all."),
-            choices=[
-                (None, _("Default to show less")),
-                ("default_show_more", _("Default to show more")),
-                ("enforce_show_more", _("Enforce show more")),
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("Use the default show mode"),
+                    totext="",
+                ),
+                DropdownChoice(
+                    title=_("Set custom show mode"),
+                    choices=show_mode_choices(),
+                ),
             ],
         )
 

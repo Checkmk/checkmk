@@ -541,7 +541,7 @@ class LoggedInUser:
 
     @property
     def show_mode(self) -> str:
-        return self.get_attribute("show_mode")
+        return self.get_attribute("show_mode") or show_mode
 
     @property
     def show_more_mode(self) -> bool:
@@ -1279,6 +1279,14 @@ def theme_choices() -> List[Tuple[str, str]]:
             themes[theme_dir.name] = theme_meta["title"]
 
     return sorted(themes.items())
+
+
+def show_mode_choices() -> List[Tuple[Optional[str], str]]:
+    return [
+        ("default_show_less", _("Default to show less")),
+        ("default_show_more", _("Default to show more")),
+        ("enforce_show_more", _("Enforce show more")),
+    ]
 
 
 def get_page_heading() -> str:

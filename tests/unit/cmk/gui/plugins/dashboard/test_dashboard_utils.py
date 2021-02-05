@@ -67,12 +67,13 @@ def test_transform_dashlets_mut(entry, result):
 
 
 @pytest.mark.parametrize(
-    "context, single_infos, title, result",
+    "context, single_infos, title, additional_macros, result",
     [
         pytest.param(
             {},
             [],
             "Some title $HOST_ALIAS$",
+            {},
             {"$DEFAULT_TITLE$": "dashlet"},
             id="no single_infos",
         ),
@@ -80,6 +81,7 @@ def test_transform_dashlets_mut(entry, result):
             {"host": "heute"},
             ["host"],
             "Best graph",
+            {},
             {
                 "$DEFAULT_TITLE$": "dashlet",
                 "$HOST_NAME$": "heute",
@@ -90,6 +92,7 @@ def test_transform_dashlets_mut(entry, result):
             {"service": "CPU utilization"},
             ["service"],
             "Best graph",
+            {},
             {
                 "$DEFAULT_TITLE$": "dashlet",
                 "$SERVICE_DESCRIPTION$": "CPU utilization",
@@ -103,6 +106,7 @@ def test_transform_dashlets_mut(entry, result):
             },
             ["host", "service"],
             "Best graph",
+            {},
             {
                 "$DEFAULT_TITLE$": "dashlet",
                 "$HOST_NAME$": "vm-123",
@@ -118,6 +122,7 @@ def test_transform_dashlets_mut(entry, result):
             },
             ["host", "service"],
             "Best graph $HOST_ALIAS$",
+            {},
             {
                 "$DEFAULT_TITLE$": "dashlet",
                 "$HOST_NAME$": "vm-123",
@@ -127,15 +132,51 @@ def test_transform_dashlets_mut(entry, result):
             },
             id="site and host alias",
         ),
+        pytest.param(
+            {
+                "host": "vm-123",
+                "service": "CPU utilization",
+                "site": "site",
+            },
+            ["host", "service"],
+            "Best graph $HOST_ALIAS$",
+            {
+                "$ADD_MACRO_1$": "1",
+                "$ADD_MACRO_2$": "2",
+            },
+            {
+                "$DEFAULT_TITLE$": "dashlet",
+                "$HOST_NAME$": "vm-123",
+                "$HOST_ALIAS$": "alias",
+                "$SERVICE_DESCRIPTION$": "CPU utilization",
+                "$SITE$": "site",
+                "$ADD_MACRO_1$": "1",
+                "$ADD_MACRO_2$": "2",
+            },
+            id="additional macros",
+        ),
     ],
 )
-def test_macro_mapping_from_context(monkeypatch, context, single_infos, title, result):
+def test_macro_mapping_from_context(
+    monkeypatch,
+    context,
+    single_infos,
+    title,
+    result,
+    additional_macros,
+):
     monkeypatch.setattr(
         utils,
         "get_alias_of_host",
         lambda _site, _host_name: "alias",
     )
-    assert utils.macro_mapping_from_context(context, single_infos, title, "dashlet") == result
+    assert utils.macro_mapping_from_context(
+        context,
+        single_infos,
+        title,
+        "dashlet",
+        **additional_macros,
+    ) == result
 
 
 @pytest.mark.parametrize(

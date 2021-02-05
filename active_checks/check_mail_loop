@@ -178,7 +178,7 @@ def fetch_mail_timestamps(
     try:
         obsolete_mails, fetched_mails = {}, {}
         # Now filter out the messages for this check
-        pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % args.subject)
+        pattern = re.compile(r'(?i)(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % args.subject)
 
         for index, msg in mails.items():
             matches = pattern.match(msg.get('Subject', ''))

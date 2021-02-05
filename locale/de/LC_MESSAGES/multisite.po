@@ -700,6 +700,10 @@ msgstr "(Modul ohne Namen)"
 msgid "(builtin)"
 msgstr "(eingebaut)"
 
+#, fuzzy
+msgid "(default title of the graph)"
+msgstr "(Standardthema)"
+
 msgid "(disabled)"
 msgstr "(deaktiviert)"
 
@@ -7870,6 +7874,12 @@ msgstr "Bisherige Alarme löschen"
 msgid "Canceled"
 msgstr "Abgebrochen"
 
+#, python-format
+msgid ""
+"Cannot aquire cookie from ntop server '%s' for user '%s'. Please check your "
+"ntop connection settings."
+msgstr ""
+
 msgid "Cannot calculate graph recipes"
 msgstr "Kann Graphdefinitionen nicht berechnen"
 
@@ -7986,6 +7996,9 @@ msgstr "Kann das Bild \"%s\" in %s nicht finden"
 msgid "Cannot get RRD data for %s"
 msgstr "Kann RRD-Daten für %s nicht holen"
 
+msgid "Cannot get data from redis DB. Please check the status."
+msgstr ""
+
 msgid "Cannot get rules from local event daemon."
 msgstr "Kann Regeln vom lokalen Ereignis Daemon nicht bekommen."
 
@@ -8096,6 +8109,10 @@ msgstr "Kann Bild nicht darstellen"
 #, python-format
 msgid "Cannot render image: %s"
 msgstr "Kann Bild nicht darstellen: %s"
+
+#, python-format
+msgid "Cannot retrieve data from ntop REST API: %s"
+msgstr ""
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Historische Daten vom Nagios Core können nicht abgerufen werden"
@@ -9047,7 +9064,8 @@ msgstr ""
 "Sektionsheader und somit der Name des benötigten Checkplugins &lt;&lt;&lt;"
 "winperf_foo&gt;&gt;&gt; sein."
 
-msgid "Choose another Icon"
+#, fuzzy, python-format
+msgid "Choose another %s"
 msgstr "Ein anderes Symbol wählen"
 
 msgid ""
@@ -10940,6 +10958,10 @@ msgstr ""
 msgid "Could not determine current theme."
 msgstr "Aktuelles Theme konnte nicht festgelegt werden"
 
+#, fuzzy
+msgid "Could not determine ntopng interface"
+msgstr "Aktuelles Theme konnte nicht festgelegt werden"
+
 #, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
@@ -10957,6 +10979,12 @@ msgstr "Ich kann die Gruppe nicht finden, die für die Rolle %s angegeben wurde"
 #, fuzzy, python-format
 msgid "Could not find the requested crash %s on site %s"
 msgstr "Ich kann die Gruppe nicht finden, die für die Rolle %s angegeben wurde"
+
+#, python-format
+msgid ""
+"Could not query ifid for host_address '%s'. Your ntopng user may have not "
+"sufficient rights to query this information."
+msgstr ""
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
@@ -17863,6 +17891,12 @@ msgstr "Fehler beim Berechnen der Graph-Definition"
 #, python-format
 msgid "Failed to compile your module: %s"
 msgstr "Fehler beim Kompilieren Ihres Moduls: %s"
+
+#, python-format
+msgid ""
+"Failed to contact ntop server '%s' with user '%s'. Please check your ntop "
+"connection settings."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -29807,6 +29841,10 @@ msgstr "Metrik-Vorhersage"
 msgid "Metric History"
 msgstr "Metrik-Historie"
 
+#, fuzzy
+msgid "Metric Status"
+msgstr "Verwalten von Tags"
+
 msgid "Metric aggregation"
 msgstr "Metrik-Aggregation"
 
@@ -29826,6 +29864,13 @@ msgstr ""
 msgid "Metric not found"
 msgstr "Metrik nicht gefunden"
 
+#, fuzzy
+msgid "Metric state is colored in its value"
+msgstr "Services nach Status eingefärbt"
+
+msgid "Metric status is colored on the dashlet background"
+msgstr ""
+
 msgid ""
 "Metric transformations and combinations like Forecasts calculations, "
 "aggregations and filtering are only available with the Checkmk Enterprise "
@@ -29834,6 +29879,9 @@ msgstr ""
 "Metrische Transformationen und Kombinationen wie Forecasts-Berechnungen, "
 "Aggregationen und Filterungen sind nur mit den Checkmk Enterprise Editions "
 "verfügbar"
+
+msgid "Metric value is displayed in neutral color"
+msgstr ""
 
 msgid "Metrics"
 msgstr "Metriken"
@@ -29996,6 +30044,10 @@ msgstr "gespiegelt gestapelt"
 
 msgid "Missing Prerequisite"
 msgstr "Fehlende Voraussetzung"
+
+#, fuzzy, python-format
+msgid "Missing connection parameter: %s"
+msgstr "Individuelle Verbindungseinstellungen nutzen"
 
 #, python-format
 msgid ""
@@ -31595,6 +31647,10 @@ msgstr "Der Graph enthält noch keine Metriken."
 
 msgid "No monitoring core"
 msgstr "Kein Monitoring-Kern"
+
+#, fuzzy
+msgid "No ntopng interfaces found"
+msgstr "Nicht gruppieren"
 
 #, fuzzy
 msgid "No object type"
@@ -38513,6 +38569,12 @@ msgstr ""
 msgid "Response Time"
 msgstr "Antwortzeit"
 
+msgid "Response data has wrong data type"
+msgstr ""
+
+msgid "Response object has wrong data type"
+msgstr ""
+
 msgid "Response size"
 msgstr "Antwortgröße"
 
@@ -40157,8 +40219,9 @@ msgstr "Ereignisse an entfernten syslog-Host senden"
 msgid "Send hint to dashlet"
 msgstr "Sende Hinweis an das Dashlet"
 
-msgid "Send hint to message inbox (bottom of sidebar)"
-msgstr "Einen Hinweis auf die Meldung am Fuß des Seitenleiste anzeigen"
+#, fuzzy
+msgid "Send hint to user menu"
+msgstr "Sende Hinweis an das Dashlet"
 
 msgid "Send metrics to Graphite / InfluxDB"
 msgstr "Metriken zu Graphite / InfluxDB senden"
@@ -43455,6 +43518,17 @@ msgid "State if violated"
 msgstr "Status bei Verstößen"
 
 #, fuzzy
+msgid "State in case MRP is started"
+msgstr "Zustand, wenn der Kanal startet"
+
+#, fuzzy
+msgid "State in case MRP is stopped"
+msgstr "Zustand, wenn der Kanal gestoppt ist"
+
+msgid "State in case Managed Recovery Process (MRP) is started or stopped"
+msgstr ""
+
+#, fuzzy
 msgid "State in case of Active Data-Guard Option is active: "
 msgstr "Status falls der Archivelogmodus abgeschaltet ist:"
 
@@ -45835,6 +45909,13 @@ msgstr "Die Logdatei"
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "Der Object Name der MBean, zum Beispiel java.lang:type=Memory"
 
+msgid ""
+"The MRP is usally started on each physical standby node. But in some setups "
+"this may vary and the process should only be started on specific or random "
+"nodes. Here you may define which state a specific node or service should "
+"have in case the MRP is started or stopped."
+msgstr ""
+
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
 "Der MSSQL Instanzname und der Tablespacename getrennt durch ein Leerzeichen."
@@ -48017,6 +48098,12 @@ msgstr ""
 "Die Syslog-Facility der Syslogmeldungen von Alarmierungen wird hier gesetzt. "
 "In der Event Console können Sie diese später als Bedingung einer Regel "
 "verwenden."
+
+#, python-format
+msgid ""
+"The ntopng username should be derived from the custom attribute '%s', but "
+"this attribute is not set for the current user."
+msgstr ""
 
 #, python-format
 msgid "The number of elements in the tuple must be exactly %d."
@@ -53837,6 +53924,10 @@ msgstr ""
 msgid "Top of page handling"
 msgstr "Verhalten beim Seitenanfang"
 
+#, python-format
+msgid "Top talkers not implemented for type: %s"
+msgstr ""
+
 msgid "Topic"
 msgstr "Thema"
 
@@ -54839,6 +54930,12 @@ msgstr ""
 "Ich kann den LDAP-Server mit den angegebenen Verbindungsdaten nicht "
 "erreichen. Bitte korrigieren in <a href=\"wato.py?mode=ldap_config\">LDAP -"
 "Einstellungen</a>."
+
+#, python-format
+msgid ""
+"Unable to connect to instance %s. Please check the credentials under Global "
+"Settings."
+msgstr ""
 
 msgid "Unable to create parent folder(s)."
 msgstr "Kann den/die Parent Ordner nicht erstellen"
@@ -60535,6 +60632,11 @@ msgstr ""
 "Titel des Zeitplans</li><li><tt><tt>$PERIODNAME$</tt>: Der Name des "
 "Planungszeitraums</li></ul></ul>."
 
+#, python-format
+msgid ""
+"You can use the following macros to fill in the corresponding information:%s"
+msgstr ""
+
 msgid ""
 "You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced with the "
 "name of the current host."
@@ -62321,6 +62423,12 @@ msgstr "max. Dauer"
 msgid "maximum"
 msgstr "Maximum"
 
+#, fuzzy
+msgid "message"
+msgid_plural "messages"
+msgstr[0] "Nachrichten"
+msgstr[1] "Nachrichten"
+
 msgid "messages"
 msgstr "Nachrichten"
 
@@ -62485,6 +62593,12 @@ msgstr "Admin"
 #, fuzzy
 msgid "ntopng Username"
 msgstr "Automatisierung Benutzername"
+
+#, python-format
+msgid ""
+"ntopng instance '%s' cannot be reached. Please check for issues and try "
+"again later."
+msgstr ""
 
 #, fuzzy
 msgid "ntopng is not configured. Please configure it under global settings."
@@ -63187,6 +63301,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "Send hint to message inbox (bottom of sidebar)"
+#~ msgstr "Einen Hinweis auf die Meldung am Fuß des Seitenleiste anzeigen"
 
 #~ msgid "Topic:"
 #~ msgstr "Thema:"
@@ -68002,9 +68119,6 @@ msgstr ""
 
 #~ msgid "Ignore state of no-archive log"
 #~ msgstr "Ignoriere no-archive-log-Status"
-
-#~ msgid "(default topic)"
-#~ msgstr "(Standardthema)"
 
 #~ msgid "Add as custom macro"
 #~ msgstr "Als Benutzermakro hinzufügen"

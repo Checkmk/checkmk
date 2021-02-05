@@ -695,6 +695,10 @@ msgstr ""
 msgid "(builtin)"
 msgstr ""
 
+#, fuzzy
+msgid "(default title of the graph)"
+msgstr "Adaugă acesta vedere la..."
+
 msgid "(disabled)"
 msgstr "(dezactivat)"
 
@@ -7433,6 +7437,12 @@ msgstr ""
 msgid "Canceled"
 msgstr ""
 
+#, python-format
+msgid ""
+"Cannot aquire cookie from ntop server '%s' for user '%s'. Please check your "
+"ntop connection settings."
+msgstr ""
+
 msgid "Cannot calculate graph recipes"
 msgstr ""
 
@@ -7531,6 +7541,9 @@ msgstr ""
 msgid "Cannot get RRD data for %s"
 msgstr ""
 
+msgid "Cannot get data from redis DB. Please check the status."
+msgstr ""
+
 msgid "Cannot get rules from local event daemon."
 msgstr ""
 
@@ -7624,6 +7637,10 @@ msgstr ""
 
 #, python-format
 msgid "Cannot render image: %s"
+msgstr ""
+
+#, python-format
+msgid "Cannot retrieve data from ntop REST API: %s"
 msgstr ""
 
 msgid "Cannot retrieve historic data with Nagios core"
@@ -8502,8 +8519,9 @@ msgid ""
 "&gt;."
 msgstr ""
 
-msgid "Choose another Icon"
-msgstr ""
+#, fuzzy, python-format
+msgid "Choose another %s"
+msgstr "% din Flash"
 
 msgid ""
 "Choose between Normal (Utilize this node as much as possible) and Exclusive "
@@ -10232,6 +10250,10 @@ msgstr ""
 msgid "Could not determine current theme."
 msgstr ""
 
+#, fuzzy
+msgid "Could not determine ntopng interface"
+msgstr "Adresă"
+
 #, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
@@ -10245,6 +10267,12 @@ msgstr ""
 
 #, python-format
 msgid "Could not find the requested crash %s on site %s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Could not query ifid for host_address '%s'. Your ntopng user may have not "
+"sufficient rights to query this information."
 msgstr ""
 
 #, python-format
@@ -16972,6 +17000,12 @@ msgstr ""
 
 #, python-format
 msgid "Failed to compile your module: %s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Failed to contact ntop server '%s' with user '%s'. Please check your ntop "
+"connection settings."
 msgstr ""
 
 #, python-format
@@ -27812,6 +27846,10 @@ msgid "Metric History"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
+msgid "Metric Status"
+msgstr "Statusul Serverului"
+
+#, fuzzy
 msgid "Metric aggregation"
 msgstr "Agregare noua"
 
@@ -27832,10 +27870,20 @@ msgstr ""
 msgid "Metric not found"
 msgstr "de sus in jos"
 
+#, fuzzy
+msgid "Metric state is colored in its value"
+msgstr " pe siteul de monitorizare: "
+
+msgid "Metric status is colored on the dashlet background"
+msgstr ""
+
 msgid ""
 "Metric transformations and combinations like Forecasts calculations, "
 "aggregations and filtering are only available with the Checkmk Enterprise "
 "Editions"
+msgstr ""
+
+msgid "Metric value is displayed in neutral color"
 msgstr ""
 
 msgid "Metrics"
@@ -28013,6 +28061,10 @@ msgstr ""
 
 msgid "Missing Prerequisite"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Missing connection parameter: %s"
+msgstr "%d reguli de notificări globale"
 
 #, python-format
 msgid ""
@@ -29633,6 +29685,10 @@ msgstr ""
 #, fuzzy
 msgid "No monitoring core"
 msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "No ntopng interfaces found"
+msgstr "Adresă"
 
 #, fuzzy
 msgid "No object type"
@@ -36262,6 +36318,12 @@ msgstr ""
 msgid "Response Time"
 msgstr ""
 
+msgid "Response data has wrong data type"
+msgstr ""
+
+msgid "Response object has wrong data type"
+msgstr ""
+
 #, fuzzy
 msgid "Response size"
 msgstr "Nume tablespace"
@@ -37875,7 +37937,7 @@ msgstr ""
 msgid "Send hint to dashlet"
 msgstr ""
 
-msgid "Send hint to message inbox (bottom of sidebar)"
+msgid "Send hint to user menu"
 msgstr ""
 
 msgid "Send metrics to Graphite / InfluxDB"
@@ -40907,6 +40969,15 @@ msgstr ""
 msgid "State if violated"
 msgstr ""
 
+msgid "State in case MRP is started"
+msgstr ""
+
+msgid "State in case MRP is stopped"
+msgstr ""
+
+msgid "State in case Managed Recovery Process (MRP) is started or stopped"
+msgstr ""
+
 msgid "State in case of Active Data-Guard Option is active: "
 msgstr ""
 
@@ -43084,6 +43155,13 @@ msgstr ""
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr ""
 
+msgid ""
+"The MRP is usally started on each physical standby node. But in some setups "
+"this may vary and the process should only be started on specific or random "
+"nodes. Here you may define which state a specific node or service should "
+"have in case the MRP is started or stopped."
+msgstr ""
+
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
 
@@ -44736,6 +44814,12 @@ msgid ""
 "The notifications will be converted into syslog messages with the facility "
 "that you choose here. In the Event Console you can later create a rule "
 "matching this facility."
+msgstr ""
+
+#, python-format
+msgid ""
+"The ntopng username should be derived from the custom attribute '%s', but "
+"this attribute is not set for the current user."
 msgstr ""
 
 #, python-format
@@ -49120,6 +49204,10 @@ msgstr ""
 msgid "Top of page handling"
 msgstr ""
 
+#, python-format
+msgid "Top talkers not implemented for type: %s"
+msgstr ""
+
 msgid "Topic"
 msgstr ""
 
@@ -50122,6 +50210,12 @@ msgid ""
 "Unable to connect to LDAP server with the configured bind credentials. "
 "Please fix this in the <a href=\"wato.py?mode=ldap_config\">LDAP connection "
 "settings</a>."
+msgstr ""
+
+#, python-format
+msgid ""
+"Unable to connect to instance %s. Please check the credentials under Global "
+"Settings."
 msgstr ""
 
 msgid "Unable to create parent folder(s)."
@@ -54974,6 +55068,11 @@ msgid ""
 "li></ul>"
 msgstr ""
 
+#, python-format
+msgid ""
+"You can use the following macros to fill in the corresponding information:%s"
+msgstr ""
+
 msgid ""
 "You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced with the "
 "name of the current host."
@@ -56604,6 +56703,13 @@ msgid "maximum"
 msgstr "Vechimea maxima"
 
 #, fuzzy
+msgid "message"
+msgid_plural "messages"
+msgstr[0] "Mesajul Text"
+msgstr[1] "Mesajul Text"
+msgstr[2] "Mesajul Text"
+
+#, fuzzy
 msgid "messages"
 msgstr "Mesajul Text"
 
@@ -56774,6 +56880,12 @@ msgstr "Parola"
 #, fuzzy
 msgid "ntopng Username"
 msgstr "Adaugă instanță NGINX"
+
+#, python-format
+msgid ""
+"ntopng instance '%s' cannot be reached. Please check for issues and try "
+"again later."
+msgstr ""
 
 #, fuzzy
 msgid "ntopng is not configured. Please configure it under global settings."

@@ -1,0 +1,17 @@
+Title: Add option to set show mode in global settings
+Class: feature
+Compatible: incomp
+Component: multisite
+Date: 1612537069
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+You can now set the option for "Show more / Show less" in the global settings.
+These setting applies to all user until they choose to use an own setting in
+there profile.
+
+Due to a change in the valuespec, please check your profile setting regarding
+this after upgrading from an earlier 2.0 version. Upgrades from version 1.6 are
+not affected.

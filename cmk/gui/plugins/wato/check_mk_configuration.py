@@ -138,6 +138,30 @@ class ConfigVariableUITheme(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableShowMoreMode(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "show_mode"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Show more / Show less"),
+            help=_("In some places like e.g. the main menu Checkmk divides "
+                   "features, filters, input fields etc. in two categories, showing "
+                   "more or less entries. With this option you can set a default "
+                   "mode for unvisited menus. Alternatively, you can enforce to "
+                   "show more, so that the round button with the three dots is not "
+                   "shown at all."),
+            choices=config.show_mode_choices(),
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface

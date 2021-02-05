@@ -9,11 +9,18 @@
 
 from typing import NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils import checkpoint
 
-checkpoint_connections_default_levels = {"pct": (80, 90)}
+checkpoint_connections_default_levels = {'levels': (80.0, 90.0)}
 
 
 class Section(NamedTuple):
@@ -62,18 +69,27 @@ def check_checkpoint_connections(
     maximum = section.maximum
     #infotext = "%d current, %d peak, %d maximum" % (current, peak, maximum)
 
-    if "pct" in params and maximum > 0:
-        warn_pct, crit_pct = params["pct"]
-        warn = maximum * warn_pct / 100
-        crit = maximum * crit_pct / 100
+    if 'levels' in params:
+        if isinstance(params['levels'][0], float):
+            # thresholds in percent
+            if maximum > 0:
+                warn_pct, crit_pct = params["levels"]
+                warn = maximum * warn_pct / 100
+                crit = maximum * crit_pct / 100
+                levels_upper = (warn, crit)
+            else:
+                # percentage values, but no maximum provided by the checkpoint device
+                levels_upper = (None, None)
+        else:
+            levels_upper = params["levels"]
     else:
         # up until cmk 1.6 this check only supported user set absolute values
-        warn, crit = params["auto-migration-wrapper-key"]
+        levels_upper = params["auto-migration-wrapper-key"]
 
     upper_boundary = maximum if maximum > 0 else None
     yield from check_levels(
         value=section.current,
-        levels_upper=(warn, crit),
+        levels_upper=levels_upper,
         metric_name="connections",
         boundaries=(0, upper_boundary),
         label="Current connections",

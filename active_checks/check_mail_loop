@@ -164,6 +164,10 @@ def send_mail(args: Args) -> Tuple[str, MailID]:
         raise SendMailError('Failed to send mail: %r' % exc) from exc
 
 
+def _regex_pattern(subject: str) -> re.Pattern:
+    return re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % subject)
+
+
 def fetch_mail_timestamps(
         args: Args,
         mails: MailMessages,
@@ -178,7 +182,7 @@ def fetch_mail_timestamps(
     try:
         obsolete_mails, fetched_mails = {}, {}
         # Now filter out the messages for this check
-        pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % args.subject)
+        pattern = _regex_pattern(args.subject)
 
         for index, msg in mails.items():
             matches = pattern.match(msg.get('Subject', ''))

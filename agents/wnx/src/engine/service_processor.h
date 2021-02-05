@@ -124,7 +124,7 @@ public:
 
                 engine_.registerCommandLine(CommandLine);
                 auto port_name = Proc->getInternalPort();
-                auto id = Tp.time_since_epoch().count();
+                auto id = AnswerIdToNumber(Tp);
                 XLOG::d.t(
                     "Provider '{}' is about to be started, id '{}' port [{}]",
                     provider_uniq_name_, id, port_name);
@@ -151,7 +151,7 @@ public:
         section_expected_timeout_ = engine_.timeout();
         engine_.updateSectionStatus();
         engine_.registerCommandLine(cmd_line);
-        auto id = timestamp.time_since_epoch().count();
+        auto id = AnswerIdToNumber(timestamp);
         XLOG::d.t("Provider '{}' is direct called, id '{}' port [{}]",
                   provider_uniq_name_, id, port_name);
         goGoGo(std::string(section::kUseEmbeddedName), cmd_line, port_name, id);
@@ -401,7 +401,7 @@ private:
         return true;
     }
 
-    void kickWinPerf(const AnswerId Tp, const std::string& Ip);
+    void kickWinPerf(const AnswerId answer_id, const std::string& ip_addr);
     void kickPlugins(const AnswerId Tp, const std::string& Ip);
 
     template <typename T>
@@ -601,9 +601,9 @@ private:
                     fmt::format(L"\"{}\" -runonce {}{} {} id:{} timeout:{} {}",
                                 full_path,  // exe
                                 LogFile.empty() ? L"" : L"@" + LogFile + L" ",
-                                SegmentName,  // name of peer
-                                port,         // port to communicate
-                                Tp.time_since_epoch().count(),  // answer id
+                                SegmentName,           // name of peer
+                                port,                  // port to communicate
+                                AnswerIdToNumber(Tp),  // answer id
                                 Timeout, CommandLine);
 
                 XLOG::d.i("async RunStdCmd: {}", wtools::ToUtf8(cmd_line));

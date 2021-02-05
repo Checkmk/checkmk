@@ -447,7 +447,7 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
         counters.emplace_back(args[i]);
     }
 
-    return provider::RunPerf(prefix, id, port, ToInt(timeout, 20), counters);
+    return provider::RunPerf(prefix, port, id, ToInt(timeout, 20), counters);
 }
 }  // namespace
 

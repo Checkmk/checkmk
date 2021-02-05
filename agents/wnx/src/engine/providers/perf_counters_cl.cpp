@@ -66,9 +66,9 @@ int RunPerf(
 ) {
     auto accu = AccumulateCounters(peer_name, counter_array);
 
-    auto result = carrier::CoreCarrier::FireSend(peer_name, answer_id, port,
+    auto result = carrier::CoreCarrier::FireSend(peer_name, port, answer_id,
                                                  accu.c_str(), accu.size());
-    XLOG::d.i("Send '{}' by '{}' [{}]", wtools::ToUtf8(port),
+    XLOG::d.i("Send at port '{}' '{}' by '{}' [{}]", wtools::ToUtf8(port),
               result ? "success" : "failed", wtools::ToUtf8(peer_name),
               accu.size());
 

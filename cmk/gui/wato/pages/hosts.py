@@ -77,6 +77,9 @@ class HostMode(WatoMode):
         self._vs_cluster_nodes().validate_value(cluster_nodes, "nodes")
         if len(cluster_nodes) < 1:
             raise MKUserError("nodes_0", _("The cluster must have at least one node"))
+
+        cluster_agent_ds_type, cluster_snmp_ds_type = self._get_cluster_ds_types()
+
         for nr, cluster_node in enumerate(cluster_nodes):
             if cluster_node == self._host.name():
                 raise MKUserError("nodes_%d" % nr, _("The cluster can not be a node of it's own"))
@@ -86,10 +89,6 @@ class HostMode(WatoMode):
                     "nodes_%d" % nr,
                     _("The node <b>%s</b> does not exist "
                       " (must be a host that is configured with WATO)") % cluster_node)
-
-            attributes = watolib.collect_attributes("cluster", new=False)
-            cluster_agent_ds_type = attributes.get("tag_agent", "cmk-agent")
-            cluster_snmp_ds_type = attributes.get("tag_snmp_ds", "no-snmp")
 
             node_agent_ds_type = watolib.hosts_and_folders.Host.host(cluster_node).tag_groups().get(
                 "agent")
@@ -112,6 +111,14 @@ class HostMode(WatoMode):
                       ))
 
         return cluster_nodes
+
+    def _get_cluster_ds_types(self):
+        folder_attributes = watolib.Folder.current().attributes()
+        attributes = watolib.collect_attributes("cluster", new=False)
+        return (
+            attributes.get("tag_agent", folder_attributes.get('tag_agent', "cmk-agent")),
+            attributes.get("tag_snmp_ds", folder_attributes.get('tag_snmp_ds', "no-snmp")),
+        )
 
     # TODO: Extract cluster specific parts from this method
     def page(self):

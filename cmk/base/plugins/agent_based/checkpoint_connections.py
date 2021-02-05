@@ -9,9 +9,9 @@
 
 from typing import NamedTuple
 
-from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import checkpoint
+from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.utils import checkpoint
 
 checkpoint_connections_default_levels = {"pct": (80, 90)}
 
@@ -22,7 +22,9 @@ class Section(NamedTuple):
     maximum: int
 
 
-def parse_checkpoint_connections(string_table: StringTable) -> Section:
+#def parse_checkpoint_connections(string_table: StringTable) -> Section:
+#for whatever reason, this more specific signature fails, I don't understand the error message
+def parse_checkpoint_connections(string_table) -> Section:
     current_raw_value = string_table[0][0][0]
     peak_raw_value = string_table[0][0][1]
     maximum_raw_value = string_table[0][0][2]

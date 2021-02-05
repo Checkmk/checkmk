@@ -322,7 +322,9 @@ try {
                 stage('Upload artifacts') {
                     // Only 'official' builds should end up on the Website
                     if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
-                        def UPLOAD_DEST = 'deploy@archive.tribe29.com:/var/downloads/checkmk'
+                        def UPLOAD_URL = 'deploy@archive.tribe29.com'
+                        def UPLOAD_DEST = "${UPLOAD_URL}:/var/downloads/checkmk/"
+
                         sh """
                             cd ${ARCHIVE_DIR}
                             rsync -av \
@@ -331,6 +333,8 @@ try {
                                 ${PACKAGE_DIR}/${CMK_VERS} \
                                 ${UPLOAD_DEST}/
                         """
+                        deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_DIR)
+
                     } else {
                             dir(ARCHIVE_DIR) {
                                 archiveArtifacts "*"
@@ -339,5 +343,14 @@ try {
                 }
             }
         }
+    }
+}
+
+def deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH) {
+    stage("Deploy to Website") {
+        sh """
+            ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022 ${UPLOAD_URL} \
+                ln -s /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
+        """
     }
 }

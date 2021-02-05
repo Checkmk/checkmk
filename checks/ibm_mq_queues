@@ -83,11 +83,11 @@ def check_ibm_mq_queues(item, params, parsed):
 
     if "IPPROCS" in data:
         cnt = data["IPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open input handles', 'ipprocs', 'reading', params)
+        yield ibm_mq_procs(cnt, 'Open input handles', 'ipprocs', 'ipprocs', params)
 
     if "OPPROCS" in data:
         cnt = data["OPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open output handles', 'opprocs', 'writing', params)
+        yield ibm_mq_procs(cnt, 'Open output handles', 'opprocs', 'opprocs', params)
 
 
 def ibm_mq_depth(cur_depth, max_depth, params):
@@ -108,7 +108,7 @@ def ibm_mq_depth(cur_depth, max_depth, params):
             state = 1
         if state:
             levelstext.append("%d/%d" % (warn, crit))
-    perfdata = [("messages_in_queue", cur_depth, warn, crit, 0, max_depth)]
+    perfdata = [("curdepth", cur_depth, warn, crit, 0, max_depth)]
 
     if cur_depth and max_depth:
         state_perc = 0
@@ -135,7 +135,7 @@ def ibm_mq_msg_age(msg_age, params):
     if not msg_age:
         return (0, label + ": n/a", [])
     return check_levels(int(msg_age),
-                        "age_oldest",
+                        "msgage",
                         params.get("msgage"),
                         human_readable_func=get_age_human_readable,
                         infoname=label)

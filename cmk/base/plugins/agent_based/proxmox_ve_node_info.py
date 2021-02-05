@@ -50,10 +50,10 @@ def check_proxmox_ve_node_info(params: Mapping[str, Any], section: Section) -> C
     ...         '    "status": "Active"}}'
     ...     ]])):
     ...   print(result)
-    Result(state=<State.OK: 0>, summary="Status: 'online'")
-    Result(state=<State.OK: 0>, summary="Subscription: 'active'")
-    Result(state=<State.OK: 0>, summary="Version: '6.2-15'")
-    Result(state=<State.OK: 0>, summary="Hosted VMs: 5 * 'lxc', 4 * 'qemu'")
+    Result(state=<State.OK: 0>, summary='Status: online')
+    Result(state=<State.OK: 0>, summary='Subscription: active')
+    Result(state=<State.OK: 0>, summary='Version: 6.2-15')
+    Result(state=<State.OK: 0>, summary='Hosted VMs: 5x LXC, 4x Qemu')
     """
     node_status = section.get("status", "n/a").lower()
     subs_status = section.get("subscription", {}).get("status", "n/a").lower()
@@ -62,19 +62,19 @@ def check_proxmox_ve_node_info(params: Mapping[str, Any], section: Section) -> C
     req_subs_status = (params.get("required_subscription_status") or "").lower()
     yield Result(
         state=State.OK if not req_node_status or node_status == req_node_status else State.WARN,
-        summary=(f"Status: {node_status!r}"
-                 f"{req_node_status and f' (required: {req_node_status!r})'}"),
+        summary=(f"Status: {node_status}"
+                 f"{req_node_status and f' (required: {req_node_status})'}"),
     )
     yield Result(
         state=State.OK if not req_subs_status or subs_status == req_subs_status else State.WARN,
-        summary=(f"Subscription: {subs_status!r}"
-                 f"{req_subs_status and f' (required: {req_subs_status!r})'}"),
+        summary=(f"Subscription: {subs_status}"
+                 f"{req_subs_status and f' (required: {req_subs_status})'}"),
     )
-    yield Result(state=State.OK, summary=f"Version: {proxmox_ve_version!r}")
+    yield Result(state=State.OK, summary=f"Version: {proxmox_ve_version}")
     yield Result(
         state=State.OK,
-        summary=(f"Hosted VMs: {len(section.get('lxc', []))} * 'lxc',"
-                 f" {len(section.get('qemu', []))} * 'qemu'"),
+        summary=(f"Hosted VMs: {len(section.get('lxc', []))}x LXC,"
+                 f" {len(section.get('qemu', []))}x Qemu"),
     )
 
 

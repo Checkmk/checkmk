@@ -37,10 +37,10 @@ NODE_DATA = parse_proxmox_ve_node_info([[
             {},  # must be explicitly set, evaluates to (0.,0.)
             NODE_DATA,
             (
-                Result(state=State.OK, summary="Status: 'online'"),
-                Result(state=State.OK, summary="Subscription: 'active'"),
-                Result(state=State.OK, summary="Version: '6.2-15'"),
-                Result(state=State.OK, summary="Hosted VMs: 5 * 'lxc', 4 * 'qemu'"),
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Subscription: active"),
+                Result(state=State.OK, summary="Version: 6.2-15"),
+                Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ),
         ),
         (
@@ -50,10 +50,10 @@ NODE_DATA = parse_proxmox_ve_node_info([[
             },
             NODE_DATA,
             (
-                Result(state=State.OK, summary="Status: 'online' (required: 'online')"),
-                Result(state=State.OK, summary="Subscription: 'active' (required: 'active')"),
-                Result(state=State.OK, summary="Version: '6.2-15'"),
-                Result(state=State.OK, summary="Hosted VMs: 5 * 'lxc', 4 * 'qemu'"),
+                Result(state=State.OK, summary="Status: online (required: online)"),
+                Result(state=State.OK, summary="Subscription: active (required: active)"),
+                Result(state=State.OK, summary="Version: 6.2-15"),
+                Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ),
         ),
         (
@@ -63,10 +63,10 @@ NODE_DATA = parse_proxmox_ve_node_info([[
             },
             NODE_DATA,
             (
-                Result(state=State.WARN, summary="Status: 'online' (required: 'offline')"),
-                Result(state=State.WARN, summary="Subscription: 'active' (required: 'inactive')"),
-                Result(state=State.OK, summary="Version: '6.2-15'"),
-                Result(state=State.OK, summary="Hosted VMs: 5 * 'lxc', 4 * 'qemu'"),
+                Result(state=State.WARN, summary="Status: online (required: offline)"),
+                Result(state=State.WARN, summary="Subscription: active (required: inactive)"),
+                Result(state=State.OK, summary="Version: 6.2-15"),
+                Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ),
         ),
     ])
@@ -79,10 +79,10 @@ def test_check_proxmox_ve_node_info(params, section, expected_results) -> None:
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    from os.path import dirname, join
+    import os
+    from testlib.utils import cmk_path  # type: ignore[import]
     assert not pytest.main([
         "--doctest-modules",
-        join(dirname(__file__),
-             "../../../../../../cmk/base/plugins/agent_based/proxmox_ve_node_info.py")
+        os.path.join(cmk_path(), "cmk/base/plugins/agent_based/proxmox_ve_node_info.py")
     ])
     pytest.main(["-T=unit", "-vvsx", __file__])

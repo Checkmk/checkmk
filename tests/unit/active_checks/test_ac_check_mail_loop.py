@@ -167,4 +167,20 @@ def test_ac_check_mail_loop(check_mail_loop, warning, critical, expected_mails, 
     assert perf == e_perf
 
 
+@pytest.mark.parametrize(
+    "subject",
+    [
+        "subject",
+        "Re: subject",
+        "WG: subject",
+        "Re: WG: Re: Re: subject",
+    ],
+)
+def test_regex_pattern(check_mail_loop, subject):
+    assert check_mail_loop._regex_pattern(subject).match(f"{subject} a b").groups() == (
+        "a",
+        "b",
+    )
+
+
 _ = __name__ == "__main__" and pytest.main(["-svv", "-T=unit", __file__])

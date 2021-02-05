@@ -1,0 +1,15 @@
+Title: Windows agent doesn't copy during migration old Windows agent updater
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612547607
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+Previously, this bug may lead to some problems in monitoring.
+
+With this release the problem has been fixed.
+

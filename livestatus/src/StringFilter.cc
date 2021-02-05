@@ -5,19 +5,21 @@
 
 #include "StringFilter.h"
 
+#include <utility>
+
 #include "RegExp.h"
 #include "Row.h"
-#include "StringColumn.h"
 
-StringFilter::StringFilter(Kind kind, const StringColumn &column,
+StringFilter::StringFilter(Kind kind, std::string columnName,
+                           std::function<std::string(Row)> getValue,
                            RelationalOperator relOp, const std::string &value)
-    : ColumnFilter(kind, column.name(), relOp, value)
-    , _column(column)
+    : ColumnFilter(kind, std::move(columnName), relOp, value)
+    , _getValue{std::move(getValue)}
     , _regExp(makeRegExpFor(relOp, value)) {}
 
 bool StringFilter::accepts(Row row, const contact * /* auth_user */,
                            std::chrono::seconds /* timezone_offset */) const {
-    std::string act_string = _column.getValue(row);
+    std::string act_string = _getValue(row);
     switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::equal_icase:
@@ -73,6 +75,7 @@ std::unique_ptr<Filter> StringFilter::copy() const {
 }
 
 std::unique_ptr<Filter> StringFilter::negate() const {
-    return std::make_unique<StringFilter>(
-        kind(), _column, negateRelationalOperator(oper()), value());
+    return std::make_unique<StringFilter>(kind(), columnName(), _getValue,
+                                          negateRelationalOperator(oper()),
+                                          value());
 }

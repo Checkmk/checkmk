@@ -11,7 +11,7 @@
 #include "HostListColumn.h"
 #include "HostListStateColumn.h"
 #include "Query.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "auth.h"
 #include "nagios.h"
 
@@ -33,24 +33,24 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
                                  const ColumnOffsets &offsets) {
     auto offsets_members{
         offsets.add([](Row r) { return &r.rawData<hostgroup>()->members; })};
-    table->addColumn(std::make_unique<StringLambdaColumn<hostgroup>>(
+    table->addColumn(std::make_unique<StringColumn<hostgroup>>(
         prefix + "name", "Name of the hostgroup", offsets,
         [](const hostgroup &r) {
             return r.group_name == nullptr ? "" : r.group_name;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<hostgroup>>(
+    table->addColumn(std::make_unique<StringColumn<hostgroup>>(
         prefix + "alias", "An alias of the hostgroup", offsets,
         [](const hostgroup &r) { return r.alias == nullptr ? "" : r.alias; }));
-    table->addColumn(std::make_unique<StringLambdaColumn<hostgroup>>(
+    table->addColumn(std::make_unique<StringColumn<hostgroup>>(
         prefix + "notes", "Optional notes to the hostgroup", offsets,
         [](const hostgroup &r) { return r.notes == nullptr ? "" : r.notes; }));
-    table->addColumn(std::make_unique<StringLambdaColumn<hostgroup>>(
+    table->addColumn(std::make_unique<StringColumn<hostgroup>>(
         prefix + "notes_url",
         "An optional URL with further information about the hostgroup", offsets,
         [](const hostgroup &r) {
             return r.notes_url == nullptr ? "" : r.notes_url;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<hostgroup>>(
+    table->addColumn(std::make_unique<StringColumn<hostgroup>>(
         prefix + "action_url",
         "An optional URL to custom actions or information about the hostgroup",
         offsets, [](const hostgroup &r) {

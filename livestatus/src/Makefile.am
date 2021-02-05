@@ -159,7 +159,6 @@ liblivestatus_a_SOURCES = \
         ServiceListStateColumn.cc \
         StatsColumn.cc \
         Store.cc \
-        StringColumn.cc \
         StringFilter.cc \
         StringUtils.cc \
         Table.cc \

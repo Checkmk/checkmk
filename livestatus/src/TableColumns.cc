@@ -11,23 +11,23 @@
 #include "Column.h"
 #include "Query.h"
 #include "Row.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringLambdaColumn<Column>>(
+    addColumn(std::make_unique<StringColumn<Column>>(
         "table", "The name of the table", offsets, [this](const Column &col) {
             return this->getValue(col, Type::table);
         }));
-    addColumn(std::make_unique<StringLambdaColumn<Column>>(
+    addColumn(std::make_unique<StringColumn<Column>>(
         "name", "The name of the column within the table", offsets,
         [this](const Column &col) { return this->getValue(col, Type::name); }));
-    addColumn(std::make_unique<StringLambdaColumn<Column>>(
+    addColumn(std::make_unique<StringColumn<Column>>(
         "description", "A description of the column", offsets,
         [this](const Column &col) {
             return this->getValue(col, Type::description);
         }));
-    addColumn(std::make_unique<StringLambdaColumn<Column>>(
+    addColumn(std::make_unique<StringColumn<Column>>(
         "type", "The data type of the column (int, float, string, list)",
         offsets,
         [this](const Column &col) { return this->getValue(col, Type::type); }));

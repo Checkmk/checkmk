@@ -46,7 +46,7 @@
 #include "Query.h"
 #include "ServiceListColumn.h"
 #include "ServiceListStateColumn.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "TimeLambdaColumn.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
@@ -75,29 +75,29 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     auto offsets_services{
         offsets.add([](Row r) { return &r.rawData<host>()->services; })};
     auto *mc = table->core();
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "name", "Host name", offsets,
         [](const host &r) { return r.name == nullptr ? "" : r.name; }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "display_name",
         "Optional display name of the host - not used by Nagios' web interface",
         offsets, [](const host &r) {
             return r.display_name == nullptr ? "" : r.display_name;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "alias", "An alias name for the host", offsets,
         [](const host &r) { return r.alias == nullptr ? "" : r.alias; }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "address", "IP address", offsets,
         [](const host &r) { return r.address == nullptr ? "" : r.address; }));
 #ifdef NAGIOS4
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_command",
         "Nagios command for active host check of this host", offsets,
         [](const host &r) {
             return r.check_command == nullptr ? "" : r.check_command;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
         offsets, [mc](const host &r) {
@@ -105,13 +105,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 r.check_command);
         }));
 #else
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_command",
         "Nagios command for active host check of this host", offsets,
         [](const host &r) {
             return r.host_check_command == nullptr ? "" : r.host_check_command;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
         offsets, [mc](const host &r) {
@@ -119,25 +119,25 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 r.host_check_command);
         }));
 #endif
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "event_handler", "Nagios command used as event handler",
         offsets, [](const host &r) {
             return r.event_handler == nullptr ? "" : r.event_handler;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notification_period",
         "Time period in which problems of this host will be notified. If empty then notification will be always",
         offsets, [](const host &r) {
             return r.notification_period == nullptr ? ""
                                                     : r.notification_period;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_period",
         "Time period in which this host will be checked. If empty then the host will always be checked.",
         offsets, [](const host &r) {
             return r.check_period == nullptr ? "" : r.check_period;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "service_period", "The name of the service period of the host",
         offsets_custom_variables, [mc](const host &p) {
             auto attrs =
@@ -148,74 +148,74 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return ""s;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notes", "Optional notes for this host", offsets,
         [](const host &r) { return r.notes == nullptr ? "" : r.notes; }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
         offsets, [mc](const host &r) {
             return HostMacroExpander::make(r, mc)->expandMacros(r.notes);
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notes_url",
         "An optional URL with further information about the host", offsets,
         [](const host &r) {
             return r.notes_url == nullptr ? "" : r.notes_url;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
         offsets, [mc](const host &r) {
             return HostMacroExpander::make(r, mc)->expandMacros(r.notes_url);
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "action_url",
         "An optional URL to custom actions or information about this host",
         offsets, [](const host &r) {
             return r.action_url == nullptr ? "" : r.action_url;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
         offsets, [mc](const host &r) {
             return HostMacroExpander::make(r, mc)->expandMacros(r.action_url);
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "plugin_output", "Output of the last host check", offsets,
         [](const host &r) {
             return r.plugin_output == nullptr ? "" : r.plugin_output;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>::PerfData>(
+    table->addColumn(std::make_unique<StringColumn<host>::PerfData>(
         prefix + "perf_data",
         "Optional performance data of the last host check", offsets,
         [](const host &r) {
             return r.perf_data == nullptr ? "" : r.perf_data;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "icon_image",
         "The name of an image file to be used in the web pages", offsets,
         [](const host &r) {
             return r.icon_image == nullptr ? "" : r.icon_image;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
         offsets, [mc](const host &r) {
             return HostMacroExpander::make(r, mc)->expandMacros(r.icon_image);
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",
         offsets, [](const host &r) {
             return r.icon_image_alt == nullptr ? "" : r.icon_image_alt;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "statusmap_image",
         "The name of in image file for the status map", offsets,
         [](const host &r) {
             return r.statusmap_image == nullptr ? "" : r.statusmap_image;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "long_plugin_output", "Complete output from check plugin",
         offsets, [](const host &r) {
             return r.long_plugin_output == nullptr ? "" : r.long_plugin_output;
@@ -575,7 +575,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     // Livestatus this will probably be configurable so access to further custom
     // variable can be added, such that those variables are presented like
     // ordinary Nagios columns.
-    table->addColumn(std::make_unique<StringLambdaColumn<host>>(
+    table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "filename", "The value of the custom variable FILENAME",
         offsets_custom_variables, [mc](const host &p) {
             auto attrs =

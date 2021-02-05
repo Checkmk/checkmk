@@ -7,18 +7,22 @@
 # .1.3.6.1.2.1.1.1.0 Linux gateway1 2.6.18-92cp #1 SMP Tue Dec 4 21:44:22 IST 2012 i686
 # .1.3.6.1.4.1.2620.1.1.25.3.0 19190
 
-from collections import namedtuple
+from typing import NamedTuple
 
-from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, state
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Parameters, SNMPStringTable
+from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import checkpoint
 
 checkpoint_connections_default_levels = {"pct": (80, 90)}
 
-Section = namedtuple('Section', 'current peak maximum')
+
+class Section(NamedTuple):
+    current: int
+    peak: int
+    maximum: int
 
 
-def parse_checkpoint_connections(string_table: SNMPStringTable) -> Section:
+def parse_checkpoint_connections(string_table: StringTable) -> Section:
     current_raw_value = string_table[0][0][0]
     peak_raw_value = string_table[0][0][1]
     maximum_raw_value = string_table[0][0][2]
@@ -50,7 +54,7 @@ def discover_checkpoint_connections(section: Section) -> DiscoveryResult:
 
 
 def check_checkpoint_connections(
-    params: Parameters,
+    params,
     section: Section,
 ) -> CheckResult:
     maximum = section.maximum
@@ -72,7 +76,7 @@ def check_checkpoint_connections(
         boundaries=(0, upper_boundary),
         label="Current connections",
     )
-    yield Result(state=state.OK,
+    yield Result(state=State.OK,
                  summary="Peak: {0.peak}, Connection table limit: {0.maximum}".format(section))
 
 

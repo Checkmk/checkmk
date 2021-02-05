@@ -9,10 +9,15 @@ import time
 from types import FrameType, TracebackType
 from typing import (
     Final,
+    Callable,
+    Hashable,
     Iterable,
+    Generic,
     NoReturn,
     Optional,
+    Sequence,
     Type,
+    TypeVar,
 )
 
 from cmk.utils.exceptions import MKException
@@ -64,3 +69,30 @@ class TimeLimitFilter:
             yield element
             if time.monotonic() > self._end:
                 raise _Timeout()
+
+
+_DiscoveredItem = TypeVar("_DiscoveredItem")
+
+
+class QualifiedDiscovery(Generic[_DiscoveredItem]):
+    """Classify items into "new", "old" and "vanished" ones.
+    """
+    def __init__(
+        self,
+        *,
+        preexisting: Sequence[_DiscoveredItem],
+        current: Sequence[_DiscoveredItem],
+        key: Callable[[_DiscoveredItem], Hashable],
+    ) -> None:
+        current_dict = {key(v): v for v in current}
+        preexisting_dict = {key(v): v for v in preexisting}
+
+        self.vanished: Final = [v for k, v in preexisting_dict.items() if k not in current_dict]
+        self.new: Final = [v for k, v in current_dict.items() if k not in preexisting_dict]
+        self.old: Final = [v for k, v in current_dict.items() if k in preexisting_dict]
+        self.present: Final = self.old + self.new
+
+    @classmethod
+    def empty(cls) -> 'QualifiedDiscovery':
+        """create an empty instance"""
+        return cls(preexisting=(), current=(), key=repr)

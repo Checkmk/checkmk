@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import os
 import socket
 import time
@@ -90,10 +91,7 @@ from cmk.base.discovered_labels import (
     ServiceLabel,
 )
 
-from .utils import TimeLimitFilter
-
-# TODO: this will disappear soon:
-_PartialServicesTable = Dict[ServiceID, Tuple[Literal["vanished", "old", "new"], Service]]
+from .utils import TimeLimitFilter, QualifiedDiscovery
 
 ServicesTable = Dict[ServiceID, Tuple[str, Service, List[HostName]]]
 ServicesByTransition = Dict[str, List[ServiceWithNodes]]
@@ -442,36 +440,29 @@ def _do_discovery_for(
         run_only_plugin_names=run_only_plugin_names,
     )
 
-    new_services = _load_existing_services(
-        host_name=host_name,
-        only_new=only_new,
-        run_only_plugin_names=run_only_plugin_names,
+    service_result = QualifiedDiscovery(
+        preexisting=_load_existing_services(
+            host_name=host_name,
+            only_new=only_new,
+            run_only_plugin_names=run_only_plugin_names,
+        ),
+        current=discovered_services,
+        key=lambda s: s.id(),
     )
 
-    services_per_plugin: Counter[CheckPluginName] = Counter()
-    for discovered_service in discovered_services:
-        if discovered_service not in new_services:
-            new_services.append(discovered_service)
-            services_per_plugin[discovered_service.check_plugin_name] += 1
+    autochecks.save_autochecks_file(host_name, service_result.present)
 
-    autochecks.save_autochecks_file(host_name, new_services)
+    new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
+    for name, count in sorted(new_per_plugin.items()):
+        console.verbose("%s%3d%s %s\n" % (tty.green + tty.bold, count, tty.normal, name))
 
-    messages = []
-
-    if services_per_plugin:
-        for check_plugin_name, count in sorted(services_per_plugin.items()):
-            console.verbose("%s%3d%s %s\n" %
-                            (tty.green + tty.bold, count, tty.normal, check_plugin_name))
-        messages.append("Found %d services" % sum(services_per_plugin.values()))
-    else:
-        messages.append("Found no%s services" % (only_new and " new" or ""))
-
-    if host_label_discovery_result.per_plugin:
-        messages.append("%d host labels" % sum(host_label_discovery_result.per_plugin.values()))
-    else:
-        messages.append("no%s host labels" % (only_new and " new" or ""))
-
-    section.section_success(", ".join(messages))
+    section.section_success("%s, %s" % (
+        f"Found {len(service_result.new)} services"
+        if service_result.new else "Found no%s services" % (" new" if only_new else ""),
+        ("%d host labels" % sum(host_label_discovery_result.per_plugin.values()))
+        if host_label_discovery_result.per_plugin else "no%s host labels" %
+        (" new" if only_new else ""),
+    ))
 
 
 def _load_existing_services(
@@ -1572,7 +1563,7 @@ def _get_node_services(
 ) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
 
     host_name = host_config.hostname
-    services_result, host_label_discovery_result = _get_discovered_services(
+    service_result, host_label_discovery_result = _get_discovered_services(
         host_name,
         ipaddress,
         parsed_sections_broker,
@@ -1591,7 +1582,11 @@ def _get_node_services(
             ),
             service,
             [host_name],
-        ) for check_source, service in services_result.values()
+        ) for check_source, service in itertools.chain(
+            (("vanished", s) for s in service_result.vanished),
+            (("old", s) for s in service_result.old),
+            (("new", s) for s in service_result.new),
+        )
     }, host_label_discovery_result
 
 
@@ -1617,7 +1612,7 @@ def _get_discovered_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[_PartialServicesTable, HostLabelDiscoveryResult]:
+) -> Tuple[QualifiedDiscovery[Service], HostLabelDiscoveryResult]:
 
     # Handle discovered services -> "new"
     discovered_services, host_label_discovery_result = _discover_host_labels_and_services(
@@ -1628,19 +1623,13 @@ def _get_discovered_services(
         run_only_plugin_names=None,
     )
 
-    # Create a dict from check_plugin_name/item to check_source/paramstring
-    services: _PartialServicesTable = {}
-    for discovered_service in discovered_services:
-        services.setdefault(discovered_service.id(), ("new", discovered_service))
+    service_result = QualifiedDiscovery(
+        preexisting=autochecks.parse_autochecks_file(host_name, config.service_description),
+        current=discovered_services,
+        key=lambda s: s.id(),
+    )
 
-    # Match with existing items -> "old" and "vanished"
-    for existing_service in autochecks.parse_autochecks_file(host_name, config.service_description):
-        if existing_service.id() in services:
-            services[existing_service.id()] = "old", existing_service
-        else:
-            services[existing_service.id()] = "vanished", existing_service
-
-    return services, host_label_discovery_result
+    return service_result, host_label_discovery_result
 
 
 # TODO: Rename or extract disabled services handling
@@ -1740,7 +1729,11 @@ def _get_cluster_services(
         # keep the latest for every label.name
         nodes_host_labels.update(host_label_discovery_result.labels)
 
-        for check_source, service in services.values():
+        for check_source, service in itertools.chain(
+            (("vanished", s) for s in services.vanished),
+            (("old", s) for s in services.old),
+            (("new", s) for s in services.new),
+        ):
             cluster_items.update(
                 _cluster_service_entry(
                     check_source=check_source,

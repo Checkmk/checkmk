@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.discovery.utils import TimeLimitFilter
+from cmk.base.discovery.utils import QualifiedDiscovery, TimeLimitFilter
 
 
 def test_time_limit_filter_iterates():
@@ -24,3 +24,17 @@ def test_time_limit_filter_stops():
     # sorry for for wasting one second of your time
     with TimeLimitFilter(limit=1, grace=0) as limiter:
         assert not list(limiter(test_generator()))
+
+
+def test_qualified_discovery():
+
+    result = QualifiedDiscovery(
+        preexisting=(1, 2),
+        current=(2, 3),
+        key=lambda x: x,
+    )
+
+    assert result.vanished == [1]
+    assert result.old == [2]
+    assert result.new == [3]
+    assert result.present == [2, 3]

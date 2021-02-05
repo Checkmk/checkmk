@@ -290,8 +290,11 @@ class Dashlet(metaclass=abc.ABCMeta):
     def dashboard_name(self) -> str:
         return self._dashboard_name
 
+    def default_display_title(self) -> str:
+        return self.title()
+
     def display_title(self) -> str:
-        return self._dashlet_spec.get("title", self.title())
+        return self._dashlet_spec.get("title", self.default_display_title())
 
     def _get_macro_mapping(self, title: str) -> MacroMapping:
         if self.has_context():

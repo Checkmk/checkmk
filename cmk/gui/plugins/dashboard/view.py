@@ -165,10 +165,9 @@ class LinkedViewDashlet(ABCViewDashlet):
 
         return view_spec
 
-    def display_title(self):
+    def default_display_title(self) -> str:
         # TODO: Visual and ViewSpec are both Dict[str, Any]. How are these related?
-        title = visuals.visual_title("view", self._get_view_spec(), self.context)
-        return self._dashlet_spec.get("title", title)
+        return visuals.visual_title("view", self._get_view_spec(), self.context)
 
     def title_url(self):
         view_name = self._dashlet_spec["name"]

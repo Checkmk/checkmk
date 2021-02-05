@@ -79,9 +79,8 @@ class GraphDashlet(Dashlet):
     def has_context(cls):
         return True
 
-    def display_title(self) -> str:
-        return self._dashlet_spec.get("title",
-                                      self._dashlet_spec.get("_graph_title") or self.title())
+    def default_display_title(self) -> str:
+        return self._dashlet_spec.get("_graph_title") or self.title()
 
     def __init__(self, dashboard_name: DashboardName, dashboard: DashboardConfig,
                  dashlet_id: DashletId, dashlet: DashletConfig) -> None:

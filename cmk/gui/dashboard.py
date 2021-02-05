@@ -383,11 +383,8 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
     def infos(self) -> List[str]:
         return self._spec.get("infos", [])
 
-    def display_title(self) -> str:
-        title_func = self._spec.get("title_func")
-        if title_func:
-            return title_func(self._dashlet_spec)
-        return self.title()
+    def default_display_title(self) -> str:
+        return self._spec.get("title_func", lambda _arg: self.title)(self._dashlet_spec)
 
     def on_resize(self) -> Optional[str]:
         on_resize_func = self._spec.get("on_resize")

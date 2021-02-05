@@ -7,6 +7,8 @@
 #define test_tools_h__
 //
 
+#include <chrono>
+#include <functional>
 #include <vector>
 
 #include "cfg.h"
@@ -210,6 +212,9 @@ private:
 const extern std::filesystem::path G_SolutionPath;
 std::filesystem::path GetFabricYml();
 std::string GetFabricYmlContent();
+
+bool WaitForSuccess(std::chrono::milliseconds ms,
+                    std::function<bool()> predicat);
 
 }  // namespace tst
 #endif  // test_tools_h__

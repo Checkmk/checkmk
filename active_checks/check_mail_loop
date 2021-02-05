@@ -165,7 +165,7 @@ def send_mail(args: Args) -> Tuple[str, MailID]:
 
 
 def _regex_pattern(subject: str) -> re.Pattern:
-    return re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % subject)
+    return re.compile(r'(?i)(?:re: |wg: )?%s ([^\s]+) ([^\s]+)' % subject)
 
 
 def fetch_mail_timestamps(

@@ -174,6 +174,7 @@ def test_ac_check_mail_loop(check_mail_loop, warning, critical, expected_mails, 
         "Re: subject",
         "WG: subject",
         "Re: WG: Re: Re: subject",
+        "RE: Wg: re: subject",
     ],
 )
 def test_regex_pattern(check_mail_loop, subject):

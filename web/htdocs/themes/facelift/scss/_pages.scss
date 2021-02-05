@@ -1511,12 +1511,14 @@ table.data.job_table td {
 }
 
 /* Tags */
+/* FIXME: This section is really messy and should be cleaned up */
 .tagify {
   $self: &;
 
   border: none;
 
   #{ $self }__input {
+    flex-grow: 0;
     padding: $tag-padding;
     margin: $tag-margin;
   }
@@ -1543,6 +1545,7 @@ table.data.job_table td {
     margin: 0 5px 2px 0;
 
     > div {
+      position: relative;
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
       margin: $tag-margin;
@@ -1550,19 +1553,17 @@ table.data.job_table td {
     }
 
     x {
-      top: 45%;
-      right: 7px;
+      position: absolute;
+      top: 0;
+      right: 2px;
+      z-index: 1;
       font-size: 10px;
       line-height: 14px;
     }
 
     &,
     &.discovered {
-      &:hover:not([readonly]) div::before {
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
+      &:hover:not([readonly]) div {
         opacity: $tag-hover-opacity;
         box-shadow: none;
       }
@@ -1571,8 +1572,8 @@ table.data.job_table td {
 
   // Display input always non-colored
   &:not([readonly]) tag {
-    > div::before,
-    &:hover > div::before {
+    > div,
+    &:hover > div {
       background: $tag-input-bg-color;
       opacity: 1;
     }
@@ -1588,28 +1589,27 @@ table.data.job_table td {
 
   tag,
   &[readonly] tag {
-    > div::before {
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      background: rgb(0, 168, 181);
-      opacity: $tag-opacity;
+    > div {
+      background: rgba(0, 168, 181, $tag-opacity);
+      border-radius: $theme-border-radius;
       box-shadow: none;
       animation: none;
+
+      &::before {
+        content: none; /* don't apply normal tagify style */
+      }
     }
 
-    &.explicit > div::before {
-      background: rgb(119, 72, 152);
+    &.explicit > div {
+      background: rgba(119, 72, 152, $tag-opacity);
     }
 
-    &.discovered > div::before {
-      background: rgb(243, 174, 75);
-      opacity: $tag-discovered-opacity;
+    &.discovered > div {
+      background: rgba(243, 174, 75, $tag-discovered-opacity);
     }
 
-    &.ruleset > div::before {
-      background: rgb(222, 67, 131);
+    &.ruleset > div {
+      background: rgba(222, 67, 131, $tag-opacity);
     }
   }
 

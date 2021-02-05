@@ -156,9 +156,9 @@ $color-nuance-17: rgb(161, 230, 248); // light blue
 // -----------------------------------------------------------------------------
 $tag-margin: 0 5px 2px 0;
 $tag-padding: 0.1em 0.3em;
-$tag-font-color: $white;
-$tag-opacity: null;
-$tag-discovered-opacity: null;
+$tag-font-color: $font-color;
+$tag-opacity: 1;
+$tag-discovered-opacity: 1;
 $tag-hover-opacity: 0.5;
 
 $tag-input-bg-color: $inpage-highlight-color;

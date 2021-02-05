@@ -974,9 +974,17 @@ def evaluate_filter(query: str, result: ResultList) -> ResultList:
         >>> evaluate_filter(q, data)
         [{'name': 'heute', 'state': 0}]
 
+        >>> q = "GET hosts\\nFilter: name = heute\\nFilter: state > 0"
+        >>> evaluate_filter(q, data)
+        []
+
         >>> q = "GET hosts\\nFilter: name = heute\\nFilter: state > 0\\nAnd: 2"
         >>> evaluate_filter(q, data)
         []
+
+        >>> q = "GET hosts\\nFilter: name = heute\\nFilter: state = 0"
+        >>> evaluate_filter(q, data)
+        [{'name': 'heute', 'state': 0}]
 
         >>> q = "GET hosts\\nFilter: name = heute\\nFilter: state = 0\\nAnd: 2"
         >>> evaluate_filter(q, data)
@@ -1008,9 +1016,11 @@ def evaluate_filter(query: str, result: ResultList) -> ResultList:
         # No filtering requested. Dump all the data.
         return result
 
+    # Implicit "And", as this is supported by Livestatus.
     if len(filters) > 1:
-        raise LivestatusTestingError(f"Got {len(filters)} filters, expected one. Forgot And/Or?")
+        filters = [and_(filters)]
 
+    assert len(filters) == 1
     return [entry for entry in result if filters[0](entry)]
 
 

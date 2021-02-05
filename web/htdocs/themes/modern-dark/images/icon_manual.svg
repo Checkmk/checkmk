@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 200 260" style="enable-background:new 0 0 200 260;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#F5F0FF;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#E1DCF3;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Page-1">
+	<g id="EXPORT" transform="translate(-936.000000, -20.000000)">
+		<g id="handbook" transform="translate(936.000000, 20.000000)">
+			<g id="Shape">
+				<path id="path-1_1_" class="st0" d="M190.5,41.5h-15.8V9.4c-0.2-5.1-4.3-9.3-9.5-9.4H30.3C13.5,0,0,13.5,0,30.2v199.6
+					C0,246.5,13.5,260,30.3,260h160.3c5.2,0,9.5-4.2,9.5-9.4V51C200,45.8,195.8,41.5,190.5,41.5z M109.7,142L87,123.4
+					c-3.1-1.9-7-1.9-10.1,0L54.2,142V60.4h55.5V142L109.7,142z M155.9,41.5H30.3c-6.3,0-11.3-5.1-11.3-11.3S24,18.9,30.3,18.9h125.6
+					V41.5z"/>
+			</g>
+		</g>
+	</g>
+</g>
+<path class="st1" d="M190.5,260c5.2,0,9.5-4.2,9.5-9.4V51c0-5.2-4.2-9.4-9.5-9.4h-15.8l-57,218.5H190.5z"/>
+</svg>

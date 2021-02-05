@@ -19,6 +19,17 @@ bool Emitter::bp_allowed_ = tgt::IsDebug();
 
 namespace details {
 
+// this is to store latest parameters which may be
+// distributed among loggers later
+// static std::string LogFileName = cma::cfg::GetCurrentLogFileName();
+// static std::wstring LogPrefix = cma::cfg::GetDefaultPrefixName();
+static bool DebugLogEnabled = false;
+static bool TraceLogEnabled = false;
+static bool WinDbgEnabled = true;
+static bool EventLogEnabled = true;  // real global for all
+
+std::string g_log_context;
+
 void WriteToWindowsEventLog(unsigned short type, int code,
                             std::string_view log_name, std::string_view text) {
     auto eventSource =
@@ -164,7 +175,7 @@ CalcLogParam(const xlog::LogParam &lp, int mods) noexcept {
     if (mods & Mods::kNoPrefix) flags |= xlog::kNoPrefix;
 
     std::string prefix = lp.prefixAscii();
-    std::string marker = "";
+    std::string marker = details::g_log_context;
 
     auto mark = mods & Mods::kMarkerMask;
 
@@ -173,24 +184,24 @@ CalcLogParam(const xlog::LogParam &lp, int mods) noexcept {
 
     switch (mark) {
         case Mods::kCritError:
-            marker = "[ERROR:CRITICAL] ";
+            marker += "[ERROR:CRITICAL] ";
             flags &= ~xlog::kNoPrefix;
             directions |= xlog::kEventPrint;
             c = Colors::pink_light;
             break;
 
         case Mods::kError:
-            marker = "[Err  ] ";
+            marker += "[Err  ] ";
             c = Colors::red;
             break;
 
         case Mods::kWarning:
-            marker = "[Warn ] ";
+            marker += "[Warn ] ";
             c = Colors::yellow;
             break;
 
         case Mods::kTrace:
-            marker = "[Trace] ";
+            marker += "[Trace] ";
             break;
         case Mods::kInfo:
         default:
@@ -304,19 +315,6 @@ void Emitter::postProcessAndPrint(const std::string &text) {
     }
 }
 
-namespace details {
-
-// this is to store latest parameters which may be
-// distributed among loggers later
-// static std::string LogFileName = cma::cfg::GetCurrentLogFileName();
-// static std::wstring LogPrefix = cma::cfg::GetDefaultPrefixName();
-static bool DebugLogEnabled = false;
-static bool TraceLogEnabled = false;
-static bool WinDbgEnabled = true;
-static bool EventLogEnabled = true;  // real global for all
-
-}  // namespace details
-
 namespace setup {
 void DuplicateOnStdio(bool On) { details::LogDuplicatedOnStdio = On; }
 void ColoredOutputOnStdio(bool On) {
@@ -335,6 +333,15 @@ void ColoredOutputOnStdio(bool On) {
     } else {
         if (details::LogOldMode != -1)
             SetConsoleMode(std_input, details::LogOldMode);
+    }
+}
+
+void SetContext(std::string_view context) {
+    if (context.empty()) {
+        details::g_log_context.clear();
+    } else {
+        details::g_log_context =
+            fmt::format("[{} {}] ", context, ::GetCurrentProcessId());
     }
 }
 

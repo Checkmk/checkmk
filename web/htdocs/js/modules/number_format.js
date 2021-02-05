@@ -153,3 +153,33 @@ export function approx_age(secs) {
 
     return years.toFixed() + " y";
 }
+
+// When labeling domains we place ticks on integer values. Return integer
+// divisors of the base we work on. Decimal by default, yet for Bytes we call
+// it binary stepping and use the Hexadecimal.
+export function domainIntervals(stepping) {
+    if (stepping === "binary") return [1, 2, 4, 8, 16];
+    return [1, 2, 5, 10];
+}
+
+function tickStep(range, ticks, increments) {
+    const base = increments[increments.length - 1];
+    const [mantissa, exp] = frexpb(range / ticks, base);
+    return increments.find(e => mantissa <= e) * base ** exp;
+}
+
+export function partitionableDomain(domain, ticks, increments) {
+    let [start, end] = domain.sort((a, b) => a - b);
+    let step = tickStep(end - start, ticks, increments);
+
+    start = Math.floor(start / step) * step;
+    end = Math.ceil(end / step) * step;
+    step = tickStep(end - start, ticks, increments);
+    return [start, end, step];
+}
+// test for later on a suite. JS can't compare arrays in a simple way ARRGG!
+//function comp_array(a, b) {
+//return a.every((val, i) => val === b[i]);
+//}
+//console.assert(comp_array(partitionableDomain([18, 2], 4, domainIntervals()), [0, 20, 5]));
+//console.assert(comp_array(partitionableDomain([25, 2], 5, domainIntervals("binary")), [0, 32, 8]));

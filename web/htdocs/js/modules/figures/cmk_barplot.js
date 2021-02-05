@@ -1,5 +1,7 @@
 import * as d3 from "d3";
+import {range} from "lodash";
 import * as cmk_figures from "cmk_figures";
+import {partitionableDomain, domainIntervals} from "number_format";
 
 // Used for rapid protoyping, bypassing webpack
 //var cmk_figures = cmk.figures; /*eslint-disable-line no-undef*/
@@ -63,7 +65,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
         });
     }
 
-    render_grid() {
+    render_grid(ticks) {
         // Grid
         let height = this.plot_size.height;
         this.plot
@@ -71,7 +73,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
             .data([null])
             .join("g")
             .classed("grid vertical", true)
-            .call(d3.axisTop(this.scale_x).ticks(5).tickSize(-height).tickFormat(""));
+            .call(d3.axisTop(this.scale_x).tickValues(ticks).tickSize(-height).tickFormat(""));
     }
 
     update_gui() {
@@ -99,22 +101,32 @@ class BarplotFigure extends cmk_figures.FigureBase {
 
         let used_tags = this._plot_definitions.map(d => d.use_tags[0]);
         let points = this._tag_dimension.filter(d => used_tags.includes(d)).top(Infinity);
-        const domain = [0, d3.max(points, d => d.value) * 1.2];
+        const tickcount = Math.max(2, Math.ceil(this.plot_size.width / 85));
+        const [min_val, max_val, step] = partitionableDomain(
+            [0, d3.max(points, d => d.value)],
+            tickcount,
+            domainIntervals(this._plot_definitions[0].stepping)
+        );
+        const domain = [min_val, max_val];
+        const tick_vals = range(min_val, max_val, step);
+
         this.scale_x.domain(domain);
         this._tag_dimension.filterAll();
 
-        let render_function = this.get_scale_render_function();
+        const render_function = this.get_scale_render_function();
+
         this.plot
             .selectAll("g.x_axis")
             .classed("axis", true)
+            .style("text-anchor", "start")
             .call(
                 d3
                     .axisTop(this.scale_x)
+                    .tickValues(tick_vals)
                     .tickFormat(d => render_function(d))
-                    .ticks(Math.min(Math.floor(this.plot_size.width / 65), 6))
             );
 
-        this.render_grid();
+        this.render_grid(range(min_val, max_val, step / 2));
         this._render_values(domain);
     }
 

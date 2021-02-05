@@ -122,6 +122,7 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
                 "color": color,
                 "opacity": 0.1 if plot_type == "area" else 1,
                 "js_render": metric['unit'].get("js_render"),
+                "stepping": metric['unit'].get("stepping"),
             }
             if plot_type == "area":
                 plot_definition["style"] = "with_topline"
@@ -140,6 +141,7 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
             "use_tags": [row_id],
             "svc_state": svc_map(row),
             "js_render": metric['unit'].get("js_render"),
+            "stepping": metric['unit'].get("stepping"),
             "metrics": {
                 "warn": metric["scalar"].get("warn"),
                 "crit": metric["scalar"].get("crit"),

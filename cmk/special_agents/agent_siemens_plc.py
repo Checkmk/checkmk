@@ -9,7 +9,8 @@ import os
 import socket
 import sys
 import traceback
-from typing import Dict, Optional, Tuple, Union
+from itertools import groupby
+from typing import Optional, Tuple, Union
 
 import snap7  # type: ignore[import]
 from snap7.common import Snap7Library  # type: ignore[import]
@@ -176,39 +177,34 @@ def _area_name_to_area_id(area_name):
     }[area_name]
 
 
-def _addresses_from_device(device):
+def _addresses_from_area_values(values):
     # We want to have a minimum number of reads. We try to only use
     # a single read and detect the memory area to fetch dynamically
     # based on the configured values
-    addresses: Dict = {}
     start_address = None
     end_address = None
-    for device_value in device['values']:
+    for device_value in values:
+        byte = device_value['byte']
+        if start_address is None or byte < start_address:
+            start_address = byte
+
         datatype = device_value['datatype']
         if isinstance(datatype, tuple):
             size: Optional[int] = datatype[1]
         else:
             size = DATATYPES[datatype][0]
 
-        area = device_value['area_name'], device_value['db_number']
-        addresses.setdefault(area, [None, None])
-        start_address, end_address = addresses[area]
-
-        byte = device_value['byte']
-        if start_address is None or byte < start_address:
-            addresses[area][0] = byte
-
         # TODO: Is the None case correct?
         end = byte + (0 if size is None else size)
         if end_address is None or end > end_address:
-            addresses[area][1] = end
+            end_address = end
 
-    return addresses
+    return start_address, end_address
 
 
-def _cast_values(device, addresses, data):
-    values = []
-    for device_value in device['values']:
+def _cast_values(values, start_address, area_value):
+    cast_values = []
+    for device_value in values:
         datatype = device_value['datatype']
         if isinstance(datatype, tuple):
             typename, size = datatype
@@ -216,17 +212,16 @@ def _cast_values(device, addresses, data):
         else:
             size, parse_func = DATATYPES[datatype]
 
-        area_name = device_value['area_name']
-        db_number = device_value['db_number']
-        # the pylint warning below will be refactored out later
-        start, end = addresses[(area_name, db_number)]  # pylint: disable=unused-variable
-        fetched_data = data[(area_name, db_number)]
+        value = parse_func(
+            area_value,
+            device_value['byte'] - start_address,
+            size,
+            device_value['bit'],
+        )
 
-        value = parse_func(fetched_data, device_value['byte'] - start, size, device_value['bit'])
+        cast_values.append((device_value['valuetype'], device_value['ident'], value))
 
-        values.append((device_value['valuetype'], device_value['ident'], value))
-
-    return values
+    return cast_values
 
 
 def main(sys_argv=None):
@@ -248,22 +243,26 @@ def main(sys_argv=None):
 
             cpu_state = client.get_cpu_state()
 
-            addresses = _addresses_from_device(device)
-
-            data = {}
-            for (area_name, db_number), (start, end) in addresses.items():
-                area_id = _area_name_to_area_id(area_name)
-                data[(area_name, db_number)] = client.read_area(area_id,
-                                                                db_number,
-                                                                start,
-                                                                size=end - start)
+            parsed_area_values = []
+            for (area_name, db_number), iter_values in groupby(
+                    sorted(device['values'], key=lambda d: (d['area_name'], d['db_number'])),
+                    lambda d: (d['area_name'], d['db_number']),
+            ):
+                values = list(iter_values)
+                start_address, end_address = _addresses_from_area_values(values)
+                area_value = client.read_area(_area_name_to_area_id(area_name),
+                                              db_number,
+                                              start_address,
+                                              size=end_address - start_address)
+                parsed_area_values.extend(_cast_values(values, start_address, area_value))
 
             sys.stdout.write("<<<siemens_plc_cpu_state>>>\n")
             sys.stdout.write(cpu_state + "\n")
 
             sys.stdout.write("<<<siemens_plc>>>\n")
-            for valuetype, ident, value in _cast_values(device, addresses, data):
-                sys.stdout.write("%s %s %s %s\n" % (device['host_name'], valuetype, ident, value))
+            hostname = device['host_name']
+            for values in parsed_area_values:
+                sys.stdout.write("%s %s %s %s\n" % (hostname, *values))
 
         except Exception:
             sys.stderr.write('%s: Unhandled error: %s' %

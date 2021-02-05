@@ -47,7 +47,6 @@
 #include "ServiceListColumn.h"
 #include "ServiceListStateColumn.h"
 #include "StringLambdaColumn.h"
-#include "StringPerfdataColumn.h"
 #include "TimeLambdaColumn.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
@@ -187,7 +186,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) {
             return r.plugin_output == nullptr ? "" : r.plugin_output;
         }));
-    table->addColumn(std::make_unique<StringPerfdataColumn<host>>(
+    table->addColumn(std::make_unique<StringLambdaColumn<host>::PerfData>(
         prefix + "perf_data",
         "Optional performance data of the last host check", offsets,
         [](const host &r) {

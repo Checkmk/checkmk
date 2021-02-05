@@ -42,7 +42,6 @@
 #include "ServiceGroupsColumn.h"
 #include "ServiceRRDColumn.h"
 #include "StringLambdaColumn.h"
-#include "StringPerfdataColumn.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TimeLambdaColumn.h"
@@ -160,7 +159,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [](const service &r) {
             return r.long_plugin_output == nullptr ? "" : r.long_plugin_output;
         }));
-    table->addColumn(std::make_unique<StringPerfdataColumn<service>>(
+    table->addColumn(std::make_unique<StringLambdaColumn<service>::PerfData>(
         prefix + "perf_data", "Performance data of the last check plugin",
         offsets, [](const service &r) {
             return r.perf_data == nullptr ? "" : r.perf_data;

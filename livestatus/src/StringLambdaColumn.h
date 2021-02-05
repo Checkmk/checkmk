@@ -9,9 +9,11 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <utility>
 
+#include "PerfdataAggregator.h"
 #include "StringColumn.h"
 class Row;
 
@@ -22,6 +24,7 @@ class StringLambdaColumn : public StringColumn {
 public:
     struct Constant;
     struct Reference;
+    struct PerfData;
     StringLambdaColumn(std::string name, std::string description,
                        ColumnOffsets offsets,
                        std::function<std::string(const T&)> gv)
@@ -53,6 +56,15 @@ struct StringLambdaColumn<T>::Reference : StringLambdaColumn {
     Reference(std::string name, std::string description, const std::string& x)
         : StringLambdaColumn(std::move(name), std::move(description), {},
                              [&x](const T& /*t*/) { return x; }){};
+};
+
+template <class T>
+struct StringLambdaColumn<T>::PerfData : StringLambdaColumn {
+    using StringLambdaColumn<T>::StringLambdaColumn;
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
+        AggregationFactory factory) const override {
+        return std::make_unique<PerfdataAggregator>(factory, this);
+    }
 };
 
 #endif

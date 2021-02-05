@@ -471,15 +471,17 @@ std::filesystem::path ExtractPathFromServiceName(
     std::wstring_view service_name) {
     namespace fs = std::filesystem;
     if (service_name.empty()) return {};
-    XLOG::l.t("Try service '{}'", wtools::ToUtf8(service_name));
+    XLOG::l.t("Try service: '{}'", wtools::ToUtf8(service_name));
 
     fs::path service_path = FindServiceImagePath(service_name);
     std::error_code ec;
     if (fs::exists(service_path, ec)) {
         // location of the services
         auto p = service_path.parent_path();
+        XLOG::l.t("Service is found '{}'", service_path);
         return p.lexically_normal();
     }
+
     XLOG::l("'{}' doesn't exist, error_code: [{}] '{}'", service_path,
             ec.value(), ec.message());
 
@@ -493,7 +495,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
                       const std::wstring& preset_root    // look in disk
 ) {
     namespace fs = std::filesystem;
-    XLOG::d.t("Setting root. service: '{}', preset: '{}'",
+    XLOG::l.t("Setting root. service: '{}', preset: '{}'",
               wtools::ToUtf8(service_name), wtools::ToUtf8(preset_root));
 
     // Path from registry if provided
@@ -505,6 +507,8 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
                   wtools::ToUtf8(service_name));
         return true;
     }
+
+    XLOG::l.i("Service '{}' not found", wtools::ToUtf8(service_name));
 
     // working folder is defined
     std::error_code ec;

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List
+from typing import Dict
 import numpy as np  # type: ignore[import]
 
 from cmk.utils.render import date_and_time
@@ -17,7 +17,11 @@ from cmk.gui.valuespec import (
     Timerange,
 )
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
-from cmk.gui.plugins.dashboard.utils import service_table_query
+from cmk.gui.plugins.dashboard.utils import (
+    macro_mapping_from_context,
+    render_title_with_macros_string,
+    service_table_query,
+)
 from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns, merge_multicol
 from cmk.gui.plugins.metrics.utils import get_metric_info
@@ -27,25 +31,13 @@ class AverageScatterplotDataGenerator:
     """Data generator for a scatterplot with average lines"""
     @classmethod
     def figure_title(cls, properties, context, settings) -> str:
-        title: List[str] = []
-        if settings.get("show_title", False):
-            if settings.get("title") and "plain" in settings.get("title_format", []):
-                title.append(settings.get("title"))
-            if "add_host_name" in settings.get("title_format", []):
-                if "hostregex" in context:
-                    hostregex = context["hostregex"].get("host_regex", "")
-                    neg_regex = context["hostregex"].get("neg_host_regex")
-                    host_title = ("not " if neg_regex else "") + hostregex
-                    title.append(host_title)
-            if "add_service_description" in settings.get("title_format", []):
-                service = context.get("service")
-                if isinstance(service, str):
-                    title.append(service)
-                elif isinstance(service, dict):
-                    if service.get('service'):
-                        title.append(service['service'])
-
-        return " / ".join(txt for txt in title)
+        if not settings.get("show_title", False):
+            return ""
+        title = settings.get("title", "")
+        return render_title_with_macros_string(
+            title,
+            macro_mapping_from_context(context, settings["single_infos"], title),
+        )
 
     @staticmethod
     def required_columns(properties, context):

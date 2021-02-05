@@ -15,7 +15,6 @@ pytestmark = pytest.mark.checks
 CHECK_NAME = "ibm_mq_channels"
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_parse():
     lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
@@ -75,7 +74,6 @@ All valid MQSC commands were processed.
     assert attrs['MONCHL'] == 'OFF'
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_parse_svrconn_with_multiple_instances():
     lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)
@@ -104,7 +102,6 @@ All valid MQSC commands were processed.
     assert attrs['CONNAME'] == '10.25.19.183'
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_discovery_qmgr_not_included():
     check = Check(CHECK_NAME)
     parsed = {
@@ -129,7 +126,6 @@ def test_discovery_qmgr_not_included():
     assert ('QM1:CHAN2', {}) in discovery
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check():
     check = Check(CHECK_NAME)
     params: Dict[str, Any] = {}
@@ -165,7 +161,6 @@ def test_check():
     assert actual == expected
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_no_xmit_queue_defined():
     """
     Happened on queue manager MQZZZPPPP and channel FOO.TO.RESA. It
@@ -199,7 +194,6 @@ def test_no_xmit_queue_defined():
     assert actual == expected
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_stale_service_for_not_running_qmgr():
     check = Check(CHECK_NAME)
     params: Dict[str, Any] = {}
@@ -208,7 +202,6 @@ def test_stale_service_for_not_running_qmgr():
         list(check.run_check('QM1:CHAN2', params, parsed))
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_vanished_service_for_running_qmgr():
     check = Check(CHECK_NAME)
     params: Dict[str, Any] = {}
@@ -224,7 +217,6 @@ def test_vanished_service_for_running_qmgr():
     assert len(actual) == 0
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_status_wato_override():
     check = Check(CHECK_NAME)
     parsed = {

@@ -9,6 +9,12 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 
+@pytest.fixture(autouse=True, scope="session")
+def _autouse_fix_register(fix_register):
+    # make fix_register autouse for this package. "Check(.)" requires it.
+    pass
+
+
 # patch cmk.utils.paths
 @pytest.fixture(autouse=True, scope="function")
 def patch_cmk_utils_paths(monkeypatch, tmp_path):

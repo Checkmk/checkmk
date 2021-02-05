@@ -21,7 +21,6 @@ pytestmark = pytest.mark.checks
         'port': 9440
     }, ['--server', 'address', '--port', '9440', '--username', 'userid', '--password', 'password']),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_prism_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_prism')

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // Command Line Parameters for whole Agent
 // Should be include for
@@ -29,22 +30,22 @@ constexpr const wchar_t* kTimeout = L"timeout";
 
 constexpr wchar_t kSplitter = L':';
 
-inline auto ParseExeCommandLine(int argc, wchar_t const* argv[]) {
+inline auto ParseExeCommandLine(const std::vector<std::wstring>& args) {
     auto make_error_answer = [](int ErrorCode) -> auto {
         return make_tuple(ErrorCode, std::wstring(), std::wstring(),
                           std::wstring());
     };
 
-    if (argc < 3) {
+    if (args.size() < 3) {
         xlog::l("Invalid command line").print();
         return make_error_answer(2);
     }
     // NAME
-    std::wstring name = argv[0];
+    std::wstring name = args[0];
 
     // PORT
     auto [port_type, port_addr] =
-        tools::ParseKeyValue(argv[1], exe::cmdline::kSplitter);
+        tools::ParseKeyValue(args[1], exe::cmdline::kSplitter);
     if (port_type.empty()) {
         xlog::l("Port type is empty").print();
         return make_error_answer(3);
@@ -56,7 +57,7 @@ inline auto ParseExeCommandLine(int argc, wchar_t const* argv[]) {
 
     // ID
     auto [id_key, id_val] =
-        tools::ParseKeyValue(argv[2], exe::cmdline::kSplitter);
+        tools::ParseKeyValue(args[2], exe::cmdline::kSplitter);
     if (id_key != exe::cmdline::kId) {
         xlog::l("IDkey is bad or absent").print();
         return make_error_answer(5);
@@ -69,7 +70,7 @@ inline auto ParseExeCommandLine(int argc, wchar_t const* argv[]) {
 
     // TIMEOUT
     auto [timeout_key, timeout_val] =
-        tools::ParseKeyValue(argv[3], exe::cmdline::kSplitter);
+        tools::ParseKeyValue(args[3], exe::cmdline::kSplitter);
     if (timeout_key != exe::cmdline::kTimeout) {
         xlog::l("Timeout Key is bad or absent").print();
         return make_error_answer(7);

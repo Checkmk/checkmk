@@ -56,12 +56,17 @@ described by the following four phases:
       Only further process a file, if its age in seconds matches the filter.
       See ``filter_size''.
 3. Grouping
-    Currently every section in the configuration file will result in one
-    group in the produced output (indicated by '[[[output_type group_name]]]',
-    where the group name will be taken from the sections name in the config
-    file.
-    Future versions may provide means to create more than one group per
-    section (grouped by subfolder, for instance).
+    It is possible to group files within a file group further into subgroups
+    using grouping criteria. The supported options are:
+    * ``grouping_regex: regular_expression''
+      Assign a file to a subgroup if its full path matches the given regular
+      expression.
+    A separate service is created for each subgroup, prefixed with its parent
+    group name (i.e. <parent group name> <subgroup name>). The order in which
+    subgroups and corresponding patterns are specified matters: rules are
+    processed in the given order.
+    Files that match the specified subgroups are shown as a separate service
+    and are excluded from the parent file group.
 4. Output
     You can choose from three different ways the output will be aggregated:
     * ``output: file_stats''
@@ -102,15 +107,21 @@ from stat import S_ISDIR, S_ISREG
 #       2.7.18 this is not supported. The documentation explicitly states
 #       that the module 'configparser' is supported from python 3.
 #       https://docs.python.org/2/library/configparser.html
+
+try:
+    from collections import OrderedDict
+except ImportError:  # Python2
+    from ordereddict import OrderedDict  # type: ignore
+
 try:
     import configparser
 except ImportError:  # Python2
     import ConfigParser as configparser  # type: ignore
 
 try:
-    from collections import OrderedDict
-except ImportError:  # Python2
-    from ordereddict import OrderedDict  # type: ignore
+    import typing
+except ImportError:
+    pass
 
 
 def ensure_str(s):
@@ -423,10 +434,67 @@ def parse_grouping_config(
     )
 
 
-def grouping_single_group(config_section_name, files_iter):
+def _grouping_construct_group_name(parent_group_name, child_group_name):
+    '''allow the user to format the service name using '%s'.
+
+    >>> _grouping_construct_group_name('aard %s vark', 'banana')
+    'aard banana vark'
+
+    >>> _grouping_construct_group_name('aard %s vark %s %s', 'banana')
+    'aard banana vark %s %s'
+
+    >>> _grouping_construct_group_name('aard %s vark')
+    'aard  vark'
+
+    >>> _grouping_construct_group_name('aard %s', '')
+    'aard'
+    '''
+
+    format_specifiers_count = parent_group_name.count('%s')
+    if not format_specifiers_count:
+        return ('%s %s' % (parent_group_name, child_group_name)).strip()
+    return (parent_group_name % ((child_group_name,) + ('%s',) *
+                                 (format_specifiers_count - 1))).strip()
+
+
+def _matches_regex(single_file, regex_pattern):
+    return bool(re.match(regex_pattern, single_file.path))
+
+
+def _get_matching_child_group(single_file, grouping_conditions):
+    for child_group_name, grouping_condition in grouping_conditions:
+        if _matches_regex(single_file, grouping_condition['rule']):
+            return child_group_name
+    return ''
+
+
+def grouping_multiple_groups(config_section_name, files_iter, grouping_conditions):
+    """create multiple groups per section if the agent is configured
+    for grouping. each group is shown as a seperate service. if a file
+    does not belong to a group, it is added to the section."""
+    grouped_files = {}  # type: typing.Dict[typing.Tuple[str, str], typing.List[FileStat]]
+    parent_group_name = config_section_name
+    for single_file in files_iter:
+        matching_child_group = _get_matching_child_group(single_file, grouping_conditions)
+        grouped_files.setdefault(
+            (parent_group_name, matching_child_group),
+            [],
+        ).append(single_file)
+
+    for (parent_group_name, child_group_name), files in grouped_files.items():
+        yield _grouping_construct_group_name(parent_group_name, child_group_name), files
+
+
+def grouping_single_group(config_section_name, files_iter, _grouping_conditions):
     """create one single group per section"""
     group_name = config_section_name
     yield group_name, files_iter
+
+
+def get_grouper(grouping_conditions):
+    if grouping_conditions:
+        return grouping_multiple_groups
+    return grouping_single_group
 
 
 #.
@@ -582,8 +650,9 @@ def main():
         filtered_files = iter_filtered_files(filters, files_iter)
 
         #3 grouping
-        grouper = grouping_single_group
-        groups = grouper(config_section_name, filtered_files)
+        grouping_conditions = config.get('grouping')
+        grouper = get_grouper(grouping_conditions)
+        groups = grouper(config_section_name, filtered_files, grouping_conditions)
 
         #4 output
         output_aggregator = get_output_aggregator(config)

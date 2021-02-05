@@ -42,7 +42,6 @@ pytestmark = pytest.mark.checks
         "address_family": "ipv6",
     }, ["-n", "-6", "$HOSTADDRESS$"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_traceroute_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_traceroute")

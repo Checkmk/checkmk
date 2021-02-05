@@ -34,11 +34,11 @@ div.bookmark {
  * Host matrix snapin
  */
 table.hostmatrix {
-  border-spacing: 0;
+  border-spacing: 5px 2px;
+  margin-left: -5px;
 
   tr {
     padding: 0;
-    border-spacing: 0;
   }
 
   a {
@@ -49,9 +49,7 @@ table.hostmatrix {
   }
 
   td {
-    padding: 0;
-    border: 1px solid rgb(18, 58, 74);
-    border-spacing: 0;
+    border-radius: 4px;
 
     &.state0 {
       background-color: $color-state-success-background;
@@ -89,7 +87,7 @@ table.hostmatrix {
   }
 
   .statebullet {
-    margin: 2px;
+    margin: 5px 2px 2px;
   }
 }
 
@@ -235,14 +233,16 @@ table.performance {
  */
 #snapin_time div.time {
   width: $theme-snapin-width - 2px;
-  padding: 0;
+  padding: 4px 0 0;
   margin: 0 auto;
   font-size: 24px;
   font-weight: bold;
   letter-spacing: $letter-spacing-table;
   color: $font-color-sidebar;
+  background-color: $server-time-div-bg-color;
   text-align: center;
   border-spacing: 4px;
+  border-radius: $theme-border-radius;
 }
 
 /*
@@ -502,9 +502,15 @@ div.spacertop {
  */
 #snapin_wato_foldertree {
   select {
+    width: $theme-snapin-width;
     margin-bottom: 10px;
     clear: both;
     box-sizing: border-box;
+    background-image: url(images/select_arrow.png);
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
   }
 }
 
@@ -672,6 +678,11 @@ table.cmc_stats {
     text-align: center;
   }
 
+  div {
+    font-size: $font-size-small;
+    color: $footnote-link-color;
+  }
+
   div.timerange {
     margin-bottom: 10px;
     color: $font-color;
@@ -701,6 +712,7 @@ table.cmc_stats {
     float: left;
     margin-top: 3px;
     margin-bottom: 5px;
+    background-image: url(images/select_arrow.png);
   }
 }
 

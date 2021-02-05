@@ -220,7 +220,7 @@ filter_registry.register(
 filter_registry.register(
     FilterText(
         ident="output",
-        title=_l("Status detail"),
+        title=_l("Summary (Plugin output)"),
         sort_index=202,
         info="service",
         column="service_plugin_output",

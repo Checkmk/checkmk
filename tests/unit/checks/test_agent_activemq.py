@@ -24,7 +24,6 @@ pytestmark = pytest.mark.checks
         'protocol': 'https'
     }, ["--servername", "testserver", "--port", "8161", '--protocol', 'https', "--piggyback"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_activemq_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_activemq')

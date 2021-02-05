@@ -114,6 +114,8 @@ const char* const kWinPerfExe = "exe";                // string
 const char* const kWinPerfPrefixName = "prefix";      // string
 const char* const kWinPerfPrefixDefault = "winperf";  // string
 const char* const kWinPerfTimeout = "timeout";        // int
+const char* const kWinPerfTrace = "trace";            // bool
+const char* const kWinPerfFork = "fork";              // bool
 
 // group "logwatch"
 // root

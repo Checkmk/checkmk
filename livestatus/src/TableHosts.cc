@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <ctime>
 #include <filesystem>
 #include <iterator>
 #include <memory>
@@ -26,7 +27,7 @@
 #include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
-#include "DoubleLambdaColumn.h"
+#include "DoubleColumn.h"
 #include "DowntimeColumn.h"
 #include "DynamicColumn.h"
 #include "DynamicFileColumn.h"
@@ -36,8 +37,6 @@
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
 #include "HostRRDColumn.h"
-#include "HostSpecialDoubleColumn.h"
-#include "HostSpecialIntColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
@@ -53,6 +52,7 @@
 #include "TimeLambdaColumn.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
+#include "mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
@@ -424,45 +424,45 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         })));
 
     // columns of type double
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "check_interval",
         "Number of basic interval lengths between two scheduled checks of the host",
         offsets, [](const host &r) { return r.check_interval; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a soft error",
         offsets, [](const host &r) { return r.retry_interval; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "notification_interval",
         "Interval of periodic notification or 0 if its off", offsets,
         [](const host &r) { return r.notification_interval; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "first_notification_delay",
         "Delay before the first notification", offsets,
         [](const host &r) { return r.first_notification_delay; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
         offsets, [](const host &r) { return r.low_flap_threshold; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "high_flap_threshold", "High threshold of flap detection",
         offsets, [](const host &r) { return r.high_flap_threshold; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "x_3d", "3D-Coordinates: X", offsets,
         [](const host &r) { return r.x_3d; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "y_3d", "3D-Coordinates: Y", offsets,
         [](const host &r) { return r.y_3d; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "z_3d", "3D-Coordinates: Z", offsets,
         [](const host &r) { return r.z_3d; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
         offsets, [](const host &r) { return r.latency; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "execution_time", "Time the host check needed for execution",
         offsets, [](const host &r) { return r.execution_time; }));
-    table->addColumn(std::make_unique<DoubleLambdaColumn<host>>(
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "percent_state_change", "Percent state change", offsets,
         [](const host &r) { return r.percent_state_change; }));
 
@@ -652,18 +652,29 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets_services, table->core(),
         ServiceListStateColumn::Type::num_hard_unknown));
 
-    table->addColumn(std::make_unique<HostSpecialIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
-        offsets, table->core(), HostSpecialIntColumn::Type::real_hard_state));
-    table->addColumn(std::make_unique<HostSpecialIntColumn>(
+        offsets, [](const host &hst) {
+            if (hst.current_state == HOST_UP) {
+                return 0;
+            }
+            return hst.state_type == HARD_STATE ? hst.current_state
+                                                : hst.last_hard_state;
+        }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
-        offsets, table->core(), HostSpecialIntColumn::Type::pnp_graph_present));
-    table->addColumn(std::make_unique<HostSpecialIntColumn>(
+        offsets, [mc](const host &hst) {
+            return pnpgraph_present(mc, hst.name, dummy_service_description());
+        }));
+    table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
-        offsets, table->core(), HostSpecialIntColumn::Type::mk_inventory_last));
+        offsets, [mc](const host &hst) {
+            return static_cast<int32_t>(
+                mk_inventory_last(mc->mkInventoryPath() / hst.name));
+        }));
 
     table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "mk_inventory",
@@ -695,8 +706,14 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return std::filesystem::path{args};
         }));
 
-    table->addColumn(std::make_unique<HostSpecialDoubleColumn>(
-        prefix + "staleness", "Staleness indicator for this host", offsets));
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
+        prefix + "staleness", "Staleness indicator for this host", offsets,
+        [](const host &hst) {
+            extern int interval_length;
+            return static_cast<double>(time(nullptr) - hst.last_check) /
+                   ((hst.check_interval == 0 ? 1 : hst.check_interval) *
+                    interval_length);
+        }));
 
     table->addColumn(std::make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",

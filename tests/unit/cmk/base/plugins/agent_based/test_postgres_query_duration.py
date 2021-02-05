@@ -7,7 +7,9 @@
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Result, State, Metric
 
 from cmk.base.plugins.agent_based.postgres_query_duration import (
-    check_postgres_query_duration,)
+    check_postgres_query_duration,
+    cluster_check_postgres_query_duration,
+)
 
 
 # TODO: a named tuple would be nice
@@ -46,4 +48,25 @@ def test_check_postgres_query_duration_basic():
         Result(state=State.OK, summary="Query state: anxious"),
         Result(state=State.OK, summary="PID: 4242"),
         Result(state=State.OK, summary="Query: Where is Waldo"),
+    ]
+
+
+def test_cluster_check_postgres_query_duration_basic():
+    node1_section = {
+        "item": [Query(seconds='23', pid='4242', current_query="Where is Hugo", state='amused'),]
+    }
+    node2_section = {
+        "item": [Query(seconds='22', pid='4242', current_query="Where is Waldo", state='anxious'),]
+    }
+
+    clustered_sections = {
+        "node1": node1_section,
+        "node2": node2_section,
+    }
+
+    assert list(cluster_check_postgres_query_duration("item", clustered_sections)) == [
+        Result(state=State.OK, summary="Longest query: 23 seconds"),
+        Result(state=State.OK, summary="Query state: amused"),
+        Result(state=State.OK, summary="PID: 4242"),
+        Result(state=State.OK, summary="Query: Where is Hugo"),
     ]

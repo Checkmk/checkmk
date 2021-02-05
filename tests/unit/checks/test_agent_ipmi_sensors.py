@@ -26,7 +26,6 @@ pytestmark = pytest.mark.checks
         "address"
     ]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ipmi_sensors_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_ipmi_sensors')

@@ -13,15 +13,7 @@ from cmk.base.api.agent_based.inventory_classes import Attributes
 
 import cmk.base.api.agent_based.register as agent_based_register
 
-import cmk.base.inventory_plugins as inventory_plugins
-
 pytestmark = pytest.mark.checks
-
-
-@pytest.fixture(scope="module", name="inv_info")
-def _get_inv_info(config_load_all_checks):  # no idea why usefixtures will not work.
-    assert len(inventory_plugins.inv_info) > 60  # sanity check
-    return inventory_plugins.inv_info.copy()
 
 
 def test_no_new_legacy_tests():
@@ -33,14 +25,17 @@ def test_no_new_legacy_tests():
         this_dir)
 
 
-def test_create_section_plugin_from_legacy(inv_info):
-    for inv_info_dict in inv_info.values():
+def test_create_section_plugin_from_legacy(fix_plugin_legacy):
+    for inv_info_dict in fix_plugin_legacy.inv_info.values():
         assert 'snmp_info' not in inv_info_dict
 
 
-def test_migrated_inventory_plugin(inv_info):  # pylint: disable=unused-argument
-    # pick a plugin, any plugin
-    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName("aix_baselevel"))
+def test_migrated_inventory_plugin(fix_plugin_legacy, fix_register):
+    # pick an automigrated plugin
+    test_plugin_name = "aix_baselevel"
+    assert test_plugin_name in fix_plugin_legacy.inv_info
+
+    plugin = fix_register.inventory_plugins.get(InventoryPluginName(test_plugin_name))
     assert plugin is not None
 
     # think of a version, and remember it:

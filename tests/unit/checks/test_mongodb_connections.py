@@ -35,7 +35,6 @@ pytestmark = pytest.mark.checks
         ([("current", "1"), ("available", None), ("totalCreated", "10000")], 3, '', '', -1, -1, ''),
         ([("current", "1"), ("available", "10"), ("totalCreated", None)], 3, '', '', -1, -1, ''),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_function(info, state_expected, info_expected, perf_expected_key, perf_expected_value,
                         state_expected_perc, info_expected_perc):
     """

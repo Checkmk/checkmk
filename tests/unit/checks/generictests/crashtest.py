@@ -164,10 +164,9 @@ class CrashReportList(list):
                 cr_info[3] = 'Exception: %s' % exc
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
-def test_crashreport(config_check_info, crashdata):
+def test_crashreport(fix_plugin_legacy, crashdata):
     try:
-        generictests.run(config_check_info, crashdata)
+        generictests.run(fix_plugin_legacy.check_info, crashdata)
         check = Check(crashdata.full_checkname)
         if 'item' in crashdata.vars:
             item = crashdata.vars['item']

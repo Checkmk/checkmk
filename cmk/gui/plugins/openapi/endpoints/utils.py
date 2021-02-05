@@ -21,6 +21,7 @@ GroupName = Literal[
     'host_group_config',
     'contact_group_config',
     'service_group_config',
+    'agent'
 ]  # yapf: disable
 
 

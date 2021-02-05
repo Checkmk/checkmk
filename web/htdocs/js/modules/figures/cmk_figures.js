@@ -503,21 +503,26 @@ export function adjust_domain(domain, metrics) {
     return [dmin, dmax];
 }
 
+export function clamp(value, domain) {
+    return Math.min(Math.max(value, domain[0]), domain[1]);
+}
+
 export function make_levels(domain, metrics) {
     let [dmin, dmax] = domain;
     if (metrics.warn == null || metrics.crit == null) return [];
 
     if (metrics.warn >= dmax) metrics.warn = dmax;
     if (metrics.crit >= dmax) metrics.crit = dmax;
+    if (metrics.warn <= dmin) dmin = metrics.warn;
 
     return [
-        {from: dmin, to: metrics.warn, color: "#13D389"},
+        {from: metrics.crit, to: dmax, color: "#FF3232"},
         {
             from: metrics.warn,
             to: metrics.crit,
             color: "#FFFE44",
         },
-        {from: metrics.crit, to: dmax, color: "#FF3232"},
+        {from: dmin, to: metrics.warn, color: "#13D389"},
     ];
 }
 // Base class for dc.js based figures (using crossfilter)
@@ -695,22 +700,34 @@ export function state_component(figurebase, state) {
         .text(d => d.msg);
 }
 
+export function renderable_value(value, domain, plot) {
+    const levels = make_levels(domain, plot.metrics);
+    const formatter = plot_render_function(plot);
+
+    const color = levels.length
+        ? levels.find(element => clamp(value.value, domain) >= element.from).color
+        : "#3CC2FF";
+
+    return {
+        ...split_unit(formatter(value.value)),
+        url: value.url || "",
+        color: color,
+    };
+}
+
 // Adhoc hack to extract the unit from a formatted string, which has units
 // Once we migrate metric system to the frontend drop this
-export function split_unit(recipe) {
-    if (!recipe) return {};
-    if (!recipe.formatted_value) return {};
-    let text = recipe.formatted_value;
+export function split_unit(formatted_value) {
+    if (!formatted_value) return {};
     // Separated by space, most rendered quantities
-    let splitted_text = text.split(" ");
-    if (splitted_text.length == 2)
-        return {value: splitted_text[0], unit: splitted_text[1], url: recipe.url};
+    let splitted_text = formatted_value.split(" ");
+    if (splitted_text.length == 2) return {value: splitted_text[0], unit: splitted_text[1]};
 
     // Percentages have no space
-    if (text.endsWith("%")) return {value: text.slice(0, -1), unit: "%", url: recipe.url};
+    if (formatted_value.endsWith("%")) return {value: formatted_value.slice(0, -1), unit: "%"};
 
     // It's a counter, unitless
-    return {value: text, unit: "", url: recipe.url};
+    return {value: formatted_value, unit: ""};
 }
 
 export function get_function(render_string) {

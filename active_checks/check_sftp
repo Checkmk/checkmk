@@ -93,23 +93,19 @@ def create_testfile(paths):
 
 
 def put_file(sftp, paths):
-    sftp.put(paths["local_put_path"], \
-             paths["remote_put_path"])
+    sftp.put(paths["local_put_path"], paths["remote_put_path"])
 
 
 def get_file(sftp, paths):
-    sftp.get(paths["remote_get_path"], \
-             paths["local_get_path"])
+    sftp.get(paths["remote_get_path"], paths["local_get_path"])
 
 
 def get_timestamp(sftp, paths):
     return sftp.stat(paths["timestamp_path"])
 
 
-def output_check_result(rc, s):
-    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    output = '%s - %s' % (stxt, s)
-    sys.stdout.write('%s\n' % output)
+def output_check_result(s):
+    sys.stdout.write('%s\n' % s)
 
 
 def parse_arguments(sys_args):
@@ -250,9 +246,8 @@ def main(sys_args=None):
         if opt_timestamp is not None:
             file_stats = get_timestamp(sftp, paths)
             states.append(0)
-            messages.append("Timestamp of %s is: %s" % \
-                            (paths["timestamp_filename"], \
-                             time.ctime(file_stats.st_mtime)))
+            messages.append("Timestamp of %s is: %s" %
+                            (paths["timestamp_filename"], time.ctime(file_stats.st_mtime)))
     except Exception:
         if opt_verbose:
             raise
@@ -268,5 +263,5 @@ def main(sys_args=None):
 
 if __name__ == "__main__":
     exitcode, info = main()
-    output_check_result(exitcode, info)
+    output_check_result(info)
     sys.exit(exitcode)

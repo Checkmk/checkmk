@@ -139,7 +139,6 @@ info_empty_inodes = [
 #   '----------------------------------------------------------------------'
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize(
     "info,expected_result,inventory_df_rules",
     [
@@ -413,7 +412,6 @@ df_params = {
 }
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize(
     "item,params,info,expected_result",
     [

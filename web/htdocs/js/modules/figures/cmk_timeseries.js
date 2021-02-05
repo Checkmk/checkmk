@@ -114,7 +114,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             };
         this.figure_size = new_size;
         if (this._title) {
-            this.margin.top = 10 + 24; // 24 from UX project
+            this.margin.top = 24; // 24 from UX project
         }
         this.plot_size = {
             width: new_size.width - this.margin.left - this.margin.right,
@@ -677,7 +677,7 @@ class SingleMetricFigure extends TimeseriesFigure {
 
     constructor(div_selector, fixed_size = null) {
         super(div_selector, fixed_size);
-        this.margin = {top: 10, right: 10, bottom: 10, left: 10};
+        this.margin = {top: 0, right: 0, bottom: 0, left: 0};
     }
 
     initialize() {
@@ -692,11 +692,7 @@ class SingleMetricFigure extends TimeseriesFigure {
     }
 
     render_legend() {}
-    render_grid() {
-        if (this._data.plot_definitions.filter(d => d.plot_type == "area").length == 1)
-            super.render_grid();
-    }
-
+    render_grid() {}
     render_axis() {}
 }
 
@@ -883,6 +879,47 @@ class SubPlot {
     }
 }
 
+function line_draw_fn(subplot) {
+    return d3
+        .line()
+        .curve(d3.curveLinear)
+        .x(d => subplot._renderer.scale_x(d.date))
+        .y(d => subplot._renderer.scale_y(d.value));
+}
+
+function area_draw_fn(subplot) {
+    let shift_y = subplot.get_coord_shifts()[1];
+    let base = subplot._renderer.scale_y(shift_y);
+    return d3
+        .area()
+        .curve(d3.curveLinear)
+        .x(d => subplot._renderer.scale_x(d.date))
+        .y1(d => subplot._renderer.scale_y(d.value))
+        .y0(d => {
+            if (subplot.stack_values != null)
+                return subplot._renderer.scale_y(subplot.stack_values[d.timestamp] || 0);
+            else return base;
+        });
+}
+
+function graph_data_path(subplot, path_type) {
+    return subplot.svg
+        .selectAll("g.graph_data path." + path_type)
+        .data([subplot.transformed_data])
+        .join(enter =>
+            enter.append("g").classed("graph_data", true).append("path").classed(path_type, true)
+        )
+        .classed((subplot.definition.css_classes || []).join(" "), true);
+}
+
+function draw_subplot(subplot, path_type, styles) {
+    let path = graph_data_path(subplot, path_type);
+    let path_fn = (path_type === "line" ? line_draw_fn : area_draw_fn)(subplot);
+
+    let plot = subplot._renderer.transition(path).attr("d", d => path_fn(d));
+    Object.entries(styles).forEach(([property, value]) => plot.style(property, value));
+}
+
 // Renders a single uninterrupted line
 class LinePlot extends SubPlot {
     static ident() {
@@ -890,31 +927,12 @@ class LinePlot extends SubPlot {
     }
 
     render() {
-        let line = d3
-            .line()
-            .curve(d3.curveLinear)
-            .x(d => this._renderer.scale_x(d.date))
-            .y(d => this._renderer.scale_y(d.value));
-
-        let path = this.svg
-            .selectAll("g.graph_data path")
-            .data([this.transformed_data])
-            .join(enter =>
-                enter.append("g").classed("graph_data", true).append("path").classed("line", true)
-            )
-            .classed((this.definition.css_classes || []).join(" "), true);
-
-        let stroke_width = this.definition.stroke_width || 2;
-        let color = this.get_color();
-        let opacity = this.get_opacity() || 1;
-
-        this._renderer
-            .transition(path)
-            .attr("d", d => line(d))
-            .attr("fill", "none")
-            .style("stroke-width", stroke_width)
-            .style("opacity", opacity)
-            .style("stroke", color);
+        draw_subplot(this, "line", {
+            fill: "none",
+            opacity: this.get_opacity() || 1,
+            stroke: this.get_color(),
+            "stroke-width": this.definition.stroke_width || 2,
+        });
     }
 
     get_color() {
@@ -931,39 +949,14 @@ class AreaPlot extends SubPlot {
     }
 
     render() {
-        let shift_y = this.get_coord_shifts()[1];
-        let base = this._renderer.scale_y(shift_y);
-        let area = d3
-            .area()
-            .curve(d3.curveLinear)
-            //.curve(d3.curveCardinal)
-            .x(d => this._renderer.scale_x(d.date))
-            .y1(d => this._renderer.scale_y(d.value))
-            .y0(d => {
-                if (this.stack_values != null)
-                    return this._renderer.scale_y(this.stack_values[d.timestamp] || 0);
-                else return base;
-            });
-
         let color = this.get_color();
-        let opacity = this.get_opacity();
-        let stroke_width = this.get_stroke_width();
-
-        let path = this.svg
-            .selectAll("g.graph_data path")
-            .data([this.transformed_data])
-            .join(enter =>
-                enter.append("g").classed("graph_data", true).append("path").classed("area", true)
-            )
-            .classed((this.definition.css_classes || []).join(" "), true);
-
-        this._renderer
-            .transition(path)
-            .attr("d", d => area(d))
-            .style("fill", color)
-            .style("stroke", color)
-            .style("stroke-width", stroke_width)
-            .style("fill-opacity", opacity);
+        draw_subplot(this, "area", {fill: color, opacity: this.get_opacity()});
+        if (this.definition.style === "with_topline")
+            draw_subplot(this, "line", {
+                "stroke-width": this.definition.stroke_width || 2,
+                fill: "none",
+                stroke: color,
+            });
     }
 
     get_color() {
@@ -976,10 +969,6 @@ class AreaPlot extends SubPlot {
         let opacity = this.definition.opacity;
         let classes = (this.definition.css_classes || []).concat("area");
         return opacity != undefined ? opacity : this._get_css("opacity", "path", classes);
-    }
-
-    get_stroke_width() {
-        return this.definition.stroke_width || 2;
     }
 }
 
@@ -1140,25 +1129,35 @@ class SingleValuePlot extends SubPlot {
             cmk_figures.calculate_domain(this.transformed_data),
             plot.metrics
         );
-        const levels = cmk_figures.make_levels(domain, plot.metrics);
 
-        const formatter = cmk_figures.plot_render_function(plot);
         const last_value = this.transformed_data.find(element => element.last_value);
-        const plot_size = this._renderer.plot_size;
-        const color = levels.length
-            ? levels.find(element => last_value.value < element.to).color
-            : "#FFFFFF";
-        const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
+        const value = cmk_figures.renderable_value(last_value, domain, plot);
 
-        const value = cmk_figures.split_unit({
-            formatted_value: formatter(last_value.value),
-            url: last_value.url,
-        });
+        const plot_size = this._renderer.plot_size;
+        const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
+        if (plot.metric_status_display && plot.metric_status_display === "background") {
+            this.svg
+                .selectAll("rect.status_background")
+                .data([null])
+                .join("rect")
+                .classed("status_background", true)
+                .attr("y", 0)
+                .attr("x", 0)
+                .attr("width", plot_size.width)
+                .attr("height", plot_size.height)
+                .attr("fill", value.color)
+                .attr("opacity", 0.4);
+            value.color = "#FFFFFF";
+        } else {
+            this.svg.selectAll("rect.status_background").remove();
+            if (plot.metric_status_display == null) value.color = "#3CC2FF"; // default blue
+        }
+
         cmk_figures.metric_value_component(
             this.svg,
             value,
             {x: plot_size.width / 2, y: plot_size.height / 2 + font_size / 3},
-            {font_size, color}
+            {font_size, color: value.color}
         );
 
         if (this.definition.svc_state)

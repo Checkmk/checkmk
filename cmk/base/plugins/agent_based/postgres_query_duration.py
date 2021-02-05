@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping
+
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .agent_based_api.v1 import (
     IgnoreResults,
@@ -68,6 +70,16 @@ def check_postgres_query_duration(item: str, section: postgres.Section) -> Check
     yield Result(state=State.OK, summary=f"Query: {query['current_query']}")
 
 
+def cluster_check_postgres_query_duration(
+    item: str,
+    section: Mapping[str, postgres.Section],
+) -> CheckResult:
+    data = [
+        d for d in (node_section.get(item) for node_section in section.values()) if d is not None
+    ]
+    yield from check_postgres_query_duration(item, {item: sum(data, [])} if data else {})
+
+
 register.agent_section(
     name='postgres_query_duration',
     parse_function=postgres.parse_dbs,
@@ -78,4 +90,5 @@ register.check_plugin(
     service_name="PostgreSQL Query Duration %s",
     discovery_function=discover_postgres_query_duration,
     check_function=check_postgres_query_duration,
+    cluster_check_function=cluster_check_postgres_query_duration,
 )

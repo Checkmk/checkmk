@@ -153,7 +153,13 @@
       @include small-menu(265px);
     }
 
-    #info_line {
+    #user_messages {
+      flex-grow: 1;
+      margin: auto 0 auto 48px;
+      font-size: 12px;
+    }
+
+    .info_line {
       margin: auto $spacing auto 0;
       font-size: $font-size-default;
       color: rgba($font-color, 0.7);
@@ -187,6 +193,10 @@
         padding: 10px 10px 9px;
         margin: 0;
         background-color: #383838;
+      }
+
+      &#popup_menu_user div.navigation_bar div.search_bar {
+        flex-grow: 0;
       }
 
       div.navigation_bar {
@@ -440,6 +450,16 @@
 
       img {
         margin-bottom: 8px;
+      }
+
+      span#msg_label {
+        position: absolute;
+        padding: 1px;
+        font-size: $font-size-default;
+        font-weight: bold;
+        color: $unmonitored-bg-color;
+        background-color: $white;
+        border-radius: 50%;
       }
     }
   }

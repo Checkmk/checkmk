@@ -164,8 +164,6 @@ def _process_request(environ, start_response, debug=False) -> Response:  # pylin
 
         page_handler = get_and_wrap_page(html.myfile)
         response = page_handler()
-        # If page_handler didn't raise we assume everything is OK.
-        response.status_code = http_client.OK
     except HTTPRedirect as e:
         # This can't be a new Response as it can have already cookies set/deleted by the pages.
         # We can't return the response because the Exception has been raised instead.

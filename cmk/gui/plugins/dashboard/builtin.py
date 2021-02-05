@@ -398,7 +398,6 @@ builtin_dashboards['checkmk_host'] = {
             'show_graph_time': True,
             'show_time_axis': True,
             'foreground_color': 'default',
-            'title_format': 'plain',
             'canvas_color': 'default',
             'show_legend': False,
             'show_title': True,
@@ -428,7 +427,6 @@ builtin_dashboards['checkmk_host'] = {
             'show_graph_time': True,
             'show_time_axis': True,
             'foreground_color': 'default',
-            'title_format': 'plain',
             'canvas_color': 'default',
             'show_legend': False,
             'show_title': True,
@@ -458,7 +456,6 @@ builtin_dashboards['checkmk_host'] = {
             'show_graph_time': True,
             'show_time_axis': True,
             'foreground_color': 'default',
-            'title_format': 'plain',
             'vertical_axis_width': 'fixed',
             'show_legend': False,
             'show_title': True,
@@ -478,8 +475,7 @@ builtin_dashboards['checkmk_host'] = {
     }, {
         'add_context_to_title': True,
         'context': {
-            'host': u'heute',
-            'service': u'Disk IO SUMMARY'
+            'service': u'Disk IO SUMMARY',
         },
         'background': True,
         'link_from': {},
@@ -489,7 +485,6 @@ builtin_dashboards['checkmk_host'] = {
             'show_graph_time': True,
             'show_time_axis': True,
             'foreground_color': 'default',
-            'title_format': 'plain',
             'vertical_axis_width': 'fixed',
             'show_legend': False,
             'show_title': True,

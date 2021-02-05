@@ -73,8 +73,8 @@ sidebar_update_interval = 30.0
 # It is possible (but ugly) to enable a scrollbar in the sidebar
 sidebar_show_scrollbar = False
 
-# Enable regular checking for popup notifications
-sidebar_notify_interval = None
+# Enable regular checking for notification messages
+sidebar_notify_interval = 30
 
 # Maximum number of results to show in quicksearch dropdown
 quicksearch_dropdown_limit = 80

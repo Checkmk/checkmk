@@ -1442,15 +1442,6 @@ div.graph_with_timeranges {
 
   table.timeranges > tbody > tr > td {
     padding: 0 8px 4px;
-    border: none;
-
-    &:first-child {
-      border-right: none solid;
-    }
-
-    &:last-child {
-      border-left: none solid;
-    }
   }
 }
 

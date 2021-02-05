@@ -38,6 +38,7 @@ protected:
         });
     }
 
+    // #TODO copy to temporary folder before start
     static int RunMeAgain(int requested) {
         std::filesystem::path exe{GetCurrentProcessPath()};
 

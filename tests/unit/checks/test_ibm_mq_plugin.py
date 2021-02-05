@@ -13,7 +13,6 @@ pytestmark = pytest.mark.checks
 CHECK_NAME = "ibm_mq_plugin"
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_parse():
     lines = """\
 version: 2.0.4
@@ -88,7 +87,6 @@ runmqsc: Not executable
         id="version_mismatch",
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check(params, parsed, expected):
     check = Check(CHECK_NAME)
     actual = list(check.run_check(None, params, parsed))

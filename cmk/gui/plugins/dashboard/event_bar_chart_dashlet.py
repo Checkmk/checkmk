@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 import time
 import livestatus
 from livestatus import lqencode
+from typing import Iterable
 
 from cmk.utils.render import date_and_time
 from cmk.gui.type_defs import HTTPVariables
@@ -17,6 +17,10 @@ from cmk.gui.globals import html, request
 from cmk.gui.visuals import get_filter_headers
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarChartDataGenerator
+from cmk.gui.plugins.dashboard.utils import (
+    macro_mapping_from_context,
+    render_title_with_macros_string,
+)
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import (Dictionary, DropdownChoice, CascadingDropdown, Timerange)
 from cmk.gui.utils.urls import makeuri_contextless
@@ -173,7 +177,7 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
         return tooltip, makeuri_contextless(request, args, filename="view.py")
 
 
-def default_bar_chart_title(log_target, name):
+def default_bar_chart_title(log_target: str, name: str) -> str:
     log_target_to_title = {
         "both": _("Host and service"),
         "host": _("Host"),
@@ -184,14 +188,19 @@ def default_bar_chart_title(log_target, name):
 
 
 def bar_chart_title(properties, context, settings) -> str:
-    title: List[str] = []
-    if settings.get("show_title", True):
-        if "plain" in settings.get("title_format", ["plain"]):
-            chart_name = settings['type'].split("_")[0]
-            title.append(
-                settings.get("title") or
-                default_bar_chart_title(properties['log_target'], chart_name))
-    return " / ".join(txt for txt in title)
+    if not settings.get("show_title", True):
+        return ""
+
+    chart_name = settings['type'].split("_")[0]
+    deflt_title = default_bar_chart_title(properties['log_target'], chart_name)
+    title = settings.get("title", deflt_title)
+    macro_mapping = macro_mapping_from_context(context, settings["single_infos"], title)
+    macro_mapping["$GRAPH_TITLE$"] = deflt_title
+
+    return render_title_with_macros_string(
+        title,
+        macro_mapping,
+    )
 
 
 def bar_chart_vs_time_components():
@@ -255,6 +264,10 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
         else:
             raise NotImplementedError()
         self.js_dashlet(figure_type_name=figure_type_name)
+
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield "$GRAPH_TITLE$ " + _("(default title of the graph)")
 
 
 #   .--Notifications-------------------------------------------------------.

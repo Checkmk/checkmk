@@ -76,7 +76,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def nagios_name(self):
         return "alias"
 
-    def is_explicit(self):
+    def is_explicit(self) -> bool:
         return True
 
     def title(self):
@@ -314,6 +314,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
     def nagios_name(self):
         return "parents"
+
+    def is_explicit(self) -> bool:
+        return True
 
     def paint(self, value, hostname):
         parts = [

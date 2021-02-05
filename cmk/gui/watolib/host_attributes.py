@@ -951,6 +951,9 @@ class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
             return value
         return None
 
+    def is_explicit(self) -> bool:
+        return True
+
 
 # TODO: Kept for pre 1.6 plugin compatibility
 def TextAttribute(name,

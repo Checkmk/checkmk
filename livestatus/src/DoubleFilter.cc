@@ -6,20 +6,23 @@
 #include "DoubleFilter.h"
 
 #include <cstdlib>
+#include <utility>
 
-#include "DoubleColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
-DoubleFilter::DoubleFilter(Kind kind, const DoubleColumn &column,
-                           RelationalOperator relOp, const std::string &value)
-    : ColumnFilter(kind, column, relOp, value)
-    , _column(column)
-    , _ref_value(atof(value.c_str())) {}
+DoubleFilter::DoubleFilter(Kind kind, std::string columnName,
+                           std::function<double(Row)> getValue,
+                           RelationalOperator relOp, const std::string &value,
+                           Logger *logger)
+    : ColumnFilter(kind, std::move(columnName), relOp, value)
+    , _getValue(std::move(getValue))
+    , _ref_value(atof(value.c_str()))
+    , _logger(logger) {}
 
 bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
                            std::chrono::seconds /* timezone_offset */) const {
-    double act_value = _column.getValue(row);
+    double act_value = _getValue(row);
     switch (oper()) {
         case RelationalOperator::equal:
             return act_value == _ref_value;
@@ -39,9 +42,8 @@ bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Informational(_column.logger())
-                << "Sorry. Operator " << oper()
-                << " for float columns not implemented.";
+            Informational(logger()) << "Sorry. Operator " << oper()
+                                    << " for float columns not implemented.";
             return false;
     }
     return false;  // unreachable
@@ -52,6 +54,9 @@ std::unique_ptr<Filter> DoubleFilter::copy() const {
 }
 
 std::unique_ptr<Filter> DoubleFilter::negate() const {
-    return std::make_unique<DoubleFilter>(
-        kind(), _column, negateRelationalOperator(oper()), value());
+    return std::make_unique<DoubleFilter>(kind(), columnName(), _getValue,
+                                          negateRelationalOperator(oper()),
+                                          value(), logger());
 }
+
+Logger *DoubleFilter::logger() const { return _logger; }

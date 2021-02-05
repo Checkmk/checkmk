@@ -16,7 +16,6 @@ CHECK_NAME = "alcatel_fans"
     ([[u'doesnt matter']], [(1, None)]),
     ([[u'doesnt matter', u'doesent matter'], [u'doesnt matter']], [(1, None), (2, None)]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_inventory_function(info, result_expected):
     check = Check(CHECK_NAME)
     result = list(check.run_discovery(info))
@@ -29,7 +28,6 @@ def test_inventory_function(info, result_expected):
         ((0, 0), 1, [[u'1']], 2, 'Fan not running', None),
         ((0, 0), 1, [[u'2']], 0, 'Fan running', None),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_function(parameters, item, info, state_expected, infotext_expected,
                         perfdata_expected):
     """

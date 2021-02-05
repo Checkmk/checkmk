@@ -149,7 +149,11 @@ bool CoreCarrier::mailSlotSend(DataType Type, const std::string& PeerName,
         return false;
     }
 
-    return postman.ExecPost(cdh.get(), cdh->fullLength());
+    auto ret = postman.ExecPost(cdh.get(), cdh->fullLength());
+    if (!ret) {
+        XLOG::l("Failed to send data to mail slot");
+    }
+    return ret;
 }
 
 bool CoreCarrier::dumpSlotSend(DataType type, const std::string& peer_name,

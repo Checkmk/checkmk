@@ -35,7 +35,7 @@ RelationalOperator relOpForElement(RelationalOperator relOp) {
 
 ListFilter::ListFilter(Kind kind, const ListColumn &column,
                        RelationalOperator relOp, const std::string &value)
-    : ColumnFilter(kind, column, relOp, value)
+    : ColumnFilter(kind, column.name(), relOp, value)
     , _column(column)
     , _regExp(makeRegExpFor(relOpForElement(relOp), value)) {}
 

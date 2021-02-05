@@ -18,7 +18,7 @@
 #include <utility>
 
 #include "Column.h"
-#include "DoubleLambdaColumn.h"
+#include "DoubleColumn.h"
 #include "EventConsoleConnection.h"
 #include "ListColumn.h"
 #include "ListLambdaColumn.h"
@@ -184,10 +184,10 @@ std::unique_ptr<IntLambdaColumn<ECRow>> ECRow::makeIntColumn(
 }
 
 // static
-std::unique_ptr<DoubleLambdaColumn<ECRow>> ECRow::makeDoubleColumn(
+std::unique_ptr<DoubleColumn<ECRow>> ECRow::makeDoubleColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<DoubleLambdaColumn<ECRow>>(
+    return std::make_unique<DoubleColumn<ECRow>>(
         name, description, offsets,
         [name](const ECRow &r) { return r.getDouble(name); });
 }

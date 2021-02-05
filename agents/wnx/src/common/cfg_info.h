@@ -59,7 +59,7 @@ constexpr uint32_t kMaxOhmErrorsBeforeRestart = 3;
 
 constexpr int kDefaultLogLevel = kLogBase;
 
-// #TODO CONFIRM VALUE:
+// Windows Wmi API timeout, decision from LWA
 constexpr int kDefaultWmiTimeout = 3;  // seconds, this is Windows FAIL
 
 // data will be send to peer during this interval
@@ -76,8 +76,9 @@ constexpr uint16_t kMainPort = 6556;
 // Default timeout for any plugin
 constexpr int kDefaultPluginTimeout = 60;  // seconds
 
-// Windows Wmi API timeout, decision from LWA
-constexpr int kDefaultWinPerfTimeout = 3;  // seconds
+constexpr int kDefaultWinPerfTimeout = 10;  // seconds
+constexpr bool kDefaultWinPerfFork = true;
+constexpr bool kDefaultWinPerfTrace = false;
 
 // #TODO Probably deprecated
 constexpr int kDefaultAgentMaxWait = 15;  // max time agent waits for a sections

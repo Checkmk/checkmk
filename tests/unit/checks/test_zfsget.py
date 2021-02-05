@@ -63,7 +63,6 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_zfsget_parse(info, expected_parse_result):
     assertEqual(Check("zfsget").run_parse(info), expected_parse_result)
 
@@ -289,7 +288,6 @@ def test_zfsget_parse(info, expected_parse_result):
             [("/mnt/f oo/bar baz", {}), ("/mnt/f oo", {}), ("/", {})],
         ),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_zfsget_discovery(info, expected_discovery_result):
     check_zfsget = Check("zfsget")
     discovery_result = DiscoveryResult(check_zfsget.run_discovery(check_zfsget.run_parse(info)))

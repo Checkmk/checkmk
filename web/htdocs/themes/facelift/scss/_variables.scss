@@ -271,7 +271,8 @@ $wato-a-border: null;
 
 $wato-subtitle-color: $darkgrey;
 
-$footnote-link-color: $success;
+$footnote-link-color: rgba(130, 130, 130, 0.9);
+$footnote-bg-color: rgb(66, 77, 88);
 
 $table-data-single-padding: 8px 16px;
 $td-single-left-padding: 2px 20px 2px 16px;
@@ -440,6 +441,7 @@ $popup-filters-border-radius: 2px;
 $popup-trigger-active-bg-color: null;
 $tactical-overview-th-font-color: rgba($white, 0.5);
 $tactical-overview-td-bg-color: $sidebar-border-color;
+$server-time-div-bg-color: $sidebar-border-color;
 $snapin-heading-border-color: rgba($font-color-sidebar, 0.2);
 $snapin-description-font-color: $font-color;
 $simplebar-scrollbar-color: rgb(38, 47, 56);
@@ -465,3 +467,9 @@ $dashlet-resize-handle-width: 32px;
 $dashlet-resize-handle-height: 16px;
 $dashlet-resize-handle-width-slim: 12px;
 $dashlet-resize-handle-height-slim: 6px;
+$hexagon-critical-color: rgb(255, 0, 0);
+$hexagon-unknown-color: rgb(255, 136, 0);
+$hexagon-warning-color: rgb(255, 255, 0);
+$hexagon-downtime-color: rgb(0, 170, 255);
+$hexagon-host-down-color: rgb(0, 68, 136);
+$hexagon-ok-color: rgb(38, 47, 56);

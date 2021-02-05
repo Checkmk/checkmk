@@ -13,7 +13,6 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize('params,expected_args', [
     (('user', 'password'), ["address", "user", "password"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_hivemanager_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_hivemanager')

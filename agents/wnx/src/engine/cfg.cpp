@@ -471,15 +471,17 @@ std::filesystem::path ExtractPathFromServiceName(
     std::wstring_view service_name) {
     namespace fs = std::filesystem;
     if (service_name.empty()) return {};
-    XLOG::l.t("Try service '{}'", wtools::ToUtf8(service_name));
+    XLOG::l.t("Try service: '{}'", wtools::ToUtf8(service_name));
 
     fs::path service_path = FindServiceImagePath(service_name);
     std::error_code ec;
     if (fs::exists(service_path, ec)) {
         // location of the services
         auto p = service_path.parent_path();
+        XLOG::l.t("Service is found '{}'", service_path);
         return p.lexically_normal();
     }
+
     XLOG::l("'{}' doesn't exist, error_code: [{}] '{}'", service_path,
             ec.value(), ec.message());
 
@@ -493,7 +495,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
                       const std::wstring& preset_root    // look in disk
 ) {
     namespace fs = std::filesystem;
-    XLOG::d.t("Setting root. service: '{}', preset: '{}'",
+    XLOG::l.t("Setting root. service: '{}', preset: '{}'",
               wtools::ToUtf8(service_name), wtools::ToUtf8(preset_root));
 
     // Path from registry if provided
@@ -505,6 +507,8 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
                   wtools::ToUtf8(service_name));
         return true;
     }
+
+    XLOG::l.i("Service '{}' not found", wtools::ToUtf8(service_name));
 
     // working folder is defined
     std::error_code ec;
@@ -1306,6 +1310,19 @@ bool ConfigInfo::pushFolders(const std::filesystem::path& root,
     return true;
 }
 
+bool ConfigInfo::pushFoldersNoIo(const std::filesystem::path& root,
+                                 const std::filesystem::path& data) {
+    std::lock_guard lk(lock_);
+    if (folders_stack_.size() >= kMaxFoldersStackSize) {
+        XLOG::l("Folders Stack is overflown, max size is [{}]",
+                kMaxFoldersStackSize);
+        return false;
+    }
+    folders_stack_.push(folders_);
+    folders_.setRoot({}, root.wstring());
+    return true;
+}
+
 bool ConfigInfo::popFolders() {
     std::lock_guard lk(lock_);
     if (folders_stack_.empty()) {
@@ -1797,6 +1814,23 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
     root_yaml_time_ = fs::last_write_time(file);
     user_yaml_path_.clear();
     user_yaml_time_ = decltype(user_yaml_time_)::min();
+    bakery_yaml_path_.clear();
+    aggregated_ = false;
+    ok_ = true;
+    g_uniq_id++;
+    return true;
+}
+
+bool ConfigInfo::loadDirect(std::string_view text) {
+    auto new_yaml = YAML::Load(std::string{text});
+    if (0 == new_yaml.size()) return false;
+
+    std::lock_guard lk(lock_);
+    yaml_ = new_yaml;
+
+    // setting up paths  to the other files
+    user_yaml_path_.clear();
+    user_yaml_path_.clear();
     bakery_yaml_path_.clear();
     aggregated_ = false;
     ok_ = true;

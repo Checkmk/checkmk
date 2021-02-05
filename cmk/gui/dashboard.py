@@ -16,7 +16,6 @@ from cmk.gui.utils.html import HTML
 from cmk.utils.exceptions import MKException
 
 import cmk.gui.pages
-import cmk.gui.notify as notify
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
@@ -83,22 +82,27 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.plugins.dashboard.utils import (builtin_dashboards, GROW, MAX, dashlet_types,
-                                             dashlet_registry, Dashlet, get_all_dashboards,
-                                             save_all_dashboards, get_permitted_dashboards,
-                                             copy_view_into_dashlet, dashboard_breadcrumb,
-                                             dashlet_vs_general_settings)
+from cmk.gui.plugins.dashboard.utils import (
+    GROW,
+    MAX,
+    Dashlet,
+    copy_view_into_dashlet,
+    builtin_dashboards,
+    dashboard_breadcrumb,
+    dashlet_types,
+    dashlet_registry,
+    dashlet_vs_general_settings,
+    get_all_dashboards,
+    get_permitted_dashboards,
+    save_all_dashboards,
+)
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
     DashletId, ABCFigureDashlet,
 )
-from cmk.gui.plugins.metrics.html_render import (
-    title_info_elements,
-    render_title_elements,
-    default_dashlet_graph_render_options,
-)
+from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.node_visualization import get_topology_view_and_filters
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -170,9 +174,13 @@ class VisualTypeDashboards(VisualType):
             #                         'graph_index': 0, 'host_name': 'server123'}])
             specification = parameters["definition"]["specification"]
             if specification[0] == "template":
-                context = {"host": specification[1]["host_name"]}
-                if specification[1].get("service_description") != "_HOST_":
-                    context["service"] = specification[1]["service_description"]
+                context = {
+                    "host": specification[1]["host_name"],
+                    # The service context has to be set, even for host graphs. Otherwise the
+                    # pnpgraph dashlet would complain about missing context information when
+                    # displaying host graphs.
+                    "service": specification[1]["service_description"],
+                }
                 parameters = {"source": specification[1]["graph_index"] + 1}
 
             elif specification[0] == "custom":
@@ -671,28 +679,13 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
                           "form on the right to make this dashlet render.") %
                         ", ".join(sorted(missing_single_infos)))))
 
-        title = _render_dashlet_title(dashlet)
+        title = dashlet.render_title_html()
         content = _render_dashlet_content(board, dashlet, is_update=False, mtime=board["mtime"])
 
     except Exception as e:
         content = render_dashlet_exception_content(dashlet, e)
 
     return title, content
-
-
-def _render_dashlet_title(dashlet: Dashlet) -> Union[str, HTML]:
-    title = dashlet.display_title()
-    title_elements = []
-    title_format = dashlet._dashlet_spec.get("title_format", ["plain"])
-
-    if dashlet.show_title() and title and "plain" in title_format:
-        title_elements.append((title, dashlet.title_url()))
-
-    if dashlet.type_name() == "pnpgraph" and dashlet._dashlet_spec.get("_graph_identification"):
-        title_elements.extend(
-            title_info_elements(dashlet._dashlet_spec["_graph_identification"][1], title_format))
-
-    return render_title_elements(title_elements)
 
 
 def _render_dashlet_content(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
@@ -1884,12 +1877,6 @@ def ajax_dashlet_pos() -> None:
                             html.request.get_integer_input_mandatory("h"))
     save_all_dashboards()
     html.write('OK %d' % board['mtime'])
-
-
-@cmk.gui.pages.register("ajax_delete_user_notification")
-def ajax_delete_user_notification() -> None:
-    msg_id = html.request.get_str_input_mandatory("id")
-    notify.delete_gui_message(msg_id)
 
 
 #.

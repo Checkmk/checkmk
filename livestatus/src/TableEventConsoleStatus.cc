@@ -6,10 +6,11 @@
 #include "TableEventConsoleStatus.h"
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "Column.h"
-#include "DoubleLambdaColumn.h"
+#include "DoubleColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "StringLambdaColumn.h"

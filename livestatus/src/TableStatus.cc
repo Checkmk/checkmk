@@ -15,7 +15,7 @@
 #include "Average.h"
 #include "BoolLambdaColumn.h"
 #include "Column.h"
-#include "DoubleLambdaColumn.h"
+#include "DoubleColumn.h"
 #include "FileColumn.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
@@ -232,48 +232,48 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
         g_livestatus_threads));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "livestatus_usage",
         "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) {
             return g_avg_livestatus_usage.get();
         }));
 
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "average_latency_generic",
         "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
         offsets,
         [](const TableStatus & /*r*/) { return g_average_active_latency; }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "average_latency_cmk",
         "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "average_latency_fetcher",
         "The average latency for executing Check_MK fetchers (i.e. the time the start of the execution is behind the schedule)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "average_latency_real_time",
         "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
 
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "helper_usage_generic",
         "The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "helper_usage_cmk",
         "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "helper_usage_real_time",
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "helper_usage_fetcher",
         "The average usage of the fetcher helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "helper_usage_checker",
         "The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
@@ -317,11 +317,11 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "license_usage_history", "Historic license usage information", offsets,
         [mc]() { return mc->licenseUsageHistoryPath(); },
         [](const TableStatus & /*r*/) { return std::filesystem::path{}; }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "average_runnable_jobs_fetcher",
         "The average count of scheduled fetcher jobs which have not yet been processed",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         "average_runnable_jobs_checker",
         "The average count of queued replies which have not yet been delivered to the checker helpers",
         offsets, [](const TableStatus & /*r*/) { return 0.0; }));
@@ -336,10 +336,10 @@ void TableStatus::addCounterColumns(const std::string &name,
                                     const std::string &description,
                                     const ColumnOffsets &offsets,
                                     Counter which) {
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         name, "The number of " + description + " since program start", offsets,
         [which](const TableStatus & /*r*/) { return counterValue(which); }));
-    addColumn(std::make_unique<DoubleLambdaColumn<TableStatus>>(
+    addColumn(std::make_unique<DoubleColumn<TableStatus>>(
         name + "_rate", "The averaged number of " + description + " per second",
         offsets,
         [which](const TableStatus & /*r*/) { return counterRate(which); }));

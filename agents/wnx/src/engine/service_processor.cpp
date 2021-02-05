@@ -3,6 +3,8 @@
 
 #include "service_processor.h"
 
+#include <fcntl.h>
+#include <io.h>
 #include <sensapi.h>
 #include <shlobj_core.h>
 
@@ -133,6 +135,11 @@ void ServiceProcessor::kickWinPerf(const AnswerId Tp, const std::string& Ip) {
     auto prefix = groups::winperf.prefix();
     auto timeout = groups::winperf.timeout();
     auto wide_prefix = wtools::ConvertToUTF16(prefix);
+    auto log_file =
+        groups::winperf.isTrace()
+            ? (std::filesystem::path(cfg::GetLogDir()) / "winperf.log")
+                  .wstring()
+            : L"";
 
     vf_.emplace_back(kickExe(true,           // async ???
                              wide_exe_name,  // perf_counter.exe
@@ -140,7 +147,8 @@ void ServiceProcessor::kickWinPerf(const AnswerId Tp, const std::string& Ip) {
                              this,           // context
                              wide_prefix,    // for section
                              timeout,        // in seconds
-                             cmd_line));     // counters
+                             cmd_line,       // counters
+                             log_file));     // log file
     answer_.newTimeout(timeout);
 }
 
@@ -421,6 +429,7 @@ void ServiceProcessor::sendDebugData() {
     auto started = startProviders(tp.value(), "");
     auto block = getAnswer(started);
     block.emplace_back('\0');  // yes, we need this for printf
+    _setmode(_fileno(stdout), _O_BINARY);
     auto count = printf("%s", block.data());
     if (count != block.size() - 1) {
         XLOG::l("Binary data at offset [{}]", count);

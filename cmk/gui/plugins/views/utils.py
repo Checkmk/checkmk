@@ -25,6 +25,7 @@ from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
 import cmk.utils.plugin_registry
 import cmk.utils.render
 import cmk.utils.regex
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
     Timestamp,
     TimeRange,
@@ -1461,12 +1462,15 @@ def replace_action_url_macros(url: str, what: str, row: Row) -> str:
         macros.update({
             "SERVICEDESC": row['service_description'],
         })
-
-    for key, val in macros.items():
-        url = url.replace("$%s$" % key, val)
-        url = url.replace("$%s_URL_ENCODED$" % key, html.urlencode(val))
-
-    return url
+    return replace_macros_in_str(
+        url,
+        {
+            k_mod: v_mod for k_orig, v_orig in macros.items() for k_mod, v_mod in (
+                (f"${k_orig}$", v_orig),
+                (f"${k_orig}_URL_ENCODED$", html.urlencode(v_orig)),
+            )
+        },
+    )
 
 
 def render_cache_info(what: str, row: Row) -> str:

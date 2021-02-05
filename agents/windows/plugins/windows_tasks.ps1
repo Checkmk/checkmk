@@ -1,4 +1,4 @@
-﻿$VERSION = "2.1.0i1"
+$CMK_VERSION = "2.1.0i1"
 ####
 ## Monitor Windows Tasks
 ##

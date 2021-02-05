@@ -30,32 +30,7 @@ from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: i
 pytestmark = pytest.mark.checks
 
 
-@pytest.fixture(scope="module", name="snmp_info", autouse=True)
-@pytest.mark.usefixtures("config_load_all_checks")
-def _get_snmp_info():
-    assert len(config.snmp_info) > 400  # sanity check
-    return config.snmp_info.copy()
-
-
-@pytest.fixture(scope="module", name="migrated_agent_sections", autouse=True)
-@pytest.mark.usefixtures("config_load_all_checks")
-def _get_migrated_agent_sections():
-    return {s.name: s for s in agent_based_register.iter_all_agent_sections()}
-
-
-@pytest.fixture(scope="module", name="migrated_snmp_sections", autouse=True)
-@pytest.mark.usefixtures("config_load_all_checks")
-def _get_migrated_snmp_sections():
-    return {s.name: s for s in agent_based_register.iter_all_snmp_sections()}
-
-
-@pytest.fixture(scope="module", name="migrated_checks", autouse=True)
-@pytest.mark.usefixtures("config_load_all_checks")
-def _get_migrated_checks():
-    return {p.name: p for p in agent_based_register.iter_all_check_plugins()}
-
-
-def test_management_board_interface_prefix(config_check_info):
+def test_management_board_interface_prefix(fix_plugin_legacy):
     mgmt_criteria = (
         ("Name must start with 'mgmt_'", lambda k, c: k.startswith("mgmt_")),
         ("Description must start with 'Management Interface: '",
@@ -64,7 +39,7 @@ def test_management_board_interface_prefix(config_check_info):
     )
 
     management_checks = [(key, check)
-                         for key, check in config_check_info.items()
+                         for key, check in fix_plugin_legacy.check_info.items()
                          if (check["service_description"] is not None and any(
                              test(key, check) for _, test in mgmt_criteria))]
 
@@ -74,7 +49,7 @@ def test_management_board_interface_prefix(config_check_info):
             assert test(key,
                         check), ("%s: Inconsistent management propertiers: %s" % (key, requirement))
 
-        host_check = config_check_info.get(key[5:])
+        host_check = fix_plugin_legacy.check_info.get(key[5:])
         if host_check is None:
             continue
 
@@ -87,20 +62,19 @@ def test_management_board_interface_prefix(config_check_info):
             "%s: Inconsistent management propertiers: %s" % (key, requirement))
 
 
-def test_create_section_plugin_from_legacy(config_check_info, snmp_info, migrated_agent_sections,
-                                           migrated_snmp_sections):
-    for name, check_info_dict in config_check_info.items():
+def test_create_section_plugin_from_legacy(fix_plugin_legacy, fix_register):
+    for name, check_info_dict in fix_plugin_legacy.check_info.items():
         # only test main checks
         if name != section_name_of(name):
             continue
 
         section_name = SectionName(name)
 
-        section = migrated_agent_sections.get(section_name)
+        section = fix_register.agent_sections.get(section_name)
         if section is not None:
             assert isinstance(section, AgentSectionPlugin)
         else:
-            section = migrated_snmp_sections.get(section_name)
+            section = fix_register.snmp_sections.get(section_name)
             if section is None:
                 raise NotImplementedError(name)
             assert isinstance(section, SNMPSectionPlugin)
@@ -113,20 +87,20 @@ def test_create_section_plugin_from_legacy(config_check_info, snmp_info, migrate
             assert original_parse_function.__name__ == section.parse_function.__name__
 
 
-def test_snmp_info_snmp_scan_functions_equal(snmp_info, config_snmp_scan_functions):
-    assert set(config_snmp_scan_functions) == set(snmp_info)
+def test_snmp_info_snmp_scan_functions_equal(fix_plugin_legacy):
+    assert set(fix_plugin_legacy.snmp_scan_functions) == set(fix_plugin_legacy.snmp_info)
 
 
-def test_snmp_tree_translation(snmp_info):
-    for info_spec in snmp_info.values():
+def test_snmp_tree_translation(fix_plugin_legacy):
+    for info_spec in fix_plugin_legacy.snmp_info.values():
         new_trees, recover_function = _create_snmp_trees(info_spec)
         assert callable(recover_function)  # is tested separately
         assert isinstance(new_trees, list)
         assert all(isinstance(tree, SNMPTree) for tree in new_trees)
 
 
-def test_scan_function_translation(config_snmp_scan_functions):
-    for name, scan_func in config_snmp_scan_functions.items():
+def test_scan_function_translation(fix_plugin_legacy):
+    for name, scan_func in fix_plugin_legacy.snmp_scan_functions.items():
         if name in (
                 # these are already migrated manually:
                 "ucd_mem",
@@ -157,29 +131,23 @@ def test_explicit_conversion(func):
     assert created == explicit
 
 
-def test_no_subcheck_with_snmp_keywords(snmp_info):
-    for name in snmp_info:
+def test_no_subcheck_with_snmp_keywords(fix_plugin_legacy):
+    for name in fix_plugin_legacy.snmp_info:
         assert name == section_name_of(name)
 
 
-def test_module_attribute(migrated_checks):
-    # TODO: this really belongs somewhere else, but for now we use the fixture from this module
-    local_check = migrated_checks[CheckPluginName("local")]
-    assert local_check.module == "local"
-
-
-def test_all_checks_migrated(config_check_info, migrated_checks):
-    migrated = set(str(c.name) for c in migrated_checks.values())
+def test_all_checks_migrated(fix_plugin_legacy, fix_register):
+    migrated = set(str(name) for name in fix_register.check_plugins)
     # we don't expect pure section declarations anymore
     true_checks = set(
         n.replace('.', '_').replace('-', '_')
-        for n, i in config_check_info.items()
+        for n, i in fix_plugin_legacy.check_info.items()
         if i['check_function'])
     failures = true_checks - migrated
     assert not failures, "failed to migrate: %r" % (failures,)
 
 
-def test_all_check_variables_present(config_check_variables):
+def test_all_check_variables_present(fix_plugin_legacy):
     expected_check_variables = {
         'AKCP_TEMP_CHECK_DEFAULT_PARAMETERS',
         'ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS',
@@ -361,6 +329,7 @@ def test_all_check_variables_present(config_check_variables):
         'checkpoint_vsx_default_levels',
         'cisco_asa_failover_default_levels',
         'cisco_asa_state_names',
+        'cisco_asa_svc_default_levels',
         'cisco_cpu_default_levels',
         'cisco_cpu_multiitem_default_levels',
         'cisco_fan_state_mapping',
@@ -1009,7 +978,7 @@ def test_all_check_variables_present(config_check_variables):
         'zorp_connections',
     }
 
-    missing_variables = expected_check_variables - set(config_check_variables)
+    missing_variables = expected_check_variables - set(fix_plugin_legacy.check_variables)
 
     assert not missing_variables, (
         "'%s' were variables present in config.get_check_variables(). "
@@ -1019,7 +988,7 @@ def test_all_check_variables_present(config_check_variables):
         "cmk.utils.migrated_check_variables.") % sorted(missing_variables)
 
 
-def test_no_new_or_vanished_legacy_checks(config_check_info):
+def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
     expected_legacy_checks = {
         '3par_capacity',
         '3par_cpgs',
@@ -2816,7 +2785,7 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'zpool_status',
         'zypper',
     }
-    current_legacy_checks = set(config_check_info)
+    current_legacy_checks = set(fix_plugin_legacy.check_info)
 
     new_legacy_checks = current_legacy_checks - expected_legacy_checks
     assert not new_legacy_checks, "Found these new legacy checks: %s. Implementing new legacy " \

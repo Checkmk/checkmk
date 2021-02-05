@@ -163,7 +163,6 @@ from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
          (2, u'5 \xb0C (device warn/crit below 6/6 \xb0C)', [('temp', 5, None, None)])),
     ],
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_temperature(params, kwargs, expected):
     check = Check('acme_temp')
     check_temperature = check.context['check_temperature']
@@ -242,7 +241,6 @@ _WATO_DICT = {
         # Are the effects of last two test cases related somehow?
     ]
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_temperature_trend(test_case):
     check = Check('acme_temp')
     check_trend = check.context['check_temperature_trend']
@@ -276,7 +274,6 @@ def test_check_temperature_trend(test_case):
         ),
     ]
 )
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_temperature_called(test_case):
     check = Check('acme_temp')
     check_temperature = check.context['check_temperature']

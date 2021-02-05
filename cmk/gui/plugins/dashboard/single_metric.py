@@ -4,7 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Tuple as _Tuple
+from typing import (
+    Any,
+    Iterable,
+    Mapping,
+)
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -17,25 +21,39 @@ from cmk.gui.valuespec import (
     Timerange,
 )
 
-from cmk.gui.plugins.dashboard.utils import create_data_for_single_metric
+from cmk.gui.plugins.dashboard.utils import (
+    create_data_for_single_metric,
+    macro_mapping_from_context,
+    render_title_with_macros_string,
+)
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.metrics.valuespecs import ValuesWithUnits
 from cmk.gui.plugins.metrics.utils import MetricName
-from cmk.gui.plugins.metrics.html_render import title_info_elements
 from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns
-from cmk.gui.plugins.views.painters import paint_service_state_short
+from cmk.gui.plugins.views.painters import service_state_short
 
 
-def dashlet_title(settings, metrics):
-    title: List[_Tuple[str, Optional[str]]] = []
-    title_format = settings.get("title_format", ["plain"])
-
-    if settings.get("show_title", True) and metrics:
-        if settings.get("title") and "plain" in title_format:
-            title.append((settings.get("title"), ""))
-        title.extend(title_info_elements(metrics[0][2], [f for f in title_format if f != "plain"]))
-
-    return " / ".join(txt for txt, _ in title)
+def dashlet_title(
+    settings: Mapping[str, Any],
+    metric_specs: Mapping[str, Any],
+) -> str:
+    if not settings.get("show_title", True):
+        return ""
+    title = settings.get("title", "")
+    return render_title_with_macros_string(
+        title,
+        macro_mapping_from_context(
+            {
+                context_key: metric_specs[metrics_key] for metrics_key, context_key in (
+                    ("host_name", "host"),
+                    ("service_description", "service"),
+                    ("site", "site"),
+                ) if metrics_key in metric_specs
+            },
+            settings["single_infos"],
+            title,
+        ),
+    )
 
 
 def required_columns(properties, context):
@@ -58,32 +76,50 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
     plot_definitions = []
 
     def svc_map(row):
-        css_classes, status_name = paint_service_state_short(row)
+        css_classes, status_name = service_state_short(row)
         draw_status = properties.get("status_border", "not_ok")
         if draw_status == "not_ok" and css_classes.endswith("state0"):
             draw_status = False
 
         return {"style": css_classes, "msg": _("Status: ") + status_name, "draw": draw_status}
 
+    def metric_state_color(metric):
+        warn = metric["scalar"].get("warn")
+        crit = metric["scalar"].get("crit")
+        if warn is not None and crit is not None:
+            if metric['value'] >= crit:
+                return "#FF3232"
+            if metric['value'] >= warn:
+                return "#FFFE44"
+            return "#13D389"
+        return "#3CC2FF"
+
     # Historic values are always added as plot_type area
     if properties.get("time_range", "current")[0] == "range":
-        time_range_params = properties["time_range"][1]
         for row_id, metric, row in metrics:
-            chosen_color = time_range_params.get("color", "default")
-            color = metric.get(
-                'color',
-                "#008EFF",
-            ) if chosen_color == "default" else chosen_color
-            fill = time_range_params.get("fill", "line")
+            # Fix style for 2.0 release
+            # time_range_params = properties["time_range"][1]
+            # chosen_color = time_range_params.get("color", "default")
+            # color = metric.get(
+            # 'color',
+            # "#008EFF",
+            # ) if chosen_color == "default" else chosen_color
+            plot_type = "area"
+            color = "#008EFF"
             plot_definition = {
                 "label": row['host_name'],
                 "id": row_id,
-                "plot_type": "area",
+                "plot_type": plot_type,
                 "use_tags": [row_id],
                 "color": color,
-                "fill": fill,
-                "opacity": 0.1 if fill else 0
+                "opacity": 0.1 if plot_type == "area" else 1
             }
+            if plot_type == "area":
+                plot_definition["style"] = "with_topline"
+            if properties.get("metric_status_display") == "background":
+                plot_definition["color"] = metric_state_color(metric)
+                plot_definition["opacity"] = 0.4 if plot_type == "area" else 1
+
             plot_definitions.append(plot_definition)
 
     # The current/last value definition also gets the metric levels
@@ -104,13 +140,15 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
         }
         if "color" in metric:
             plot_definition["color"] = metric["color"]
+        if "metric_status_display" in properties:
+            plot_definition["metric_status_display"] = properties["metric_status_display"]
 
         plot_definitions.append(plot_definition)
 
     return {
         "plot_definitions": plot_definitions,
         "data": data,
-        "title": dashlet_title(settings, metrics)
+        "title": dashlet_title(settings, metrics[0][2] if metrics else {})
     }
 
 
@@ -131,13 +169,13 @@ def _time_range_historic_dict_elements(with_elements) -> DictionaryElements:
         help=_("Consolidation function for the [cms_graphing#rrds|RRD] data column"),
     )
 
-    if "with_graph" in with_elements:
-        yield "fill", DropdownChoice(
+    if "with_graph_styling" in with_elements:
+        yield "style", DropdownChoice(
             choices=[
-                (False, _("Line")),
-                (True, _("Area")),
+                ("line", _("Line")),
+                ("area", _("Area")),
             ],
-            default_value=True,
+            default_value="area",
             title=_("Style"),
         )
         yield "color", GraphColor(
@@ -192,6 +230,14 @@ def _vs_elements(with_elements) -> DictionaryElements:
             ],
             default_value="fixed")
 
+    if "metric_status_display" in with_elements:
+        yield "metric_status_display", DropdownChoice(
+            title=_("Metric Status"),
+            choices=[(None, _("Metric value is displayed in neutral color")),
+                     ("text", _("Metric state is colored in its value")),
+                     ("background", _("Metric status is colored on the dashlet background"))],
+        )
+
     if "status_border" in with_elements:
         yield "status_border", DropdownChoice(
             title=_("Status border"),
@@ -242,6 +288,10 @@ class GaugeDashlet(SingleMetricDashlet):
     @staticmethod
     def _vs_elements():
         return _vs_elements(["time_range", "display_range", "status_border"])
+
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield "$SITE$"
 
 
 #   .--Bar Plot------------------------------------------------------------.
@@ -304,4 +354,8 @@ class SingleGraphDashlet(SingleMetricDashlet):
 
     @staticmethod
     def _vs_elements():
-        return _vs_elements(["time_range", "with_graph", "status_border"])
+        return _vs_elements(["time_range", "status_border", "metric_status_display"])
+
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield "$SITE$"

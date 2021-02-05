@@ -20,13 +20,13 @@ export function hide() {
     hover_menu.parentNode.removeChild(hover_menu);
 }
 
-export function show(event_, code, trigger_obj) {
+export function show(event_, code) {
     event_ = event_ || window.event;
-    add(trigger_obj);
+    add();
     update_content(code, event_);
 }
 
-export function add(trigger_obj) {
+export function add() {
     if (g_hover_menu) {
         return;
     }
@@ -34,7 +34,7 @@ export function add(trigger_obj) {
     g_hover_menu = document.createElement("div");
     g_hover_menu.setAttribute("id", "hover_menu");
     g_hover_menu.className = "hover_menu";
-    trigger_obj.parentNode.insertBefore(g_hover_menu, trigger_obj.nextSibling);
+    document.body.appendChild(g_hover_menu);
 }
 
 export function update_content(code, event_) {

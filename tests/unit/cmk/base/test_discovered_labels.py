@@ -20,7 +20,7 @@ from cmk.base.discovered_labels import (
     ServiceLabel,
 )
 
-from cmk.base.discovery import _perform_host_label_discovery, DiscoveryParameters
+from cmk.base.discovery import _analyse_host_labels, DiscoveryParameters
 import cmk.base.config as config
 
 
@@ -283,8 +283,8 @@ def test_label_validation(cls):
         True,
     ],
 ])
-def test_perform_host_label_discovery(discovered_host_labels_dir, existing_labels, new_labels,
-                                      expected_labels, load_labels):
+def test_analyse_host_labels(discovered_host_labels_dir, existing_labels, new_labels,
+                             expected_labels, load_labels):
     hostname = "testhost"
     config.get_config_cache().initialize()
     store = DiscoveredHostLabelsStore(hostname)
@@ -297,8 +297,11 @@ def test_perform_host_label_discovery(discovered_host_labels_dir, existing_label
         only_host_labels=False,
     )
 
-    new_host_labels, _host_labels_per_plugin = _perform_host_label_discovery(
-        hostname, DiscoveredHostLabels(*[HostLabel(*x) for x in new_labels]), discovery_parameters)
+    new_host_labels, _host_labels_per_plugin = _analyse_host_labels(
+        host_name=hostname,
+        discovered_host_labels=DiscoveredHostLabels(*[HostLabel(*x) for x in new_labels]),
+        discovery_parameters=discovery_parameters,
+    )
 
     labels_expected = DiscoveredHostLabels(*[HostLabel(*x) for x in expected_labels])
     assert new_host_labels.to_dict() == labels_expected.to_dict()

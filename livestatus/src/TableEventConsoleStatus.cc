@@ -13,7 +13,7 @@
 #include "DoubleColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "TimeLambdaColumn.h"
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)

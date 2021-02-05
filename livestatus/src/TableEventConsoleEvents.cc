@@ -6,13 +6,14 @@
 #include "TableEventConsoleEvents.h"
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "Column.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Row.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "Table.h"
 #include "TableHosts.h"
 #include "TimeLambdaColumn.h"

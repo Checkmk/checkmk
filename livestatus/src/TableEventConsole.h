@@ -24,7 +24,7 @@ class DoubleColumn;
 template <class T>
 class ListLambdaColumn;
 template <class T>
-class StringLambdaColumn;
+class StringColumn;
 template <class T>
 class TimeLambdaColumn;
 class Query;
@@ -39,7 +39,7 @@ public:
     ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
           const std::vector<std::string> &columns);
 
-    static std::unique_ptr<StringLambdaColumn<ECRow>> makeStringColumn(
+    static std::unique_ptr<StringColumn<ECRow>> makeStringColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
     static std::unique_ptr<IntLambdaColumn<ECRow>> makeIntColumn(

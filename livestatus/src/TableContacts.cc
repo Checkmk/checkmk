@@ -23,7 +23,7 @@
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "TimeperiodsCache.h"
 #include "nagios.h"
 
@@ -81,25 +81,25 @@ std::string TableContacts::namePrefix() const { return "contact_"; }
 // static
 void TableContacts::addColumns(Table *table, const std::string &prefix,
                                const ColumnOffsets &offsets) {
-    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<StringColumn<contact>>(
         prefix + "name", "The login name of the contact person", offsets,
         [](const contact &ct) { return ct.name == nullptr ? ""s : ct.name; }));
-    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<StringColumn<contact>>(
         prefix + "alias", "The full name of the contact", offsets,
         [](const contact &ct) {
             return ct.alias == nullptr ? ""s : ct.alias;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<StringColumn<contact>>(
         prefix + "email", "The email address of the contact", offsets,
         [](const contact &ct) {
             return ct.email == nullptr ? ""s : ct.email;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<StringColumn<contact>>(
         prefix + "pager", "The pager address of the contact", offsets,
         [](const contact &ct) {
             return ct.pager == nullptr ? ""s : ct.pager;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<StringColumn<contact>>(
         prefix + "host_notification_period",
         "The time period in which the contact will be notified about host problems",
         offsets, [](const contact &ct) {
@@ -107,7 +107,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
                        ? ""s
                        : ct.host_notification_period;
         }));
-    table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<StringColumn<contact>>(
         prefix + "service_notification_period",
         "The time period in which the contact will be notified about service problems",
         offsets, [](const contact &ct) {
@@ -117,7 +117,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         }));
     for (int i = 0; i < MAX_CONTACT_ADDRESSES; ++i) {
         std::string b = "address" + std::to_string(i + 1);
-        table->addColumn(std::make_unique<StringLambdaColumn<contact>>(
+        table->addColumn(std::make_unique<StringColumn<contact>>(
             prefix + b, "The additional field " + b, offsets,
             [i](const contact &ct) {
                 return ct.address[i] == nullptr ? ""s : ct.address[i];

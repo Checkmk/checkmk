@@ -6,10 +6,11 @@
 #include "TableEventConsoleRules.h"
 
 #include <cstdint>
+#include <memory>
 
 #include "Column.h"
 #include "IntLambdaColumn.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
     : TableEventConsole(mc) {

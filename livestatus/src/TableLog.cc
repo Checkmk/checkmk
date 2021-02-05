@@ -21,7 +21,7 @@
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
 #include "TableHosts.h"
@@ -72,27 +72,27 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
         offsets_entry,
         [](const LogEntry &r) { return static_cast<int32_t>(r._class); }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "message", "The complete message line including the timestamp",
         offsets_entry, [](const LogEntry &r) { return r._message; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
         offsets_entry,
         [](const LogEntry &r) { return r._type == nullptr ? "" : r._type; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "options", "The part of the message after the ':'", offsets_entry,
         [](const LogEntry &r) {
             return r._options == nullptr ? "" : r._options;
         }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "comment", "A comment field used in various message types",
         offsets_entry, [](const LogEntry &r) { return r._comment; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "plugin_output",
         "The output of the check, if any is associated with the message",
         offsets_entry, [](const LogEntry &r) { return r._plugin_output; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "long_plugin_output",
         "The complete output of the check, if any is associated with the message",
         offsets_entry,
@@ -100,29 +100,29 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
         "state", "The state of the host or service in question", offsets_entry,
         [](const LogEntry &r) { return r._state; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "state_type", "The type of the state (varies on different log classes)",
         offsets_entry, [](const LogEntry &r) { return r._state_type; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "state_info", "Additional information about the state", offsets_entry,
         [](const LogEntry &r) { return r.state_info(); }));
     addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
         "attempt", "The number of the check attempt", offsets_entry,
         [](const LogEntry &r) { return r._attempt; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
         offsets_entry,
         [](const LogEntry &r) { return r._service_description; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "host_name",
         "The name of the host the log entry is about (might be empty)",
         offsets_entry, [](const LogEntry &r) { return r._host_name; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "contact_name",
         "The name of the contact the log entry is about (might be empty)",
         offsets_entry, [](const LogEntry &r) { return r._contact_name; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn<LogEntry>>(
         "command_name",
         "The name of the command of the log entry (e.g. for notifications)",
         offsets_entry, [](const LogEntry &r) { return r._command_name; }));

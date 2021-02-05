@@ -19,7 +19,7 @@
 #include "Query.h"
 #include "Row.h"
 #include "Store.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeLambdaColumn.h"
@@ -30,10 +30,10 @@
 
 TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<StringColumn<Downtime>>(
         "author", "The contact that scheduled the downtime", offsets,
         [](const Downtime &r) { return r._author_name; }));
-    addColumn(std::make_unique<StringLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<StringColumn<Downtime>>(
         "comment", "A comment text", offsets,
         [](const Downtime &r) { return r._comment; }));
     addColumn(std::make_unique<IntLambdaColumn<Downtime>>(

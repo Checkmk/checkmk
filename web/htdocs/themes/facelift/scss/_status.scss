@@ -43,30 +43,41 @@ table.data tr.data td.stale.hstate1 {
   text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
 }
 
+.state span {
+  position: absolute;
+  top: 1px;
+  right: 4px;
+  bottom: 1px;
+  left: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+}
+
 /* OK/UP */
-.state0,
-.state0 a,
-.state0 body.main .popup_menu span,
-body.main .popup_menu .state0 span,
-.hstate0,
-.hstate0 a,
-.hstate0 body.main .popup_menu span,
-body.main .popup_menu .hstate0 span {
-  color: $success !important;
+b.state0,
+.state0 span,
+.hstate0 span {
+  color: $black !important;
+  background-color: $color-state-success-background !important;
+}
+
+.count.state0,
+.count.hstate1 {
+  &,
+  a {
+    color: $color-state-success-background !important;
+  }
 }
 
 .hstate {
   white-space: nowrap;
 }
 
-@mixin state-label-mixin {
-  padding: 4px 2px 2px;
-  border-radius: 2px;
-}
-
 /* WARN */
+b.state1,
 .state1 span {
-  @include state-label-mixin;
   color: $black !important;
   background-color: $color-state-1-background !important;
 }
@@ -79,9 +90,9 @@ body.main .popup_menu .hstate0 span {
 }
 
 /* CRIT/DOWN */
+b.state2,
 .state2 span,
 .hstate1 span {
-  @include state-label-mixin;
   color: $white !important;
   background-color: $color-state-2-background !important;
 }
@@ -95,9 +106,9 @@ body.main .popup_menu .hstate0 span {
 }
 
 /* UNKNOWN / UNREACH */
+b.state3,
 .state3 span,
 .hstate2 span {
-  @include state-label-mixin;
   color: $white !important;
   background-color: $color-state-3-background !important;
 }
@@ -116,7 +127,6 @@ body.main .popup_menu .hstate0 span {
 .stated,
 .hstated {
   span {
-    @include state-label-mixin;
     color: $statep-font-color !important;
     background-color: $color-state-4-background !important;
   }
@@ -126,7 +136,7 @@ body.main .popup_menu .hstate0 span {
 b.stmark {
   position: relative;
   top: -1px;
-  padding: 1px 3px;
+  padding: 1.5px 3px;
   margin-left: 2px;
   font-size: 9px;
   border-radius: 4px;
@@ -408,7 +418,6 @@ table.data {
 }
 
 td.badflag span {
-  @include state-label-mixin;
   font-weight: bold;
   background-color: rgb(255, 102, 68);
 }

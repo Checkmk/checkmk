@@ -401,6 +401,11 @@ table.data {
       padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
 
+      &.state {
+        position: relative;
+        padding: 0;
+      }
+
       a {
         color: $secondary-font-color;
 

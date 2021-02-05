@@ -1044,7 +1044,10 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName, board: Dashboard
 
     yield PageMenuEntry(
         title='Alert statistics',
-        icon_name='statistic',
+        icon_name={
+            'icon': 'alerts',
+            'emblem': 'statistic'
+        },
         item=make_simple_link(
             'edit_dashlet.py?name=%s&create=0&back=%s&type=alert_statistics' %
             (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),

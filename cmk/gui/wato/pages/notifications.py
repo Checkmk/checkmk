@@ -486,7 +486,10 @@ class ModeNotifications(ABCNotificationsMode):
                     PageMenuEntry(
                         title=_("Hide user rules")
                         if self._show_user_rules else _("Show user rules"),
-                        icon_name="checkbox",
+                        icon_name={
+                            'icon': 'checkbox',
+                            'emblem': 'disable' if self._show_user_rules else 'enable'
+                        },
                         item=make_simple_link(
                             html.makeactionuri([
                                 ("_show_user", "" if self._show_user_rules else "1"),

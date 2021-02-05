@@ -478,8 +478,11 @@ def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
     if not available_macros:
         return ""
     macros_as_list = f"<ul>{''.join(f'<li><tt>{macro}</tt></li>' for macro in available_macros)}</ul>"
-    return _("You can use the following macros to fill in the corresponding information:%s"
-            ) % macros_as_list
+    return _("You can use the following macros to fill in the corresponding information:%s%s") % (
+        macros_as_list,
+        _("These macros can be combined with arbitrary text elements, e.g. \"some text "
+          "<tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\"."),
+    )
 
 
 def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[str]):
@@ -516,8 +519,11 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
             ('title',
              TextUnicode(
                  title=_('Custom Title') + '<sup>*</sup>',
+                 placeholder=_(
+                     "This option is macro-capable, please check the inline help for more "
+                     "information."),
                  help=" ".join((
-                     _('Most dashlets have a hard coded static title and some are aware of its '
+                     _('Most dashlets have a hard coded static title and some are aware of their '
                        'content and set the title dynamically, like the view snapin, which '
                        'displays the title of the view. If you like to use any other title, set it '
                        'here.'),

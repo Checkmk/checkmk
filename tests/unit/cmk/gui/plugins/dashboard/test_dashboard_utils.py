@@ -147,14 +147,18 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             [],
             "You can use the following macros to fill in the corresponding information:"
             "<ul><li><tt>$HOST_NAME$</tt></li>"
-            "<li><tt>$HOST_ALIAS$</tt></li></ul>",
+            "<li><tt>$HOST_ALIAS$</tt></li></ul>"
+            "These macros can be combined with arbitrary text elements, e.g. "
+            "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
             id="host single infos",
         ),
         pytest.param(
             [],
             ["$MACRO$"],
             "You can use the following macros to fill in the corresponding information:"
-            "<ul><li><tt>$MACRO$</tt></li></ul>",
+            "<ul><li><tt>$MACRO$</tt></li></ul>"
+            "These macros can be combined with arbitrary text elements, e.g. "
+            "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
             id="only additional macro",
         ),
         pytest.param(
@@ -165,7 +169,9 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             "<li><tt>$HOST_ALIAS$</tt></li>"
             "<li><tt>$SERVICE_DESCRIPTION$</tt></li>"
             "<li><tt>$MACRO1$</tt></li>"
-            "<li><tt>$MACRO2$ (some explanation)</tt></li></ul>",
+            "<li><tt>$MACRO2$ (some explanation)</tt></li></ul>"
+            "These macros can be combined with arbitrary text elements, e.g. "
+            "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
             id="host, service in single infos and additional macros",
         ),
     ],

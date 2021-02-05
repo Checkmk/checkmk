@@ -37,7 +37,7 @@ def _parameter_valuespec_checkpoint_connections():
                            ]),
                      Tuple(title=_("Absolute"),
                            elements=[
-                               Integer(title=_("Warning at"), minvalue=0.0),
+                               Integer(title=_("Warning at"), minvalue=0),
                                Integer(
                                    title=_("Critical at"),
                                    minvalue=0,

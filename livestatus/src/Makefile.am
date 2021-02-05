@@ -106,7 +106,6 @@ liblivestatus_a_SOURCES = \
         CrashReport.cc \
         CustomVarsDictColumn.cc \
         CustomVarsDictFilter.cc \
-        CustomVarsExplicitColumn.cc \
         CustomVarsNamesColumn.cc \
         CustomVarsValuesColumn.cc \
         DoubleFilter.cc \

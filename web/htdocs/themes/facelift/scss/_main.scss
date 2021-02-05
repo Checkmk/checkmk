@@ -420,6 +420,7 @@ b.treeangle.title {
 }
 
 div.foldable_wrapper {
+  margin-top: $spacing;
   background-color: $headline-color;
   border-radius: $theme-border-radius $theme-border-radius 0 0;
 
@@ -432,7 +433,7 @@ div.foldable_wrapper {
   }
 
   h3 {
-    padding-left: 5px;
+    margin-top: 0;
   }
 
   ul.treeangle {

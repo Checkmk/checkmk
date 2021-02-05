@@ -19,6 +19,7 @@ from cmk.gui.valuespec import Dictionary
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.dashboard.site_overview import (
     ABCElement,)
+from cmk.gui.plugins.dashboard.utils import render_title_with_macros_string
 
 
 @dataclass
@@ -52,6 +53,7 @@ class AlertStatisticsDashletDataGenerator:
         site_id = context.get("site", {}).get("site")
 
         time_range, range_title = Timerange().compute_range(properties["time_range"])
+        default_title = _("Top alerters - %s") % range_title
 
         elements = cls._collect_data(
             only_sites=[SiteId(site_id)] if site_id else None,
@@ -61,10 +63,14 @@ class AlertStatisticsDashletDataGenerator:
 
         return {
             "render_mode": "alert_statistics",
-            # TODO: Get the correct dashlet title. This needs to use the general dashlet title
-            # calculation. We somehow have to get the title from
-            # cmk.gui.dashboard._render_dashlet_title.
-            "title": _("Top alerters - %s") % range_title,
+            # TODO: This should all be done inside the dashlet class once it is instantiated by the
+            #  ajax call
+            "title": render_title_with_macros_string(
+                context,
+                settings["single_infos"],
+                settings.get("title", default_title),
+                default_title,
+            ),
             "plot_definitions": [],
             "data": [e.serialize() for e in elements],
             "upper_bound": max([100] + [e.num_problems + 1 for e in elements]),

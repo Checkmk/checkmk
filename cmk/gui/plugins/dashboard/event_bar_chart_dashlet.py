@@ -7,7 +7,6 @@
 import time
 import livestatus
 from livestatus import lqencode
-from typing import Iterable
 
 from cmk.utils.render import date_and_time
 from cmk.gui.type_defs import HTTPVariables
@@ -17,10 +16,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.visuals import get_filter_headers
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.dashboard.bar_chart_dashlet import BarChartDataGenerator
-from cmk.gui.plugins.dashboard.utils import (
-    macro_mapping_from_context,
-    render_title_with_macros_string,
-)
+from cmk.gui.plugins.dashboard.utils import render_title_with_macros_string
 from cmk.gui.exceptions import MKTimeout, MKGeneralException
 from cmk.gui.valuespec import (Dictionary, DropdownChoice, CascadingDropdown, Timerange)
 from cmk.gui.utils.urls import makeuri_contextless
@@ -193,13 +189,12 @@ def bar_chart_title(properties, context, settings) -> str:
 
     chart_name = settings['type'].split("_")[0]
     deflt_title = default_bar_chart_title(properties['log_target'], chart_name)
-    title = settings.get("title", deflt_title)
-    macro_mapping = macro_mapping_from_context(context, settings["single_infos"], title)
-    macro_mapping["$GRAPH_TITLE$"] = deflt_title
 
     return render_title_with_macros_string(
-        title,
-        macro_mapping,
+        context,
+        settings["single_infos"],
+        settings.get("title", deflt_title),
+        deflt_title,
     )
 
 
@@ -265,9 +260,9 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
             raise NotImplementedError()
         self.js_dashlet(figure_type_name=figure_type_name)
 
-    @staticmethod
-    def get_additional_title_macros() -> Iterable[str]:
-        yield "$GRAPH_TITLE$ " + _("(default title of the graph)")
+    # TODO: implement default_display_title. This is currently handled in bar_chart_title, but it
+    #  should be implemented here. This can be done once the ajax calls for rendering the dashlets
+    #  actually instantiate the corresponding dashlet class.
 
 
 #   .--Notifications-------------------------------------------------------.

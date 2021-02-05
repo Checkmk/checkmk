@@ -23,7 +23,6 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.dashboard.utils import (
     create_data_for_single_metric,
-    macro_mapping_from_context,
     render_title_with_macros_string,
 )
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
@@ -39,20 +38,18 @@ def dashlet_title(
 ) -> str:
     if not settings.get("show_title", True):
         return ""
-    title = settings.get("title", "")
+    default_title = SingleMetricDashlet.default_display_title()
     return render_title_with_macros_string(
-        title,
-        macro_mapping_from_context(
-            {
-                context_key: metric_specs[metrics_key] for metrics_key, context_key in (
-                    ("host_name", "host"),
-                    ("service_description", "service"),
-                    ("site", "site"),
-                ) if metrics_key in metric_specs
-            },
-            settings["single_infos"],
-            title,
-        ),
+        {
+            context_key: metric_specs[metrics_key] for metrics_key, context_key in (
+                ("host_name", "host"),
+                ("service_description", "service"),
+                ("site", "site"),
+            ) if metrics_key in metric_specs
+        },
+        settings["single_infos"],
+        settings.get("title", default_title),
+        default_title,
     )
 
 
@@ -258,6 +255,10 @@ class SingleMetricDashlet(ABCFigureDashlet):
     @classmethod
     def single_infos(cls):
         return ["service", "host"]
+
+    @staticmethod
+    def default_display_title() -> str:
+        return ""
 
 
 #   .--Gauge---------------------------------------------------------------.

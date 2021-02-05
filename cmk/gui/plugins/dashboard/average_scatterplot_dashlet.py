@@ -18,7 +18,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.dashboard.utils import (
-    macro_mapping_from_context,
     render_title_with_macros_string,
     service_table_query,
 )
@@ -33,10 +32,12 @@ class AverageScatterplotDataGenerator:
     def figure_title(cls, properties, context, settings) -> str:
         if not settings.get("show_title", False):
             return ""
-        title = settings.get("title", "")
+        default_title = AverageScatterplotDashlet.default_display_title()
         return render_title_with_macros_string(
-            title,
-            macro_mapping_from_context(context, settings["single_infos"], title),
+            context,
+            settings["single_infos"],
+            settings.get("title", default_title),
+            default_title,
         )
 
     @staticmethod
@@ -220,3 +221,7 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
             ("median_color",
              GraphColor(title=_("Color for the median line"), default_value="default")),
         ]
+
+    @staticmethod
+    def default_display_title() -> str:
+        return ""

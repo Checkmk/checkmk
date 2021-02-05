@@ -73,40 +73,69 @@ def test_transform_dashlets_mut(entry, result):
             {},
             [],
             "Some title $HOST_ALIAS$",
-            {},
+            {"$DEFAULT_TITLE$": "dashlet"},
             id="no single_infos",
         ),
         pytest.param(
             {"host": "heute"},
             ["host"],
             "Best graph",
-            {"$HOST_NAME$": "heute"},
+            {
+                "$DEFAULT_TITLE$": "dashlet",
+                "$HOST_NAME$": "heute",
+            },
             id="host single_infos",
         ),
         pytest.param(
             {"service": "CPU utilization"},
             ["service"],
             "Best graph",
-            {"$SERVICE_DESCRIPTION$": "CPU utilization"},
+            {
+                "$DEFAULT_TITLE$": "dashlet",
+                "$SERVICE_DESCRIPTION$": "CPU utilization",
+            },
             id="service single_infos",
         ),
         pytest.param(
             {
                 "host": "vm-123",
-                "service": "CPU utilization"
+                "service": "CPU utilization",
             },
             ["host", "service"],
             "Best graph",
             {
+                "$DEFAULT_TITLE$": "dashlet",
                 "$HOST_NAME$": "vm-123",
                 "$SERVICE_DESCRIPTION$": "CPU utilization"
             },
             id="host and service single_infos",
         ),
+        pytest.param(
+            {
+                "host": "vm-123",
+                "service": "CPU utilization",
+                "site": "site",
+            },
+            ["host", "service"],
+            "Best graph $HOST_ALIAS$",
+            {
+                "$DEFAULT_TITLE$": "dashlet",
+                "$HOST_NAME$": "vm-123",
+                "$HOST_ALIAS$": "alias",
+                "$SERVICE_DESCRIPTION$": "CPU utilization",
+                "$SITE$": "site",
+            },
+            id="site and host alias",
+        ),
     ],
 )
-def test_macro_mapping_from_context(context, single_infos, title, result):
-    assert utils.macro_mapping_from_context(context, single_infos, title) == result
+def test_macro_mapping_from_context(monkeypatch, context, single_infos, title, result):
+    monkeypatch.setattr(
+        utils,
+        "get_alias_of_host",
+        lambda _site, _host_name: "alias",
+    )
+    assert utils.macro_mapping_from_context(context, single_infos, title, "dashlet") == result
 
 
 @pytest.mark.parametrize(
@@ -139,14 +168,18 @@ def test_get_title_macros_from_single_infos(single_infos, result):
         pytest.param(
             [],
             [],
-            "",
-            id="no macros",
+            "You can use the following macros to fill in the corresponding information:"
+            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the dashlet)</tt></li></ul>"
+            "These macros can be combined with arbitrary text elements, e.g. "
+            "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
+            id="default title only",
         ),
         pytest.param(
             ["host"],
             [],
             "You can use the following macros to fill in the corresponding information:"
-            "<ul><li><tt>$HOST_NAME$</tt></li>"
+            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the dashlet)</tt></li>"
+            "<li><tt>$HOST_NAME$</tt></li>"
             "<li><tt>$HOST_ALIAS$</tt></li></ul>"
             "These macros can be combined with arbitrary text elements, e.g. "
             "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
@@ -156,16 +189,18 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             [],
             ["$MACRO$"],
             "You can use the following macros to fill in the corresponding information:"
-            "<ul><li><tt>$MACRO$</tt></li></ul>"
+            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the dashlet)</tt></li>"
+            "<li><tt>$MACRO$</tt></li></ul>"
             "These macros can be combined with arbitrary text elements, e.g. "
             "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
-            id="only additional macro",
+            id="additional macro",
         ),
         pytest.param(
             ["service", "host"],
             ["$MACRO1$", "$MACRO2$ (some explanation)"],
             "You can use the following macros to fill in the corresponding information:"
-            "<ul><li><tt>$HOST_NAME$</tt></li>"
+            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the dashlet)</tt></li>"
+            "<li><tt>$HOST_NAME$</tt></li>"
             "<li><tt>$HOST_ALIAS$</tt></li>"
             "<li><tt>$SERVICE_DESCRIPTION$</tt></li>"
             "<li><tt>$MACRO1$</tt></li>"

@@ -16,6 +16,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
+from cmk.gui.plugins.dashboard.utils import render_title_with_macros_string
 
 
 @dataclass
@@ -112,11 +113,17 @@ class SiteOverviewDashletDataGenerator:
         else:
             raise NotImplementedError()
 
+        default_title = _("Site overview")
+
         return {
-            # TODO: Get the correct dashlet title. This needs to use the general dashlet title
-            # calculation. We somehow have to get the title from
-            # cmk.gui.dashboard._render_dashlet_title.
-            "title": _("Site overview"),
+            # TODO: This should all be done inside the dashlet class once it is instantiated by the
+            #  ajax call
+            "title": render_title_with_macros_string(
+                context,
+                settings["single_infos"],
+                settings.get("title", default_title),
+                default_title,
+            ),
             "render_mode": render_mode,
             "plot_definitions": [],
             "data": [e.serialize() for e in elements],

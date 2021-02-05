@@ -1697,10 +1697,21 @@ sql_systemparameter () {
 
 sql_instance () {
     echo 'prompt <<<oracle_instance:sep(124)>>>'
+
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 180 ]; then
+        # Oracle 18c introduced another version column with Release Update information
+        # version       version_full
+        # 18.0.0.0.0    18.5.0.0.0
+        # 19.0.0.0.0    19.5.0.0.0
+        local version_column="version_full"
+    else
+        local version_column="version"
+    fi
+
     if [ "${ORACLE_SID:0:1}" = '+' ]; then
         # ASM
         echo "select upper(i.instance_name)
-                     || '|' || i.VERSION
+                     || '|' || i.${version_column}
                      || '|' || i.STATUS
                      || '|' || i.LOGINS
                      || '|' || i.ARCHIVER
@@ -1736,7 +1747,7 @@ sql_instance () {
                          || '|' || round(nvl(popen_time, -1))
                          || '|' || pblock_size
                   from(
-                      select i.instance_name, i.version, i.status, i.logins, i.archiver
+                      select i.instance_name, i.${version_column} version, i.status, i.logins, i.archiver
                             ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                             ,d.name, d.created, p.value, vp.con_id, vp.name pname
                             ,vp.dbid pdbid, vp.open_mode popen_mode, vp.restricted prestricted, vp.total_size ptotal_time
@@ -1749,7 +1760,7 @@ sql_instance () {
                         where p.name = 'enable_pluggable_database'
                       union all
                       select
-                             i.instance_name, i.version, i.status, i.logins, i.archiver
+                             i.instance_name, i.${version_column} version, i.status, i.logins, i.archiver
                             ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                             ,d.name, d.created, p.value, 0 con_id, null pname
                             ,0 pdbis, null popen_mode, null prestricted, null ptotal_time

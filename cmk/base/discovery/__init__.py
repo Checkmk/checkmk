@@ -1740,39 +1740,17 @@ def _get_cluster_services(
         # keep the latest for every label.name
         nodes_host_labels.update(host_label_discovery_result.labels)
 
-        for check_source, discovered_service in services.values():
-            if host_config.hostname != config_cache.host_of_clustered_service(
-                    node, discovered_service.description):
-                continue  # not part of this host
-
-            if discovered_service.id() not in cluster_items:
-                cluster_items[discovered_service.id()] = (check_source, discovered_service, [node])
-                continue
-
-            first_check_source, first_discovered_service, nodes_with_service = cluster_items[
-                discovered_service.id()]
-            if node not in nodes_with_service:
-                nodes_with_service.append(node)
-
-            if first_check_source == "old":
-                continue
-
-            if check_source == "old":
-                cluster_items[discovered_service.id()] = (check_source, discovered_service,
-                                                          nodes_with_service)
-                continue
-
-            if first_check_source == "vanished" and check_source == "new":
-                cluster_items[discovered_service.id()] = ("old", first_discovered_service,
-                                                          nodes_with_service)
-                continue
-
-            if check_source == "vanished" and first_check_source == "new":
-                cluster_items[discovered_service.id()] = ("old", discovered_service,
-                                                          nodes_with_service)
-                continue
-
-            # In all other cases either both must be "new" or "vanished" -> let it be
+        for check_source, service in services.values():
+            cluster_items.update(
+                _cluster_service_entry(
+                    check_source=check_source,
+                    host_name=host_config.hostname,
+                    node_name=node,
+                    services_cluster=config_cache.host_of_clustered_service(
+                        node, service.description),
+                    service=service,
+                    existing_entry=cluster_items.get(service.id()),
+                ))
 
     cluster_host_labels, cluster_labels_per_plugin = _analyse_host_labels(
         host_name=host_config.hostname,
@@ -1787,6 +1765,40 @@ def _get_cluster_services(
         labels=cluster_host_labels,
         per_plugin=cluster_labels_per_plugin,
     )
+
+
+def _cluster_service_entry(
+    *,
+    check_source: str,
+    host_name: HostName,
+    node_name: HostName,
+    services_cluster: HostName,
+    service: Service,
+    existing_entry: Optional[Tuple[str, Service, List[HostName]]],
+) -> Iterable[Tuple[ServiceID, Tuple[str, Service, List[HostName]]]]:
+    if host_name != services_cluster:
+        return  # not part of this host
+
+    if existing_entry is None:
+        yield service.id(), (check_source, service, [node_name])
+        return
+
+    first_check_source, existing_service, nodes_with_service = existing_entry
+    if node_name not in nodes_with_service:
+        nodes_with_service.append(node_name)
+
+    if first_check_source == "old":
+        return
+
+    if check_source == "old":
+        yield service.id(), (check_source, service, nodes_with_service)
+        return
+
+    if {first_check_source, check_source} == {"vanished", "new"}:
+        yield existing_service.id(), ("old", existing_service, nodes_with_service)
+        return
+
+    # In all other cases either both must be "new" or "vanished" -> let it be
 
 
 def get_check_preview(

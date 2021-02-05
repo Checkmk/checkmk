@@ -38,7 +38,7 @@ from cmk.gui.plugins.dashboard.event_bar_chart_dashlet import bar_chart_title
                 "show_title": True,
                 "type": "notifications_bar_chart",
                 "single_infos": [],
-                "title": "fancy title / $GRAPH_TITLE$",
+                "title": "fancy title / $DEFAULT_TITLE$",
             },
             "fancy title / Host and service notifications",
             id="custom title with macro",

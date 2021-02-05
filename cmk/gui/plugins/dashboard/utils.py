@@ -105,13 +105,15 @@ def macro_mapping_from_context(
     context: VisualContext,
     single_infos: SingleInfos,
     title: str,
+    default_title: str,
 ) -> MacroMapping:
-    macro_mapping = {
+    macro_mapping = {"$DEFAULT_TITLE$": default_title}
+    macro_mapping.update({
         macro: str(context[key]) for macro, key in (
             ("$HOST_NAME$", "host"),
             ("$SERVICE_DESCRIPTION$", "service"),
         ) if key in context and key in single_infos
-    }
+    })
 
     only_sites = visuals.get_only_sites_from_context(context)
     if only_sites and len(only_sites) == 1:
@@ -127,10 +129,20 @@ def macro_mapping_from_context(
 
 
 def render_title_with_macros_string(
+    context: VisualContext,
+    single_infos: SingleInfos,
     title: str,
-    macro_mapping: MacroMapping,
+    default_title: str,
 ):
-    return replace_macros_in_str(_u(title), macro_mapping)
+    return replace_macros_in_str(
+        _u(title),
+        macro_mapping_from_context(
+            context,
+            single_infos,
+            title,
+            default_title,
+        ),
+    )
 
 
 class Dashlet(metaclass=abc.ABCMeta):
@@ -297,9 +309,12 @@ class Dashlet(metaclass=abc.ABCMeta):
         return self._dashlet_spec.get("title", self.default_display_title())
 
     def _get_macro_mapping(self, title: str) -> MacroMapping:
-        if self.has_context():
-            return macro_mapping_from_context(self.context, self.single_infos(), title)
-        return {}
+        return macro_mapping_from_context(
+            self.context if self.has_context() else {},
+            self.single_infos(),
+            title,
+            self.default_display_title(),
+        )
 
     def render_title_html(self) -> HTML:
         title = self.display_title()
@@ -473,13 +488,11 @@ def _get_title_macros_from_single_infos(single_infos: SingleInfos) -> Iterable[s
 
 
 def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
-    available_macros = list(
-        chain(
-            _get_title_macros_from_single_infos(dashlet_type.single_infos()),
-            dashlet_type.get_additional_title_macros(),
-        ))
-    if not available_macros:
-        return ""
+    available_macros = chain(
+        ["$DEFAULT_TITLE$ " + _u("(default title of the dashlet)")],
+        _get_title_macros_from_single_infos(dashlet_type.single_infos()),
+        dashlet_type.get_additional_title_macros(),
+    )
     macros_as_list = f"<ul>{''.join(f'<li><tt>{macro}</tt></li>' for macro in available_macros)}</ul>"
     return _("You can use the following macros to fill in the corresponding information:%s%s") % (
         macros_as_list,
@@ -531,7 +544,7 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
                        'displays the title of the view. If you like to use any other title, set it '
                        'here.'),
                      _title_help_text_for_macros(dashlet_type),
-                 )).rstrip(),
+                 )),
                  size=75,
              )),
             ('title_url',

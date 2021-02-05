@@ -258,8 +258,8 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             context,
             self.single_infos(),
             self.display_title(),
+            self.default_display_title(),
         )
-        macro_mapping["$GRAPH_TITLE$"] = self._dashlet_spec["_graph_title"]
         return macro_mapping
 
     def _get_site_from_dashlet_spec(self) -> Optional[str]:
@@ -268,4 +268,3 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
     @staticmethod
     def get_additional_title_macros() -> Iterable[str]:
         yield "$SITE$"
-        yield "$GRAPH_TITLE$ " + _("(default title of the graph)")

@@ -1,0 +1,22 @@
+Title: Error on windows agent update in case of a numerical agent hash
+Knowledge: doc
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p21
+Date: 1612519179
+
+After an (automatic) windows agent update took place,
+the agent updater checks for a correct agent hash on the next call.
+
+Previously, the check failed, if the new hash only contains numbers, with
+the acutal update being successful.
+As a result, the agent updater downloaded the agent periodically, while the
+Check_MK Agent service periodically changed to WARN with a last_error of
+<i>inconsistent pending update</i>.
+
+With this Werk applied, the behavior will be fixed after the next agent baking
+and the succeeding agent update on the affected hosts.

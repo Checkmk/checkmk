@@ -18,7 +18,8 @@ import abc
 import platform
 import sys
 import logging
-import argparse
+# optparse exist in python2.6 up to python 3.8. Do not use argparse, because it will not run with python2.6
+import optparse  # pylint: disable=W0402
 from collections import namedtuple
 try:
     from typing import Dict, List, Optional, Tuple
@@ -37,6 +38,11 @@ elif IS_WINDOWS:
     import time
 else:
     raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
+
+
+# for compatibility with python 2.6
+def subprocess_check_output(args):
+    return subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
 
 
 # Borrowed from six
@@ -237,12 +243,10 @@ class PostgresBase:
         """Executes pg_isready.
         pg_isready is a utility for checking the connection status of a PostgreSQL database server.
         """
-
-        out = subprocess.check_output([
+        out = subprocess_check_output([
             "%s%spg_isready" % (self.bin_path, self.sep), "-p",
             self.instance.get("pg_port", "5432")
         ],)
-
         sys.stdout.write("%s\n" % ensure_str(out))
 
     def execute_all_queries(self):
@@ -370,7 +374,7 @@ class PostgresWin(PostgresBase):
         ]
 
         taskslist = ensure_str(
-            subprocess.check_output(
+            subprocess_check_output(
                 ["wmic", "process", "get", "processid,commandline",
                  "/format:list"])).split("\r\r\n\r\r\n\r\r\n")
 
@@ -666,7 +670,7 @@ class PostgresLinux(PostgresBase):
             ["(.*)bin/postgres(.*)", "(.*)bin/postmaster(.*)", "(.*)bin/edb-postgres(.*)"]
         ]
 
-        procs_list = ensure_str(subprocess.check_output(["ps", "h", "-eo",
+        procs_list = ensure_str(subprocess_check_output(["ps", "h", "-eo",
                                                          "pid:1,command:1"])).split("\n")
         out = ""
         for proc in procs_list:
@@ -999,17 +1003,15 @@ class PostgresConfig:
 
 
 def parse_arguments(argv):
-    # type: (List[str]) -> argparse.Namespace
-
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--verbose', '-v', action="count", default=0)
-    parser.add_argument("-t",
-                        "--test-connection",
-                        default=False,
-                        action="store_true",
-                        help="Test if postgres is ready")
-
-    return parser.parse_args(argv)
+    parser = optparse.OptionParser()
+    parser.add_option('-v', '--verbose', action="count", default=0)
+    parser.add_option("-t",
+                      "--test-connection",
+                      default=False,
+                      action="store_true",
+                      help="Test if postgres is ready")
+    options, _ = parser.parse_args(argv)
+    return options
 
 
 def open_wrapper(file_to_open):

@@ -332,8 +332,7 @@ def test_lget_ok_no_params():
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "11.19.05")
     params: Dict[str, Any] = {}
-    expected: Tuple[int, str,
-                    List[Tuple]] = (0, 'Last get: 60 m', [('lgetage', 3600.0, None, None)])
+    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: 60 m', [])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -349,8 +348,7 @@ def test_lget_ok():
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected: Tuple[int, str,
-                    List[Tuple]] = (0, 'Last get: 10.0 s', [('lgetage', 10.0, 1800.0, 3600.0)])
+    expected: Tuple[int, str, List[Tuple]] = (0, 'Last get: 10.0 s', [])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -358,8 +356,7 @@ def test_lget_warn():
     lget = ("2018-04-19", "09.49.14")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (1, 'Last get: 30 m (warn/crit at 30 m/60 m)',
-                                              [('lgetage', 1801.0, 1800.0, 3600.0)])
+    expected: Tuple[int, str, List[Tuple]] = (1, 'Last get: 30 m (warn/crit at 30 m/60 m)', [])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -375,8 +372,7 @@ def test_lget_crit():
     lget = ("2018-04-19", "09.19.14")
     now = ("2018-04-19", "10.19.15")
     params = {'lgetage': (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (2, 'Last get: 60 m (warn/crit at 30 m/60 m)',
-                                              [('lgetage', 3601.0, 1800.0, 3600.0)])
+    expected: Tuple[int, str, List[Tuple]] = (2, 'Last get: 60 m (warn/crit at 30 m/60 m)', [])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -499,7 +495,6 @@ def assert_procs(opprocs, params, expected):
 #
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_qtime_no_values():
     params: Dict[str, Any] = {}
     qtime = ','
@@ -510,7 +505,6 @@ def test_qtime_no_values():
     assert_qtime(qtime, params, expected)
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_qtime_only_short():
     params: Dict[str, Any] = {}
     qtime = '300000000,'
@@ -521,7 +515,6 @@ def test_qtime_only_short():
     assert_qtime(qtime, params, expected)
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_qtime_both():
     params: Dict[str, Any] = {}
     qtime = '300000000,420000000'

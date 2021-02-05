@@ -164,7 +164,7 @@ def ibm_mq_last_age(mq_date, mq_time, agent_timestamp, label, key, params):
     input_time = dateutil.parser.parse(mq_datetime, default=agent_timestamp)
     age = (agent_timestamp - input_time).total_seconds()
     return check_levels(age,
-                        key,
+                        None,
                         params.get(key),
                         human_readable_func=get_age_human_readable,
                         infoname=label)

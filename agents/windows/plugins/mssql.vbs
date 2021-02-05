@@ -711,7 +711,9 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         addOutput(instance_id & " " & errMsg)
     Else
         Do While Not RS.Eof
-            addOutput(instance_id & vbCrLf & RS.GetString)
+            'See following documentation for use of parameters and the GetString method:
+            'https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/getstring-method-ado?view=sql-server-ver15
+            addOutput(instance_id & vbCrLf & RS.GetString(2,,vbTab,vbCrLf,""))
         Loop
         RS.Close
     End If

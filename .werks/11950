@@ -1,0 +1,14 @@
+Title: mssql.vbs: fix only one mssql job discovered
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612556703
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+In some localised versions of MSSQL, we have observed that only one MSSQL job
+is discovered, even though multiple jobs exist on the database. This has been
+fixed.
+The agent plugin has to be rolled out again, if this fix is required.

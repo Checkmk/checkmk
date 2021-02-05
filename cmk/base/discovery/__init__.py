@@ -17,6 +17,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Mapping,
     NamedTuple,
     Optional,
@@ -90,6 +91,9 @@ from cmk.base.discovered_labels import (
 )
 
 from .utils import TimeLimitFilter
+
+# TODO: this will disappear soon:
+_PartialServicesTable = Dict[ServiceID, Tuple[Literal["vanished", "old", "new"], Service]]
 
 ServicesTable = Dict[ServiceID, Tuple[str, Service, List[HostName]]]
 ServicesByTransition = Dict[str, List[ServiceWithNodes]]
@@ -1568,7 +1572,7 @@ def _get_node_services(
 ) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
 
     host_name = host_config.hostname
-    services, host_label_discovery_result = _get_discovered_services(
+    services_result, host_label_discovery_result = _get_discovered_services(
         host_name,
         ipaddress,
         parsed_sections_broker,
@@ -1576,15 +1580,35 @@ def _get_node_services(
     )
 
     config_cache = config.get_config_cache()
-    # Identify clustered services
-    for check_source, service, found_on_nodes in services.values():
-        clustername = config_cache.host_of_clustered_service(host_name, service.description)
-        if host_name != clustername:
-            if config.service_ignored(clustername, service.check_plugin_name, service.description):
-                check_source = "ignored"
-            services[service.id()] = ("clustered_" + check_source, service, found_on_nodes)
 
-    return services, host_label_discovery_result
+    return {
+        service.id(): (
+            _node_service_source(
+                check_source=check_source,
+                host_name=host_name,
+                cluster_name=config_cache.host_of_clustered_service(host_name, service.description),
+                service=service,
+            ),
+            service,
+            [host_name],
+        ) for check_source, service in services_result.values()
+    }, host_label_discovery_result
+
+
+def _node_service_source(
+    *,
+    check_source: str,
+    host_name: HostName,
+    cluster_name: HostName,
+    service: Service,
+) -> str:
+    if host_name == cluster_name:
+        return check_source
+
+    if config.service_ignored(cluster_name, service.check_plugin_name, service.description):
+        return "ignored"
+
+    return "clustered_" + check_source
 
 
 # Part of _get_node_services that deals with discovered services
@@ -1593,7 +1617,7 @@ def _get_discovered_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesTable, HostLabelDiscoveryResult]:
+) -> Tuple[_PartialServicesTable, HostLabelDiscoveryResult]:
 
     # Handle discovered services -> "new"
     discovered_services, host_label_discovery_result = _discover_host_labels_and_services(
@@ -1605,14 +1629,16 @@ def _get_discovered_services(
     )
 
     # Create a dict from check_plugin_name/item to check_source/paramstring
-    services: ServicesTable = {}
+    services: _PartialServicesTable = {}
     for discovered_service in discovered_services:
-        services.setdefault(discovered_service.id(), ("new", discovered_service, [host_name]))
+        services.setdefault(discovered_service.id(), ("new", discovered_service))
 
     # Match with existing items -> "old" and "vanished"
     for existing_service in autochecks.parse_autochecks_file(host_name, config.service_description):
-        check_source = "vanished" if existing_service.id() not in services else "old"
-        services[existing_service.id()] = check_source, existing_service, [host_name]
+        if existing_service.id() in services:
+            services[existing_service.id()] = "old", existing_service
+        else:
+            services[existing_service.id()] = "vanished", existing_service
 
     return services, host_label_discovery_result
 
@@ -1714,14 +1740,13 @@ def _get_cluster_services(
         # keep the latest for every label.name
         nodes_host_labels.update(host_label_discovery_result.labels)
 
-        for check_source, discovered_service, found_on_nodes in services.values():
+        for check_source, discovered_service in services.values():
             if host_config.hostname != config_cache.host_of_clustered_service(
                     node, discovered_service.description):
                 continue  # not part of this host
 
             if discovered_service.id() not in cluster_items:
-                cluster_items[discovered_service.id()] = (check_source, discovered_service,
-                                                          found_on_nodes)
+                cluster_items[discovered_service.id()] = (check_source, discovered_service, [node])
                 continue
 
             first_check_source, first_discovered_service, nodes_with_service = cluster_items[

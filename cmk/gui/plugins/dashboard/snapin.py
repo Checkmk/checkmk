@@ -59,10 +59,9 @@ class SnapinDashlet(IFrameDashlet):
         return sorted([(k, v.title()) for k, v in sidebar.snapin_registry.items()],
                       key=lambda x: x[1])
 
-    def display_title(self):
+    def default_display_title(self) -> str:
         import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
-        title = sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
-        return self._dashlet_spec.get("title", title)
+        return sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
 
     def update(self):
         import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel

@@ -531,11 +531,6 @@ def discover_on_host(
         result.error_text = ""
         return result
 
-    host_label_discovery_result = HostLabelDiscoveryResult(
-        labels=DiscoveredHostLabels(),
-        per_plugin=Counter(),
-    )
-
     try:
         # in "refresh" mode we first need to remove all previously discovered
         # checks of the host, so that _get_host_services() does show us the
@@ -607,9 +602,10 @@ def discover_on_host(
             raise
         result.error_text = str(e)
 
-    if mode != "remove":
-        result.self_new_host_labels = sum(host_label_discovery_result.per_plugin.values())
-        result.self_total_host_labels = len(host_label_discovery_result.labels)
+    else:
+        if mode != "remove":
+            result.self_new_host_labels = sum(host_label_discovery_result.per_plugin.values())
+            result.self_total_host_labels = len(host_label_discovery_result.labels)
 
     result.self_total = result.self_new + result.self_kept
     return result

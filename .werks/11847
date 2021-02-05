@@ -1,0 +1,19 @@
+Title: Windows agent may get winperf data without spawning new process
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1612547166
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+Since this release it is possible to generate winperf data without spawning a 
+new process.
+
+To enable this feature  you should edit check_mk.user.yml file and set in the 
+section <tt>winperf</tt> the key <tt>fork</tt> in <tt>no</tt>
+
+This setting is primary intended for problem solving and should be used carefully, 
+because Windows OS may leak handles when winperf API is used.

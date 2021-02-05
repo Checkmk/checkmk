@@ -35,11 +35,10 @@ def parse_ceph_df(info):
     pools_headers = None
 
     for line in info:
-        if line[0] in ["GLOBAL:", "RAW"]:
+        if line[0] in ["GLOBAL:", "RAW"] or re.sub("[-: ]", "", ''.join(line)) == 'RAWSTORAGE':
             section = "global"
             continue
-
-        elif line[0] == "POOLS:":
+        elif re.sub("[-: ]", "", ''.join(line)) == "POOLS":
             section = "pools"
             continue
 
@@ -89,6 +88,17 @@ def parse_ceph_df(info):
                 pools_headers = [
                     'POOL', 'ID', 'PGS', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX AVAIL',
                     'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
+                ]
+
+            elif line == [
+                    'POOL', 'ID', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
+                    '(OMAP)', '%USED', 'MAX', 'AVAIL', 'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES',
+                    'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+            ]:
+                pools_headers = [
+                    'POOL', 'ID', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
+                    '(OMAP)', '%USED', 'MAX AVAIL', 'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY',
+                    'USED COMPR', 'UNDER COMPR'
                 ]
 
             elif pools_headers is not None:

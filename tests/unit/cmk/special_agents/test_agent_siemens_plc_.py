@@ -23,13 +23,15 @@ from cmk.special_agents.agent_siemens_plc import (
             'rack': 0,
             'slot': 2,
             'port': 102,
-            'values': [(
-                ('merker', None),
-                (5, 3),
-                'bit',
-                'flag',
-                'Filterturm_Sammelstoerung_Telefon',
-            )],
+            'values': [{
+                'area_name': 'merker',
+                'db_number': None,
+                'byte': 5,
+                'bit': 3,
+                'datatype': 'bit',
+                'valuetype': 'flag',
+                'ident': 'Filterturm_Sammelstoerung_Telefon',
+            }],
         },
     ),
     (
@@ -40,13 +42,15 @@ from cmk.special_agents.agent_siemens_plc import (
             'rack': 0,
             'slot': 2,
             'port': 102,
-            'values': [(
-                ('merker', None),
-                (5, 0),
-                'bit',
-                'None',
-                '""',
-            )],
+            'values': [{
+                'area_name': 'merker',
+                'db_number': None,
+                'byte': 5,
+                'bit': 0,
+                'datatype': 'bit',
+                'valuetype': 'None',
+                'ident': '""',
+            }],
         },
     ),
     (
@@ -59,20 +63,24 @@ from cmk.special_agents.agent_siemens_plc import (
             'slot': 0,
             'port': 102,
             'values': [
-                (
-                    ('merker', None),
-                    (5, 0),
-                    'bit',
-                    'flag',
-                    '"Kuehlanlage1_Sammelstoerung_Telefon"',
-                ),
-                (
-                    ('merker', None),
-                    (5, 1),
-                    'bit',
-                    'flag',
-                    '"Kuehlanlage1_Sammelstoerung_Email"',
-                ),
+                {
+                    'area_name': 'merker',
+                    'db_number': None,
+                    'byte': 5,
+                    'bit': 0,
+                    'datatype': 'bit',
+                    'valuetype': 'flag',
+                    'ident': '"Kuehlanlage1_Sammelstoerung_Telefon"',
+                },
+                {
+                    'area_name': 'merker',
+                    'db_number': None,
+                    'byte': 5,
+                    'bit': 1,
+                    'datatype': 'bit',
+                    'valuetype': 'flag',
+                    'ident': '"Kuehlanlage1_Sammelstoerung_Email"',
+                },
             ],
         },
     ),
@@ -96,13 +104,15 @@ def test__area_name_to_area_id(area_name, expected_id):
             'rack': 0,
             'slot': 2,
             'port': 102,
-            'values': [(
-                ('merker', None),
-                (5, 3),
-                'bit',
-                'flag',
-                'Filterturm_Sammelstoerung_Telefon',
-            )]
+            'values': [{
+                'area_name': 'merker',
+                'db_number': None,
+                'byte': 5,
+                'bit': 3,
+                'datatype': 'bit',
+                'valuetype': 'flag',
+                'ident': 'Filterturm_Sammelstoerung_Telefon',
+            }],
         },
         {
             ('merker', None): [5, 6]
@@ -115,13 +125,15 @@ def test__area_name_to_area_id(area_name, expected_id):
             'rack': 0,
             'slot': 2,
             'port': 102,
-            'values': [(
-                ('merker', None),
-                (5, 0),
-                'bit',
-                'None',
-                '""',
-            )]
+            'values': [{
+                'area_name': 'merker',
+                'db_number': None,
+                'byte': 5,
+                'bit': 0,
+                'datatype': 'bit',
+                'valuetype': 'None',
+                'ident': '""',
+            }],
         },
         {
             ('merker', None): [5, 6]
@@ -140,13 +152,15 @@ def test__addresses_from_device(device, expected_addresses):
             'rack': 0,
             'slot': 2,
             'port': 102,
-            'values': [(
-                ('merker', None),
-                (5, 3),
-                'bit',
-                'flag',
-                'Filterturm_Sammelstoerung_Telefon',
-            )]
+            'values': [{
+                'area_name': 'merker',
+                'db_number': None,
+                'byte': 5,
+                'bit': 3,
+                'datatype': 'bit',
+                'valuetype': 'flag',
+                'ident': 'Filterturm_Sammelstoerung_Telefon',
+            }],
         },
         {
             ('merker', None): [5, 6]
@@ -165,13 +179,15 @@ def test__addresses_from_device(device, expected_addresses):
             'rack': 0,
             'slot': 2,
             'port': 102,
-            'values': [(
-                ('merker', None),
-                (5, 0),
-                'bit',
-                'None',
-                '""',
-            )]
+            'values': [{
+                'area_name': 'merker',
+                'db_number': None,
+                'byte': 5,
+                'bit': 0,
+                'datatype': 'bit',
+                'valuetype': 'None',
+                'ident': '""',
+            }],
         },
         {
             ('merker', None): [5, 6]

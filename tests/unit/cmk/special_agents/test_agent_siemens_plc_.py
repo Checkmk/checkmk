@@ -7,7 +7,7 @@
 import pytest  # type: ignore[import]
 
 from cmk.special_agents.agent_siemens_plc import (
-    _addresses_from_device,
+    _addresses_from_area_values,
     _area_name_to_area_id,
     _cast_values,
     parse_spec,
@@ -96,109 +96,69 @@ def test__area_name_to_area_id(area_name, expected_id):
     assert _area_name_to_area_id(area_name) == expected_id
 
 
-@pytest.mark.parametrize('device, expected_addresses', [
+@pytest.mark.parametrize('values, expected_addresses', [
     (
-        {
-            'host_name': '4fcm',
-            'host_address': '10.2.90.20',
-            'rack': 0,
-            'slot': 2,
-            'port': 102,
-            'values': [{
-                'area_name': 'merker',
-                'db_number': None,
-                'byte': 5,
-                'bit': 3,
-                'datatype': 'bit',
-                'valuetype': 'flag',
-                'ident': 'Filterturm_Sammelstoerung_Telefon',
-            }],
-        },
-        {
-            ('merker', None): [5, 6]
-        },
+        [{
+            'area_name': 'merker',
+            'db_number': None,
+            'byte': 5,
+            'bit': 3,
+            'datatype': 'bit',
+            'valuetype': 'flag',
+            'ident': 'Filterturm_Sammelstoerung_Telefon',
+        }],
+        (5, 6),
     ),
     (
-        {
-            'host_name': 'a885-sps2',
-            'host_address': '10.2.90.131',
-            'rack': 0,
-            'slot': 2,
-            'port': 102,
-            'values': [{
-                'area_name': 'merker',
-                'db_number': None,
-                'byte': 5,
-                'bit': 0,
-                'datatype': 'bit',
-                'valuetype': 'None',
-                'ident': '""',
-            }],
-        },
-        {
-            ('merker', None): [5, 6]
-        },
+        [{
+            'area_name': 'merker',
+            'db_number': None,
+            'byte': 5,
+            'bit': 0,
+            'datatype': 'bit',
+            'valuetype': 'None',
+            'ident': '""',
+        }],
+        (5, 6),
     ),
 ])
-def test__addresses_from_device(device, expected_addresses):
-    assert _addresses_from_device(device) == expected_addresses
+def test__addresses_from_area_values(values, expected_addresses):
+    assert _addresses_from_area_values(values) == expected_addresses
 
 
-@pytest.mark.parametrize('device, addresses, data, expected_value', [
+@pytest.mark.parametrize('values, start_address, area_value, expected_value', [
     (
-        {
-            'host_name': '4fcm',
-            'host_address': '10.2.90.20',
-            'rack': 0,
-            'slot': 2,
-            'port': 102,
-            'values': [{
-                'area_name': 'merker',
-                'db_number': None,
-                'byte': 5,
-                'bit': 3,
-                'datatype': 'bit',
-                'valuetype': 'flag',
-                'ident': 'Filterturm_Sammelstoerung_Telefon',
-            }],
-        },
-        {
-            ('merker', None): [5, 6]
-        },
-        {
-            ('merker', None): b'\x08'
-        },
+        [{
+            'area_name': 'merker',
+            'db_number': None,
+            'byte': 5,
+            'bit': 3,
+            'datatype': 'bit',
+            'valuetype': 'flag',
+            'ident': 'Filterturm_Sammelstoerung_Telefon',
+        }],
+        5,
+        b'\x08',
         [
             ('flag', 'Filterturm_Sammelstoerung_Telefon', True),
         ],
     ),
     (
-        {
-            'host_name': 'a885-sps2',
-            'host_address': '10.2.90.131',
-            'rack': 0,
-            'slot': 2,
-            'port': 102,
-            'values': [{
-                'area_name': 'merker',
-                'db_number': None,
-                'byte': 5,
-                'bit': 0,
-                'datatype': 'bit',
-                'valuetype': 'None',
-                'ident': '""',
-            }],
-        },
-        {
-            ('merker', None): [5, 6]
-        },
-        {
-            ('merker', None): b'\x00'
-        },
+        [{
+            'area_name': 'merker',
+            'db_number': None,
+            'byte': 5,
+            'bit': 0,
+            'datatype': 'bit',
+            'valuetype': 'None',
+            'ident': '""',
+        }],
+        5,
+        b'\x00',
         [
             ('None', '""', False),
         ],
     ),
 ])
-def test__cast_values(device, addresses, data, expected_value):
-    assert _cast_values(device, addresses, data) == expected_value
+def test__cast_values(values, start_address, area_value, expected_value):
+    assert _cast_values(values, start_address, area_value) == expected_value

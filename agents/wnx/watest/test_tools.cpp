@@ -377,4 +377,27 @@ std::filesystem::path GetFabricYml() {
     return G_SolutionPath / "install" / "resources" /
            cma::cfg::files::kDefaultMainConfig;
 }
+
+bool WaitForSuccess(std::chrono::milliseconds ms,
+                    std::function<bool()> predicat) {
+    using namespace std::chrono_literals;
+    auto count = ms / 20ms;
+
+    auto success = false;
+
+    for (int i = 0; i < count; i++) {
+        if (i % 10 == 9) {
+            xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
+        }
+        if (predicat()) {
+            success = true;
+            break;
+        }
+        cma::tools::sleep(20ms);
+    }
+
+    xlog::sendStringToStdio("\n", xlog::internal::Colors::yellow);
+    return success;
+}
+
 }  // namespace tst

@@ -1510,8 +1510,16 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
 
     discovery_parameters = discovery_test_case.parameters
 
+    # we're depending on the changed host labels:
+    _ = discovery.analyse_host_labels(
+        host_name=scenario.hostname,
+        ipaddress=scenario.ipaddress,
+        parsed_sections_broker=scenario.parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    )
+
     with cmk_debug_enabled():
-        discovered_services, _host_label_result = discovery._discover_host_labels_and_services(
+        discovered_services = [] if discovery_parameters.only_host_labels else discovery._discover_services(
             host_name=scenario.hostname,
             ipaddress=scenario.ipaddress,
             parsed_sections_broker=scenario.parsed_sections_broker,
@@ -1532,12 +1540,11 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
     discovery_parameters = discovery_test_case.parameters
 
     with cmk_debug_enabled():
-        _discovered_services, host_label_result = discovery._discover_host_labels_and_services(
+        host_label_result = discovery.analyse_host_labels(
             host_name=scenario.hostname,
             ipaddress=scenario.ipaddress,
             parsed_sections_broker=scenario.parsed_sections_broker,
             discovery_parameters=discovery_parameters,
-            run_only_plugin_names={CheckPluginName('df')},
         )
 
     assert host_label_result.vanished == discovery_test_case.on_realhost.expected_vanished_host_labels

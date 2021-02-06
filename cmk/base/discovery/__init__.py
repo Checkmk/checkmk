@@ -432,7 +432,14 @@ def _do_discovery_for(
     discovery_parameters: DiscoveryParameters,
 ) -> None:
 
-    discovered_services, host_label_discovery_result = _discover_host_labels_and_services(
+    host_label_discovery_result = analyse_host_labels(
+        host_name=host_name,
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    )
+
+    discovered_services = [] if discovery_parameters.only_host_labels else _discover_services(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
@@ -1359,34 +1366,6 @@ def _find_mgmt_candidates(
     }
 
 
-def _discover_host_labels_and_services(
-    *,
-    host_name: HostName,
-    ipaddress: Optional[HostAddress],
-    parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
-    run_only_plugin_names: Optional[Set[CheckPluginName]],
-) -> Tuple[List[Service], QualifiedDiscovery[HostLabel]]:
-    """Discovers host labels and services per real host or node"""
-
-    host_labels = analyse_host_labels(
-        host_name=host_name,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-    )
-
-    discovered_services = [] if discovery_parameters.only_host_labels else _discover_services(
-        host_name=host_name,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-        run_only_plugin_names=run_only_plugin_names,
-    )
-
-    return discovered_services, host_labels
-
-
 # Create a table of autodiscovered services of a host. Do not save
 # this table anywhere. Do not read any previously discovered
 # services. The table has the following columns:
@@ -1624,8 +1603,15 @@ def _get_discovered_services(
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[QualifiedDiscovery[Service], QualifiedDiscovery[HostLabel]]:
 
+    host_label_discovery_result = analyse_host_labels(
+        host_name=host_name,
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    )
+
     # Handle discovered services -> "new"
-    discovered_services, host_label_discovery_result = _discover_host_labels_and_services(
+    discovered_services = [] if discovery_parameters.only_host_labels else _discover_services(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,

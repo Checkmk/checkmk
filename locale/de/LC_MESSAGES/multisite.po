@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-02-04 07:00+0000\n"
-"Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
+"PO-Revision-Date: 2021-02-05 23:41+0000\n"
+"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -700,9 +700,8 @@ msgstr "(Modul ohne Namen)"
 msgid "(builtin)"
 msgstr "(eingebaut)"
 
-#, fuzzy
 msgid "(default title of the graph)"
-msgstr "(Standardthema)"
+msgstr "(voreingestellter Titel des Grafen)"
 
 msgid "(disabled)"
 msgstr "(deaktiviert)"
@@ -4780,6 +4779,10 @@ msgstr ""
 "Alarmen. In älteren Versionen hat diese Einstellung nur die Sichtbarkeit von "
 "Ereignissen in der GUI beeinflusst und <i>nicht</i> die Alarme. Neue Regeln "
 "haben diese Option automatisch aktiviert, bestehende nicht."
+
+#, fuzzy
+msgid "Altered"
+msgstr "Geclustert"
 
 msgid "Alternative Hostname"
 msgstr "Alternativer Hostname"
@@ -10956,10 +10959,6 @@ msgstr ""
 "dazugehörige Check "
 
 msgid "Could not determine current theme."
-msgstr "Aktuelles Theme konnte nicht festgelegt werden"
-
-#, fuzzy
-msgid "Could not determine ntopng interface"
 msgstr "Aktuelles Theme konnte nicht festgelegt werden"
 
 #, python-format
@@ -19973,6 +19972,10 @@ msgstr "Gastbenutzer"
 msgid "H.Down"
 msgstr "H.Unten"
 
+#, fuzzy
+msgid "HA"
+msgstr "A"
+
 msgid "HARD"
 msgstr "HART"
 
@@ -24892,10 +24895,6 @@ msgstr "Installierte Pakete"
 msgid "Installation"
 msgstr "Installationsdatum"
 
-#, fuzzy
-msgid "Installation Name"
-msgstr "Installationsdatum"
-
 msgid "Installation paths for agent files (Linux, UNIX)"
 msgstr "Installationspfade für Agenten (Linux, UNIX)"
 
@@ -28699,10 +28698,6 @@ msgid "Manager"
 msgstr "Verwalten"
 
 #, fuzzy
-msgid "Manager Status"
-msgstr "Verwalten von Tags"
-
-#, fuzzy
 msgid "Managers"
 msgstr "Verwalten"
 
@@ -29088,13 +29083,11 @@ msgstr "Maximales Cachealter"
 msgid "Max Cache Age (Interval)"
 msgstr "Maximales Cachealter"
 
-#, fuzzy
-msgid "Max Message Size"
-msgstr "Nachrichtenalter"
+msgid "Max Depth"
+msgstr ""
 
-#, fuzzy
-msgid "Max Number Of Messages"
-msgstr "Maximale Anzahl von Meldungen"
+msgid "Max Length"
+msgstr ""
 
 msgid "Max Perm used"
 msgstr "Max Perm used"
@@ -31649,10 +31642,6 @@ msgid "No monitoring core"
 msgstr "Kein Monitoring-Kern"
 
 #, fuzzy
-msgid "No ntopng interfaces found"
-msgstr "Nicht gruppieren"
-
-#, fuzzy
 msgid "No object type"
 msgstr "Verbindungstyp"
 
@@ -33315,15 +33304,16 @@ msgstr "ICMP-Pakete ohne Payload erzeugen"
 msgid "Omit rows where all columns are identical"
 msgstr "Zeilen mit nur identischen Spalten auslassen"
 
-msgid "On Down host"
-msgstr "Bei Host DOWN"
-
 msgid "On Hold"
 msgstr "In Wartestellung"
 
 #, fuzzy
 msgid "On all sites"
 msgstr "Alle Instanzen"
+
+#, fuzzy
+msgid "On down host"
+msgstr "Bei Host DOWN"
 
 #, fuzzy
 msgid "On selected MIBs"
@@ -43254,10 +43244,6 @@ msgstr "Standardabweichung der Antwortzeit in Milisekunden"
 
 msgid "Standby"
 msgstr "Standby"
-
-#, fuzzy
-msgid "Standby Status"
-msgstr "Pfaden im Standby"
 
 msgid "Standby node"
 msgstr "Standby-Knoten"
@@ -63301,6 +63287,41 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Could not determine current theme."
+#~ msgid "Could not determine ntopng interface"
+#~ msgstr "Aktuelles Theme konnte nicht festgelegt werden"
+
+#, fuzzy
+#~| msgid "Install Date"
+#~ msgid "Installation Name"
+#~ msgstr "Installationsdatum"
+
+#, fuzzy
+#~| msgid "Manage tags"
+#~ msgid "Manager Status"
+#~ msgstr "Verwalten von Tags"
+
+#, fuzzy
+#~| msgid "Message Age"
+#~ msgid "Max Message Size"
+#~ msgstr "Nachrichtenalter"
+
+#, fuzzy
+#~| msgid "Maximum number of messages"
+#~ msgid "Max Number Of Messages"
+#~ msgstr "Maximale Anzahl von Meldungen"
+
+#, fuzzy
+#~| msgid "Do not group"
+#~ msgid "No ntopng interfaces found"
+#~ msgstr "Nicht gruppieren"
+
+#, fuzzy
+#~| msgid "Standby paths"
+#~ msgid "Standby Status"
+#~ msgstr "Pfaden im Standby"
 
 #~ msgid "Send hint to message inbox (bottom of sidebar)"
 #~ msgstr "Einen Hinweis auf die Meldung am Fuß des Seitenleiste anzeigen"

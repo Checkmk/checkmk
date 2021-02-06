@@ -4569,6 +4569,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Altered"
+msgstr "Cluster nou"
+
+#, fuzzy
 msgid "Alternative Hostname"
 msgstr "Stare adiministrativă"
 
@@ -10249,10 +10253,6 @@ msgstr ""
 
 msgid "Could not determine current theme."
 msgstr ""
-
-#, fuzzy
-msgid "Could not determine ntopng interface"
-msgstr "Adresă"
 
 #, python-format
 msgid ""
@@ -18947,6 +18947,9 @@ msgstr ""
 msgid "H.Down"
 msgstr ""
 
+msgid "HA"
+msgstr ""
+
 msgid "HARD"
 msgstr ""
 
@@ -22927,10 +22930,6 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Installation"
 msgstr "Adaugă instanță NGINX"
 
-#, fuzzy
-msgid "Installation Name"
-msgstr "Numele Aplicatiei"
-
 msgid "Installation paths for agent files (Linux, UNIX)"
 msgstr ""
 
@@ -26667,10 +26666,6 @@ msgid "Manager"
 msgstr "Statusul Serverului"
 
 #, fuzzy
-msgid "Manager Status"
-msgstr "Statusul Serverului"
-
-#, fuzzy
 msgid "Managers"
 msgstr "Statusul Serverului"
 
@@ -27068,13 +27063,11 @@ msgstr "Vechimea Maxima"
 msgid "Max Cache Age (Interval)"
 msgstr "Vechimea Maxima"
 
-#, fuzzy
-msgid "Max Message Size"
-msgstr "Mesajul Text"
+msgid "Max Depth"
+msgstr ""
 
-#, fuzzy
-msgid "Max Number Of Messages"
-msgstr "Numarul maxim de mesaje"
+msgid "Max Length"
+msgstr ""
 
 msgid "Max Perm used"
 msgstr ""
@@ -29687,10 +29680,6 @@ msgid "No monitoring core"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
-msgid "No ntopng interfaces found"
-msgstr "Adresă"
-
-#, fuzzy
 msgid "No object type"
 msgstr "Conexiune Noua"
 
@@ -31296,15 +31285,16 @@ msgstr ""
 msgid "Omit rows where all columns are identical"
 msgstr ""
 
-msgid "On Down host"
-msgstr ""
-
 msgid "On Hold"
 msgstr ""
 
 #, fuzzy
 msgid "On all sites"
 msgstr "Scaneaza toate elementele"
+
+#, fuzzy
+msgid "On down host"
+msgstr " pentru elementul %s"
 
 #, fuzzy
 msgid "On selected MIBs"
@@ -40705,10 +40695,6 @@ msgstr ""
 
 msgid "Standby"
 msgstr ""
-
-#, fuzzy
-msgid "Standby Status"
-msgstr "Statusul Serverului"
 
 msgid "Standby node"
 msgstr ""
@@ -57598,6 +57584,37 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not determine ntopng interface"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~| msgid "Application Name"
+#~ msgid "Installation Name"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
+#~ msgid "Manager Status"
+#~ msgstr "Statusul Serverului"
+
+#, fuzzy
+#~| msgid "Message Text"
+#~ msgid "Max Message Size"
+#~ msgstr "Mesajul Text"
+
+#, fuzzy
+#~| msgid "Maximum number of messages"
+#~ msgid "Max Number Of Messages"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "No ntopng interfaces found"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Standby Status"
+#~ msgstr "Statusul Serverului"
 
 #, fuzzy
 #~ msgid "%s alerts"

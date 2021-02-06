@@ -1552,7 +1552,14 @@ def _get_node_services(
 ) -> Tuple[ServicesTable, QualifiedDiscovery[HostLabel]]:
 
     host_name = host_config.hostname
-    service_result, host_label_discovery_result = _get_discovered_services(
+    host_label_discovery_result = analyse_host_labels(
+        host_name=host_name,
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    )
+
+    service_result = _get_discovered_services(
         host_name,
         ipaddress,
         parsed_sections_broker,
@@ -1601,14 +1608,7 @@ def _get_discovered_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[QualifiedDiscovery[Service], QualifiedDiscovery[HostLabel]]:
-
-    host_label_discovery_result = analyse_host_labels(
-        host_name=host_name,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-    )
+) -> QualifiedDiscovery[Service]:
 
     # Handle discovered services -> "new"
     discovered_services = [] if discovery_parameters.only_host_labels else _discover_services(
@@ -1625,7 +1625,7 @@ def _get_discovered_services(
         key=lambda s: s.id(),
     )
 
-    return service_result, host_label_discovery_result
+    return service_result
 
 
 # TODO: Rename or extract disabled services handling
@@ -1712,9 +1712,19 @@ def _get_cluster_services(
     # From the states and parameters of these we construct the final state per service.
     for node in host_config.nodes:
         node_config = config_cache.get_host_config(node)
-        services, host_label_discovery_result = _get_discovered_services(
+        node_ipaddress = ip_lookup.lookup_ip_address(node_config,
+                                                     family=node_config.default_address_family)
+
+        host_label_discovery_result = analyse_host_labels(
+            host_name=node,
+            ipaddress=node_ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
+        )
+
+        services = _get_discovered_services(
             node,
-            ip_lookup.lookup_ip_address(node_config, family=node_config.default_address_family),
+            node_ipaddress,
             parsed_sections_broker,
             discovery_parameters,
         )

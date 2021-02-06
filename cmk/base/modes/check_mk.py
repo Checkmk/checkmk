@@ -1630,7 +1630,7 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
         ipaddress,
         selected_sections=selected_sections,
         run_only_plugin_names=run_only_plugin_names,
-        submit_to_core=not options.get("no-submit", False),
+        dry_run=options.get("no-submit", False),
         show_perfdata=options.get("perfdata", False),
     )
 

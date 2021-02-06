@@ -1701,11 +1701,17 @@ def _get_cluster_services(
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[ServicesTable, QualifiedDiscovery[HostLabel]]:
+
+    cluster_host_labels = analyse_cluster_host_labels(
+        host_config=host_config,
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    )
     if not host_config.nodes:
-        return {}, QualifiedDiscovery.empty()
+        return {}, cluster_host_labels
 
     cluster_items: ServicesTable = {}
-    nodes_host_labels: Dict[str, HostLabel] = {}
     config_cache = config.get_config_cache()
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
@@ -1715,27 +1721,12 @@ def _get_cluster_services(
         node_ipaddress = ip_lookup.lookup_ip_address(node_config,
                                                      family=node_config.default_address_family)
 
-        host_label_discovery_result = analyse_host_labels(
-            host_name=node,
-            ipaddress=node_ipaddress,
-            parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
-        )
-
         services = _get_discovered_services(
             node,
             node_ipaddress,
             parsed_sections_broker,
             discovery_parameters,
         )
-
-        # keep the latest for every label.name
-        nodes_host_labels.update({
-            # TODO (mo): According to unit tests, this is what was done prior to refactoring.
-            # Im not sure this is desired. If it is, it should be explained.
-            **{l.name: l for l in host_label_discovery_result.vanished},
-            **{l.name: l for l in host_label_discovery_result.present},
-        })
 
         for check_source, service in itertools.chain(
             (("vanished", s) for s in services.vanished),
@@ -1753,7 +1744,43 @@ def _get_cluster_services(
                     existing_entry=cluster_items.get(service.id()),
                 ))
 
-    cluster_host_labels = _analyse_host_labels(
+    return cluster_items, cluster_host_labels
+
+
+def analyse_cluster_host_labels(
+    *,
+    host_config: config.HostConfig,
+    ipaddress: Optional[str],
+    parsed_sections_broker: ParsedSectionsBroker,
+    discovery_parameters: DiscoveryParameters,
+) -> QualifiedDiscovery[HostLabel]:
+    if not host_config.nodes:
+        return QualifiedDiscovery.empty()
+
+    nodes_host_labels: Dict[str, HostLabel] = {}
+    config_cache = config.get_config_cache()
+
+    for node in host_config.nodes:
+        node_config = config_cache.get_host_config(node)
+        node_ipaddress = ip_lookup.lookup_ip_address(node_config,
+                                                     family=node_config.default_address_family)
+
+        node_result = analyse_host_labels(
+            host_name=node,
+            ipaddress=node_ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
+        )
+
+        # keep the latest for every label.name
+        nodes_host_labels.update({
+            # TODO (mo): According to unit tests, this is what was done prior to refactoring.
+            # Im not sure this is desired. If it is, it should be explained.
+            **{l.name: l for l in node_result.vanished},
+            **{l.name: l for l in node_result.present},
+        })
+
+    return _analyse_host_labels(
         host_name=host_config.hostname,
         discovered_host_labels=list(nodes_host_labels.values()),
         existing_host_labels=_load_existing_host_labels(
@@ -1762,8 +1789,6 @@ def _get_cluster_services(
         ),
         discovery_parameters=discovery_parameters,
     )
-
-    return cluster_items, cluster_host_labels
 
 
 def _cluster_service_entry(

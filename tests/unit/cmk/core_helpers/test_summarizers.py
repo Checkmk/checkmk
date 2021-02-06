@@ -18,7 +18,7 @@ from cmk.core_helpers.type_defs import Mode
 
 class Summarizer(AgentSummarizer):
     def summarize_success(self, host_sections, *, mode):
-        return 0, "", []
+        return 0, ""
 
 
 class TestAgentSummarizer:
@@ -31,19 +31,19 @@ class TestAgentSummarizer:
         return request.param
 
     def test_summarize_success(self, summarizer, mode):
-        assert summarizer.summarize_success(AgentRawData(b""), mode=mode) == (0, "", [])
+        assert summarizer.summarize_success(AgentRawData(b""), mode=mode) == (0, "")
 
     def test_summarize_base_exception(self, summarizer, mode):
-        assert summarizer.summarize_failure(Exception(), mode=mode) == (3, "(?)", [])
+        assert summarizer.summarize_failure(Exception(), mode=mode) == (3, "(?)")
 
     def test_summarize_MKEmptyAgentData_exception(self, summarizer, mode):
-        assert summarizer.summarize_failure(MKEmptyAgentData(), mode=mode) == (2, "(!!)", [])
+        assert summarizer.summarize_failure(MKEmptyAgentData(), mode=mode) == (2, "(!!)")
 
     def test_summarize_MKAgentError_exception(self, summarizer, mode):
-        assert summarizer.summarize_failure(MKAgentError(), mode=mode) == (2, "(!!)", [])
+        assert summarizer.summarize_failure(MKAgentError(), mode=mode) == (2, "(!!)")
 
     def test_summarize_MKTimeout_exception(self, summarizer, mode):
-        assert summarizer.summarize_failure(MKTimeout(), mode=mode) == (2, "(!!)", [])
+        assert summarizer.summarize_failure(MKTimeout(), mode=mode) == (2, "(!!)")
 
 
 class TestAgentSummarizerDefault_AllModes:
@@ -65,7 +65,6 @@ class TestAgentSummarizerDefault_AllModes:
         assert summarizer.summarize_check_mk_section(None, mode=mode) == (
             0,
             "Version: unknown, OS: unknown",
-            [],
         )
 
     def test_random_section(self, summarizer, mode):
@@ -75,7 +74,6 @@ class TestAgentSummarizerDefault_AllModes:
         ) == (
             0,
             "Version: unknown, OS: unknown",
-            [],
         )
 
     def test_clear_version_and_os(self, summarizer, mode):
@@ -85,7 +83,6 @@ class TestAgentSummarizerDefault_AllModes:
         ) == (
             0,
             "",
-            [],
         )
 
     def test_set_version_and_os(self, summarizer, mode):
@@ -95,7 +92,6 @@ class TestAgentSummarizerDefault_AllModes:
         ) == (
             0,
             "Version: 42, OS: BeOS or Haiku OS",
-            [],
         )
 
 
@@ -123,7 +119,7 @@ class TestAgentSummarizerDefault_OnlyFrom:
                 ["onlyfrom:", "deep_space"],
             ],
             mode=mode,
-        ) == (0, "Allowed IP ranges: deep_space", [])
+        ) == (0, "Allowed IP ranges: deep_space")
 
     def test_exceeding(self, summarizer, mode):
         assert summarizer.summarize_check_mk_section(
@@ -133,7 +129,7 @@ class TestAgentSummarizerDefault_OnlyFrom:
                 ["onlyfrom:", "deep_space somewhere_else"],
             ],
             mode=mode,
-        ) == (1, "Unexpected allowed IP ranges (exceeding: somewhere_else)(!)", [])
+        ) == (1, "Unexpected allowed IP ranges (exceeding: somewhere_else)(!)")
 
     def test_exceeding_missing(self, summarizer, mode):
         assert summarizer.summarize_check_mk_section(
@@ -146,7 +142,6 @@ class TestAgentSummarizerDefault_OnlyFrom:
         ) == (
             1,
             "Unexpected allowed IP ranges (exceeding: somewhere_else, missing: deep_space)(!)",
-            [],
         )
 
 
@@ -175,7 +170,7 @@ class TestAgentSummarizerDefault_CheckVersion:
                 ["agentos:"],
             ],
             mode=mode,
-        ) == (0, 'Version: 42', [])
+        ) == (0, 'Version: 42')
 
     @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
     def test_mismatch(self, summarizer, mode):
@@ -185,7 +180,7 @@ class TestAgentSummarizerDefault_CheckVersion:
                 ["agentos:"],
             ],
             mode=mode,
-        ) == (1, 'Version: 69, unexpected agent version 69 (should be 42)(!)', [])
+        ) == (1, 'Version: 69, unexpected agent version 69 (should be 42)(!)')
 
     @pytest.mark.parametrize(
         "summarizer",
@@ -204,7 +199,7 @@ class TestAgentSummarizerDefault_CheckVersion:
                 ["agentos:"],
             ],
             mode=mode,
-        ) == (0, 'Version: 69', [])
+        ) == (0, 'Version: 69')
 
     @pytest.mark.parametrize("summarizer", [("at_least", {})], indirect=True)
     def test_at_least_dict_empty(self, summarizer, mode):
@@ -214,7 +209,7 @@ class TestAgentSummarizerDefault_CheckVersion:
                 ["agentos:"],
             ],
             mode=mode,
-        ) == (0, 'Version: 69', [])
+        ) == (0, 'Version: 69')
 
 
 class TestPiggybackSummarizer:
@@ -260,14 +255,14 @@ class TestPiggybackSummarizer:
         assert summarizer.summarize_success(
             host_sections,
             mode=Mode.DISCOVERY,
-        ) == (0, "", [])
+        ) == (0, "")
 
     @pytest.mark.usefixtures("patch_get_piggyback_raw_data")
     def test_summarize_missing_data(self, summarizer, host_sections):
         assert summarizer.summarize_success(
             host_sections,
             mode=Mode.CHECKING,
-        ) == (0, "", [])
+        ) == (0, "")
 
     @pytest.mark.usefixtures("patch_get_piggyback_raw_data")
     def test_summarize_missing_data_with_always_option(
@@ -281,7 +276,7 @@ class TestPiggybackSummarizer:
         assert summarizer.summarize_success(
             host_sections,
             mode=Mode.CHECKING,
-        ) == (1, "Missing data", [])
+        ) == (1, "Missing data")
 
     def test_summarize_existing_data_with_always_option(
         self,
@@ -320,4 +315,4 @@ class TestPiggybackSummarizer:
         assert summarizer.summarize_success(
             host_sections,
             mode=Mode.CHECKING,
-        ) == (0, reason, [])
+        ) == (0, reason)

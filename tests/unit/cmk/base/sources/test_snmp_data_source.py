@@ -160,11 +160,11 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source):
-        assert source.summarize(result.OK(AgentHostSections())) == (0, "Success", [])
+        assert source.summarize(result.OK(AgentHostSections())) == (0, "Success")
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):
-        assert source.summarize(result.Error(Exception())) == (3, "(?)", [])
+        assert source.summarize(result.Error(Exception())) == (3, "(?)")
 
 
 @pytest.fixture(name="check_plugin")

@@ -194,7 +194,7 @@ def do_inv_check(
             infotexts.append("Found %s status entries" % trees.status_data.count_entries())
 
     for source, host_sections in inv_result.source_results:
-        source_state, source_output, _source_perfdata = source.summarize(host_sections)
+        source_state, source_output = source.summarize(host_sections)
         if source_state != 0:
             # Do not output informational things (state == 0). Also do not use source states
             # which would overwrite "State when inventory fails" in the ruleset

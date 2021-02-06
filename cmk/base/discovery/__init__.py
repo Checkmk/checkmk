@@ -798,7 +798,7 @@ def check_discovery(
 
     # Add data source information to check results
     for source, host_sections in result:
-        source_state, source_output, _source_perfdata = source.summarize(host_sections)
+        source_state, source_output = source.summarize(host_sections)
         # Do not output informational (state = 0) things.  These information
         # are shown by the "Check_MK" service
         if source_state != 0:

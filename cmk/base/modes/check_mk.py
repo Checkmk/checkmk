@@ -422,7 +422,7 @@ def mode_dump_agent(hostname: HostName) -> None:
 
             raw_data = source.fetch()
             host_sections = source.parse(raw_data, selection=NO_SELECTION)
-            source_state, source_output, _source_perfdata = source.summarize(host_sections)
+            source_state, source_output = source.summarize(host_sections)
             if source_state != 0:
                 console.error(
                     "ERROR [%s]: %s\n",

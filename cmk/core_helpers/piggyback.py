@@ -15,7 +15,8 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostName,
-    ServiceCheckResult,
+    ServiceState,
+    ServiceDetails,
 )
 
 from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, NoCache
@@ -130,12 +131,12 @@ class PiggybackSummarizer(AgentSummarizer):
         host_sections: AgentHostSections,
         *,
         mode: Mode,
-    ) -> ServiceCheckResult:
+    ) -> Tuple[ServiceState, ServiceDetails]:
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""
         if mode is not Mode.CHECKING:
-            return 0, '', []
+            return 0, ''
 
         sources: Final[Sequence[PiggybackRawDataInfo]] = list(
             itertools.chain.from_iterable(
@@ -147,10 +148,9 @@ class PiggybackSummarizer(AgentSummarizer):
                 for origin in (self.hostname, self.ipaddress)))
         if not sources:
             if self.always:
-                return 1, "Missing data", []
-            return 0, '', []
+                return 1, "Missing data"
+            return 0, ''
         return (
             max(src.reason_status for src in sources),
             ", ".join(src.reason for src in sources if src.reason),
-            [],
         )

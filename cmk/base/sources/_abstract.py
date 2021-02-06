@@ -8,7 +8,7 @@ import abc
 import logging
 from functools import partial
 from pathlib import Path
-from typing import final, Final, Generic, Optional
+from typing import final, Final, Generic, Optional, Tuple
 
 import cmk.utils
 import cmk.utils.debug
@@ -20,7 +20,8 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     result,
-    ServiceCheckResult,
+    ServiceDetails,
+    ServiceState,
     SourceType,
 )
 
@@ -127,7 +128,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     def summarize(
         self,
         host_sections: result.Result[THostSections, Exception],
-    ) -> ServiceCheckResult:
+    ) -> Tuple[ServiceState, ServiceDetails]:
         summarizer = self._make_summarizer()
         return host_sections.fold(
             ok=partial(summarizer.summarize_success, mode=self.mode),

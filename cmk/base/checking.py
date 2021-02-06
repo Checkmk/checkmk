@@ -234,11 +234,10 @@ def do_check(
                 )
 
             for source, host_sections in result:
-                source_state, source_output, source_perfdata = source.summarize(host_sections)
+                source_state, source_output = source.summarize(host_sections)
                 if source_output != "":
                     status = max(status, source_state)
                     infotexts.append("[%s] %s" % (source.id, source_output))
-                    perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
 
             if plugins_missing_data:
                 missing_data_status, missing_data_infotext = _check_plugins_missing_data(

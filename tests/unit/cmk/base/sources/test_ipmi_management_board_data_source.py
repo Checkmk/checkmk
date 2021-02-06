@@ -37,7 +37,7 @@ def test_attribute_defaults(mode, monkeypatch):
     assert source.mode is mode
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
-    assert source.summarize(result.OK(AgentHostSections())) == (0, "Version: unknown", [])
+    assert source.summarize(result.OK(AgentHostSections())) == (0, "Version: unknown")
     assert source.id == "mgmt_ipmi"
 
 

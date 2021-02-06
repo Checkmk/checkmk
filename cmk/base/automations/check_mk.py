@@ -1442,7 +1442,7 @@ class AutomationGetAgentOutput(Automation):
 
                     raw_data = source.fetch()
                     host_sections = source.parse(raw_data, selection=NO_SELECTION)
-                    source_state, source_output, _source_perfdata = source.summarize(host_sections)
+                    source_state, source_output = source.summarize(host_sections)
                     if source_state != 0:
                         # Optionally show errors of problematic data sources
                         success = False

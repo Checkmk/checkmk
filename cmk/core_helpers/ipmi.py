@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Final, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, Final, List, Optional, Tuple, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 
@@ -24,8 +24,8 @@ from cmk.utils.type_defs import (
     AgentRawData,
     HostAddress,
     SectionName,
-    ServiceCheckResult,
     ServiceDetails,
+    ServiceState,
 )
 
 from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, DefaultAgentFileCache
@@ -274,8 +274,8 @@ class IPMISummarizer(AgentSummarizer):
         host_sections: AgentHostSections,
         *,
         mode: Mode,
-    ) -> ServiceCheckResult:
-        return 0, "Version: %s" % self._get_ipmi_version(host_sections), []
+    ) -> Tuple[ServiceState, ServiceDetails]:
+        return 0, "Version: %s" % self._get_ipmi_version(host_sections)
 
     @staticmethod
     def _get_ipmi_version(host_sections: Optional[AgentHostSections]) -> ServiceDetails:

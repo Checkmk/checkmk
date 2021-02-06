@@ -37,10 +37,8 @@ from cmk.utils.type_defs import (
     AgentTargetVersion,
     ExitSpec,
     HostName,
-    MetricTuple,
     SectionName,
     ServiceDetails,
-    ServiceCheckResult,
     ServiceState,
     state_markers,
 )
@@ -765,7 +763,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         host_sections: AgentHostSections,
         *,
         mode: Mode,
-    ) -> ServiceCheckResult:
+    ) -> Tuple[ServiceState, ServiceDetails]:
         return self.summarize_check_mk_section(
             host_sections.sections.get(SectionName("check_mk")),
             mode=mode,
@@ -776,12 +774,11 @@ class AgentSummarizerDefault(AgentSummarizer):
         cmk_section: Optional[AgentRawDataSection],
         *,
         mode: Mode,
-    ) -> ServiceCheckResult:
+    ) -> Tuple[ServiceState, ServiceDetails]:
         agent_info = self._get_agent_info(cmk_section)
 
         status: ServiceState = 0
         output: List[ServiceDetails] = []
-        perfdata: List[MetricTuple] = []
         if not self.is_cluster and agent_info["version"] is not None:
             output.append("Version: %s" % agent_info["version"])
 
@@ -789,17 +786,13 @@ class AgentSummarizerDefault(AgentSummarizer):
             output.append("OS: %s" % agent_info["agentos"])
 
         if mode is Mode.CHECKING and cmk_section:
-            for sub_result in [
+            for sub_status, sub_output in (r for r in [
                     self._check_version(agent_info.get("version")),
                     self._check_only_from(agent_info.get("onlyfrom")),
-            ]:
-                if not sub_result:
-                    continue
-                sub_status, sub_output, sub_perfdata = sub_result
+            ] if r):
                 status = max(status, sub_status)
                 output.append(sub_output)
-                perfdata += sub_perfdata
-        return status, ", ".join(output), perfdata
+        return status, ", ".join(output)
 
     @staticmethod
     def _get_agent_info(cmk_section: Optional[AgentRawDataSection],) -> Dict[str, Optional[str]]:
@@ -815,7 +808,8 @@ class AgentSummarizerDefault(AgentSummarizer):
             agent_info[line[0][:-1].lower()] = value
         return agent_info
 
-    def _check_version(self, agent_version: Optional[str]) -> Optional[ServiceCheckResult]:
+    def _check_version(
+            self, agent_version: Optional[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]:
         expected_version = self.agent_target_version
 
         if expected_version and agent_version \
@@ -837,21 +831,21 @@ class AgentSummarizerDefault(AgentSummarizer):
             else:
                 expected = "%s" % (expected_version,)
             status = cast(int, self.exit_spec.get("wrong_version", 1))
-            return (status, "unexpected agent version %s (should be %s)%s" %
-                    (agent_version, expected, state_markers[status]), [])
+            return status, (f"unexpected agent version {agent_version} "
+                            f"(should be {expected}){state_markers[status]}")
 
         if self.agent_min_version and cast(int, agent_version) < self.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
             status = self.exit_spec.get("wrong_version", 1)
-            return (status, "old plugin version %s (should be at least %s)%s" %
-                    (agent_version, self.agent_min_version, state_markers[status]), [])
+            return status, (f"old plugin version {agent_version} "
+                            f"(should be at least {self.agent_min_version}){state_markers[status]}")
 
         return None
 
     def _check_only_from(
         self,
         agent_only_from: Optional[str],
-    ) -> Optional[ServiceCheckResult]:
+    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
         if agent_only_from is None:
             return None
 
@@ -862,7 +856,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         allowed_nets = set(normalize_ip_addresses(agent_only_from))
         expected_nets = set(normalize_ip_addresses(config_only_from))
         if allowed_nets == expected_nets:
-            return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0]), []
+            return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0])
 
         infotexts = []
         exceeding = allowed_nets - expected_nets
@@ -875,8 +869,10 @@ class AgentSummarizerDefault(AgentSummarizer):
 
         mismatch_state = self.exit_spec.get("restricted_address_mismatch", 1)
         assert isinstance(mismatch_state, int)
-        return (mismatch_state, "Unexpected allowed IP ranges (%s)%s" %
-                (", ".join(infotexts), state_markers[mismatch_state]), [])
+        return mismatch_state, "Unexpected allowed IP ranges (%s)%s" % (
+            ", ".join(infotexts),
+            state_markers[mismatch_state],
+        )
 
     @staticmethod
     def _is_expected_agent_version(

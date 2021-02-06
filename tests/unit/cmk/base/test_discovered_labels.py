@@ -290,7 +290,7 @@ def test_analyse_host_labels(discovered_host_labels_dir, existing_labels, new_la
                              expected_labels, load_labels):
     def make_host_labels(raw_data):
         # discovered host labels always have a plugin name
-        return [HostLabel(n, n, SectionName("moo")) for n, v in raw_data]
+        return [HostLabel(n, v, SectionName("moo")) for n, v in raw_data]
 
     config.get_config_cache().initialize()
 

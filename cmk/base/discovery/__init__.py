@@ -1086,6 +1086,31 @@ def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
 #   '----------------------------------------------------------------------'
 
 
+def analyse_host_labels(
+    *,
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+    parsed_sections_broker: ParsedSectionsBroker,
+    discovery_parameters: DiscoveryParameters,
+) -> QualifiedDiscovery[HostLabel]:
+    """Discovers host labels and services per real host or node"""
+
+    return _analyse_host_labels(
+        host_name=host_name,
+        discovered_host_labels=_discover_host_labels(
+            host_name=host_name,
+            ipaddress=ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
+        ),
+        existing_host_labels=_load_existing_host_labels(
+            host_name=host_name,
+            discovery_parameters=discovery_parameters,
+        ),
+        discovery_parameters=discovery_parameters,
+    )
+
+
 def _analyse_host_labels(
     *,
     host_name: HostName,
@@ -1344,18 +1369,10 @@ def _discover_host_labels_and_services(
 ) -> Tuple[List[Service], QualifiedDiscovery[HostLabel]]:
     """Discovers host labels and services per real host or node"""
 
-    host_labels = _analyse_host_labels(
+    host_labels = analyse_host_labels(
         host_name=host_name,
-        discovered_host_labels=_discover_host_labels(
-            host_name=host_name,
-            ipaddress=ipaddress,
-            parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
-        ),
-        existing_host_labels=_load_existing_host_labels(
-            host_name=host_name,
-            discovery_parameters=discovery_parameters,
-        ),
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
     )
 

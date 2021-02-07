@@ -1804,6 +1804,9 @@ class BIModeAggregations(ABCBIMode):
                                 ),
                             ],
                         ),
+                        # TODO CMK-7121 row selection is written to
+                        # ~/var/check_mk/web/user/rowselection/null.mk with
+                        # "null" key
                         make_checkbox_selection_topic("bi"),
                     ],
                 ),

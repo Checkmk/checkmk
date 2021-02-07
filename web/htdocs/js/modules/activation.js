@@ -135,7 +135,6 @@ function lock_activation_controls(lock) {
         elements[i].disabled = lock ? "disabled" : false;
     }
 
-    page_menu.enable_menu_entry("activate_affected", !lock);
     page_menu.enable_menu_entry("activate_selected", !lock);
     page_menu.enable_menu_entry("discard_changes", !lock);
 }

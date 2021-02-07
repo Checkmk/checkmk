@@ -478,7 +478,7 @@ def execute_check(
             ipaddress,
             service,
             plugin,
-            lambda: final_read_only_check_parameters(service.parameters),
+            lambda: _final_read_only_check_parameters(service.parameters),
         )
 
     if submittable.submit:
@@ -605,7 +605,7 @@ def get_aggregated_result(
     )
 
 
-def final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:
+def _final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:
     raw_parameters = (time_resolved_check_parameters(entries) if isinstance(
         entries, cmk.base.config.TimespecificParamList) else entries)
     # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.

@@ -1,0 +1,14 @@
+title: Fortinet FortiMail Mail Queue Info
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This Check will display every exisiting Queue on a Fortinet Mail Server and the amount and
+ size of the queued mails within those.
+ The Check can go into warning or ciritical if the amount of mails in the Queue is too high.
+ The default thresholds are:
+ 100 Mails for warning and 200 Mails for ciritical.
+
+discovery:
+ One check per Mail Queue will be created.

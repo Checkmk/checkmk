@@ -475,7 +475,7 @@ def execute_check(
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
         with _service_context(service):
-            return _execute_check_legacy_mode(
+            submittable = _execute_check_legacy_mode(
                 MultiHostSections(parsed_sections_broker),
                 host_config.hostname,
                 ipaddress,
@@ -484,18 +484,16 @@ def execute_check(
                     time_resolved_check_parameters(service.parameters)  #
                     if isinstance(service.parameters, cmk.base.config.TimespecificParamList) else
                     service.parameters),
-                dry_run=dry_run,
-                show_perfdata=show_perfdata,
             )
-
-    submittable = get_aggregated_result(
-        parsed_sections_broker,
-        host_config,
-        ipaddress,
-        service,
-        plugin,
-        lambda: final_read_only_check_parameters(service.parameters),
-    )
+    else:  # This is the new, shiny, 'normal' case.
+        submittable = get_aggregated_result(
+            parsed_sections_broker,
+            host_config,
+            ipaddress,
+            service,
+            plugin,
+            lambda: final_read_only_check_parameters(service.parameters),
+        )
 
     if submittable.submit:
         _submit_to_core.check_result(
@@ -506,8 +504,8 @@ def execute_check(
             dry_run=dry_run,
             show_perfdata=show_perfdata,
         )
-    elif submittable.data_received:
-        console.verbose("%-20s PEND - %s\n", ensure_str(service.description), submittable.result[1])
+    else:
+        console.verbose(f"{service.description:20} PEND - {submittable.result[1]}\n")
 
     return submittable.data_received
 
@@ -628,32 +626,24 @@ def _execute_check_legacy_mode(
     service: Service,
     *,
     used_params: LegacyCheckParameters,
-    dry_run: bool,
-    show_perfdata: bool,
-) -> bool:
+) -> AggregatedResult:
     legacy_check_plugin_name = config.legacy_check_plugin_names.get(service.check_plugin_name)
     if legacy_check_plugin_name is None:
-        _submit_to_core.check_result(
-            host_name=hostname,
-            service_name=service.description,
+        return AggregatedResult(
+            submit=True,
+            data_received=True,
             result=CHECK_NOT_IMPLEMENTED,
             cache_info=None,
-            dry_run=dry_run,
-            show_perfdata=show_perfdata,
         )
-        return True
 
     check_function = config.check_info[legacy_check_plugin_name].get("check_function")
     if check_function is None:
-        _submit_to_core.check_result(
-            host_name=hostname,
-            service_name=service.description,
+        return AggregatedResult(
+            submit=True,
+            data_received=True,
             result=CHECK_NOT_IMPLEMENTED,
             cache_info=None,
-            dry_run=dry_run,
-            show_perfdata=show_perfdata,
         )
-        return True
 
     section_name = legacy_check_plugin_name.split('.')[0]
 
@@ -676,7 +666,12 @@ def _execute_check_legacy_mode(
         )
 
         if section_content is None:  # No data for this check type
-            return False
+            return AggregatedResult(
+                submit=False,
+                data_received=False,
+                result=RECEIVED_NO_DATA,
+                cache_info=None,
+            )
 
         # Call the actual check function
         item_state.reset_wrapped_counters()
@@ -685,14 +680,16 @@ def _execute_check_legacy_mode(
         result = sanitize_check_result(raw_result)
         item_state.raise_counter_wrap()
 
-    except item_state.MKCounterWrapped as e:
+    except item_state.MKCounterWrapped as exc:
         # handle check implementations that do not yet support the
         # handling of wrapped counters via exception on their own.
         # Do not submit any check result in that case:
-        console.verbose("%-20s PEND - Cannot compute check result: %s\n",
-                        ensure_str(service.description), e)
-        # Don't submit to core - we're done.
-        return True
+        return AggregatedResult(
+            submit=False,
+            data_received=True,
+            result=(0, f"Cannot compute check result: {exc}\n", []),
+            cache_info=None,
+        )
 
     except MKTimeout:
         raise
@@ -712,15 +709,12 @@ def _execute_check_legacy_mode(
             is_manual=service.id() in check_table.get_check_table(hostname, skip_autochecks=True),
         ), []
 
-    _submit_to_core.check_result(
-        host_name=hostname,
-        service_name=service.description,
+    return AggregatedResult(
+        submit=True,
+        data_received=True,
         result=result,
         cache_info=multi_host_sections.legacy_determine_cache_info(SectionName(section_name)),
-        dry_run=dry_run,
-        show_perfdata=show_perfdata,
     )
-    return True
 
 
 def final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:

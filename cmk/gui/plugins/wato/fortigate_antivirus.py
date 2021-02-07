@@ -17,12 +17,12 @@ from cmk.gui.plugins.wato import (
 def _parameter_valuespec_fortigate_antivirus():
     return Dictionary(elements=[(
         "detections",
-        Tuple(title=_("Detections/5min"),
+        Tuple(title=_("Detections/sec"),
               help=_("These levels make the check go warning or critical whenever the "
                      "<b>count of Detections/s</b> of the monitored Fortigate System is too high."),
               elements=[
-                  Integer(title=_("warning at"), unit=u"Detections/5min", default_value=100),
-                  Integer(title=_("critical at"), unit=u"Detections/5min", default_value=300),
+                  Integer(title=_("warning at"), unit=u"Detections/sec", default_value=100),
+                  Integer(title=_("critical at"), unit=u"Detections/sec", default_value=300),
               ]))])
 
 rulespec_registry.register(

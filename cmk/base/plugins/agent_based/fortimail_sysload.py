@@ -20,7 +20,6 @@ from .agent_based_api.v1.type_defs import (
 )
 from .agent_based_api.v1 import (
     register,
-    IgnoreResultsError,
     Service,
     equals,
     check_levels,
@@ -43,9 +42,7 @@ def discovery_fortimail_sysload(section: Section) -> DiscoveryResult:
 def check_fortimail_sysload(params: Mapping[str, Tuple[float, float]],
                             section: Section) -> CheckResult:
     mail_sysload_upper = params.get('mail_sysload')
-    sysload = section.get('sysload')
-    if not isinstance(sysload, float):
-        raise IgnoreResultsError("Failed to read system load")
+    sysload = section['sysload']
     yield from check_levels(
         sysload,
         levels_upper=mail_sysload_upper,

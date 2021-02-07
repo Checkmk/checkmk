@@ -57,7 +57,10 @@ def test_check_cmk_site_statistics():
         Result(
             state=State.OK,
             summary='Problem hosts: 9',
-            details='UP hosts: 1\nDOWN hosts: 2\nUnreachable hosts: 3\nHosts in downtime: 4',
+            details='Hosts in state UP: 1\n'
+            'Hosts in state DOWN: 2\n'
+            'Unreachable hosts: 3\n'
+            'Hosts in downtime: 4',
         ),
         Result(
             state=State.OK,
@@ -66,8 +69,12 @@ def test_check_cmk_site_statistics():
         Result(
             state=State.OK,
             summary='Problem services: 40',
-            details=
-            'Services in downtime: 6\nServices of down hosts: 7\nWARNING services: 8\nUNKNOWN services: 9\nCRITICAL services: 10',
+            details='Services in state OK: 5\n'
+            'Services in downtime: 6\n'
+            'Services of down hosts: 7\n'
+            'Services in state WARNING: 8\n'
+            'Services in state UNKNOWN: 9\n'
+            'Services in state CRITICAL: 10',
         ),
         Metric('cmk_hosts_up', 1.0),
         Metric('cmk_hosts_down', 2.0),

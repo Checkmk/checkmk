@@ -216,6 +216,7 @@ class BICompiledRule(ABCBICompiledNode):
     def __init__(
         self,
         rule_id: str,
+        pack_id: str,
         nodes: List[ABCBICompiledNode],
         required_hosts: List[Tuple[SiteId, HostName]],
         properties: BIRuleProperties,
@@ -224,6 +225,7 @@ class BICompiledRule(ABCBICompiledNode):
     ):
         super().__init__()
         self.id = rule_id
+        self.pack_id = pack_id
         self.required_hosts = required_hosts
         self.nodes = nodes
         self.properties = properties
@@ -315,6 +317,7 @@ class BICompiledRule(ABCBICompiledNode):
 
 class BICompiledRuleSchema(Schema):
     id = ReqString()
+    pack_id = ReqString()
     type = ReqConstant(BICompiledRule.type())
     required_hosts = ReqList(fields.Nested(BISiteHostPairSchema))
     nodes = ReqList(fields.Nested("BIResultSchema"))

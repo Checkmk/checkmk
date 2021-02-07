@@ -139,7 +139,7 @@ curl \\
   {%- endif %}
  {%- endfor %}
 {%- endif %}
-{%- if request_schema %} \\
+{%- if request_schema %}
     --data '{{ request_schema |
             to_dict |
             to_json(indent=2, sort_keys=True) |

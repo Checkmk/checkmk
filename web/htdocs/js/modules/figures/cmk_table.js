@@ -41,8 +41,7 @@ export class TableFigure extends cmk_figures.FigureBase {
             .join("tr")
             .attr("class", d => (d.classes && d.classes.join(" ")) || null);
 
-        let cells = rows
-            .selectAll(".cell")
+        rows.selectAll(".cell")
             .data(d => d.cells)
             .join(enter =>
                 enter.append(d => {
@@ -90,7 +89,7 @@ cmk_figures.figure_registry.register(TableFigure);
 function _update_dc_graphs_in_selection(selection, graph_group) {
     selection.selectAll(".figure_cell").each((d, idx, nodes) => {
         // TODO: implement better intialization solution, works for now
-        if (d.figure_size != undefined)
+        if (!d.figure_config || !d.figure_config.type)
             // new format, not to be handled by this legacy block
             return;
 

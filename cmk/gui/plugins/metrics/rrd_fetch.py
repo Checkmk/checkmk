@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List, Set, Tuple, Union, Optional, Itera
 import livestatus
 
 import cmk.utils.version as cmk_version
-from cmk.gui.plugins.metrics.utils import check_metrics
+from cmk.gui.plugins.metrics.utils import check_metrics, reverse_translate_metric_name
 import cmk.gui.plugins.metrics.timeseries as ts
 from cmk.utils.prediction import livestatus_lql, TimeSeries
 from cmk.gui.i18n import _
@@ -152,7 +152,7 @@ def fetch_rrd_data(site, host_name, service_description, entries, graph_recipe, 
 
 def rrd_columns(metrics: List[Tuple[str, Optional[str], float]], rrd_consolidation: str,
                 data_range: str) -> Iterator[ColumnName]:
-    """RRD data columns for all metrics
+    """RRD data columns for each metric
 
     Include scaling of metric directly in query"""
 
@@ -162,6 +162,17 @@ def rrd_columns(metrics: List[Tuple[str, Optional[str], float]], rrd_consolidati
         if scale != 1.0:
             rpn += ",%f,*" % scale
         yield "rrddata:%s:%s:%s" % (perfvar, rpn, data_range)
+
+
+def metric_in_all_rrd_columns(metric: str, rrd_consolidation: str, from_time: int,
+                              until_time: int) -> List[ColumnName]:
+    """Translate metric name to all perf_data names and construct RRD data columns for each"""
+
+    data_range = "%s:%s:%s" % (from_time, until_time, 60)
+    _metrics: List[Tuple[str, Optional[str], float]] = [
+        (name, None, scale) for name, scale in reverse_translate_metric_name(metric)
+    ]
+    return list(rrd_columns(_metrics, rrd_consolidation, data_range))
 
 
 def merge_multicol(row: Dict, rrdcols: List[ColumnName], params: Dict) -> TimeSeries:

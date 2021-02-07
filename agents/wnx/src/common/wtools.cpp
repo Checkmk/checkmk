@@ -2741,6 +2741,261 @@ std::wstring ToCanonical(std::wstring_view raw_app_name) {
     return std::wstring(raw_app_name);
 }
 
+namespace {
+struct SidStore {
+    SID* sid() const noexcept { return sid_; }
+    size_t count() const noexcept { return count_; }
+    bool makeAdmin() { return assignAdmin(); }
+    bool makeCreator() { return assignCreator(); }
+    bool makeEveryone() { return assignEveryone(); }
+
+private:
+    //
+    // Win32 wrapper
+    //
+
+    bool assignAdmin() {
+        SID_IDENTIFIER_AUTHORITY sia_admin = SECURITY_NT_AUTHORITY;
+        constexpr UCHAR count{2};
+
+        if (InitializeSid(sid_, &sia_admin, count) == FALSE) {
+            return false;
+        }
+        count_ = count;
+        *GetSidSubAuthority(sid_, 0) = SECURITY_BUILTIN_DOMAIN_RID;
+        *GetSidSubAuthority(sid_, 1) = DOMAIN_ALIAS_RID_ADMINS;
+        return true;
+    }
+
+    bool assignCreator() {
+        SID_IDENTIFIER_AUTHORITY sia_creator = SECURITY_CREATOR_SID_AUTHORITY;
+        constexpr UCHAR count{1};
+
+        if (InitializeSid(sid_, &sia_creator, count) == FALSE) {
+            return false;
+        }
+        count_ = count;
+        *GetSidSubAuthority(sid_, 0) = SECURITY_CREATOR_OWNER_RID;
+        return true;
+    }
+
+    bool assignEveryone() {
+        SID_IDENTIFIER_AUTHORITY sia_world = SECURITY_WORLD_SID_AUTHORITY;
+        constexpr UCHAR count{1};
+
+        if (InitializeSid(sid_, &sia_world, count) == FALSE) {
+            return false;
+        }
+        count_ = count;
+        *GetSidSubAuthority(sid_, 0) = SECURITY_WORLD_RID;
+        return true;
+    }
+
+    char buf_[32];
+    SID* sid_{reinterpret_cast<SID*>(buf_)};
+    size_t count_{0};
+};
+
+ACL* CombineSidsIntoACl(SidStore& first, SidStore& second) {
+    // compute size of acl
+    auto acl_size = sizeof(ACL) +
+                    2 * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)) +
+                    GetSidLengthRequired(static_cast<UCHAR>(first.count())) +
+                    GetSidLengthRequired(static_cast<UCHAR>(second.count()));
+
+    // create ACL
+    auto acl = static_cast<ACL*>(ProcessHeapAlloc(acl_size));
+
+    // init ACL
+    if (acl != nullptr &&
+        ::InitializeAcl(acl, (int32_t)acl_size, ACL_REVISION) == TRUE &&
+        ::AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS,
+                              first.sid()) == TRUE &&
+        ::AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS,
+                              second.sid()) == TRUE)
+        return acl;
+    XLOG::l("Failed ACL creation");
+    ProcessHeapFree(acl);
+    return nullptr;
+}
+
+}  // namespace
+
+ACL* BuildStandardAcl() {
+    SidStore everyone;
+    SidStore owner;
+
+    if (!everyone.makeEveryone() || !owner.makeCreator()) {
+        return nullptr;
+    }
+
+    return CombineSidsIntoACl(everyone, owner);
+}
+
+ACL* BuildAdminAcl() {
+    SidStore admin;
+    SidStore owner;
+
+    // initialize well known SID's
+    if (!admin.makeAdmin() || !owner.makeCreator()) {
+        return nullptr;
+    }
+
+    return CombineSidsIntoACl(admin, owner);
+}
+
+SecurityAttributeKeeper::SecurityAttributeKeeper(SecurityLevel sl) {
+    if (!allocAll(sl)) {
+        cleanupAll();
+    }
+}
+SecurityAttributeKeeper::~SecurityAttributeKeeper() {
+    cleanupAll();  //
+}
+
+bool SecurityAttributeKeeper::allocAll(SecurityLevel sl) {
+    // this trash is referenced in the Security
+    // Descriptor, we should keep it safe
+    switch (sl) {
+        case SecurityLevel::standard:
+            acl_ = BuildStandardAcl();
+            break;
+        case SecurityLevel::admin:
+            acl_ = BuildAdminAcl();
+            break;
+    }
+
+    sd_ = static_cast<SECURITY_DESCRIPTOR*>(
+        ProcessHeapAlloc(sizeof(SECURITY_DESCRIPTOR)));
+    sa_ = static_cast<SECURITY_ATTRIBUTES*>(
+        ProcessHeapAlloc(sizeof(SECURITY_ATTRIBUTES)));
+
+    if (acl_ != nullptr && sd_ != nullptr &&
+        sa_ != nullptr &&  // <--- alloc check
+        ::InitializeSecurityDescriptor(sd_, SECURITY_DESCRIPTOR_REVISION) ==
+            TRUE &&
+        ::SetSecurityDescriptorDacl(sd_, TRUE, acl_, FALSE) == TRUE) {
+        sa_->nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa_->lpSecurityDescriptor = sd_;
+        sa_->bInheritHandle = FALSE;
+        return true;
+    }
+    return false;
+}
+void SecurityAttributeKeeper::cleanupAll() {
+    ProcessHeapFree(acl_);
+    ProcessHeapFree(sd_);
+    ProcessHeapFree(sa_);
+    acl_ = nullptr;
+    sd_ = nullptr;
+    sa_ = nullptr;
+}
+
+#if 0
+/// <summary>
+///  The code below is a reference code from MSDN
+/// </summary>
+ACL* BuildAdminSDAcls {
+    DWORD dwRes, dwDisposition;
+    PSID pEveryoneSID = NULL, pAdminSID = NULL;
+    PACL pACL = NULL;
+    PSECURITY_DESCRIPTOR pSD = NULL;
+    EXPLICIT_ACCESS ea[2];
+    SID_IDENTIFIER_AUTHORITY SIDAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY SIDAuthNT = SECURITY_NT_AUTHORITY;
+    SECURITY_ATTRIBUTES sa;
+    LONG lRes;
+    HKEY hkSub = NULL;
+
+    // Create a well-known SID for the Everyone group.
+    if (!AllocateAndInitializeSid(&SIDAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0,
+                                  0, 0, 0, 0, &pEveryoneSID)) {
+        _tprintf(_T("AllocateAndInitializeSid Error %u\n"), GetLastError());
+        goto Cleanup;
+    }
+
+    // Initialize an EXPLICIT_ACCESS structure for an ACE.
+    // The ACE will allow Everyone read access to the key.
+    ZeroMemory(&ea, 2 * sizeof(EXPLICIT_ACCESS));
+    ea[0].grfAccessPermissions = KEY_READ;
+    ea[0].grfAccessMode = SET_ACCESS;
+    ea[0].grfInheritance = NO_INHERITANCE;
+    ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    ea[0].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+    ea[0].Trustee.ptstrName = (LPTSTR)pEveryoneSID;
+
+    // Create a SID for the BUILTIN\Administrators group.
+    if (!AllocateAndInitializeSid(&SIDAuthNT, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+                                  &pAdminSID)) {
+        _tprintf(_T("AllocateAndInitializeSid Error %u\n"), GetLastError());
+        goto Cleanup;
+    }
+
+    // Initialize an EXPLICIT_ACCESS structure for an ACE.
+    // The ACE will allow the Administrators group full access to
+    // the key.
+    ea[1].grfAccessPermissions = KEY_ALL_ACCESS;
+    ea[1].grfAccessMode = SET_ACCESS;
+    ea[1].grfInheritance = NO_INHERITANCE;
+    ea[1].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    ea[1].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+    ea[1].Trustee.ptstrName = (LPTSTR)pAdminSID;
+
+    // Create a new ACL that contains the new ACEs.
+    dwRes = SetEntriesInAcl(2, ea, NULL, &pACL);
+    if (ERROR_SUCCESS != dwRes) {
+        _tprintf(_T("SetEntriesInAcl Error %u\n"), GetLastError());
+        goto Cleanup;
+    }
+
+    // Initialize a security descriptor.
+    pSD =
+        (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
+    if (NULL == pSD) {
+        _tprintf(_T("LocalAlloc Error %u\n"), GetLastError());
+        goto Cleanup;
+    }
+
+    if (!InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION)) {
+        _tprintf(_T("InitializeSecurityDescriptor Error %u\n"), GetLastError());
+        goto Cleanup;
+    }
+
+    // Add the ACL to the security descriptor.
+    if (!SetSecurityDescriptorDacl(pSD,
+                                   TRUE,  // bDaclPresent flag
+                                   pACL,
+                                   FALSE))  // not a default DACL
+    {
+        _tprintf(_T("SetSecurityDescriptorDacl Error %u\n"), GetLastError());
+        goto Cleanup;
+    }
+
+    // Initialize a security attributes structure.
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.lpSecurityDescriptor = pSD;
+    sa.bInheritHandle = FALSE;
+
+    // Use the security attributes to set the security descriptor
+    // when you create a key.
+    lRes = RegCreateKeyEx(HKEY_CURRENT_USER, _T("mykey"), 0, _T(""), 0,
+                          KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition);
+    _tprintf(_T("RegCreateKeyEx result %u\n"), lRes);
+
+Cleanup:
+
+    if (pEveryoneSID) FreeSid(pEveryoneSID);
+    if (pAdminSID) FreeSid(pAdminSID);
+    if (pACL) LocalFree(pACL);
+    if (pSD) LocalFree(pSD);
+    if (hkSub) RegCloseKey(hkSub);
+
+    return;
+}
+
+#endif
+
 }  // namespace wtools
 
 // verified code from the legacy client
@@ -2761,9 +3016,9 @@ inline SOCKET RemoveSocketInheritance(SOCKET OldSocket) {
 // This is BAD method, still we have no other choice
 //
 SOCKET WSASocketW_Hook(int af, int type, int protocol,
-                       LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g,
-                       DWORD dwFlags) {
-    auto handle = ::WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
+                       LPWSAPROTOCOL_INFOW protocol_info, GROUP g,
+                       DWORD flags) {
+    auto handle = ::WSASocketW(af, type, protocol, protocol_info, g, flags);
     if (handle == INVALID_SOCKET) {
         XLOG::l.bp("Error on socket creation {}", GetLastError());
         return handle;

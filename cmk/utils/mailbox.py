@@ -471,19 +471,16 @@ def _active_check_main_core(
         return 3, 'Unhandled exception: %r' % e, None
 
 
-def _output_check_result(rc: Status, text: str, perfdata: PerfData) -> None:
+def _output_check_result(text: str, perfdata: PerfData) -> None:
     """Write check result message containing the state, a message an optionally performance data
     separated by a pipe '|' symbol:
-    <STATE> - <MESSAGE>[ | <PERF_DATA>]
-    >>> _output_check_result(0, "Successfully connected", None)
-    OK - Successfully connected
-    >>> _output_check_result(1, "Something strange", [("name", "value1", "value2")])
-    WARN - Something strange | name=value1;value2
+    <MESSAGE>[ | <PERF_DATA>]
+    >>> _output_check_result("Successfully connected", None)
+    Successfully connected
+    >>> _output_check_result("Something strange", [("name", "value1", "value2")])
+    Something strange | name=value1;value2
     """
-    sys.stdout.write('%s - %s' % (
-        ('OK', 'WARN', 'CRIT', 'UNKNOWN')[rc],
-        text,
-    ))
+    sys.stdout.write('%s' % text)
     if perfdata:
         sys.stdout.write(" | ")
         sys.stdout.write(" ".join('%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata))
@@ -507,5 +504,5 @@ def active_check_main(
     they are not meant to modify the system environment or terminate the process."""
     cmk.utils.password_store.replace_passwords()
     exitcode, status, perfdata = _active_check_main_core(argument_parser, check_fn, sys.argv[1:])
-    _output_check_result(exitcode, status, perfdata)
+    _output_check_result(status, perfdata)
     raise SystemExit(exitcode)

@@ -699,7 +699,7 @@ class ModeNotifications(ABCNotificationsMode):
                         statename = context.get("HOSTSTATE")[:4]
                         state = context["HOSTSTATEID"]
                         css = "state hstate hstate%s" % state
-                    table.cell(_("State"), statename, css=css)
+                    table.cell(_("State"), html.render_span(statename), css=css)
                 elif nottype.startswith("DOWNTIME"):
                     table.cell(_("State"))
                     html.icon("downtime", _("Downtime"))

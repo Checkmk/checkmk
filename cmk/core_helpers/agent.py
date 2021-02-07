@@ -766,33 +766,32 @@ class AgentSummarizerDefault(AgentSummarizer):
         *,
         mode: Mode,
     ) -> ServiceCheckResult:
-        return self._summarize_impl(
+        return self.summarize_check_mk_section(
             host_sections.sections.get(SectionName("check_mk")),
             mode=mode,
         )
 
-    def _summarize_impl(
+    def summarize_check_mk_section(
         self,
         cmk_section: Optional[AgentRawDataSection],
         *,
         mode: Mode,
     ) -> ServiceCheckResult:
         agent_info = self._get_agent_info(cmk_section)
-        agent_version = agent_info["version"]
 
         status: ServiceState = 0
         output: List[ServiceDetails] = []
         perfdata: List[MetricTuple] = []
-        if not self.is_cluster and agent_version is not None:
-            output.append("Version: %s" % agent_version)
+        if not self.is_cluster and agent_info["version"] is not None:
+            output.append("Version: %s" % agent_info["version"])
 
         if not self.is_cluster and agent_info["agentos"] is not None:
             output.append("OS: %s" % agent_info["agentos"])
 
         if mode is Mode.CHECKING and cmk_section:
             for sub_result in [
-                    self._sub_result_version(agent_info),
-                    self._sub_result_only_from(agent_info),
+                    self._check_version(agent_info.get("version")),
+                    self._check_only_from(agent_info.get("onlyfrom")),
             ]:
                 if not sub_result:
                     continue
@@ -813,14 +812,10 @@ class AgentSummarizerDefault(AgentSummarizer):
 
         for line in cmk_section:
             value = " ".join(line[1:]) if len(line) > 1 else None
-            agent_info[str(line[0][:-1].lower())] = value
+            agent_info[line[0][:-1].lower()] = value
         return agent_info
 
-    def _sub_result_version(
-        self,
-        agent_info: Dict[str, Optional[str]],
-    ) -> Optional[ServiceCheckResult]:
-        agent_version = str(agent_info["version"])
+    def _check_version(self, agent_version: Optional[str]) -> Optional[ServiceCheckResult]:
         expected_version = self.agent_target_version
 
         if expected_version and agent_version \
@@ -853,11 +848,10 @@ class AgentSummarizerDefault(AgentSummarizer):
 
         return None
 
-    def _sub_result_only_from(
+    def _check_only_from(
         self,
-        agent_info: Dict[str, Optional[str]],
+        agent_only_from: Optional[str],
     ) -> Optional[ServiceCheckResult]:
-        agent_only_from = agent_info.get("onlyfrom")
         if agent_only_from is None:
             return None
 

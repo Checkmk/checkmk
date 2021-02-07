@@ -169,8 +169,16 @@ export function confirm_dialog(optional_args, confirm_handler) {
             target: "#page_menu_popups",
             position: "top-start",
             grow: "row",
+            allowOutsideClick: false,
             backdrop: false,
-            animation: false,
+            showClass: {
+                popup: "",
+                backdrop: "",
+            },
+            hideClass: {
+                popup: "",
+                backdrop: "",
+            },
             buttonsStyling: false,
             showCancelButton: true,
             confirmButtonText: "Yes",

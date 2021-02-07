@@ -16,6 +16,7 @@ from cmk.gui import config
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
 from cmk.utils import version
 
 # TODO
@@ -31,9 +32,11 @@ if not version.is_raw_edition():
     import cmk.gui.cee.plugins.openapi  # noqa: F401 # pylint: disable=unused-import,no-name-in-module
 
 
-def generate_data() -> Dict[str, Any]:
+def generate_data(target: EndpointTarget) -> Dict[str, Any]:
     endpoint: Endpoint
     for endpoint in ENDPOINT_REGISTRY:
+        if target in endpoint.blacklist_in:
+            continue
         SPEC.path(
             path=endpoint.path,
             operations=endpoint.to_operation_dict(),
@@ -73,7 +76,7 @@ def generate(args=None):
     if args is None:
         args = [None]
 
-    data = generate_data()
+    data = generate_data(target='debug')
     if args[-1] == '--json':
         output = json.dumps(data, indent=2).rstrip()
     else:

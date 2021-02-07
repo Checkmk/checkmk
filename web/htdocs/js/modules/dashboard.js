@@ -414,19 +414,19 @@ export function toggle_dashboard_edit(edit_text, display_text) {
 
     if (edit_text && display_text) {
         const title = g_editing ? edit_text : display_text;
-        toggle_suggestion.lastChild.textContent = title;
+        if (toggle_suggestion) toggle_suggestion.lastChild.textContent = title;
         toggle_shortcut.title = title;
         toggle_entry.firstChild.lastChild.textContent = title;
     }
 
     if (g_editing) {
         const icon_disable = "themes/" + utils.get_theme() + "/images/emblem_disable.svg";
-        toggle_suggestion.querySelector("img.emblem").src = icon_disable;
+        if (toggle_suggestion) toggle_suggestion.querySelector("img.emblem").src = icon_disable;
         toggle_shortcut.querySelector("img.emblem").src = icon_disable;
         toggle_entry.querySelector("img.emblem").src = icon_disable;
     } else {
         const icon_trans = "themes/facelift/images/emblem_trans.svg";
-        toggle_suggestion.querySelector("img.emblem").src = icon_trans;
+        if (toggle_suggestion) toggle_suggestion.querySelector("img.emblem").src = icon_trans;
         toggle_shortcut.querySelector("img.emblem").src = icon_trans;
         toggle_entry.querySelector("img.emblem").src = icon_trans;
     }
@@ -467,7 +467,7 @@ function render_resize_controls(controls, i) {
     }
 }
 
-function render_sizer(controls, nr, i, anchor_id, size) {
+function render_sizer(centered_controls, nr, i, anchor_id, size) {
     // 0 ~ X, 1 ~ Y
     let orientation = i ? "height" : "width";
     var sizer = document.createElement("div");
@@ -485,12 +485,12 @@ function render_sizer(controls, nr, i, anchor_id, size) {
         sizer.className += " abs";
         sizer.title = "Fixed size (drag border for resize)";
         sizer.innerHTML = "manual " + orientation;
-        render_resize_controls(controls, i);
+        render_resize_controls(centered_controls.parentNode, i);
     }
 
     sizer.onclick = () => toggle_sizer(nr, i);
 
-    controls.appendChild(sizer);
+    centered_controls.appendChild(sizer);
 }
 
 function render_corner_resizers(controls) {
@@ -519,6 +519,14 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         dashlet_obj.appendChild(controls);
         set_control_size(controls, dashlet_obj.clientWidth, dashlet_obj.clientHeight);
 
+        const d_width = parseInt(dashlet_obj.clientWidth);
+        const d_height = parseInt(dashlet_obj.clientHeight);
+        toggle_slim_controls(controls, d_width, d_height);
+
+        const centered_controls = document.createElement("div");
+        centered_controls.className = "centered_controls";
+        controls.appendChild(centered_controls);
+
         // IE < 9: Without this fix the controls container is not working
         if (utils.browser.is_ie_below_9()) {
             controls.style.background = "url(about:blank)";
@@ -529,8 +537,8 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
 
         // Create the size / grow indicators and resizer control elements
         if (utils.has_class(dashlet_obj, "resizable")) {
-            render_sizer(controls, nr, 0, anchor_id, dashlet.w);
-            render_sizer(controls, nr, 1, anchor_id, dashlet.h);
+            render_sizer(centered_controls, nr, 0, anchor_id, dashlet.w);
+            render_sizer(centered_controls, nr, 1, anchor_id, dashlet.h);
 
             if (!is_dynamic(dashlet.w) && !is_dynamic(dashlet.h)) render_corner_resizers(controls);
         }
@@ -553,10 +561,11 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
             if (anchor_id == i) {
                 anchor.className += " on";
                 anchor.title = "Currently growing from here";
-                const drag_image = document.createElement("div");
-                drag_image.className = "drag_image";
-                anchor.appendChild(drag_image);
+                const anchor_image = document.createElement("div");
+                anchor_image.className = "anchor_image";
+                anchor.appendChild(anchor_image);
                 const helper = document.createElement("div");
+                utils.add_class(helper, "anchor_label");
                 helper.innerHTML = "Anchor";
                 anchor.appendChild(helper);
             }
@@ -601,7 +610,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
                 )
             )
         );
-        controls.appendChild(edits);
+        centered_controls.prepend(edits);
     } else {
         // make the inner parts visible again
         utils.remove_class(dashlet_obj, "edit");
@@ -1082,6 +1091,10 @@ function resize_dashlet(event) {
         }
     }
 
+    const new_width = parseInt(dashlet_obj.clientWidth);
+    const new_height = parseInt(dashlet_obj.clientHeight);
+    toggle_slim_controls(document.getElementById("dashlet_controls_" + nr), new_width, new_height);
+
     // Calculates new data for the internal coord structure
     calculate_relative_dashlet_coords(nr);
 
@@ -1159,4 +1172,18 @@ export function chart_pie(pie_id, x_scale, radius, color, right_side, pie_diamet
     context.fill();
     context.restore();
     context = null;
+}
+
+function toggle_slim_controls(controls_obj, width, height) {
+    let thresholds = {};
+    for (const key in dashboard_properties.slim_editor_thresholds) {
+        thresholds[key] =
+            dashboard_properties.slim_editor_thresholds[key] * dashboard_properties.grid_size;
+    }
+
+    if (width < thresholds.width || height < thresholds.height) {
+        utils.add_class(controls_obj, "slim_controls");
+    } else {
+        utils.remove_class(controls_obj, "slim_controls");
+    }
 }

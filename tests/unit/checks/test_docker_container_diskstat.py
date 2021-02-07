@@ -23,7 +23,6 @@ INFO_MISSING_COUNTERS = [
 ]
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_docker_container_diskstat_wrapped():
     check = Check('docker_container_diskstat')
     parsed = check.run_parse(INFO_MISSING_COUNTERS)
@@ -40,7 +39,6 @@ def test_docker_container_diskstat_wrapped():
 @pytest.mark.parametrize("info, discovery_expected", [
     (INFO_MISSING_COUNTERS, DiscoveryResult([("SUMMARY", {})])),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_docker_container_diskstat_discovery(info, discovery_expected):
     check = Check('docker_container_diskstat')
     parsed = check.run_parse(info)

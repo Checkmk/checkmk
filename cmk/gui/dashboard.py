@@ -7,7 +7,7 @@
 import time
 import copy
 import json
-from typing import cast, Set, Dict, Optional, Tuple, Type, List, Union, Callable, Iterator
+from typing import Set, Dict, Optional, Tuple, Type, List, Union, Callable, Iterator
 
 from six import ensure_str
 
@@ -16,7 +16,6 @@ from cmk.gui.utils.html import HTML
 from cmk.utils.exceptions import MKException
 
 import cmk.gui.pages
-import cmk.gui.notify as notify
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
@@ -83,22 +82,27 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.plugins.dashboard.utils import (builtin_dashboards, GROW, MAX, dashlet_types,
-                                             dashlet_registry, Dashlet, get_all_dashboards,
-                                             save_all_dashboards, get_permitted_dashboards,
-                                             copy_view_into_dashlet, dashboard_breadcrumb,
-                                             dashlet_vs_general_settings)
+from cmk.gui.plugins.dashboard.utils import (
+    GROW,
+    MAX,
+    Dashlet,
+    copy_view_into_dashlet,
+    builtin_dashboards,
+    dashboard_breadcrumb,
+    dashlet_types,
+    dashlet_registry,
+    dashlet_vs_general_settings,
+    get_all_dashboards,
+    get_permitted_dashboards,
+    save_all_dashboards,
+)
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
-    DashletId,
+    DashletId, ABCFigureDashlet,
 )
-from cmk.gui.plugins.metrics.html_render import (
-    title_info_elements,
-    render_title_elements,
-    default_dashlet_graph_render_options,
-)
+from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.node_visualization import get_topology_view_and_filters
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -170,9 +174,13 @@ class VisualTypeDashboards(VisualType):
             #                         'graph_index': 0, 'host_name': 'server123'}])
             specification = parameters["definition"]["specification"]
             if specification[0] == "template":
-                context = {"host": specification[1]["host_name"]}
-                if specification[1].get("service_description") != "_HOST_":
-                    context["service"] = specification[1]["service_description"]
+                context = {
+                    "host": specification[1]["host_name"],
+                    # The service context has to be set, even for host graphs. Otherwise the
+                    # pnpgraph dashlet would complain about missing context information when
+                    # displaying host graphs.
+                    "service": specification[1]["service_description"],
+                }
                 parameters = {"source": specification[1]["graph_index"] + 1}
 
             elif specification[0] == "custom":
@@ -475,10 +483,9 @@ def _get_default_dashboard_name() -> str:
     They will see the dashboard that has been built for operators and is built to show only the host
     and service problems that are relevant for the user.
     """
-    return "main"
-    #if cmk_version.is_raw_edition():
-    #    return "main"  # problems = main in raw edition
-    #return "main" if config.user.may("general.see_all") else "problems"
+    if cmk_version.is_raw_edition():
+        return "main"  # problems = main in raw edition
+    return "main" if config.user.may("general.see_all") else "problems"
 
 
 def _load_dashboard_with_cloning(permitted_dashboards: Dict[DashboardName, DashboardConfig],
@@ -581,6 +588,10 @@ def draw_dashboard(name: DashboardName) -> None:
         "dashboard_name": name,
         "dashboard_mtime": board['mtime'],
         "dashlets": _get_dashlet_coords(dashlets),
+        "slim_editor_thresholds": {
+            "width": 28,
+            "height": 14,
+        },
     }
 
     html.javascript("""
@@ -668,28 +679,13 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
                           "form on the right to make this dashlet render.") %
                         ", ".join(sorted(missing_single_infos)))))
 
-        title = _render_dashlet_title(dashlet)
+        title = dashlet.render_title_html()
         content = _render_dashlet_content(board, dashlet, is_update=False, mtime=board["mtime"])
 
     except Exception as e:
         content = render_dashlet_exception_content(dashlet, e)
 
     return title, content
-
-
-def _render_dashlet_title(dashlet: Dashlet) -> Union[str, HTML]:
-    title = dashlet.display_title()
-    title_elements = []
-    title_format = dashlet._dashlet_spec.get("title_format", ["plain"])
-
-    if dashlet.show_title() and title and "plain" in title_format:
-        title_elements.append((title, dashlet.title_url()))
-
-    if dashlet.type_name() == "pnpgraph" and dashlet._dashlet_spec.get("_graph_identification"):
-        title_elements.extend(
-            title_info_elements(dashlet._dashlet_spec["_graph_identification"][1], title_format))
-
-    return render_title_elements(title_elements)
 
 
 def _render_dashlet_content(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
@@ -878,6 +874,7 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         item=make_javascript_link('cmk.dashboard.toggle_dashboard_edit("%s", "%s")' %
                                   (edit_text, display_text)),
         is_shortcut=True,
+        is_suggested=False,
         name="toggle_edit",
     )
 
@@ -917,6 +914,7 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                                                              "ajax_initial_dashboard_filters")),
                               name="filters",
                               is_shortcut=True,
+                              is_suggested=False,
                           ),
                       ]))
 
@@ -1047,6 +1045,13 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName, board: Dashboard
             (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
     )
 
+    yield PageMenuEntry(
+        title='Alert statistics',
+        icon_name='statistic',
+        item=make_simple_link(
+            'edit_dashlet.py?name=%s&create=0&back=%s&type=alert_statistics' %
+            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+    )
     yield PageMenuEntry(
         title='Host Statistics',
         icon_name={
@@ -1247,10 +1252,7 @@ def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> Non
     is updated later using the dashboard_dashlet.py ajax call.
     """
     if all((
-            dashlet.type_name() not in [
-                'single_metric', 'average_scatterplot', 'site_overview', 'gauge', 'barplot',
-                'average_scatterplot', 'alerts_bar_chart', 'notifications_bar_chart'
-            ],
+            not isinstance(dashlet, ABCFigureDashlet),
             title is not None,
             dashlet.show_title(),
     )):
@@ -1614,12 +1616,12 @@ class EditDashletPage(Page):
             title = _('Add Dashlet')
 
             try:
-                dashlet_type = cast(Dashlet, dashlet_registry[type_name])
+                dashlet_type = dashlet_registry[type_name]
             except KeyError:
                 raise MKUserError("type", _('The requested dashlet type does not exist.'))
 
             # Initial configuration
-            dashlet_spec = {
+            dashlet_spec: DashletConfig = {
                 'position': dashlet_type.initial_position(),
                 'size': dashlet_type.initial_size(),
                 'single_infos': dashlet_type.single_infos(),
@@ -1653,9 +1655,9 @@ class EditDashletPage(Page):
             except IndexError:
                 raise MKUserError("id", _('The dashlet does not exist.'))
 
-            type_name = cast(str, dashlet_spec['type'])
-            dashlet_type = cast(Dashlet, dashlet_registry[type_name])
-            single_infos = cast(List[str], dashlet_spec['single_infos'])
+            type_name = dashlet_spec['type']
+            dashlet_type = dashlet_registry[type_name]
+            single_infos = dashlet_spec['single_infos']
 
         breadcrumb = _dashlet_editor_breadcrumb(self._board, self._dashboard, title)
         html.header(title, breadcrumb=breadcrumb, page_menu=_dashlet_editor_page_menu(breadcrumb))
@@ -1693,9 +1695,8 @@ class EditDashletPage(Page):
 
         # Check disjoint option on known valuespecs
         if isinstance(vs_type, Dictionary):
-            settings_elements = set(el[0] for el in vs_general._elements)
-            pe = vs_type._elements() if callable(vs_type._elements) else vs_type._elements
-            properties_elements = set(el[0] for el in pe)
+            settings_elements = set(el[0] for el in vs_general._get_elements())
+            properties_elements = set(el[0] for el in vs_type._get_elements())
             assert settings_elements.isdisjoint(
                 properties_elements), "Dashlet settings and properties have a shared option name"
 
@@ -1876,12 +1877,6 @@ def ajax_dashlet_pos() -> None:
                             html.request.get_integer_input_mandatory("h"))
     save_all_dashboards()
     html.write('OK %d' % board['mtime'])
-
-
-@cmk.gui.pages.register("ajax_delete_user_notification")
-def ajax_delete_user_notification() -> None:
-    msg_id = html.request.get_str_input_mandatory("id")
-    notify.delete_gui_message(msg_id)
 
 
 #.

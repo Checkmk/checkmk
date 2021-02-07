@@ -37,7 +37,6 @@ pytestmark = pytest.mark.checks
     (['orabase.lun50', '(360a9800043346937686f456f59386741)', 'dm-15', 'NETAPP,LUN'
      ], '360a9800043346937686f456f59386741')
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_multipath_parse_groups(group, result):
     check = Check("multipath")
     assert result in check.run_parse([group])

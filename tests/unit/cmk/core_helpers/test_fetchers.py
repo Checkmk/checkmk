@@ -23,7 +23,7 @@ from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
     BackendOIDSpec,
     BackendSNMPTree,
-    SNMPBackend,
+    SNMPBackendEnum,
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPTable,
@@ -397,7 +397,7 @@ class ABCTestSNMPFetcher(ABC):
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
-                snmp_backend=SNMPBackend.classic,
+                snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
         )
 
@@ -424,8 +424,8 @@ class ABCTestSNMPFetcher(ABC):
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
-                snmp_backend=SNMPBackend.inline
-                if not cmk_version.is_raw_edition() else SNMPBackend.classic,
+                snmp_backend=SNMPBackendEnum.INLINE
+                if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC,
             ),
         )
 
@@ -452,8 +452,8 @@ class ABCTestSNMPFetcher(ABC):
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
-                snmp_backend=SNMPBackend.pysnmp
-                if not cmk_version.is_raw_edition() else SNMPBackend.classic,
+                snmp_backend=SNMPBackendEnum.PYSNMP
+                if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC,
             ),
         )
 
@@ -472,12 +472,12 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
     def test_fetcher_inline_backend_deserialization(self, fetcher_inline):
         other = type(fetcher_inline).from_json(json_identity(fetcher_inline.to_json()))
         assert other.snmp_config.snmp_backend == (
-            SNMPBackend.inline if not cmk_version.is_raw_edition() else SNMPBackend.classic)
+            SNMPBackendEnum.INLINE if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC)
 
     def test_fetcher_pysnmp_backend_deserialization(self, fetcher_pysnmp):
         other = type(fetcher_pysnmp).from_json(json_identity(fetcher_pysnmp.to_json()))
         assert other.snmp_config.snmp_backend == (
-            SNMPBackend.pysnmp if not cmk_version.is_raw_edition() else SNMPBackend.classic)
+            SNMPBackendEnum.PYSNMP if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC)
 
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
@@ -487,7 +487,7 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
         assert other.on_error == fetcher.on_error
         assert other.missing_sys_description == fetcher.missing_sys_description
         assert other.snmp_config == fetcher.snmp_config
-        assert other.snmp_config.snmp_backend == SNMPBackend.classic
+        assert other.snmp_config.snmp_backend == SNMPBackendEnum.CLASSIC
 
     def test_fetcher_deserialization_snmpv3_credentials(self, fetcher):
         fetcher.snmp_config = fetcher.snmp_config._replace(credentials=("authNoPriv", "md5", "md5",
@@ -511,7 +511,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
-            "_get_snmp_table",
+            "get_snmp_table",
             lambda *_, **__: table,
         )
         section_name = SectionName('pim')
@@ -538,7 +538,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
-            "_get_snmp_table",
+            "get_snmp_table",
             lambda tree, **__: table
             if tree.base == fetcher.plugin_store[section_name].trees[0].base else [],
         )

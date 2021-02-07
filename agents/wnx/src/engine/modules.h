@@ -40,8 +40,8 @@ public:
     [[nodiscard]] auto bin() const noexcept { return bin_; }
     [[nodiscard]] auto zip() const noexcept { return zip_; }
 
-    [[nodiscard]] bool isModuleZip(const std::filesystem::path& file) const
-        noexcept;
+    [[nodiscard]] bool isModuleZip(
+        const std::filesystem::path& file) const noexcept;
 
     // finds the zip and executable
     bool prepareToWork(const std::filesystem::path& backup_dir,
@@ -49,8 +49,8 @@ public:
 
     //
     bool isMyScript(const std::filesystem::path& script) const noexcept;
-    std::wstring buildCommandLine(const std::filesystem::path& script) const
-        noexcept;
+    std::wstring buildCommandLine(
+        const std::filesystem::path& script) const noexcept;
 
     // makes command line with script, if bin_ is empty returns nothing
     std::wstring buildCommandLineForced(
@@ -59,6 +59,8 @@ public:
     void removeExtension(std::string_view ext);
 
 private:
+    void runPostInstall();
+
     void reset() noexcept;
     std::string name_;
     std::vector<std::string> exts_;
@@ -68,8 +70,8 @@ private:
     std::filesystem::path bin_;  // executable from the exec:
     std::filesystem::path zip_;  // path to valid zip file
 
-    std::filesystem::path findZip(const std::filesystem::path& backup_dir) const
-        noexcept;
+    std::filesystem::path findZip(
+        const std::filesystem::path& backup_dir) const noexcept;
 
     std::filesystem::path findBin(
         const std::filesystem::path& modules_dir) const noexcept;
@@ -92,6 +94,7 @@ private:
 enum class InstallMode { normal, force };
 
 using StringViewPair = std::pair<std::string_view, std::string_view>;
+constexpr std::string_view post_install_script_name{"postinstall.cmd"};
 
 class ModuleCommander {
 public:

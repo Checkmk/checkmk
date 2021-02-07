@@ -35,9 +35,26 @@ import socket
 import time
 import uuid
 import urllib.parse
-from typing import (Any, Callable, Dict, Generic, List, Optional as _Optional, Pattern, Set,
-                    SupportsFloat, Tuple as _Tuple, Type, TypeVar, Union, Sequence, NamedTuple,
-                    Protocol)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Final,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional as _Optional,
+    Pattern,
+    Protocol,
+    Sequence,
+    Set,
+    SupportsFloat,
+    Tuple as _Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
@@ -69,6 +86,7 @@ from cmk.gui.utils.labels import (
     label_help_text,
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.http import UploadedFile
 from cmk.gui.type_defs import Choices, GroupedChoices, ChoiceGroup
 from cmk.gui.view_utils import render_labels
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
@@ -492,7 +510,7 @@ class Integer(ValueSpec):
         return value
 
     def value_from_json(self, json_value):
-        return json_value
+        return int(json_value)
 
     def validate_datatype(self, value: int, varprefix: str) -> None:
         if isinstance(value, numbers.Integral):
@@ -1173,7 +1191,8 @@ class MonitoredServiceDescription(TextAsciiAutocomplete):
     def __init__(self, **kwargs):
         kwargs.setdefault(
             'completion_params_js',
-            '(() => ({host: document.getElementsByName("context_host_p_host")[0].value}))()')
+            '(() => {let host_elem=document.getElementsByName("context_host_p_host"); return host_elem.length?{host:host_elem[0].value}:{}})()'
+        )
         super().__init__(completion_ident=self.ident, completion_params={}, **kwargs)
 
     @classmethod
@@ -4666,14 +4685,16 @@ class Tuple(ValueSpec):
 
 
 DictionaryEntry = _Tuple[str, ValueSpec]
-DictionaryElements = Union[List[DictionaryEntry], Callable[[], List[DictionaryEntry]]]
+DictionaryElements = Iterable[DictionaryEntry]
+DictionaryElementsThunk = Callable[[], DictionaryElements]
+DictionaryElementsRaw = Union[DictionaryElements, DictionaryElementsThunk]
 
 
 class Dictionary(ValueSpec):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements: DictionaryElements,
+        elements: DictionaryElementsRaw,
         empty_text: _Optional[str] = None,
         default_text: _Optional[str] = None,
         optional_keys: Union[bool, List[str]] = True,
@@ -4696,7 +4717,11 @@ class Dictionary(ValueSpec):
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
-        self._elements = elements
+        if callable(elements):
+            self._elements = elements
+        else:
+            const_elements = list(elements)
+            self._elements = lambda: const_elements
         self._empty_text = empty_text if empty_text is not None else _("(no parameters)")
 
         # Optionally a text can be specified to be shown by value_to_text()
@@ -4730,12 +4755,8 @@ class Dictionary(ValueSpec):
             return self._migrate(value)
         return value
 
-    def _get_elements(self):
-        if callable(self._elements):
-            return self._elements()
-        if isinstance(self._elements, list):
-            return self._elements
-        return []
+    def _get_elements(self) -> DictionaryElements:
+        yield from self._elements()
 
     def render_input_as_form(self, varprefix, value):
         self._render_input(varprefix, value, "form")
@@ -4774,6 +4795,7 @@ class Dictionary(ValueSpec):
                     visible = param in value
                 label = vs.title()
                 if two_columns:
+                    assert isinstance(label, str)
                     label += ":"
                     colon_printed = True
                 html.checkbox(checkbox_varname,
@@ -4888,9 +4910,9 @@ class Dictionary(ValueSpec):
             html.close_div()
 
     def set_focus(self, varprefix):
-        elements = self._get_elements()
-        if elements:
-            elements[0][1].set_focus(varprefix + "_p_" + elements[0][0])
+        first_element = next(iter(self._get_elements()), None)
+        if first_element:
+            first_element[1].set_focus(varprefix + "_p_" + first_element[0])
 
     def canonical_value(self):
         return {
@@ -5403,30 +5425,30 @@ class PasswordSpec(Password):
 
 
 class FileUpload(ValueSpec):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._allow_empty = kwargs.get('allow_empty', False)
-        self._allowed_extensions = kwargs.get('allowed_extensions')
-        self._allow_empty_content = kwargs.get('allow_empty_content', True)
+        self._allow_empty: Final[bool] = kwargs.get('allow_empty', False)
+        self._allowed_extensions: Final[_Optional[Iterable[str]]] = kwargs.get('allowed_extensions')
+        self._allow_empty_content: Final[bool] = kwargs.get('allow_empty_content', True)
 
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def canonical_value(self):
+    def canonical_value(self) -> _Optional[bytes]:
         if self._allow_empty:
             return None
-        return ''
+        return b''
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: _Optional[UploadedFile], varprefix: str) -> None:
         if not value:
             raise MKUserError(varprefix, _('Please select a file.'))
 
         file_name, _mime_type, content = value
 
-        if not self._allow_empty and (content == '' or file_name == ''):
+        if not self._allow_empty and (content == b'' or file_name == ''):
             raise MKUserError(varprefix, _('Please select a file.'))
 
-        if not self._allow_empty_content and len(content) == 0:
+        if not self._allow_empty_content and not content:
             raise MKUserError(varprefix,
                               _('The selected file is empty. Please select a non-empty file.'))
         if self._allowed_extensions is not None:
@@ -5441,20 +5463,25 @@ class FileUpload(ValueSpec):
                     _("Invalid file name extension. Allowed are: %s") %
                     ", ".join(self._allowed_extensions))
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: bytes) -> None:
         html.upload_file(varprefix)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> UploadedFile:
         return html.request.uploaded_file(varprefix)
 
 
 class ImageUpload(FileUpload):
-    def __init__(self, max_size=None, show_current_image=False, **kwargs):
-        self._max_size = max_size
-        self._show_current_image = show_current_image
+    def __init__(
+        self,
+        max_size: _Optional[_Tuple[int, int]] = None,
+        show_current_image: bool = False,
+        **kwargs,
+    ) -> None:
+        self._max_size: Final = max_size
+        self._show_current_image: Final = show_current_image
         super().__init__(**kwargs)
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: bytes) -> None:
         if self._show_current_image and value:
             html.open_table()
             html.open_tr()
@@ -5473,7 +5500,7 @@ class ImageUpload(FileUpload):
         else:
             super().render_input(varprefix, value)
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: _Optional[UploadedFile], varprefix: str) -> None:
         if not value:
             raise MKUserError(varprefix, _('Please choose a PNG image.'))
 
@@ -5512,15 +5539,18 @@ class UploadOrPasteTextFile(Alternative):
         super().__init__(**kwargs)
 
     def from_html_vars(self, varprefix: str) -> str:
-        value = super().from_html_vars(varprefix)
+        value: Final[UploadedFile] = super().from_html_vars(varprefix)
         # We validate the value here, because we want to validate the user input,
         # that will be lost after the following transformation to str.
         # After that, the validate_value() function will always validate the
         # TextAreaUnicode case when called.
         super()._validate_value(value, varprefix)
         if isinstance(value, tuple):
-            # We are only interested in the file content here. Get it from FileUpload value.
-            return value[2].decode("utf-8")
+            try:
+                # We are only interested in the file content here. Get it from FileUpload value.
+                return value[2].decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise MKUserError(varprefix, _("Please choose a file to upload.")) from exc
         return value
 
 
@@ -5837,10 +5867,13 @@ class IconSelector(ValueSpec):
     def _render_icon(self, icon, onclick='', title='', id_=''):
         if not icon:
             icon = self._empty_img
-        if id_.endswith('_emblem_img'):
-            icon = {'icon': 'empty', 'emblem': icon}
 
-        icon_tag = html.render_icon(icon, title=title, id_=id_)
+        if id_.endswith('_emblem_img'):
+            icon_tag = html.render_emblem(icon, title=title, id_=id_)
+            html.write_text(" + ")
+        else:
+            icon_tag = html.render_icon(icon, title=title, id_=id_)
+
         if onclick:
             icon_tag = html.render_a(icon_tag, href="javascript:void(0)", onclick=onclick)
 
@@ -5870,7 +5903,9 @@ class IconSelector(ValueSpec):
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var=True)
 
         if value:
-            content = self._render_icon(value, '', _('Choose another Icon'), id_=varprefix + '_img')
+            is_emblem = varprefix.endswith("emblem")
+            selection_text = _('Choose another %s') % ("Emblem" if is_emblem else "Icon")
+            content = self._render_icon(value, '', selection_text, id_=varprefix + "_img")
         else:
             content = _('Select an Icon')
 

@@ -313,6 +313,19 @@ class ModeEditSite(WatoMode):
         if value in self._site_mgmt.load_sites():
             raise MKUserError("id", _("This id is already being used by another connection."))
 
+        # Checkmk creates NagVis backends for all sites: For each site it creates two backends:
+        # a) [site_id]    - Livestatus connection to the sites core
+        # b) [site_id]_bi - Bacned to Checkmk BI for displaying aggregation states
+        #
+        # In case one tries to add a site with a Site-ID "[central_site]_bi" this will result
+        # in a name conflict between the central site BI backend and the remote site livestatus
+        # backend. See CMK-6968.
+        if value == "%s_bi" % config.omd_site():
+            raise MKUserError(
+                varprefix,
+                _("You can not connect remote sites named <tt>[central_site]_bi</tt>. You will "
+                  "have to rename your remote site to be able to connect it with this site."))
+
     def _livestatus_elements(self):
         proxy_docu_url = "https://checkmk.com/checkmk_multisite_modproxy.html"
         status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"

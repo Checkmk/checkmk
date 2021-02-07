@@ -28,6 +28,7 @@ from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParame
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException, MKBailOut
 from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
@@ -232,6 +233,15 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
+
+        # Not loading all checks improves performance of the calls and as a result the
+        # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
+        # because we already have calculated service descriptions. For clusters we have to load all
+        # checks for host_config.set_autochecks, because it needs to calculate the
+        # service_descriptions of existing services to decided whether or not they are clustered
+        # (See autochecks.set_autochecks_of_cluster())
+        if host_config.is_cluster:
+            config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
         new_services: List[ServiceWithNodes] = []
         for (raw_check_plugin_name, item), (descr, params, raw_service_labels,
@@ -663,7 +673,7 @@ class AutomationAnalyseServices(Automation):
             if isinstance(parameters, cmk.base.config.TimespecificParamList):
                 effective_parameters: LegacyCheckParameters = {
                     "tp_computed_params": {
-                        "params": cmk.base.checking.legacy_determine_check_params(parameters),
+                        "params": cmk.base.checking.time_resolved_check_parameters(parameters),
                         "computed_at": time.time()
                     }
                 }
@@ -1361,9 +1371,7 @@ class AutomationActiveCheck(Automation):
         macros = core_config.get_host_macros_from_attributes(
             hostname, core_config.get_host_attributes(hostname, config_cache))
         self._load_resource_file(macros)
-        for varname, value in macros.items():
-            commandline = commandline.replace(varname, "%s" % value)
-        return commandline
+        return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})
 
     def _execute_check_plugin(self, commandline: str) -> Tuple[ServiceState, ServiceDetails]:
         try:

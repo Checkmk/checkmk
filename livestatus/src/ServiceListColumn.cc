@@ -100,8 +100,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
                     static_cast<ServiceState>(svc->state()->_last_hard_state),
                     svc->state()->_current_attempt, svc->_max_check_attempts,
                     svc->state()->_scheduled_downtime_depth,
-                    svc->state()->_acknowledged,
-                    svc->_service_period->isActive());
+                    svc->acknowledged(), svc->_service_period->isActive());
             }
         }
     }

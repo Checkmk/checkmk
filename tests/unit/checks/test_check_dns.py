@@ -15,7 +15,6 @@ pytestmark = pytest.mark.checks
                           (["foo", {
                               "timeout": 1
                           }], ["-H", "foo", "-s", "$HOSTADDRESS$", "-t", 1])])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_dns_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_dns")

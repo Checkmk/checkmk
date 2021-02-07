@@ -79,7 +79,9 @@ TEST(Cma, Commander) {
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
     cma::srv::ServiceProcessor processor;
-    mailbox.ConstructThread(cma::srv::SystemMailboxCallback, 20, &processor);
+    mailbox.ConstructThread(
+        cma::srv::SystemMailboxCallback, 20, &processor,
+        wtools::SecurityLevel::standard);  // standard is intentional
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
     cma::tools::sleep(100ms);
 

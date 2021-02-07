@@ -15,16 +15,13 @@ import cmk.gui.sites as sites
 from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.plugins.dashboard import dashlet_registry
-from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
+from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 
 
 @dataclass
 class Part:
     title: str
-    color: Optional[str]
+    css_class: str
     count: int
 
 
@@ -38,7 +35,7 @@ class ABCElement:
 
 
 @dataclass
-class Element(ABCElement):
+class SiteElement(ABCElement):
     """Renders a regularly available site"""
     url_add_vars: Dict[str, str]
     total: Part
@@ -96,19 +93,20 @@ class HostStats(NamedTuple):
     num_services_warn: int
 
 
-class SiteOverviewDashletDataGenerator(ABCDataGenerator):
-    @classmethod
-    def vs_parameters(cls):
-        return Dictionary(title=_("Properties"), render="form", optional_keys=False, elements=[])
-
+class SiteOverviewDashletDataGenerator:
     @classmethod
     def generate_response_data(cls, properties, context, settings):
-        site_id = context.get("site", {}).get("site")
+        if config.is_single_local_site():
+            site_id: Optional[SiteId] = config.omd_site()
+        else:
+            site_filter = context.get("site", {}).get("site")
+            site_id = SiteId(site_filter) if site_filter else None
+
         render_mode = "hosts" if site_id else "sites"
 
         if render_mode == "hosts":
             assert site_id is not None
-            elements = cls._collect_hosts_data(SiteId(site_id))
+            elements = cls._collect_hosts_data(site_id)
         elif render_mode == "sites":
             elements = cls._collect_sites_data()
         else:
@@ -161,7 +159,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             2: "#ff0000",
             3: "#ff8800",
             1: "#ffff00",
-            0: "#13d38910",
+            0: "#262f38",
         }[host_stats.state]
         if host_stats.scheduled_downtime_depth > 0:
             color = "#00aaff"
@@ -175,7 +173,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             return "#ff8800"
         if host_stats.num_services_warn > 0:
             return "#ffff00"
-        return "#13d38910"
+        return "#262f38"
 
     @classmethod
     def _get_host_stats(cls, site_id: SiteId) -> Dict[HostName, HostStats]:
@@ -229,24 +227,24 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             stats = site_stats[site_id]
             parts = []
             total = 0
-            for title, color, count in [
-                (_("hosts are down or have critical services"), "#ff0000",
+            for title, css_class, count in [
+                (_("hosts are down or have critical services"), "critical",
                  stats.hosts_down_or_have_critical),
-                (_("hosts are unreachable or have unknown services"), "#ff8800",
+                (_("hosts are unreachable or have unknown services"), "unknown",
                  stats.hosts_unreachable_or_have_unknown),
-                (_("hosts are up but have services in warning state"), "#ffff00",
+                (_("hosts are up but have services in warning state"), "warning",
                  stats.hosts_up_and_have_warning),
-                (_("hosts are in scheduled downtime"), "#00aaff", stats.hosts_in_downtime),
-                (_("hosts are up and have no service problems"), "#13d38910",
+                (_("hosts are in scheduled downtime"), "downtime", stats.hosts_in_downtime),
+                (_("hosts are up and have no service problems"), "ok",
                  stats.hosts_up_without_problem),
             ]:
-                parts.append(Part(title=title, color=color, count=count))
+                parts.append(Part(title=title, css_class=css_class, count=count))
                 total += count
 
-            total_part = Part(title=_("Total number of hosts"), color=None, count=total)
+            total_part = Part(title=_("Total number of hosts"), css_class="", count=total)
 
             elements.append(
-                Element(
+                SiteElement(
                     title=site_spec["alias"],
                     url_add_vars={
                         "site": site_id,
@@ -256,7 +254,8 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
                     tooltip=cls._render_tooltip(site_spec["alias"], parts, total_part),
                 ))
 
-        return elements + cls._test_elements()
+        #return elements + cls._test_elements()
+        return elements
 
     @classmethod
     def _get_site_stats(cls) -> Dict[SiteId, SiteStats]:
@@ -367,20 +366,20 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
         for site_name, site_id, states in test_sites:
             parts = []
             total = 0
-            for title, color, count in zip([
+            for title, css_class, count in zip([
                     "Critical hosts",
                     "Hosts with unknowns",
                     "Hosts with warnings",
                     "Hosts in downtime",
                     "OK/UP",
-            ], ["#ff0000", "#ff8800", "#ffff00", "#00aaff", "#13d38910"], states):
-                parts.append(Part(title=title, color=color, count=count))
+            ], ["critical", "unknown", "warning", "downtime", "ok"], states):
+                parts.append(Part(title=title, css_class=css_class, count=count))
                 total += count
 
-            total_part = Part(title="Total", color=None, count=total)
+            total_part = Part(title="Total", css_class="", count=total)
 
             elements.append(
-                Element(
+                SiteElement(
                     title=site_name,
                     url_add_vars={
                         "site": site_id,
@@ -407,7 +406,7 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
             html.open_table()
             for part in parts:
                 html.open_tr()
-                html.td("", class_="color", style="background-color:%s" % part.color)
+                html.td("", class_=["color", part.css_class])
                 html.td(str(part.count), class_="count")
                 html.td(part.title, class_="title")
                 html.close_tr()
@@ -420,12 +419,6 @@ class SiteOverviewDashletDataGenerator(ABCDataGenerator):
 
             html.close_table()
             return html.drain()
-
-
-@page_registry.register_page("ajax_site_overview_dashlet_data")
-class SitesDashletData(AjaxPage):
-    def page(self):
-        return SiteOverviewDashletDataGenerator.generate_response_from_request()
 
 
 @dashlet_registry.register
@@ -443,12 +436,14 @@ class SiteOverviewDashlet(ABCFigureDashlet):
         return _("Displays either sites and states or hosts and states of a site")
 
     @classmethod
-    def data_generator(cls):
-        return SiteOverviewDashletDataGenerator
-
-    @classmethod
     def single_infos(cls):
         return []
 
-    def show(self):
-        self.js_dashlet("ajax_site_overview_dashlet_data.py")
+    @staticmethod
+    def _vs_elements():
+        return []
+
+    @staticmethod
+    def generate_response_data(properties, context, settings):
+        return SiteOverviewDashletDataGenerator.generate_response_data(
+            properties, context, settings)

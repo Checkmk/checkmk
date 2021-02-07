@@ -83,7 +83,7 @@ For backwards compatibility reasons we only keep the fields that have already be
 versions. You can consult the documentation to see what changed in each API revision.
 
 """
-from typing import List, Literal, Sequence, Dict, TypedDict, Union
+from typing import List, Literal, Dict, TypedDict
 
 import apispec.utils  # type: ignore[import]
 import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
@@ -94,7 +94,6 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
     ACCEPT_HEADER,)
 
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
-from cmk.gui.plugins.openapi.restful_objects.type_defs import OpenAPIParameter
 
 SECURITY_SCHEMES = {
     'bearerAuth': {
@@ -232,63 +231,3 @@ for header_name, field in ACCEPT_HEADER.items():
     )
 
 ErrorType = Literal['ignore', 'raise']
-
-
-def find_all_parameters(
-    params: Sequence[Union[OpenAPIParameter, str]],
-    errors: ErrorType = 'ignore',
-) -> List[OpenAPIParameter]:
-    """Find all parameters, while de-referencing string based parameters.
-
-    Parameters can come in dictionary, or string form. If they are a dictionary they are supposed
-    to be completely self-contained and can be specified with the same name multiple times for
-    different endpoints even with different values.
-
-    A string parameter is just a reference to a globally defined parameter, which can only be
-    defined once with that name.
-
-    This function de-references these string based parameters and emits a list of all parameters
-    that it has been given in their dictionary form.
-
-    Examples:
-
-        >>> find_all_parameters([{'name': 'fizz', 'in': 'query'}, 'foobar'])
-        [{'name': 'fizz', 'in': 'query'}]
-
-        >>> find_all_parameters(['foobar'])
-        []
-
-        >>> find_all_parameters(['foobar'], errors='raise')
-        Traceback (most recent call last):
-           ...
-        ValueError: Param 'foobar', assumed globally defined, was not found.
-
-    Args:
-        params:
-            Either as a dict or as a string. If it is a string it will be replaced
-            by it's globally defined parameter (if found).
-
-        errors:
-            What to do when an error is detected. Can be either 'raise' or 'ignore'.
-
-    Returns:
-        A list of parameters, all in their dictionary form.
-
-    Raises:
-        ValueError: Whenever a parameter could not be de-referenced.
-
-    """
-    result = []
-    global_params = SPEC.components.to_dict().get('parameters', {})
-
-    for _param in params:
-        if isinstance(_param, dict):
-            result.append(_param)
-        elif isinstance(_param, str):
-            if _param in global_params:
-                result.append(global_params[_param])
-                continue
-
-            if errors == 'raise':
-                raise ValueError(f"Param {_param!r}, assumed globally defined, was not found.")
-    return result

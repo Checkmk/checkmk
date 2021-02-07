@@ -38,6 +38,7 @@ DomainType = Literal[
     'host_group_config',
     'host_tag_group',
     'password',
+    'user_config',
     'service',
     'servicegroup',
     'service_discovery',
@@ -176,6 +177,9 @@ ETagBehaviour = Literal["input", "output", "both"]
 SchemaClass = Type[Schema]
 SchemaInstanceOrClass = Union[Schema, SchemaClass]
 OpenAPISchemaType = Literal['string', 'array', 'object', 'boolean', 'integer', 'number']
+
+# Used to blacklist some endpoints in certain locations
+EndpointTarget = Literal['swagger-ui', 'doc', 'debug']
 
 
 def translate_to_openapi_keys(

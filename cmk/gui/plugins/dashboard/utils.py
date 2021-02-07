@@ -5,29 +5,54 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for module internals and the plugins"""
 
-import time
 import abc
-import json
 import copy
-from typing import Set, Optional, Any, Dict, Union, Tuple, List, Callable, cast, Type
+import json
+import time
 import urllib.parse
+from itertools import chain
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import cmk.utils.plugin_registry
+from cmk.utils.macros import (
+    MacroMapping,
+    replace_macros_in_str,
+)
 from cmk.utils.type_defs import UserId
-from cmk.gui.type_defs import HTTPVariables, VisualContext
+from cmk.gui.type_defs import (
+    HTTPVariables,
+    SingleInfos,
+    VisualContext,
+)
 
 import cmk.gui.sites as sites
 
+from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.figures import create_figures_response
 import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException, MKTimeout
+from cmk.gui.i18n import _, _u
+from cmk.gui.exceptions import MKGeneralException, MKTimeout, MKUserError
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import g, html, request
+from cmk.gui.sites import get_alias_of_host
 from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
     DictionaryEntry,
+    DictionaryElements,
     Dictionary,
     DropdownChoice,
     FixedValue,
@@ -41,8 +66,7 @@ from cmk.gui.plugins.views.utils import (
 )
 from cmk.gui.metrics import translate_perf_data
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
-from cmk.gui.plugins.metrics.valuespecs import vs_title_infos, transform_graph_render_options
-from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
+from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import (
@@ -50,6 +74,8 @@ from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
 )
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 DashboardName = str
@@ -75,11 +101,43 @@ GROW = 0
 MAX = -1
 
 
+def macro_mapping_from_context(
+    context: VisualContext,
+    single_infos: SingleInfos,
+    title: str,
+) -> MacroMapping:
+    macro_mapping = {
+        macro: str(context[key]) for macro, key in (
+            ("$HOST_NAME$", "host"),
+            ("$SERVICE_DESCRIPTION$", "service"),
+        ) if key in context and key in single_infos
+    }
+
+    only_sites = visuals.get_only_sites_from_context(context)
+    if only_sites and len(only_sites) == 1:
+        macro_mapping["$SITE$"] = only_sites[0]
+
+    if "$HOST_ALIAS$" in title and "$HOST_NAME$" in macro_mapping:
+        macro_mapping["$HOST_ALIAS$"] = get_alias_of_host(
+            macro_mapping.get("$SITE$"),
+            macro_mapping["$HOST_NAME$"],
+        )
+
+    return macro_mapping
+
+
+def render_title_with_macros_string(
+    title: str,
+    macro_mapping: MacroMapping,
+):
+    return replace_macros_in_str(_u(title), macro_mapping)
+
+
 class Dashlet(metaclass=abc.ABCMeta):
     """Base class for all dashboard dashlet implementations"""
 
     # Minimum width and height of dashlets in raster units
-    minimum_size: DashletSize = (10, 10)
+    minimum_size: DashletSize = (12, 10)
 
     @classmethod
     @abc.abstractmethod
@@ -235,6 +293,23 @@ class Dashlet(metaclass=abc.ABCMeta):
     def display_title(self) -> str:
         return self._dashlet_spec.get("title", self.title())
 
+    def _get_macro_mapping(self, title: str) -> MacroMapping:
+        if self.has_context():
+            return macro_mapping_from_context(self.context, self.single_infos(), title)
+        return {}
+
+    def render_title_html(self) -> HTML:
+        title = self.display_title()
+        return text_with_links_to_user_translated_html([
+            (
+                replace_macros_in_str(
+                    title,
+                    self._get_macro_mapping(title),
+                ),
+                self.title_url(),
+            ),
+        ],)
+
     def show_title(self) -> bool:
         return self._dashlet_spec.get("show_title", True)
 
@@ -380,8 +455,34 @@ class Dashlet(metaclass=abc.ABCMeta):
 
         return globals()[urlfunc]()
 
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield from []
 
-def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
+
+def _get_title_macros_from_single_infos(single_infos: SingleInfos) -> Iterable[str]:
+    single_info_to_macros = {
+        "host": ("$HOST_NAME$", "$HOST_ALIAS$"),
+        "service": ("$SERVICE_DESCRIPTION$",),
+    }
+    for single_info in sorted(single_infos):
+        yield from single_info_to_macros.get(single_info, [])
+
+
+def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
+    available_macros = list(
+        chain(
+            _get_title_macros_from_single_infos(dashlet_type.single_infos()),
+            dashlet_type.get_additional_title_macros(),
+        ))
+    if not available_macros:
+        return ""
+    macros_as_list = f"<ul>{''.join(f'<li><tt>{macro}</tt></li>' for macro in available_macros)}</ul>"
+    return _("You can use the following macros to fill in the corresponding information:%s"
+            ) % macros_as_list
+
+
+def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[str]):
     return Dictionary(
         title=_('General Settings'),
         render='form',
@@ -389,8 +490,8 @@ def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
         elements=[
             ('type',
              FixedValue(
-                 dashlet.type_name(),
-                 totext=dashlet.title(),
+                 dashlet_type.type_name(),
+                 totext=dashlet_type.title(),
                  title=_('Dashlet Type'),
              )),
             visuals.single_infos_spec(single_infos),
@@ -415,13 +516,15 @@ def dashlet_vs_general_settings(dashlet: Dashlet, single_infos: List[str]):
             ('title',
              TextUnicode(
                  title=_('Custom Title') + '<sup>*</sup>',
-                 help=_('Most dashlets have a hard coded static title and some are aware of '
-                        'its content and set the title dynamically, like the view snapin, which '
-                        'displays the title of the view. If you like to use any other title, '
-                        'set it here.'),
-                 size=50,
+                 help=" ".join((
+                     _('Most dashlets have a hard coded static title and some are aware of its '
+                       'content and set the title dynamically, like the view snapin, which '
+                       'displays the title of the view. If you like to use any other title, set it '
+                       'here.'),
+                     _title_help_text_for_macros(dashlet_type),
+                 )).rstrip(),
+                 size=75,
              )),
-            ("title_format", vs_title_infos()),
             ('title_url',
              TextUnicode(
                  title=_('Link of Title'),
@@ -484,6 +587,139 @@ class DashletRegistry(cmk.utils.plugin_registry.Registry[Type[Dashlet]]):
 
 
 dashlet_registry = DashletRegistry()
+
+
+@page_registry.register_page("ajax_figure_dashlet_data")
+class FigureDashletPage(AjaxPage):
+    def page(self):
+        settings = json.loads(html.request.get_str_input_mandatory("settings"))
+
+        try:
+            dashlet_type = cast(Type[ABCFigureDashlet], dashlet_registry[settings.get("type")])
+        except KeyError:
+            raise MKUserError("type", _('The requested dashlet type does not exist.'))
+
+        settings = dashlet_vs_general_settings(
+            dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
+
+        raw_properties = html.request.get_str_input_mandatory("properties")
+        properties = dashlet_type.vs_parameters().value_from_json(json.loads(raw_properties))
+        context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
+        response_data = dashlet_type.generate_response_data(properties, context, settings)
+        return create_figures_response(response_data)
+
+
+class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
+    """ Base class for cmk_figures based graphs
+        Only contains the dashlet spec, the data generation is handled in the
+        DataGenerator classes, to split visualization and data
+    """
+    @classmethod
+    def type_name(cls):
+        return "figure_dashlet"
+
+    @classmethod
+    def sort_index(cls):
+        return 95
+
+    @classmethod
+    def initial_refresh_interval(cls):
+        return False
+
+    @classmethod
+    def initial_size(cls):
+        return (56, 40)
+
+    @classmethod
+    def infos(cls):
+        return ["host", "service"]
+
+    @classmethod
+    def single_infos(cls):
+        return []
+
+    @classmethod
+    def has_context(cls):
+        return True
+
+    @property
+    def instance_name(self):
+        # Note: This introduces the restriction one graph type per dashlet
+        return "%s_%s" % (self.type_name(), self._dashlet_id)
+
+    @classmethod
+    def vs_parameters(cls) -> Dictionary:
+        return Dictionary(title=_("Properties"),
+                          render="form",
+                          optional_keys=False,
+                          elements=cls._vs_elements())
+
+    @staticmethod
+    def _vs_elements() -> DictionaryElements:
+        return []
+
+    @staticmethod
+    def generate_response_data(properties, context, settings):
+        raise NotImplementedError()
+
+    @property
+    def update_interval(self) -> int:
+        return 60
+
+    def on_resize(self):
+        return ("if (typeof %(instance)s != 'undefined') {"
+                "%(instance)s.update_gui();"
+                "}") % {
+                    "instance": self.instance_name
+                }
+
+    def show(self) -> None:
+        self.js_dashlet(figure_type_name=self.type_name())
+
+    def js_dashlet(self, figure_type_name: str) -> None:
+        fetch_url = "ajax_figure_dashlet_data.py"
+        div_id = "%s_dashlet_%d" % (self.type_name(), self._dashlet_id)
+        html.div("", id_=div_id)
+
+        # TODO: Would be good to align this scheme with AjaxPage.webapi_request()
+        # (a single HTTP variable "request=<json-body>".
+        post_body = html.urlencode_vars(self._dashlet_http_variables())
+
+        html.javascript(
+            """
+            let figure_%(dashlet_id)d = cmk.figures.figure_registry.get_figure(%(type_name)s);
+            let %(instance_name)s = new figure_%(dashlet_id)d(%(div_selector)s);
+            %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
+            %(instance_name)s.initialize();
+            %(instance_name)s.scheduler.set_update_interval(%(update)d);
+            %(instance_name)s.scheduler.enable();
+            """ % {
+                "type_name": json.dumps(figure_type_name),
+                "dashlet_id": self._dashlet_id,
+                "instance_name": self.instance_name,
+                "div_selector": json.dumps("#%s" % div_id),
+                "url": json.dumps(fetch_url),
+                "body": json.dumps(post_body),
+                "update": self.update_interval,
+            })
+
+    def _dashlet_http_variables(self) -> HTTPVariables:
+        vs_general_settings = dashlet_vs_general_settings(self.__class__, self.single_infos())
+        dashlet_settings = vs_general_settings.value_to_json(self._dashlet_spec)
+        dashlet_params = self.vs_parameters()
+        assert isinstance(dashlet_params, Dictionary)  # help mypy
+        dashlet_properties = dashlet_params.value_to_json(self._dashlet_spec)
+
+        context = visuals.get_merged_context(
+            visuals.get_context_from_uri_vars(["host", "service"], self.single_infos()),
+            self._dashlet_spec["context"])
+
+        args: HTTPVariables = []
+        args.append(("settings", json.dumps(dashlet_settings)))
+        args.append(("context", json.dumps(context)))
+        args.append(("properties", json.dumps(dashlet_properties)))
+
+        return args
 
 
 # TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
@@ -556,6 +792,10 @@ def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
         if 'host' not in dashlet_spec['single_infos']:
             dashlet_spec['single_infos'].append('host')
 
+        # The service context has to be set, otherwise the pnpgraph dashlet would
+        # complain about missing context information when displaying host graphs.
+        dashlet_spec["context"].setdefault("service", "_HOST_")
+
     if dashlet_spec['type'] in ['pnpgraph', 'custom_graph']:
         # -> 1.5.0i2
         if "graph_render_options" not in dashlet_spec:
@@ -563,21 +803,15 @@ def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
                 "show_legend": dashlet_spec.pop("show_legend", False),
                 "show_service": dashlet_spec.pop("show_service", True),
             }
-        # -> 2.0.0i1
-        dashlet_spec["graph_render_options"].setdefault(
-            "title_format", default_dashlet_graph_render_options["title_format"])
+        # -> 2.0.0b6
         transform_graph_render_options(dashlet_spec["graph_render_options"])
-        title_format = dashlet_spec["graph_render_options"].pop("title_format")
-        dashlet_spec.setdefault(
-            "title_format", title_format or dashlet_spec["graph_render_options"]["title_format"])
         dashlet_spec["graph_render_options"].pop("show_title", None)
+        # title_format is not used in Dashlets (Custom tiltle instead, field 'title')
+        dashlet_spec["graph_render_options"].pop("title_format", None)
 
     if dashlet_spec["type"] == "network_topology":
         # -> 2.0.0i Removed network topology dashlet type
         transform_topology_dashlet(dashlet_spec)
-
-    # -> 2.0.0i1 All dashlets have new mandatory title_format
-    dashlet_spec.setdefault("title_format", ['plain'])
 
     return dashlet_spec
 
@@ -589,10 +823,10 @@ def transform_topology_dashlet(dashlet_spec: DashletConfig,
     dashlet_spec.update({
         "type": "url",
         "title": _("Network topology of site %s") % site_id,
-        "url": "../nagvis/frontend/nagvis-js/index.php?mod=Map&header_template="\
-                "on-demand-filter&header_menu=1&label_show=1&sources=automap&act=view"\
-                "&backend_id=%s&render_mode=undirected&url_target=main&filter_group=%s"\
-                % (site_id, filter_group),
+        "url": "../nagvis/frontend/nagvis-js/index.php?mod=Map&header_template="
+               "on-demand-filter&header_menu=1&label_show=1&sources=automap&act=view"
+               "&backend_id=%s&render_mode=undirected&url_target=main&filter_group=%s" %
+               (site_id, filter_group),
         "show_in_iframe": True,
     })
 
@@ -750,34 +984,30 @@ def copy_view_into_dashlet(dashlet: DashletConfig,
     dashlet['mustsearch'] = False
 
 
-class site_query:
-    def __init__(self, f):
-        self.f = f
+def service_table_query(properties, context, column_generator):
+    filter_headers, only_sites = visuals.get_filter_headers("log", ["host", "service"], context)
+    columns = column_generator(properties, context)
 
-    def __call__(self, cls, properties, context):
-        filter_headers, only_sites = visuals.get_filter_headers("log", ["host", "service"], context)
-        columns = self.f(cls, properties, context)
+    query = ("GET services\n"
+             "Columns: %(cols)s\n"
+             "%(filter)s" % {
+                 "cols": " ".join(columns),
+                 "filter": filter_headers,
+             })
 
-        query = ("GET services\n"
-                 "Columns: %(cols)s\n"
-                 "%(filter)s" % {
-                     "cols": " ".join(columns),
-                     "filter": filter_headers,
-                 })
+    with sites.only_sites(only_sites), sites.prepend_site():
+        try:
+            rows = sites.live().query(query)
+        except MKTimeout:
+            raise
+        except Exception:
+            raise MKGeneralException(_("The query returned no data."))
 
-        with sites.only_sites(only_sites), sites.prepend_site():
-            try:
-                rows = sites.live().query(query)
-            except MKTimeout:
-                raise
-            except Exception:
-                raise MKGeneralException(_("The query returned no data."))
-
-        return ['site'] + columns, rows
+    return ['site'] + columns, rows
 
 
-def create_data_for_single_metric(cls, properties, context):
-    columns, data_rows = cls._get_data(properties, context)
+def create_data_for_single_metric(properties, context, column_generator):
+    columns, data_rows = service_table_query(properties, context, column_generator)
 
     data = []
     used_metrics = []
@@ -794,7 +1024,7 @@ def create_data_for_single_metric(cls, properties, context):
         series = merge_multicol(d_row, columns, properties)
         site = d_row['site']
         host = d_row["host_name"]
-        svc_url = makeuri(
+        svc_url = makeuri_contextless(
             request,
             [("view_name", "service"), ("site", site), ("host", host),
              ("service", d_row['service_description'])],
@@ -816,6 +1046,7 @@ def create_data_for_single_metric(cls, properties, context):
         # Live value
         data.append({
             "tag": row_id,
+            "last_value": True,
             "timestamp": int(time.time()),
             "value": metric['value'],
             "label": host,

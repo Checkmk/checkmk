@@ -90,6 +90,15 @@ body.side {
       &:visited {
         color: $font-color-sidebar;
       }
+
+      &.min {
+        font-size: 0;
+
+        img {
+          width: 24px;
+          height: 24px;
+        }
+      }
     }
 
     img {
@@ -222,18 +231,6 @@ body.main .popup_menu #side_header > span {
   }
 }
 
-span#msg_label {
-  position: relative;
-  top: -6px;
-  left: -10px;
-  z-index: 15;
-  padding: 1px;
-  font-size: $font-size-global;
-  color: rgb(255, 0, 0);
-  background-color: rgb(255, 255, 255);
-  border-radius: 5px;
-}
-
 /* General layout of snapins */
 body.side div.snapin,
 div.add_snapin div.snapin {
@@ -271,11 +268,21 @@ div.snapin {
       font-weight: $font-weight-bold;
       line-height: 16px;
       letter-spacing: $letter-spacing-table;
-      border-bottom: 1px solid $snapin-heading-border-color;
     }
 
     &.closed span.minisnapin {
       background-image: url("images/icon_maxisnapin.png");
+    }
+
+    span.minisnapin {
+      position: absolute;
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      margin-left: 6px;
+      line-height: 0;
+      cursor: pointer;
+      background: no-repeat center / 100% url("images/icon_minisnapin.png");
     }
   }
 
@@ -293,43 +300,38 @@ div.snapin {
 
   span.moresnapin {
     display: inline-block;
+    height: 16px;
     width: 16px; /* FIXME: get rid of the animation that uses 4 images */
     margin-right: 4px;
+    vertical-align: middle;
 
     img {
       width: 16px;
       height: 16px;
+      padding: 0;
     }
   }
 
   span.closesnapin {
     display: inline-block;
     width: 16px;
+    height: 16px;
+    vertical-align: middle;
 
     img {
       width: 16px;
       height: 16px;
       padding: 0;
-      margin-top: -8px; /* HACK to align the button */
     }
-  }
-
-  span.minisnapin {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
-    line-height: 0;
-    cursor: pointer;
-    background: no-repeat center / 100% url("images/icon_minisnapin.png");
   }
 
   div.content {
     top: 64px;
     width: 100%;
-    padding: $spacing 0 0;
+    padding: $spacing 0;
     color: $font-color-sidebar;
     box-sizing: border-box;
+    border-bottom: 1px solid $snapin-heading-border-color;
   }
 
   select {
@@ -366,6 +368,11 @@ div.snapin {
 
     &.iconlink img:not(.emblem) {
       margin-right: 5px;
+    }
+
+    &.iconlink img {
+      width: 10px;
+      height: 12px;
     }
   }
 
@@ -418,14 +425,16 @@ div.snapin {
   /* The right-aligned link at the bottom of some snapins like the "views" snapin. */
   div.footnotelink {
     margin-top: 0;
-    text-align: right;
+    text-align: left;
 
     a {
-      border-radius: 5px;
+      border-radius: $spacing;
     }
 
     a:hover {
+      /* TODO: create a better hover effect */
       text-decoration: none;
+      opacity: 0.5;
     }
   }
 
@@ -451,12 +460,9 @@ div.snapin {
   /* state bullets at problem host or all hosts snapin */
   div.statebullet {
     float: left;
-    width: 10px;
-    height: 10px;
-    margin-right: 6px;
-    margin-left: 0;
-    border: 1px solid rgb(18, 58, 74);
-    box-shadow: 0 0 1px rgb(18, 58, 74);
+    width: 5px;
+    height: 5px;
+    border-radius: 5px;
   }
 }
 
@@ -497,26 +503,24 @@ div.snapin div.footnotelink a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin div.footnotelink body.main .popup_menu span.link,
 body.main .popup_menu div.snapin div.footnotelink span.link {
-  padding: 0;
-  margin-right: 16px;
-  margin-left: 0;
+  padding: 3px 7px 1px;
+  margin: 5px 10px 0 0;
   font-size: $font-size-small;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
   color: $footnote-link-color;
-  text-transform: uppercase;
-  background: transparent;
+  background: $footnote-bg-color;
   border: none;
   box-shadow: none;
 }
 
-div.snapin div.footnotelink a.link::before,
+//div.snapin div.footnotelink a.link::before,
 /* TODO: Reproduce these two html elements */
-div.snapin div.footnotelink body.main .popup_menu span.link::before,
+/*div.snapin div.footnotelink body.main .popup_menu span.link::before,
 body.main .popup_menu div.snapin div.footnotelink span.link::before {
   margin-right: 8px;
   content: "···";
-}
+}*/
 
 /* TODO: Reproduce this html element */
 div#snapinDragIndicator {
@@ -661,15 +665,6 @@ div.popup_msg {
     display: block;
     float: right;
   }
-}
-
-span#msg_label {
-  position: relative;
-  z-index: 15;
-  padding: 1px;
-  color: rgb(255, 0, 0);
-  background-color: rgb(255, 255, 255);
-  border-radius: 5px;
 }
 
 div.head {

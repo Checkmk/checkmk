@@ -146,26 +146,19 @@ def test_manpage_files(all_pages):
     assert len(all_pages) > 1000
 
 
-def _is_pure_section_declaration(check):
-    '''return true if and only if the check never generates a service'''
-    return check.get('inventory_function') is None and check.get('check_function') is None
+def test_find_missing_manpages_passive(fix_register, all_pages):
+    for plugin_name in fix_register.check_plugins:
+        assert str(plugin_name) in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def test_find_missing_manpages_passive(config_load_all_checks, all_pages):
-    for plugin_name in (str(p.name) for p in agent_based_register.iter_all_check_plugins()):
-        if plugin_name in ("labels", "esx_systeminfo"):
-            continue  # these checks discovery functions can only create labels, never a service
+def test_find_missing_manpages_active(fix_plugin_legacy, all_pages):
+    for plugin_name in ("check_%s" % n for n in fix_plugin_legacy.active_check_info):
         assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def test_find_missing_manpages_active(config_active_check_info, all_pages):
-    for plugin_name in ("check_%s" % n for n in config_active_check_info):
-        assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
-
-
-def test_find_missing_manpages_cluster_section(config_load_all_checks, all_pages):
+def test_find_missing_manpages_cluster_section(fix_register, all_pages):
     missing_cluster_description = set()
-    for plugin in agent_based_register.iter_all_check_plugins():
+    for plugin in fix_register.check_plugins.values():
         if plugin.cluster_check_function.__name__ in (
                 "unfit_for_clustering",
                 "cluster_legacy_mode_from_hell",

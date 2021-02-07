@@ -18,7 +18,6 @@ info = [[u'PingFederate-CUK-CDI', u'TotalRequests', u'64790', u'number'],
     ('jolokia_generic', info, [(u'PingFederate-CUK-CDI TotalRequests', {})]),
     ('jolokia_generic.rate', info, [(u'PingFederate-CUK-CDI MaxRequestTime', {})]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_jolokia_generic_discovery(check, lines, expected_result):
     parsed = Check('jolokia_generic').run_parse(lines)
 

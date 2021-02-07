@@ -1,0 +1,11 @@
+Title: Check rds_licenses support Windows Server 2019
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1611927461
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+

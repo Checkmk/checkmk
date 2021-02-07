@@ -9,12 +9,12 @@ from collections.abc import MutableMapping
 from typing import Any, Dict, Iterator, List, Optional, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import Labels, CheckPluginNameStr
+from cmk.utils.type_defs import Labels, SectionName
 
 
 class HostLabelValueDict(TypedDict):
     value: str
-    plugin_name: Optional[CheckPluginNameStr]
+    plugin_name: Optional[str]
 
 
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
@@ -155,34 +155,32 @@ class HostLabel(ABCLabel):
         value = dict_label["value"]
         assert isinstance(value, str)
 
-        plugin_name = dict_label["plugin_name"]
-        assert isinstance(plugin_name, str) or plugin_name is None
+        raw_name = dict_label["plugin_name"]
+        plugin_name = None if raw_name is None else SectionName(raw_name)
 
         return cls(name, value, plugin_name)
 
-    def __init__(self,
-                 name: str,
-                 value: str,
-                 plugin_name: Optional[CheckPluginNameStr] = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        value: str,
+        plugin_name: Optional[SectionName] = None,
+    ) -> None:
         super(HostLabel, self).__init__(name, value)
         self._plugin_name = plugin_name
 
     @property
-    def plugin_name(self) -> Optional[str]:
+    def plugin_name(self) -> Optional[SectionName]:
         return self._plugin_name
-
-    @plugin_name.setter
-    def plugin_name(self, plugin_name: str) -> None:
-        self._plugin_name = plugin_name
 
     def to_dict(self) -> HostLabelValueDict:
         return {
             "value": self.value,
-            "plugin_name": self.plugin_name,
+            "plugin_name": None if self._plugin_name is None else str(self._plugin_name),
         }
 
     def __repr__(self) -> str:
-        return "HostLabel(%r, %r, plugin_name=%r)" % (self.name, self.value, self.plugin_name)
+        return f"HostLabel({self.name!r}, {self.value!r}, plugin_name={self._plugin_name!r})"
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HostLabel):

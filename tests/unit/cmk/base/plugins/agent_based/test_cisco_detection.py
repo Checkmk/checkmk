@@ -9,7 +9,6 @@ import pytest  # type: ignore[import]
 from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.utils import evaluate_snmp_detection
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 
@@ -52,11 +51,10 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
         id="Cisco Nexus device, yet without the required OID",
     ),
 ])
-@pytest.mark.usefixtures('config_load_all_checks')
-def test_cisco_related_snmp_detection(oid_data, detected, not_detected):
+def test_cisco_related_snmp_detection(fix_register, oid_data, detected, not_detected):
 
     for name in detected | not_detected:
-        section = agent_based_register.get_snmp_section_plugin(SectionName(name))
+        section = fix_register.snmp_sections.get(SectionName(name))
 
         assert evaluate_snmp_detection(
             detect_spec=section.detect_spec,

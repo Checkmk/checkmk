@@ -473,7 +473,7 @@ class Jobs(BackupEntityCollection):
                     css = ""
 
                 table.cell(_("State"), css=css)
-                html.write(html.render_text(state_txt))
+                html.write(html.render_span(state_txt))
 
                 table.cell(_("Runtime"))
                 if state["started"]:

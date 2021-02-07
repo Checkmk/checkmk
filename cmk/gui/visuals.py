@@ -16,6 +16,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Literal,
     Optional,
     Sequence,
     Set,
@@ -33,7 +34,12 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import (
+    HTTPRedirect,
+    MKGeneralException,
+    MKAuthException,
+    MKUserError,
+)
 from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
 from cmk.gui.type_defs import (
@@ -92,6 +98,7 @@ from cmk.gui.plugins.visuals.utils import (
     filter_registry,
 )
 
+from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 # Needed for legacy (pre 1.6) plugins
@@ -784,8 +791,8 @@ def render_context_specs(visual, context_specs):
         spec.render_input(ident, value)
 
 
-def page_edit_visual(what,
-                     all_visuals,
+def page_edit_visual(what: Literal["dashboards", "views", "reports"],
+                     all_visuals: Dict[Any, Dict[str, Any]],
                      custom_field_handler=None,
                      create_handler=None,
                      load_handler=None,
@@ -810,7 +817,7 @@ def page_edit_visual(what,
         cloneuser = html.request.var("load_user")
         if cloneuser is not None:
             mode = 'clone'
-            visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), None))
+            visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), {}))
             if not visual:
                 raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type.title)
 
@@ -833,9 +840,9 @@ def page_edit_visual(what,
         else:
             user_id_str = html.request.get_unicode_input("owner", config.user.id)
             owner_user_id = None if user_id_str is None else UserId(user_id_str)
-            visual = all_visuals.get((owner_user_id, visualname))
+            visual = all_visuals.get((owner_user_id, visualname), {})
             if not visual:
-                visual = all_visuals.get(('', visualname))  # load builtin visual
+                visual = all_visuals.get(('', visualname), {})  # load builtin visual
                 mode = 'clone'
                 if not visual:
                     raise MKUserError(None,
@@ -925,7 +932,11 @@ def page_edit_visual(what,
                  regex_error=_(
                      'The name of the view may only contain letters, digits and underscores.'),
                  size=50,
-                 allow_empty=False)),
+                 allow_empty=False,
+                 default_value=unique_default_name_suggestion(
+                     what[:-1],
+                     (visual["name"] for visual in all_visuals.values()),
+                 ))),
             ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
             ('description',
              TextAreaUnicode(
@@ -979,7 +990,8 @@ def page_edit_visual(what,
         if html.request.var("save%d" % nr):
             save_and_go = pagename
 
-    if save_and_go or html.request.var("save") or html.request.var("search"):
+    if save_and_go or html.request.var("save") or html.request.var(
+            "save_and_view") or html.request.var("search"):
         try:
             general_properties = vs_general.from_html_vars('general')
 
@@ -1019,12 +1031,19 @@ def page_edit_visual(what,
 
             visual['context'] = process_context_specs(context_specs)
 
-            if html.request.var("save") or save_and_go:
+            if html.request.var("save") or html.request.var("save_and_view") or save_and_go:
                 if save_and_go:
                     back_url = makeuri_contextless(
                         global_request,
                         [(visual_type.ident_attr, visual['name'])],
                         filename=save_and_go + '.py',
+                    )
+
+                if html.request.var("save_and_view"):
+                    back_url = makeuri_contextless(
+                        global_request,
+                        [(visual_type.ident_attr, visual['name'])],
+                        filename=visual_type.show_url,
                     )
 
                 if html.check_transaction():
@@ -1041,7 +1060,8 @@ def page_edit_visual(what,
                                                         varstring + visual["name"])
                     save(what, all_visuals, owner_user_id)
 
-                flash(_('Your %s has been saved.') % visual_type.title)
+                if not html.request.var("save_and_view"):
+                    flash(_('Your %s has been saved.') % visual_type.title)
                 html.reload_whole_page(back_url)
                 html.footer()
                 return
@@ -1349,7 +1369,7 @@ def get_filter_headers(table, infos, context):
     return filter_headers, get_only_sites_from_context(context)
 
 
-def get_only_sites_from_context(context: dict) -> Optional[List[SiteId]]:
+def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]]:
     """Gather possible existing "only sites" information from context
 
       We need to deal with
@@ -1379,17 +1399,18 @@ def get_only_sites_from_context(context: dict) -> Optional[List[SiteId]]:
         only_sites = context["sites"]
         if isinstance(only_sites, dict):
             only_sites = only_sites["sites"]
-        only_sites = [SiteId(site) for site in only_sites.strip().split("|") if site]
-        return only_sites if only_sites else None
+        only_sites_list = [SiteId(site) for site in only_sites.strip().split("|") if site]
+        return only_sites_list if only_sites_list else None
 
     for var in ["site", "siteopt"]:
         if var in context:
-            if isinstance(context[var], dict):
-                site_name = context[var].get("site")
+            value = context[var]
+            if isinstance(value, dict):
+                site_name = value.get("site")
                 if site_name:
                     return [SiteId(site_name)]
                 return None
-            return [SiteId(context[var])]
+            return [SiteId(value)]
 
     return None
 
@@ -1819,36 +1840,6 @@ def single_infos_spec(single_infos: SingleInfos) -> Tuple[str, FixedValue]:
                 totext=single_infos and ', '.join(single_infos) or
                 _('Not restricted to showing a specific object.'),
             ))
-
-
-def verify_single_infos(visual: Visual, context: VisualContext) -> None:
-    """Check if all single infos from the element are known"""
-
-    missing_single_infos = get_missing_single_infos(visual["single_infos"], context)
-
-    # Special hack for the situation where hostgroup views link to host views: The host view uses
-    # the datasource "hosts" which does not have the "hostgroup" info, but is configured to have a
-    # single_info "hostgroup". To make this possible there exists a feature in
-    # (ABCDataSource.link_filters, views._patch_view_context) which is a very specific hack. Have a
-    # look at the description there.  We workaround the issue here by allowing this specific
-    # situation but validating all others.
-    #
-    # The more correct approach would be to find a way which allows filters of different datasources
-    # to have equal names. But this would need a bigger refactoring of the filter mechanic. One
-    # day...
-    if (visual.get("datasource") in ["hosts", "services"] and
-            missing_single_infos == {'hostgroup'} and "opthostgroup" in context):
-        return
-    if (visual.get("datasource") == "services" and missing_single_infos == {"servicegroup"} and
-            "optservicegroup" in context):
-        return
-
-    if missing_single_infos:
-        raise MKUserError(
-            None,
-            _("Missing context information: %s. You can either add this as a fixed "
-              "setting, or call the with the missing HTTP variables.") %
-            (", ".join(missing_single_infos)))
 
 
 def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) -> Set[FilterName]:

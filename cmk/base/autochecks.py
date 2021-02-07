@@ -34,8 +34,7 @@ GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
 
-ServiceWithNodes = NamedTuple("ServiceWithNodesInfo", [("service", Service),
-                                                       ("nodes", List[HostName])])
+ServiceWithNodes = NamedTuple("ServiceWithNodes", [("service", Service), ("nodes", List[HostName])])
 
 
 class AutochecksManager:
@@ -158,7 +157,7 @@ class AutochecksManager:
             except Exception:
                 raise MKGeneralException(
                     "Invalid check entry '%r' of host '%s' (%s) found. This "
-                    "entry is in pre Checkmk 1.7 format and needs to be converted. This is "
+                    "entry is in pre Checkmk 2.0 format and needs to be converted. This is "
                     "normally done by \"cmk-update-config -v\" during \"omd update\". Please "
                     "execute \"cmk-update-config -v\" for convertig the old configuration." %
                     (entry, hostname, path))

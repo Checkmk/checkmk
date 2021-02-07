@@ -4,191 +4,260 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple as _Tuple, Optional
+from typing import (
+    Any,
+    Iterable,
+    Mapping,
+)
 
 from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
+    DictionaryElements,
     DropdownChoice,
     GraphColor,
     Timerange,
 )
 
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.plugins.dashboard import dashlet_registry
-from cmk.gui.plugins.dashboard.utils import site_query, create_data_for_single_metric
+from cmk.gui.plugins.dashboard.utils import (
+    create_data_for_single_metric,
+    macro_mapping_from_context,
+    render_title_with_macros_string,
+)
+from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.metrics.valuespecs import ValuesWithUnits
-from cmk.gui.plugins.metrics.utils import MetricName, reverse_translate_metric_name
-from cmk.gui.plugins.metrics.html_render import title_info_elements
-from cmk.gui.plugins.metrics.rrd_fetch import rrd_columns
-from cmk.gui.figures import ABCFigureDashlet, ABCDataGenerator
-from cmk.gui.plugins.views.painters import paint_service_state_short
+from cmk.gui.plugins.metrics.utils import MetricName
+from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns
+from cmk.gui.plugins.views.painters import service_state_short
 
 
-class SingleMetricDataGenerator(ABCDataGenerator):
-    """Data generator for a scatterplot with average lines"""
-    @classmethod
-    def vs_parameters(cls):
-        return Dictionary(title=_("Properties"),
-                          render="form",
-                          optional_keys=False,
-                          elements=cls._vs_elements())
+def dashlet_title(
+    settings: Mapping[str, Any],
+    metric_specs: Mapping[str, Any],
+) -> str:
+    if not settings.get("show_title", True):
+        return ""
+    title = settings.get("title", "")
+    return render_title_with_macros_string(
+        title,
+        macro_mapping_from_context(
+            {
+                context_key: metric_specs[metrics_key] for metrics_key, context_key in (
+                    ("host_name", "host"),
+                    ("service_description", "service"),
+                    ("site", "site"),
+                ) if metrics_key in metric_specs
+            },
+            settings["single_infos"],
+            title,
+        ),
+    )
 
-    @classmethod
-    def _vs_elements(cls):
-        return [
-            ("metric", MetricName()),  # MetricChoice would be nicer, but we use the context filters
-            ("time_range",
-             CascadingDropdown(
-                 title=_("Timerange"),
-                 orientation="horizontal",
-                 choices=[
-                     ("current", _("Only show current value")),
-                     ("range", _("Show historic values"),
-                      Dictionary(
-                          optional_keys=False,
-                          elements=[
-                              ('window',
-                               Timerange(title=_("Time range to consider"),
-                                         default_value="d0",
-                                         allow_empty=True)),
-                              ("rrd_consolidation",
-                               DropdownChoice(
-                                   choices=[
-                                       ("average", _("Average")),
-                                       ("min", _("Minimum")),
-                                       ("max", _("Maximum")),
-                                   ],
-                                   default_value="max",
-                                   title="RRD consolidation",
-                                   help=
-                                   _("Consolidation function for the [cms_graphing#rrds|RRD] data column"
-                                    ),
-                               )),
-                          ])),
-                 ],
-                 default_value="current")),
-            ("display_range",
-             CascadingDropdown(title=_("Display range"),
-                               choices=[
-                                   ("infer", _("Automatic")),
-                                   ("fixed", _("Fixed range"),
-                                    ValuesWithUnits(
-                                        vs_name="display_range",
-                                        metric_vs_name="metric",
-                                        help=_("Set the range in which data is displayed. "
-                                               "Having selected a metric before auto selects "
-                                               "here the matching unit of the metric."),
-                                        elements=[_("Minimum"), _("Maximum")])),
-                               ])),
-            ("status_border",
-             DropdownChoice(title=_("Status border"),
-                            choices=[
-                                (False, _("Do not show any service status border")),
-                                ("not_ok", _("Draw a status border when service is not OK")),
-                                ("always", _("Always draw the service status on the border")),
-                            ],
-                            default_value="not_ok")),
-        ]
 
-    @classmethod
-    @site_query
-    def _get_data(cls, properties, context):
-        cmc_cols = [
-            "host_name", "service_check_command", "service_description", "service_perf_data",
-            "service_state", "service_has_been_checked"
-        ]
-        metric_columns = []
-        if properties["time_range"] != "current":
-            params = properties["time_range"][1]
+def required_columns(properties, context):
+    cmc_cols = [
+        "host_name", "service_check_command", "service_description", "service_perf_data",
+        "service_state", "service_has_been_checked"
+    ]
+    metric_columns = []
+    if properties.get("time_range", "current")[0] == "range":
+        params = properties["time_range"][1]
+        from_time, until_time = map(int, Timerange().compute_range(params['window'])[0])
+        metric_columns = metric_in_all_rrd_columns(properties["metric"],
+                                                   params["rrd_consolidation"], from_time,
+                                                   until_time)
 
-            from_time, until_time = map(int, Timerange().compute_range(params['window'])[0])
-            data_range = "%s:%s:%s" % (from_time, until_time, 60)
-            _metrics: List[_Tuple[str, Optional[str], float]] = [
-                (name, None, scale)
-                for name, scale in reverse_translate_metric_name(properties["metric"])
-            ]
-            metric_columns = list(rrd_columns(_metrics, params["rrd_consolidation"], data_range))
+    return cmc_cols + metric_columns
 
-        return cmc_cols + metric_columns
 
-    @classmethod
-    def generate_response_data(cls, properties, context, settings):
-        data, metrics = create_data_for_single_metric(cls, properties, context)
-        return cls._create_single_metric_config(data, metrics, properties, context, settings)
+def _create_single_metric_config(data, metrics, properties, context, settings):
+    plot_definitions = []
 
-    @classmethod
-    def _create_single_metric_config(cls, data, metrics, properties, context, settings):
-        plot_definitions = []
+    def svc_map(row):
+        css_classes, status_name = service_state_short(row)
+        draw_status = properties.get("status_border", "not_ok")
+        if draw_status == "not_ok" and css_classes.endswith("state0"):
+            draw_status = False
 
-        def svc_map(row):
-            css_classes, status_name = paint_service_state_short(row)
-            draw_status = properties.get("status_border", "not_ok")
-            if draw_status == "not_ok" and css_classes.endswith("state0"):
-                draw_status = False
+        return {"style": css_classes, "msg": _("Status: ") + status_name, "draw": draw_status}
 
-            return {"style": css_classes, "msg": _("Status: ") + status_name, "draw": draw_status}
+    def metric_state_color(metric):
+        warn = metric["scalar"].get("warn")
+        crit = metric["scalar"].get("crit")
+        if warn is not None and crit is not None:
+            if metric['value'] >= crit:
+                return "#FF3232"
+            if metric['value'] >= warn:
+                return "#FFFE44"
+            return "#13D389"
+        return "#3CC2FF"
 
-        # Historic values are always added as plot_type area
-        if properties["time_range"] != "current":
-            for row_id, metric, row in metrics:
-                color = metric.get('color', "#008EFF") if properties.get(
-                    "color", "default") == "default" else properties.get('color', "#008EFF")
-                plot_definition = {
-                    "label": row['host_name'],
-                    "id": row_id,
-                    "plot_type": "area",
-                    "use_tags": [row_id],
-                    "color": color,
-                    "fill": properties.get("fill", True),
-                    "opacity": 0.1 if properties.get('fill', True) is True else 0
-                }
-                plot_definitions.append(plot_definition)
-
-        # The current/last value definition also gets the metric levels
+    # Historic values are always added as plot_type area
+    if properties.get("time_range", "current")[0] == "range":
         for row_id, metric, row in metrics:
+            # Fix style for 2.0 release
+            # time_range_params = properties["time_range"][1]
+            # chosen_color = time_range_params.get("color", "default")
+            # color = metric.get(
+            # 'color',
+            # "#008EFF",
+            # ) if chosen_color == "default" else chosen_color
+            plot_type = "area"
+            color = "#008EFF"
             plot_definition = {
                 "label": row['host_name'],
-                "id": "%s_single" % row_id,
-                "plot_type": "single_value",
+                "id": row_id,
+                "plot_type": plot_type,
                 "use_tags": [row_id],
-                "svc_state": svc_map(row),
-                "js_render": metric['unit'].get("js_render"),
-                "metrics": {
-                    "warn": metric["scalar"].get("warn"),
-                    "crit": metric["scalar"].get("crit"),
-                    "min": metric["scalar"].get("min"),
-                    "max": metric["scalar"].get("max"),
-                }
+                "color": color,
+                "opacity": 0.1 if plot_type == "area" else 1
             }
-            if "color" in metric:
-                plot_definition["color"] = metric["color"]
+            if plot_type == "area":
+                plot_definition["style"] = "with_topline"
+            if properties.get("metric_status_display") == "background":
+                plot_definition["color"] = metric_state_color(metric)
+                plot_definition["opacity"] = 0.4 if plot_type == "area" else 1
 
             plot_definitions.append(plot_definition)
 
-        response = {
-            "plot_definitions": plot_definitions,
-            "data": data,
+    # The current/last value definition also gets the metric levels
+    for row_id, metric, row in metrics:
+        plot_definition = {
+            "label": row['host_name'],
+            "id": "%s_single" % row_id,
+            "plot_type": "single_value",
+            "use_tags": [row_id],
+            "svc_state": svc_map(row),
+            "js_render": metric['unit'].get("js_render"),
+            "metrics": {
+                "warn": metric["scalar"].get("warn"),
+                "crit": metric["scalar"].get("crit"),
+                "min": metric["scalar"].get("min"),
+                "max": metric["scalar"].get("max"),
+            }
         }
-        title: List[_Tuple[str, Optional[str]]] = []
-        title_format = settings.get("title_format", ["plain"])
+        if "color" in metric:
+            plot_definition["color"] = metric["color"]
+        if "metric_status_display" in properties:
+            plot_definition["metric_status_display"] = properties["metric_status_display"]
 
-        if settings.get("show_title", True) and metrics:
-            if settings.get("title") and "plain" in title_format:
-                title.append((settings.get("title"), ""))
-            title.extend(
-                title_info_elements(metrics[0][2], [f for f in title_format if f != "plain"]))
+        plot_definitions.append(plot_definition)
 
-        response["title"] = " / ".join(txt for txt, _ in title)
-
-        return response
+    return {
+        "plot_definitions": plot_definitions,
+        "data": data,
+        "title": dashlet_title(settings, metrics[0][2] if metrics else {})
+    }
 
 
-@page_registry.register_page("single_metric_data")
-class SingleMetricPage(AjaxPage):
-    def page(self):
-        return SingleMetricStyledDataGenerator.generate_response_from_request()
+def _time_range_historic_dict_elements(with_elements) -> DictionaryElements:
+    yield 'window', Timerange(
+        title=_("Time range to consider"),
+        default_value="d0",
+        allow_empty=True,
+    )
+    yield "rrd_consolidation", DropdownChoice(
+        choices=[
+            ("average", _("Average")),
+            ("min", _("Minimum")),
+            ("max", _("Maximum")),
+        ],
+        default_value="max",
+        title="RRD consolidation",
+        help=_("Consolidation function for the [cms_graphing#rrds|RRD] data column"),
+    )
+
+    if "with_graph_styling" in with_elements:
+        yield "style", DropdownChoice(
+            choices=[
+                ("line", _("Line")),
+                ("area", _("Area")),
+            ],
+            default_value="area",
+            title=_("Style"),
+        )
+        yield "color", GraphColor(
+            title=_("Color"),
+            default_value="default",
+        )
+
+
+def _vs_elements(with_elements) -> DictionaryElements:
+    yield ("metric", MetricName())  # MetricChoice would be nicer, but we use the context filters
+    if "time_range" in with_elements:
+        yield "time_range", CascadingDropdown(
+            title=_("Timerange"),
+            orientation="horizontal",
+            choices=[
+                (
+                    "current",
+                    _("Only show current value"),
+                ),
+                (
+                    "range",
+                    _("Show historic values"),
+                    Dictionary(
+                        optional_keys=False,
+                        elements=_time_range_historic_dict_elements(with_elements),
+                    ),
+                ),
+            ],
+            default_value="current",
+        )
+
+    if "display_range" in with_elements:
+
+        def validate_range(value, varprefix):
+            _min, _max = value
+            if _min >= _max:
+                raise MKUserError(varprefix,
+                                  _("Display range: Minimum must be strictly less than maximum"))
+
+        yield "display_range", CascadingDropdown(
+            title=_("Display range"),
+            choices=[
+                ("fixed", _("Fixed range"),
+                 ValuesWithUnits(vs_name="display_range",
+                                 metric_vs_name="metric",
+                                 help=_("Set the range in which data is displayed. "
+                                        "Having selected a metric before auto selects "
+                                        "here the matching unit of the metric."),
+                                 elements=[_("Minimum"), _("Maximum")],
+                                 validate_value_elemets=validate_range)),
+                # ("infer", _("Automatic")), # For future logic
+            ],
+            default_value="fixed")
+
+    if "metric_status_display" in with_elements:
+        yield "metric_status_display", DropdownChoice(
+            title=_("Metric Status"),
+            choices=[(None, _("Metric value is displayed in neutral color")),
+                     ("text", _("Metric state is colored in its value")),
+                     ("background", _("Metric status is colored on the dashlet background"))],
+        )
+
+    if "status_border" in with_elements:
+        yield "status_border", DropdownChoice(
+            title=_("Status border"),
+            choices=[
+                (False, _("Do not show any service status border")),
+                ("not_ok", _("Draw a status border when service is not OK")),
+                ("always", _("Always draw the service status on the border")),
+            ],
+            default_value="not_ok")
+
+
+class SingleMetricDashlet(ABCFigureDashlet):
+    @staticmethod
+    def generate_response_data(properties, context, settings):
+        data, metrics = create_data_for_single_metric(properties, context, required_columns)
+        return _create_single_metric_config(data, metrics, properties, context, settings)
+
+    @classmethod
+    def single_infos(cls):
+        return ["service", "host"]
 
 
 #   .--Gauge---------------------------------------------------------------.
@@ -202,7 +271,7 @@ class SingleMetricPage(AjaxPage):
 
 
 @dashlet_registry.register
-class GaugeDashlet(ABCFigureDashlet):
+class GaugeDashlet(SingleMetricDashlet):
     """Dashlet that displays a scatterplot and average lines for a selected type of service"""
     @classmethod
     def type_name(cls):
@@ -216,16 +285,13 @@ class GaugeDashlet(ABCFigureDashlet):
     def description(cls):
         return _("Displays Gauge")
 
-    @classmethod
-    def data_generator(cls):
-        return SingleMetricDataGenerator
+    @staticmethod
+    def _vs_elements():
+        return _vs_elements(["time_range", "display_range", "status_border"])
 
-    @classmethod
-    def single_infos(cls):
-        return ["service", "host"]
-
-    def show(self):
-        self.js_dashlet("single_metric_data.py")
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield "$SITE$"
 
 
 #   .--Bar Plot------------------------------------------------------------.
@@ -239,7 +305,7 @@ class GaugeDashlet(ABCFigureDashlet):
 
 
 @dashlet_registry.register
-class BarplotDashlet(ABCFigureDashlet):
+class BarplotDashlet(SingleMetricDashlet):
     @classmethod
     def type_name(cls):
         return "barplot"
@@ -249,19 +315,16 @@ class BarplotDashlet(ABCFigureDashlet):
         return _("Barplot")
 
     @classmethod
-    def data_generator(cls):
-        return SingleMetricDataGenerator
-
-    @classmethod
     def description(cls):
         return _("Barplot")
+
+    @staticmethod
+    def _vs_elements():
+        return _vs_elements([])
 
     @classmethod
     def single_infos(cls):
         return ["service"]
-
-    def show(self):
-        self.js_dashlet("single_metric_data.py")
 
 
 #   .--Single Graph--------------------------------------------------------.
@@ -274,30 +337,9 @@ class BarplotDashlet(ABCFigureDashlet):
 #   +----------------------------------------------------------------------+
 
 
-class SingleMetricStyledDataGenerator(SingleMetricDataGenerator):
-    @classmethod
-    def _vs_elements(cls):
-        vs_el = super()._vs_elements()
-        vs_el.extend([("fill",
-                       DropdownChoice(choices=[
-                           (False, _("Don't fill area plot")),
-                           (True, _("Fill area plot")),
-                       ],
-                                      default_value=True,
-                                      title=_("Fill area plot when displaying historic values"))),
-                      ("color", GraphColor(title=_("Color metric plot"), default_value="default"))])
-
-        return vs_el
-
-
 @dashlet_registry.register
-class SingleMetricDashlet(ABCFigureDashlet):
+class SingleGraphDashlet(SingleMetricDashlet):
     """Dashlet that displays a single metric"""
-    def __init__(self, dashboard_name, dashboard, dashlet_id, dashlet):
-        super(SingleMetricDashlet, self).__init__(dashboard_name, dashboard, dashlet_id, dashlet)
-        self._perf_data = []
-        self._check_command = ""
-
     @classmethod
     def type_name(cls):
         return "single_metric"
@@ -307,23 +349,13 @@ class SingleMetricDashlet(ABCFigureDashlet):
         return _("Single metric")
 
     @classmethod
-    def data_generator(cls):
-        return SingleMetricStyledDataGenerator
-
-    @classmethod
     def description(cls):
         return _("Displays a single metric of a specific host and service.")
 
-    @classmethod
-    def single_infos(cls):
-        return ["service", "host"]
+    @staticmethod
+    def _vs_elements():
+        return _vs_elements(["time_range", "status_border", "metric_status_display"])
 
-    def on_resize(self):
-        return ("if (typeof %(instance)s != 'undefined') {"
-                "%(instance)s.update_gui();"
-                "}") % {
-                    "instance": self.instance_name
-                }
-
-    def show(self):
-        self.js_dashlet("single_metric_data.py")
+    @staticmethod
+    def get_additional_title_macros() -> Iterable[str]:
+        yield "$SITE$"

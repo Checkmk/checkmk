@@ -1523,6 +1523,12 @@ metric_info['packets_rejected'] = {
     "color": "42/a",
 }
 
+metric_info["fortiauthenticator_fails_5min"] = {
+    "title": _("Authentication failures (last 5 minutes)"),
+    "unit": "count",
+    "color": "42/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

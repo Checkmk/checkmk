@@ -3,7 +3,24 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Classes defining the check helper protocol."""
+"""Classes defining the check helper protocol.
+
+We call "message" a header followed by the corresponding payload.
+
++---------------+----------------+---------------+----------------+
+| Layer         | Message type   | Header type   | Payload type   |
++===============+================+===============+================+
+| CMC Layer     | CMCMessage     | CMCHeader     | FetcherMessage |
++---------------+----------------+---------------+----------------+
+| Fetcher Layer | FetcherMessage | FetcherHeader | ResultMessage  |
+|               |                |               | + ResultStats  |
++---------------+----------------+---------------+----------------+
+|               |                |      AgentResultMessage        |
+| Result Layer  | ResultMessage  |      SNMPResultMessage         |
+|               |                |      ErrorResultMessage        |
++---------------+----------------+--------------------------------+
+
+"""
 
 import abc
 import enum
@@ -31,24 +48,6 @@ __all__ = [
     "CMCHeader",
     "CMCMessage",
 ]
-"""Defines a layered protocol.
-
-We call "message" a header followed by the corresponding payload.
-
-+---------------+----------------+---------------+----------------+
-| Layer         | Message type   | Header type   | Payload type   |
-+===============+================+===============+================+
-| CMC Layer     | CMCMessage     | CMCHeader     | FetcherMessage |
-+---------------+----------------+---------------+----------------+
-| Fetcher Layer | FetcherMessage | FetcherHeader | ResultMessage  |
-|               |                |               | + ResultStats  |
-+---------------+----------------+---------------+----------------+
-|               |                |      AgentResultMessage        |
-| Result Layer  | ResultMessage  |      SNMPResultMessage         |
-|               |                |      ErrorResultMessage        |
-+---------------+----------------+--------------------------------+
-
-"""
 
 
 class CMCLogLevel(str, enum.Enum):

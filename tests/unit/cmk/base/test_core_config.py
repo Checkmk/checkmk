@@ -127,7 +127,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     assert attrs == expected_attrs
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("hostname,result", [
     ("localhost", {
         'check_interval': 1.0,

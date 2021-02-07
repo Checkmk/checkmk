@@ -35,7 +35,10 @@ DETECT_CANON_HAS_TOTAL = all_of(
     exists(".1.3.6.1.4.1.1602.1.11.1.3.1.4.301"),
 )
 
-DETECT_GENERIC = exists(".1.3.6.1.2.1.43.10.2.1.4.1.1")
+DETECT_GENERIC = all_of(
+    exists(".1.3.6.1.2.1.43.*"),
+    exists(".1.3.6.1.2.1.43.10.2.1.4.1.1"),
+)
 
 PRINTER_PAGES_TYPES = {
     'pages_total': 'total prints',

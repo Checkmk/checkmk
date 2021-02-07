@@ -1,0 +1,14 @@
+Title: lvm_vgs: Validate against levels of 0 bytes on free space
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611603152
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The rule "Volume Groups (LVM)" and the corresponding check plugin
+are not able to deal with levels of 0 imposed on free space.
+Please use 100% on used space if this affects you.

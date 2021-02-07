@@ -6115,21 +6115,30 @@ def test_registered_display_hints():
     '.software.applications.docker.num_containers_total',
     '.software.applications.docker.num_images',
     '.software.applications.docker.version',
+    '.software.applications.fortinet.fortigate_high_availability.',
+    '.software.applications.fortinet.fortisandbox:',
+    '.software.applications.fortinet.fortisandbox:*.name',
+    '.software.applications.fortinet.fortisandbox:*.version',
     '.software.applications.ibm_mq.',
     '.software.applications.ibm_mq.channels:',
+    '.software.applications.ibm_mq.channels:*.monchl',
     '.software.applications.ibm_mq.channels:*.name',
     '.software.applications.ibm_mq.channels:*.qmgr',
     '.software.applications.ibm_mq.channels:*.status',
     '.software.applications.ibm_mq.channels:*.type',
     '.software.applications.ibm_mq.managers:',
+    '.software.applications.ibm_mq.managers:*.ha',
     '.software.applications.ibm_mq.managers:*.instname',
     '.software.applications.ibm_mq.managers:*.instver',
     '.software.applications.ibm_mq.managers:*.name',
     '.software.applications.ibm_mq.managers:*.standby',
     '.software.applications.ibm_mq.managers:*.status',
     '.software.applications.ibm_mq.queues:',
+    '.software.applications.ibm_mq.queues:*.altered',
+    '.software.applications.ibm_mq.queues:*.created',
     '.software.applications.ibm_mq.queues:*.maxdepth',
     '.software.applications.ibm_mq.queues:*.maxmsgl',
+    '.software.applications.ibm_mq.queues:*.monq',
     '.software.applications.ibm_mq.queues:*.name',
     '.software.applications.ibm_mq.queues:*.qmgr',
     '.software.applications.kubernetes.assigned_pods:',
@@ -6284,13 +6293,8 @@ def test_get_inventory_display_hint():
     assert isinstance(hint, dict)
 
 
-def test_view_page(wsgi_app, with_user, mock_livestatus):
-    username, password = with_user
-    login = wsgi_app.get('/NO_SITE/check_mk/login.py')
-    login.form['_username'] = username
-    login.form['_password'] = password
-    resp = login.form.submit('_login', index=1)
-    assert "Invalid credentials." not in resp.text
+def test_view_page(logged_in_wsgi_app, mock_livestatus):
+    wsgi_app = logged_in_wsgi_app
 
     def _prepend(prefix, dict_):
         d = {}
@@ -6348,7 +6352,8 @@ def test_view_page(wsgi_app, with_user, mock_livestatus):
         "host_is_flapping host_labels host_modified_attributes_list host_name host_notes_url_expanded "
         "host_notifications_enabled host_num_services_crit host_num_services_ok "
         "host_num_services_pending host_num_services_unknown host_num_services_warn host_perf_data "
-        "host_pnpgraph_present host_scheduled_downtime_depth host_staleness host_state"
+        "host_pnpgraph_present host_scheduled_downtime_depth host_staleness host_state\n"
+        "Limit: 1001"
     )
     live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     with live():

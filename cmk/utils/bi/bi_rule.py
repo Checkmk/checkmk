@@ -16,6 +16,7 @@
 from typing import List, Dict, Type, Sequence, Optional, Any
 from marshmallow import fields
 
+from cmk.utils.macros import MacroMapping
 from cmk.utils.bi.bi_lib import (
     bi_aggregation_function_registry,
     BIParams,
@@ -24,7 +25,6 @@ from cmk.utils.bi.bi_lib import (
     ReqString,
     ABCBICompiledNode,
     get_schema_default_config,
-    MacroMappings,
     create_nested_schema,
     create_nested_schema_for_class,
     ABCWithSchema,
@@ -100,7 +100,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         if self.computation_options.disabled:
             return []
 
-        mapped_rule_arguments: MacroMappings = dict(
+        mapped_rule_arguments: MacroMapping = dict(
             zip(["$%s$" % x for x in self._params.arguments], extern_arguments))
 
         action_results = []
@@ -113,13 +113,14 @@ class BIRule(ABCBIRule, ABCWithSchema):
         return [self._generate_rule_branch(action_results, mapped_rule_arguments)]
 
     def _generate_rule_branch(self, nodes: List[ABCBICompiledNode],
-                              macros: MacroMappings) -> ABCBICompiledNode:
+                              macros: MacroMapping) -> ABCBICompiledNode:
         required_hosts = set()
         for node in nodes:
             required_hosts.update(node.required_hosts)
 
         bi_rule_result = BICompiledRule(
             self.id,
+            self.pack_id,
             nodes,
             list(required_hosts),
             BIRuleProperties(self._properties_config),
@@ -133,6 +134,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
     @classmethod
     def create_tree_from_schema(cls, schema_config: Dict[str, Any]) -> BICompiledRule:
         rule_id = schema_config["id"]
+        pack_id = schema_config["pack_id"]
         nodes = [cls._create_node(x) for x in schema_config["nodes"]]
         required_hosts = [(x["site_id"], x["host_name"]) for x in schema_config["required_hosts"]]
         properties = BIRuleProperties(schema_config["properties"])
@@ -142,6 +144,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
         return BICompiledRule(
             rule_id,
+            pack_id,
             nodes,
             required_hosts,
             properties,

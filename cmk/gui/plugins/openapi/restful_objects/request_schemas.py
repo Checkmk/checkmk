@@ -23,6 +23,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
 from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
+from cmk.gui.userdb import load_users
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_service_problem,
@@ -805,6 +806,14 @@ SERVICE_DURATION = fields.Integer(
     missing=0,
 )
 
+INCLUDE_ALL_SERVICES = fields.Bool(
+    description=
+    "If set, downtimes for all services associated with the given host will be scheduled.",
+    required=False,
+    missing=False,
+    example=True,
+)
+
 
 class CreateHostDowntime(CreateDowntimeBase):
     host_name = MONITORED_HOST
@@ -881,7 +890,7 @@ class DeleteDowntimeBase(BaseSchema):
     )
 
 
-class DeleteParamDowntime(DeleteDowntimeBase):
+class DeleteDowntimeById(DeleteDowntimeBase):
     downtime_id = fields.String(
         description='The id of the downtime',
         example='54',
@@ -889,7 +898,21 @@ class DeleteParamDowntime(DeleteDowntimeBase):
     )
 
 
-class DeleteQueryDowntime(DeleteDowntimeBase):
+class DeleteDowntimeByName(DeleteDowntimeBase):
+    hostname = fields.String(
+        required=True,
+        description="If set alone, then all downtimes of the host will be removed.",
+        example="example.com")
+    services = fields.List(
+        SERVICE_DESCRIPTION_FIELD,
+        description="If set, the downtimes of the listed services of the specified host will be "
+        "removed. If a service has multiple downtimes then all will be removed",
+        required=False,
+        example=["CPU load", "Memory"],
+    )
+
+
+class DeleteDowntimeByQuery(DeleteDowntimeBase):
     query = QUERY
 
 
@@ -897,8 +920,9 @@ class DeleteDowntime(OneOfSchema):
     type_field = 'delete_type'
     type_field_remove = False
     type_schemas = {
-        'params': DeleteParamDowntime,
-        'query': DeleteQueryDowntime,
+        'by_id': DeleteDowntimeById,
+        'params': DeleteDowntimeByName,
+        'query': DeleteDowntimeByQuery,
     }
 
 
@@ -1098,6 +1122,359 @@ class UpdatePassword(BaseSchema):
                          attribute="shared_with")
 
 
+class Username(fields.String):
+    default_error_messages = {
+        "should_exist": "Username missing: {username!r}",
+        "should_not_exist": "Username {username!r} already exists"
+    }
+
+    def __init__(
+        self,
+        example,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        # TODO: change to names list only
+        usernames = load_users()
+        if self._should_exist and value not in usernames:
+            self.fail("should_exist", username=value)
+        elif not self._should_exist and value in usernames:
+            self.fail("should_not_exist", username=value)
+
+
+class CustomTimeRange(BaseSchema):
+    # TODO: fields.Dict validation also for Timperiods
+    start_time = fields.DateTime(
+        format="iso8601",
+        required=True,
+        example="2017-07-21T17:32:28Z",
+        description=
+        "The start datetime of the time period. The format has to conform to the ISO 8601 profile",
+    )
+    end_time = fields.DateTime(
+        required=True,
+        example="2017-07-21T17:32:28Z",
+        description=
+        "The end datetime of the time period. The format has to conform to the ISO 8601 profile",
+        format="iso8601",
+    )
+
+
+class DisabledNotifications(BaseSchema):
+    disable = fields.Bool(
+        required=False,
+        description="Option if all notifications should be temporarily disabled",
+        missing=False,
+        example="False",
+    )
+    timerange = fields.Nested(
+        CustomTimeRange,
+        description="A custom timerange during which notifications are disabled",
+        required=False,
+        example={
+            "start_time": "2017-07-21T17:32:28Z",
+            "end_time": "2017-07-21T18:32:28Z",
+        },
+    )
+
+
+AUTH_PASSWORD = fields.String(
+    required=False,
+    description="The password for login",
+    example="password",
+)
+
+AUTH_SECRET = fields.String(
+    required=False,
+    description="For accounts used by automation processes (such as fetching data from views "
+    "for further procession). This is the automation secret",
+    example="DEYQEQQPYCFFBYH@AVMC",
+)
+
+AUTH_CREATE_TYPE = fields.String(
+    required=False,
+    description="The authentication type",
+    enum=["automation", "password"],
+    example="password",
+)
+
+AUTH_UPDATE_TYPE = fields.String(
+    required=True,
+    description="The authentication type",
+    enum=["automation", "password", "remove"],
+    example="password",
+)
+
+
+class AuthSecret(BaseSchema):
+    auth_type = AUTH_CREATE_TYPE
+    secret = AUTH_SECRET
+
+
+class AuthPassword(BaseSchema):
+    auth_type = AUTH_CREATE_TYPE
+    password = AUTH_PASSWORD
+
+
+class AuthUpdateSecret(BaseSchema):
+    auth_type = AUTH_UPDATE_TYPE
+    secret = AUTH_SECRET
+
+
+class AuthUpdatePassword(BaseSchema):
+    auth_type = AUTH_UPDATE_TYPE
+    password = AUTH_PASSWORD
+
+
+class AuthUpdateRemove(BaseSchema):
+    auth_type = AUTH_UPDATE_TYPE
+
+
+class AuthOption(OneOfSchema):
+    type_field = 'auth_type'
+    type_field_remove = False
+    type_schemas = {
+        'password': AuthPassword,
+        'automation': AuthSecret,
+    }
+
+
+class AuthUpdateOption(OneOfSchema):
+    type_field = 'auth_type'
+    type_field_remove = False
+    type_schemas = {
+        'password': AuthUpdatePassword,
+        'automation': AuthUpdateSecret,
+        'remove': AuthUpdateRemove,
+    }
+
+
+class IdleOption(BaseSchema):
+    option = fields.String(
+        required=True,
+        description="Specify if the idle timeout should use the global configuration, be disabled "
+        "or use an individual duration",
+        enum=["global", "disable", "individual"],
+        example=False,
+    )
+    duration = fields.Integer(
+        required=False,
+        description="The duration in seconds of the individual idle timeout if individual is "
+        "selected as idle timeout option.",
+        example=3600,
+        missing=3600,
+    )
+
+
+class UserContactOption(BaseSchema):
+    email_address = fields.String(
+        required=True,
+        description="The mail address of the user. Required if the user is a monitoring"
+        "contact and receives notifications via mail.",
+        example="user@example.com",
+        attribute="email")
+    # User cannot enable fallback contact if no email is specified
+    fallback_contact = fields.Bool(
+        description="In case none of your notification rules handles a certain event a notification "
+        "will be sent to the specified email",
+        required=False,
+        missing=False,
+        example=False,
+    )
+
+
+class CreateUser(BaseSchema):
+    username = Username(
+        required=True,
+        should_exist=False,
+        description="An unique username for the user",
+        example="cmkuser",
+    )
+    fullname = fields.String(
+        required=True,
+        description="The alias or full name of the user",
+        example="Mathias Kettner",
+        attribute="alias",
+    )
+    auth_option = fields.Nested(
+        AuthOption,
+        required=False,
+        description="Authentication option for the user",
+        example={
+            "auth_type": "password",
+            "password": "password"
+        },
+        missing=lambda: {},
+    )
+    disable_login = fields.Bool(
+        required=False,
+        missing=False,
+        description="The user can be blocked from login but will remain part of the site. "
+        "The disabling does not affect notification and alerts.",
+        example=False,
+        attribute='locked')
+    contact_options = fields.Nested(UserContactOption,
+                                    required=False,
+                                    description="Contact settings for the user",
+                                    missing={
+                                        "email": "",
+                                        "fallback_contact": False
+                                    },
+                                    example={"email": "user@example.com"})
+    pager_address = fields.String(
+        required=False,
+        description="",
+        example="",
+        missing="",
+        attribute="pager",
+    )
+    idle_timeout = fields.Nested(
+        IdleOption,
+        required=False,
+        description="Idle timeout for the user. Per default, the global configuration is used.",
+        example={},
+    )
+    roles = fields.List(
+        fields.String(
+            required=True,
+            description="A role of the user",
+            enum=["user", "admin", "guest"],
+            example="user",
+        ),
+        required=False,
+        missing=[],
+        description="The list of assigned roles to the user",
+        example=["user"],
+    )
+    authorized_sites = fields.List(
+        fields.String(description="The sites the user is authorized to handle",),
+        example=['heute'],
+        required=False,
+    )
+    contactgroups = fields.List(
+        fields.String(description="Assign the user to one or multiple contact groups",
+                      required=True,
+                      example="all"),
+        required=False,
+        missing=[],
+        description="Assign the user to one or multiple contact groups. If no contact group is "
+        "specified then no monitoring contact will be created for the user."
+        "",
+        example=['all'])
+    disable_notifications = fields.Nested(
+        DisabledNotifications,
+        required=False,
+        missing={},
+        example={"disabled": False},
+    )
+    # default language is not setting a key in dict
+    language = fields.String(
+        required=False,
+        description="Configure the language to be used by the user in the user interface. Omitting "
+        "this will configure the default language.",
+        example="en",
+        enum=["de", "en", "rm"],
+    )
+
+
+class UpdateUser(BaseSchema):
+    fullname = fields.String(
+        required=False,
+        description="The alias or full name of the user",
+        example="Mathias Kettner",
+        attribute="alias",
+    )
+    auth_option = fields.Nested(
+        AuthUpdateOption,
+        required=False,
+        description="Authentication option for the user",
+        example={
+            "auth_type": "password",
+            "password": "password"
+        },
+        missing=lambda: {},
+    )
+    enforce_password_change = fields.Bool(
+        required=False,
+        description="Enforce the password change on next login. This has no effect if you remove "
+        "the authentication option",
+        example=True,
+    )
+    disable_login = fields.Bool(
+        required=False,
+        description="The user can be blocked from login but will remain part of the site. "
+        "The disabling does not affect notification and alerts.",
+        example=False,
+        attribute='locked')
+    contact_options = fields.Nested(UserContactOption,
+                                    required=False,
+                                    description="Contact settings for the user",
+                                    example={"email": "user@example.com"})
+    pager_address = fields.String(
+        required=False,
+        description="",
+        example="",
+        attribute="pager",
+    )
+    idle_timeout = fields.Nested(
+        IdleOption,
+        required=False,
+        description="Idle timeout for the user",
+        example={},
+    )
+    roles = fields.List(
+        fields.String(
+            required=False,
+            description="A role of the user",
+            enum=["user", "admin", "guest"],
+            example="user",
+        ),
+        required=False,
+        description="The list of assigned roles to the user",
+        example=["user"],
+    )
+    authorized_sites = fields.List(
+        fields.String(description="The sites the user is authorized to handle",),
+        example=['heute'],
+        required=False,
+    )
+    contactgroups = fields.List(
+        fields.String(description="Assign the user to one or multiple contact groups",
+                      required=True,
+                      example="all"),
+        required=False,
+        description="Assign the user to one or multiple contact groups. If no contact group is "
+        "specified then no monitoring contact will be created for the user."
+        "",
+        example=['all'])
+    disable_notifications = fields.Nested(
+        DisabledNotifications,
+        required=False,
+        example={"disabled": False},
+    )
+    # default language is not setting a key in dict
+    language = fields.String(
+        required=False,
+        description="Configure the language to be used by the user in the user interface. Omitting "
+        "this will configure the default language",
+        example="en",
+        enum=["de", "en", "rm"],
+    )
+
+
 class HostTagGroupId(fields.String):
     """A field representing a host tag group id"""
 
@@ -1221,6 +1598,7 @@ class InputHostTagGroup(BaseSchema):
         example="group_id",
         description="An id for the host tag group",
         attribute="id",
+        pattern='[a-zA-Z_]+[-0-9a-zA-Z_]*',
     )
     title = fields.String(
         required=True,

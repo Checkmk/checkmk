@@ -18,7 +18,7 @@ from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig, SNMPBackend
+from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPBackendEnum
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -131,11 +131,11 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
             False,
         ),
     ])
-def test_evaluate_snmp_detection(config_snmp_scan_functions, name, oids_data, expected_result):
+def test_evaluate_snmp_detection(fix_plugin_legacy, name, oids_data, expected_result):
     def oid_function(oid, _default=None, _name=None):
         return oids_data.get(oid)
 
-    scan_function = config_snmp_scan_functions[name]
+    scan_function = fix_plugin_legacy.snmp_scan_functions[name]
     assert bool(scan_function(oid_function)) is expected_result
 
     converted_detect_spec = create_detect_spec(name, scan_function, [])
@@ -161,12 +161,12 @@ SNMPConfig = SNMPHostConfig(
     snmpv3_contexts=[],
     character_encoding="ascii",
     is_usewalk_host=False,
-    snmp_backend=SNMPBackend.classic,
+    snmp_backend=SNMPBackendEnum.CLASSIC,
 )
 
 
 # Adapted from `test_snmplib_snmp_table`.
-class SNMPTestBackend(ABCSNMPBackend):
+class SNMPTestBackend(SNMPBackend):
     def get(self, oid, context_name=None):
         raise NotImplementedError("get")
 

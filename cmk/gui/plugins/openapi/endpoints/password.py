@@ -39,8 +39,9 @@ def create_password(params):
     """Create a password"""
     body = params['body']
     ident = body['ident']
-    body["owned_by"] = None if body['owned_by'] == "admin" else body['owned_by']
-    save_password(ident, body)
+    password_details = {k: v for k, v in body.items() if k not in ("ident", "owned_by")}
+    password_details["owned_by"] = None if body['owned_by'] == "admin" else body['owned_by']
+    save_password(ident, password_details)
     return Response(status=204)
 
 
@@ -91,27 +92,26 @@ def show_password(params):
             404, f'Password "{ident}" is not known.',
             'The password you asked for is not known. Please check for eventual misspellings.')
     password_details = passwords[ident]
-    return _serve_password(password_details)
+    return _serve_password(ident, password_details)
 
 
-def _serve_password(password_details):
+def _serve_password(ident, password_details):
     response = Response()
-    response.set_data(json.dumps(serialize_password(password_details)))
+    response.set_data(json.dumps(serialize_password(ident, password_details)))
     response.set_content_type('application/json')
     return response
 
 
-def serialize_password(details):
+def serialize_password(ident, details):
     return constructors.domain_object(domain_type="password",
-                                      identifier=details["ident"],
+                                      identifier=ident,
                                       title=details["title"],
                                       members={
                                           "title": constructors.object_property(
                                               name='title',
                                               value=details["title"],
                                               prop_format='string',
-                                              base=constructors.object_href(
-                                                  'password', details["ident"]),
+                                              base=constructors.object_href('password', ident),
                                           )
                                       },
                                       extensions={

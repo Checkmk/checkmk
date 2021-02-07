@@ -11,9 +11,8 @@ Migrate RRDs metadata which are based on mountpoint names to static name 'fs_use
 - Go through every info file, either cmc infos or Nagios XML files
 - Update the metric names from a mountpoint to fs_used in info files
 - For Nagios, correspondingly rename rrd files and update journal
-- Activate a config flag that fs_used is the new metric name
 
-WARN: DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->1.7
+WARN: DELETE THIS FOR CMK 2.1, THIS ONLY migrates 1.6->2.0
 """
 import importlib
 import os
@@ -80,19 +79,20 @@ def update_files(hostname, servicedesc, item, source):
 
     filepath = get_info_file(hostname, servicedesc, source)
     if not os.path.exists(filepath):
-        return False
+        return {}
 
     metrics = get_metrics(filepath, source)
     perfvar = cmk.utils.pnp_cleanup(item)
 
     update_condition = perfvar in metrics and 'fs_used' not in metrics
     logger.info('Analyzing %s', filepath)
+    entry_to_rename = {}
     if update_condition:
         if source == 'cmc':
             r_metrics = ['fs_used' if x == perfvar else x for x in metrics]
             cmk.base.cee.rrd.create_cmc_rrd_info_file(hostname, servicedesc, r_metrics)
         else:
-            update_pnp_info_files(perfvar, 'fs_used', filepath)
+            entry_to_rename = update_pnp_info_files(perfvar, 'fs_used', filepath)
 
         logger.info("   Updated ")
 
@@ -108,10 +108,18 @@ def update_files(hostname, servicedesc, item, source):
             filepath.replace(".info", ".rrd"),
         )
 
-    return False
+    return entry_to_rename
 
 
-def update_journal(rrdfile, rrdfilenew):
+def drop_opt_prefix(path):
+    if path.startswith("/opt"):
+        return path[4:]
+    return path
+
+
+def update_journal(rename_journal):
+    if not rename_journal:
+        return
     journaldir = Path(cmk.utils.paths.omd_root, 'var/rrdcached/')
     for filepath in journaldir.iterdir():
         logger.info('- Updating journal file %s', filepath)
@@ -120,8 +128,12 @@ def update_journal(rrdfile, rrdfilenew):
             with filepath.open('r', encoding="utf-8") as old_jou, new_file.open(
                     'w', encoding="utf-8") as new_jou:
                 for line in old_jou:
-                    if rrdfile in line:
-                        line = line.replace(rrdfile, rrdfilenew)
+                    try:
+                        old_rrd_file = drop_opt_prefix(line.split(" ", 2)[1])
+                        if old_rrd_file in rename_journal:
+                            line = line.replace(old_rrd_file, rename_journal[old_rrd_file])
+                    except IndexError:  # AB? is this for the linesplit? Example line of failure?
+                        pass
                     new_jou.write(line)
         except Exception:
             new_file.unlink()
@@ -143,14 +155,14 @@ def update_pnp_info_files(perfvar, newvar, filepath):
     rrdfile, rrdfilenew = cmk.base.rrd.update_metric_pnp_xml_info_file(perfvar, newvar, filepath)
     os.rename(rrdfile, rrdfilenew)
     logger.info("Renamed %s -> %s", rrdfile, rrdfilenew)
-    update_journal(rrdfile, rrdfilenew)
+    return {drop_opt_prefix(rrdfile): drop_opt_prefix(rrdfilenew)}
 
 
 def update_service_info(config_cache, hostnames):
-    pnp_files_present = False
     check_variables = config.get_check_variables()
     cmc_capable = importlib.util.find_spec('cmk.base.cee')
 
+    rename_journal = {}
     for hostname in hostnames:
         for service in cmk.base.autochecks.parse_autochecks_file(
                 hostname,
@@ -160,8 +172,10 @@ def update_service_info(config_cache, hostnames):
             if service.check_plugin_name in CHECKS_USING_DF_INCLUDE:
                 if cmc_capable:
                     update_files(hostname, service.description, service.item, 'cmc')
-                pnp_files_present |= update_files(hostname, service.description, service.item,
-                                                  'pnp4nagios')
+                rename_journal.update(
+                    update_files(hostname, service.description, service.item, 'pnp4nagios'))
+
+    update_journal(rename_journal)
 
 
 def update():

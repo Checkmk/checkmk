@@ -467,11 +467,17 @@ check_info['cmciii.access'] = {
 
 
 def inventory_cmciii_temp(parsed):
-    for entry in parsed.get("temp", {}):
-        yield entry, {}
+    for entry, content in parsed.get("temp", {}).items():
+        # TODO: Should we not handle the dew points somewhere else?
+        # In any case, the "Setup" entries contain setpoints and
+        # cannot report a temperature to the user.
+        if "Value" in content:
+            yield entry, {}
 
 
 def check_cmciii_temp(item, params, parsed):
+    # Fields from table 8.3.2 Temperature in "Assembly and operating instructions"
+    # for software version V3.07.03.
     if item in parsed.get("temp", {}):
         attrs = parsed["temp"][item]
         state, infotext, perfdata = check_temperature(

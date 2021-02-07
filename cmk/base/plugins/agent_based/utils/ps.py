@@ -42,8 +42,8 @@ from ..agent_based_api.v1 import (
 )
 
 ps_info = collections.namedtuple(
-    "Process_Info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile',
-                     'usermode_time', 'kernelmode_time', 'handles', 'threads', 'uptime', 'cgroup'))
+    "ps_info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile', 'usermode_time',
+                'kernelmode_time', 'handles', 'threads', 'uptime', 'cgroup'))
 
 ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)  # type: ignore[attr-defined]
 

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+import re
 
 import pytest  # type: ignore[import]
 from six import ensure_str
@@ -16,6 +17,7 @@ import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -1130,7 +1132,7 @@ def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version,
     assert config_cache.get_host_config(hostname).snmp_credentials_of_version(version) == result
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("hostname,section_name,result", [
     ("testhost1", "uptime", None),
     ("testhost2", "uptime", None),
@@ -1182,6 +1184,69 @@ def test_http_proxy(http_proxy, result, monkeypatch):
         })
 
     assert config.get_http_proxy(http_proxy) == result
+
+
+@pytest.fixture(name="service_list")
+def _service_list():
+    return [
+        Service(
+            check_plugin_name=CheckPluginName("plugin_%s" % d),
+            item="item",
+            description="description %s" % d,
+            parameters={},
+        ) for d in "FDACEB"
+    ]
+
+
+def test_get_sorted_check_table_cmc(monkeypatch, service_list):
+    monkeypatch.setattr(config, "is_cmc", lambda: True)
+
+    assert service_list == config.resolve_service_dependencies(
+        host_name="",
+        services=service_list,
+    )
+
+
+def test_get_sorted_check_table_no_cmc(monkeypatch, service_list):
+    monkeypatch.setattr(config, "is_cmc", lambda: False)
+    monkeypatch.setattr(
+        config, "service_depends_on", lambda _hn, descr: {
+            "description A": ["description C"],
+            "description B": ["description D"],
+            "description D": ["description A", "description F"],
+        }.get(descr, []))
+
+    sorted_service_list = config.resolve_service_dependencies(
+        host_name="",
+        services=service_list,
+    )
+    assert [s.description for s in sorted_service_list] == [
+        "description F",  #
+        "description C",  # no deps => input order maintained
+        "description E",  #
+        "description A",
+        "description D",
+        "description B",
+    ]
+
+
+def test_resolve_service_dependencies_cyclic(monkeypatch, service_list):
+    monkeypatch.setattr(config, "is_cmc", lambda: False)
+    monkeypatch.setattr(
+        config, "service_depends_on", lambda _hn, descr: {
+            "description A": ["description B"],
+            "description B": ["description D"],
+            "description D": ["description A"],
+        }.get(descr, []))
+
+    with pytest.raises(
+            MKGeneralException,
+            match=re.escape("Cyclic service dependency of host MyHost:"
+                            " 'description D' (plugin_D / item),"
+                            " 'description A' (plugin_A / item),"
+                            " 'description B' (plugin_B / item)"),
+    ):
+        _ = config.resolve_service_dependencies(host_name="MyHost", services=service_list)
 
 
 def test_service_depends_on_unknown_host():
@@ -1419,7 +1484,7 @@ def test_labels_of_service(monkeypatch):
     }
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
     ts = Scenario().add_host("test-host")
 
@@ -1480,7 +1545,7 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
     assert config_cache.extra_attributes_of_service(hostname, "CPU load") == result
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", []),
     ("testhost2", ["icon1", "icon2"]),

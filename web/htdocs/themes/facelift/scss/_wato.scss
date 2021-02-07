@@ -27,8 +27,8 @@
 }
 
 .wato table.data {
-  &:not(.job_table) th.header_state {
-    background: transparent !important;
+  th.header_state {
+    color: $table-secondary-font-color !important; // prevents state colors in table headers
   }
 
   /* TODO: Reproduce this html element */
@@ -762,10 +762,10 @@ div.varname {
   td.simple a.modified,
   td.simple div.toggle_switch_container.modified,
   td.content a.modified > table {
-    padding: 1px 4px 2px;
+    padding: 2px 4px;
     margin-left: -4px;
     border: 1px solid $globalvars-modified-border-color;
-    border-radius: 5px;
+    border-radius: $spacing;
     box-shadow: $globalvars-modified-box-shadow;
   }
 
@@ -776,7 +776,8 @@ div.varname {
   }
 
   td.simple div.toggle_switch_container {
-    width: 56px;
+    width: $toggle-switch-width;
+    height: $toggle-switch-height;
   }
 
   /* TODO: Reproduce this html class "vs_dict_text" */
@@ -1469,13 +1470,4 @@ table.data.analyze_config td.buttons {
 .wato h3 {
   @include table-header-mixin;
   margin-bottom: 0;
-}
-
-.wato table.data.job_table {
-  td div.info {
-    padding: $wato-info-padding;
-    margin: $wato-info-margin;
-    background-color: $data-container-bg-color;
-    border: $primary-border;
-  }
 }

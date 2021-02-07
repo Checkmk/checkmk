@@ -12,10 +12,8 @@ import pytest  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.type_defs import result
-
+from cmk.core_helpers.agent import AgentSummarizerDefault
 from cmk.core_helpers.type_defs import Mode
-from cmk.core_helpers.agent import AgentHostSections, AgentSummarizerDefault
 
 from cmk.base.sources.tcp import TCPSource
 
@@ -35,6 +33,10 @@ def mode_fixture(request):
      "1.2.3.{4,5,6}"),
 ])
 def test_tcpdatasource_only_from(mode, monkeypatch, res, reported, rule):
+    # TODO(ml): Not only is this white box testing but all these instantiations
+    #           before the summarizer obscure the purpose of the test.  This is
+    #           way too complicated.  Test the `AgentSummarizerDefault` directly
+    #           in `tests.unit.cmk.core_helpers.test_summarizers` instead.
     ts = Scenario().add_host("hostname")
     ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
     config_cache = ts.apply(monkeypatch)
@@ -49,7 +51,7 @@ def test_tcpdatasource_only_from(mode, monkeypatch, res, reported, rule):
         agent_target_version=source.host_config.agent_target_version,
         only_from=source.host_config.only_from,
     )
-    assert summarizer._sub_result_only_from({"onlyfrom": reported}) == res
+    assert summarizer._check_only_from(reported) == res
 
 
 @pytest.mark.parametrize("restricted_address_mismatch_state, only_from, rule, res", [
@@ -82,7 +84,12 @@ def test_tcpdatasource_restricted_address_mismatch(
     rule,
     res,
 ):
+    # TODO(ml): Not only is this white box testing but all these instantiations
+    #           before the summarizer obscure the purpose of the test.  This is
+    #           way too complicated.  Test the `AgentSummarizerDefault` directly
+    #           in `tests.unit.cmk.core_helpers.test_summarizers` instead.
     hostname = "hostname"
+
     ts = Scenario().add_host(hostname)
     ts.set_option("agent_config", {"only_from": [(rule, [], [hostname], {})]})
 
@@ -95,6 +102,7 @@ def test_tcpdatasource_restricted_address_mismatch(
 
     ts.apply(monkeypatch)
     source = TCPSource(hostname, "ipaddress", mode=mode)
+
     summarizer = AgentSummarizerDefault(
         source.exit_spec,
         is_cluster=source.host_config.is_cluster,
@@ -103,7 +111,7 @@ def test_tcpdatasource_restricted_address_mismatch(
         only_from=source.host_config.only_from,
     )
 
-    assert summarizer._sub_result_only_from({"onlyfrom": only_from}) == res
+    assert summarizer._check_only_from(only_from) == res
 
 
 def test_attribute_defaults(mode, monkeypatch):
@@ -132,21 +140,3 @@ def test_attribute_defaults(mode, monkeypatch):
     }
     assert source.description == "TCP: %s:%s" % (ipaddress, 6556)
     assert source.id == "agent"
-
-
-class TestSummaryResult:
-    @pytest.fixture(params=(mode for mode in Mode if mode is not Mode.NONE))
-    def mode(self, request):
-        return request.param
-
-    @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_defaults(self, ipaddress, mode, monkeypatch):
-        hostname = "testhost"
-        Scenario().add_host(hostname).apply(monkeypatch)
-        source = TCPSource(hostname, ipaddress, mode=mode)
-
-        assert source.summarize(result.OK(AgentHostSections())) == (
-            0,
-            "Version: unknown, OS: unknown",
-            [],
-        )

@@ -2,18 +2,20 @@ import * as d3 from "d3";
 import * as utils from "utils";
 import * as cmk_figures from "cmk_figures";
 
-class SiteOverview extends cmk_figures.FigureBase {
+export class SiteOverview extends cmk_figures.FigureBase {
     static ident() {
         return "site_overview";
     }
 
     constructor(div_selector, fixed_size = null) {
         super(div_selector, fixed_size);
-        this.margin = {top: 50, right: 50, bottom: 50, left: 50};
+        this.margin = {top: 0, right: 0, bottom: 0, left: 0};
+
+        this._max_box_width = 114;
 
         // Debugging/demo stuff
         this._test_filter = false;
-        this._use_canvas_for_hosts = true;
+        this._use_canvas_for_hosts = false;
     }
 
     initialize(debug) {
@@ -87,15 +89,20 @@ class SiteOverview extends cmk_figures.FigureBase {
         cmk_figures.FigureBase.prototype.update_data.call(this, data);
         this._crossfilter.remove(() => true);
 
-        if (this._data.render_mode == "hosts") {
-            for (let i = 0; i < 200; i++) {
-                // Create new data instead of references
-                let demo_host = JSON.parse(JSON.stringify(this._data.data[0]));
-                demo_host.tooltip = "Demo host" + i;
-                demo_host.title += i;
-                this._crossfilter.add([demo_host]);
-            }
-        }
+        //if (this._data.render_mode == "hosts") {
+        //    for (let i = 0; i < 200; i++) {
+        //        // Create new data instead of references
+        //        let demo_host = JSON.parse(JSON.stringify(this._data.data[0]));
+        //        demo_host.num_services = 10;
+        //        demo_host.num_problems = 0;
+        //        demo_host.has_host_problem = false;
+        //        demo_host.host_color = "#262f38";
+        //        demo_host.service_color = "#262f38";
+        //        demo_host.tooltip = "Demo host" + i;
+        //        demo_host.title += i;
+        //        this._crossfilter.add([demo_host]);
+        //    }
+        //}
         this._crossfilter.add(this._data.data);
     }
 
@@ -138,7 +145,7 @@ class SiteOverview extends cmk_figures.FigureBase {
 
         // Compute data: Geometry and element positions -> _hexagon_content
         this._hexagon_content = null;
-        if (this._data.render_mode == "hosts") {
+        if (this._data.render_mode == "hosts" || this._data.render_mode == "alert_statistics") {
             this._hexagon_content = this._compute_hosts();
         } else if (this._data.render_mode == "sites") {
             this._hexagon_content = this._compute_sites();
@@ -160,13 +167,19 @@ class SiteOverview extends cmk_figures.FigureBase {
             } else {
                 box_width = box_area.width / num_columns;
             }
+
+            if (box_width > this._max_box_width) {
+                box_width = this._max_box_width;
+                num_columns = Math.max(Math.floor(box_area.width / this._max_box_width), 1);
+            }
+
             let num_rows = Math.ceil(num_elements / num_columns);
             let box_height = (box_width * Math.sqrt(3)) / 2;
             let necessary_total_height = box_height * (num_rows + 1 / 3);
 
             if (necessary_total_height <= box_area.height) {
                 return {
-                    radius: ((box_height * 2) / 3) * 0.95,
+                    radius: ((box_height * 2) / 3) * 0.92,
                     box_height: box_height,
                     hexagon_height: (box_height * 4) / 3,
                     box_width: box_width,
@@ -220,8 +233,13 @@ class SiteOverview extends cmk_figures.FigureBase {
 
     _render_hexagon_content(hexagon_content) {
         if (this._data.render_mode == "hosts") {
-            if (this._use_canvas_for_hosts) this._render_host_hexagons_as_canvas(hexagon_content);
-            else this._render_host_hexagons_as_svg(hexagon_content);
+            if (this._use_canvas_for_hosts) {
+                this._render_host_hexagons_as_canvas(hexagon_content);
+            } else {
+                this._render_host_hexagons_as_svg(hexagon_content);
+            }
+        } else if (this._data.render_mode == "alert_statistics") {
+            this._render_host_hexagons_as_svg(hexagon_content);
         } else {
             this._render_sites(hexagon_content);
         }
@@ -243,31 +261,50 @@ class SiteOverview extends cmk_figures.FigureBase {
             d.x = x + geometry.box_area.left;
             d.y = y + geometry.box_area.top;
 
-            // Compute required hexagons
-            let tooltip = d.tooltip;
-            d.hexagon_config = [
-                {
-                    id: "outer_hexagon",
-                    path: outer_hexagon_path,
-                    color: d.has_host_problem ? d.host_color : d.service_color,
-                    tooltip: tooltip,
-                },
-            ];
+            if (this._data.render_mode == "hosts") {
+                // Compute required hexagons
+                let tooltip = d.tooltip;
+                d.hexagon_config = [
+                    {
+                        id: "outer_hexagon",
+                        path: outer_hexagon_path,
+                        color: d.has_host_problem ? d.host_color : d.service_color,
+                        css_class: !d.has_host_problem && d.num_problems == 0 ? "ok" : "",
+                        tooltip: tooltip,
+                    },
+                ];
 
-            if (!d.has_host_problem) {
-                // Center is reserved for displaying the host state
-                let mid_radius = 0.7;
-                let badness = d.num_problems / d.num_services;
-                badness = 0;
-                let goodness = 1.0 - badness;
-                let radius_factor = Math.pow((1.0 - mid_radius) * goodness + mid_radius, 2);
-                radius_factor *= Math.random();
-                d.hexagon_config.push({
-                    id: "inner_hexagon",
-                    path: hexbin.hexagon(geometry.radius * radius_factor),
-                    color: "#1f3334",
-                    tooltip: tooltip,
-                });
+                if (!d.has_host_problem) {
+                    // Center is reserved for displaying the host state
+                    let mid_radius = 0.7;
+                    let badness = d.num_problems / d.num_services;
+                    badness = 0;
+                    let goodness = 1.0 - badness;
+                    let radius_factor = Math.pow((1.0 - mid_radius) * goodness + mid_radius, 2);
+                    d.hexagon_config.push({
+                        id: "inner_hexagon",
+                        path: hexbin.hexagon(geometry.radius * radius_factor),
+                        color: "#262f38",
+                        css_class: "",
+                        tooltip: tooltip,
+                    });
+                }
+            } else if (this._data.render_mode == "alert_statistics") {
+                const colors = d3
+                    .scaleLinear()
+                    .domain([0, this._data.upper_bound])
+                    .range(["#b1d2e880", "#08377580"]);
+                d.hexagon_config = [
+                    {
+                        id: "outer_hexagon",
+                        path: outer_hexagon_path,
+                        color: colors(d.num_problems),
+                        css_class: "alert_element",
+                        tooltip: d.tooltip,
+                    },
+                ];
+            } else {
+                console.log("Unhandled render mode: " + this._data.render_mode);
             }
         });
         return elements;
@@ -284,12 +321,12 @@ class SiteOverview extends cmk_figures.FigureBase {
             enter
                 .append("g")
                 .classed("element_box", true)
+                .classed("host_element", true)
                 .style("cursor", "pointer")
                 .on("click", d => {
                     location.href = d.link;
                 })
                 .each((d, idx, nodes) => {
-                    console.log("create");
                     this.tooltip_generator.add_support(nodes[idx]);
                 })
         );
@@ -303,7 +340,11 @@ class SiteOverview extends cmk_figures.FigureBase {
             )
             .join(enter => enter.append("path").classed("hexagon", true))
             .attr("d", d => d.path)
-            .attr("fill", d => d.color);
+            .attr("fill", d => d.color)
+            .each((d, idx, nodes) => {
+                let element = d3.select(nodes[idx]);
+                if (d.css_class) element.node().classList.add(d.css_class);
+            });
 
         // move boxes
         hexagon_boxes
@@ -359,7 +400,7 @@ class SiteOverview extends cmk_figures.FigureBase {
         let reduced_content = {geometry: this._hexagon_content.geometry};
         reduced_content.elements = host ? [host] : [];
         this._render_host_hexagons_as_svg(reduced_content, 0);
-        this.plot.selectAll("path.hexagon").attr("stroke", "yellow").attr("stroke-width", 3);
+        this.plot.selectAll("path.hexagon").attr("fill", "rgba(0, 0, 0, 0.2)");
     }
 
     _compute_sites() {
@@ -436,8 +477,8 @@ class SiteOverview extends cmk_figures.FigureBase {
                     .join(enter => enter.append("path").classed("hexagon_0", true))
                     .attr("d", d3.hexbin().hexagon(geometry.hexagon_radius * 0.5))
                     .attr("title", element.title)
-                    .classed(element.css_class, true)
-                    .attr("fill", "#ffffff30");
+                    .classed("icon_element", true)
+                    .classed(element.css_class, true);
 
                 hexagon_box
                     .selectAll("path.hexagon_icon")
@@ -469,15 +510,14 @@ class SiteOverview extends cmk_figures.FigureBase {
                         geometry.hexagon_radius;
                     sum -= part.count;
 
-                    let hexagon = hexagon_box
+                    hexagon_box
                         .selectAll("path.hexagon_" + i)
                         .data([element])
                         .join(enter => enter.append("path").classed("hexagon_" + i, true))
                         .attr("d", d3.hexbin().hexagon(radius * scale))
                         .attr("title", part.title)
-                        .attr("fill", part.color);
-
-                    if (i == 0) hexagon.attr("stroke", "#13d389");
+                        .classed("site_element", true)
+                        .classed(part.css_class, true);
                 }
             }
             this.tooltip_generator.add_support(hexagon_box.node());
@@ -520,11 +560,10 @@ class SiteOverview extends cmk_figures.FigureBase {
         let box_area = this._compute_box_area(this.plot_size);
 
         // Must not be larger than the "host/service statistics" hexagons
-        let max_box_width = 114;
         let box_v_rel_padding = 0.05;
         let box_h_rel_padding = 0;
         // Calculating the distance from center to top of hexagon
-        let hexagon_max_radius = max_box_width / 2;
+        let hexagon_max_radius = this._max_box_width / 2;
 
         let num_elements = this._crossfilter.allFiltered().length;
 
@@ -533,7 +572,7 @@ class SiteOverview extends cmk_figures.FigureBase {
         }
 
         // Calculate number of columns and rows we need to render all elements
-        let num_columns = Math.max(Math.floor(box_area.width / max_box_width), 1);
+        let num_columns = Math.max(Math.floor(box_area.width / this._max_box_width), 1);
 
         // Rough idea of this algorithm: Increase the number of columns, then calculate the number
         // of rows needed to fit all elements into the box_area. Then calculate the box size based

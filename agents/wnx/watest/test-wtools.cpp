@@ -38,6 +38,7 @@ protected:
         });
     }
 
+    // #TODO copy to temporary folder before start
     static int RunMeAgain(int requested) {
         std::filesystem::path exe{GetCurrentProcessPath()};
 
@@ -621,6 +622,15 @@ TEST(Wtools, ToCanonical) {
 
     // Border value
     EXPECT_TRUE(ToCanonical(L"").empty());
+}
+
+TEST(PlayerTest, Pipe) {
+    auto p = std::make_unique<wtools::SimplePipe>();
+    EXPECT_EQ(p->getRead(), nullptr);
+    EXPECT_EQ(p->getWrite(), nullptr);
+    p->create();
+    EXPECT_NE(p->getRead(), nullptr);
+    EXPECT_NE(p->getWrite(), nullptr);
 }
 
 }  // namespace wtools

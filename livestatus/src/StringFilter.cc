@@ -11,7 +11,7 @@
 
 StringFilter::StringFilter(Kind kind, const StringColumn &column,
                            RelationalOperator relOp, const std::string &value)
-    : ColumnFilter(kind, column, relOp, value)
+    : ColumnFilter(kind, column.name(), relOp, value)
     , _column(column)
     , _regExp(makeRegExpFor(relOp, value)) {}
 

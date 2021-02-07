@@ -309,6 +309,15 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
     if html.has_user_errors():
         html.final_javascript("cmk.page_menu.open_popup('avoptions');")
 
+    missing_single_infos = view.missing_single_infos
+    if missing_single_infos:
+        raise MKUserError(
+            None,
+            _("Unable to render this availability view, because we miss some required context "
+              "information (%s). Please update the filters on the source view or add the "
+              "missing HTTP request variables to your request") %
+            ", ".join(sorted(missing_single_infos)))
+
     html.write(confirmation_html_code)
 
     if not html.has_user_errors():
@@ -572,7 +581,9 @@ def _render_availability_timeline(what: AVObjectType, av_entry: AVEntry, avoptio
             table.cell(_("From"), row["from_text"], css="nobr narrow")
             table.cell(_("Until"), row["until_text"], css="nobr narrow")
             table.cell(_("Duration"), row["duration_text"], css="narrow number")
-            table.cell(_("State"), row["state_name"], css=row["css"] + " state narrow")
+            table.cell(_("State"),
+                       html.render_span(row["state_name"]),
+                       css=row["css"] + " state narrow")
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
                 table.cell(_("Last known summary"),

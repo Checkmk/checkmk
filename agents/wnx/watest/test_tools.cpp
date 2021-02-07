@@ -25,6 +25,22 @@
 namespace fs = std::filesystem;
 
 namespace tst {
+
+std::string GetFabricYmlContent() {
+    static std::string fabric_yaml_content;
+    static bool one_run{false};
+    if (!one_run) {
+        one_run = true;
+        try {
+            fabric_yaml_content = wtools::ReadWholeFile(GetFabricYml());
+        } catch (const std::exception& e) {
+            XLOG::l("Exception '{}' loading fabric yaml", e.what());
+        }
+    }
+
+    return fabric_yaml_content;
+}
+
 class TestEnvironment : public ::testing::Environment {
 public:
     static constexpr std::string_view temp_test_prefix_{"tmp_watest_"};
@@ -260,31 +276,53 @@ std::wstring GenerateRandomFileName() noexcept {
     return ret;
 }
 
-TempCfgFs::TempCfgFs() {
+TempCfgFs::TempCfgFs(Mode mode) : mode_{mode} {
     namespace fs = std::filesystem;
     base_ = MakeTempFolderInTempPath(std::wstring(L"test_") +
                                      GenerateRandomFileName());
     root_ = base_ / "r";
-    fs::create_directories(root_);
     data_ = base_ / "d";
-    fs::create_directories(data_);
-    cma::cfg::GetCfg().pushFolders(root_, data_);
+    if (mode_ == Mode::standard) {
+        fs::create_directories(root_);
+        fs::create_directories(data_);
+        cma::cfg::GetCfg().pushFolders(root_, data_);
+    } else {
+        cma::cfg::GetCfg().pushFoldersNoIo(root_, data_);
+        auto ret = loadContent("global:\n  enabled: yes\n  install: yes\n");
+        if (ret) XLOG::l("cant load content");
+    }
 }
 
 TempCfgFs ::~TempCfgFs() {
     cma::cfg::GetCfg().popFolders();
-    std::filesystem::remove_all(base_);
+    if (mode_ == Mode::standard) {
+        std::filesystem::remove_all(base_);
+    }
 }
 
 bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
-    std::filesystem::copy_file(yml,
-                               root() / cma::cfg::files::kDefaultMainConfig);
-
     std::vector<std::wstring> cfg_files;
-    cfg_files.emplace_back(cma::cfg::files::kDefaultMainConfig);
+    if (mode_ == Mode::standard) {
+        std::filesystem::copy_file(
+            yml, root() / cma::cfg::files::kDefaultMainConfig);
+
+        cfg_files.emplace_back(cma::cfg::files::kDefaultMainConfig);
+    } else {
+        cfg_files.emplace_back(yml);
+    }
 
     auto ret =
         cma::cfg::InitializeMainConfig(cfg_files, cma::YamlCacheOp::nothing);
+    if (ret) {
+        cma::cfg::ProcessKnownConfigGroups();
+        cma::cfg::SetupEnvironmentFromGroups();
+    }
+
+    return ret;
+}
+
+bool TempCfgFs::loadContent(std::string_view content) {
+    auto ret = cma::cfg::GetCfg().loadDirect(content);
     if (ret) {
         cma::cfg::ProcessKnownConfigGroups();
         cma::cfg::SetupEnvironmentFromGroups();
@@ -339,4 +377,27 @@ std::filesystem::path GetFabricYml() {
     return G_SolutionPath / "install" / "resources" /
            cma::cfg::files::kDefaultMainConfig;
 }
+
+bool WaitForSuccess(std::chrono::milliseconds ms,
+                    std::function<bool()> predicat) {
+    using namespace std::chrono_literals;
+    auto count = ms / 20ms;
+
+    auto success = false;
+
+    for (int i = 0; i < count; i++) {
+        if (i % 10 == 9) {
+            xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
+        }
+        if (predicat()) {
+            success = true;
+            break;
+        }
+        cma::tools::sleep(20ms);
+    }
+
+    xlog::sendStringToStdio("\n", xlog::internal::Colors::yellow);
+    return success;
+}
+
 }  // namespace tst

@@ -10,7 +10,6 @@ from typing import Any, Dict
 import pytest  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
@@ -3816,15 +3815,12 @@ def test_get_merged_context(register_builtin_html, uri_vars, visual, expected_co
     assert context == expected_context
 
 
-def test_verify_single_infos_has_context():
-    visual: Visual = {"single_infos": ["host"], "context": {"host": "abc"},}
-    visuals.verify_single_infos(visual, visual["context"])
+def test_get_missing_single_infos_has_context():
+    assert visuals.get_missing_single_infos(single_infos=["host"], context={"host": "abc"}) == set()
 
 
-def test_verify_single_infos_missing_context():
-    visual: Visual = {"single_infos": ["host"], "context": {},}
-    with pytest.raises(MKUserError, match="Missing context information"):
-        visuals.verify_single_infos(visual, visual["context"])
+def test_get_missing_single_infos_missing_context():
+    assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
 def test_context_uri_vars(register_builtin_html):

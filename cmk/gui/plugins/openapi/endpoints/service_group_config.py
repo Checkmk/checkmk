@@ -77,9 +77,11 @@ def bulk_create(params):
           response_schema=response_schemas.DomainObjectCollection)
 def list_groups(params):
     """Show all service groups"""
-    return constructors.serve_json(
-        serialize_group_list('service_group_config',
-                             list(load_service_group_information().values())))
+    collection = [{
+        "id": k,
+        "alias": v["alias"]
+    } for k, v in load_service_group_information().items()]
+    return constructors.serve_json(serialize_group_list('service_group_config', collection))
 
 
 @Endpoint(
@@ -119,7 +121,8 @@ def delete(params):
           output_empty=True)
 def bulk_delete(params):
     """Bulk delete service groups"""
-    entries = params['entries']
+    body = params['body']
+    entries = body['entries']
     for group_name in entries:
         _group = fetch_group(group_name,
                              "service",

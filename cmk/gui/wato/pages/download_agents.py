@@ -9,13 +9,14 @@ import os
 import abc
 import glob
 import fnmatch
-from typing import List, Iterator
+from typing import List, Iterator, Optional
 
 import cmk.utils.paths
 import cmk.utils.render
 
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
@@ -36,7 +37,7 @@ from cmk.gui.plugins.wato import (
 
 class ABCModeDownloadAgents(WatoMode):
     @classmethod
-    def permissions(cls) -> List[str]:
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["download_agents"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

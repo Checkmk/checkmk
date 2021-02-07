@@ -39,7 +39,7 @@
 @import "../facelift/scss/cee/_graphs_cee.scss";
 @import "../facelift/scss/cee/_reporting.scss";
 @import "../facelift/scss/cee/_ntop.scss";
-@if $ENTERPRISE = "yes" {
+@if $ENTERPRISE == "yes" {
   @include graphs_cee;
   @include reporting;
   @include ntop;
@@ -48,6 +48,6 @@
 // Note: In case you add something here, you will have to add some dummy files
 // to buildscripts/scripts/lib/versioning.groovy (see patch_themes())
 @import "../facelift/scss/cme/_managed.scss";
-@if $MANAGED = "yes" {
+@if $MANAGED == "yes" {
   @include managed;
 }

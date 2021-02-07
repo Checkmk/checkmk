@@ -66,6 +66,7 @@ PARAMETERS = [{
           path_params=[HOST_NAME],
           query_params=PARAMETERS,
           tag_group='Monitoring',
+          blacklist_in=['swagger-ui'],
           response_schema=response_schemas.DomainObjectCollection)
 def _list_host_services(param):
     """Show the monitored services of a host

@@ -85,7 +85,7 @@ TEST(ExternalPortTest, Read) {
         EXPECT_EQ(test_port.defaultPort(), 555);
     }
     {
-        char reply_text[] = "I am test\n";
+        char reply_text[] = "I am test\r\n";
         int port = 64351;
         cma::world::ReplyFunc reply =
             [reply_text](const std::string Ip) -> std::vector<uint8_t> {

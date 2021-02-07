@@ -19,7 +19,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
-CSSClass = str
+CSSClass = Optional[str]
 # Dict: The aggr_treestate painters are returning a dictionary data structure (see
 # paint_aggregated_tree_state()) in case the output_format is not HTML. Once we have
 # separated the data from rendering of the data, we can hopefully clean this up

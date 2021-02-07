@@ -264,6 +264,7 @@ python3-modules-dump-Pipfile:
 	@echo 'sphinx-rtd-theme = "*"  # used for the plugin API documentation'
 	@echo '3to2 = "*"  # used for converting agent plugins from py3 to 2'
 	@echo 'fakeredis = {extras = ["lua"],version = "1.4.5"}  # used for testing code which uses Redis (freeze version due to dependency on redis, which is fixed to some version, lua is needed for faking features like "lock")'
+	@echo 'sphinxcontrib-plantuml = "*"  # used for the API and architecture'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

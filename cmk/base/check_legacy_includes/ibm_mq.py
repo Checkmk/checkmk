@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+import re
+
 from cmk.base.check_api import regex
 from cmk.base.check_api import MKCounterWrapped
 
@@ -18,6 +19,8 @@ def parse_runmqsc_display_output(info, group_by_object):
 
     def record_attribute(s, attributes, parsed):
         pair = re_key_value.match(s)
+        if pair is None:
+            return
         key = pair.group(1)
         value = pair.group(2).strip()
         attributes[key] = value
@@ -43,13 +46,13 @@ def parse_runmqsc_display_output(info, group_by_object):
             previous = value
         yield previous, False
 
-    parsed = {}
-    attributes = {}
+    parsed = {}  # type: ignore[var-annotated]
+    attributes = {}  # type: ignore[var-annotated]
     for (line,), has_more in lookahead(info):
         intro_line = re_intro.match(line)
         if intro_line:
             if attributes:
-                record_group(qmname, attributes, parsed)
+                record_group(qmname, attributes, parsed)  # type: ignore[has-type]
                 attributes.clear()
             qmname = intro_line.group(1)
             qmstatus = intro_line.group(2)
@@ -92,33 +95,41 @@ def is_ibm_mq_service_vanished(item, parsed):
 
 
 def ibm_mq_check_version(actual_version, params, label):
+    """
+        >>> ibm_mq_check_version(
+        ...    "2.0.0b4",
+        ...     {"version": (("at_least", "2.0.0p2"), 2)},
+        ...     "Doc test",
+        ... )
+        (2, 'Doc test: 2.0.0b4 (should be at least 2.0.0p2)')
+
+    """
     def tokenize(version):
-        return [int(n) for n in version.split('.')]
+        _map_chars = {"p": 2, "b": 1, "i": 0}
+        if not set("0123456789.pbi").issuperset(version):
+            raise ValueError(version)
+        return [
+            _map_chars[g] if g in _map_chars else int(g)
+            for g in re.findall(r"(\d+|[pbi]+)", version)
+        ]
 
     info = "%s: %s" % (label, actual_version)
     if actual_version is None:
         return 3, info + " (no agent info)"
     if "version" not in params:
         return 0, info
-
-    comp_type, expected_version = params["version"]
+    (comp_type, expected_version), state = params["version"]
     try:
         parts_actual = tokenize(actual_version)
         parts_expected = tokenize(expected_version)
     except ValueError:
-        error = ("Can not compare %s and %s. "
-                 "Only characters 0-9 and . are allowed for a version." %
-                 (actual_version, expected_version))
-        return 3, error
-
-    parts_actual_len = len(parts_actual)
-    parts_expected_len = len(parts_expected)
-    m = max(parts_actual_len, parts_expected_len)
-    parts_actual.extend(0 for _ in range(m - parts_actual_len))
-    parts_expected.extend(0 for _ in range(m - parts_expected_len))
+        return 3, (
+            f"Cannot compare {actual_version} and {expected_version}."
+            " Only numbers separated by characters 'b', 'i', 'p', or '.' are allowed for a version."
+        )
 
     if comp_type == "at_least" and parts_actual < parts_expected:
-        return 2, info + " (should be at least %s)" % expected_version
+        return state, info + " (should be at least %s)" % expected_version
     if comp_type == "specific" and parts_actual != parts_expected:
-        return 2, info + " (should be %s)" % expected_version
+        return state, info + " (should be %s)" % expected_version
     return 0, info

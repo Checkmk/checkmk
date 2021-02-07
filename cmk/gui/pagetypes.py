@@ -87,6 +87,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.main_menu import mega_menu_registry
 
+from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 SubPagesSpec = _Optional[List[Tuple[str, str, str]]]
@@ -232,14 +233,10 @@ class Base:
     # sub class.
     @classmethod
     def default_name(cls) -> str:
-        stem = cls.type_name()
-        nr = 1
-        used_instance_names = [instance.name() for instance in cls.__instances.values()]
-        while True:
-            name = "%s_%d" % (stem, nr)
-            if name not in used_instance_names:
-                return name
-            nr += 1
+        return unique_default_name_suggestion(
+            cls.type_name(),
+            (instance.name() for instance in cls.__instances.values()),
+        )
 
     @classmethod
     def default_topic(cls) -> str:
@@ -1414,10 +1411,14 @@ def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: s
                     PageMenuTopic(
                         title=_("Save this %s and go to") % type_title.title(),
                         entries=list(
-                            _page_menu_entries_save(breadcrumb,
-                                                    sub_pages,
-                                                    form_name=form_name,
-                                                    button_name="save")),
+                            _page_menu_entries_save(
+                                breadcrumb,
+                                sub_pages,
+                                dropdown_name,
+                                type_title,
+                                form_name=form_name,
+                                button_name="save",
+                            )),
                     ),
                     PageMenuTopic(
                         title=_("For this %s") % type_title.title(),
@@ -1432,7 +1433,8 @@ def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: s
     )
 
 
-def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, form_name: str,
+def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, dropdown_name: str,
+                            type_title: str, form_name: str,
                             button_name: str) -> Iterator[PageMenuEntry]:
     """Provide the different "save" buttons"""
     yield PageMenuEntry(
@@ -1442,8 +1444,27 @@ def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, for
         is_list_entry=True,
         is_shortcut=True,
         is_suggested=True,
-        shortcut_title=_("Save and go to list"),
+        shortcut_title=_("Save & go to list"),
     )
+
+    if dropdown_name in [
+            "custom_graph",
+            "dashboard",
+            "forecast_graph",
+            "graph_collection",
+            "graph_tuning",
+            "view",
+    ]:
+
+        yield PageMenuEntry(
+            title=_("Result"),
+            icon_name="save",
+            item=make_form_submit_link(form_name, "save_and_view"),
+            is_list_entry=True,
+            is_shortcut=True,
+            is_suggested=True,
+            shortcut_title=_("Save & go to %s") % type_title.title(),
+        )
 
     parent_item = breadcrumb[-2]
 

@@ -304,7 +304,14 @@ def render_tree_folder(tree_id, folder, js_func):
                           onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
 
     if not is_leaf:
-        html.begin_foldable_container(tree_id, "/" + folder[".path"], False, HTML(title))
+        html.begin_foldable_container(
+            tree_id,
+            "/" + folder[".path"],
+            False,
+            HTML(title),
+            icon="foldable_sidebar",
+            padding=6,
+        )
         for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
             render_tree_folder(tree_id, subfolder, js_func)
         html.end_foldable_container()
@@ -358,7 +365,6 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
         html.open_table()
         html.open_tr()
-        html.td(_('Topic:'), class_="label")
         html.open_td()
         html.dropdown("topic",
                       topic_choices,
@@ -368,7 +374,6 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         html.close_tr()
 
         html.open_tr()
-        html.td(_("View:"), class_="label")
         html.open_td()
 
         for topic in topics:

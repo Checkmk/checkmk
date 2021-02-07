@@ -124,7 +124,7 @@ public:
 
                 engine_.registerCommandLine(CommandLine);
                 auto port_name = Proc->getInternalPort();
-                auto id = Tp.time_since_epoch().count();
+                auto id = AnswerIdToNumber(Tp);
                 XLOG::d.t(
                     "Provider '{}' is about to be started, id '{}' port [{}]",
                     provider_uniq_name_, id, port_name);
@@ -151,7 +151,7 @@ public:
         section_expected_timeout_ = engine_.timeout();
         engine_.updateSectionStatus();
         engine_.registerCommandLine(cmd_line);
-        auto id = timestamp.time_since_epoch().count();
+        auto id = AnswerIdToNumber(timestamp);
         XLOG::d.t("Provider '{}' is direct called, id '{}' port [{}]",
                   provider_uniq_name_, id, port_name);
         goGoGo(std::string(section::kUseEmbeddedName), cmd_line, port_name, id);
@@ -401,7 +401,7 @@ private:
         return true;
     }
 
-    void kickWinPerf(const AnswerId Tp, const std::string& Ip);
+    void kickWinPerf(const AnswerId answer_id, const std::string& ip_addr);
     void kickPlugins(const AnswerId Tp, const std::string& Ip);
 
     template <typename T>
@@ -573,12 +573,13 @@ private:
         ServiceProcessor* Proc,           // host
         const std::wstring& SegmentName,  // identifies exe
         int Timeout,                      // for exe
-        const std::wstring& CommandLine) {
+        const std::wstring& CommandLine, const std::wstring& LogFile) {
         return std::async(
             Async ? std::launch::async : std::launch::deferred,
-            [this, ExeName](const AnswerId Tp, ServiceProcessor* Proc,
-                            const std::wstring& SegmentName, int Timeout,
-                            const std::wstring& CommandLine) {
+            [this, ExeName, LogFile](const AnswerId Tp, ServiceProcessor* Proc,
+                                     const std::wstring& SegmentName,
+                                     int Timeout,
+                                     const std::wstring& CommandLine) {
                 XLOG::l.i("Exec {} for {} started", wtools::ToUtf8(ExeName),
                           wtools::ToUtf8(SegmentName));
 
@@ -597,11 +598,12 @@ private:
                 // make command line
                 auto port = wtools::ConvertToUTF16(Proc->getInternalPort());
                 auto cmd_line =
-                    fmt::format(L"\"{}\" -runonce {} {} id:{} timeout:{} {}",
-                                full_path,    // exe
-                                SegmentName,  // name of peer
-                                port,         // port to communicate
-                                Tp.time_since_epoch().count(),  // answer id
+                    fmt::format(L"\"{}\" -runonce {}{} {} id:{} timeout:{} {}",
+                                full_path,  // exe
+                                LogFile.empty() ? L"" : L"@" + LogFile + L" ",
+                                SegmentName,           // name of peer
+                                port,                  // port to communicate
+                                AnswerIdToNumber(Tp),  // answer id
                                 Timeout, CommandLine);
 
                 XLOG::d.i("async RunStdCmd: {}", wtools::ToUtf8(cmd_line));
@@ -617,6 +619,16 @@ private:
         );
     }
 
+    std::future<bool> kickExe(
+        bool Async,  // controlled from the config
+        const std::wstring ExeName, const AnswerId Tp,
+        ServiceProcessor* Proc,           // host
+        const std::wstring& SegmentName,  // identifies exe
+        int Timeout,                      // for exe
+        const std::wstring& CommandLine) {
+        return kickExe(Async, ExeName, Tp, Proc, SegmentName, Timeout,
+                       CommandLine, {});
+    }
 #if 0
     SectionProviderText txt_provider_{"Text", "<<<IAMSECTIONTOO>>>"};
     SectionProviderFile file_provider_{

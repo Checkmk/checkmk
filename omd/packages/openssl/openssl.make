@@ -28,7 +28,7 @@ else
 $(OPENSSL_BUILD): $(OPENSSL_UNPACK)
 	cd $(OPENSSL_BUILD_DIR) && \
 	    ./config --prefix=$(OMD_ROOT) \
-                 --openssldir=$(OMD_ROOT)/etc \
+                 --openssldir=$(OMD_ROOT)/etc/ssl \
                  -Wl,-rpath,$(OMD_ROOT)/lib \
                  enable-md2
 	$(MAKE) -C $(OPENSSL_BUILD_DIR) -j6

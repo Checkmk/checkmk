@@ -269,13 +269,6 @@ def check_hp_proliant_temp(item, params, info):
 #   '----------------------------------------------------------------------'
 
 
-def proliant_general_scan_function(oid):
-    return ("8072.3.2.10" in oid(".1.3.6.1.2.1.1.2.0") or
-            "232.9.4.10" in oid(".1.3.6.1.2.1.1.2.0") or
-            (".1.3.6.1.4.1.311.1.1.3.1.2" in oid(".1.3.6.1.2.1.1.2.0") and
-             oid(".1.3.6.1.4.1.232.11.1.3.0")))
-
-
 def hp_proliant_scan_function(oid):
     # migrated!
     return ("proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower() or

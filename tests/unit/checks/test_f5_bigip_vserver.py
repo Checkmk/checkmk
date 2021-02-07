@@ -40,7 +40,6 @@ from testlib import Check  # type: ignore[import]
         'status': u'1',
     }),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_wmi_cpu_load_discovery(info, item, expected_item_data):
     check = Check("f5_bigip_vserver")
     assert sorted(check.run_parse(info)[item].items()) == sorted(expected_item_data.items())

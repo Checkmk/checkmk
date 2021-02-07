@@ -14,225 +14,184 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
-namespace cma::carrier {  // to become friendly for wtools classes
-TEST(PlayerTest, Pipe) {
-    auto p = new wtools::SimplePipe();
-    EXPECT_TRUE(p->getRead() == 0);
-    EXPECT_TRUE(p->getWrite() == 0);
-    p->create();
-    EXPECT_TRUE(p->getRead() != 0);
-    EXPECT_TRUE(p->getWrite() != 0);
+using namespace std::chrono_literals;
 
-    auto p2 = new wtools::SimplePipe();
-    EXPECT_TRUE(p2->getRead() == 0);
-    EXPECT_TRUE(p2->getWrite() == 0);
-    p2->create();
-    EXPECT_TRUE(p2->getRead() != 0);
-    EXPECT_TRUE(p2->getWrite() != 0);
-    delete p;
-    delete p2;
-}
+namespace cma::carrier {
+class CarrierTestFixture : public ::testing::Test {
+protected:
+    struct TestStorage {
+        std::vector<uint8_t> buffer_;
+        bool delivered_;
+        uint64_t answer_id_;
+        std::string peer_name_;
+    };
 
-struct TestStorage {
-public:
-    std::vector<uint8_t> buffer_;
-    bool delivered_;
-    uint64_t answer_id_;
-    std::string peer_name_;
-};
+    static inline TestStorage g_mailslot_storage;
 
-static TestStorage S_Storage;
+    static bool MailboxCallbackCarrier(const MailSlot* Slot, const void* Data,
+                                       int Len, void* Context) {
+        using namespace std::chrono;
+        auto storage = (TestStorage*)Context;
+        if (!storage) {
+            return false;
+        }
 
-bool MailboxCallbackCarrier(const cma::MailSlot* Slot, const void* Data,
-                            int Len, void* Context) {
-    using namespace std::chrono;
-    auto storage = (TestStorage*)Context;
-    if (!storage) {
-        xlog::l("error in param\n");
-        return false;
-    }
+        // your code is here
+        auto fname = cfg::GetCurrentLogFileName();
 
-    // your code is here
-    XLOG::l("Received \"{}\"", Len);
+        auto dt = static_cast<const CarrierDataHeader*>(Data);
+        switch (dt->type()) {
+            case DataType::kLog:
+                break;
 
-    auto fname = cma::cfg::GetCurrentLogFileName();
-
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
-    switch (dt->type()) {
-        case cma::carrier::DataType::kLog:
-            // IMPORTANT ENTRY POINT
-            // Receive data for Logging to file
-            xlog::l("log: %s", dt->string().c_str()).filelog(fname.c_str());
-            break;
-
-        case cma::carrier::DataType::kSegment:
-            // IMPORTANT ENTRY POINT
-            // Receive data for Section
-            {
+            case DataType::kSegment: {
                 nanoseconds duration_since_epoch(dt->answerId());
                 time_point<steady_clock> tp(duration_since_epoch);
                 auto data_source = static_cast<const uint8_t*>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);
-                S_Storage.buffer_ = vectorized_data;
-                S_Storage.answer_id_ = dt->answerId();
-                S_Storage.peer_name_ = dt->providerId();
-                S_Storage.delivered_ = true;
+                g_mailslot_storage.buffer_ = vectorized_data;
+                g_mailslot_storage.answer_id_ = dt->answerId();
+                g_mailslot_storage.peer_name_ = dt->providerId();
+                g_mailslot_storage.delivered_ = true;
                 break;
             }
 
-        case cma::carrier::DataType::kYaml:
-            break;
-    }
-
-    return true;
-}
-
-TEST(CarrierTest, EstablishShutdown) {
-    cma::MailSlot mailbox("WinAgentTest", 0);
-    using namespace cma::carrier;
-    auto internal_port =
-        BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
-    mailbox.ConstructThread(MailboxCallbackCarrier, 20, &S_Storage);
-    ON_OUT_OF_SCOPE(mailbox.DismantleThread());
-
-    cma::carrier::CoreCarrier cc;
-    // "mail"
-    auto ret = cc.establishCommunication(internal_port);
-    EXPECT_TRUE(ret);
-    EXPECT_EQ(cc.carrier_name_, kCarrierMailslotName);
-    EXPECT_EQ(cc.carrier_address_, mailbox.GetName());
-    cc.shutdownCommunication();
-
-    // "asio"
-    internal_port = BuildPortName(kCarrierAsioName, "127.0.0.1");  // port here
-    ret = cc.establishCommunication(internal_port);
-    EXPECT_FALSE(ret);
-    std::string_view s = "Output from the asio";
-    ret = cc.sendData("a", 11, s.data(), s.length());
-    EXPECT_FALSE(ret);
-
-    // bad port
-    internal_port = BuildPortName("<GTEST>", "127.0.0.1");  // port here
-    ret = cc.establishCommunication(internal_port);
-    EXPECT_FALSE(ret);
-
-    // "null"
-    internal_port = BuildPortName(kCarrierNullName, "???");  // port here
-    ret = cc.establishCommunication(internal_port);
-    EXPECT_TRUE(ret);
-    s = "Output from the null";
-    ret = cc.sendData("a", 11, s.data(), s.length());
-    EXPECT_TRUE(ret);
-    cc.shutdownCommunication();
-
-    // "dump"
-    internal_port = BuildPortName(kCarrierDumpName, "???");  // port here
-    ret = cc.establishCommunication(internal_port);
-    EXPECT_TRUE(ret);
-    s = "Output from the dump";
-    ret = cc.sendData("a", 11, s.data(), s.length());
-    EXPECT_TRUE(ret);
-    cc.shutdownCommunication();
-
-    // "file"
-    internal_port =
-        BuildPortName(kCarrierFileName, "fileout.dat.tmp");  // port here
-    std::error_code ec;
-    ON_OUT_OF_SCOPE(std::filesystem::remove("fileout.dat.tmp", ec));
-    ret = cc.establishCommunication(internal_port);
-    EXPECT_TRUE(ret);
-    ret = cc.sendData("a", 11, "aaa", 3);
-    EXPECT_TRUE(ret);
-    cc.shutdownCommunication();
-}  // namespace cma::carrier
-
-TEST(CarrierTest, Mail) {
-    cma::MailSlot mailbox("WinAgentTest", 0);
-    using namespace cma::carrier;
-    auto internal_port =
-        BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
-    mailbox.ConstructThread(MailboxCallbackCarrier, 20, &S_Storage);
-    ON_OUT_OF_SCOPE(mailbox.DismantleThread());
-
-    auto summary_output = cma::tools::ReadFileInVector(
-        (tst::G_TestPath / L"summary.output").wstring().c_str());
-    EXPECT_TRUE(summary_output);
-    auto size = summary_output->size();
-
-    S_Storage.buffer_.resize(0);
-    S_Storage.delivered_ = false;
-
-    cma::carrier::CoreCarrier cc;
-    auto ret = cc.establishCommunication(internal_port);
-    EXPECT_TRUE(ret);
-    EXPECT_EQ(kCarrierMailslotName, cc.carrier_name_);
-    EXPECT_EQ(mailbox.GetName(), cc.carrier_address_);
-    cc.sendData("a", 11, summary_output->data(), summary_output->size());
-    cc.shutdownCommunication();
-
-    int count = 100;
-    while (count--) {
-        if (!S_Storage.delivered_) {
-            ::Sleep(100);
-            continue;
+            case DataType::kYaml:
+                break;
         }
 
-        EXPECT_EQ(S_Storage.answer_id_, 11);
-        EXPECT_EQ(S_Storage.peer_name_, "a");
-        EXPECT_EQ(S_Storage.buffer_, summary_output);
-
-        return;
+        return true;
     }
 
-    EXPECT_TRUE(false);
+    void SetUp() override {
+        internal_port_ = BuildPortName(kCarrierMailslotName,
+                                       mailbox_.GetName());  // port here
+        g_mailslot_storage.buffer_.resize(0);
+        g_mailslot_storage.delivered_ = false;
+
+        mailbox_.ConstructThread(&CarrierTestFixture::MailboxCallbackCarrier,
+                                 20, &g_mailslot_storage,
+                                 wtools::SecurityLevel::admin);
+    }
+    void TearDown() override {
+        mailbox_.DismantleThread();  //
+    }
+    MailSlot mailbox_{"WinAgentTest", 0};
+    std::string internal_port_;
+    CoreCarrier cc_;
+};
+
+TEST_F(CarrierTestFixture, EstablishShutdown) {
+    // "mail"
+    EXPECT_TRUE(cc_.establishCommunication(internal_port_));
+    EXPECT_EQ(cc_.getName(), kCarrierMailslotName);
+    EXPECT_EQ(cc_.getAddress(), mailbox_.GetName());
+    cc_.shutdownCommunication();
+
+    // "asio"
+    auto internal_port = BuildPortName(kCarrierAsioName, "127.0.0.1");
+    EXPECT_FALSE(cc_.establishCommunication(internal_port));
+    constexpr std::string_view s1 = "Output from the asio";
+    EXPECT_FALSE(cc_.sendData("a", 11, s1.data(), s1.length()));
+
+    // bad port
+    internal_port = BuildPortName("<GTEST>", "127.0.0.1");
+    EXPECT_FALSE(cc_.establishCommunication(internal_port));
+
+    // "null"
+    internal_port = BuildPortName(kCarrierNullName, "???");
+    EXPECT_TRUE(cc_.establishCommunication(internal_port));
+    constexpr std::string_view s2 = "Output from the null";
+    EXPECT_TRUE(cc_.sendData("a", 11, s2.data(), s2.length()));
+    cc_.shutdownCommunication();
+
+    // "dump"
+    internal_port = BuildPortName(kCarrierDumpName, "???");
+    EXPECT_TRUE(cc_.establishCommunication(internal_port));
+    constexpr std::string_view s3 = "Output from the dump";
+    EXPECT_TRUE(cc_.sendData("a", 11, s3.data(), s3.length()));
+    cc_.shutdownCommunication();
+
+    // "file"
+    internal_port = BuildPortName(kCarrierFileName, "fileout.dat.tmp");
+    std::error_code ec;
+    ON_OUT_OF_SCOPE(std::filesystem::remove("fileout.dat.tmp", ec));
+    EXPECT_TRUE(cc_.establishCommunication(internal_port));
+    EXPECT_TRUE(cc_.sendData("a", 11, "aaa", 3));
+    cc_.shutdownCommunication();
 }
 
-static std::string last;
+TEST_F(CarrierTestFixture, MailSlotIntegration) {
+    auto summary_output = tools::ReadFileInVector(
+        (tst::G_TestPath / L"summary.output").wstring().c_str());
+
+    ASSERT_TRUE(cc_.establishCommunication(internal_port_));
+
+    // send data to mailslot
+    cc_.sendData("a", 11, summary_output->data(), summary_output->size());
+    cc_.shutdownCommunication();
+
+    int count = 1000;
+    while (count--) {
+        if (g_mailslot_storage.delivered_) {
+            break;
+        }
+
+        cma::tools::sleep(10ms);
+    }
+
+    ASSERT_TRUE(g_mailslot_storage.delivered_);
+    EXPECT_EQ(g_mailslot_storage.answer_id_, 11);
+    EXPECT_EQ(g_mailslot_storage.peer_name_, "a");
+    EXPECT_EQ(g_mailslot_storage.buffer_, summary_output);
+}
+
+namespace {
+std::string g_last_command;
 
 bool TestRunCommand(std::string_view peer, std::string_view cmd) {
-    last = cmd;
+    g_last_command = cmd;
     return true;
 }
+}  // namespace
 
 // check that inform port works ok
-TEST(CarrierTest, InformByMailSLot) {
-    using namespace std::chrono;
-
+TEST(CarrierTest, InformByMailSlot) {
     auto name_used = "WinAgentTestLocal";
-    cma::MailSlot mailbox_client(name_used, 0);
-    cma::MailSlot mailbox_server(name_used, 0);
-    using namespace cma::carrier;
+    MailSlot mailbox_client(name_used, 0);
+    MailSlot mailbox_server(name_used, 0);
+
     auto internal_port = BuildPortName(kCarrierMailslotName,
                                        mailbox_server.GetName());  // port here
-    cma::srv::ServiceProcessor processor;
-    mailbox_server.ConstructThread(cma::srv::SystemMailboxCallback, 20,
-                                   &processor);
+    srv::ServiceProcessor processor;
+    mailbox_server.ConstructThread(
+        srv::SystemMailboxCallback, 20, &processor,
+        wtools::SecurityLevel::standard);  // standard may be ok
     ON_OUT_OF_SCOPE(mailbox_server.DismantleThread());
-    cma::tools::sleep(100ms);
+    tools::sleep(100ms);
 
     {
-        cma::carrier::CoreCarrier cc;
+        carrier::CoreCarrier cc;
         // "mail"
         auto ret = cc.establishCommunication(internal_port);
         ASSERT_TRUE(ret);
         ON_OUT_OF_SCOPE(cc.shutdownCommunication());
 
-        cma::tools::sleep(100ms);
+        tools::sleep(100ms);
 
-        auto save_rcp = cma::commander::ObtainRunCommandProcessor();
-        ON_OUT_OF_SCOPE(cma::commander::ChangeRunCommandProcessor(save_rcp));
-        cma::commander::ChangeRunCommandProcessor(TestRunCommand);
+        auto save_rcp = commander::ObtainRunCommandProcessor();
+        ON_OUT_OF_SCOPE(commander::ChangeRunCommandProcessor(save_rcp));
+        commander::ChangeRunCommandProcessor(TestRunCommand);
 
         InformByMailSlot(mailbox_client.GetName(), "xxx");
-        cma::tools::sleep(100ms);
-        EXPECT_EQ(last, "xxx");
+        tools::sleep(100ms);
+        EXPECT_EQ(g_last_command, "xxx");
 
         InformByMailSlot(mailbox_client.GetName(), "zzz");
-        cma::tools::sleep(100ms);
-        EXPECT_EQ(last, "zzz");
+        tools::sleep(100ms);
+        EXPECT_EQ(g_last_command, "zzz");
     }
-
-}  // namespace cma::carrier
+}
 
 }  // namespace cma::carrier

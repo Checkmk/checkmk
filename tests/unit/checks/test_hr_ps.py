@@ -16,7 +16,6 @@ from checktestlib import (
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 @pytest.mark.parametrize('info, discovery_params, expected_discovery_result', [
     (
         [

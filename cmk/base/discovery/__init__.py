@@ -1418,7 +1418,11 @@ def _get_discovered_services(
     )
 
     service_result = QualifiedDiscovery(
-        preexisting=autochecks.parse_autochecks_file(host_name, config.service_description),
+        preexisting=_load_existing_services(
+            host_name=host_name,
+            only_new=True,
+            run_only_plugin_names=None,
+        ),
         current=discovered_services,
         key=lambda s: s.id(),
     )

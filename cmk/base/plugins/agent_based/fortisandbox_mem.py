@@ -19,28 +19,33 @@
 # [...]
 
 # Example GUI Output:
-# OK	FortiSandbox Memory	RAM used: 4.00% of 248 GiB
+# OK	FortiSandbox Memory	   RAM used: 4.00% - 9.94 GiB of 248 GiB
 
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     CheckResult,
     StringTable,
 )
+from .utils.memory import (
+    check_element,)
 from .agent_based_api.v1 import (
     register,
-    render,
     Service,
     equals,
-    check_levels,
     SNMPTree,
 )
-from typing import Mapping, List, Tuple
+from typing import Mapping, Dict, List, Tuple
 
-Section = List[str]
+Section = Dict[str, float]
 
 
 def parse_fortisandbox_mem(string_table: List[StringTable]) -> Section:
-    return string_table[0][0]
+    mem_cap_kb = float(string_table[0][0][1])
+    mem_cap = mem_cap_kb * 1024
+    mem_used_perc = float(string_table[0][0][0])
+    mem_used = (mem_cap / 100) * mem_used_perc
+    parsed = {'memory_used': mem_used, 'memory_cap': mem_cap}
+    return parsed
 
 
 def discovery_fortisandbox_mem(section: Section) -> DiscoveryResult:
@@ -49,21 +54,20 @@ def discovery_fortisandbox_mem(section: Section) -> DiscoveryResult:
 
 def check_fortisandbox_mem(params: Mapping[str, Tuple[float, float]],
                            section: Section) -> CheckResult:
-    mem_usage_upper = params.get("mem_usage")
-    memusage = float(section[0])
-    memcap = 1024 * int(section[1])
-    total = render.bytes(memcap)
-    yield from check_levels(
-        memusage,
-        levels_upper=mem_usage_upper,
-        metric_name="fortisandbox_memory_usage",
-        label="RAM used",
-        render_func=lambda v: "%.2f%% of %s" % (v, total),
+    warn, crit = params.get("levels", (0, 0))
+    mem_used = section['memory_used']
+    mem_cap = section['memory_cap']
+    yield from check_element(
+        'RAM used',
+        mem_used,
+        mem_cap,
+        ("perc_used", (warn, crit)),
+        create_percent_metric=True,
     )
 
 
 register.snmp_section(
-    name="fortisandbox_mem",
+    name='fortisandbox_mem',
     parse_function=parse_fortisandbox_mem,
     detect=equals('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.12356.118.1.30006'),
     fetch=[
@@ -77,10 +81,10 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="fortisandbox_mem",
-    service_name="FortiSandbox Memory",
+    name='fortisandbox_mem',
+    service_name='FortiSandbox Memory',
     discovery_function=discovery_fortisandbox_mem,
     check_function=check_fortisandbox_mem,
-    check_default_parameters={"mem_usage": (80.0, 90.0)},
-    check_ruleset_name="fortisandbox_mem",
+    check_default_parameters={'levels': (80.0, 90.0)},
+    check_ruleset_name='memory',
 )

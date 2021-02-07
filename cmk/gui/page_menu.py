@@ -27,6 +27,7 @@ from cmk.gui.type_defs import CSSSpec, Icon
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
 from cmk.gui.config import user
 import cmk.gui.escaping as escaping
+import cmk.gui.weblib as weblib
 
 
 def enable_page_menu_entry(name: str):
@@ -139,15 +140,10 @@ class PageMenuEntry:
     is_show_more: bool = False
     is_list_entry: bool = True
     is_shortcut: bool = False
-    is_suggested: bool = False
+    is_suggested: bool = True
     shortcut_title: Optional[str] = None
     css_classes: CSSSpec = None
-
-    def __post_init__(self):
-        # Enforce all shortcuts to be suggested links. The user can then toggle all entries between
-        # the suggested button format and the smaller shortcut buttons.
-        if self.is_shortcut and self.name not in ["toggle_suggestions"]:
-            self.is_suggested = True
+    disabled_tooltip: Optional[str] = None
 
 
 @dataclass
@@ -240,6 +236,8 @@ class PageMenu:
                 icon_name="suggestion",
                 item=make_javascript_link("cmk.page_menu.toggle_suggestions()"),
                 name="toggle_suggestions",
+                is_shortcut=True,
+                is_suggested=False,
             )
 
         yield from shortcuts
@@ -330,6 +328,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                                                   (title_show_help, title_hide_help)),
                         name="inline_help",
                         is_enabled=False,
+                        disabled_tooltip=_("This page does not provide an inline help."),
                     )
                 ],
             ),
@@ -374,14 +373,19 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
-def make_checkbox_selection_topic(is_enabled: bool = True) -> PageMenuTopic:
+def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
+    name_selected = _("Select all checkboxes")
+    name_deselected = _("Deselect all checkboxes")
+    is_selected = user.get_rowselection(weblib.selection_id(), selection_key)
     return PageMenuTopic(
         title=_("Selection"),
         entries=[
             PageMenuEntry(
-                title=_("Toggle checkboxes"),
+                name="checkbox_selection",
+                title=name_deselected if is_selected else name_selected,
                 icon_name="checkbox",
-                item=make_javascript_link("cmk.selection.toggle_all_rows();"),
+                item=make_javascript_link("cmk.selection.toggle_all_rows(this.form, %s, %s);" %
+                                          (json.dumps(name_selected), json.dumps(name_deselected))),
                 is_enabled=is_enabled,
             ),
         ],
@@ -548,7 +552,11 @@ class PageMenuRenderer:
             "entry",
         ] + self._get_entry_css_classes(entry)
 
-        html.open_div(class_=classes, id_="menu_entry_%s" % entry.name if entry.name else None)
+        html.open_div(
+            class_=classes,
+            id_="menu_entry_%s" % entry.name if entry.name else None,
+            title=entry.disabled_tooltip if not entry.is_enabled else None,
+        )
         DropdownEntryRenderer().show(entry)
         html.close_div()
 

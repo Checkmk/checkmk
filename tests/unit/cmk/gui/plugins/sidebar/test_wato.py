@@ -55,7 +55,6 @@ def expected_items() -> Dict[str, List[str]]:
         'diagnostics',
         'analyze_config',
         'background_jobs_overview',
-        'version.py',
     ]
 
     hosts_items = [

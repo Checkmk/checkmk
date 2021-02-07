@@ -124,10 +124,10 @@ def connection_set(options: Optional[List[str]] = None,
              HTTPUrl(title=_("Custom URL prefix"),
                      help=_(
                          "Specifies a URL prefix which is prepended to the path in calls to "
-                         "the API. This is e.g. useful if you use the ip-address or the hostname "
-                         "as base address but require some additional prefix to make the correct"
+                         "the API. This is e.g. useful if you use the ip address or the hostname "
+                         "as base address but require some additional prefix to make the correct "
                          "API call. Use the custom URL option if you need to specify a more "
-                         "complex API url"),
+                         "complex API url."),
                      allow_empty=False)))
 
     if "path_prefix" in options or all_options:
@@ -135,12 +135,12 @@ def connection_set(options: Optional[List[str]] = None,
             ("path-prefix",
              TextAscii(
                  title=_("Custom path prefix"),
-                 help=_("Specifies an url path prefix which is appended to the path in calls "
-                        "to the API. This is e.g. useful if you use the ip-address or the hostname "
-                        "as base address and require to specify a path url in order to make the "
-                        "correct API calls. Do not prepend/append your custom path with \"/\". "
+                 help=_("Specifies an URL path suffix which is appended to the path in calls "
+                        "to the API. This is e.g. useful if you use the ip address or the hostname "
+                        "as base address and require to specify a path URL in order to make the "
+                        "correct API calls. Do not prepend or append your custom path with \"/\". "
                         "Use the custom URL option if you need to specify a "
-                        "more complex API url"),
+                        "more complex API URL"),
                  allow_empty=False)))
 
     if "ssl_verify" in options or all_options:
@@ -643,7 +643,7 @@ def _valuespec_generic_metrics_prometheus():
                                      "The created services of the mapped Node Exporter will "
                                      "be assigned to the Checkmk host. A piggyback host for each "
                                      "Node Exporter host will be created if none of the options are "
-                                     "valid."
+                                     "valid. "
                                      "This option allows you to explicitly map one of your Node "
                                      "Exporter hosts to the underlying Checkmk host. This can be "
                                      "used if the default options do not apply to your setup."),
@@ -819,7 +819,7 @@ def _valuespec_generic_metrics_prometheus():
                           help=_("Specify the host to which the resulting "
                                  "service will be assigned to. The host "
                                  "should be configured to allow Piggyback "
-                                 "data"),
+                                 "data."),
                       )),
                      ("metric_components",
                       ListOf(

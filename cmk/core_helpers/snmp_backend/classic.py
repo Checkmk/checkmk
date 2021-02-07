@@ -15,14 +15,14 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
 
-from cmk.snmplib.type_defs import ABCSNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib.type_defs import SNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
 __all__ = ["ClassicSNMPBackend"]
 
 
-class ClassicSNMPBackend(ABCSNMPBackend):
+class ClassicSNMPBackend(SNMPBackend):
     def get(self,
             oid: OID,
             context_name: Optional[SNMPContextName] = None) -> Optional[SNMPRawValue]:

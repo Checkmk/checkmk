@@ -54,6 +54,7 @@ def test_dashlet_registry_plugins():
         'single_metric',
         'snapin',
         'site_overview',
+        'alert_statistics',
     ]
 
     if not cmk_version.is_raw_edition():
@@ -71,14 +72,14 @@ def test_dashlet_registry_plugins():
 
 def _expected_intervals():
     expected = [
-        ('hoststats', 60),
+        ('hoststats', False),
         ('mk_logo', False),
         ('nodata', False),
         ('notify_failed_notifications', 60),
         ('notify_users', False),
         ('overview', False),
         ('pnpgraph', 60),
-        ('servicestats', 60),
+        ('servicestats', False),
         ('snapin', 30),
         ('url', False),
         ('view', False),
@@ -261,7 +262,7 @@ def test_old_dashlet_position(mocker):
 
 def test_old_dashlet_size(mocker):
     dashlet_type = _legacy_dashlet_type({})
-    assert dashlet_type.initial_size() == (10, 10)
+    assert dashlet_type.initial_size() == (12, 10)
 
     dashlet_type = _legacy_dashlet_type({"size": (25, 10)})
     assert dashlet_type.initial_size() == (25, 10)

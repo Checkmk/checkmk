@@ -7,11 +7,12 @@
 
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
-
 from typing import NamedTuple, List, Optional, Union
 
 import cmk.gui.config as config
-from cmk.gui.i18n import _
+import cmk.gui.notify as notify
+from cmk.gui.pages import page_registry, AjaxPage, register
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.utils.popups import MethodInline
@@ -70,7 +71,7 @@ class MainMenuRenderer:
 
     def _get_popup_trigger_content(self, active_icon: Icon, menu_item: MainMenuItem) -> HTML:
         content = html.render_icon(menu_item.icon) + \
-                html.render_icon(active_icon, class_="active")
+                    html.render_icon(active_icon, class_="active")
 
         if not config.user.get_attribute("nav_hide_icons_title"):
             content += html.render_div(menu_item.title)
@@ -78,9 +79,11 @@ class MainMenuRenderer:
         return content
 
     def _get_main_menu_items(self) -> List[MainMenuItem]:
-        # TODO: Add permissions? For example WATO is not allowed for all users
         items: List[MainMenuItem] = []
         for menu in sorted(mega_menu_registry.values(), key=lambda g: g.sort_index):
+            if not menu.topics():
+                continue  # Hide e.g. Setup menu when user is not permitted to see a single topic
+
             items.append(
                 MainMenuItem(
                     name=menu.name,
@@ -104,6 +107,39 @@ class MainMenuRenderer:
             return html.drain()
 
 
+@register("sidebar_message_read")
+def ajax_message_read():
+    html.set_output_format("json")
+    try:
+        notify.delete_gui_message(html.request.var('id'))
+        html.write("OK")
+    except Exception:
+        if config.debug:
+            raise
+        html.write("ERROR")
+
+
+@page_registry.register_page("ajax_sidebar_get_messages")
+class ModeAjaxSidebarGetMessages(AjaxPage):
+    def page(self):
+        popup_msg: List = []
+        hint_msg: int = 0
+
+        for msg in notify.get_gui_messages():
+            if 'gui_hint' in msg['methods']:
+                hint_msg += 1
+            if 'gui_popup' in msg['methods']:
+                popup_msg.append({"id": msg["id"], "text": msg['text']})
+
+        return {
+            "popup_messages": popup_msg,
+            "hint_messages": {
+                "text": ungettext("message", "messages", hint_msg),
+                "count": hint_msg,
+            },
+        }
+
+
 class MegaMenuRenderer:
     """Renders the content of the mega menu popups"""
     def show(self, menu: MegaMenu) -> None:
@@ -119,7 +155,7 @@ class MegaMenuRenderer:
             menu.search.show_search_field()
         html.close_div()
         if menu.info_line:
-            html.span(menu.info_line(), id_="info_line")
+            html.span(menu.info_line(), id_="info_line_%s" % menu.name, class_="info_line")
         topics = menu.topics()
         if any_show_more_items(topics):
             html.open_div()

@@ -16,7 +16,6 @@ CHECK_NAME = "alcatel_cpu"
     ([[u'doesnt matter', u'doesent matter'], [u'doesnt matter']
      ], [(None, "alcatel_cpu_default_levels")]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_inventory_function(info, result_expected):
     check = Check(CHECK_NAME)
     result = list(check.run_discovery(info))
@@ -30,7 +29,6 @@ def test_inventory_function(info, result_expected):
     ((30, 40), [[u'41']
                ], 2, 'total: 41.0% (warn/crit at 30.0%/40.0%)', [('util', 41, 30, 40, 0, 100)]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_function(parameters, info, state_expected, infotext_expected, perfdata_expected):
     """
     Verifies if check function asserts warn and crit CPU levels.

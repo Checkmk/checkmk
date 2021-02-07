@@ -7,6 +7,8 @@
 #define test_tools_h__
 //
 
+#include <chrono>
+#include <functional>
 #include <vector>
 
 #include "cfg.h"
@@ -161,6 +163,7 @@ inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
 }
 
 constexpr std::string_view zip_to_test = "unzip_test.zip";
+constexpr std::string_view cab_to_test = "uncab_test.zip";  // cab! file
 
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name);
 std::wstring GenerateRandomFileName() noexcept;
@@ -168,7 +171,9 @@ std::wstring GenerateRandomFileName() noexcept;
 /// \brief RAII class to change folder structure in the config
 class TempCfgFs {
 public:
-    TempCfgFs();
+    enum class Mode { standard, no_io };
+    TempCfgFs() : TempCfgFs(Mode::standard) {}
+    TempCfgFs(Mode mode);
 
     TempCfgFs(const TempCfgFs&) = delete;
     TempCfgFs(TempCfgFs&&) = delete;
@@ -178,6 +183,8 @@ public:
     ~TempCfgFs();
 
     [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
+
+    [[nodiscard]] bool loadContent(std::string_view config);
 
     [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
                                       const std::string& content) const;
@@ -199,10 +206,15 @@ private:
     std::filesystem::path root_;
     std::filesystem::path data_;
     std::filesystem::path base_;
+    Mode mode_;
 };
 
 const extern std::filesystem::path G_SolutionPath;
 std::filesystem::path GetFabricYml();
+std::string GetFabricYmlContent();
+
+bool WaitForSuccess(std::chrono::milliseconds ms,
+                    std::function<bool()> predicat);
 
 }  // namespace tst
 #endif  // test_tools_h__

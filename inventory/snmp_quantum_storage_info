@@ -5,15 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def inv_snmp_quantum_storage_info(info, inventory_tree):
-
-    manufacturer, product, revision, serial = info[0][0]
+def inv_snmp_quantum_storage_info(section, inventory_tree):
 
     node = inventory_tree.get_dict("hardware.system.")
-    node["manufacturer"] = manufacturer
-    node["product"] = product
-    node["revision"] = revision
-    node["serial"] = serial
+    node["manufacturer"] = section.manufacturer
+    node["product"] = section.product
+    node["revision"] = section.revision
+    node["serial"] = section.serial
 
 
 inv_info['snmp_quantum_storage_info'] = {

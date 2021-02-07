@@ -38,7 +38,7 @@ from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-
 # No commands have a syntax error.
 # All valid MQSC commands were processed.
 
-import dateutil
+import dateutil.parser
 
 factory_settings["ibm_mq_queues_default_levels"] = {}
 
@@ -83,11 +83,11 @@ def check_ibm_mq_queues(item, params, parsed):
 
     if "IPPROCS" in data:
         cnt = data["IPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open input count', 'ipprocs', 'reading', params)
+        yield ibm_mq_procs(cnt, 'Open input handles', 'ipprocs', 'reading', params)
 
     if "OPPROCS" in data:
         cnt = data["OPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open output count', 'opprocs', 'writing', params)
+        yield ibm_mq_procs(cnt, 'Open output handles', 'opprocs', 'writing', params)
 
 
 def ibm_mq_depth(cur_depth, max_depth, params):

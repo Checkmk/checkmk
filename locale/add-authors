@@ -64,15 +64,19 @@ def update_untranslated_with_last_commits(po_file):
                 raise
 
             if not hasattr(po_entry, "commits"):
-                po_entry.commits = set()
+                # This wildly and apparently unnecessarily adds
+                # an attribe outside of `__init__`.  That makes
+                # mypy very sad and is the reason for the 3 type
+                # ignores.  The code is ugly but otherwise correct.
+                po_entry.commits = set()  # type: ignore[attr-defined]
 
-            po_entry.commits.add(commit)
+            po_entry.commits.add(commit)  # type: ignore[attr-defined]
 
         if not hasattr(po_entry, "commits"):
             continue
 
         commit_comment = []
-        for commit_id, name, summary_msg in po_entry.commits:
+        for commit_id, name, summary_msg in po_entry.commits:  # type: ignore[attr-defined]
             commit_comment.append("%s - %s: %s" % (name, commit_id, summary_msg))
         po_entry.comment = "\n".join(commit_comment)
 

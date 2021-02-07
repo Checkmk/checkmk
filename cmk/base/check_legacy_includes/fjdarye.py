@@ -17,33 +17,25 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 fjdarye_item_status = {
-    1: 'normal',
-    2: 'alarm',
-    3: 'warning',
-    4: 'invalid',
-    5: 'maintenance',
-    6: 'undefined'
+    "1": (0, 'Normal'),
+    "2": (2, 'Alarm'),
+    "3": (1, 'Warning'),
+    "4": (2, 'Invalid'),
+    "5": (2, 'Maintenance'),
+    "6": (2, 'Undefined'),
 }
 
 
 # generic inventory item - status other than 'invalid' is ok for inventory
 def inventory_fjdarye_item(info):
-    return [(int(index), '', None) for index, status in info if int(status) != 4]
+    return [(index, {}) for index, status in info if status != '4']
 
 
 # generic check_function returning the nagios-code and the status text
-def check_fjdarye_item(index, _no_param, info):
+def check_fjdarye_item(item, _no_param, info):
     for line in info:
-        if int(line[0]) == index:
-            status = int(line[1])
-            if status == 1:
-                code = 0
-            elif status == 3:
-                code = 1
-            else:
-                code = 2
-            return (code, "Status is %s" % (fjdarye_item_status[status]))
-    return (3, 'No status for item %d present' % index)
+        if line[0] == str(item):  # watch out! older versions discovered `int`s!
+            return fjdarye_item_status[line[1]]
 
 
 #.
@@ -112,8 +104,6 @@ def check_fjdarye_disks(item, params, parsed):
             check_state = 2
             infotext += " (expected: %s)" % expected_state
         return check_state, infotext
-
-    return 3, "No status for disk number %s present" % item
 
 
 #.

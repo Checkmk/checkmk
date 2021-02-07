@@ -109,7 +109,6 @@ liblivestatus_a_SOURCES = \
         CustomVarsExplicitColumn.cc \
         CustomVarsNamesColumn.cc \
         CustomVarsValuesColumn.cc \
-        DoubleColumn.cc \
         DoubleFilter.cc \
         DowntimeColumn.cc \
         DowntimeOrComment.cc \
@@ -127,8 +126,6 @@ liblivestatus_a_SOURCES = \
         HostListColumn.cc \
         HostListStateColumn.cc \
         HostServiceState.cc \
-        HostSpecialDoubleColumn.cc \
-        HostSpecialIntColumn.cc \
         InputBuffer.cc \
         IntColumn.cc \
         IntFilter.cc \
@@ -136,7 +133,6 @@ liblivestatus_a_SOURCES = \
         ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \
-        LogEntryStringColumn.cc \
         Logfile.cc \
         Logger.cc \
         LogwatchListColumn.cc \
@@ -162,8 +158,6 @@ liblivestatus_a_SOURCES = \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
         ServiceListStateColumn.cc \
-        ServiceSpecialDoubleColumn.cc \
-        ServiceSpecialIntColumn.cc \
         StatsColumn.cc \
         Store.cc \
         StringColumn.cc \

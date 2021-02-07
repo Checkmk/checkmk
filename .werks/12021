@@ -1,0 +1,16 @@
+Title: Windows agent plugin for MySQL (<tt>mk_mysql</tt>): support MariaDB
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1612441069
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The Windows agent plugin <tt>mk_mysql</tt> for monitoring MySQL databases
+now supports MariaDB. If you want to use this feature, you have to update
+the plugin on the corresponding hosts. No other configuration steps are
+necessary. You will then discover additional services on these hosts.
+Users who simply want to continue monitoring their already existing MySQL
+DBs do not have to take any steps.

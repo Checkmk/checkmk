@@ -6,6 +6,7 @@
 
 import time
 import os
+import functools
 
 from typing import Callable, Set, Dict, Any, Union, List, NamedTuple, Tuple as _Tuple, Optional as _Optional
 from six import ensure_str
@@ -1717,44 +1718,40 @@ def layout_timeline_choords(time_range):
     from_time, until_time = time_range
     duration = until_time - from_time
 
-    # Now comes the difficult part: decide automatically, whether to use
-    # hours, days, weeks or months. Days and weeks needs to take local time
-    # into account. Months are irregular.
-    hours = duration / 3600.0
-    if hours < 12:
-        scale = "hours"
-        render = _render_hour
-    elif hours < 24:
-        scale = "2hours"
-        render = _render_2hours
-    elif hours < 48:
-        scale = "6hours"
-        render = _render_6hours
-    elif hours < 24 * 14:
-        scale = "days"
-        render = _render_day
-    elif hours < 24 * 60:
-        scale = "weeks"
-        render = _render_week
-    else:
-        scale = "months"
-        render = _render_month
+    increment, render = _dispatch_scale(duration / 3600.0)
 
-    broken = list(time.localtime(from_time))
+    ordinate = time.localtime(from_time)
     while True:
-        # TODO: this modifies `broken` in place. Stopit.
-        next_choord = find_next_choord(broken, scale)
-        if next_choord >= until_time:
-            break
-        position = (next_choord - from_time) / float(duration)  # ranges from 0.0 to 1.0
-        yield position, render(_structify(broken))
+        ordinate = increment(ordinate)
+        position = (time.mktime(ordinate) - from_time) / float(duration)  # ranges from 0.0 to 1.0
+        if position >= 1.0:
+            return
+        yield position, render(ordinate)
 
 
-# TODO: refactor the above and get rid of this!
-def _structify(broken: List[int]) -> time.struct_time:
-    return time.struct_time(
-        (int(broken[0]), int(broken[1]), int(broken[2]), int(broken[3]), int(broken[4]),
-         int(broken[5]), int(broken[6]), int(broken[7]), int(broken[8])))
+def _dispatch_scale(
+    hours: float
+) -> _Tuple[Callable[[time.struct_time], time.struct_time], Callable[[time.struct_time], str],]:
+    """decide automatically whether to use hours, days, weeks or months
+
+    Days and weeks needs to take local time into account. Months are irregular.
+    """
+    if hours < 12:
+        return _increment_hour, _render_hour
+
+    if hours < 24:
+        return _increment_2hours, _render_2hours
+
+    if hours < 48:
+        return _increment_6hours, _render_6hours
+
+    if hours < 24 * 14:
+        return _increment_day, _render_day
+
+    if hours < 24 * 60:
+        return _increment_week, _render_week
+
+    return _increment_month, _render_month
 
 
 def _render_hour(tst: time.struct_time) -> str:
@@ -1781,66 +1778,54 @@ def _render_month(tst: time.struct_time) -> str:
     return "%s %d" % (defines.month_name(tst.tm_mon - 1), tst.tm_year)
 
 
-def find_next_choord(broken: List[int], scale):
-    # Elements in broken:
-    # 0: year
-    # 1: month (1 = January)
-    # 2: day of month
-    # 3: hour
-    # 4: minute
-    # 5: second
-    # 6: day of week (0 = monday)
-    # 7: day of year
-    # 8: isdst (0 or 1)
-    broken[4:6] = [0, 0]  # always set min/sec to 00:00
-    old_dst = broken[8]
+def _make_struct(year: int, month: int, day: int, hour: int, *, offset: int) -> time.struct_time:
+    # do not 'shorten' to time.struct_time! This fixes tm_isdst, tm_wday and others
+    return time.localtime(time.mktime((year, month, day, hour, 0, 0, 0, 0, 0)) + offset)
 
-    if scale == "hours":
-        epoch = time.mktime(_structify(broken))
-        epoch += 3600
-        broken[:] = list(time.localtime(epoch))
 
-    elif scale == "2hours":
-        broken[3] = int(broken[3] / 2) * 2
-        epoch = time.mktime(_structify(broken))
-        epoch += 2 * 3600
-        broken[:] = list(time.localtime(epoch))
+def _fix_dst_change(
+    incrementor: Callable[[time.struct_time], time.struct_time],
+) -> Callable[[time.struct_time], time.struct_time]:
+    """Fix up one hour offset in case the incrementor crosses the DST switch"""
+    @functools.wraps(incrementor)
+    def wrapped(intime: time.struct_time) -> time.struct_time:
+        outtime = incrementor(intime)
+        if intime.tm_isdst == outtime.tm_isdst:
+            return outtime
+        shift = (intime.tm_isdst - outtime.tm_isdst) * 3600
+        return time.localtime(time.mktime(outtime) + shift)
 
-    elif scale == "6hours":
-        broken[3] = int(broken[3] / 6) * 6
-        epoch = time.mktime(_structify(broken))
-        epoch += 6 * 3600
-        broken[:] = list(time.localtime(epoch))
+    return wrapped
 
-    elif scale == "days":
-        broken[3] = 0
-        epoch = time.mktime(_structify(broken))
-        epoch += 24 * 3600
-        broken[:] = list(time.localtime(epoch))
 
-    elif scale == "weeks":
-        broken[3] = 0
-        at_00 = int(time.mktime(_structify(broken)))
-        at_monday = at_00 - 86400 * broken[6]
-        epoch = at_monday + 7 * 86400
-        broken[:] = list(time.localtime(epoch))
+@_fix_dst_change
+def _increment_hour(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, tst.tm_hour, offset=3600)
 
-    else:  # scale == "months":
-        broken[3] = 0
-        broken[2] = 0
-        broken[1] += 1
-        if broken[1] > 12:
-            broken[1] = 1
-            broken[0] += 1
-        epoch = time.mktime(_structify(broken))
 
-    dst = broken[8]
-    if old_dst == 1 and dst == 0:
-        epoch += 3600
-    elif old_dst == 0 and dst == 1:
-        epoch -= 3600
+@_fix_dst_change
+def _increment_2hours(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, tst.tm_hour // 2 * 2, offset=7200)
 
-    return epoch
+
+@_fix_dst_change
+def _increment_6hours(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, tst.tm_hour // 6 * 6, offset=6 * 3600)
+
+
+@_fix_dst_change
+def _increment_day(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, 0, offset=24 * 3600)
+
+
+@_fix_dst_change
+def _increment_week(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, 0, offset=86400 * (7 - tst.tm_wday))
+
+
+@_fix_dst_change
+def _increment_month(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year + (tst.tm_mon == 12), (tst.tm_mon % 12) + 1, 1, 0, offset=0)
 
 
 #.

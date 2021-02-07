@@ -2414,7 +2414,8 @@ class html(ABCHTMLGenerator):
                                  icon: Optional[str] = None,
                                  fetch_url: Optional[str] = None,
                                  title_url: Optional[str] = None,
-                                 title_target: Optional[str] = None) -> bool:
+                                 title_target: Optional[str] = None,
+                                 padding: int = 15) -> bool:
         isopen = config.user.get_tree_state(treename, id_, isopen)
         onclick = self.foldable_container_onclick(treename, id_, fetch_url)
         img_id = self.foldable_container_img_id(treename, id_)
@@ -2422,32 +2423,33 @@ class html(ABCHTMLGenerator):
 
         self.open_div(class_=["foldable", "open" if isopen else "closed"])
 
-        if not icon:
-            self.img(id_=img_id,
-                     class_=["treeangle", "open" if isopen else "closed"],
-                     src="themes/%s/images/tree_closed.png" % (self._theme),
-                     onclick=onclick)
         if isinstance(title, HTML):  # custom HTML code
-            if icon:
-                self.img(class_=["treeangle", "title"],
-                         src="themes/%s/images/icon_%s.png" % (self._theme, icon),
-                         onclick=onclick)
             self.write_text(title)
-            if indent != "form":
-                self.br()
+
         else:
             self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
-            if icon:
-                self.img(class_=["treeangle", "title"],
-                         src="themes/%s/images/icon_%s.png" % (self._theme, icon))
+
             if title_url:
                 self.a(title, href=title_url, target=title_target)
             else:
                 self.write_text(title)
             self.close_b()
+
+        if icon:
+            self.img(id_=img_id,
+                     class_=["treeangle", "title", "open" if isopen else "closed"],
+                     src="themes/%s/images/icon_%s.png" % (self._theme, icon),
+                     onclick=onclick)
+        else:
+            self.img(id_=img_id,
+                     class_=["treeangle", "open" if isopen else "closed"],
+                     src="themes/%s/images/tree_closed.png" % (self._theme),
+                     onclick=onclick)
+
+        if indent != "form" or not isinstance(title, HTML):
             self.br()
 
-        indent_style = "padding-left: %dpx; " % (indent is True and 15 or 0)
+        indent_style = "padding-left: %dpx; " % (padding if indent else 0)
         if indent == "form":
             self.close_td()
             self.close_tr()
@@ -2531,10 +2533,35 @@ class html(ABCHTMLGenerator):
         )
 
         if isinstance(icon, dict) and icon["emblem"] is not None:
-            emblem_path = self.detect_icon_path(icon["emblem"], prefix="emblem")
-            return self.render_span(icon_element + self.render_img(emblem_path, class_="emblem"),
-                                    class_="emblem")
+            return self.render_emblem(icon["emblem"], title, id_, icon_element)
+
         return icon_element
+
+    def render_emblem(
+        self,
+        emblem: str,
+        title: Optional[str],
+        id_: Optional[str],
+        icon_element: Optional[HTML] = None,
+    ) -> HTML:
+        """ Render emblem to corresponding icon (icon_element in function call)
+        or render emblem itself as icon image, used e.g. in view options."""
+
+        emblem_path = self.detect_icon_path(emblem, prefix="emblem")
+        if not icon_element:
+            return self._render_start_tag(
+                'img',
+                close_tag=True,
+                title=title,
+                id_=id_,
+                class_="icon",
+                src=emblem_path,
+            )
+
+        return self.render_span(
+            icon_element + self.render_img(emblem_path, class_="emblem"),
+            class_="emblem",
+        )
 
     def detect_icon_path(self, icon_name: str, prefix: str) -> str:
         """Detect from which place an icon shall be used and return it's path relative to htdocs/

@@ -53,6 +53,10 @@ JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                               $(foreach edir,. enterprise managed, \
                                   $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).js))))
 
+SCSS_SOURCES := $(wildcard \
+					$(foreach edir,. enterprise managed, \
+						$(foreach subdir,* */*,$(edir)/web/htdocs/themes/$(subdir)/*.scss)))
+
 JAVASCRIPT_MINI    := $(foreach jmini,main mobile side,web/htdocs/js/$(jmini)_min.js)
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
@@ -352,17 +356,24 @@ node_modules/.bin/redoc-cli: .ran-npm
 	npm install --audit=false --unsafe-perm $$REGISTRY
 	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli
 
-web/htdocs/js/%_min.js: node_modules/.bin/webpack webpack.config.js $(JAVASCRIPT_SOURCES)
+# NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
+# list all targets separately.
+#
+# NOTE 2: For the touch command refer to the notes above.
+#
+# NOTE 3: The cma_facelift.scss target is used to generate a css file for the virtual
+# appliance. It is called from the cma git's makefile and the built css file is moved
+# to ~/git/cma/skel/usr/share/cma/webconf/htdocs/
+.INTERMEDIATE: .ran-webpack
+web/htdocs/js/main_min.js: .ran-webpack
+web/htdocs/js/side_min.js: .ran-webpack
+web/htdocs/js/mobile_min.js: .ran-webpack
+web/htdocs/themes/facelift/theme.css: .ran-webpack
+web/htdocs/themes/modern-dark/theme.css: .ran-webpack
+web/htdocs/themes/facelift/cma_facelift.css: .ran-webpack
+.ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
-
-web/htdocs/themes/%/theme.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
-
-# This target is used to generate a css file for the virtual appliance. It is
-# called from the cma git's Makefile and the built css file is moved to
-# ~/git/cma/skel/usr/share/cma/webconf/htdocs/
-web/htdocs/themes/facelift/cma_facelift.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+	touch web/htdocs/js/*_min.js web/htdocs/themes/*/theme.css
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
@@ -409,6 +420,7 @@ setup:
 	    clang-tidy-10 \
 	    clang-tools-10 \
 	    clangd-10 \
+	    curl \
 	    libclang-10-dev \
 	    libclang-common-10-dev \
 	    libclang1-10 \
@@ -604,5 +616,5 @@ Pipfile.lock: Pipfile
 # top-level Makefile's dependencies must be updated.  It does not
 # need to depend on %MAKEFILE% because GNU make will always make sure
 # %MAKEFILE% is updated before considering the am--refresh target.
-am--refresh:
-	@:
+am--refresh: config.status
+	./config.status

@@ -954,7 +954,7 @@ permission_registry.register(
         title=_l("Monitoring Agents"),
         description=_l("Download the default Check_MK monitoring agents for Linux, "
                        "Windows and other operating systems."),
-        defaults=config.builtin_role_ids,
+        defaults=["admin", "user"],
     ))
 
 permission_registry.register(
@@ -1049,5 +1049,14 @@ permission_registry.register(
         name="service_discovery_to_removed",
         title=_l("Service discovery: Remove services"),
         description=_l("Service discovery: Remove services"),
+        defaults=["admin", "user"],
+    ))
+
+permission_registry.register(
+    Permission(
+        section=cmk.gui.plugins.wato.utils.PermissionSectionWATO,
+        name="check_plugins",
+        title=_l("Catalog of check plugins"),
+        description=_l("Use the catalog of check plugins."),
         defaults=["admin", "user"],
     ))

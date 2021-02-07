@@ -621,10 +621,6 @@ def parse_file(site, host_name, file_name, hidecontext=False):
                     line_level = 0
                     line_class = 'OK'
 
-                elif line[0] == '.':
-                    line_level = 0
-                    line_class = 'OK'
-
                 elif not hidecontext:
                     line_level = 0
                     line_class = 'context'

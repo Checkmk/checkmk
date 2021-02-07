@@ -360,3 +360,15 @@ def avoid_search_index_update_background(monkeypatch):
         'update_index_background',
         lambda _change_action_name:...,
     )
+
+
+@pytest.fixture(scope='function')
+def logged_in_wsgi_app(wsgi_app, with_user):
+    username, password = with_user
+    wsgi_app.username = username
+    login = wsgi_app.get('/NO_SITE/check_mk/login.py')
+    login.form['_username'] = username
+    login.form['_password'] = password
+    resp = login.form.submit('_login', index=1)
+    assert "Invalid credentials." not in resp.text
+    return wsgi_app

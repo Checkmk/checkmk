@@ -24,7 +24,7 @@ cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 '
 
 Set WMI = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
-Set service_list = WMI.ExecQuery("SELECT * FROM Win32_Service WHERE Name LIKE '%MySQL%' and State = 'Running'")
+Set service_list = WMI.ExecQuery("SELECT * FROM Win32_Service WHERE (Name LIKE '%MySQL%' or Name LIKE '%MariaDB') and State = 'Running'")
 For Each service in service_list
     ' add the internal service name as key and the launch command line as value
     instances.add service.Name, service.PathName

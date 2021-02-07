@@ -127,7 +127,7 @@ def _evaluate_params(params: LegacyCheckParameters) -> str:
     if not isinstance(params, cmk.base.config.TimespecificParamList):
         return repr(params)
 
-    current_params = checking.legacy_determine_check_params(params)
+    current_params = checking.time_resolved_check_parameters(params)
     return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(
         time.time()), current_params)
 

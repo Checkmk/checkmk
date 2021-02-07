@@ -293,40 +293,14 @@ class DiscoveryResult:
     that yield-based discovery functions run, and that no exceptions
     get lost in the laziness.
     """
-
-    # TODO: Add some more consistency checks here.
     def __init__(self, result=()):
-        self.entries = []
-        self.labels = DiscoveredHostLabels()
-        if not result:
-            # discovering nothing is valid!
-            return
-        for entry in result:
-            if isinstance(entry, DiscoveredHostLabels):
-                self.labels += entry
-            elif isinstance(entry, HostLabel):
-                self.labels.add_label(entry)
-            # preparation for ServiceLabel Discovery
-            #elif isinstance(entry, Service):
-            #
-            else:
-                self.entries.append(DiscoveryEntry(entry))
-        self.entries.sort(key=repr)
+        self.entries = sorted((DiscoveryEntry(e) for e in (result or ())), key=repr)
 
     def __eq__(self, other):
-        return self.entries == other.entries and self.labels == other.labels
+        return self.entries == other.entries
 
-    # TODO: Very questionable __repr__ conversion, leading to even more
-    # interesting typing Kung Fu...
     def __repr__(self) -> str:
-        entries: List[object] = [o for o in self.entries if isinstance(o, object)]
-        host_labels: List[object] = [HostLabel(str(k), str(self.labels[k])) for k in self.labels]
-        return "DiscoveryResult(%r)" % (entries + host_labels,)
-
-    # TODO: Very obscure and inconsistent __str__ conversion...
-    def __str__(self):
-        return "%s%s" % ([tuple(e) for e in self.entries
-                         ], [self.labels[k].label for k in self.labels])
+        return f"DiscoveryResult({self.entries!r})"
 
 
 def assertDiscoveryResultsEqual(check, actual, expected):
@@ -354,13 +328,6 @@ def assertDiscoveryResultsEqual(check, actual, expected):
         assert item_a == item_e, "items differ: %r != %r" % (item_a, item_e)
         assert default_params_a == default_params_e, "default parameters differ: %r != %r" % (
             default_params_a, default_params_e)
-
-    assert len(actual.labels) == len(expected.labels), \
-           "DiscoveryResults labels are not of equal length: %s != %s" % (actual.labels.to_dict(), expected.labels.to_dict())
-
-    # iterate over the HostLabels in DiscoveredHostLabels, not lable string
-    for laba, labe in zip(actual.labels.to_list(), expected.labels.to_list()):
-        assert laba == labe, "discovered host labels differ: expected %r got %r" % (laba, labe)
 
 
 class BasicItemState:

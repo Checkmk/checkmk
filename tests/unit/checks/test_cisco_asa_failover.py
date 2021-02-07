@@ -30,7 +30,6 @@ cisco_asa_failover_info = [
         (0, 'Device (primary) is the active unit'),
     ]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_cisco_asa_failover_params(info, params, expected):
     check = Check('cisco_asa_failover')
     result = CheckResult(check.run_check(None, params, check.run_parse(info)))

@@ -1,0 +1,16 @@
+Title: Fix displaying host graphs on dashboard
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612370584
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Previous 2.0.0 versions could not display host related time series graphs on
+the dashboard. The new context validation mechanism, that expects a service
+context for this dashlet, was preventing the rendering of that dashlet. Now
+the host dashlets automatically get an empty service context set which makes
+the dashlet render again.

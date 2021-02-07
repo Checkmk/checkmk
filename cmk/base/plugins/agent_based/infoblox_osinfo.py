@@ -23,7 +23,7 @@ register.snmp_section(
         ),
     ],
     detect=all_of(
-        exists(".1.3.6.1.4.1.2021.4.1.*"),
         contains(".1.3.6.1.2.1.1.1.0", "infoblox"),
+        exists(".1.3.6.1.4.1.2021.4.1.*"),
     ),
 )

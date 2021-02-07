@@ -475,6 +475,7 @@ def test_registered_permissions():
         'wato.backups',
         'wato.bi_admin',
         'wato.bi_rules',
+        'wato.check_plugins',
         'wato.clear_auditlog',
         'wato.clone_hosts',
         'wato.custom_attributes',

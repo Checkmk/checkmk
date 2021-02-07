@@ -161,7 +161,6 @@ pytestmark = pytest.mark.checks
         ['--sni', '$_HOSTADDRESS_4$', 'virtual.host'],
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_http_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck('check_http')
@@ -184,7 +183,6 @@ def test_check_http_argument_parsing(params, expected_args):
         u'No Prefix Test',
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_http_service_description(params, expected_description):
     active_check = ActiveCheck('check_http')
     assert active_check.run_service_description(params) == expected_description

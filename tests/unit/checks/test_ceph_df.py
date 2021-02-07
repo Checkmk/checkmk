@@ -8,7 +8,6 @@ from testlib import Check  # type: ignore[import]
 import pytest
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_sanitize_line():
     input_ = [
         u'cephfs_data', u'1', u'N/A', u'N/A', u'1.6', u'GiB', u'1.97', u'77', u'GiB', u'809',

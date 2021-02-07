@@ -65,6 +65,7 @@ HOST_TAG_GROUP_NAME = {
     'name': HostTagGroupName(
         description="The name of the host tag group",
         example='datasource',
+        pattern='[a-zA-Z_]+[-0-9a-zA-Z_]*',
         required=True,
     )
 }

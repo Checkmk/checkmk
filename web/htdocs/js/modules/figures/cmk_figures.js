@@ -352,7 +352,8 @@ export class FigureBase {
             },
         })
             .then(json_data => this._process_api_response(json_data))
-            .catch(() => {
+            .catch(e => {
+                console.error(e);
                 this._show_error_info("Error fetching data");
                 this.remove_loading_image();
             });
@@ -467,9 +468,9 @@ export class FigureBase {
             .data(d => [d])
             .join("rect")
             .attr("x", 0)
-            .attr("y", 0)
+            .attr("y", 0.5)
             .attr("width", this.figure_size.width)
-            .attr("height", 24)
+            .attr("height", 22)
             .classed(highlight_container ? "highlighted" : "", true);
 
         title_component
@@ -477,10 +478,15 @@ export class FigureBase {
             .data(d => [d])
             .join("text")
             .text(d => d)
-            .attr("y", 18)
+            .attr("y", 16)
             .attr("x", this.figure_size.width / 2)
-            .style("font-size", "12px")
             .attr("text-anchor", "middle");
+    }
+
+    get_scale_render_function() {
+        if (this._data.plot_definitions.length > 0)
+            return plot_render_function(this._data.plot_definitions[0]);
+        return plot_render_function({});
     }
 }
 
@@ -497,21 +503,26 @@ export function adjust_domain(domain, metrics) {
     return [dmin, dmax];
 }
 
+export function clamp(value, domain) {
+    return Math.min(Math.max(value, domain[0]), domain[1]);
+}
+
 export function make_levels(domain, metrics) {
     let [dmin, dmax] = domain;
     if (metrics.warn == null || metrics.crit == null) return [];
 
     if (metrics.warn >= dmax) metrics.warn = dmax;
     if (metrics.crit >= dmax) metrics.crit = dmax;
+    if (metrics.warn <= dmin) dmin = metrics.warn;
 
     return [
-        {from: dmin, to: metrics.warn, color: "#13D389"},
+        {from: metrics.crit, to: dmax, color: "#FF3232"},
         {
             from: metrics.warn,
             to: metrics.crit,
             color: "#FFFE44",
         },
-        {from: metrics.crit, to: dmax, color: "#FF3232"},
+        {from: dmin, to: metrics.warn, color: "#13D389"},
     ];
 }
 // Base class for dc.js based figures (using crossfilter)
@@ -689,26 +700,43 @@ export function state_component(figurebase, state) {
         .text(d => d.msg);
 }
 
+export function renderable_value(value, domain, plot) {
+    const levels = make_levels(domain, plot.metrics);
+    const formatter = plot_render_function(plot);
+
+    const color = levels.length
+        ? levels.find(element => clamp(value.value, domain) >= element.from).color
+        : "#3CC2FF";
+
+    return {
+        ...split_unit(formatter(value.value)),
+        url: value.url || "",
+        color: color,
+    };
+}
+
 // Adhoc hack to extract the unit from a formatted string, which has units
 // Once we migrate metric system to the frontend drop this
-export function split_unit(recipe) {
-    if (!recipe) return {};
-    if (!recipe.formatted_value) return {};
-    let text = recipe.formatted_value;
+export function split_unit(formatted_value) {
+    if (!formatted_value) return {};
     // Separated by space, most rendered quantities
-    let splitted_text = text.split(" ");
-    if (splitted_text.length == 2)
-        return {value: splitted_text[0], unit: splitted_text[1], url: recipe.url};
+    let splitted_text = formatted_value.split(" ");
+    if (splitted_text.length == 2) return {value: splitted_text[0], unit: splitted_text[1]};
 
     // Percentages have no space
-    if (text.endsWith("%")) return {value: text.slice(0, -1), unit: "%", url: recipe.url};
+    if (formatted_value.endsWith("%")) return {value: formatted_value.slice(0, -1), unit: "%"};
 
     // It's a counter, unitless
-    return {value: text, unit: "", url: recipe.url};
+    return {value: formatted_value, unit: ""};
 }
 
 export function get_function(render_string) {
     return Function(`"use strict"; return ${render_string}`)();
+}
+
+export function plot_render_function(plot) {
+    if (plot.js_render) return get_function(plot.js_render);
+    return get_function("v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)");
 }
 
 export function metric_value_component(selection, value, attr, style) {
@@ -717,7 +745,7 @@ export function metric_value_component(selection, value, attr, style) {
         .data([value])
         .join("a")
         .classed("single_value", true)
-        .attr("xlink:href", d => d.url || "");
+        .attr("xlink:href", d => d.url || null);
     let text = link
         .selectAll("text")
         .data(d => [d])

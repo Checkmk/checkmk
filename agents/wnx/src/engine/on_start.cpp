@@ -160,7 +160,10 @@ bool OnStart(AppType proposed_type, const std::wstring& config_file) {
                                              "check_mk_service is loading");
     }
 
-    if (!already_loaded) return OnStartCore(type, config_file);
+    if (!already_loaded) {
+        XLOG::setup::SetContext(cma::IsService() ? "srv" : "app");
+        return OnStartCore(type, config_file);
+    }
 
     if (AppDefaultType() == AppType::test) {
         XLOG::d.i("Second call of OnStart in test mode");

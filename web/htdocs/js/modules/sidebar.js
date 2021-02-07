@@ -486,10 +486,7 @@ function remove_snapin(id) {
 
 export function toggle_sidebar_snapin(oH2, url) {
     // oH2 is a <b> if it is the snapin title otherwise it is the minimize button.
-    let childs =
-        oH2.tagName == "B"
-            ? oH2.parentNode.parentNode.childNodes
-            : oH2.parentNode.parentNode.parentNode.childNodes;
+    let childs = oH2.parentNode.parentNode.childNodes;
 
     let oContent, oHead;
     for (const i in childs) {
@@ -963,17 +960,17 @@ function show_speed(percentage) {
 
     if (percentage > 100.0) percentage = 100.0;
 
-    const orig_x = 116;
+    const orig_x = 124;
     const orig_y = 181;
-    const angle_0 = 232.0;
-    const angle_100 = 307.0;
+    const angle_0 = 226.0;
+    const angle_100 = 314.0;
     const angle = angle_0 + ((angle_100 - angle_0) * percentage) / 100.0;
     const angle_rad = (angle / 360.0) * Math.PI * 2;
     const length = 120;
     const end_x = orig_x + Math.cos(angle_rad) * length;
     const end_y = orig_y + Math.sin(angle_rad) * length;
 
-    context.clearRect(0, 0, 228, 136);
+    context.clearRect(0, 0, 228, 146);
     context.beginPath();
     context.moveTo(orig_x, orig_y);
     context.lineTo(end_x, end_y);
@@ -981,7 +978,10 @@ function show_speed(percentage) {
     context.shadowOffsetX = 2;
     context.shadowOffsetY = 2;
     context.shadowBlur = 2;
-    context.strokeStyle = "#000000";
+    if (percentage < 80.0) context.strokeStyle = "#FF3232";
+    else if (percentage < 95.0) context.strokeStyle = "#FFFE44";
+    else context.strokeStyle = "#13D389";
+    context.lineWidth = 3;
     context.stroke();
 }
 
@@ -1011,94 +1011,74 @@ var g_sidebar_notify_interval;
 
 export function init_messages(interval) {
     g_sidebar_notify_interval = interval;
+    create_message_ids();
 
     // Are there pending messages? Render the initial state of
     // trigger button
-    update_message_trigger();
+    update_messages();
 }
 
-function handle_update_messages(_unused, code) {
-    // add new messages to container
-    const c = document.getElementById("messages");
-    if (c) {
-        c.innerHTML = code;
-        utils.execute_javascript_by_object(c);
-        update_message_trigger();
+function create_message_ids() {
+    const mega_menu_user_div = document.getElementById("popup_trigger_mega_menu_user").firstChild;
+    const user_div = mega_menu_user_div.childNodes[2];
+
+    const l = document.createElement("span");
+    l.setAttribute("id", "msg_label");
+    l.style.display = "none";
+    mega_menu_user_div.insertBefore(l, user_div);
+
+    // Also update popup content
+    const info_line_span = document.getElementById("info_line_user");
+    const user_messages = document.createElement("span");
+    user_messages.setAttribute("id", "user_messages");
+    const a = document.createElement("a");
+    a.href = "index.py?start_url=user_notify.py";
+    a.setAttribute("id", "user_msg_link");
+    user_messages.append(a);
+    info_line_span.insertAdjacentElement("beforebegin", user_messages);
+}
+
+function handle_update_messages(_data, response_text) {
+    const response = JSON.parse(response_text);
+    if (response.result_code !== 0) {
+        return;
     }
+    const result = response.result;
+    const messages_text = result.hint_messages.text;
+    const messages_count = result.hint_messages.count;
+
+    update_message_trigger(messages_text, messages_count);
+    result.popup_messages.forEach(msg => {
+        alert(msg.text);
+        mark_message_read(msg.id, messages_text, messages_count);
+    });
 }
 
 function update_messages() {
-    // Remove all pending messages from container
-    const c = document.getElementById("messages");
-    if (c) {
-        c.innerHTML = "";
-    }
-
     // retrieve new messages
-    ajax.get_url("sidebar_get_messages.py", handle_update_messages);
+    ajax.call_ajax("ajax_sidebar_get_messages.py", {response_handler: handle_update_messages});
 }
 
-function get_hint_messages(c) {
-    let hints;
-    if (c.getElementsByClassName) hints = c.getElementsByClassName("popup_msg");
-    else hints = document.getElementsByClassName("popup_msg", c);
-    return hints;
-}
-
-function update_message_trigger() {
-    const c = document.getElementById("messages");
-    if (c) {
-        const b = document.getElementById("msg_button");
-        const hints = get_hint_messages(c);
-        if (hints.length > 0) {
-            // are there pending messages? make trigger visible
-            b.style.display = "inline";
-
-            // Create/Update a blinking number label
-            let l = document.getElementById("msg_label");
-            if (!l) {
-                l = document.createElement("span");
-                l.setAttribute("id", "msg_label");
-                b.appendChild(l);
-            }
-
-            l.innerHTML = "" + hints.length;
-        } else {
-            // no messages: hide the trigger
-            b.style.display = "none";
-        }
+export function update_message_trigger(msg_text, msg_count) {
+    let l = document.getElementById("msg_label");
+    if (msg_count === 0) {
+        l.style.display = "none";
+        return;
     }
+
+    l.innerText = msg_count.toString();
+    l.style.display = "inline";
+
+    let user_messages = document.getElementById("user_msg_link");
+    let text_content = msg_count + " " + msg_text;
+    user_messages.textContent = text_content;
 }
 
-export function mark_message_read(msg_id) {
+function mark_message_read(msg_id, msg_text, msg_count) {
     ajax.get_url("sidebar_message_read.py?id=" + msg_id);
 
     // Update the button state
-    update_message_trigger();
-}
-
-export function read_message() {
-    const c = document.getElementById("messages");
-    if (!c) return;
-
-    // extract message from the message container
-    const hints = get_hint_messages(c);
-    const msg = hints[0];
-    c.removeChild(msg);
-
-    // open the next message in a window
-    c.parentNode.appendChild(msg);
-
-    // tell server that the message has been read
-    const msg_id = msg.id.replace("message-", "");
-    mark_message_read(msg_id);
-}
-
-export function message_close(msg_id) {
-    const m = document.getElementById("message-" + msg_id);
-    if (m) {
-        m.parentNode.removeChild(m);
-    }
+    update_message_trigger(msg_text, msg_count);
 }
 
 /************************************************

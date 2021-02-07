@@ -27,7 +27,6 @@ pytestmark = pytest.mark.checks
         "--mode", "basic"
     ]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_jolokia_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_jolokia')

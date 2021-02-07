@@ -96,7 +96,7 @@ def lookup_ip_address(
     # Honor simulation mode und usewalk hosts. Never contact the network.
     if config.simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
                                                         host_config.is_snmp_host):
-        return fallback_ip_for(family)
+        return "127.0.0.1" if family is socket.AF_INET else "::1"
 
     hostname = host_config.hostname
 

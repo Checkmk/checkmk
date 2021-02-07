@@ -213,8 +213,30 @@ def delete_downtime(params):
     delete_type = body['delete_type']
     if delete_type == "query":
         downtime_commands.delete_downtime_with_query(live, body['query'])
-    elif delete_type == "params":
+    elif delete_type == "by_id":
         downtime_commands.delete_downtime(live, body['downtime_id'])
+    elif delete_type == "params":
+        hostname = body['hostname']
+        if "services" not in body:
+            host_query = {"op": "~", "left": "downtimes.host_name", "right": hostname}
+            downtime_commands.delete_downtime_with_query(live, host_query)
+        else:
+            services_query = {
+                "op": "and",
+                "expr": [{
+                    'op': '=',
+                    'left': 'downtimes.host_name',
+                    'right': body['hostname']
+                }, {
+                    'op': 'or',
+                    'expr': [{
+                        'op': '=',
+                        'left': 'downtimes.service_description',
+                        'right': service_description
+                    } for service_description in body['services']]
+                }]
+            }
+            downtime_commands.delete_downtime_with_query(live, services_query)
     else:
         return problem(status=400,
                        title="Unhandled delete_type.",

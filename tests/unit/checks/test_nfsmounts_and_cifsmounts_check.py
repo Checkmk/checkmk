@@ -91,7 +91,6 @@ size2 = Size(
                 #BasicCheckResult(0, "server is responding", [PerfValue('fs_size', 0), PerfValue('fs_used', 0)]))]
                 BasicCheckResult(2, "Stale fs handle", None))]),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_nfsmounts(info, discovery_expected, check_expected):
     check_nfs = Check("nfsmounts")
     check_cifs = Check("cifsmounts")

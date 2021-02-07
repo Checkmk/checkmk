@@ -3,6 +3,8 @@
 
 #include "service_processor.h"
 
+#include <fcntl.h>
+#include <io.h>
 #include <sensapi.h>
 #include <shlobj_core.h>
 
@@ -16,6 +18,7 @@
 #include "common/yaml.h"
 #include "external_port.h"
 #include "install_api.h"
+#include "providers/perf_counters_cl.h"
 #include "realtime.h"
 #include "tools/_process.h"
 #include "upgrade.h"
@@ -92,19 +95,15 @@ void ServiceProcessor::stopTestingMainThread() {
     thread_.join();
 }
 
-void ServiceProcessor::kickWinPerf(const AnswerId Tp, const std::string& Ip) {
-    using namespace cma::cfg;
-
-    auto cmd_line = groups::winperf.buildCmdLine();
-    if (Ip.size())
-        cmd_line = L"ip:" + wtools::ConvertToUTF16(Ip) + L" " + cmd_line;
-    auto exe_name = groups::winperf.exe();
-    if (cma::tools::IsEqual(exe_name, "agent")) {
+namespace {
+std::string FindWinPerfExe() {
+    auto exe_name = cfg::groups::winperf.exe();
+    if (tools::IsEqual(exe_name, "agent")) {
         XLOG::t.i("Looking for default agent");
         namespace fs = std::filesystem;
-        fs::path f = cma::cfg::GetRootDir();
-        std::vector<fs::path> names = {
-            f / cma::cfg::kDefaultAppFileName  // on install
+        fs::path f = cfg::GetRootDir();
+        std::vector<fs::path> names{
+            f / cfg::kDefaultAppFileName  // on install
 
         };
 
@@ -124,23 +123,60 @@ void ServiceProcessor::kickWinPerf(const AnswerId Tp, const std::string& Ip) {
         }
         if (exe_name.empty()) {
             XLOG::l.crit("In folder '{}' not found binaries to exec winperf");
-            return;
+            return {};
         }
     } else {
         XLOG::d.i("Looking for agent '{}'", exe_name);
     }
-    auto wide_exe_name = wtools::ConvertToUTF16(exe_name);
-    auto prefix = groups::winperf.prefix();
-    auto timeout = groups::winperf.timeout();
-    auto wide_prefix = wtools::ConvertToUTF16(prefix);
+    return exe_name;
+}
 
-    vf_.emplace_back(kickExe(true,           // async ???
-                             wide_exe_name,  // perf_counter.exe
-                             Tp,             // answer id
-                             this,           // context
-                             wide_prefix,    // for section
-                             timeout,        // in seconds
-                             cmd_line));     // counters
+std::wstring GetWinPerfLogFile() {
+    return cfg::groups::winperf.isTrace()
+               ? (std::filesystem::path{cfg::GetLogDir()} / "winperf.log")
+                     .wstring()
+               : L"";
+}
+}  // namespace
+
+void ServiceProcessor::kickWinPerf(const AnswerId answer_id,
+                                   const std::string& ip_addr) {
+    using cfg::groups::winperf;
+
+    auto cmd_line = winperf.buildCmdLine();
+    if (!ip_addr.empty()) {
+        // we may need IP info and using for this pseudo-counter
+        cmd_line = L"ip:" + wtools::ConvertToUTF16(ip_addr) + L" " + cmd_line;
+    }
+
+    auto exe_name = wtools::ConvertToUTF16(FindWinPerfExe());
+    auto timeout = winperf.timeout();
+    auto prefix = wtools::ConvertToUTF16(winperf.prefix());
+
+    if (winperf.isFork() && !exe_name.empty()) {
+        vf_.emplace_back(kickExe(true,                   // async ???
+                                 exe_name,               // perf_counter.exe
+                                 answer_id,              // answer id
+                                 this,                   // context
+                                 prefix,                 // for section
+                                 timeout,                // in seconds
+                                 cmd_line,               // counters
+                                 GetWinPerfLogFile()));  // log file
+    } else {
+        // NOTE: This part is for debug/testing only.
+        // NOT TESTED with Automatic tests
+        XLOG::d("No forking to get winperf data: may lead to handle leak.");
+        vf_.emplace_back(std::async(
+            std::launch::async, [prefix, this, answer_id, timeout, cmd_line]() {
+                auto cs = tools::SplitString(cmd_line, L" ");
+                std::vector<std::wstring_view> counters{cs.begin(), cs.end()};
+                return provider::RunPerf(prefix,
+                                         wtools::ConvertToUTF16(internal_port_),
+                                         AnswerIdToWstring(answer_id), timeout,
+                                         std::vector<std::wstring_view>{
+                                             cs.begin(), cs.end()}) == 0;
+            }));
+    }
     answer_.newTimeout(timeout);
 }
 
@@ -421,6 +457,7 @@ void ServiceProcessor::sendDebugData() {
     auto started = startProviders(tp.value(), "");
     auto block = getAnswer(started);
     block.emplace_back('\0');  // yes, we need this for printf
+    _setmode(_fileno(stdout), _O_BINARY);
     auto count = printf("%s", block.data());
     if (count != block.size() - 1) {
         XLOG::l("Binary data at offset [{}]", count);
@@ -448,7 +485,7 @@ void ServiceProcessor::prepareAnswer(const std::string& ip_from,
 cma::ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
     auto tp = openAnswer(ip_from);
     if (tp) {
-        XLOG::d.i("Id is [{}] ", tp.value().time_since_epoch().count());
+        XLOG::d.i("Id is [{}] ", AnswerIdToNumber(tp.value()));
         auto count_of_started = startProviders(tp.value(), ip_from);
 
         return getAnswer(count_of_started);
@@ -599,7 +636,10 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
     try {
         // start and stop for mailbox thread
-        mailbox.ConstructThread(SystemMailboxCallback, 20, this);
+        mailbox.ConstructThread(SystemMailboxCallback, 20, this,
+                                cma::IsService()
+                                    ? wtools::SecurityLevel::admin
+                                    : wtools::SecurityLevel::standard);
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
         // preparation if any

@@ -1,4 +1,4 @@
-# Windows Modules to deploy wint Windows Agent 1.7 and later
+# Windows Modules to deploy wint Windows Agent 2.0 and later
 
 ## Python 3.8
 
@@ -46,10 +46,12 @@ make
 7. Save whole folder to the *to_save*
 8. Uninstall python from *to_install*
 9. copy ~check_mk/virtual-envs/Windows/3.8/Pipfile~ in *to_save*
-10. Build virtual environemtn *to_save* and copy correct *pyvenv.cfg* into *tO-save/.venv*
-11. Clean virtual environemtn *to_save*
-12. Zip *tmp/to_save* into *tmp/python-3.8.zip*
-13. Copy to *artefacts*
+10. Build virtual environemtn *to_save* 
+11. Copy correct *pyvenv.cfg* into *tO-save/.venv*
+12. Copy runtime from runtime to DLL
+13. Clean virtual environemtn *to_save*
+14. Compress *tmp/to_save* into *tmp/python-3.8.zip*. Attention! Compression is done uisng cab format
+15. Copy zip to *artefacts*
 
 
 

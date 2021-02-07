@@ -27,7 +27,7 @@ from cmk.base.check_utils import Service
 
 # TODO: This misses a lot of cases
 # - different get_check_table arguments
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize(
     "hostname,expected_result",
     [
@@ -185,7 +185,7 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
     assert check_table.get_check_table(hostname) == expected_result
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("hostname, expected_result", [
     ("mgmt-board-ipmi", [(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X")]),
     ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),
@@ -230,7 +230,7 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
 
 
 # verify static check outcome, including timespecific params
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize(
     "hostname,expected_result",
     [
@@ -333,82 +333,6 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
     monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: static_checks.get(h, []))
 
     assert list(check_table.get_check_table(hostname).keys()) == expected_result
-
-
-@pytest.fixture(name="service_list")
-def _service_list():
-    return [
-        Service(
-            check_plugin_name=CheckPluginName("plugin_%s" % d),
-            item="item",
-            description="description %s" % d,
-            parameters={},
-        ) for d in "FDACEB"
-    ]
-
-
-def test_get_sorted_check_table_cmc(monkeypatch, service_list):
-    monkeypatch.setattr(config, "is_cmc", lambda: True)
-    monkeypatch.setattr(check_table, "get_check_table",
-                        lambda *a, **kw: {s.id(): s for s in service_list})
-
-    # all arguments are ignored in test
-    sorted_service_list = check_table.get_sorted_service_list(
-        "",
-        filter_mode=check_table.FilterMode.NONE,
-        skip_ignored=True,
-    )
-    assert sorted_service_list == sorted(service_list, key=lambda s: s.description)
-
-
-def test_get_sorted_check_table_no_cmc(monkeypatch, service_list):
-    monkeypatch.setattr(config, "is_cmc", lambda: False)
-    monkeypatch.setattr(check_table, "get_check_table",
-                        lambda *a, **kw: {s.id(): s for s in service_list})
-    monkeypatch.setattr(
-        config, "service_depends_on", lambda _hn, descr: {
-            "description A": ["description C"],
-            "description B": ["description D"],
-            "description D": ["description A", "description F"],
-        }.get(descr, []))
-
-    # all arguments are ignored in test
-    sorted_service_list = check_table.get_sorted_service_list(
-        "",
-        filter_mode=check_table.FilterMode.NONE,
-        skip_ignored=True,
-    )
-    assert [s.description for s in sorted_service_list] == [
-        "description C",  #
-        "description E",  # no deps, alphabetical order
-        "description F",  #
-        "description A",
-        "description D",
-        "description B",
-    ]
-
-
-def test_get_sorted_check_table_cyclic(monkeypatch, service_list):
-    monkeypatch.setattr(config, "is_cmc", lambda: False)
-    monkeypatch.setattr(check_table, "get_check_table",
-                        lambda *a, **kw: {s.id(): s for s in service_list})
-    monkeypatch.setattr(
-        config, "service_depends_on", lambda _hn, descr: {
-            "description A": ["description B"],
-            "description B": ["description D"],
-            "description D": ["description A"],
-        }.get(descr, []))
-
-    with pytest.raises(MKGeneralException,
-                       match=re.escape(
-                           "Cyclic service dependency of host MyHost. Problematic are:"
-                           " 'description A' (plugin_A / item), 'description B' (plugin_B / item),"
-                           " 'description D' (plugin_D / item)")):
-        _ = check_table.get_sorted_service_list(
-            "MyHost",
-            filter_mode=check_table.FilterMode.NONE,
-            skip_ignored=True,
-        )
 
 
 @pytest.mark.parametrize("check_group_parameters", [

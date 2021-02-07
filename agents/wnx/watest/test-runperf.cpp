@@ -23,18 +23,18 @@
 #include "providers/perf_counters_cl.h"
 #include "read_file.h"
 #include "service_processor.h"
+#include "test_tools.h"
 #include "tools/_raii.h"
 
 constexpr const wchar_t* kUniqueTestId = L"0345246";
 struct TestStorage {
-public:
     std::vector<uint8_t> buffer_;
     bool delivered_;
     uint64_t answer_id_;
     std::string peer_name_;
 };
 
-static TestStorage S_Storage;
+static TestStorage g_mailslot_storage;
 
 // testing callback
 bool MailboxCallbackPerfTest(const cma::MailSlot* Slot, const void* Data,
@@ -69,10 +69,10 @@ bool MailboxCallbackPerfTest(const cma::MailSlot* Slot, const void* Data,
                 auto data_source = static_cast<const uint8_t*>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);
-                S_Storage.buffer_ = vectorized_data;
-                S_Storage.answer_id_ = dt->answerId();
-                S_Storage.peer_name_ = dt->providerId();
-                S_Storage.delivered_ = true;
+                g_mailslot_storage.buffer_ = vectorized_data;
+                g_mailslot_storage.answer_id_ = dt->answerId();
+                g_mailslot_storage.peer_name_ = dt->providerId();
+                g_mailslot_storage.delivered_ = true;
                 break;
             }
 
@@ -83,21 +83,23 @@ bool MailboxCallbackPerfTest(const cma::MailSlot* Slot, const void* Data,
     return true;
 }
 
-namespace cma::provider {  // to become friendly for wtools classes
+namespace cma::provider {
+
 TEST(SectionPerf, Runner) {
     //
     cma::MailSlot mailbox("WinAgentPerfTest", 0);
 
     using namespace cma::carrier;
     using namespace cma::exe;
-    using namespace std;
+    using namespace std::chrono_literals;
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
-    mailbox.ConstructThread(MailboxCallbackPerfTest, 20, &S_Storage);
+    mailbox.ConstructThread(MailboxCallbackPerfTest, 20, &g_mailslot_storage,
+                            wtools::SecurityLevel::standard);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
     // prepare parameters
-    wstring port_param(internal_port.begin(), internal_port.end());
+    std::wstring port_param(internal_port.begin(), internal_port.end());
 
     std::vector<std::wstring_view> counters = {
         L"234:phydisk",                     // 0
@@ -123,18 +125,13 @@ TEST(SectionPerf, Runner) {
         EXPECT_NE(accu.find("winperf_ts_sessions"), std::string::npos);
     }
 
-    auto ret = RunPerf(prefix, L"12345", port_param, 20, counters);
+    auto ret = RunPerf(prefix, port_param, L"12345", 20, counters);
     ASSERT_EQ(ret, 0);
-    for (int i = 0; i < 20; i++) {
-        xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
-        if (S_Storage.delivered_) break;
-        cma::tools::sleep(200);
-    }
+    ASSERT_TRUE(tst::WaitForSuccess(
+        4s, []() { return g_mailslot_storage.delivered_; }));
 
-    xlog::sendStringToStdio("\n", xlog::internal::Colors::yellow);
-
-    auto data = S_Storage.buffer_.data();
-    auto data_end = data + S_Storage.buffer_.size();
+    auto data = g_mailslot_storage.buffer_.data();
+    auto data_end = data + g_mailslot_storage.buffer_.size();
     accu = std::string(data, data_end);
     {
         ASSERT_TRUE(accu.size() > 0);

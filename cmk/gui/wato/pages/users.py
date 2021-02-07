@@ -590,8 +590,8 @@ class ModeEditUser(WatoMode):
     def _page_menu_entries_this_user(self) -> Iterator[PageMenuEntry]:
         if self._rbn_enabled and not self._is_new_user:
             yield PageMenuEntry(
-                title=_("Notifications"),
-                icon_name="notifications",
+                title=_("Notification rules"),
+                icon_name="topic_events",
                 item=make_simple_link(
                     watolib.folder_preserving_link([("mode", "user_notifications"),
                                                     ("user", self._user_id)])),
@@ -1119,10 +1119,8 @@ class ModeEditUser(WatoMode):
     def _pw_suffix(self) -> str:
         if self._is_new_user:
             return 'new'
-        # mypy complaines that None has no attribute "encode" and
-        # "bytes", expected "str"
         assert self._user_id is not None
-        return str(base64.b64encode(self._user_id.encode("utf-8")))
+        return base64.b64encode(self._user_id.encode("utf-8")).decode("ascii")
 
     def _is_locked(self, attr):
         """Returns true if an attribute is locked and should be read only. Is only

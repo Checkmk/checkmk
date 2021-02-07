@@ -32,7 +32,6 @@ pytestmark = pytest.mark.checks
         'accept-any-hostkey': False
     }, ["-u", "user", "address"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ibmsvc_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_ibmsvc')

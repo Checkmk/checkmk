@@ -77,6 +77,7 @@ class HostParameters(BaseSchema):
           '.../collection',
           method='get',
           tag_group='Monitoring',
+          blacklist_in=['swagger-ui'],
           query_params=[HostParameters],
           response_schema=response_schemas.DomainObjectCollection)
 def list_hosts(param):

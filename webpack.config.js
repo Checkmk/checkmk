@@ -4,20 +4,31 @@
 
 const path = require("path");
 const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
+const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require("webpack");
 
 module.exports = {
     mode: "production",
     devtool: "source-map",
+    optimization: {
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: {
+                    format: {
+                        comments: false,
+                    },
+                },
+                extractComments: false,
+            }),
+        ],
+    },
     entry: {
         main: "./web/htdocs/js/index.js",
         mobile: "./web/htdocs/js/mobile.js",
         side: "./web/htdocs/js/side_index.js",
-        themes: [
-            "./web/htdocs/themes/facelift/theme.scss",
-            "./web/htdocs/themes/facelift/cma_facelift.scss",
-            "./web/htdocs/themes/modern-dark/theme.scss",
-        ],
+        facelift: "./web/htdocs/themes/facelift/theme.scss",
+        modern_dark: "./web/htdocs/themes/modern-dark/theme.scss",
+        cma: "./web/htdocs/themes/facelift/cma_facelift.scss",
     },
     output: {
         path: path.resolve(__dirname, "web/htdocs/js"),
@@ -63,11 +74,13 @@ module.exports = {
                         options: {
                             url: false,
                             importLoaders: 2,
+                            esModule: false,
+                            sourceMap: false,
                         },
                     },
                     // 2. Some postprocessing of CSS definitions (see postcss.config.js)
                     // - add browser vendor prefixes https://github.com/postcss/autoprefixer
-                    // - minifies CSS with https://github.com/jakubpawlowicz/clean-css
+                    // - minifies CSS with https://github.com/cssnano/cssnano
                     {
                         loader: "postcss-loader",
                     },
@@ -75,7 +88,7 @@ module.exports = {
                     {
                         loader: "sass-loader",
                         options: {
-                            prependData:
+                            additionalData:
                                 "$ENTERPRISE: " +
                                 process.env.ENTERPRISE +
                                 ";\n" +
@@ -85,7 +98,8 @@ module.exports = {
                             sassOptions: {
                                 // Hand over build options from webpack to SASS
                                 includePaths: ["node_modules"],
-                                // See https://github.com/sass/node-sass/blob/master/README.md#options
+                                // dart-sass supports "expanded" and "compressed":
+                                // https://github.com/sass/dart-sass#javascript-api
                                 outputStyle: "expanded",
                                 precision: 10,
                             },

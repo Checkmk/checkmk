@@ -20,7 +20,6 @@ pytestmark = pytest.mark.checks
         "version": "v2"
     }), ["-H", "baz", "-b", "bar", "-p", 389, "-2"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_ldap_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_ldap")

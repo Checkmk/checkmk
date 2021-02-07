@@ -7,7 +7,7 @@
 from typing import Optional
 import logging
 
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPHostConfig, SNMPBackend
+from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPBackendEnum
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 try:
@@ -37,20 +37,20 @@ def get_force_stored_walks() -> bool:
 def backend(snmp_config: SNMPHostConfig,
             logger: logging.Logger,
             *,
-            use_cache: Optional[bool] = None) -> ABCSNMPBackend:
+            use_cache: Optional[bool] = None) -> SNMPBackend:
     if use_cache is None:
         use_cache = get_force_stored_walks()
 
     if use_cache or snmp_config.is_usewalk_host:
         return StoredWalkSNMPBackend(snmp_config, logger)
 
-    if inline and snmp_config.snmp_backend == SNMPBackend.inline:
+    if inline and snmp_config.snmp_backend == SNMPBackendEnum.INLINE:
         return inline.InlineSNMPBackend(snmp_config, logger)
 
-    if pysnmp_backend and snmp_config.snmp_backend == SNMPBackend.pysnmp:
+    if pysnmp_backend and snmp_config.snmp_backend == SNMPBackendEnum.PYSNMP:
         return pysnmp_backend.PySNMPBackend(snmp_config, logger)
 
-    if snmp_config.snmp_backend == SNMPBackend.classic:
+    if snmp_config.snmp_backend == SNMPBackendEnum.CLASSIC:
         return ClassicSNMPBackend(snmp_config, logger)
 
     raise NotImplementedError(f"Unknown SNMP backend: {snmp_config.snmp_backend}")

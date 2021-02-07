@@ -6,18 +6,20 @@
 
 import json
 import time
-from typing import List, Optional, Tuple, Dict, Any, Union, Set, Type
-from pathlib import Path
+from typing import List, Optional, Tuple, Dict, Any, Set, Type
 
 import livestatus
-import cmk.utils.store as store
+from cmk.gui.node_vis_lib import BILayoutManagement
+from cmk.gui.plugins.wato import bi_valuespecs
+from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
+from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledLeaf
 from cmk.utils.type_defs import HostName
 
 from cmk.gui import sites
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-import cmk.gui.watolib as watolib
 import cmk.gui.bi as bi
+
 import cmk.gui.config as config
 from cmk.gui.pages import (
     page_registry,
@@ -45,6 +47,8 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (make_display_options_dropdown, PageMenu, PageMenuEntry,
                                PageMenuSidePopup, PageMenuTopic)
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.utils.bi.bi_computer import BIAggregationFilter
+from cmk.utils.bi.bi_lib import NodeResultBundle
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]
@@ -262,52 +266,53 @@ class AjaxFetchAggregationData(AjaxPage):
         if forced_layout_id not in BILayoutManagement.get_all_bi_template_layouts():
             forced_layout_id = None
 
-        state_data = bi.api_get_aggregation_state(filter_names=filter_names)
+        bi_aggregation_filter = BIAggregationFilter([], [], [], filter_names, [], [])
+        results = bi.get_cached_bi_manager().computer.compute_result_for_filter(
+            bi_aggregation_filter)
 
         aggregation_info: Dict[str, Any] = {"aggregations": {}}
 
         aggregation_layouts = BILayoutManagement.get_all_bi_aggregation_layouts()
 
-        for row in state_data["rows"]:
-            row = row["tree"]
-            aggr_name = row["aggr_name"]
-            if filter_names and aggr_name not in filter_names:
-                continue
-            visual_mapper = NodeVisualizationBIDataMapper()
-            aggr_treestate = row["aggr_treestate"]
-            hierarchy = visual_mapper.consume(aggr_treestate)
+        for bi_compiled_aggregation, node_result_bundles in results:
+            for node_result_bundle in node_result_bundles:
+                branch = node_result_bundle.instance
+                aggr_name = branch.properties.title
+                visual_mapper = NodeVisualizationBIDataMapper(
+                    is_single_host_aggregation=len(branch.get_required_hosts()) == 1)
+                hierarchy = visual_mapper.consume(node_result_bundle)
 
-            data: Dict[str, Any] = {}
-            data["hierarchy"] = hierarchy
-            data["aggr_type"] = row["aggr_tree"]["aggr_type"]
-            data["groups"] = row["aggr_group"]
-            data["data_timestamp"] = int(time.time())
+                data: Dict[str, Any] = {}
+                data["hierarchy"] = hierarchy
+                data["groups"] = bi_compiled_aggregation.groups.names
+                data["data_timestamp"] = int(time.time())
 
-            aggr_settings = row["aggr_tree"]["node_visualization"]
-            layout: Dict[str, Any] = {"config": {}}
-            if forced_layout_id:
-                layout["enforced_id"] = aggr_name
-                layout["origin_type"] = "globally_enforced"
-                layout["origin_info"] = _("Globally enforced")
-                layout["use_layout"] = BILayoutManagement.load_bi_template_layout(forced_layout_id)
-            else:
-                if aggr_name in aggregation_layouts:
-                    layout["origin_type"] = "explicit"
-                    layout["origin_info"] = _("Explicit set")
-                    layout["explicit_id"] = aggr_name
-                    layout["config"] = aggregation_layouts[aggr_name]
-                    layout["config"]["ignore_rule_styles"] = True
+                aggr_settings = bi_compiled_aggregation.aggregation_visualization
+                layout: Dict[str, Any] = {"config": {}}
+                if forced_layout_id:
+                    layout["enforced_id"] = aggr_name
+                    layout["origin_type"] = "globally_enforced"
+                    layout["origin_info"] = _("Globally enforced")
+                    layout["use_layout"] = BILayoutManagement.load_bi_template_layout(
+                        forced_layout_id)
                 else:
-                    layout.update(self._get_template_based_layout_settings(aggr_settings))
+                    if aggr_name in aggregation_layouts:
+                        layout["origin_type"] = "explicit"
+                        layout["origin_info"] = _("Explicit set")
+                        layout["explicit_id"] = aggr_name
+                        layout["config"] = aggregation_layouts[aggr_name]
+                        layout["config"]["ignore_rule_styles"] = True
+                    else:
+                        layout.update(self._get_template_based_layout_settings(aggr_settings))
 
-            if "ignore_rule_styles" not in layout["config"]:
-                layout["config"]["ignore_rule_styles"] = aggr_settings.get(
-                    "ignore_rule_styles", False)
-            if "line_config" not in layout["config"]:
-                layout["config"]["line_config"] = self._get_line_style_config(aggr_settings)
+                if "ignore_rule_styles" not in layout["config"]:
+                    layout["config"]["ignore_rule_styles"] = aggr_settings.get(
+                        "ignore_rule_styles", False)
+                if "line_config" not in layout["config"]:
+                    layout["config"]["line_config"] = self._get_line_style_config(aggr_settings)
 
-            data["layout"] = layout
-            aggregation_info["aggregations"][row["aggr_name"]] = data
+                data["layout"] = layout
+                aggregation_info["aggregations"][aggr_name] = data
 
         html.set_output_format("json")
         return aggregation_info
@@ -362,88 +367,61 @@ BILeafTreeState = Tuple[Dict[str, Any], Any, Dict[str, Any]]
 
 # Creates are hierarchical dictionary which can be read by the NodeVisualization framework
 class NodeVisualizationBIDataMapper:
-    def consume(self,
-                treestate: Union[BIAggrTreeState, BILeafTreeState],
-                depth: int = 1) -> Dict[str, Any]:
-        state_info, node, subtrees = self._normalize_treestate(treestate)
-        if subtrees:
-            node_data = self._get_node_data_of_bi_aggregator(node)
+    def __init__(self, is_single_host_aggregation=False):
+        super().__init__()
+        self._is_single_host_aggregation = is_single_host_aggregation
+
+    def consume(self, node_result_bundle: NodeResultBundle, depth: int = 1) -> Dict[str, Any]:
+        instance = node_result_bundle.instance
+        if isinstance(instance, BICompiledRule):
+            node_data = self._get_node_data_for_rule(instance)
         else:
-            node_data = self._get_node_data_of_bi_leaf(node)
+            node_data = self._get_node_data_for_leaf(instance)
 
-        node_data["icon"] = node.get("icon")
-        node_data["state"] = state_info["state"]
-        node_data["name"] = node.get("title")
+        actual_result = node_result_bundle.actual_result
+        if isinstance(instance, BICompiledRule) and instance.properties.icon:
+            node_data["icon"] = html.detect_icon_path(instance.properties.icon, prefix="icon")
 
-        # TODO: BI cleanup: in_downtime has two states 0, False
-        node_data["in_downtime"] = not state_info.get("in_downtime", False) in [0, False]
-        node_data["acknowledged"] = state_info.get("acknowledged", False)
+        node_data["state"] = actual_result.state
+
+        node_data["in_downtime"] = actual_result.downtime_state > 0
+        node_data["acknowledged"] = actual_result.acknowledged
         node_data["children"] = []
-        for subtree in subtrees:
-            node_data["children"].append(self.consume(subtree, depth=depth + 1))
+        for nested_bundle in node_result_bundle.nested_results:
+            node_data["children"].append(self.consume(nested_bundle, depth=depth + 1))
         return node_data
 
-    def _normalize_treestate(self, treestate):
-        if isinstance(treestate, tuple):
-            if len(treestate) == 4:
-                return treestate[0], treestate[2], treestate[3]
-            if len(treestate) == 3:
-                return treestate[0], treestate[2], []
-            raise ValueError("Invalid treestate tuple length")
-        raise ValueError("Invalid treestate")
+    def _get_node_data_for_rule(self, bi_compiled_rule: BICompiledRule) -> Dict[str, Any]:
+        node_data: Dict[str, Any] = {
+            "node_type": "bi_aggregator",
+            "name": bi_compiled_rule.properties.title,
+        }
 
-    def _get_node_data_of_bi_aggregator(self, node: Dict[str, Any]) -> Dict[str, Any]:
-        bi_packs = bi.get_cached_bi_packs()
-        node_data: Dict[str, Any] = {}
-        node_data["node_type"] = "bi_aggregator"
-        bi_rule = bi_packs.get_rule_mandatory(node["rule_id"])
+        aggregation_function = bi_compiled_rule.aggregation_function
+        function_data = BIAggregationFunctionSchema().dump(aggregation_function)
+        aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
+            aggregation_function.type()]
 
         node_data["rule_id"] = {
-            "pack": bi_rule.pack_id,
-            "rule": bi_rule.id,
-            "function":
-                node["rule_id"][2]  # TODO: fix visualization of function
+            "pack": bi_compiled_rule.pack_id,
+            "rule": bi_compiled_rule.id,
+            "aggregation_function_description": str(aggr_func_gui(function_data))
         }
-        if "rule_layout_style" in node:
-            node_data["rule_layout_style"] = node["rule_layout_style"]
-        if "aggregation_id" in node:
-            node_data["aggregation_id"] = node["aggregation_id"]
+        node_data["rule_layout_style"] = bi_compiled_rule.node_visualization
         return node_data
 
-    def _get_node_data_of_bi_leaf(self, node: Dict[str, Any]) -> Dict[str, Any]:
-        node_data: Dict[str, Any] = {}
-        node_data["node_type"] = "bi_leaf"
-        node_data["hostname"] = node.get("host", ["", ""])[1]
-        if "service" in node:
-            node_data["service"] = node["service"]
+    def _get_node_data_for_leaf(self, bi_compiled_leaf: BICompiledLeaf) -> Dict[str, Any]:
+        node_data: Dict[str, Any] = {"node_type": "bi_leaf", "hostname": bi_compiled_leaf.host_name}
+        if not bi_compiled_leaf.service_description:
+            node_data["name"] = bi_compiled_leaf.host_name
+        else:
+            node_data["service"] = bi_compiled_leaf.service_description
+            if self._is_single_host_aggregation:
+                node_data["name"] = bi_compiled_leaf.service_description
+            else:
+                node_data["name"] = " ".join(
+                    [bi_compiled_leaf.host_name, bi_compiled_leaf.service_description])
         return node_data
-
-
-class BILayoutManagement:
-    _config_file = Path(watolib.multisite_dir()) / "bi_layouts.mk"
-
-    @classmethod
-    def save_layouts(cls) -> None:
-        store.save_to_mk_file(str(BILayoutManagement._config_file),
-                              "bi_layouts",
-                              config.bi_layouts,
-                              pprint_value=True)
-
-    @classmethod
-    def load_bi_template_layout(cls, template_id: Optional[str]) -> Any:
-        return config.bi_layouts["templates"].get(template_id)
-
-    @classmethod
-    def load_bi_aggregation_layout(cls, aggregation_name: Optional[str]) -> Any:
-        return config.bi_layouts["aggregations"].get(aggregation_name)
-
-    @classmethod
-    def get_all_bi_template_layouts(cls) -> Any:
-        return config.bi_layouts["templates"]
-
-    @classmethod
-    def get_all_bi_aggregation_layouts(cls) -> Any:
-        return config.bi_layouts["aggregations"]
 
 
 # Explicit Aggregations
@@ -522,16 +500,14 @@ class AjaxFetchTopology(AjaxPage):
 
         topology = self._get_topology_instance(topology_config)
         meshes = topology.compute()
-
-        topology_info: Dict[str, Any] = {"topology_meshes": {}}
-        topology_info = {
+        topology_info: Dict[str, Any] = {
+            "topology_meshes": {},
             "topology_chunks": {},
+            "headline": topology.title(),
+            "errors": topology.errors(),
+            "max_nodes": topology.max_nodes,
+            "mesh_depth": topology.mesh_depth,
         }
-
-        topology_info["headline"] = topology.title()
-        topology_info["errors"] = topology.errors()
-        topology_info["max_nodes"] = topology.max_nodes
-        topology_info["mesh_depth"] = topology.mesh_depth
 
         for mesh in meshes:
             if not mesh:

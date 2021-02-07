@@ -134,8 +134,9 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
         raise ValueError("[%s]: invalid service description: %r" % (name, service_descr))
 
     # 1) ensure we have the correct signature
+    requires_item = "%s" in service_descr
     sig_function = _create_signature_check_function(
-        requires_item="%s" in service_descr,
+        requires_item=requires_item,
         original_function=check_info_dict["check_function"],
     )
 
@@ -154,15 +155,14 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
 
         item_state.reset_wrapped_counters()  # not supported by the new API!
 
-        try:
-            subresults = sig_function(**kwargs)
-        except TypeError:
+        if not requires_item:
             # this handles a very weird case, in which check plugins do not have an '%s'
             # in their description (^= no item) but do in fact discover an empty string.
             # We cannot just append "%s" to the service description, because in that case
             # our tests complain about the ruleset not being for plugins with item :-(
-            # Just retry without item:
-            subresults = sig_function(**{k: v for k, v in kwargs.items() if k != "item"})
+            kwargs = {k: v for k, v in kwargs.items() if k != "item"}
+
+        subresults = sig_function(**kwargs)
 
         if subresults is None:
             return

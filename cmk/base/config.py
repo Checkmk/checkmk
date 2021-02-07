@@ -99,7 +99,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
-    SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackend)
+    SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackendEnum)
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -827,8 +827,8 @@ def _filter_active_hosts(config_cache: 'ConfigCache',
 
     return [
         hostname for hostname in hostlist
-        if (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts)) and
-        _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
+        if _host_is_member_of_site(config_cache, hostname, distributed_wato_site) and
+        (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts))
     ]
 
 
@@ -1140,6 +1140,33 @@ def _checktype_ignored_for_host(
         if check_plugin_name_str in e:
             return True
     return False
+
+
+def resolve_service_dependencies(
+    *,
+    host_name: HostName,
+    services: Sequence[cmk.base.check_utils.Service],
+) -> Sequence[cmk.base.check_utils.Service]:
+    if is_cmc():
+        return services
+
+    unresolved = [(s, set(service_depends_on(host_name, s.description))) for s in services]
+
+    resolved: List[cmk.base.check_utils.Service] = []
+    while unresolved:
+        resolved_descriptions = {service.description for service in resolved}
+        newly_resolved = [
+            service for service, dependencies in unresolved if dependencies <= resolved_descriptions
+        ]
+        if not newly_resolved:
+            problems = ', '.join(
+                f"{s.description!r} ({s.check_plugin_name} / {s.item})" for s, _ in unresolved)
+            raise MKGeneralException(f"Cyclic service dependency of host {host_name}: {problems}")
+
+        unresolved = [(s, d) for s, d in unresolved if s not in newly_resolved]
+        resolved.extend(newly_resolved)
+
+    return resolved
 
 
 # TODO: Make this use the generic "rulesets" functions
@@ -2421,15 +2448,18 @@ class HostConfig:
         """Returns the parents of a host configured via ruleset "parents"
 
         Use only those parents which are defined and active in all_hosts"""
-        used_parents = []
+        parent_candidates = set()
+
+        # Parent by explicit matching
+        explicit_parents = self._explicit_host_attributes.get("parents")
+        if explicit_parents:
+            parent_candidates.update(explicit_parents.split(","))
 
         # Respect the ancient parents ruleset. This can not be configured via WATO and should be removed one day
         for parent_names in self._config_cache.host_extra_conf(self.hostname, parents):
-            for parent_name in parent_names.split(","):
-                if parent_name in self._config_cache.all_active_realhosts():
-                    used_parents.append(parent_name)
+            parent_candidates.update(parent_names.split(","))
 
-        return used_parents
+        return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
 
     def snmp_config(self, ipaddress: HostAddress) -> SNMPHostConfig:
         return SNMPHostConfig(
@@ -2506,7 +2536,7 @@ class HostConfig:
             return None
         return entries[0]
 
-    def _get_snmp_backend(self) -> SNMPBackend:
+    def _get_snmp_backend(self) -> SNMPBackendEnum:
         has_netsnmp = "netsnmp" in sys.modules
         has_pysnmp = "pysnmp" in sys.modules
         with_inline_snmp = has_netsnmp and not cmk_version.is_raw_edition()
@@ -2518,18 +2548,18 @@ class HostConfig:
             # If more backends are configured for this host take the first one
             host_backend = host_backend_config[0]
             if with_pysnmp and host_backend == "pysnmp":
-                return SNMPBackend.pysnmp
+                return SNMPBackendEnum.PYSNMP
             if with_inline_snmp and host_backend == "inline":
-                return SNMPBackend.inline
+                return SNMPBackendEnum.INLINE
             if host_backend == "classic":
-                return SNMPBackend.classic
+                return SNMPBackendEnum.CLASSIC
             raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend)
 
         if with_pysnmp and snmp_backend_default == "pysnmp":
-            return SNMPBackend.pysnmp
+            return SNMPBackendEnum.PYSNMP
         if with_inline_snmp and snmp_backend_default == "inline":
-            return SNMPBackend.inline
-        return SNMPBackend.classic
+            return SNMPBackendEnum.INLINE
+        return SNMPBackendEnum.CLASSIC
 
     def _is_cluster(self) -> bool:
         """Checks whether or not the given host is a cluster host
@@ -2717,14 +2747,14 @@ class HostConfig:
                 values = [attrs[key]]
             else:
                 values = self._config_cache.host_extra_conf(self.hostname, ruleset)
+                if not values:
+                    continue
 
-            if values:
-                if key[0] == "_":
-                    key = key.upper()
+            if values[0] is not None:
+                attrs[key] = values[0]
 
-                if values[0] is not None:
-                    attrs[key] = values[0]
-
+        # Convert _keys to uppercase. Affects explicit and rule based keys
+        attrs = {key.upper() if key[0] == "_" else key: value for key, value in attrs.items()}
         return attrs
 
     @property

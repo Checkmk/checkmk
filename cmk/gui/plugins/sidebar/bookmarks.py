@@ -251,12 +251,19 @@ class Bookmarks(SidebarSnapin):
 
     def show(self):
         for topic, bookmarks in self._get_bookmarks_by_topic():
-            html.begin_foldable_container("bookmarks", topic, False, topic)
+            html.begin_foldable_container(
+                treename="bookmarks",
+                id_=topic,
+                isopen=False,
+                title=topic,
+                indent=False,
+                icon="foldable_sidebar",
+            )
 
             for bookmark in bookmarks:
                 icon = bookmark["icon"]
                 if not icon:
-                    icon = "kdict"
+                    icon = "bookmark_list"
 
                 iconlink(bookmark["title"], bookmark["url"], icon)
 

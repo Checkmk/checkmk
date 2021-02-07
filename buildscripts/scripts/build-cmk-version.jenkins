@@ -50,7 +50,8 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def BRANCH_VERSION
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
-def UPLOAD_DEST = 'deploy@customer.checkmk.com:/var/downloads/checkmk/'
+def UPLOAD_URL = 'deploy@archive.tribe29.com'
+def UPLOAD_DEST = "${UPLOAD_URL}:/var/downloads/checkmk/"
 
 def ARCHIVE_DIR = ''
 if (shall_publish_package(scm, JOB_BASE_NAME)) {
@@ -90,6 +91,7 @@ node(NODE) {
                     windows = load 'buildscripts/scripts/lib/windows.groovy'
                     str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
                     notify = load 'buildscripts/scripts/lib/notify.groovy'
+                    upload_artifacts = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
                     withFolderProperties{
                         DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, DOCKER_TAG_DEFAULT)
                     }
@@ -158,7 +160,16 @@ node(NODE) {
 
             cleanup_source_package(WORKSPACE, FINAL_SOURCE_PACKAGE_PATH)
             test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, CMK_VERS)
-            upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+
+            upload_artifacts.upload(
+                NAME: "source",
+                FILE_PATH: FINAL_SOURCE_PACKAGE_PATH,
+                FILE_NAME: SOURCE_PACKAGE_NAME,
+                RELEASE_KEY_PATH: RELEASE_KEY_PATH,
+                CMK_VERS: CMK_VERS,
+                UPLOAD_DEST: UPLOAD_DEST,
+                SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
+            )
         }
     }
 
@@ -197,7 +208,16 @@ node(NODE) {
                             sign_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE)
                             test_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE, CMK_VERS)
                             copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
-                            upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+
+                            upload_artifacts.upload(
+                                NAME: DISTRO,
+                                FILE_PATH: FINAL_PACKAGE_PATH,
+                                FILE_NAME: PACKAGE_NAME,
+                                RELEASE_KEY_PATH: RELEASE_KEY_PATH,
+                                CMK_VERS: CMK_VERS,
+                                UPLOAD_DEST: UPLOAD_DEST,
+                                SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
+                            )
                         }
                     }
                 }
@@ -212,7 +232,13 @@ node(NODE) {
                 create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
             }
         }
-        if (!shall_publish_package(scm, JOB_BASE_NAME)) {
+        if (shall_publish_package(scm, JOB_BASE_NAME)) {
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
+                    deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH)
+                }
+            }
+        } else {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(BUILD_IMAGE_NAME).inside(DOCKER_BASE_ARGS + " -v /tmp:/tmp") {
                     sh("rm -rf ${ARCHIVE_DIR}")
@@ -438,34 +464,27 @@ def clean_venv() {
     sh('rm -rf git/.venv')
 }
 
-def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
-    stage(NAME + ' upload package') {
-        def FILE_BASE = sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
-        def ARCHIVE_BASE = sh(script: "dirname ${FILE_BASE}", returnStdout: true).toString().trim()
-
-        // Only 'official' builds should end up on the Website
-        if (shall_publish_package(scm, JOB_BASE_NAME)) {
-            sh """
-                rsync -av --relative \
-                    --exclude '*dbgsym*.deb' \
-                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022" \
-                    ${ARCHIVE_BASE}/./${CMK_VERS}/${FILE_NAME} \
-                    ${UPLOAD_DEST}
-            """
-        } else {
-            dir(FILE_BASE) {
-                // Multiple subsequent calls overwrite the previous artifacts. For this reason
-                // we always archive all available files
-                archiveArtifacts("*")
-            }
-        }
-    }
-}
-
 def create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
     stage("Create and upload file hashes") {
         def HASHES_PATH = ARCHIVE_DIR + "/HASHES"
         sh("cd ${ARCHIVE_DIR} ; sha256sum -- *.{tar.gz,rpm,deb,cma,cmk} | sort -k 2 > ${HASHES_PATH}")
-        upload_package(HASHES_PATH, "HASHES", "hashes", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+        upload_artifacts.upload(
+            NAME: "hashes",
+            FILE_PATH: HASHES_PATH,
+            FILE_NAME: "HASHES",
+            RELEASE_KEY_PATH: RELEASE_KEY_PATH,
+            CMK_VERS: CMK_VERS,
+            UPLOAD_DEST: UPLOAD_DEST,
+            SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
+        )
+    }
+}
+
+def deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH) {
+    stage("Deploy to Website") {
+        sh """
+            ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022 ${UPLOAD_URL} \
+                ln -s /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
+        """
     }
 }

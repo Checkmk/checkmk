@@ -93,8 +93,11 @@ div.cmk_figure {
     position: relative;
     left: 50%;
     width: 48px;
-    height: 48px;
+    height: 100%;
     background-image: url("images/load_graph.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
   }
 
   div.tooltip {
@@ -256,10 +259,12 @@ div.cmk_figure {
   }
 
   g.title rect {
-    fill: $dashlet-inner-bg-color;
+    font-size: $font-size-default;
+    fill: $dashlet-body-bg-color;
 
     &.highlighted {
       fill: $headline-color;
+      stroke: $color-table-border;
     }
   }
 }

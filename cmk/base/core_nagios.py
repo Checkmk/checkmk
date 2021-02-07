@@ -21,6 +21,7 @@ import cmk.utils.store as store
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
@@ -215,10 +216,19 @@ def _create_nagios_host_spec(cfg: NagiosConfig, config_cache: ConfigCache, hostn
 
     def host_check_via_service_status(service: ServiceName) -> CoreCommand:
         command = "check-mk-host-custom-%d" % (len(cfg.hostcheck_commands_to_define) + 1)
-        cfg.hostcheck_commands_to_define.append(
-            (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
-             (host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname),
-              host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
+        service_with_hostname = replace_macros_in_str(
+            service,
+            {'$HOSTNAME$': host_config.hostname},
+        )
+        cfg.hostcheck_commands_to_define.append((
+            command,
+            'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' % (
+                host_config.hostname,
+                service_with_hostname,
+                host_config.hostname,
+                service_with_hostname,
+            ),
+        ),)
         return command
 
     def host_check_via_custom_check(command_name: CoreCommandName,
@@ -1165,11 +1175,12 @@ def _get_needed_plugin_names(
     # when determining the needed *section* plugins.
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
-    needed_agent_based_check_plugin_names = check_table.get_needed_check_names(
+    needed_agent_based_check_plugin_names = check_table.get_check_table(
         host_config.hostname,
         filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
-    )
+    ).needed_check_names()
+
     legacy_names = (_resolve_legacy_plugin_name(pn) for pn in needed_agent_based_check_plugin_names)
     needed_legacy_check_plugin_names.update(ln for ln in legacy_names if ln is not None)
 
@@ -1182,7 +1193,8 @@ def _get_needed_plugin_names(
         if nodes is None:
             raise MKGeneralException("Invalid cluster configuration")
         for node in nodes:
-            for check_plugin_name in check_table.get_needed_check_names(node, skip_ignored=False):
+            node_table = check_table.get_check_table(node, skip_ignored=False)
+            for check_plugin_name in node_table.needed_check_names():
                 opt_legacy_name = _resolve_legacy_plugin_name(check_plugin_name)
                 if opt_legacy_name is not None:
                     needed_legacy_check_plugin_names.add(opt_legacy_name)

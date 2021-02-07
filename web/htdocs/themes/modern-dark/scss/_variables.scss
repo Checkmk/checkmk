@@ -128,7 +128,7 @@ $color-table-border-dark-2: rgb(49, 54, 56); // dark grey
 // -----------------------------------------------------------------------------
 // Sidebar
 // -----------------------------------------------------------------------------
-$theme-snapin-width: 262px;
+$theme-snapin-width: 240px;
 
 // -----------------------------------------------------------------------------
 // Nuances (Colors only used once)
@@ -188,12 +188,15 @@ $checkbox-shadow: $grey-3;
 $checkbox-checked-color: $primary-font-color;
 $checkbox-checked-bg-color: $grey-3;
 
-$toggle-switch-on-bg-color: rgb(20, 118, 20);
-$toggle-switch-on-border: 1px solid rgb(40, 60, 40);
-$toggle-switch-off-bg-color: rgb(164, 0, 0);
-$toggle-switch-off-border: 1px solid rgb(70, 40, 40);
-$toggle-switch-font-color: $font-color;
-$toggle-switch-height: 15px;
+$toggle-switch-on-bg-color: rgb(19, 211, 137);
+$toggle-switch-on-border: null;
+$toggle-switch-off-bg-color: rgb(38, 47, 56);
+$toggle-switch-off-bg-color-sidebar: $toggle-switch-off-bg-color;
+$toggle-switch-off-border: null;
+$toggle-switch-font-color-on: $black;
+$toggle-switch-font-color-off: rgba($white, 0.4);
+$toggle-switch-height: 14px;
+$toggle-switch-width: 30px;
 $toggle-switch-font-weight: 400;
 
 $toggle-button-off-border: 1px solid $grey-7;
@@ -268,7 +271,8 @@ $wato-a-border: 1px solid rgb(33, 33, 33);
 
 $wato-subtitle-color: $grey-2;
 
-$footnote-link-color: $font-color;
+$footnote-link-color: rgba($white, 0.4);
+$footnote-bg-color: rgb(38, 47, 56);
 
 $table-data-single-padding: 2px 0;
 $td-single-left-padding: 2px 36px 2px 16px;
@@ -436,6 +440,7 @@ $popup-filters-border-radius: 2px;
 $popup-trigger-active-bg-color: $base-color;
 $tactical-overview-th-font-color: $font-color;
 $tactical-overview-td-bg-color: $button-bg-color-default;
+$server-time-div-bg-color: $button-bg-color-default;
 $snapin-heading-border-color: rgba(255, 255, 255, 0.2);
 $snapin-description-font-color: $color-nuance-8;
 $simplebar-scrollbar-color: $inpage-highlight-color;
@@ -452,7 +457,18 @@ $inpage-close-button-filter: none;
 $sidebar-input-field-bg-color: $bg-color;
 $dashlet-anchor-size: 26px;
 $dashlet-anchor-on-size: 40px;
+$dashlet-anchor-size-slim: 20px;
 $dashlet-editor-free: rgb(78, 93, 105);
 $dashlet-editor-icon-size: 22px;
 $dark-image-invert: invert(100%);
 $ntop-protocol-painter-padding-top: 4px;
+$dashlet-resize-handle-width: 32px;
+$dashlet-resize-handle-height: 16px;
+$dashlet-resize-handle-width-slim: 12px;
+$dashlet-resize-handle-height-slim: 6px;
+$hexagon-critical-color: rgb(255, 0, 0);
+$hexagon-unknown-color: rgb(255, 136, 0);
+$hexagon-warning-color: rgb(255, 255, 0);
+$hexagon-downtime-color: rgb(0, 170, 255);
+$hexagon-host-down-color: rgb(0, 68, 136);
+$hexagon-ok-color: rgb(38, 47, 56);

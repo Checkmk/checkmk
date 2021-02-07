@@ -131,16 +131,28 @@ class GaugeFigure extends cmk_figures.FigureBase {
         if (Array.isArray(display_range) && display_range[0] === "fixed")
             domain = display_range[1][1];
 
-        const levels = cmk_figures.make_levels(domain, plot.metrics);
-        const formatter = cmk_figures.get_function(plot.js_render);
+        domain.sort(); // Safeguards against negative number ordering or bad order. Display and clamp need good order
+        const formatter = cmk_figures.plot_render_function(plot);
 
         this._render_gauge_range_labels(domain, formatter);
 
+        const last_value = data[data.length - 1];
+        const value = cmk_figures.renderable_value(last_value, domain, plot);
+
+        cmk_figures.metric_value_component(
+            this.plot,
+            value,
+            {x: 0, y: -this._radius / 5},
+            {font_size: this._radius / 3.5, color: value.color}
+        );
+
+        if (domain[0] === domain[1]) return;
         const limit = (7 * Math.PI) / 12;
         const scale_x = d3.scaleLinear().domain(domain).range([-limit, limit]);
+        // Thresholds indicator stripe
         this.plot
             .selectAll("path.level")
-            .data(levels)
+            .data(cmk_figures.make_levels(domain, plot.metrics))
             .join(enter => enter.append("path").classed("level", true))
             .attr("fill", d => d.color)
             .attr("opacity", 0.9)
@@ -148,8 +160,8 @@ class GaugeFigure extends cmk_figures.FigureBase {
                 "d",
                 d3
                     .arc()
-                    .innerRadius(this._radius * 0.75)
-                    .outerRadius(this._radius * 0.76)
+                    .innerRadius(this._radius * 0.71)
+                    .outerRadius(this._radius * 0.73)
                     .startAngle(d => scale_x(d.from))
                     .endAngle(d => scale_x(d.to))
             )
@@ -157,24 +169,10 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .data(d => [d])
             .join("title")
             .text(d => d.from + " -> " + d.to);
-
-        const last_value = data[data.length - 1];
-        const clamp = value => Math.min(Math.max(value, domain[0]), domain[1]);
-        const color = levels.length
-            ? levels.find(element => clamp(last_value.value) <= element.to).color
-            : "#3CC2FF";
-
-        this._render_text(
-            {
-                formatted_value: formatter(last_value.value),
-                url: last_value.url,
-            },
-            color
-        );
         // gauge bar
         this.plot
             .selectAll("path.value")
-            .data([{value: clamp(last_value.value), color}])
+            .data([{value: cmk_figures.clamp(last_value.value, domain), color: value.color}])
             .join(enter => enter.append("path").classed("value", true))
             .attr("fill", d => d.color)
             .attr("opacity", 0.9)
@@ -182,17 +180,17 @@ class GaugeFigure extends cmk_figures.FigureBase {
                 "d",
                 d3
                     .arc()
-                    .innerRadius(this._radius * 0.77)
+                    .innerRadius(this._radius * 0.75)
                     .outerRadius(this._radius * 0.85)
                     .startAngle(d => -limit)
                     .endAngle(d => scale_x(d.value))
             );
 
-        if (data.lenght > 10) this._render_histogram(domain, data);
+        if (data.length > 10) this._render_histogram(domain, data);
     }
 
     _render_histogram(domain, data) {
-        let num_bins = 20;
+        let num_bins = 40;
         const x = d3.scaleLinear().domain([0, num_bins]).range(domain);
         const bins = d3
             .histogram()
@@ -201,19 +199,19 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .domain(x.range())(data);
 
         let record_count = data.length;
-        const innerRadius = this._radius * 0.85;
+        const innerRadius = this._radius * 0.87;
         const bin_scale = d3
             .scaleLinear()
             .domain([0, d3.max(bins, d => d.length)])
             .range([innerRadius, this._radius]);
         const limit = (7 * Math.PI) / 12;
         const angle_between_bins = (2 * limit) / bins.length;
+        const bin_spacing = angle_between_bins * 0.05;
         this.plot
             .selectAll("path.bin")
             .data(bins)
             .join(enter => enter.append("path").classed("bin", true))
             .attr("fill", "#0F62AF")
-            .attr("stroke", d => (d.length > 0 ? "black" : null))
             .attr(
                 "d",
                 d3
@@ -221,7 +219,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
                     .innerRadius(innerRadius)
                     .outerRadius(d => bin_scale(d.length) + (d.length > 0 ? 2 : 0))
                     .startAngle((d, idx) => -limit + idx * angle_between_bins)
-                    .endAngle((d, idx) => -limit + (idx + 1) * angle_between_bins)
+                    .endAngle((d, idx) => -limit + (idx + 1) * angle_between_bins - bin_spacing)
             )
             .selectAll("title")
             .data(d => [d])
@@ -234,15 +232,6 @@ class GaugeFigure extends cmk_figures.FigureBase {
                 title += " -> " + d.x1.toPrecision(3);
                 return title;
             });
-    }
-
-    _render_text(value, color) {
-        cmk_figures.metric_value_component(
-            this.plot,
-            cmk_figures.split_unit(value),
-            {x: 0, y: -this._radius / 5},
-            {font_size: this._radius / 3.5, color: color}
-        );
     }
 }
 

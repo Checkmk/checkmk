@@ -10,6 +10,7 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+using namespace std::chrono_literals;
 
 namespace cma::provider {
 class Empty : public Synchronous {
@@ -73,10 +74,11 @@ TEST(ServiceProcessorTest, Generate) {
 }
 
 TEST(ServiceProcessorTest, StartStopExe) {
-    using namespace cma::srv;
     using namespace cma::cfg;
-    using namespace std::chrono;
     int counter = 0;
+    tst::TempCfgFs temp_fs{tst::TempCfgFs::Mode::no_io};
+    ASSERT_TRUE(temp_fs.loadContent(tst::GetFabricYmlContent()));
+
     auto processor =
         new ServiceProcessor(100ms, [&counter](const void* Processor) {
             xlog::l("pip").print();
@@ -85,8 +87,9 @@ TEST(ServiceProcessorTest, StartStopExe) {
         });
     ON_OUT_OF_SCOPE(delete processor;);
 
-    cma::MailSlot mailbox(kServiceMailSlot, 0);
-    mailbox.ConstructThread(SystemMailboxCallback, 20, processor);
+    cma::MailSlot mailbox(kTestingMailSlot, 0);
+    mailbox.ConstructThread(SystemMailboxCallback, 20, processor,
+                            wtools::SecurityLevel::admin);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
     using namespace cma::carrier;
     processor->internal_port_ =

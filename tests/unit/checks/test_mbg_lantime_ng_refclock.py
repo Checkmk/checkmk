@@ -27,7 +27,6 @@ meinberg_lantime_6 = [[
         (meinberg_lantime_1, DiscoveryResult([])),  # GPS clocks are not covered here
         (meinberg_lantime_2, DiscoveryResult([('1', None)])),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_discovery_mbg_lantime_ng_refclock(info, expected):
     check = Check("mbg_lantime_ng_refclock")
     discovery = DiscoveryResult(check.run_discovery(info))
@@ -42,7 +41,6 @@ def test_discovery_mbg_lantime_ng_refclock(info, expected):
          BasicCheckResult(0, 'Correlation: 62%', [('correlation', 62.0)]),
      ])),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_mbg_lantime_ng_refclock(info, item, params, expected):
     check = Check("mbg_lantime_ng_refclock")
     result = CheckResult(check.run_check(item, params, info))
@@ -57,7 +55,6 @@ def test_check_mbg_lantime_ng_refclock(info, item, params, expected):
         (meinberg_lantime_5, DiscoveryResult([('1', 'mbg_lantime_refclock_default_levels')])),
         (meinberg_lantime_6, DiscoveryResult([('1', 'mbg_lantime_refclock_default_levels')])),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_discovery_mbg_lantime_ng_refclock_gps(info, expected):
     check = Check("mbg_lantime_ng_refclock.gps")
     discovery = DiscoveryResult(check.run_discovery(info))
@@ -103,7 +100,6 @@ def test_discovery_mbg_lantime_ng_refclock_gps(info, expected):
             ]),
         ),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_mbg_lantime_ng_refclock_gps(info, item, params, expected):
     check = Check("mbg_lantime_ng_refclock.gps")
     result = CheckResult(check.run_check(item, params, info))

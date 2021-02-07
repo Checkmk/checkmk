@@ -91,13 +91,11 @@ class HostMatrixVisualization(MatrixVisualization):
         # - Then get the full-digit width of the cell and summarize the rest
         #   to be substracted from the cell width
         # This is not a 100% solution but way better than having no links
-        cell_spacing = 1
+        cell_spacing = 4
         cell_size = int((width - cell_spacing * (n + 1)) / n)
         style = 'width:%spx' % width
 
-        html.open_table(class_=["content_center", "hostmatrix"],
-                        cellspacing="0",
-                        style=["border-collapse:collapse;", style])
+        html.open_table(class_=["content_center", "hostmatrix"], style=[style])
         col = 1
         row = 1
         for site, host, state, has_been_checked, worstsvc, downtimedepth in sorted(hosts):
@@ -123,7 +121,7 @@ class HostMatrixVisualization(MatrixVisualization):
                    title=host,
                    target="main",
                    style=["width:%spx;" % cell_size,
-                          "height:%spx;" % cell_size])
+                          "height:%spx;" % (2 * cell_size / 3)])
             html.close_td()
 
             if col == n or (row == rows and n == lastcols):

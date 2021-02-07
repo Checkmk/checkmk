@@ -289,6 +289,10 @@ export function get_url_param(name, url) {
 export function makeuri(addvars, url, filename) {
     url = typeof url === "undefined" ? window.location.href : url;
 
+    // First cleanup some trailing characters that would confuse the
+    // following logic
+    url = url.replace(/[#?]+$/g, "");
+
     var tmp = url.split("?");
     var base = typeof filename === "undefined" ? tmp[0] : filename;
     if (tmp.length > 1) {
@@ -374,6 +378,12 @@ export function reload_whole_page(url) {
     } else {
         window.top.location.reload();
     }
+}
+
+export function delete_user_notification(msg_id, btn) {
+    ajax.post_url("ajax_delete_user_notification.py", "id=" + msg_id);
+    var row = btn.parentNode.parentNode;
+    row.parentNode.removeChild(row);
 }
 
 //#.

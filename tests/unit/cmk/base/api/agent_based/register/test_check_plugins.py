@@ -180,3 +180,8 @@ def test_create_check_plugin():
     assert plugin.check_function.__name__ == MINIMAL_CREATION_KWARGS["check_function"].__name__
     assert plugin.check_default_parameters is None
     assert plugin.check_ruleset_name is None
+
+
+def test_module_attribute(fix_register):
+    local_check = fix_register.check_plugins[CheckPluginName("local")]
+    assert local_check.module == "local"

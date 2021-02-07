@@ -31,9 +31,7 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
 from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_schema, to_openapi
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
 from cmk.gui.plugins.openapi.restful_objects.specification import (
-    find_all_parameters,
-    SPEC,
-)
+    SPEC,)
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     EndpointName,
@@ -46,6 +44,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     RawParameter,
     ResponseType,
     SchemaParameter,
+    EndpointTarget,
 )
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
@@ -180,6 +179,7 @@ class Endpoint:
         status_descriptions: Optional[Dict[int, str]] = None,
         options: Optional[Dict[str, str]] = None,
         tag_group: Literal['Monitoring', 'Setup'] = 'Setup',
+        blacklist_in: Optional[Sequence[EndpointTarget]] = None,
         func: Optional[FunctionType] = None,
         operation_id: Optional[str] = None,
         wrapped: Optional[Any] = None,
@@ -199,6 +199,8 @@ class Endpoint:
         self.status_descriptions = status_descriptions if status_descriptions is not None else {}
         self.options: Dict[str, str] = options if options is not None else {}
         self.tag_group = tag_group
+        self.blacklist_in: List[EndpointTarget] = list(
+            blacklist_in) if blacklist_in is not None else []
         self.func = func
         self.operation_id = operation_id
         self.wrapped = wrapped
@@ -222,14 +224,14 @@ class Endpoint:
             query_schema,
         )
 
-        _verify_parameters2(self.path, path_schema)
+        _verify_parameters(self.path, path_schema)
 
         self.operation_id = func.__module__ + "." + func.__name__
 
-        def _mandatory_parameter_names(*params):
+        def _mandatory_parameter_names(*_params):
             schema: Type[Schema]
             req = []
-            for schema in params:
+            for schema in _params:
                 if not schema:
                     continue
                 for name, field in schema().declared_fields.items():
@@ -499,7 +501,7 @@ class Endpoint:
         return {self.method: operation_spec}  # type: ignore[misc]
 
 
-def _verify_parameters2(
+def _verify_parameters(
     path: str,
     path_schema: Optional[Type[Schema]],
 ):
@@ -523,17 +525,17 @@ def _verify_parameters2(
           >>> class Params(Schema):
           ...      bar = fields.String()
 
-          >>> _verify_parameters2('/foo/{bar}', Params)
-          >>> _verify_parameters2('/foo', None)
+          >>> _verify_parameters('/foo/{bar}', Params)
+          >>> _verify_parameters('/foo', None)
 
         Yet, when problems are found, ValueErrors are raised.
 
-          >>> _verify_parameters2('/foo', Params)
+          >>> _verify_parameters('/foo', Params)
           Traceback (most recent call last):
           ...
           ValueError: Params {'bar'} not used in path /foo. Found params: set()
 
-          >>> _verify_parameters2('/foo/{bar}', None)
+          >>> _verify_parameters('/foo/{bar}', None)
           Traceback (most recent call last):
           ...
           ValueError: Params {'bar'} of path /foo/{bar} were not given in schema parameters set()
@@ -563,66 +565,6 @@ def _verify_parameters2(
     if missing_in_path:
         raise ValueError(f"Params {missing_in_path!r} not used in path {path}. "
                          f"Found params: {path_params!r}")
-
-
-def _verify_parameters(
-    path: str,
-    parameters: Sequence[OpenAPIParameter],
-):
-    """Verifies matching of parameters to the placeholders used in an URL-Template
-
-    This works both ways, ensuring that no parameter is supplied which is then not used and that
-    each template-variable in the URL-template has a corresponding parameter supplied,
-    either globally or locally.
-
-    Args:
-        path:
-            The URL-Template, for eample: '/user/{username}'
-
-        parameters:
-            A list of parameters. A parameter can either be a string referencing a
-            globally defined parameter by name, or a dict containing a full parameter.
-
-    Examples:
-
-        In case of success, this function will return nothing.
-
-          >>> _verify_parameters('/foo/{bar}', [{'name': 'bar', 'in': 'path'}])
-
-        Yet, when problems are found, ValueErrors are raised.
-
-          >>> _verify_parameters('/foo', [{'name': 'foo', 'in': 'path'}])
-          Traceback (most recent call last):
-          ...
-          ValueError: Param 'foo', which is specified as 'path', not used in path. Found params: []
-
-          >>> _verify_parameters('/foo/{bar}', [])
-          Traceback (most recent call last):
-          ...
-          ValueError: Param 'bar', which is used in the HTTP path, was not specified in []
-
-    Returns:
-        Nothing.
-
-    Raises:
-        ValueError in case of a mismatch.
-
-    """
-    param_names = _names_of(parameters)
-    path_params = path_parameters(path)
-    for path_param in path_params:
-        if path_param not in param_names:
-            raise ValueError(
-                f"Param {path_param!r}, which is used in the HTTP path, was not specified in "
-                f"{parameters!r}")
-
-    for param in parameters:
-        if isinstance(param, dict) and param['in'] == 'path' and param['name'] not in path_params:
-            raise ValueError(
-                f"Param {repr(param['name'])}, which is specified as 'path', not used in path. "
-                f"Found params: {path_params}")
-
-    find_all_parameters(parameters, errors='raise')
 
 
 def _assign_to_tag_group(tag_group: str, name: str) -> None:
@@ -765,47 +707,3 @@ def _docstring_description(docstring: Union[Any, str, None]) -> Optional[str]:
     if len(parts) > 1:
         return parts[1].strip()
     return None
-
-
-def _names_of(params: Sequence[OpenAPIParameter]) -> Sequence[str]:
-    """Give a list of parameter names
-
-    Both dictionary and string form are supported. See examples.
-
-    Args:
-        params: A list of params (dict or string).
-
-    Returns:
-        A list of parameter names.
-
-    Examples:
-        >>> _names_of(['a', 'b', 'c'])
-        ['a', 'b', 'c']
-
-        >>> _names_of(['a', {'name': 'b'}, 'c'])
-        ['a', 'b', 'c']
-
-    Examples:
-
-        >>> _names_of(['a', 'b', 'c'])
-        ['a', 'b', 'c']
-
-        >>> _names_of(['a', {'name': 'b'}])
-        ['a', 'b']
-
-    """
-    res = []
-    for p in params:
-        if isinstance(p, dict):
-            if 'name' in p and isinstance(p['name'], str):
-                res.append(p['name'])
-            else:
-                for key, value in p.items():
-                    if isinstance(value, fields.Field):
-                        res.append(key)
-        elif isinstance(p, str):
-            res.append(p)
-        else:
-            raise ValueError(f"Unknown type: {type(p)}")
-
-    return res

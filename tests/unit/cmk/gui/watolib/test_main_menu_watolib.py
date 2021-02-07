@@ -41,7 +41,6 @@ def test_registered_modules():
         'ldap_config',
         'diagnostics',
         'download_agents',
-        'version.py',
         'rule_search',
         'wato.py?group=activechecks&mode=rulesets',
         'wato.py?group=agent&mode=rulesets',

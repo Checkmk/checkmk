@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
@@ -516,7 +516,7 @@ def test_check_ps_common(inv_item, reference):
         assert test_result == reference
 
 
-cpu_config = namedtuple("CPU_config", "name agent_info cputime cpu_cores exp_load cpu_rescale_max")
+cpu_config = namedtuple("cpu_config", "name agent_info cputime cpu_cores exp_load cpu_rescale_max")
 cpu_util_data = [
     cpu_config('linux no cpu scale conf 1 core', "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 1,
                50, None),

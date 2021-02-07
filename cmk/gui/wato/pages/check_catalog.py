@@ -20,6 +20,7 @@ from cmk.utils.man_pages import ManPageCatalogPath
 from cmk.utils.type_defs import CheckPluginNameStr
 
 import cmk.gui.watolib as watolib
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.table import table_element
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
@@ -61,8 +62,8 @@ class ModeCheckPlugins(WatoMode):
         return "check_plugins"
 
     @classmethod
-    def permissions(cls):
-        return []
+    def permissions(cls) -> Optional[List[PermissionName]]:
+        return ["check_plugins"]
 
     def _from_vars(self):
         self._manpages = _get_check_catalog(only_path=())
@@ -106,8 +107,8 @@ class ModeCheckPluginSearch(WatoMode):
         return "check_plugin_search"
 
     @classmethod
-    def permissions(cls):
-        return []
+    def permissions(cls) -> Optional[List[PermissionName]]:
+        return ["check_plugins"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
@@ -178,8 +179,8 @@ class ModeCheckPluginTopic(WatoMode):
         return "check_plugin_topic"
 
     @classmethod
-    def permissions(cls):
-        return []
+    def permissions(cls) -> Optional[List[PermissionName]]:
+        return ["check_plugins"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
@@ -394,8 +395,8 @@ class ModeCheckManPage(WatoMode):
         return "check_manpage"
 
     @classmethod
-    def permissions(cls):
-        return []
+    def permissions(cls) -> Optional[List[PermissionName]]:
+        return ["check_plugins"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:

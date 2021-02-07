@@ -128,7 +128,7 @@ $color-table-border-dark-2: rgb(49, 54, 56); // dark grey
 // -----------------------------------------------------------------------------
 // Sidebar
 // -----------------------------------------------------------------------------
-$theme-snapin-width: 230px;
+$theme-snapin-width: 240px;
 
 // -----------------------------------------------------------------------------
 // Nuances (Colors only used once)
@@ -188,12 +188,15 @@ $checkbox-shadow: rgb(136, 136, 136);
 $checkbox-checked-color: $primary-font-color;
 $checkbox-checked-bg-color: rgb(221, 221, 221);
 
-$toggle-switch-on-bg-color: rgb(84, 166, 38);
+$toggle-switch-on-bg-color: rgb(19, 211, 137);
 $toggle-switch-on-border: null;
-$toggle-switch-off-bg-color: rgb(246, 0, 0);
+$toggle-switch-off-bg-color-sidebar: rgb(66, 77, 88);
+$toggle-switch-off-bg-color: rgba(173, 178, 183, 0.5);
 $toggle-switch-off-border: null;
-$toggle-switch-font-color: $white;
-$toggle-switch-height: 17px;
+$toggle-switch-font-color-on: $black;
+$toggle-switch-font-color-off: rgba(130, 130, 130, 0.9);
+$toggle-switch-height: 14px;
+$toggle-switch-width: 30px;
 $toggle-switch-font-weight: 700;
 
 $toggle-button-off-border: null;
@@ -268,7 +271,8 @@ $wato-a-border: null;
 
 $wato-subtitle-color: $darkgrey;
 
-$footnote-link-color: $success;
+$footnote-link-color: rgba(130, 130, 130, 0.9);
+$footnote-bg-color: rgb(66, 77, 88);
 
 $table-data-single-padding: 8px 16px;
 $td-single-left-padding: 2px 20px 2px 16px;
@@ -435,8 +439,9 @@ $form-font-color: $font-color;
 $filter-group-title-font-color: $black;
 $popup-filters-border-radius: 2px;
 $popup-trigger-active-bg-color: null;
-$tactical-overview-th-font-color: $white;
+$tactical-overview-th-font-color: rgba($white, 0.5);
 $tactical-overview-td-bg-color: $sidebar-border-color;
+$server-time-div-bg-color: $sidebar-border-color;
 $snapin-heading-border-color: rgba($font-color-sidebar, 0.2);
 $snapin-description-font-color: $font-color;
 $simplebar-scrollbar-color: rgb(38, 47, 56);
@@ -453,7 +458,18 @@ $inpage-close-button-filter: invert(100%);
 $sidebar-input-field-bg-color: $sidebar-border-color;
 $dashlet-anchor-size: 26px;
 $dashlet-anchor-on-size: 40px;
+$dashlet-anchor-size-slim: 20px;
 $dashlet-editor-free: rgb(78, 93, 105);
 $dashlet-editor-icon-size: 22px;
 $dark-image-invert: null;
 $ntop-protocol-painter-padding-top: null;
+$dashlet-resize-handle-width: 32px;
+$dashlet-resize-handle-height: 16px;
+$dashlet-resize-handle-width-slim: 12px;
+$dashlet-resize-handle-height-slim: 6px;
+$hexagon-critical-color: rgb(255, 0, 0);
+$hexagon-unknown-color: rgb(255, 136, 0);
+$hexagon-warning-color: rgb(255, 255, 0);
+$hexagon-downtime-color: rgb(0, 170, 255);
+$hexagon-host-down-color: rgb(0, 68, 136);
+$hexagon-ok-color: rgb(38, 47, 56);

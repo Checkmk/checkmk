@@ -251,7 +251,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         )
 
     def _use_snmpwalk_cache(self, mode: Mode) -> bool:
-        """Decide whether to use the SNMP walk cache
+        """Decide whether to load data from the SNMP walk cache
 
         The SNMP walk cache applies to individual OIDs that are marked as to-be-cached
         in the section definition plugins using `OIDCached`.
@@ -332,16 +332,13 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         section_names = self._get_selection(mode)
         section_names |= self._detect(select_from=self._get_detected_sections(mode) - section_names)
 
+        walk_cache = snmp_table.WalkCache(self._backend.hostname)
         if self._use_snmpwalk_cache(mode):
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
-            walk_cache = snmp_table.load_walk_cache(
-                trees=(tree for section_name in section_names
-                       for tree in self.plugin_store[section_name].trees),
-                host_name=self._backend.hostname,
-            )
+            walk_cache.load(trees=(tree for section_name in section_names
+                                   for tree in self.plugin_store[section_name].trees),)
         else:
             walk_cache_msg = "SNMP walk cache is disabled"
-            walk_cache = {}
 
         fetched_data: MutableMapping[SectionName, SNMPRawDataSection] = {}
         for section_name in self._sort_section_names(section_names):
@@ -362,6 +359,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
                 if any(section):
                     fetched_data[section_name] = section
+
+        walk_cache.save()
 
         return fetched_data
 

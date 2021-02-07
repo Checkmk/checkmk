@@ -1,4 +1,4 @@
-$VERSION = "2.1.0i1"
+$CMK_VERSION = "2.1.0i1"
 ## filename for timestamp
 $MK_CONFDIR = $env:MK_CONFDIR
 
@@ -8,7 +8,7 @@ if (!$MK_CONFDIR) {
 }
 
 ## Source the configuration file for this agent plugin
-$CONFIG_FILE="${MK_CONFDIR}\msoffice_cfg.ps1"
+$CONFIG_FILE="${MK_CONFDIR}\msoffice.cfg.ps1"
 if (test-path -path "${CONFIG_FILE}" ) {
      . "${CONFIG_FILE}"
 } else {

@@ -14,7 +14,6 @@ pytestmark = pytest.mark.checks
 FileinfoItem = namedtuple("FileinfoItem", "name missing failed size time")
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_fileinfo_min_max_age_levels():
     # This test has the following purpose:
     # For each file attr (size or age) the levels 'min*', 'max*' are evaluated.
@@ -140,7 +139,6 @@ def test_fileinfo_min_max_age_levels():
             ],
         ),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_fileinfo_group_no_files(info, parsed, expected_result):
     '''Test that the check returns an OK status when there are no files.'''
 
@@ -206,7 +204,6 @@ def test_check_fileinfo_group_no_files(info, parsed, expected_result):
             ],
         ),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
     '''Test that the check returns an OK status if there are no matching files.'''
 

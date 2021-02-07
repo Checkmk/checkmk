@@ -409,6 +409,48 @@ void WaitForPostInstall() {
 
 }  // namespace
 
+namespace {
+int ProcessWinperf(const std::vector<std::wstring> &args) {
+    // @file winperf file:a.txt id:12345 timeout:20 238:processor
+    //       winperf file:a.txt id:12345 timeout:20 238:processor
+    int offset = 0;
+    if (args[0][0] == '@') {
+        try {
+            std::filesystem::path p{args[0].c_str() + 1};
+            XLOG::setup::ChangeLogFileName(p.u8string());
+            XLOG::setup::EnableDebugLog(true);
+            XLOG::setup::EnableTraceLog(true);
+            XLOG::d.i("winperf started");
+            offset++;
+        } catch (const std::exception & /*e*/) {
+            return 1;
+        }
+    };
+
+    auto [error_val, name, id_val, timeout_val] =
+        exe::cmdline::ParseExeCommandLine({args.begin() + offset, args.end()});
+
+    if (error_val != 0) {
+        XLOG::l("Invalid parameters in command line [{}]", error_val);
+        return 1;
+    }
+
+    std::wstring prefix = name;
+    std::wstring port = args[offset + 1];
+    std::wstring id = id_val;
+    std::wstring timeout = timeout_val;
+    std::vector<std::wstring_view> counters;
+    for (size_t i = 4 + offset; i < args.size(); i++) {
+        if (std::wstring(L"#") == args[i]) {
+            break;
+        }
+        counters.emplace_back(args[i]);
+    }
+
+    return provider::RunPerf(prefix, port, id, ToInt(timeout, 20), counters);
+}
+}  // namespace
+
 // #TODO Function is over complicated
 // we want to test main function too.
 // so we have main, but callable
@@ -427,31 +469,16 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     WaitForPostInstall();
 
     std::wstring param(Argv[1]);
-    if (param == cma::exe::cmdline::kRunOnceParam) {
-        // to test
-        // -runonce winperf file:a.txt id:12345 timeout:20 238:processor
+    if (param == exe::cmdline::kRunOnceParam) {
         // NO READING FROM CONFIG. This is intentional
-
-        auto [error_val, name, id_val, timeout_val] =
-            cma::exe::cmdline::ParseExeCommandLine(argc - 2, Argv + 2);
-
-        if (error_val != 0) {
-            XLOG::l("Invalid parameters in command line [{}]", error_val);
-            return 1;
+        //
+        // -runonce @file winperf file:a.txt id:12345 timeout:20 238:processor
+        // -runonce winperf file:a.txt id:12345 timeout:20 238:processor
+        std::vector<std::wstring> args;
+        for (int i = 2; i < argc; i++) {
+            args.emplace_back(Argv[i]);
         }
-
-        std::wstring prefix = name;
-        std::wstring port = Argv[3];
-        std::wstring id = id_val;
-        std::wstring timeout = timeout_val;
-        std::vector<std::wstring_view> counters;
-        for (int i = 6; i < argc; i++) {
-            if (std::wstring(L"#") == Argv[i]) break;
-            counters.push_back(Argv[i]);
-        }
-
-        return cma::provider::RunPerf(prefix, id, port, ToInt(timeout, 20),
-                                      counters);
+        return ProcessWinperf(args);
     }
 
     using namespace cma::cmdline;

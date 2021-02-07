@@ -27,7 +27,6 @@ pytestmark = pytest.mark.checks
         })
     }, ["$HOSTADDRESS$", 123, "foobar", "ADDRESS", "street", 0, "city", "regex"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_uniserv_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_uniserv")

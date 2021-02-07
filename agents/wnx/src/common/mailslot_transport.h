@@ -22,110 +22,14 @@
 #include <filesystem>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <strstream>
 #include <thread>
 
 #include "tools/_process.h"  // folders
 #include "tools/_win.h"      // trace and log
 #include "tools/_xlog.h"     // trace and log
-
-// to be moved outside
-namespace wtools {
-// we are using custom allocator because of Windows taking care about memory
-// allocated
-inline void* ProcessHeapAlloc(size_t size) {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
-
-inline void ProcessHeapFree(void* data) {
-    if (data) HeapFree(GetProcessHeap(), 0, data);
-}
-
-// legacy from the past
-inline ACL* BuildSDAcl() {
-    SID_IDENTIFIER_AUTHORITY siaWorld = SECURITY_WORLD_SID_AUTHORITY;
-    SID_IDENTIFIER_AUTHORITY siaCreator = SECURITY_CREATOR_SID_AUTHORITY;
-
-    char buf_everyone_sid[32];
-    char buf_creator_sid[32];
-
-    auto everyone_sid = reinterpret_cast<SID*>(buf_everyone_sid);
-    auto owner_sid = reinterpret_cast<SID*>(buf_creator_sid);
-
-    // initialize well known SID's
-    if (!InitializeSid(everyone_sid, &siaWorld, 1) ||
-        !InitializeSid(owner_sid, &siaCreator, 1))
-        return nullptr;
-
-    *GetSidSubAuthority(everyone_sid, 0) = SECURITY_WORLD_RID;
-    *GetSidSubAuthority(owner_sid, 0) = SECURITY_CREATOR_OWNER_RID;
-
-    // compute size of acl
-    auto acl_size = sizeof(ACL) +
-                    2 * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)) +
-                    GetSidLengthRequired(1) +  // well-known Everyone Sid
-                    GetSidLengthRequired(1);   // well-known Creator Owner Sid
-
-    // create ACL
-    auto acl = static_cast<ACL*>(ProcessHeapAlloc(acl_size));
-
-    // init ACL
-    if (acl && InitializeAcl(acl, (int32_t)acl_size, ACL_REVISION) &&
-        AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS, everyone_sid) &&
-        AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS, owner_sid))
-        return acl;
-
-    // FAILURE is HERE
-    ProcessHeapFree(acl);
-    return nullptr;
-}
-
-// RAII class to keep MS Windows Security Descriptor temporary
-class SecurityAttributeKeeper {
-public:
-    SecurityAttributeKeeper() {
-        if (!allocAll()) cleanupAll();  // failed here
-    }
-    ~SecurityAttributeKeeper() { cleanupAll(); }
-
-    const SECURITY_ATTRIBUTES* get() const { return sa_; }
-    SECURITY_ATTRIBUTES* get() { return sa_; }
-
-private:
-    bool allocAll() {
-        acl_ = BuildSDAcl();  // this trash is referenced in the Security
-                              // Descriptor, we should keepit safe
-        sd_ = static_cast<SECURITY_DESCRIPTOR*>(
-            ProcessHeapAlloc(sizeof(SECURITY_DESCRIPTOR)));
-        sa_ = static_cast<SECURITY_ATTRIBUTES*>(
-            ProcessHeapAlloc(sizeof(SECURITY_ATTRIBUTES)));
-
-        if (acl_ && sd_ && sa_ &&  // <--- alloc check
-            InitializeSecurityDescriptor(sd_, SECURITY_DESCRIPTOR_REVISION) &&
-            SetSecurityDescriptorDacl(sd_, TRUE, acl_, FALSE)) {
-            sa_->nLength = sizeof(SECURITY_ATTRIBUTES);
-            sa_->lpSecurityDescriptor = sd_;
-            sa_->bInheritHandle = FALSE;
-            return true;
-        }
-        return false;
-    }
-    void cleanupAll() {
-        if (acl_) ProcessHeapFree(acl_);
-        if (sd_) ProcessHeapFree(sd_);
-        if (sa_) ProcessHeapFree(sa_);
-        acl_ = nullptr;
-        sd_ = nullptr;
-        sa_ = nullptr;
-    }
-
-    // below are allocated using ProcessHeapAlloc values
-    SECURITY_DESCRIPTOR* sd_{nullptr};
-    SECURITY_ATTRIBUTES* sa_{nullptr};
-    ACL* acl_{nullptr};
-};
-
-}  // namespace wtools
+#include "wtools.h"
 
 namespace cma {
 class MailSlot;
@@ -138,20 +42,21 @@ constexpr const char* const kMailSlotLogFileName = "cmk_mail.log";
 
 inline bool IsMailApiTraced() { return true; }
 
-// #TODO gtest
-inline const std::string GetMailApiLog() {
-    using namespace cma::tools;
+inline std::string GetMailApiLog() {
     namespace fs = std::filesystem;
 
     if (kUsePublicProfileLog) {
-        fs::path path = win::GetSomeSystemFolder(FOLDERID_Public);
-        if (!path.empty()) return (path / kMailSlotLogFileName).u8string();
+        fs::path path{tools::win::GetSomeSystemFolder(FOLDERID_Public)};
+        if (!path.empty()) {
+            return (path / kMailSlotLogFileName).u8string();
+        }
     }
 
-    fs::path win_path = win::GetSomeSystemFolder(FOLDERID_Windows);
+    fs::path win_path = tools::win::GetSomeSystemFolder(FOLDERID_Windows);
 
-    if (!win_path.empty())
+    if (!win_path.empty()) {
         return (win_path / "Logs" / kMailSlotLogFileName).u8string();
+    }
 
     return {};
 }
@@ -191,8 +96,8 @@ public:
 
 public:
     // convert slot name into fully qualified global object
-    static std::string BuildMailSlotName(const char* slot_name, int id,
-                                         const char* pc_name) {
+    static std::string BuildMailSlotName(std::string_view slot_name, int id,
+                                         std::string_view pc_name) {
         std::string name = "\\\\";
         name += pc_name;
         name += "\\mailslot\\Global\\";  // this work. ok. don't touch.
@@ -201,16 +106,16 @@ public:
         name += std::to_string(id);  // session id or something unique
         return name;
     }
-    MailSlot(const char* name, int id, const char* pc_name) {
+    MailSlot(std::string_view name, int id, std::string_view pc_name) {
         name_ = BuildMailSlotName(name, id, pc_name);
     }
 
-    MailSlot(const char* name, int id) {
+    MailSlot(std::string_view name, int id) {
         name_ = BuildMailSlotName(name, id, ".");
     }
 
     // with prepared mail slot
-    explicit MailSlot(const char* name) : name_(name) {}
+    explicit MailSlot(std::string_view name) : name_(name) {}
 
     ~MailSlot() { Close(); }
 
@@ -224,14 +129,14 @@ public:
     [[nodiscard]] const char* GetName() const noexcept { return name_.c_str(); }
     [[nodiscard]] HANDLE GetHandle() const noexcept { return handle_; }
 
-    bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms,
-                         void* context) {
-        return ConstructThread(foo, sleep_ms, context, false);
+    bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms, void* context,
+                         wtools::SecurityLevel sl) {
+        return ConstructThread(foo, sleep_ms, context, false, sl);
     }
 
     // mailbox start here
     bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms, void* context,
-                         bool force_open) {
+                         bool force_open, wtools::SecurityLevel sl) {
         if (main_thread_) {
             MailSlotLog(XLOG_FUNC + " Double call is forbidden");
             return false;
@@ -241,14 +146,14 @@ public:
         if (force_open) {
             // future use only or will be removed
             for (int i = 0; i < 10; i++) {
-                auto ret = Create();
+                auto ret = Create(sl);
                 if (ret) break;
                 Close();
                 using namespace std::chrono;
                 std::this_thread::sleep_for(100ms);
             }
         } else
-            while (!Create()) {
+            while (!Create(sl)) {
                 name_ += "x";
             }
 
@@ -287,12 +192,12 @@ public:
     }
 
     // returns false on duplicated name
-    bool Create() {
+    bool Create(wtools::SecurityLevel sl) {
         std::lock_guard<std::mutex> lck(lock_);
 
         if (handle_) return true;  // bad(already exists) call
 
-        handle_ = createMailSlot(name_.c_str());
+        handle_ = createMailSlot(name_.c_str(), sl);
 
         if (handle_ == nullptr &&
             ::GetLastError() == 183)  // duplicated file name
@@ -438,10 +343,10 @@ public:
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
 
-    static HANDLE createMailSlot(const char* name) {
-        wtools::SecurityAttributeKeeper
-            security_attribute_keeper;  // black magic behind, do not try to
-                                        // understand, RAII auto-destroy
+    static HANDLE createMailSlot(const char* name, wtools::SecurityLevel sl) {
+        wtools::SecurityAttributeKeeper security_attribute_keeper(
+            sl);  // black magic behind, do not try to
+                  // understand, RAII auto-destroy
         auto sa = security_attribute_keeper.get();
         if (nullptr == sa) {
             MailSlotLog("Failed to create security descriptor");

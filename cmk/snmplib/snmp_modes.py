@@ -21,7 +21,7 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import SectionName
 
 from . import snmp_cache
-from .type_defs import ABCSNMPBackend, OID, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
+from .type_defs import SNMPBackend, OID, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 SNMPWalkOptions = Dict[str, List[OID]]
@@ -43,7 +43,7 @@ SNMPWalkOptions = Dict[str, List[OID]]
 def get_single_oid(oid: str,
                    *,
                    section_name: Optional[SectionName] = None,
-                   backend: ABCSNMPBackend) -> Optional[SNMPDecodedString]:
+                   backend: SNMPBackend) -> Optional[SNMPDecodedString]:
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
@@ -90,7 +90,7 @@ def get_single_oid(oid: str,
     return decoded_value
 
 
-def walk_for_export(oid: OID, *, backend: ABCSNMPBackend) -> SNMPRowInfoForStoredWalk:
+def walk_for_export(oid: OID, *, backend: SNMPBackend) -> SNMPRowInfoForStoredWalk:
     return _convert_rows_for_stored_walk(backend.walk(oid=oid))
 
 
@@ -199,7 +199,7 @@ def do_snmptranslate(walk_filename: str) -> None:
                                    for translation, line in translated_lines) + "\n")
 
 
-def do_snmpwalk(options: SNMPWalkOptions, *, backend: ABCSNMPBackend) -> None:
+def do_snmpwalk(options: SNMPWalkOptions, *, backend: SNMPBackend) -> None:
     if not os.path.exists(cmk.utils.paths.snmpwalks_dir):
         os.makedirs(cmk.utils.paths.snmpwalks_dir)
 
@@ -215,7 +215,7 @@ def do_snmpwalk(options: SNMPWalkOptions, *, backend: ABCSNMPBackend) -> None:
     cmk.utils.cleanup.cleanup_globals()
 
 
-def _do_snmpwalk_on(options: SNMPWalkOptions, filename: str, *, backend: ABCSNMPBackend) -> None:
+def _do_snmpwalk_on(options: SNMPWalkOptions, filename: str, *, backend: SNMPBackend) -> None:
     console.verbose("%s:\n" % backend.hostname)
 
     oids = oids_to_walk(options)
@@ -230,7 +230,7 @@ def _do_snmpwalk_on(options: SNMPWalkOptions, filename: str, *, backend: ABCSNMP
 
 
 def _execute_walks_for_dump(oids: List[OID], *,
-                            backend: ABCSNMPBackend) -> Iterable[SNMPRowInfoForStoredWalk]:
+                            backend: SNMPBackend) -> Iterable[SNMPRowInfoForStoredWalk]:
     for oid in oids:
         try:
             console.verbose("Walk on \"%s\"...\n" % oid)
@@ -259,7 +259,7 @@ def oids_to_walk(options: Optional[SNMPWalkOptions] = None) -> List[OID]:
     return sorted(oids, key=lambda x: list(map(int, x.strip(".").split("."))))
 
 
-def do_snmpget(oid: OID, *, backend: ABCSNMPBackend) -> None:
+def do_snmpget(oid: OID, *, backend: SNMPBackend) -> None:
     #TODO what about SNMP management boards?
     snmp_cache.initialize_single_oid_cache(backend.config)
 

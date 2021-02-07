@@ -33,7 +33,7 @@ def check_cpu_load(item, params, section):
     if not section:
         return None
 
-    return check_cpu_load_generic(params, section['load'], section['num_cpus'])
+    return check_cpu_load_generic(params, section.load, section.num_cpus)
 
 
 check_info["cpu.loads"] = {
@@ -70,21 +70,16 @@ def check_cpu_threads(item, params, section):
     if isinstance(params, tuple):
         params = {'levels': params}
 
-    try:
-        num_threads = section['num_threads']
-    except Exception:
-        return
-
     absolute_levels = params.get("levels", (None, None))
-    yield check_levels(num_threads,
+    yield check_levels(section.num_threads,
                        'threads',
                        absolute_levels,
                        unit="threads",
                        human_readable_func=lambda x: "%.f" % x,
                        infoname="Count")
 
-    if 'max_threads' in section:
-        thread_usage = 100.0 * num_threads / section['max_threads']
+    if section.max_threads is not None:
+        thread_usage = 100.0 * section.num_threads / section.max_threads
         relative_levels = params.get("levels_percent", (None, None))
         yield check_levels(thread_usage,
                            'thread_usage',

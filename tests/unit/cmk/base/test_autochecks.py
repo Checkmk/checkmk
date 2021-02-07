@@ -36,7 +36,7 @@ def test_config(monkeypatch):
     return ts.apply(monkeypatch)
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [
@@ -137,7 +137,7 @@ def test_parse_autochecks_file_not_existing():
     assert autochecks.parse_autochecks_file("host", config.service_description) == []
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [
@@ -213,8 +213,7 @@ def test_parse_autochecks_file_not_existing():
             ],
         ),
     ])
-def test_parse_autochecks_file(config_check_variables, test_config, autochecks_content,
-                               expected_result):
+def test_parse_autochecks_file(fix_plugin_legacy, test_config, autochecks_content, expected_result):
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
@@ -224,14 +223,14 @@ def test_parse_autochecks_file(config_check_variables, test_config, autochecks_c
             autochecks.parse_autochecks_file(
                 "host",
                 config.service_description,
-                config_check_variables,
+                fix_plugin_legacy.check_variables,
             )
         return
 
     parsed = autochecks.parse_autochecks_file(
         "host",
         config.service_description,
-        config_check_variables,
+        fix_plugin_legacy.check_variables,
     )
     assert len(parsed) == len(expected_result)
 

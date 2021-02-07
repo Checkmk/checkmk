@@ -406,10 +406,10 @@ class PerfgraphIcon(Icon):
             content=html.render_icon('graph', ''),
             href=url,
             onmouseout="cmk.hover.hide()",
-            onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s, this);" % (
+            onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s);" % (
                 json.dumps(row['site']),
                 json.dumps(row["host_name"]),
-                json.dumps(row.get('service_description', '_HOST_')),
+                json.dumps(row['service_description'] if what == "service" else '_HOST_'),
             ))
 
     def _graph_icon_link(self, row, what):

@@ -296,21 +296,25 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         // TODO: fix marked obsolete handling
         this._node_chunk_list.forEach(node_chunk => (node_chunk.marked_obsolete = true));
 
-        // This is in indicator whether its necessary to reapply all layouts
+        // This is an indicator whether its necessary to reapply all layouts
+        // Applying layouts needlessly
+        // - cost performance
+        // - may cause the gui to flicker/move with certain layouts
         this._chunks_changed = false;
+
         this.data_to_show.chunks.forEach(chunk_rawdata => {
             this._consume_chunk_rawdata(chunk_rawdata);
         });
 
         this._remove_obsolete_chunks();
         this._arrange_multiple_node_chunks();
-
         this.update_layers();
         this.layout_manager.layout_applier.apply_multiple_layouts(
             this.get_hierarchy_list(),
             this._chunks_changed || this.always_update_layout
         );
         this.layout_manager.compute_node_positions();
+
         this.update_active_overlays();
     }
 
@@ -318,13 +322,13 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         // Generates a chunk object which includes the following data
         // {
         //   id:                 ID to identify this chunk
-        //   hierarchy:          nodes in hierarchical order
         //   tree:               hierarchy tree
-        //   nodes:              nodes as list
+        //   nodes:              visible nodes as list
+        //   nodes_by_id:        all nodes by id
         //   links:              links between nodes
         //                       These are either provided in the rawdata or
         //                       automatically computed out of the hierarchy layout
-        //   layout:             layout configuration
+        //   layout_settings:    layout configuration
         // }
         let chunk = {};
 
@@ -336,6 +340,8 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             node.data.node_positioning = {};
             node.data.transition_info = {};
             node.data.chunk = chunk;
+            // User interactions, e.g. collapsing node, root cause analysis
+            node.data.user_interactions = {};
         });
 
         // Compute path and id to identify the nodes
@@ -345,10 +351,11 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
 
         chunk.tree = hierarchy;
         chunk.nodes = chunk.tree.descendants();
+        chunk.nodes_by_id = {};
+        chunk.nodes.forEach(node => (chunk.nodes_by_id[node.data.id] = node));
 
         // Use layout info
         chunk.layout_settings = chunk_rawdata.layout;
-
         chunk.id = chunk.nodes[0].data.id;
 
         let chunk_links = [];
@@ -375,6 +382,20 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             else this._chunks_changed = true;
         });
         this._node_chunk_list = new_chunk_list;
+    }
+
+    _filter_root_cause(node) {
+        if (!node._children) return;
+
+        let critical_children = [];
+        node._children.forEach(child_node => {
+            if (child_node.data.state != 0) {
+                critical_children.push(child_node);
+                this._filter_root_cause(child_node);
+            }
+        });
+        node.data.user_interactions.bi = "root_cause";
+        node.children = critical_children;
     }
 
     _add_aggr_path_and_node_id(node, siblings_id_counter) {
@@ -541,24 +562,18 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         for (let idx in this._node_chunk_list) {
             let existing_chunk = this._node_chunk_list[idx];
             if (existing_chunk.tree.data.id == chunk_id) {
-                let old_node_coords = {};
-                existing_chunk.nodes.forEach(node => {
-                    old_node_coords[node.data.id] = {x: node.x, y: node.y};
-                });
-
                 new_chunk.layout_instance = existing_chunk.layout_instance;
-
                 new_chunk.coords = existing_chunk.coords;
-                new_chunk.nodes.forEach((node, idx) => {
-                    // Reuse computed coordinates from previous chunk data
-                    if (old_node_coords[node.data.id]) {
-                        node.x = old_node_coords[node.data.id].x;
-                        node.y = old_node_coords[node.data.id].y;
-                    } else this._chunks_changed = true;
+                new_chunk.nodes.forEach(node => {
+                    let existing_node = existing_chunk.nodes_by_id[node.data.id];
+                    if (existing_node !== undefined)
+                        this._migrate_node_content(existing_node, node);
+                    else this._chunks_changed = true;
                 });
+                this._node_chunk_list[idx] = new_chunk;
+                this._apply_user_interactions_to_chunk(new_chunk);
                 if (existing_chunk.nodes.length != new_chunk.nodes.length)
                     this._chunks_changed = true;
-                this._node_chunk_list[idx] = new_chunk;
                 return;
             }
         }
@@ -567,23 +582,51 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         this._node_chunk_list.push(new_chunk);
     }
 
-    recompute_node_chunk_descendants_and_links(node_chunk) {
-        node_chunk.nodes = node_chunk.tree.descendants();
+    _migrate_node_content(old_node, new_node) {
+        // Reuse computed coordinates from previous chunk data
+        new_node.x = old_node.x;
+        new_node.y = old_node.y;
 
+        // Migrate user interactions
+        new_node.data.user_interactions = old_node.data.user_interactions;
+    }
+
+    _apply_user_interactions_to_chunk(chunk) {
+        chunk.nodes.forEach(node => {
+            let bi_setting = node.data.user_interactions.bi;
+            if (bi_setting === undefined) return;
+
+            switch (bi_setting) {
+                case "collapsed":
+                    node.children = null;
+                    break;
+                case "root_cause":
+                    this._filter_root_cause(node);
+                    break;
+            }
+        });
+        this.update_node_chunk_descendants_and_links(chunk);
+    }
+
+    update_node_chunk_descendants_and_links(node_chunk) {
+        node_chunk.nodes = node_chunk.tree.descendants();
         let chunk_links = [];
         node_chunk.nodes.forEach(node => {
             if (!node.parent || node.data.invisible) return;
             chunk_links.push({source: node, target: node.parent});
         });
         node_chunk.links = chunk_links;
+    }
 
+    recompute_node_chunk_descendants_and_links(node_chunk) {
+        this.update_node_chunk_descendants_and_links(node_chunk);
+        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5);
         let all_nodes = this.get_all_nodes();
         let all_links = this.get_all_links();
         node_visualization_layout_styles.force_simulation.update_nodes_and_links(
             all_nodes,
             all_links
         );
-        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5);
     }
 
     update_layers() {

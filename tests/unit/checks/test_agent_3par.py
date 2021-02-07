@@ -48,7 +48,6 @@ from testlib import SpecialAgent  # type: ignore[import]
         "verify_cert": True,
     }, ['--user', 'user', '--password', ('store', 'pw-id', '%s'), '--port', 8079, "address"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_3par(params, result):
     agent = SpecialAgent("agent_3par")
     arguments = agent.argument_func(params, "host", "address")

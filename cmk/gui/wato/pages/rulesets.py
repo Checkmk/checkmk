@@ -360,7 +360,7 @@ class ModeRuleSearch(ABCRulesetMode):
 
 def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[PageMenuEntry]:
     for search_title, search_emblem, search_term in [
-        ("Used rulsets", "enable", "ruleset_used"),
+        ("Used rulesets", "enable", "ruleset_used"),
         ("Ineffective rules", "disable", "rule_ineffective"),
         ("Deprecated rules", "warning", "ruleset_deprecated"),
     ]:

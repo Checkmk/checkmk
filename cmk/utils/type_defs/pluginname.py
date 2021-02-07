@@ -32,19 +32,24 @@ class ABCName(abc.ABC):
         return set()
 
     def __init__(self, plugin_name: str) -> None:
-        self._value = plugin_name
+        self._value = self._parse_valid(plugin_name)
+        self._hash = hash(type(self).__name__ + self._value)
+
+    def _parse_valid(self, plugin_name: str) -> str:
         if plugin_name in self._legacy_naming_exceptions:
-            return
+            return plugin_name
 
         if not isinstance(plugin_name, str):
-            raise TypeError("%s must initialized from str" % self.__class__.__name__)
+            raise TypeError(f"{self.__class__.__name__} must initialized from str")
         if not plugin_name:
-            raise ValueError("%s initializer must not be empty" % self.__class__.__name__)
+            raise ValueError(f"{self.__class__.__name__} initializer must not be empty")
 
-        for char in plugin_name:
-            if char not in self.VALID_CHARACTERS:
-                raise ValueError("invalid character for %s %r: %r" %
-                                 (self.__class__.__name__, plugin_name, char))
+        if any(c not in self.VALID_CHARACTERS for c in plugin_name):
+            invalid = ''.join((c for c in plugin_name if c not in self.VALID_CHARACTERS))
+            class_ = self.__class__.__name__
+            raise ValueError(f"Invalid characters in {plugin_name!r} for {class_}: {invalid!r}")
+
+        return plugin_name
 
     def __repr__(self) -> str:
         return "%s(%r)" % (self.__class__.__name__, self._value)
@@ -72,7 +77,7 @@ class ABCName(abc.ABC):
         return not self < other
 
     def __hash__(self) -> int:
-        return hash(type(self).__name__ + self._value)
+        return self._hash
 
 
 class ParsedSectionName(ABCName):

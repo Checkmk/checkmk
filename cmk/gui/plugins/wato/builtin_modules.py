@@ -407,7 +407,7 @@ class MainModuleCheckPlugins(ABCMainModule):
 
     @property
     def permission(self):
-        return None
+        return "check_plugins"
 
     @property
     def description(self):
@@ -977,41 +977,6 @@ class MainModuleAnalyzeConfig(ABCMainModule):
     @property
     def sort_index(self):
         return 40
-
-    @property
-    def is_show_more(self):
-        return False
-
-
-@main_module_registry.register
-class MainModuleReleaseNotes(ABCMainModule):
-    @property
-    def mode_or_url(self):
-        return "version.py"
-
-    @property
-    def topic(self):
-        return MainModuleTopicMaintenance
-
-    @property
-    def title(self):
-        return _("Release notes")
-
-    @property
-    def icon(self):
-        return "tribe29"
-
-    @property
-    def permission(self):
-        return None
-
-    @property
-    def description(self):
-        return _("Learn something about what changed at Checkmk.")
-
-    @property
-    def sort_index(self):
-        return 60
 
     @property
     def is_show_more(self):

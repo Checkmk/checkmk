@@ -10,19 +10,15 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import (
     Any,
-    AnyStr,
     Callable,
-    cast,
     DefaultDict,
     Dict,
-    Iterable,
     List,
     NamedTuple,
     Optional,
     Sequence,
     Set,
     Tuple,
-    Union,
 )
 
 from six import ensure_str
@@ -30,7 +26,7 @@ from six import ensure_str
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
@@ -39,7 +35,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     MetricTuple,
-    SectionName,
     ServiceAdditionalDetails,
     ServiceCheckResult,
     ServiceDetails,
@@ -68,8 +63,7 @@ import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
-from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
+from cmk.base.check_utils import LegacyCheckParameters, Service
 from cmk.base.sources.host_sections import HostKey, MultiHostSections, ParsedSectionsBroker
 
 if not cmk_version.is_raw_edition():
@@ -77,17 +71,15 @@ if not cmk_version.is_raw_edition():
 else:
     keepalive = None  # type: ignore[assignment]
 
-from . import _submit_to_core
+from . import _legacy_mode, _submit_to_core
+from .utils import (
+    AggregatedResult,
+    CHECK_NOT_IMPLEMENTED,
+    ITEM_NOT_FOUND,
+    RECEIVED_NO_DATA,
+)
 
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
-
-
-class AggregatedResult(NamedTuple):
-    submit: bool
-    data_received: bool
-    result: ServiceCheckResult
-    cache_info: Optional[Tuple[int, int]]
-
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -100,12 +92,6 @@ class AggregatedResult(NamedTuple):
 #   +----------------------------------------------------------------------+
 #   | Execute the Check_MK checks on hosts                                 |
 #   '----------------------------------------------------------------------'
-
-ITEM_NOT_FOUND: ServiceCheckResult = (3, "Item not found in monitoring data", [])
-
-RECEIVED_NO_DATA: ServiceCheckResult = (3, "Check plugin received no monitoring data", [])
-
-CHECK_NOT_IMPLEMENTED: ServiceCheckResult = (3, 'Check plugin not implemented', [])
 
 
 @cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
@@ -475,7 +461,7 @@ def execute_check(
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
         with _service_context(service):
-            submittable = _execute_check_legacy_mode(
+            submittable = _legacy_mode.get_aggregated_result(
                 MultiHostSections(parsed_sections_broker),
                 host_config.hostname,
                 ipaddress,
@@ -619,104 +605,6 @@ def get_aggregated_result(
     )
 
 
-def _execute_check_legacy_mode(
-    multi_host_sections: MultiHostSections,
-    hostname: HostName,
-    ipaddress: Optional[HostAddress],
-    service: Service,
-    *,
-    used_params: LegacyCheckParameters,
-) -> AggregatedResult:
-    legacy_check_plugin_name = config.legacy_check_plugin_names.get(service.check_plugin_name)
-    if legacy_check_plugin_name is None:
-        return AggregatedResult(
-            submit=True,
-            data_received=True,
-            result=CHECK_NOT_IMPLEMENTED,
-            cache_info=None,
-        )
-
-    check_function = config.check_info[legacy_check_plugin_name].get("check_function")
-    if check_function is None:
-        return AggregatedResult(
-            submit=True,
-            data_received=True,
-            result=CHECK_NOT_IMPLEMENTED,
-            cache_info=None,
-        )
-
-    section_name = legacy_check_plugin_name.split('.')[0]
-
-    section_content = None
-    mgmt_board_info = config.get_management_board_precedence(section_name, config.check_info)
-    source_type = SourceType.MANAGEMENT if mgmt_board_info == LEGACY_MGMT_ONLY else SourceType.HOST
-    try:
-        section_content = multi_host_sections.get_section_content(
-            HostKey(hostname, ipaddress, source_type),
-            mgmt_board_info,
-            section_name,
-            for_discovery=False,
-            cluster_node_keys=config.get_config_cache().get_clustered_service_node_keys(
-                hostname,
-                source_type,
-                service.description,
-                ip_lookup.lookup_ip_address,
-            ),
-            check_legacy_info=config.check_info,
-        )
-
-        if section_content is None:  # No data for this check type
-            return AggregatedResult(
-                submit=False,
-                data_received=False,
-                result=RECEIVED_NO_DATA,
-                cache_info=None,
-            )
-
-        # Call the actual check function
-        item_state.reset_wrapped_counters()
-
-        raw_result = check_function(service.item, used_params, section_content)
-        result = sanitize_check_result(raw_result)
-        item_state.raise_counter_wrap()
-
-    except item_state.MKCounterWrapped as exc:
-        # handle check implementations that do not yet support the
-        # handling of wrapped counters via exception on their own.
-        # Do not submit any check result in that case:
-        return AggregatedResult(
-            submit=False,
-            data_received=True,
-            result=(0, f"Cannot compute check result: {exc}\n", []),
-            cache_info=None,
-        )
-
-    except MKTimeout:
-        raise
-
-    except Exception:
-        if cmk.utils.debug.enabled():
-            raise
-        result = 3, cmk.base.crash_reporting.create_check_crash_dump(
-            host_name=hostname,
-            service_name=service.description,
-            plugin_name=service.check_plugin_name,
-            plugin_kwargs={
-                "item": service.item,
-                "params": used_params,
-                "section_content": section_content
-            },
-            is_manual=service.id() in check_table.get_check_table(hostname, skip_autochecks=True),
-        ), []
-
-    return AggregatedResult(
-        submit=True,
-        data_received=True,
-        result=result,
-        cache_info=multi_host_sections.legacy_determine_cache_info(SectionName(section_name)),
-    )
-
-
 def final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:
     raw_parameters = (time_resolved_check_parameters(entries) if isinstance(
         entries, cmk.base.config.TimespecificParamList) else entries)
@@ -850,83 +738,3 @@ def _consume_and_dispatch_result_types(
         raise checking_classes.IgnoreResultsError(str(ignore_results[-1]))
 
     return perfdata, results
-
-
-def sanitize_check_result(
-        result: Union[None, ServiceCheckResult, Tuple, Iterable]) -> ServiceCheckResult:
-    if isinstance(result, tuple):
-        return cast(ServiceCheckResult, _sanitize_tuple_check_result(result))
-
-    if result is None:
-        return ITEM_NOT_FOUND
-
-    return _sanitize_yield_check_result(result)
-
-
-# The check function may return an iterator (using yield) since 1.2.5i5.
-# This function handles this case and converts them to tuple results
-def _sanitize_yield_check_result(result: Iterable[Any]) -> ServiceCheckResult:
-    subresults = list(result)
-
-    # Empty list? Check returned nothing
-    if not subresults:
-        return ITEM_NOT_FOUND
-
-    # Several sub results issued with multiple yields. Make that worst sub check
-    # decide the total state, join the texts and performance data. Subresults with
-    # an infotext of None are used for adding performance data.
-    perfdata: List[MetricTuple] = []
-    infotexts: List[ServiceDetails] = []
-    status: ServiceState = 0
-
-    for subresult in subresults:
-        st, text, perf = _sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
-        status = cmk.base.utils.worst_service_state(st, status)
-
-        if text:
-            infotexts.append(text + state_markers[st])
-
-        if perf is not None:
-            perfdata += perf
-
-    return status, ", ".join(infotexts), perfdata
-
-
-# TODO: Cleanup return value: Factor "infotext: Optional[str]" case out and then make Tuple values
-# more specific
-def _sanitize_tuple_check_result(
-        result: Tuple,
-        allow_missing_infotext: bool = False) -> ServiceCheckResultWithOptionalDetails:
-    if len(result) >= 3:
-        state, infotext, perfdata = result[:3]
-        _validate_perf_data_values(perfdata)
-    else:
-        state, infotext = result
-        perfdata = []
-
-    infotext = _sanitize_check_result_infotext(infotext, allow_missing_infotext)
-
-    # NOTE: the typing is just wishful thinking. However, this part of the
-    # code is only used for the legacy cluster case, so we do not introduce
-    # new validation here.
-    return state, infotext, perfdata
-
-
-def _validate_perf_data_values(perfdata: Any) -> None:
-    if not isinstance(perfdata, list):
-        return
-    for v in [value for entry in perfdata for value in entry[1:]]:
-        if " " in str(v):
-            # See Nagios performance data spec for detailed information
-            raise MKGeneralException("Performance data values must not contain spaces")
-
-
-def _sanitize_check_result_infotext(infotext: Optional[AnyStr],
-                                    allow_missing_infotext: bool) -> Optional[ServiceDetails]:
-    if infotext is None and not allow_missing_infotext:
-        raise MKGeneralException("Invalid infotext from check: \"None\"")
-
-    if isinstance(infotext, bytes):
-        return infotext.decode('utf-8')
-
-    return infotext

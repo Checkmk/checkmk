@@ -20,7 +20,6 @@ from .agent_based_api.v1.type_defs import (
 )
 from .agent_based_api.v1 import (
     register,
-    IgnoreResultsError,
     Service,
     equals,
     check_levels,
@@ -43,9 +42,7 @@ def discovery_fortimail_disk(section: Section) -> DiscoveryResult:
 def check_fortimail_disk(params: Mapping[str, Tuple[float, float]],
                          section: Section) -> CheckResult:
     disk_usage_upper = params.get('mail_disk_usage')
-    usage = section.get('disk_usage')
-    if not isinstance(usage, float):
-        raise IgnoreResultsError("Failed to read disk usage")
+    usage = section['disk_usage']
     yield from check_levels(
         usage,
         levels_upper=disk_usage_upper,

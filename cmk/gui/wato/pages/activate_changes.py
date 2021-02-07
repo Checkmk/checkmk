@@ -40,6 +40,7 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
+    make_checkbox_selection_topic,
     make_simple_link,
     make_javascript_link,
 )
@@ -80,6 +81,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                             title=_("On selected sites"),
                             entries=list(self._page_menu_entries_selected_sites()),
                         ),
+                        # TODO CMK-7121 row selection is written to
+                        # ~/var/check_mk/web/user/rowselection/null.mk with
+                        # "null" key
+                        make_checkbox_selection_topic("activate_changes"),
                     ],
                 ),
                 PageMenuDropdown(
@@ -119,16 +124,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return
 
         yield PageMenuEntry(
-            title=_("Activate on affected sites"),
-            icon_name="save",
-            item=make_javascript_link("cmk.activation.activate_changes(\"affected\")"),
-            name="activate_affected",
-            is_shortcut=True,
-            is_suggested=True,
-            is_enabled=self.has_changes(),
-        )
-
-        yield PageMenuEntry(
             title=_("Discard all pending changes"),
             icon_name="delete",
             item=make_simple_link(html.makeactionuri([("_action", "discard")])),
@@ -146,6 +141,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 },
                 item=make_javascript_link("cmk.activation.activate_changes(\"selected\")"),
                 name="activate_selected",
+                is_shortcut=True,
+                is_suggested=True,
                 is_enabled=self.has_changes(),
             )
 
@@ -380,7 +377,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 # Activation checkbox
                 table.cell("", css="buttons")
                 if can_activate_all:
-                    html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
+                    html.checkbox("site_%s" % site_id, bool(need_restart), cssclass="site_checkbox")
 
                 # Iconbuttons
                 table.cell(_("Actions"), css="buttons")

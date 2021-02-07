@@ -1657,14 +1657,14 @@ def get_check_preview(
                 wrapped_params = (None if plugin.check_default_parameters is None else Parameters(
                     wrap_parameters(params)))
 
-                _submit, _data_rx, (exitcode, output, _perfdata) = checking.get_aggregated_result(
+                exitcode, output, _perfdata = checking.get_aggregated_result(
                     parsed_sections_broker,
                     host_config,
                     ip_address,
                     service,
                     plugin,
                     lambda p=wrapped_params: p,  # type: ignore[misc]  # "type of lambda"
-                )
+                ).result
 
             # Service discovery never uses the perfdata in the check table. That entry
             # is constantly discarded, yet passed around(back and forth) as part of the

@@ -17,6 +17,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -79,6 +80,14 @@ else:
 from . import _submit_to_core
 
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
+
+
+class AggregatedResult(NamedTuple):
+    submit: bool
+    data_received: bool
+    result: ServiceCheckResult
+    cache_info: Optional[Tuple[int, int]]
+
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -479,7 +488,7 @@ def execute_check(
                 show_perfdata=show_perfdata,
             )
 
-    submit, data_received, result = get_aggregated_result(
+    submittable = get_aggregated_result(
         parsed_sections_broker,
         host_config,
         ipaddress,
@@ -488,19 +497,19 @@ def execute_check(
         lambda: final_read_only_check_parameters(service.parameters),
     )
 
-    if submit:
+    if submittable.submit:
         _submit_to_core.check_result(
             host_name=host_config.hostname,
             service_name=service.description,
-            result=result,
-            cache_info=parsed_sections_broker.get_cache_info(plugin.sections) if plugin else None,
+            result=submittable.result,
+            cache_info=submittable.cache_info,
             dry_run=dry_run,
             show_perfdata=show_perfdata,
         )
-    elif data_received:
-        console.verbose("%-20s PEND - %s\n", ensure_str(service.description), result[1])
+    elif submittable.data_received:
+        console.verbose("%-20s PEND - %s\n", ensure_str(service.description), submittable.result[1])
 
-    return data_received
+    return submittable.data_received
 
 
 def get_aggregated_result(
@@ -510,19 +519,18 @@ def get_aggregated_result(
     service: Service,
     plugin: Optional[checking_classes.CheckPlugin],
     params_function: Callable[[], Parameters],
-) -> Tuple[bool, bool, ServiceCheckResult]:
+) -> AggregatedResult:
     """Run the check function and aggregate the subresults
 
     This function is also called during discovery.
-
-    Returns a triple:
-       bool: should the result be submitted to the core
-       bool: did we receive data for the plugin
-       ServiceCheckResult: The aggregated result as returned by the plugin, or a fallback
-
     """
     if plugin is None:
-        return False, True, CHECK_NOT_IMPLEMENTED
+        return AggregatedResult(
+            submit=False,
+            data_received=True,
+            result=CHECK_NOT_IMPLEMENTED,
+            cache_info=None,
+        )
 
     check_function = (plugin.cluster_check_function
                       if host_config.is_cluster else plugin.check_function)
@@ -565,7 +573,12 @@ def get_aggregated_result(
             )
 
         if not kwargs:  # no data found
-            return False, False, RECEIVED_NO_DATA
+            return AggregatedResult(
+                submit=False,
+                data_received=False,
+                result=RECEIVED_NO_DATA,
+                cache_info=None,
+            )
 
         if service.item is not None:
             kwargs["item"] = service.item
@@ -578,7 +591,12 @@ def get_aggregated_result(
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
         msg = str(e) or "No service summary available"
-        return False, True, (0, msg, [])
+        return AggregatedResult(
+            submit=False,
+            data_received=True,
+            result=(0, msg, []),
+            cache_info=None,
+        )
 
     except MKTimeout:
         raise
@@ -595,7 +613,12 @@ def get_aggregated_result(
             is_manual=service.id() in table,
         ), []
 
-    return True, True, result
+    return AggregatedResult(
+        submit=True,
+        data_received=True,
+        result=result,
+        cache_info=parsed_sections_broker.get_cache_info(plugin.sections),
+    )
 
 
 def _execute_check_legacy_mode(

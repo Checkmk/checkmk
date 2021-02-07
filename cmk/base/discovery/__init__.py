@@ -424,7 +424,7 @@ def _do_discovery_for(
     discovery_parameters: DiscoveryParameters,
 ) -> None:
 
-    host_label_discovery_result = analyse_host_labels(
+    host_labels = analyse_host_labels(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
@@ -458,8 +458,8 @@ def _do_discovery_for(
     section.section_success("%s, %s" % (
         f"Found {len(service_result.new)} services"
         if service_result.new else "Found no%s services" % (" new" if only_new else ""),
-        f"{len(host_label_discovery_result.new)} host labels"
-        if host_label_discovery_result.new else "no%s host labels" % (" new" if only_new else ""),
+        f"{len(host_labels.new)} host labels" if host_labels.new else "no%s host labels" %
+        (" new" if only_new else ""),
     ))
 
 
@@ -569,7 +569,7 @@ def discover_on_host(
         )
 
         # Compute current state of new and existing checks
-        services, host_label_discovery_result = _get_host_services(
+        services, host_labels = _get_host_services(
             host_config,
             ipaddress,
             parsed_sections_broker,
@@ -597,8 +597,8 @@ def discover_on_host(
 
     else:
         if mode != "remove":
-            result.self_new_host_labels = len(host_label_discovery_result.new)
-            result.self_total_host_labels = len(host_label_discovery_result.present)
+            result.self_new_host_labels = len(host_labels.new)
+            result.self_total_host_labels = len(host_labels.present)
 
     result.self_total = result.self_new + result.self_kept
     return result
@@ -1350,7 +1350,7 @@ def _get_node_services(
 ) -> Tuple[ServicesTable, QualifiedDiscovery[HostLabel]]:
 
     host_name = host_config.hostname
-    host_label_discovery_result = analyse_host_labels(
+    host_label_result = analyse_host_labels(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
@@ -1381,7 +1381,7 @@ def _get_node_services(
             (("old", s) for s in service_result.old),
             (("new", s) for s in service_result.new),
         )
-    }, host_label_discovery_result
+    }, host_label_result
 
 
 def _node_service_source(
@@ -1632,7 +1632,7 @@ def get_check_preview(
         selected_sections=NO_SELECTION,
     )
 
-    grouped_services, host_label_discovery_result = _get_host_services(
+    grouped_services, host_label_result = _get_host_services(
         host_config,
         ip_address,
         parsed_sections_broker,
@@ -1690,8 +1690,8 @@ def get_check_preview(
         *{
             # TODO (mo): According to unit tests, this is what was done prior to refactoring.
             # Im not sure this is desired. If it is, it should be explained.
-            **{l.name: l for l in host_label_discovery_result.vanished},
-            **{l.name: l for l in host_label_discovery_result.present},
+            **{l.name: l for l in host_label_result.vanished},
+            **{l.name: l for l in host_label_result.present},
         }.values())
 
 

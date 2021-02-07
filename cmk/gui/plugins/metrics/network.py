@@ -1529,6 +1529,18 @@ metric_info["fortiauthenticator_fails_5min"] = {
     "color": "42/a",
 }
 
+metric_info["fortigate_ips_detected_sec"] = {
+    "title": _("Detected per second"),
+    "unit": "count",
+    "color": "#60f020",
+}
+
+metric_info["fortigate_ips_blocked_sec"] = {
+    "title": _("Blocked per second"),
+    "unit": "count",
+    "color": "#60f020",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

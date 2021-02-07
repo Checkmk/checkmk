@@ -4,10 +4,10 @@ catalog: hw/network/fortinet
 license: GPL
 distribution: check_mk
 description:
- This check displays the average amount of detected and blocked
- intrusions on a FortiGate IPS System within the last 5 minutes. 
- The Check can go into warning or critical if the average amount of detected 
- intrusions within the last 5 Minutes is too high.
+ This check displays the amount of detected and blocked
+ intrusions on a FortiGate IPS System per second. 
+ The Check can go into warning or critical if the amount of detected 
+ intrusions is too high.
  The default tresholds are 100 for warning and 300 for criticial.
 
 discovery:

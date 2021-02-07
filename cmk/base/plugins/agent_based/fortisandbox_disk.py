@@ -19,53 +19,58 @@
 #[...]
 
 # Example GUI Output:
-# OK	FortiSandbox		Disk used: 5.28% used (694 GiB of 3.58 TiB)
+# OK	FortiSandbox Disk usage: total		18.93% used (694 GiB of 3.58 TiB),
+#                                   trend per 1 day 0 hours: +0 B, trend per 1 day 0 hours: +0%
 
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     CheckResult,
     StringTable,
 )
+from .utils.df import (
+    df_check_filesystem_single,
+    FILESYSTEM_DEFAULT_LEVELS,
+)
 from .agent_based_api.v1 import (
     register,
-    render,
     Service,
     equals,
-    check_levels,
     SNMPTree,
+    get_value_store,
 )
-from typing import Mapping, List, Tuple
+from typing import Mapping, Dict, List, Tuple
 
-Section = List[str]
+Section = Dict[str, int]
 
 
 def parse_fortisandbox_disk(string_table: List[StringTable]) -> Section:
-    return string_table[0][0]
+    parsed = {'disk_used': int(string_table[0][0][0]), 'disk_cap': int(string_table[0][0][1])}
+    return parsed
 
 
 def discovery_fortisandbox_disk(section: Section) -> DiscoveryResult:
-    yield Service()
+    yield Service(item="total")
 
 
-def check_fortisandbox_disk(params: Mapping[str, Tuple[float, float]],
+def check_fortisandbox_disk(item: str, params: Mapping[str, Tuple[float, float]],
                             section: Section) -> CheckResult:
-    disk_usage_upper = params.get("disk_usage")
-    diskusage = 1024 * 1024 * float(section[0])
-    diskcap = 1024 * 1024 * int(section[1])
-    diskperc = float(diskcap / diskusage)
-    display_diskusage = render.bytes(diskusage)
-    display_diskcap = render.bytes(diskcap)
-    yield from check_levels(
-        diskperc,
-        levels_upper=disk_usage_upper,
-        metric_name="fortisandbox_disk_usage",
-        label="Disk used",
-        render_func=lambda v: "%.2f%% used (%s of %s)" % (v, display_diskusage, display_diskcap),
+    disk_used = section['disk_used']
+    disk_cap = section['disk_cap']
+    disk_avail = disk_cap - disk_used
+    yield from df_check_filesystem_single(
+        value_store=get_value_store(),
+        mountpoint=item,
+        size_mb=disk_cap,
+        avail_mb=disk_avail,
+        reserved_mb=0,
+        inodes_total=None,
+        inodes_avail=None,
+        params=params,
     )
 
 
 register.snmp_section(
-    name="fortisandbox_disk",
+    name='fortisandbox_disk',
     parse_function=parse_fortisandbox_disk,
     detect=equals('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.12356.118.1.30006'),
     fetch=[
@@ -79,10 +84,10 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="fortisandbox_disk",
-    service_name="FortiSandbox Disk usage",
+    name='fortisandbox_disk',
+    service_name='FortiSandbox Disk usage: %s',
     discovery_function=discovery_fortisandbox_disk,
     check_function=check_fortisandbox_disk,
-    check_default_parameters={"disk_usage": (80.0, 90.0)},
-    check_ruleset_name="fortisandbox_disk",
+    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_ruleset_name='filesystem',
 )

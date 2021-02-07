@@ -6,8 +6,8 @@ distribution: check_mk
 description:
  This check displays the Disk usage on a Fortinet Sandbox Server.
  The Check can go into warning or ciritical if Disk usage is too high.
- The default thresholds are:
- 80%+ for warning and 90%+ for ciritical.
+ The default Filesystem levels are used to make this check go into
+ WARN and CRIT.
 
 discovery:
  One check per host will be created.

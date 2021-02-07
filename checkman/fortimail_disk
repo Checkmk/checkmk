@@ -1,0 +1,13 @@
+title: Fortinet FortiMail Mail Disk usage
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This Check will display the current Mail Disk usage  on a Fortinet FortiMail Server.
+ The Check can go into warning or ciritical if the Mail Disk  usage is too high. The
+ default thresholds are:
+ 80% for warning and 90% for ciritical for the Disk usage.
+
+discovery:
+ One check per host will be created.

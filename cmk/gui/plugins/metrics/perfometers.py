@@ -1604,3 +1604,10 @@ perfometer_info.append({
     "segments": ["log_file_utilization"],
     "total": 100.0,
 })
+
+perfometer_info.append({
+    "metric": "fortimail_disk_usage",
+    "type": "linear",
+    "segments": ["fortimail_disk_usage"],
+    "total": 100.0,
+})

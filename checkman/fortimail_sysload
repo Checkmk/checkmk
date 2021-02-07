@@ -1,0 +1,13 @@
+title: Fortinet FortiMail System Load
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This Check will display the current System Load on a Fortinet FortiMail Server.
+ The Check can go into warning or ciritical if the CPU usage is too high. The
+ default thresholds are:
+ 90% for warning and 95% for ciritical for the CPU usage.
+
+discovery:
+ One check per host will be created.

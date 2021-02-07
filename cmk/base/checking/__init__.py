@@ -471,6 +471,10 @@ def execute_check(
                 host_config.hostname,
                 ipaddress,
                 service,
+                used_params=(  #
+                    time_resolved_check_parameters(service.parameters)  #
+                    if isinstance(service.parameters, cmk.base.config.TimespecificParamList) else
+                    service.parameters),
                 dry_run=dry_run,
                 show_perfdata=show_perfdata,
             )
@@ -600,6 +604,7 @@ def _execute_check_legacy_mode(
     ipaddress: Optional[HostAddress],
     service: Service,
     *,
+    used_params: LegacyCheckParameters,
     dry_run: bool,
     show_perfdata: bool,
 ) -> bool:
@@ -653,8 +658,6 @@ def _execute_check_legacy_mode(
         # Call the actual check function
         item_state.reset_wrapped_counters()
 
-        used_params = (time_resolved_check_parameters(service.parameters) if isinstance(
-            service.parameters, cmk.base.config.TimespecificParamList) else service.parameters)
         raw_result = check_function(service.item, used_params, section_content)
         result = sanitize_check_result(raw_result)
         item_state.raise_counter_wrap()

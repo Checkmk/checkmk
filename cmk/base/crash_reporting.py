@@ -48,11 +48,12 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
 
 
 def create_check_crash_dump(
-    hostname: HostName,
-    check_plugin_name: Union[CheckPluginNameStr, CheckPluginName],
-    check_plugin_kwargs: Dict[str, Any],
-    is_manual_check: bool,
-    description: ServiceName,
+    *,
+    host_name: HostName,
+    service_name: ServiceName,
+    plugin_name: Union[CheckPluginNameStr, CheckPluginName],
+    plugin_kwargs: Dict[str, Any],
+    is_manual: bool,
 ) -> str:
     """Create a crash dump from an exception occured during check execution
 
@@ -63,11 +64,11 @@ def create_check_crash_dump(
     text = u"check failed - please submit a crash report!"
     try:
         crash = CheckCrashReport.from_exception_and_context(
-            hostname=hostname,
-            check_plugin_name=str(check_plugin_name),
-            check_plugin_kwargs=check_plugin_kwargs,
-            is_manual_check=is_manual_check,
-            description=description,
+            hostname=host_name,
+            check_plugin_name=str(plugin_name),
+            check_plugin_kwargs=plugin_kwargs,
+            is_manual_check=is_manual,
+            description=service_name,
             text=text,
         )
         CrashReportStore().save(crash)

@@ -582,12 +582,13 @@ def get_aggregated_result(
     except Exception:
         if cmk.utils.debug.enabled():
             raise
+        table = check_table.get_check_table(host_config.hostname, skip_autochecks=True)
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
-            host_config.hostname,
-            service.check_plugin_name,
-            kwargs,
-            is_manual_check(host_config.hostname, service.id()),
-            service.description,
+            host_name=host_config.hostname,
+            service_name=service.description,
+            plugin_name=service.check_plugin_name,
+            plugin_kwargs=kwargs,
+            is_manual=service.id() in table,
         ), []
 
     return True, True, result
@@ -674,15 +675,15 @@ def _execute_check_legacy_mode(
         if cmk.utils.debug.enabled():
             raise
         result = 3, cmk.base.crash_reporting.create_check_crash_dump(
-            hostname,
-            service.check_plugin_name,
-            {
+            host_name=hostname,
+            service_name=service.description,
+            plugin_name=service.check_plugin_name,
+            plugin_kwargs={
                 "item": service.item,
                 "params": used_params,
                 "section_content": section_content
             },
-            is_manual_check(hostname, service.id()),
-            service.description,
+            is_manual=service.id() in check_table.get_check_table(hostname, skip_autochecks=True),
         ), []
 
     _submit_to_core.check_result(
@@ -762,13 +763,6 @@ def _evaluate_timespecific_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
             combined_entry = tp_entry
 
     return combined_entry
-
-
-def is_manual_check(hostname: HostName, service_id: ServiceID) -> bool:
-    return service_id in check_table.get_check_table(
-        hostname,
-        skip_autochecks=True,
-    )
 
 
 def _add_state_marker(

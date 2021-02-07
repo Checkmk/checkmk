@@ -52,6 +52,12 @@ metric_info["predict_load15"] = {
     "color": "#a0b0c0",
 }
 
+metric_info["load_instant"] = {
+    "title": _("Instantaneous CPU load"),
+    "unit": "",
+    "color": "42/a",
+}
+
 metric_info["context_switches"] = {
     "title": _("Context switches"),
     "unit": "1/s",

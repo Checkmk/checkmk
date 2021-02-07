@@ -49,7 +49,6 @@ from .agent_based_api.v1.type_defs import (
 )
 from .agent_based_api.v1 import (
     register,
-    IgnoreResultsError,
     render,
     Service,
     equals,
@@ -78,13 +77,8 @@ def discovery_fortimail_queue(section: Section) -> DiscoveryResult:
 def check_fortimail_queue(item: str, params: Mapping[str, Tuple[float, float]],
                           section: Section) -> CheckResult:
     queued_mails_upper = params.get('queued_mails')
-    queue = section.get(item)
-    if not queue:
-        raise IgnoreResultsError("Queue data could not be read")
-    mail_count = queue.get('mail_count')
-    if not isinstance(mail_count, int):
-        raise IgnoreResultsError("Mail count could not be read")
-    mail_size = queue.get('mail_size')
+    mail_count = section[item]['mail_count']
+    mail_size = section[item]['mail_size']
     yield from check_levels(
         mail_count,
         levels_upper=queued_mails_upper,

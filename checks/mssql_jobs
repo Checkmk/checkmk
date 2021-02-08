@@ -79,7 +79,7 @@ def _format_to_datetime(raw_date, raw_time):
     'N/A'
 
     '''
-    if raw_date == '0':
+    if raw_date in ['0', '']:
         return 'N/A'
 
     source_datetime = datetime.datetime.strptime(

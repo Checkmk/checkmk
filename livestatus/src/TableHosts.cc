@@ -24,7 +24,6 @@
 #include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "CommentColumn.h"
-#include "ContactGroupsColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
@@ -749,10 +748,17 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "groups", "A list of all host groups this host is in",
         offsets.add([](Row r) { return &r.rawData<host>()->hostgroups_ptr; }),
         table->core()));
-    table->addColumn(std::make_unique<ContactGroupsColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<host>>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in",
-        offsets.add([](Row r) { return &r.rawData<host>()->contact_groups; })));
+        offsets,
+        [](const host &hst) {
+            std::vector<std::string> names;
+            for (const auto *cgm = hst.contact_groups; cgm != nullptr; cgm = cgm->next) {
+                names.emplace_back(cgm->group_ptr->group_name);
+            }
+            return names;
+        }));
 
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",

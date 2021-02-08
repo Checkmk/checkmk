@@ -542,7 +542,7 @@ table.data.single {
 
     td.left {
       width: 10%;
-      padding: $td-single-left-padding;
+      padding: 2px 20px 2px 16px;
       white-space: nowrap;
     }
 
@@ -569,8 +569,7 @@ table.data.single {
   > tbody > tr > td,
   > tbody tr.odd0 > td,
   > tbody tr.even0 > td {
-    padding: $table-data-single-padding;
-    background-color: $td-single-bg-color;
+    padding: 2px 0;
     border-radius: 0;
 
     &.left {

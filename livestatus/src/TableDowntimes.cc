@@ -22,7 +22,7 @@
 #include "StringColumn.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
 #include "auth.h"
 #include "nagios.h"
 
@@ -39,7 +39,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<Downtime>>(
         "id", "The id of the downtime", offsets,
         [](const Downtime &r) { return r._id; }));
-    addColumn(std::make_unique<TimeLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<TimeColumn<Downtime>>(
         "entry_time", "The time the entry was made as UNIX timestamp", offsets,
         [](const Downtime &r) {
             return std::chrono::system_clock::from_time_t(r._entry_time);
@@ -53,12 +53,12 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "0, if this entry is for a host, 1 if it is for a service", offsets,
         [](const Downtime &r) { return r._is_service; }));
 
-    addColumn(std::make_unique<TimeLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<TimeColumn<Downtime>>(
         "start_time", "The start time of the downtime as UNIX timestamp",
         offsets, [](const Downtime &r) {
             return std::chrono::system_clock::from_time_t(r._start_time);
         }));
-    addColumn(std::make_unique<TimeLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<TimeColumn<Downtime>>(
         "end_time", "The end time of the downtime as UNIX timestamp", offsets,
         [](const Downtime &r) {
             return std::chrono::system_clock::from_time_t(r._end_time);

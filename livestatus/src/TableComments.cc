@@ -22,7 +22,7 @@
 #include "StringColumn.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
 #include "auth.h"
 #include "nagios.h"
 
@@ -39,7 +39,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<Comment>>(
         "id", "The id of the comment", offsets,
         [](const Comment &r) { return r._id; }));
-    addColumn(std::make_unique<TimeLambdaColumn<Comment>>(
+    addColumn(std::make_unique<TimeColumn<Comment>>(
         "entry_time", "The time the entry was made as UNIX timestamp", offsets,
         [](const Comment &r) {
             return std::chrono::system_clock::from_time_t(r._entry_time);
@@ -65,7 +65,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<Comment>>(
         "expires", "Whether this comment expires", offsets,
         [](const Comment &r) { return r._expires; }));
-    addColumn(std::make_unique<TimeLambdaColumn<Comment>>(
+    addColumn(std::make_unique<TimeColumn<Comment>>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         offsets, [](const Comment &r) {
             return std::chrono::system_clock::from_time_t(r._expire_time);

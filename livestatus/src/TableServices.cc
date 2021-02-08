@@ -44,7 +44,7 @@
 #include "StringColumn.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
 #include "nagios.h"
@@ -287,49 +287,49 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "no_more_notifications",
         "Whether to stop sending notifications (0/1)", offsets,
         [](const service &r) { return r.no_more_notifications; }));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "last_time_ok",
         "The last time the service was OK (Unix timestamp)", offsets,
         [](const service &r) {
             return std::chrono::system_clock::from_time_t(r.last_time_ok);
         }));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "last_time_warning",
         "The last time the service was in WARNING state (Unix timestamp)",
         offsets, [](const service &r) {
             return std::chrono::system_clock::from_time_t(r.last_time_warning);
         }));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "last_time_critical",
         "The last time the service was CRITICAL (Unix timestamp)", offsets,
         [](const service &r) {
             return std::chrono::system_clock::from_time_t(r.last_time_critical);
         }));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "last_time_unknown",
         "The last time the service was UNKNOWN (Unix timestamp)", offsets,
         [](const service &r) {
             return std::chrono::system_clock::from_time_t(r.last_time_unknown);
         }));
 
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "last_check", "The time of the last check (Unix timestamp)",
         offsets, [](const service &r) {
             return std::chrono::system_clock::from_time_t(r.last_check);
         }));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "next_check",
         "The scheduled time of the next check (Unix timestamp)", offsets,
         [](const service &r) {
             return std::chrono::system_clock::from_time_t(r.next_check);
         }));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "last_notification",
         "The time of the last notification (Unix timestamp)", offsets,
         [](const service &r) {
             return std::chrono::system_clock::from_time_t(r.last_notification);
         }));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "next_notification",
         "The time of the next notification (Unix timestamp)", offsets,
         [](const service &r) {
@@ -339,13 +339,13 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "current_notification_number",
         "The number of the current notification", offsets,
         [](const service &r) { return r.current_notification_number; }));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "last_state_change",
         "The time of the last state change - soft or hard (Unix timestamp)",
         offsets, [](const service &r) {
             return std::chrono::system_clock::from_time_t(r.last_state_change);
         }));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>>(
+    table->addColumn(std::make_unique<TimeColumn<service>>(
         prefix + "last_hard_state_change",
         "The time of the last hard state change (Unix timestamp)", offsets,
         [](const service &r) {
@@ -619,7 +619,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         table->core(), offsets));
-    table->addColumn(std::make_unique<TimeLambdaColumn<service>::Constant>(
+    table->addColumn(std::make_unique<TimeColumn<service>::Constant>(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite",
         std::chrono::system_clock::time_point{}));

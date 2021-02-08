@@ -13,7 +13,7 @@
 #include "Row.h"
 #include "StringColumn.h"
 #include "TableEventConsoleEvents.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     : TableEventConsole(mc) {

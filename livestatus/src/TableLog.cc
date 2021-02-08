@@ -26,7 +26,7 @@
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
 
 #ifdef CMC
 #include "cmc.h"
@@ -59,7 +59,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     ColumnOffsets offsets{};
     auto offsets_entry{
         offsets.add([](Row r) { return r.rawData<LogRow>()->entry; })};
-    addColumn(std::make_unique<TimeLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<TimeColumn<LogEntry>>(
         "time", "Time of the log event (UNIX timestamp)", offsets_entry,
         [](const LogEntry &r) {
             return std::chrono::system_clock::from_time_t(r._time);

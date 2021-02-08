@@ -14,7 +14,7 @@
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "StringColumn.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
     : TableEventConsole(mc) {

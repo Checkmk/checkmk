@@ -1562,8 +1562,16 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discove
 
     discovery_parameters = discovery_test_case.parameters
 
+    # we need the sideeffects of this call. TODO: guess what.
+    _ = discovery._host_labels.analyse_cluster_host_labels(
+        host_config=scenario.host_config,
+        ipaddress=scenario.ipaddress,
+        parsed_sections_broker=scenario.parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    )
+
     with cmk_debug_enabled():
-        discovered_services, _host_label_discovery_result = discovery._get_cluster_services(
+        discovered_services = discovery._get_cluster_services(
             scenario.host_config,
             scenario.ipaddress,
             scenario.parsed_sections_broker,
@@ -1583,14 +1591,15 @@ def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_te
     discovery_parameters = discovery_test_case.parameters
 
     with cmk_debug_enabled():
-        _discovered_services, host_label_result = discovery._get_cluster_services(
-            scenario.host_config,
-            scenario.ipaddress,
-            scenario.parsed_sections_broker,
-            discovery_parameters,
+        host_label_result = discovery._host_labels.analyse_cluster_host_labels(
+            host_config=scenario.host_config,
+            ipaddress=scenario.ipaddress,
+            parsed_sections_broker=scenario.parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
         )
 
-    assert host_label_result.vanished == discovery_test_case.on_cluster.expected_vanished_host_labels
+    assert (
+        host_label_result.vanished == discovery_test_case.on_cluster.expected_vanished_host_labels)
     assert host_label_result.old == discovery_test_case.on_cluster.expected_old_host_labels
     assert host_label_result.new == discovery_test_case.on_cluster.expected_new_host_labels
 

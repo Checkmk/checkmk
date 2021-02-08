@@ -1316,41 +1316,41 @@ def _get_host_services(
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[ServicesByTransition, QualifiedDiscovery[HostLabel]]:
 
-    if host_config.is_cluster:
-        services, host_label_discovery_result = _get_cluster_services(
-            host_config,
-            ipaddress,
-            parsed_sections_broker,
-            discovery_parameters,
-        )
-    else:
-        services, host_label_discovery_result = _get_node_services(
-            host_config,
-            ipaddress,
-            parsed_sections_broker,
-            discovery_parameters,
-        )
-
-    # Now add manual and active service and handle ignored services
-    return _merge_manual_services(host_config, services,
-                                  discovery_parameters), host_label_discovery_result
-
-
-# Do the actual work for a non-cluster host or node
-def _get_node_services(
-    host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
-    parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesTable, QualifiedDiscovery[HostLabel]]:
-
-    host_name = host_config.hostname
-    host_label_result = analyse_host_labels(
-        host_name=host_name,
+    host_labels = analyse_cluster_host_labels(
+        host_config=host_config,
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    ) if host_config.is_cluster else analyse_host_labels(
+        host_name=host_config.hostname,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
     )
+
+    services = _get_cluster_services(
+        host_config,
+        ipaddress,
+        parsed_sections_broker,
+        discovery_parameters,
+    ) if host_config.is_cluster else _get_node_services(
+        host_config.hostname,
+        ipaddress,
+        parsed_sections_broker,
+        discovery_parameters,
+    )
+
+    # Now add manual and active service and handle ignored services
+    return _merge_manual_services(host_config, services, discovery_parameters), host_labels
+
+
+# Do the actual work for a non-cluster host or node
+def _get_node_services(
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+    parsed_sections_broker: ParsedSectionsBroker,
+    discovery_parameters: DiscoveryParameters,
+) -> ServicesTable:
 
     service_result = _get_discovered_services(
         host_name,
@@ -1376,7 +1376,7 @@ def _get_node_services(
             (("old", s) for s in service_result.old),
             (("new", s) for s in service_result.new),
         )
-    }, host_label_result
+    }
 
 
 def _node_service_source(
@@ -1395,7 +1395,6 @@ def _node_service_source(
     return "clustered_" + check_source
 
 
-# Part of _get_node_services that deals with discovered services
 def _get_discovered_services(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
@@ -1497,16 +1496,10 @@ def _get_cluster_services(
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesTable, QualifiedDiscovery[HostLabel]]:
+) -> ServicesTable:
 
-    cluster_host_labels = analyse_cluster_host_labels(
-        host_config=host_config,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-    )
     if not host_config.nodes:
-        return {}, cluster_host_labels
+        return {}
 
     cluster_items: ServicesTable = {}
     config_cache = config.get_config_cache()
@@ -1541,7 +1534,7 @@ def _get_cluster_services(
                     existing_entry=cluster_items.get(service.id()),
                 ))
 
-    return cluster_items, cluster_host_labels
+    return cluster_items
 
 
 def _cluster_service_entry(

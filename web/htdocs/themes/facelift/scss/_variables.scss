@@ -152,20 +152,6 @@ $color-nuance-16: rgb(255, 150, 68); // orange
 $color-nuance-17: rgb(161, 230, 248); // light blue
 
 // -----------------------------------------------------------------------------
-// Tags
-// -----------------------------------------------------------------------------
-$tag-margin: 0 5px 2px 0;
-$tag-padding: 0.1em 0.3em;
-$tag-font-color: $font-color;
-$tag-opacity: 1;
-$tag-discovered-opacity: 1;
-$tag-hover-opacity: 0.5;
-
-$tag-input-bg-color: $inpage-highlight-color;
-$tag-dropdown-active-bg-color: $inpage-highlight-color;
-$tag-dropdown-active-border: none;
-
-// -----------------------------------------------------------------------------
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
@@ -349,6 +335,22 @@ $snapin-list-color: $font-color-sidebar;
 $performance-table-shared-padding: 8px;
 $logwatch-text-color: rgb(11, 5, 5);
 $logwatch-text-color-2: $darkgrey;
+
+// -----------------------------------------------------------------------------
+// Tags
+// -----------------------------------------------------------------------------
+$tag-margin: 0 5px 2px 0;
+$tag-padding: 0.1em 0.3em;
+$tag-font-color: $font-color;
+$tag-opacity: 1;
+$tag-discovered-opacity: 1;
+$tag-hover-opacity: 0.5;
+
+$tag-input-bg-color: $inpage-highlight-color;
+$tag-dropdown-bg-color: $inpage-highlight-color;
+$tag-dropdown-hover-bg-color: $inpage-highlight-color;
+$tag-dropdown-hover-border-color: $select2-border-color;
+$tag-dropdown-hover-font-color: $success;
 
 // -----------------------------------------------------------------------------
 // Node visualization

@@ -76,6 +76,15 @@ function enable_label_input_fields(container) {
         let ajax_obj;
         let tagify_args = {
             pattern: /^[^:]+:[^:]+$/,
+            dropdown: {
+                enabled: 1, // show dropdown on first character
+                fuzzySearch: false,
+                caseSensitive: false,
+            },
+            editTags: {
+                clicks: 1, // single click to edit a tag
+                keepInvalid: false, // if after editing, tag is invalid, auto-revert
+            },
         };
 
         if (max_labels !== null) {
@@ -84,10 +93,34 @@ function enable_label_input_fields(container) {
 
         let tagify = new Tagify(element, tagify_args);
 
+        // Add custom validation function that ensures that a single label key is only used once
+        tagify.settings.validate = (t => {
+            return add_label => {
+                let label_key = add_label.value.split(":", 1)[0];
+                for (const existing_label of t.value) {
+                    let existing_key = existing_label.value.split(":", 1)[0];
+
+                    if (label_key == existing_key) {
+                        return (
+                            "Only one value per KEY can be used at a time. " +
+                            existing_label.value +
+                            " is already used."
+                        );
+                    }
+                }
+                return true;
+            };
+        })(tagify);
+
         tagify.on("invalid", function (e) {
             let message;
             if (e.type == "invalid" && e.detail.message == "number of tags exceeded") {
                 message = "Only one tag allowed";
+            } else if (
+                e.type == "invalid" &&
+                e.detail.message.indexOf("Only one value per KEY") === 0
+            ) {
+                message = e.detail.message;
             } else {
                 message =
                     "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.</div>";
@@ -111,7 +144,7 @@ function enable_label_input_fields(container) {
         tagify.on("input", function (e) {
             $("div.label_error").remove(); // Remove all previous errors
 
-            var value = e.detail;
+            var value = e.detail.value;
             tagify.settings.whitelist.length = 0; // reset the whitelist
 
             var post_data =

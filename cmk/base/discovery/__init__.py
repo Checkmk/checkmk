@@ -450,12 +450,14 @@ def _do_discovery_for(
 #                       if it returns False for a new item it will not be added, if it returns
 #                       False for a vanished item, that item is kept
 def discover_on_host(
+    *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     mode: str,
-    use_caches: bool,
     service_filters: ServiceFilters,
-    on_error: str = "ignore",
+    on_error: str,
+    use_cached_snmp_data: bool,
+    max_cachefile_age: int,
 ) -> DiscoveryResult:
 
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
@@ -472,6 +474,8 @@ def discover_on_host(
     if host_name not in config_cache.all_active_hosts():
         result.error_text = ""
         return result
+
+    _set_cache_opts_of_checkers(use_cached_snmp_data=use_cached_snmp_data)
 
     try:
         # in "refresh" mode we first need to remove all previously discovered
@@ -501,7 +505,7 @@ def discover_on_host(
             ),
         )
 
-        max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
+        max_cachefile_age = config.discovery_max_cachefile_age()
         parsed_sections_broker = ParsedSectionsBroker()
         sources.update_host_sections(
             parsed_sections_broker,
@@ -551,6 +555,22 @@ def discover_on_host(
 
     result.self_total = result.self_new + result.self_kept
     return result
+
+
+def _set_cache_opts_of_checkers(*, use_cached_snmp_data: bool) -> None:
+    """Set caching options appropriate for discovery"""
+    # TCP data sources should use the cache: Fetching live data may steal log
+    # messages and the like from the checks.
+    # However: Discovering new hosts might have no cache, so don't enforce it.
+    cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
+    # As this is a change quite close to a release, I am leaving the following
+    # line in. As far as I can tell, this property is never being read after the
+    # callsites of this function.
+    cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
+    # SNMP data sources *may* use the cache. Note the cached data results from
+    # the last time a *discovery* was done. It contains all sections for
+    # which the detection triggered at that time.
+    cmk.core_helpers.cache.FileCacheFactory.snmp_disabled = not use_cached_snmp_data
 
 
 def _make_services_audit_log_object(services: List[Service]) -> Set[str]:
@@ -937,11 +957,16 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
     reason = _may_rediscover(params, now_ts, oldest_queued)
     if not reason:
         result = discover_on_host(
-            config_cache,
-            host_config,
-            _get_rediscovery_mode(params),
-            use_caches=True,
+            config_cache=config_cache,
+            host_config=host_config,
+            mode=_get_rediscovery_mode(params),
             service_filters=service_filters,
+            on_error="ignore",
+            use_cached_snmp_data=True,
+            # autodiscovery is run every 5 minutes (see
+            # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
+            # make sure we may use the file the active discovery check left behind:
+            max_cachefile_age=600,
         )
         if result.error_text is not None:
             if result.error_text:
@@ -1274,9 +1299,10 @@ def _cluster_service_entry(
 
 
 def get_check_preview(
-    host_name: HostName,
     *,
-    use_caches: bool,
+    host_name: HostName,
+    max_cachefile_age: int,
+    use_cached_snmp_data: bool,
     on_error: str,
 ) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]:
     """Get the list of service of a host or cluster and guess the current state of
@@ -1295,6 +1321,7 @@ def get_check_preview(
         only_host_labels=False,
     )
 
+    _set_cache_opts_of_checkers(use_cached_snmp_data=use_cached_snmp_data)
     nodes = sources.make_nodes(
         config_cache, host_config, ip_address, Mode.CACHED_DISCOVERY,
         sources.make_sources(
@@ -1303,7 +1330,7 @@ def get_check_preview(
             mode=Mode.CACHED_DISCOVERY,
             on_scan_error=on_error,
         ))
-    max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
+    max_cachefile_age = config.discovery_max_cachefile_age()
 
     parsed_sections_broker = ParsedSectionsBroker()
     sources.update_host_sections(

@@ -37,10 +37,6 @@ from cmk.gui.htmllib import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.pages import get_page_handler
-from cmk.gui.plugins.watolib.utils import (
-    SampleConfigGenerator,
-    sample_config_generator_registry,
-)
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.utils import may_edit_ruleset
@@ -503,23 +499,6 @@ class SearchIndexBackgroundJob(GUIBackgroundJob):
             stoppable=False,
             estimated_duration=last_job_status.get("duration"),
         )
-
-
-@sample_config_generator_registry.register
-class SampleConfigGeneratorSearchIndex(SampleConfigGenerator):
-    """Initial building and storing of search index"""
-    @classmethod
-    def ident(cls) -> str:
-        return "search_index"
-
-    @classmethod
-    def sort_index(cls) -> int:
-        return 70
-
-    def generate(self) -> None:
-        # it is possible that Redis is not yet up and running, therefore we explicitly allow
-        # multiple connection attempts
-        build_index_background(n_attempts_redis_connection=5)
 
 
 match_item_generator_registry = MatchItemGeneratorRegistry()

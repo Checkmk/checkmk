@@ -58,7 +58,6 @@ from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType  # p
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib.search  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.userdb import load_users, save_users  # pylint: disable=cmk-module-layer-violation
@@ -160,7 +159,6 @@ class UpdateConfig:
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
             (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
-            (self._create_search_index, "Creating search index"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._set_user_scheme_serial, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
@@ -665,17 +663,6 @@ class UpdateConfig:
         for connection in connections:
             connection.setdefault("type", "ldap")
         save_connection_config(connections)
-
-    def _create_search_index(self):
-        """Rebuild and store the search index used by the seach field in the Setup menu.
-
-        This is necessary for example if a new Rulespec was added by an MKP. We do this in the
-        background and try to connect to Redis for up to 10 minutes.
-        """
-        cmk.gui.watolib.search.build_index_background(
-            n_attempts_redis_connection=30,
-            sleep_time=20,
-        )
 
     def _rewrite_bi_configuration(self):
         """Convert the bi configuration to the new (REST API compatible) format"""

@@ -86,7 +86,22 @@ def get_bi_rule(params):
           request_schema=BIRuleEndpointSchema,
           response_schema=BIRuleEndpointSchema)
 def put_bi_rule(params):
-    """Update a BI rule"""
+    """Update an existing BI rule"""
+    return _update_bi_rule(params, must_exist=True)
+
+
+@Endpoint(constructors.object_href("bi_rule", "{rule_id}"),
+          'cmk/post_bi_rule',
+          method='post',
+          path_params=[BI_RULE_ID],
+          request_schema=BIRuleEndpointSchema,
+          response_schema=BIRuleEndpointSchema)
+def post_bi_rule(params):
+    """ Create a new BI rule"""
+    return _update_bi_rule(params, must_exist=False)
+
+
+def _update_bi_rule(params, must_exist: bool):
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     rule_config = params["body"]
@@ -95,7 +110,14 @@ def put_bi_rule(params):
     except KeyError:
         _bailout_with_message("Unknown bi_pack: %s" % rule_config["pack_id"])
 
-    rule_config["id"] = params["rule_id"]
+    rule_id = params["rule_id"]
+    rule_exists = bool(bi_packs.get_rule(rule_id))
+    if rule_exists and not must_exist:
+        _bailout_with_message("This rule_id already exists: %s" % rule_id)
+    if not rule_exists and must_exist:
+        _bailout_with_message("This rule_id does not exist: %s" % rule_id)
+
+    rule_config["id"] = rule_id
     bi_rule = BIRule(rule_config)
     target_pack.add_rule(bi_rule)
     bi_packs.save_config()
@@ -144,7 +166,7 @@ class BIAggregationEndpointSchema(BIAggregationSchema):
           path_params=[BI_AGGR_ID],
           response_schema=BIAggregationEndpointSchema)
 def get_bi_aggregation(params):
-    """Show a BI aggregation"""
+    """Get a BI aggregation"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     try:
@@ -164,18 +186,38 @@ def get_bi_aggregation(params):
           request_schema=BIAggregationEndpointSchema,
           response_schema=BIAggregationEndpointSchema)
 def put_bi_aggregation(params):
-    """Update a BI aggregation"""
+    """Update an existing BI aggregation"""
+    return _update_bi_aggregation(params, must_exist=True)
+
+
+@Endpoint(constructors.object_href("bi_aggregation", "{aggregation_id}"),
+          'cmk/post_bi_aggregation',
+          method='post',
+          path_params=[BI_AGGR_ID],
+          request_schema=BIAggregationEndpointSchema,
+          response_schema=BIAggregationEndpointSchema)
+def post_bi_aggregation(params):
+    """Create a BI aggregation"""
+    return _update_bi_aggregation(params, must_exist=False)
+
+
+def _update_bi_aggregation(params, must_exist: bool):
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
-
     aggregation_config = params["body"]
-
     try:
         target_pack = bi_packs.get_pack_mandatory(aggregation_config["pack_id"])
     except KeyError:
         _bailout_with_message("Unknown bi_pack: %s" % aggregation_config["pack_id"])
 
-    aggregation_config["id"] = params["aggregation_id"]
+    aggregation_id = params["aggregation_id"]
+    aggregation_exists = bool(bi_packs.get_aggregation(aggregation_id))
+    if aggregation_exists and not must_exist:
+        _bailout_with_message("This aggregation_id already exists: %s" % aggregation_id)
+    if not aggregation_exists and must_exist:
+        _bailout_with_message("This aggregation_id does not exist: %s" % aggregation_id)
+
+    aggregation_config["id"] = aggregation_id
     bi_aggregation = BIAggregation(aggregation_config)
     target_pack.add_aggregation(bi_aggregation)
     bi_packs.save_config()

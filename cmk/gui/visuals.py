@@ -974,7 +974,17 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
                         "not this %s should only be shown with show more %s.") %
                  (visual_type.title, visual_type.title),
              )),
-            ('icon', IconSelector(title=_('Icon'))),
+            ('icon',
+             IconSelector(
+                 title=_('Icon'),
+                 help=_("This selection is only relevant if under 'User' "
+                        "-> 'Edit Profile' -> 'Mega menue icons' you have selected "
+                        "the options 'Per Entry'. If this is the case, you "
+                        "select here the icon that will be placed next to your "
+                        "Dashboard’s name in the Monitoring menu. You can only "
+                        "select one icon (the colored icon) or one icon that is "
+                        "complemented with an additional symbol."),
+             )),
             ('visibility', Dictionary(
                 title=_('Visibility'),
                 elements=visibility_elements,

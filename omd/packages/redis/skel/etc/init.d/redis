@@ -15,6 +15,7 @@ start)
         exit 0
     fi
     $DAEMON $OPTS
+    init-redis
     echo OK
     ;;
 stop)

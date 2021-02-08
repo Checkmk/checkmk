@@ -79,12 +79,16 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
     plot_definitions = []
 
     def svc_map(row):
-        css_classes, status_name = service_state_short(row)
+        state, status_name = service_state_short(row)
         draw_status = properties.get("status_border", "not_ok")
-        if draw_status == "not_ok" and css_classes.endswith("state0"):
+        if draw_status == "not_ok" and state == "0":
             draw_status = False
 
-        return {"style": css_classes, "msg": _("Status: ") + status_name, "draw": draw_status}
+        return {
+            "style": "svcstate state%s" % state,
+            "msg": _("Status: ") + status_name,
+            "draw": draw_status
+        }
 
     def metric_state_color(metric):
         warn = metric["scalar"].get("warn")

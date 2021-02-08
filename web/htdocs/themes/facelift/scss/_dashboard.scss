@@ -724,7 +724,7 @@ div#dashboard.grid {
 }
 
 div.dashlet g {
-  &.state.svcstate {
+  &.svcstate {
     &.state0 rect {
       stroke: $color-state-success-background;
     }
@@ -742,7 +742,7 @@ div.dashlet g {
     }
   }
 
-  &.state.svcstate {
+  &.svcstate {
     &.state0 text {
       fill: $color-state-success-background;
     }

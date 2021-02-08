@@ -18,8 +18,8 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.passwords import (
     save_password,
     load_password_to_modify,
-    load_passwords_to_modify,
     load_passwords,
+    remove_password,
 )
 
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -41,7 +41,7 @@ def create_password(params):
     ident = body['ident']
     password_details = {k: v for k, v in body.items() if k not in ("ident", "owned_by")}
     password_details["owned_by"] = None if body['owned_by'] == "admin" else body['owned_by']
-    save_password(ident, password_details)
+    save_password(ident, password_details, new_password=True)
     return Response(status=204)
 
 
@@ -69,12 +69,11 @@ def update_password(params):
 def delete_password(params):
     """Delete a password"""
     ident = params['name']
-    entries = load_passwords_to_modify()
-    if ident not in entries:
+    if ident not in load_passwords():
         return problem(
             404, f'Password "{ident}" is not known.',
             'The password you asked for is not known. Please check for eventual misspellings.')
-    _ = entries.pop(ident)
+    remove_password(ident)
     return Response(status=204)
 
 

@@ -951,10 +951,16 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
                  help=_("Whether or not additional information from the page context "
                         "(filters) should be added to the title given above."),
              )),
-            ('topic', DropdownChoice(
-                title=_('Topic'),
-                choices=pagetypes.PagetypeTopics.choices(),
-            )),
+            ('topic',
+             DropdownChoice(
+                 title=_("Topic in ’Monitor' menu"),
+                 help=_("Dashboards will be visible in the ‘Monitor’ main menu. "
+                        "With this option, you can select in which section of the menu this "
+                        "dashboard should be accessible. If you want to define a new "
+                        "topic name you can do this here <a href='%s'>here</a>.") %
+                 "pagetype_topics.py",
+                 choices=pagetypes.PagetypeTopics.choices(),
+             )),
             ("sort_index",
              Integer(
                  title=_("Sort index"),

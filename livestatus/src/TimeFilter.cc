@@ -6,14 +6,17 @@
 #include "TimeFilter.h"
 
 #include <cstdlib>
+#include <utility>
 
 #include "Row.h"
-#include "TimeColumn.h"
 
-TimeFilter::TimeFilter(Kind kind, const TimeColumn &column,
+TimeFilter::TimeFilter(Kind kind, std::string columnName,
+                       std::function<std::chrono::system_clock::time_point(
+                           Row, std::chrono::seconds)>
+                           getValue,
                        RelationalOperator relOp, const std::string &value)
-    : ColumnFilter(kind, column.name(), relOp, value)
-    , _column(column)
+    : ColumnFilter(kind, std::move(columnName), relOp, value)
+    , _getValue{std::move(getValue)}
     , _ref_value(atoi(value.c_str())) {}
 
 namespace {
@@ -50,9 +53,9 @@ bool eval(int32_t x, RelationalOperator op, int32_t y) {
 
 bool TimeFilter::accepts(Row row, const contact * /*auth_user*/,
                          std::chrono::seconds timezone_offset) const {
-    return eval(std::chrono::system_clock::to_time_t(
-                    _column.getValue(row, timezone_offset)),
-                oper(), _ref_value);
+    return eval(
+        std::chrono::system_clock::to_time_t(_getValue(row, timezone_offset)),
+        oper(), _ref_value);
 }
 
 std::optional<int32_t> TimeFilter::greatestLowerBoundFor(
@@ -127,6 +130,7 @@ std::unique_ptr<Filter> TimeFilter::copy() const {
 }
 
 std::unique_ptr<Filter> TimeFilter::negate() const {
-    return std::make_unique<TimeFilter>(
-        kind(), _column, negateRelationalOperator(oper()), value());
+    return std::make_unique<TimeFilter>(kind(), columnName(), _getValue,
+                                        negateRelationalOperator(oper()),
+                                        value());
 }

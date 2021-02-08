@@ -328,13 +328,13 @@ def is_ntop_configured() -> bool:
     ntop = get_ntop_connection()
 
     if is_ntop_available() and isinstance(ntop, dict):
+        is_ntop_activated = ntop.get("is_activated", False)
         custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
         # We currently have two options to get an ntop username
         # 1) User needs to define his own -> if this string is empty, declare ntop as not configured
         # 2) Take the checkmk username as ntop username -> always declare ntop as configured
-        return bool(
-            isinstance(custom_attribute_name, str) and
-            user.get_attribute(custom_attribute_name, "")) or not custom_attribute_name
+        return bool(is_ntop_activated and isinstance(custom_attribute_name, str) and
+                    user.get_attribute(custom_attribute_name, "")) or not custom_attribute_name
     return False
 
 

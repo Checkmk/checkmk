@@ -1,0 +1,12 @@
+Title: Proxmox VE: don't generate/process disk-usage info for PVE nodes
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1612773691
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b6
+
+Since disk usage information is not useful for PVE nodes the PVE special agent
+won't generate disk usage sections for nodes any more.

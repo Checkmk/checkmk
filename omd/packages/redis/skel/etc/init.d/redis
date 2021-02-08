@@ -11,6 +11,7 @@ case "$1" in
 start)
     echo -n 'Starting redis...'
     $DAEMON $OPTS
+    init-redis
     echo OK
     ;;
 stop)

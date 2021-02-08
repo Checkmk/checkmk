@@ -70,6 +70,15 @@ ETAG_HEADER_PARAM = {
     )
 }
 
+CONTENT_TYPE = {
+    'Content-Type': fields.String(
+        required=True,
+        description=("A header specifying which type of content is in the request/response body. "
+                     "This is required when sending encoded data in a POST/PUT body."),
+        example='application/json',
+    )
+}
+
 SERVICE_DESCRIPTION = {
     'service_description': fields.String(
         description="The service description.",

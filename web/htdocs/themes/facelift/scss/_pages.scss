@@ -1629,13 +1629,19 @@ table.data.job_table td {
     border: none;
     box-shadow: none;
 
+    &__wrapper {
+      background: $tag-input-bg-color;
+      border: 1px solid $tag-dropdown-hover-border-color;
+      border-radius: 4px;
+    }
+
     &__item {
       margin: 1px;
 
       &--active {
-        color: $tag-font-color;
-        background-color: $tag-dropdown-active-bg-color;
-        border: $tag-dropdown-active-border;
+        color: $tag-dropdown-hover-font-color;
+        background-color: $tag-dropdown-hover-bg-color;
+        border: $tag-dropdown-hover-border-color;
       }
     }
   }

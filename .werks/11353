@@ -1,0 +1,12 @@
+Title: k8s_daemon_pods: Handle null value
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612796282
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b6
+
+number_available and number_unavailable may be None, so handle them correctly.

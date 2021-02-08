@@ -370,7 +370,7 @@ class IndexSearcher:
                 if not permissions_check(match_item_dict["url"]):
                     continue
 
-                results[match_item_dict["topic"]].append(
+                results[_(match_item_dict["topic"])].append(
                     SearchResult(
                         match_item_dict["title"],
                         match_item_dict["url"],

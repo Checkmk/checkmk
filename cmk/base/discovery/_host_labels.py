@@ -37,8 +37,19 @@ def analyse_host_labels(
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> QualifiedDiscovery[HostLabel]:
-    """Discovers host labels and services per real host or node"""
+    """Discovers and processes host labels per real host or node
 
+    Side effects:
+     * prints to console (`section`)
+     * may write to disk
+     * may reset ruleset optimizer
+
+    If specified in the discovery_parameters, the host labels after
+    the discovery are persisted on disk.
+
+    Some plugins discover services based on host labels, so the ruleset
+    optimizer caches have to be cleared if new host labels are found.
+    """
     return _analyse_host_labels(
         host_name=host_name,
         discovered_host_labels=_discover_host_labels(
@@ -62,6 +73,19 @@ def analyse_cluster_host_labels(
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> QualifiedDiscovery[HostLabel]:
+    """Discovers and processes host labels per cluster host
+
+    Side effects:
+     * prints to console (`section`)
+     * may write to disk
+     * may reset ruleset optimizer
+
+    If specified in the discovery_parameters, the host labels after
+    the discovery are persisted on disk.
+
+    Some plugins discover services based on host labels, so the ruleset
+    optimizer caches have to be cleared if new host labels are found.
+    """
     if not host_config.nodes:
         return QualifiedDiscovery.empty()
 

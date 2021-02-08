@@ -1762,66 +1762,72 @@ class PagetypeTopics(Overridable):
     @classmethod
     def builtin_pages(cls):
         return {
+            "my_workplace": {
+                "title": _("My workplace"),
+                "icon_name": "topic_my_workplace",  #TODO add new green icon
+                "description": "",
+                "sort_index": 10,
+            },
             "overview": {
                 "title": _("Overview"),
                 "icon_name": "topic_overview",
                 "description": "",
-                "sort_index": 10,
+                "sort_index": 20,
             },
             "monitoring": {
                 "title": _("Monitoring"),
                 "icon_name": "topic_monitoring",
                 "description": "",
-                "sort_index": 10,
+                "sort_index": 30,
             },
             "problems": {
                 "title": _("Problems"),
                 "icon_name": "topic_problems",
                 "description": "",
-                "sort_index": 20,
+                "sort_index": 40,
             },
             "history": {
                 "title": _("History"),
                 "icon_name": "topic_history",
                 "description": "",
-                "sort_index": 30,
+                "sort_index": 50,
             },
             "analyze": {
                 "title": _("System"),
                 "icon_name": "topic_checkmk",
                 "description": "",
-                "sort_index": 40,
+                "sort_index": 60,
             },
             "events": {
                 "title": _("Event Console"),
                 "icon_name": "topic_events",
                 "description": "",
-                "sort_index": 50,
+                "sort_index": 70,
             },
             "bi": {
                 "title": _("Business Intelligence"),
                 "icon_name": "topic_bi",
                 "description": "",
-                "sort_index": 60,
+                "sort_index": 80,
                 "hide": _no_bi_aggregate_active(),
             },
             "applications": {
                 "title": _("Applications"),
                 "icon_name": "topic_applications",
                 "description": "",
-                "sort_index": 70,
+                "sort_index": 85,
             },
             "inventory": {
                 "title": _("Inventory"),
                 "icon_name": "topic_inventory",
                 "description": "",
-                "sort_index": 80,
+                "sort_index": 90,
             },
             "network_statistics": {
                 "title": _("Network statistics"),
                 "icon_name": "topic_network_statistics",
                 "description": "",
-                "sort_index": 75,
+                "sort_index": 95,
                 "hide": not config.is_ntop_configured(),
             },
             # Only fallback for items without topic

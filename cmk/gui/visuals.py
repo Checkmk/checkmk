@@ -974,7 +974,6 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
              Checkbox(
                  title=_("Show more"),
                  label=_("Only show the %s if show more is active" % visual_type.title),
-                 default_value=99,
                  help=_("The navigation allows to hide items based on a show "
                         "less / show more toggle. You can specify here whether or "
                         "not this %s should only be shown with show more %s.") %

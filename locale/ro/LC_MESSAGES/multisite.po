@@ -695,10 +695,6 @@ msgstr ""
 msgid "(builtin)"
 msgstr ""
 
-#, fuzzy
-msgid "(default title of the graph)"
-msgstr "Adaugă acesta vedere la..."
-
 msgid "(disabled)"
 msgstr "(dezactivat)"
 
@@ -28510,7 +28506,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Most dashlets have a hard coded static title and some are aware of its "
+"Most dashlets have a hard coded static title and some are aware of their "
 "content and set the title dynamically, like the view snapin, which displays "
 "the title of the view. If you like to use any other title, set it here."
 msgstr ""
@@ -46031,6 +46027,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"These macros can be combined with arbitrary text elements, e.g. \"some text "
+"<tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\"."
+msgstr ""
+
+msgid ""
 "These macros can be used in reports by surrounding the namespaced macro name "
 "in dollar signs. E.g. $CUSTOMER_MACRO$"
 msgstr ""
@@ -47034,6 +47035,11 @@ msgstr ""
 msgid ""
 "This option is just for testing. It will be removed in future. Do not use it "
 "unless you are told to do so!"
+msgstr ""
+
+msgid ""
+"This option is macro-capable, please check the inline help for more "
+"information."
 msgstr ""
 
 msgid "This option is needed in case you work without the Agent Bakery"
@@ -55057,6 +55063,7 @@ msgstr ""
 #, python-format
 msgid ""
 "You can use the following macros to fill in the corresponding information:%s"
+"%s"
 msgstr ""
 
 msgid ""
@@ -57584,6 +57591,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "(default title of the graph)"
+#~ msgstr "Adaugă acesta vedere la..."
 
 #, fuzzy
 #~ msgid "Could not determine ntopng interface"

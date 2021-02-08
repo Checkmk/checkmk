@@ -133,11 +133,23 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
 
     clone_id = "cloned_aggregation"
 
-    # Modify and send back
+    # Check invalid POST request on existing id
+    response = wsgi_app.post(base + '/objects/bi_aggregation/%s' % aggr_id,
+                             content_type='application/json',
+                             params=json.dumps(aggr),
+                             status=404)
+
+    # Check invalid PUT request on new id
     response = wsgi_app.put(base + '/objects/bi_aggregation/%s' % clone_id,
                             content_type='application/json',
                             params=json.dumps(aggr),
-                            status=200)
+                            status=404)
+
+    # Save config under different id
+    response = wsgi_app.post(base + '/objects/bi_aggregation/%s' % clone_id,
+                             content_type='application/json',
+                             params=json.dumps(aggr),
+                             status=200)
 
     # Verify cloned_rule configuration
     response = wsgi_app.get(base + '/objects/bi_aggregation/%s' % clone_id, status=200)
@@ -159,13 +171,25 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     response = wsgi_app.get(base + '/objects/bi_rule/%s' % rule_id, status=200)
     rule = json.loads(response.text)
 
-    clone_id = "appliations_clone"
+    clone_id = "applications_clone"
 
-    # Modify and send back
-    response = wsgi_app.put(base + '/objects/bi_rule/%s' % clone_id,
-                            content_type='application/json',
-                            params=json.dumps(rule),
-                            status=200)
+    # Check invalid POST request on existing id
+    wsgi_app.post(base + '/objects/bi_rule/%s' % rule_id,
+                  content_type='application/json',
+                  params=json.dumps(rule),
+                  status=404)
+
+    # Check invalid PUT request on new id
+    wsgi_app.put(base + '/objects/bi_rule/%s' % clone_id,
+                 content_type='application/json',
+                 params=json.dumps(rule),
+                 status=404)
+
+    # Save config under different id
+    response = wsgi_app.post(base + '/objects/bi_rule/%s' % clone_id,
+                             content_type='application/json',
+                             params=json.dumps(rule),
+                             status=200)
 
     # Verify cloned_rule configuration
     response = wsgi_app.get(base + '/objects/bi_rule/%s' % clone_id, status=200)

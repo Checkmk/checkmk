@@ -11,10 +11,12 @@
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -38,7 +40,6 @@
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "ServiceContactsColumn.h"
 #include "ServiceGroupsColumn.h"
 #include "ServiceRRDColumn.h"
 #include "StringColumn.h"
@@ -505,10 +506,23 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return g_timeperiods_cache->inTimeperiod(r.notification_period_ptr);
         }));
 
-    table->addColumn(std::make_unique<ServiceContactsColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<service>>(
         prefix + "contacts",
         "A list of all contacts of the service, either direct or via a contact group",
-        offsets));
+        offsets, [](const service &r) {
+            std::unordered_set<std::string> names;
+            for (auto *cm = r.contacts; cm != nullptr; cm = cm->next) {
+                names.insert(cm->contact_ptr->name);
+            }
+            for (auto *cgm = r.contact_groups; cgm != nullptr;
+                 cgm = cgm->next) {
+                for (auto *cm = cgm->group_ptr->members; cm != nullptr;
+                     cm = cm->next) {
+                    names.insert(cm->contact_ptr->name);
+                }
+            }
+            return std::vector<std::string>(names.begin(), names.end());
+        }));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes", "A list of all downtime ids of the service",
         offsets, table->core(), true, DowntimeColumn::info::none));

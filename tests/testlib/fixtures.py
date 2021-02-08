@@ -15,7 +15,7 @@ from testlib.event_console import CMKEventConsole
 def web(site):
     web = CMKWebSession(site)
     web.login()
-    web.set_language("en")
+    web.enforce_non_localized_gui()
     return web
 
 

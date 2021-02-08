@@ -1,0 +1,14 @@
+Title: Stored Walks: Remove Deadlock when retrieving corrupt Walks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612779513
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+When loading corrupt snmpwalks (e.g. with "^M" as linebreak) Checkmk would
+run into a Deadlock because the handling of those lines was wrong.
+
+Now the data is parsed and and corrupt data is fixed.

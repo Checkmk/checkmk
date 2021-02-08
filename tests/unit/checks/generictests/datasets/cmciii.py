@@ -22,7 +22,7 @@ info = [
             '30.50 degree C', '3050'
         ],
         [
-            '1.3', 'Temperature.Offset', '18', 'degree C', '-100',
+            '1.3', 'Temperature.Offset', '18', 'degree C', '',
             '0.00 degree C', '0'
         ],
         [

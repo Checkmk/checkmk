@@ -76,3 +76,38 @@ def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automat
         base + "/objects/password/test",
         status=200,
     )
+
+
+def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    _resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/password/collections/all",
+        params=json.dumps({
+            "ident": "foo",
+            "title": "foobar",
+            "owner": "admin",
+            "password": "tt",
+            "shared": ["all"],
+        }),
+        status=204,
+        content_type='application/json',
+    )
+
+    _resp = wsgi_app.call_method(
+        'delete',
+        base + "/objects/password/nothing",
+        status=404,
+    )
+
+    _resp = wsgi_app.call_method(
+        'delete',
+        base + "/objects/password/foo",
+        status=204,
+    )
+
+    _resp = wsgi_app.call_method('get', base + "/objects/password/foo", status=404)

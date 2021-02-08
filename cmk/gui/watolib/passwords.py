@@ -10,7 +10,9 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 
 from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.plugins.wato import ConfigDomainCore
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.changes import add_change
 
 PASSWORD = Dict[str, Union[Optional[str], List[str]]]
 
@@ -34,11 +36,37 @@ def sorted_contact_group_choices(only_own=False):
     return sorted(contact_group_choices(only_own), key=lambda x: x[1])
 
 
-def save_password(ident: str, details: PASSWORD):
+def save_password(ident: str, details: PASSWORD, new_password=False):
     password_store = PasswordStore()
     entries = password_store.load_for_modification()
     entries[ident] = details
     password_store.save(entries)
+    _add_change(ident, new_password=new_password)
+
+
+def remove_password(ident: str):
+    password_store = PasswordStore()
+    entries = load_passwords_to_modify()
+    _ = entries.pop(ident)
+    password_store.save(entries)
+    _add_change(ident, new_password=False)
+
+
+def _add_change(ident, new_password):
+    if new_password:
+        add_change(
+            "add-password",
+            f"Added the password {ident}",
+            domains=[ConfigDomainCore],
+            sites=None,
+        )
+    else:  # update or delete
+        add_change(
+            "edit-password",
+            f"Edited the password '{ident}'",
+            domains=[ConfigDomainCore],
+            sites=None,
+        )
 
 
 def password_exists(ident: str) -> bool:

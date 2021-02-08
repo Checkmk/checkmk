@@ -426,24 +426,17 @@ def _do_discovery_for(
         discovery_parameters=discovery_parameters,
     )
 
-    discovered_services = [] if discovery_parameters.only_host_labels else _discover_services(
+    service_result = _get_discovered_services(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
         run_only_plugin_names=run_only_plugin_names,
+        only_new=only_new,
     )
 
-    service_result = QualifiedDiscovery(
-        preexisting=_load_existing_services(
-            host_name=host_name,
-            only_new=only_new,
-            run_only_plugin_names=run_only_plugin_names,
-        ),
-        current=discovered_services,
-        key=lambda s: s.id(),
-    )
-
+    # TODO (mo): for the labels the corresponding code is in _host_labels.
+    # We should put the persisting and logging in one place.
     autochecks.save_autochecks_file(host_name, service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
@@ -1353,10 +1346,12 @@ def _get_node_services(
 ) -> ServicesTable:
 
     service_result = _get_discovered_services(
-        host_name,
-        ipaddress,
-        parsed_sections_broker,
-        discovery_parameters,
+        host_name=host_name,
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+        run_only_plugin_names=None,
+        only_new=True,
     )
 
     config_cache = config.get_config_cache()
@@ -1396,10 +1391,13 @@ def _node_service_source(
 
 
 def _get_discovered_services(
-    host_name: HostName,
-    ipaddress: Optional[HostAddress],
-    parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+        *,
+        host_name: HostName,
+        ipaddress: Optional[HostAddress],
+        parsed_sections_broker: ParsedSectionsBroker,
+        discovery_parameters: DiscoveryParameters,
+        run_only_plugin_names: Optional[Set[CheckPluginName]],
+        only_new: bool,  # TODO: find a better name downwards in the callstack
 ) -> QualifiedDiscovery[Service]:
 
     # Handle discovered services -> "new"
@@ -1408,14 +1406,14 @@ def _get_discovered_services(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
-        run_only_plugin_names=None,
+        run_only_plugin_names=run_only_plugin_names,
     )
 
     service_result = QualifiedDiscovery(
         preexisting=_load_existing_services(
             host_name=host_name,
-            only_new=True,
-            run_only_plugin_names=None,
+            only_new=only_new,
+            run_only_plugin_names=run_only_plugin_names,
         ),
         current=discovered_services,
         key=lambda s: s.id(),
@@ -1512,10 +1510,12 @@ def _get_cluster_services(
                                                      family=node_config.default_address_family)
 
         services = _get_discovered_services(
-            node,
-            node_ipaddress,
-            parsed_sections_broker,
-            discovery_parameters,
+            host_name=node,
+            ipaddress=node_ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
+            run_only_plugin_names=None,
+            only_new=True,
         )
 
         for check_source, service in itertools.chain(

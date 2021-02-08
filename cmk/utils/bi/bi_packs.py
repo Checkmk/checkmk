@@ -72,14 +72,17 @@ class BIAggregationPack:
         self.contact_groups = pack_config["contact_groups"]
         self.public = pack_config["public"]
 
-        self.rules = {x["id"]: BIRule(x, self.id) for x in pack_config["rules"]}
+        self.rules = {x["id"]: BIRule(x, self.id) for x in pack_config.get("rules", [])}
         self.aggregations = {
-            x["id"]: BIAggregation(x, self.id) for x in pack_config["aggregations"]
+            x["id"]: BIAggregation(x, self.id) for x in pack_config.get("aggregations", [])
         }
 
     @classmethod
     def schema(cls) -> Type["BIAggregationPackSchema"]:
         return BIAggregationPackSchema
+
+    def serialize(self):
+        return self.schema()().dump(self)
 
     def num_aggregations(self) -> int:
         return len(self.aggregations)

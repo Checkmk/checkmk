@@ -26,10 +26,12 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.utils import ProblemException
 
-from cmk.utils.bi.bi_lib import ReqString
+from cmk.utils.bi.bi_lib import ReqString, ReqBoolean, ReqList
+from cmk.utils.bi.bi_packs import BIAggregationPack
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
 from cmk.gui.bi import get_cached_bi_packs
+from cmk.utils.bi.bi_schema import Schema
 
 BI_RULE_ID = {
     'rule_id': fields.String(example='rule1'),
@@ -289,12 +291,12 @@ def get_bi_packs(params):
           path_params=[BI_PACK_ID],
           response_schema=response_schemas.DomainObject)
 def get_bi_pack(params):
-    """Get a BI pack"""
+    """Get a BI pack and its rules and aggregations"""
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     bi_pack = bi_packs.get_pack(params["pack_id"])
     if bi_pack is None:
-        _bailout_with_message("Unknown bi_pack: %s" % params["pack_id"])
+        _bailout_with_message("This pack_id does not exist: %s" % params["pack_id"])
     assert bi_pack is not None
 
     uri = constructors.object_href('bi_pack', bi_pack.id)
@@ -310,17 +312,103 @@ def get_bi_pack(params):
                     rel='.../value',
                     parameters={'collection': "items"},
                     href=constructors.object_href(
-                        "bi_" + name  # type: ignore[arg-type]
-                        ,
+                        "bi_" + name,  # type: ignore[arg-type]
                         element.id),
                 ) for element in elements
             ],
             base=uri,
         )
 
-    domain_object = constructors.domain_object(domain_type='bi_pack',
-                                               identifier=bi_pack.id,
-                                               title=bi_pack.title,
-                                               members=domain_members)
+    extensions = {
+        "title": bi_pack.title,
+        "contact_groups": bi_pack.contact_groups,
+        "public": bi_pack.public,
+    }
+    domain_object = constructors.domain_object(
+        domain_type='bi_pack',
+        identifier=bi_pack.id,
+        title=bi_pack.title,
+        extensions=extensions,
+        members=domain_members,
+    )
 
     return constructors.serve_json(domain_object)
+
+
+@Endpoint(constructors.object_href("bi_pack", "{pack_id}"),
+          'cmk/delete_bi_pack',
+          method='delete',
+          path_params=[BI_PACK_ID],
+          output_empty=True)
+def delete_bi_pack(params):
+    """Delete BI pack"""
+    bi_packs = get_cached_bi_packs()
+    bi_packs.load_config()
+
+    pack_id = params["pack_id"]
+    try:
+        target_pack = bi_packs.get_pack_mandatory(pack_id)
+    except KeyError:
+        _bailout_with_message("Unknown bi_pack: %s" % pack_id)
+
+    num_rules = target_pack.num_rules()
+    if num_rules > 0:
+        _bailout_with_message(
+            "Cannot delete bi_pack %s. It contains %d rules, which might be used in other packs" %
+            (pack_id, num_rules))
+    bi_packs.delete_pack(pack_id)
+    bi_packs.save_config()
+    return Response(status=204)
+
+
+class BIPackEndpointSchema(Schema):
+    title = ReqString(default="", example="BI Title")
+    contact_groups = ReqList(fields.String(), default=[], example=["contact", "contactgroup_b"])
+    public = ReqBoolean(default=False, example="false")
+
+
+@Endpoint(constructors.object_href("bi_pack", "{pack_id}"),
+          'cmk/put_bi_pack',
+          method='put',
+          path_params=[BI_PACK_ID],
+          request_schema=BIPackEndpointSchema,
+          response_schema=BIPackEndpointSchema)
+def put_bi_pack(params):
+    """Update an existing BI pack"""
+    return _update_bi_pack(params, must_exist=True)
+
+
+@Endpoint(constructors.object_href("bi_pack", "{pack_id}"),
+          'cmk/post_bi_pack',
+          method='post',
+          path_params=[BI_PACK_ID],
+          request_schema=BIPackEndpointSchema,
+          response_schema=BIPackEndpointSchema)
+def post_bi_pack(params):
+    """Create a new BI pack"""
+    return _update_bi_pack(params, must_exist=False)
+
+
+def _update_bi_pack(params, must_exist: bool):
+    bi_packs = get_cached_bi_packs()
+    bi_packs.load_config()
+
+    pack_id = params["pack_id"]
+    existing_pack = bi_packs.get_pack(pack_id)
+    if existing_pack and not must_exist:
+        _bailout_with_message("This pack_id already exists: %s" % pack_id)
+    if not existing_pack and must_exist:
+        _bailout_with_message("This pack_id does not exist: %s" % pack_id)
+
+    pack_config = {}
+    if existing_pack:
+        # Serialize the old pack
+        # Rules and aggregations will be transferred to the new pack
+        pack_config.update(existing_pack.serialize())
+
+    pack_config["id"] = pack_id
+    pack_config.update(BIPackEndpointSchema().dump(params["body"]))
+    new_pack = BIAggregationPack(pack_config)
+    bi_packs.add_pack(new_pack)
+    bi_packs.save_config()
+    return constructors.serve_json(BIPackEndpointSchema().dump(new_pack.serialize()))

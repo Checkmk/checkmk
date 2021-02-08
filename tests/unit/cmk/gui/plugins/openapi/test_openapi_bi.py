@@ -88,10 +88,10 @@ def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
     # Modify and send back
     aggregation["computation_options"]["disabled"] = False
     aggregation["computation_options"]["escalate_downtimes_as_warn"] = True
-    response = wsgi_app.put(base + '/objects/bi_aggregation/%s' % aggr_id,
-                            content_type='application/json',
-                            params=json.dumps(aggregation),
-                            status=200)
+    wsgi_app.put(base + '/objects/bi_aggregation/%s' % aggr_id,
+                 content_type='application/json',
+                 params=json.dumps(aggregation),
+                 status=200)
 
     # Verify changed configuration
     response = wsgi_app.get(base + '/objects/bi_aggregation/%s' % aggr_id, status=200)
@@ -111,10 +111,10 @@ def test_openapi_modify_bi_rule(wsgi_app, with_automation_user):
     rule["params"]["arguments"].append("OTHERARGUMENT")
 
     # Modify and send back
-    response = wsgi_app.put(base + '/objects/bi_rule/%s' % rule_id,
-                            content_type='application/json',
-                            params=json.dumps(rule),
-                            status=200)
+    wsgi_app.put(base + '/objects/bi_rule/%s' % rule_id,
+                 content_type='application/json',
+                 params=json.dumps(rule),
+                 status=200)
 
     # Verify changed configuration
     response = wsgi_app.get(base + '/objects/bi_rule/%s' % rule_id, status=200)
@@ -134,22 +134,22 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     clone_id = "cloned_aggregation"
 
     # Check invalid POST request on existing id
-    response = wsgi_app.post(base + '/objects/bi_aggregation/%s' % aggr_id,
-                             content_type='application/json',
-                             params=json.dumps(aggr),
-                             status=404)
+    wsgi_app.post(base + '/objects/bi_aggregation/%s' % aggr_id,
+                  content_type='application/json',
+                  params=json.dumps(aggr),
+                  status=404)
 
     # Check invalid PUT request on new id
-    response = wsgi_app.put(base + '/objects/bi_aggregation/%s' % clone_id,
-                            content_type='application/json',
-                            params=json.dumps(aggr),
-                            status=404)
+    wsgi_app.put(base + '/objects/bi_aggregation/%s' % clone_id,
+                 content_type='application/json',
+                 params=json.dumps(aggr),
+                 status=404)
 
     # Save config under different id
-    response = wsgi_app.post(base + '/objects/bi_aggregation/%s' % clone_id,
-                             content_type='application/json',
-                             params=json.dumps(aggr),
-                             status=200)
+    wsgi_app.post(base + '/objects/bi_aggregation/%s' % clone_id,
+                  content_type='application/json',
+                  params=json.dumps(aggr),
+                  status=200)
 
     # Verify cloned_rule configuration
     response = wsgi_app.get(base + '/objects/bi_aggregation/%s' % clone_id, status=200)
@@ -186,10 +186,10 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
                  status=404)
 
     # Save config under different id
-    response = wsgi_app.post(base + '/objects/bi_rule/%s' % clone_id,
-                             content_type='application/json',
-                             params=json.dumps(rule),
-                             status=200)
+    wsgi_app.post(base + '/objects/bi_rule/%s' % clone_id,
+                  content_type='application/json',
+                  params=json.dumps(rule),
+                  status=200)
 
     # Verify cloned_rule configuration
     response = wsgi_app.get(base + '/objects/bi_rule/%s' % clone_id, status=200)
@@ -200,3 +200,96 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     response = wsgi_app.get(base + '/objects/bi_pack/default', status=200)
     pack = json.loads(response.text)
     assert len(pack["members"]["rules"]["value"]) == 13
+
+
+def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    pack_id = "default"
+    response = wsgi_app.get(base + '/objects/bi_pack/%s' % pack_id, status=200)
+    pack = json.loads(response.text)
+
+    clone_id = "cloned_pack"
+    new_data = {key: pack["extensions"][key] for key in ["title", "contact_groups", "public"]}
+    new_data["title"] = "Test title"
+
+    # Check invalid POST request on existing id
+    wsgi_app.post(base + '/objects/bi_pack/%s' % pack_id,
+                  content_type='application/json',
+                  params=json.dumps(new_data),
+                  status=404)
+
+    # Check valid PUT request on existing id
+    wsgi_app.put(base + '/objects/bi_pack/%s' % pack_id,
+                 content_type='application/json',
+                 params=json.dumps(new_data),
+                 status=200)
+
+    # Verify that rules/aggregations remain unchanged
+    response = wsgi_app.get(base + '/objects/bi_pack/%s' % pack_id, status=200)
+    pack = json.loads(response.text)
+    assert len(pack["members"]["rules"]["value"]) == 12
+    assert len(pack["members"]["aggregations"]["value"]) == 1
+    assert pack["title"] == "Test title"
+
+    # Check invalid PUT request on new id
+    wsgi_app.put(base + '/objects/bi_pack/%s' % clone_id,
+                 content_type='application/json',
+                 params=json.dumps(new_data),
+                 status=404)
+
+    # Save config under different id
+    wsgi_app.post(base + '/objects/bi_pack/%s' % clone_id,
+                  content_type='application/json',
+                  params=json.dumps(new_data),
+                  status=200)
+
+    # Verify cloned_pack configuration
+    response = wsgi_app.get(base + '/objects/bi_pack/%s' % clone_id, status=200)
+    cloned_pack = json.loads(response.text)
+    assert cloned_pack["id"] == clone_id
+
+    # Verify that rules/aggregations have been migrated
+    assert len(cloned_pack["members"]["rules"]["value"]) == 0
+    assert len(cloned_pack["members"]["aggregations"]["value"]) == 0
+    assert cloned_pack["title"] == "Test title"
+
+
+def test_openapi_delete_pack(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    pack_data = {
+        "title": "Test pack",
+        "contact_groups": [],
+        "public": True,
+    }
+
+    # Check invalid POST request on existing id
+    wsgi_app.post(base + '/objects/bi_pack/test_pack',
+                  content_type='application/json',
+                  params=json.dumps(pack_data),
+                  status=200)
+
+    # Verify creation
+    response = wsgi_app.get(base + '/objects/bi_pack/test_pack', status=200)
+    pack = json.loads(response.text)
+    assert pack["title"] == "Test pack"
+
+    # Delete pack
+    wsgi_app.delete(base + '/objects/bi_pack/test_pack', status=204)
+
+    # Verify deletion
+    wsgi_app.get(base + '/objects/bi_pack/test_pack', status=404)
+
+
+def test_openapi_delete_pack_forbidden(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    # Check invalid POST request on existing id
+    wsgi_app.delete(base + '/objects/bi_pack/default', content_type='application/json', status=404)

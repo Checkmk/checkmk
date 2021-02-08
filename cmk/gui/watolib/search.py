@@ -267,7 +267,8 @@ class PermissionsHandler:
             "folders": user.may("wato.hosts"),
             "hosts": user.may("wato.hosts"),
             "event_console": user.may("mkeventd.edit") or user.may("wato.seeall"),
-            "event_console_settings": user.may("mkeventd.config") or user.may("wato.seeall")
+            "event_console_settings": user.may("mkeventd.config") or user.may("wato.seeall"),
+            "logfile_pattern_analyzer": user.may("wato.pattern_editor") or user.may("wato.seeall"),
         }
         self._url_checker = URLChecker()
 
@@ -415,6 +416,7 @@ class IndexSearcher:
             # _("Users"),
             _("Services") + " > " + _("Enforced services"),
             _("Global settings"),
+            _("Miscellaneous"),
             # _("Maintenance"),
         )
 

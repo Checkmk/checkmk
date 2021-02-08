@@ -23,8 +23,6 @@ import ast
 import gzip
 import multiprocessing
 
-from werkzeug.test import create_environ
-
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
 # to a specific layer in the future, but for the the moment we need to deal
@@ -36,7 +34,6 @@ from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-vio
 from cmk.base.api.agent_based import register  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
-from cmk.gui.display_options import DisplayOptions  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.regex import unescape
 from cmk.utils.log import VERBOSE
 import cmk.utils.debug
@@ -62,9 +59,7 @@ import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.userdb import load_users, save_users  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.htmllib as htmllib  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.globals import AppContext, RequestContext  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.http import Request  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment  # pylint: disable=cmk-module-layer-violation
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
 
@@ -97,13 +92,6 @@ REMOVED_WATO_RULESETS_MAP = {
 }
 
 
-# TODO: Better make our application available?
-class DummyApplication:
-    def __init__(self, environ, start_response):
-        self._environ = environ
-        self._start_response = start_response
-
-
 class UpdateConfig:
     def __init__(self, logger: logging.Logger, arguments: argparse.Namespace) -> None:
         super(UpdateConfig, self).__init__()
@@ -119,19 +107,8 @@ class UpdateConfig:
             logging.getLogger().addHandler(console_handler)
 
     def run(self):
-
         self._logger.log(VERBOSE, "Initializing application...")
-        environ = dict(create_environ(), REQUEST_URI='')
-
-        this_html = htmllib.html(Request(environ))
-        # Currently the htmllib.html constructor enables the timeout by default. This side effect
-        # should really be cleaned up.
-        this_html.disable_request_timeout()
-
-        with AppContext(DummyApplication(environ,
-                                         None)), RequestContext(this_html,
-                                                                display_options=DisplayOptions(),
-                                                                prefix_logs_with_url=False):
+        with application_and_request_context():
             self._initialize_gui_environment()
             self._initialize_base_environment()
 
@@ -461,21 +438,19 @@ class UpdateConfig:
 
     def _initialize_gui_environment(self):
         self._logger.log(VERBOSE, "Loading GUI plugins...")
-        cmk.gui.modules.load_all_plugins()
-        failed_plugins = cmk.gui.utils.get_failed_plugins()
 
+        # TODO: We are about to rewrite parts of the config. Would be better to be executable without
+        # loading the configuration first (because the load_config() may miss some conversion logic
+        # which is only known to cmk.update_config in the future).
+        initialize_gui_environment()
+
+        failed_plugins = cmk.gui.utils.get_failed_plugins()
         if failed_plugins:
             self._logger.error("")
             self._logger.error("ERROR: Failed to load some GUI plugins. You will either have \n"
                                "       to remove or update them to be compatible with this \n"
                                "       Checkmk version.")
             self._logger.error("")
-
-        # TODO: We are about to rewrite parts of the config. Would be better to be executable without
-        # loading the configuration first (because the load_config() may miss some conversion logic
-        # which is only known to cmk.update_config in the future).
-        cmk.gui.config.load_config()
-        cmk.gui.config.set_super_user()
 
     def _cleanup_version_specific_caches(self) -> None:
         paths = [

@@ -55,6 +55,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuSearch,
     PageMenuPopup,
+    make_checkbox_selection_json_text,
     make_simple_link,
     make_checkbox_selection_topic,
     make_simple_form_page_menu,
@@ -780,11 +781,11 @@ class ModeFolder(WatoMode):
         table.row()
 
         # Column with actions (buttons)
-
         table.cell(html.render_input("_toggle_group",
                                      type_="button",
                                      class_="checkgroup",
-                                     onclick="cmk.selection.toggle_all_rows();",
+                                     onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);" %
+                                     make_checkbox_selection_json_text(),
                                      value='X'),
                    sortable=False,
                    css="checkbox")

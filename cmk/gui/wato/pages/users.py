@@ -48,6 +48,8 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
+    make_checkbox_selection_json_text,
+    make_checkbox_selection_topic,
     make_simple_link,
     make_simple_form_page_menu,
     make_confirmed_form_submit_link,
@@ -140,6 +142,10 @@ class ModeUsers(WatoMode):
                             title=_("Notify users"),
                             entries=list(self._page_menu_entries_notify_users()),
                         ),
+                        # TODO CMK-7121 row selection is written to
+                        # ~/var/check_mk/web/user/rowselection/null.mk with
+                        # "null" key
+                        make_checkbox_selection_topic("user"),
                     ],
                 ),
                 PageMenuDropdown(
@@ -315,13 +321,15 @@ class ModeUsers(WatoMode):
                 table.row()
 
                 # Checkboxes
-                table.cell(html.render_input("_toggle_group",
-                                             type_="button",
-                                             class_="checkgroup",
-                                             onclick="cmk.selection.toggle_all_rows();",
-                                             value='X'),
-                           sortable=False,
-                           css="checkbox")
+                table.cell(
+                    html.render_input("_toggle_group",
+                                      type_="button",
+                                      class_="checkgroup",
+                                      onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);" %
+                                      make_checkbox_selection_json_text(),
+                                      value='X'),
+                    sortable=False,
+                    css="checkbox")
 
                 if uid != config.user.id:
                     html.checkbox("_c_user_%s" % ensure_str(base64.b64encode(uid.encode("utf-8"))))

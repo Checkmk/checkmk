@@ -121,7 +121,7 @@ class ModeFolder(WatoMode):
                             title=_("On selected hosts"),
                             entries=list(self._page_menu_entries_selected_hosts()),
                         ),
-                        make_checkbox_selection_topic("wato-folder-%s" % self._folder.name()),
+                        make_checkbox_selection_topic("wato-folder-/%s" % self._folder.path()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -197,7 +197,7 @@ class ModeFolder(WatoMode):
                             title=_("On selected hosts"),
                             entries=list(self._page_menu_entries_selected_hosts()),
                         ),
-                        make_checkbox_selection_topic("wato-folder-%s" % self._folder.name()),
+                        make_checkbox_selection_topic("wato-folder-/%s" % self._folder.path()),
                     ],
                 ),
                 PageMenuDropdown(

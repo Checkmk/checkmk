@@ -13,7 +13,7 @@ import functools
 import hashlib
 import http.client
 from types import FunctionType
-from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union, TypeVar
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -26,6 +26,7 @@ from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    CONTENT_TYPE,
     ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
 )
@@ -50,6 +51,8 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
 from cmk.gui.plugins.openapi.utils import problem
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
+
+T = TypeVar("T")
 
 
 def to_named_schema(fields_: Dict[str, fields.Field]) -> Type[Schema]:
@@ -216,7 +219,23 @@ class Endpoint:
 
         self._expected_status_codes = self.additional_status_codes.copy()
 
-    def _list(self, sequence):
+        if self.response_schema is not None:
+            self._expected_status_codes.append(200)  # ok
+
+        if self.output_empty:
+            self._expected_status_codes.append(204)  # no content
+
+        if self.method in ("put", "post"):
+            self._expected_status_codes.append(400)  # bad request
+
+        if self.path_params:
+            self._expected_status_codes.append(404)  # not found
+
+        if self.etag in ('input', 'both'):
+            self._expected_status_codes.append(412)  # precondition failed
+            self._expected_status_codes.append(428)  # precondition required
+
+    def _list(self, sequence: Optional[Sequence[T]]) -> List[T]:
         return list(sequence) if sequence is not None else []
 
     def __call__(self, func):
@@ -224,7 +243,13 @@ class Endpoint:
         Returns:
         A wrapped function. The wrapper does input and output validation.
         """
-        header_schema = to_schema(self.header_params)
+        header_schema = None
+        if self.header_params is not None:
+            header_params = list(self.header_params)
+            if self.request_schema:
+                header_params.append(CONTENT_TYPE)
+            header_schema = to_schema(header_params)
+
         path_schema = to_schema(self.path_params, required='all')
         query_schema = to_schema(self.query_params)
 
@@ -356,7 +381,8 @@ class Endpoint:
             if response.status_code not in self._expected_status_codes:
                 return problem(status=500,
                                title=f"Unexpected status code returned: {response.status_code}",
-                               detail=f"Endpoint {self.operation_id}")
+                               detail=f"Endpoint {self.operation_id}",
+                               ext={'codes': self._expected_status_codes})
 
             if hasattr(response, 'original_data') and response_schema:
                 try:
@@ -406,16 +432,19 @@ class Endpoint:
 
         module_obj = import_string(self.func.__module__)
 
-        headers: Dict[str, OpenAPIParameter] = {}
+        response_headers: Dict[str, OpenAPIParameter] = {}
+        content_type_header = to_openapi([CONTENT_TYPE], 'header')[0]
+        del content_type_header['in']
+        response_headers[content_type_header.pop('name')] = content_type_header
+
         if self.etag in ('output', 'both'):
             etag_header = to_openapi([ETAG_HEADER_PARAM], 'header')[0]
             del etag_header['in']
-            headers[etag_header.pop('name')] = etag_header
+            response_headers[etag_header.pop('name')] = etag_header
 
         responses: ResponseType = {}
-        # NOTE: These would have been better in a loop, but mypy is too dumb for that.
-        if self.path_params:
-            self._expected_status_codes.append(http.client.NOT_FOUND)
+
+        if 404 in self._expected_status_codes:
             responses['404'] = _path_item('Not found: The requested object has not been found.')
 
         if 409 in self._expected_status_codes:
@@ -427,14 +456,12 @@ class Endpoint:
                 'Found: Either the resource has moved or has not yet '
                 'completed. Please see this resource for further information.')
 
-        if self.method in ("put", "post"):
-            self._expected_status_codes.append(400)
+        if 400 in self._expected_status_codes:
             responses['400'] = _path_item('Bad request: Parameter or validation failure')
 
         # We don't(!) support any endpoint without an output schema.
         # Just define one!
-        if self.response_schema is not None:
-            self._expected_status_codes.append(200)
+        if 200 in self._expected_status_codes:
             responses['200'] = _path_item(
                 'The operation was done successfully.' if self.method != 'get' else '',
                 content={
@@ -442,23 +469,21 @@ class Endpoint:
                         'schema': self.response_schema
                     },
                 },
-                headers=headers,
+                headers=response_headers,
             )
 
-        if self.etag in ('input', 'both'):
-            self._expected_status_codes.append(412)
-            self._expected_status_codes.append(428)
+        if 204 in self._expected_status_codes:
+            responses['204'] = _path_item('Operation done successfully. No further output.',
+                                          headers=response_headers)
+
+        if 412 in self._expected_status_codes:
             responses['412'] = _path_item(
                 "Precondition failed: The value of the If-Match header doesn't match the "
                 "object's ETag.")
+
+        if 428 in self._expected_status_codes:
             responses['428'] = _path_item(
                 'Precondition required: The required If-Match header is missing.')
-
-        # Actually, iff you don't want to give out anything, then we don't need a schema.
-        if self.output_empty:
-            self._expected_status_codes.append(204)
-            responses['204'] = _path_item('Operation done successfully. No further output.',
-                                          headers=headers)
 
         docstring_name = _docstring_name(module_obj.__doc__)
         tag_obj: OpenAPITag = {
@@ -484,6 +509,9 @@ class Endpoint:
 
         if self.etag in ('input', 'both'):
             header_params.append(ETAG_IF_MATCH_HEADER)
+
+        if self.request_schema:
+            header_params.append(CONTENT_TYPE)
 
         operation_spec['parameters'] = coalesce_schemas([
             ('header', header_params),

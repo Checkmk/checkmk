@@ -707,11 +707,10 @@ def _docstring_name(docstring: Union[Any, str, None]) -> str:
         A string or nothing.
 
     """ ""
-    parts = [part.strip() for part in apispec.utils.dedent(docstring).split("\n\n", 1)]
-    if len(parts) > 0 and parts[0]:
-        return parts[0]
+    if not docstring:
+        raise ValueError("No name for the module defined. Please add a docstring!")
 
-    raise ValueError("No name for the module defined. Please add a docstring!")
+    return [part.strip() for part in apispec.utils.dedent(docstring).split("\n\n", 1)][0]
 
 
 def _docstring_description(docstring: Union[Any, str, None]) -> Optional[str]:

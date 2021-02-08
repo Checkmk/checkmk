@@ -18,15 +18,15 @@
 #[...]
 
 #Example GUI Output:
-#OK     FortiGate IPS Info: 0
+#OK     FortiGate IPS Info: 102
 #       Intrusions per second: detected: 0.00, blocked: 0.00
-#OK     FortiGate IPS Info: 1
+#OK     FortiGate IPS Info: 103
 #       Intrusions per second: detected: 0.00, blocked: 0.00
-#OK     FortiGate IPS Info: 2
+#OK     FortiGate IPS Info: 104
 #       Intrusions per second: detected: 0.00, blocked: 0.00
-#OK	    FortiGate IPS Info: 3
+#OK	FortiGate IPS Info: 105
 #       Intrusions per second: detected: 0.00, blocked: 0.00
-#OK     FortiGate IPS Info: 4
+#OK     FortiGate IPS Info: 106
 #       Intrusions per second: detected: 0.00, blocked: 0.00
 
 from .agent_based_api.v1.type_defs import (
@@ -35,6 +35,7 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
 )
 from .agent_based_api.v1 import (
+    OIDEnd,
     register,
     get_rate,
     Service,
@@ -54,9 +55,9 @@ def parse_fortigate_ips(string_table: List[StringTable]) -> Section:
     parsed = {}
     for i in range(len(string_table[0])):
         parsed.update({
-            str(i): {
-                'detected': int(string_table[0][i][0]),
-                'blocked': int(string_table[0][i][1])
+            string_table[0][i][0]: {
+                'detected': int(string_table[0][i][1]),
+                'blocked': int(string_table[0][i][2])
             }
         })
     return parsed
@@ -86,13 +87,14 @@ def check_fortigate_ips(item: str, params: Mapping[str, Tuple[float, float]],
 
 
 register.snmp_section(
-    name="fortigate_ips",
+    name='fortigate_ips',
     parse_function=parse_fortigate_ips,
     detect=startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.12356.101.1.'),
     fetch=[
         SNMPTree(
             base='.1.3.6.1.4.1.12356.101.9.2.1.1',
             oids=[
+                OIDEnd(),
                 '1',  # fgIpsIntrusionsDetected
                 '2',  # fgIpsIntrusionsBlocked
             ]),
@@ -100,10 +102,10 @@ register.snmp_section(
 )
 
 register.check_plugin(
-    name="fortigate_ips",
-    service_name="FortiGate IPS Info: %s",
+    name='fortigate_ips',
+    service_name='FortiGate IPS Info: %s',
     discovery_function=discovery_fortigate_ips,
     check_function=check_fortigate_ips,
-    check_ruleset_name="fortigate_ips",
-    check_default_parameters={"intrusions": (100, 300)},
+    check_ruleset_name='fortigate_ips',
+    check_default_parameters={'intrusions': (100, 300)},
 )

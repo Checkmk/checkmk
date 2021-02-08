@@ -11,4 +11,4 @@ description:
  The default tresholds are 100 for warning and 300 for criticial.
 
 discovery:
- One check per instance will be created.
+ One check per virtual domain will be created.

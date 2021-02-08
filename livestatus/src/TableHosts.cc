@@ -10,10 +10,12 @@
 #include <cstdint>
 #include <ctime>
 #include <filesystem>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -32,7 +34,6 @@
 #include "DynamicFileColumn.h"
 #include "DynamicRRDColumn.h"
 #include "FileColumn.h"
-#include "HostContactsColumn.h"
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
 #include "HostRRDColumn.h"
@@ -497,10 +498,23 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                    g_timeperiods_cache->inTimeperiod(it->second);
         }));
 
-    table->addColumn(std::make_unique<HostContactsColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<host>>(
         prefix + "contacts",
         "A list of all contacts of this host, either direct or via a contact group",
-        offsets));
+        offsets, [](const host &hst) {
+            std::unordered_set<std::string> names;
+            for (auto *cm = hst.contacts; cm != nullptr; cm = cm->next) {
+                names.insert(cm->contact_ptr->name);
+            }
+            for (auto *cgm = hst.contact_groups; cgm != nullptr;
+                 cgm = cgm->next) {
+                for (auto *cm = cgm->group_ptr->members; cm != nullptr;
+                     cm = cm->next) {
+                    names.insert(cm->contact_ptr->name);
+                }
+            }
+            return std::vector<std::string>(names.begin(), names.end());
+        }));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host", offsets,

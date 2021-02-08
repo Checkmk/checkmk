@@ -456,11 +456,6 @@ def agent_proxmox_ve_main(args: Args) -> None:
                         }
                     },
                 })
-            with SectionWriter("proxmox_ve_disk_usage") as writer:
-                writer.append_json({
-                    "disk": node["disk"],
-                    "max_disk": node["maxdisk"],
-                })
             with SectionWriter("proxmox_ve_mem_usage") as writer:
                 writer.append_json({
                     "mem": node["mem"],

@@ -18,15 +18,15 @@
 #[...]
 
 #Example GUI Output:
-#OK	FortiGate AntiVirus Info: 0
+#OK	FortiGate AntiVirus Info: 102
 #       Viruses per second: detected: 0.00, blocked: 0.00
-#OK	FortiGate AntiVirus Info: 1
+#OK	FortiGate AntiVirus Info: 103
 #       Viruses per second: detected: 0.00, blocked: 0.00
-#OK	FortiGate AntiVirus Info: 2
+#OK	FortiGate AntiVirus Info: 104
 #       Viruses per second: detected: 0.00, blocked: 0.00
-#OK	FortiGate AntiVirus Info: 3
+#OK	FortiGate AntiVirus Info: 105
 #       Viruses per second: detected: 0.00, blocked: 0.00
-#OK	FortiGate AntiVirus Info: 4
+#OK	FortiGate AntiVirus Info: 106
 #       Viruses per second: detected: 0.00, blocked: 0.00
 
 from .agent_based_api.v1.type_defs import (
@@ -35,6 +35,7 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
 )
 from .agent_based_api.v1 import (
+    OIDEnd,
     register,
     get_rate,
     Service,
@@ -54,9 +55,9 @@ def parse_fortigate_antivirus(string_table: List[StringTable]) -> Section:
     parsed = {}
     for i in range(len(string_table[0])):
         parsed.update({
-            str(i): {
-                'detected': int(string_table[0][i][0]),
-                'blocked': int(string_table[0][i][1])
+            string_table[0][i][0]: {
+                'detected': int(string_table[0][i][1]),
+                'blocked': int(string_table[0][i][2])
             }
         })
     return parsed
@@ -93,6 +94,7 @@ register.snmp_section(
         SNMPTree(
             base='.1.3.6.1.4.1.12356.101.8.2.1.1',
             oids=[
+                OIDEnd(),
                 '1',  # fgAvVirusDetected
                 '2',  # fgAvVirusBlocked
             ]),

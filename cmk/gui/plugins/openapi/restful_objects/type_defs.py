@@ -81,6 +81,8 @@ CmkEndpointName = Literal[
     'cmk/get_bi_aggregation',
     'cmk/get_bi_pack',
     'cmk/get_bi_packs',
+    'cmk/put_bi_pack',
+    'cmk/post_bi_pack',
     'cmk/wait-for-completion',
     'cmk/baking-status',
     'cmk/bakery-status',

@@ -16,7 +16,6 @@ def test_registered_generators():
         'basic_wato_config',
         'create_automation_user',
         'ec_sample_rule_pack',
-        'search_index',
     ]
 
     if not cmk_version.is_raw_edition():
@@ -43,7 +42,6 @@ def test_get_sorted_generators():
         'acknowledge_initial_werks',
         'ec_sample_rule_pack',
         'create_automation_user',
-        'search_index',
     ]
 
     assert [g.ident() for g in utils.sample_config_generator_registry.get_generators()] == expected

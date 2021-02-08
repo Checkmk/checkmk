@@ -69,6 +69,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     PageMenuPopup,
+    make_checkbox_selection_json_text,
     make_simple_link,
     make_simple_form_page_menu,
     make_confirmed_form_submit_link,
@@ -809,11 +810,13 @@ class ModeBIRules(ABCBIMode):
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
                     table.row()
-                    table.cell(html.render_input("_toggle_group",
-                                                 type_="button",
-                                                 class_="checkgroup",
-                                                 onclick="cmk.selection.toggle_all_rows();",
-                                                 value='X'),
+                    table.cell(html.render_input(
+                        "_toggle_group",
+                        type_="button",
+                        class_="checkgroup",
+                        onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);" %
+                        make_checkbox_selection_json_text(),
+                        value='X'),
                                sortable=False,
                                css="checkbox")
                     html.checkbox("_c_rule_%s" % rule_id)

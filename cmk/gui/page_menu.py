@@ -16,7 +16,7 @@ The hierarchy here is:
 import abc
 import json
 from dataclasses import dataclass, field
-from typing import List, Iterator, Optional, Dict, Union
+from typing import List, Iterator, Optional, Dict, Union, Tuple
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
@@ -373,10 +373,13 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
+def make_checkbox_selection_json_text() -> Tuple[str, str]:
+    return json.dumps(_("Select all checkboxes")), json.dumps(_("Deselect all checkboxes"))
+
+
 def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
-    name_selected = _("Select all checkboxes")
-    name_deselected = _("Deselect all checkboxes")
     is_selected = user.get_rowselection(weblib.selection_id(), selection_key)
+    name_selected, name_deselected = make_checkbox_selection_json_text()
     return PageMenuTopic(
         title=_("Selection"),
         entries=[
@@ -385,7 +388,7 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
                 title=name_deselected if is_selected else name_selected,
                 icon_name="checkbox",
                 item=make_javascript_link("cmk.selection.toggle_all_rows(this.form, %s, %s);" %
-                                          (json.dumps(name_selected), json.dumps(name_deselected))),
+                                          (name_selected, name_deselected)),
                 is_enabled=is_enabled,
             ),
         ],

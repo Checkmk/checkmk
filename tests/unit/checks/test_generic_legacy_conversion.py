@@ -2782,7 +2782,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'zorp_connections',
         'zpool',
         'zpool_status',
-        'zypper',
     }
     current_legacy_checks = set(fix_plugin_legacy.check_info)
 

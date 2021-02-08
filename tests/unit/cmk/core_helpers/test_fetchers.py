@@ -526,6 +526,13 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         assert fetcher.fetch(Mode.INVENTORY) == result.OK({})  # 'pim' is not an inventory section
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table]})
 
+        monkeypatch.setattr(
+            snmp,
+            "gather_available_raw_section_names",
+            lambda *_, **__: {SectionName('pim')},
+        )
+        assert fetcher.fetch(Mode.DISCOVERY) == result.OK({section_name: [table]})
+
     def test_fetch_from_io_partially_empty(self, monkeypatch, fetcher):
         section_name = SectionName('pum')
         monkeypatch.setattr(fetcher, "sections", {
@@ -578,13 +585,9 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
     def patch_io(self, fetcher, monkeypatch):
         monkeypatch.setattr(fetcher, "_fetch_from_io", lambda mode: b"fetched_section")
 
-    def test_fetch_not_reading_cache_in_discovery_mode(self, fetcher):
+    def test_fetch_reading_cache_in_discovery_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.DISCOVERY) == result.OK(b"fetched_section")
-
-    def test_fetch_reading_cache_in_cached_discovery_mode(self, fetcher):
-        assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.CACHED_DISCOVERY) == result.OK(b"cached_section")
+        assert fetcher.fetch(Mode.DISCOVERY) == result.OK(b"cached_section")
 
 
 class TestSNMPSectionMeta:

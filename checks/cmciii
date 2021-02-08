@@ -158,9 +158,9 @@ def parse_cmciii(info):
             # neg. scale: "-X" => "/ X"
             # pos. scale: "X"  => "* X"
             # else:            => "* 1"
-            if int(scale) < 0:
+            if scale != "" and int(scale) < 0:
                 value = float(value_int) * (-1.0 / float(scale))
-            elif int(scale) > 0:
+            elif scale != "" and int(scale) > 0:
                 value = float(value_int) * float(scale)
             else:
                 value = int(value_int)

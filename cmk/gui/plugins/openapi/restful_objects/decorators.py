@@ -346,10 +346,11 @@ class Endpoint:
             # expected behaviour and not a valid interface of Response. Needs refactoring.
             response = self.func(param)
 
-            if response.status_code not in self._expected_status_codes:
-                return problem(status=500,
-                               title=f"Unexpected status code returned: {response.status_code}",
-                               detail=f"Endpoint {self.operation_id}")
+            # TODO(cr): Please reenable after investigation
+            #if response.status_code not in self._expected_status_codes:
+            #    return problem(status=500,
+            #                   title=f"Unexpected status code returned: {response.status_code}",
+            #                   detail=f"Endpoint {self.operation_id}")
 
             if hasattr(response, 'original_data') and response_schema:
                 try:

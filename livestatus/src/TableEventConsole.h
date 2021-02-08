@@ -26,7 +26,7 @@ class ListLambdaColumn;
 template <class T>
 class StringColumn;
 template <class T>
-class TimeLambdaColumn;
+class TimeColumn;
 class Query;
 class Row;
 
@@ -48,7 +48,7 @@ public:
     static std::unique_ptr<DoubleColumn<ECRow>> makeDoubleColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<TimeLambdaColumn<ECRow>> makeTimeColumn(
+    static std::unique_ptr<TimeColumn<ECRow>> makeTimeColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
     static std::unique_ptr<ListLambdaColumn<ECRow>> makeListColumn(

@@ -186,7 +186,6 @@ liblivestatus_a_SOURCES = \
         TableStateHistory.cc \
         TableStatus.cc \
         TableTimeperiods.cc \
-        TimeColumn.cc \
         TimeFilter.cc \
         TimeperiodsCache.cc \
         Triggers.cc \

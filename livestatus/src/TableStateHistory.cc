@@ -29,7 +29,7 @@
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
 
 #ifdef CMC
 #include "Host.h"     // IWYU pragma: keep
@@ -73,7 +73,7 @@ std::string getCustomVariable(const MonitoringCore *mc,
 TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<TimeLambdaColumn<HostServiceState>>(
+    addColumn(std::make_unique<TimeColumn<HostServiceState>>(
         "time", "Time of the log event (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) {
             return std::chrono::system_clock::from_time_t(r._time);
@@ -81,12 +81,12 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<IntLambdaColumn<HostServiceState>>(
         "lineno", "The number of the line in the log file", offsets,
         [](const HostServiceState &r) { return r._lineno; }));
-    addColumn(std::make_unique<TimeLambdaColumn<HostServiceState>>(
+    addColumn(std::make_unique<TimeColumn<HostServiceState>>(
         "from", "Start time of state (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) {
             return std::chrono::system_clock::from_time_t(r._from);
         }));
-    addColumn(std::make_unique<TimeLambdaColumn<HostServiceState>>(
+    addColumn(std::make_unique<TimeColumn<HostServiceState>>(
         "until", "End time of state (seconds since 1/1/1970)", offsets,
         [](const HostServiceState &r) {
             return std::chrono::system_clock::from_time_t(r._until);

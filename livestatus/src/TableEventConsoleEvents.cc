@@ -16,7 +16,7 @@
 #include "StringColumn.h"
 #include "Table.h"
 #include "TableHosts.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
     : TableEventConsole(mc) {

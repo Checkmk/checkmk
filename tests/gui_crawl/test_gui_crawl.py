@@ -58,7 +58,7 @@ class Worker(threading.Thread):
 
         self.client = CMKWebSession(self.crawler.site)
         self.client.login()
-        self.client.set_language("en")
+        self.client.enforce_non_localized_gui()
 
     def run(self):
         while not self.terminate:

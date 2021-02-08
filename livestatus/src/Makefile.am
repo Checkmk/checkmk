@@ -120,7 +120,6 @@ liblivestatus_a_SOURCES = \
         FileColumn-impl.cc \
         FileSystemHelper.cc \
         Filter.cc \
-        HostContactsColumn.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \

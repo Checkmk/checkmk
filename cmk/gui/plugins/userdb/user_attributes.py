@@ -217,6 +217,10 @@ class UIIconPlacement(UserAttribute):
     def valuespec(self):
         return DropdownChoice(
             title=_("Mega menu icons"),
+            help=_("In the mega menus you can select between two options: "
+                   "Have a green icon only for the headlines – the 'topics' – "
+                   "for lean design. Or have a colored icon for every entry so that "
+                   "over time you can zoom in more quickly to a specific entry."),
             choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
             no_preselect_value=False,
         )

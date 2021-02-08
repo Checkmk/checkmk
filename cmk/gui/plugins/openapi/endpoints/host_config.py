@@ -53,7 +53,7 @@ def create_host(params):
     body['folder'].create_hosts([(host_name, body['attributes'], None)])
 
     host = watolib.Host.host(host_name)
-    return _serve_host(host, host.attributes())
+    return _serve_host(host, False)
 
 
 @Endpoint(constructors.collection_href('host_config', "clusters"),
@@ -73,7 +73,7 @@ def create_cluster_host(params):
     body['folder'].create_hosts([(host_name, body['attributes'], body['nodes'])])
 
     host = watolib.Host.host(host_name)
-    return _serve_host(host, host.attributes())
+    return _serve_host(host, False)
 
 
 @Endpoint(constructors.domain_type_action_href('host_config', 'bulk-create'),
@@ -202,7 +202,7 @@ def update_host(params):
     for attribute in remove_attributes:
         host.remove_attribute(attribute)
 
-    return _serve_host(host, host.attributes())
+    return _serve_host(host, False)
 
 
 @Endpoint(constructors.domain_type_action_href('host_config', 'bulk-update'),
@@ -269,7 +269,7 @@ def rename_host(params):
             title="Rename process failed",
             detail=f"It was not possible to rename the host {host_name} to {new_name}",
         )
-    return _serve_host(host, host.attributes())
+    return _serve_host(host, False)
 
 
 @Endpoint(constructors.object_action_href('host_config', '{host_name}', action_name='move'),
@@ -303,7 +303,7 @@ def move(params):
             title="Problem moving host",
             detail=exc.message,
         )
-    return _serve_host(host, host.attributes())
+    return _serve_host(host, False)
 
 
 @Endpoint(constructors.object_href('host_config', '{host_name}'),
@@ -356,26 +356,22 @@ def show_host(params):
     """Show a host"""
     host_name = params['host_name']
     host: watolib.CREHost = watolib.Host.host(host_name)
-    if params['effective_attributes']:
-        attributes = host.effective_attributes()
-    else:
-        attributes = host.attributes()
     if host is None:
         return problem(
             404, f'Host "{host_name}" is not known.',
             'The host you asked for is not known. Please check for eventual misspellings.')
-    return _serve_host(host, attributes)
+    return _serve_host(host, params['effective_attributes'])
 
 
-def _serve_host(host, attributes):
+def _serve_host(host, effective_attributes=False):
     response = Response()
-    response.set_data(json.dumps(serialize_host(host, attributes)))
+    response.set_data(json.dumps(serialize_host(host, effective_attributes)))
     response.set_content_type('application/json')
     response.headers.add('ETag', constructors.etag_of_obj(host).to_header())
     return response
 
 
-def serialize_host(host, attributes):
+def serialize_host(host: watolib.CREHost, effective_attributes: bool):
     # TODO: readd link mechanism once object ref between endpoints is in place
     base = constructors.object_href('host_config', host.ident())
     members = constructors.DomainObjectMembers(base)
@@ -387,6 +383,11 @@ def serialize_host(host, attributes):
         prop_format='string',
         linkable=False,
     )
+
+    if effective_attributes:
+        attributes = host.effective_attributes()
+    else:
+        attributes = host.attributes()
 
     if 'meta_data' in attributes:
         attributes = attributes.copy()

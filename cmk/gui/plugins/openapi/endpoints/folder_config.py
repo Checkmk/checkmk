@@ -12,6 +12,7 @@ If you build the tree cleverly you can use it to pass on attributes in a meaning
 You can find an introduction to hosts including folders in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
+from typing import List
 
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
@@ -51,6 +52,11 @@ def create(params):
     title = put_body['title']
     parent_folder = put_body['parent']
     attributes = put_body.get('attributes', {})
+
+    if parent_folder.has_subfolder(name):
+        raise ProblemException(status=400,
+                               title="Path already exists",
+                               detail=f"The path '{parent_folder.name()}/{name}' already exists.")
 
     folder = parent_folder.create_subfolder(name, title, attributes)
 
@@ -137,7 +143,7 @@ def bulk_update(params):
         folder.edit(title, attributes)
         folders.append(folder)
 
-    return constructors.serve_json(_folders_collection(folders))
+    return constructors.serve_json(_folders_collection(folders, False))
 
 
 @Endpoint(constructors.object_href('folder_config', '{folder}'),
@@ -181,55 +187,108 @@ def move(params):
     return _serve_folder(folder)
 
 
-@Endpoint(constructors.collection_href('folder_config'),
-          '.../collection',
-          method='get',
-          response_schema=response_schemas.FolderCollection)
-def list_folders(_params):
+@Endpoint(
+    constructors.collection_href('folder_config'),
+    '.../collection',
+    method='get',
+    query_params=[{
+        'show_hosts': fields.Boolean(
+            description=("When set, all hosts that are stored in each folder will also be shown. "
+                         "On large setups this may come at a performance cost, so by default this "
+                         "is switched off."),
+            example=False,
+            missing=False,
+        )
+    }],
+    response_schema=response_schemas.FolderCollection)
+def list_folders(params):
     """Show all folders"""
     folders = watolib.Folder.root_folder().subfolders()
-    return constructors.serve_json(_folders_collection(folders))
+    return constructors.serve_json(_folders_collection(folders, params['show_hosts']))
 
 
-def _folders_collection(folders):
-    collection_object = constructors.collection_object(
-        domain_type='folder_config',
-        value=[
+def _folders_collection(
+    folders: List[CREFolder],
+    show_hosts: bool,
+):
+    folders_ = []
+    for folder in folders:
+        if show_hosts:
+            folders_.append(
+                constructors.domain_object(
+                    domain_type='folder_config',
+                    identifier=folder.id(),
+                    title=folder.title(),
+                    extensions={
+                        'attributes': folder.attributes().copy(),
+                    },
+                    members={
+                        'hosts': constructors.object_collection(
+                            name='hosts',
+                            domain_type='folder_config',
+                            entries=[
+                                constructors.collection_item("host_config", {
+                                    "title": host,
+                                    "id": host
+                                }) for host in folder.hosts()
+                            ],
+                            base="",
+                        )
+                    },
+                ))
+        folders_.append(
             constructors.collection_item(
                 domain_type='folder_config',
                 obj={
                     'title': folder.title(),
                     'id': folder.id()
                 },
-            ) for folder in folders
-        ],
+            ))
+    collection_object = constructors.collection_object(
+        domain_type='folder_config',
+        value=folders_,
         links=[constructors.link_rel('self', constructors.collection_href('folder_config'))],
     )
     return collection_object
 
 
-@Endpoint(constructors.object_href('folder_config', '{folder}'),
-          'cmk/show',
-          method='get',
-          response_schema=response_schemas.ConcreteFolder,
-          etag='output',
-          path_params=[FOLDER_FIELD])
+@Endpoint(
+    constructors.object_href('folder_config', '{folder}'),
+    'cmk/show',
+    method='get',
+    response_schema=response_schemas.ConcreteFolder,
+    etag='output',
+    query_params=[{
+        'show_hosts': fields.Boolean(
+            description=("When set, all hosts that are stored in this folder will also be shown. "
+                         "On large setups this may come at a performance cost, so by default this "
+                         "is switched off."),
+            example=False,
+            missing=False,
+        )
+    }],
+    path_params=[FOLDER_FIELD],
+)
 def show_folder(params):
     """Show a folder"""
     folder = params['folder']
-    return _serve_folder(folder)
+    return _serve_folder(folder, show_hosts=params['show_hosts'])
 
 
-def _serve_folder(folder, profile=None):
-    folder_json = _serialize_folder(folder)
+def _serve_folder(
+    folder,
+    profile=None,
+    show_hosts=False,
+):
+    folder_json = _serialize_folder(folder, show_hosts)
     response = constructors.serve_json(folder_json, profile=profile)
     response.headers.add("ETag", constructors.etag_of_obj(folder).to_header())
     return response
 
 
-def _serialize_folder(folder: CREFolder):
+def _serialize_folder(folder: CREFolder, show_hosts):
     uri = constructors.object_href('folder_config', folder.id())
-    return constructors.domain_object(
+    rv = constructors.domain_object(
         domain_type='folder_config',
         identifier=folder.id(),
         title=folder.title(),
@@ -252,3 +311,21 @@ def _serialize_folder(folder: CREFolder):
             'attributes': folder.attributes().copy(),
         },
     )
+    if show_hosts:
+        rv['members']['hosts'] = constructors.collection_property(
+            name='hosts',
+            base=constructors.object_href(
+                'folder_config',
+                "~" + folder.path().replace("/", "~"),
+            ),
+            value=[
+                constructors.collection_item(
+                    domain_type='host_config',
+                    obj={
+                        'title': host.name(),
+                        'id': host.id()
+                    },
+                ) for host in folder.hosts()
+            ],
+        )
+    return rv

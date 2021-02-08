@@ -194,6 +194,117 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                              headers={'If-Match': resp.headers['ETag']})
 
 
+def test_openapi_folder_config_collections(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        status=400,
+        content_type='application/json',
+    )
+
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/host_config/collections/all",
+        params='{"host_name": "host-1", "folder": "/new_folder"}',
+        status=200,
+        content_type='application/json',
+    )
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/host_config/collections/all",
+        params='{"host_name": "host-2", "folder": "/new_folder"}',
+        status=200,
+        content_type='application/json',
+    )
+
+
+def test_openapi_hosts_in_folder_collection(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        status=400,
+        content_type='application/json',
+    )
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/host_config/collections/all",
+        params='{"host_name": "host-1", "folder": "/new_folder"}',
+        status=200,
+        content_type='application/json',
+    )
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/host_config/collections/all",
+        params='{"host_name": "host-2", "folder": "/new_folder"}',
+        status=200,
+        content_type='application/json',
+    )
+    resp = wsgi_app.call_method(
+        'get',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params={'show_hosts': True},
+    )
+    hosts_ = resp.json['value'][0]['members']['hosts']['value']
+    assert len(hosts_) == 2
+    resp = wsgi_app.call_method(
+        'get',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params={'show_hosts': False},
+    )
+    assert 'members' not in resp.json['value'][0]
+
+
+def test_openapi_show_hosts_on_folder(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        "/NO_SITE/check_mk/api/v0/objects/folder_config/~new_folder",
+        params={'show_hosts': True},
+        status=200,
+    )
+    hosts_ = resp.json['members']['hosts']
+    assert len(hosts_) > 0
+
+    resp = wsgi_app.call_method(
+        'get',
+        "/NO_SITE/check_mk/api/v0/objects/folder_config/~new_folder",
+        params={'show_hosts': False},
+        status=200,
+    )
+    assert 'hosts' not in resp.json['members']
+
+
 def test_openapi_missing_folder(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))

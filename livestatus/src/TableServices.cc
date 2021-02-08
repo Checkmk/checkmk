@@ -25,7 +25,6 @@
 #include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "CommentColumn.h"
-#include "ContactGroupsColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
@@ -607,11 +606,17 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets.add(
             [](Row r) { return &r.rawData<service>()->servicegroups_ptr; }),
         table->core()));
-    table->addColumn(std::make_unique<ContactGroupsColumn>(
+    table->addColumn(std::make_unique<ListLambdaColumn<service>>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in",
-        offsets.add(
-            [](Row r) { return &r.rawData<service>()->contact_groups; })));
+        offsets,
+        [](const service &svc) {
+            std::vector<std::string> names;
+            for (const auto *cgm = svc.contact_groups; cgm != nullptr; cgm = cgm->next) {
+                names.emplace_back(cgm->group_ptr->group_name);
+            }
+            return names;
+        }));
 
     table->addColumn(std::make_unique<ListLambdaColumn<service>>(
         prefix + "metrics",

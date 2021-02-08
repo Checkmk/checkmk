@@ -101,7 +101,6 @@ liblivestatus_a_SOURCES = \
         Column.cc \
         ColumnFilter.cc \
         CommentColumn.cc \
-        ContactGroupsColumn.cc \
         CountAggregator.cc \
         CrashReport.cc \
         CustomVarsDictColumn.cc \

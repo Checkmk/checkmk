@@ -254,7 +254,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             html.write_text(_("Pending changes"))
             html.div("", id_="row_info")
             html.close_h3()
-            html.final_javascript("cmk.utils.display_header_info();")
             self._change_table()
 
     def _activation_msg(self):

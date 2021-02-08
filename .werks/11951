@@ -1,0 +1,18 @@
+Title: mssql_jobs: fix Check_MK and Check_MK_Discovery crash
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612769275
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+The Check_MK and Check_MK Discovery services crashed in association with the
+mssql_jobs check with the following error message:
+
+ValueError (time data ' 000000' does not match format '%Y%m%d %H%M%S')
+
+This crash occurs when the next run date and next run time of the MSSQL jobs
+are not set (i.e. set to NULL).
+This has been fixed.

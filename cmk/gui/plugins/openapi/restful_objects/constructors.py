@@ -385,6 +385,45 @@ def object_sub_property(
     return ret
 
 
+def collection_property(
+    name: str,
+    value: List[Any],
+    base: str,
+):
+    """Represent a collection property.
+
+    This is a property on an object which hols a collection. This has to be stored in the "member"
+    section of the object.
+
+    Args:
+        name:
+            The name of the collection.
+        value:
+            The value of the collection, i.e. all the entries.
+
+        base:
+            The base url, i.e. the URL under which the collection is located.
+
+        >>> with _request_context(secure=False):
+        ...     _base = '/objects/host_config/example.com'
+        ...     _hosts = [{'name': 'host1'}, {'name': 'host2'}]
+        ...     collection_property('hosts', _hosts, _base)
+        {'id': 'hosts', 'memberType': 'property', 'value': [{'name': 'host1'}, {'name': 'host2'}], \
+'links': [{'rel': 'self', \
+'href': 'http://localhost:5000/NO_SITE/check_mk/api/v0/objects/host_config/example.com/collections/hosts', \
+'method': 'GET', 'type': 'application/json', 'domainType': 'link'}]}
+
+    Returns:
+
+    """
+    return {
+        'id': name,
+        'memberType': "property",
+        'value': value,
+        'links': [link_rel(rel='self', href=base.rstrip("/") + f'/collections/{name}')],
+    }
+
+
 def object_property(
     name: str,
     value: Any,

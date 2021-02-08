@@ -19,7 +19,12 @@ void TimeColumn::output(Row row, RowRenderer &r, const contact * /*auth_user*/,
 std::unique_ptr<Filter> TimeColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
-    return std::make_unique<TimeFilter>(kind, *this, relOp, value);
+    return std::make_unique<TimeFilter>(
+        kind, name(),
+        [this](Row row, std::chrono::seconds timezone_offset) {
+            return this->getValue(row, timezone_offset);
+        },
+        relOp, value);
 }
 
 std::unique_ptr<Aggregator> TimeColumn::createAggregator(

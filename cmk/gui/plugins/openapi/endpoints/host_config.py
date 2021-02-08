@@ -20,7 +20,7 @@ import json
 import operator
 
 from cmk.gui import watolib
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -87,13 +87,30 @@ def bulk_create_hosts(params):
     body = params['body']
     entries = body['entries']
 
+    failed_hosts = []
     for folder, grouped_hosts in itertools.groupby(body['entries'], operator.itemgetter('folder')):
-        folder.create_hosts(
-            [(host['host_name'], host['attributes'], None) for host in grouped_hosts],
-            bake_hosts=False)
+        validated_entries = []
+        folder.prepare_create_hosts()
+        for host in grouped_hosts:
+            host_name = host["host_name"]
+            attributes = host["attributes"]
+            try:
+                folder.verify_host_details(host_name, host["attributes"])
+            except (MKUserError, MKAuthException):
+                failed_hosts.append(host_name)
+            validated_entries.append((host_name, attributes, None))
+
+        folder.create_validated_hosts(validated_entries, bake_hosts=False)
 
     try_bake_agents_for_hosts([host["host_name"] for host in body["entries"]])
 
+    if failed_hosts:
+        return problem(
+            status=400,
+            title="Provided details for some hosts are faulty",
+            detail=
+            f"Validated hosts were saved. The configurations for following hosts are faulty and "
+            f"were skipped: {' ,'.join(failed_hosts)}.")
     hosts = [watolib.Host.host(entry['host_name']) for entry in entries]
     return _host_collection(hosts)
 

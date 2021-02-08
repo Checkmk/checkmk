@@ -9,7 +9,7 @@ from werkzeug.test import create_environ
 from cmk.gui import htmllib
 from cmk.gui.globals import html, request, RequestContext, AppContext
 from cmk.gui.http import Request
-from cmk.update_config import DummyApplication
+from cmk.gui.utils.script_helpers import DummyApplication
 
 
 def test_del_vars():

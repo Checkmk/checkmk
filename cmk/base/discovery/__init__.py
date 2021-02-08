@@ -119,11 +119,6 @@ class RediscoveryMode(Enum):
     refresh = 3
 
 
-HostLabelDiscoveryResult = NamedTuple("HostLabelDiscoveryResult", [
-    ("labels", DiscoveredHostLabels),
-    ("per_plugin", Counter[SectionName]),
-])
-
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |

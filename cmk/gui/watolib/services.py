@@ -353,6 +353,9 @@ class Discovery:
 
     def _get_rule_of_host(self, ruleset, value):
         for _folder, _index, rule in ruleset.get_rules():
+            if rule.is_disabled():
+                continue
+
             if rule.is_discovery_rule_of(self._host) and rule.value == value:
                 return rule
         return None

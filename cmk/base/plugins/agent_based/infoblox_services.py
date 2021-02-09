@@ -26,8 +26,8 @@ from .agent_based_api.v1.type_defs import (
 Section = Dict[str, Tuple[str, str]]
 
 DETECT_INFOBLOX = any_of(
-    contains(".1.3.6.1.2.1.1.1", "infoblox"),
-    startswith(".1.3.6.1.2.1.1.2", ".1.3.6.1.4.1.7779.1."),
+    contains(".1.3.6.1.2.1.1.1.0", "infoblox"),
+    startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.7779.1."),
 )
 
 SERVICE_ID = {

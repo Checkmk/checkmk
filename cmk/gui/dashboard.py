@@ -1405,11 +1405,17 @@ def page_create_dashboard() -> None:
 
 @cmk.gui.pages.register("edit_dashboard")
 def page_edit_dashboard() -> None:
-    visuals.page_edit_visual('dashboards',
-                             get_all_dashboards(),
-                             create_handler=create_dashboard,
-                             custom_field_handler=dashboard_fields_handler,
-                             info_handler=_dashboard_info_handler)
+    visuals.page_edit_visual(
+        'dashboards',
+        get_all_dashboards(),
+        create_handler=create_dashboard,
+        custom_field_handler=dashboard_fields_handler,
+        info_handler=_dashboard_info_handler,
+        help_text_context=_(
+            "A dashboard can have an optional context. It can for example be restricted to display "
+            "only information of a single host or for a set of services matching a regular "
+            "expression."),
+    )
 
 
 def _dashboard_info_handler(visual):
@@ -1461,6 +1467,13 @@ def _vs_dashboard() -> Dictionary:
                 )),
         ],
         form_isopen=False,
+        help=_(
+            "Here, you can configure additional properties of the dashboard. This is completely "
+            "optional and only needed to create more advanced dashboards. For example, you can "
+            "make certain filters mandatory. This enables you to build generic dashboards which "
+            "could for example contain all the relevant information for a single Oracle DB. "
+            "However, before the dashboard is rendered, the user has to decide which DB he wants "
+            "to look at."),
     )
 
 

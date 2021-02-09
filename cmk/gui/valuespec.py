@@ -2804,8 +2804,7 @@ class CascadingDropdown(ValueSpec):
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
     def allow_empty(self) -> bool:
-        return not self._no_preselect and all(
-            vs.allow_empty() for _ident, _title, vs in self.choices() if vs is not None)
+        return not self._no_preselect
 
     def choices(self) -> Sequence[CascadingDropdownCleanChoice]:
         return list(itertools.chain(self._preselected, self._choices()))

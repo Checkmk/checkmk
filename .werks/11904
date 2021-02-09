@@ -1,0 +1,13 @@
+Title: Fix TypeError in docker_container_diskstat check
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p21
+Date: 1612885661
+
+This fixes the <tt>TypeError ('NoneType' object is not iterable)</tt> error
+in the docker_container_diskstat check.

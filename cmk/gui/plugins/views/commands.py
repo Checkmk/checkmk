@@ -1303,6 +1303,10 @@ class CommandRemoveDowntime(Command):
     def is_shortcut(self):
         return True
 
+    @property
+    def is_suggested(self):
+        return True
+
     def render(self, what):
         html.button("_remove_downtimes", _("Remove"))
 
@@ -1320,6 +1324,14 @@ class CommandRemoveComments(Command):
     @property
     def title(self):
         return _("Remove comments")
+
+    @property
+    def is_shortcut(self) -> bool:
+        return True
+
+    @property
+    def is_suggested(self) -> bool:
+        return True
 
     @property
     def permission(self):

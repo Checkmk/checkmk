@@ -43,7 +43,12 @@ table.data tr.data td.stale.hstate1 {
   text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
 }
 
-.state span {
+tr.groupheader .state span {
+  padding: 2px 4px 0;
+  border-radius: $theme-border-radius;
+}
+
+tr.data .state span {
   position: absolute;
   top: 1px;
   right: 4px;
@@ -56,6 +61,8 @@ table.data tr.data td.stale.hstate1 {
 }
 
 /* OK/UP */
+.bibox_box.state0,
+span.content.state0,
 b.state0,
 .state0 span,
 .hstate0 span {
@@ -64,10 +71,10 @@ b.state0,
 }
 
 .count.state0,
-.count.hstate1 {
+.count.hstate0 {
   &,
   a {
-    color: $color-state-success-background !important;
+    color: $success !important;
   }
 }
 
@@ -76,6 +83,8 @@ b.state0,
 }
 
 /* WARN */
+.bibox_box.state1,
+span.content.state1,
 b.state1,
 .state1 span {
   color: $black !important;
@@ -90,6 +99,8 @@ b.state1,
 }
 
 /* CRIT/DOWN */
+.bibox_box.state2,
+span.content.state2,
 b.state2,
 .state2 span,
 .hstate1 span {
@@ -106,6 +117,8 @@ b.state2,
 }
 
 /* UNKNOWN / UNREACH */
+.bibox_box.state3,
+span.content.state3,
 b.state3,
 .state3 span,
 .hstate2 span {
@@ -431,7 +444,6 @@ td.icons {
   white-space: nowrap;
 
   img {
-    height: 20px;
     margin-right: 0;
   }
 }

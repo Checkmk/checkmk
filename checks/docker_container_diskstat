@@ -48,12 +48,12 @@ def _parse_docker_container_diskstat_plugin(info):
             "ios": {},
         }
 
-    for entry in raw["io_service_bytes_recursive"]:
+    for entry in raw["io_service_bytes_recursive"] or ():
         device = devices.get((entry["major"], entry["minor"]))
         if device:
             device["bytes"][entry["op"]] = entry["value"]
 
-    for entry in raw["io_serviced_recursive"]:
+    for entry in raw["io_serviced_recursive"] or ():
         device = devices.get((entry["major"], entry["minor"]))
         if device:
             device["ios"][entry["op"]] = entry["value"]

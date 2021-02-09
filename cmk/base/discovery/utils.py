@@ -88,8 +88,8 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         preexisting_dict = {key(v): v for v in preexisting}
 
         self.vanished: Final = [v for k, v in preexisting_dict.items() if k not in current_dict]
+        self.old: Final = [v for k, v in preexisting_dict.items() if k in current_dict]
         self.new: Final = [v for k, v in current_dict.items() if k not in preexisting_dict]
-        self.old: Final = [v for k, v in current_dict.items() if k in preexisting_dict]
         self.present: Final = self.old + self.new
 
     @classmethod

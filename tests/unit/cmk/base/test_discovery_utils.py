@@ -38,3 +38,18 @@ def test_qualified_discovery():
     assert result.old == [2]
     assert result.new == [3]
     assert result.present == [2, 3]
+
+
+def test_qualified_discovery_keeps_old():
+
+    # e.g.: same service, different parameters
+    result = QualifiedDiscovery(
+        preexisting=["this is old"],
+        current=["this is new"],
+        key=lambda x: x[:6],
+    )
+
+    assert not result.vanished
+    assert result.old == ["this is old"]
+    assert not result.new
+    assert result.present == ["this is old"]

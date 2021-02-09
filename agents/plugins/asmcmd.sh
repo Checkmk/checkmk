@@ -5,6 +5,6 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.0.0b6"
+CMK_VERSION="2.0.0b7"
 
 su - griduser -c "asmcmd $@"

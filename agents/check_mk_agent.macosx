@@ -26,7 +26,7 @@ fi
 
 
 echo "<<<check_mk>>>"
-echo "Version: 2.0.0b6"
+echo "Version: 2.0.0b7"
 echo "AgentOS: macosx"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

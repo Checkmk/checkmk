@@ -38,19 +38,21 @@ TIME_RANGE = Tuple[str, str]
 @Endpoint(constructors.collection_href('time_period'),
           'cmk/create',
           method='post',
+          etag='output',
           request_schema=request_schemas.InputTimePeriod,
-          output_empty=True)
+          response_schema=response_schemas.DomainObject)
 def create_timeperiod(params):
     """Create a time period"""
     body = params['body']
+    name = body['name']
     exceptions = _format_exceptions(body.get("exceptions", []))
     periods = _daily_time_ranges(body["active_time_ranges"])
     time_period = _time_period(alias=body['alias'],
                                periods=periods,
                                exceptions=exceptions,
                                exclude=body.get("exclude", []))
-    save_timeperiod(body['name'], time_period)
-    return Response(status=204)
+    save_timeperiod(name, time_period)
+    return _serve_time_period(_readable_format(load_timeperiod(name)))
 
 
 @Endpoint(constructors.object_href('time_period', '{name}'),
@@ -91,6 +93,7 @@ def update_timeperiod(params):
           '.../delete',
           method='delete',
           path_params=[NAME_FIELD],
+          etag='input',
           output_empty=True)
 def delete(params):
     """Delete a time period"""
@@ -115,7 +118,46 @@ def show_time_period(params):
     if name not in time_periods:
         raise ProblemException(404, http.client.responses[404], f"Time period {name} not found")
     time_period = time_periods[name]
+    return _serve_time_period(_readable_format(time_period))
 
+
+@Endpoint(constructors.collection_href('time_period'),
+          '.../collection',
+          method='get',
+          response_schema=response_schemas.DomainObjectCollection)
+def list_time_periods(params):
+    """Show all time periods"""
+    time_periods = []
+    for time_period_id, time_period_details in load_timeperiods().items():
+        alias = time_period_details['alias']
+        if not isinstance(alias, str):  # check for mypy
+            continue
+        time_periods.append(
+            constructors.collection_item(
+                domain_type='time_period',
+                obj={
+                    'title': alias,
+                    'id': time_period_id
+                },
+            ))
+    time_period_collection = {
+        'id': "timeperiod",
+        'domainType': 'time_period',
+        'value': time_periods,
+        'links': [constructors.link_rel('self', constructors.collection_href('time_period'))],
+    }
+    return constructors.serve_json(time_period_collection)
+
+
+def _serve_time_period(time_period):
+    response = Response()
+    response.set_data(json.dumps(time_period))
+    response.set_content_type('application/json')
+    response.headers.add('ETag', constructors.etag_of_dict(time_period).to_header())
+    return response
+
+
+def _readable_format(time_period):
     time_period_readable: Dict[str, Any] = {key: time_period[key] for key in ("alias", "exclude")}
     active_time_ranges = _active_time_ranges_readable(
         {key: time_period[key] for key in defines.weekday_ids()})
@@ -125,14 +167,7 @@ def show_time_period(params):
         for key in time_period
         if key not in ['alias', 'exclude', *defines.weekday_ids()]
     })
-    return _serve_time_period(time_period_readable)
-
-
-def _serve_time_period(time_period):
-    response = Response()
-    response.set_data(json.dumps(time_period))
-    response.set_content_type('application/json')
-    return response
+    return time_period_readable
 
 
 def _daily_time_ranges(active_time_ranges: List[Dict[str, Any]]) -> Dict[str, List[TIME_RANGE]]:

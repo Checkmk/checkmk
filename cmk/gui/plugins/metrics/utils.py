@@ -1003,10 +1003,13 @@ class MetricName(DropdownChoice):
         # options extending the registered metric names on the system. Thus assuming the user
         # only selects from available options we skip the input validation(invalid_choice=None)
         # Since it is not possible anymore on the backend to collect the host & service hints
-        super().__init__(title=_("Metric"),
-                         sorted=True,
-                         encode_value=False,
-                         choices=[(None, _("Select metric"))])
+        super().__init__(
+            title=_("Metric"),
+            sorted=True,
+            encode_value=False,
+            choices=[(None, _("Select metric"))],
+            no_preselect=True,
+        )
         self._regex = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
         self._regex_error = _("Metric names must only consist of letters, digits and "
                               "underscores and they must start with a letter.")

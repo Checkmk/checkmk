@@ -204,14 +204,16 @@ class ABCRulesetMode(WatoMode):
         grouped_rulesets = sorted(rulesets.get_grouped(),
                                   key=lambda k_v: watolib.get_rulegroup(k_v[0]).title)
 
+        show_main_group_title = len(grouped_rulesets) > 1
+
         for main_group_name, sub_groups in grouped_rulesets:
-            # Display the main group header only when there are several main groups shown
-            if len(grouped_rulesets) > 1:
-                html.h3(watolib.get_rulegroup(main_group_name).title)
-                html.br()
+            main_group_title = watolib.get_rulegroup(main_group_name).title
 
             for group_name, group_rulesets in sub_groups:
-                forms.header(watolib.get_rulegroup(group_name).title)
+                group_title = watolib.get_rulegroup(group_name).title
+                forms.header(title=(
+                    f"{main_group_title} > {group_title}" if show_main_group_title else group_title
+                ))
                 forms.container()
 
                 for ruleset in group_rulesets:

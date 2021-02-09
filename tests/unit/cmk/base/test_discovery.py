@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name,protected-access
-from typing import Dict, Sequence, Set, NamedTuple, Counter, Tuple
+from typing import Dict, Sequence, Set, NamedTuple, Tuple
 
 import pytest  # type: ignore[import]
 
@@ -831,7 +831,7 @@ def test__find_candidates():
         for parsed_section_name in plugin.sections
     }
 
-    assert discovery._find_host_candidates(
+    assert discovery._discovered_services._find_host_candidates(
         broker,
         preliminary_candidates,
         parsed_sections_of_interest,
@@ -843,7 +843,7 @@ def test__find_candidates():
         CheckPluginName("uptime"),
     }
 
-    assert discovery._find_mgmt_candidates(
+    assert discovery._discovered_services._find_mgmt_candidates(
         broker,
         preliminary_candidates,
         parsed_sections_of_interest,
@@ -853,7 +853,7 @@ def test__find_candidates():
         CheckPluginName("mgmt_uptime"),
     }
 
-    assert discovery._find_candidates(
+    assert discovery._discovered_services._find_candidates(
         broker,
         run_only_plugin_names=None,
     ) == {
@@ -1519,13 +1519,14 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
     )
 
     with cmk_debug_enabled():
-        discovered_services = [] if discovery_parameters.only_host_labels else discovery._discover_services(
-            host_name=scenario.hostname,
-            ipaddress=scenario.ipaddress,
-            parsed_sections_broker=scenario.parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
-            run_only_plugin_names=None,
-        )
+        discovered_services = ([] if discovery_parameters.only_host_labels else
+                               discovery._discovered_services._discover_services(
+                                   host_name=scenario.hostname,
+                                   ipaddress=scenario.ipaddress,
+                                   parsed_sections_broker=scenario.parsed_sections_broker,
+                                   discovery_parameters=discovery_parameters,
+                                   run_only_plugin_names=None,
+                               ))
 
     services = {(s.check_plugin_name, s.item) for s in discovered_services}
 

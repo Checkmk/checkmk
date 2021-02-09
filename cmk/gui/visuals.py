@@ -99,6 +99,7 @@ from cmk.gui.plugins.visuals.utils import (
 )
 
 from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 # Needed for legacy (pre 1.6) plugins
@@ -775,6 +776,7 @@ def render_context_specs(
     visual,
     context_specs,
     isopen: bool = True,
+    help_text: Union[str, HTML, None] = None,
 ):
     if not context_specs:
         return
@@ -783,6 +785,7 @@ def render_context_specs(
         _("Context / Search Filters"),
         isopen=isopen,
         show_more_toggle=any(vs.has_show_more() for _title, vs in context_specs if vs is not None),
+        help_text=help_text,
     )
     # Trick: the field "context" contains a dictionary with
     # all filter settings, from which the value spec will automatically
@@ -797,13 +800,16 @@ def render_context_specs(
         spec.render_input(ident, value)
 
 
-def page_edit_visual(what: Literal["dashboards", "views", "reports"],
-                     all_visuals: Dict[Any, Dict[str, Any]],
-                     custom_field_handler=None,
-                     create_handler=None,
-                     load_handler=None,
-                     info_handler=None,
-                     sub_pages: pagetypes.SubPagesSpec = None):
+def page_edit_visual(
+    what: Literal["dashboards", "views", "reports"],
+    all_visuals: Dict[Any, Dict[str, Any]],
+    custom_field_handler=None,
+    create_handler=None,
+    load_handler=None,
+    info_handler=None,
+    sub_pages: pagetypes.SubPagesSpec = None,
+    help_text_context: Union[str, HTML, None] = None,
+):
     if sub_pages is None:
         sub_pages = []
 
@@ -1115,6 +1121,7 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
         visual,
         context_specs,
         isopen=what != "dashboards",
+        help_text=help_text_context,
     )
 
     if custom_field_handler and custom_field_handler.__name__ == 'dashboard_fields_handler':

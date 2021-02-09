@@ -41,8 +41,8 @@ CODE_TEMPLATE_MACROS = """
 
 {%- macro list_params(params, indent=8) -%}
 {%- for param in params %}{% if not (param.example is defined and param.example) %}{% continue %}{% endif %}
-{{ " " * indent }}"{{ param.name }}": "{{
-            param.example }}",{% if param.description is defined and param.description %}  #
+{{ " " * indent }}"{{ param.name }}": {{
+            param.example | repr }},{% if param.description is defined and param.description %}  #
         {%- if param.required %} (required){% endif %} {{
             param.description | first_sentence }}{% endif %}
 {%- endfor %}
@@ -124,18 +124,22 @@ PASSWORD="{{ password }}"
 
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
-curl \\
-    -X {{ request_method | upper }} \\
+out=$(
+  curl \\
+{%- if query_params %}
+    -G \\
+{%- endif %}
+    --request {{ request_method | upper }} \\
+    --write-out "\\nxxx-status_code=%{http_code}\\n" \\
     --header "Authorization: Bearer $USERNAME $PASSWORD" \\
     --header "Accept: application/json" \\
 {%- for header in header_params %}
     --header "{{ header.name }}: {{ header.example }}" \\
 {%- endfor %}
 {%- if query_params %}
-    -G  \\
  {%- for param in query_params %}
   {%- if param.example is defined and param.example %}
-    --data-urlencode "{{ param.name }}={{ param.example }}"{% if not loop.last %} \\{% endif %}
+    --data-urlencode {{ (param.name + "=" + param.example) | repr }} \\
   {%- endif %}
  {%- endfor %}
 {%- endif %}
@@ -145,7 +149,22 @@ curl \\
             to_json(indent=2, sort_keys=True) |
             indent(skip_lines=1, spaces=8) }}' \\
 {%- endif %}
-    "$API_URL{{ request_endpoint | fill_out_parameters }}"
+    "$API_URL{{ request_endpoint | fill_out_parameters }}")
+
+resp=$( echo "${out}" | grep -v "xxx-status_code" )
+code=$( echo "${out}" | awk -F"=" '/^xxx-status_code/ {print $2}')
+
+# For indentation, please install 'jq' (JSON query tool)
+echo "$resp" | jq
+# echo "$resp"
+
+if [[ $code -lt 400 ]]; then
+    echo "OK"
+    exit 0
+else
+    echo "Request error"
+    exit 1
+fi
 """
 
 CODE_TEMPLATE_HTTPIE = """
@@ -213,8 +232,11 @@ resp = session.{{ method }}(
             indent(skip_lines=1, spaces=4) }},
     {%- endif %}
 )
-resp.raise_for_status()
 data = resp.json()
+if resp.ok:
+    print(data)
+else:
+    raise RuntimeError(repr(data))
 """
 
 CodeExample = NamedTuple("CodeExample", [('lang', str), ('label', str), ('template', str)])
@@ -468,6 +490,7 @@ def _jinja_environment() -> jinja2.Environment:
         to_env=_to_env,
         to_json=json.dumps,
         to_python=yapf_format,
+        repr=repr,
     )
     # These objects will be available in the templates
     tmpl_env.globals.update(spec=SPEC,)

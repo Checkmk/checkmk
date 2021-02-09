@@ -5,16 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import logging
 import os
 import socket
 import sys
-import traceback
 from itertools import groupby
 from typing import Optional, Tuple, Union
 
 import snap7  # type: ignore[import]
-from snap7.common import Snap7Library  # type: ignore[import]
+from snap7.common import Snap7Library, Snap7Exception  # type: ignore[import]
 from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM  # type: ignore[import]
+
+# prevent snap7 logger to log errors directly to console
+snap7.common.logger.setLevel(logging.CRITICAL + 10)
 
 DATATYPES = {
     # type-name   size(bytes) parse-function
@@ -80,7 +83,7 @@ def parse_spec(hostspec):
     for spec in parts[5:]:
         p = spec.split(',')
         if len(p) != 5:
-            sys.stderr.write("ERROR: Invalid value specified: %s\n" % spec)
+            print("ERROR: Invalid value specified: %s" % spec, file=sys.stderr)
             return 1
 
         if ':' in p[0]:
@@ -254,6 +257,11 @@ def _group_device_values(device):
     )
 
 
+def _snap7error(hostname, custom_text, raw_error_message):
+    error_message = str(raw_error_message).replace("b' ", "'")
+    return f'Host {hostname}: {custom_text}: {error_message}'
+
+
 def main(sys_argv=None):
 
     args = parse_arguments(sys_argv or sys.argv[1:])
@@ -267,34 +275,43 @@ def main(sys_argv=None):
     client = snap7.client.Client()
 
     for device in args.hostspec:
+
+        hostname = device['host_name']
+
         try:
             client.connect(device['host_address'], device['rack'], device['slot'], device['port'])
+        except Snap7Exception as e:
+            print(_snap7error(hostname, 'Error connecting to device', e), file=sys.stderr)
+            continue
 
+        try:
             cpu_state = client.get_cpu_state()
+        except Snap7Exception as e:
+            cpu_state = None
+            print(_snap7error(hostname, 'Error reading device CPU state', e), file=sys.stderr)
 
-            parsed_area_values = []
-            for (area_name, db_number), iter_values in _group_device_values(device):
-                values = list(iter_values)
-                start_address, end_address = _addresses_from_area_values(values)
+        parsed_area_values = []
+        for (area_name, db_number), iter_values in _group_device_values(device):
+            values = list(iter_values)
+            start_address, end_address = _addresses_from_area_values(values)
+            try:
                 area_value = client.read_area(_area_name_to_area_id(area_name),
                                               db_number,
                                               start_address,
                                               size=end_address - start_address)
-                parsed_area_values.extend(_cast_values(values, start_address, area_value))
+            except Snap7Exception as e:
+                print(_snap7error(hostname, 'Error reading data area', e), file=sys.stderr)
+                continue
 
-            sys.stdout.write("<<<siemens_plc_cpu_state>>>\n")
+            parsed_area_values.extend(_cast_values(values, start_address, area_value))
+
+        sys.stdout.write("<<<siemens_plc_cpu_state>>>\n")
+        if cpu_state is not None:
             sys.stdout.write(cpu_state + "\n")
 
-            sys.stdout.write("<<<siemens_plc>>>\n")
-            hostname = device['host_name']
-            for values in parsed_area_values:
-                sys.stdout.write("%s %s %s %s\n" % (hostname, *values))
-
-        except Exception:
-            sys.stderr.write('%s: Unhandled error: %s' %
-                             (device['host_name'], traceback.format_exc()))
-            if args.debug:
-                raise
+        sys.stdout.write("<<<siemens_plc>>>\n")
+        for values in parsed_area_values:
+            sys.stdout.write("%s %s %s %s\n" % (hostname, *values))
 
 
 if __name__ == '__main__':

@@ -39,8 +39,9 @@ from cmk.gui.config import SiteId
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuTopic,
+    PageMenuSearch,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -191,6 +192,7 @@ class SimpleListMode(_SimpleWatoModeBase):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def _new_button_label(self) -> str:

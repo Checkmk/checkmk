@@ -46,8 +46,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_checkbox_selection_json_text,
     make_checkbox_selection_topic,
     make_simple_link,
@@ -157,6 +158,7 @@ class ModeUsers(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:

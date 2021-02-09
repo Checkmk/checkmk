@@ -74,8 +74,7 @@ class ModeCheckPlugins(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = super().page_menu(breadcrumb)
-        menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search",
-                                            placeholder=_("Search"))
+        menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search")
         return menu
 
     def page(self):

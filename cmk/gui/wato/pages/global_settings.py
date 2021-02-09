@@ -412,7 +412,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         menu = PageMenu(
             dropdowns=dropdowns,
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
+            inpage_search=PageMenuSearch(),
         )
 
         self._extend_display_dropdown(menu)

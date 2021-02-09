@@ -39,9 +39,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -130,6 +130,7 @@ class ModeRoles(RoleManagement, WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
         return menu
 
@@ -281,7 +282,7 @@ class ModeEditRole(RoleManagement, WatoMode):
             form_name="role",
             button_name="save",
         )
-        menu.inpage_search = PageMenuSearch(placeholder=_("Filter permissions"))
+        menu.inpage_search = PageMenuSearch()
         return menu
 
     def action(self) -> ActionResult:

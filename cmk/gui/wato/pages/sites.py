@@ -524,6 +524,7 @@ class ModeDistributedMonitoring(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
@@ -1003,7 +1004,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 _page_menu_dropdown_site_details(self._site_id, self._site, self.name()),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
+            inpage_search=PageMenuSearch(),
         )
 
     # TODO: Consolidate with ModeEditGlobals.action()

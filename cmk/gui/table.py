@@ -357,9 +357,6 @@ class Table:
         return
 
     def _show_action_row(self) -> bool:
-        if self.options["searchable"]:
-            return True
-
         if self.options["sortable"] and self._get_sort_column(config.user.tableoptions[self.id]):
             return True
 
@@ -384,19 +381,12 @@ class Table:
             actions_visible = html.request.get_ascii_input('_%s_actions' % table_id) == '1'
             table_opts['actions_visible'] = actions_visible
 
-        if html.request.get_ascii_input('_%s_reset' % table_id):
-            html.request.del_var('_%s_search' % table_id)
-            if 'search' in table_opts:
-                del table_opts['search']  # persist
-
         if self.options["searchable"]:
+            search_term = html.request.get_unicode_input_mandatory('search', '')
             # Search is always lower case -> case insensitive
-            search_term = html.request.get_unicode_input_mandatory('_%s_search' % table_id,
-                                                                   table_opts.get('search', ''))
             search_term = search_term.lower()
             if search_term:
-                html.request.set_var('_%s_search' % table_id, search_term)
-                table_opts['search'] = search_term  # persist
+                html.request.set_var('search', search_term)
                 rows = _filter_rows(rows, search_term)
 
         if html.request.get_ascii_input('_%s_reset_sorting' % table_id):
@@ -450,14 +440,6 @@ class Table:
             html.open_td(colspan=num_cols)
             if not html.in_form():
                 html.begin_form("%s_actions" % table_id)
-
-            if self.options["searchable"]:
-                html.open_div(class_="search")
-                html.text_input("_%s_search" % table_id)
-                html.button("_%s_submit" % table_id, _("Search"))
-                html.button("_%s_reset" % table_id, _("Reset search"))
-                html.set_focus("_%s_search" % table_id)
-                html.close_div()
 
             if html.request.has_var('_%s_sort' % table_id):
                 html.open_div(class_=["sort"])
@@ -647,6 +629,9 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
             continue  # skip filtering of headers or fixed rows
 
         for cell in row.cells:
+            # Filter out buttons
+            if cell.css is not None and "buttons" in cell.css:
+                continue
             if match_regex.search(cell.content):
                 filtered_rows.append(row)
                 break  # skip other cells when matched

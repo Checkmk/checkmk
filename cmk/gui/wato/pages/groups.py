@@ -31,8 +31,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -125,6 +126,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:

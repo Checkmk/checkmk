@@ -56,8 +56,9 @@ from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_javascript_link,
     make_simple_link,
     make_form_submit_link,
@@ -981,14 +982,15 @@ class Overridable(Base):
 
         cls.need_overriding_permission("edit")
 
+        title_plural = cls.phrase("title_plural")
         breadcrumb = cls.breadcrumb(cls.phrase("title_plural"), "list")
 
         current_type_dropdown = PageMenuDropdown(
             name=cls.type_name(),
-            title=cls.phrase("title_plural"),
+            title=title_plural,
             topics=[
                 PageMenuTopic(
-                    title=cls.phrase("title_plural"),
+                    title=title_plural,
                     entries=[
                         PageMenuEntry(
                             title=cls.phrase("new"),
@@ -1004,7 +1006,7 @@ class Overridable(Base):
                                 form_name="bulk_delete",
                                 button_name="_bulk_delete",
                                 message=_("Do you really want to delete the selected %s?") %
-                                cls.phrase("title_plural"),
+                                title_plural,
                             ),
                             is_shortcut=True,
                             is_suggested=True,
@@ -1014,8 +1016,12 @@ class Overridable(Base):
             ],
         )
 
-        page_menu = customize_page_menu(breadcrumb, current_type_dropdown, cls.type_name())
-        html.header(cls.phrase("title_plural"), breadcrumb, page_menu)
+        page_menu = customize_page_menu(
+            breadcrumb,
+            current_type_dropdown,
+            cls.type_name(),
+        )
+        html.header(title_plural, breadcrumb, page_menu)
 
         for message in get_flashed_messages():
             html.show_message(message)
@@ -1323,8 +1329,11 @@ class Overridable(Base):
         html.footer()
 
 
-def customize_page_menu(breadcrumb: Breadcrumb, current_type_dropdown: PageMenuDropdown,
-                        current_type_name: str) -> PageMenu:
+def customize_page_menu(
+    breadcrumb: Breadcrumb,
+    current_type_dropdown: PageMenuDropdown,
+    current_type_name: str,
+) -> PageMenu:
     return PageMenu(
         dropdowns=[
             current_type_dropdown,
@@ -1340,6 +1349,7 @@ def customize_page_menu(breadcrumb: Breadcrumb, current_type_dropdown: PageMenuD
             ),
         ],
         breadcrumb=breadcrumb,
+        inpage_search=PageMenuSearch(),
     )
 
 

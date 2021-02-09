@@ -1259,7 +1259,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter rule packs")),
+            inpage_search=PageMenuSearch(),
         )
 
         return menu
@@ -1456,7 +1456,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 _("You have not created any rule packs yet. The Event Console is useless unless "
                   "you have activated <i>Force message archiving</i> in the global settings."))
         elif search_expression and not found_packs:
-            html.show_message(_("Found no rules packs."))
+            html.show_message(_("Found no rule packs."))
             return
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
@@ -1702,7 +1702,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter rules")),
+            inpage_search=PageMenuSearch(),
         )
 
         return menu
@@ -2442,7 +2442,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
+            inpage_search=PageMenuSearch(),
         )
 
         return menu

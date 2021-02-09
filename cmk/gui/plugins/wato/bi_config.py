@@ -67,9 +67,10 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuPopup,
+    PageMenuSearch,
+    PageMenuTopic,
     make_checkbox_selection_json_text,
     make_simple_link,
     make_simple_form_page_menu,
@@ -445,6 +446,7 @@ class ModeBIPacks(ABCBIMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
@@ -663,6 +665,7 @@ class ModeBIRules(ABCBIMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
@@ -1838,6 +1841,7 @@ class BIModeAggregations(ABCBIMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def page(self):

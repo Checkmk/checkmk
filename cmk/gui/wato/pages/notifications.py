@@ -69,8 +69,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
     make_display_options_dropdown,
@@ -472,6 +473,7 @@ class ModeNotifications(ABCNotificationsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
         self._extend_display_dropdown(menu)
         return menu
@@ -931,6 +933,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
         return menu
 
@@ -985,6 +988,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                 cmk.gui.wato.user_profile.page_menu_dropdown_user_related("user_notifications_p"),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def _user_id(self):

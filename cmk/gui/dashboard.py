@@ -1460,6 +1460,7 @@ def _vs_dashboard() -> Dictionary:
                         "the users to first provide some context before rendering the dashboard."),
                 )),
         ],
+        form_isopen=False,
     )
 
 

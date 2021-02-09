@@ -771,13 +771,19 @@ def process_context_specs(context_specs):
     return context
 
 
-def render_context_specs(visual, context_specs):
+def render_context_specs(
+    visual,
+    context_specs,
+    isopen: bool = True,
+):
     if not context_specs:
         return
 
-    forms.header(_("Context / Search Filters"),
-                 show_more_toggle=any(
-                     vs.has_show_more() for _title, vs in context_specs if vs is not None))
+    forms.header(
+        _("Context / Search Filters"),
+        isopen=isopen,
+        show_more_toggle=any(vs.has_show_more() for _title, vs in context_specs if vs is not None),
+    )
     # Trick: the field "context" contains a dictionary with
     # all filter settings, from which the value spec will automatically
     # extract those that it needs.
@@ -1105,7 +1111,11 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
     if custom_field_handler and custom_field_handler.__name__ != 'dashboard_fields_handler':
         custom_field_handler(visual)
 
-    render_context_specs(visual, context_specs)
+    render_context_specs(
+        visual,
+        context_specs,
+        isopen=what != "dashboards",
+    )
 
     if custom_field_handler and custom_field_handler.__name__ == 'dashboard_fields_handler':
         custom_field_handler(visual)

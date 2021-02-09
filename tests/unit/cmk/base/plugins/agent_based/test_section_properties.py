@@ -51,10 +51,8 @@ def test_section_detection_uses_sysdescr_or_sysobjid():
     """
 
     allowed_oids = {
-        ".1.3.6.1.2.1.1.1",  # system description
-        ".1.3.6.1.2.1.1.1.0",
-        ".1.3.6.1.2.1.1.2",  # system object ID
-        ".1.3.6.1.2.1.1.2.0",
+        ".1.3.6.1.2.1.1.1.0",  # system description
+        ".1.3.6.1.2.1.1.2.0",  # system object ID
     }
 
     known_exceptions = {

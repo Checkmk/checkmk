@@ -81,8 +81,7 @@
 
       &.clearable {
         cursor: pointer;
-        background-image: url("images/icon_close.png");
-        filter: $inpage-close-button-filter;
+        background-image: url("images/icon_close.svg");
       }
     }
   }

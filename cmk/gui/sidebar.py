@@ -556,9 +556,11 @@ class SidebarRenderer:
             href=config.user.get_attribute("start_url") or config.start_url,
             target="main",
             title=_("Go to main overview"),
-            class_="min" if config.user.get_attribute("nav_hide_icons_title") else None,
         )
-        html.div("", id_="side_bg")
+        if config.user.get_attribute("nav_hide_icons_title"):
+            html.img(html.theme_url('images/tribe29_icon_min.svg'))
+        else:
+            html.img(html.theme_url('images/tribe29_icon.svg'))
         html.close_a()
         html.close_div()
 

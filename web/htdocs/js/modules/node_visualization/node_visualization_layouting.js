@@ -364,7 +364,7 @@ export class LayoutStyleConfiguration {
         //        matchers_enter.append("img")
         //                        .classed("treeangle", true)
         //                        .classed("open", d=>d.default_open)
-        //                        .attr("src",  theme_prefix + "/images/tree_closed.png")
+        //                        .attr("src",  theme_prefix + "/images/tree_closed.svg")
         //                        .on("click", function() {
         //                            let image = d3.select(this)
         //                            image.classed("open", !image.classed("open"))

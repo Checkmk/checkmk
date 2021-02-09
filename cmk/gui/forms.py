@@ -158,7 +158,7 @@ def _table_head(
     html.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
     html.img(id_=img_id,
              class_=["treeangle", "nform", "open" if isopen else "closed"],
-             src="themes/%s/images/tree_closed.png" % (html.get_theme()),
+             src="themes/%s/images/tree_closed.svg" % (html.get_theme()),
              align="absbottom")
     html.write_text(title)
     if show_more_toggle:

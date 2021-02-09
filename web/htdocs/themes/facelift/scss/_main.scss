@@ -379,21 +379,15 @@ div.livestatus.message {
 '-------------------------------------------------------------------------*/
 
 img.treeangle {
-  width: 9px;
+  width: 8px;
   height: 8px;
-  margin-top: 0;
-  margin-right: 3px;
+  margin: 0 3px;
   vertical-align: middle;
   cursor: pointer;
-  filter: $treeangle-img-filter;
   transition: transform 0.2s ease-in-out;
-  -webkit-transition: -webkit-transform 0.2s ease-in-out;
-  -moz-transition: -moz-transform 0.2s ease-in-out;
 
   &.open {
     transform: rotate(90deg);
-    -webkit-transform: rotate(90deg);
-    -moz-transform: rotate(90deg);
   }
 
   &.nform {
@@ -401,8 +395,6 @@ img.treeangle {
   }
 
   &.title {
-    width: 16px;
-    height: 16px;
     margin-right: 5px;
     vertical-align: middle;
     filter: none;
@@ -1557,10 +1549,6 @@ tr.hidden {
 
 .simplebar-scrollbar.simplebar-visible::before {
   opacity: 1;
-}
-
-body.main a.delete_button img {
-  filter: $inpage-close-button-filter;
 }
 
 div#row_info {

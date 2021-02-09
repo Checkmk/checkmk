@@ -54,6 +54,14 @@ def test_openapi_host_tag_group(wsgi_app, with_automation_user, suppress_automat
         'topic': 'nothing'
     }
 
+    col_resp = wsgi_app.call_method(
+        'get',
+        base + '/domain-types/host_tag_group/collections/all',
+        status=200,
+    )
+
+    assert len(col_resp.json_body["value"]) == 1
+
     _resp = wsgi_app.call_method(
         'delete',
         base + "/objects/host_tag_group/foo",
@@ -68,6 +76,14 @@ def test_openapi_host_tag_group(wsgi_app, with_automation_user, suppress_automat
         base + "/objects/host_tag_group/foo",
         status=404,
     )
+
+    col_resp = wsgi_app.call_method(
+        'get',
+        base + '/domain-types/host_tag_group/collections/all',
+        status=200,
+    )
+
+    assert len(col_resp.json_body["value"]) == 0
 
 
 def test_openapi_host_tag_group_invalid_id(wsgi_app, with_automation_user,

@@ -332,6 +332,9 @@ class TagConfig:
         self.aux_tag_list += other.aux_tag_list
         return self
 
+    def get_tag_groups(self):
+        return self.tag_groups
+
     def get_topic_choices(self):
         names = set([])
         for tag_group in self.tag_groups:

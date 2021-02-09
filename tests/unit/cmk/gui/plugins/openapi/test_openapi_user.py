@@ -184,6 +184,13 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
         'enforce_pw_change': True
     }
 
+    collection_resp = wsgi_app.call_method(
+        'get',
+        base + f"/domain-types/user_config/collections/all",
+        status=200,
+    )
+    assert len(collection_resp.json_body["value"]) == 2
+
     _resp = wsgi_app.call_method(
         'delete',
         base + f"/objects/user_config/{name}",
@@ -192,6 +199,13 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
     )
 
     _resp = wsgi_app.call_method('get', base + f"/objects/user_config/{name}", status=404)
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + f"/domain-types/user_config/collections/all",
+        status=200,
+    )
+    assert len(resp.json_body["value"]) == 1
 
 
 def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):

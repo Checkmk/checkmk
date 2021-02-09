@@ -99,6 +99,13 @@ def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automa
         content_type='application/json',
     )
 
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/domain-types/password/collections/all",
+        status=200,
+    )
+    assert len(resp.json_body["value"]) == 1
+
     _resp = wsgi_app.call_method(
         'delete',
         base + "/objects/password/nothing",
@@ -112,3 +119,10 @@ def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automa
     )
 
     _resp = wsgi_app.call_method('get', base + "/objects/password/foo", status=404)
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/domain-types/password/collections/all",
+        status=200,
+    )
+    assert len(resp.json_body["value"]) == 0

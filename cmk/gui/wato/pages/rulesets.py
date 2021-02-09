@@ -1790,7 +1790,7 @@ class VSExplicitConditions(Transform):
             return _("Check types")
 
         if item_type == "item":
-            return self._rulespec.item_name.title()
+            return self._rulespec.item_name
 
         raise MKUserError(None, "Invalid item type '%s'" % item_type)
 

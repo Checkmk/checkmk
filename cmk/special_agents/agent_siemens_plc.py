@@ -224,6 +224,36 @@ def _cast_values(values, start_address, area_value):
     return cast_values
 
 
+def _group_device_values(device):
+    '''A device can have multiple sets of values. Group them by area name and db_number,
+    so that the start and end address of the memroy area can be determined and only needs
+    to be fetched once form the client.
+
+    >>> [(i, list(j)) for i, j in _group_device_values({'values': [
+    ... {'area_name': 'merker', 'db_number': None, 'arbitrary_values': 15},
+    ... {'area_name': 'timer', 'db_number': None, 'arbitrary_values': 60},
+    ... {'area_name': 'merker', 'db_number': None, 'arbitrary_values': 32}
+    ... ]})]
+    [\
+(('merker', None), [{'area_name': 'merker', 'db_number': None, 'arbitrary_values': 15}, {'area_name': 'merker', 'db_number': None, 'arbitrary_values': 32}]), \
+(('timer', None), [{'area_name': 'timer', 'db_number': None, 'arbitrary_values': 60}])\
+]
+    '''
+    yield from groupby(
+        sorted(
+            device['values'],
+            key=lambda d: (
+                d['area_name'],
+                d['db_number'],
+            ),
+        ),
+        lambda d: (
+            d['area_name'],
+            d['db_number'],
+        ),
+    )
+
+
 def main(sys_argv=None):
 
     args = parse_arguments(sys_argv or sys.argv[1:])
@@ -236,18 +266,14 @@ def main(sys_argv=None):
 
     client = snap7.client.Client()
 
-    devices = args.hostspec
-    for device in devices:
+    for device in args.hostspec:
         try:
             client.connect(device['host_address'], device['rack'], device['slot'], device['port'])
 
             cpu_state = client.get_cpu_state()
 
             parsed_area_values = []
-            for (area_name, db_number), iter_values in groupby(
-                    sorted(device['values'], key=lambda d: (d['area_name'], d['db_number'])),
-                    lambda d: (d['area_name'], d['db_number']),
-            ):
+            for (area_name, db_number), iter_values in _group_device_values(device):
                 values = list(iter_values)
                 start_address, end_address = _addresses_from_area_values(values)
                 area_value = client.read_area(_area_name_to_area_id(area_name),

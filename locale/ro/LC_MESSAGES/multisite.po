@@ -2509,10 +2509,6 @@ msgid "Activate monitoring of the HiveManagerNG cloud."
 msgstr ""
 
 #, fuzzy
-msgid "Activate on affected sites"
-msgstr "Conexiuni Active"
-
-#, fuzzy
 msgid "Activate on selected sites"
 msgstr "Conexiuni Active"
 
@@ -3693,6 +3689,10 @@ msgstr ""
 msgid "Age of never analyzed/vacuumed tables"
 msgstr ""
 
+#, fuzzy
+msgid "Age of oldest message"
+msgstr "Adaugă model mesaj"
+
 msgid "Age of oldest notification is over maximum age"
 msgstr ""
 
@@ -3701,6 +3701,9 @@ msgid "Age of the latest snapshot"
 msgstr "Optiuni tabel"
 
 msgid "Age of the oldest snapshot"
+msgstr ""
+
+msgid "Age, in seconds, of the oldest message on the queue."
 msgstr ""
 
 msgid "Agent"
@@ -5771,6 +5774,10 @@ msgid ""
 "Average the CPU utilization over the specified time period before levels are "
 "applied."
 msgstr ""
+
+#, fuzzy
+msgid "Average time messages stay on queue"
+msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Average usage"
@@ -11723,6 +11730,14 @@ msgstr ""
 msgid "Dashboards"
 msgstr ""
 
+#, python-format
+msgid ""
+"Dashboards will be visible in the ‘Monitor’ main menu. With this option, you "
+"can select in which section of the menu this dashboard should be accessible. "
+"If you want to define a new topic name you can do this here <a "
+"href='%s'>here</a>."
+msgstr ""
+
 msgid "Dashlet"
 msgstr ""
 
@@ -15615,6 +15630,10 @@ msgstr ""
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr ""
+
+#, fuzzy
+msgid "Enable this ntopng instance"
+msgstr "Dezactiveaza Notificarile"
 
 msgid ""
 "Enable this option if you want to uninstall the Legacy Agent after the new "
@@ -22526,6 +22545,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"In the mega menus you can select between two options: Have a green icon only "
+"for the headlines – the 'topics' – for lean design. Or have a colored icon "
+"for every entry so that over time you can zoom in more quickly to a specific "
+"entry."
+msgstr ""
+
+msgid ""
 "In this directory will be installed <tt>check_mk_agent</tt>, <tt>waitmax</"
 "tt> and possibly other binaries that are needed by the agent."
 msgstr ""
@@ -27550,6 +27576,13 @@ msgstr ""
 msgid "Mean %s"
 msgstr "Cautare"
 
+msgid "Mean time in queue for the last few messages."
+msgstr ""
+
+#, fuzzy
+msgid "Mean time in queue for the last medium number of messages."
+msgstr "Numarul maxim de mesaje"
+
 msgid "Measurement unit"
 msgstr ""
 
@@ -28046,6 +28079,9 @@ msgid "Mirrored Line"
 msgstr ""
 
 msgid "Mirrored Stacked"
+msgstr ""
+
+msgid "Miscellaneous"
 msgstr ""
 
 msgid "Missing Prerequisite"
@@ -28687,6 +28723,9 @@ msgstr "Conexiune Noua"
 #, fuzzy
 msgid "My graphs"
 msgstr "Grup nou"
+
+msgid "My workplace"
+msgstr ""
 
 msgid "MySQL"
 msgstr ""
@@ -30635,6 +30674,12 @@ msgstr "Numarul maxim de conexiuni"
 msgid "Number of folders to create in each level"
 msgstr ""
 
+msgid "Number of handles that are currently open for input for the queue."
+msgstr ""
+
+msgid "Number of handles that are currently open for output for the queue."
+msgstr ""
+
 #, fuzzy
 msgid "Number of hops"
 msgstr "Numele elementului pentru eveniment"
@@ -31583,6 +31628,14 @@ msgstr ""
 msgid "Open input count"
 msgstr ""
 
+#, fuzzy
+msgid "Open input handles"
+msgstr "licente nefolosite"
+
+#, fuzzy
+msgid "Open input/output handles"
+msgstr "Reseteaza contoarele"
+
 msgid "Open mode"
 msgstr ""
 
@@ -31591,6 +31644,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Open output count"
+msgstr "Reseteaza contoarele"
+
+#, fuzzy
+msgid "Open output handles"
 msgstr "Reseteaza contoarele"
 
 #, fuzzy
@@ -34787,6 +34844,10 @@ msgid "Queue Name"
 msgstr ""
 
 #, fuzzy
+msgid "Queue depth"
+msgstr "Nume nou"
+
+#, fuzzy
 msgid "Queue info"
 msgstr "Nume nou"
 
@@ -34799,6 +34860,14 @@ msgstr "Nume nou"
 
 #, fuzzy
 msgid "Queue name"
+msgstr "Nume nou"
+
+#, fuzzy
+msgid "Queue time long"
+msgstr "Nume nou"
+
+#, fuzzy
+msgid "Queue time short"
 msgstr "Nume nou"
 
 #, fuzzy
@@ -38649,6 +38718,10 @@ msgstr "Conexiune Noua"
 msgid "Set criticality host tag"
 msgstr ""
 
+#, fuzzy
+msgid "Set custom show mode"
+msgstr "afiseaza erori"
+
 msgid "Set custom theme"
 msgstr ""
 
@@ -38839,6 +38912,10 @@ msgstr ""
 msgid ""
 "Set this in order to specify the name of the virtual host for the query."
 msgstr ""
+
+#, fuzzy
+msgid "Set this ntopng instance active"
+msgstr "Numele elementului pentru eveniment"
 
 msgid "Set timeouts for plugins and local checks"
 msgstr ""
@@ -43769,6 +43846,11 @@ msgid ""
 "latency of %.3fs."
 msgstr ""
 
+msgid ""
+"The current depth of the queue, that is, the number of messages on the "
+"queue, including both committed messages and uncommitted messages."
+msgstr ""
+
 #, python-format
 msgid ""
 "The current fetcher usage is %.2f%%. The checks have an average check "
@@ -48160,6 +48242,14 @@ msgid ""
 "\">rule</a>."
 msgstr ""
 
+msgid ""
+"This selection is only relevant if under 'User' -> 'Edit Profile' -> 'Mega "
+"menue icons' you have selected the options 'Per Entry'. If this is the case, "
+"you select here the icon that will be placed next to your Dashboard’s name "
+"in the Monitoring menu. You can only select one icon (the colored icon) or "
+"one icon that is complemented with an additional symbol."
+msgstr ""
+
 msgid "This service is based on cached agent data and cannot be rescheduled."
 msgstr ""
 
@@ -49201,6 +49291,9 @@ msgid "Top talkers not implemented for type: %s"
 msgstr ""
 
 msgid "Topic"
+msgstr ""
+
+msgid "Topic in ’Monitor' menu"
 msgstr ""
 
 msgid "Topics"
@@ -51655,6 +51748,10 @@ msgstr ""
 #, python-format
 msgid "Use the default language (%s)"
 msgstr ""
+
+#, fuzzy
+msgid "Use the default show mode"
+msgstr "afiseaza erori"
 
 msgid "Use the default start URL"
 msgstr ""
@@ -57591,6 +57688,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Activate on affected sites"
+#~ msgstr "Conexiuni Active"
 
 #, fuzzy
 #~ msgid "(default title of the graph)"

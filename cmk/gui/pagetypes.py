@@ -1764,7 +1764,7 @@ class PagetypeTopics(Overridable):
         return {
             "my_workplace": {
                 "title": _("My workplace"),
-                "icon_name": "topic_my_workplace",  #TODO add new green icon
+                "icon_name": "topic_my_workplace",
                 "description": "",
                 "sort_index": 10,
             },

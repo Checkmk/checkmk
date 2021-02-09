@@ -463,9 +463,8 @@ def cgroup_match_options():
     )
 
 
-# Rule for discovered process checks
 def _item_spec_ps():
-    return TextAscii(title=_("Process name as defined at discovery"),)
+    return TextAscii(title=_("Discovered process name"),)
 
 
 def _parameter_valuespec_ps():
@@ -815,11 +814,6 @@ rulespec_registry.register(
     ))
 
 
-# Rule for discovered process checks
-def _item_spec_hr_ps():
-    return TextAscii(title=_("Process name as defined at discovery"),)
-
-
 def _parameter_valuespec_hr_ps():
     return Dictionary(help=_(
         "This ruleset defines criteria for SNMP processes base upon the HOST Resources MIB."),
@@ -831,7 +825,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hr_ps",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_hr_ps,
+        item_spec=_item_spec_ps,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hr_ps,
         title=lambda: _("State and count of processes (only SNMP)"),

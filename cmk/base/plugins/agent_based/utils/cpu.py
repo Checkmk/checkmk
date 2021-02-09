@@ -4,13 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Optional
+from typing import Optional, NamedTuple
 from dataclasses import dataclass
+
+
+class Load(NamedTuple):
+    load1: float
+    load5: float
+    load15: float
 
 
 @dataclass
 class Section:
-    load: Sequence[float]
+    load: Load
     num_cpus: int
     num_threads: int
     max_threads: Optional[int] = None

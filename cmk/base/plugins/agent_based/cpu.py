@@ -9,7 +9,7 @@ from .agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register
 
-from .utils.cpu import Section
+from .utils.cpu import Section, Load
 
 
 def parse_cpu(string_table: StringTable) -> Optional[Section]:
@@ -18,10 +18,10 @@ def parse_cpu(string_table: StringTable) -> Optional[Section]:
 
         >>> string_table = ['0.26 0.47 0.52 2/459 19531 4'.split()]
         >>> print(parse_cpu(string_table))
-        Section(load=[0.26, 0.47, 0.52], num_cpus=4, num_threads=459, max_threads=None)
+        Section(load=Load(load1=0.26, load5=0.47, load15=0.52), num_cpus=4, num_threads=459, max_threads=None)
         >>> string_table = ['0.26 0.47 0.52 2/459 19531 4'.split(), ['124069']]
         >>> print(parse_cpu(string_table))
-        Section(load=[0.26, 0.47, 0.52], num_cpus=4, num_threads=459, max_threads=124069)
+        Section(load=Load(load1=0.26, load5=0.47, load15=0.52), num_cpus=4, num_threads=459, max_threads=124069)
 
     """
     if not string_table or len(string_table[0]) < 5:
@@ -45,7 +45,7 @@ def parse_cpu(string_table: StringTable) -> Optional[Section]:
 
     section = Section(
         num_cpus=num_cpus,
-        load=[float(i) for i in row[0:3]],
+        load=Load(float(row[0]), float(row[1]), float(row[2])),
         num_threads=int(row[3].split('/')[1]),
     )
 

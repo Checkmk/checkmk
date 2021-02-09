@@ -1,6 +1,6 @@
 import pytest  # type: ignore[import]
 from testlib import Check  # type: ignore[import]
-from cmk.base.plugins.agent_based.utils.cpu import Section
+from cmk.base.plugins.agent_based.utils.cpu import Section, Load
 
 pytestmark = pytest.mark.checks
 
@@ -17,7 +17,7 @@ def test_cpu_loads_predictive(mocker):
             'levels_upper': ('absolute', (2.0, 4.0))
         }
     }
-    section = Section(load=(0.5, 1.0, 1.5), num_cpus=4, num_threads=123)
+    section = Section(load=Load(0.5, 1.0, 1.5), num_cpus=4, num_threads=123)
     result = check_cpu.run_check(None, params, section)
 
     assert result == (0, '15 min load: 1.50 (no reference for prediction yet) '

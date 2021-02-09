@@ -750,11 +750,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         table->core()));
     table->addColumn(std::make_unique<ListLambdaColumn<host>>(
         prefix + "contact_groups",
-        "A list of all contact groups this host is in",
-        offsets,
+        "A list of all contact groups this host is in", offsets,
         [](const host &hst) {
             std::vector<std::string> names;
-            for (const auto *cgm = hst.contact_groups; cgm != nullptr; cgm = cgm->next) {
+            for (const auto *cgm = hst.contact_groups; cgm != nullptr;
+                 cgm = cgm->next) {
                 names.emplace_back(cgm->group_ptr->group_name);
             }
             return names;

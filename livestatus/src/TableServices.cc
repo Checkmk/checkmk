@@ -608,11 +608,11 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         table->core()));
     table->addColumn(std::make_unique<ListLambdaColumn<service>>(
         prefix + "contact_groups",
-        "A list of all contact groups this service is in",
-        offsets,
+        "A list of all contact groups this service is in", offsets,
         [](const service &svc) {
             std::vector<std::string> names;
-            for (const auto *cgm = svc.contact_groups; cgm != nullptr; cgm = cgm->next) {
+            for (const auto *cgm = svc.contact_groups; cgm != nullptr;
+                 cgm = cgm->next) {
                 names.emplace_back(cgm->group_ptr->group_name);
             }
             return names;

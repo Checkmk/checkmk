@@ -10,6 +10,7 @@ from cmk.special_agents.agent_siemens_plc import (
     _addresses_from_area_values,
     _area_name_to_area_id,
     _cast_values,
+    _group_device_values,
     parse_spec,
 )
 
@@ -162,3 +163,87 @@ def test__addresses_from_area_values(values, expected_addresses):
 ])
 def test__cast_values(values, start_address, area_value, expected_value):
     assert _cast_values(values, start_address, area_value) == expected_value
+
+
+@pytest.mark.parametrize('device, expected_grouped_values', [
+    (
+        {
+            'host_name': '4fcm',
+            'host_address': '10.2.90.20',
+            'rack': 0,
+            'slot': 2,
+            'port': 102,
+            'values': [
+                {
+                    'area_name': 'merker',
+                    'db_number': None,
+                    'byte': 5,
+                    'bit': 3,
+                    'datatype': 'bit',
+                    'valuetype': 'flag',
+                    'ident': 'Filterturm_Sammelstoerung_Telefon',
+                },
+                {
+                    'area_name': 'timer',
+                    'db_number': None,
+                    'byte': 5,
+                    'bit': 0,
+                    'datatype': 'bit',
+                    'valuetype': 'None',
+                    'ident': '',
+                },
+                {
+                    'area_name': 'merker',
+                    'db_number': None,
+                    'byte': 3,
+                    'bit': 1,
+                    'datatype': 'bit',
+                    'valuetype': 'flag',
+                    'ident': 'Filterturm_Sammelstoerung_Email',
+                },
+            ]
+        },
+        [
+            (
+                ('merker', None),
+                [
+                    {
+                        'area_name': 'merker',
+                        'db_number': None,
+                        'byte': 5,
+                        'bit': 3,
+                        'datatype': 'bit',
+                        'valuetype': 'flag',
+                        'ident': 'Filterturm_Sammelstoerung_Telefon',
+                    },
+                    {
+                        'area_name': 'merker',
+                        'db_number': None,
+                        'byte': 3,
+                        'bit': 1,
+                        'datatype': 'bit',
+                        'valuetype': 'flag',
+                        'ident': 'Filterturm_Sammelstoerung_Email',
+                    },
+                ],
+            ),
+            (
+                ('timer', None),
+                [
+                    {
+                        'area_name': 'timer',
+                        'db_number': None,
+                        'byte': 5,
+                        'bit': 0,
+                        'datatype': 'bit',
+                        'valuetype': 'None',
+                        'ident': '',
+                    },
+                ],
+            ),
+        ],
+    ),
+])
+def test__group_device_values(device, expected_grouped_values):
+    actual_values = [(i, list(j)) for i, j in _group_device_values(device)]
+    assert actual_values == expected_grouped_values

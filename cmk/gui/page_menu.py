@@ -125,7 +125,6 @@ class PageMenuSearch(ABCPageMenuItem):
     """A text input box right in the menu, primarily for in page quick search"""
     target_mode: Optional[str] = None
     default_value: str = ""
-    placeholder: Optional[str] = None
 
 
 @dataclass
@@ -593,9 +592,7 @@ class PageMenuRenderer:
 
     def _show_inpage_search_field(self, item: PageMenuSearch) -> None:
         html.open_td(class_="inpage_search")
-        inpage_search_form(mode=item.target_mode,
-                           default_value=item.default_value,
-                           placeholder=item.placeholder)
+        inpage_search_form(mode=item.target_mode, default_value=item.default_value)
         html.close_td()
 
     def _show_pending_changes_icon(self) -> None:
@@ -730,9 +727,7 @@ def search_form(title: Optional[str] = None,
 
 
 # TODO: Mesh this function into one with the above search_form()
-def inpage_search_form(mode: Optional[str] = None,
-                       default_value: str = "",
-                       placeholder: Optional[str] = None) -> None:
+def inpage_search_form(mode: Optional[str] = None, default_value: str = "") -> None:
     form_name = "inpage_search_form"
     reset_button_id = "%s_reset" % form_name
     was_submitted = html.request.get_ascii_input("filled_in") == form_name
@@ -740,7 +735,7 @@ def inpage_search_form(mode: Optional[str] = None,
     html.text_input("search",
                     size=32,
                     default_value=default_value,
-                    placeholder=placeholder,
+                    placeholder=_("Filter"),
                     required=True,
                     title="")
     html.hidden_fields()

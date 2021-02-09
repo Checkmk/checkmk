@@ -343,10 +343,8 @@ class ModeRuleSearch(ABCRulesetMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(
-                default_value=self._search_options.get("fulltext", ""),
-                placeholder=_("Filter"),
-            ) if self._page_type is not PageType.RuleSearch else None,
+            inpage_search=PageMenuSearch(default_value=self._search_options.get("fulltext", ""))
+            if self._page_type is not PageType.RuleSearch else None,
         )
         return menu
 
@@ -469,8 +467,7 @@ class ModeRulesetGroup(ABCRulesetMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(default_value=self._search_options.get("fulltext", ""),
-                                         placeholder=_("Filter")),
+            inpage_search=PageMenuSearch(default_value=self._search_options.get("fulltext", "")),
         )
         return menu
 

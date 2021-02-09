@@ -147,7 +147,7 @@ class ModeFolder(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter hosts")),
+            inpage_search=PageMenuSearch(),
         )
 
         self._extend_display_dropdown(menu)
@@ -727,14 +727,12 @@ class ModeFolder(WatoMode):
             return
 
         hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
-        search_text = html.request.var("search")
 
         html.div("", id_="row_info")
 
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
-        with table_element("hosts", title=_("Hosts"), searchable=False,
-                           omit_empty_columns=True) as table:
+        with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
 
             # Compute colspan for bulk actions
             colspan = 6
@@ -758,8 +756,8 @@ class ModeFolder(WatoMode):
                 if table.limit_reached:
                     table.limit_hint = max_hosts
                     continue
-                self._show_host_row(rendered_hosts, table, hostname, search_text, colspan,
-                                    host_errors, contact_group_names)
+                self._show_host_row(rendered_hosts, table, hostname, colspan, host_errors,
+                                    contact_group_names)
 
         html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
@@ -771,11 +769,8 @@ class ModeFolder(WatoMode):
 
         init_rowselect("wato-folder-/" + self._folder.path())
 
-    def _show_host_row(self, rendered_hosts, table, hostname, search_text, colspan, host_errors,
+    def _show_host_row(self, rendered_hosts, table, hostname, colspan, host_errors,
                        contact_group_names):
-        if search_text and (search_text.lower() not in hostname.lower()):
-            return
-
         host = self._folder.host(hostname)
         rendered_hosts.append(hostname)
         effective = host.effective_attributes()

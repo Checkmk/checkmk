@@ -476,12 +476,13 @@ def page_list(what,
     breadcrumb = visual_page_breadcrumb(what, title, "list")
 
     visual_type = visual_type_registry[what]()
+    visual_plural_title = visual_type.plural_title.title()
     current_type_dropdown = PageMenuDropdown(
         name=what,
-        title=visual_type.plural_title.title(),
+        title=visual_plural_title,
         topics=[
             PageMenuTopic(
-                title=visual_type.plural_title.title(),
+                title=visual_plural_title,
                 entries=[
                     PageMenuEntry(
                         title=_('Add %s') % visual_type.title,
@@ -495,7 +496,11 @@ def page_list(what,
         ],
     )
 
-    page_menu = pagetypes.customize_page_menu(breadcrumb, current_type_dropdown, what)
+    page_menu = pagetypes.customize_page_menu(
+        breadcrumb,
+        current_type_dropdown,
+        what,
+    )
     html.header(title, breadcrumb, page_menu)
 
     for message in get_flashed_messages():

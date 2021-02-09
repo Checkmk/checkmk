@@ -31,7 +31,7 @@ PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 GOOGLETEST_VERSION := googletest-07d4a6e93d
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
-.PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation
+.PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation documentation-quick
 
 AM_CPPFLAGS = \
     -I.. \
@@ -281,8 +281,12 @@ cppcheck-xml: compile_commands.json
 	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> $(CPPCHECK_NEB_RESULT)
 	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" $(CPPCHECK_NEB_RESULT)
 
-documentation: doc/plantuml.jar
+documentation: compile_commands.json doc/plantuml.jar
 	$(DOXYGEN) doc/Doxyfile
+	$(RM) '$$depbase.Tpo'
+
+documentation-quick: compile_commands.json doc/plantuml.jar
+	( cat doc/Doxyfile; echo "CLANG_ASSISTED_PARSING=NO") | $(DOXYGEN) -
 
 doc/plantuml.jar:
 	wget https://master.dl.sourceforge.net/project/plantuml/$(PLANTUTML_VERSION)/plantuml.$(PLANTUTML_VERSION).jar --quiet --output-document=$@ || { $(RM) $@; exit 1; }

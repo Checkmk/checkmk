@@ -101,14 +101,17 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
 # New functions for painting forms
 
 
-def header(title: str,
-           isopen: bool = True,
-           table_id: str = "",
-           narrow: bool = False,
-           css: Optional[str] = None,
-           show_table_head: bool = True,
-           show_more_toggle: bool = False,
-           show_more_mode: bool = False) -> None:
+def header(
+    title: str,
+    isopen: bool = True,
+    table_id: str = "",
+    narrow: bool = False,
+    css: Optional[str] = None,
+    show_table_head: bool = True,
+    show_more_toggle: bool = False,
+    show_more_mode: bool = False,
+    help_text: Union[str, HTML, None] = None,
+) -> None:
     global g_header_open, g_section_open
     if g_header_open:
         end()
@@ -135,6 +138,7 @@ def header(title: str,
             isopen=isopen,
             title=title,
             show_more_toggle=show_more_toggle,
+            help_text=help_text,
         )
 
     html.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
@@ -149,6 +153,7 @@ def _table_head(
     isopen: bool,
     title: str,
     show_more_toggle: bool,
+    help_text: Union[str, HTML, None] = None,
 ) -> None:
     onclick = html.foldable_container_onclick(treename, id_, fetch_url=None)
     img_id = html.foldable_container_img_id(treename, id_)
@@ -161,6 +166,7 @@ def _table_head(
              src="themes/%s/images/tree_closed.svg" % (html.get_theme()),
              align="absbottom")
     html.write_text(title)
+    html.help(help_text)
     if show_more_toggle:
         html.more_button("foldable_" + id_, dom_levels_up=4, with_text=True)
     html.close_td()

@@ -357,7 +357,7 @@ div#top_heading {
       input,
       input:active,
       input:focus {
-        background-color: $inpage-highlight-color;
+        background-color: transparent;
         border: none;
         box-shadow: none;
         box-sizing: border-box;
@@ -383,10 +383,9 @@ div#top_heading {
       input#inpage_search_form_reset {
         width: 11px;
         height: 11px;
-        background-image: url("images/icon_close.png");
+        background-image: url("images/icon_close.svg");
         background-size: 11px 11px;
         border-radius: 0;
-        filter: $inpage-close-button-filter;
       }
 
       input.submit {
@@ -546,11 +545,10 @@ div#page_menu_popups {
 
       a.close_popup img {
         position: absolute;
-        top: 4px;
+        top: 6px;
         right: $spacing;
-        width: 16px;
+        width: 12px;
         height: auto;
-        filter: $inpage-close-button-filter;
       }
     }
 

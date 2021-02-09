@@ -284,7 +284,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
                  onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" %
                  (index, num_rows))
 
-    html.img(html.theme_url("images/tree_closed.png"),
+    html.img(html.theme_url("images/tree_closed.svg"),
              align="absbottom",
              class_=["treeangle", "nform", "open" if is_open else "closed"])
     html.write_text("%s (%d)" % (group_spec["title"], num_rows))

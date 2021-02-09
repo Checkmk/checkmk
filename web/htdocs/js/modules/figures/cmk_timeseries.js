@@ -56,7 +56,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         this.tooltip_generator = new cmk_figures.FigureTooltip(this._tooltip);
         // TODO: uncomment to utilize the tooltip collapser
         //let collapser = this._tooltip.append("div").classed("collapser", true);
-        //collapser.append("img").attr("src", "themes/facelift/images/tree_closed.png")
+        //collapser.append("img").attr("src", "themes/facelift/images/tree_closed.svg")
         //    .on("click", ()=>{
         //        collapser.classed("active", !collapser.classed("active"));
         //    });

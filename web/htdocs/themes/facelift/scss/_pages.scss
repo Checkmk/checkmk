@@ -508,17 +508,11 @@ table.data {
     img {
       position: relative;
       top: 2px;
-      width: 12px;
-      height: 13px;
+      width: 8px;
+      height: auto;
       padding: 0;
       vertical-align: top;
     }
-  }
-
-  tr th a.toggle_actions img,
-  tr th body.main .popup_menu span.toggle_actions img,
-  body.main .popup_menu & tr th span.toggle_actions img {
-    filter: $treeangle-img-filter;
   }
 }
 

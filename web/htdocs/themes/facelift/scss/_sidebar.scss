@@ -36,10 +36,6 @@ body.side {
   b.treeangle.title {
     color: $font-color-sidebar;
   }
-
-  img.treeangle {
-    filter: $treeangle-img-filter-sidebar;
-  }
 }
 
 #check_mk_navigation {
@@ -142,18 +138,17 @@ body.side {
   height: 58px;
 
   > a {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
     text-decoration: none;
-    background-image: url("images/tribe29_icon.svg");
-    background-position: center $spacing;
-    background-repeat: no-repeat;
-    background-size: auto 44px;
     outline: none;
 
-    &.min {
-      background-image: url("images/tribe29_icon_min.svg");
+    img {
+      width: 48px;
+      height: auto;
     }
   }
 }
@@ -166,10 +161,6 @@ body.main .popup_menu #side_header > span {
   background-position: 16px center;
   background-repeat: no-repeat;
   background-size: auto 30px;
-}
-
-#side_bg {
-  display: none;
 }
 
 #side_fold {
@@ -271,18 +262,17 @@ div.snapin {
     }
 
     &.closed span.minisnapin {
-      background-image: url("images/icon_maxisnapin.png");
+      background-image: url("images/icon_maxisnapin.svg");
     }
 
     span.minisnapin {
-      position: absolute;
       display: inline-block;
-      width: 16px;
-      height: 16px;
+      width: 8px;
+      height: 8px;
       margin-left: 6px;
       line-height: 0;
       cursor: pointer;
-      background: no-repeat center / 100% url("images/icon_minisnapin.png");
+      background: no-repeat center / 100% url("images/icon_minisnapin.svg");
     }
   }
 
@@ -314,13 +304,13 @@ div.snapin {
 
   span.closesnapin {
     display: inline-block;
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     vertical-align: middle;
 
     img {
-      width: 16px;
-      height: 16px;
+      width: 12px;
+      height: 12px;
       padding: 0;
     }
   }
@@ -615,10 +605,6 @@ div.add_snapin {
     div.foldable {
       b.treeangle {
         color: $font-color-sidebar;
-      }
-
-      img.treeangle {
-        filter: $treeangle-img-filter-sidebar;
       }
     }
   }

@@ -2438,12 +2438,12 @@ class html(ABCHTMLGenerator):
         if icon:
             self.img(id_=img_id,
                      class_=["treeangle", "title", "open" if isopen else "closed"],
-                     src="themes/%s/images/icon_%s.png" % (self._theme, icon),
+                     src="themes/%s/images/icon_%s.svg" % (self._theme, icon),
                      onclick=onclick)
         else:
             self.img(id_=img_id,
                      class_=["treeangle", "open" if isopen else "closed"],
-                     src="themes/%s/images/tree_closed.png" % (self._theme),
+                     src="themes/%s/images/tree_closed.svg" % (self._theme),
                      onclick=onclick)
 
         if indent != "form" or not isinstance(title, HTML):

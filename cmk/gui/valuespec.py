@@ -4020,7 +4020,6 @@ class TimeHelper:
 class Timerange(CascadingDropdown):
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        allow_empty: bool = False,
         include_time: bool = False,
         choices: Union[None, List[CascadingDropdownChoice],
                        Callable[[], List[CascadingDropdownChoice]]] = None,
@@ -4064,12 +4063,8 @@ class Timerange(CascadingDropdown):
             validate=validate,
         )
         self._title = title if title is not None else _('Time range')
-        self._allow_empty = allow_empty
         self._include_time = include_time
         self._fixed_choices = choices
-
-    def allow_empty(self) -> bool:
-        return self._allow_empty
 
     def _prepare_choices(self) -> List[CascadingDropdownChoice]:
         # TODO: We have dispatching code like this all over place...
@@ -4081,9 +4076,6 @@ class Timerange(CascadingDropdown):
             choices = self._fixed_choices()
         else:
             raise ValueError("invalid type for choices")
-
-        if self._allow_empty:
-            choices += [(None, '', None)]
 
         choices.extend(self._get_graph_timeranges())
         choices.extend([

@@ -165,7 +165,6 @@ def _time_range_historic_dict_elements(with_elements) -> DictionaryElements:
     yield 'window', Timerange(
         title=_("Time range to consider"),
         default_value="d0",
-        allow_empty=True,
     )
     yield "rrd_consolidation", DropdownChoice(
         choices=[

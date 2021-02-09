@@ -12,6 +12,7 @@ export class HostStats extends cmk_figures.FigureBase {
         this._table_div = this._div_selection.append("div").classed("stats_table", true);
         this.svg = this._div_selection.append("svg");
         this._hexagon_box = this.svg.append("g").classed("hexagons", true);
+        this._max_radius = 48;
     }
 
     update_data(data) {
@@ -34,13 +35,16 @@ export class HostStats extends cmk_figures.FigureBase {
         let sum = this._data.total.count;
         let radius = 0;
         parts.forEach(part => {
-            radius = (Math.pow(sum, 0.33) / Math.pow(this._data.total.count, 0.33)) * 50;
+            radius =
+                part.count == 0
+                    ? 0
+                    : (Math.pow(sum, 0.33) / Math.pow(this._data.total.count, 0.33)) *
+                      this._max_radius;
             sum -= part.count;
 
             hexagon_config.push({
                 title: part.title,
                 path: hexbin.hexagon(radius),
-                color: "#262f38",
                 css_class: part.css_class,
                 tooltip: "",
                 count: part.count,
@@ -51,10 +55,9 @@ export class HostStats extends cmk_figures.FigureBase {
         this._hexagon_box
             .selectAll("path.hexagon")
             .data(hexagon_config)
-            .join(enter => enter.append("path").classed("hexagon", true))
+            .join(enter => enter.append("path"))
             .attr("d", d => d.path)
-            .attr("fill", d => d.color)
-            .attr("class", d => "site_element " + d.css_class);
+            .attr("class", d => "hexagon " + d.css_class);
 
         // render table
         let table = this._table_div

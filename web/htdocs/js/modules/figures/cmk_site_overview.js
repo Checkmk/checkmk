@@ -11,7 +11,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
         super(div_selector, fixed_size);
         this.margin = {top: 0, right: 0, bottom: 0, left: 0};
 
-        this._max_box_width = 114;
+        this._max_box_width = 96;
 
         // Debugging/demo stuff
         this._test_filter = false;
@@ -179,7 +179,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
 
             if (necessary_total_height <= box_area.height) {
                 return {
-                    radius: ((box_height * 2) / 3) * 0.92,
+                    radius: ((box_height * 2) / 3) * 0.87,
                     box_height: box_height,
                     hexagon_height: (box_height * 4) / 3,
                     box_width: box_width,
@@ -263,30 +263,42 @@ export class SiteOverview extends cmk_figures.FigureBase {
 
             if (this._data.render_mode == "hosts") {
                 // Compute required hexagons
-                let tooltip = d.tooltip;
+                const outer_css_class = d.has_host_problem ? d.host_css_class : d.service_css_class;
                 d.hexagon_config = [
                     {
                         id: "outer_hexagon",
                         path: outer_hexagon_path,
-                        color: d.has_host_problem ? d.host_color : d.service_color,
-                        css_class: !d.has_host_problem && d.num_problems == 0 ? "ok" : "",
-                        tooltip: tooltip,
+                        css_class: outer_css_class,
+                        tooltip: d.tooltip,
                     },
                 ];
 
                 if (!d.has_host_problem) {
                     // Center is reserved for displaying the host state
-                    let mid_radius = 0.7;
+                    const mid_radius = 0.7;
                     let badness = d.num_problems / d.num_services;
-                    badness = 0;
-                    let goodness = 1.0 - badness;
-                    let radius_factor = Math.pow((1.0 - mid_radius) * goodness + mid_radius, 2);
+
+                    // Hexagon border width: Ensure a minimum and apply discrete value steps
+                    const thresholds = [
+                        [0, 0.05, 0.05],
+                        [0.05, 0.2, 0.3],
+                        [0.2, 0.5, 0.6],
+                        [0.5, 1, 1],
+                    ];
+                    for (const [min, max, map_val] of thresholds) {
+                        if (min < badness && badness <= max) {
+                            badness = map_val;
+                            break;
+                        }
+                    }
+
+                    const goodness = 1.0 - badness;
+                    const radius_factor = Math.pow((1.0 - mid_radius) * goodness + mid_radius, 2);
                     d.hexagon_config.push({
                         id: "inner_hexagon",
                         path: hexbin.hexagon(geometry.radius * radius_factor),
-                        color: "#262f38",
-                        css_class: "",
-                        tooltip: tooltip,
+                        css_class: "ok inner",
+                        tooltip: d.tooltip,
                     });
                 }
             } else if (this._data.render_mode == "alert_statistics") {
@@ -297,7 +309,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
                 d.hexagon_config = [
                     {
                         id: "outer_hexagon",
-                        path: outer_hexagon_path,
+                        path: hexbin.hexagon(geometry.radius * 1.06),
                         color: colors(d.num_problems),
                         css_class: "alert_element",
                         tooltip: d.tooltip,
@@ -341,10 +353,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
             .join(enter => enter.append("path").classed("hexagon", true))
             .attr("d", d => d.path)
             .attr("fill", d => d.color)
-            .each((d, idx, nodes) => {
-                let element = d3.select(nodes[idx]);
-                if (d.css_class) element.node().classList.add(d.css_class);
-            });
+            .attr("class", d => "hexagon " + d.css_class);
 
         // move boxes
         hexagon_boxes
@@ -503,11 +512,12 @@ export class SiteOverview extends cmk_figures.FigureBase {
                 // Now render the parts of an element (cubical sizing)
                 let sum = element.total.count;
                 for (let i = 0; i < element.parts.length; i++) {
-                    let part = element.parts[element.parts.length - 1 - i];
-
-                    let radius =
-                        (Math.pow(sum, 0.33) / Math.pow(element.total.count, 0.33)) *
-                        geometry.hexagon_radius;
+                    const part = element.parts[element.parts.length - 1 - i];
+                    const radius =
+                        part.count == 0
+                            ? 0
+                            : (Math.pow(sum, 0.33) / Math.pow(element.total.count, 0.33)) *
+                              geometry.hexagon_radius;
                     sum -= part.count;
 
                     hexagon_box
@@ -516,7 +526,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
                         .join(enter => enter.append("path").classed("hexagon_" + i, true))
                         .attr("d", d3.hexbin().hexagon(radius * scale))
                         .attr("title", part.title)
-                        .classed("site_element", true)
+                        .classed("hexagon", true)
                         .classed(part.css_class, true);
                 }
             }

@@ -54,8 +54,8 @@ class SiteElement(ABCElement):
 class HostElement(ABCElement):
     """Renders a regularly available site"""
     link: str
-    host_color: str
-    service_color: str
+    host_css_class: str
+    service_css_class: str
     has_host_problem: bool
     num_services: int
     num_problems: int
@@ -148,8 +148,8 @@ class SiteOverviewDashletDataGenerator:
                         ],
                         filename="view.py",
                     ),
-                    host_color=cls._host_color(host_stats),
-                    service_color=cls._service_color(host_stats),
+                    host_css_class=cls._host_css_class(host_stats),
+                    service_css_class=cls._service_css_class(host_stats),
                     has_host_problem=(host_stats.state != 0 or
                                       host_stats.scheduled_downtime_depth > 0),
                     num_services=host_stats.num_services,
@@ -161,26 +161,26 @@ class SiteOverviewDashletDataGenerator:
         return elements
 
     @classmethod
-    def _host_color(cls, host_stats: HostStats) -> str:
-        color = {
-            2: "#ff0000",
-            3: "#ff8800",
-            1: "#ffff00",
-            0: "#262f38",
+    def _host_css_class(cls, host_stats: HostStats) -> str:
+        css_class = {
+            3: "unreachable",
+            2: "critical",
+            1: "warning",
+            0: "ok",
         }[host_stats.state]
         if host_stats.scheduled_downtime_depth > 0:
-            color = "#00aaff"
-        return color
+            css_class = "downtime"
+        return css_class
 
     @classmethod
-    def _service_color(cls, host_stats: HostStats) -> str:
+    def _service_css_class(cls, host_stats: HostStats) -> str:
         if host_stats.num_services_crit > 0:
-            return "#ff0000"
+            return "critical"
         if host_stats.num_services_unknown > 0:
-            return "#ff8800"
+            return "unknown"
         if host_stats.num_services_warn > 0:
-            return "#ffff00"
-        return "#262f38"
+            return "warning"
+        return "ok"
 
     @classmethod
     def _get_host_stats(cls, site_id: SiteId) -> Dict[HostName, HostStats]:

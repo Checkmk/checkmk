@@ -977,38 +977,71 @@ div.servicestats {
     }
   }
 
-  path.hexagon_0.site_element {
+  path.hexagon.hexagon_0 {
     stroke: #404a55;
   }
 
-  path.site_element {
-    &.critical {
+  path.hexagon {
+    &.critical,
+    &.unreachable {
       fill: $hexagon-critical-color;
+      fill-opacity: 0.8;
+      stroke: $hexagon-critical-color;
     }
 
     &.unknown {
       fill: $hexagon-unknown-color;
+      fill-opacity: 0.8;
+      stroke: $hexagon-unknown-color;
     }
 
     &.warning {
       fill: $hexagon-warning-color;
+      fill-opacity: 0.6;
+      stroke: $hexagon-warning-color;
     }
 
     &.downtime {
       fill: $hexagon-downtime-color;
+      fill-opacity: 0.6;
+      stroke: $hexagon-downtime-color;
     }
 
     &.host_down {
       fill: $hexagon-host-down-color;
+      fill-opacity: 0.5;
+      stroke: $hexagon-host-down-color;
     }
 
     &.ok {
       fill: $hexagon-ok-color;
+      fill-opacity: $hexagon-ok-fill-opacity;
+      stroke: $hexagon-ok-stroke-color;
+      stroke-opacity: $hexagon-ok-stroke-opacity;
     }
   }
 
-  g.element_box.host_element path.hexagon.ok {
-    stroke: #404a55;
+  g.element_box.host_element path.hexagon {
+    fill-opacity: 0.8;
+    stroke-opacity: 0.8;
+
+    &.ok {
+      fill: $host-hexagon-ok-stroke-color;
+      fill-opacity: 1;
+      stroke: $host-hexagon-ok-stroke-color;
+      stroke-opacity: 1;
+
+      &.inner {
+        fill: $host-hexagon-ok-color;
+        stroke: none;
+      }
+    }
+
+    &.unknown {
+      fill: $hexagon-critical-color;
+      fill-opacity: 0.8;
+      stroke: $hexagon-critical-color;
+    }
   }
 
   path.icon_element {

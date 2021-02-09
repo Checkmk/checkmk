@@ -1,0 +1,21 @@
+Title: Service discovery: Disabling services works also with disabled rule
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1612886011
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b6
+
+The service discovery page created and updates "disabled services" rules
+in the moment a user is clicking on the "disable this service" icon on
+the service discovery page.
+
+In the moment a user disabled such a rule, the "disable this service" feature
+on the service discovery page did not work anymore because the related rule
+was disabled.
+
+From now on the disabled rules are not updaten anymore in such a situation.
+Instead the service discovery page will create a new rule to make the disabling
+of the service work.

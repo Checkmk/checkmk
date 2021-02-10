@@ -56,6 +56,7 @@ test_neb_SOURCES = \
     test/test_CrashReport.cc \
     test/test_CustomVarsDictFilter.cc \
     test/test_FileSystemHelper.cc \
+    test/test_IntColumn.cc \
     test/test_LogEntry.cc \
     test/test_MacroExpander.cc \
     test/test_Metric.cc \

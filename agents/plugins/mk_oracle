@@ -2444,7 +2444,7 @@ run_cached () {
         fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
-        cat "$cache_file"
+        sed "s/^<<<\\(.*\\)>>>$/<<<\\1:cached(${mtime},${maxage})>>>/g" "$cache_file"
     fi
 
     # Cache file outdated and new job not yet running? Start it

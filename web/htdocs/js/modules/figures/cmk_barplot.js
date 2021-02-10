@@ -91,11 +91,22 @@ class BarplotFigure extends cmk_figures.FigureBase {
 
         this.resize();
         this.render_title(data.title);
-        this.scale_y.domain(this._plot_definitions.map(d => d.label));
+
+        const domain = this.render_axis();
+        this._render_values(domain);
+    }
+
+    render_axis() {
+        const value_labels = this._plot_definitions.map(d => d.label);
+        this.scale_y.domain(value_labels);
+        let axis_labels = d3.axisRight(this.scale_y);
+        // 12 is UX font-height, omit labels when not enough space
+        if (value_labels.length >= this.plot_size.height / 12) axis_labels.tickFormat("");
+
         this.plot
             .selectAll("g.y_axis")
             .classed("axis", true)
-            .call(d3.axisRight(this.scale_y))
+            .call(axis_labels)
             .selectAll("text")
             .attr("transform", `translate(0,${-this.scale_y.bandwidth() / 2})`);
 
@@ -125,9 +136,8 @@ class BarplotFigure extends cmk_figures.FigureBase {
                     .tickValues(tick_vals)
                     .tickFormat(d => render_function(d))
             );
-
         this.render_grid(range(min_val, max_val, step / 2));
-        this._render_values(domain);
+        return domain;
     }
 
     _render_values(domain) {

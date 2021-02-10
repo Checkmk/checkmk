@@ -33,12 +33,13 @@ from ._abstract import Source
 
 
 def make_inventory_sections() -> Set[SectionName]:
-    return set(
-        agent_based_register.get_relevant_raw_sections(
+    return {
+        s for s in agent_based_register.get_relevant_raw_sections(
             check_plugin_names=(),
             inventory_plugin_names=(
-                p.name for p in agent_based_register.iter_all_inventory_plugins()),
-        )).intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
+                p.name for p in agent_based_register.iter_all_inventory_plugins()))
+        if agent_based_register.is_registered_snmp_section_plugin(s)
+    }
 
 
 def make_plugin_store() -> SNMPPluginStore:
@@ -212,8 +213,10 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                         skip_ignored=True,
                     ).needed_check_names(),
                     inventory_plugin_names=()))
-        return checking_sections.intersection(
-            s.name for s in agent_based_register.iter_all_snmp_sections())
+        return {
+            s for s in checking_sections
+            if agent_based_register.is_registered_snmp_section_plugin(s)
+        }
 
     @staticmethod
     def _make_description(

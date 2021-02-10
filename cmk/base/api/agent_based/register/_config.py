@@ -230,3 +230,7 @@ def set_host_label_ruleset(
 ) -> None:
     """Set a ruleset to a given value"""
     stored_rulesets[ruleset_name] = rules
+
+
+def is_registered_snmp_section_plugin(section_name: SectionName) -> bool:
+    return section_name in registered_snmp_sections

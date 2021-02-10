@@ -28,7 +28,7 @@ RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
-GOOGLETEST_VERSION := googletest-07d4a6e93d
+GOOGLETEST_VERSION := googletest-f3ef7e173f
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
 .PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation documentation-quick

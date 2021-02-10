@@ -185,6 +185,13 @@ div.dashlet {
       }
     }
   }
+
+  div.graph > div.v_axis_label {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: rotate(-90deg) translateX(50%);
+  }
 }
 
 div.dashlet > div.title span {

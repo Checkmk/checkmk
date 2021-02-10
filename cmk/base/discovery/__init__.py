@@ -104,6 +104,8 @@ ServiceFilterLists = NamedTuple("ServiceFilterLists", [
     ("vanished_blacklist", Optional[List[str]]),
 ])
 
+_DiscoverySubresult = Tuple[int, List[str], List[str], List[Tuple], bool]
+
 
 class RediscoveryMode(Enum):
     new = 0
@@ -736,21 +738,10 @@ def check_discovery(
         discovery_parameters,
     )
 
-    status, infotexts, long_infotexts, perfdata, need_rediscovery = _check_service_lists(
-        host_name,
-        services,
-        params,
+    status, infotexts, long_infotexts, perfdata, need_rediscovery = _aggregate_subresults(
+        _check_service_lists(host_name, services, params),
+        _check_host_labels(host_label_discovery_result, params),
     )
-
-    if host_label_discovery_result.new:
-        infotexts.append(f"{len(host_label_discovery_result.new)} new host labels")
-        status = cmk.base.utils.worst_service_state(status,
-                                                    params.get("severity_new_host_label", 1))
-
-        if _get_rediscovery_mode(params) in ("new", "fixall", "refresh"):
-            need_rediscovery = True
-    else:
-        infotexts.append("no new host labels")
 
     if need_rediscovery:
         if host_config.is_cluster and host_config.nodes:
@@ -772,11 +763,22 @@ def check_discovery(
     return status, infotexts, long_infotexts, perfdata
 
 
+def _aggregate_subresults(*subresults: _DiscoverySubresult) -> _DiscoverySubresult:
+    stati, texts, long_texts, perfdata_list, need_rediscovery_flags = zip(*subresults)
+    return (
+        cmk.base.utils.worst_service_state(*stati),
+        sum(texts, []),
+        sum(long_texts, []),
+        sum(perfdata_list, []),
+        any(need_rediscovery_flags),
+    )
+
+
 def _check_service_lists(
     host_name: HostName,
     services_by_transition: ServicesByTransition,
-    params: Dict,
-) -> Tuple[int, List[str], List[str], List[Tuple], bool]:
+    params: config.DiscoveryCheckParameters,
+) -> _DiscoverySubresult:
 
     status = 0
     infotexts = []
@@ -834,6 +836,25 @@ def _check_service_lists(
             (discovered_service.check_plugin_name, discovered_service.description))
 
     return status, infotexts, long_infotexts, perfdata, need_rediscovery
+
+
+def _check_host_labels(
+    host_labels: QualifiedDiscovery[HostLabel],
+    params: config.DiscoveryCheckParameters,
+) -> _DiscoverySubresult:
+    return (
+        int(params.get("severity_new_host_label", 1)),
+        [f"{len(host_labels.new)} new host labels"],
+        [],
+        [],
+        _get_rediscovery_mode(params) in ("new", "fixall", "refresh"),
+    ) if host_labels.new else (
+        0,
+        ["no new host labels"],
+        [],
+        [],
+        False,
+    )
 
 
 def _set_rediscovery_flag(host_name: HostName) -> None:

@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <iosfwd>
+#include <iterator>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -16,7 +17,7 @@
 #include "EventConsoleConnection.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
-#include "Row.h"
+class Row;
 
 namespace {
 class ECTableConnection : public EventConsoleConnection {
@@ -35,20 +36,6 @@ private:
     std::string result_;
 };
 
-class ReplicationColumn : public BlobColumn {
-public:
-    ReplicationColumn(const std::string &name, const std::string &description,
-                      std::string blob, const ColumnOffsets &offsets)
-        : BlobColumn(name, description, offsets), blob_(std::move(blob)) {}
-
-    [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
-        Row /* unused */) const override {
-        return std::make_unique<std::vector<char>>(blob_.begin(), blob_.end());
-    };
-
-private:
-    std::string blob_;
-};
 }  // namespace
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
@@ -68,6 +55,7 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
             Alert(_mc->loggerLivestatus()) << err.what();
         }
     }
-    return std::make_unique<ReplicationColumn>(name, "replication value",
-                                               result, _offsets);
+    return std::make_unique<BlobLambdaColumn<Row>::Constant>(
+        name, "replication value",
+        std::vector<char>{std::begin(result), std::end(result)});
 }

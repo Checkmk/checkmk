@@ -5,7 +5,6 @@
 
 #include "TableEventConsoleRules.h"
 
-#include <cstdint>
 #include <memory>
 
 #include "Column.h"

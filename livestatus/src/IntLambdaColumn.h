@@ -14,14 +14,25 @@
 #include "contact_fwd.h"
 class Row;
 
+namespace detail {
+struct IntColumn : ::IntColumn {
+    class Constant;
+    class Reference;
+    using ::IntColumn::IntColumn;
+    std::int32_t getValue(Row row,
+                          const contact* /*auth_user*/) const override = 0;
+};
+}  // namespace detail
+
 template <class T, int32_t Default = 0>
-class IntLambdaColumn : public IntColumn {
+class IntLambdaColumn : public detail::IntColumn {
 public:
-    struct Constant;
-    struct Reference;
+    using ::detail::IntColumn::Constant;
+    using ::detail::IntColumn::Reference;
     IntLambdaColumn(std::string name, std::string description,
                     ColumnOffsets offsets, std::function<int(const T&)> gv)
-        : IntColumn(std::move(name), std::move(description), std::move(offsets))
+        : detail::IntColumn(std::move(name), std::move(description),
+                            std::move(offsets))
         , get_value_{std::move(gv)} {}
     ~IntLambdaColumn() override = default;
 
@@ -35,18 +46,34 @@ private:
     std::function<int(const T&)> get_value_;
 };
 
-template <class T, int32_t Default>
-struct IntLambdaColumn<T, Default>::Constant : IntLambdaColumn<T, Default> {
+class detail::IntColumn::Constant : public detail::IntColumn {
+public:
     Constant(std::string name, std::string description, int x)
-        : IntLambdaColumn(std::move(name), std::move(description), {},
-                          [x](const T& /*t*/) { return x; }){};
+        : detail::IntColumn(std::move(name), std::move(description), {})
+        , x{x} {}
+
+    std::int32_t getValue(Row /*row*/,
+                          const contact* /*auth_user*/) const override {
+        return x;
+    }
+
+private:
+    const std::int32_t x;
 };
 
-template <class T, int32_t Default>
-struct IntLambdaColumn<T, Default>::Reference : IntLambdaColumn<T, Default> {
+class detail::IntColumn::Reference : public detail::IntColumn {
+public:
     Reference(std::string name, std::string description, int& x)
-        : IntLambdaColumn(std::move(name), std::move(description), {},
-                          [&x](const T& /*t*/) { return x; }){};
+        : detail::IntColumn(std::move(name), std::move(description), {})
+        , x{x} {}
+
+    std::int32_t getValue(Row /*row*/,
+                          const contact* /*auth_user*/) const override {
+        return x;
+    }
+
+private:
+    const std::int32_t& x;
 };
 
 #endif

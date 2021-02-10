@@ -354,6 +354,10 @@ class AutomationRenameHosts(Automation):
         if self._rename_host_file(cmk.utils.paths.autochecks_dir, oldname + ".mk", newname + ".mk"):
             actions.append("autochecks")
 
+        if self._rename_host_file(str(cmk.utils.paths.discovered_host_labels_dir), oldname + ".mk",
+                                  newname + ".mk"):
+            actions.append("host-labels")
+
         # Rename temporary files of the host
         for d in ["cache", "counters"]:
             if self._rename_host_file(cmk.utils.paths.tmp_dir + "/" + d + "/", oldname, newname):

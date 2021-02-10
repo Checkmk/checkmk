@@ -38,8 +38,6 @@ enum class LogLevel {
 };
 
 std::ostream &operator<<(std::ostream &os, const LogLevel &c);
-std::ostream &operator<<(std::ostream &os,
-                         const std::chrono::system_clock::time_point &tp);
 
 // -----------------------------------------------------------------------------
 

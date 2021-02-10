@@ -151,7 +151,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
             .join("rect")
             .classed("value", true)
             .attr("y", d => this.scale_y(d.label) + 6) // 6 is half the default font size. Thus bar stays bellow text
-            .attr("height", 4)
+            .attr("height", Math.max(this.scale_y.bandwidth() - 12, 4))
             .attr("width", d => this.scale_x(d.value))
             .attr("fill", d => d.level_color);
 

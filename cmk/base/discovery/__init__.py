@@ -48,6 +48,7 @@ from cmk.utils.type_defs import (
     HostState,
     Item,
     MetricTuple,
+    result as result_type,
     RulesetName,
     state_markers,
 )
@@ -73,7 +74,7 @@ from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
-from cmk.base.sources.host_sections import ParsedSectionsBroker
+from cmk.base.sources.host_sections import HostSections, ParsedSectionsBroker
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import (
     DiscoveredHostLabels,
@@ -741,6 +742,7 @@ def check_discovery(
     status, infotexts, long_infotexts, perfdata, need_rediscovery = _aggregate_subresults(
         _check_service_lists(host_name, services, params),
         _check_host_labels(host_label_discovery_result, params),
+        _check_data_sources(result),
     )
 
     if need_rediscovery:
@@ -750,15 +752,6 @@ def check_discovery(
         else:
             _set_rediscovery_flag(host_name)
         infotexts.append(u"rediscovery scheduled")
-
-    # Add data source information to check results
-    for source, host_sections in result:
-        source_state, source_output = source.summarize(host_sections)
-        # Do not output informational (state = 0) things.  These information
-        # are shown by the "Check_MK" service
-        if source_state != 0:
-            status = cmk.base.utils.worst_service_state(status, source_state)
-            infotexts.append(u"[%s] %s" % (source.id, source_output))
 
     return status, infotexts, long_infotexts, perfdata
 
@@ -851,6 +844,21 @@ def _check_host_labels(
     ) if host_labels.new else (
         0,
         ["no new host labels"],
+        [],
+        [],
+        False,
+    )
+
+
+def _check_data_sources(
+    result: Sequence[Tuple[sources.Source, result_type.Result[HostSections, Exception]]],
+) -> _DiscoverySubresult:
+    summaries = [(source, source.summarize(host_sections)) for source, host_sections in result]
+    return (
+        cmk.base.utils.worst_service_state(*(state for _s, (state, _t) in summaries)),
+        # Do not output informational (state = 0) things.  These information
+        # are shown by the "Check_MK" service
+        [f"[{src.id}] {text}" for src, (state, text) in summaries if state != 0],
         [],
         [],
         False,

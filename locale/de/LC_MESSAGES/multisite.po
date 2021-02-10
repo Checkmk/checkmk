@@ -347,6 +347,10 @@ msgstr ""
 "%d von %d der maximalen Anzahl an Prozessen sind gestartet. Das ist eine "
 "Nutzung von %0.2f %%."
 
+#, fuzzy, python-format
+msgid "%d open incompatible werks"
+msgstr "%d unquittierte Werks"
+
 #, python-format
 msgid "%d rows"
 msgstr "%d Zeilen"
@@ -368,6 +372,12 @@ msgstr "%d Zeitbereiche"
 #, python-format
 msgid "%d translations"
 msgstr "%d Übersetzungen"
+
+#, fuzzy, python-format
+msgid "%d unacknowledged incompatible werk"
+msgid_plural "%d unacknowledged incompatible werks"
+msgstr[0] "%d unquittierte Werks"
+msgstr[1] "%d unquittierte Werks"
 
 msgid "%m-%d"
 msgstr "%d.%m"
@@ -1214,6 +1224,14 @@ msgstr ""
 msgid ""
 "<br>Please add customer portal credentials and subscription details in the "
 "<a href=\"%s\">subscription settings<a>."
+msgstr ""
+"<br>Bitte die Anmeldedaten im 'Customer Portal' und Details zu der "
+"Subskription in den <a href=\"%s\">Subskriptionseinstellungen<a> hinzufügen."
+
+#, fuzzy, python-format
+msgid ""
+"<br>Please add subscription details in the <a href=\"%s\">subscription "
+"settings<a>."
 msgstr ""
 "<br>Bitte die Anmeldedaten im 'Customer Portal' und Details zu der "
 "Subskription in den <a href=\"%s\">Subskriptionseinstellungen<a> hinzufügen."
@@ -5768,6 +5786,10 @@ msgstr "Automatische Updates"
 
 msgid "Automatically activate changes"
 msgstr "Änderungen automatisch aktivieren"
+
+#, fuzzy
+msgid "Automatically adjusted to available data"
+msgstr "Automatisches Löschen von Hosts ohne Huckepackdaten"
 
 msgid "Automatically create monitoring agents"
 msgstr "Monitoring-Agenten automatisch erzeugen"
@@ -14201,6 +14223,10 @@ msgstr "Erkannte Host-Labels"
 
 msgid "Discovered no service yet."
 msgstr "Es wurde noch kein Service entdeckt."
+
+#, fuzzy
+msgid "Discovered process name"
+msgstr "Entdeckte Host-Labels"
 
 #, fuzzy
 msgid "Discovery"
@@ -36721,9 +36747,6 @@ msgstr "Prozess-Erkennung (nur SNMP)"
 
 msgid "Process handles"
 msgstr "Prozesshandles"
-
-msgid "Process name as defined at discovery"
-msgstr "Prozessname wie bei der Erkennung festgelegt"
 
 msgid "Process name for usage in the Nagios service description"
 msgstr "Prozessname zur Verwendung in der Nagios Servicebeschreibung"
@@ -60140,6 +60163,10 @@ msgstr "Sie dürfen auf diese Seite (%s) nicht zugreifen."
 msgid "You are not allowed to acknowledge %s"
 msgstr "Sie dürfen %s nicht bestätigen"
 
+#, fuzzy
+msgid "You are not allowed to acknowlegde werks"
+msgstr "Sie dürfen %s nicht bestätigen"
+
 msgid "You are not allowed to activate changes of other users."
 msgstr "Sie können Änderungen anderer Benutzer nicht anwenden."
 
@@ -63634,6 +63661,9 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Process name as defined at discovery"
+#~ msgstr "Prozessname wie bei der Erkennung festgelegt"
+
 #~ msgid "Activate on affected sites"
 #~ msgstr "Auf betroffenen Instanzen aktivieren"
 
@@ -64226,9 +64256,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "The members of certain contact groups"
 #~ msgstr "Mitglieder von Kontaktgruppen"
-
-#~ msgid "%d unacknowledged incompatible werks"
-#~ msgstr "%d unquittierte Werks"
 
 #~ msgid "Calling final hooks"
 #~ msgstr "Rufe finale Hooks auf"

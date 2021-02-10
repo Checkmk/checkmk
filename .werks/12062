@@ -1,0 +1,12 @@
+Title: Fix rendering of report snapin if icon is missing
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612956740
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If an exsiting report had no icon, the rendering of the gui was broken.
+Such reports will now get a default icon.

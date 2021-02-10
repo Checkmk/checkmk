@@ -1,0 +1,13 @@
+Title: Core config generation: Small increase in performance through further caching
+Class: fix
+Compatible: compat
+Component: core
+Date: 1612960814
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+For larger sites (>10k hosts), performance problems occurred during configuration generation.                                                       For each host, the current checkmk edition (CRE/CME/CEE) had to be determined from scratch.
+This took about 4 seconds. This information is now cached.

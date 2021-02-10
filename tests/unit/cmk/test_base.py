@@ -13,32 +13,44 @@ def test_version():
 
 def test_is_enterprise_edition(monkeypatch):
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cre")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_enterprise_edition() is False
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cee")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_enterprise_edition() is True
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "2016.09.22.cee")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_enterprise_edition() is True
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "2016.09.22.cee.demo")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_enterprise_edition() is True
 
 
 def test_is_raw_edition(monkeypatch):
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cre")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_raw_edition() is True
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cee")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_raw_edition() is False
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "2016.09.22.cee")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_raw_edition() is False
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "2016.09.22.cee.demo")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_raw_edition() is False
 
 
 def test_is_demo(monkeypatch):
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cre")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_demo() is False
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cee")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_demo() is False
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "2016.09.22.cee")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_demo() is False
     monkeypatch.setattr(cmk_version, "omd_version", lambda: "2016.09.22.cee.demo")
+    cmk_version.edition_short.cache_clear()
     assert cmk_version.is_demo() is True

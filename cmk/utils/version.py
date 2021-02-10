@@ -25,13 +25,16 @@ import cmk.utils.paths
 import livestatus
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
+from functools import lru_cache
 
 
+@lru_cache
 def omd_version() -> str:
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
     return ensure_str(version_link.resolve().name)
 
 
+@lru_cache
 def omd_site() -> str:
     try:
         return os.environ["OMD_SITE"]
@@ -41,6 +44,7 @@ def omd_site() -> str:
               "only execute this in an OMD site."))
 
 
+@lru_cache
 def edition_short() -> str:
     """Can currently either return \"cre\" or \"cee\"."""
     parts = omd_version().split(".")

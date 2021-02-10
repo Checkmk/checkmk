@@ -1,0 +1,16 @@
+Title: cmk-update-config: TypeError during "Rewriting autochecks"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612967988
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+In Checkmk versions 2.0.0i1 to 2.0.0b6 an error could occur when
+writing certain sets of discovered services in the cmk-update-config
+step "Rewriting autochecks".
+The message displayed was
+"TypeError: '<' not supported between instances of 'str' and 'NoneType'".

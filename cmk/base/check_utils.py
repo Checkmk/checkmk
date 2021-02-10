@@ -55,6 +55,17 @@ class Service:
     def id(self) -> ServiceID:
         return self.check_plugin_name, self.item
 
+    def __lt__(self, other: Any) -> bool:
+        """Allow to sort services
+
+        Basically sort by id(). Unfortunately we have plugins with *AND* without
+        items.
+        """
+        if not isinstance(other, Service):
+            raise TypeError("Can only be compared with other Service objects")
+        return (self.check_plugin_name, self.item or "") < (other.check_plugin_name, other.item or
+                                                            "")
+
     def __eq__(self, other: Any) -> bool:
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""

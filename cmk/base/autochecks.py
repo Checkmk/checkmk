@@ -401,7 +401,7 @@ def save_autochecks_file(
     path.parent.mkdir(parents=True, exist_ok=True)
     content = []
     content.append("[")
-    for service in sorted(services, key=lambda s: (s.check_plugin_name, s.item)):
+    for service in sorted(services):
         content.append("  %s," % service.dump_autocheck())
     content.append("]\n")
     store.save_file(path, "\n".join(content))

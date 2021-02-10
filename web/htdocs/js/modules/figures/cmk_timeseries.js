@@ -407,6 +407,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             .classed("x_axis", true)
             .classed("axis", true);
 
+        const x_tick_count = Math.min(Math.ceil(this.plot_size.width / 65), 6);
         this.transition(x).call(
             d3
                 .axisBottom(this.scale_x)
@@ -416,7 +417,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
                         return d3.timeFormat("%m-%d")(d);
                     return d3.timeFormat("%H:%M")(d);
                 })
-                .ticks(6)
+                .ticks(x_tick_count)
         );
         x.attr("transform", "translate(0," + this.plot_size.height + ")");
 
@@ -427,11 +428,12 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             .join("g")
             .classed("y_axis", true)
             .classed("axis", true);
+        const y_tick_count = Math.min(Math.ceil(this.plot_size.height / 24), 6);
         this.transition(y).call(
             d3
                 .axisLeft(this.scale_y)
                 .tickFormat(d => render_function(d))
-                .ticks(Math.min(Math.floor(this.plot_size.height / 16), 6))
+                .ticks(y_tick_count)
         );
     }
 

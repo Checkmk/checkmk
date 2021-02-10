@@ -2031,8 +2031,8 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
             Age(
                 title=None,
                 display=["minutes", "hours", "days"],
-                minvalue=60,
-                default_value=3600,
+                minvalue=5400,
+                default_value=5400,
             ),
             title=_("Login session idle timeout"),
             label=_("Enable a login session idle timeout"),

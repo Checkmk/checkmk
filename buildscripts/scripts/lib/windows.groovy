@@ -5,7 +5,7 @@ def build(Map args) {
     def ARTIFACTS_DIR = 'artefacts'
     def ARTIFACTS = ''
     if (args.TARGET == "test_integration") {
-        download_artifacts('cmk_master/windows-agent-build', ARTIFACTS_DIR)
+        download_artifacts("${FOLDER_ID}/windows-agent-build", ARTIFACTS_DIR)
     }
 
     stage("Windows ${args.TARGET} build") {
@@ -61,7 +61,7 @@ def download_artifacts(PROJECT_NAME, DIR) {
         dir(DIR) {
             script {
                 step ([$class: 'CopyArtifact',
-                projectName: 'cmk_master/windows-agent-build',
+                projectName: "${FOLDER_ID}/windows-agent-build",
             ]);
             }
         }
@@ -82,5 +82,8 @@ def stash_artifacts(ARTIFACTS, STASH_NAME, DIR) {
         )
     }
 }
+
+def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
+
 
 return this

@@ -729,7 +729,7 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
     query += filterheaders
     logrow_limit = avoptions["logrow_limit"]
 
-    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(logrow_limit):
+    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(logrow_limit or None):
         data = sites.live().query(query)
     columns = ["site"] + columns
     spans: List[AVSpan] = [dict(zip(columns, span)) for span in data]

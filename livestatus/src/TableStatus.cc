@@ -13,10 +13,10 @@
 #include <memory>
 
 #include "Average.h"
+#include "BlobColumn.h"
 #include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "DoubleColumn.h"
-#include "FileColumn.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
@@ -313,8 +313,8 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(mc->numQueuedAlerts());
         }));
-    addColumn(std::make_unique<FileColumn<TableStatus>>(
-        "license_usage_history", "Historic license usage information", offsets,
+    addColumn(std::make_unique<BlobLambdaColumn<TableStatus>::File>(
+        "license_usage_history", "Historic license usage information",
         [mc]() { return mc->licenseUsageHistoryPath(); },
         [](const TableStatus & /*r*/) { return std::filesystem::path{}; }));
     addColumn(std::make_unique<DoubleColumn<TableStatus>>(

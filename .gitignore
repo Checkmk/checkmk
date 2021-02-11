@@ -51,3 +51,4 @@ wnx/
 node_modules/
 web/htdocs/js/*_min.js.map
 .mypy_cache/
+*.code-workspace

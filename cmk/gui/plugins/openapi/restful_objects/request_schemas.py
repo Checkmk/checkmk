@@ -1804,7 +1804,6 @@ class BulkDeleteDowntime(BaseSchema):
 
 
 class BulkDeleteHost(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         EXISTING_HOST_NAME,
         required=True,
@@ -1822,7 +1821,6 @@ class BulkDeleteFolder(BaseSchema):
 
 
 class BulkDeleteHostGroup(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         fields.String(
             required=True,
@@ -1835,7 +1833,6 @@ class BulkDeleteHostGroup(BaseSchema):
 
 
 class BulkDeleteServiceGroup(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         fields.String(
             required=True,
@@ -1848,7 +1845,6 @@ class BulkDeleteServiceGroup(BaseSchema):
 
 
 class BulkDeleteContactGroup(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         fields.String(
             required=True,

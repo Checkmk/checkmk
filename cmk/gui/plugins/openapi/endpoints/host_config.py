@@ -308,7 +308,6 @@ def move(params):
           '.../delete',
           method='delete',
           path_params=[HOST_NAME],
-          etag='input',
           output_empty=True)
 def delete(params):
     """Delete a host"""

@@ -113,7 +113,6 @@ def create_user(params):
           '.../delete',
           method='delete',
           path_params=[USERNAME],
-          etag='input',
           output_empty=True)
 def delete_user(params):
     """Delete a user"""

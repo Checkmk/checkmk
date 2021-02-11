@@ -103,8 +103,7 @@ def show_group(params):
           '.../delete',
           method='delete',
           path_params=[NAME_FIELD],
-          output_empty=True,
-          etag='input')
+          output_empty=True)
 def delete(params):
     """Delete a service group"""
     name = params['name']

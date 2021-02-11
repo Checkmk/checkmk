@@ -380,7 +380,7 @@ class Endpoint:
                     status=status_code,
                     title=http.client.responses[status_code],
                     detail=f"These fields have problems: {_format_fields(exc_.messages)}",
-                    ext=messages,
+                    ext={'fields': messages},
                 )
 
             try:

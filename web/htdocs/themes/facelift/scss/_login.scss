@@ -27,20 +27,8 @@ body.login {
     width: 770px;
     height: 605px;
     margin: auto;
+    color: $font-color;
     background: transparent;
-
-    #version::before {
-      position: absolute;
-      top: -8px;
-      left: -156px;
-      width: 200px;
-      height: 30px;
-      background-image: url("images/mk-logo.png");
-      background-position: 16px center;
-      background-repeat: no-repeat;
-      background-size: auto 30px;
-      content: " ";
-    }
   }
 
   #login_window {
@@ -52,7 +40,14 @@ body.login {
     margin: -30px auto 10px;
     background: $navigation-bg-color;
     border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+
+  #logo {
+    position: absolute;
+    top: 25px;
+    left: 40px;
+    width: 120px;
+    height: auto;
   }
 
   #version {
@@ -62,12 +57,7 @@ body.login {
     width: 150px;
     font-size: 11px;
     letter-spacing: $letter-spacing-table;
-    color: $lightgrey;
     text-align: right;
-  }
-
-  label {
-    color: rgb(255, 255, 255);
   }
 
   #label_user,

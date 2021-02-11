@@ -1576,7 +1576,8 @@ def configure_attributes(new,
             forms.section(_u(attr.title()),
                           checkbox=checkbox_code,
                           section_id="attr_" + attrname,
-                          is_show_more=attr.is_show_more())
+                          is_show_more=attr.is_show_more(),
+                          is_changed=active)
             html.help(attr.help())
 
             if len(values) == 1:

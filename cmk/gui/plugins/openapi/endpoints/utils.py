@@ -201,12 +201,11 @@ def may_fail(
             >>> try:
             ...     with may_fail(ValueError, status=404):
             ...          raise ValueError("Nothing to see here, move along.")
-            ... except Exception as exc:
-            ...     exc.to_problem().data
+            ... except ProblemException as _exc:
+            ...     _exc.to_problem().data
             b'{"title": "The operation has failed.", \
 "status": 404, \
-"detail": "Nothing to see here, move along.", \
-"ext": null}'
+"detail": "Nothing to see here, move along."}'
 
     """
     def _get_message(e):

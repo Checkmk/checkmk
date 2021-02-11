@@ -93,6 +93,11 @@ def _serve_activation_run(activation_id, is_running=False):
                                           'wait-for-completion'),
           'cmk/wait-for-completion',
           method='get',
+          status_descriptions={
+              204: "The activation has been completed.",
+              302: ("The activation is still running. Redirecting to the "
+                    "'Wait for completion' endpoint."),
+          },
           path_params=[ACTIVATION_ID],
           additional_status_codes=[302],
           output_empty=True)

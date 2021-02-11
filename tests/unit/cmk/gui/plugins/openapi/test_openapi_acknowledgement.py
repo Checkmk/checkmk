@@ -182,6 +182,7 @@ def test_openapi_acknowledge_host(
     mock_livestatus,
     host_name,
     acknowledgement_sent,
+    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
@@ -199,7 +200,8 @@ def test_openapi_acknowledge_host(
         },
     ])
 
-    live.expect_query(f'GET hosts\nColumns: name state\nFilter: name = {host_name}')
+    live.expect_query(f'GET hosts\nColumns: name\nFilter: name = {host_name}')
+    live.expect_query(f"GET hosts\nColumns: state\nFilter: name = {host_name}")
 
     if acknowledgement_sent:
         live.expect_query(

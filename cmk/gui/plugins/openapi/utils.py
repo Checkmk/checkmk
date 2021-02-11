@@ -36,7 +36,8 @@ def problem(
     if isinstance(ext, dict):
         problem_dict.update(ext)
     else:
-        problem_dict['ext'] = ext
+        if ext:
+            problem_dict['ext'] = ext
 
     response = Response()
     response.status_code = status

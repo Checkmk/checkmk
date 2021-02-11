@@ -103,13 +103,45 @@ def coalesce_schemas(
     return rv
 
 
-def _path_item(description, content=None, headers=None) -> PathItem:
+def _path_item(
+    status_code: int,
+    description: str,
+    content: Optional[Dict[str, Any]] = None,
+    headers: Optional[Dict[str, OpenAPIParameter]] = None,
+) -> PathItem:
+    """Build a OpenAPI PathItem segment
+
+    Examples:
+
+        >>> _path_item(404, "Godot is still not here.")  # doctest: +ELLIPSIS
+        {'description': 'Not Found: Godot is still not here.', 'content': ...}
+
+        >>> _path_item(422, "What's this?")  # doctest: +ELLIPSIS
+        {'description': "Unprocessable Entity: What's this?", 'content': ...}
+
+    Args:
+        status_code:
+            A HTTP status code
+
+        description:
+            Description for the segment.
+
+        content:
+            A dictionary which has content-types as keys and dicts as values in
+            the form of {'schema': <marshmallowschema>}
+
+        headers:
+
+
+    Returns:
+
+    """
+    response: PathItem = {'description': f"{http.client.responses[status_code]}: {description}"}
+    if status_code >= 400 and content is None:
+        content = {'application/problem+json': {'schema': ApiError}}
     if content is None:
-        content = {'application/problem+json': {'schema': ApiError,}}
-    response: PathItem = {
-        'description': description,
-        'content': content,
-    }
+        content = {}
+    response['content'] = content
     if headers:
         response['headers'] = headers
     return response
@@ -421,6 +453,18 @@ class Endpoint:
     def make_url(self, parameter_values: Dict[str, Any]):
         return self.path.format(**parameter_values)
 
+    def _path_item(
+        self,
+        status_code: int,
+        description: str,
+        content: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, OpenAPIParameter]] = None,
+    ) -> PathItem:
+        message = self.status_descriptions.get(status_code)
+        if message is None:
+            message = description
+        return _path_item(status_code, message, content, headers)
+
     def to_operation_dict(self) -> OperationSpecType:
         """Generate the openapi spec part of this endpoint.
 
@@ -444,45 +488,51 @@ class Endpoint:
         responses: ResponseType = {}
 
         if 404 in self._expected_status_codes:
-            responses['404'] = _path_item('Not found: The requested object has not been found.')
+            responses['404'] = self._path_item(404, 'The requested object has not been found.')
+
+        if 422 in self._expected_status_codes:
+            responses['422'] = self._path_item(422, 'The request could not be processed.')
 
         if 409 in self._expected_status_codes:
-            responses['409'] = _path_item(
-                'Conflict: The request is in conflict with the stored resource')
+            responses['409'] = self._path_item(
+                409,
+                'The request is in conflict with the stored resource',
+            )
 
         if 302 in self._expected_status_codes:
-            responses['302'] = _path_item(
-                'Found: Either the resource has moved or has not yet '
-                'completed. Please see this resource for further information.')
+            responses['302'] = self._path_item(
+                302,
+                'Either the resource has moved or has not yet completed. Please see this '
+                'resource for further information.',
+            )
 
         if 400 in self._expected_status_codes:
-            responses['400'] = _path_item('Bad request: Parameter or validation failure')
+            responses['400'] = self._path_item(400, 'Parameter or validation failure')
 
         # We don't(!) support any endpoint without an output schema.
         # Just define one!
         if 200 in self._expected_status_codes:
-            responses['200'] = _path_item(
-                'The operation was done successfully.' if self.method != 'get' else '',
-                content={
-                    self.content_type: {
-                        'schema': self.response_schema
-                    },
-                },
+            responses['200'] = self._path_item(
+                200,
+                'The operation was done successfully.',
+                content={self.content_type: {
+                    'schema': self.response_schema
+                }},
                 headers=response_headers,
             )
 
         if 204 in self._expected_status_codes:
-            responses['204'] = _path_item('Operation done successfully. No further output.',
-                                          headers=response_headers)
+            responses['204'] = self._path_item(204,
+                                               'Operation done successfully. No further output.')
 
         if 412 in self._expected_status_codes:
-            responses['412'] = _path_item(
-                "Precondition failed: The value of the If-Match header doesn't match the "
-                "object's ETag.")
+            responses['412'] = self._path_item(
+                412,
+                "The value of the If-Match header doesn't match the object's ETag.",
+            )
 
         if 428 in self._expected_status_codes:
-            responses['428'] = _path_item(
-                'Precondition required: The required If-Match header is missing.')
+            responses['428'] = self._path_item(428, 'The required If-Match header is missing.')
 
         docstring_name = _docstring_name(module_obj.__doc__)
         tag_obj: OpenAPITag = {

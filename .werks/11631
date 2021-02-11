@@ -1,0 +1,30 @@
+Title: License usage report: How to exclude sites, hosts and services from license counting
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1613031442
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+The license usage report should NOT contain sites, hosts and services which are
+used for test scenarios.  Due to a lot of different scenarios we need a
+flexible way for excluding these test scenarios from the reports.
+
+Let's begin at atom level. A service can be excluded by adding the label
+{cmk/licensing:excluded}. For example you can do that via the ruleset
+{Setup > Services > Service monitoring rules > Service labels}.
+
+In order to exclude a host and all it's services you only have to label this
+host with {cmk/licensing:excluded}. In this case you do not need additional
+labels for the host services. Adding a host label can be achieved with the
+ruleset {Setup > Hosts > Host monitoring rules > Host labels}.
+
+If you want to exclude a whole site you can use the host label ruleset
+{Setup > Hosts > Host monitoring rules > Host labels} for ALL hosts.
+
+Thus, the idea is the following: if a higher level entity (eg. a host) is
+already excluded then the lower level entities (eg. host services) do not have
+to be excluded again. This also may reduce the number of rulesets.

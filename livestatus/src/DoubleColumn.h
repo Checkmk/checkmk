@@ -31,10 +31,10 @@
 template <class T>
 class DoubleColumn : public Column {
 public:
-    DoubleColumn(std::string name, std::string description,
-                 ColumnOffsets offsets, std::function<double(const T &)> gv)
-        : Column(std::move(name), std::move(description), std::move(offsets))
-        , get_value_{std::move(gv)} {}
+    DoubleColumn(const std::string &name, const std::string &description,
+                 const ColumnOffsets &offsets,
+                 std::function<double(const T &)> gv)
+        : Column(name, description, offsets), get_value_{std::move(gv)} {}
     ~DoubleColumn() override = default;
 
     [[nodiscard]] double getValue(Row row) const {

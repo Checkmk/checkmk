@@ -30,10 +30,10 @@ public:
     struct Constant;
     struct Reference;
     TimeColumn(
-        std::string name, std::string description, ColumnOffsets offsets,
+        const std::string& name, const std::string& description,
+        const ColumnOffsets& offsets,
         std::function<std::chrono::system_clock::time_point(const T&)> gv)
-        : Column(std::move(name), std::move(description), std::move(offsets))
-        , get_value_{std::move(gv)} {}
+        : Column(name, description, offsets), get_value_{std::move(gv)} {}
 
     ~TimeColumn() override = default;
 
@@ -81,17 +81,17 @@ private:
 
 template <class T>
 struct TimeColumn<T>::Constant : TimeColumn {
-    Constant(std::string name, std::string description,
+    Constant(const std::string& name, const std::string& description,
              std::chrono::system_clock::time_point x)
-        : TimeColumn(std::move(name), std::move(description), {},
+        : TimeColumn(name, description, {},
                      [x](const T& /*t*/) { return x; }){};
 };
 
 template <class T>
 struct TimeColumn<T>::Reference : TimeColumn {
-    Reference(std::string name, std::string description,
+    Reference(const std::string& name, const std::string& description,
               std::chrono::system_clock::time_point& x)
-        : TimeColumn(std::move(name), std::move(description), {},
+        : TimeColumn(name, description, {},
                      [&x](const T& /*t*/) { return x; }){};
 };
 

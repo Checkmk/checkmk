@@ -24,11 +24,11 @@
 template <class T, int32_t Default = 0>
 class AttributeBitmaskLambdaColumn : public AttributeListAsIntColumn {
 public:
-    AttributeBitmaskLambdaColumn(std::string name, std::string description,
-                                 ColumnOffsets offsets,
+    AttributeBitmaskLambdaColumn(const std::string& name,
+                                 const std::string& description,
+                                 const ColumnOffsets& offsets,
                                  std::function<int(const T&)> f)
-        : AttributeListAsIntColumn(std::move(name), std::move(description),
-                                   std::move(offsets))
+        : AttributeListAsIntColumn(name, description, offsets)
         , get_value_{std::move(f)} {}
     ~AttributeBitmaskLambdaColumn() override = default;
 
@@ -49,12 +49,11 @@ private:
 template <class T>
 class AttributeListColumn2 : public ListColumn {
 public:
-    AttributeListColumn2(std::string name, std::string description,
-                         ColumnOffsets offsets,
+    AttributeListColumn2(const std::string& name,
+                         const std::string& description,
+                         const ColumnOffsets& offsets,
                          const AttributeBitmaskLambdaColumn<T>& bitmask_col)
-        : ListColumn(std::move(name), std::move(description),
-                     std::move(offsets))
-        , bitmask_col_{bitmask_col} {}
+        : ListColumn(name, description, offsets), bitmask_col_{bitmask_col} {}
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,

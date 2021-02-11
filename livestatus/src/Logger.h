@@ -238,6 +238,7 @@ public:
     Logger *getLogger(const std::string &name);
 
 private:
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     static LogManager global_log_manager;
 
     // The mutex protects _known_loggers.

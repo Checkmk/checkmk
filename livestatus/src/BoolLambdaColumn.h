@@ -17,10 +17,10 @@ class Row;
 template <class T, bool Default = false>
 class BoolLambdaColumn : public IntColumn {
 public:
-    BoolLambdaColumn(std::string name, std::string description,
-                     ColumnOffsets offsets, std::function<bool(const T&)> f)
-        : IntColumn(std::move(name), std::move(description), std::move(offsets))
-        , get_value_{std::move(f)} {}
+    BoolLambdaColumn(const std::string& name, const std::string& description,
+                     const ColumnOffsets& offsets,
+                     std::function<bool(const T&)> f)
+        : IntColumn(name, description, offsets), get_value_{std::move(f)} {}
     ~BoolLambdaColumn() override = default;
 
     std::int32_t getValue(Row row,

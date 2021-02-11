@@ -28,7 +28,7 @@ public:
     static std::unique_ptr<Filter> make(Kind kind, const Filters &subfilters);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
-    std::unique_ptr<Filter> partialFilter(
+    [[nodiscard]] std::unique_ptr<Filter> partialFilter(
         columnNamePredicate predicate) const override;
     [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;

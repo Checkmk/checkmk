@@ -20,12 +20,10 @@ class Row;
 template <class T>
 class ListLambdaColumn : public ListColumn {
 public:
-    ListLambdaColumn(std::string name, std::string description,
-                     ColumnOffsets offsets,
+    ListLambdaColumn(const std::string& name, const std::string& description,
+                     const ColumnOffsets& offsets,
                      std::function<std::vector<std::string>(const T&)> f)
-        : ListColumn(std::move(name), std::move(description),
-                     std::move(offsets))
-        , get_value_{std::move(f)} {}
+        : ListColumn(name, description, offsets), get_value_{std::move(f)} {}
     ~ListLambdaColumn() override = default;
 
     std::vector<std::string> getValue(

@@ -510,8 +510,8 @@ table.data.tiled td.tiles {
         }
 
         &.center {
-          word-wrap: anywhere;
           white-space: break-spaces;
+          overflow-wrap: anywhere;
         }
       }
     }

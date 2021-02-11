@@ -927,8 +927,8 @@ table.nform {
     overflow: hidden;
     line-height: 28px;
     text-align: left;
-    word-wrap: break-word;
     vertical-align: baseline;
+    overflow-wrap: break-word;
 
     div.title {
       float: left;

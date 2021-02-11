@@ -1,0 +1,15 @@
+Title: Fix word wrap on service discovery page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613059349
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+If long service names contained no spaces, the service name was further
+written into the status detail column.
+
+The name will now be wrapped correctly.

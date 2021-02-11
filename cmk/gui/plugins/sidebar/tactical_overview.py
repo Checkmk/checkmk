@@ -161,7 +161,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.th(_("Problems"), class_="show_more_mode")
             html.th(_("Unhandled"))
             if show_stales and has_stale_objects:
-                html.th(_("Stale"), class_="show_more_mode")
+                html.th(_("Stale"))
             html.close_tr()
 
             td_class = 'col4' if has_stale_objects else 'col3'
@@ -192,12 +192,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                         row.views.stale + context_vars,
                         filename="view.py",
                     )
-                    html.open_td(
-                        class_=[td_class, "states prob" if stales != 0 else None, "show_more_mode"])
+                    html.open_td(class_=[td_class, "states prob" if stales != 0 else None])
                     link(str(stales), url)
                     html.close_td()
                 else:
-                    html.td(html.render_span("0"), class_="show_more_mode")
+                    html.td(html.render_span("0"))
 
             html.close_tr()
         html.close_table()

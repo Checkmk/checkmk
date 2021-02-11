@@ -11,8 +11,6 @@ You can find an introduction to basic monitoring principles including host statu
 [Checkmk guide](https://docs.checkmk.com/latest/en/monitoring_basics.html).
 """
 
-import json
-
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import verify_columns
@@ -45,21 +43,7 @@ class HostParameters(BaseSchema):
         description="Restrict the query to this particular site.",
         missing=[],
     )
-    query = fields.Nested(
-        fields.ExprSchema,
-        description=("An query expression in nested dictionary form. If you want to "
-                     "use multiple expressions, nest them with the AND/OR operators."),
-        many=False,
-        example=json.dumps({
-            'op': 'not',
-            'expr': {
-                'op': '=',
-                'left': 'name',
-                'right': 'example.com'
-            }
-        }),
-        required=False,
-    )
+    query = fields.query_field(Hosts, required=False)
     columns = fields.List(
         fields.LiveStatusColumn(
             table=Hosts,

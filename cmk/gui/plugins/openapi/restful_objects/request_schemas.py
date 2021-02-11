@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import urllib.parse
-import json
 
 from marshmallow import ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import config
-from cmk.gui.plugins.openapi.fields import HostField
+from cmk.gui.plugins.openapi.fields import HostField, query_field
+from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.utils.defines import weekday_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi import fields
@@ -38,22 +38,6 @@ class InputAttribute(BaseSchema):
     key = fields.String(required=True)
     value = fields.String(required=True)
 
-
-QUERY = fields.Nested(
-    fields.ExprSchema,
-    description=("An query expression in nested dictionary form. If you want to "
-                 "use multiple expressions, nest them with the AND/OR operators."),
-    many=False,
-    example=json.dumps({
-        'op': 'not',
-        'expr': {
-            'op': '=',
-            'left': 'hosts.name',
-            'right': 'example.com'
-        }
-    }),
-    required=False,
-)
 
 EXISTING_HOST_NAME = HostField(
     description="The hostname or IP address itself.",
@@ -808,12 +792,12 @@ class CreateHostGroupDowntime(CreateDowntimeBase):
 
 
 class CreateHostQueryDowntime(CreateDowntimeBase):
-    query = QUERY
+    query = query_field(tables.Hosts, required=True)
     duration = HOST_DURATION
 
 
 class CreateServiceQueryDowntime(CreateDowntimeBase):
-    query = QUERY
+    query = query_field(tables.Services, required=True)
     duration = SERVICE_DURATION
 
 
@@ -869,7 +853,7 @@ class DeleteDowntimeByName(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByQuery(DeleteDowntimeBase):
-    query = QUERY
+    query = query_field(tables.Downtimes, required=True)
 
 
 class DeleteDowntime(OneOfSchema):
@@ -1679,7 +1663,7 @@ class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):
 
 
 class AcknowledgeHostQueryProblem(AcknowledgeHostProblemBase):
-    query = QUERY
+    query = query_field(tables.Hosts, required=True)
 
 
 class AcknowledgeHostRelatedProblem(OneOfSchema):
@@ -1746,7 +1730,7 @@ class AcknowledgeServiceGroupProblem(AcknowledgeServiceProblemBase):
 
 
 class AcknowledgeServiceQueryProblem(AcknowledgeServiceProblemBase):
-    query = QUERY
+    query = query_field(tables.Services, required=True)
 
 
 class AcknowledgeServiceRelatedProblem(OneOfSchema):

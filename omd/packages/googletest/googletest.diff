@@ -1,0 +1,44 @@
+diff -Nur googletest-f3ef7e173f/googletest/include/gtest/gtest-param-test.h includes/googletest/gtest/gtest-param-test.h
+--- includes/googletest/gtest/gtest-param-test.h.orig	2021-02-05 19:41:32.000000000 +0100
++++ includes/googletest/gtest/gtest-param-test.h	2021-02-11 16:06:48.701307330 +0100
+@@ -428,12 +428,12 @@
+               ::testing::internal::CodeLocation(__FILE__, __LINE__));          \
+       return 0;                                                                \
+     }                                                                          \
+-    static int gtest_registering_dummy_ GTEST_ATTRIBUTE_UNUSED_;               \
++    static int gtest_registering_dummy_ GTEST_ATTRIBUTE_UNUSED_; /*NOLINT*/    \
+     GTEST_DISALLOW_COPY_AND_ASSIGN_(GTEST_TEST_CLASS_NAME_(test_suite_name,    \
+                                                            test_name));        \
+   };                                                                           \
+   int GTEST_TEST_CLASS_NAME_(test_suite_name,                                  \
+-                             test_name)::gtest_registering_dummy_ =            \
++                             test_name)::gtest_registering_dummy_ = /*NOLINT*/ \
+       GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::AddToRegistry();     \
+   void GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::TestBody()
+ 
+@@ -475,7 +475,7 @@
+         ::testing::internal::DefaultParamName<test_suite_name::ParamType>,    \
+         DUMMY_PARAM_))))(info);                                               \
+   }                                                                           \
+-  static int gtest_##prefix##test_suite_name##_dummy_                         \
++  static int gtest_##prefix##test_suite_name##_dummy_ /*NOLINT*/              \
+       GTEST_ATTRIBUTE_UNUSED_ =                                               \
+           ::testing::UnitTest::GetInstance()                                  \
+               ->parameterized_test_registry()                                 \
+diff -Nur googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-internal.h includes/googletest/gtest/internal/gtest-internal.h
+--- includes/googletest/gtest/internal/gtest-internal.h.orig	2021-02-05 19:41:32.000000000 +0100
++++ includes/googletest/gtest/internal/gtest-internal.h	2021-02-11 13:46:26.191391003 +0100
+@@ -1541,11 +1541,11 @@
+                                                                               \
+    private:                                                                   \
+     void TestBody() override;                                                 \
+-    static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_;     \
++    static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_; /*NOLINT*/ \
+   };                                                                          \
+                                                                               \
+   ::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_suite_name,          \
+-                                                    test_name)::test_info_ =  \
++                                                    test_name)::test_info_ =  /*NOLINT*/ \
+       ::testing::internal::MakeAndRegisterTestInfo(                           \
+           #test_suite_name, #test_name, nullptr, nullptr,                     \
+           ::testing::internal::CodeLocation(__FILE__, __LINE__), (parent_id), \

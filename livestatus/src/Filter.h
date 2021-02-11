@@ -36,7 +36,7 @@ public:
     [[nodiscard]] Kind kind() const { return _kind; }
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
-    virtual std::unique_ptr<Filter> partialFilter(
+    [[nodiscard]] virtual std::unique_ptr<Filter> partialFilter(
         columnNamePredicate predicate) const = 0;
 
     // TODO(sp) We might be able to unify all the methods below if we make the

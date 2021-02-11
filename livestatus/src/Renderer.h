@@ -12,7 +12,6 @@
 #include <iosfwd>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 enum class Encoding;
@@ -186,7 +185,7 @@ public:
 
     void output(const RowFragment &value) {
         separate();
-        renderer().output(std::move(value));
+        renderer().output(value);
     }
 
     template <typename T>

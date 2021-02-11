@@ -134,6 +134,7 @@ private:
         std::vector<Param> params;
     };
 
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     static std::vector<LogDef> log_definitions;
 
     void assign(Param par, const std::string &field);

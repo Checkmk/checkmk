@@ -29,10 +29,10 @@ class IntLambdaColumn : public detail::IntColumn {
 public:
     using ::detail::IntColumn::Constant;
     using ::detail::IntColumn::Reference;
-    IntLambdaColumn(std::string name, std::string description,
-                    ColumnOffsets offsets, std::function<int(const T&)> gv)
-        : detail::IntColumn(std::move(name), std::move(description),
-                            std::move(offsets))
+    IntLambdaColumn(const std::string& name, const std::string& description,
+                    const ColumnOffsets& offsets,
+                    std::function<int(const T&)> gv)
+        : detail::IntColumn(name, description, offsets)
         , get_value_{std::move(gv)} {}
     ~IntLambdaColumn() override = default;
 

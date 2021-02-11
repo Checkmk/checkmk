@@ -14,6 +14,7 @@
 
 #include "RRDColumn.h"
 #include "nagios.h"
+#include "pnp4nagios.h"
 class Row;
 
 class HostRRDColumn : public RRDColumn {

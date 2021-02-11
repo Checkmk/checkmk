@@ -67,10 +67,10 @@ public:
     using ::detail::StringColumn::Reference;
     struct PerfData;
 
-    StringColumn(std::string name, std::string description,
-                 ColumnOffsets offsets, std::function<std::string(const T&)> gv)
-        : detail::StringColumn(std::move(name), std::move(description),
-                               std::move(offsets))
+    StringColumn(const std::string& name, const std::string& description,
+                 const ColumnOffsets& offsets,
+                 std::function<std::string(const T&)> gv)
+        : detail::StringColumn(name, description, offsets)
         , get_value_(std::move(gv)) {}
 
     [[nodiscard]] std::string getValue(Row row) const override {

@@ -11,6 +11,7 @@
 #include <chrono>
 
 #include "Aggregator.h"
+#include "Column.h"
 #include "contact_fwd.h"
 class Row;
 class RowRenderer;

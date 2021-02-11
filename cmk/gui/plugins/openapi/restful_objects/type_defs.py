@@ -301,6 +301,7 @@ ResponseType = TypedDict(
         "404": PathItem,
         "409": PathItem,
         "412": PathItem,
+        "422": PathItem,
         "428": PathItem,
     },
     total=False,
@@ -368,5 +369,5 @@ EndpointEntry = TypedDict(
 EndpointKey = Tuple[str, LinkRelation]
 ParameterKey = Tuple[str, ...]
 
-StatusCodeInt = Literal[200, 204, 301, 302, 400, 404, 409, 412, 428]
-StatusCode = Literal["200", "204", "301", "302", "400", "404", "409", "412", "428"]
+StatusCodeInt = Literal[200, 204, 301, 302, 400, 404, 409, 412, 422, 428]
+StatusCode = Literal["200", "204", "301", "302", "400", "404", "409", "412", "422", "428"]

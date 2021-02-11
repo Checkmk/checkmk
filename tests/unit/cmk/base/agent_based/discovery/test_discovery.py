@@ -80,21 +80,6 @@ def test_discovered_service_eq():
     assert ser1 in {ser5}
 
 
-def test__get_rediscovery_mode():
-    allowed_modes = [
-        ("fixall", 2),
-        ("new", 0),
-        ("refresh", 3),
-        ("remove", 1),
-    ]
-
-    assert sorted(allowed_modes) == sorted(
-        (member.name, member.value) for member in discovery.RediscoveryMode)
-    assert discovery._get_rediscovery_mode({}) == ""
-    assert discovery._get_rediscovery_mode({"inventory_rediscovery": {}}) == ""
-    assert discovery._get_rediscovery_mode({"inventory_rediscovery": {"mode": "UNKNOWN"}}) == ""
-
-
 @pytest.fixture
 def service_table() -> discovery.ServicesTable:
     return {
@@ -195,96 +180,97 @@ def test__group_by_transition(service_table, grouped_services):
     "mode, parameters_rediscovery, result_new_item_names, result_counts",
     [
         # No params
-        ("new", {}, ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"], (2, 2, 0)),
-        ("fixall", {}, ["New Item 1", "New Item 2"], (2, 0, 2)),
-        ("refresh", {}, ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
-         (2, 2, 0)),
-        ("remove", {}, [], (0, 0, 2)),
+        (discovery.DiscoveryMode.NEW, {},
+         ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"], (2, 2, 0)),
+        (discovery.DiscoveryMode.FIXALL, {}, ["New Item 1", "New Item 2"], (2, 0, 2)),
+        (discovery.DiscoveryMode.REFRESH, {},
+         ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"], (2, 2, 0)),
+        (discovery.DiscoveryMode.REMOVE, {}, [], (0, 0, 2)),
         # New services
         # Whitelist
-        ("new", {
+        (discovery.DiscoveryMode.NEW, {
             "service_whitelist": ["^Test Description New Item 1"]
         }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
-        ("fixall", {
+        (discovery.DiscoveryMode.FIXALL, {
             "service_whitelist": ["^Test Description New Item 1"]
         }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
-        ("refresh", {
+        (discovery.DiscoveryMode.REFRESH, {
             "service_whitelist": ["^Test Description New Item 1"]
         }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
-        ("remove", {
+        (discovery.DiscoveryMode.REMOVE, {
             "service_whitelist": ["^Test Description New Item 1"]
         }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
         # Blacklist
-        ("new", {
+        (discovery.DiscoveryMode.NEW, {
             "service_blacklist": ["^Test Description New Item 1"]
         }, ["New Item 2", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
-        ("fixall", {
+        (discovery.DiscoveryMode.FIXALL, {
             "service_blacklist": ["^Test Description New Item 1"]
         }, ["New Item 2"], (1, 0, 2)),
-        ("refresh", {
+        (discovery.DiscoveryMode.REFRESH, {
             "service_blacklist": ["^Test Description New Item 1"]
         }, ["New Item 2", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
-        ("remove", {
+        (discovery.DiscoveryMode.REMOVE, {
             "service_blacklist": ["^Test Description New Item 1"]
         }, [], (0, 0, 2)),
         # White-/blacklist
-        ("new", {
+        (discovery.DiscoveryMode.NEW, {
             "service_whitelist": ["^Test Description New Item 1"],
             "service_blacklist": ["^Test Description New Item 2"],
         }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
-        ("fixall", {
+        (discovery.DiscoveryMode.FIXALL, {
             "service_whitelist": ["^Test Description New Item 1"],
             "service_blacklist": ["^Test Description New Item 2"],
         }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
-        ("refresh", {
+        (discovery.DiscoveryMode.REFRESH, {
             "service_whitelist": ["^Test Description New Item 1"],
             "service_blacklist": ["^Test Description New Item 2"],
         }, ["New Item 1", "Vanished Item 1", "Vanished Item 2"], (1, 2, 0)),
-        ("remove", {
+        (discovery.DiscoveryMode.REMOVE, {
             "service_whitelist": ["^Test Description New Item 1"],
             "service_blacklist": ["^Test Description New Item 2"],
         }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
         # Vanished services
         # Whitelist
-        ("new", {
+        (discovery.DiscoveryMode.NEW, {
             "service_whitelist": ["^Test Description Vanished Item 1"]
         }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
-        ("fixall", {
+        (discovery.DiscoveryMode.FIXALL, {
             "service_whitelist": ["^Test Description Vanished Item 1"]
         }, ["Vanished Item 2"], (0, 1, 1)),
-        ("refresh", {
+        (discovery.DiscoveryMode.REFRESH, {
             "service_whitelist": ["^Test Description Vanished Item 1"]
         }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
-        ("remove", {
+        (discovery.DiscoveryMode.REMOVE, {
             "service_whitelist": ["^Test Description Vanished Item 1"]
         }, ["Vanished Item 2"], (0, 1, 1)),
         # Blacklist
-        ("new", {
+        (discovery.DiscoveryMode.NEW, {
             "service_blacklist": ["^Test Description Vanished Item 1"]
         }, ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"], (2, 2, 0)),
-        ("fixall", {
+        (discovery.DiscoveryMode.FIXALL, {
             "service_blacklist": ["^Test Description Vanished Item 1"]
         }, ["New Item 1", "New Item 2", "Vanished Item 1"], (2, 1, 1)),
-        ("refresh", {
+        (discovery.DiscoveryMode.REFRESH, {
             "service_blacklist": ["^Test Description Vanished Item 1"]
         }, ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"], (2, 2, 0)),
-        ("remove", {
+        (discovery.DiscoveryMode.REMOVE, {
             "service_blacklist": ["^Test Description Vanished Item 1"]
         }, ["Vanished Item 1"], (0, 1, 1)),
         # White-/blacklist
-        ("new", {
+        (discovery.DiscoveryMode.NEW, {
             "service_whitelist": ["^Test Description Vanished Item 1"],
             "service_blacklist": ["^Test Description Vanished Item 2"],
         }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
-        ("fixall", {
+        (discovery.DiscoveryMode.FIXALL, {
             "service_whitelist": ["^Test Description Vanished Item 1"],
             "service_blacklist": ["^Test Description Vanished Item 2"],
         }, ["Vanished Item 2"], (0, 1, 1)),
-        ("refresh", {
+        (discovery.DiscoveryMode.REFRESH, {
             "service_whitelist": ["^Test Description Vanished Item 1"],
             "service_blacklist": ["^Test Description Vanished Item 2"],
         }, ["Vanished Item 1", "Vanished Item 2"], (0, 2, 0)),
-        ("remove", {
+        (discovery.DiscoveryMode.REMOVE, {
             "service_whitelist": ["^Test Description Vanished Item 1"],
             "service_blacklist": ["^Test Description Vanished Item 2"],
         }, ["Vanished Item 2"], (0, 1, 1)),
@@ -326,78 +312,78 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
         # Whitelist
         ({
             "inventory_rediscovery": {
-                "mode": 0,
+                "mode": discovery.DiscoveryMode.NEW,
                 "service_whitelist": ["^Test Description New Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 1,
+                "mode": discovery.DiscoveryMode.REMOVE,
                 "service_whitelist": ["^Test Description New Item 1"]
             },
         }, False),
         ({
             "inventory_rediscovery": {
-                "mode": 2,
+                "mode": discovery.DiscoveryMode.FIXALL,
                 "service_whitelist": ["^Test Description New Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 3,
+                "mode": discovery.DiscoveryMode.REFRESH,
                 "service_whitelist": ["^Test Description New Item 1"]
             },
         }, True),
         # Blacklist
         ({
             "inventory_rediscovery": {
-                "mode": 0,
+                "mode": discovery.DiscoveryMode.NEW,
                 "service_blacklist": ["^Test Description New Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 1,
+                "mode": discovery.DiscoveryMode.REMOVE,
                 "service_blacklist": ["^Test Description New Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 2,
+                "mode": discovery.DiscoveryMode.FIXALL,
                 "service_blacklist": ["^Test Description New Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 3,
+                "mode": discovery.DiscoveryMode.REFRESH,
                 "service_blacklist": ["^Test Description New Item 1"]
             },
         }, True),
         # White-/blacklist
         ({
             "inventory_rediscovery": {
-                "mode": 0,
+                "mode": discovery.DiscoveryMode.NEW,
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 1,
+                "mode": discovery.DiscoveryMode.REMOVE,
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
             },
         }, False),
         ({
             "inventory_rediscovery": {
-                "mode": 2,
+                "mode": discovery.DiscoveryMode.FIXALL,
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 3,
+                "mode": discovery.DiscoveryMode.REFRESH,
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
             },
@@ -406,91 +392,97 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
         # Whitelist
         ({
             "inventory_rediscovery": {
-                "mode": 0,
+                "mode": discovery.DiscoveryMode.NEW,
                 "service_whitelist": ["^Test Description Vanished Item 1"]
             },
         }, False),
         ({
             "inventory_rediscovery": {
-                "mode": 1,
+                "mode": discovery.DiscoveryMode.REMOVE,
                 "service_whitelist": ["^Test Description Vanished Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 2,
+                "mode": discovery.DiscoveryMode.FIXALL,
                 "service_whitelist": ["^Test Description Vanished Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 3,
+                "mode": discovery.DiscoveryMode.REFRESH,
                 "service_whitelist": ["^Test Description Vanished Item 1"]
             },
         }, True),
         # Blacklist
         ({
             "inventory_rediscovery": {
-                "mode": 0,
+                "mode": discovery.DiscoveryMode.NEW,
                 "service_blacklist": ["^Test Description Vanished Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 1,
+                "mode": discovery.DiscoveryMode.REMOVE,
                 "service_blacklist": ["^Test Description Vanished Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 2,
+                "mode": discovery.DiscoveryMode.FIXALL,
                 "service_blacklist": ["^Test Description Vanished Item 1"]
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 3,
+                "mode": discovery.DiscoveryMode.REFRESH,
                 "service_blacklist": ["^Test Description Vanished Item 1"]
             },
         }, True),
         # White-/blacklist
         ({
             "inventory_rediscovery": {
-                "mode": 0,
+                "mode": discovery.DiscoveryMode.NEW,
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
             },
         }, False),
         ({
             "inventory_rediscovery": {
-                "mode": 1,
+                "mode": discovery.DiscoveryMode.REMOVE,
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 2,
+                "mode": discovery.DiscoveryMode.FIXALL,
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
             },
         }, True),
         ({
             "inventory_rediscovery": {
-                "mode": 3,
+                "mode": discovery.DiscoveryMode.REFRESH,
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
             },
         }, True),
     ])
-def test__check_service_table(monkeypatch, grouped_services, parameters, result_need_rediscovery):
+def test__check_service_table(
+    monkeypatch,
+    grouped_services,
+    parameters,
+    result_need_rediscovery,
+):
     def _get_service_description(_hostname, _check_plugin_name, item):
         return "Test Description %s" % item
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
+    discovery_mode = parameters.get("inventory_rediscovery", {}).pop('mode', "")
     status, infotexts, long_infotexts, perfdata, need_rediscovery = discovery._check_service_lists(
-        "hostname", grouped_services, parameters)
+        "hostname", grouped_services, parameters, discovery_mode)
 
     assert status == 1
     assert sorted(infotexts) == sorted([

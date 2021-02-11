@@ -129,7 +129,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             raise MKAutomationError(
                 "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME")
 
-        mode = args[0]
+        mode = discovery.DiscoveryMode.from_str(args[0])
         hostnames = args[1:]
 
         config_cache = config.get_config_cache()

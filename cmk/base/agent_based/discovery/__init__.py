@@ -8,7 +8,6 @@ import itertools
 import os
 import socket
 import time
-from enum import Enum
 from typing import (
     Callable,
     Container,
@@ -77,7 +76,7 @@ from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_cluster_host_labels, analyse_host_labels
 from .type_defs import DiscoveryParameters
-from .utils import TimeLimitFilter, QualifiedDiscovery
+from .utils import DiscoveryMode, TimeLimitFilter, QualifiedDiscovery
 
 ServicesTable = Dict[ServiceID, Tuple[str, Service, List[HostName]]]
 ServicesByTransition = Dict[str, List[autochecks.ServiceWithNodes]]
@@ -88,14 +87,6 @@ CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
 CheckPreviewTable = List[CheckPreviewEntry]
 
 _DiscoverySubresult = Tuple[int, List[str], List[str], List[Tuple], bool]
-
-
-class RediscoveryMode(Enum):
-    new = 0
-    remove = 1
-    fixall = 2
-    refresh = 3
-
 
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -133,14 +124,6 @@ def schedule_discovery_check(host_name: HostName) -> None:
 
 def _get_rediscovery_parameters(params: Dict) -> Dict:
     return params.get("inventory_rediscovery", {})
-
-
-def _get_rediscovery_mode(params: Dict) -> str:
-    mode_int = _get_rediscovery_parameters(params).get("mode")
-    try:
-        return RediscoveryMode(mode_int).name
-    except ValueError:
-        return ""
 
 
 #.
@@ -298,7 +281,7 @@ def discover_on_host(
     *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-    mode: str,
+    mode: DiscoveryMode,
     service_filters: Optional[_ServiceFilters],
     on_error: str,
     use_cached_snmp_data: bool,
@@ -311,9 +294,9 @@ def discover_on_host(
     result = DiscoveryResult()
     discovery_parameters = DiscoveryParameters(
         on_error=on_error,
-        load_labels=(mode != "remove"),
-        save_labels=(mode != "remove"),
-        only_host_labels=(mode == "only-host-labels"),
+        load_labels=(mode is not DiscoveryMode.REMOVE),
+        save_labels=(mode is not DiscoveryMode.REMOVE),
+        only_host_labels=(mode is DiscoveryMode.ONLY_HOST_LABELS),
     )
 
     if host_name not in config_cache.all_active_hosts():
@@ -326,7 +309,7 @@ def discover_on_host(
         # in "refresh" mode we first need to remove all previously discovered
         # checks of the host, so that _get_host_services() does show us the
         # new discovered check parameters.
-        if mode == "refresh":
+        if mode is DiscoveryMode.REFRESH:
             result.self_removed += host_config.remove_autochecks()  # this is cluster-aware!
 
         if host_config.is_cluster:
@@ -374,7 +357,7 @@ def discover_on_host(
         result.error_text = str(e)
 
     else:
-        if mode != "remove":
+        if mode is not DiscoveryMode.REMOVE:
             result.self_new_host_labels = len(host_labels.new)
             result.self_total_host_labels = len(host_labels.present)
 
@@ -404,7 +387,7 @@ def _get_post_discovery_services(
     services: ServicesByTransition,
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
-    mode: str,
+    mode: DiscoveryMode,
 ) -> List[autochecks.ServiceWithNodes]:
     """
     The output contains a selction of services in the states "new", "old", "ignored", "vanished"
@@ -426,7 +409,7 @@ def _get_post_discovery_services(
             continue
 
         if check_source == "new":
-            if mode in ("new", "fixall", "refresh"):
+            if mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH):
                 new = [
                     s for s in discovered_services_with_nodes
                     if service_filters.new(host_name, s.service)
@@ -445,8 +428,9 @@ def _get_post_discovery_services(
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
             for entry in discovered_services_with_nodes:
-                if mode in ("fixall", "remove") and service_filters.vanished(
-                        host_name, entry.service):
+                if mode in (DiscoveryMode.FIXALL,
+                            DiscoveryMode.REMOVE) and service_filters.vanished(
+                                host_name, entry.service):
                     result.self_removed += 1
                 else:
                     post_discovery_services.append(entry)
@@ -507,6 +491,8 @@ def check_discovery(
     if params is None:
         params = host_config.default_discovery_check_parameters()
 
+    discovery_mode = DiscoveryMode(_get_rediscovery_parameters(params).get("mode"))
+
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
     if ipaddress is None and not host_config.is_cluster:
@@ -533,8 +519,12 @@ def check_discovery(
     )
 
     status, infotexts, long_infotexts, perfdata, need_rediscovery = _aggregate_subresults(
-        _check_service_lists(host_name, services, params),
-        _check_host_labels(host_label_discovery_result, params),
+        _check_service_lists(host_name, services, params, discovery_mode),
+        _check_host_labels(
+            host_label_discovery_result,
+            int(params.get("severity_new_host_label", 1)),
+            discovery_mode,
+        ),
         _check_data_sources(source_results),
     )
 
@@ -564,6 +554,7 @@ def _check_service_lists(
     host_name: HostName,
     services_by_transition: ServicesByTransition,
     params: config.DiscoveryCheckParameters,
+    discovery_mode: DiscoveryMode,
 ) -> _DiscoverySubresult:
 
     status = 0
@@ -573,7 +564,6 @@ def _check_service_lists(
     need_rediscovery = False
 
     service_filters = _ServiceFilters.from_settings(_get_rediscovery_parameters(params))
-    rediscovery_mode = _get_rediscovery_mode(params)
 
     for transition, title, params_key, default_state, service_filter in [
         ("new", "unmonitored", "severity_unmonitored", config.inventory_check_severity,
@@ -609,9 +599,10 @@ def _check_service_lists(
             ))
 
             if (unfiltered and
-                ((transition == "new" and rediscovery_mode in ("new", "fixall", "refresh")) or
-                 (transition == "vanished" and
-                  rediscovery_mode in ("remove", "fixall", "refresh")))):
+                ((transition == "new" and discovery_mode in
+                  (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH)) or
+                 (transition == "vanished" and discovery_mode in
+                  (DiscoveryMode.REMOVE, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH)))):
                 need_rediscovery = True
         else:
             infotexts.append(u"no %s services found" % title)
@@ -626,14 +617,15 @@ def _check_service_lists(
 
 def _check_host_labels(
     host_labels: QualifiedDiscovery[HostLabel],
-    params: config.DiscoveryCheckParameters,
+    severity_new_host_label: int,
+    discovery_mode: DiscoveryMode,
 ) -> _DiscoverySubresult:
     return (
-        int(params.get("severity_new_host_label", 1)),
+        severity_new_host_label,
         [f"{len(host_labels.new)} new host labels"],
         [],
         [],
-        _get_rediscovery_mode(params) in ("new", "fixall", "refresh"),
+        discovery_mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
     ) if host_labels.new else (
         0,
         ["no new host labels"],
@@ -777,7 +769,7 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
         result = discover_on_host(
             config_cache=config_cache,
             host_config=host_config,
-            mode=_get_rediscovery_mode(params),
+            mode=DiscoveryMode(_get_rediscovery_parameters(params).get("mode")),
             service_filters=_ServiceFilters.from_settings(_get_rediscovery_parameters(params)),
             on_error="ignore",
             use_cached_snmp_data=True,

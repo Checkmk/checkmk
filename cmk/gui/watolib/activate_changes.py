@@ -2289,6 +2289,7 @@ def activate_changes_start(
             logged in user.
 
     Returns:
+        An activation id.
 
     """
     changes = ActivateChanges()

@@ -8,7 +8,7 @@ import urllib.parse
 from marshmallow import ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import config
+from cmk.gui import config, watolib
 from cmk.gui.plugins.openapi.fields import HostField, query_field
 from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.utils.defines import weekday_ids
@@ -1874,4 +1874,11 @@ class ActivateChanges(BaseSchema):
         required=False,
         missing=[],
         example=['production'],
+    )
+    force_foreign_changes = fields.Boolean(
+        description=param_description(watolib.activate_changes_start.__doc__,
+                                      'force_foreign_changes'),
+        required=False,
+        missing=False,
+        example=False,
     )

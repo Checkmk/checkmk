@@ -1,0 +1,26 @@
+Title: Agent Bakery: Improve deployment host selection form
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1613384161
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+The form for the configuration "Activate update only on the selected hosts",
+that can be found at the "Automatic agent updates" page, undergoes two improvements:
+
+Test hostname without activation:<br>
+It is now possible to test a hostname for being considered for automatic updates,
+without the need to activate the new conditions. To achieve this, enter the new conditions
+at the "Conditions" section, enter the hostname to be tested at the "Test hostname before
+activation" section and hit "Test". The result will be displayed inline.
+
+Better visibility of activation button:<br>
+The activation button for new filled-in conditions is moved into the "Activate update
+only in the selected hosts" form (it was placed undearneath before), is renamed to
+"Apply conditions" (It was named "Change selection" before) and is displayed with
+a green background for better visibility.
+

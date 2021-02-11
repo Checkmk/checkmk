@@ -195,12 +195,13 @@ def section(title: Union[None, HTML, str] = None,
             legend: bool = True,
             css: Optional[str] = None,
             is_show_more: bool = False,
+            is_changed: bool = False,
             is_required: bool = False) -> None:
     global g_section_open
     section_close()
     html.open_tr(
         id_=section_id,
-        class_=[css, "show_more_mode" if is_show_more else "basic"],
+        class_=[css, "show_more_mode" if is_show_more and not is_changed else "basic"],
         style="display:none;" if hide else None,
     )
 

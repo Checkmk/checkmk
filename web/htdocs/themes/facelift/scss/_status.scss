@@ -48,16 +48,19 @@ tr.groupheader .state span {
   border-radius: $theme-border-radius;
 }
 
-tr.data td.state,
-tr.data td.hstate {
-  height: 100%;
-  padding: 0 1px;
+tr.data,
+div.tile {
+  td.state,
+  td.hstate {
+    height: 100%;
+    padding: 0 1px;
 
-  span {
-    display: flex;
-    align-items: center;
-    height: 95%;
-    border-radius: 2px;
+    span {
+      display: flex;
+      align-items: center;
+      height: 95%;
+      border-radius: 2px;
+    }
   }
 }
 

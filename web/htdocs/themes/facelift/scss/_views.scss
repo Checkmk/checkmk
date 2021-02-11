@@ -500,6 +500,11 @@ table.data.tiled td.tiles {
       td {
         padding: 8px;
 
+        &.state {
+          height: 30px;
+          padding: 0;
+        }
+
         &.states {
           border-radius: $theme-border-radius;
         }
@@ -532,7 +537,6 @@ table.data.single {
 
   tr.data {
     > td {
-      height: 16px;
       padding: 4px 5px 2px;
       padding-bottom: 4px;
       line-height: 14px;
@@ -568,7 +572,7 @@ table.data.single {
   > tbody > tr > td,
   > tbody tr.odd0 > td,
   > tbody tr.even0 > td {
-    padding: 2px 0;
+    padding: 2px;
     border-radius: 0;
 
     &.left {

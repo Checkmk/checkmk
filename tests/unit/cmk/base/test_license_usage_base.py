@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 from datetime import datetime, timedelta
 
 import cmk.utils.store as store
@@ -208,3 +209,22 @@ def test_update_history__may_update_next_run_not_reached(monkeypatch):
 
     # Check result
     assert not license_usage._may_update(fake_now.timestamp(), fake_next_run_ts)
+
+
+@pytest.mark.parametrize("num_hosts, num_services, returns_sample", [
+    (0, 0, False),
+    (1, 0, True),
+    (0, 1, True),
+])
+def test__create_sample(monkeypatch, num_hosts, num_services, returns_sample):
+    monkeypatch.setattr(
+        license_usage,
+        "_get_stats_from_livestatus",
+        lambda query: num_hosts if "GET hosts" in query else num_services,
+    )
+
+    sample = license_usage._create_sample()
+    if returns_sample:
+        assert sample is not None
+    else:
+        assert sample is None

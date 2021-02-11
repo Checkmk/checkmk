@@ -9,6 +9,7 @@ import random
 import time
 from pathlib import Path
 from datetime import datetime, timedelta
+from typing import Optional
 
 import livestatus
 
@@ -28,6 +29,9 @@ next_run_filepath = license_usage_dir.joinpath("next_run")
 history_filepath = license_usage_dir.joinpath("history.json")
 
 _last_update_try_ts = 0.0
+
+_LICENSE_LABEL_NAME = "cmk/licensing"
+_LICENSE_LABEL_EXCLUDE = "excluded"
 
 
 def try_history_update() -> None:
@@ -79,7 +83,9 @@ def _create_or_update_history_dump() -> LicenseUsageHistoryDump:
 
     The history has a max. length of 400 (days)."""
     history_dump = _load_history_dump()
-    history_dump.add_sample(_create_sample())
+    sample = _create_sample()
+    if sample is not None:
+        history_dump.add_sample(sample)
     return history_dump
 
 
@@ -91,13 +97,23 @@ def _load_history_dump() -> LicenseUsageHistoryDump:
     return LicenseUsageHistoryDump.deserialize(raw_history_dump)
 
 
-def _create_sample() -> LicenseUsageSample:
-    query = "GET status\nColumns: num_hosts num_services\n"
-    try:
-        num_hosts, num_services = livestatus.LocalConnection().query(query)[0]
-    except (livestatus.MKLivestatusSocketError, livestatus.MKLivestatusNotFoundError) as e:
-        logger.debug("Livestatus error: %s", e)
-        num_hosts, num_services = 0, 0
+def _create_sample() -> Optional[LicenseUsageSample]:
+    num_hosts = _get_stats_from_livestatus(
+        "GET hosts\nStats: host_labels != '{label_name}' '{label_value}'\n".format(
+            label_name=_LICENSE_LABEL_NAME,
+            label_value=_LICENSE_LABEL_EXCLUDE,
+        ))
+    num_services = _get_stats_from_livestatus(
+        ("GET services\n"
+         "Stats: host_labels != '{label_name}' '{label_value}'\n"
+         "Stats: service_labels != '{label_name}' '{label_value}'\n"
+         "StatsAnd: 2\n").format(
+             label_name=_LICENSE_LABEL_NAME,
+             label_value=_LICENSE_LABEL_EXCLUDE,
+         ))
+
+    if num_hosts == 0 and num_services == 0:
+        return None
 
     general_infos = cmk_version.get_general_version_infos()
     return LicenseUsageSample(
@@ -110,3 +126,11 @@ def _create_sample() -> LicenseUsageSample:
         sample_time=int(time.time()),
         timezone=time.localtime().tm_zone,
     )
+
+
+def _get_stats_from_livestatus(query: str) -> int:
+    try:
+        return livestatus.LocalConnection().query_summed_stats(query)[0]
+    except (livestatus.MKLivestatusSocketError, livestatus.MKLivestatusNotFoundError) as e:
+        logger.debug("Livestatus error: %s", e)
+        return 0

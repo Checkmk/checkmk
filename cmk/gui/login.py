@@ -519,6 +519,7 @@ class LoginPage(Page):
 
         html.open_div(id_="login_window")
 
+        html.img(src=html.theme_url("images/mk-logo.png"), id_="logo")
         html.div("" if "hide_version" in config.login_screen else cmk_version.__version__,
                  id_="version")
 

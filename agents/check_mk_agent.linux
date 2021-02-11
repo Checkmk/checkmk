@@ -372,9 +372,10 @@ section_lnx_if() {
 section_bonding_interfaces() {
     if [ -e /proc/net/bonding ]; then
         echo '<<<lnx_bonding:sep(58)>>>'
-        pushd /proc/net/bonding >/dev/null
-        head -v -n 1000 ./*
-        popd >/dev/null
+        (
+            cd /proc/net/bonding || return
+            head -v -n 1000 ./*
+        )
     fi
 }
 
@@ -929,20 +930,20 @@ section_mkbackup() {
 }
 
 section_job() {
-    if pushd "$MK_VARDIR/job" >/dev/null; then
+    (
+        cd "$MK_VARDIR/job" || return
         echo '<<<job>>>'
         for username in *; do
-            if [ -d "$username" ] && cd "$username"; then
+            (
+                cd "$username" || return
                 if [ $EUID -eq 0 ]; then
                     su -s "$SHELL" "$username" -c "head -n -0 -v *"
                 else
                     head -n -0 -v ./*
                 fi
-                cd ..
-            fi
+            )
         done
-        popd >/dev/null
-    fi
+    )
 }
 
 section_thermal() {
@@ -1626,8 +1627,9 @@ run_local_checks
 run_plugins
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
-    pushd "$SPOOLDIR" >/dev/null
+(
+    cd "$SPOOLDIR" || return
+    test -r "$SPOOLFILE" || return
     now=$(date +%s)
 
     for file in *; do
@@ -1656,5 +1658,4 @@ if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
         # Output the file
         cat "$file"
     done
-    popd >/dev/null
-fi
+)

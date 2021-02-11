@@ -2781,7 +2781,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'zfsget',
         'zorp_connections',
         'zpool',
-        'zpool_status',
     }
     current_legacy_checks = set(fix_plugin_legacy.check_info)
 

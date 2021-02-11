@@ -12,8 +12,6 @@ is monitored by Checkmk.
 You can find an introduction to services in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
-import json
-
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import verify_columns
@@ -29,21 +27,7 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTION
 
 PARAMETERS = [{
     'site': fields.String(description="Restrict the query to this particular site."),
-    'query': fields.Nested(
-        fields.ExprSchema,
-        description=("An query expression in nested dictionary form. If you want to "
-                     "use multiple expressions, nest them with the AND/OR operators."),
-        many=False,
-        example=json.dumps({
-            'op': 'not',
-            'expr': {
-                'op': '=',
-                'left': 'name',
-                'right': 'example.com'
-            }
-        }),
-        required=False,
-    ),
+    'query': fields.query_field(Services, required=False),
     'columns': fields.List(
         fields.LiveStatusColumn(
             table=Services,

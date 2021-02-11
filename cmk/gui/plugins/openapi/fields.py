@@ -7,6 +7,7 @@
 import collections.abc
 import json
 import re
+import typing
 from typing import Any, Optional, Tuple, Callable
 
 from marshmallow import fields as _fields, ValidationError
@@ -14,6 +15,8 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import watolib, valuespec as valuespec
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression
+from cmk.gui.plugins.openapi.livestatus_helpers.types import Table
 
 from cmk.gui.plugins.openapi.utils import BaseSchema
 from cmk.utils.exceptions import MKException
@@ -536,9 +539,10 @@ class NotExprSchema(BaseSchema):
 
     Examples:
 
-        >>> input_expr = {'op': '=', 'left': 'foo.bar', 'right': 'foo'}
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> input_expr = {'op': '=', 'left': 'hosts.name', 'right': 'foo'}
         >>> q = {'op': 'not', 'expr': input_expr}
-        >>> result = NotExprSchema().load(q)
+        >>> result = NotExprSchema(context={'table': Hosts}).load(q)
         >>> assert result == q
 
     """
@@ -557,13 +561,13 @@ class LogicalExprSchema(BaseSchema):
     # many=True does not work here for some reason.
     expr = List(
         Nested(
-            lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
+            lambda *a, **kw: ExprSchema(*a, **kw),  # pylint: disable=unnecessary-lambda
             description="A list of query expressions to combine.",
         ))
 
 
 class ExprSchema(OneOfSchema):
-    """
+    """Top level class for query expression schema
 
     Operators can be one of: AND, OR
 
@@ -577,8 +581,16 @@ class ExprSchema(OneOfSchema):
         ...             ]},
         ...         },
         ...     ]}
-        >>> result = ExprSchema().load(q)
-        >>> assert result == q
+
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> schema = ExprSchema(context={'table': Hosts})
+        >>> assert schema.load(q) == schema.load(json.dumps(q))
+
+        >>> q = {'op': '=', 'left': 'foo', 'right': 'bar'}
+        >>> schema.load(q)
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: Table 'hosts' has no column 'foo'.
 
     """
     type_field = 'op'
@@ -616,21 +628,61 @@ class ExprSchema(OneOfSchema):
                         str(exc),
                     ],
                 })
+        elif isinstance(data, QueryExpression):
+            return data
 
+        if not self.context or 'table' not in self.context:
+            raise RuntimeError(f"No table in context for field {self}")
+
+        try:
+            tree_to_expr(data, self.context['table'])
+        except ValueError as e:
+            raise ValidationError(str(e)) from e
         return super().load(data, many=many, partial=partial, unknown=unknown)
+
+
+def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
+    """Returns a Nested ExprSchema Field which validates a Livestatus query.
+
+    Args:
+        table:
+            A Livestatus Table class.
+        required:
+            Whether the field shall be required.
+
+    Returns:
+        A marshmallow Nested field.
+
+    """
+    return Nested(
+        ExprSchema(context={'table': table}),
+        description=(
+            f"An query expression of the Livestatus {table.__tablename__!r} table in nested "
+            "dictionary form. If you want to use multiple expressions, nest them with the "
+            "AND/OR operators."),
+        many=False,
+        example=json.dumps({
+            'op': 'and',
+            'expr': [{
+                'op': '=',
+                'left': 'name',
+                'right': 'example.com'
+            }, {
+                'op': '!=',
+                'left': 'status',
+                'right': '0'
+            }],
+        }),
+        required=required,
+    )
 
 
 class LiveStatusColumn(String):
     """Represents a LiveStatus column.
 
-    >>> class Hosts:
-    ...      __tablename__ = 'hosts'
-    ...      @classmethod
-    ...      def __columns__(cls):
-    ...          return ['foo']
-
-    >>> LiveStatusColumn(table=Hosts).deserialize('foo')
-    'foo'
+    >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+    >>> LiveStatusColumn(table=Hosts).deserialize('name')
+    'name'
 
     >>> import pytest
     >>> with pytest.raises(ValidationError) as exc:
@@ -742,4 +794,5 @@ __all__ = [
     'FolderField',
     'HostField',
     'FOLDER_PATTERN',
+    'query_field',
 ]

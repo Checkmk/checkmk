@@ -19,6 +19,7 @@ from typing import Literal
 
 from cmk.gui import config, sites
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands import downtimes as downtime_commands
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
@@ -31,7 +32,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
     OPTIONAL_HOST_NAME,
-    QUERY,
     SERVICE_DESCRIPTION,
 )
 from cmk.gui.plugins.openapi.utils import problem
@@ -42,7 +42,7 @@ DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup', 'host_by_
 
 
 class DowntimeParameter(BaseSchema):
-    query = QUERY
+    query = fields.query_field(Downtimes, required=False)
 
 
 @Endpoint(constructors.collection_href('downtime', 'host'),

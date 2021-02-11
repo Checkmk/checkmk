@@ -80,7 +80,7 @@ case "$1" in
         # set the capabilities and once that fails we fall back to setuid.
         if ! setcap "$CAP" "$PROGRAM_PATH"; then
             echo "Failed to set capabilities $CAP for $PROGRAM. Falling back to setuid."
-            chmod 4750 "$PROGRAM"
+            chmod 4750 "$PROGRAM_PATH"
         fi
       fi
     done

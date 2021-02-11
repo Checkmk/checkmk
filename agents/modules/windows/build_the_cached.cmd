@@ -52,7 +52,7 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
   powershell Write-Host "%fname% not found on %url%, building python %version%.%subversion% ..." -Foreground cyan
   
   :: BUILDING
-  if "%version" == "3.4"(
+  if "%version%" == "3.4" (
     make python_344 PY_VER=3.4 PY_SUBVER=4 ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 33
   ) else (
     make build PY_VER=%version% PY_SUBVER=%subversion% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34

@@ -1584,6 +1584,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"A dashboard can have an optional context. It can for example be restricted "
+"to display only information of a single host or for a set of services "
+"matching a regular expression."
+msgstr ""
+
+msgid ""
 "A delay can be configured here so that multiple changes can be activated in "
 "one go. This avoids frequent activation of changes in situations with "
 "frequent services changes."
@@ -5435,9 +5441,6 @@ msgid "Auto shrink off"
 msgstr ""
 
 msgid "Auto shrink on"
-msgstr ""
-
-msgid "Auto-disovered services of the host"
 msgstr ""
 
 msgid "Autodetect instances, expect HTTPS on the following ports:"
@@ -13603,6 +13606,14 @@ msgstr ""
 msgid "Diskstates"
 msgstr ""
 
+#, fuzzy
+msgid "Disovered host labels of the host"
+msgstr "Nici o schimbare"
+
+#, fuzzy
+msgid "Disovered services of the host"
+msgstr "Grup nou"
+
 msgid "Display ESX Host power state on"
 msgstr ""
 
@@ -19848,6 +19859,15 @@ msgid ""
 "Here you specify which types of alerts will be notified to this contact. "
 "Note: these settings will only be saved and used if the user is member of a "
 "contact group."
+msgstr ""
+
+msgid ""
+"Here, you can configure additional properties of the dashboard. This is "
+"completely optional and only needed to create more advanced dashboards. For "
+"example, you can make certain filters mandatory. This enables you to build "
+"generic dashboards which could for example contain all the relevant "
+"information for a single Oracle DB. However, before the dashboard is "
+"rendered, the user has to decide which DB he wants to look at."
 msgstr ""
 
 msgid ""
@@ -34235,6 +34255,10 @@ msgstr ""
 
 msgid "Prefix match"
 msgstr ""
+
+#, fuzzy
+msgid "Prepend namespace prefix for hosts"
+msgstr "Cautare"
 
 #, fuzzy
 msgid "Prerequisites"
@@ -56082,6 +56106,10 @@ msgid "complete"
 msgstr ""
 
 #, fuzzy
+msgid "confidence interval"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
 msgid "configuration"
 msgstr "Activare Configurare"
 
@@ -56413,6 +56441,10 @@ msgstr "Spațiu liber exact"
 
 msgid "first level"
 msgstr ""
+
+#, fuzzy
+msgid "fit & forecast"
+msgstr "Element nou"
 
 msgid "fixed"
 msgstr ""
@@ -56775,6 +56807,10 @@ msgstr ""
 msgid "low threshold"
 msgstr ""
 
+#, fuzzy
+msgid "lower edge"
+msgstr "doua nivele"
+
 msgid "lower layer down"
 msgstr ""
 
@@ -57076,6 +57112,9 @@ msgid "optional"
 msgstr ""
 
 msgid "orderly stop"
+msgstr ""
+
+msgid "original"
 msgstr ""
 
 #, fuzzy
@@ -59065,10 +59104,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Notify Users"
 #~ msgstr "Notifica utilizatorii"
-
-#, fuzzy
-#~ msgid "Number of Services of the Host"
-#~ msgstr "Grup nou"
 
 #, fuzzy
 #~ msgid "Number of context buttons to show"

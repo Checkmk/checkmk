@@ -4,10 +4,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-02-09 07:00+0000\n"
-"Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
+"PO-Revision-Date: 2021-02-11 15:39+0000\n"
+"Last-Translator: Moritz Kiemer <moritz.kiemer@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -373,10 +373,10 @@ msgstr "%d Zeitbereiche"
 msgid "%d translations"
 msgstr "%d Übersetzungen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d unacknowledged incompatible werk"
 msgid_plural "%d unacknowledged incompatible werks"
-msgstr[0] "%d unquittierte Werks"
+msgstr[0] "%d unquittiertes Werk"
 msgstr[1] "%d unquittierte Werks"
 
 msgid "%m-%d"
@@ -1828,6 +1828,12 @@ msgstr ""
 "unterstützen (liefern aber keine Ausgabe in diese Zähler). Hosts, die in "
 "dieser Regel aufgelistet werden, benutzen den Schnittstellen-Check mit 32bit-"
 "Zählern."
+
+msgid ""
+"A dashboard can have an optional context. It can for example be restricted "
+"to display only information of a single host or for a set of services "
+"matching a regular expression."
+msgstr ""
 
 msgid ""
 "A delay can be configured here so that multiple changes can be activated in "
@@ -5301,7 +5307,7 @@ msgstr "Transformation auf geprüfte Metrik anwenden:"
 
 #, python-format
 msgid "Approximately finishes in %.1f seconds"
-msgstr "Fertigstelling in etwa %.1f Sekunden"
+msgstr "Fertigstellung in etwa %.1f Sekunden"
 
 msgid "April"
 msgstr "April"
@@ -5719,9 +5725,6 @@ msgstr "Auto-Shrink aus"
 
 msgid "Auto shrink on"
 msgstr "Auto-Shrink an"
-
-msgid "Auto-disovered services of the host"
-msgstr "Erkannte Services des Hosts"
 
 msgid "Autodetect instances, expect HTTPS on the following ports:"
 msgstr "Instanzen automatisch erkennen, HTTPS auf folgenden Ports erwarten:"
@@ -12462,6 +12465,10 @@ msgid ""
 "If you want to define a new topic name you can do this here <a "
 "href='%s'>here</a>."
 msgstr ""
+"Dashboards werden auf der 'Monitor' Hauptseite angezeigt. Mit dieser "
+"Einstellung kann man auswählen, in welcher Sektion des Menüs das Dashboard "
+"erreichbar sein soll. Einen neuen Themennamen kann man <a href='%s'>hier</a> "
+"definieren."
 
 msgid "Dashlet"
 msgstr "Übersichtselement"
@@ -14360,6 +14367,14 @@ msgstr "Plattenstatus"
 
 msgid "Diskstates"
 msgstr "Plattenzustände"
+
+#, fuzzy
+msgid "Disovered host labels of the host"
+msgstr "Entdeckte Host-Labels"
+
+#, fuzzy
+msgid "Disovered services of the host"
+msgstr "Erkannte Services des Hosts"
 
 msgid "Display ESX Host power state on"
 msgstr "Service für ESX-Hostzustand anzeigen auf"
@@ -21149,6 +21164,15 @@ msgstr ""
 "Benutzer Mitglied der Kontaktgruppe ist."
 
 msgid ""
+"Here, you can configure additional properties of the dashboard. This is "
+"completely optional and only needed to create more advanced dashboards. For "
+"example, you can make certain filters mandatory. This enables you to build "
+"generic dashboards which could for example contain all the relevant "
+"information for a single Oracle DB. However, before the dashboard is "
+"rendered, the user has to decide which DB he wants to look at."
+msgstr ""
+
+msgid ""
 "Here, you can define conditions for applying this rule. These conditions are "
 "evaluated on a per-interface basis. When discovering an interface, checkmk "
 "will first find all rules whose conditions match this interface. Then, these "
@@ -24535,6 +24559,10 @@ msgid ""
 "for every entry so that over time you can zoom in more quickly to a specific "
 "entry."
 msgstr ""
+"Im Megamenü kann man zwischen zwei Optionen wählen: Grünes Icon für die "
+"Überschriften - die 'Themen' - für ein schlichtes Design. Oder ein farbiges "
+"Icon für jeden Eintrag, damit man mit der Zeit spezielle Einträge schneller "
+"findet."
 
 msgid ""
 "In this directory will be installed <tt>check_mk_agent</tt>, <tt>waitmax</"
@@ -25979,7 +26007,7 @@ msgid "Juniper Processor Utilization of Operating CPU"
 msgstr "Prozessorauslastung der Routing Engine"
 
 msgid "Just rely on existing check files, detect new items only"
-msgstr "Nur bereit bekannte Checks berücksichtigen, nur neue Items finden"
+msgstr "Nur bereits bekannte Checks berücksichtigen, nur neue Items finden"
 
 msgid "Just remove the affected tags from the rules."
 msgstr "Nur betroffene Merkmale von Regeln entfernen."
@@ -29612,6 +29640,7 @@ msgstr "Suche in %s"
 
 msgid "Mean time in queue for the last few messages."
 msgstr ""
+"Durchschnittliche Zeit in der Warteschlange für die letzten Nachrichten."
 
 #, fuzzy
 msgid "Mean time in queue for the last medium number of messages."
@@ -30103,7 +30132,7 @@ msgid "Mirrored Stacked"
 msgstr "gespiegelt gestapelt"
 
 msgid "Miscellaneous"
-msgstr ""
+msgstr "Sonstiges"
 
 msgid "Missing Prerequisite"
 msgstr "Fehlende Voraussetzung"
@@ -30750,7 +30779,7 @@ msgid "My graphs"
 msgstr "Meine Graphen"
 
 msgid "My workplace"
-msgstr ""
+msgstr "Mein Arbeitsbereich"
 
 msgid "MySQL"
 msgstr "MySQL"
@@ -35292,7 +35321,7 @@ msgstr ""
 "finden."
 
 msgid "Perform periodic service discovery check"
-msgstr "Periodischen Serviceerkennungs-Checks ausführen"
+msgstr "Periodische Serviceerkennungs-Checks ausführen"
 
 msgid "Perform real time checks for the following plugins"
 msgstr "Führe Echtzeit-Checks für die folgenden Plugins aus"
@@ -36491,6 +36520,10 @@ msgstr "Präfix für Huckepack-Hostname"
 
 msgid "Prefix match"
 msgstr "Präfixübereinstimmung"
+
+#, fuzzy
+msgid "Prepend namespace prefix for hosts"
+msgstr "Serviceperiode für Hosts"
 
 msgid "Prerequisites"
 msgstr "Voraussetzungen"
@@ -46908,6 +46941,9 @@ msgid ""
 "The current depth of the queue, that is, the number of messages on the "
 "queue, including both committed messages and uncommitted messages."
 msgstr ""
+"Die aktuelle Tiefe der Warteschlange, das ist die Anzahl der Nachrichten in "
+"der Warteschlange, inklusive übergebene Nachrichten und noch nicht "
+"übergebene Nachrichten."
 
 #, fuzzy, python-format
 msgid ""
@@ -50673,7 +50709,7 @@ msgstr ""
 "Maximum ist das fünffache normale Checkintervall."
 
 msgid "This is a front matter Template"
-msgstr ""
+msgstr "Das ist eine Titelei Vorlage"
 
 msgid "This is a regular expression for matching the event's comment."
 msgstr ""
@@ -51822,6 +51858,8 @@ msgid ""
 "This rule allows to select a Couchbase server to monitor as well as "
 "configure buckets for further checks"
 msgstr ""
+"Diese Regel ermöglicht einen Couchbase Server zum Monitoren auszuwählen, als "
+"auch Buckets für weitere Checks zu konfigurieren"
 
 #, fuzzy
 msgid ""
@@ -52877,6 +52915,11 @@ msgid ""
 "in the Monitoring menu. You can only select one icon (the colored icon) or "
 "one icon that is complemented with an additional symbol."
 msgstr ""
+"Diese Auswahl ist nur relevant wenn unter 'Benutzer' -> 'Profil editieren' -"
+"> 'Mega menu Icons' die Option 'Pro Eintrag' ausgewählt ist. In diesem Fall "
+"kannst du hier das Icon neben dem Namen des Dashboard im Monitoring Menu "
+"festlegen. Man kann nur ein Icon (farbiges Icon) oder ein Icon, dass mit "
+"einem zusätzlichen Symbol ergänzt ist auswählen."
 
 msgid "This service is based on cached agent data and cannot be rescheduled."
 msgstr ""
@@ -53251,6 +53294,8 @@ msgid ""
 "This template is used for cover pages, table of contents and other elements "
 "of the front matter"
 msgstr ""
+"Diese Vorlage wird für die Titelseite, Inhaltsverzeichnis und andere "
+"Elemente der Titelei verwendet"
 
 msgid ""
 "This text is a regular expression that is being searched in the output of "
@@ -54149,7 +54194,7 @@ msgstr "%s Alarme"
 
 #, python-format
 msgid "Top alerters - %s"
-msgstr ""
+msgstr "Top Alarmierer - %s"
 
 msgid "Top of page handling"
 msgstr "Verhalten beim Seitenanfang"
@@ -54162,7 +54207,7 @@ msgid "Topic"
 msgstr "Thema"
 
 msgid "Topic in ’Monitor' menu"
-msgstr ""
+msgstr "Thema im 'Monitor' Menu"
 
 #, fuzzy
 msgid "Topics"
@@ -54404,7 +54449,7 @@ msgid "Total number of collectors in state running upper level"
 msgstr "Anzahl von Ordnern, die pro Level anzulegen sind"
 
 msgid "Total number of collectors in state stopped lower level"
-msgstr ""
+msgstr "Gesamte Anzahl an Kollektoren mit Status \"stopped lower level\""
 
 #, fuzzy
 msgid "Total number of collectors in state stopped upper level"
@@ -54759,7 +54804,7 @@ msgstr ""
 "dass nicht abgeschnitten wird"
 
 msgid "Trunk"
-msgstr ""
+msgstr "Rumpf"
 
 msgid "Trust system wide configured CAs"
 msgstr "Systemweit konfigurierten CAs vertrauen"
@@ -56394,7 +56439,7 @@ msgid "Use STARTTLS for the connection."
 msgstr "STARTTLS für Verbindung verwenden."
 
 msgid "Use STS AssumeRole to assume a different IAM role"
-msgstr ""
+msgstr "Verwende STS AssumeRole um eine andere IAM Rolle zu übernehmen"
 
 msgid "Use TLS for IMAP authentification"
 msgstr "TLS für IMAP-Authentifikation verwenden"
@@ -57402,7 +57447,7 @@ msgid "V"
 msgstr "V"
 
 msgid "V$SYSTEM_PARAMETER"
-msgstr ""
+msgstr "V$SYSTEM_PARAMETER"
 
 msgid "VA"
 msgstr "VA"
@@ -57488,7 +57533,7 @@ msgid "VRRP Instance"
 msgstr "Instanz"
 
 msgid "VSID"
-msgstr ""
+msgstr "VSID"
 
 msgid "VServer name"
 msgstr "VServer Name"
@@ -57882,7 +57927,7 @@ msgid "Visualize this aggregation"
 msgstr "Diese Aggregation anzeigen"
 
 msgid "Vlan"
-msgstr ""
+msgstr "Vlan"
 
 msgid "VoIP"
 msgstr "VoIP"
@@ -57933,7 +57978,7 @@ msgid "Voluntary context switches"
 msgstr "Freiwillige Kontextwechsel"
 
 msgid "Vswitch bonding"
-msgstr ""
+msgstr "Vswitch Verbindung"
 
 #, fuzzy
 msgid "VxVM volumes (Linux)"
@@ -58151,7 +58196,7 @@ msgstr ""
 "<tt>OpenSSH_3.9p1</tt>)"
 
 msgid "Warn if subscription status value is not"
-msgstr ""
+msgstr "Warnung wenn kein Subskriptionsstatus vorhanden"
 
 msgid "Warn on unexpected active interface"
 msgstr "Warnung bei unerwarteter aktiver Schnittstelle"
@@ -58331,7 +58376,7 @@ msgid "Watch the total size of the log file"
 msgstr "Gesamtgröße der Logdatei überwachen"
 
 msgid "Wato"
-msgstr ""
+msgstr "Wato"
 
 #, python-format
 msgid ""
@@ -59111,6 +59156,14 @@ msgid ""
 "settings template. Page elements and fixed page elements from inherited "
 "reports appear before the elements defined in this report."
 msgstr ""
+"Wenn dieses Item nicht ausgewählt ist wird die Standardvorlage, die in dem "
+"Globalen Einstellungen festgelegt ist, verwendet. Hier kann ein anderer "
+"Report festgelegt werden von dem übernommen wird. Alle Einstellung des "
+"Reports werden importiert und wenn dieser Report von einem anderen erbt wird "
+"die Vererbung weitergeführt. Wenn die letzte Reportvorlage in der Vererbung "
+"diese Item abgewählt hat wird es nicht vom globalen Template importieren. "
+"Seitenelemente und fixe Seitenelemente von vererbten Reports erscheinen vor "
+"den Elementen, die in diesem Report definieren sind."
 
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
@@ -59452,6 +59505,8 @@ msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
 "configuration change."
 msgstr ""
+"Soll Checkmk den Benutzer nach einem Kommentar fragen, bevor er "
+"Konfigurationsänderungen aktiviert."
 
 msgid ""
 "Whether or not additional information from the page context (filters) should "
@@ -59753,6 +59808,9 @@ msgid ""
 "With this option you can define if icons in the navigation bar should show a "
 "title or not. This gives you the possibility to save some space in the UI."
 msgstr ""
+"Mit dieser Option kann definiert werden, ob Icons in der Navigationsleiste "
+"einen Titel anzeigen sollen oder nicht. Das ermöglicht es in der UI etwas "
+"Platz zu sparen."
 
 msgid ""
 "With this option you can implement rules that rule out certain message from "
@@ -59958,7 +60016,7 @@ msgstr "Schlechtester Status"
 
 #, python-format
 msgid "Worst state, %d nodes, restrict to %s"
-msgstr ""
+msgstr "Schlechtester Status, %d Knoten auf %s beschränken"
 
 msgid "Write"
 msgstr "schreiben"
@@ -61812,7 +61870,7 @@ msgid "ZFS storage pool status"
 msgstr "Status des ZFS Speicher-Pools"
 
 msgid "Zerto"
-msgstr ""
+msgstr "Zerto"
 
 #, fuzzy
 msgid "Zorp connections"
@@ -62026,7 +62084,7 @@ msgid "bytes/s"
 msgstr "Bytes/s"
 
 msgid "cAdvisor"
-msgstr ""
+msgstr "cAdvisor"
 
 msgid "cartridge specification"
 msgstr "Spezifikation der Patrone"
@@ -62063,6 +62121,10 @@ msgstr "Kommando"
 
 msgid "complete"
 msgstr "vollständig"
+
+#, fuzzy
+msgid "confidence interval"
+msgstr "Konfidenzintervall"
 
 msgid "configuration"
 msgstr "Konfiguration"
@@ -62264,7 +62326,7 @@ msgid "down"
 msgstr "heruntergefahren"
 
 msgid "e.g. 'My_Project/Closed'"
-msgstr ""
+msgstr "z.B. 'Mein_Projekt/Geschlossen'"
 
 msgid "eWON SNMP Proxy"
 msgstr "eWON SNMP Proxy"
@@ -62383,6 +62445,10 @@ msgstr "Dateisystem"
 
 msgid "first level"
 msgstr "erste Ebene"
+
+#, fuzzy
+msgid "fit & forecast"
+msgstr "Passgenauigkeit und Vorhersage für %s"
 
 msgid "fixed"
 msgstr "fest"
@@ -62632,7 +62698,7 @@ msgid "incidents left"
 msgstr "Vorfälle übrig"
 
 msgid "init"
-msgstr ""
+msgstr "initialisiere"
 
 msgid "inodes"
 msgstr "Inodes"
@@ -62734,6 +62800,10 @@ msgstr "Anmeldung als Rolle"
 
 msgid "low threshold"
 msgstr "untere Schwelle"
+
+#, fuzzy
+msgid "lower edge"
+msgstr "Energie Verbrauch"
 
 msgid "lower layer down"
 msgstr "lower layer down"
@@ -63031,6 +63101,10 @@ msgstr "optional"
 msgid "orderly stop"
 msgstr "ordnungsgemäß gestoppt"
 
+#, fuzzy
+msgid "original"
+msgstr "Original %s"
+
 msgid "other"
 msgstr "anderer"
 
@@ -63248,7 +63322,7 @@ msgid "return CRITICAL if found, OK if not"
 msgstr "Rückgabewert: CRITICAL wenn gefunden, OK wenn nicht"
 
 msgid "reuses"
-msgstr ""
+msgstr "wiederverwenden"
 
 msgid "right"
 msgstr "rechts"

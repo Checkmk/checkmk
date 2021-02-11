@@ -372,9 +372,10 @@ section_lnx_if() {
 section_bonding_interfaces() {
     if [ -e /proc/net/bonding ]; then
         echo '<<<lnx_bonding:sep(58)>>>'
-        pushd /proc/net/bonding >/dev/null
-        head -v -n 1000 ./*
-        popd >/dev/null
+        (
+            cd /proc/net/bonding || return
+            head -v -n 1000 ./*
+        )
     fi
 }
 
@@ -929,7 +930,8 @@ section_mkbackup() {
 }
 
 section_job() {
-    if pushd "$MK_VARDIR/job" >/dev/null; then
+    (
+        cd "$MK_VARDIR/job" || return
         echo '<<<job>>>'
         for username in *; do
             if [ -d "$username" ] && cd "$username"; then
@@ -941,8 +943,7 @@ section_job() {
                 cd ..
             fi
         done
-        popd >/dev/null
-    fi
+    )
 }
 
 section_thermal() {
@@ -1626,35 +1627,37 @@ run_local_checks
 run_plugins
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
-    pushd "$SPOOLDIR" >/dev/null
-    now=$(date +%s)
 
-    for file in *; do
-        test "$file" = "*" && break
-        # output every file in this directory. If the file is prefixed
-        # with a number, then that number is the maximum age of the
-        # file in seconds. If the file is older than that, it is ignored.
-        maxage=""
-        part="$file"
+(
+    if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
+        now=$(date +%s)
 
-        # Each away all digits from the front of the filename and
-        # collect them in the variable maxage.
-        while [ "${part/#[0-9]/}" != "$part" ]; do
-            maxage=$maxage${part:0:1}
-            part=${part:1}
-        done
+        for file in *; do
+            test "$file" = "*" && break
+            # output every file in this directory. If the file is prefixed
+            # with a number, then that number is the maximum age of the
+            # file in seconds. If the file is older than that, it is ignored.
+            maxage=""
+            part="$file"
 
-        # If there is at least one digit, than we honor that.
-        if [ "$maxage" ]; then
-            mtime=$(stat -c %Y "$file")
-            if [ $((now - mtime)) -gt "$maxage" ]; then
-                continue
+            # Each away all digits from the front of the filename and
+            # collect them in the variable maxage.
+            while [ "${part/#[0-9]/}" != "$part" ]; do
+                maxage=$maxage${part:0:1}
+                part=${part:1}
+            done
+
+            # If there is at least one digit, than we honor that.
+            if [ "$maxage" ]; then
+                mtime=$(stat -c %Y "$file")
+                if [ $((now - mtime)) -gt "$maxage" ]; then
+                    continue
+                fi
             fi
-        fi
 
-        # Output the file
-        cat "$file"
-    done
-    popd >/dev/null
-fi
+            # Output the file
+            cat "$file"
+        done
+    fi
+)
+

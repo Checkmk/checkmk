@@ -48,16 +48,25 @@ tr.groupheader .state span {
   border-radius: $theme-border-radius;
 }
 
-tr.data .state span {
-  position: absolute;
-  top: 1px;
-  right: 4px;
-  bottom: 1px;
-  left: 4px;
-  display: flex;
-  align-items: center;
+tr.data td.state,
+tr.data td.hstate {
+  height: 100%;
+  padding: 0 1px;
+
+  span {
+    display: flex;
+    align-items: center;
+    height: 95%;
+    border-radius: 2px;
+  }
+}
+
+td.state span {
   justify-content: center;
-  border-radius: 2px;
+}
+
+td.hstate span {
+  padding: 0 5px;
 }
 
 /* OK/UP */
@@ -66,8 +75,11 @@ span.content.state0,
 b.state0,
 .state0 span,
 .hstate0 span {
-  color: $black !important;
-  background-color: $color-state-success-background !important;
+  &,
+  a {
+    color: $black !important;
+    background-color: $color-state-success-background !important;
+  }
 }
 
 .count.state0,
@@ -87,8 +99,11 @@ b.state0,
 span.content.state1,
 b.state1,
 .state1 span {
-  color: $black !important;
-  background-color: $color-state-1-background !important;
+  &,
+  a {
+    color: $black !important;
+    background-color: $color-state-1-background !important;
+  }
 }
 
 .count.state1 {
@@ -104,8 +119,11 @@ span.content.state2,
 b.state2,
 .state2 span,
 .hstate1 span {
-  color: $white !important;
-  background-color: $color-state-2-background !important;
+  &,
+  a {
+    color: $white !important;
+    background-color: $color-state-2-background !important;
+  }
 }
 
 .count.state2,
@@ -122,8 +140,11 @@ span.content.state3,
 b.state3,
 .state3 span,
 .hstate2 span {
-  color: $white !important;
-  background-color: $color-state-3-background !important;
+  &,
+  a {
+    color: $white !important;
+    background-color: $color-state-3-background !important;
+  }
 }
 
 .count.state3,
@@ -140,8 +161,11 @@ b.state3,
 .stated,
 .hstated {
   span {
-    color: $statep-font-color !important;
-    background-color: $color-state-4-background !important;
+    &,
+    a {
+      color: $statep-font-color !important;
+      background-color: $color-state-4-background !important;
+    }
   }
 }
 

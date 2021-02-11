@@ -301,6 +301,12 @@ body {
 
 table.data {
   width: 100%;
+  // This basically has no effect since it is treated as a minimum height.
+  // It is needed so that the height attribute of nested elements has an
+  // effect. It is used e.g. in td.state of _status.scss.
+  // See: https://www.w3.org/TR/CSS22/tables.html#height-layout
+  // And: https://stackoverflow.com/a/56913789
+  height: 1px;
   padding: 0;
   margin: 0;
   color: $font-color;
@@ -395,14 +401,7 @@ table.data {
 
     /* TODO: Refactor these messy and complicated styles */
     > td {
-      height: 26px;
-      padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
-
-      &.state {
-        position: relative;
-        padding: 0;
-      }
 
       a {
         color: $secondary-font-color;
@@ -412,7 +411,9 @@ table.data {
         }
       }
 
-      &:not(.state) {
+      &:not(.state):not(.hstate) {
+        height: 26px;
+        padding: 2px 8px; /* spacing in every row */
         text-overflow: $td-text-overflow;
       }
     }

@@ -132,8 +132,7 @@ def bulk_update(params):
           '.../delete',
           method='delete',
           path_params=[FOLDER_FIELD],
-          output_empty=True,
-          etag='input')
+          output_empty=True)
 def delete(params):
     """Delete a folder"""
     folder = params['folder']

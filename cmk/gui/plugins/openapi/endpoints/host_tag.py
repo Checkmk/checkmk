@@ -139,7 +139,6 @@ def update_host_tag_group(params):
     constructors.object_href('host_tag_group', '{name}'),
     '.../delete',
     method='delete',
-    etag='input',
     path_params=[HOST_TAG_GROUP_NAME],
     request_schema=request_schemas.DeleteHostTagGroup,
     output_empty=True,

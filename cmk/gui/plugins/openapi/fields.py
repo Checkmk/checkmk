@@ -13,9 +13,11 @@ from typing import Any, Optional, Tuple, Callable
 from marshmallow import fields as _fields, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib, valuespec as valuespec
+from cmk.gui import watolib, valuespec as valuespec, sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression
+from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Table
 
 from cmk.gui.plugins.openapi.utils import BaseSchema
@@ -719,6 +721,8 @@ class HostField(String):
     default_error_messages = {
         'should_exist': 'Host not found: {host_name!r}',
         'should_not_exist': 'Host {host_name!r} already exists.',
+        'should_be_monitored': 'Host {host_name!r} exists, but is not monitored. '
+                               'Activate the configuration?',
         'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
     }
 
@@ -753,11 +757,16 @@ class HostField(String):
         host = watolib.Host.host(value)
         if self._should_exist and not host:
             self.fail("should_exist", host_name=value)
-        elif not self._should_exist and host:
+
+        if not self._should_exist and host:
             self.fail("should_not_exist", host_name=value)
 
-        if self._should_be_monitored is not None:
-            pass
+        if self._should_be_monitored is not None and not host_is_monitored(value):
+            self.fail("should_be_monitored", host_name=value)
+
+
+def host_is_monitored(host_name: str) -> bool:
+    return bool(Query([Hosts.name], Hosts.name == host_name).value(sites.live()))
 
 
 Boolean = _fields.Boolean

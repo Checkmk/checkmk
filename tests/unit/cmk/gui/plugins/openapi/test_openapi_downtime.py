@@ -76,6 +76,7 @@ def test_openapi_schedule_host_downtime(
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
 
+    live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query(
         'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
@@ -142,6 +143,7 @@ def test_openapi_schedule_service_downtime(
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/v0'
 
+    live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query(
         'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',

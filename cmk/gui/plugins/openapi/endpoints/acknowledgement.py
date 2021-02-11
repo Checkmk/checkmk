@@ -31,7 +31,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     Endpoint,
     request_schemas,
 )
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, ProblemException
 
 SERVICE_DESCRIPTION = {
     'service_description': fields.String(
@@ -48,7 +48,7 @@ SERVICE_DESCRIPTION = {
           additional_status_codes=[404],
           request_schema=request_schemas.AcknowledgeHostRelatedProblem,
           output_empty=True)
-def set_acknowledgement_related_to_host(params):
+def set_acknowledgement_on_hosts(params):
     """Set acknowledgement on related hosts"""
     body = params['body']
     live = sites.live()
@@ -61,7 +61,7 @@ def set_acknowledgement_related_to_host(params):
     acknowledge_type = body['acknowledge_type']
 
     if acknowledge_type == 'host':
-        return _set_acknowledgement_on_host(
+        _set_acknowledgement_on_host(
             live,
             body['host_name'],
             sticky,
@@ -69,9 +69,8 @@ def set_acknowledgement_related_to_host(params):
             persistent,
             comment,
         )
-
-    if acknowledge_type == 'hostgroup':
-        return _set_acknowledgement_on_hostgroup(
+    elif acknowledge_type == 'hostgroup':
+        _set_acknowledgement_on_hostgroup(
             live,
             body['hostgroup_name'],
             sticky,
@@ -79,9 +78,8 @@ def set_acknowledgement_related_to_host(params):
             persistent,
             comment,
         )
-
-    if acknowledge_type == 'host_by_query':
-        return _set_acknowlegement_on_queried_hosts(
+    elif acknowledge_type == 'host_by_query':
+        _set_acknowlegement_on_queried_hosts(
             live,
             body['query'],
             sticky,
@@ -89,10 +87,12 @@ def set_acknowledgement_related_to_host(params):
             persistent,
             comment,
         )
+    else:
+        return problem(status=400,
+                       title="Unhandled acknowledge-type.",
+                       detail=f"The acknowledge-type {acknowledge_type!r} is not supported.")
 
-    return problem(status=400,
-                   title="Unhandled acknowledge-type.",
-                   detail=f"The acknowledge-type {acknowledge_type!r} is not supported.")
+    return http.Response(status=204)
 
 
 def _set_acknowledgement_on_host(
@@ -104,16 +104,9 @@ def _set_acknowledgement_on_host(
     comment: str,
 ):
     """Acknowledge for a specific host"""
-    host = Query([Hosts.name, Hosts.state], Hosts.name == host_name).fetchone(connection)
+    host_state = Query([Hosts.state], Hosts.name == host_name).value(connection)
 
-    if host is None:
-        return problem(
-            status=404,
-            title=f'Host {host_name} does not exist.',
-            detail='It is not currently monitored.',
-        )
-
-    if host.state > 0:
+    if host_state > 0:
         acknowledge_host_problem(
             connection,
             host_name,
@@ -123,7 +116,6 @@ def _set_acknowledgement_on_host(
             user=config.user.ident,
             comment=comment,
         )
-    return http.Response(status=204)
 
 
 def _set_acknowlegement_on_queried_hosts(
@@ -138,7 +130,7 @@ def _set_acknowlegement_on_queried_hosts(
     hosts = q.fetchall(connection)
 
     if not hosts:
-        return problem(status=404, title="The provided query returned no monitored hosts")
+        raise ProblemException(status=404, title="The provided query returned no monitored hosts")
 
     for host in hosts:
         acknowledge_host_problem(
@@ -150,8 +142,6 @@ def _set_acknowlegement_on_queried_hosts(
             user=config.user.ident,
             comment=comment,
         )
-
-    return http.Response(status=204)
 
 
 def _set_acknowledgement_on_hostgroup(
@@ -172,16 +162,16 @@ def _set_acknowledgement_on_hostgroup(
         user=config.user.ident,
         comment=comment,
     )
-    return http.Response(status=204)
 
 
 @Endpoint(constructors.collection_href('acknowledge', 'service'),
           'cmk/create_service',
           method='post',
           tag_group='Monitoring',
+          additional_status_codes=[404, 422],
           request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
           output_empty=True)
-def set_acknowledgement_on_service_related(params):
+def set_acknowledgement_on_services(params):
     """Set acknowledgement on related services"""
     body = params['body']
     live = sites.live()
@@ -194,7 +184,7 @@ def set_acknowledgement_on_service_related(params):
     acknowledge_type = body['acknowledge_type']
 
     if acknowledge_type == 'service':
-        return _set_acknowledgement_for_service(
+        _set_acknowledgement_for_service(
             live,
             unquote(body['service_description']),
             sticky,
@@ -202,8 +192,7 @@ def set_acknowledgement_on_service_related(params):
             persistent,
             comment,
         )
-
-    if acknowledge_type == 'servicegroup':
+    elif acknowledge_type == 'servicegroup':
         acknowledge_servicegroup_problem(
             live,
             body['servicegroup_name'],
@@ -213,15 +202,13 @@ def set_acknowledgement_on_service_related(params):
             user=config.user.ident,
             comment=comment,
         )
-        return http.Response(status=204)
-
-    if acknowledge_type == 'service_by_query':
+    elif acknowledge_type == 'service_by_query':
         expr = tree_to_expr(body['query'], Services.__tablename__)
         q = Query([Services.host_name, Services.description, Services.state]).filter(expr)
         services = q.fetchall(live)
         if not services:
             return problem(
-                status=400,
+                status=422,
                 title='No services with problems found.',
                 detail='All queried services are OK.',
             )
@@ -239,12 +226,12 @@ def set_acknowledgement_on_service_related(params):
                 user=config.user.ident,
                 comment=comment,
             )
+    else:
+        return problem(status=400,
+                       title="Unhandled acknowledge-type.",
+                       detail=f"The acknowledge-type {acknowledge_type!r} is not supported.")
 
-        return http.Response(status=204)
-
-    return problem(status=400,
-                   title="Unhandled acknowledge-type.",
-                   detail=f"The acknowledge-type {acknowledge_type!r} is not supported.")
+    return http.Response(status=204)
 
 
 def _set_acknowledgement_for_service(
@@ -259,7 +246,7 @@ def _set_acknowledgement_for_service(
                      Services.description == service_description).fetchall(connection)
 
     if not services:
-        return problem(
+        raise ProblemException(
             status=404,
             title=f'No services with {service_description!r} were found.',
         )
@@ -277,5 +264,3 @@ def _set_acknowledgement_for_service(
             user=config.user.ident,
             comment=comment,
         )
-
-    return http.Response(status=204)

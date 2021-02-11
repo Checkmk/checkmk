@@ -1649,9 +1649,11 @@ class AcknowledgeHostProblemBase(BaseSchema):
 
 
 class AcknowledgeHostProblem(AcknowledgeHostProblemBase):
-    host_name = fields.String(description="The name of the host",
-                              example="example.com",
-                              required=True)
+    host_name = fields.HostField(description="The name of the host.",
+                                 should_exist=True,
+                                 should_be_monitored=True,
+                                 example="example.com",
+                                 required=True)
 
 
 class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):

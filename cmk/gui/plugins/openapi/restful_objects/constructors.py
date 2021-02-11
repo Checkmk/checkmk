@@ -811,6 +811,9 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         >>> etag_of_dict({'a': 'b', 'c': {'d': {'e': 'f'}}})
         <ETags '"bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721"'>
 
+        >>> etag_of_dict({'a': [{'b': 1, 'd': 2}, {'d': 2, 'b': 3}]})
+        <ETags '"6ea899bec9b061d54f1f8fcdb7405363126c0e96d198d09792eff0996590ee3e"'>
+
     Args:
         dict_ (dict): A dictionary.
 
@@ -818,10 +821,21 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         str: The hex-digest of the built hash.
 
     """
+    def _first(sequence):
+        try:
+            return sequence[0]
+        except IndexError:
+            pass
+
     def _update(_hash_obj, _d):
         if isinstance(_d, (list, tuple)):
-            for value in sorted(_d):
-                _update(_hash_obj, value)
+            first = _first(_d)
+            if isinstance(first, dict):
+                for entry in _d:
+                    _update(_hash_obj, entry)
+            else:
+                for value in sorted(_d):
+                    _update(_hash_obj, value)
         else:
             if isinstance(_d, dict):
                 for key, value in sorted(_d.items()):

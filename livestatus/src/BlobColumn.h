@@ -52,25 +52,18 @@ public:
 };
 }  // namespace detail
 
-struct BlobColumn : ::detail::BlobColumn {
-    // This is for the legacy code and will go away once
-    // the callers are ported to BlobLambdaColumn.
-    using ::detail::BlobColumn::BlobColumn;
-};
-
 template <class T>
-class BlobLambdaColumn : public ::detail::BlobColumn {
+class BlobColumn : public ::detail::BlobColumn {
 public:
     using ::detail::BlobColumn::Constant;
     using ::detail::BlobColumn::Reference;
     struct File;
-    BlobLambdaColumn(std::string name, std::string description,
-                     ColumnOffsets offsets,
-                     std::function<std::vector<char>(const T &)> f)
-        : BlobColumn(std::move(name), std::move(description),
-                     std::move(offsets))
+    BlobColumn(std::string name, std::string description, ColumnOffsets offsets,
+               std::function<std::vector<char>(const T &)> f)
+        : detail::BlobColumn{std::move(name), std::move(description),
+                             std::move(offsets)}
         , get_value_{std::move(f)} {}
-    ~BlobLambdaColumn() override = default;
+    ~BlobColumn() override = default;
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
         Row row) const override {
         const T *data = columnData<T>(row);
@@ -111,7 +104,7 @@ private:
 };
 
 template <class T>
-struct BlobLambdaColumn<T>::File : BlobLambdaColumn {
+struct BlobColumn<T>::File : BlobColumn {
     File(std::string name, std::string description,
          std::function<std::filesystem::path()> basepath,
          std::function<std::filesystem::path(const T &)> filepath);
@@ -173,14 +166,13 @@ std::vector<char> detail::FileImpl<T>::operator()(const T &data) const {
 }
 
 template <class T>
-BlobLambdaColumn<T>::File::File(
+BlobColumn<T>::File::File(
     std::string name, std::string description,
     std::function<std::filesystem::path()> basepath,
     std::function<std::filesystem::path(const T &)> filepath)
-    : BlobLambdaColumn{
-          std::move(name),
-          std::move(description),
-          {},
-          detail::FileImpl{std::move(basepath), std::move(filepath)}} {}
+    : BlobColumn{std::move(name),
+                 std::move(description),
+                 {},
+                 detail::FileImpl{std::move(basepath), std::move(filepath)}} {}
 
 #endif  // BlobColumn_h

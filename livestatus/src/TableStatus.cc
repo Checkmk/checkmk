@@ -313,7 +313,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(mc->numQueuedAlerts());
         }));
-    addColumn(std::make_unique<BlobLambdaColumn<TableStatus>::File>(
+    addColumn(std::make_unique<BlobColumn<TableStatus>::File>(
         "license_usage_history", "Historic license usage information",
         [mc]() { return mc->licenseUsageHistoryPath(); },
         [](const TableStatus & /*r*/) { return std::filesystem::path{}; }));

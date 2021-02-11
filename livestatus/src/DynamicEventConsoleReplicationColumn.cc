@@ -55,7 +55,7 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
             Alert(_mc->loggerLivestatus()) << err.what();
         }
     }
-    return std::make_unique<BlobLambdaColumn<Row>::Constant>(
+    return std::make_unique<BlobColumn<Row>::Constant>(
         name, "replication value",
         std::vector<char>{std::begin(result), std::end(result)});
 }

@@ -366,7 +366,7 @@ def check_levels_predictive(
 
     """
     if render_func is None:
-        render_func = "%.2f".format
+        render_func = "{:.2f}".format
 
     # validate the metric name, before we can get the levels.
     Metric.validate_name(metric_name)

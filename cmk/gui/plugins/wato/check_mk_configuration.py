@@ -2692,27 +2692,6 @@ class ConfigVariableInventoryCheckSeverity(ConfigVariable):
 
 
 @config_variable_registry.register
-class ConfigVariableInventoryCheckDoScan(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupServiceDiscovery
-
-    def domain(self):
-        return ConfigDomainCore
-
-    def ident(self):
-        return "inventory_check_do_scan"
-
-    def valuespec(self):
-        return DropdownChoice(
-            title=_("Service discovery check for SNMP devices"),
-            choices=[
-                (True, _("Perform full SNMP scan always, detect new check types")),
-                (False, _("Just rely on existing check files, detect new items only")),
-            ],
-        )
-
-
-@config_variable_registry.register
 class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
     def group(self):
         return ConfigVariableGroupServiceDiscovery
@@ -3544,7 +3523,6 @@ def _valuespec_periodic_discovery():
             "severity_unmonitored": 1,
             "severity_vanished": 0,
             "severity_new_host_label": 1,
-            "inventory_check_do_scan": True,
         },
         elements=[
             FixedValue(
@@ -3611,17 +3589,10 @@ def _vs_periodic_discovery() -> Transform:
                          (3, _("Unknown")),
                      ],
                  )),
-                ("inventory_check_do_scan",
-                 DropdownChoice(
-                     title=_("Service discovery check for SNMP devices"),
-                     choices=[
-                         (True, _("Perform full SNMP scan always, detect new check types")),
-                         (False, _("Just rely on existing check files, detect new items only")),
-                     ],
-                 )),
                 ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
             ],
             optional_keys=["inventory_rediscovery"],
+            ignored_keys=["inventory_check_do_scan"],
         ),
         forth=_periodic_discovery_add_severity_new_host_label,
     )

@@ -675,12 +675,6 @@ def check_discovery(
     #    - Set FileCacheFactory.maybe = True (set max_cachefile_age, else 0)
     #    - Set FileCacheFactory.use_outdated = True
     # 2. Then these settings are used to read cache file or not
-    # 3. If params['inventory_check_do_scan'] = True in 'Periodic service discovery'
-    #    then caching is disabled, but only for SNMP data sources:
-    #    - FileCacheFactory.snmp_disabled = True
-    #      -> FileCacheFactory.disabled = True
-    #    For agent-based data sources we do not disable cache because of some special
-    #    cases (eg. logwatch) in order to prevent stealing data (log lines etc.)
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)

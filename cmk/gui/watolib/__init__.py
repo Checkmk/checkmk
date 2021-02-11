@@ -510,7 +510,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     'severity_unmonitored': 1,
                     'severity_vanished': 0,
                     'check_interval': 120.0,
-                    'inventory_check_do_scan': True
                 },
                 'options': {
                     'description': u'Perform every two hours a service discovery'

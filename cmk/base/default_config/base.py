@@ -106,7 +106,6 @@ cmc_service_rrd_config: _List = []
 # Inventory and inventory checks
 inventory_check_interval = None  # Nagios intervals (4h = 240)
 inventory_check_severity = 1  # warning
-inventory_check_do_scan = True  # include SNMP scan for SNMP devices
 inventory_max_cachefile_age = 120  # seconds
 inventory_check_autotrigger = True  # Automatically trigger inv-check after automation-inventory
 # TODO: Remove this already deprecated option

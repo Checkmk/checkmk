@@ -1,0 +1,19 @@
+Title: Autodiscovery: Drop scanning configuration option
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1613044609
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b7
+
+In the rule "Periodic service discovery" users have been able to configure either
+"Perform full SNMP scan always, detect new check types" or
+"Just rely on existing check files, detect new items only".
+
+This was solving performance issues since the automatic service discovery was not
+using cached data.
+
+Since this has been fixed, this option is no longer required. User will now always
+detect new check types.

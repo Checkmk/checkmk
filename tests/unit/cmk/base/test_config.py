@@ -815,7 +815,6 @@ def test_host_config_inventory_parameters(monkeypatch, hostname, result):
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", {
         'check_interval': None,
-        'inventory_check_do_scan': True,
         'severity_unmonitored': 1,
         'severity_vanished': 0,
     }),

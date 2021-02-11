@@ -531,8 +531,14 @@ def _verify_non_duplicate_hosts() -> None:
 def _validate_configuraton_variables(vars_before_config: Set[str]) -> None:
     """Check for invalid and deprecated configuration variables"""
     ignored_variables = {
-        'vars_before_config', 'parts', 'seen_hostnames', 'taggedhost', 'hostname',
-        'service_service_levels', 'host_service_levels'
+        'hostname',
+        'host_service_levels',
+        'inventory_check_do_scan',
+        'parts',
+        'seen_hostnames',
+        'service_service_levels',
+        'taggedhost',
+        'vars_before_config',
     }
     deprecated_variables = {
         # variable name                                # warning introduced *after* version
@@ -2817,7 +2823,6 @@ class HostConfig:
             "check_interval": inventory_check_interval,
             "severity_unmonitored": inventory_check_severity,
             "severity_vanished": 0,
-            "inventory_check_do_scan": inventory_check_do_scan,
         }
 
     def add_service_discovery_check(self, params: Optional[Dict[str, Any]],

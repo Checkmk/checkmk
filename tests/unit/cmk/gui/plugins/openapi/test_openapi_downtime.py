@@ -44,11 +44,11 @@ def test_openapi_schedule_hostgroup_downtime(
 
     live.expect_query('GET hostgroups\nColumns: members\nFilter: name = example',)
     live.expect_query(
-        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;0;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     live.expect_query(
-        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;0;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     with live:
@@ -77,7 +77,7 @@ def test_openapi_schedule_host_downtime(
     base = '/NO_SITE/check_mk/api/v0'
 
     live.expect_query(
-        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;0;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     with live:
@@ -106,15 +106,15 @@ def test_openapi_schedule_servicegroup_downtime(
 
     live.expect_query('GET servicegroups\nColumns: members\nFilter: name = example',)
     live.expect_query(
-        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;0;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     live.expect_query(
-        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;0;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     live.expect_query(
-        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;1577836800;1577923200;0;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     with live:
@@ -143,11 +143,11 @@ def test_openapi_schedule_service_downtime(
     base = '/NO_SITE/check_mk/api/v0'
 
     live.expect_query(
-        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;0;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     live.expect_query(
-        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;0;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     with live:
@@ -264,7 +264,7 @@ def test_openapi_create_host_downtime_with_query(
 
     live.expect_query(['GET hosts', 'Columns: name', 'Filter: name ~ heute'])
     live.expect_query(
-        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;0;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     with live:
@@ -323,7 +323,7 @@ def test_openapi_create_service_downtime_with_query(
     live.expect_query(
         ['GET services', 'Columns: description host_name', 'Filter: host_name ~ heute'],)
     live.expect_query(
-        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;Memory;1577836800;1577923200;0;0;0;...;Downtime for service Memory@heute',
+        'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;Memory;1577836800;1577923200;1;0;0;...;Downtime for service Memory@heute',
         match_type='ellipsis',
     )
 

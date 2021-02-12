@@ -50,7 +50,8 @@ TEST(BlobColumn, ConstantBlob) {
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = BlobColumn<DummyRow>::Constant{"name"s, "description"s, v};
+    const auto col =
+        BlobLambdaColumn<DummyRow>::Constant{"name"s, "description"s, v};
 
     ASSERT_NE(nullptr, col.getValue(row));
     EXPECT_EQ(v, *col.getValue(row));
@@ -60,7 +61,8 @@ TEST(BlobColumn, ConstantDefaultRow) {
     const auto v = to_value("hello"s);
 
     const auto row = DummyRow{nullptr};
-    const auto col = BlobColumn<DummyRow>::Constant{"name"s, "description"s, v};
+    const auto col =
+        BlobLambdaColumn<DummyRow>::Constant{"name"s, "description"s, v};
 
     ASSERT_NE(nullptr, col.getValue(row));
     EXPECT_EQ(v, *col.getValue(row));
@@ -72,7 +74,7 @@ TEST(BlobColumn, Reference) {
 
     const auto row = DummyRow{nullptr};
     const auto col =
-        BlobColumn<DummyRow>::Reference{"name"s, "description"s, v};
+        BlobLambdaColumn<DummyRow>::Reference{"name"s, "description"s, v};
 
     ASSERT_NE(nullptr, col.getValue(row));
     EXPECT_EQ(v, *col.getValue(row));
@@ -89,7 +91,7 @@ TEST(BlobColumn, Reference) {
 TEST_F(FileFixture, BlobColumnReadFile) {
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = BlobColumn<DummyRow>::File{
+    const auto col = BlobLambdaColumn<DummyRow>::File{
         "name"s,
         "description"s,
         [this]() { return basepath; },

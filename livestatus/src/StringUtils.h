@@ -49,11 +49,6 @@ std::string lstrip(const std::string &str,
 std::string rstrip(const std::string &str,
                    const std::string &chars = whitespace);
 
-// TODO (sk): unit tests
-std::string_view rstrip(std::string_view str, std::string_view chars);
-// TODO (sk): unit tests
-std::string_view lstrip(std::string_view str, std::string_view chars);
-
 std::string strip(const std::string &str,
                   const std::string &chars = whitespace);
 

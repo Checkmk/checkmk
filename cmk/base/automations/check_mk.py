@@ -130,7 +130,6 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         mode = args[0]
         hostnames = args[1:]
-        service_filters = discovery.get_service_filter_funcs({})
 
         config_cache = config.get_config_cache()
 
@@ -142,7 +141,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 config_cache=config_cache,
                 host_config=host_config,
                 mode=mode,
-                service_filters=service_filters,
+                service_filters=None,
                 on_error=on_error,
                 use_cached_snmp_data=use_cached_snmp_data,
                 max_cachefile_age=config.discovery_max_cachefile_age(),

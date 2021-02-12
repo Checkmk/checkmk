@@ -94,10 +94,6 @@ CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           List[MetricTuple], Dict[str, str], List[HostName]]
 CheckPreviewTable = List[CheckPreviewEntry]
 ServiceFilter = Callable[[HostName, Service], bool]
-ServiceFilters = NamedTuple("ServiceFilters", [
-    ("new", ServiceFilter),
-    ("vanished", ServiceFilter),
-])
 ServiceFilterLists = NamedTuple("ServiceFilterLists", [
     ("new_whitelist", Optional[List[str]]),
     ("new_blacklist", Optional[List[str]]),
@@ -149,24 +145,32 @@ def schedule_discovery_check(host_name: HostName) -> None:
             raise
 
 
-def get_service_filter_funcs(params: Dict[str, Any]) -> ServiceFilters:
-    service_filter_lists = _get_service_filter_lists(params)
+class ServiceFilters(NamedTuple):
+    new: ServiceFilter
+    vanished: ServiceFilter
 
-    new_services_filter = _get_service_filter_func(
-        service_filter_lists.new_whitelist,
-        service_filter_lists.new_blacklist,
-    )
+    @classmethod
+    def accept_all(cls) -> 'ServiceFilters':
+        return cls(_accept_all_services, _accept_all_services)
 
-    vanished_services_filter = _get_service_filter_func(
-        service_filter_lists.vanished_whitelist,
-        service_filter_lists.vanished_blacklist,
-    )
+    @classmethod
+    def from_settings(cls, rediscovery_parameters: Dict[str, Any]) -> 'ServiceFilters':
+        service_filter_lists = _get_service_filter_lists(rediscovery_parameters)
 
-    return ServiceFilters(new_services_filter, vanished_services_filter)
+        new_services_filter = _get_service_filter_func(
+            service_filter_lists.new_whitelist,
+            service_filter_lists.new_blacklist,
+        )
+
+        vanished_services_filter = _get_service_filter_func(
+            service_filter_lists.vanished_whitelist,
+            service_filter_lists.vanished_blacklist,
+        )
+
+        return cls(new_services_filter, vanished_services_filter)
 
 
-def _get_service_filter_lists(params: Dict[str, Any]) -> ServiceFilterLists:
-    rediscovery_parameters = _get_rediscovery_parameters(params)
+def _get_service_filter_lists(rediscovery_parameters: Dict[str, Any]) -> ServiceFilterLists:
 
     if "service_filters" not in rediscovery_parameters:
         # Be compatible to pre 1.7.0 versions; There were only two general pattern lists
@@ -457,7 +461,7 @@ def discover_on_host(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     mode: str,
-    service_filters: ServiceFilters,
+    service_filters: Optional[ServiceFilters],
     on_error: str,
     use_cached_snmp_data: bool,
     max_cachefile_age: int,
@@ -535,8 +539,8 @@ def discover_on_host(
         old_services = services.get("old", [])
 
         # Create new list of checks
-        new_services = _get_post_discovery_services(host_name, services, service_filters, result,
-                                                    mode)
+        new_services = _get_post_discovery_services(host_name, services, service_filters or
+                                                    ServiceFilters.accept_all(), result, mode)
         host_config.set_autochecks(new_services)
 
         result.diff_text = make_object_diff(
@@ -773,7 +777,7 @@ def _check_service_lists(
     perfdata: List[Tuple] = []
     need_rediscovery = False
 
-    service_filters = get_service_filter_funcs(params)
+    service_filters = ServiceFilters.from_settings(_get_rediscovery_parameters(params))
     rediscovery_mode = _get_rediscovery_mode(params)
 
     for transition, title, params_key, default_state, service_filter in [
@@ -973,15 +977,13 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
         console.verbose("  failed: discovery check disabled\n")
         return False
 
-    service_filters = get_service_filter_funcs(params)
-
     reason = _may_rediscover(params, now_ts, oldest_queued)
     if not reason:
         result = discover_on_host(
             config_cache=config_cache,
             host_config=host_config,
             mode=_get_rediscovery_mode(params),
-            service_filters=service_filters,
+            service_filters=ServiceFilters.from_settings(_get_rediscovery_parameters(params)),
             on_error="ignore",
             use_cached_snmp_data=True,
             # autodiscovery is run every 5 minutes (see

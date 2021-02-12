@@ -1,17 +1,26 @@
 :: *********************************************
 :: Used as a proxy to call any other script to
 :: correctly set common environment variables
+::
 :: 'exec.cmd script PY_VER PY_SUBVER'
-:: always return back to current dir
+::
+:: Example: exec.cmd install_legacy.cmd 3.8 7
+:: Always return back to current dir
 :: *********************************************
+
 @echo off
 
-if "%3" == "" powershell Write-Host "exec_cmd cmd 3.8 7" -foreground red && exit /b 1
+if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.8 7" -foreground red && exit /b 1
 set PY_VER=%2
 set PY_SUBVER=%3
 
-:: Old Pythons may require this
+:: This is shortcut to fit path in Windows limit of 260 symbols.
+set temp=c:\temp
+
+:: Some older Pythons may require this
 set MSBUILD="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
+
+:: Points to the doc to build, which may not be build and must be just set to empty file
 set chm_368=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp\python368.chm
 
 :: Variables

@@ -94,6 +94,9 @@ In latter case the git_hash is replaced with string "latest".
 8. Compress *tmp/to_save* into *tmp/python-3.8.zip*. Attention! Compression is done using cab format
 9. Copy zip to *artefacts*
 
+IMPORTANT: You need Visual Studio 10 to build 3.4.4. 
+This can be difficult to obtain, you have to ask a person having Visual Studio Professional license to download.
+
 
 ### TREE
 

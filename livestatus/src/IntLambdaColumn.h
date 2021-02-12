@@ -31,49 +31,48 @@ public:
     using ::detail::IntColumn::Reference;
     IntLambdaColumn(const std::string& name, const std::string& description,
                     const ColumnOffsets& offsets,
-                    std::function<int(const T&)> gv)
-        : detail::IntColumn(name, description, offsets)
-        , get_value_{std::move(gv)} {}
+                    const std::function<int(const T&)>& f)
+        : detail::IntColumn{name, description, offsets}, f_{f} {}
     ~IntLambdaColumn() override = default;
 
     std::int32_t getValue(Row row,
                           const contact* /*auth_user*/) const override {
         const T* data = columnData<T>(row);
-        return data == nullptr ? Default : get_value_(*data);
+        return data == nullptr ? Default : f_(*data);
     }
 
 private:
-    std::function<int(const T&)> get_value_;
+    const std::function<int(const T&)> f_;
 };
 
 class detail::IntColumn::Constant : public detail::IntColumn {
 public:
-    Constant(std::string name, std::string description, int x)
-        : detail::IntColumn(std::move(name), std::move(description), {})
-        , x{x} {}
+    Constant(const std::string& name, const std::string& description, int x)
+        : detail::IntColumn{name, description, {}}, x_{x} {}
+    ~Constant() override = default;
 
     std::int32_t getValue(Row /*row*/,
                           const contact* /*auth_user*/) const override {
-        return x;
+        return x_;
     }
 
 private:
-    const std::int32_t x;
+    const std::int32_t x_;
 };
 
 class detail::IntColumn::Reference : public detail::IntColumn {
 public:
-    Reference(std::string name, std::string description, int& x)
-        : detail::IntColumn(std::move(name), std::move(description), {})
-        , x{x} {}
+    Reference(const std::string& name, const std::string& description, int& x)
+        : detail::IntColumn{name, description, {}}, x_{x} {}
+    ~Reference() override = default;
 
     std::int32_t getValue(Row /*row*/,
                           const contact* /*auth_user*/) const override {
-        return x;
+        return x_;
     }
 
 private:
-    const std::int32_t& x;
+    const std::int32_t& x_;
 };
 
 #endif

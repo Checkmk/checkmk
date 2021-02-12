@@ -3,6 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <functional>
 #include <string>
 
 #include "IntLambdaColumn.h"
@@ -49,4 +50,30 @@ TEST(IntColumn, Reference) {
 
     v *= 42;
     EXPECT_EQ(v, col.getValue(row, nullptr));
+}
+
+TEST(IntColumn, GetValueLambda) {
+    auto v = 1337;
+
+    const auto val = DummyValue{};
+    const auto row = DummyRow{&val};
+    const auto col = IntLambdaColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+            return v;
+        }};
+
+    EXPECT_EQ(v, col.getValue(row, nullptr));
+}
+
+TEST(IntColumn, GetValueDefault) {
+    auto v = 1337;
+
+    const auto row = DummyRow{nullptr};
+    const auto col = IntLambdaColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+            return v;
+        }};
+
+    EXPECT_NE(v, col.getValue(row, nullptr));
+    EXPECT_EQ(0, col.getValue(row, nullptr));
 }

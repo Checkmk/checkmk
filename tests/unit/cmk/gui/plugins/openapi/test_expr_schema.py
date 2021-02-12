@@ -21,7 +21,8 @@ def _schema():
 def test_expr_schema(schema):
     from_json = schema.load({'q': '{"op": "=", "left": "hosts.name", "right": "example.com"}'})
     from_dict = schema.load({'q': {"op": "=", "left": "hosts.name", "right": "example.com"}})
-    assert from_json == from_dict
+    assert not isinstance(from_json['q'], dict)
+    assert not isinstance(from_dict['q'], dict)
 
 
 def test_expr_schema_without_table_name(schema):

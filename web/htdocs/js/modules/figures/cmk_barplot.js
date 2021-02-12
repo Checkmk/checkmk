@@ -116,7 +116,9 @@ class BarplotFigure extends cmk_figures.FigureBase {
         const [min_val, max_val, step] = partitionableDomain(
             [0, d3.max(points, d => d.value)],
             tickcount,
-            domainIntervals(this._plot_definitions[0].stepping)
+            domainIntervals(
+                cmk_figures.getIn(this._plot_definitions[0], "metric", "unit", "stepping")
+            )
         );
         const domain = [min_val, max_val];
         const tick_vals = range(min_val, max_val, step);
@@ -145,7 +147,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
             let point = this._tag_dimension.filter(tag => tag == d.use_tags[0]).top(1)[0];
             if (point === undefined) point = {value: 0};
 
-            const levels = cmk_figures.make_levels(domain, d.metrics);
+            const levels = cmk_figures.make_levels(domain, d.metric.bounds);
             point.level_color = levels.length
                 ? levels.find(element => point.value < element.to).color
                 : "#3CC2FF";

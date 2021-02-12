@@ -1163,20 +1163,20 @@ class SingleValuePlot extends SubPlot {
     }
 
     render() {
-        const plot = this._renderer._data.plot_definitions.filter(
-            d => d.plot_type == "single_value"
-        )[0];
         const domain = cmk_figures.adjust_domain(
             cmk_figures.calculate_domain(this.transformed_data),
-            plot.metrics
+            this.definition.metric.bounds
         );
 
         const last_value = this.transformed_data.find(element => element.last_value);
-        const value = cmk_figures.renderable_value(last_value, domain, plot);
+        const value = cmk_figures.renderable_value(last_value, domain, this.definition);
 
         const plot_size = this._renderer.plot_size;
         const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
-        if (plot.metric_status_display && plot.metric_status_display === "background") {
+        if (
+            this.definition.metric_status_display &&
+            this.definition.metric_status_display === "background"
+        ) {
             this.svg
                 .selectAll("rect.status_background")
                 .data([null])
@@ -1191,7 +1191,7 @@ class SingleValuePlot extends SubPlot {
             value.color = "#FFFFFF";
         } else {
             this.svg.selectAll("rect.status_background").remove();
-            if (plot.metric_status_display == null) value.color = "#3CC2FF"; // default blue
+            if (this.definition.metric_status_display == null) value.color = "#3CC2FF"; // default blue
         }
 
         cmk_figures.metric_value_component(

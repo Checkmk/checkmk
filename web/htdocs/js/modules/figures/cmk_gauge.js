@@ -117,7 +117,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
     _render_levels() {
         const data = this._crossfilter.allFiltered();
         const plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
-        if (!data.length || !plot || !plot.metrics) {
+        if (!data.length || !plot || !plot.metric.bounds) {
             this.plot.selectAll("path.level").remove();
             this.plot.selectAll("path.value").remove();
             this.plot.selectAll("a.single_value").remove();
@@ -127,7 +127,10 @@ class GaugeFigure extends cmk_figures.FigureBase {
         const config = new URLSearchParams(this._post_body);
         const display_range = JSON.parse(config.get("properties")).display_range;
 
-        let domain = cmk_figures.adjust_domain(cmk_figures.calculate_domain(data), plot.metrics);
+        let domain = cmk_figures.adjust_domain(
+            cmk_figures.calculate_domain(data),
+            plot.metric.bounds
+        );
         if (Array.isArray(display_range) && display_range[0] === "fixed")
             domain = display_range[1][1];
 
@@ -152,7 +155,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
         // Thresholds indicator stripe
         this.plot
             .selectAll("path.level")
-            .data(cmk_figures.make_levels(domain, plot.metrics))
+            .data(cmk_figures.make_levels(domain, plot.metric.bounds))
             .join(enter => enter.append("path").classed("level", true))
             .attr("fill", d => d.color)
             .attr("opacity", 0.9)

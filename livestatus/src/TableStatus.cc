@@ -12,10 +12,10 @@
 #include <memory>
 
 #include "Average.h"
+#include "BlobColumn.h"
 #include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "DoubleColumn.h"
-#include "FileColumn.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
@@ -298,7 +298,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(mc->numQueuedAlerts());
         }));
-    addColumn(std::make_unique<FileColumn<TableStatus>>(
+    addColumn(std::make_unique<BlobColumn<TableStatus>::File>(
         "license_usage_history", "Historic license usage information", offsets,
         [mc]() { return mc->licenseUsageHistoryPath(); },
         [](const TableStatus & /*r*/) { return std::filesystem::path{}; }));

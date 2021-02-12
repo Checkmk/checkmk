@@ -10,15 +10,11 @@ import socket
 import time
 from enum import Enum
 from typing import (
-    Any,
-    Callable,
     Counter,
     Dict,
     Iterable,
     List,
-    NamedTuple,
     Optional,
-    Pattern,
     Sequence,
     Set,
     Tuple,
@@ -38,7 +34,6 @@ from cmk.utils.check_utils import wrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
-from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
@@ -81,8 +76,9 @@ from cmk.base.discovered_labels import (
     HostLabel,
 )
 
-from ._host_labels import analyse_cluster_host_labels, analyse_host_labels
 from ._discovered_services import analyse_discovered_services
+from ._filters import ServiceFilters as _ServiceFilters
+from ._host_labels import analyse_cluster_host_labels, analyse_host_labels
 from .type_defs import DiscoveryParameters
 from .utils import TimeLimitFilter, QualifiedDiscovery
 
@@ -93,13 +89,6 @@ CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
                           List[MetricTuple], Dict[str, str], List[HostName]]
 CheckPreviewTable = List[CheckPreviewEntry]
-ServiceFilter = Callable[[HostName, Service], bool]
-ServiceFilterLists = NamedTuple("ServiceFilterLists", [
-    ("new_whitelist", Optional[List[str]]),
-    ("new_blacklist", Optional[List[str]]),
-    ("vanished_whitelist", Optional[List[str]]),
-    ("vanished_blacklist", Optional[List[str]]),
-])
 
 _DiscoverySubresult = Tuple[int, List[str], List[str], List[Tuple], bool]
 
@@ -143,133 +132,6 @@ def schedule_discovery_check(host_name: HostName) -> None:
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-
-
-class ServiceFilters(NamedTuple):
-    new: ServiceFilter
-    vanished: ServiceFilter
-
-    @classmethod
-    def accept_all(cls) -> 'ServiceFilters':
-        return cls(_accept_all_services, _accept_all_services)
-
-    @classmethod
-    def from_settings(cls, rediscovery_parameters: Dict[str, Any]) -> 'ServiceFilters':
-        service_filter_lists = _get_service_filter_lists(rediscovery_parameters)
-
-        new_services_filter = _get_service_filter_func(
-            service_filter_lists.new_whitelist,
-            service_filter_lists.new_blacklist,
-        )
-
-        vanished_services_filter = _get_service_filter_func(
-            service_filter_lists.vanished_whitelist,
-            service_filter_lists.vanished_blacklist,
-        )
-
-        return cls(new_services_filter, vanished_services_filter)
-
-
-def _get_service_filter_lists(rediscovery_parameters: Dict[str, Any]) -> ServiceFilterLists:
-
-    if "service_filters" not in rediscovery_parameters:
-        # Be compatible to pre 1.7.0 versions; There were only two general pattern lists
-        # which were used for new AND vanished services:
-        # {
-        #     "service_whitelist": [PATTERN],
-        #     "service_blacklist": [PATTERN],
-        # }
-        service_whitelist = rediscovery_parameters.get("service_whitelist")
-        service_blacklist = rediscovery_parameters.get("service_blacklist")
-        return ServiceFilterLists(
-            service_whitelist,
-            service_blacklist,
-            service_whitelist,
-            service_blacklist,
-        )
-
-    # New since 1.7.0: A white- and blacklist can be configured for both new and vanished
-    # services as "combined" pattern lists.
-    # Or two separate pattern lists for each new and vanished services are configurable:
-    # {
-    #     "service_filters": (
-    #         "combined",
-    #         {
-    #             "service_whitelist": [PATTERN],
-    #             "service_blacklist": [PATTERN],
-    #         },
-    #     )
-    # } resp.
-    # {
-    #     "service_filters": (
-    #         "dedicated",
-    #         {
-    #             "service_whitelist": [PATTERN],
-    #             "service_blacklist": [PATTERN],
-    #             "vanished_service_whitelist": [PATTERN],
-    #             "vanished_service_blacklist": [PATTERN],
-    #         },
-    #     )
-    # }
-    service_filter_ty, service_filter_lists = rediscovery_parameters["service_filters"]
-
-    if service_filter_ty == "combined":
-        new_service_whitelist = service_filter_lists.get("service_whitelist")
-        new_service_blacklist = service_filter_lists.get("service_blacklist")
-        return ServiceFilterLists(
-            new_service_whitelist,
-            new_service_blacklist,
-            new_service_whitelist,
-            new_service_blacklist,
-        )
-
-    if service_filter_ty == "dedicated":
-        return ServiceFilterLists(
-            service_filter_lists.get("service_whitelist"),
-            service_filter_lists.get("service_blacklist"),
-            service_filter_lists.get("vanished_service_whitelist"),
-            service_filter_lists.get("vanished_service_blacklist"),
-        )
-
-    raise NotImplementedError()
-
-
-def _get_service_filter_func(service_whitelist: Optional[List[str]],
-                             service_blacklist: Optional[List[str]]) -> ServiceFilter:
-    if not service_whitelist and not service_blacklist:
-        return _accept_all_services
-
-    if not service_whitelist:
-        # whitelist. if none is specified, this matches everything
-        service_whitelist = [".*"]
-
-    if not service_blacklist:
-        # blacklist. if none is specified, this matches nothing
-        service_blacklist = ["(?!x)x"]
-
-    whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
-    blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
-
-    return lambda host_name, service: _filter_service_by_patterns(host_name, service, whitelist,
-                                                                  blacklist)
-
-
-def _filter_service_by_patterns(
-    host_name: HostName,
-    service: Service,
-    whitelist: Pattern[str],
-    blacklist: Pattern[str],
-) -> bool:
-    #TODO Call sites: Why do we not use discovered_service.description;
-    # Is discovered_service.description already finalized as
-    # in config.service_description?
-    # (mo): we should indeed make sure that is the case, and use it
-    description = config.service_description(host_name, service.check_plugin_name, service.item)
-    return whitelist.match(description) is not None and blacklist.match(description) is None
-
-
-def _accept_all_services(_host_name: HostName, _service: Service) -> bool:
-    return True
 
 
 def _get_rediscovery_parameters(params: Dict) -> Dict:
@@ -461,7 +323,7 @@ def discover_on_host(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     mode: str,
-    service_filters: Optional[ServiceFilters],
+    service_filters: Optional[_ServiceFilters],
     on_error: str,
     use_cached_snmp_data: bool,
     max_cachefile_age: int,
@@ -540,7 +402,7 @@ def discover_on_host(
 
         # Create new list of checks
         new_services = _get_post_discovery_services(host_name, services, service_filters or
-                                                    ServiceFilters.accept_all(), result, mode)
+                                                    _ServiceFilters.accept_all(), result, mode)
         host_config.set_autochecks(new_services)
 
         result.diff_text = make_object_diff(
@@ -588,7 +450,7 @@ def _make_services_audit_log_object(services: List[Service]) -> Set[str]:
 def _get_post_discovery_services(
     host_name: HostName,
     services: ServicesByTransition,
-    service_filters: ServiceFilters,
+    service_filters: _ServiceFilters,
     result: DiscoveryResult,
     mode: str,
 ) -> List[ServiceWithNodes]:
@@ -777,7 +639,7 @@ def _check_service_lists(
     perfdata: List[Tuple] = []
     need_rediscovery = False
 
-    service_filters = ServiceFilters.from_settings(_get_rediscovery_parameters(params))
+    service_filters = _ServiceFilters.from_settings(_get_rediscovery_parameters(params))
     rediscovery_mode = _get_rediscovery_mode(params)
 
     for transition, title, params_key, default_state, service_filter in [
@@ -983,7 +845,7 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
             config_cache=config_cache,
             host_config=host_config,
             mode=_get_rediscovery_mode(params),
-            service_filters=ServiceFilters.from_settings(_get_rediscovery_parameters(params)),
+            service_filters=_ServiceFilters.from_settings(_get_rediscovery_parameters(params)),
             on_error="ignore",
             use_cached_snmp_data=True,
             # autodiscovery is run every 5 minutes (see

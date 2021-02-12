@@ -97,10 +97,8 @@ def _patch_data_source(mocker, **kwargs):
         assert isinstance(self, Source), repr(self)
 
         file_cache = self._make_file_cache()
-
-        assert file_cache.disabled == ((defaults["disabled"] or defaults["snmp_disabled"])
-                                       if isinstance(self, SNMPSource) else defaults["disabled"])
-
+        assert file_cache.disabled == (defaults["disabled"] or
+                                       (isinstance(self, SNMPSource) and defaults["snmp_disabled"]))
         assert file_cache.use_outdated == defaults["use_outdated"]
         assert file_cache.max_age == defaults["max_age"]
 

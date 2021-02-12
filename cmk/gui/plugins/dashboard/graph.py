@@ -5,28 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import Iterable, Optional
+
 import livestatus
-from typing import (
-    Iterable,
-    Optional,
-)
 
-import cmk.gui.visuals as visuals
+from cmk.utils.macros import MacroMapping
+
 import cmk.gui.sites as sites
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.i18n import _
+import cmk.gui.visuals as visuals
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    Integer,
-)
-
-from cmk.gui.plugins.dashboard import (
-    Dashlet,
-    dashlet_registry,
-)
-
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
 from cmk.gui.plugins.dashboard.utils import (
     DashboardConfig,
     DashboardName,
@@ -34,10 +24,12 @@ from cmk.gui.plugins.dashboard.utils import (
     DashletId,
     macro_mapping_from_context,
 )
-
-from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options, resolve_graph_recipe
+from cmk.gui.plugins.metrics.html_render import (
+    default_dashlet_graph_render_options,
+    resolve_graph_recipe,
+)
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.utils.macros import MacroMapping
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer
 
 
 @dashlet_registry.register

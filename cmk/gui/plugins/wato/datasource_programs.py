@@ -6,21 +6,24 @@
 
 from typing import Any, Dict, List, Optional
 
+from cmk.utils import aws_constants
+
 import cmk.gui.bi as bi
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.wato import (
+    HostRulespec,
     IndividualOrStoredPassword,
-    RulespecGroup,
-    RulespecSubGroup,
     monitoring_macro_help,
     rulespec_group_registry,
     rulespec_registry,
-    HostRulespec,
+    RulespecGroup,
+    RulespecSubGroup,
 )
+from cmk.gui.plugins.wato.utils import PasswordFromStore
 from cmk.gui.valuespec import (
-    ID,
     Age,
     Alternative,
     CascadingDropdown,
@@ -29,8 +32,9 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Float,
-    HTTPUrl,
     Hostname,
+    HTTPUrl,
+    ID,
     Integer,
     ListChoice,
     ListOf,
@@ -44,10 +48,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.plugins.wato.utils import (
-    PasswordFromStore,)
-from cmk.utils import aws_constants
-from cmk.gui.plugins.metrics.utils import MetricName
 
 
 def connection_set(options: Optional[List[str]] = None,

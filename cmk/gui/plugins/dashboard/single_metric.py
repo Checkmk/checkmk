@@ -4,15 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Iterable,
-    Mapping,
-    Tuple,
-)
+from typing import Any, Iterable, Mapping, Tuple
 
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import ABCFigureDashlet, dashlet_registry
+from cmk.gui.plugins.dashboard.utils import (
+    create_data_for_single_metric,
+    render_title_with_macros_string,
+)
+from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns
+from cmk.gui.plugins.metrics.utils import MetricName
+from cmk.gui.plugins.metrics.valuespecs import ValuesWithUnits
+from cmk.gui.plugins.views.painters import service_state_short
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
@@ -21,16 +25,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Timerange,
 )
-
-from cmk.gui.plugins.dashboard.utils import (
-    create_data_for_single_metric,
-    render_title_with_macros_string,
-)
-from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
-from cmk.gui.plugins.metrics.valuespecs import ValuesWithUnits
-from cmk.gui.plugins.metrics.utils import MetricName
-from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns
-from cmk.gui.plugins.views.painters import service_state_short
 
 
 def dashlet_title(

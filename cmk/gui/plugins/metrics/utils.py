@@ -5,33 +5,50 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
 
-from collections import OrderedDict
-import re
 import colorsys
-import random
-import shlex
 import json
-from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union, TypeVar
+import random
+import re
+import shlex
+from collections import OrderedDict
+from typing import (
+    Any,
+    AnyStr,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from six import ensure_binary, ensure_str
 
 import livestatus
 
 import cmk.utils.regex
-from cmk.utils.memoize import MemoizeCache
-from cmk.utils.werks import parse_check_mk_version
 import cmk.utils.version as cmk_version
+from cmk.utils.memoize import MemoizeCache
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.type_defs import MetricName as _MetricName
-from cmk.gui.type_defs import Choices
+from cmk.utils.werks import parse_check_mk_version
 
 import cmk.gui.config as config
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.valuespec import DropdownChoice, TextAsciiAutocomplete, MonitoredHostname, MonitoredServiceDescription
 import cmk.gui.sites as sites
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import g, html
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.type_defs import Choices
+from cmk.gui.valuespec import (
+    DropdownChoice,
+    MonitoredHostname,
+    MonitoredServiceDescription,
+    TextAsciiAutocomplete,
+)
 
 LegacyPerfometer = Tuple[str, Any]
 Perfometer = Dict[str, Any]

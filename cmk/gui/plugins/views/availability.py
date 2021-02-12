@@ -110,7 +110,14 @@ def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
     # trick will merge their options with our default options.
     avoptions.update(config.user.load_file("avoptions", {}))
 
-    avoption_entries = availability.get_av_display_options(what)
+    form_name = html.request.get_ascii_input("filled_in")
+    if form_name == "avoption_display":
+        avoption_entries = availability.get_av_display_options(what)
+    elif form_name == "avoptions_computation":
+        avoption_entries = availability.get_av_computation_options()
+    else:
+        avoption_entries = []
+
     if html.request.var("avoptions") == "set":
         for name, _height, _show_in_reporting, vs in avoption_entries:
             try:
@@ -144,14 +151,15 @@ def _handle_availability_option_reset() -> None:
 
 def _show_availability_options(option_type: str, what: AVObjectType, avoptions: AVOptions,
                                valuespecs: AVOptionValueSpecs) -> None:
-    html.begin_form("avoptions_%s" % option_type)
+    form_name = "avoptions_%s" % option_type
+    html.begin_form(form_name)
     html.hidden_field("avoptions", "set")
 
     _show_availability_options_controls()
 
     container_id = "av_options_%s" % option_type
     html.open_div(id_=container_id, class_="side_popup_content")
-    if html.has_user_errors():
+    if html.has_user_errors() and html.form_submitted(form_name):
         html.show_user_errors()
 
     for name, height, _show_in_reporting, vs in valuespecs:

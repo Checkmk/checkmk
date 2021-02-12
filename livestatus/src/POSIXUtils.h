@@ -48,8 +48,9 @@ class Semaphore {
 public:
     enum class Shared { between_threads, between_processes };
 
-    explicit Semaphore(Shared shared = Shared::between_threads,
-                       unsigned int value = 0) {
+    Semaphore() : Semaphore{Shared::between_threads, 0U} {}
+    explicit Semaphore(Shared shared) : Semaphore{shared, 0U} {}
+    Semaphore(Shared shared, unsigned int value) {
         sem_init(&_semaphore, shared == Shared::between_threads ? 0 : 1, value);
     }
     ~Semaphore() { sem_destroy(&_semaphore); }
@@ -124,8 +125,12 @@ public:
 private:
     int fd_;
 
+    bool fcntl_impl(short l_type, int cmd, const char *msg) const {
+        return fcntl_impl(l_type, cmd, msg, false);
+    }
+
     bool fcntl_impl(short l_type, int cmd, const char *msg,
-                    bool accecpt_timeout = false) const;
+                    bool accecpt_timeout) const;
 
     bool try_lock_until_impl(const std::chrono::steady_clock::time_point &time,
                              short l_type, const char *msg);

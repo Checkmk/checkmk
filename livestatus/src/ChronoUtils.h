@@ -102,31 +102,18 @@ typename Dur::rep time_point_part(std::chrono::system_clock::time_point &tp) {
         .count();
 }
 
-class FormattedTimePoint {
-public:
-    explicit FormattedTimePoint(std::chrono::system_clock::time_point tp,
-                                std::string format = default_format)
-        : _tp(tp), _format(std::move(format)) {}
-    explicit FormattedTimePoint(time_t t, std::string format = default_format)
-        : _tp(std::chrono::system_clock::from_time_t(t))
-        , _format(std::move(format)) {}
+struct FormattedTimePoint {
+    explicit FormattedTimePoint(
+        std::chrono::system_clock::time_point time_point)
+        : tp(time_point) {}
+
+    std::chrono::system_clock::time_point tp;
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const FormattedTimePoint &f) {
-        tm local = to_tm(f._tp);
-        return os << std::put_time(&local, f._format.c_str());
+        tm local = to_tm(f.tp);
+        return os << std::put_time(&local, "%Y-%m-%d %H:%M:%S");
     }
-
-private:
-    std::chrono::system_clock::time_point _tp;
-    std::string _format;
-
-    // NOTE: In a perfect world we would simply use "%F %T" below, but the "%F"
-    // format is a C99 addition, and the "%T" format is part of The Single Unix
-    // Specification. Both formats should be available in any C++11-compliant
-    // compiler, but the MinGW cross compiler doesn't get this right. So let's
-    // use their ancient expansions...
-    static constexpr auto default_format = "%Y-%m-%d %H:%M:%S";
 };
 
 #endif  // ChronoUtils_h

@@ -66,7 +66,7 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
   powershell Write-Host "Build successful" -Foreground green
 
   :: UPLOADING to the Nexus Cache:
-  powershell Write-Host "Uploading to cache..." -Foreground cyan
+  powershell Write-Host "Uploading to cache %arti_dir%\python-%version%.zip ... %fname% ..." -Foreground cyan
   copy %arti_dir%\python-%version%.zip %fname%
 
   powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%" -foreground white
@@ -81,9 +81,9 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
     exit /B 0
   )
 ) else (
-  :: Most probable case 0 we have python in cache - just copy cached file to the artifact folder
+  :: Most probable case. We have the python zip in the cache, just copy cached file to the artifact folder
   powershell Write-Host "The file exists in cache. Moving cached file to artifact" -Foreground green 
-  move /Y %fname% %arti_dir%/%python-%version%.zip
+  move /Y %fname% %arti_dir%/python-%version%.zip
   powershell Write-Host "[+] Downloaded successfully" -Foreground green
   exit /b 0
 )

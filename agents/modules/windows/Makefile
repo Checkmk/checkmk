@@ -62,8 +62,8 @@ $(PYTHON_TIMESTAMP): $(OMD_PYTHON_PACKAGE) ## deploying python sources
 	@if not exist "$(MSBUILD)" powershell Write-Host -foreground Red "MS Build 2017 must be installed" && exit 1
 	@if not exist $< powershell Write-Host -foreground Red "$< absent" && exit 1
 	@powershell Write-Host -foreground Green "Unpacking $< ..."
-	@7z x -y -mmt4 -o$(PYTHON_SRC_DIR) $< 
-	@7z x -y -o$(PYTHON_SRC_DIR) $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar && del /S $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar
+	7z x -y -mmt4 -o$(PYTHON_SRC_DIR) $< 
+	7z x -y -o$(PYTHON_SRC_DIR) $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar && del /S $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar
 	@type nul >>$@ && powershell (ls $@).LastWriteTime = Get-Date   # windows touch
 	@powershell Write-Host -foreground Green "Done"
 
@@ -85,12 +85,12 @@ $(PYTHON_INSTALLER): $(PYTHON_TIMESTAMP)    ## python installer
 
 python_install: $(PYTHON_INSTALLER)    ## python installation
 	@powershell Write-Host "Target $@" -foreground white
-	@call exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
-	@call exec_cmd.bat install_python.cmd $(PY_VER) $(PY_SUBVER)
-	@call exec_cmd.bat upgrade_pip.cmd $(PY_VER) $(PY_SUBVER)
-	@call exec_cmd.bat install_pipenv.cmd $(PY_VER) $(PY_SUBVER)
-	@call exec_cmd.bat save_python.cmd $(PY_VER) $(PY_SUBVER)
-	@call exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat install_python.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat upgrade_pip.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat install_pipenv.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat save_python.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
 	@powershell Write-Host -foreground Green "Python is saved"
 
 
@@ -107,19 +107,15 @@ $(PYTHON_PIPFILE_LOCK): $(PYTHON_PIPFILE) ## piplock building
 
 venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
 	@powershell Write-Host "Target '$@'" -foreground white
-	@call exec_cmd.bat build_environment.cmd $(PY_VER) $(PY_SUBVER)
-	@call exec_cmd.bat clean_environment.cmd $(PY_VER) $(PY_SUBVER)
-	@call exec_cmd.bat patch_environment.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat build_environment.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat clean_environment.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat patch_environment.cmd $(PY_VER) $(PY_SUBVER)
 	
 	
 $(PYTHON_MODULE): venv ## zipping venv
 	@powershell Write-Host "+Target $@" -foreground white
-	@rem CAB mode
 	@powershell Write-Host "*CAB*" -foreground white
-	@call python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save
-	@rem ZIP mode - legacy, may be need to testing 
-	@rem powershell Write-Host "*ZIP*" -foreground white
-	@rem call python_to_zip.cmd $(PYTHON_SAVE_DIR) ..\$(PYTHON_MODULE_NAME)
+	python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save
 
 $(ARTEFACT_MODULE): $(PYTHON_MODULE) ## copy to artefacts
 	@powershell Write-Host "+Target $@" -foreground white
@@ -139,13 +135,13 @@ clean:
 
 python_344:
 	@powershell Write-Host "Building Legacy Python 3.4.4 ..." -foreground white
-	@call exec_cmd.bat uninstall_legacy.cmd 3.4 4
-	@call exec_cmd.bat install_legacy.cmd 3.4 4
-	@call exec_cmd.bat build_environment_legacy.cmd 3.4 4
-	@call exec_cmd.bat uninstall_legacy.cmd 3.4 4
-	@call exec_cmd.bat clean_environment.cmd 3.4 4
-	@call exec_cmd.bat patch_environment.cmd 3.4 4
-	@call python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save
+	exec_cmd.bat uninstall_legacy.cmd 3.4 4
+	exec_cmd.bat install_legacy.cmd 3.4 4
+	exec_cmd.bat build_environment_legacy.cmd 3.4 4
+	exec_cmd.bat uninstall_legacy.cmd 3.4 4
+	exec_cmd.bat clean_environment.cmd 3.4 4
+	exec_cmd.bat patch_environment.cmd 3.4 4
+	python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save
 	@if not exist $(ARTEFACTS_DIR) mkdir $(ARTEFACTS_DIR) 2> nul
 	@copy /Y $(PYTHON_MODULE) $(ARTEFACT_MODULE)
 	@powershell Write-Host -foreground Green "Python 3.4.4 is saved"

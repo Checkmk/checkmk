@@ -365,15 +365,23 @@ body.main .popup_menu table.tacticaloverview td span {
   color: $font-color-sidebar;
 }
 
-div.tacticalalert {
+div.tacticalalert,
+div.tacticalinfo {
   height: 25px;
   margin-top: 8px;
   font-size: 12px;
   line-height: 25px;
   text-align: center;
-  background-color: $color-state-2-background;
   border-radius: $theme-border-radius;
   box-shadow: none;
+}
+
+div.tacticalalert {
+  background-color: $color-state-2-background;
+}
+
+div.tacticalinfo {
+  background-color: $overview-info-bg;
 }
 
 div.spacertop {

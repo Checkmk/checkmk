@@ -710,41 +710,45 @@ div#dashboard.grid {
   color: $primary-font-color;
 }
 
-div.dashlet g {
-  &.svcstate {
-    &.state0 rect {
-      stroke: $color-state-success-background;
-    }
-
-    &.state1 rect {
-      stroke: $color-state-1-background;
-    }
-
-    &.state2 rect {
-      stroke: $color-state-2-background;
-    }
-
-    &.state3 rect {
-      stroke: $color-state-3-background;
-    }
+svg g,
+svg a.single_value {
+  &.state0 rect {
+    stroke: $color-state-success-background;
   }
 
-  &.svcstate {
-    &.state0 text {
-      fill: $color-state-success-background;
-    }
+  &.state1 rect {
+    stroke: $color-state-1-background;
+  }
 
-    &.state1 text {
-      fill: $color-state-1-background;
-    }
+  &.state2 rect {
+    stroke: $color-state-2-background;
+  }
 
-    &.state2 text {
-      fill: $color-state-2-background;
-    }
+  &.state3 rect {
+    stroke: $color-state-3-background;
+  }
 
-    &.state3 text {
-      fill: $color-state-3-background;
-    }
+  &.state0 text {
+    fill: $color-state-success-background;
+  }
+
+  &.state1 text {
+    fill: $color-state-1-background;
+  }
+
+  &.state2 text {
+    fill: $color-state-2-background;
+  }
+
+  &.state3 text {
+    fill: $color-state-3-background;
+  }
+}
+
+svg a.single_value {
+  // this is default unspecified text color
+  text {
+    fill: $hexagon-downtime-color; //because is the same light blue
   }
 }
 
@@ -770,54 +774,6 @@ div.dashlet.single_metric {
 
     div.metric {
       padding: 4px;
-    }
-  }
-
-  div.single_metric {
-    a.single_value {
-      width: 100%;
-
-      text {
-        &.state0,
-        &.state0 > a,
-        &.state0 > a:link {
-          fill: $black;
-        }
-
-        &.state-fill-font,
-        &.no-state-color {
-          &,
-          > a {
-            fill: $font-color !important;
-          }
-        }
-
-        &.state-fill-font {
-          &.state0,
-          &.state0 > a,
-          &.state0 > a:link {
-            fill: $color-state-success-background !important;
-          }
-
-          &.state1,
-          &.state1 > a,
-          &.state1 > a:link {
-            fill: $color-state-1-background !important;
-          }
-
-          &.state2,
-          &.state2 > a,
-          &.state2 > a:link {
-            fill: $color-state-2-background !important;
-          }
-
-          &.state3,
-          &.state3 > a,
-          &.state3 > a:link {
-            fill: $color-state-3-background !important;
-          }
-        }
-      }
     }
   }
 

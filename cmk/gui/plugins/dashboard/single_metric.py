@@ -19,7 +19,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
     DropdownChoice,
-    GraphColor,
     Timerange,
 )
 
@@ -79,17 +78,39 @@ def required_columns(properties, context):
 def _create_single_metric_config(data, metrics, properties, context, settings):
     plot_definitions = []
 
+    def metric_state_color(metric):
+        warn = metric["scalar"].get("warn")
+        crit = metric["scalar"].get("crit")
+        if warn is not None and crit is not None:
+            if metric['value'] >= crit:
+                return "2", "CRIT"
+            if metric['value'] >= warn:
+                return "1", "WARN"
+            return "0", "OK"
+        return "_", ""
+
     def svc_map(row):
         state, status_name = service_state_short(row)
-        draw_status = properties.get("status_border", "not_ok")
-        if draw_status == "not_ok" and state == "0":
-            draw_status = False
-
         return {
             "style": "svcstate state%s" % state,
-            "msg": _("Status: ") + status_name,
-            "draw": draw_status
+            "msg": _("Service: ") + status_name,
+            "draw": state != "0",
         }
+
+    def metric_map(metric):
+        state, status_name = metric_state_color(metric)
+        return {
+            "style": "metricstate state%s" % state,
+            "msg": _("Metric: ") + status_name if status_name else "",
+            "draw": state != "0",
+        }
+
+    def status_component(style, metric, row):
+        if style == "service":
+            return svc_map(row)
+        if style == "metric":
+            return metric_map(metric)
+        return {}
 
     def purge_metric_for_js(metric):
         return {
@@ -120,7 +141,8 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
             "id": "%s_single" % row_id,
             "plot_type": "single_value",
             "use_tags": [row_id],
-            "svc_state": svc_map(row),
+            "border_component": status_component(properties.get("status_border"), metric, row),
+            "inner_render": status_component(properties.get("inner_state_display"), metric, row),
             "metric": purge_metric_for_js(metric),
             "color": metric.get("color", "#3CC2FF")
         }
@@ -149,20 +171,6 @@ def _time_range_historic_dict_elements(with_elements) -> DictionaryElements:
         title="RRD consolidation",
         help=_("Consolidation function for the [cms_graphing#rrds|RRD] data column"),
     )
-
-    if "with_graph_styling" in with_elements:
-        yield "style", DropdownChoice(
-            choices=[
-                ("line", _("Line")),
-                ("area", _("Area")),
-            ],
-            default_value="area",
-            title=_("Style"),
-        )
-        yield "color", GraphColor(
-            title=_("Color"),
-            default_value="default",
-        )
 
 
 def _vs_elements(with_elements) -> DictionaryElements:
@@ -215,23 +223,23 @@ def _vs_elements(with_elements) -> DictionaryElements:
             choices=choices,
             default_value="automatic" if "automatic_range" in with_elements else "fixed")
 
-    if "metric_status_display" in with_elements:
-        yield "metric_status_display", DropdownChoice(
-            title=_("Metric Status"),
-            choices=[(None, _("Metric value is displayed in neutral color")),
-                     ("text", _("Metric state is colored in its value")),
-                     ("background", _("Metric status is colored on the dashlet background"))],
+    if "inner_state_display" in with_elements:
+        yield "inner_state_display", DropdownChoice(
+            title=_("Metric color"),
+            choices=[(None, _("Follow theme default")),
+                     ("service", _("Color value after SERVICE state")),
+                     ("metric", _("Color value following it's METRIC THRESHOLDS if available"))],
         )
 
     if "status_border" in with_elements:
         yield "status_border", DropdownChoice(
             title=_("Status border"),
             choices=[
-                (False, _("Do not show any service status border")),
-                ("not_ok", _("Draw a status border when service is not OK")),
-                ("always", _("Always draw the service status on the border")),
+                (None, _("Do not show any status border")),
+                ("service", _("Draw a status border when SERVICE is not OK")),
+                ("metric", _("Draw a status border when METRICS THRESHOLDS are crossed")),
             ],
-            default_value="not_ok")
+            default_value="service")
 
 
 class SingleMetricDashlet(ABCFigureDashlet):
@@ -349,8 +357,7 @@ class SingleGraphDashlet(SingleMetricDashlet):
     @staticmethod
     def _vs_elements():
         return _vs_elements([
-            "time_range", "display_range", "automatic_range", "status_border",
-            "metric_status_display"
+            "time_range", "display_range", "automatic_range", "status_border", "inner_state_display"
         ])
 
     @classmethod

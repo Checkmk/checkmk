@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "Column.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "ServiceGroupMembersColumn.h"
 #include "ServiceListStateColumn.h"
@@ -121,7 +122,6 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
 }
 
 void TableServiceGroups::answerQuery(Query *query) {
-    extern servicegroup *servicegroup_list;
     for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
         const servicegroup *r = sg;
         if (!query->processDataset(Row(r))) {

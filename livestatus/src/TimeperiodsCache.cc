@@ -8,8 +8,7 @@
 #include <utility>
 
 #include "Logger.h"
-
-extern timeperiod *timeperiod_list;
+#include "NagiosGlobals.h"
 
 using namespace std::chrono_literals;
 

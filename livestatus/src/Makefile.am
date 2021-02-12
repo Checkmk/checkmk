@@ -251,7 +251,7 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 # RE2 we make sure that this is the case, too.
 	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@ $(RRDTOOL_LD_FLAGS)
 # To make sure we can dlopen() our NEB later
-	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
+	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatus_a_LD_FLAGS)
 	$(RM) NagiosMockup
 

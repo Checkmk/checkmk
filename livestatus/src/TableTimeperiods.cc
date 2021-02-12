@@ -10,6 +10,7 @@
 
 #include "BoolLambdaColumn.h"
 #include "Column.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"
@@ -28,6 +29,7 @@ TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
     addColumn(std::make_unique<BoolLambdaColumn<timeperiod, true>>(
         "in", "Wether we are currently in this period (0/1)", offsets,
         [](const timeperiod& tp) {
+            // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
             extern TimeperiodsCache* g_timeperiods_cache;
             return g_timeperiods_cache->inTimeperiod(&tp);
         }));
@@ -39,7 +41,6 @@ std::string TableTimeperiods::name() const { return "timeperiods"; }
 std::string TableTimeperiods::namePrefix() const { return "timeperiod_"; }
 
 void TableTimeperiods::answerQuery(Query* query) {
-    extern timeperiod* timeperiod_list;
     for (const timeperiod* tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         if (!query->processDataset(Row{tp})) {
             break;

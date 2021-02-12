@@ -43,6 +43,7 @@
 #include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "ServiceListColumn.h"
 #include "ServiceListStateColumn.h"
@@ -56,7 +57,7 @@
 
 using namespace std::string_literals;
 
-extern host *host_list;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern TimeperiodsCache *g_timeperiods_cache;
 
 TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
@@ -738,7 +739,6 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "staleness", "Staleness indicator for this host", offsets,
         [](const host &hst) {
-            extern int interval_length;
             return static_cast<double>(time(nullptr) - hst.last_check) /
                    ((hst.check_interval == 0 ? 1 : hst.check_interval) *
                     interval_length);

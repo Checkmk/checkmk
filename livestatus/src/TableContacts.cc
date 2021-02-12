@@ -22,12 +22,13 @@
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "StringColumn.h"
 #include "TimeperiodsCache.h"
 #include "nagios.h"
 
-extern contact *contact_list;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern TimeperiodsCache *g_timeperiods_cache;
 
 using namespace std::literals;

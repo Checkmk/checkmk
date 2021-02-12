@@ -7,14 +7,13 @@
 
 #include "Column.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
 #include "auth.h"
 #include "nagios.h"
-
-extern servicegroup *servicegroup_list;
 
 namespace {
 struct servicebygroup {

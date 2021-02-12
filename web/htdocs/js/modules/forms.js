@@ -16,8 +16,6 @@ export function enable_dynamic_form_elements(container = null) {
     enable_label_input_fields(container);
 }
 
-// html.dropdown() adds the .select2-enable class for all dropdowns
-// that should use the select2 powered dropdowns
 export function enable_select2_dropdowns(container) {
     let elements;
     if (!container) container = $(document);
@@ -28,36 +26,40 @@ export function enable_select2_dropdowns(container) {
         minimumResultsForSearch: 5,
     });
 
-    // handle metric selection dropdowns dynamic narrowing
-    elements = $(container)
-        .find(".metric-selector")
-        .each((i, elem) =>
-            $(elem).select2({
-                language: {
-                    searching: () => "Type to trigger search",
-                },
-                width: "style",
-                ajax: {
-                    url: "ajax_vs_autocomplete.py",
-                    type: "POST",
-                    data: term =>
-                        "request=" +
-                        JSON.stringify({
-                            ident: "monitored_metrics",
-                            params: {
-                                host: $(`input[name='${elem.id}_hostname_hint']`).val(),
-                                service: $(`input[name='${elem.id}_service_hint']`).val(),
-                            },
-                            value: term.term || "",
-                        }),
+    elements = $(container);
+    ajax_call_select2_dropdown_autocomplete(elements, "metric-selector", "monitored_metrics");
+    ajax_call_select2_dropdown_autocomplete(elements, "graph-selector", "available_graphs");
+}
 
-                    processResults: resp => ({
-                        results: resp.result.choices.map(x => ({id: x[0], text: x[1]})),
+function ajax_call_select2_dropdown_autocomplete(elements, selector_name, autocomplete_name) {
+    // handle selection dropdowns dynamic narrowing
+    elements.find("." + selector_name).each((i, elem) =>
+        $(elem).select2({
+            language: {
+                searching: () => "Type to trigger search",
+            },
+            width: "style",
+            ajax: {
+                url: "ajax_vs_autocomplete.py",
+                type: "POST",
+                data: term =>
+                    "request=" +
+                    JSON.stringify({
+                        ident: autocomplete_name,
+                        params: {
+                            host: $(`input[name='${elem.id}_hostname_hint']`).val(),
+                            service: $(`input[name='${elem.id}_service_hint']`).val(),
+                        },
+                        value: term.term || "",
                     }),
-                    cache: true,
-                },
-            })
-        );
+
+                processResults: resp => ({
+                    results: resp.result.choices.map(x => ({id: x[0], text: x[1]})),
+                }),
+                cache: true,
+            },
+        })
+    );
 }
 
 function enable_label_input_fields(container) {

@@ -27,6 +27,7 @@ from cmk.gui.utils.html import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
+import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri
@@ -678,3 +679,13 @@ def _sort_rows(rows: TableRows, sort_col: int, sort_reverse: int) -> TableRows:
             rows.insert(index, cells)
 
     return rows
+
+
+def init_rowselect(selection_key: str) -> None:
+    selected = config.user.get_rowselection(weblib.selection_id(), selection_key)
+    selection_properties = {
+        "page_id": selection_key,
+        "selection_id": weblib.selection_id(),
+        "selected_rows": selected,
+    }
+    html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))

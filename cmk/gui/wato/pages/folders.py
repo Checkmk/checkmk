@@ -16,7 +16,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.utils as utils
 import cmk.gui.escaping as escaping
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, init_rowselect
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
@@ -755,19 +755,11 @@ class ModeFolder(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-        selected = config.user.get_rowselection(weblib.selection_id(),
-                                                'wato-folder-/' + self._folder.path())
-
         row_count = len(hostnames)
         row_info = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
         html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
-        selection_properties = {
-            "page_id": "wato-folder-%s" % ('/' + self._folder.path()),
-            "selection_id": weblib.selection_id(),
-            "selected_rows": selected,
-        }
-        html.javascript('cmk.selection.init_rowselect(%s);' % (json.dumps(selection_properties)))
+        init_rowselect("wato-folder-/" + self._folder.path())
 
     def _show_host_row(self, rendered_hosts, table, hostname, search_text, colspan, host_errors,
                        contact_group_names):

@@ -19,9 +19,10 @@ except ImportError:
     managed = None  # type: ignore[assignment]
 
 import cmk.gui.config as config
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, init_rowselect
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
+import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.valuespec import (
     ValueSpec,
@@ -618,7 +619,7 @@ class ModeBIRules(ABCBIMode):
                                 ),
                             ],
                         ),
-                        make_checkbox_selection_topic("bi"),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -760,8 +761,10 @@ class ModeBIRules(ABCBIMode):
         else:
             self.render_rules(_("Unused BI Rules"), only_unused=True)
 
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+        init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> str:
         with html.plugged():
@@ -1807,10 +1810,7 @@ class BIModeAggregations(ABCBIMode):
                                 ),
                             ],
                         ),
-                        # TODO CMK-7121 row selection is written to
-                        # ~/var/check_mk/web/user/rowselection/null.mk with
-                        # "null" key
-                        make_checkbox_selection_topic("bi"),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -1839,8 +1839,10 @@ class BIModeAggregations(ABCBIMode):
     def page(self):
         html.begin_form("bulk_action_form", method="POST")
         self._render_aggregations()
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+        init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> str:
         with html.plugged():

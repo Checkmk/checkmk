@@ -1,0 +1,22 @@
+Title: Fix random encrypted livestatus connection issues without Livestatus proxy
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613139167
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b7
+
+When using encrypted livestatus connections for accessing remote sites while
+not using the livestatus proxy daemon, this could result in errors like
+"attempt to connect already-connected SSLsocket" or some handshake related
+errors like "The handshake operation timed out".
+
+This was caused by the livestatus.py client which tries to optimize the connect
+timeouts by first starting with a very small timeout and then retrying with a
+larger timeout value. This worked as expected for not encrypted connections,
+but not for encrypted connections which were able to perform the connect but
+not the TLS handshake in time. The second try was then failing because of the
+already connected socket from the first try. This already connected socket is
+now handled correctly and will retry the handshake with a longer timeout.

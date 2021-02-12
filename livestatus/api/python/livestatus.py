@@ -116,8 +116,11 @@ def site_local_ca_path() -> str:
     return os.path.join(omd_root, "var/ssl/ca-certificates.crt")
 
 
-def create_client_socket(family: socket.AddressFamily, tls: bool, verify: bool,
-                         ca_file_path: Optional[str]) -> socket.socket:
+def create_client_socket(family: socket.AddressFamily,
+                         tls: bool,
+                         verify: bool,
+                         ca_file_path: Optional[str],
+                         do_handshake_on_connect: bool = True) -> socket.socket:
     """Create a client socket object for the livestatus connection"""
     sock = socket.socket(family, socket.SOCK_STREAM)
 
@@ -135,7 +138,7 @@ def create_client_socket(family: socket.AddressFamily, tls: bool, verify: bool,
     except Exception as e:
         raise MKLivestatusConfigError("Failed to load CA file '%s': %s" % (ca_file_path, e))
 
-    return context.wrap_socket(sock)
+    return context.wrap_socket(sock, do_handshake_on_connect=do_handshake_on_connect)
 
 
 #.
@@ -417,19 +420,20 @@ class SingleSiteConnection(Helpers):
             try:
                 if self.timeout:
                     self.socket.settimeout(sleep_interval)
-                self.socket.connect(address)
+
+                # In case of TLS it may happen that we are retrying after the connect succeeded
+                # and the handshake failed. In this case do not retry the connect.
+                try:
+                    self.socket.connect(address)
+                except ValueError as e:
+                    if "attempt to connect already-connected SSLSocket" not in str(e):
+                        raise
+
+                if self.tls:
+                    # Mypy does not understand the SSL socket wrapping
+                    self.socket.do_handshake()  # type: ignore[attr-defined]
+
                 break
-            except ssl.SSLError as e:
-                # Do not retry in case of SSL protocol / handshake errors. They don't seem to be
-                # recoverable by retrying
-
-                if "The handshake operation timed out" in str(e):
-                    raise MKLivestatusSocketError("Cannot connect to '%s': %s. The encryption "
-                                                  "settings are probably wrong." %
-                                                  (self.socketurl, e))
-
-                raise
-
             except Exception as e:
                 if self.timeout:
                     time_left = self.timeout - (time.time() - before)
@@ -460,7 +464,11 @@ class SingleSiteConnection(Helpers):
 
         It ensures that either a TLS secured socket or a plain text socket
         is being created."""
-        return create_client_socket(family, self.tls, self.tls_verify, self._tls_ca_file_path)
+        return create_client_socket(family,
+                                    self.tls,
+                                    self.tls_verify,
+                                    self._tls_ca_file_path,
+                                    do_handshake_on_connect=False)
 
     def disconnect(self) -> None:
         self.socket = None

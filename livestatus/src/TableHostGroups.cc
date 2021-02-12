@@ -10,15 +10,11 @@
 #include "Column.h"
 #include "HostListColumn.h"
 #include "HostListStateColumn.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "StringColumn.h"
 #include "auth.h"
 #include "nagios.h"
-
-/* this might be a hack (accessing Nagios' internal structures.
-   Hi Ethan: please help me here: how should this be code to be
-   portable? */
-extern hostgroup *hostgroup_list;
 
 TableHostGroups::TableHostGroups(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});

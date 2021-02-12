@@ -13,6 +13,7 @@
 #include "Column.h"
 #include "MacroExpander.h"
 #include "NagiosCore.h"
+#include "NagiosGlobals.h"
 #include "Row.h"
 #include "Store.h"
 #include "StringColumn.h"
@@ -39,9 +40,6 @@ TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
         },
         ::testing::ExitedWithCode(0), "");
 }
-
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern char *macro_user[MAX_USER_MACROS];
 
 namespace {
 // First test fixture: A single host

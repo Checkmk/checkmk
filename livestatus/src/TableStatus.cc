@@ -8,7 +8,6 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
-#include <ctime>
 #include <filesystem>
 #include <memory>
 
@@ -19,6 +18,7 @@
 #include "FileColumn.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"
@@ -26,34 +26,22 @@
 #include "mk_inventory.h"
 #include "nagios.h"
 
-extern int nagios_pid;
-extern int enable_notifications;
-extern int execute_service_checks;
-extern int accept_passive_service_checks;
-extern int execute_host_checks;
-extern int accept_passive_host_checks;
-extern int enable_event_handlers;
-extern int obsess_over_services;
-extern int obsess_over_hosts;
-extern int check_service_freshness;
-extern int check_host_freshness;
-extern int enable_flap_detection;
-extern int process_performance_data;
-extern int check_external_commands;
-extern int interval_length;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_num_hosts;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_num_services;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern bool g_any_event_handler_enabled;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern double g_average_active_latency;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern Average g_avg_livestatus_usage;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_livestatus_threads;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_num_queued_connections;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern std::atomic_int32_t g_livestatus_active_connections;
-
-#ifndef NAGIOS4
-extern circular_buffer external_command_buffer;
-extern int external_command_buffer_slots;
-#endif  // NAGIOS4
 
 TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
@@ -141,7 +129,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "program_start", "The time of the last program start as UNIX timestamp",
         offsets, [](const TableStatus & /*r*/) {
-            extern time_t program_start;
             return std::chrono::system_clock::from_time_t(program_start);
         }));
 #ifndef NAGIOS4
@@ -149,7 +136,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp", offsets,
         [](const TableStatus & /*r*/) {
-            extern time_t last_command_check;
             return std::chrono::system_clock::from_time_t(last_command_check);
         }));
 #else
@@ -164,7 +150,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "last_log_rotation", "Time time of the last log file rotation", offsets,
         [](const TableStatus & /*r*/) {
-            extern time_t last_log_rotation;
             return std::chrono::system_clock::from_time_t(last_log_rotation);
         }));
     addColumn(std::make_unique<IntLambdaColumn<TableStatus>::Reference>(

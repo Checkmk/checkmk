@@ -38,6 +38,7 @@
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "NagiosCore.h"
+#include "NagiosGlobals.h"
 #include "OutputBuffer.h"
 #include "Poller.h"
 #include "Queue.h"
@@ -54,10 +55,6 @@ using namespace std::chrono_literals;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern unsigned long event_broker_options;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern int enable_environment_macros;
 
 // maximum idle time for connection in keep alive state
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -125,13 +122,6 @@ static ClientQueue_t *fl_client_queue = nullptr;
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 /* simple statistics data for TableStatus */
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern host *host_list;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern service *service_list;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern int log_initial_states;
-
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_hosts;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -564,8 +554,6 @@ int broker_program(int event_type __attribute__((__unused__)),
 }
 
 void livestatus_log_initial_states() {
-    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-    extern scheduled_downtime *scheduled_downtime_list;
     // It's a bit unclear if we need to log downtimes of hosts *before*
     // their corresponding service downtimes, so let's play safe...
     for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
@@ -746,10 +734,7 @@ std::string check_path(const std::string &name, const std::string &path) {
 
 void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     {
-        // set default path to our logfile to be in the same path as
-        // nagios.log
-        // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-        extern char *log_file;
+        // set default path to our logfile to be in the same path as nagios.log
         std::string lf{log_file};
         auto slash = lf.rfind('/');
         fl_paths._logfile =

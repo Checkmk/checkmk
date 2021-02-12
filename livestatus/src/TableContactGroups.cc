@@ -11,6 +11,7 @@
 #include "Column.h"
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "StringColumn.h"
 #include "nagios.h"
@@ -43,7 +44,6 @@ std::string TableContactGroups::name() const { return "contactgroups"; }
 std::string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
 void TableContactGroups::answerQuery(Query *query) {
-    extern contactgroup *contactgroup_list;
     for (const auto *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
         const contactgroup *r = cg;
         if (!query->processDataset(Row(r))) {

@@ -6,14 +6,13 @@
 #include "TableServicesByHostGroup.h"
 
 #include "Column.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableHostGroups.h"
 #include "TableServices.h"
 #include "auth.h"
 #include "nagios.h"
-
-extern hostgroup *hostgroup_list;
 
 namespace {
 struct servicebyhostgroup {

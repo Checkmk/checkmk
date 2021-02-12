@@ -7,15 +7,13 @@
 
 #include "Column.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableHostGroups.h"
 #include "TableHosts.h"
 #include "auth.h"
 #include "nagios.h"
-
-extern host *host_list;
-extern hostgroup *hostgroup_list;
 
 namespace {
 struct hostbygroup {

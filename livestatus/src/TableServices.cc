@@ -38,6 +38,7 @@
 #include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "ServiceGroupsColumn.h"
 #include "ServiceRRDColumn.h"
@@ -52,13 +53,12 @@
 
 using namespace std::string_literals;
 
-extern service *service_list;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern TimeperiodsCache *g_timeperiods_cache;
 
 // TODO(ml): Here we use `static` instead of an anonymous namespace because
 // of the `extern` declaration.  We should find something better.
 static double staleness(const service &svc) {
-    extern int interval_length;
     auto check_result_age = static_cast<double>(time(nullptr) - svc.last_check);
     if (svc.check_interval != 0) {
         return check_result_age / (svc.check_interval * interval_length);

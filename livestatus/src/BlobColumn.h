@@ -58,12 +58,10 @@ class BlobLambdaColumn : public ::detail::BlobColumn {
 public:
     using ::detail::BlobColumn::Constant;
     using ::detail::BlobColumn::Reference;
-    BlobLambdaColumn(std::string name, std::string description,
-                     ColumnOffsets offsets,
+    BlobLambdaColumn(const std::string &name, const std::string &description,
+                     const ColumnOffsets &offsets,
                      std::function<std::vector<char>(const T &)> f)
-        : BlobColumn(std::move(name), std::move(description),
-                     std::move(offsets))
-        , get_value_{std::move(f)} {}
+        : BlobColumn(name, description, offsets), get_value_{std::move(f)} {}
     ~BlobLambdaColumn() override = default;
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
         Row row) const override {

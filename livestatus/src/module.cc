@@ -52,34 +52,49 @@
 
 using namespace std::chrono_literals;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 #ifndef NAGIOS4
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int event_broker_options;
 #else
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern unsigned long event_broker_options;
 #endif  // NAGIOS4
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int enable_environment_macros;
 
 // maximum idle time for connection in keep alive state
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::chrono::milliseconds fl_idle_timeout = 5min;
 
 // maximum time for reading a query
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::chrono::milliseconds fl_query_timeout = 10s;
 
 // allow 10 concurrent connections per default
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 size_t g_livestatus_threads = 10;
 // current number of queued connections (for statistics)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_queued_connections = 0;
 // current number of active connections (for statistics)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::atomic_int32_t g_livestatus_active_connections{0};
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 void *g_nagios_handle;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_unix_socket = -1;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_max_fd_ever = 0;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosPaths fl_paths;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static bool fl_should_terminate = false;
 
 struct ThreadInfo {
@@ -87,34 +102,53 @@ struct ThreadInfo {
     std::string name;
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::vector<ThreadInfo> fl_thread_info;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static thread_local ThreadInfo *tl_info;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosLimits fl_limits;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_thread_running = 0;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosAuthorization fl_authorization;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Encoding fl_data_encoding{Encoding::utf8};
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static Logger *fl_logger_nagios = nullptr;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
 using ClientQueue_t = Queue<std::deque<int>>;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static ClientQueue_t *fl_client_queue = nullptr;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 /* simple statistics data for TableStatus */
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern host *host_list;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern service *service_list;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int log_initial_states;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_hosts;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_services;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 bool g_any_event_handler_enabled;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 double g_average_active_latency;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Average g_avg_livestatus_usage;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosCore *fl_core = nullptr;
 
 namespace {
@@ -155,8 +189,6 @@ void update_status() {
         g_livestatus_threads);
 }
 }  // namespace
-
-void *voidp;
 
 void livestatus_count_fork() { counterIncrement(Counter::forks); }
 
@@ -227,7 +259,7 @@ void *main_thread(void *data) {
         counterIncrement(Counter::connections);
     }
     Notice(logger) << "socket thread has terminated";
-    return voidp;
+    return nullptr;
 }
 
 void *client_thread(void *data) {
@@ -255,7 +287,7 @@ void *client_thread(void *data) {
         }
         g_livestatus_active_connections--;
     }
-    return voidp;
+    return nullptr;
 }
 
 namespace {
@@ -537,6 +569,7 @@ int broker_program(int event_type __attribute__((__unused__)),
 }
 
 void livestatus_log_initial_states() {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     extern scheduled_downtime *scheduled_downtime_list;
     // It's a bit unclear if we need to log downtimes of hosts *before*
     // their corresponding service downtimes, so let's play safe...
@@ -720,6 +753,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     {
         // set default path to our logfile to be in the same path as
         // nagios.log
+        // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
         extern char *log_file;
         std::string lf{log_file};
         auto slash = lf.rfind('/');

@@ -40,6 +40,7 @@ TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
         ::testing::ExitedWithCode(0), "");
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern char *macro_user[MAX_USER_MACROS];
 
 namespace {

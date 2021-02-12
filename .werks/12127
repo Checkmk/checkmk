@@ -1,0 +1,22 @@
+Title: Fix one site logging out the login session of another site
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613130317
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b7
+
+Since #11499 we are tracking login sessions in each site individually.
+This results in one change of the authentication session handling that
+has not been mentioned in the previous werk before.
+
+In previous Checkmk versions it was possible to share login session between
+Checkmk sites of a single distributed setup. You could login into the central
+site and then browse to the user interface of the remote site and did not have
+to login into that site because your central site login session was accepted.
+This is not possible anymore.
+
+The result is: The login sessions of Checkmk sites are now completely
+independent of other sites.

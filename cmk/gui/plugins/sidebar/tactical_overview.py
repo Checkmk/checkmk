@@ -17,6 +17,8 @@ from cmk.gui.globals import html, request
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
 from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
 from cmk.gui.utils.urls import makeuri_contextless
+from typing import List, Dict, Tuple
+from functools import reduce
 
 ViewURLParams = namedtuple("ViewURLParams", ["total", "handled", "unhandled", "stale"])
 OverviewRow = namedtuple("OverviewRow", ["what", "title", "context", "stats", "views"])
@@ -32,6 +34,23 @@ def get_context_url_variables(context):
     for filter_vars in context.values():
         add_vars.update(filter_vars)
     return list(add_vars.items())
+
+
+def map_site_state(state: str) -> str:
+    if state in ('online', 'waiting'):
+        return 'ok'
+    if state == 'disabled':
+        return 'disabled'
+    return 'error'
+
+
+def group_by_state(
+    acc: Dict[str, List[str]],
+    id_and_state: Tuple[str, str],
+) -> Dict[str, List[str]]:
+    id_, state = id_and_state
+    acc[state].append(id_)
+    return acc
 
 
 @snapin_registry.register
@@ -429,25 +448,40 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         if not self.parameters().get("show_sites_not_connected"):
             return
 
-        sites_not_connected = [
-            site_id for site_id, site_status in sites.states().items()
-            if site_status["state"] != "online"
-        ]
-        if len(sites_not_connected) == 0:
+        site_states: Dict[str, List[str]] = reduce(
+            group_by_state,
+            [(id_, map_site_state(info["state"])) for id_, info in sites.states().items()],
+            {
+                'ok': [],
+                'disabled': [],
+                'error': []
+            },
+        )
+
+        if site_states["disabled"]:
+            self._create_status_box(site_states["disabled"], "tacticalinfo", "disabled")
+
+        if not site_states["error"]:
             return
 
-        html.open_div(class_="spacertop")
-        html.open_div(class_="tacticalalert")
+        self._create_status_box(site_states["error"], "tacticalalert", "disconnected")
 
-        message_template = ungettext("%d site is not connected", "%d sites are not connected",
-                                     len(sites_not_connected))
+    def _create_status_box(
+        self,
+        site_ids: List[str],
+        css_class: str,
+        site_status: str,
+    ):
+        html.open_div(class_="spacertop")
+        html.open_div(class_=css_class)
+        message_template = ungettext("%d site is %s.", "%d sites are %s.", len(site_ids))
+        message = message_template % (len(site_ids), site_status)
         tooltip_template = ungettext(
             "Associated hosts, services and events are not included "
-            "in the Tactical Overview. The disconnected site is %s.",
+            "in the Tactical Overview. The %s site is %s.",
             "Associated hosts, services and events are not included "
-            "in the Tactical Overview. The disconnected sites are %s.", len(sites_not_connected))
-        message = message_template % len(sites_not_connected)
-        tooltip = tooltip_template % ', '.join(sites_not_connected)
+            "in the Tactical Overview. The %s sites are %s.", len(site_ids))
+        tooltip = tooltip_template % (site_status, ', '.join(site_ids))
 
         if config.user.may("wato.sites"):
             url = makeuri_contextless(request, [("mode", "sites")], filename="wato.py")
@@ -456,7 +490,6 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         else:
             html.icon("sites", tooltip)
             html.write_text(message)
-
         html.close_div()
         html.close_div()
 

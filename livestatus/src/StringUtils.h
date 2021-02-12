@@ -43,17 +43,30 @@ std::string join(const std::vector<std::string> &values,
 
 constexpr auto whitespace = " \t\n\v\f\r";
 
-std::string lstrip(const std::string &str,
-                   const std::string &chars = whitespace);
+std::string lstrip(const std::string &str, const std::string &chars);
 
-std::string rstrip(const std::string &str,
-                   const std::string &chars = whitespace);
+inline std::string lstrip(const std::string &str) {
+    return lstrip(str, whitespace);
+}
 
-std::string strip(const std::string &str,
-                  const std::string &chars = whitespace);
+std::string rstrip(const std::string &str, const std::string &chars);
 
-std::pair<std::string, std::string> nextField(
-    const std::string &str, const std::string &chars = whitespace);
+inline std::string rstrip(const std::string &str) {
+    return rstrip(str, whitespace);
+}
+
+std::string strip(const std::string &str, const std::string &chars);
+
+inline std::string strip(const std::string &str) {
+    return strip(str, whitespace);
+}
+
+std::pair<std::string, std::string> nextField(const std::string &str,
+                                              const std::string &chars);
+
+inline std::pair<std::string, std::string> nextField(const std::string &str) {
+    return nextField(str, whitespace);
+}
 
 std::string replace_first(const std::string &str, const std::string &from,
                           const std::string &to);

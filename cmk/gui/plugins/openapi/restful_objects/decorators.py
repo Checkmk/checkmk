@@ -267,6 +267,12 @@ class Endpoint:
             self._expected_status_codes.append(412)  # precondition failed
             self._expected_status_codes.append(428)  # precondition required
 
+        for status_code, _ in self.status_descriptions.items():
+            if status_code not in self._expected_status_codes:
+                raise RuntimeError(
+                    f"Unexpected custom status description. "
+                    f"Status code {status_code} not expected for endpoint: {method.upper()} {path}")
+
     def _list(self, sequence: Optional[Sequence[T]]) -> List[T]:
         return list(sequence) if sequence is not None else []
 
@@ -562,6 +568,8 @@ class Endpoint:
         if self.request_schema:
             header_params.append(CONTENT_TYPE)
 
+        # While we define the parameters separately to be able to use them for validation, the
+        # OpenAPI spec expects them to be listed in on place, so here we bunch them together.
         operation_spec['parameters'] = coalesce_schemas([
             ('header', header_params),
             ('query', query_params),

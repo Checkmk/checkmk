@@ -23,7 +23,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import 
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
 )
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import QueryExpression
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Services
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -120,13 +120,13 @@ def _set_acknowledgement_on_host(
 
 def _set_acknowlegement_on_queried_hosts(
     connection,
-    query: str,
+    query: QueryExpression,
     sticky: bool,
     notify: bool,
     persistent: bool,
     comment: str,
 ):
-    q = Query([Hosts.name]).filter(tree_to_expr(query, Hosts.__tablename__))
+    q = Query([Hosts.name]).filter(query)
     hosts = q.fetchall(connection)
 
     if not hosts:
@@ -203,8 +203,7 @@ def set_acknowledgement_on_services(params):
             comment=comment,
         )
     elif acknowledge_type == 'service_by_query':
-        expr = tree_to_expr(body['query'], Services.__tablename__)
-        q = Query([Services.host_name, Services.description, Services.state]).filter(expr)
+        q = Query([Services.host_name, Services.description, Services.state]).filter(body['query'])
         services = q.fetchall(live)
         if not services:
             return problem(

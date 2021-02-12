@@ -14,7 +14,6 @@ You can find an introduction to basic monitoring principles including host statu
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import verify_columns
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -75,10 +74,9 @@ def list_hosts(param):
     q = Query(columns)
 
     # TODO: add sites parameter
-    filter_tree = param.get('query')
-    if filter_tree:
-        expr = tree_to_expr(filter_tree, Hosts.__tablename__)
-        q = q.filter(expr)
+    query_expr = param.get('query')
+    if query_expr:
+        q = q.filter(query_expr)
 
     result = q.iterate(live)
 

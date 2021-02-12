@@ -15,7 +15,6 @@ You can find an introduction to services in the
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import verify_columns
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Services
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -84,10 +83,9 @@ def _list_services(param):
     if host_name is not None:
         q = q.filter(Services.host_name == host_name)
 
-    filter_tree = param.get('query')
-    if filter_tree:
-        expr = tree_to_expr(filter_tree, Services.__tablename__)
-        q = q.filter(expr)
+    query_expr = param.get('query')
+    if query_expr:
+        q = q.filter(query_expr)
 
     result = q.iterate(live)
 

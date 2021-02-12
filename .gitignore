@@ -54,8 +54,4 @@ artefacts/
 node_modules/
 web/htdocs/js/*_min.js.map
 .vscode/
-<<<<<<< HEAD
-=======
-.testmondata
 *.code-workspace
->>>>>>> c899871465... Add VS code workspace files to .gitignore

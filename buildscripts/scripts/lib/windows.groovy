@@ -1,6 +1,8 @@
 // library for Windows builds
 package lib
 
+FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
+
 def build(Map args) {
     def ARTIFACTS_DIR = 'artefacts'
     def ARTIFACTS = ''
@@ -79,8 +81,5 @@ def stash_artifacts(ARTIFACTS, STASH_NAME, DIR) {
         )
     }
 }
-
-def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
-
 
 return this

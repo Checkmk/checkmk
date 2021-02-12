@@ -6,6 +6,7 @@
 
 import time
 import itertools
+import json
 from typing import List, TYPE_CHECKING, Set, Tuple, Iterator
 
 import cmk.utils.version as cmk_version
@@ -143,7 +144,7 @@ def _handle_availability_option_reset() -> None:
 
 def _show_availability_options(option_type: str, what: AVObjectType, avoptions: AVOptions,
                                valuespecs: AVOptionValueSpecs) -> None:
-    html.begin_form("avoptions")
+    html.begin_form("avoptions_%s" % option_type)
     html.hidden_field("avoptions", "set")
 
     _show_availability_options_controls()
@@ -307,7 +308,10 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
                          if display_options.enabled(display_options.B) else None)
 
     if html.has_user_errors():
-        html.final_javascript("cmk.page_menu.open_popup('avoptions');")
+        form_name = html.request.get_ascii_input_mandatory("filled_in")
+        if form_name in ("avoption_display", "avoptions_computation"):
+            html.final_javascript("cmk.page_menu.open_popup(%s);" %
+                                  json.dumps("popup_" + form_name))
 
     missing_single_infos = view.missing_single_infos
     if missing_single_infos:

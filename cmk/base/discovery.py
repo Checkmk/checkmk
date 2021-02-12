@@ -356,7 +356,7 @@ def do_discovery(
                 mode,
                 sources,
             )
-            max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
+            max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
 
             multi_host_sections = MultiHostSections()
             checkers.update_host_sections(
@@ -550,7 +550,7 @@ def discover_on_host(
             checkers.Mode.DISCOVERY,
             sources,
         )
-        max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
+        max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
         multi_host_sections = MultiHostSections()
         checkers.update_host_sections(
             multi_host_sections,
@@ -743,7 +743,7 @@ def check_discovery(
         sources,
     )
     use_caches = checkers.FileCacheFactory.maybe
-    max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
+    max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
     if not fetcher_messages:
         # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
         #       Also See: `cmk.base.checking.do_check()`
@@ -1784,10 +1784,12 @@ def get_check_preview(
         only_host_labels=False,
     )
 
+    mode = checkers.Mode.CACHED_DISCOVERY if use_caches else checkers.Mode.DISCOVERY
+
     sources = checkers.make_sources(
         host_config,
         ip_address,
-        mode=checkers.Mode.CACHED_DISCOVERY,
+        mode=mode,
     )
     for source in sources:
         _configure_sources(source, discovery_parameters=discovery_parameters)
@@ -1796,10 +1798,10 @@ def get_check_preview(
         config_cache,
         host_config,
         ip_address,
-        checkers.Mode.CACHED_DISCOVERY,
+        mode,
         sources,
     )
-    max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
+    max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
 
     multi_host_sections = MultiHostSections()
     checkers.update_host_sections(

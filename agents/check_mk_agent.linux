@@ -278,7 +278,7 @@ sections_systemd() {
         echo "[list-unit-files]"
         systemctl list-unit-files --no-pager | tr -s ' '
         echo "[all]"
-        systemctl --all --no-pager | sed '/^$/q' | tr -s ' '
+        systemctl --all --no-pager -r | sed '/^$/q' | tr -s ' '
     fi
 }
 

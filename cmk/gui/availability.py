@@ -742,7 +742,7 @@ def get_availability_rawdata(what,
     logrow_limit = avoptions["logrow_limit"]
 
     with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(
-            logrow_limit), CPUTracker() as fetch_rows_tracker:
+            logrow_limit or None), CPUTracker() as fetch_rows_tracker:
         data = sites.live().query(query)
 
     columns = ["site"] + columns

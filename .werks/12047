@@ -1,0 +1,12 @@
+Title: Availability: Fix displaying of availability popup after validation error
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613122046
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b7
+
+When an availability option form is submitted and a validation error occurs,
+the form is now displayed on page load to visualize the error to the user.

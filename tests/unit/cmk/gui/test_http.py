@@ -259,7 +259,6 @@ def test_get_integer_input_mandatory_not_a_number():
 
 def test_cookie_handling(register_builtin_html, monkeypatch):
     monkeypatch.setattr(html.request, "cookies", {"cookie1": {"key": "1a"}})
-    assert html.request.get_cookie_names() == ["cookie1"]
     assert html.request.has_cookie("cookie1")
     assert not html.request.has_cookie("cookie2")
     #TODO: Write proper test assert html.cookie("cookie1", "2n class") == "1a"

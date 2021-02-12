@@ -257,7 +257,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         The SNMP walk cache applies to individual OIDs that are marked as to-be-cached
         in the section definition plugins using `OIDCached`.
         """
-        return mode in (Mode.CACHED_DISCOVERY, Mode.CHECKING)
+        return mode in (Mode.DISCOVERY, Mode.CHECKING)
 
     def _is_cache_read_enabled(self, mode: Mode) -> bool:
         """Decide whether to try to read data from cache
@@ -269,17 +269,17 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         in the cache), but all sections for which the detection spec evaluates to true,
         which can be many more.
         """
-        return mode is Mode.CACHED_DISCOVERY
+        return mode is Mode.DISCOVERY
 
     def _is_cache_write_enabled(self, mode: Mode) -> bool:
         """Decide whether to write data to cache
 
         If we write the fetching result for SNMP, we also "override" the resulting
         sections for the next call that uses the cache. Since we use the cache for
-        CACHED_DISCOVERY only, we must only write it if we're dealing with the right
+        DISCOVERY only, we must only write it if we're dealing with the right
         sections for discovery.
         """
-        return mode in (Mode.CACHED_DISCOVERY, Mode.DISCOVERY)
+        return mode is Mode.DISCOVERY
 
     def _get_selection(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
@@ -296,7 +296,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         if mode in (Mode.INVENTORY, Mode.CHECKING) and self.do_status_data_inventory:
             return self.inventory_sections - self.disabled_sections
 
-        if mode in (Mode.DISCOVERY, Mode.CACHED_DISCOVERY):
+        if mode is Mode.DISCOVERY:
             return set(self.plugin_store) - self.disabled_sections
 
         return set()
@@ -310,11 +310,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         Detection:
 
-         * Mode.DISCOVERY / CACHED_DISCOVERY:
+         * Mode.DISCOVERY:
            In this straight forward case we must determine all applicable sections for
            the device in question.
-           Should the fetcher make it to this IO function in *CACHED_*DISCOVERY mode, it
-           should behave in the same way as DISCOVERY mode.
 
          * Mode.INVENTORY
            There is no need to try to detect all sections: For the inventory we have a

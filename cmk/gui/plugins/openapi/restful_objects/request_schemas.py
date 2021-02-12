@@ -1715,6 +1715,11 @@ class AcknowledgeServiceProblemBase(BaseSchema):
 
 
 class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
+    host_name = fields.HostField(
+        should_exist=True,
+        should_be_monitored=True,
+        required=True,
+    )
     service_description = fields.String(
         description=
         "The acknowledgement process will be applied to all matching service descriptions",

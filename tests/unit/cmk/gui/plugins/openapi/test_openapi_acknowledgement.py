@@ -12,19 +12,22 @@ from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusCon
 
 @pytest.mark.parametrize(
     argnames=[
+        'host_name',
         'service',
         'acknowledgement_sent',
     ],
     argvalues=[
-        ['CPU load', True],  # service Failed, acked.
-        ['Memory', False],  # service OK, not failed.
+        ['example.com', 'CPU load', True],  # service Failed, acked.
+        ['heute', 'Memory', False],  # service OK, not failed.
     ])
 def test_openapi_acknowledge_all_services(
     wsgi_app,
     with_automation_user,
     mock_livestatus,
+    host_name,
     service,
     acknowledgement_sent,
+    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
@@ -39,34 +42,23 @@ def test_openapi_acknowledge_all_services(
         },
         {
             'host_name': 'heute',
-            'description': 'CPU load',
-            'state': 1
-        },
-        {
-            'host_name': 'example.com',
-            'description': 'Memory',
-            'state': 0
-        },
-        {
-            'host_name': 'heute',
             'description': 'Memory',
             'state': 0
         },
     ])
 
+    live.expect_query([f'GET hosts\nColumns: name\nFilter: name = {host_name}'])
     live.expect_query([
         'GET services',
         'Columns: host_name description state',
+        f'Filter: host_name = {host_name}',
         f'Filter: description = {service}',
+        'And: 2',
     ])
 
     if acknowledgement_sent:
         live.expect_query(
-            f'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;{service};2;1;1;test123-...;Hello world!',
-            match_type='ellipsis',
-        )
-        live.expect_query(
-            f'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;{service};2;1;1;test123-...;Hello world!',
+            f'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;{host_name};{service};2;1;1;test123-...;Hello world!',
             match_type='ellipsis',
         )
 
@@ -75,6 +67,7 @@ def test_openapi_acknowledge_all_services(
             base + "/domain-types/acknowledge/collections/service",
             params=json.dumps({
                 'acknowledge_type': 'service',
+                'host_name': host_name,
                 'service_description': service,
                 'sticky': True,
                 'notify': True,
@@ -82,7 +75,7 @@ def test_openapi_acknowledge_all_services(
                 'comment': 'Hello world!',
             }),
             content_type='application/json',
-            status=204,
+            status=(204 if acknowledgement_sent else 422),
         )
 
 
@@ -221,7 +214,7 @@ def test_openapi_acknowledge_host(
                 'comment': 'Hello world!',
             }),
             content_type='application/json',
-            status=204,
+            status=204 if acknowledgement_sent else 422,
         )
 
 
@@ -372,6 +365,22 @@ def test_openapi_acknowledge_hostgroup(
             status=204,
         )
 
+    live.expect_query('GET hostgroups\nColumns: members\nFilter: name = twiddledee')
+    with live(expect_status_query=True):
+        wsgi_app.post(
+            base + '/domain-types/acknowledge/collections/host',
+            content_type='application/json',
+            params=json.dumps({
+                'acknowledge_type': 'hostgroup',
+                'hostgroup_name': 'twiddledee',
+                'sticky': False,
+                'notify': False,
+                'persistent': False,
+                'comment': 'Acknowledged'
+            }),
+            status=404,
+        )
+
 
 def test_openapi_acknowledge_host_with_query(
     wsgi_app,
@@ -451,5 +460,5 @@ def test_openapi_acknowledge_host_with_non_matching_query(
                 'persistent': False,
                 'comment': 'Acknowledged',
             }),
-            status=404,
+            status=422,
         )

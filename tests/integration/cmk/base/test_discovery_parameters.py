@@ -39,6 +39,18 @@ def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer
         web.activate_changes()
 
 
+@pytest.fixture(name="clear_cache")
+def test_clear_cache(site):  # noqa: F811 # pylint: disable=redefined-outer-name
+
+    cache_file = "tmp/check_mk/cache/modes-test-host"
+    if site.file_exists(cache_file):
+        site.delete_file(cache_file)
+    yield
+    if site.file_exists(cache_file):
+        site.delete_file(cache_file)
+
+
+@pytest.mark.usefixtures("clear_cache")
 def test_test_check_1_merged_rule(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_1.py"
@@ -113,6 +125,7 @@ register.check_plugin(
         assert False, '"test_check_1" not discovered'
 
 
+@pytest.mark.usefixtures("clear_cache")
 def test_test_check_1_all_rule(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_2.py"

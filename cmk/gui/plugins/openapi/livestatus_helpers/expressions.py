@@ -15,7 +15,7 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 """
 
 import abc
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, cast
 
 # TODO: column functions
 # TODO: more tests
@@ -419,6 +419,10 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
                                             'right': 'example.com'}}})
         Not(Not(Filter(name = example.com)))
 
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> tree_to_expr({'op': 'not', 'expr': Hosts.name == 'example.com'})
+        Not(Filter(name = example.com))
+
         >>> tree_to_expr({'op': 'no_way', \
                           'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
         Traceback (most recent call last):
@@ -440,6 +444,16 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
         ValueError: when unknown columns are queried
 
     """
+    if not isinstance(filter_dict, dict):
+        # FIXME
+        #   Because of not having correct Python packages at the root-level, sometimes a
+        #   locally defined class ends up having a relative dotted path, like for example
+        #       <class 'expressions.BinaryExpression'>
+        #   instead of
+        #       <class 'cmk.gui.plugins.openapi.livestatus_helpers.expressions.BinaryExpression'>
+        #   While these classes are actually the same, Python treats them distinct, so we can't
+        #   just say `isinstance(filter_dict, BinaryExpression)` (or their super-type) here.
+        return cast(QueryExpression, filter_dict)
     op = filter_dict['op']
     if op in LIVESTATUS_OPERATORS:
         left = filter_dict['left']

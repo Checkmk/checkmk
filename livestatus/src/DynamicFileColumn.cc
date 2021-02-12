@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "BlobColumn.h"
+#include "FileColumn.h"
 #include "FileSystemHelper.h"
 
 template <class T>
@@ -46,7 +46,7 @@ std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
                                  "': '" + f.string() + "' not in '" +
                                  basepath().string() + "'");
     }
-    return std::make_unique<typename BlobLambdaColumn<T>::File>(
-        name, _description, _basepath,
+    return std::make_unique<FileColumn<T>>(
+        name, _description, _offsets, _basepath,
         [this, f](const T &r) { return _filepath(r, f); });
 }

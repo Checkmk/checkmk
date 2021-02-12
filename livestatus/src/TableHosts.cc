@@ -21,7 +21,6 @@
 
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
-#include "BlobColumn.h"
 #include "BoolLambdaColumn.h"
 #include "Column.h"
 #include "CommentColumn.h"
@@ -33,6 +32,7 @@
 #include "DynamicColumn.h"
 #include "DynamicFileColumn.h"
 #include "DynamicRRDColumn.h"
+#include "FileColumn.h"
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
 #include "HostRRDColumn.h"
@@ -705,22 +705,22 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 mk_inventory_last(mc->mkInventoryPath() / hst.name));
         }));
 
-    table->addColumn(std::make_unique<BlobLambdaColumn<host>::File>(
+    table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "mk_inventory",
-        "The file content of the Check_MK HW/SW-Inventory",
+        "The file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
         [](const host &r) { return std::filesystem::path{r.name}; }));
-    table->addColumn(std::make_unique<BlobLambdaColumn<host>::File>(
+    table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "mk_inventory_gz",
-        "The gzipped file content of the Check_MK HW/SW-Inventory",
+        "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
         [](const host &r) {
             return std::filesystem::path{std::string{r.name} + ".gz"};
         }));
-    table->addColumn(std::make_unique<BlobLambdaColumn<host>::File>(
+    table->addColumn(std::make_unique<FileColumn<host>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
-        [mc]() { return mc->structuredStatusPath(); },
+        offsets, [mc]() { return mc->structuredStatusPath(); },
         [](const host &r) { return std::filesystem::path{r.name}; }));
     table->addColumn(std::make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",

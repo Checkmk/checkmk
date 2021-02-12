@@ -58,10 +58,10 @@ public:
     using ::detail::BlobColumn::Constant;
     using ::detail::BlobColumn::Reference;
     struct File;
-    BlobColumn(std::string name, std::string description, ColumnOffsets offsets,
+    BlobColumn(const std::string &name, const std::string &description,
+               const ColumnOffsets &offsets,
                std::function<std::vector<char>(const T &)> f)
-        : detail::BlobColumn{std::move(name), std::move(description),
-                             std::move(offsets)}
+        : detail::BlobColumn{name, description, offsets}
         , get_value_{std::move(f)} {}
     ~BlobColumn() override = default;
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
@@ -107,8 +107,9 @@ private:
 
 template <class T>
 struct BlobColumn<T>::File : BlobColumn {
-    File(std::string name, std::string description, ColumnOffsets,
-         std::function<std::filesystem::path()> basepath,
+    File(const std::string &name, const std::string &description,
+         const ColumnOffsets &offsets,
+         const std::function<std::filesystem::path()> &basepath,
          std::function<std::filesystem::path(const T &)> filepath);
     ~File() override = default;
 };
@@ -170,10 +171,11 @@ std::vector<char> detail::FileImpl<T>::operator()(const T &data) const {
 
 template <class T>
 BlobColumn<T>::File::File(
-    std::string name, std::string description, ColumnOffsets offsets,
-    std::function<std::filesystem::path()> basepath,
+    const std::string &name, const std::string &description,
+    const ColumnOffsets &offsets,
+    const std::function<std::filesystem::path()> &basepath,
     std::function<std::filesystem::path(const T &)> filepath)
-    : BlobColumn{std::move(name), std::move(description), std::move(offsets),
-                 detail::FileImpl{std::move(basepath), std::move(filepath)}} {}
+    : BlobColumn{name, description, offsets,
+                 detail::FileImpl{basepath, std::move(filepath)}} {}
 
 #endif  // BlobColumn_h

@@ -5,7 +5,8 @@
 
 #include <ctime>
 
-#include "NagiosGlobals.h"
+#include "NagiosGlobals.h"  // IWYU pragma: keep
+#include "nagios.h"
 
 extern "C" {
 // official exports ------------------------------------------------------------

@@ -376,7 +376,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 # Activation checkbox
                 table.cell("", css="buttons")
                 if can_activate_all:
-                    html.checkbox("site_%s" % site_id, bool(need_restart), cssclass="site_checkbox")
+                    html.checkbox("site_%s" % site_id, bool(need_action), cssclass="site_checkbox")
 
                 # Iconbuttons
                 table.cell(_("Actions"), css="buttons")

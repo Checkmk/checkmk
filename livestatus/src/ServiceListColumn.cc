@@ -69,6 +69,7 @@ std::vector<std::string> ServiceListColumn::getValue(
 }
 
 #ifndef CMC
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern TimeperiodsCache *g_timeperiods_cache;
 
 namespace {

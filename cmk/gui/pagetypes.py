@@ -31,8 +31,9 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.config as config
-from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
+import cmk.gui.weblib as weblib
+from cmk.gui.table import table_element, init_rowselect
 from cmk.gui.valuespec import (
     ID,
     Dictionary,
@@ -1128,8 +1129,10 @@ class Overridable(Base):
                     # ##     render_custom_columns(visual_name, visual)
 
             if what != "builtin":
+                html.hidden_field("selection_id", weblib.selection_id())
                 html.hidden_fields()
                 html.end_form()
+                init_rowselect(cls.type_name())
 
         html.footer()
 

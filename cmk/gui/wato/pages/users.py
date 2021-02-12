@@ -142,10 +142,7 @@ class ModeUsers(WatoMode):
                             title=_("Notify users"),
                             entries=list(self._page_menu_entries_notify_users()),
                         ),
-                        # TODO CMK-7121 row selection is written to
-                        # ~/var/check_mk/web/user/rowselection/null.mk with
-                        # "null" key
-                        make_checkbox_selection_topic("user"),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(

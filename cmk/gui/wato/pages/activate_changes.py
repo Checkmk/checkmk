@@ -16,8 +16,9 @@ from six import ensure_str
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element
 import cmk.gui.forms as forms
+import cmk.gui.weblib as weblib
+from cmk.gui.table import table_element, init_rowselect
 import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
@@ -81,10 +82,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                             title=_("On selected sites"),
                             entries=list(self._page_menu_entries_selected_sites()),
                         ),
-                        # TODO CMK-7121 row selection is written to
-                        # ~/var/check_mk/web/user/rowselection/null.mk with
-                        # "null" key
-                        make_checkbox_selection_topic("activate_changes"),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -255,6 +253,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             html.div("", id_="row_info")
             html.close_h3()
             self._change_table()
+        html.hidden_field("selection_id", weblib.selection_id())
+        init_rowselect(self.name())
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg")

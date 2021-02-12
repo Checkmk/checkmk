@@ -41,11 +41,13 @@ std::tuple<std::string, std::string, std::string> splitCompositeKey3(
 std::string join(const std::vector<std::string> &values,
                  const std::string &separator);
 
+constexpr auto whitespace = " \t\n\v\f\r";
+
 std::string lstrip(const std::string &str,
-                   const std::string &chars = " \t\n\v\f\r");
+                   const std::string &chars = whitespace);
 
 std::string rstrip(const std::string &str,
-                   const std::string &chars = " \t\n\v\f\r");
+                   const std::string &chars = whitespace);
 
 // TODO (sk): unit tests
 std::string_view rstrip(std::string_view str, std::string_view chars);
@@ -53,10 +55,10 @@ std::string_view rstrip(std::string_view str, std::string_view chars);
 std::string_view lstrip(std::string_view str, std::string_view chars);
 
 std::string strip(const std::string &str,
-                  const std::string &chars = " \t\n\v\f\r");
+                  const std::string &chars = whitespace);
 
 std::pair<std::string, std::string> nextField(
-    const std::string &str, const std::string &chars = " \t\n\v\f\r");
+    const std::string &str, const std::string &chars = whitespace);
 
 std::string replace_first(const std::string &str, const std::string &from,
                           const std::string &to);

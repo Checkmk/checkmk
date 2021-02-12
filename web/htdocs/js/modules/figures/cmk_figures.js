@@ -701,7 +701,7 @@ export function state_component(figurebase, state) {
 }
 
 export function renderable_value(value, domain, plot) {
-    const levels = make_levels(domain, plot.metrics);
+    const levels = make_levels(domain, plot.metric.bounds);
     const formatter = plot_render_function(plot);
 
     const color = levels.length
@@ -730,12 +730,15 @@ export function split_unit(formatted_value) {
     return {value: formatted_value, unit: ""};
 }
 
+export function getIn(object, ...args) {
+    return args.reduce((obj, level) => obj && obj[level], object);
+}
 export function get_function(render_string) {
     return Function(`"use strict"; return ${render_string}`)();
 }
-
 export function plot_render_function(plot) {
-    if (plot.js_render) return get_function(plot.js_render);
+    let js_render = getIn(plot, "metric", "unit", "js_render");
+    if (js_render) return get_function(js_render);
     return get_function("v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)");
 }
 

@@ -91,44 +91,25 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
             "draw": draw_status
         }
 
-    def metric_state_color(metric):
-        warn = metric["scalar"].get("warn")
-        crit = metric["scalar"].get("crit")
-        if warn is not None and crit is not None:
-            if metric['value'] >= crit:
-                return "#FF3232"
-            if metric['value'] >= warn:
-                return "#FFFE44"
-            return "#13D389"
-        return "#3CC2FF"
+    def purge_metric_for_js(metric):
+        return {
+            "bounds": metric["scalar"],
+            "unit": {k: v for k, v in metric["unit"].items() if k in ["js_render", "stepping"]}
+        }
 
     # Historic values are always added as plot_type area
     if properties.get("time_range", "current")[0] == "range":
         for row_id, metric, row in metrics:
-            # Fix style for 2.0 release
-            # time_range_params = properties["time_range"][1]
-            # chosen_color = time_range_params.get("color", "default")
-            # color = metric.get(
-            # 'color',
-            # "#008EFF",
-            # ) if chosen_color == "default" else chosen_color
-            plot_type = "area"
-            color = "#008EFF"
             plot_definition = {
                 "label": row['host_name'],
                 "id": row_id,
-                "plot_type": plot_type,
+                "plot_type": "area",
+                "style": "with_topline",
                 "use_tags": [row_id],
-                "color": color,
-                "opacity": 0.1 if plot_type == "area" else 1,
-                "js_render": metric['unit'].get("js_render"),
-                "stepping": metric['unit'].get("stepping"),
+                "color": "#008EFF",
+                "opacity": 0.1,
+                "metric": purge_metric_for_js(metric),
             }
-            if plot_type == "area":
-                plot_definition["style"] = "with_topline"
-            if properties.get("metric_status_display") == "background":
-                plot_definition["color"] = metric_state_color(metric)
-                plot_definition["opacity"] = 0.4 if plot_type == "area" else 1
 
             plot_definitions.append(plot_definition)
 
@@ -140,19 +121,9 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
             "plot_type": "single_value",
             "use_tags": [row_id],
             "svc_state": svc_map(row),
-            "js_render": metric['unit'].get("js_render"),
-            "stepping": metric['unit'].get("stepping"),
-            "metrics": {
-                "warn": metric["scalar"].get("warn"),
-                "crit": metric["scalar"].get("crit"),
-                "min": metric["scalar"].get("min"),
-                "max": metric["scalar"].get("max"),
-            }
+            "metric": purge_metric_for_js(metric),
+            "color": metric.get("color", "#3CC2FF")
         }
-        if "color" in metric:
-            plot_definition["color"] = metric["color"]
-        if "metric_status_display" in properties:
-            plot_definition["metric_status_display"] = properties["metric_status_display"]
 
         plot_definitions.append(plot_definition)
 

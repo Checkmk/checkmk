@@ -60,11 +60,13 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
                 "id": "number",
                 "plot_type": "single_value",
                 "use_tags": ["number"],
-                "metrics": {
-                    "warn": None,
-                    "crit": None,
-                    "min": None,
-                    "max": None,
+                "metric": {
+                    "bounds": {
+                        "warn": None,
+                        "crit": None,
+                        "min": None,
+                        "max": None,
+                    }
                 }
             }],
             "data": self._get_simple_number_data(properties, context),

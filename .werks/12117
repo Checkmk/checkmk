@@ -1,0 +1,12 @@
+Title: Inventory: docker: Readd labels for images and containers
+Knowledge: doc
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p21
+Date: 1613395397
+
+Labels for images and containers where not shown in docker inventory.

@@ -11,7 +11,17 @@ from ..agent_based_api.v1 import Metric, render, Result, State as state
 
 
 def is_linux_section(section: Dict[str, int]) -> bool:
-    return {"PageTables", "Writeback", "Committed_AS"} <= section.keys()
+    # match these to the keys required by checks/mem
+    return {
+        "Buffers",
+        "Cached",
+        "Dirty",
+        "MemFree",
+        "MemTotal",
+        "SwapFree",
+        "SwapTotal",
+        "Writeback",
+    } <= section.keys()
 
 
 def get_levels_mode_from_value(

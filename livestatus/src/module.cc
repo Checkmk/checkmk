@@ -54,13 +54,8 @@ using namespace std::chrono_literals;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
-#ifndef NAGIOS4
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern int event_broker_options;
-#else
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern unsigned long event_broker_options;
-#endif  // NAGIOS4
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int enable_environment_macros;
 

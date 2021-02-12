@@ -700,12 +700,14 @@ def check_discovery(
             family=host_config.default_address_family,
         )
 
+    mode = (Mode.DISCOVERY if params['inventory_check_do_scan'] else Mode.CACHED_DISCOVERY)
+
     nodes = sources.make_nodes(
         config_cache,
         host_config,
         ipaddress,
-        Mode.DISCOVERY,
-        sources.make_sources(host_config, ipaddress, mode=Mode.DISCOVERY),
+        mode,
+        sources.make_sources(host_config, ipaddress, mode=mode),
     )
     use_caches = cmk.core_helpers.cache.FileCacheFactory.maybe
     max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
@@ -1321,11 +1323,11 @@ def get_check_preview(
 
     _set_cache_opts_of_checkers(use_cached_snmp_data=use_cached_snmp_data)
     nodes = sources.make_nodes(
-        config_cache, host_config, ip_address, Mode.DISCOVERY,
+        config_cache, host_config, ip_address, Mode.CACHED_DISCOVERY,
         sources.make_sources(
             host_config,
             ip_address,
-            mode=Mode.DISCOVERY,
+            mode=Mode.CACHED_DISCOVERY,
             on_scan_error=on_error,
         ))
     max_cachefile_age = config.discovery_max_cachefile_age()

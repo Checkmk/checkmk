@@ -495,19 +495,15 @@ def _do_discovery_for(
 #                       if it returns False for a new item it will not be added, if it returns
 #                       False for a vanished item, that item is kept
 def discover_on_host(
-    *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     mode: str,
+    use_caches: bool,
     service_filters: ServiceFilters,
-    on_error: str,
-    use_cached_snmp_data: bool,
-    max_cachefile_age: int,
+    on_error: str = "ignore",
 ) -> DiscoveryResult:
 
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
-
-    cmk.base.checkers.FileCacheFactory.snmp_disabled = not use_cached_snmp_data
 
     hostname = host_config.hostname
     result = DiscoveryResult()
@@ -521,8 +517,6 @@ def discover_on_host(
     if hostname not in config_cache.all_active_hosts():
         result.error_text = ""
         return result
-
-    _set_cache_opts_of_checkers(use_cached_snmp_data=use_cached_snmp_data)
 
     host_label_discovery_result = HostLabelDiscoveryResult(
         labels=DiscoveredHostLabels(),
@@ -544,7 +538,7 @@ def discover_on_host(
         sources = checkers.make_sources(
             host_config,
             ipaddress,
-            mode=checkers.Mode.CACHED_DISCOVERY,
+            mode=checkers.Mode.DISCOVERY,
         )
         for source in sources:
             _configure_sources(source, discovery_parameters=discovery_parameters)
@@ -553,10 +547,10 @@ def discover_on_host(
             config_cache,
             host_config,
             ipaddress,
-            checkers.Mode.CACHED_DISCOVERY,
+            checkers.Mode.DISCOVERY,
             sources,
         )
-
+        max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
         multi_host_sections = MultiHostSections()
         checkers.update_host_sections(
             multi_host_sections,
@@ -605,22 +599,6 @@ def discover_on_host(
 
     result.self_total = result.self_new + result.self_kept
     return result
-
-
-def _set_cache_opts_of_checkers(*, use_cached_snmp_data: bool) -> None:
-    """Set caching options appropriate for discovery"""
-    # TCP data sources should use the cache: Fetching live data may steal log
-    # messages and the like from the checks.
-    # However: Discovering new hosts might have no cache, so don't enforce it.
-    checkers.FileCacheFactory.use_outdated = True
-    # As this is a change quite close to a release, I am leaving the following
-    # line in. As far as I can tell, this property is never being read after the
-    # callsites of this function.
-    checkers.FileCacheFactory.maybe = use_cached_snmp_data
-    # SNMP data sources *may* use the cache. Note the cached data results from
-    # the last time a *discovery* was done. It contains all sections for
-    # which the detection triggered at that time.
-    checkers.FileCacheFactory.snmp_disabled = not use_cached_snmp_data
 
 
 def _make_services_audit_log_object(services: List[Service]) -> Set[str]:
@@ -1042,16 +1020,11 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
     why_not = _may_rediscover(params, now_ts, oldest_queued)
     if not why_not:
         result = discover_on_host(
-            config_cache=config_cache,
-            host_config=host_config,
-            mode=_get_rediscovery_mode(params),
+            config_cache,
+            host_config,
+            _get_rediscovery_mode(params),
+            use_caches=True,
             service_filters=service_filters,
-            on_error="ignore",
-            use_cached_snmp_data=True,
-            # autodiscovery is run every 5 minutes (see
-            # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
-            # make sure we may use the file the active discovery check left behind:
-            max_cachefile_age=600,
         )
         if result.error_text is not None:
             if result.error_text:
@@ -1793,10 +1766,9 @@ def _get_cluster_services(
 
 
 def get_check_preview(
-    *,
     host_name: HostName,
-    max_cachefile_age: int,
-    use_cached_snmp_data: bool,
+    *,
+    use_caches: bool,
     on_error: str,
 ) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]:
     """Get the list of service of a host or cluster and guess the current state of
@@ -1811,8 +1783,6 @@ def get_check_preview(
         save_labels=False,
         only_host_labels=False,
     )
-
-    _set_cache_opts_of_checkers(use_cached_snmp_data=use_cached_snmp_data)
 
     sources = checkers.make_sources(
         host_config,
@@ -1829,6 +1799,7 @@ def get_check_preview(
         checkers.Mode.CACHED_DISCOVERY,
         sources,
     )
+    max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
 
     multi_host_sections = MultiHostSections()
     checkers.update_host_sections(

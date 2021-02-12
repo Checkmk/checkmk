@@ -44,8 +44,8 @@ class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
 
 
 def set_cache_opts(use_caches: bool) -> None:
-    # TODO check these settings vs. _set_cache_opts_of_checkers
-    # of the discovery module.
+    # TODO check these settings vs.
+    # cmk/base/automations/check_mk.py:_set_cache_opts_of_checkers
     if use_caches:
         FileCacheFactory.maybe = True
         FileCacheFactory.use_outdated = True

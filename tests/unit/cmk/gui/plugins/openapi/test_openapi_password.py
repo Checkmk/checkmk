@@ -12,7 +12,7 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
 
     base = '/NO_SITE/check_mk/api/v0'
 
-    _resp = wsgi_app.call_method(
+    resp = wsgi_app.call_method(
         'post',
         base + "/domain-types/password/collections/all",
         params=json.dumps({
@@ -22,7 +22,7 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
             "password": "tt",
             "shared": ["all"],
         }),
-        status=204,
+        status=200,
         content_type='application/json',
     )
 
@@ -33,7 +33,8 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
             "title": "foobu",
             "comment": "Something but nothing random"
         }),
-        status=204,
+        status=200,
+        headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )
 
@@ -67,7 +68,7 @@ def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automat
             "password": "tt",
             "shared": [],
         }),
-        status=204,
+        status=200,
         content_type='application/json',
     )
 
@@ -94,7 +95,7 @@ def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automa
             "password": "tt",
             "shared": ["all"],
         }),
-        status=204,
+        status=200,
         content_type='application/json',
     )
 

@@ -13,10 +13,8 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.type_defs import Livest
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.utils import to_timestamp
 
 # TODO: Test duration option
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import Or
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
-
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.hosts import Hosts
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.services import Services
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
@@ -77,8 +75,7 @@ def del_service_downtime(connection, downtime_id: int):
 
 def delete_downtime_with_query(connection, query):
     """Delete scheduled downtimes based upon a query"""
-    q = Query([Downtimes.id,
-               Downtimes.is_service]).filter(tree_to_expr(query, Downtimes.__tablename__))
+    q = Query([Downtimes.id, Downtimes.is_service]).filter(query)
     for downtime_id, is_service in [(row['id'], row['is_service']) for row in q.iterate(connection)
                                    ]:
         if is_service:
@@ -101,7 +98,7 @@ def delete_downtime(connection, downtime_id):
 
 def schedule_services_downtimes_with_query(
     connection,
-    query,
+    query: QueryExpression,
     start_time: dt.datetime,
     end_time: dt.datetime,
     recur: RecurMode = 'fixed',
@@ -111,8 +108,10 @@ def schedule_services_downtimes_with_query(
 ):
     """Schedule downtimes for services based upon a query"""
 
-    q = Query([Services.description,
-               Services.host_name]).filter(tree_to_expr(query, Services.__tablename__))
+    q = Query(
+        [Services.description, Services.host_name],
+        query,
+    )
     for host_name, service_description in [
         (row['host_name'], row['description']) for row in q.iterate(connection)
     ]:
@@ -414,7 +413,7 @@ def schedule_hostgroup_host_downtime(
 
 def schedule_hosts_downtimes_with_query(
     connection,
-    query: str,
+    query: QueryExpression,
     start_time: dt.datetime,
     end_time: dt.datetime,
     include_all_services=False,
@@ -425,7 +424,7 @@ def schedule_hosts_downtimes_with_query(
 ):
     """Schedule a downtimes for hosts based upon a query"""
 
-    q = Query([Hosts.name]).filter(tree_to_expr(query, Hosts.__tablename__))
+    q = Query([Hosts.name]).filter(query)
     hosts = [row['name'] for row in q.iterate(connection)]
     if not comment:
         comment = f"Downtime for hosts {', '.join(hosts)}"

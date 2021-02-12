@@ -21,7 +21,7 @@ from cmk.gui import config, sites
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands import downtimes as downtime_commands
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -187,12 +187,11 @@ def show_downtimes(param):
         Downtimes.comment,
     ])
 
-    filter_tree = param.get('query')
+    query_expr = param.get('query')
     host_name = param.get('host_name')
     service_description = param.get('service_description')
-    if filter_tree is not None:
-        expr = tree_to_expr(filter_tree, Downtimes.__tablename__)
-        q = q.filter(expr)
+    if query_expr is not None:
+        q = q.filter(query_expr)
 
     if host_name is not None:
         q = q.filter(Downtimes.host_name.contains(host_name))
@@ -222,25 +221,14 @@ def delete_downtime(params):
     elif delete_type == "params":
         hostname = body['hostname']
         if "services" not in body:
-            host_query = {"op": "~", "left": "downtimes.host_name", "right": hostname}
-            downtime_commands.delete_downtime_with_query(live, host_query)
+            host_expr = Downtimes.host_name.op("~", hostname)
+            downtime_commands.delete_downtime_with_query(live, host_expr)
         else:
-            services_query = {
-                "op": "and",
-                "expr": [{
-                    'op': '=',
-                    'left': 'downtimes.host_name',
-                    'right': body['hostname']
-                }, {
-                    'op': 'or',
-                    'expr': [{
-                        'op': '=',
-                        'left': 'downtimes.service_description',
-                        'right': service_description
-                    } for service_description in body['services']]
-                }]
-            }
-            downtime_commands.delete_downtime_with_query(live, services_query)
+            services_expr = And(*[
+                Downtimes.host_name == body['hostname'],
+                Or(*[Downtimes.service_description == svc_desc for svc_desc in body['services']])
+            ])
+            downtime_commands.delete_downtime_with_query(live, services_expr)
     else:
         return problem(status=400,
                        title="Unhandled delete_type.",

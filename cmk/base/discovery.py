@@ -544,7 +544,7 @@ def discover_on_host(
         sources = checkers.make_sources(
             host_config,
             ipaddress,
-            mode=checkers.Mode.CACHED_DISCOVERY,
+            mode=checkers.Mode.DISCOVERY,
         )
         for source in sources:
             _configure_sources(source, discovery_parameters=discovery_parameters)
@@ -553,7 +553,7 @@ def discover_on_host(
             config_cache,
             host_config,
             ipaddress,
-            checkers.Mode.CACHED_DISCOVERY,
+            checkers.Mode.DISCOVERY,
             sources,
         )
 
@@ -747,10 +747,7 @@ def check_discovery(
     if ipaddress is None and not host_config.is_cluster:
         ipaddress = ip_lookup.lookup_ip_address(host_config)
 
-    mode = (checkers.Mode.DISCOVERY
-            if params['inventory_check_do_scan'] else checkers.Mode.CACHED_DISCOVERY)
-
-    sources = checkers.make_sources(host_config, ipaddress, mode=mode)
+    sources = checkers.make_sources(host_config, ipaddress, mode=checkers.Mode.DISCOVERY)
     for source in sources:
         _configure_sources(
             source,
@@ -761,7 +758,7 @@ def check_discovery(
         config_cache,
         host_config,
         ipaddress,
-        mode,
+        checkers.Mode.DISCOVERY,
         sources,
     )
     use_caches = checkers.FileCacheFactory.maybe
@@ -1817,7 +1814,7 @@ def get_check_preview(
     sources = checkers.make_sources(
         host_config,
         ip_address,
-        mode=checkers.Mode.CACHED_DISCOVERY,
+        mode=checkers.Mode.DISCOVERY,
     )
     for source in sources:
         _configure_sources(source, discovery_parameters=discovery_parameters)
@@ -1826,7 +1823,7 @@ def get_check_preview(
         config_cache,
         host_config,
         ip_address,
-        checkers.Mode.CACHED_DISCOVERY,
+        checkers.Mode.DISCOVERY,
         sources,
     )
 

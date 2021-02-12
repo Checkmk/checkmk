@@ -34,7 +34,8 @@ export function add() {
     g_hover_menu = document.createElement("div");
     g_hover_menu.setAttribute("id", "hover_menu");
     g_hover_menu.className = "hover_menu";
-    document.body.appendChild(g_hover_menu);
+
+    hover_container().appendChild(g_hover_menu);
 }
 
 export function update_content(code, event_) {
@@ -132,4 +133,20 @@ export function update_position(event_) {
 function stretch_to_full_width(hover_menu, container_size, scrollLeft, hoverSpacer) {
     g_hover_menu.style.left = hoverSpacer + scrollLeft + "px";
     g_hover_menu.style.width = container_size.width - 2 * hoverSpacer + "px";
+}
+
+function hover_container() {
+    // Return the simplebar wrapper div (if it exists) to avoid the default browser scrollbar for
+    // long hover menu contents. If it doesn't exist try the content wrapper div. If that doesn't
+    // exist either, fall back to the document body.
+    const container = utils.get_content_wrapper_object();
+    if (!container) {
+        return document.body;
+    }
+
+    const simplebar_wrapper = container.getElementsByClassName("simplebar-content-wrapper");
+    if (simplebar_wrapper.length == 0) {
+        return container;
+    }
+    return simplebar_wrapper[0];
 }

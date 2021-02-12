@@ -22,8 +22,11 @@ from cmk.base.check_utils import Service
 
 _ServiceFilter = Callable[[HostName, Service], bool]
 
+_MATCH_EVERYTHING = regex("(.*)")
 
-# TODO (mo): see if this can become Sequences
+_MATCH_NOTHING = regex("((?!x)x)")
+
+
 class _ServiceFilterLists(NamedTuple):
     new_whitelist: Optional[List[str]]
     new_blacklist: Optional[List[str]]
@@ -120,21 +123,20 @@ def _get_service_filter_lists(rediscovery_parameters: Dict[str, Any]) -> _Servic
     raise NotImplementedError()
 
 
-def _get_service_filter_func(service_whitelist: Optional[List[str]],
-                             service_blacklist: Optional[List[str]]) -> _ServiceFilter:
+def _get_service_filter_func(
+    service_whitelist: Optional[List[str]],
+    service_blacklist: Optional[List[str]],
+) -> _ServiceFilter:
     if not service_whitelist and not service_blacklist:
         return _accept_all_services
 
-    if not service_whitelist:
-        # whitelist. if none is specified, this matches everything
-        service_whitelist = [".*"]
+    whitelist = (
+        regex("|".join(f"({p})" for p in service_whitelist))  #
+        if service_whitelist else _MATCH_EVERYTHING)
 
-    if not service_blacklist:
-        # blacklist. if none is specified, this matches nothing
-        service_blacklist = ["(?!x)x"]
-
-    whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
-    blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
+    blacklist = (
+        regex("|".join(f"({p})" for p in service_blacklist))  #
+        if service_blacklist else _MATCH_NOTHING)
 
     return lambda host_name, service: _filter_service_by_patterns(host_name, service, whitelist,
                                                                   blacklist)

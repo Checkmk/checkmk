@@ -1173,36 +1173,18 @@ class SingleValuePlot extends SubPlot {
 
         const plot_size = this._renderer.plot_size;
         const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
-        if (
-            this.definition.metric_status_display &&
-            this.definition.metric_status_display === "background"
-        ) {
-            this.svg
-                .selectAll("rect.status_background")
-                .data([null])
-                .join("rect")
-                .classed("status_background", true)
-                .attr("y", 0)
-                .attr("x", 0)
-                .attr("width", plot_size.width)
-                .attr("height", plot_size.height)
-                .attr("fill", value.color)
-                .attr("opacity", 0.4);
-            value.color = "#FFFFFF";
-        } else {
-            this.svg.selectAll("rect.status_background").remove();
-            if (this.definition.metric_status_display == null) value.color = "#3CC2FF"; // default blue
-        }
+        let inner_status_display = cmk_figures.getIn(this, "definition", "inner_render");
 
+        const config = new URLSearchParams(this._post_body);
         cmk_figures.metric_value_component(
             this.svg,
             value,
             {x: plot_size.width / 2, y: plot_size.height / 2 + font_size / 3},
-            {font_size, color: value.color}
+            {font_size, ...inner_status_display}
         );
 
-        if (this.definition.svc_state)
-            cmk_figures.state_component(this._renderer, this.definition.svc_state);
+        let border_component = cmk_figures.getIn(this, "definition", "border_component");
+        if (border_component) cmk_figures.state_component(this._renderer, border_component);
     }
 
     get_color() {

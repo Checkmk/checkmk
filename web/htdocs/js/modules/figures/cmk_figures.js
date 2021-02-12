@@ -507,22 +507,22 @@ export function clamp(value, domain) {
     return Math.min(Math.max(value, domain[0]), domain[1]);
 }
 
-export function make_levels(domain, metrics) {
+export function make_levels(domain, bounds) {
     let [dmin, dmax] = domain;
-    if (metrics.warn == null || metrics.crit == null) return [];
+    if (bounds.warn == null || bounds.crit == null) return [];
 
-    if (metrics.warn >= dmax) metrics.warn = dmax;
-    if (metrics.crit >= dmax) metrics.crit = dmax;
-    if (metrics.warn <= dmin) dmin = metrics.warn;
+    if (bounds.warn >= dmax) bounds.warn = dmax;
+    if (bounds.crit >= dmax) bounds.crit = dmax;
+    if (bounds.warn <= dmin) dmin = bounds.warn;
 
     return [
-        {from: metrics.crit, to: dmax, color: "#FF3232"},
+        {from: bounds.crit, to: dmax, color: "#FF3232"},
         {
-            from: metrics.warn,
-            to: metrics.crit,
+            from: bounds.warn,
+            to: bounds.crit,
             color: "#FFFE44",
         },
-        {from: dmin, to: metrics.warn, color: "#13D389"},
+        {from: dmin, to: bounds.warn, color: "#13D389"},
     ];
 }
 // Base class for dc.js based figures (using crossfilter)
@@ -662,7 +662,7 @@ export class FigureLegend {
 
 // Figure which inherited from FigureBase. Needs access to svg and size
 export function state_component(figurebase, state) {
-    if (!state.draw) {
+    if (!getIn(state, "draw")) {
         figurebase.svg.selectAll(".state_component").remove();
         return;
     }
@@ -747,7 +747,7 @@ export function metric_value_component(selection, value, attr, style) {
         .selectAll("a.single_value")
         .data([value])
         .join("a")
-        .classed("single_value", true)
+        .attr("class", `single_value${style.style ? " " + style.style : ""}`)
         .attr("xlink:href", d => d.url || null);
     let text = link
         .selectAll("text")
@@ -757,7 +757,6 @@ export function metric_value_component(selection, value, attr, style) {
         .attr("x", attr.x)
         .attr("y", attr.y)
         .attr("text-anchor", "middle")
-        .style("fill", style.color)
         .style("font-size", style.font_size + "px");
 
     let unit = text

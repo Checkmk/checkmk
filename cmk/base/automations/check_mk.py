@@ -94,17 +94,6 @@ class DiscoveryAutomation(Automation):
         discovery.schedule_discovery_check(host_config.hostname)
 
 
-def _set_cache_opts_of_checkers(use_caches: bool) -> None:
-    # TODO check these settings vs.
-    # cmk/base/checkers/_abstract.py:set_cache_opts
-    if use_caches:
-        checkers.FileCacheFactory.use_outdated = True
-        # TODO why does this only apply to TCP data sources and not
-        # to all agent data sources?
-        checkers.tcp.TCPSource.use_only_cache = True
-    checkers.FileCacheFactory.maybe = use_caches
-
-
 class AutomationDiscovery(DiscoveryAutomation):
     cmd = "inventory"  # TODO: Rename!
     needs_config = True
@@ -128,12 +117,10 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         # Do a full service scan
         if args[0] == "@scan":
+            use_cached_snmp_data = False
             args = args[1:]
-            use_caches = False
         else:
-            use_caches = True
-
-        _set_cache_opts_of_checkers(use_caches)
+            use_cached_snmp_data = True
 
         if len(args) < 2:
             raise MKAutomationError(
@@ -150,12 +137,13 @@ class AutomationDiscovery(DiscoveryAutomation):
         for hostname in hostnames:
             host_config = config_cache.get_host_config(hostname)
             results[hostname] = discovery.discover_on_host(
-                config_cache,
-                host_config,
-                mode,
-                use_caches,
-                service_filters,
+                config_cache=config_cache,
+                host_config=host_config,
+                mode=mode,
+                service_filters=service_filters,
                 on_error=on_error,
+                use_cached_snmp_data=use_cached_snmp_data,
+                max_cachefile_age=config.discovery_max_cachefile_age(),
             )
 
             if results[hostname].error_text is None:
@@ -188,16 +176,14 @@ class AutomationTryDiscovery(Automation):
     def _execute_discovery(
             self, args: List[str]) -> Tuple[discovery.CheckPreviewTable, DiscoveredHostLabels]:
 
-        use_caches = False
+        use_cached_snmp_data = False
         if args[0] == '@noscan':
             args = args[1:]
-            use_caches = True
+            use_cached_snmp_data = True
 
         elif args[0] == '@scan':
             # Do a full service scan
             args = args[1:]
-
-        _set_cache_opts_of_checkers(use_caches)
 
         if args[0] == '@raiseerrors':
             on_error = "raise"
@@ -205,10 +191,10 @@ class AutomationTryDiscovery(Automation):
         else:
             on_error = "warn"
 
-        hostname = args[0]
         return discovery.get_check_preview(
-            hostname,
-            use_caches=use_caches,
+            host_name=args[0],
+            max_cachefile_age=config.discovery_max_cachefile_age(),
+            use_cached_snmp_data=use_cached_snmp_data,
             on_error=on_error,
         )
 

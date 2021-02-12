@@ -97,6 +97,7 @@ void SocketPair::close() {
 }
 
 namespace {
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 thread_local std::string thread_name;
 }  // namespace
 

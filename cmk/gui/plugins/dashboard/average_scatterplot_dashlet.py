@@ -4,29 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    Iterable,
-)
+from typing import Dict, Iterable
+
 import numpy as np  # type: ignore[import]
 
 from cmk.utils.render import date_and_time
 
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import (
-    DictionaryElements,
-    GraphColor,
-    Timerange,
-)
-from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
-from cmk.gui.plugins.dashboard.utils import (
-    render_title_with_macros_string,
-    service_table_query,
-)
-from cmk.gui.plugins.metrics.utils import MetricName
-from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns, merge_multicol
-from cmk.gui.plugins.metrics.utils import get_metric_info
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import ABCFigureDashlet, dashlet_registry
+from cmk.gui.plugins.dashboard.utils import render_title_with_macros_string, service_table_query
+from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol, metric_in_all_rrd_columns
+from cmk.gui.plugins.metrics.utils import get_metric_info, MetricName
+from cmk.gui.valuespec import DictionaryElements, GraphColor, Timerange
 
 
 class AverageScatterplotDataGenerator:

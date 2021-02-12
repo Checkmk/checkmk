@@ -17,8 +17,6 @@
 
 import abc
 import base64
-from collections.abc import MutableMapping, Sequence as ABCSequence
-from enum import Enum
 import datetime
 import hashlib
 import io
@@ -29,71 +27,54 @@ import logging
 import math
 import numbers
 import os
-from pathlib import Path
 import re
 import socket
 import time
-import uuid
 import urllib.parse
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Final,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional as _Optional,
-    Pattern,
-    Protocol,
-    Sequence,
-    Set,
-    SupportsFloat,
-    Tuple as _Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+import uuid
+from collections.abc import MutableMapping
+from collections.abc import Sequence as ABCSequence
+from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Dict, Final, Generic, Iterable, List, NamedTuple
+from typing import Optional as _Optional
+from typing import Pattern, Protocol, Sequence, Set, SupportsFloat
+from typing import Tuple as _Tuple
+from typing import Type, TypeVar, Union
 
+from Cryptodome.Cipher import AES
+from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
-
+from OpenSSL import crypto  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from six import ensure_binary, ensure_str
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Cipher import AES
-from OpenSSL import crypto  # type: ignore[import]
-
-import cmk.utils.log
-import cmk.utils.paths
-import cmk.utils.defines as defines
-from cmk.utils.type_defs import Seconds
-import cmk.utils.regex
-
-import cmk.gui.forms as forms
-import cmk.gui.utils as utils
-import cmk.gui.escaping as escaping
-import cmk.gui.sites as sites
-import cmk.gui.config as config
-from cmk.gui.i18n import _
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request as global_request
-from cmk.gui.utils.html import HTML
-from cmk.gui.utils.labels import (
-    encode_labels_for_tagify,
-    encode_labels_for_http,
-    label_help_text,
-)
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.http import UploadedFile
-from cmk.gui.type_defs import Choices, GroupedChoices, ChoiceGroup
-from cmk.gui.view_utils import render_labels
-from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
-
-from cmk.gui.utils.urls import makeuri
 
 import livestatus
+
+import cmk.utils.defines as defines
+import cmk.utils.log
+import cmk.utils.paths
+import cmk.utils.regex
+from cmk.utils.type_defs import Seconds
+
+import cmk.gui.config as config
+import cmk.gui.escaping as escaping
+import cmk.gui.forms as forms
+import cmk.gui.sites as sites
+import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import html
+from cmk.gui.globals import request as global_request
+from cmk.gui.http import UploadedFile
+from cmk.gui.i18n import _
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.type_defs import ChoiceGroup, Choices, GroupedChoices
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.labels import encode_labels_for_http, encode_labels_for_tagify, label_help_text
+from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
+from cmk.gui.utils.urls import makeuri
+from cmk.gui.view_utils import render_labels
 
 seconds_per_day = 86400
 

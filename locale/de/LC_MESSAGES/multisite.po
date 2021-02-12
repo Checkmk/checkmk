@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-02-11 15:39+0000\n"
 "Last-Translator: Moritz Kiemer <moritz.kiemer@tribe29.com>\n"
@@ -7850,6 +7850,10 @@ msgstr "Caches"
 msgid "Call a Rule"
 msgstr "Regel auswählen..."
 
+#, fuzzy
+msgid "Call a rule"
+msgstr "Regel auswählen..."
+
 msgid "Call legs"
 msgstr "Call legs"
 
@@ -11340,6 +11344,12 @@ msgstr "Neues Thema erstellen"
 
 msgid "Create new virtual host tree configuration"
 msgstr "Neuen virtuellen Hostbaum erzeugen"
+
+msgid "Create nodes based on a host search"
+msgstr "Erzeuge Nodes basierend auf einer Host-Suche"
+
+msgid "Create nodes based on a service search"
+msgstr "Erzeuge Nodes basierend auf einer Service-Suche"
 
 #, fuzzy
 msgid "Create notification with the following parameters"
@@ -31891,10 +31901,6 @@ msgstr "Node-Statistiken"
 msgid "Node Status"
 msgstr "Node-Statistiken"
 
-#, fuzzy
-msgid "Node configuration"
-msgstr "Konfiguration"
-
 msgid "Node name"
 msgstr "Name des Knotens"
 
@@ -31927,12 +31933,8 @@ msgid "Nodes"
 msgstr "Nodes"
 
 #, fuzzy
-msgid "Nodes configuration"
-msgstr "Konfiguration"
-
-#, fuzzy
-msgid "Nodes to create from search result(s)"
-msgstr "Anzahl von Ordnern, die pro Level anzulegen sind"
+msgid "Nodes to create"
+msgstr "Zu erzeugende Nodes:"
 
 msgid "Noise floor"
 msgstr "Grundrauschen"
@@ -39976,10 +39978,6 @@ msgstr "Zeit seit dem letzten erfolgreichen Backup"
 msgid "Search index successfully updated"
 msgstr "Konfiguration erfolgreich aktiviert."
 
-#, fuzzy
-msgid "Search node arguments"
-msgstr "Suche in den Regeln"
-
 msgid "Search only the entry at the base DN"
 msgstr "Eintrag nur in Basis DN suchen"
 
@@ -40022,10 +40020,6 @@ msgstr "Nach Regelsätzen und Regeln suchen"
 #, fuzzy
 msgid "Search scope"
 msgstr "Suchbereich"
-
-#, fuzzy
-msgid "Search services"
-msgstr "Veraltete Services"
 
 msgid "Search string"
 msgstr "Suchtext"
@@ -63735,6 +63729,31 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#, fuzzy
+#~| msgid "configuration"
+#~ msgid "Node configuration"
+#~ msgstr "Konfiguration"
+
+#, fuzzy
+#~| msgid "configuration"
+#~ msgid "Nodes configuration"
+#~ msgstr "Konfiguration"
+
+#, fuzzy
+#~| msgid "Number of folders to create in each level"
+#~ msgid "Nodes to create from search result(s)"
+#~ msgstr "Anzahl von Ordnern, die pro Level anzulegen sind"
+
+#, fuzzy
+#~| msgid "Search in rules"
+#~ msgid "Search node arguments"
+#~ msgstr "Suche in den Regeln"
+
+#, fuzzy
+#~| msgid "Stale services"
+#~ msgid "Search services"
+#~ msgstr "Veraltete Services"
+
 #~ msgid "Process name as defined at discovery"
 #~ msgstr "Prozessname wie bei der Erkennung festgelegt"
 
@@ -65335,12 +65354,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Create new user"
 #~ msgstr "Erzeuge neuen Benutzer"
 
-#~ msgid "Create nodes based on a host search"
-#~ msgstr "Erzeuge Nodes basierend auf einer Host-Suche"
-
-#~ msgid "Create nodes based on a service search"
-#~ msgstr "Erzeuge Nodes basierend auf einer Service-Suche"
-
 #~ msgid "Create random hosts"
 #~ msgstr "Erzeuge Zufallshosts"
 
@@ -66338,9 +66351,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "No changes"
 #~ msgstr "Keine Änderungen"
-
-#~ msgid "Nodes to create:"
-#~ msgstr "Zu erzeugende Nodes:"
 
 #~ msgid "Note"
 #~ msgstr "Anmerkungen"

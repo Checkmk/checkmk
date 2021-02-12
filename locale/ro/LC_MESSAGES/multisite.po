@@ -7418,6 +7418,10 @@ msgstr ""
 msgid "Call a Rule"
 msgstr ""
 
+#, fuzzy
+msgid "Call a rule"
+msgstr "Arata regulile de utilizator"
+
 msgid "Call legs"
 msgstr ""
 
@@ -10619,6 +10623,12 @@ msgid "Create new topic"
 msgstr ""
 
 msgid "Create new virtual host tree configuration"
+msgstr ""
+
+msgid "Create nodes based on a host search"
+msgstr ""
+
+msgid "Create nodes based on a service search"
 msgstr ""
 
 #, fuzzy
@@ -29904,10 +29914,6 @@ msgid "Node Status"
 msgstr "Statusul Serverului"
 
 #, fuzzy
-msgid "Node configuration"
-msgstr "foloseste configuratia locala"
-
-#, fuzzy
 msgid "Node name"
 msgstr "Nume nou"
 
@@ -29940,11 +29946,8 @@ msgid "Nodes"
 msgstr ""
 
 #, fuzzy
-msgid "Nodes configuration"
-msgstr "Adaugp o noua configurație de utilizator"
-
-msgid "Nodes to create from search result(s)"
-msgstr ""
+msgid "Nodes to create"
+msgstr "catre port:"
 
 msgid "Noise floor"
 msgstr ""
@@ -37682,10 +37685,6 @@ msgstr ""
 msgid "Search index successfully updated"
 msgstr "Portul TCP pentru conexiune"
 
-#, fuzzy
-msgid "Search node arguments"
-msgstr "fara argumente"
-
 msgid "Search only the entry at the base DN"
 msgstr ""
 
@@ -37731,10 +37730,6 @@ msgstr "Arata regulile de utilizator"
 #, fuzzy
 msgid "Search scope"
 msgstr "Cautare"
-
-#, fuzzy
-msgid "Search services"
-msgstr "servicii"
 
 #, fuzzy
 msgid "Search string"
@@ -57754,6 +57749,26 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~| msgid "use local configuration"
+#~ msgid "Node configuration"
+#~ msgstr "foloseste configuratia locala"
+
+#, fuzzy
+#~| msgid "Add new user configuration"
+#~ msgid "Nodes configuration"
+#~ msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+#~| msgid "without arguments"
+#~ msgid "Search node arguments"
+#~ msgstr "fara argumente"
+
+#, fuzzy
+#~| msgid "services"
+#~ msgid "Search services"
+#~ msgstr "servicii"
+
+#, fuzzy
 #~ msgid "Activate on affected sites"
 #~ msgstr "Conexiuni Active"
 
@@ -59088,10 +59103,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "No changes"
 #~ msgstr "%d schimbări"
-
-#, fuzzy
-#~ msgid "Nodes to create:"
-#~ msgstr "catre port:"
 
 #, fuzzy
 #~ msgid "Nonheap Memory Levels"

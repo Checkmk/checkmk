@@ -643,6 +643,12 @@ class ExprSchema(OneOfSchema):
         return super().load(data, many=many, partial=partial, unknown=unknown)
 
 
+class _ExprNested(Nested):
+    def _load(self, value, data, partial=None):
+        _data = super()._load(value, data, partial=partial)
+        return tree_to_expr(_data, table=self.metadata['table'])
+
+
 def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 
@@ -656,8 +662,9 @@ def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
         A marshmallow Nested field.
 
     """
-    return Nested(
+    return _ExprNested(
         ExprSchema(context={'table': table}),
+        table=table,
         description=(
             f"An query expression of the Livestatus {table.__tablename__!r} table in nested "
             "dictionary form. If you want to use multiple expressions, nest them with the "

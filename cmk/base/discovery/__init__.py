@@ -339,7 +339,7 @@ def do_discovery(
                     on_scan_error=on_error,
                 ),
             )
-            max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
+            max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
 
             parsed_sections_broker = ParsedSectionsBroker()
             sources.update_host_sections(
@@ -501,7 +501,7 @@ def discover_on_host(
             ),
         )
 
-        max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
+        max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
         parsed_sections_broker = ParsedSectionsBroker()
         sources.update_host_sections(
             parsed_sections_broker,
@@ -690,7 +690,7 @@ def check_discovery(
         sources.make_sources(host_config, ipaddress, mode=mode),
     )
     use_caches = cmk.core_helpers.cache.FileCacheFactory.maybe
-    max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
+    max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
     if not fetcher_messages:
         # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
         #       Also See: `cmk.base.checking.do_check()`
@@ -1295,17 +1295,15 @@ def get_check_preview(
         only_host_labels=False,
     )
 
-    mode = Mode.CACHED_DISCOVERY if use_caches else Mode.DISCOVERY
-
     nodes = sources.make_nodes(
-        config_cache, host_config, ip_address, mode,
+        config_cache, host_config, ip_address, Mode.CACHED_DISCOVERY,
         sources.make_sources(
             host_config,
             ip_address,
-            mode=mode,
+            mode=Mode.CACHED_DISCOVERY,
             on_scan_error=on_error,
         ))
-    max_cachefile_age = config.discovery_max_cachefile_age(use_caches)
+    max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
 
     parsed_sections_broker = ParsedSectionsBroker()
     sources.update_host_sections(

@@ -3,6 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <functional>
 #include <string>
 
 #include "Row.h"
@@ -49,4 +50,30 @@ TEST(StringColumn, Reference) {
 
     v += " world"s;
     EXPECT_EQ(v, col.getValue(row));
+}
+
+TEST(StringColumn, GetValueLambda) {
+    auto v = "hello"s;
+
+    const auto val = DummyValue{};
+    const auto row = DummyRow{&val};
+    const auto col = StringColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+            return v;
+        }};
+
+    EXPECT_EQ(v, col.getValue(row));
+}
+
+TEST(StringColumn, GetValueDefault) {
+    auto v = "hello"s;
+
+    const auto row = DummyRow{nullptr};
+    const auto col = StringColumn<DummyRow>{
+        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+            return v;
+        }};
+
+    EXPECT_NE(v, col.getValue(row));
+    EXPECT_EQ(""s, col.getValue(row));
 }

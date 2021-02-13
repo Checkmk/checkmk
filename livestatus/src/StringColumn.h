@@ -58,8 +58,8 @@ struct StringColumn : ::Column {
 };
 }  // namespace detail
 
-// TODO(sp): Is there a way to have a default value in the template parameters?
-// Currently it is hardwired to the empty string.
+// TODO(ml, sp): C++-20 should let us use strings as default
+// template parameter (see P0732).
 template <class T>
 class StringColumn : public ::detail::StringColumn {
 public:
@@ -69,41 +69,47 @@ public:
 
     StringColumn(const std::string& name, const std::string& description,
                  const ColumnOffsets& offsets,
-                 std::function<std::string(const T&)> gv)
-        : detail::StringColumn(name, description, offsets)
-        , get_value_(std::move(gv)) {}
+                 const std::function<std::string(const T&)>& f)
+        : detail::StringColumn{name, description, offsets}, f_{f} {}
+    ~StringColumn() override = default;
 
     [[nodiscard]] std::string getValue(Row row) const override {
         using namespace std::string_literals;
         const T* data = columnData<T>(row);
-        return data == nullptr ? ""s : get_value_(*data);
+        return data == nullptr ? ""s : f_(*data);
     }
 
 private:
-    std::function<std::string(const T&)> get_value_;
+    const std::function<std::string(const T&)> f_;
 };
 
 class detail::StringColumn::Constant : public detail::StringColumn {
 public:
-    Constant(std::string name, std::string description, std::string x)
-        : detail::StringColumn(std::move(name), std::move(description), {})
-        , x{std::move(x)} {}
+    Constant(const std::string& name, const std::string& description,
+             const std::string& x)
+        : detail::StringColumn{name, description, {}}, x_{x} {}
+    ~Constant() override = default;
 
-    [[nodiscard]] std::string getValue(Row /*row*/) const override { return x; }
+    [[nodiscard]] std::string getValue(Row /*row*/) const override {
+        return x_;
+    }
 
 private:
-    const std::string x;
+    const std::string x_;
 };
 
 class detail::StringColumn::Reference : public detail::StringColumn {
 public:
-    Reference(std::string name, std::string description, const std::string& x)
-        : detail::StringColumn(std::move(name), std::move(description), {})
-        , x{x} {}
-    [[nodiscard]] std::string getValue(Row /*row*/) const override { return x; }
+    Reference(const std::string& name, const std::string& description,
+              const std::string& x)
+        : detail::StringColumn{name, description, {}}, x_{x} {}
+    ~Reference() override = default;
+    [[nodiscard]] std::string getValue(Row /*row*/) const override {
+        return x_;
+    }
 
 private:
-    const std::string& x;
+    const std::string& x_;
 };
 
 template <class T>

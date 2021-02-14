@@ -121,7 +121,8 @@ class ModeFolder(WatoMode):
                             title=_("On selected hosts"),
                             entries=list(self._page_menu_entries_selected_hosts()),
                         ),
-                        make_checkbox_selection_topic("wato-folder-/%s" % self._folder.path()),
+                        make_checkbox_selection_topic("wato-folder-/%s" % self._folder.path(),
+                                                      is_enabled=bool(self._folder.has_hosts())),
                     ],
                 ),
                 PageMenuDropdown(
@@ -197,7 +198,8 @@ class ModeFolder(WatoMode):
                             title=_("On selected hosts"),
                             entries=list(self._page_menu_entries_selected_hosts()),
                         ),
-                        make_checkbox_selection_topic("wato-folder-/%s" % self._folder.path()),
+                        make_checkbox_selection_topic("wato-folder-/%s" % self._folder.path(),
+                                                      is_enabled=bool(self._folder.has_hosts())),
                     ],
                 ),
                 PageMenuDropdown(
@@ -276,6 +278,7 @@ class ModeFolder(WatoMode):
             return
 
         hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
+        is_enabled = bool(self._folder.has_hosts())
         search_text = html.request.var("search")
 
         # Remember if that host has a target folder (i.e. was imported with
@@ -302,6 +305,7 @@ class ModeFolder(WatoMode):
                         button_name="_bulk_delete",
                         message=_("Do you really want to delete the selected hosts?"),
                     ),
+                    is_enabled=is_enabled,
                 )
 
             if config.user.may("wato.edit_hosts"):
@@ -312,6 +316,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_bulk_edit",
                     ),
+                    is_enabled=is_enabled,
                 )
 
                 yield PageMenuEntry(
@@ -321,6 +326,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_bulk_cleanup",
                     ),
+                    is_enabled=is_enabled,
                 )
 
         if config.user.may("wato.services"):
@@ -331,6 +337,7 @@ class ModeFolder(WatoMode):
                     form_name="hosts",
                     button_name="_bulk_inventory",
                 ),
+                is_enabled=is_enabled,
             )
 
         if not self._folder.locked_hosts():
@@ -342,6 +349,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_parentscan",
                     ),
+                    is_enabled=is_enabled,
                 )
             if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
                 yield PageMenuEntry(
@@ -349,6 +357,7 @@ class ModeFolder(WatoMode):
                     icon_name="move",
                     name="move_rules",
                     item=PageMenuPopup(self._render_bulk_move_form()),
+                    is_enabled=is_enabled,
                 )
 
                 if at_least_one_imported:
@@ -363,6 +372,7 @@ class ModeFolder(WatoMode):
                                       'you did the import from. Please make sure that you have '
                                       'done an <b>inventory</b> before moving the hosts.'),
                         ),
+                        is_enabled=is_enabled,
                     )
 
     def _page_menu_entries_this_folder(self) -> Iterator[PageMenuEntry]:

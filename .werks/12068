@@ -1,0 +1,15 @@
+Title: Only enable "On selected hosts" options if hosts exist in folder
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613302641
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+The options in the section "On selected hosts "within the "Hosts" Dropdown were
+always enabled and had no effect if there was no host in the current folder.
+
+These options are now only enabled, if hosts exist.

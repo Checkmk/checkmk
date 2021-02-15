@@ -632,4 +632,24 @@ TEST(PlayerTest, Pipe) {
     EXPECT_NE(p->getWrite(), nullptr);
 }
 
+TEST(Wtools, HandleDeleter) {
+    auto pid = ::GetCurrentProcessId();
+    UniqueHandle mount;
+    ASSERT_EQ(mount.get(), nullptr);
+    mount.reset(::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid));
+    ASSERT_TRUE(mount.get() != nullptr);
+    mount.reset();
+    ASSERT_TRUE(mount.get() == nullptr);
+}
+
+TEST(Wtools, HandleDeleterInvalidAndNull) {
+    const std::array<HANDLE, 2> handles{wtools::InvalidHandle(), nullptr};
+    for (auto h : handles) {
+        UniqueHandle unique_handle(h);
+        ASSERT_EQ(unique_handle.get(), h);
+        unique_handle.reset();  // check for no crash and no throw
+        ASSERT_TRUE(unique_handle.get() == nullptr) << "Current handle " << h;
+    }
+}
+
 }  // namespace wtools

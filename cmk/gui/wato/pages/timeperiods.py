@@ -584,7 +584,7 @@ class ModeTimeperiodImportICal(WatoMode):
             else:
                 resolved += resolve_multiple_days(event, event["start"])
 
-        ical['events'] = sorted(resolved)
+        ical['events'] = sorted(resolved, key=lambda x: x["date"])
 
         return ical
 

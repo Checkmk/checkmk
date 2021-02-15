@@ -1,0 +1,12 @@
+Title: Fix "Failed to parse file" error on iCalendar import
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613396257
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+

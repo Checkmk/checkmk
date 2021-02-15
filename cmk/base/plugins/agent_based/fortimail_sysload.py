@@ -11,7 +11,7 @@
 #[...]
 
 #Example GUI Output:
-#OK FortiMail System load       System load: 5%
+#OK FortiMail System load       System load: 5
 
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
@@ -48,7 +48,7 @@ def check_fortimail_sysload(params: Mapping[str, Tuple[float, float]],
         levels_upper=mail_sysload_upper,
         metric_name='fortimail_system_load',
         label='System load',
-        render_func=lambda v: "%s%%" % v,
+        render_func=lambda v: "%s" % v,
     )
 
 
@@ -70,6 +70,6 @@ register.check_plugin(
     service_name='FortiMail system load',
     discovery_function=discovery_fortimail_sysload,
     check_function=check_fortimail_sysload,
-    check_default_parameters={'mail_sysload': (90, 95)},
+    check_default_parameters={'mail_sysload': (5, 15)},
     check_ruleset_name='fortimail_sysload',
 )

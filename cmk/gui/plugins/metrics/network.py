@@ -1531,7 +1531,7 @@ metric_info["fortiauthenticator_fails_5min"] = {
 
 metric_info["fortimail_system_load"] = {
     "title": _("System load"),
-    "unit": "%",
+    "unit": "",
     "color": "#60f020",
 }
 

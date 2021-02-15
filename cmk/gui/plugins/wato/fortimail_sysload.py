@@ -21,8 +21,8 @@ def _parameter_valuespec_fortimail_sysload():
                          help=_("These levels make the check go warning or critical whenever the "
                                 "<b>system load</b> of the monitored Fortinet Mail is too high."),
                          elements=[
-                             Integer(title=_("warning at"), unit=u"%", default_value=90),
-                             Integer(title=_("critical at"), unit=u"%", default_value=95),
+                             Integer(title=_("warning at"), unit=u"processes", default_value=5),
+                             Integer(title=_("critical at"), unit=u"processes", default_value=15),
                          ]))])
     
 

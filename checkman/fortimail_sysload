@@ -5,9 +5,9 @@ license: GPL
 distribution: check_mk
 description:
  This Check will display the current System Load on a Fortinet FortiMail Server.
- The Check can go into warning or ciritical if the CPU usage is too high. The
+ The Check can go into warning or ciritical if the System load is too high. The
  default thresholds are:
- 90% for warning and 95% for ciritical for the CPU usage.
+ 5 processes for warning and 15 processes for ciritical.
 
 discovery:
  One check per host will be created.

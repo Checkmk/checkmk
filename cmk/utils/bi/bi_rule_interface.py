@@ -42,6 +42,15 @@ class BIRuleProperties(ABCWithSchema):
     def schema(cls) -> Type["BIRulePropertiesSchema"]:
         return BIRulePropertiesSchema
 
+    def serialize(self):
+        return {
+            "title": self.title,
+            "comment": self.comment,
+            "docu_url": self.docu_url,
+            "icon": self.icon,
+            "state_messages": self.state_messages,
+        }
+
 
 class BIRuleComputationOptionsSchema(Schema):
     disabled = ReqBoolean(default=False, example=False)
@@ -55,6 +64,11 @@ class BIRuleComputationOptions(ABCWithSchema):
     @classmethod
     def schema(cls) -> Type[BIRuleComputationOptionsSchema]:
         return BIRuleComputationOptionsSchema
+
+    def serialize(self):
+        return {
+            "disabled": self.disabled,
+        }
 
 
 class ABCBIRule(ABCWithSchema):

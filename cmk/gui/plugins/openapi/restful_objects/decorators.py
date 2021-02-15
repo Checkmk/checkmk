@@ -576,10 +576,6 @@ class Endpoint:
             ('path', path_params),
         ])
 
-        for code, _item in responses.items():
-            if int(code) in self.status_descriptions:
-                _item['description'] = self.status_descriptions[int(code)]  # type: ignore[index]
-
         operation_spec['responses'] = responses
 
         if self.request_schema is not None:

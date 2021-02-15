@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Iterator, List, Optional
-from typing import Tuple as _Tuple
+from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple
 
 from cmk.utils import pnp_cleanup
 
@@ -17,14 +16,26 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_data_from_livestatus,
     get_graph_range,
     get_graph_templates,
+    GraphTemplate,
     metrics_used_in_expression,
     replace_expressions,
     split_expression,
     stack_resolver,
     translated_metrics_from_row,
+    TranslatedMetrics,
 )
 
-RPNAtom = _Tuple  # TODO: Improve this type
+RPNAtom = Tuple  # TODO: Improve this type
+
+
+def matching_graph_templates(
+    graph_identification_info: Mapping,
+    translated_metrics: TranslatedMetrics,
+) -> Iterable[Tuple[int, GraphTemplate]]:
+    graph_index = graph_identification_info.get("graph_index")  # can be None -> show all graphs
+    yield from ((index, graph_template)
+                for index, graph_template in enumerate(get_graph_templates(translated_metrics))
+                if graph_index is None or index == graph_index)
 
 
 class GraphIdentificationTemplate(GraphIdentification):
@@ -45,24 +56,24 @@ class GraphIdentificationTemplate(GraphIdentification):
         site = get_info('site')
         host_name = get_info('host_name')
         service_description = get_info('service_description')
-
-        graph_index = graph_identification_info.get("graph_index")  # can be None -> show all graphs
-
         row = get_graph_data_from_livestatus(site, host_name, service_description)
-
         translated_metrics = translated_metrics_from_row(row)
-        site = row["site"]
 
         graph_recipes = []
-        for index, graph_template in enumerate(get_graph_templates(translated_metrics)):
-            if graph_index is None or index == graph_index:
-                graph_recipe = create_graph_recipe_from_template(graph_template, translated_metrics,
-                                                                 row)
-                # Put the specification of this graph into the graph_recipe
-                spec_info = graph_identification_info.copy()
-                spec_info["graph_index"] = index
-                graph_recipe["specification"] = ("template", spec_info)
-                graph_recipes.append(graph_recipe)
+        for index, graph_template in matching_graph_templates(
+                graph_identification_info,
+                translated_metrics,
+        ):
+            graph_recipe = create_graph_recipe_from_template(
+                graph_template,
+                translated_metrics,
+                row,
+            )
+            # Put the specification of this graph into the graph_recipe
+            spec_info = graph_identification_info.copy()
+            spec_info["graph_index"] = index
+            graph_recipe["specification"] = ("template", spec_info)
+            graph_recipes.append(graph_recipe)
         return graph_recipes
 
 
@@ -105,7 +116,7 @@ def create_graph_recipe_from_template(graph_template, translated_metrics, row):
 
 def iter_rpn_expression(
         expression: str,
-        enforced_consolidation_function: Optional[str]) -> Iterator[_Tuple[str, Optional[str]]]:
+        enforced_consolidation_function: Optional[str]) -> Iterator[Tuple[str, Optional[str]]]:
     for part in expression.split(","):  # var names, operators
         if any(part.endswith(cf) for cf in ['.max', '.min', '.average']):
             part, consolidation_function = part.rsplit(".", 1)
@@ -168,7 +179,7 @@ def metric_expression_to_graph_recipe_expression(expression, translated_metrics,
                           apply_element=lambda x: x)
 
 
-def metric_line_title(metric_definition: _Tuple, translated_metrics: Dict) -> str:
+def metric_line_title(metric_definition: Tuple, translated_metrics: Dict) -> str:
     if len(metric_definition) >= 3:
         return metric_definition[2]
 

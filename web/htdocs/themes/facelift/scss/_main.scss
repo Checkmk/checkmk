@@ -1308,10 +1308,6 @@ html {
 }
 
 div.graph {
-  border: 1px solid $color-table-border;
-  border-radius: $theme-border-radius;
-  box-shadow: none;
-
   &.preview {
     padding: 4px !important;
   }

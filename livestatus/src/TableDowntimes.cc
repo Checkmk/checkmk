@@ -10,7 +10,7 @@
 #include <memory>
 #include <utility>
 
-#include "BoolLambdaColumn.h"
+#include "BoolColumn.h"
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
@@ -48,7 +48,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "type",
         "The type of the downtime: 0 if it is active, 1 if it is pending",
         offsets, [](const Downtime &r) { return r._type; }));
-    addColumn(std::make_unique<BoolLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<BoolColumn<Downtime>>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service", offsets,
         [](const Downtime &r) { return r._is_service; }));

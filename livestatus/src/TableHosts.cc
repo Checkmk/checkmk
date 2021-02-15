@@ -22,7 +22,7 @@
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "BlobColumn.h"
-#include "BoolLambdaColumn.h"
+#include "BoolColumn.h"
 #include "Column.h"
 #include "CommentColumn.h"
 #include "CustomVarsDictColumn.h"
@@ -475,19 +475,19 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "percent_state_change", "Percent state change", offsets,
         [](const host &r) { return r.percent_state_change; }));
 
-    table->addColumn(std::make_unique<BoolLambdaColumn<host, true>>(
+    table->addColumn(std::make_unique<BoolColumn<host, true>>(
         prefix + "in_notification_period",
         "Whether this host is currently in its notification period (0/1)",
         offsets, [](const host &r) {
             return g_timeperiods_cache->inTimeperiod(r.notification_period_ptr);
         }));
-    table->addColumn(std::make_unique<BoolLambdaColumn<host, true>>(
+    table->addColumn(std::make_unique<BoolColumn<host, true>>(
         prefix + "in_check_period",
         "Whether this host is currently in its check period (0/1)", offsets,
         [](const host &r) {
             return g_timeperiods_cache->inTimeperiod(r.check_period_ptr);
         }));
-    table->addColumn(std::make_unique<BoolLambdaColumn<host, true>>(
+    table->addColumn(std::make_unique<BoolColumn<host, true>>(
         prefix + "in_service_period",
         "Whether this host is currently in its service period (0/1)", offsets,
         [mc](const host &r) {

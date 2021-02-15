@@ -146,7 +146,6 @@ def test_cmk_automation(wsgi_app):
     assert response.text == "Missing secret for automation command."
 
 
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No AJAX graphs in raw edition")
 def test_cmk_ajax_graph_images(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
     assert resp.text.startswith("You are not allowed")

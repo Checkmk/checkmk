@@ -37,8 +37,7 @@ struct BoolColumn : Column {
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 
-    // TODO(ml): contact* is not necessary.
-    virtual std::int32_t getValue(Row row, const contact* auth_user) const = 0;
+    virtual std::int32_t getValue(Row row) const = 0;
 };
 }  // namespace detail
 
@@ -50,8 +49,7 @@ public:
         : detail::BoolColumn{name, description, offsets}, f_{std::move(f)} {}
     ~BoolColumn() override = default;
 
-    std::int32_t getValue(Row row,
-                          const contact* /*auth_user*/) const override {
+    std::int32_t getValue(Row row) const override {
         const T* data = columnData<T>(row);
         return (data == nullptr ? Default : f_(*data)) ? 1 : 0;
     }

@@ -10,7 +10,7 @@
 
 #include <chrono>
 #include <functional>
-#include <utility>
+#include <variant>
 
 #include "Aggregator.h"
 #include "Column.h"
@@ -19,15 +19,23 @@ class Row;
 class RowRenderer;
 
 class IntAggregator : public Aggregator {
-    using function_type = std::function<int(Row, const contact *)>;
+    using f0_t = std::function<int(Row)>;
+    using f1_t = std::function<int(Row, const contact *)>;
+    using function_type = std::variant<f0_t, f1_t>;
 
 public:
-    IntAggregator(const AggregationFactory &factory, function_type getValue)
-        : _aggregation{factory()}, _getValue{std::move(getValue)} {}
+    IntAggregator(const AggregationFactory &factory, const function_type &f)
+        : _aggregation{factory()}, f_{f} {}
 
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds /* timezone_offset*/) override {
-        _aggregation->update(_getValue(row, auth_user));
+        if (std::holds_alternative<f0_t>(f_)) {
+            _aggregation->update(std::get<f0_t>(f_)(row));
+        } else if (std::holds_alternative<f1_t>(f_)) {
+            _aggregation->update(std::get<f1_t>(f_)(row, auth_user));
+        } else {
+            throw std::runtime_error("unreachable");
+        }
     }
 
     void output(RowRenderer &r) const override {
@@ -36,7 +44,7 @@ public:
 
 private:
     std::unique_ptr<Aggregation> _aggregation;
-    const function_type _getValue;
+    const function_type f_;
 };
 
 #endif  // IntAggregator_h

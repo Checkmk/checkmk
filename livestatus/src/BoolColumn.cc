@@ -12,26 +12,20 @@
 #include "Row.h"
 
 void detail::BoolColumn::output(
-    Row row, RowRenderer &r, const contact *auth_user,
+    Row row, RowRenderer &r, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
-    r.output(getValue(row, auth_user));
+    r.output(getValue(row));
 }
 
 std::unique_ptr<Filter> detail::BoolColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
     return std::make_unique<IntFilter>(
-        kind, name(),
-        [this](Row row, const contact *auth_user) {
-            return this->getValue(row, auth_user);
-        },
-        relOp, value);
+        kind, name(), [this](Row row) { return getValue(row); }, relOp, value);
 }
 
 std::unique_ptr<Aggregator> detail::BoolColumn::createAggregator(
     AggregationFactory factory) const {
     return std::make_unique<IntAggregator>(
-        factory, [this](Row row, const contact *auth_user) {
-            return getValue(row, auth_user);
-        });
+        factory, [this](Row row) { return getValue(row); });
 }

@@ -5,7 +5,6 @@
 
 #include "TableTimeperiods.h"
 
-#include <cstdint>
 #include <memory>
 
 #include "BoolColumn.h"

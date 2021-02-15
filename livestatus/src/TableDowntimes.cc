@@ -6,7 +6,6 @@
 #include "TableDowntimes.h"
 
 #include <chrono>
-#include <cstdint>
 #include <memory>
 #include <utility>
 

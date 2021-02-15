@@ -137,6 +137,14 @@ ActivationId = str
 ActivationState = Dict[str, Dict[str, Any]]
 
 
+def get_trial_expired_message() -> str:
+    return _(
+        "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
+        "The Checkmk Free Edition does not allow distributed setups after the 30-day trial period. "
+        "In case you want to test distributed setups, please "
+        "<a href=\"https://checkmk.com/contact.php?\" target=\"_blank\">contact us</a>.")
+
+
 def add_replication_paths(paths: List[ReplicationPathCompat]) -> None:
 
     clean_paths: List[ReplicationPath] = []
@@ -1348,6 +1356,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._mark_running()
 
             log_audit("activate-changes", _("Started activation of site %s") % self._site_id)
+
+            if cmk_version.is_expired_trial() and self._site_id != config.omd_site():
+                raise MKGeneralException(get_trial_expired_message())
 
             if self.is_sync_needed(self._site_id):
                 self._synchronize_site()

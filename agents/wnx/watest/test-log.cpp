@@ -443,7 +443,7 @@ TEST(LogTest, Functional) {
         auto n = std::count(contents.begin(), contents.end(), '\n');
         auto result = cma::tools::SplitString(contents, "\n");
         ASSERT_EQ(result.size(), 9);
-        const int start_position = 24;
+        constexpr int start_position = 36;
         EXPECT_NE(std::string::npos, result[0].find("simple test"));
         EXPECT_NE(std::string::npos, result[1].find("<GTEST> std test"));
         EXPECT_NE(std::string::npos, result[2].find("<GTEST> stream test"));

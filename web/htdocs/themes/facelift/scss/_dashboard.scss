@@ -233,11 +233,6 @@ body.main.dashlet {
   table.data.table {
     padding: 0 8px;
 
-    th:nth-child(1) {
-      padding-bottom: 2px;
-      padding-left: 1px;
-    }
-
     tr.data {
       transition: 0.15s ease-in-out;
     }
@@ -248,11 +243,6 @@ body.main.dashlet {
     > td {
       padding-top: 2px;
       padding-bottom: 2px;
-      border-bottom: none;
-
-      &.state {
-        border-top: none;
-      }
     }
   }
 
@@ -265,7 +255,7 @@ body.main.dashlet {
   }
 
   &.view {
-    padding: 4px 0 0 8px;
+    padding: $h3-margin-bottom 0 0; // add padding-top for consistency with other tables
     overflow: hidden;
 
     div#dashlet_content_wrapper[data-simplebar="init"] {

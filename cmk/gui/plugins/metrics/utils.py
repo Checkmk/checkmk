@@ -6,7 +6,6 @@
 """Module to hold shared code for main module internals and the plugins"""
 
 import colorsys
-import json
 import random
 import re
 import shlex
@@ -18,6 +17,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Mapping,
     Optional,
     Set,
     Tuple,
@@ -44,9 +44,8 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import (
-    DropdownChoice,
-    MonitoredHostname,
-    MonitoredServiceDescription,
+    DropdownChoiceValue,
+    DropdownChoiceWithHostAndServiceHints,
     TextAsciiAutocomplete,
 )
 
@@ -1013,77 +1012,41 @@ def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tu
         yield name, mi.get("title", name.title())
 
 
-class MetricName(DropdownChoice):
+class MetricName(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all known metric names"""
-    def __init__(self):
+    def __init__(self, **kwargs: Any):
         # Customer's metrics from local checks or other custom plugins will now appear as metric
         # options extending the registered metric names on the system. Thus assuming the user
         # only selects from available options we skip the input validation(invalid_choice=None)
         # Since it is not possible anymore on the backend to collect the host & service hints
-        super().__init__(
-            title=_("Metric"),
-            sorted=True,
-            encode_value=False,
-            choices=[(None, _("Select metric"))],
-            no_preselect=True,
-        )
+        kwargs_with_defaults: Mapping[str, Any] = {
+            "css_spec": "metric-selector",
+            "hint_label": _("metric"),
+            "choices": [(None, _("Select metric"))],
+            "title": _("Metric"),
+            "encode_value": False,
+            "sorted": True,
+            "no_preselect": True,
+            **kwargs,
+        }
+        super().__init__(**kwargs_with_defaults)
         self._regex = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
         self._regex_error = _("Metric names must only consist of letters, digits and "
                               "underscores and they must start with a letter.")
 
-    def from_html_vars(self, varprefix: str) -> Optional[str]:
-        return html.request.var(varprefix)
-
-    def _validate_value(self, value: Optional[str], varprefix: str) -> None:
+    def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
         if value is not None and not self._regex.match(ensure_str(value)):
             raise MKUserError(varprefix, self._regex_error)
 
-    def render_input(self, varprefix: str, value: str) -> None:
-        if self._label:
-            html.write(self._label)
-            html.nbsp()
-
+    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
         if value is None:
-            clean_choices = self.choices()
-        else:
-            # Need to create an on the fly metric option
-            clean_choices = [
-                next(((metric_id, metric_detail['title'])
-                      for metric_id, metric_detail in metric_info.items()
-                      if metric_id == value), (value, value.title()))
-            ]
-
-        html.write(_("Select metric: "))
-        html.dropdown(varprefix,
-                      self._options_for_html(clean_choices),
-                      deflt=self._option_for_html(value),
-                      class_="metric-selector",
-                      style="width: 250px;",
-                      read_only=self._read_only)
-
-        vs_host = MonitoredHostname(
-            label=_("Filter metric selection by hostname: "),
-            placeholder=_("Hint a hostname"),
-            size=20,
-        )
-        html.br()
-        host_varprefix = varprefix + "_hostname_hint"
-        vs_host.render_input(host_varprefix, None)
-        html.javascript("cmk.valuespecs.transfer_context_onchange('context_host_p_host', %s)" %
-                        json.dumps(host_varprefix))
-
-        completion_js = '(() => ({host: document.getElementsByName(%s)[0].value}))()' % json.dumps(
-            host_varprefix)
-        vs_service = MonitoredServiceDescription(label=_("Filter metric selection by service: "),
-                                                 placeholder=_("Hint a service"),
-                                                 completion_params_js=completion_js,
-                                                 size=20)
-        service_varprefix = varprefix + "_service_hint"
-        html.br()
-        vs_service.render_input(service_varprefix, None)
-        html.javascript(
-            "cmk.valuespecs.transfer_context_onchange('context_service_p_service', %s)" %
-            json.dumps(service_varprefix))
+            return self.choices()
+        # Need to create an on the fly metric option
+        return [
+            next(((metric_id, metric_detail['title'])
+                  for metric_id, metric_detail in metric_info.items()
+                  if metric_id == value), (value, value.title()))
+        ]
 
 
 class MonitoredMetrics(TextAsciiAutocomplete):

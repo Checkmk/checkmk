@@ -52,6 +52,12 @@ class BINodeGenerator(ABCBINodeGenerator):
             action_results.extend(self.action.execute(action_arguments, bi_searcher))
         return action_results
 
+    def serialize(self):
+        return {
+            "search": self.search.serialize(),
+            "action": self.action.serialize(),
+        }
+
 
 class BINodeGeneratorSchema(Schema):
     search = create_nested_schema(BISearchSchema, default_schema=BIEmptySearchSchema)

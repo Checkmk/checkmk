@@ -59,6 +59,13 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
     def schema(cls) -> Type["BIAggregationFunctionBestSchema"]:
         return BIAggregationFunctionBestSchema
 
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "count": self.count,
+            "restrict_state": self.restrict_state,
+        }
+
     def __init__(self, aggr_function_config: Dict[str, Any]):
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
@@ -100,6 +107,13 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
     def schema(cls) -> Type["BIAggregationFunctionWorstSchema"]:
         return BIAggregationFunctionWorstSchema
 
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "count": self.count,
+            "restrict_state": self.restrict_state,
+        }
+
     def __init__(self, aggr_function_config: Dict[str, Any]):
         super().__init__(aggr_function_config)
         self.count = aggr_function_config["count"]
@@ -140,6 +154,13 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
     @classmethod
     def schema(cls) -> Type["BIAggregationFunctionCountOKSchema"]:
         return BIAggregationFunctionCountOKSchema
+
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "levels_ok": self.levels_ok,
+            "levels_warn": self.levels_warn,
+        }
 
     def __init__(self, aggr_function_config: Dict[str, Any]):
         super().__init__(aggr_function_config)

@@ -58,6 +58,16 @@ class BIAggregation:
     def schema(cls) -> Type["BIAggregationSchema"]:
         return BIAggregationSchema
 
+    def serialize(self):
+        return {
+            "id": self.id,
+            "customer": self.customer,
+            "groups": self.groups.serialize(),
+            "node": self.node.serialize(),
+            "aggregation_visualization": self.aggregation_visualization,
+            "computation_options": self.computation_options.serialize(),
+        }
+
     def clone(self) -> "BIAggregation":
         aggregation_config = self.schema()().dump(self)
         return BIAggregation(aggregation_config)

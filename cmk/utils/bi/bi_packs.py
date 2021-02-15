@@ -82,7 +82,14 @@ class BIAggregationPack:
         return BIAggregationPackSchema
 
     def serialize(self):
-        return self.schema()().dump(self)
+        return {
+            "id": self.id,
+            "title": self.title,
+            "contact_groups": self.contact_groups,
+            "public": self.public,
+            "rules": [rule.serialize() for rule in self.rules.values()],
+            "aggregations": [aggr.serialize() for aggr in self.aggregations.values()]
+        }
 
     def num_aggregations(self) -> int:
         return len(self.aggregations)
@@ -320,7 +327,10 @@ class BIAggregationPacks:
 
     def generate_config(self) -> Dict[str, Any]:
         self._check_rule_cycles()
-        return BIAggregationPacksSchema().dump(self)
+        return self.serialize()
+
+    def serialize(self):
+        return {"packs": [pack.serialize() for pack in self.packs.values()]}
 
     def _check_rule_cycles(self) -> None:
         toplevel_rules = {

@@ -92,6 +92,11 @@ class BIEmptySearch(ABCBISearch):
     def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         return [{}]
 
+    def serialize(self):
+        return {
+            "type": self.type(),
+        }
+
 
 class BIEmptySearchSchema(Schema):
     type = ReqConstant(BIEmptySearch.type())
@@ -116,6 +121,13 @@ class BIHostSearch(ABCBISearch):
     @classmethod
     def schema(cls) -> Type["BIHostSearchSchema"]:
         return BIHostSearchSchema
+
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "conditions": self.conditions,
+            "refer_to": self.refer_to,
+        }
 
     def __init__(self, search_config: Dict[str, Any]):
         super().__init__(search_config)
@@ -242,6 +254,12 @@ class BIServiceSearch(ABCBISearch):
     def schema(cls) -> Type["BIServiceSearchSchema"]:
         return BIServiceSearchSchema
 
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "conditions": self.conditions,
+        }
+
     def __init__(self, search_config: Dict[str, Any]):
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
@@ -282,6 +300,12 @@ class BIFixedArgumentsSearch(ABCBISearch):
     @classmethod
     def type(cls) -> str:
         return "fixed_arguments"
+
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "arguments": self.arguments,
+        }
 
     @classmethod
     def schema(cls) -> Type["BIFixedArgumentsSearchSchema"]:

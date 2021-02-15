@@ -81,68 +81,91 @@ std::string ProduceFileSystemOutput(std::string_view volume_id) {
                        volume_id);
 }
 
-std::vector<std::string> GetMountPointVector(std::string_view volume_id) {
-    constexpr int sz = 2048;
-    auto storage = std::make_unique<char[]>(sz);
+class VolumeMountData {
+public:
+    VolumeMountData(const VolumeMountData&) = delete;
+    VolumeMountData& operator=(const VolumeMountData&) = delete;
+    VolumeMountData(const VolumeMountData&&) = delete;
+    VolumeMountData& operator=(VolumeMountData&&) = delete;
 
-    std::vector<std::string> result;
+    VolumeMountData(std::string_view volume_id)
+        : storage_{std::make_unique<char[]>(sz_)}
+        , volume_id_{volume_id}
+        , handle_{::FindFirstVolumeMountPointA(volume_id.data(), storage_.get(),
+                                               sz_)} {
+        XLOG::t("Volume is '{}'", volume_id_);
+    }
 
-    XLOG::t("Volume is '{}'", volume_id);
-    auto* handle =
-        ::FindFirstVolumeMountPointA(volume_id.data(), storage.get(), sz);
+    ~VolumeMountData() {
+        if (!wtools::IsBadHandle(handle_)) {
+            ::FindVolumeMountPointClose(handle_);
+        }
+    }
 
-    if (wtools::IsBadHandle(handle)) return {};
-    ON_OUT_OF_SCOPE(FindVolumeMountPointClose(handle));
+    bool next() {
+        auto ret =
+            ::FindNextVolumeMountPointA(handle_, storage_.get(), sz_) == TRUE;
 
-    std::string vol(volume_id);
-    while (true) {
-        result.emplace_back(vol + storage.get());
-
-        auto success = ::FindNextVolumeMountPointA(handle, storage.get(), sz);
-        if (success == FALSE) {
+        if (ret == FALSE) {
+            // we should report if something is going really wrong
             auto error = ::GetLastError();
             if (error != ERROR_NO_MORE_FILES)
-                XLOG::l("Error  [{}] looking for volume '{}'", error,
-                        volume_id);
+                XLOG::l("Error [{}] looking for volume '{}'", error,
+                        volume_id_);
+        }
+
+        return ret;
+    }
+
+    bool exists() const { return !wtools::IsBadHandle(handle_); }
+
+    std::string result() const { return storage_.get(); }
+
+private:
+    static inline int sz_{2048};
+    std::unique_ptr<char[]> storage_;
+    std::string volume_id_;
+    HANDLE handle_{nullptr};
+};
+
+std::vector<std::string> GetMountPointVector(std::string_view volume_id) {
+    VolumeMountData vmd(volume_id);
+    if (!vmd.exists()) return {};
+
+    std::vector<std::string> result;
+    std::string vol(volume_id);
+    while (true) {
+        result.emplace_back(vol + vmd.result());
+
+        if (!vmd.next()) {
             break;
         }
-        XLOG::t("Next mount point '{}'", storage.get());
+        XLOG::t("Next mount point '{}'", vmd.result());
     }
 
     return result;
 }
 
-std::string ProduceMountPointsOutput(const std::string& volume_id) {
-    constexpr int sz = 2048;
-    auto storage = std::make_unique<char[]>(sz);
+std::string ProduceMountPointsOutput(std::string_view volume_id) {
+    VolumeMountData vmd(volume_id);
 
-    XLOG::t("Volume is '{}'", volume_id);
-    auto* handle =
-        ::FindFirstVolumeMountPointA(volume_id.c_str(), storage.get(), sz);
-
-    if (wtools::IsBadHandle(handle)) {
+    if (!vmd.exists()) {
         XLOG::d("Failed FindFirstVolumeMountPointA, error is [{}]",
                 ::GetLastError());
         return {};
     }
-    ON_OUT_OF_SCOPE(::FindVolumeMountPointClose(handle));
 
     std::string out;
 
-    const auto combined_path = volume_id + storage.get();
     while (true) {
+        auto combined_path = std::string{volume_id} + vmd.result();
         out += ProduceFileSystemOutput(combined_path);
-        out += ProduceMountPointsOutput(combined_path);
+        out += ProduceMountPointsOutput(combined_path);  // recursion here
 
-        auto success = ::FindNextVolumeMountPointA(handle, storage.get(), sz);
-        if (FALSE == success) {
-            auto error = ::GetLastError();
-            if (error != ERROR_NO_MORE_FILES)
-                XLOG::l("Error  [{}] looking for volume '{}'", error,
-                        volume_id);
+        if (!vmd.next()) {
             break;
         }
-        XLOG::t("Next mount point '{}'", storage.get());
+        XLOG::t("Next mount point '{}'", vmd.result());
     }
 
     return out;

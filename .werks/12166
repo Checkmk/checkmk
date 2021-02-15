@@ -1,0 +1,13 @@
+Title: Fixed comment/downtime WaitTriggers
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1613396269
+Edition: cee
+Knowledge: doc
+Level: 3
+State: unknown
+Version: 2.0.0b7
+
+The "comment" and "downtime" WaitTriggers were not always triggered when a
+corresponding entity has been changed. This has been fixed.

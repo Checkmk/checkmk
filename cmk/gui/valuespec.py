@@ -6341,3 +6341,61 @@ def _type_name(v):
         return type(v).__name__
     except Exception:
         return escaping.escape_attribute(str(type(v)))
+
+
+class DropdownChoiceWithHostAndServiceHints(DropdownChoice):
+    def __init__(
+        self,
+        css_spec: str,
+        hint_label: str,
+        **kwargs: Any,
+    ):
+        super().__init__(**kwargs)
+        self._css_spec = css_spec
+        self._hint_label = hint_label
+
+    def from_html_vars(self, varprefix: str) -> _Optional[str]:
+        return html.request.var(varprefix)
+
+    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
+        raise NotImplementedError()
+
+    def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
+        if self._label:
+            html.write(self._label)
+            html.nbsp()
+
+        html.dropdown(
+            varprefix,
+            self._options_for_html(self._choices_from_value(value)),
+            deflt=self._option_for_html(value),
+            class_=self._css_spec,
+            style="width: 250px;",
+            read_only=self._read_only,
+        )
+
+        vs_host = MonitoredHostname(
+            label=_("Filter %s selection by hostname: ") % self._hint_label,
+            placeholder=_("Hint a hostname"),
+            size=20,
+        )
+        html.br()
+        host_varprefix = varprefix + "_hostname_hint"
+        vs_host.render_input(host_varprefix, None)
+        html.javascript("cmk.valuespecs.transfer_context_onchange('context_host_p_host', %s)" %
+                        json.dumps(host_varprefix))
+
+        completion_js = '(() => ({host: document.getElementsByName(%s)[0].value}))()' % json.dumps(
+            host_varprefix)
+        vs_service = MonitoredServiceDescription(
+            label=_("Filter %s selection by service: ") % self._hint_label,
+            placeholder=_("Hint a service"),
+            completion_params_js=completion_js,
+            size=20,
+        )
+        service_varprefix = varprefix + "_service_hint"
+        html.br()
+        vs_service.render_input(service_varprefix, None)
+        html.javascript(
+            "cmk.valuespecs.transfer_context_onchange('context_service_p_service', %s)" %
+            json.dumps(service_varprefix))

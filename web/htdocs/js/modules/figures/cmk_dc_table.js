@@ -126,11 +126,6 @@ export class DCTableFigure extends cmk_figures.DCFigureBase {
     }
 
     _display() {
-        if (this._crossfilter.size() < this._pages) {
-            this._paging.style("display", "none");
-            return;
-        }
-        this._paging.style("display", null);
         let totFilteredRecs = this._crossfilter.groupAll().value();
         var end =
             this._offset + this._pages > totFilteredRecs

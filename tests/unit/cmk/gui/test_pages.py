@@ -140,6 +140,7 @@ def test_registered_pages():
         'ajax_initial_dashboard_filters',
         'ajax_initial_view_filters',
         'ajax_initial_topology_filters',
+        'noauth:ajax_graph_images',
     ]
 
     if not cmk_version.is_raw_edition():
@@ -174,7 +175,6 @@ def test_registered_pages():
             'graph_export',
             'graph_image',
             'graph_tunings',
-            'noauth:ajax_graph_images',
             'noauth:deploy_agent',
             'register_agent',
             'report',

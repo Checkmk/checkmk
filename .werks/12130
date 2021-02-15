@@ -1,0 +1,12 @@
+Title: Raw Edition: Fix graph in HTML notifications
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1613378453
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b7
+
+The HTML mail notifications of the Raw Edition were not containing graph images
+anymore.

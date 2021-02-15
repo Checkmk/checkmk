@@ -1,5 +1,21 @@
 #!/usr/bin/ksh
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+VERSION="2.0.0b5"
+
 # Logfile monitoring for AIX via errpt
+#
+# This plugin will send all new lines reported by
+# errpt to the monitoring server in the form of a
+# logwatch section.
+# On the monitoring server side this will appear to
+# be a monitored logfile by the name 'errorlog'.
+# Every encoutered line will be reported as 'CRIT'
+#
 
 ## Output of errpt looks like this, newest first
 ## (timestamp is month-day-hour-minute-year):
@@ -13,6 +29,7 @@
 
 MK_LOGWATCH_AIX_STATE="$MK_VARDIR/mk_logwatch_aix.last_reported"
 
+
 echo "<<<logwatch>>>"
 echo "[[[errorlog]]]"
 
@@ -20,7 +37,7 @@ echo "[[[errorlog]]]"
 LINE=$(tail -n1 "$MK_LOGWATCH_AIX_STATE" 2> /dev/null)
 
 if [ "$LINE" ]; then  # get rid of all lines after that:
-    OUT=$(errpt | awk '/'"$LINE"'/ {exit}; (NR>1) {printf "C %s\n", $0}')
+    OUT=$(errpt | awk -v line="$LINE" '($0 == line) {exit}; ($0 != line) && (NR>1) {printf "C %s\n", $0}')
 else  # LINE is empty -> report all
     OUT=$(errpt | awk '(NR>1) {printf "C %s\n", $0}')
 fi

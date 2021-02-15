@@ -1,0 +1,12 @@
+Title: mk_errpt.aix: avoid escaping issues when '/' is in errpts output
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p21
+Date: 1611126422
+
+An unhadled '/' in errpts output lead to an completely empty logwatch subsection.

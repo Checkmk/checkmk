@@ -21,6 +21,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Table
 
 from cmk.gui.plugins.openapi.utils import BaseSchema
+from cmk.gui.plugins.webapi import validate_host_attributes
 from cmk.utils.exceptions import MKException
 
 
@@ -456,6 +457,13 @@ class FolderField(String):
         self,
         **kwargs,
     ):
+        if 'description' not in kwargs:
+            kwargs['description'] = (
+                "The folder identifier. This can be a path name or the folder-specific 128 bit "
+                "identifier. This identifier is unique to the folder and stays the same, even if "
+                "the folder has been moved. When identifying a folder by it's path, delimiters can "
+                "be either `~`, `/` or `\\`. Please use the one most appropriate for your "
+                "quoting/escaping needs. A good default choice is `~`.")
         super().__init__(pattern=FOLDER_PATTERN, **kwargs)
 
     @classmethod
@@ -776,6 +784,24 @@ def host_is_monitored(host_name: str) -> bool:
     return bool(Query([Hosts.name], Hosts.name == host_name).value(sites.live()))
 
 
+class AttributesField(_fields.Dict):
+    default_error_messages = {
+        'attribute_forbidden': "Setting of attribute {attribute!r} is forbidden: {value!r}.",
+    }
+
+    def _validate(self, value):
+        # Special keys:
+        #  - site -> validate against config.allsites().keys()
+        #  - tag_* -> validate_host_tags
+        #  - * -> validate against host_attribute_registry.keys()
+        try:
+            validate_host_attributes(value, new=True)
+            if 'meta_data' in value:
+                self.fail("attribute_forbidden", attribute='meta_data', value=value)
+        except MKUserError as exc:
+            raise ValidationError(str(exc))
+
+
 Boolean = _fields.Boolean
 Decimal = _fields.Decimal
 DateTime = _fields.DateTime
@@ -811,4 +837,5 @@ __all__ = [
     'HostField',
     'FOLDER_PATTERN',
     'query_field',
+    'AttributesField',
 ]

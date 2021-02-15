@@ -5,14 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import urllib.parse
 
-from marshmallow import ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import config, watolib
-from cmk.gui.plugins.openapi.fields import HostField, query_field
-from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.utils.defines import weekday_ids
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_host_downtime,
@@ -20,24 +16,19 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_service_downtime,
     schedule_servicegroup_service_downtime,
 )
-from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
-from cmk.gui.userdb import load_users
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_service_problem,
 )
-from cmk.gui.plugins.webapi import validate_host_attributes
+from cmk.gui.plugins.openapi.fields import HostField, query_field, AttributesField
+from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.gui.plugins.openapi.endpoints.utils import verify_group_exist
+from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
+from cmk.gui.userdb import load_users
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.passwords import password_exists, contact_group_choices
 from cmk.gui.watolib.tags import load_tag_config, load_aux_tags
-
-
-class InputAttribute(BaseSchema):
-    key = fields.String(required=True)
-    value = fields.String(required=True)
-
 
 EXISTING_HOST_NAME = HostField(
     description="The hostname or IP address itself.",
@@ -52,25 +43,6 @@ MONITORED_HOST = fields.HostField(
     should_be_monitored=True,
     required=True,
 )
-
-
-class AttributesField(fields.Dict):
-    default_error_messages = {
-        'attribute_forbidden': "Setting of attribute {attribute!r} is forbidden: {value!r}.",
-    }
-
-    def _validate(self, value):
-        # Special keys:
-        #  - site -> validate against config.allsites().keys()
-        #  - tag_* -> validate_host_tags
-        #  - * -> validate against host_attribute_registry.keys()
-        try:
-            validate_host_attributes(value, new=True)
-            if 'meta_data' in value:
-                self.fail("attribute_forbidden", attribute='meta_data', value=value)
-        except MKUserError as exc:
-            raise ValidationError(str(exc))
-
 
 EXISTING_FOLDER = fields.FolderField(
     description=("The folder-id of the folder under which this folder shall be created. May be "
@@ -181,7 +153,7 @@ class UpdateHost(BaseSchema):
         fields.String(),
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
-        missing=[],
+        missing=list,
         required=False,
     )
 
@@ -463,6 +435,13 @@ class UpdateFolder(BaseSchema):
         missing=dict,
         required=False,
     )
+    remove_attributes = fields.List(
+        fields.String(),
+        description="A list of attributes which should be removed.",
+        example=["tag_foobar"],
+        missing=list,
+        required=False,
+    )
 
 
 class UpdateFolderEntry(UpdateFolder):
@@ -480,6 +459,13 @@ class UpdateFolderEntry(UpdateFolder):
                      "attributes will not be touched."),
         example={},
         missing=dict,
+        required=False,
+    )
+    remove_attributes = fields.List(
+        fields.String(),
+        description="A list of attributes which should be removed.",
+        example=["tag_foobar"],
+        missing=list,
         required=False,
     )
 
@@ -1013,7 +999,7 @@ class InputPassword(BaseSchema):
         description="The list of members to share the password with",
         required=False,
         attribute="shared_with",
-        missing=[],
+        missing=list,
     )
 
 
@@ -1257,7 +1243,7 @@ class CreateUser(BaseSchema):
             "auth_type": "password",
             "password": "password"
         },
-        missing=lambda: {},
+        missing=dict,
     )
     disable_login = fields.Bool(
         required=False,
@@ -1269,7 +1255,7 @@ class CreateUser(BaseSchema):
     contact_options = fields.Nested(UserContactOption,
                                     required=False,
                                     description="Contact settings for the user",
-                                    missing={
+                                    missing=lambda: {
                                         "email": "",
                                         "fallback_contact": False
                                     },
@@ -1295,7 +1281,7 @@ class CreateUser(BaseSchema):
             example="user",
         ),
         required=False,
-        missing=[],
+        missing=list,
         description="The list of assigned roles to the user",
         example=["user"],
     )
@@ -1309,7 +1295,7 @@ class CreateUser(BaseSchema):
                       required=True,
                       example="all"),
         required=False,
-        missing=[],
+        missing=list,
         description="Assign the user to one or multiple contact groups. If no contact group is "
         "specified then no monitoring contact will be created for the user."
         "",
@@ -1317,7 +1303,7 @@ class CreateUser(BaseSchema):
     disable_notifications = fields.Nested(
         DisabledNotifications,
         required=False,
-        missing={},
+        missing=dict,
         example={"disabled": False},
     )
     # default language is not setting a key in dict
@@ -1345,7 +1331,7 @@ class UpdateUser(BaseSchema):
             "auth_type": "password",
             "password": "password"
         },
-        missing=lambda: {},
+        missing=dict,
     )
     enforce_password_change = fields.Bool(
         required=False,
@@ -1529,7 +1515,7 @@ class HostTag(BaseSchema):
         "The list of auxiliary tag ids. Built-in tags (ip-v4, ip-v6, snmp, tcp, ping) and custom defined tags are allowed.",
         example=["ip-v4, ip-v6"],
         required=False,
-        missing=[],
+        missing=list,
     )
 
 
@@ -1873,7 +1859,7 @@ class ActivateChanges(BaseSchema):
         description=("On which sites the configuration shall be activated. An empty list "
                      "means all sites which have pending changes."),
         required=False,
-        missing=[],
+        missing=list,
         example=['production'],
     )
     force_foreign_changes = fields.Boolean(

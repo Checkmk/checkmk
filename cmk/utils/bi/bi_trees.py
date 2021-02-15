@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Any, Set, Dict, Tuple, Union
+from typing import List, Optional, Any, Set, Dict, Tuple, Union, Type
 from marshmallow import fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
@@ -179,6 +179,23 @@ class BICompiledLeaf(ABCBICompiledNode):
             return entity
         return entity.services_with_fullstate.get(self.service_description)
 
+    @classmethod
+    def schema(cls) -> Type["BICompiledLeafSchema"]:
+        return BICompiledLeafSchema
+
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "required_hosts": list(
+                map(lambda x: {
+                    "site_id": x[0],
+                    "host_name": x[1]
+                }, self.required_hosts)),
+            "site_id": self.site_id,
+            "host_name": self.host_name,
+            "service_description": self.service_description,
+        }
+
 
 class BISiteHostPairSchema(Schema):
     site_id = ReqString()
@@ -314,6 +331,26 @@ class BICompiledRule(ABCBICompiledNode):
             {},
         )
 
+    @classmethod
+    def schema(cls) -> Type["BICompiledRuleSchema"]:
+        return BICompiledRuleSchema
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "pack_id": self.pack_id,
+            "type": self.type(),
+            "required_hosts": list(
+                map(lambda x: {
+                    "site_id": x[0],
+                    "host_name": x[1]
+                }, self.required_hosts)),
+            "nodes": [node.serialize() for node in self.nodes],
+            "aggregation_function": self.aggregation_function.serialize(),
+            "node_visualization": self.node_visualization,
+            "properties": self.properties.serialize(),
+        }
+
 
 class BICompiledRuleSchema(Schema):
     id = ReqString()
@@ -384,6 +421,9 @@ class BIRemainingResult(ABCBICompiledNode):
                 bi_status_fetcher: ABCBIStatusFetcher,
                 use_assumed=False) -> Optional[NodeResultBundle]:
         return None
+
+    def serialize(self) -> Dict[str, Any]:
+        return {}
 
 
 #   .--Aggregation---------------------------------------------------------.
@@ -508,6 +548,19 @@ class BICompiledAggregation:
             return result
 
         raise NotImplementedError("Unknown node type %r" % node)
+
+    @classmethod
+    def schema(cls) -> Type["BICompiledAggregationSchema"]:
+        return BICompiledAggregationSchema
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "branches": [branch.serialize() for branch in self.branches],
+            "aggregation_visualization": self.aggregation_visualization,
+            "computation_options": self.computation_options.serialize(),
+            "groups": self.groups.serialize(),
+        }
 
 
 class BICompiledAggregationSchema(Schema):

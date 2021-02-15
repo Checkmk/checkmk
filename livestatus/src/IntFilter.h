@@ -15,6 +15,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 
 #include "ColumnFilter.h"
 #include "Filter.h"
@@ -23,7 +24,9 @@
 class Row;
 
 class IntFilter : public ColumnFilter {
-    using function_type = std::function<int(Row, const contact *)>;
+    using f0_t = std::function<int(Row)>;
+    using f1_t = std::function<int(Row, const contact *)>;
+    using function_type = std::variant<f0_t, f1_t>;
 
 public:
     IntFilter(Kind kind, std::string columnName, function_type,
@@ -48,7 +51,7 @@ public:
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
 private:
-    const function_type _get_value;
+    const function_type f_;
     const int32_t _ref_value;
 };
 

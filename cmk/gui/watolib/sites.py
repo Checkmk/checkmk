@@ -7,10 +7,12 @@
 import os
 import re
 import time
-from typing import NamedTuple, Type
+from typing import NamedTuple, Type, Any
 from pathlib import Path
 
 from six import ensure_binary
+
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -52,7 +54,9 @@ from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
 )
+from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.utils import multisite_dir
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 
 
 class SiteManagement:
@@ -705,3 +709,22 @@ class AutomationPushSnapshot(AutomationCommand):
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
                 request.site_id, request.tar_content, Path(cmk.utils.paths.omd_root),
                 cmk.gui.watolib.activate_changes.get_replication_paths())
+
+
+def get_effective_global_setting(site_id: SiteId, is_wato_slave_site: bool, varname: str) -> Any:
+    global_settings = load_configuration_settings()
+    default_values = ABCConfigDomain.get_all_default_globals()
+
+    if is_wato_slave_site:
+        current_settings = load_configuration_settings(site_specific=True)
+    else:
+        sites = SiteManagementFactory.factory().load_sites()
+        current_settings = sites[site_id].get("globals", {})
+
+    if varname in current_settings:
+        return current_settings[varname]
+
+    if varname in global_settings:
+        return global_settings[varname]
+
+    return default_values[varname]

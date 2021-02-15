@@ -82,7 +82,8 @@ from cmk.gui.page_menu import (
 )
 
 from cmk.gui.watolib.sites import is_livestatus_encrypted
-from cmk.gui.watolib.activate_changes import clear_site_replication_status
+from cmk.gui.watolib.activate_changes import (clear_site_replication_status,
+                                              get_trial_expired_message)
 from cmk.gui.wato.pages.global_settings import ABCGlobalSettingsMode, ABCEditGlobalSettingMode
 
 from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
@@ -99,14 +100,6 @@ def _site_globals_editable(site_id, site):
         return False
 
     return site["replication"] or config.site_is_local(site_id)
-
-
-def _get_trial_expired_message():
-    return _(
-        "The Checkmk Enterprise Free Edition is expired and you can create a distributed setup "
-        "with only two sites: one central and one remote site. In case you want to test "
-        "more complex distributed setups, please "
-        "<a href=\"https://checkmk.com/contact.php?\" target=\"_blank\">contact us</a>.")
 
 
 @mode_registry.register
@@ -146,10 +139,8 @@ class ModeEditSite(WatoMode):
         self._clone_id = html.request.get_ascii_input("clone")
         self._new = self._site_id is None
 
-        if cmk_version.is_expired_trial() and self._new:
-            num_sites = len(self._site_mgmt.load_sites())
-            if num_sites > 1:
-                raise MKUserError(None, _get_trial_expired_message())
+        if cmk_version.is_expired_trial() and (self._new or self._site_id != config.omd_site()):
+            raise MKUserError(None, get_trial_expired_message())
 
         configured_sites = self._site_mgmt.load_sites()
 
@@ -680,7 +671,7 @@ class ModeDistributedMonitoring(WatoMode):
         sites = sort_sites(self._site_mgmt.load_sites())
 
         if cmk_version.is_expired_trial():
-            html.show_message(_get_trial_expired_message())
+            html.show_message(get_trial_expired_message())
 
         html.div("", id_="message_container")
         with table_element(

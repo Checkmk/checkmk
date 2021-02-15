@@ -417,6 +417,10 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
     def required_elements(self) -> Set[RequiredBIElement]:
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def serialize(self) -> Dict[str, Any]:
+        raise NotImplementedError()
+
 
 #   .--Action--------------------------------------------------------------.
 #   |                       _        _   _                                 |

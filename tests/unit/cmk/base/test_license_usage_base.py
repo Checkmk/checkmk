@@ -24,7 +24,9 @@ _license_usage_sample_example = LicenseUsageSample(
     sample_time=150,
     timezone="",
     num_hosts=100,
+    num_hosts_excluded=0,
     num_services=1000,
+    num_services_excluded=0,
 )
 
 
@@ -49,7 +51,9 @@ def test_update_history_de_serialize(monkeypatch):
                 sample_time=75,
                 timezone="",
                 num_hosts=50,
+                num_hosts_excluded=0,
                 num_services=500,
+                num_services_excluded=0,
             )
         ],
     )
@@ -105,7 +109,7 @@ def test_update_history__create_or_update_history_dump_empty(monkeypatch):
 
 def test_update_history__create_or_update_history_dump(monkeypatch):
     serialized_history_dump = LicenseUsageHistoryDump(
-        VERSION="1.2",
+        VERSION="1.1",
         history=[
             LicenseUsageSample(
                 version="",
@@ -115,7 +119,9 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 sample_time=3,
                 timezone="",
                 num_hosts=3,
+                num_hosts_excluded=0,
                 num_services=30,
+                num_services_excluded=0,
             ),
             LicenseUsageSample(
                 version="",
@@ -125,7 +131,9 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 sample_time=2,
                 timezone="",
                 num_hosts=2,
+                num_hosts_excluded=0,
                 num_services=20,
+                num_services_excluded=0,
             ),
             LicenseUsageSample(
                 version="",
@@ -135,7 +143,9 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 sample_time=1,
                 timezone="",
                 num_hosts=1,
+                num_hosts_excluded=0,
                 num_services=10,
+                num_services_excluded=0,
             ),
         ],
     ).serialize()
@@ -147,7 +157,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
     )
 
     history_dump = license_usage._create_or_update_history_dump()
-    assert history_dump.VERSION == "1.2"
+    assert history_dump.VERSION == "1.1"
     assert len(history_dump.history) == 4
 
     for (sample_time, num_hosts, num_services), sample in zip([
@@ -211,16 +221,25 @@ def test_update_history__may_update_next_run_not_reached(monkeypatch):
     assert not license_usage._may_update(fake_now.timestamp(), fake_next_run_ts)
 
 
-@pytest.mark.parametrize("num_hosts, num_services, returns_sample", [
-    (0, 0, False),
-    (1, 0, True),
-    (0, 1, True),
-])
-def test__create_sample(monkeypatch, num_hosts, num_services, returns_sample):
+@pytest.mark.parametrize(
+    "num_hosts, num_hosts_excluded, num_services, num_services_excluded, returns_sample", [
+        (0, 0, 0, 0, False),
+        (1, 0, 0, 0, True),
+        (0, 1, 0, 0, True),
+        (0, 0, 1, 0, True),
+        (0, 0, 0, 1, True),
+    ])
+def test__create_sample(monkeypatch, num_hosts, num_hosts_excluded, num_services,
+                        num_services_excluded, returns_sample):
+    def _mock_livestatus(query):
+        if "GET hosts" in query:
+            return num_hosts, num_hosts_excluded
+        return num_services, num_services_excluded
+
     monkeypatch.setattr(
         license_usage,
         "_get_stats_from_livestatus",
-        lambda query: num_hosts if "GET hosts" in query else num_services,
+        _mock_livestatus,
     )
 
     sample = license_usage._create_sample()

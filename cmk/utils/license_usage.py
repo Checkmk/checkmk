@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import List
+from typing import List, Dict
 from dataclasses import dataclass, asdict
 
-LicenseUsageHistoryDumpVersion = "1.0"
+LicenseUsageHistoryDumpVersion = "1.1"
 
 
 @dataclass
@@ -20,7 +20,9 @@ class LicenseUsageSample:
     sample_time: int
     timezone: str
     num_hosts: int
+    num_hosts_excluded: int
     num_services: int
+    num_services_excluded: int
 
 
 @dataclass
@@ -45,9 +47,19 @@ class LicenseUsageHistoryDump:
             history_dump = {}
 
         return cls(
-            VERSION=history_dump.get("VERSION", LicenseUsageHistoryDumpVersion),
-            history=[LicenseUsageSample(**sample) for sample in history_dump.get("history", [])],
+            VERSION=LicenseUsageHistoryDumpVersion,
+            history=[
+                _migrate_sample(history_dump["VERSION"], s)
+                for s in history_dump.get("history", [])
+            ],
         )
+
+
+def _migrate_sample(prev_dump_version: str, sample: Dict) -> LicenseUsageSample:
+    if prev_dump_version == "1.0":
+        sample.setdefault("num_hosts_excluded", 0)
+        sample.setdefault("num_services_excluded", 0)
+    return LicenseUsageSample(**sample)
 
 
 def rot47(input_str: str) -> str:

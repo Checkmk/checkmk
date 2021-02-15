@@ -9,21 +9,23 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <functional>
 
 #include "Aggregator.h"
-#include "IntColumn.h"
 #include "contact_fwd.h"
 class Row;
 class RowRenderer;
 
 class IntAggregator : public Aggregator {
+    using function_type = std::function<int(Row, const contact *)>;
+
 public:
-    IntAggregator(const AggregationFactory &factory, const IntColumn *column)
-        : _aggregation(factory()), _column(column) {}
+    IntAggregator(const AggregationFactory &factory, const function_type& getValue)
+        : _aggregation{factory()}, _getValue{getValue} {}
 
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds /* timezone_offset*/) override {
-        _aggregation->update(_column->getValue(row, auth_user));
+        _aggregation->update(_getValue(row, auth_user));
     }
 
     void output(RowRenderer &r) const override {
@@ -32,7 +34,7 @@ public:
 
 private:
     std::unique_ptr<Aggregation> _aggregation;
-    const IntColumn *const _column;
+    const function_type _getValue;
 };
 
 #endif  // IntAggregator_h

@@ -287,7 +287,7 @@ class MockedFileStatFile:
     (
         'no_files',
         iter([]),
-        OrderedDict([
+        [
             (
                 'raccoon',
                 {
@@ -302,8 +302,12 @@ class MockedFileStatFile:
                     'rule': '/var/log/sys*',
                 },
             ),
-        ]),
-        [],
+        ],
+        [
+            ('no_files', []),
+            ('no_files raccoon', []),
+            ('no_files colibri', []),
+        ],
     ),
 ])
 def test_grouping_multiple_groups(

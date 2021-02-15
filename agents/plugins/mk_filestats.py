@@ -472,17 +472,19 @@ def grouping_multiple_groups(config_section_name, files_iter, grouping_condition
     """create multiple groups per section if the agent is configured
     for grouping. each group is shown as a seperate service. if a file
     does not belong to a group, it is added to the section."""
-    grouped_files = {}  # type: typing.Dict[typing.Tuple[str, str], typing.List[FileStat]]
     parent_group_name = config_section_name
+    # Initalise dict with parent and child group because they should be in the section
+    # with 0 count if there are no files for them.
+    grouped_files = {
+        '': [],  # parent
+    }  # type: typing.Dict[str, typing.List[FileStat]]
+    grouped_files.update({g[0]: [] for g in grouping_conditions})
     for single_file in files_iter:
         matching_child_group = _get_matching_child_group(single_file, grouping_conditions)
-        grouped_files.setdefault(
-            (parent_group_name, matching_child_group),
-            [],
-        ).append(single_file)
+        grouped_files[matching_child_group].append(single_file)
 
-    for (parent_group_name, child_group_name), files in grouped_files.items():
-        yield _grouping_construct_group_name(parent_group_name, child_group_name), files
+    for matching_child_group, files in grouped_files.items():
+        yield _grouping_construct_group_name(parent_group_name, matching_child_group), files
 
 
 def grouping_single_group(config_section_name, files_iter, _grouping_conditions):
